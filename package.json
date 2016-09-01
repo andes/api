@@ -1,0 +1,36 @@
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "Api proyecto Andes",
+  "main": "index.js",
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "systemjs": "0.19.27",
+    "events": "^1.1.1",
+    "express": "^4.14.0",
+    "http": "0.0.0",
+    "mongoose": "^4.5.10",
+    "typescript": "^1.8.10",
+    "typings": "^1.3.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "startNode": "tsc && gulp && concurrently \"npm run node\" ",
+    "start": "concurrently \"npm run tsc:w\" \"npm run node\" ",
+    "node": "node ./index.js",
+    "postinstall": "typings install",
+    "tsc": "tsc",
+    "tsc:w": "tsc -w",
+    "typings": "typings"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andes/api.git"
+  },
+  "author": "Team Andes",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/andes/api/issues"
+  },
+  "homepage": "https://github.com/andes/api#readme"
+}
