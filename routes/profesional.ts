@@ -1,10 +1,10 @@
 import * as express from 'express'
-import * as establecimiento from './schemas/establecimiento'
+import * as profesional from '../schemas/profesional'
 
 var router = express.Router();
 
-    router.get('/establecimiento', function (req, res, next) {
-       establecimiento.find({},(err, data) => {
+    router.get('/profesional', function (req, res, next) {
+       profesional.find({},(err, data) => {
            if (err) {
                next(err);
            };
@@ -13,10 +13,3 @@ var router = express.Router();
     });
 
 export = router;
-
-
-
-
-
-
-
