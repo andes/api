@@ -5,7 +5,7 @@ var especialidadSchema = new mongoose.Schema({
     descripcion: String,
     nivelComplejidad: {
         type:Number,
-        requiered :true
+        required :true
     },
     disciplina: String,
     codigo:{
@@ -16,7 +16,7 @@ var especialidadSchema = new mongoose.Schema({
     },
     habilitado:{
         type: Boolean,
-        requiered : true
+        required : true
     },
     fechaAlta: Date,
     fechaBaja: Date,
