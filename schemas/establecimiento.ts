@@ -26,8 +26,8 @@ var establecimientoSchema = new mongoose.Schema({
                 nombre: String
             }
         }
-    },
-    codigo:{
+    }
+ /*   codigo:{
         sisa: {
             type: Number,
             required: true
@@ -40,7 +40,7 @@ var establecimientoSchema = new mongoose.Schema({
         requiered : true
     },
     fechaAlta: Date,
-    fechaBaja: Date,
+    fechaBaja: Date,*/
     
 });
 
