@@ -1,7 +1,6 @@
 "use strict";
 var express = require('express');
 var establecimiento = require('../schemas/establecimiento');
-//var ObjectID = require('mongodb').ObjectID
 var router = express.Router();
 router.get('/establecimiento', function (req, res, next) {
     establecimiento.find({}, function (err, data) {
@@ -12,6 +11,16 @@ router.get('/establecimiento', function (req, res, next) {
         res.json(data);
     });
 });
+/*
+router.get('/establecimiento/:id', function (req, res, next) {
+       establecimiento.findOne({_id: req.params.id},(err, data) => {
+           if (err) {
+               next(err);
+           };
+           res.json(data);
+       });
+    });
+*/
 router.get('/establecimiento/:_id', function (req, res, next) {
     establecimiento.findById(req.params._id, function (err, data) {
         if (err) {
@@ -41,15 +50,6 @@ router.delete('/establecimiento/:_id', function (req, res, next) {
     establecimiento.findByIdAndRemove(req.params._id, req.body, function (err, data) {
         if (err)
             return next(err);
-        res.json(data);
-    });
-});
-router.get('/establecimiento/:id', function (req, res, next) {
-    establecimiento.findOne({ _id: req.params.id }, function (err, data) {
-        if (err) {
-            next(err);
-        }
-        ;
         res.json(data);
     });
 });
