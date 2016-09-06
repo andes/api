@@ -25,7 +25,21 @@ var establecimientoSchema = new mongoose.Schema({
                 nombre: String
             }
         }
-    }
+    },
+    codigo: {
+        sisa: {
+            type: Number,
+            required: true
+        },
+        cuie: String,
+        remediar: String
+    },
+    habilitado: {
+        type: Boolean,
+        required: true
+    },
+    fechaAlta: Date,
+    fechaBaja: Date
 });
 var establecimiento = mongoose.model('establecimiento', establecimientoSchema, 'establecimiento');
 module.exports = establecimiento;

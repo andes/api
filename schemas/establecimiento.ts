@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-var establecimientoSchema = new mongoose.Schema({   
+var establecimientoSchema = new mongoose.Schema({
     nombre: {
         type: String,
         required: true
@@ -10,7 +10,7 @@ var establecimientoSchema = new mongoose.Schema({
         type:Number,
         requiered :true
     },
-   
+
     tipoEstabecimiento : {
         nombre: String,
         descripcion: String,
@@ -26,8 +26,8 @@ var establecimientoSchema = new mongoose.Schema({
                 nombre: String
             }
         }
-    }
- /*   codigo:{
+    },
+    codigo:{
         sisa: {
             type: Number,
             required: true
@@ -37,11 +37,11 @@ var establecimientoSchema = new mongoose.Schema({
     },
     habilitado:{
         type: Boolean,
-        requiered : true
+        required : true
     },
     fechaAlta: Date,
-    fechaBaja: Date,*/
-    
+    fechaBaja: Date
+
 });
 
 var establecimiento = mongoose.model('establecimiento', establecimientoSchema, 'establecimiento');
