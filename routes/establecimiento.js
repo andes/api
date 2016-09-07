@@ -11,16 +11,6 @@ router.get('/establecimiento', function (req, res, next) {
         res.json(data);
     });
 });
-/*
-router.get('/establecimiento/:id', function (req, res, next) {
-       establecimiento.findOne({_id: req.params.id},(err, data) => {
-           if (err) {
-               next(err);
-           };
-           res.json(data);
-       });
-    });
-*/
 router.get('/establecimiento/:_id', function (req, res, next) {
     establecimiento.findById(req.params._id, function (err, data) {
         if (err) {

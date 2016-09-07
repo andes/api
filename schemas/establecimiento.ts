@@ -22,9 +22,7 @@ var establecimientoSchema = new mongoose.Schema({
         localidad: {
             nombre: String,
             codigoPostal: String,
-            provincia:{
-                nombre: String
-            }
+            provincia: String
         }
     },
     codigo:{
