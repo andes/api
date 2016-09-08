@@ -11,7 +11,7 @@ var establecimientoSchema = new mongoose.Schema({
         requiered :true
     },
 
-    tipoEstabecimiento : {
+    tipoEstablecimiento : {
         nombre: String,
         descripcion: String,
         clasificacion: String
@@ -19,11 +19,14 @@ var establecimientoSchema = new mongoose.Schema({
     domicilio: {
         calle: String,
         numero: Number,
-        localidad: {
+        provincia: {
             nombre: String,
-            codigoPostal: String,
-            provincia: String
+            localidad: {
+                nombre: String,
+                codigoPostal: String                
+            }
         }
+        
     },
     codigo:{
         sisa: {
