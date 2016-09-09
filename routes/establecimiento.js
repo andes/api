@@ -2,23 +2,31 @@
 var express = require('express');
 var establecimiento = require('../schemas/establecimiento');
 var router = express.Router();
-router.get('/establecimiento', function (req, res, next) {
-    establecimiento.find({}, function (err, data) {
-        if (err) {
-            next(err);
-        }
-        ;
-        res.json(data);
-    });
-});
-router.get('/establecimiento/:_id', function (req, res, next) {
-    establecimiento.findById(req.params._id, function (err, data) {
-        if (err) {
-            next(err);
-        }
-        ;
-        res.json(data);
-    });
+router.get('/establecimiento/:id*?', function (req, res, next) {
+    if (req.params.id) {
+        establecimiento.findById(req.params.id, function (err, data) {
+            if (err) {
+                next(err);
+            }
+            ;
+            res.json(data);
+        });
+    }
+    else {
+        var query;
+        //if (!(req.query.codigoSisa || req.query.nombre))
+        // return next();
+        query = establecimiento.find({}); //Trae todos 
+        if (req.query.codigoSisa)
+            query.where('codigo.sisa').equals(req.query.codigoSisa);
+        if (req.query.nombre)
+            query.where('nombre').equals(RegExp('^' + req.query.nombre + '$', "i"));
+        query.exec(function (err, data) {
+            if (err)
+                return next(err);
+            res.json(data);
+        });
+    }
 });
 router.post('/establecimiento', function (req, res, next) {
     var newEstablecimiento = new establecimiento(req.body);

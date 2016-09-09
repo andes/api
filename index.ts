@@ -29,5 +29,5 @@ for (var route in routes)
     app.use('/api', routes[route]);
 
 var server = app.listen(3002, function () {
-    console.log('Inicio web Server local http://127.0.0.1:3000/');
+    console.log('Inicio web Server local http://127.0.0.1:3002/');
 });
