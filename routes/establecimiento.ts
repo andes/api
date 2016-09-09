@@ -23,9 +23,9 @@ router.get('/establecimiento/:id*?', function(req, res, next) {
 
             if (req.query.codigoSisa)
                 query.where('codigo.sisa').equals(req.query.codigoSisa);
-            if (req.query.nombre)
-                query.where('nombre').equals(RegExp('^' + req.query.nombre + '$', "i"));
-           
+            if (req.query.nombre){
+                query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
+           }
             query.exec((err, data)=> {
                 if (err) return next(err);
                 res.json(data);
