@@ -19,7 +19,7 @@ router.get('/establecimiento/:id*?', function(req, res, next) {
         //if (!(req.query.codigoSisa || req.query.nombre))
                // return next();
 
-         query = establecimiento.find({}); //Trae todos 
+         query = establecimiento.find({habilitado:true}); //Trae todos 
 
             if (req.query.codigoSisa)
                 query.where('codigo.sisa').equals(req.query.codigoSisa);
