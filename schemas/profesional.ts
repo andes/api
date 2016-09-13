@@ -28,7 +28,11 @@ var profesionalSchema = new mongoose.Schema({
         vigente: Boolean
     }],
     habilitado: Boolean,
-    fechaBaja: Date
+    fechaBaja: Date,
+    
+},
+ {
+    versionKey: false // You should be aware of the outcome after set to false
 })
 
 var profesional = mongoose.model('profesional', profesionalSchema, 'profesional');
