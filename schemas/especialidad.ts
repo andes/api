@@ -1,12 +1,12 @@
 import * as mongoose from 'mongoose';
 
 var especialidadSchema = new mongoose.Schema({   
-    nombre: String,
-    descripcion: String,
-    nivelComplejidad: {
-        type:Number,
-        required :true
+     nombre: {
+        type: String,
+        required: true
     },
+    descripcion: String,
+    nivelComplejidad: Number,
     disciplina: String,
     codigo:{
         sisa: {
