@@ -14,21 +14,19 @@ var profesionalSchema = new mongoose.Schema({
         numero: Number,
         localidad: {
             nombre: String,
-            codigoPostal: String,
-            provincia: {
-                nombre: String
-            }
-        }
+            codigoPostal: String
+        },
+        provincia: String,
     },
     telefono: String,
     email: String,
-    matriculas: {
-        numero: Number,
-        descripcion: String,
-        fechaInicio: Date,
-        fechaVencimiento: Date,
-        vigente: Boolean
-    },
+    matriculas: [{
+            numero: Number,
+            descripcion: String,
+            fechaInicio: Date,
+            fechaVencimiento: Date,
+            vigente: Boolean
+        }],
     habilitado: Boolean,
     fechaBaja: Date
 });
