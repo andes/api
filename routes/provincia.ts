@@ -4,7 +4,7 @@ import * as provincia from '../schemas/provincia'
 var router = express.Router();
 
 router.get('/provincia/:id*?', function(req, res, next) {
-    console.log(req.params);
+   
 
    if (req.params.id) {
        provincia.findById(req.params.id, function (err, data) {
