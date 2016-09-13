@@ -1,12 +1,12 @@
 "use strict";
 var mongoose = require('mongoose');
 var especialidadSchema = new mongoose.Schema({
-    nombre: String,
-    descripcion: String,
-    nivelComplejidad: {
-        type: Number,
+    nombre: {
+        type: String,
         required: true
     },
+    descripcion: String,
+    nivelComplejidad: Number,
     disciplina: String,
     codigo: {
         sisa: {
