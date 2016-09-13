@@ -18,13 +18,11 @@ var establecimientoSchema = new mongoose.Schema({
     domicilio: {
         calle: String,
         numero: Number,
-        provincia: {
+        localidad: {
             nombre: String,
-            localidad: {
-                nombre: String,
-                codigoPostal: String
-            }
-        }
+            codigoPostal: String
+        },
+        provincia: String
     },
     codigo: {
         sisa: {

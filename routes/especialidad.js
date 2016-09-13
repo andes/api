@@ -2,25 +2,30 @@
 var express = require('express');
 var especialidad = require('../schemas/especialidad');
 var router = express.Router();
-router.get('/especialidad', function (req, res, next) {
-    especialidad.find({}, function (err, data) {
-        if (err) {
-            next(err);
+router.get('/especialidad/:id*?', function (req, res, next) {
+    if (req.params.id) {
+        especialidad.findById(req.params.id, function (err, data) {
+            if (err) {
+                next(err);
+            }
+            ;
+            res.json(data);
+        });
+    }
+    else {
+        var query;
+        query = especialidad.find({ habilitado: true }); //Trae todos 
+        if (req.query.codigoSisa)
+            query.where('codigo.sisa').equals(req.query.codigoSisa);
+        if (req.query.nombre) {
+            query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
         }
-        ;
-        res.json(data);
-    });
-});
-router.get('/especialidad/:id', function (req, res, next) {
-    especialidad.findOne({
-        _id: req.params.id
-    }, function (err, data) {
-        if (err) {
-            next(err);
-        }
-        ;
-        res.json(data);
-    });
+        query.exec(function (err, data) {
+            if (err)
+                return next(err);
+            res.json(data);
+        });
+    }
 });
 router.post('/especialidad', function (req, res, next) {
     var newEspecialidad = new especialidad(req.body);
