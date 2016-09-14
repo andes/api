@@ -16,7 +16,7 @@ router.get('/especialidad/:id*?', function(req, res, next) {
     }
     else{
         var query;
-        query = especialidad.find({habilitado:true}); //Trae todos 
+        query = especialidad.find({}); //Trae todos 
 
             if (req.query.codigoSisa)
                 query.where('codigo.sisa').equals(req.query.codigoSisa);
