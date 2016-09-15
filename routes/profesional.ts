@@ -14,7 +14,7 @@ router.get('/profesional/:_id*?', function (req, res, next) {
         });
     }else{
         var query;
-        query = profesional.find({habilitado:true}); //Trae todos 
+        query = profesional.find({}); //Trae todos 
 
         if (req.query.apellido)
             query.where('apellido').equals(RegExp('^.*' + req.query.apellido + '.*$', "i"));
