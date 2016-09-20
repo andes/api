@@ -1,9 +1,9 @@
 import * as mongoose from 'mongoose';
 
-var PatientSchema = new mongoose.Schema({
+var patientSchema = new mongoose.Schema({
     resourceType: String,
     id: String,
-    identifier: [{ // Guardar kas instancias de los numeros de historias clinicas de los distintos efectores
+    identifier: [{ // Guardar las instancias de los numeros de historias clinicas de los distintos efectores
         use: String, // puede ser usual | official | temp | secondary ----> En ANDES deberian ser oficiales
         system: String, // URI ????
         value: String // Valor identiicador
@@ -39,7 +39,9 @@ var PatientSchema = new mongoose.Schema({
         state : String, // Provincia
         postalCode : String, // Postal code for area
         country : String, // Country (can be ISO 3166 3 letter code)
-        period : { 
+        latitude : String, //"latitud",
+        longitude : String,  //"longitud",
+        period : {
             start : Date, // C? Starting time with inclusive boundary
             end : Date // C? End time with inclusive boundary, if not ongoing} // Time period when the contact point was/is in use
         }
@@ -83,17 +85,32 @@ var PatientSchema = new mongoose.Schema({
             state : String, // Provincia
             postalCode : String, // Postal code for area
             country : String, // Country (can be ISO 3166 3 letter code)
-            period : { 
+            latitude : String, //"latitud",
+            longitude : String,  //"longitud",
+            period : {
                 start : Date, // C? Starting time with inclusive boundary
                 end : Date // C? End time with inclusive boundary, if not ongoing} // Time period when the contact point was/is in use
             }
        },
-       gender: String,
+       gender: String
+       }],
+       communication: [{
+           language: {
+               coding: [{
+                   system: String,
+                   code: String,
+                   display: String
+               }]
+           },
+           preferred: Boolean,
+       }],
        careProvider : [{ //Referencia a una obrasocial) }], // Patient's nominated primary care provid
+       }],
         managingOrganization: {//referencia a un efector
         }
-   }],
-   }]
-});
+    });
 
-mongoose.model('Patient', PatientSchema);
+
+
+var patient = mongoose.model('patient', patientSchema, 'patient');
+export = patient;
