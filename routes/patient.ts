@@ -23,6 +23,7 @@ router.get('/patient/:id*?', function(req, res, next) {
         opciones.gender = Array.isArray(req.query.gender) ? {
             $in: req.query.gender
         } : req.query.gender;
+        
     }
 
     //  if (req.query.family) {
