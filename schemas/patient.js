@@ -13,10 +13,10 @@ var patientSchema = new mongoose.Schema({
         value: String
     },
     active: Boolean,
-    name: [{
-            family: [String],
-            given: [String] // Nombres
-        }],
+    name: {
+        family: [String],
+        given: [String] // Nombres
+    },
     telecom: [{
             system: String,
             value: String,

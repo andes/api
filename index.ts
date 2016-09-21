@@ -31,3 +31,5 @@ for (var route in routes)
 var server = app.listen(3002, function () {
     console.log('Inicio web Server local http://127.0.0.1:3002/');
 });
+
+export = app

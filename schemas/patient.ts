@@ -13,10 +13,10 @@ var patientSchema = new mongoose.Schema({
         value: String
     },
     active: Boolean,
-    name: [{
+    name: {
         family: [String], // Apellidos
         given: [String] // Nombres
-    }],
+    },
     telecom: [{
         system: String, // limitado a phone | email solo dejo que sea telefono o email
         value: String, // El numero de telefono formato 999-15 9999999
@@ -94,9 +94,10 @@ var patientSchema = new mongoose.Schema({
        },
        gender: String
        }],
-       communication: [{
-           language: {
-               coding: [{
+
+    communication: [{
+          language: {
+                   coding: [{
                    system: String,
                    code: String,
                    display: String
@@ -104,9 +105,9 @@ var patientSchema = new mongoose.Schema({
            },
            preferred: Boolean,
        }],
-       careProvider : [{ //Referencia a una obrasocial) }], // Patient's nominated primary care provid
+    careProvider : [{ //Referencia a una obrasocial) }], // Patient's nominated primary care provid
        }],
-        managingOrganization: {//referencia a un efector
+    managingOrganization: {//referencia a un efector
         }
     });
 
