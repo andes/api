@@ -7,7 +7,7 @@ var requireDir = require('require-dir');
 
 var app = express();
 
-mongoose.connect('mongodb://10.1.62.17/andes');
+mongoose.connect('mongodb://localhost/andes');
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
