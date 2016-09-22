@@ -107,6 +107,8 @@ var patientSchema = new mongoose.Schema({
     careProvider: [{}],
     managingOrganization: {}
 });
+//Creo un indice para fulltext Search
+patientSchema.index({ '$**': 'text' });
 var patient = mongoose.model('patient', patientSchema, 'patient');
 module.exports = patient;
 //# sourceMappingURL=patient.js.map
