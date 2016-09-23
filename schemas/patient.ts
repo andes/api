@@ -14,6 +14,7 @@ var patientSchema = new mongoose.Schema({
     },
     active: Boolean,
     name: {
+        text : String,
         family: [String], // Apellidos
         given: [String] // Nombres
     },
@@ -63,12 +64,12 @@ var patientSchema = new mongoose.Schema({
            }]
        }],
        name: {
-           text : [String],
+           text : String,
            family: [String],
            given: [String]
        },
        telecom: [{
-           system: String, // limitado a phone | email solo dejo que sea telefono o email
+            system: String, // limitado a phone | email solo dejo que sea telefono o email
             value: String, // El numero de telefono formato 999-15 9999999
             use: String, // home | work | temp | mobile - purpose of this contact point
             rank: Number, // Specify preferred order of use (1 = highest) // Podemos usar el rank para guardar un historico de puntos de contacto (le restamos valor si no es actual???)

@@ -14,6 +14,7 @@ var patientSchema = new mongoose.Schema({
     },
     active: Boolean,
     name: {
+        text: String,
         family: [String],
         given: [String] // Nombres
     },
@@ -63,7 +64,7 @@ var patientSchema = new mongoose.Schema({
                         }]
                 }],
             name: {
-                text: [String],
+                text: String,
                 family: [String],
                 given: [String]
             },
