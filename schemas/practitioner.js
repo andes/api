@@ -18,8 +18,8 @@ var practitionerSchema = new mongoose.Schema({
     },
     name: {
         text: String,
-        given: [{ String: String }],
-        family: [{ String: String }]
+        given: [String],
+        family: [String]
     },
     telecom: [{
             system: String,

@@ -18,8 +18,8 @@ var practitionerSchema = new mongoose.Schema({
     },
     name: {
         text: String, //FullName Generation
-        given: [{String}],
-        family: [{String}]
+        given: [String],
+        family: [String]
     },
     telecom: [{
         system: String, // limitado a phone | email solo dejo que sea telefono o email
