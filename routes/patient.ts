@@ -24,15 +24,10 @@ router.get('/patient/:id*?', function(req, res, next) {
             if (req.query.search) {
                 opciones['$or'] = [{
 
-                    "name.family": {
+                    "name.text": {
                         "$regex": utils.makePattern(req.query.search)
                     }
-                }, {
-                    "name.given": {
-                        "$regex": utils.makePattern(req.query.search)
-                    }
-
-                },
+                }, 
                 {
                     "document.value": {
                         "$regex": utils.makePattern(req.query.search)

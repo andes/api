@@ -63,6 +63,7 @@ var patientSchema = new mongoose.Schema({
            }]
        }],
        name: {
+           text : [String],
            family: [String],
            given: [String]
        },
