@@ -30,13 +30,14 @@ var router = express.Router();
  *   get:
  *     tags:
  *       - Especialidad
- *     description: Returns all especialidad
+ *     description: Retorna un arreglo de objetos especialidad
+ *     summary: Listar especialidades
  *     produces:
  *       - application/json
  *     parameters:
  *       - name: nombre
  *         in: query
- *         description: EL nombre o descripción de la especialidad
+ *         description: El nombre o descripción de la especialidad
  *         required: false
  *         type: string
  *       - name: codigo.sisa
@@ -46,17 +47,23 @@ var router = express.Router();
  *         type: string
  *     responses:
  *       200:
- *         description: An array of especialidades
+ *         description: un arreglo de objetos especialidad
  *         schema:
  *           $ref: '#/definitions/especialidad'
  * /especialidad/{id}:
  *   get:
  *     tags:
  *       - Especialidad
- *     description: Returns all especialidad
+ *     summary: Listar especialidades con filtro por ID
+ *     description: Retorna un arreglo de objetos especialidad
  *     produces:
  *       - application/json
  *     parameters:
+ *       - name: id
+ *         in: path
+ *         description: _Id de una especialidad
+ *         required: true
+ *         type: string
  *       - name: nombre
  *         in: query
  *         description: EL nombre o descripción de la especialidad
@@ -65,11 +72,6 @@ var router = express.Router();
  *       - name: codigo.sisa
  *         in: query
  *         description: El codigo sisa de la especialidad
- *         required: false
- *         type: string
- *       - name: id
- *         in: path
- *         description: _Id de una especialidad
  *         required: false
  *         type: string
  *     responses:
@@ -103,6 +105,31 @@ router.get('/especialidad/:id*?', function (req, res, next) {
         });
     }
 });
+/**
+ * @swagger
+ * /especialidad:
+ *   post:
+ *     tags:
+ *       - Especialidad
+ *     description: Cargar una especialidad
+ *     summary: Cargar una especialidad
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: especialidad
+ *         description: objeto especialidad
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/especialidad'
+ *     responses:
+ *       200:
+ *         description: Un objeto especialidades
+ *         schema:
+ *           $ref: '#/definitions/especialidad'
+ */
 router.post('/especialidad', function (req, res, next) {
     var newEspecialidad = new especialidad(req.body);
     newEspecialidad.save(function (err) {
@@ -112,6 +139,36 @@ router.post('/especialidad', function (req, res, next) {
         res.json(newEspecialidad);
     });
 });
+/**
+ * @swagger
+ * /especialidad/{id}:
+ *   put:
+ *     tags:
+ *       - Especialidad
+ *     description: Actualizar una especialidad
+ *     summary: Actualizar una especialidad
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         description: Id de una especialidad
+ *         required: true
+ *         type: string
+ *       - name: especialidad
+ *         description: objeto especialidad
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/especialidad'
+ *     responses:
+ *       200:
+ *         description: Un objeto especialidades
+ *         schema:
+ *           $ref: '#/definitions/especialidad'
+ */
 router.put('/especialidad/:id', function (req, res, next) {
     especialidad.findByIdAndUpdate(req.params.id, req.body, function (err, data) {
         if (err) {
@@ -120,6 +177,36 @@ router.put('/especialidad/:id', function (req, res, next) {
         res.json(data);
     });
 });
+/**
+ * @swagger
+ * /especialidad/{id}:
+ *   delete:
+ *     tags:
+ *       - Especialidad
+ *     description: Eliminar una especialidad
+ *     summary: Eliminar una especialidad
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         description: Id de una especialidad
+ *         required: true
+ *         type: string
+ *       - name: especialidad
+ *         description: objeto especialidad
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/especialidad'
+ *     responses:
+ *       200:
+ *         description: Un objeto especialidades
+ *         schema:
+ *           $ref: '#/definitions/especialidad'
+ */
 router.delete('/especialidad/:id', function (req, res, next) {
     especialidad.findByIdAndRemove(req.params.id, req.body, function (err, data) {
         if (err) {

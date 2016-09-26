@@ -14,7 +14,7 @@ var swaggerDefinition = {
         description: 'APIs de tablas maestras ANDES',
     },
     host: 'localhost:3002',
-    basePath: '/',
+    basePath: '/api',
 };
 // options for the swagger docs
 var options = {
