@@ -2,6 +2,82 @@
 var express = require('express');
 var especialidad = require('../schemas/especialidad');
 var router = express.Router();
+/**
+ * @swagger
+ * definition:
+ *   especialidad:
+ *     properties:
+ *       nombre:
+ *         type: string
+ *       descripcion:
+ *         type: string
+ *       complejidad:
+ *         type: integer
+ *       disciplina:
+ *         type: string
+ *       codigo.sisa:
+ *         type: string
+ *       habilitado:
+ *         type: Boolean
+ *       fechaAlta:
+ *          type: Date
+ *       fechaBaja:
+ *          type: Date
+ */
+/**
+ * @swagger
+ * /especialidad:
+ *   get:
+ *     tags:
+ *       - Especialidad
+ *     description: Returns all especialidad
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: nombre
+ *         in: query
+ *         description: EL nombre o descripción de la especialidad
+ *         required: false
+ *         type: string
+ *       - name: codigo.sisa
+ *         in: query
+ *         description: El codigo sisa de la especialidad
+ *         required: false
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: An array of especialidades
+ *         schema:
+ *           $ref: '#/definitions/especialidad'
+ * /especialidad/{id}:
+ *   get:
+ *     tags:
+ *       - Especialidad
+ *     description: Returns all especialidad
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: nombre
+ *         in: query
+ *         description: EL nombre o descripción de la especialidad
+ *         required: false
+ *         type: string
+ *       - name: codigo.sisa
+ *         in: query
+ *         description: El codigo sisa de la especialidad
+ *         required: false
+ *         type: string
+ *       - name: id
+ *         in: path
+ *         description: _Id de una especialidad
+ *         required: false
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: An array of especialidades
+ *         schema:
+ *           $ref: '#/definitions/especialidad'
+ */
 router.get('/especialidad/:id*?', function (req, res, next) {
     if (req.params.id) {
         especialidad.findById(req.params.id, function (err, data) {
