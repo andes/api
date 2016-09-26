@@ -1,0 +1,15 @@
+{
+    info: {
+        title: "API ANDES",
+        version: "1.0.0",
+        description: "APIs de tablas maestras ANDES"
+    },
+    host: "localhost:3000",
+    basePath: "/",
+    swagger: "2.0",
+    paths: {},
+    definitions: {},
+    responses: {},
+    parameters: {},
+    securityDefinitions: {}
+}

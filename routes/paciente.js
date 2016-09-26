@@ -1,11 +1,11 @@
 "use strict";
 var express = require('express');
-var patient = require('../schemas/patient');
+var paciente = require('../schemas/paciente');
 var utils = require('../utils/utils');
 var router = express.Router();
-router.get('/patient/:id*?', function (req, res, next) {
+router.get('/paciente/:id*?', function (req, res, next) {
     if (req.params.id) {
-        patient.findById(req.params.id, function (err, data) {
+        paciente.findById(req.params.id, function (err, data) {
             if (err) {
                 next(err);
             }
@@ -36,7 +36,7 @@ router.get('/patient/:id*?', function (req, res, next) {
                 ];
             }
         }
-        query = patient.find(opciones);
+        query = paciente.find(opciones);
         query.exec(function (err, data) {
             if (err)
                 return next(err);
@@ -44,8 +44,8 @@ router.get('/patient/:id*?', function (req, res, next) {
         });
     }
 });
-router.post('/patient', function (req, res, next) {
-    var newPatient = new patient(req.body);
+router.post('/paciente', function (req, res, next) {
+    var newPatient = new paciente(req.body);
     newPatient.save(function (err) {
         if (err) {
             next(err);
@@ -53,19 +53,19 @@ router.post('/patient', function (req, res, next) {
         res.json(newPatient);
     });
 });
-router.put('/patient/:_id', function (req, res, next) {
-    patient.findByIdAndUpdate(req.params._id, req.body, function (err, data) {
+router.put('/paciente/:_id', function (req, res, next) {
+    paciente.findByIdAndUpdate(req.params._id, req.body, function (err, data) {
         if (err)
             return next(err);
         res.json(data);
     });
 });
-router.delete('/patient/:_id', function (req, res, next) {
-    patient.findByIdAndRemove(req.params._id, req.body, function (err, data) {
+router.delete('/paciente/:_id', function (req, res, next) {
+    paciente.findByIdAndRemove(req.params._id, req.body, function (err, data) {
         if (err)
             return next(err);
         res.json(data);
     });
 });
 module.exports = router;
-//# sourceMappingURL=patient.js.map
+//# sourceMappingURL=paciente.js.map
