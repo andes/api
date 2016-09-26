@@ -62,5 +62,11 @@ var profesionalSchema = new mongoose.Schema({
 
 })
 
+//Defino Virtuals
+profesionalSchema.virtual('nombreCompleto').get(function() {  
+    return this.nombre + ' ' + this.apellido;
+});
+
+
 var profesional = mongoose.model('profesional', profesionalSchema, 'profesional');
 export = profesional;
