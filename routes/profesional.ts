@@ -19,17 +19,17 @@ router.get('/profesional/:_id*?', function(req, res, next) {
         var opciones={};
 
         if (req.query.apellido) {
-             opciones = { 'apellido' : {'$regex': utils.makePattern(req.query.apellido)}};
+             opciones['apellido'] = {'$regex': utils.makePattern(req.query.apellido)};
         }
 
         if (req.query.fechaNacimiento){
-            opciones = {'fechaNacimiento': req.query.fechaNacimiento}
+            opciones['fechaNacimiento'] = req.query.fechaNacimiento
         }
 
         //if (req.query)
     }
     
-    
+    console.log(opciones);
     query = profesional.find(opciones);
 
 // opciones = {
