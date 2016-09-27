@@ -9,21 +9,26 @@ var router = express.Router();
  *   especialidad:
  *     properties:
  *       nombre:
- *         type: string
+ *          type: string
  *       descripcion:
- *         type: string
+ *          type: string
  *       complejidad:
- *         type: integer
+ *          type: integer
  *       disciplina:
- *         type: string
- *       codigo.sisa:
- *         type: string
+ *          type: string
+ *       codigo:
+ *          type: object
+ *          properties:
+ *              sisa:
+ *                  type: string
  *       habilitado:
- *         type: Boolean
+ *          type: Boolean
  *       fechaAlta: 
- *          type: Date
+ *          type: string
+ *          format: date
  *       fechaBaja: 
- *          type: Date
+ *          type: string
+ *          format: date
  */
 
 /**
@@ -42,7 +47,7 @@ var router = express.Router();
  *         description: El nombre o descripción de la especialidad
  *         required: false
  *         type: string
- *       - name: codigo.sisa
+ *       - name: sisa
  *         in: query
  *         description: El codigo sisa de la especialidad
  *         required: false
@@ -66,46 +71,35 @@ var router = express.Router();
  *         description: _Id de una especialidad
  *         required: true
  *         type: string
- *       - name: nombre
- *         in: query
- *         description: EL nombre o descripción de la especialidad
- *         required: false
- *         type: string
- *       - name: codigo.sisa
- *         in: query
- *         description: El codigo sisa de la especialidad
- *         required: false
- *         type: string
  *     responses:
  *       200:
  *         description: An array of especialidades
  *         schema:
  *           $ref: '#/definitions/especialidad'
  */
-router.get('/especialidad/:id*?', function(req, res, next) {
+router.get('/especialidad/:id*?', function (req, res, next) {
     if (req.params.id) {
-        
-        especialidad.findById(req.params.id, function (err, data) {
-        if (err) {
-            next(err);
-        };
 
-        res.json(data);
-    });
-    }
-    else{
+        especialidad.findById(req.params.id, function (err, data) {
+            if (err) {
+                next(err);
+            };
+
+            res.json(data);
+        });
+    } else {
         var query;
         query = especialidad.find({}); //Trae todos 
 
-            if (req.query.codigoSisa)
-                query.where('codigo.sisa').equals(req.query.codigoSisa);
-            if (req.query.nombre){
-                query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
-           }
-            query.exec((err, data)=> {
-                if (err) return next(err);
-                res.json(data);
-            });
+        if (req.query.sisa)
+            query.where('codigo.sisa').equals(req.query.sisa);
+        if (req.query.nombre) {
+            query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
+        }
+        query.exec((err, data) => {
+            if (err) return next(err);
+            res.json(data);
+        });
     }
 });
 
@@ -134,7 +128,7 @@ router.get('/especialidad/:id*?', function(req, res, next) {
  *         schema:
  *           $ref: '#/definitions/especialidad'
  */
-router.post('/especialidad', function(req, res, next) {
+router.post('/especialidad', function (req, res, next) {
     var newEspecialidad = new especialidad(req.body)
     newEspecialidad.save((err) => {
         if (err) {
@@ -174,8 +168,8 @@ router.post('/especialidad', function(req, res, next) {
  *         schema:
  *           $ref: '#/definitions/especialidad'
  */
-router.put('/especialidad/:id', function(req, res, next) {
-    especialidad.findByIdAndUpdate(req.params.id, req.body, function(err, data) {
+router.put('/especialidad/:id', function (req, res, next) {
+    especialidad.findByIdAndUpdate(req.params.id, req.body, function (err, data) {
         if (err) {
             return next(err);
         }
@@ -213,8 +207,8 @@ router.put('/especialidad/:id', function(req, res, next) {
  *         schema:
  *           $ref: '#/definitions/especialidad'
  */
-router.delete('/especialidad/:id', function(req, res, next) {
-    especialidad.findByIdAndRemove(req.params.id, req.body, function(err, data) {
+router.delete('/especialidad/:id', function (req, res, next) {
+    especialidad.findByIdAndRemove(req.params.id, req.body, function (err, data) {
         if (err) {
             return next(err);
         }
