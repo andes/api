@@ -55,7 +55,7 @@ var profesionalSchema = new mongoose.Schema({
         activo: Boolean,
         periodo: {
             inicio: Date,
-            end: Date
+            fin: Date
         },
 
     }],
