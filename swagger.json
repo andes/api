@@ -8,7 +8,54 @@
     basePath: "/",
     swagger: "2.0",
     paths: {},
-    definitions: {},
+    definitions: {
+        referencia:{
+            type: object,
+            properties:{
+                id:
+                    {type: string},
+                nombre:
+                    {type: string}
+            }
+        },
+        ubicacion:{
+            type: Object,
+            properties:{
+                barrio: {
+                    $ref: '#/definitions/referencia'
+                },
+                localidad: {
+                    $ref: '#/definitions/referencia'
+                },
+                provincia: {
+                    $ref: '#/definitions/referencia'
+                },
+                pais: {
+                    $ref: '#/definitions/referencia'
+                }
+            }
+        },
+        direccion: {
+            type: object,
+            properties:{
+                valor: 
+                    {type: string},
+                codigoPostal: 
+                    {type: string},
+                ubicacion: {
+                    $ref: '#/definitions/ubicacion'
+                    },
+                ranking: 
+                    {type: number},
+                geoReferencia:
+                    {type: [number]}, 
+                ultimaActualizacion: 
+                    {type: string,format: date },
+                activo: 
+                    {type: boolean}
+            }
+        }
+    },
     responses: {},
     parameters: {},
     securityDefinitions: {}

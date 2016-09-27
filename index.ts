@@ -19,6 +19,56 @@ var swaggerDefinition = {
   },
   host: 'localhost:3002',
   basePath: '/api',
+  definitions: {
+        "referencia":{
+            "type": "object",
+            "properties":{
+                "id":
+                    {"type": "string"},
+                "nombre":
+                    {"type": "string"}
+            }
+        },
+        "ubicacion":{
+            "type": "object",
+            "properties":{
+                "barrio": {
+                    $ref: '#/definitions/referencia'
+                },
+                "localidad": {
+                    $ref: '#/definitions/referencia'
+                },
+                "provincia": {
+                    $ref: '#/definitions/referencia'
+                },
+                "pais": {
+                    $ref: '#/definitions/referencia'
+                }
+            }
+        },
+        "direccion": {
+            "type": "object",
+            "properties":{
+                "valor": 
+                    {"type": "string"},
+                "codigoPostal": 
+                    {"type": "string"},
+                "ubicacion": {
+                    $ref: '#/definitions/ubicacion'
+                    },
+                "ranking": 
+                    {"type": "number"},
+                "geoReferencia":
+                    {"type": "array",
+                     "items": {"type":"number"}}, 
+                "ultimaActualizacion": 
+                    {"type": "string","format": "date" },
+                "activo": 
+                    {"type": "boolean"}
+            }
+        }
+    }
+  
 };
 
 // options for the swagger docs
@@ -27,6 +77,7 @@ var options = {
   swaggerDefinition: swaggerDefinition,
   // path to the API docs
   apis: ['./routes/*.js'],
+  
 };
 
 // initialize swagger-jsdoc

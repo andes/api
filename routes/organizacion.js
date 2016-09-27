@@ -1,0 +1,247 @@
+"use strict";
+var express = require('express');
+var organizacion = require('../schemas/organizacion');
+var utils = require('../utils/utils');
+var router = express.Router();
+/**
+ * @swagger
+ * definition:
+ *   organizacion:
+ *     properties:
+ *       codigo:
+ *          type: object
+ *          properties:
+ *            sisa:
+ *              type: number
+ *              format: float
+ *            cuie:
+ *              type: string
+ *            remediar:
+ *              type: string
+ *       nombre:
+ *          type: string
+ *       tipoEstablecimiento:
+ *          type: object
+ *          properties:
+ *            id:
+ *              type: string
+ *            nombre:
+ *              type: string
+ *       telecom:
+ *          type: array
+ *          items:
+ *              type: object
+ *              properties:
+ *                  tipo:
+ *                      type: string
+ *                      enum:
+ *                          -telefonoFijo
+ *                          -telefonoCelular
+ *                  valor:
+ *                      type: string
+ *                  ranking:
+ *                      type: number
+ *                      format: float
+ *                  ultimaActualizacion:
+ *                      type: string
+ *                      format: date
+ *                  activo:
+ *                      type: boolean
+ *       direccion:
+ *          type: array
+ *          items:
+ *              $ref: '#/definitions/direccion'
+ */
+/**
+ * @swagger
+ * /organizacion:
+ *   get:
+ *     tags:
+ *       - Organizacion
+ *     description: Retorna un arreglo de objetos organizacion
+ *     summary: Listar organizaciones
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: nombre
+ *         in: query
+ *         description: El nombre o descripción de la organizacion
+ *         required: false
+ *         type: string
+ *       - name: sisa
+ *         in: query
+ *         description: El codigo sisa de la organizacion
+ *         required: false
+ *         type: string
+ *     responses:
+ *       200:
+ *         description: un arreglo de objetos organizacion
+ *         schema:
+ *           $ref: '#/definitions/organizacion'
+ * /organizacion/{id}:
+ *   get:
+ *     tags:
+ *       - Organizacion
+ *     summary: Listar organizaciones con filtro por ID
+ *     description: Retorna un arreglo de objetos organizacion
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         description: _Id de una organizacion
+ *         required: true
+ *         type: string
+ *       - name: tipo
+ *         in: query
+ *         description: _Id de una organizacion
+ *         required: true
+ *         type: string
+ *
+ *     responses:
+ *       200:
+ *         description: An array of especialidades
+ *         schema:
+ *           $ref: '#/definitions/organizacion'
+ */
+router.get('/organizacion/:id*?', function (req, res, next) {
+    if (req.params.id) {
+        organizacion.findById(req.params.id, function (err, data) {
+            if (err) {
+                next(err);
+            }
+            ;
+            res.json(data);
+        });
+    }
+    else {
+        var query;
+        var opciones = {};
+        if (req.query.nombre) {
+            opciones['nombre'] = { '$regex': utils.makePattern(req.query.nombre) };
+        }
+        if (req.query.cuie) {
+            opciones['codigo.cuie'] = { '$regex': utils.makePattern(req.query.cuie) };
+        }
+        if (req.query.sisa) {
+            opciones['codigo.sisa'] = req.query.sisa;
+        }
+    }
+    console.log(opciones);
+    query = organizacion.find(opciones);
+    query.exec(function (err, data) {
+        if (err)
+            return next(err);
+        res.json(data);
+    });
+});
+/**
+ * @swagger
+ * /organizacion:
+ *   post:
+ *     tags:
+ *       - Organizacion
+ *     description: Cargar una organizacion
+ *     summary: Cargar una organizacion
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: organizacion
+ *         description: objeto organizacion
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/organizacion'
+ *     responses:
+ *       200:
+ *         description: Un objeto organizacion
+ *         schema:
+ *           $ref: '#/definitions/organizacion'
+ */
+router.post('/organizacion', function (req, res, next) {
+    var newOrganization = new organizacion(req.body);
+    newOrganization.save(function (err) {
+        if (err) {
+            next(err);
+        }
+        res.json(newOrganization);
+    });
+});
+/**
+ * @swagger
+ * /organizacion/{id}:
+ *   put:
+ *     tags:
+ *       - Organizacion
+ *     description: Actualizar una organizacion
+ *     summary: Actualizar una organizacion
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         description: Id de una organizacion
+ *         required: true
+ *         type: string
+ *       - name: organizacion
+ *         description: objeto organizacion
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/organizacion'
+ *     responses:
+ *       200:
+ *         description: Un objeto organizaciones
+ *         schema:
+ *           $ref: '#/definitions/organizacion'
+ */
+router.put('/organizacion/:id', function (req, res, next) {
+    organizacion.findByIdAndUpdate(req.params.id, req.body, function (err, data) {
+        if (err)
+            return next(err);
+        res.json(data);
+    });
+});
+/**
+ * @swagger
+ * /organizacion/{id}:
+ *   delete:
+ *     tags:
+ *       - Organizacion
+ *     description: Eliminar una organizacion
+ *     summary: Eliminar una organizacion
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         description: Id de una organizacion
+ *         required: true
+ *         type: string
+ *       - name: organizacion
+ *         description: objeto organizacion
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/organizacion'
+ *     responses:
+ *       200:
+ *         description: Un objeto organizaciones
+ *         schema:
+ *           $ref: '#/definitions/organizacion'
+ */
+router.delete('/organizacion/:_id', function (req, res, next) {
+    organizacion.findByIdAndRemove(req.params._id, req.body, function (err, data) {
+        if (err)
+            return next(err);
+        res.json(data);
+    });
+});
+module.exports = router;
+//# sourceMappingURL=organizacion.js.map
