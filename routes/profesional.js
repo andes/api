@@ -22,8 +22,6 @@ router.get('/profesional/:_id*?', function (req, res, next) {
         if (req.query.fechaNacimiento) {
             opciones = { 'fechaNacimiento': req.query.fechaNacimiento };
         }
-        if (req.query)
-            ;
     }
     query = profesional.find(opciones);
     // opciones = {

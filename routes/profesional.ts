@@ -26,7 +26,7 @@ router.get('/profesional/:_id*?', function(req, res, next) {
             opciones = {'fechaNacimiento': req.query.fechaNacimiento}
         }
 
-        if (req.query)
+        //if (req.query)
     }
     
     
