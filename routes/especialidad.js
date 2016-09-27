@@ -8,21 +8,26 @@ var router = express.Router();
  *   especialidad:
  *     properties:
  *       nombre:
- *         type: string
+ *          type: string
  *       descripcion:
- *         type: string
+ *          type: string
  *       complejidad:
- *         type: integer
+ *          type: integer
  *       disciplina:
- *         type: string
- *       codigo.sisa:
- *         type: string
+ *          type: string
+ *       codigo:
+ *          type: object
+ *          properties:
+ *              sisa:
+ *                  type: string
  *       habilitado:
- *         type: Boolean
+ *          type: Boolean
  *       fechaAlta:
- *          type: Date
+ *          type: string
+ *          format: date
  *       fechaBaja:
- *          type: Date
+ *          type: string
+ *          format: date
  */
 /**
  * @swagger
@@ -40,7 +45,7 @@ var router = express.Router();
  *         description: El nombre o descripción de la especialidad
  *         required: false
  *         type: string
- *       - name: codigo.sisa
+ *       - name: sisa
  *         in: query
  *         description: El codigo sisa de la especialidad
  *         required: false
@@ -64,16 +69,6 @@ var router = express.Router();
  *         description: _Id de una especialidad
  *         required: true
  *         type: string
- *       - name: nombre
- *         in: query
- *         description: EL nombre o descripción de la especialidad
- *         required: false
- *         type: string
- *       - name: codigo.sisa
- *         in: query
- *         description: El codigo sisa de la especialidad
- *         required: false
- *         type: string
  *     responses:
  *       200:
  *         description: An array of especialidades
@@ -93,8 +88,8 @@ router.get('/especialidad/:id*?', function (req, res, next) {
     else {
         var query;
         query = especialidad.find({}); //Trae todos 
-        if (req.query.codigoSisa)
-            query.where('codigo.sisa').equals(req.query.codigoSisa);
+        if (req.query.sisa)
+            query.where('codigo.sisa').equals(req.query.sisa);
         if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
         }
