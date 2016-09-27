@@ -16,39 +16,32 @@ router.get('/profesional/:_id*?', function (req, res, next) {
     else {
         var query;
         var opciones = {};
+        if (req.query.nombre) {
+            opciones['nombre'] = {
+                '$regex': utils.makePattern(req.query.nombre)
+            };
+        }
         if (req.query.apellido) {
-            opciones['apellido'] = { '$regex': utils.makePattern(req.query.apellido) };
+            opciones['apellido'] = {
+                '$regex': utils.makePattern(req.query.apellido)
+            };
+        }
+        if (req.query.documento) {
+            opciones['documento'] = utils.makePattern(req.query.documento);
         }
         if (req.query.fechaNacimiento) {
             opciones['fechaNacimiento'] = req.query.fechaNacimiento;
         }
+        if (req.query.numeroMatricula) {
+            opciones['matricula.numero'] = req.query.numeroMatricula;
+        }
+        if (req.query.especialidad) {
+            opciones['especialidad.nombre'] = {
+                '$regex': utils.makePattern(req.query.especialidad)
+            };
+        }
     }
-    console.log(opciones);
     query = profesional.find(opciones);
-    // opciones = {
-    //     apellido: {
-    //         $regex: '/^' + req.query.apellido + '/i'
-    //     }
-    // }
-    // if (req.query.documento)
-    //     query.where('documento').equals(req.query.documento);
-    // if (req.query.apellido)
-    //       query.where('apellido').equals(req.query.apellido);
-    // if (req.query.fechaNacimiento)
-    //     query.where('fechaNacimiento').equals(req.query.fechaNacimiento);
-    //var opciones = {};
-    // if (req.query.search) {
-    // opciones['$or'] = [{
-    //             "name.text": {
-    //                 "$regex": utils.makePattern(req.query.search)
-    //             }
-    //         }, {
-    //             "document.value": {
-    //                 "$regex": utils.makePattern(req.query.search)
-    //             }
-    //         }]
-    // }
-    //query = profesional.find(opciones);
     query.exec(function (err, data) {
         if (err)
             return next(err);
