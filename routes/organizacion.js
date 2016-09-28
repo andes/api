@@ -35,8 +35,9 @@ var router = express.Router();
  *                  tipo:
  *                      type: string
  *                      enum:
- *                          -telefonoFijo
- *                          -telefonoCelular
+ *                          - telefonoFijo
+ *                          - telefonoCelular
+ *                          - email
  *                  valor:
  *                      type: string
  *                  ranking:
@@ -51,6 +52,21 @@ var router = express.Router();
  *          type: array
  *          items:
  *              $ref: '#/definitions/direccion'
+ *       contacto:
+ *          type: array
+ *          items:
+ *              $ref: '#/definitions/contacto'
+ *       nivelComplejidad:
+ *          type: number
+ *          format: float
+ *       activo:
+ *          type: boolean
+ *       fechaAlta:
+ *          type: string
+ *          format: date
+ *       fechaBaja:
+ *          type: string
+ *          format: date
  */
 /**
  * @swagger
