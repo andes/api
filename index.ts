@@ -66,6 +66,25 @@ var swaggerDefinition = {
                 "activo": 
                     {"type": "boolean"}
             }
+        },
+        "contacto": {
+            "type": "object",
+            "properties":{
+                "proposito": 
+                    {"type": "String"},
+                "nombre":
+                    {"type": "String"},
+                "apellido":
+                    {"type": "String"},
+                "tipo":
+                    {"type": "String",
+                     "enum": ["telefonoFijo", "telefonoCelular", "email"]
+                    },
+                 "valor": 
+                    {"type": "string"},   
+                 "activo": 
+                    {"type": "boolean"}
+            }
         }
     }
   
