@@ -17,21 +17,40 @@ var router = express.Router();
  *       apellido:
  *         type: string
  *       contacto:
- *         tipo:
- *          type: string
- *         valor:
- *          type: string
- *         ranking:
- *          type: number
- *         contacto:
- *           type: string
- *           format: date
- *         activo:
- *          type: boolean
+ *         type: array
+ *         items:
+ *          type: object
+ *          properties:
+ *               tipo:
+ *                  type: string
+ *                  enum: [
+ *                      telefonoFijo,
+ *                      telefonoCelular,
+ *                      email
+ *                  ]
+ *               valor:
+ *                  type: string
+ *               ranking:
+ *                  type: number
+ *               ultimaActualizacion:
+ *                  type: string
+ *                  format: date
+ *               activo:
+ *                  type: boolean
  *       sexo:
  *         type: string
+ *         enum: [
+ *              femenino,
+ *              masculino,
+ *              otro
+ *         ]
  *       genero:
  *         type: string
+ *         enum: [
+ *           femenino,
+ *           masculino,
+ *           otro
+ *         ]
  *       fechaNacimiento:
  *         type: string
  *         format: date
@@ -39,46 +58,50 @@ var router = express.Router();
  *         type: string
  *         format: date
  *       direccion:
- *          valor:
- *           type:string
- *          codigoPostal:
- *           type:string
- *          ubicacion:
- *           type: ubicacionSchema
- *          ranking:
- *           type: number
- *          geoReferencia:
- *           type: [number]
- *          ultimaActualizacion:
- *           type: string
- *           format: date
- *          activo:
- *           type: boolean
+ *         type: array
+ *         items:
+ *             $ref: '#/definitions/direccion'
  *       estadoCivil:
  *         type: string
+ *         enum: [
+ *           casado,
+ *           separado,
+ *           divorciado,
+ *           viudo,
+ *           soltero,
+ *           otro
+ *           ]
  *       foto:
  *         type: string
  *       rol:
  *         type: string
  *       especialidad:
- *          id:
- *           type: string
- *          nombre:
- *           type: string
+ *          type: object
+ *          properties:
+ *            id:
+ *                type: string
+ *            nombre:
+ *                type: string
  *       matriculas:
- *          numero:
- *           type: number
- *          descripcion:
- *           type: string
- *          activo:
- *           type: boolean
- *          periodo:
- *              inicio:
- *                  type: string
- *                  format: date
- *              fin:
- *                  type: string
- *                  format: date
+ *          type: array
+ *          items:
+ *              type: object
+ *              properties:
+ *                  numero:
+ *                      type: number
+ *                  descripcion:
+ *                      type: string
+ *                  activo:
+ *                      type: boolean
+ *                  periodo:
+ *                      type: object
+ *                      properties:
+ *                          inicio:
+ *                              type: string
+ *                              format: date
+ *                          fin:
+ *                              type: string
+ *                              format: date
  */
 /**
  * @swagger
