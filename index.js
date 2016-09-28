@@ -4,6 +4,7 @@ var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
 var requireDir = require('require-dir');
 var swaggerJSDoc = require('swagger-jsdoc');
+var path = require('path');
 var app = express();
 mongoose.connect('mongodb://10.1.62.17/andes');
 // swagger definition
@@ -75,7 +76,7 @@ var options = {
     // import swaggerDefinitions
     swaggerDefinition: swaggerDefinition,
     // path to the API docs
-    apis: ['./routes/*.js'],
+    apis: [path.join(__dirname, '/routes/*.js')],
 };
 // initialize swagger-jsdoc
 var swaggerSpec = swaggerJSDoc(options);
