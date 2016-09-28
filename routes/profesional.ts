@@ -12,30 +12,33 @@ var router = express.Router();
  *       documento:
  *         type: string
  *       activo:
- *         type: Boolean
+ *         type: boolean
  *       nombre:
  *         type: string
  *       apellido:
  *         type: string
  *       contacto:
  *         tipo:
- *          type: String
+ *          type: string
  *         valor:
  *          type: string
  *         ranking: 
- *          type: Number
+ *          type: number
  *         contacto: 
-*           type: Date
+ *           type: string
+ *           format: date
  *         activo:
- *          type: Boolean
+ *          type: boolean
  *       sexo:
  *         type: string
  *       genero:
  *         type: string
  *       fechaNacimiento:
- *         type: Date
+ *         type: string
+ *         format: date
  *       fechaFallecimiento:
- *         type: Date
+ *         type: string
+ *         format: date
  *       direccion:
  *          valor:
  *           type:string
@@ -44,13 +47,14 @@ var router = express.Router();
  *          ubicacion:
  *           type: ubicacionSchema
  *          ranking:
- *           type: Number
+ *           type: number
  *          geoReferencia:
- *           type: [Number]
+ *           type: [number]
  *          ultimaActualizacion:
- *           type: Date
+ *           type: string
+ *           format: date
  *          activo:
- *           type: Boolean
+ *           type: boolean
  *       estadoCivil:
  *         type: string
  *       foto:
@@ -64,16 +68,18 @@ var router = express.Router();
  *           type: string
  *       matriculas:
  *          numero:
- *           type: Number
+ *           type: number
  *          descripcion:
  *           type: string
  *          activo:
- *           type: Boolean
+ *           type: boolean
  *          periodo:
  *              inicio:
- *                  type: Date
+ *                  type: string
+ *                  format: date
  *              fin:
- *                  type: Date
+ *                  type: string
+ *                  format: date
  */
 
 /**
@@ -95,7 +101,7 @@ var router = express.Router();
  *   get:
  *     tags:
  *       - Profesional
- *     summary: Lista el profesional por ID
+ *     summary: Lista el profesional por distintos filtros
  *     description: Retorna un objeto profesional
  *     produces:
  *       - application/json
@@ -104,21 +110,46 @@ var router = express.Router();
  *         in: path
  *         description: _Id de un profesional
  *         required: false
- *         type: string
+ *         type: string 
+ *       - name: nombre
+ *         in: query
+ *         description: nombre de un profesional
+ *         required: false
+ *         type: string 
+ *       - name: apellido
+ *         in: query
+ *         description: apellido de un profesional
+ *         required: false
+ *         type: string 
  *       - name: documento
  *         in: query
  *         description: documento del profesional
  *         required : false
  *         type: string
+ *       - name: fechaNacimiento
+ *         in: query
+ *         description: fecha de nacimiento del profesional
+ *         required : false
+ *         type: Date
+ *       - name: matriculas.numero
+ *         in: query
+ *         description: número de matrícula del profesional
+ *         required : false
+ *         type: Number  
+ *       - name: especialidad.nombre
+ *         in: query
+ *         description: especialidad del profesional
+ *         required : false
+ *         type: string    
  *     responses:
  *       200:
  *         description: Un objeto profesional
  *         schema:
  *           $ref: '#/definitions/profesional'
  */
-router.get('/profesional/:_id*?', function(req, res, next) {
+router.get('/profesional/:_id*?', function (req, res, next) {
     if (req.params.id) {
-        profesional.findById(req.params._id, function(err, data) {
+        profesional.findById(req.params._id, function (err, data) {
             if (err) {
                 next(err);
             };
@@ -159,20 +190,43 @@ router.get('/profesional/:_id*?', function(req, res, next) {
                 '$regex': utils.makePattern(req.query.especialidad)
             };
         }
-
-
     }
 
     query = profesional.find(opciones);
 
-    query.exec(function(err, data) {
+    query.exec(function (err, data) {
         if (err) return next(err);
         res.json(data);
     });
 
 });
 
-router.post('/profesional', function(req, res, next) {
+/**
+ * @swagger
+ * /profesional:
+ *   post:
+ *     tags:
+ *       - Profesional
+ *     description: Cargar una profesional
+ *     summary: Cargar una profesional
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: profesional
+ *         description: objeto especialidad
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/profesional'
+ *     responses:
+ *       200:
+ *         description: Un objeto profesional
+ *         schema:
+ *           $ref: '#/definitions/profesional'
+ */
+router.post('/profesional', function (req, res, next) {
     var newProfesional = new profesional(req.body);
     newProfesional.save((err) => {
         if (err) {
@@ -183,8 +237,38 @@ router.post('/profesional', function(req, res, next) {
     });
 });
 
-router.put('/profesional/:_id', function(req, res, next) {
-    profesional.findByIdAndUpdate(req.params._id, req.body, function(err, data) {
+/**
+ * @swagger
+ * /profesional/{id}:
+ *   put:
+ *     tags:
+ *       - Profesional
+ *     description: Actualizar una profesional
+ *     summary: Actualizar una profesional
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         description: Id de una profesional
+ *         required: true
+ *         type: string
+ *       - name: profesional
+ *         description: objeto profesional
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/profesional'
+ *     responses:
+ *       200:
+ *         description: Un objeto profesional
+ *         schema:
+ *           $ref: '#/definitions/profesional'
+ */
+router.put('/profesional/:_id', function (req, res, next) {
+    profesional.findByIdAndUpdate(req.params._id, req.body, function (err, data) {
         if (err)
             return next(err);
 
@@ -192,8 +276,38 @@ router.put('/profesional/:_id', function(req, res, next) {
     });
 });
 
-router.delete('/profesional/:_id', function(req, res, next) {
-    profesional.findByIdAndRemove(req.params._id, req.body, function(err, data) {
+/**
+ * @swagger
+ * /profesional/{id}:
+ *   delete:
+ *     tags:
+ *       - Profesional
+ *     description: Eliminar una profesional
+ *     summary: Eliminar una profesional
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         description: Id de una profesional
+ *         required: true
+ *         type: string
+ *       - name: profesional
+ *         description: objeto profesional
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/profesional'
+ *     responses:
+ *       200:
+ *         description: Un objeto profesional
+ *         schema:
+ *           $ref: '#/definitions/profesional'
+ */
+router.delete('/profesional/:_id', function (req, res, next) {
+    profesional.findByIdAndRemove(req.params._id, req.body, function (err, data) {
         if (err)
             return next(err);
 
