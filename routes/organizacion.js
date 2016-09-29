@@ -216,7 +216,7 @@ router.post('/organizacion', function (req, res, next) {
  *           $ref: '#/definitions/organizacion'
  */
 router.put('/organizacion/:id', function (req, res, next) {
-    organizacion.findByIdAndUpdate(req.params.id, req.body, function (err, data) {
+    organizacion.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
         if (err)
             return next(err);
         res.json(data);
@@ -240,12 +240,7 @@ router.put('/organizacion/:id', function (req, res, next) {
  *         description: Id de una organizacion
  *         required: true
  *         type: string
- *       - name: organizacion
- *         description: objeto organizacion
- *         in: body
- *         required: true
- *         schema:
- *           $ref: '#/definitions/organizacion'
+ *
  *     responses:
  *       200:
  *         description: Un objeto organizaciones
@@ -253,7 +248,7 @@ router.put('/organizacion/:id', function (req, res, next) {
  *           $ref: '#/definitions/organizacion'
  */
 router.delete('/organizacion/:_id', function (req, res, next) {
-    organizacion.findByIdAndRemove(req.params._id, req.body, function (err, data) {
+    organizacion.findByIdAndRemove(req.params._id, function (err, data) {
         if (err)
             return next(err);
         res.json(data);
