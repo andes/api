@@ -22,16 +22,6 @@ var pacienteSchema = new mongoose.Schema({
         ultimaActualizacion: Date,
         activo: Boolean
     }],
-    sexo: {
-        type: String,
-        enum: ["femenino", "masculino", "otro"]
-    },
-    genero: {
-        type: String,
-        enum: ["femenino", "masculino", "otro"]
-    }, // identidad autopercibida
-    fechaNacimiento: Date, // Fecha Nacimiento
-    fechaFallecimiento: Date,
     direccion: [{
         valor: String,
         codigoPostal: String,
@@ -44,6 +34,16 @@ var pacienteSchema = new mongoose.Schema({
         ultimaActualizacion: Date,
         activo: Boolean
     }],
+    sexo: {
+        type: String,
+        enum: ["femenino", "masculino", "otro"]
+    },
+    genero: {
+        type: String,
+        enum: ["femenino", "masculino", "otro"]
+    }, // identidad autopercibida
+    fechaNacimiento: Date, // Fecha Nacimiento
+    fechaFallecimiento: Date,
     estadoCivil: {
         type: String,
         enum: ["casado", "separado", "divorciado", "viudo", "soltero", "otro"]
