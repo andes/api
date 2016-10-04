@@ -1,11 +1,12 @@
 "use strict";
 var mongoose = require('mongoose');
 var provinciaSchema = new mongoose.Schema({
+    id: mongoose.Schema.Types.ObjectId,
     nombre: String,
-    localidades: [{
-            nombre: String,
-            codigoPostal: String
-        }]
+    pais: {
+        id: mongoose.Schema.Types.ObjectId,
+        nombre: String
+    }
 });
 var provincia = mongoose.model('provincia', provinciaSchema, 'provincia');
 module.exports = provincia;

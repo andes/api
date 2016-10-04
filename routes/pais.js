@@ -1,8 +1,7 @@
-import * as express from 'express'
-import * as pais from '../schemas/pais'
-
+"use strict";
+var express = require('express');
+var pais = require('../schemas/pais');
 var router = express.Router();
-
 /**
  * @swagger
  * definition:
@@ -13,7 +12,6 @@ var router = express.Router();
  *      nombre:
  *          type: string
  */
-
 /**
  * @swagger
  * /pais:
@@ -55,28 +53,28 @@ var router = express.Router();
  *         schema:
  *           $ref: '#/definitions/pais'
  */
-router.get('/pais/:id*?', function(req, res, next) {
-
-   if (req.params.id) {
-       pais.findById(req.params.id, function (err, data) {
-       if (err) {
-           next(err);
-       };
-
-       res.json(data);
-   });
-   }
-   else{
-       var query;
+router.get('/pais/:id*?', function (req, res, next) {
+    if (req.params.id) {
+        pais.findById(req.params.id, function (err, data) {
+            if (err) {
+                next(err);
+            }
+            ;
+            res.json(data);
+        });
+    }
+    else {
+        var query;
         query = pais.find({});
-        if (req.query.nombre){
+        if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
         }
-        query.exec((err, data)=> {
-           if (err) return next(err);
-           res.json(data);
+        query.exec(function (err, data) {
+            if (err)
+                return next(err);
+            res.json(data);
         });
-   }
+    }
 });
-
-export = router;
+module.exports = router;
+//# sourceMappingURL=pais.js.map

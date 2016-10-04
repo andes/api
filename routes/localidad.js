@@ -1,8 +1,7 @@
-import * as express from 'express'
-import * as localidad from '../schemas/localidad'
-
+"use strict";
+var express = require('express');
+var localidad = require('../schemas/localidad');
 var router = express.Router();
-
 /**
  * @swagger
  * definition:
@@ -14,14 +13,13 @@ var router = express.Router();
  *          type: string
  *      provincia:
  *          type: object
- *          properties: 
- *              id: 
+ *          properties:
+ *              id:
  *                  type: string
  *              nombre:
  *                  type: string
- * 
+ *
  */
-
 /**
  * @swagger
  * /localidad:
@@ -68,31 +66,31 @@ var router = express.Router();
  *         schema:
  *           $ref: '#/definitions/localidad'
  */
-router.get('/localidad/:id*?', function(req, res, next) {
-
-   if (req.params.id) {
-       localidad.findById(req.params.id, function (err, data) {
-       if (err) {
-           next(err);
-       };
-
-       res.json(data);
-   });
-   }
-   else{
-       var query;
+router.get('/localidad/:id*?', function (req, res, next) {
+    if (req.params.id) {
+        localidad.findById(req.params.id, function (err, data) {
+            if (err) {
+                next(err);
+            }
+            ;
+            res.json(data);
+        });
+    }
+    else {
+        var query;
         query = localidad.find({});
-        if (req.query.nombre){
+        if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
         }
-        if (req.query.provincia){
+        if (req.query.provincia) {
             query.where('provincia.id').equals(req.query.provincia);
         }
-        query.exec((err, data)=> {
-           if (err) return next(err);
-           res.json(data);
+        query.exec(function (err, data) {
+            if (err)
+                return next(err);
+            res.json(data);
         });
-   }
+    }
 });
-
-export = router;
+module.exports = router;
+//# sourceMappingURL=localidad.js.map
