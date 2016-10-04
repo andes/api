@@ -4,7 +4,7 @@ import * as ubicacionSchema from './ubicacion';
 var organizacionSchema = new mongoose.Schema({
     codigo:{
         sisa: {
-            type: Number,
+            type: String,
             required: true
         },
         cuie: String,
