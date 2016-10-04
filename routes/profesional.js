@@ -278,7 +278,7 @@ router.post('/profesional', function (req, res, next) {
  *           $ref: '#/definitions/profesional'
  */
 router.put('/profesional/:_id', function (req, res, next) {
-    profesional.findByIdAndUpdate(req.params._id, req.body, function (err, data) {
+    profesional.findByIdAndUpdate(req.params._id, req.body, { new: true }, function (err, data) {
         if (err)
             return next(err);
         res.json(data);
@@ -302,12 +302,7 @@ router.put('/profesional/:_id', function (req, res, next) {
  *         description: Id de una profesional
  *         required: true
  *         type: string
- *       - name: profesional
- *         description: objeto profesional
- *         in: body
- *         required: true
- *         schema:
- *           $ref: '#/definitions/profesional'
+ *
  *     responses:
  *       200:
  *         description: Un objeto profesional
@@ -315,7 +310,7 @@ router.put('/profesional/:_id', function (req, res, next) {
  *           $ref: '#/definitions/profesional'
  */
 router.delete('/profesional/:_id', function (req, res, next) {
-    profesional.findByIdAndRemove(req.params._id, req.body, function (err, data) {
+    profesional.findByIdAndRemove(req.params._id, function (err, data) {
         if (err)
             return next(err);
         res.json(data);

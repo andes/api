@@ -12,9 +12,19 @@ var router = express.Router();
  *          type: string
  *       activo:
  *          type: boolean
+ *       estado:
+ *          type: string
+ *          enum:
+ *              - temporal
+ *              - identificado
+ *              - validado
+ *              - recienNacido
+ *              - extranjero
  *       nombre:
  *          type: string
  *       apellido:
+ *          type: string
+ *       alias:
  *          type: string
  *       contacto:
  *          type: array
@@ -153,6 +163,8 @@ var router = express.Router();
  *         description: un arreglo de objetos paciente
  *         schema:
  *           $ref: '#/definitions/paciente'
+ *       400:
+ *         description: Error- Agregar parámetro de búsqueda
  *
  * /paciente/{id}:
  *   get:
@@ -211,6 +223,7 @@ router.get('/paciente/:id*?', function (req, res, next) {
             opciones["estado"] = req.query.estado;
         }
         if (!Object.keys(opciones).length) {
+            res.status(400).send("Debe ingresar al menos un parámetro");
             return next(400);
         }
         query = paciente.find(opciones);
@@ -286,7 +299,7 @@ router.post('/paciente', function (req, res, next) {
  *           $ref: '#/definitions/paciente'
  */
 router.put('/paciente/:id', function (req, res, next) {
-    paciente.findByIdAndUpdate(req.params.id, req.body, function (err, data) {
+    paciente.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
         if (err)
             return next(err);
         res.json(data);
@@ -310,12 +323,7 @@ router.put('/paciente/:id', function (req, res, next) {
  *         description: Id de un paciente
  *         required: true
  *         type: string
- *       - name: paciente
- *         description: objeto paciente
- *         in: body
- *         required: true
- *         schema:
- *           $ref: '#/definitions/paciente'
+ *
  *     responses:
  *       200:
  *         description: Un objeto paciente
@@ -323,7 +331,7 @@ router.put('/paciente/:id', function (req, res, next) {
  *           $ref: '#/definitions/paciente'
  */
 router.delete('/paciente/:id', function (req, res, next) {
-    paciente.findByIdAndRemove(req.params.id, req.body, function (err, data) {
+    paciente.findByIdAndRemove(req.params.id, function (err, data) {
         if (err)
             return next(err);
         res.json(data);

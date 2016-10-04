@@ -165,7 +165,7 @@ router.post('/especialidad', function (req, res, next) {
  *           $ref: '#/definitions/especialidad'
  */
 router.put('/especialidad/:id', function (req, res, next) {
-    especialidad.findByIdAndUpdate(req.params.id, req.body, function (err, data) {
+    especialidad.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
         if (err) {
             return next(err);
         }
@@ -190,12 +190,7 @@ router.put('/especialidad/:id', function (req, res, next) {
  *         description: Id de una especialidad
  *         required: true
  *         type: string
- *       - name: especialidad
- *         description: objeto especialidad
- *         in: body
- *         required: true
- *         schema:
- *           $ref: '#/definitions/especialidad'
+ *
  *     responses:
  *       200:
  *         description: Un objeto especialidades
@@ -203,7 +198,7 @@ router.put('/especialidad/:id', function (req, res, next) {
  *           $ref: '#/definitions/especialidad'
  */
 router.delete('/especialidad/:id', function (req, res, next) {
-    especialidad.findByIdAndRemove(req.params.id, req.body, function (err, data) {
+    especialidad.findByIdAndRemove(req.params.id, function (err, data) {
         if (err) {
             return next(err);
         }
