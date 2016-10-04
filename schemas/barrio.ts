@@ -1,14 +1,14 @@
 import * as mongoose from 'mongoose';
 
-var provinciaSchema = new mongoose.Schema({
+var barrioSchema = new mongoose.Schema({
     id: mongoose.Schema.Types.ObjectId,
     nombre: String,
-    pais: {
+    localidad: {
         id: mongoose.Schema.Types.ObjectId,
         nombre: String
     }
 });
 
-var provincia = mongoose.model('provincia', provinciaSchema, 'provincia');
+var barrio = mongoose.model('barrio', barrioSchema, 'barrio');
 
-export = provincia;
+export = barrio;

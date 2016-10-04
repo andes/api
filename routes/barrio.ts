@@ -1,12 +1,12 @@
 import * as express from 'express'
-import * as provincia from '../schemas/provincia'
+import * as barrio from '../schemas/barrio'
 
 var router = express.Router();
 
-router.get('/provincia/:id*?', function(req, res, next) {
+router.get('/barrio/:id*?', function(req, res, next) {
 
    if (req.params.id) {
-       provincia.findById(req.params.id, function (err, data) {
+       barrio.findById(req.params.id, function (err, data) {
        if (err) {
            next(err);
        };
@@ -16,12 +16,12 @@ router.get('/provincia/:id*?', function(req, res, next) {
    }
    else{
        var query;
-        query = provincia.find({});
+        query = barrio.find({});
         if (req.query.nombre){
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
         }
-        if (req.query.pais){
-            query.where('pais.id').equals(req.query.pais);
+        if (req.query.localidad){
+            query.where('localidad.id').equals(req.query.localidad);
         }
         query.exec((err, data)=> {
            if (err) return next(err);
