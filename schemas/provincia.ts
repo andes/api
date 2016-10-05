@@ -1,12 +1,9 @@
 import * as mongoose from 'mongoose';
+import * as lugarSchema from './lugar';
 
 var provinciaSchema = new mongoose.Schema({
-    id: mongoose.Schema.Types.ObjectId,
     nombre: String,
-    pais: {
-        id: mongoose.Schema.Types.ObjectId,
-        nombre: String
-    }
+    pais: lugarSchema
 });
 
 var provincia = mongoose.model('provincia', provinciaSchema, 'provincia');

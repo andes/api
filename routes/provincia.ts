@@ -1,5 +1,7 @@
+import * as mongoose from 'mongoose';
 import * as express from 'express'
 import * as provincia from '../schemas/provincia'
+import * as utils from '../utils/utils';
 
 var router = express.Router();
 /**
@@ -80,6 +82,7 @@ router.get('/provincia/:id*?', function(req, res, next) {
    }
    else{
        var query;
+      
         query = provincia.find({});
         if (req.query.nombre){
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
@@ -87,6 +90,7 @@ router.get('/provincia/:id*?', function(req, res, next) {
         if (req.query.pais){
             query.where('pais.id').equals(req.query.pais);
         }
+
         query.exec((err, data)=> {
            if (err) return next(err);
            res.json(data);

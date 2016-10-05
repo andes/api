@@ -1,7 +1,6 @@
 import * as mongoose from 'mongoose';
 
 var paisSchema = new mongoose.Schema({
-    id: mongoose.Schema.Types.ObjectId,
     nombre: String
 });
 

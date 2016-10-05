@@ -68,6 +68,7 @@ router.get('/pais/:id*?', function(req, res, next) {
    }
    else{
        var query;
+        
         query = pais.find({});
         if (req.query.nombre){
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));

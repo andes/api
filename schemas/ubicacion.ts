@@ -1,22 +1,10 @@
 import * as mongoose from 'mongoose';
+import * as lugarSchema from './lugar';
 
 var ubicacionSchema = new mongoose.Schema({  
-       barrio: {
-           id: mongoose.Schema.Types.ObjectId,
-           nombre: String
-       },
-       localidad: {
-           id: mongoose.Schema.Types.ObjectId,
-           nombre: String
-       },
-       provincia: {
-           id: mongoose.Schema.Types.ObjectId,
-           nombre: String
-       },
-        pais: {
-           id: mongoose.Schema.Types.ObjectId,
-           nombre: String
-       }
+    localidad:lugarSchema,
+    provincia:lugarSchema,
+    pais: lugarSchema
 });
 
 export = ubicacionSchema;

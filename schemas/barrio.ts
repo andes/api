@@ -1,12 +1,9 @@
 import * as mongoose from 'mongoose';
+import * as lugarSchema from './lugar';
 
 var barrioSchema = new mongoose.Schema({
-    id: mongoose.Schema.Types.ObjectId,
     nombre: String,
-    localidad: {
-        id: mongoose.Schema.Types.ObjectId,
-        nombre: String
-    }
+    localidad:lugarSchema
 });
 
 var barrio = mongoose.model('barrio', barrioSchema, 'barrio');
