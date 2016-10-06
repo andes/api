@@ -260,9 +260,16 @@ router.get('/paciente/:id*?', function (req, res, next) {
  *           $ref: '#/definitions/paciente'
  */
 router.post('/paciente', function (req, res, next) {
+    /** TODO: resolver el buscar a los tutores */
+    var arrTutor = req.body.tutor;
+    console.log(arrTutor);
+    var arrTutorSave = [];
     var newPatient = new paciente(req.body);
+    console.log("Objeto Paciente: ");
+    console.log(newPatient);
     newPatient.save(function (err) {
         if (err) {
+            console.log(err);
             next(err);
         }
         res.json(newPatient);

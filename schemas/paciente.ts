@@ -15,7 +15,7 @@ var pacienteSchema = new mongoose.Schema({
     contacto: [{
         tipo: {
             type: String,
-            enum: ["telefonoFijo", "telefonoCelular", "email"]
+            enum: ["Teléfono Fijo", "Teléfono Celular", "Email"]
         },
         valor: String,
         ranking: Number, // Specify preferred order of use (1 = highest) // Podemos usar el rank para guardar un historico de puntos de contacto (le restamos valor si no es actual???)
@@ -55,13 +55,16 @@ var pacienteSchema = new mongoose.Schema({
             enum: ["padre", "madre", "hijo", "tutor"]
         },
         referencia: {
-            type: Number,
+            type: mongoose.Schema.Types.ObjectId,
             ref: 'paciente'
         }
     }],
     financiador: [{ //obrasocial, plan sumar 
-        id: mongoose.Schema.Types.ObjectId,
-        nombre: String,
+        entidad: {
+            id: mongoose.Schema.Types.ObjectId,
+            nombre: String
+        },
+        codigo: String,
         activo: Boolean,
         fechaAlta: Date,
         fechaBaja: Date,
