@@ -9,7 +9,7 @@ var profesionalSchema = new mongoose.Schema({
     contacto: [{
             tipo: {
                 type: String,
-                enum: ["telefonoFijo", "telefonoCelular", "email"]
+                enum: ["telefonoFijo", "telefonoCelular", "email", ""]
             },
             valor: String,
             ranking: Number,
@@ -18,11 +18,11 @@ var profesionalSchema = new mongoose.Schema({
         }],
     sexo: {
         type: String,
-        enum: ["femenino", "masculino", "otro"]
+        enum: ["femenino", "masculino", "otro", ""]
     },
     genero: {
         type: String,
-        enum: ["femenino", "masculino", "otro"]
+        enum: ["femenino", "masculino", "otro", ""]
     },
     fechaNacimiento: Date,
     fechaFallecimiento: Date,
@@ -40,7 +40,7 @@ var profesionalSchema = new mongoose.Schema({
         }],
     estadoCivil: {
         type: String,
-        enum: ["casado", "separado", "divorciado", "viudo", "soltero", "otro"]
+        enum: ["casado", "separado", "divorciado", "viudo", "soltero", "otro", ""]
     },
     foto: String,
     rol: String,

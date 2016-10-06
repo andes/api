@@ -10,7 +10,7 @@ var profesionalSchema = new mongoose.Schema({
     contacto: [{
         tipo: {
             type: String,
-            enum: ["telefonoFijo", "telefonoCelular", "email"]
+            enum: ["telefonoFijo", "telefonoCelular", "email",""]
         },
         valor: String,
         ranking: Number, // Specify preferred order of use (1 = highest) // Podemos usar el rank para guardar un historico de puntos de contacto (le restamos valor si no es actual???)
@@ -19,11 +19,11 @@ var profesionalSchema = new mongoose.Schema({
     }],
     sexo: {
         type: String,
-        enum: ["femenino", "masculino", "otro"]
+        enum: ["femenino", "masculino", "otro",""]
     },
     genero: {
         type: String,
-        enum: ["femenino", "masculino", "otro"]
+        enum: ["femenino", "masculino", "otro",""]
     }, // identidad autopercibida
     fechaNacimiento: Date, // Fecha Nacimiento
     fechaFallecimiento: Date,
@@ -41,7 +41,7 @@ var profesionalSchema = new mongoose.Schema({
     }],
     estadoCivil: {
         type: String,
-        enum: ["casado", "separado", "divorciado", "viudo", "soltero", "otro"]
+        enum: ["casado", "separado", "divorciado", "viudo", "soltero", "otro",""]
     },
     foto: String,
     rol: String, //Ejemplo Jefe de Terapia intensiva
