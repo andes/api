@@ -36,7 +36,7 @@ var pacienteSchema = new mongoose.Schema({
         }],
     sexo: {
         type: String,
-        enum: ["femenino", "masculino", "otro"]
+        enum: ["femenino", "masculino", "otro", ""]
     },
     genero: {
         type: String,
@@ -52,12 +52,15 @@ var pacienteSchema = new mongoose.Schema({
     tutor: [{
             relacion: {
                 type: String,
-                enum: ["padre", "madre", "hijo", "tutor"]
+                enum: ["padre", "madre", "hijo", "hermano", "tutor"]
             },
             referencia: {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: 'paciente'
-            }
+            },
+            nombre: String,
+            apellido: String,
+            documento: String
         }],
     financiador: [{
             entidad: {
