@@ -12,8 +12,7 @@ var router = express.Router();
  *          type: object
  *          properties: 
  *            sisa:
- *              type: number
- *              format: float
+ *              type: string
  *            cuie:
  *              type: string
  *            remediar:
@@ -35,8 +34,8 @@ var router = express.Router();
  *                  tipo:
  *                      type: string
  *                      enum:
- *                          - telefonoFijo
- *                          - telefonoCelular
+ *                          - Teléfono Fijo
+ *                          - Teléfono Celular
  *                          - email
  *                  valor:
  *                      type: string
@@ -88,7 +87,7 @@ var router = express.Router();
  *       - name: sisa
  *         in: query
  *         description: El codigo sisa de la organizacion
- *         required: false
+ *         required: true
  *         type: string
  *     responses:
  *       200:
@@ -145,7 +144,7 @@ router.get('/organizacion/:id*?', function(req, res, next) {
         }
 
         if (req.query.sisa) {
-             opciones['codigo.sisa'] = req.query.sisa;
+             opciones['codigo.sisa'] = {'$regex': utils.makePattern(req.query.sisa)};
         }
     }
     console.log(opciones);
@@ -183,8 +182,10 @@ router.get('/organizacion/:id*?', function(req, res, next) {
  */
 router.post('/organizacion', function (req, res, next) {
     var newOrganization = new organizacion(req.body);
+    //console.log(req.body);
     newOrganization.save((err) => {
         if (err) {
+            //console.log(err);
             next(err);
         }
         res.json(newOrganization);

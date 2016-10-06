@@ -3,7 +3,7 @@ var express = require('express');
 var tipoEstablecimiento = require('../schemas/tipoEstablecimiento');
 var router = express.Router();
 router.get('/tipoEstablecimiento', function (req, res, next) {
-    tipoEstablecimiento.find({}, { _id: 0 }, function (err, data) {
+    tipoEstablecimiento.find({}, { nombre: 1 }, function (err, data) {
         if (err) {
             next(err);
         }
