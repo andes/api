@@ -18,7 +18,7 @@ var organizacionSchema = new mongoose.Schema({
     telecom: [{
             tipo: {
                 type: String,
-                enum: ["telefonoFijo", "telefonoCelular", "email"]
+                enum: ["", "Teléfono Fijo", "Teléfono Celular", "email"]
             },
             valor: String,
             ranking: Number,
@@ -44,7 +44,7 @@ var organizacionSchema = new mongoose.Schema({
             apellido: String,
             tipo: {
                 type: String,
-                enum: ["telefonoFijo", "telefonoCelular", "email"]
+                enum: ["", "Teléfono Fijo", "Teléfono Celular", "email"]
             },
             valor: String,
             activo: Boolean

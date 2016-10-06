@@ -4,7 +4,7 @@ import * as tipoEstablecimiento from '../schemas/tipoEstablecimiento'
 var router = express.Router();
 
 router.get('/tipoEstablecimiento', function (req, res, next) {
-    tipoEstablecimiento.find({},{_id:0}, (err, data) => {
+    tipoEstablecimiento.find({},{nombre:1}, (err, data) => {
         if (err) {
             next(err);
         };
