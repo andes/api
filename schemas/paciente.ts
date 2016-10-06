@@ -72,6 +72,10 @@ var pacienteSchema = new mongoose.Schema({
     }]
 });
 
+//Defino Virtuals
+pacienteSchema.virtual('nombreCompleto').get(function() {  
+    return this.nombre + ' ' + this.apellido;
+});
 
 //Creo un indice para fulltext Search
 pacienteSchema.index({

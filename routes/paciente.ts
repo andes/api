@@ -161,6 +161,15 @@ var router = express.Router();
  *              - validado
  *              - recienNacido
  *              - extranjero
+ *       - name: sexo
+ *         in: query
+ *         description: 
+ *         required: false
+ *         type: string
+ *         enum: 
+ *              - femenino
+ *              - masculino
+ *              - otro
  *     responses:
  *       200:
  *         description: un arreglo de objetos paciente
@@ -222,6 +231,9 @@ router.get('/paciente/:id*?', function (req, res, next) {
             opciones["fechaNacimiento"] = {
                 "$regex": utils.makePattern(req.query.fechaNacimiento)
             }
+        }
+        if (req.query.sexo) {
+            opciones["sexo"] = req.query.sexo;
         }
         if (req.query.estado) {
             opciones["estado"] = req.query.estado;
