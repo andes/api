@@ -26,7 +26,7 @@ var router = express.Router();
  *     parameters:
  *       - name: nombre
  *         in: query
- *         description: El nombre o descripción del barrio
+ *         description: El nombre o descripción del financiador
  *         required: false
  *         type: string
  *     responses:

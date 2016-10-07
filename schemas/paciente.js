@@ -15,7 +15,7 @@ var pacienteSchema = new mongoose.Schema({
     contacto: [{
             tipo: {
                 type: String,
-                enum: ["Teléfono Fijo", "Teléfono Celular", "Email"]
+                enum: ["Teléfono Fijo", "Teléfono Celular", "Email", ""]
             },
             valor: String,
             ranking: Number,
@@ -40,19 +40,19 @@ var pacienteSchema = new mongoose.Schema({
     },
     genero: {
         type: String,
-        enum: ["femenino", "masculino", "otro"]
+        enum: ["femenino", "masculino", "otro", ""]
     },
     fechaNacimiento: Date,
     fechaFallecimiento: Date,
     estadoCivil: {
         type: String,
-        enum: ["casado", "separado", "divorciado", "viudo", "soltero", "otro"]
+        enum: ["casado", "separado", "divorciado", "viudo", "soltero", "otro", ""]
     },
     foto: String,
-    tutor: [{
+    relaciones: [{
             relacion: {
                 type: String,
-                enum: ["padre", "madre", "hijo", "hermano", "tutor"]
+                enum: ["padre", "madre", "hijo", "hermano", "tutor", ""]
             },
             referencia: {
                 type: mongoose.Schema.Types.ObjectId,
