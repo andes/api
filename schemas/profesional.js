@@ -9,7 +9,7 @@ var profesionalSchema = new mongoose.Schema({
     contacto: [{
             tipo: {
                 type: String,
-                enum: ["Teléfono Fijo", "Teléfono Celular", "Email"]
+                enum: ["Teléfono Fijo", "Teléfono Celular", "Email", ""]
             },
             valor: String,
             ranking: Number,
