@@ -253,6 +253,7 @@ router.post('/profesional', function (req, res, next) {
     var newProfesional = new profesional(req.body);
     newProfesional.save((err) => {
         if (err) {
+            //console.log(err);
             next(err);
         }
 
