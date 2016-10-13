@@ -245,7 +245,7 @@ router.get('/paciente/:id*?', function (req, res, next) {
             return next(400);
         }
 
-        query = paciente.find(opciones);
+        query = paciente.find(opciones).sort({apellido: 1, nombre: 1});
 
         query.exec(function (err, data) {
             if (err) return next(err);
