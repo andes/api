@@ -1,5 +1,5 @@
 import * as express from 'express'
-import * as prestacion from '../schemas/turnos/prestacion'
+import * as prestacion from '../../schemas/turnos/prestacion'
 
 var router = express.Router();
 
@@ -10,7 +10,7 @@ router.get('/prestacion/:id*?', function (req, res, next) {
                 next(err);
             };
 
-            res.json(data);
+            res.json(data); 
         });
     } else {
         var query;
@@ -43,5 +43,14 @@ router.put('/prestacion/:id', function (req, res, next) {
         res.json(data);
     });
 });
+
+router.delete('/prestacion/:_id', function (req, res, next) {
+    prestacion.findByIdAndRemove(req.params._id, function (err, data) {
+        if (err)
+            return next(err);
+
+        res.json(data);
+    });
+})
 
 export = router;

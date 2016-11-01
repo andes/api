@@ -1,5 +1,5 @@
 import * as express from 'express'
-import * as configPrestacion from '../schemas/turnos/configPrestacion'
+import * as configPrestacion from '../../schemas/turnos/configPrestacion'
 
 var router = express.Router();
 

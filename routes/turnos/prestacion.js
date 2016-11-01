@@ -1,6 +1,6 @@
 "use strict";
 var express = require('express');
-var prestacion = require('../schemas/turnos/prestacion');
+var prestacion = require('../../schemas/turnos/prestacion');
 var router = express.Router();
 router.get('/prestacion/:id*?', function (req, res, next) {
     if (req.params.id) {
@@ -39,6 +39,13 @@ router.put('/prestacion/:id', function (req, res, next) {
         if (err) {
             return next(err);
         }
+        res.json(data);
+    });
+});
+router.delete('/prestacion/:_id', function (req, res, next) {
+    prestacion.findByIdAndRemove(req.params._id, function (err, data) {
+        if (err)
+            return next(err);
         res.json(data);
     });
 });

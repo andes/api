@@ -3,10 +3,12 @@ import * as express from 'express'
 import * as bodyParser from 'body-parser'
 import * as mongoose from 'mongoose'
 
+
 var requireDir = require('require-dir');
 var swaggerJSDoc = require('swagger-jsdoc');
 var path = require('path');
 var app = express();
+var config = require('./config');
 
 mongoose.connect('mongodb://10.1.62.17/andes');
 mongoose.plugin(require('./plugins/defaults'));
@@ -102,7 +104,6 @@ var options = {
 // initialize swagger-jsdoc
 var swaggerSpec = swaggerJSDoc(options);
 
-
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
     extended: true
@@ -118,9 +119,18 @@ app.all('*', function(req, res, next) {
     next();
 });
 
-var routes = requireDir('./routes/');
+//leo el archivo de configuracion
+
+//var routes = requireDir('./routes/');
+var routes = requireDir(config.routesRoot);
 for (var route in routes)
     app.use('/api', routes[route]);
+
+if (config.turnos.habilitado){
+    var routes = requireDir(config.turnos.route);
+    for (var route in routes)
+        app.use(config.turnos.rutaAPI, routes[route]);
+}
 
 //serve swagger
 app.get('/swagger.json', function(req, res) {

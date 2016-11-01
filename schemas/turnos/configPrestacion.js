@@ -2,21 +2,61 @@
 var mongoose = require('mongoose');
 var configPrestacionSchema = new mongoose.Schema({
     prestacion: {
-        id: mongoose.Schema.Types.ObjectId,
-        nombre: String
+        // type: lugarSchema,//genera un _id con otro id por eso no quedo asi
+        type: {
+            id: mongoose.Schema.Types.ObjectId,
+            nombre: String
+        },
+        required: true
     },
-    deldiaAccesoDirecto: Boolean,
-    deldiaAdmision: Boolean,
-    deldiaSeguimiento: Boolean,
-    deldiaAutocitado: Boolean,
-    programadosAccesoDirecto: Boolean,
-    programadosAdmision: Boolean,
-    programadosSeguimiento: Boolean,
-    programadosAutocitado: Boolean,
-    demandaAccesoDirecto: Boolean,
-    demandaAdmision: Boolean,
-    demandaSeguimiento: Boolean,
-    demandaAutocitado: Boolean
+    deldiaAccesoDirecto: {
+        type: Boolean,
+        default: false
+    },
+    deldiaAdmision: {
+        type: Boolean,
+        default: false
+    },
+    deldiaSeguimiento: {
+        type: Boolean,
+        default: false
+    },
+    deldiaAutocitado: {
+        type: Boolean,
+        default: false
+    },
+    programadosAccesoDirecto: {
+        type: Boolean,
+        default: false
+    },
+    programadosAdmision: {
+        type: Boolean,
+        default: false
+    },
+    programadosSeguimiento: {
+        type: Boolean,
+        default: false
+    },
+    programadosAutocitado: {
+        type: Boolean,
+        default: false
+    },
+    demandaAccesoDirecto: {
+        type: Boolean,
+        default: false
+    },
+    demandaAdmision: {
+        type: Boolean,
+        default: false
+    },
+    demandaSeguimiento: {
+        type: Boolean,
+        default: false
+    },
+    demandaAutocitado: {
+        type: Boolean,
+        default: false
+    }
 });
 var configPrestacion = mongoose.model('formato', configPrestacionSchema, 'configPrestacion');
 module.exports = configPrestacion;
