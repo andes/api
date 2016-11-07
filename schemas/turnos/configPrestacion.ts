@@ -16,11 +16,7 @@ var configPrestacionSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    deldiaAdmision: {
-        type: Boolean,
-        default: false
-    },
-    deldiaSeguimiento:{
+    deldiaReservado: {
         type: Boolean,
         default: false
     },
@@ -33,11 +29,7 @@ var configPrestacionSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    programadosAdmision: {
-        type: Boolean,
-        default: false
-    },
-    programadosSeguimiento: {
+    programadosReservado: {
         type: Boolean,
         default: false
     },
@@ -46,22 +38,22 @@ var configPrestacionSchema = new mongoose.Schema({
         default: false
     },
     
-    demandaAccesoDirecto: {
-        type: Boolean,
-        default: false
-    },
-    demandaAdmision: {
-        type: Boolean,
-        default: false
-    },
-    demandaSeguimiento: {
-        type: Boolean,
-        default: false
-    },
-    demandaAutocitado: {
-        type: Boolean,
-        default: false
-    }
+    // demandaAccesoDirecto: {
+    //     type: Boolean,
+    //     default: false
+    // },
+    // demandaAdmision: {
+    //     type: Boolean,
+    //     default: false
+    // },
+    // demandaSeguimiento: {
+    //     type: Boolean,
+    //     default: false
+    // },
+    // demandaAutocitado: {
+    //     type: Boolean,
+    //     default: false
+    // }
 });
 
 var configPrestacion = mongoose.model('formato', configPrestacionSchema, 'configPrestacion');

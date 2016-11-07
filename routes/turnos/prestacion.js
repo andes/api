@@ -14,7 +14,7 @@ router.get('/prestacion/:id*?', function (req, res, next) {
     }
     else {
         var query;
-        query = prestacion.find({}); //Trae todos 
+        query = prestacion.find({}, { id: 1, nombre: 1 }); //Trae todos 
         if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
         }
