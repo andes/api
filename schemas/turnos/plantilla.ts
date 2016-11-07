@@ -1,10 +1,7 @@
 import * as mongoose from 'mongoose';
 
-var programacionSchema = new mongoose.Schema({  
-    dia: {
-        type: Date,
-        required: true
-    },
+var plantillaSchema = new mongoose.Schema({  
+    
     prestaciones: [{
         id: mongoose.Schema.Types.ObjectId,
         nombre: String
@@ -15,10 +12,12 @@ var programacionSchema = new mongoose.Schema({
         nombre: String,
         apellido: String
     }],
+
     espacioFisico: {
         id: mongoose.Schema.Types.ObjectId,
         nombre: String
     },
+
     descripcion: String,
     bloques:[{
         horaInicio: Date,
@@ -29,24 +28,19 @@ var programacionSchema = new mongoose.Schema({
             id: mongoose.Schema.Types.ObjectId,
             nombre: String
         },
+        
         deldiaAccesoDirecto: Number,
-        deldiaAdmision: Number,
-        deldiaSeguimiento: Number,
-        deldiaAutocitado: Number,
+        deldiaReservado: Number,
         programadosAccesoDirecto: Number,
-        programadosAdmision: Number,
-        programadosSeguimiento: Number,
+        programadosReservado: Number,
         programadosAutocitado: Number,
-        demandaAccesoDirecto: Number,
-        demandaAdmision: Number,
-        demandaSeguimiento: Number,
-        demandaAutocitado: Number,
+
         pacienteSimultaneos: Boolean,
         cantidadSimultaneos: Number,
         citarPorBloque: Boolean
     }]
 });
 
-var programacion = mongoose.model('formato', programacionSchema, 'programacion');
+var plantilla = mongoose.model('formato', plantillaSchema, 'plantilla');
 
-export = programacion;
+export = plantilla;
