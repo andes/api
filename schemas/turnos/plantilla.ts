@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
 
-var plantillaSchema = new mongoose.Schema({  
-    
+var plantillaSchema = new mongoose.Schema({
+
     prestaciones: [{
         id: mongoose.Schema.Types.ObjectId,
         nombre: String
@@ -19,7 +19,7 @@ var plantillaSchema = new mongoose.Schema({
     },
 
     descripcion: String,
-    bloques:[{
+    bloques: [{
         horaInicio: Date,
         horaFin: Date,
         cantidadTurnos: Number,
@@ -28,7 +28,7 @@ var plantillaSchema = new mongoose.Schema({
             id: mongoose.Schema.Types.ObjectId,
             nombre: String
         },
-        
+
         deldiaAccesoDirecto: Number,
         deldiaReservado: Number,
         programadosAccesoDirecto: Number,
@@ -41,6 +41,6 @@ var plantillaSchema = new mongoose.Schema({
     }]
 });
 
-var plantilla = mongoose.model('formato', plantillaSchema, 'plantilla');
+var plantilla = mongoose.model('plantilla', plantillaSchema, 'plantilla');
 
 export = plantilla;
