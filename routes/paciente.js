@@ -1,4 +1,5 @@
 "use strict";
+var validatePatient_1 = require('./../utils/validatePatient');
 var express = require('express');
 var paciente = require('../schemas/paciente');
 var utils = require('../utils/utils');
@@ -80,7 +81,7 @@ var router = express.Router();
  *              - otro
  *       foto:
  *          type: string
- *       tutor:
+ *       relaciones:
  *          type: array
  *          items:
  *              type: object
@@ -238,7 +239,10 @@ router.get('/paciente/:id*?', function (req, res, next) {
             res.status(400).send("Debe ingresar al menos un parámetro");
             return next(400);
         }
-        query = paciente.find(opciones).sort({ apellido: 1, nombre: 1 });
+        query = paciente.find(opciones).sort({
+            apellido: 1,
+            nombre: 1
+        });
         query.exec(function (err, data) {
             if (err)
                 return next(err);
@@ -270,23 +274,37 @@ router.get('/paciente/:id*?', function (req, res, next) {
  *         description: Un objeto paciente
  *         schema:
  *           $ref: '#/definitions/paciente'
+ *       409:
+ *         description: Un código de error con un array de mensajes de error
  */
 router.post('/paciente', function (req, res, next) {
     /** TODO: resolver el buscar a los tutores */
     var arrRel = req.body.relaciones;
-    console.log(arrRel);
     var arrTutorSave = [];
-    arrRel;
-    var newPatient = new paciente(req.body);
-    console.log("Objeto Paciente: ");
-    console.log(newPatient);
-    newPatient.save(function (err) {
-        if (err) {
-            console.log(err);
-            next(err);
-        }
-        res.json(newPatient);
-    });
+    //Validación de campos del paciente del lado de la api
+    var continues = validatePatient_1.ValidatePatient.checkPatient(req.body);
+    if (continues.valid) {
+        var newPatient = new paciente(req.body);
+        newPatient.save(function (err) {
+            if (err) {
+                next(err);
+            }
+            res.json(newPatient);
+        });
+    }
+    else {
+        //Devuelvo el conjunto de mensajes de error junto con el código
+        var err = {
+            status: "409",
+            messages: continues.errors
+        };
+        var errores = "";
+        continues.errors.forEach(function (element) {
+            errores = errores + " | " + element;
+        });
+        res.status(409).send("Errores de validación: " + errores);
+        return next(err);
+    }
 });
 /**
  * @swagger
@@ -319,11 +337,30 @@ router.post('/paciente', function (req, res, next) {
  *           $ref: '#/definitions/paciente'
  */
 router.put('/paciente/:id', function (req, res, next) {
-    paciente.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
-        if (err)
-            return next(err);
-        res.json(data);
-    });
+    //Validación de campos del paciente del lado de la api
+    var continues = validatePatient_1.ValidatePatient.checkPatient(req.body);
+    if (continues.valid) {
+        paciente.findByIdAndUpdate(req.params.id, req.body, {
+            new: true
+        }, function (err, data) {
+            if (err)
+                return next(err);
+            res.json(data);
+        });
+    }
+    else {
+        //Devuelvo el conjunto de mensajes de error junto con el código
+        var err = {
+            status: "409",
+            messages: continues.errors
+        };
+        var errores = "";
+        continues.errors.forEach(function (element) {
+            errores = errores + " | " + element;
+        });
+        res.status(409).send("Errores de validación: " + errores);
+        return next(err);
+    }
 });
 /**
  * @swagger
