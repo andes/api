@@ -1,3 +1,6 @@
+import {
+    ValidatePatient
+} from './../utils/validatePatient';
 import * as express from 'express'
 import * as paciente from '../schemas/paciente';
 import * as utils from '../utils/utils';
@@ -81,7 +84,7 @@ var router = express.Router();
  *              - otro
  *       foto:
  *          type: string
- *       tutor:
+ *       relaciones:
  *          type: array
  *          items:
  *              type: object
@@ -239,13 +242,15 @@ router.get('/paciente/:id*?', function (req, res, next) {
             opciones["estado"] = req.query.estado;
         }
 
-        if(!Object.keys(opciones).length)
-        {
+        if (!Object.keys(opciones).length) {
             res.status(400).send("Debe ingresar al menos un parámetro");
             return next(400);
         }
 
-        query = paciente.find(opciones).sort({apellido: 1, nombre: 1});
+        query = paciente.find(opciones).sort({
+            apellido: 1,
+            nombre: 1
+        });
 
         query.exec(function (err, data) {
             if (err) return next(err);
@@ -281,27 +286,44 @@ router.get('/paciente/:id*?', function (req, res, next) {
  *         description: Un objeto paciente
  *         schema:
  *           $ref: '#/definitions/paciente'
+ *       409:
+ *         description: Un código de error con un array de mensajes de error
  */
+
+
 router.post('/paciente', function (req, res, next) {
-   /** TODO: resolver el buscar a los tutores */
+    /** TODO: resolver el buscar a los tutores */
     var arrRel = req.body.relaciones;
-    console.log(arrRel);
     var arrTutorSave = [];
-    arrRel
+    //Validación de campos del paciente del lado de la api
+    var continues = ValidatePatient.checkPatient(req.body);
 
-
-    var newPatient = new paciente(req.body);
-    console.log("Objeto Paciente: ");
-    console.log(newPatient);
-    newPatient.save((err) => {
-        if (err) {
-            console.log(err);
-            next(err);
+    if (continues.valid) {
+        var newPatient = new paciente(req.body);
+        newPatient.save((err) => {
+            if (err) {
+                next(err);
+            }
+            res.json(newPatient);
+        });
+    } else {
+        //Devuelvo el conjunto de mensajes de error junto con el código
+        var err = {
+            status: "409",
+            messages: continues.errors
         }
-        res.json(newPatient);
-    });
-});
 
+        var errores = "";
+        continues.errors.forEach(element => {
+            errores = errores + " | " + element
+        });
+
+        res.status(409).send("Errores de validación: " + errores)
+        return next(err)
+
+    }
+
+});
 
 /**
  * @swagger
@@ -334,12 +356,34 @@ router.post('/paciente', function (req, res, next) {
  *           $ref: '#/definitions/paciente'
  */
 router.put('/paciente/:id', function (req, res, next) {
-    paciente.findByIdAndUpdate(req.params.id, req.body, {new:true}, function (err, data) {
-        if (err)
-            return next(err);
 
-        res.json(data);
-    });
+    //Validación de campos del paciente del lado de la api
+    var continues = ValidatePatient.checkPatient(req.body);
+    if (continues.valid) {
+        paciente.findByIdAndUpdate(req.params.id, req.body, {
+            new: true
+        }, function (err, data) {
+            if (err)
+                return next(err);
+            res.json(data);
+        });
+    } else {
+        //Devuelvo el conjunto de mensajes de error junto con el código
+        var err = {
+            status: "409",
+            messages: continues.errors
+        }
+        
+        var errores = "";
+        continues.errors.forEach(element => {
+            errores = errores + " | " + element
+        });
+
+        res.status(409).send("Errores de validación: " + errores)
+        return next(err)
+
+    }
+
 });
 
 /**
