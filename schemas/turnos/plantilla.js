@@ -28,9 +28,9 @@ var plantillaSchema = new mongoose.Schema({
             },
             deldiaAccesoDirecto: Number,
             deldiaReservado: Number,
-            programadosAccesoDirecto: Number,
-            programadosReservado: Number,
-            programadosAutocitado: Number,
+            progAccesoDirecto: Number,
+            progReservado: Number,
+            progAutocitado: Number,
             pacienteSimultaneos: Boolean,
             cantidadSimultaneos: Number,
             citarPorBloque: Boolean
