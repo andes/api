@@ -19,6 +19,8 @@ var plantillaSchema = new mongoose.Schema({
     },
 
     descripcion: String,
+    horaInicio: Date,
+    horaFin: Date,
     bloques: [{
         horaInicio: Date,
         horaFin: Date,
@@ -31,9 +33,9 @@ var plantillaSchema = new mongoose.Schema({
 
         deldiaAccesoDirecto: Number,
         deldiaReservado: Number,
-        programadosAccesoDirecto: Number,
-        programadosReservado: Number,
-        programadosAutocitado: Number,
+        progAccesoDirecto: Number,
+        progReservado: Number,
+        progAutocitado: Number,
 
         pacienteSimultaneos: Boolean,
         cantidadSimultaneos: Number,

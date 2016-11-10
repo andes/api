@@ -15,6 +15,8 @@ var plantillaSchema = new mongoose.Schema({
         nombre: String
     },
     descripcion: String,
+    horaInicio: Date,
+    horaFin: Date,
     bloques: [{
             horaInicio: Date,
             horaFin: Date,
