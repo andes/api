@@ -72,7 +72,9 @@ var pacienteSchema = new mongoose.Schema({
         fechaAlta: Date,
         fechaBaja: Date,
         ranking: Number,
-    }]
+    }],
+    claveBlocking: [String],
+    entidadesValidadoras: [String]
 });
 
 //Defino Virtuals

@@ -65,6 +65,7 @@ var ValidatePatient = (function () {
                     errors.push("Existe al menos un tipo de parentezco que no pertenece al conjunto enumerado");
                     break;
                 }
+                long = long + 1;
             }
         }
         if (patient.contacto) {
@@ -75,6 +76,7 @@ var ValidatePatient = (function () {
                     errors.push("Existe al menos un tipo de contacto que no pertenece al conjunto enumerado");
                     break;
                 }
+                long = long + 1;
             }
         }
         return {

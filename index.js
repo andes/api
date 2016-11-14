@@ -66,7 +66,7 @@ var swaggerDefinition = {
                 "nombre": { "type": "String" },
                 "apellido": { "type": "String" },
                 "tipo": { "type": "String",
-                    "enum": ["telefonoFijo", "telefonoCelular", "email"]
+                    "enum": ["Teléfono Fijo", "Teléfono Celular", "Email"]
                 },
                 "valor": { "type": "string" },
                 "activo": { "type": "boolean" }

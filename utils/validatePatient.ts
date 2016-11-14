@@ -80,6 +80,7 @@ export class ValidatePatient {
                     errors.push("Existe al menos un tipo de parentezco que no pertenece al conjunto enumerado");
                     break;
                 }
+                long = long + 1;
             }
 
         }
@@ -87,12 +88,12 @@ export class ValidatePatient {
         if (patient.contacto) {
             let long = 0;
             while(patient.contacto.length > long){
-
                 if(tipoContacto.indexOf(patient.contacto[long].tipo) < 0){
                     valid = false;
                     errors.push("Existe al menos un tipo de contacto que no pertenece al conjunto enumerado");
                     break;
                 }
+                long = long + 1;
             }
            
         }

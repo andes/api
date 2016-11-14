@@ -38,9 +38,9 @@ var router = express.Router();
  *                  tipo:
  *                      type: string
  *                      enum:
- *                          - telefonoFijo
- *                          - telefonoCelular
- *                          - email
+ *                          - Teléfono Fijo
+ *                          - Teléfono Celular
+ *                          - Email
  *                  valor:
  *                      type: string
  *                  ranking:
@@ -96,8 +96,14 @@ var router = express.Router();
  *                          - madre
  *                          - hijo
  *                          - tutor
- *                  referencia:
- *                      type: number
+ *                  referencia: 
+ *                      $ref: '#/definitions/referencia'
+ *                  nombre:
+ *                      type: string
+ *                  apellido:
+ *                      type: string
+ *                  documento:
+ *                      type: string
  *       financiador:
  *          type: array
  *          items:
@@ -117,7 +123,14 @@ var router = express.Router();
  *                      format: date
  *                  ranking:
  *                      type: number
- * 
+ *       claveBloking:
+ *          type: array
+ *          items:
+ *              type: string
+ *       entidadesValidadoras:
+ *          type: array
+ *          items:
+ *              type: string
  */
 
 
@@ -295,9 +308,11 @@ router.post('/paciente', function (req, res, next) {
     /** TODO: resolver el buscar a los tutores */
     var arrRel = req.body.relaciones;
     var arrTutorSave = [];
+
+
     //Validación de campos del paciente del lado de la api
     var continues = ValidatePatient.checkPatient(req.body);
-
+    console.log(continues.errors);
     if (continues.valid) {
         var newPatient = new paciente(req.body);
         newPatient.save((err) => {
