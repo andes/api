@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
 
 var plantillaSchema = new mongoose.Schema({
-
+    nombre: String,
     prestaciones: [{
         id: mongoose.Schema.Types.ObjectId,
         nombre: String
@@ -18,7 +18,6 @@ var plantillaSchema = new mongoose.Schema({
         nombre: String
     },
 
-    descripcion: String,
     horaInicio: Date,
     horaFin: Date,
     bloques: [{

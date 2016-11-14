@@ -1,6 +1,7 @@
 "use strict";
 var mongoose = require('mongoose');
 var plantillaSchema = new mongoose.Schema({
+    nombre: String,
     prestaciones: [{
             id: mongoose.Schema.Types.ObjectId,
             nombre: String
@@ -14,7 +15,6 @@ var plantillaSchema = new mongoose.Schema({
         id: mongoose.Schema.Types.ObjectId,
         nombre: String
     },
-    descripcion: String,
     horaInicio: Date,
     horaFin: Date,
     bloques: [{
