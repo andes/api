@@ -1,5 +1,5 @@
 import * as express from 'express'
-import * as consultorio from '../../schemas/turnos/consultorio'
+import * as consultorio from '../../../schemas/turnos/consultorio'
 
 var router = express.Router();
 
