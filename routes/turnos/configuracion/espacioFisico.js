@@ -1,10 +1,10 @@
 "use strict";
 var express = require('express');
-var consultorio = require('../../schemas/turnos/consultorio');
+var espacioFisico = require('../../../schemas/turnos/espacioFisico');
 var router = express.Router();
-router.get('/consultorio/:id*?', function (req, res, next) {
+router.get('/espacioFisico/:id*?', function (req, res, next) {
     if (req.params.id) {
-        consultorio.findById(req.params.id, function (err, data) {
+        espacioFisico.findById(req.params.id, function (err, data) {
             if (err) {
                 next(err);
             }
@@ -14,7 +14,7 @@ router.get('/consultorio/:id*?', function (req, res, next) {
     }
     else {
         var query;
-        query = consultorio.find({}); //Trae todos 
+        query = espacioFisico.find({}); //Trae todos 
         if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
         }
@@ -25,29 +25,29 @@ router.get('/consultorio/:id*?', function (req, res, next) {
         });
     }
 });
-router.post('/consultorio', function (req, res, next) {
-    var newConsultorio = new consultorio(req.body);
-    newConsultorio.save(function (err) {
+router.post('/espacioFisico', function (req, res, next) {
+    var newespacioFisico = new espacioFisico(req.body);
+    newespacioFisico.save(function (err) {
         if (err) {
             return next(err);
         }
-        res.json(newConsultorio);
+        res.json(newespacioFisico);
     });
 });
-router.put('/consultorio/:id', function (req, res, next) {
-    consultorio.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
+router.put('/espacioFisico/:id', function (req, res, next) {
+    espacioFisico.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
         if (err) {
             return next(err);
         }
         res.json(data);
     });
 });
-router.delete('/consultorio/:_id', function (req, res, next) {
-    consultorio.findByIdAndRemove(req.params._id, function (err, data) {
+router.delete('/espacioFisico/:_id', function (req, res, next) {
+    espacioFisico.findByIdAndRemove(req.params._id, function (err, data) {
         if (err)
             return next(err);
         res.json(data);
     });
 });
 module.exports = router;
-//# sourceMappingURL=consultorio.js.map
+//# sourceMappingURL=espacioFisico.js.map
