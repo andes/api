@@ -5,9 +5,8 @@ var espacioFisicoSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    descripcion: String,
-    activo: Boolean
+    descripcion: String
 });
-var espacioFisico = mongoose.model('consultorio', espacioFisicoSchema, 'consultorio');
+var espacioFisico = mongoose.model('espacioFisico', espacioFisicoSchema, 'espacioFisico');
 module.exports = espacioFisico;
 //# sourceMappingURL=espacioFisico.js.map

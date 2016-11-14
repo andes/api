@@ -1,10 +1,10 @@
 "use strict";
 var express = require('express');
-var espacioFisico = require('../../../schemas/turnos/espacioFisico');
+var espacioFisico = require('../../schemas/turnos/espacioFisico');
 var router = express.Router();
-router.get('/espacioFisico/:id*?', function (req, res, next) {
-    if (req.params.id) {
-        espacioFisico.findById(req.params.id, function (err, data) {
+router.get('/espacioFisico/:_id*?', function (req, res, next) {
+    if (req.params._id) {
+        espacioFisico.findById(req.params._id, function (err, data) {
             if (err) {
                 next(err);
             }

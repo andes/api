@@ -1,11 +1,11 @@
 import * as express from 'express'
-import * as espacioFisico from '../../../schemas/turnos/espacioFisico'
+import * as espacioFisico from '../../schemas/turnos/espacioFisico'
 
 var router = express.Router();
 
-router.get('/espacioFisico/:id*?', function (req, res, next) {
-    if (req.params.id) {
-        espacioFisico.findById(req.params.id, function (err, data) {
+router.get('/espacioFisico/:_id*?', function (req, res, next) {
+    if (req.params._id) {
+        espacioFisico.findById(req.params._id, function (err, data) {
             if (err) {
                 next(err);
             };
