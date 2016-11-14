@@ -9,4 +9,12 @@ public static validateDate(date) {
         }
     }
 
+public static obtenerFecha(fechaStr){
+      var numbers = fechaStr.match(/\d+/g);
+      var date = new Date(numbers[2], numbers[1]-1, numbers[0]);
+      return date;
+
+    }
+
+
 }

@@ -1,6 +1,10 @@
 import {
     ValidatePatient
 } from './../utils/validatePatient';
+import {
+    ValidateFormatDate
+} from './../utils/validateFormatDate';
+
 import * as express from 'express'
 import * as paciente from '../schemas/paciente';
 import * as utils from '../utils/utils';
@@ -314,6 +318,8 @@ router.post('/paciente', function (req, res, next) {
     var continues = ValidatePatient.checkPatient(req.body);
     console.log(continues.errors);
     if (continues.valid) {
+       req.body.fechaNacimiento = ValidateFormatDate.obtenerFecha(req.body.fechaNacimiento);
+
         var newPatient = new paciente(req.body);
         newPatient.save((err) => {
             if (err) {

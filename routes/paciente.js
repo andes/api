@@ -1,5 +1,6 @@
 "use strict";
 var validatePatient_1 = require('./../utils/validatePatient');
+var validateFormatDate_1 = require('./../utils/validateFormatDate');
 var express = require('express');
 var paciente = require('../schemas/paciente');
 var utils = require('../utils/utils');
@@ -298,6 +299,7 @@ router.post('/paciente', function (req, res, next) {
     var continues = validatePatient_1.ValidatePatient.checkPatient(req.body);
     console.log(continues.errors);
     if (continues.valid) {
+        req.body.fechaNacimiento = validateFormatDate_1.ValidateFormatDate.obtenerFecha(req.body.fechaNacimiento);
         var newPatient = new paciente(req.body);
         newPatient.save(function (err) {
             if (err) {
