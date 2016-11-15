@@ -26,12 +26,13 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
     }
 });
 router.post('/espacioFisico', function (req, res, next) {
-    var newespacioFisico = new espacioFisico(req.body);
-    newespacioFisico.save(function (err) {
+    var newEspacioFisico = new espacioFisico(req.body);
+    newEspacioFisico.save(function (err) {
         if (err) {
             return next(err);
         }
-        res.json(newespacioFisico);
+        res.json(newEspacioFisico);
+        console.log(newEspacioFisico);
     });
 });
 router.put('/espacioFisico/:id', function (req, res, next) {
