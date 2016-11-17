@@ -5,11 +5,8 @@ var prestacionSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    activo: Boolean,
-    especialidad: {
-        id: mongoose.Schema.Types.ObjectId,
-        nombre: String
-    }
+    descripcion: String,
+    activo: Boolean
 });
 var prestacion = mongoose.model('prestacion', prestacionSchema, 'prestacion');
 module.exports = prestacion;

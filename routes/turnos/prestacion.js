@@ -2,9 +2,9 @@
 var express = require('express');
 var prestacion = require('../../schemas/turnos/prestacion');
 var router = express.Router();
-router.get('/prestacion/:id*?', function (req, res, next) {
+router.get('/prestacion/:_id*?', function (req, res, next) {
     if (req.params.id) {
-        prestacion.findById(req.params.id, function (err, data) {
+        prestacion.findById(req.params._id, function (err, data) {
             if (err) {
                 next(err);
             }
@@ -14,7 +14,7 @@ router.get('/prestacion/:id*?', function (req, res, next) {
     }
     else {
         var query;
-        query = prestacion.find({}, { id: 1, nombre: 1 }); //Trae todos 
+        query = prestacion.find({}); //Trae todos 
         if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
         }
