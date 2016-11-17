@@ -26,11 +26,10 @@ var plantillaSchema = new mongoose.Schema({
                 id: mongoose.Schema.Types.ObjectId,
                 nombre: String
             },
-            deldiaAccesoDirecto: Number,
-            deldiaReservado: Number,
-            progAccesoDirecto: Number,
-            progReservado: Number,
-            progAutocitado: Number,
+            accesoDirectoDelDia: Number,
+            accesoDirectoProgramado: Number,
+            reservadoProgramado: Number,
+            reservadoProfesional: Number,
             pacienteSimultaneos: Boolean,
             cantidadSimultaneos: Number,
             citarPorBloque: Boolean
