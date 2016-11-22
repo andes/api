@@ -7,7 +7,7 @@ var swaggerJSDoc = require('swagger-jsdoc');
 var path = require('path');
 var app = express();
 var config = require('./config');
-// mongoose.connect('mongodb://localhost/andes')
+//mongoose.connect('mongodb://localhost/andes')
 mongoose.connect('mongodb://10.1.62.17/andes');
 mongoose.plugin(require('./plugins/defaults'));
 // swagger definition
@@ -53,8 +53,10 @@ var swaggerDefinition = {
                     $ref: '#/definitions/ubicacion'
                 },
                 "ranking": { "type": "number" },
-                "geoReferencia": { "type": "array",
-                    "items": { "type": "number" } },
+                "geoReferencia": {
+                    "type": "array",
+                    "items": { "type": "number" }
+                },
                 "ultimaActualizacion": { "type": "string", "format": "date" },
                 "activo": { "type": "boolean" }
             }
@@ -65,7 +67,8 @@ var swaggerDefinition = {
                 "proposito": { "type": "String" },
                 "nombre": { "type": "String" },
                 "apellido": { "type": "String" },
-                "tipo": { "type": "String",
+                "tipo": {
+                    "type": "String",
                     "enum": ["Teléfono Fijo", "Teléfono Celular", "Email"]
                 },
                 "valor": { "type": "string" },

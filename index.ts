@@ -10,31 +10,31 @@ var path = require('path');
 var app = express();
 var config = require('./config');
 
-// mongoose.connect('mongodb://localhost/andes')
+//mongoose.connect('mongodb://localhost/andes')
 mongoose.connect('mongodb://10.1.62.17/andes');
 mongoose.plugin(require('./plugins/defaults'));
 // swagger definition
 var swaggerDefinition = {
-  info: {
-    title: 'API ANDES',
-    version: '1.0.0',
-    description: 'APIs de tablas maestras ANDES',
-  },
-  host: 'localhost:3002',
-  basePath: '/api',
-  definitions: {
-        "referencia":{
+    info: {
+        title: 'API ANDES',
+        version: '1.0.0',
+        description: 'APIs de tablas maestras ANDES',
+    },
+    host: 'localhost:3002',
+    basePath: '/api',
+    definitions: {
+        "referencia": {
             "type": "object",
-            "properties":{
+            "properties": {
                 "id":
-                    {"type": "string"},
+                { "type": "string" },
                 "nombre":
-                    {"type": "string"}
+                { "type": "string" }
             }
         },
-        "ubicacion":{
+        "ubicacion": {
             "type": "object",
-            "properties":{
+            "properties": {
                 "barrio": {
                     $ref: '#/definitions/referencia'
                 },
@@ -51,55 +51,58 @@ var swaggerDefinition = {
         },
         "direccion": {
             "type": "object",
-            "properties":{
-                "valor": 
-                    {"type": "string"},
-                "codigoPostal": 
-                    {"type": "string"},
+            "properties": {
+                "valor":
+                { "type": "string" },
+                "codigoPostal":
+                { "type": "string" },
                 "ubicacion": {
                     $ref: '#/definitions/ubicacion'
-                    },
-                "ranking": 
-                    {"type": "number"},
+                },
+                "ranking":
+                { "type": "number" },
                 "geoReferencia":
-                    {"type": "array",
-                     "items": {"type":"number"}}, 
-                "ultimaActualizacion": 
-                    {"type": "string","format": "date" },
-                "activo": 
-                    {"type": "boolean"}
+                {
+                    "type": "array",
+                    "items": { "type": "number" }
+                },
+                "ultimaActualizacion":
+                { "type": "string", "format": "date" },
+                "activo":
+                { "type": "boolean" }
             }
         },
         "contacto": {
             "type": "object",
-            "properties":{
-                "proposito": 
-                    {"type": "String"},
+            "properties": {
+                "proposito":
+                { "type": "String" },
                 "nombre":
-                    {"type": "String"},
+                { "type": "String" },
                 "apellido":
-                    {"type": "String"},
+                { "type": "String" },
                 "tipo":
-                    {"type": "String",
-                     "enum": ["Teléfono Fijo", "Teléfono Celular", "Email"]
-                    },
-                 "valor": 
-                    {"type": "string"},   
-                 "activo": 
-                    {"type": "boolean"}
+                {
+                    "type": "String",
+                    "enum": ["Teléfono Fijo", "Teléfono Celular", "Email"]
+                },
+                "valor":
+                { "type": "string" },
+                "activo":
+                { "type": "boolean" }
             }
         }
     }
-  
+
 };
 
 // options for the swagger docs
 var options = {
-  // import swaggerDefinitions
-  swaggerDefinition: swaggerDefinition,
-  // path to the API docs
-   apis: [path.join(__dirname,'/routes/*.js')],
-  
+    // import swaggerDefinitions
+    swaggerDefinition: swaggerDefinition,
+    // path to the API docs
+    apis: [path.join(__dirname, '/routes/*.js')],
+
 };
 
 // initialize swagger-jsdoc
@@ -110,11 +113,11 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 
-app.all('*', function(req, res, next) {
+app.all('*', function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header('Access-Control-Allow-Methods', 'OPTIONS,GET,POST,PUT,DELETE');
     res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
-    if ('OPTIONS' == req.method){
+    if ('OPTIONS' == req.method) {
         return res.send(200);
     }
     next();
@@ -127,16 +130,16 @@ var routes = requireDir(config.routesRoot);
 for (var route in routes)
     app.use('/api', routes[route]);
 
-if (config.turnos.habilitado){
+if (config.turnos.habilitado) {
     var routes = requireDir(config.turnos.route);
     for (var route in routes)
         app.use(config.turnos.rutaAPI, routes[route]);
 }
 
 //serve swagger
-app.get('/swagger.json', function(req, res) {
-  res.setHeader('Content-Type', 'application/json');
-  res.send(swaggerSpec);
+app.get('/swagger.json', function (req, res) {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerSpec);
 });
 
 //Incluimos swagger-ui
