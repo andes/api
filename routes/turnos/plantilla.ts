@@ -40,8 +40,28 @@ router.get('/plantilla/:id*?', function (req, res, next) {
         var query;
         query = plantilla.find({}); //Trae todos
 
+
+
+        if (req.query.fechaDesde) {
+            console.log(req.query.fechaDesde);
+            query.where('horaInicio').gte(req.query.fechaDesde);
+        }
+
+        if (req.query.fechaHasta) {
+            console.log(req.query.fechaHasta);
+            query.where('horaFin').lte(req.query.fechaHasta);
+        }
+
+        if (req.query.idEspacioFisico) {
+            query.where('espacioFisico.id').equals(req.query.idEspacioFisico);
+        }
+
         if (req.query.idProfesional) {
             query.where('profesionales.id').equals(req.query.idProfesional);
+        }
+
+        if (req.query.idPrestacion) {
+            query.where('prestaciones.id').equals(req.query.idPrestacion);
         }
 
         // if (req.query.nombre) {

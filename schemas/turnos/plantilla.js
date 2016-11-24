@@ -33,7 +33,11 @@ var plantillaSchema = new mongoose.Schema({
             pacienteSimultaneos: Boolean,
             cantidadSimultaneos: Number,
             citarPorBloque: Boolean
-        }]
+        }],
+    estado: {
+        type: String,
+        enum: ["", "Planificada", "Publicada"]
+    }
 });
 var plantilla = mongoose.model('plantilla', plantillaSchema, 'plantilla');
 module.exports = plantilla;
