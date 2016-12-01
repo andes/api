@@ -2,26 +2,6 @@
 var express = require('express');
 var plantilla = require('../../schemas/turnos/plantilla');
 var router = express.Router();
-// router.get('/plantilla/:id*?', function (req, res, next) {
-//     if (req.params.id) {
-//         plantilla.findById(req.params.id, function (err, data) {
-//             if (err) {
-//                 next(err);
-//             };
-//             res.json(data);
-//         });
-//     } else {
-//         var query;
-//         query = plantilla.find({}); //Trae todos 
-//         if (req.query.prestacion) {
-//             query.where('prestacion.nombre').equals(RegExp('^.*' + req.query.prestacion + '.*$', "i"));
-//         }
-//         query.exec((err, data) => {
-//             if (err) return next(err);
-//             res.json(data);
-//         });
-//     }
-// });
 router.get('/plantilla/:id*?', function (req, res, next) {
     if (req.params.id) {
         plantilla.findById(req.params.id, function (err, data) {
@@ -49,9 +29,9 @@ router.get('/plantilla/:id*?', function (req, res, next) {
         if (req.query.idProfesional) {
             query.where('profesionales.id').equals(req.query.idProfesional);
         }
-        if (req.query.idPrestacion) {
-            query.where('prestaciones.id').equals(req.query.idPrestacion);
-        }
+        // if (req.query.idPrestacion) {
+        //     query.where('prestaciones.id').equals(req.query.idPrestacion);
+        // }
         // if (req.query.nombre) {
         //     query.where('profesionales.nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
         // }

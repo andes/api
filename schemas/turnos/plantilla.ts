@@ -24,10 +24,10 @@ var plantillaSchema = new mongoose.Schema({
         horaFin: Date,
         cantidadTurnos: Number,
         descripcion: String,
-        prestacion: {
+        prestaciones: [{
             id: mongoose.Schema.Types.ObjectId,
             nombre: String
-        },
+        }],
 
         accesoDirectoDelDia: Number,
         accesoDirectoProgramado: Number,
