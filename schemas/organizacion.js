@@ -1,6 +1,7 @@
 "use strict";
 var mongoose = require('mongoose');
 var ubicacionSchema = require('./ubicacion');
+mongoose.set('debug', true);
 var organizacionSchema = new mongoose.Schema({
     codigo: {
         sisa: {
@@ -48,6 +49,31 @@ var organizacionSchema = new mongoose.Schema({
             },
             valor: String,
             activo: Boolean
+        }],
+    edificio: [{
+            descripcion: String,
+            telefono: {
+                tipo: {
+                    type: String,
+                    enum: ["", "Teléfono Fijo", "Teléfono Celular", "email"]
+                },
+                valor: String,
+                ranking: Number,
+                ultimaActualizacion: Date,
+                activo: Boolean
+            },
+            direccion: {
+                valor: String,
+                codigoPostal: String,
+                ubicacion: ubicacionSchema,
+                ranking: Number,
+                geoReferencia: {
+                    type: [Number],
+                    index: '2d'
+                },
+                ultimaActualizacion: Date,
+                activo: Boolean
+            },
         }],
     nivelComplejidad: Number,
     activo: Boolean,

@@ -29,12 +29,6 @@ router.get('/plantilla/:id*?', function (req, res, next) {
         if (req.query.idProfesional) {
             query.where('profesionales.id').equals(req.query.idProfesional);
         }
-        // if (req.query.idPrestacion) {
-        //     query.where('prestaciones.id').equals(req.query.idPrestacion);
-        // }
-        // if (req.query.nombre) {
-        //     query.where('profesionales.nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
-        // }
         if (!Object.keys(query).length) {
             res.status(400).send("Debe ingresar al menos un parámetro");
             return next(400);
