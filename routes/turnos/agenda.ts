@@ -1,13 +1,13 @@
 import * as express from 'express'
-import * as plantilla from '../../schemas/turnos/plantilla'
+import * as agenda from '../../schemas/turnos/agenda'
 import * as utils from '../../utils/utils';
 
 var router = express.Router();
 
-router.get('/plantilla/:id*?', function (req, res, next) {
+router.get('/agenda/:id*?', function (req, res, next) {
     if (req.params.id) {
 
-        plantilla.findById(req.params.id, function (err, data) {
+        agenda.findById(req.params.id, function (err, data) {
             if (err) {
                 next(err);
             };
@@ -16,7 +16,7 @@ router.get('/plantilla/:id*?', function (req, res, next) {
         });
     } else {
         var query;
-        query = plantilla.find({}); //Trae todos
+        query = agenda.find({}); //Trae todos
 
         if (req.query.fechaDesde) {
             console.log(req.query.fechaDesde);
@@ -41,7 +41,7 @@ router.get('/plantilla/:id*?', function (req, res, next) {
             return next(400);
         }
 
-        query = plantilla.find(query).sort({
+        query = agenda.find(query).sort({
             fechaDesde: 1,
             fechaHasta: 1
         });
@@ -54,19 +54,19 @@ router.get('/plantilla/:id*?', function (req, res, next) {
 });
 
 
-router.post('/plantilla', function (req, res, next) {
-    var newPlantilla = new plantilla(req.body)
-    newPlantilla.save((err) => {
+router.post('/agenda', function (req, res, next) {
+    var newAgenda = new agenda(req.body)
+    newAgenda.save((err) => {
         if (err) {
             return next(err);
         }
-        res.json(newPlantilla);
+        res.json(newAgenda);
     })
-    console.log(newPlantilla);
+    console.log(newAgenda);
 });
 
-router.put('/plantilla/:_id', function (req, res, next) {
-    plantilla.findByIdAndUpdate(req.params._id, req.body, { new: true }, function (err, data) {
+router.put('/agenda/:_id', function (req, res, next) {
+    agenda.findByIdAndUpdate(req.params._id, req.body, { new: true }, function (err, data) {
         if (err) {
             return next(err);
         }
@@ -74,8 +74,8 @@ router.put('/plantilla/:_id', function (req, res, next) {
     });
 });
 
-router.delete('/plantilla/:_id', function (req, res, next) {
-    plantilla.findByIdAndRemove(req.params._id, req.body, function (err, data) {
+router.delete('/agenda/:_id', function (req, res, next) {
+    agenda.findByIdAndRemove(req.params._id, req.body, function (err, data) {
         if (err)
             return next(err);
 

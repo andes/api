@@ -1,6 +1,6 @@
 "use strict";
 var mongoose = require('mongoose');
-var plantillaSchema = new mongoose.Schema({
+var agendaSchema = new mongoose.Schema({
     nombre: String,
     prestaciones: [{
             id: mongoose.Schema.Types.ObjectId,
@@ -39,6 +39,6 @@ var plantillaSchema = new mongoose.Schema({
         enum: ["", "Planificada", "Publicada"]
     }
 });
-var plantilla = mongoose.model('plantilla', plantillaSchema, 'plantilla');
-module.exports = plantilla;
-//# sourceMappingURL=plantilla.js.map
+var agenda = mongoose.model('agenda', agendaSchema, 'agenda');
+module.exports = agenda;
+//# sourceMappingURL=agenda.js.map
