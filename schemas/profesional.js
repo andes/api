@@ -52,10 +52,8 @@ var profesionalSchema = new mongoose.Schema({
             numero: Number,
             descripcion: String,
             activo: Boolean,
-            periodo: {
-                inicio: Date,
-                fin: Date
-            },
+            fechaInicio: Date,
+            fechaVencimiento: Date
         }],
 });
 //Defino Virtuals
