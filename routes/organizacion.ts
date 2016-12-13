@@ -122,14 +122,12 @@ var router = express.Router();
  */
 router.get('/organizacion/:id*?', function(req, res, next) {
     if (req.params.id) {
-        
         organizacion.findById(req.params.id, function (err, data) {
-        if (err) {
-            next(err);
-        };
-
-        res.json(data);
-    });
+            if (err) {
+                next(err);
+            }
+            res.json(data);
+        });
     }
     else {
         var query;
@@ -146,13 +144,13 @@ router.get('/organizacion/:id*?', function(req, res, next) {
         if (req.query.sisa) {
              opciones['codigo.sisa'] = {'$regex': utils.makePattern(req.query.sisa)};
         }
+        console.log(opciones);
+        query = organizacion.find(opciones);
+        query.exec(function(err, data) {
+            if (err) return next(err);
+            res.json(data);
+        });
     }
-    console.log(opciones);
-    query = organizacion.find(opciones);
-    query.exec(function(err, data) {
-        if (err) return next(err);
-        res.json(data);
-    });
 });
 
 /**
@@ -223,7 +221,8 @@ router.post('/organizacion', function (req, res, next) {
  *           $ref: '#/definitions/organizacion'
  */
 router.put('/organizacion/:id', function (req, res, next) {
-    organizacion.findByIdAndUpdate(req.params.id, req.body, {new:true}, function (err, data) {
+    console.log(req.body);
+    organizacion.findByIdAndUpdate(req.params.id, req.body, function (err, data) {
         if (err)
             return next(err);
 

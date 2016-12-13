@@ -10,8 +10,8 @@ var path = require('path');
 var app = express();
 var config = require('./config');
 
-//mongoose.connect('mongodb://localhost/andes')
-mongoose.connect('mongodb://10.1.62.17/andes');
+mongoose.connect('mongodb://localhost/andes')
+//mongoose.connect('mongodb://10.1.62.17/andes');
 mongoose.plugin(require('./plugins/defaults'));
 // swagger definition
 var swaggerDefinition = {

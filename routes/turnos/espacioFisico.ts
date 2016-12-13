@@ -37,7 +37,7 @@ router.post('/espacioFisico', function (req, res, next) {
 });
 
 router.put('/espacioFisico/:id', function (req, res, next) {
-    espacioFisico.findByIdAndUpdate(req.params.id, req.body, {new:true}, function (err, data) {
+    espacioFisico.findByIdAndUpdate(req.params.id, req.body, function (err, data) {
         if (err) {
             return next(err);
         }

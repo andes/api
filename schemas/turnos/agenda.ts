@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-var plantillaSchema = new mongoose.Schema({
+var agendaSchema = new mongoose.Schema({
     nombre: String,
     prestaciones: [{
         id: mongoose.Schema.Types.ObjectId,
@@ -44,6 +44,6 @@ var plantillaSchema = new mongoose.Schema({
     }
 });
 
-var plantilla = mongoose.model('plantilla', plantillaSchema, 'plantilla');
+var agenda = mongoose.model('agenda', agendaSchema, 'agenda');
 
-export = plantilla;
+export = agenda;
