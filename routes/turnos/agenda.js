@@ -29,6 +29,9 @@ router.get('/agenda/:id*?', function (req, res, next) {
         if (req.query.idProfesional) {
             query.where('profesionales.id').equals(req.query.idProfesional);
         }
+        if (req.query.idPrestacion) {
+            query.where('prestaciones.id').equals(req.query.idPrestacion);
+        }
         if (!Object.keys(query).length) {
             res.status(400).send("Debe ingresar al menos un parámetro");
             return next(400);

@@ -17,10 +17,12 @@ var agendaSchema = new mongoose.Schema({
     },
     horaInicio: Date,
     horaFin: Date,
+    intercalar: Boolean,
     bloques: [{
             horaInicio: Date,
             horaFin: Date,
             cantidadTurnos: Number,
+            duracionTurno: Number,
             descripcion: String,
             prestaciones: [{
                     id: mongoose.Schema.Types.ObjectId,
@@ -28,11 +30,32 @@ var agendaSchema = new mongoose.Schema({
                 }],
             accesoDirectoDelDia: Number,
             accesoDirectoProgramado: Number,
-            reservadoProgramado: Number,
+            reservadoGestion: Number,
             reservadoProfesional: Number,
             pacienteSimultaneos: Boolean,
             cantidadSimultaneos: Number,
-            citarPorBloque: Boolean
+            citarPorBloque: Boolean,
+            turnos: [{
+                    horaInicio: Date,
+                    estado: {
+                        type: String,
+                        enum: ["disponible", "asignado"]
+                    },
+                    paciente: {
+                        id: mongoose.Schema.Types.ObjectId,
+                        nombre: String,
+                        apellido: String,
+                    },
+                    pacientes: [{
+                            id: mongoose.Schema.Types.ObjectId,
+                            nombre: String,
+                            apellido: String,
+                        }],
+                    prestacion: {
+                        id: mongoose.Schema.Types.ObjectId,
+                        nombre: String
+                    }
+                }],
         }],
     estado: {
         type: String,
