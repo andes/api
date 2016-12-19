@@ -264,6 +264,11 @@ router.get('/paciente/:id*?', function (req, res, next) {
         });
     }
 });
+router.post('/paciente/search', function (req, res) {
+    paciente.search({ query_string: { query: req.body.q } }, function (err, results) {
+        res.send(results);
+    });
+});
 /**
  * @swagger
  * /paciente:
@@ -305,6 +310,9 @@ router.post('/paciente', function (req, res, next) {
             if (err) {
                 next(err);
             }
+            newPatient.on('es-indexed', function () {
+                console.log('paciente indexed');
+            });
             res.json(newPatient);
         });
     }
@@ -407,6 +415,11 @@ router.delete('/paciente/:id', function (req, res, next) {
     paciente.findByIdAndRemove(req.params.id, function (err, data) {
         if (err)
             return next(err);
+        /* Docuemnt is unindexed elasticsearch */
+        paciente.on('es-removed', function (err, res) {
+            if (err)
+                return next(err);
+        });
         res.json(data);
     });
 });

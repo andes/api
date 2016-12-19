@@ -10,6 +10,7 @@ var path = require('path');
 var app = express();
 var config = require('./config');
 <<<<<<< HEAD
+<<<<<<< HEAD
 mongoose.connect('mongodb://localhost/andes');
 //mongoose.connect('mongodb://10.1.62.17/andes');
 =======
@@ -19,6 +20,10 @@ mongoose.createConnection('mongodb://10.1.62.17/andes');
 //mongoose.connect('mongodb://10.1.62.17/andes');
 //mongoose.connect('mongodb://10.1.62.17/migrasips');
 >>>>>>> auditoriaAPI
+=======
+//mongoose.connect('mongodb://localhost/andes')
+mongoose.connect('mongodb://10.1.62.17/andes');
+>>>>>>> b-incluirmongoosastic
 mongoose.plugin(require('./plugins/defaults'));
 // swagger definition
 var swaggerDefinition = {

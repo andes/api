@@ -10,8 +10,8 @@ var path = require('path');
 var app = express();
 var config = require('./config');
 
-mongoose.connect('mongodb://localhost/andes')
-//mongoose.connect('mongodb://10.1.62.17/andes');
+//mongoose.connect('mongodb://localhost/andes')
+mongoose.connect('mongodb://10.1.62.17/andes');
 mongoose.plugin(require('./plugins/defaults'));
 // swagger definition
 var swaggerDefinition = {
@@ -20,7 +20,7 @@ var swaggerDefinition = {
         version: '1.0.0',
         description: 'APIs de tablas maestras ANDES',
     },
-    host: 'localhost:3002',
+    host: 'localhost:3002',                                                                
     basePath: '/api',
     definitions: {
         "referencia": {

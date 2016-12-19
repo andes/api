@@ -1,16 +1,27 @@
 "use strict";
 var mongoose = require('mongoose');
+var mongoosastic = require('mongoosastic');
 var ubicacionSchema = require('./ubicacion');
 var pacienteSchema = new mongoose.Schema({
-    documento: String,
+    documento: {
+        type: String,
+        es_indexed: true
+    },
     activo: Boolean,
     estado: {
         type: String,
         required: true,
-        enum: ["temporal", "identificado", "validado", "recienNacido", "extranjero"]
+        enum: ["temporal", "identificado", "validado", "recienNacido", "extranjero"],
+        es_indexed: true
     },
-    nombre: String,
-    apellido: String,
+    nombre: {
+        type: String,
+        es_indexed: true
+    },
+    apellido: {
+        type: String,
+        es_indexed: true
+    },
     alias: String,
     contacto: [{
             tipo: {
@@ -36,13 +47,17 @@ var pacienteSchema = new mongoose.Schema({
         }],
     sexo: {
         type: String,
-        enum: ["femenino", "masculino", "otro", ""]
+        enum: ["femenino", "masculino", "otro", ""],
+        es_indexed: true
     },
     genero: {
         type: String,
         enum: ["femenino", "masculino", "otro", ""]
     },
-    fechaNacimiento: Date,
+    fechaNacimiento: {
+        type: Date,
+        es_indexed: true
+    },
     fechaFallecimiento: Date,
     estadoCivil: {
         type: String,
@@ -84,6 +99,25 @@ pacienteSchema.virtual('nombreCompleto').get(function () {
 pacienteSchema.index({
     '$**': 'text'
 });
+//conectamos con elasticSearch
+pacienteSchema.plugin(mongoosastic, {
+    hosts: ['localhost:9200'],
+    index: 'andes',
+    type: 'paciente'
+});
 var paciente = mongoose.model('paciente', pacienteSchema, 'paciente');
+/**
+ * mongoosastic create mappings
+ */
+paciente.createMapping(function (err, mapping) {
+    if (err) {
+        console.log('error creating mapping (you can safely ignore this)');
+        console.log(err);
+    }
+    else {
+        console.log('mapping created!');
+        console.log(mapping);
+    }
+});
 module.exports = paciente;
 //# sourceMappingURL=paciente.js.map
