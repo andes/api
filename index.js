@@ -2,28 +2,13 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 var mongoose = require('mongoose');
-//var mongoose = require('mongoose');
-//import * as mongooseMigraSips from 'mongoose'
 var requireDir = require('require-dir');
 var swaggerJSDoc = require('swagger-jsdoc');
 var path = require('path');
 var app = express();
 var config = require('./config');
-<<<<<<< HEAD
-<<<<<<< HEAD
-mongoose.connect('mongodb://localhost/andes');
-//mongoose.connect('mongodb://10.1.62.17/andes');
-=======
-//mongoose.connect('mongodb://localhost/andes')
-mongoose.createConnection('mongodb://10.1.62.17/andes');
-//mongoose.createConnection('mongodb://10.1.62.17/migrasips');
-//mongoose.connect('mongodb://10.1.62.17/andes');
-//mongoose.connect('mongodb://10.1.62.17/migrasips');
->>>>>>> auditoriaAPI
-=======
 //mongoose.connect('mongodb://localhost/andes')
 mongoose.connect('mongodb://10.1.62.17/andes');
->>>>>>> b-incluirmongoosastic
 mongoose.plugin(require('./plugins/defaults'));
 // swagger definition
 var swaggerDefinition = {
@@ -32,7 +17,7 @@ var swaggerDefinition = {
         version: '1.0.0',
         description: 'APIs de tablas maestras ANDES',
     },
-    host: 'localhost:3002',
+    host: '10.1.62.17:3002',
     basePath: '/api',
     definitions: {
         "referencia": {
@@ -124,11 +109,6 @@ if (config.turnos.habilitado) {
     for (var route in routes)
         app.use(config.turnos.rutaAPI, routes[route]);
 }
-if (config.auditoria.habilitado) {
-    var routes = requireDir(config.auditoria.route);
-    for (var route in routes)
-        app.use(config.auditoria.rutaAPI, routes[route]);
-}
 //serve swagger
 app.get('/swagger.json', function (req, res) {
     res.setHeader('Content-Type', 'application/json');
@@ -137,7 +117,7 @@ app.get('/swagger.json', function (req, res) {
 //Incluimos swagger-ui
 app.use('/api-docs', express.static(__dirname + '/api-docs'));
 var server = app.listen(3002, function () {
-    console.log('Inicio web Server local http://127.0.0.1:3002/');
+    console.log('Inicio web Server local http://10.1.62.17:3002/');
 });
 module.exports = app;
 //# sourceMappingURL=index.js.map

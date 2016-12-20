@@ -20,7 +20,7 @@ var swaggerDefinition = {
         version: '1.0.0',
         description: 'APIs de tablas maestras ANDES',
     },
-    host: 'localhost:3002',                                                                
+    host: '10.1.62.17:3002',                                                                
     basePath: '/api',
     definitions: {
         "referencia": {
@@ -146,7 +146,7 @@ app.get('/swagger.json', function (req, res) {
 app.use('/api-docs', express.static(__dirname + '/api-docs'));
 
 var server = app.listen(3002, function () {
-    console.log('Inicio web Server local http://127.0.0.1:3002/');
+    console.log('Inicio web Server local http://10.1.62.17:3002/');
 });
 
 export = app

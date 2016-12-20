@@ -281,8 +281,16 @@ router.get('/paciente/:id*?', function (req, res, next) {
 
 
 router.post('/paciente/search', function(req, res) {
-    paciente.search({ query_string: { query: req.body.q } }, function(err, results) {
-        res.send(results);
+    var lPacientes
+    paciente.search({ query_string: {
+                    query: req.body.infoBusqueda
+                }}, function(err, results) {
+                
+                let pacientes = results.hits.hits.map(element => {
+                    return element._source
+                });
+                
+                res.send(pacientes);
     });
 });
 

@@ -126,21 +126,21 @@ paciente.createMapping(function (err, mapping) {
 });
 
 
-// /**
-//  * mongoosastic synchronize
-//  */
-// var stream = paciente.synchronize(function (err) {
-//         console.log(err);
-//     }),
-//     count = 0;
-// stream.on('data', function (err, doc) {
-//     count++;
-// });
-// stream.on('close', function () {
-//     console.log('indexed ' + count + ' documents from LeadSearch!');
-// });
-// stream.on('error', function (err) {
-//     console.log(err);
-// });
+/**
+ * mongoosastic synchronize
+ */
+var stream = paciente.synchronize(function (err) {
+        console.log(err);
+    }),
+    count = 0;
+stream.on('data', function (err, doc) {
+    count++;
+});
+stream.on('close', function () {
+    console.log('indexed ' + count + ' documents from LeadSearch!');
+});
+stream.on('error', function (err) {
+    console.log(err);
+});
 
 export = paciente;
