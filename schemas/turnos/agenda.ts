@@ -1,7 +1,6 @@
 import * as mongoose from 'mongoose';
 
 var agendaSchema = new mongoose.Schema({
-    nombre: String,
     prestaciones: [{
         id: mongoose.Schema.Types.ObjectId,
         nombre: String
@@ -46,15 +45,17 @@ var agendaSchema = new mongoose.Schema({
                 type: String,
                 enum: ["disponible", "asignado"]
             },
-            paciente: {//ver que otros datos del paciente conviene tener
+            paciente: {//pensar que otros datos del paciente conviene tener
                 id: mongoose.Schema.Types.ObjectId,
                 nombre: String,
                 apellido: String,
+                documento: String
             },
             pacientes: [{//este array se va a usar solo en el caso de pacientes simultaneos
                 id: mongoose.Schema.Types.ObjectId,
                 nombre: String,
                 apellido: String,
+                documento: String
             }],
             prestacion: {
                 id: mongoose.Schema.Types.ObjectId,

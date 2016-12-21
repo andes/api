@@ -1,7 +1,6 @@
 "use strict";
 var mongoose = require('mongoose');
 var agendaSchema = new mongoose.Schema({
-    nombre: String,
     prestaciones: [{
             id: mongoose.Schema.Types.ObjectId,
             nombre: String
@@ -45,11 +44,13 @@ var agendaSchema = new mongoose.Schema({
                         id: mongoose.Schema.Types.ObjectId,
                         nombre: String,
                         apellido: String,
+                        documento: String
                     },
                     pacientes: [{
                             id: mongoose.Schema.Types.ObjectId,
                             nombre: String,
                             apellido: String,
+                            documento: String
                         }],
                     prestacion: {
                         id: mongoose.Schema.Types.ObjectId,

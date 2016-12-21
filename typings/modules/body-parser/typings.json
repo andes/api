@@ -5,6 +5,7 @@
     "raw": "registry:npm/body-parser#1.15.2+20160815132839",
     "main": "index.d.ts",
     "version": "1.15.2",
-    "name": "body-parser"
+    "name": "body-parser",
+    "type": "typings"
   }
 }

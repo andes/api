@@ -11,9 +11,11 @@
         "raw": "registry:npm/mpromise#0.5.5+20160524161901",
         "main": "index.d.ts",
         "version": "0.5.5",
-        "name": "mpromise"
+        "name": "mpromise",
+        "type": "typings"
       }
     },
-    "name": "mongoose"
+    "name": "mongoose",
+    "type": "typings"
   }
 }
