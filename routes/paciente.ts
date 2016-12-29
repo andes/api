@@ -280,30 +280,33 @@ router.get('/paciente/:id*?', function (req, res, next) {
 });
 
 
-router.post('/paciente/search', function(req, res) {
-    var lPacientes
-   
-    paciente.search(
-                { 
-                    query_string:{
-                        query: '*' + req.body.infoBusqueda + '*'
-                    }
-                },
-                {
-                    from: 0,
-                    size: 200
-                },
+router.post('/paciente/search', function (req, res) {
+    var lPacientes;
+    var obj = req.body.objetoBusqueda;
+    var apellido = obj.apellido;
+    var nombre = obj.nombre;
+    var documento = obj.documento;
+    var fechaNacimiento = obj.fechaNacimiento;
+    var sexo = obj.sexo;
+    var myQuery = 'apellido: '+apellido+' AND nombre: '+nombre+' AND documento: '+documento+' AND sexo: '+sexo+' AND fechaNacimiento: '+fechaNacimiento;
+    //console.log(obj);
+    //console.log('Las consulta a ejecutar es: ',myQuery);
 
-                function(err, results) {
-                
-                let pacientes = results.hits.hits.map(element => {
-                    return element._source
-                });
-
-                console.log(pacientes.length)
-                res.send(pacientes);
+    paciente.search({
+        query_string: {
+            query: myQuery
+        }
+    }, {
+        from: 0,
+        size: 50,  
+    }, function (err, results) {
+          var pacientes = results.hits.hits.map(function (element) {
+            return element._source;
+        });
+        res.send(pacientes);
     });
 });
+
 
 /**
  * @swagger
