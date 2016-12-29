@@ -288,7 +288,16 @@ router.post('/paciente/search', function (req, res) {
     var documento = obj.documento;
     var fechaNacimiento = obj.fechaNacimiento;
     var sexo = obj.sexo;
-    var myQuery = 'apellido: '+apellido+' AND nombre: '+nombre+' AND documento: '+documento+' AND sexo: '+sexo+' AND fechaNacimiento: '+fechaNacimiento;
+    var myQuery = "";
+
+    if (fechaNacimiento == "*") {
+        //Tengo que controlar esta parte porque si en la fecha le mando comodín (*) falla la consulta.
+        myQuery = 'apellido: ' + apellido + ' AND nombre: ' + nombre + ' AND documento: ' + documento + ' AND sexo: ' + sexo;
+    } else {
+        myQuery = 'apellido: ' + apellido + ' AND nombre: ' + nombre + ' AND documento: ' + documento + ' AND sexo: ' + sexo + ' AND fechaNacimiento: ' + fechaNacimiento;
+    }
+
+
     //console.log(obj);
     //console.log('Las consulta a ejecutar es: ',myQuery);
 
@@ -298,9 +307,9 @@ router.post('/paciente/search', function (req, res) {
         }
     }, {
         from: 0,
-        size: 50,  
+        size: 50,
     }, function (err, results) {
-          var pacientes = results.hits.hits.map(function (element) {
+        var pacientes = results.hits.hits.map(function (element) {
             return element._source;
         });
         res.send(pacientes);
@@ -347,14 +356,14 @@ router.post('/paciente', function (req, res, next) {
     var continues = ValidatePatient.checkPatient(req.body);
     console.log(continues.errors);
     if (continues.valid) {
-       req.body.fechaNacimiento = ValidateFormatDate.obtenerFecha(req.body.fechaNacimiento);
+        req.body.fechaNacimiento = ValidateFormatDate.obtenerFecha(req.body.fechaNacimiento);
 
         var newPatient = new paciente(req.body);
         newPatient.save((err) => {
             if (err) {
                 next(err);
             }
-            newPatient.on('es-indexed', function() {
+            newPatient.on('es-indexed', function () {
                 console.log('paciente indexed');
             });
             res.json(newPatient);
@@ -426,7 +435,7 @@ router.put('/paciente/:id', function (req, res, next) {
             status: "409",
             messages: continues.errors
         }
-        
+
         var errores = "";
         continues.errors.forEach(element => {
             errores = errores + " | " + element
@@ -469,8 +478,8 @@ router.delete('/paciente/:id', function (req, res, next) {
         if (err)
             return next(err);
         /* Docuemnt is unindexed elasticsearch */
-        paciente.on('es-removed', function(err, res) {
-            if (err)  return next(err);
+        paciente.on('es-removed', function (err, res) {
+            if (err) return next(err);
         });
         res.json(data);
     });

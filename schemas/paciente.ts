@@ -57,7 +57,6 @@ var pacienteSchema = new mongoose.Schema({
     }, // identidad autopercibida
     fechaNacimiento: {
         type:Date, 
-        es_type:'date',
         es_indexed: true
     }, // Fecha Nacimiento
     fechaFallecimiento: Date,

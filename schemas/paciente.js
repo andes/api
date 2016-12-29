@@ -56,7 +56,6 @@ var pacienteSchema = new mongoose.Schema({
     },
     fechaNacimiento: {
         type: Date,
-        es_type: 'date',
         es_indexed: true
     },
     fechaFallecimiento: Date,

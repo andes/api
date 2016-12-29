@@ -272,7 +272,14 @@ router.post('/paciente/search', function (req, res) {
     var documento = obj.documento;
     var fechaNacimiento = obj.fechaNacimiento;
     var sexo = obj.sexo;
-    var myQuery = 'apellido: ' + apellido + ' AND nombre: ' + nombre + ' AND documento: ' + documento + ' AND sexo: ' + sexo + ' AND fechaNacimiento: ' + fechaNacimiento;
+    var myQuery = "";
+    if (fechaNacimiento == "*") {
+        //Tengo que controlar esta parte porque si en la fecha le mando comodín (*) falla la consulta.
+        myQuery = 'apellido: ' + apellido + ' AND nombre: ' + nombre + ' AND documento: ' + documento + ' AND sexo: ' + sexo;
+    }
+    else {
+        myQuery = 'apellido: ' + apellido + ' AND nombre: ' + nombre + ' AND documento: ' + documento + ' AND sexo: ' + sexo + ' AND fechaNacimiento: ' + fechaNacimiento;
+    }
     //console.log(obj);
     //console.log('Las consulta a ejecutar es: ',myQuery);
     paciente.search({
@@ -282,7 +289,6 @@ router.post('/paciente/search', function (req, res) {
     }, {
         from: 0,
         size: 50,
-        time_zone: "-03:00",
     }, function (err, results) {
         var pacientes = results.hits.hits.map(function (element) {
             return element._source;
