@@ -61,7 +61,7 @@ var pacienteSchema = new mongoose.Schema({
     fechaFallecimiento: Date,
     estadoCivil: {
         type: String,
-        enum: ["casado", "separado", "divorciado", "viudo", "soltero", "otro", ""]
+        enum: ["casado", "separado", "divorciado", "viudo", "soltero", "concubino", "otro", ""]
     },
     foto: String,
     relaciones: [{

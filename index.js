@@ -7,8 +7,8 @@ var swaggerJSDoc = require('swagger-jsdoc');
 var path = require('path');
 var app = express();
 var config = require('./config');
-//mongoose.connect('mongodb://localhost/andes')
-mongoose.connect('mongodb://10.1.62.17/andes');
+mongoose.connect('mongodb://localhost/migracion');
+//mongoose.connect('mongodb://10.1.62.17/migracion');
 mongoose.plugin(require('./plugins/defaults'));
 // swagger definition
 var swaggerDefinition = {
@@ -106,8 +106,13 @@ for (var route in routes)
     app.use('/api', routes[route]);
 if (config.turnos.habilitado) {
     var routes = requireDir(config.turnos.route);
-    for (var route in routes)
-        app.use(config.turnos.rutaAPI, routes[route]);
+    for (var route_1 in routes)
+        app.use(config.turnos.rutaAPI, routes[route_1]);
+}
+if (config.auditoria.habilitado) {
+    var routes = requireDir(config.auditoria.route);
+    for (var route_2 in routes)
+        app.use(config.auditoria.rutaAPI, routes[route_2]);
 }
 //serve swagger
 app.get('/swagger.json', function (req, res) {

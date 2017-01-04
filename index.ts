@@ -10,8 +10,8 @@ var path = require('path');
 var app = express();
 var config = require('./config');
 
-//mongoose.connect('mongodb://localhost/andes')
-mongoose.connect('mongodb://10.1.62.17/andes');
+mongoose.connect('mongodb://localhost/migracion')
+//mongoose.connect('mongodb://10.1.62.17/migracion');
 mongoose.plugin(require('./plugins/defaults'));
 // swagger definition
 var swaggerDefinition = {
@@ -132,8 +132,14 @@ for (var route in routes)
 
 if (config.turnos.habilitado) {
     var routes = requireDir(config.turnos.route);
-    for (var route in routes)
+    for (let route in routes)
         app.use(config.turnos.rutaAPI, routes[route]);
+}
+
+if (config.auditoria.habilitado) {
+    var routes = requireDir(config.auditoria.route);
+    for (let route in routes)
+        app.use(config.auditoria.rutaAPI, routes[route]);
 }
 
 //serve swagger
