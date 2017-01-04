@@ -3,6 +3,10 @@ var mongoose = require('mongoose');
 var mongoosastic = require('mongoosastic');
 var ubicacionSchema = require('./ubicacion');
 var pacienteSchema = new mongoose.Schema({
+    identificadores: [{
+            entidad: String,
+            valor: String
+        }],
     documento: {
         type: String,
         es_indexed: true
@@ -11,7 +15,7 @@ var pacienteSchema = new mongoose.Schema({
     estado: {
         type: String,
         required: true,
-        enum: ["temporal", "identificado", "validado", "recienNacido", "extranjero"],
+        enum: ["temporal", "validado", "recienNacido", "extranjero"],
         es_indexed: true
     },
     nombre: {
@@ -64,6 +68,7 @@ var pacienteSchema = new mongoose.Schema({
         enum: ["casado", "separado", "divorciado", "viudo", "soltero", "concubino", "otro", ""]
     },
     foto: String,
+    Nacionalidad: String,
     relaciones: [{
             relacion: {
                 type: String,
@@ -118,21 +123,6 @@ paciente.createMapping(function (err, mapping) {
         console.log('mapping created!');
         console.log(mapping);
     }
-});
-/**
- * mongoosastic synchronize
- */
-var stream = paciente.synchronize(function (err) {
-    console.log(err);
-}), count = 0;
-stream.on('data', function (err, doc) {
-    count++;
-});
-stream.on('close', function () {
-    console.log('indexed ' + count + ' documents from LeadSearch!');
-});
-stream.on('error', function (err) {
-    console.log(err);
 });
 module.exports = paciente;
 //# sourceMappingURL=paciente.js.map

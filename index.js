@@ -7,13 +7,8 @@ var swaggerJSDoc = require('swagger-jsdoc');
 var path = require('path');
 var app = express();
 var config = require('./config');
-<<<<<<< HEAD
-mongoose.connect('mongodb://localhost/migracion');
-//mongoose.connect('mongodb://10.1.62.17/migracion');
-=======
-mongoose.connect('mongodb://localhost/andes');
-//mongoose.connect('mongodb://10.1.62.17/andes');
->>>>>>> 3a4ea05d1fb65d48743863d9426c4844b82fc11f
+//mongoose.connect('mongodb://localhost/migracion')
+mongoose.connect('mongodb://10.1.62.17/migracion');
 mongoose.plugin(require('./plugins/defaults'));
 // swagger definition
 var swaggerDefinition = {

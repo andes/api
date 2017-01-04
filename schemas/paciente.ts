@@ -4,6 +4,10 @@ import * as ubicacionSchema from './ubicacion';
 
 
 var pacienteSchema = new mongoose.Schema({
+    identificadores: [{
+        entidad: String,
+        valor: String
+    }],
     documento: {
         type: String,
         es_indexed: true
@@ -12,7 +16,7 @@ var pacienteSchema = new mongoose.Schema({
     estado: {
         type: String,
         required: true,
-        enum: ["temporal", "identificado", "validado", "recienNacido", "extranjero"],
+        enum: ["temporal", "validado", "recienNacido", "extranjero"],
         es_indexed: true
     },
     nombre: {
@@ -65,6 +69,7 @@ var pacienteSchema = new mongoose.Schema({
         enum: ["casado", "separado", "divorciado", "viudo", "soltero", "concubino", "otro", ""]
     },
     foto: String,
+    Nacionalidad: String,
     relaciones: [{
         relacion: {
             type: String,
@@ -129,7 +134,7 @@ paciente.createMapping(function (err, mapping) {
 /**
  * mongoosastic synchronize
  */
-var stream = paciente.synchronize(function (err) {
+/*var stream = paciente.synchronize(function (err) {
         console.log(err);
     }),
     count = 0;
@@ -142,5 +147,5 @@ stream.on('close', function () {
 stream.on('error', function (err) {
     console.log(err);
 });
-
+*/
 export = paciente;
