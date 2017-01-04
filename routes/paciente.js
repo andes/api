@@ -266,18 +266,33 @@ router.get('/paciente/:id*?', function (req, res, next) {
 });
 router.post('/paciente/search', function (req, res) {
     var lPacientes;
+    var obj = req.body.objetoBusqueda;
+    var apellido = obj.apellido;
+    var nombre = obj.nombre;
+    var documento = obj.documento;
+    var fechaNacimiento = obj.fechaNacimiento;
+    var sexo = obj.sexo;
+    var myQuery = "";
+    if (fechaNacimiento == "*") {
+        //Tengo que controlar esta parte porque si en la fecha le mando comodín (*) falla la consulta.
+        myQuery = 'apellido: ' + apellido + ' AND nombre: ' + nombre + ' AND documento: ' + documento + ' AND sexo: ' + sexo;
+    }
+    else {
+        myQuery = 'apellido: ' + apellido + ' AND nombre: ' + nombre + ' AND documento: ' + documento + ' AND sexo: ' + sexo + ' AND fechaNacimiento: ' + fechaNacimiento;
+    }
+    //console.log(obj);
+    //console.log('Las consulta a ejecutar es: ',myQuery);
     paciente.search({
         query_string: {
-            query: '*' + req.body.infoBusqueda + '*'
+            query: myQuery
         }
     }, {
         from: 0,
-        size: 200
+        size: 50,
     }, function (err, results) {
         var pacientes = results.hits.hits.map(function (element) {
             return element._source;
         });
-        console.log(pacientes.length);
         res.send(pacientes);
     });
 });

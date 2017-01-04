@@ -34,6 +34,7 @@ var agendaSchema = new mongoose.Schema({
             pacienteSimultaneos: Boolean,
             cantidadSimultaneos: Number,
             citarPorBloque: Boolean,
+            cantidadBloque: Number,
             turnos: [{
                     horaInicio: Date,
                     estado: {
