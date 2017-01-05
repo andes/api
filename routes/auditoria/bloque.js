@@ -13,18 +13,17 @@ router.get('/bloque/:id', function (req, res, next) {
                     "count": {
                         "$sum": 1
                     }
-                }
-            }], function (err, data) {
+                } },
+            { "$match": { count: { $gt: 1 } } }
+        ], function (err, data) {
             if (err) {
                 next(err);
             }
             ;
             var claves = data.map(function (elemt) {
-                if (elemt._id) {
-                    var dato = elemt._id;
-                    return dato;
-                }
-            });
+                var dato = elemt._id;
+                return dato;
+            }).filter(function (n) { return (n != undefined && n != null && n != ""); });
             res.json(claves);
         });
     }
@@ -32,7 +31,7 @@ router.get('/bloque/:id', function (req, res, next) {
 router.get('/bloque/paciente/:idb/:id', function (req, res, next) {
     var filtro = "claveBlocking." + req.params.idb;
     var query = {};
-    query[filtro] = { $eq: Number(req.params.id) };
+    query[filtro] = { $eq: req.params.id };
     console.log('Parametros', query);
     paciente.find(query, function (err, data) {
         //console.log(data);
