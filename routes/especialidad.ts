@@ -90,9 +90,8 @@ router.get('/especialidad/:id*?', function (req, res, next) {
     } else {
         var query;
         query = especialidad.find({}); //Trae todos 
-
-        if (req.query.sisa)
-            query.where('codigo.sisa').equals(req.query.sisa);
+        if (req.query.codigoSisa)
+           query.where('codigo.sisa').equals(RegExp('^.*' + req.query.codigoSisa + '.*$', "i"));
         if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
         }

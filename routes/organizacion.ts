@@ -144,7 +144,9 @@ router.get('/organizacion/:id*?', function(req, res, next) {
         if (req.query.sisa) {
              opciones['codigo.sisa'] = {'$regex': utils.makePattern(req.query.sisa)};
         }
-        console.log(opciones);
+         if (req.query.activo) {
+            opciones['activo'] = req.query.activo;
+       }
         query = organizacion.find(opciones);
         query.exec(function(err, data) {
             if (err) return next(err);
