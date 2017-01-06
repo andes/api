@@ -10,7 +10,7 @@ var especialidadSchema = new mongoose.Schema({
     disciplina: String,
     codigo:{
         sisa: {
-            type: Number,
+            type: String,
             required: true
         }
     },
