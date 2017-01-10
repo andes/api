@@ -16,6 +16,20 @@ var ValidateFormatDate = (function () {
         var date = new Date(numbers[2], numbers[1] - 1, numbers[0]);
         return date;
     };
+    ValidateFormatDate.convertirFecha = function (fecha) {
+        //console.log(fecha,typeof(fecha));
+        if (fecha) {
+            if (typeof (fecha) != "string") {
+                var fecha1 = new Date(fecha);
+                return ((fecha1.toISOString()).substring(0, 10));
+            }
+            else
+                return ((fecha.toString()).substring(0, 10));
+        }
+        else {
+            return "";
+        }
+    };
     return ValidateFormatDate;
 }());
 exports.ValidateFormatDate = ValidateFormatDate;
