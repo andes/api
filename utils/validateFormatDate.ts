@@ -16,5 +16,20 @@ public static obtenerFecha(fechaStr){
 
     }
 
+public static convertirFecha(fecha) {
+       //console.log(fecha,typeof(fecha));
+    if(fecha){
+       if (typeof (fecha) != "string") {
+          
+           var fecha1 = new Date(fecha);
+           return ((fecha1.toISOString()).substring(0, 10));
+       }
+       else
+           return ((fecha.toString()).substring(0, 10));
+    }else{
+        return "";
+    }
+   }
+
 
 }

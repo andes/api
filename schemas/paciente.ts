@@ -120,6 +120,7 @@ var paciente = mongoose.model('paciente', pacienteSchema, 'paciente');
 /**
  * mongoosastic create mappings
  */
+/*
 paciente.createMapping(function (err, mapping) {
     if (err) {
         console.log('error creating mapping (you can safely ignore this)');
@@ -129,7 +130,7 @@ paciente.createMapping(function (err, mapping) {
         console.log(mapping);
     }
 });
-
+*/
 
 /**
  * mongoosastic synchronize
