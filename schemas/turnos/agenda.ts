@@ -4,7 +4,7 @@ var agendaSchema = new mongoose.Schema({
     prestaciones: [{
         id: mongoose.Schema.Types.ObjectId,
         nombre: String
-    }],//requerido
+    }],
 
     profesionales: [{
         id: mongoose.Schema.Types.ObjectId,
@@ -70,6 +70,28 @@ var agendaSchema = new mongoose.Schema({
         enum: ["", "Planificada", "Publicada"]
     }
 });
+
+// agendaSchema.pre('save', function (next) {
+//     //chequeo que las referencias a los pacientes son validas (coincide el id con el resto de los datos)
+//     let modelo = this;
+//     let paciente = require('../paciente');
+//     modelo.bloques.forEach((bloque, index1) => {
+//         bloque.turnos.forEach((turno, index1) => {
+//             if (turno.paciente) {
+//                 paciente.findOne({
+//                     _id: turno.paciente.id
+//                 })
+//                 if (err) {
+//                     var err = new Error('something went wrong');
+//                     return next(err);
+//                 }
+//                 next();
+//             } else {
+//                 next();
+//             }
+//         });
+//     });
+// });
 
 var agenda = mongoose.model('agenda', agendaSchema, 'agenda');
 

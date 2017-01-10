@@ -55,7 +55,6 @@ router.post('/agenda', function (req, res, next) {
         }
         res.json(newAgenda);
     });
-    console.log(newAgenda);
 });
 router.put('/agenda/:_id', function (req, res, next) {
     agenda.findByIdAndUpdate(req.params._id, req.body, { new: true }, function (err, data) {

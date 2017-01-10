@@ -59,14 +59,13 @@ router.get('/agenda/:id*?', function (req, res, next) {
 
 
 router.post('/agenda', function (req, res, next) {
-    var newAgenda = new agenda(req.body)
+    var newAgenda = new agenda(req.body);
     newAgenda.save((err) => {
         if (err) {
             return next(err);
         }
         res.json(newAgenda);
     })
-    console.log(newAgenda);
 });
 
 router.put('/agenda/:_id', function (req, res, next) {
