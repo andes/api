@@ -251,13 +251,16 @@ var servicioSisa = (function () {
             if (pacienteActualizar.paciente.entidadesValidadoras.indexOf(entidad) <= -1) {
                 pacienteActualizar.paciente.entidadesValidadoras.push(entidad);
             }
-            paciente.findByIdAndUpdate(pacienteActualizar.paciente._id, pacienteActualizar, {
+            console.log("Paciente Actualizar: ", pacienteActualizar);
+            paciente.findByIdAndUpdate(pacienteActualizar.paciente._id, pacienteActualizar.paciente, {
                 new: true
             }, function (err, data) {
-                if (err)
+                if (err) {
                     reject(err);
-                else
+                }
+                else {
                     resolve({ "paciente": data, "matcheos": pacienteActualizar.matcheos });
+                }
             });
         });
     };

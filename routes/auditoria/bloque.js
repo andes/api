@@ -67,7 +67,7 @@ router.get('/bloque/pacienteSisa/:idb/:id', function (req, res, next) {
     //console.log('Parametros', query)
     var listaPac = [];
     paciente.find(query, function (err, data) {
-        console.log("Inicia Find", data);
+        //console.log("Inicia Find");
         if (err) {
             next(err);
         }
@@ -95,7 +95,8 @@ router.get('/bloque/pacienteSisa/:idb/:id', function (req, res, next) {
             arrPacValidados.forEach(function (pacVal) {
                 var datoPac;
                 datoPac = pacVal;
-                if (datoPac.matcheos.matcheo >= 99 && datoPac.paciente.estado) {
+                if (datoPac.matcheos.matcheo >= 99 && datoPac.paciente.estado == 'temporal') {
+                    //console.log("Inicia Val sisa",datoPac);
                     arrSalida.push(servSisa.validarPaciente(datoPac, "Sisa"));
                 }
                 else {
@@ -103,7 +104,7 @@ router.get('/bloque/pacienteSisa/:idb/:id', function (req, res, next) {
                 }
             });
             Promise.all(arrSalida).then(function (PacSal) {
-                //console.log("devuelvo el array", PacSal); 
+                console.log("devuelvo el array", PacSal);
                 res.json(PacSal);
             }).catch(function (err) {
                 console.log(err);
@@ -132,7 +133,7 @@ router.post('/bloque/paciente/fusionar', function (req, res, next) {
         var arrayIds = pacAux.identificadores;
         paciente.update({ "_id": pacienteOriginal._id }, { $addToSet: { "identificadores": { $each: arrayIds } } }, { upsert: true }, function (err) {
             if (err) {
-                next(err);
+                return next(err);
             }
             else {
                 paciente.findByIdAndRemove(pacienteFusionar.id.toString(), function (err, elem) {
@@ -150,6 +151,21 @@ router.delete('/bloque/paciente/:id', function (req, res, next) {
         if (err)
             return next(err);
         res.json(data);
+    });
+});
+router.post('/bloque/paciente/validar', function (req, res, next) {
+    console.log("Entra a validar", req.body);
+    var pacienteVal = new paciente(req.body.paciente);
+    var entidad = req.body.entidad;
+    var servSisa = new servicioSisa_1.servicioSisa();
+    console.log("entidad", entidad);
+    var datoCompleto = { "paciente": pacienteVal, "matcheos": { "entidad": entidad, "matcheo": 0, "datosPaciente": {} } };
+    console.log("Dato Completo", datoCompleto);
+    servSisa.validarPaciente(datoCompleto, entidad).then(function (resultado) {
+        res.json(resultado);
+    })
+        .catch(function (err) {
+        return next(err);
     });
 });
 module.exports = router;
