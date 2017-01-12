@@ -1,6 +1,7 @@
 "use strict";
 var validateFormatDate_1 = require('./validateFormatDate');
 var machingDeterministico_1 = require('./machingDeterministico');
+var paciente = require('../schemas/paciente');
 var https = require('https');
 var config = require('./config');
 var to_json = require('xmljson').to_json;
@@ -198,10 +199,8 @@ var servicioSisa = (function () {
                                     case 'OK':
                                         pacienteSisa = _this.formatearDatosSisa(resultado[1].Ciudadano);
                                         matchPorcentaje = _this.matchPersonas(paciente, pacienteSisa);
-                                        paciente["matchSisa"] = matchPorcentaje;
-                                        //auxPac.set('matchSisa', valorSisa)
-                                        console.log('Datos: ', paciente);
-                                        resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": matchPorcentaje } });
+                                        matchPorcentaje = (matchPorcentaje * 100);
+                                        resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": matchPorcentaje, "datosPaciente": pacienteSisa } });
                                         break;
                                     case 'MULTIPLE_RESULTADO':
                                         var sexo = "F";
@@ -217,22 +216,19 @@ var servicioSisa = (function () {
                                                 pacienteSisa = _this.formatearDatosSisa(res[1].Ciudadano);
                                                 matchPorcentaje = _this.matchPersonas(paciente, pacienteSisa);
                                                 matchPorcentaje = (matchPorcentaje * 100);
-                                                paciente["matchSisa"] = matchPorcentaje;
-                                                //auxPac.set('matchSisa', valorSisa)
-                                                //console.log('Datos: ', paciente);
-                                                resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": matchPorcentaje } });
+                                                resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": matchPorcentaje, "datosPaciente": pacienteSisa } });
                                             }
                                         })
                                             .catch(function (err) {
                                             reject(err);
                                         });
                                     default:
-                                        resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0 } });
+                                        resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0, "datosPaciente": null } });
                                         break;
                                 }
                             }
                         }
-                        resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0 } });
+                        resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0, "datosPaciente": null } });
                     })
                         .catch(function (err) {
                         console.error('Error consulta rest Sisa:' + err);
@@ -240,12 +236,29 @@ var servicioSisa = (function () {
                     });
                 }
                 else {
-                    resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0 } });
+                    resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0, "datosPaciente": null } });
                 }
             }
             else {
-                resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0 } });
+                resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0, "datosPaciente": null } });
             }
+        });
+    };
+    //Cambiar el estado del paciente a validado y agregamos como entidad validadora a Sisa
+    servicioSisa.prototype.validarPaciente = function (pacienteActualizar, entidad) {
+        return new Promise(function (resolve, reject) {
+            pacienteActualizar.paciente.estado = "validado";
+            if (pacienteActualizar.paciente.entidadesValidadoras.indexOf(entidad) <= -1) {
+                pacienteActualizar.paciente.entidadesValidadoras.push(entidad);
+            }
+            paciente.findByIdAndUpdate(pacienteActualizar.paciente._id, pacienteActualizar, {
+                new: true
+            }, function (err, data) {
+                if (err)
+                    reject(err);
+                else
+                    resolve({ "paciente": data, "matcheos": pacienteActualizar.matcheos });
+            });
         });
     };
     return servicioSisa;
