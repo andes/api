@@ -1,4 +1,3 @@
-import { StringDecoder } from './../typings/globals/node/index.d';
 import { ValidateFormatDate } from './validateFormatDate';
 import {
     machingDeterministico
@@ -23,21 +22,25 @@ export class servicioSintys {
         };
         var IPac: IPerson = {
             identity: paciente.documento,
-            firstname: paciente.nombre,
-            lastname: paciente.apellido,
+            firstname: '',
+            lastname: paciente.apellido + ' ' + paciente.nombre, //Se carga todo en el apellido
             birthDate: ValidateFormatDate.convertirFecha(paciente.fechaNacimiento),
             gender: paciente.sexo
         };
 
         var IPacSintys: IPerson = {
             identity: pacienteSintys.documento,
-            firstname: pacienteSintys.nombre,
-            lastname: pacienteSintys.apellido,
+            firstname: '',
+            lastname: pacienteSintys.apellido, //Se carga todo en el apellido
             birthDate: ValidateFormatDate.convertirFecha(pacienteSintys.fechaNacimiento),
             gender: pacienteSintys.sexo
         };
+
+        console.log('El paciente prametro:', IPac);
+        console.log('El paciente Sintys' ,IPacSintys);
+
         var valorSintys = m3.maching(IPac, IPacSintys, weights);
-        
+        console.log('Valor del matcheo:',valorSintys);
         return valorSintys;
     }
 
@@ -73,7 +76,7 @@ export class servicioSintys {
 
                     if (xml) {
                         //Se parsea el xml obtenido a JSON
-                        console.log('el xml obtenido',xml);
+                        //console.log('el xml obtenido',xml);
                         to_json(xml, function (error, data) {
                             if (error) {
                                 resolve([500, {}]);
@@ -100,10 +103,10 @@ export class servicioSintys {
         var fecha;
         ciudadano = new Object();
        
-        ciudadano.documento = datosSintys.Documento ? datosSintys.Documento : '';
+        ciudadano.documento = datosSintys.Documento ? datosSintys.Documento.toString() : '';
 
         //VER con las chicas ya que sintys no trae separado nbe y apellido.
-        ciudadano.nombre = datosSintys.NombreCompleto  ? datosSintys.NombreCompleto : '';
+        ciudadano.apellido = datosSintys.NombreCompleto  ? datosSintys.NombreCompleto : '';
         //ciudadano.apellido ?
         
         //TEMA DE DIRECCIÓN VERS SI VALE LA PENA
@@ -179,7 +182,7 @@ export class servicioSintys {
         */
 
 
-        console.log('Muestra el objeto Persona: ',ciudadano);
+       // console.log('Muestra el objeto Persona: ',ciudadano);
         return ciudadano;
 
     }
@@ -202,98 +205,57 @@ export class servicioSintys {
     }
 
 
-
-//PROGRAMAR EL 12/01
-
-/*
-    matchSisa(paciente) {
-        //Verifica si el paciente tiene un documento valido y realiza la búsqueda a través de Sisa
+    matchSintys(paciente) {
+        //Verifica si el paciente tiene un documento valido y realiza la búsqueda a través de Sintys
         var matchPorcentaje = 0;
-        var pacienteSisa = {};
+        var pacienteSintys = {};
         var weights = {
             identity: 0.3, //0.2
             name: 0.3, //0.3
             gender: 0.1, //0.4
             birthDate: 0.3 //0.1
         };
-        paciente["matchSisa"] = 0;
-        //Se buscan los datos en sisa y se obtiene el paciente
+        paciente["matchSintys"] = 0;
+        //Se buscan los datos en sintys y se obtiene el paciente
         return new Promise((resolve, reject) => {
 
             if (paciente.documento) {
                 if (paciente.documento.length >= 7) {
-
+                    console.log('antes del getPersonaSintys');
                     this.getPersonaSintys(paciente.documento)
                         .then((resultado) => {
                             if (resultado) {
-                                //Verifico el resultado devuelto por el rest de Sisa
+                                //console.log('obtengo resultado de sintys ', resultado);
+                                //Verifico el resultado devuelto por el rest de Sintys
                                 if (resultado[0] == 200) {
-
-                                    switch (resultado[1].Ciudadano.resultado) {
-                                        case 'OK':
-                                            pacienteSisa = this.formatearDatosSisa(resultado[1].Ciudadano);
-                                            matchPorcentaje = this.matchPersonas(paciente, pacienteSisa);
-                                            paciente["matchSisa"] = matchPorcentaje;
-                                                        //auxPac.set('matchSisa', valorSisa)
-                                            console.log('Datos: ', paciente);
-                                           
-                                            resolve({"paciente": paciente, "matcheos": {"entidad": "Sisa","matcheo": matchPorcentaje}});
-                                            break;
-                                        case 'MULTIPLE_RESULTADO':
-                                            var sexo = "F";
-                                            if (paciente.sexo == "femenino") {
-                                                sexo = "F";
-                                            }
-                                            if (paciente.sexo == "masculino") {
-                                                sexo = "M";
-                                            }
-
-                                            this.getPersonaSintys(paciente.documento)
-                                                .then((res) => {
-                                                    if (res[1].Ciudadano.resultado == 'OK') {
-                                                        pacienteSisa = this.formatearDatosSisa(res[1].Ciudadano);
-                                                        matchPorcentaje = this.matchPersonas(paciente, pacienteSisa);
-                                                        matchPorcentaje = (matchPorcentaje * 100);
-                                                        paciente["matchSisa"] = matchPorcentaje;
-                                                        //auxPac.set('matchSisa', valorSisa)
-                                                        //console.log('Datos: ', paciente);
-                                                        resolve({"paciente": paciente, "matcheos": {"entidad": "Sisa","matcheo": matchPorcentaje}});
-                                                    }
-
-                                                })
-                                                .catch((err) => {
-                                                    reject(err);
-                                                })
-
-                                        default:
-                                            resolve({"paciente": paciente, "matcheos": {"entidad": "Sisa","matcheo": 0}});
-                                            break;
-                                    }
-
+                                    console.log('entro por 200');
+                                    pacienteSintys = this.formatearDatosSintys(JSON.parse(resultado[1])[0]);
+                                    matchPorcentaje = this.matchPersonas(paciente, pacienteSintys);
+                                    console.log('el % de matcheo es:', matchPorcentaje);
+                                    paciente["matchSintys"] = matchPorcentaje;
+                                    //console.log('Datos: ', paciente);
+                                    resolve({"paciente": paciente, "matcheos": {"entidad": "Sintys","matcheo": matchPorcentaje}});
                                 }
-
                             }
-                            resolve({"paciente": paciente, "matcheos": {"entidad": "Sisa","matcheo": 0}});
-
-
+                            resolve({"paciente": paciente, "matcheos": {"entidad": "Sintys","matcheo": 0}});
                         })
                         .catch((err) => {
-                            console.error('Error consulta rest Sisa:' + err)
+                            console.error('Error consulta rest Sintys:' + err)
                             reject(err);
                         });
 
-                    // setInterval(consultaSisa,100);
+                    // setInterval(consultaSintys,100);
 
                 } else {
-                    resolve({"paciente": paciente, "matcheos": {"entidad": "Sisa","matcheo": 0}});
+                    resolve({"paciente": paciente, "matcheos": {"entidad": "Sintys","matcheo": 0}});
                 }
             } else {
-                resolve({"paciente": paciente, "matcheos": {"entidad": "Sisa","matcheo": 0}});
+                resolve({"paciente": paciente, "matcheos": {"entidad": "Sintys","matcheo": 0}});
             }
         })
 
     }
 
-*/
+
 
 }
