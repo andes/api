@@ -126,24 +126,25 @@ router.get('/organizacion/:id*?', function (req, res, next) {
                 next(err);
             }
             res.json(data);
-        });
+        }).populate('tipoEstablecimiento');
     }
     else {
         var query;
-        var opciones = {};
+        var filtros = {};
         if (req.query.nombre) {
-            opciones['nombre'] = { '$regex': utils.makePattern(req.query.nombre) };
+            filtros['nombre'] = { '$regex': utils.makePattern(req.query.nombre) };
         }
         if (req.query.cuie) {
-            opciones['codigo.cuie'] = { '$regex': utils.makePattern(req.query.cuie) };
+            filtros['codigo.cuie'] = { '$regex': utils.makePattern(req.query.cuie) };
         }
         if (req.query.sisa) {
-            opciones['codigo.sisa'] = { '$regex': utils.makePattern(req.query.sisa) };
+            filtros['codigo.sisa'] = { '$regex': utils.makePattern(req.query.sisa) };
         }
         if (req.query.activo) {
-            opciones['activo'] = req.query.activo;
+            filtros['activo'] = req.query.activo;
         }
-        query = organizacion.find(opciones);
+        query = organizacion.find(filtros).populate('tipoEstablecimiento');
+        ;
         query.exec(function (err, data) {
             if (err)
                 return next(err);
