@@ -75,7 +75,7 @@ var router = express.Router();
  *         schema:
  *           $ref: '#/definitions/especialidad'
  */
-router.get('/especialidad/:id*?', function (req, res, next) {
+router.get('/especialidades/:id*?', function (req, res, next) {
     if (req.params.id) {
         especialidad.findById(req.params.id, function (err, data) {
             if (err) {
@@ -86,8 +86,10 @@ router.get('/especialidad/:id*?', function (req, res, next) {
         });
     }
     else {
+        var skip = parseInt(req.query.skip || 0);
+        var limit = parseInt(req.query.limit || 10);
         var query;
-        query = especialidad.find({}); //Trae todos 
+        query = especialidad.find({}).skip(skip).limit(limit); //Trae todos 
         if (req.query.codigoSisa)
             query.where('codigo.sisa').equals(RegExp('^.*' + req.query.codigoSisa + '.*$', "i"));
         if (req.query.nombre) {
@@ -125,7 +127,7 @@ router.get('/especialidad/:id*?', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/especialidad'
  */
-router.post('/especialidad', function (req, res, next) {
+router.post('/especialidades', function (req, res, next) {
     var newEspecialidad = new especialidad(req.body);
     newEspecialidad.save(function (err) {
         if (err) {
@@ -164,7 +166,7 @@ router.post('/especialidad', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/especialidad'
  */
-router.put('/especialidad/:id', function (req, res, next) {
+router.put('/especialidades/:id', function (req, res, next) {
     especialidad.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
         if (err) {
             return next(err);
@@ -197,7 +199,7 @@ router.put('/especialidad/:id', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/especialidad'
  */
-router.delete('/especialidad/:id', function (req, res, next) {
+router.delete('/especialidades/:id', function (req, res, next) {
     especialidad.findByIdAndRemove(req.params.id, function (err, data) {
         if (err) {
             return next(err);
