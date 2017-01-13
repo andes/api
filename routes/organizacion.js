@@ -130,7 +130,9 @@ router.get('/organizacion/:id*?', function (req, res, next) {
     }
     else {
         var query;
-        var filtros = {};
+        var act = true;
+        var filtros = { "activo": act };
+        console.log("query ", req.query);
         if (req.query.nombre) {
             filtros['nombre'] = { '$regex': utils.makePattern(req.query.nombre) };
         }
@@ -143,8 +145,9 @@ router.get('/organizacion/:id*?', function (req, res, next) {
         if (req.query.activo) {
             filtros['activo'] = req.query.activo;
         }
-        query = organizacion.find(filtros).populate('tipoEstablecimiento');
-        ;
+        var skip = parseInt(req.query.skip || 0);
+        var limit = parseInt(req.query.limit || 10);
+        query = organizacion.find(filtros).skip(skip).limit(limit).populate('tipoEstablecimiento');
         query.exec(function (err, data) {
             if (err)
                 return next(err);
