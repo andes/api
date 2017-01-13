@@ -205,10 +205,10 @@ var servicioSintys = (function () {
                                 console.log('el % de matcheo es:', matchPorcentaje);
                                 paciente["matchSintys"] = matchPorcentaje;
                                 //console.log('Datos: ', paciente);
-                                resolve({ "paciente": paciente, "matcheos": { "entidad": "Sintys", "matcheo": matchPorcentaje } });
+                                resolve({ "paciente": paciente, "matcheos": { "entidad": "Sintys", "matcheo": matchPorcentaje, "datosPaciente": pacienteSintys } });
                             }
                         }
-                        resolve({ "paciente": paciente, "matcheos": { "entidad": "Sintys", "matcheo": 0 } });
+                        resolve({ "paciente": paciente, "matcheos": { "entidad": "Sintys", "matcheo": 0, "datosPaciente": pacienteSintys } });
                     })
                         .catch(function (err) {
                         console.error('Error consulta rest Sintys:' + err);
@@ -216,11 +216,11 @@ var servicioSintys = (function () {
                     });
                 }
                 else {
-                    resolve({ "paciente": paciente, "matcheos": { "entidad": "Sintys", "matcheo": 0 } });
+                    resolve({ "paciente": paciente, "matcheos": { "entidad": "Sintys", "matcheo": 0, "datosPaciente": pacienteSintys } });
                 }
             }
             else {
-                resolve({ "paciente": paciente, "matcheos": { "entidad": "Sintys", "matcheo": 0 } });
+                resolve({ "paciente": paciente, "matcheos": { "entidad": "Sintys", "matcheo": 0, "datosPaciente": pacienteSintys } });
             }
         });
     };

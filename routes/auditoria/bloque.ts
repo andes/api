@@ -13,7 +13,7 @@ import {
 
 var router = express.Router();
 
-router.get('/bloque/:id', function (req, res, next) {
+router.get('/bloques/:id', function (req, res, next) {
     if (req.params.id) {
         var filtro = "claveBlocking." + req.params.id;
         paciente.aggregate([{
@@ -119,7 +119,7 @@ router.get('/bloque/pacienteSisa/:idb/:id', function (req, res, next) {
             });
             
             Promise.all(arrSalida).then(PacSal => {
-               console.log("devuelvo el array", PacSal); 
+              // console.log("devuelvo el array", PacSal); 
                 res.json(PacSal);
             }).catch(err => {
                 console.log(err);
@@ -181,9 +181,9 @@ router.post('/bloque/paciente/validar', function (req, res, next) {
     var pacienteVal = new paciente(req.body.paciente);
     var entidad = req.body.entidad;
     var servSisa = new servicioSisa();
-    console.log("entidad",entidad);
+    //console.log("entidad",entidad);
     var datoCompleto = {"paciente": pacienteVal, "matcheos": {"entidad": entidad,"matcheo": 0, "datosPaciente": {}}};
-    console.log("Dato Completo",datoCompleto);
+   // console.log("Dato Completo",datoCompleto);
     servSisa.validarPaciente(datoCompleto,entidad).then(resultado =>{
         res.json(resultado);
     })
@@ -192,6 +192,25 @@ router.post('/bloque/paciente/validar', function (req, res, next) {
     })
 });
 
+
+
+router.post('/bloque/paciente/validarActualizar', function (req, res, next) {
+    console.log("Entra a validar",req.body);
+    var pacienteVal = new paciente(req.body.paciente);
+    var entidad = req.body.entidad;
+    var datosPacEntidad = req.body.DatoPacEntidad;
+    
+    var servSisa = new servicioSisa();
+    console.log("entidad",entidad);
+    var datoCompleto = {"paciente": pacienteVal, "matcheos": {"entidad": entidad,"matcheo": 0, "datosPaciente": datosPacEntidad}};
+    console.log("Dato Completo",datoCompleto);
+    servSisa.validarActualizarPaciente(datoCompleto,entidad,datosPacEntidad).then(resultado =>{
+        res.json(resultado);
+    })
+    .catch(err=>{
+        return next(err);
+    })
+});
 
 
 /************SYNTIS************** */
@@ -210,6 +229,7 @@ router.get('/bloque/pacienteSintys/:idb/:id', function (req, res, next) {
             next(err);
         };
         var servSintys = new servicioSintys();
+        var servSisa = new servicioSisa();
         var pacientesRes = [];
         var weights = {
             identity: 0.3,
@@ -222,7 +242,7 @@ router.get('/bloque/pacienteSintys/:idb/:id', function (req, res, next) {
         listaPac.forEach(function (elem) {
             var valorSisa = 0;
             var auxPac = elem;
-            pacientesRes.push(servSintys.matchPersonas(auxPac));
+            pacientesRes.push(servSintys.matchSintys(auxPac));
         })
         Promise.all(pacientesRes).then(values => {
             //console.log("Inicia Promise All");
@@ -235,23 +255,23 @@ router.get('/bloque/pacienteSintys/:idb/:id', function (req, res, next) {
                 if(datoPac.matcheos.matcheo >= 99 && datoPac.paciente.estado == 'temporal')
                 { 
                     //console.log("Inicia Val sisa",datoPac);
-                    arrSalida.push(servSisa.validarPaciente(datoPac, "Sisa"))
+                    arrSalida.push(servSisa.validarPaciente(datoPac, "Sintys"))
                 }else{
                     arrSalida.push(datoPac); 
                 }
             });
             
             Promise.all(arrSalida).then(PacSal => {
-               console.log("devuelvo el array", PacSal); 
+               //console.log("devuelvo el array", PacSal); 
                 res.json(PacSal);
             }).catch(err => {
-                console.log(err);
-                next(err);
+               console.log(err);
+               return next(err);
             })
 
         }).catch(err => {
             console.log(err);
-            next(err);
+            return next(err);
         })
 
     })

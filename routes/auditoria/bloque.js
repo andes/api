@@ -1,4 +1,5 @@
 "use strict";
+var servicioSintys_1 = require('./../../utils/servicioSintys');
 var express = require('express');
 var paciente = require('../../schemas/paciente');
 var servicioSisa_1 = require('./../../utils/servicioSisa');
@@ -104,7 +105,7 @@ router.get('/bloque/pacienteSisa/:idb/:id', function (req, res, next) {
                 }
             });
             Promise.all(arrSalida).then(function (PacSal) {
-                console.log("devuelvo el array", PacSal);
+                // console.log("devuelvo el array", PacSal); 
                 res.json(PacSal);
             }).catch(function (err) {
                 console.log(err);
@@ -158,14 +159,90 @@ router.post('/bloque/paciente/validar', function (req, res, next) {
     var pacienteVal = new paciente(req.body.paciente);
     var entidad = req.body.entidad;
     var servSisa = new servicioSisa_1.servicioSisa();
-    console.log("entidad", entidad);
+    //console.log("entidad",entidad);
     var datoCompleto = { "paciente": pacienteVal, "matcheos": { "entidad": entidad, "matcheo": 0, "datosPaciente": {} } };
-    console.log("Dato Completo", datoCompleto);
+    // console.log("Dato Completo",datoCompleto);
     servSisa.validarPaciente(datoCompleto, entidad).then(function (resultado) {
         res.json(resultado);
     })
         .catch(function (err) {
         return next(err);
+    });
+});
+router.post('/bloque/paciente/validarActualizar', function (req, res, next) {
+    console.log("Entra a validar", req.body);
+    var pacienteVal = new paciente(req.body.paciente);
+    var entidad = req.body.entidad;
+    var datosPacEntidad = req.body.DatoPacEntidad;
+    var servSisa = new servicioSisa_1.servicioSisa();
+    console.log("entidad", entidad);
+    var datoCompleto = { "paciente": pacienteVal, "matcheos": { "entidad": entidad, "matcheo": 0, "datosPaciente": datosPacEntidad } };
+    console.log("Dato Completo", datoCompleto);
+    servSisa.validarActualizarPaciente(datoCompleto, entidad, datosPacEntidad).then(function (resultado) {
+        res.json(resultado);
+    })
+        .catch(function (err) {
+        return next(err);
+    });
+});
+/************SYNTIS************** */
+router.get('/bloque/pacienteSintys/:idb/:id', function (req, res, next) {
+    var filtro = "claveBlocking." + req.params.idb;
+    var query = {};
+    query[filtro] = {
+        $eq: req.params.id
+    };
+    //console.log('Parametros', query)
+    var listaPac = [];
+    paciente.find(query, function (err, data) {
+        //console.log("Inicia Find");
+        if (err) {
+            next(err);
+        }
+        ;
+        var servSintys = new servicioSintys_1.servicioSintys();
+        var servSisa = new servicioSisa_1.servicioSisa();
+        var pacientesRes = [];
+        var weights = {
+            identity: 0.3,
+            name: 0.3,
+            gender: 0.1,
+            birthDate: 0.3
+        };
+        var listaPac;
+        listaPac = data;
+        listaPac.forEach(function (elem) {
+            var valorSisa = 0;
+            var auxPac = elem;
+            pacientesRes.push(servSintys.matchSintys(auxPac));
+        });
+        Promise.all(pacientesRes).then(function (values) {
+            //console.log("Inicia Promise All");
+            var arrPacValidados;
+            arrPacValidados = values;
+            var arrSalida = [];
+            arrPacValidados.forEach(function (pacVal) {
+                var datoPac;
+                datoPac = pacVal;
+                if (datoPac.matcheos.matcheo >= 99 && datoPac.paciente.estado == 'temporal') {
+                    //console.log("Inicia Val sisa",datoPac);
+                    arrSalida.push(servSisa.validarPaciente(datoPac, "Sintys"));
+                }
+                else {
+                    arrSalida.push(datoPac);
+                }
+            });
+            Promise.all(arrSalida).then(function (PacSal) {
+                //console.log("devuelvo el array", PacSal); 
+                res.json(PacSal);
+            }).catch(function (err) {
+                console.log(err);
+                return next(err);
+            });
+        }).catch(function (err) {
+            console.log(err);
+            return next(err);
+        });
     });
 });
 module.exports = router;

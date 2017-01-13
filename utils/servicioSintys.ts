@@ -234,10 +234,10 @@ export class servicioSintys {
                                     console.log('el % de matcheo es:', matchPorcentaje);
                                     paciente["matchSintys"] = matchPorcentaje;
                                     //console.log('Datos: ', paciente);
-                                    resolve({"paciente": paciente, "matcheos": {"entidad": "Sintys","matcheo": matchPorcentaje}});
+                                    resolve({"paciente": paciente, "matcheos": {"entidad": "Sintys","matcheo": matchPorcentaje, "datosPaciente": pacienteSintys}});
                                 }
                             }
-                            resolve({"paciente": paciente, "matcheos": {"entidad": "Sintys","matcheo": 0}});
+                            resolve({"paciente": paciente, "matcheos": {"entidad": "Sintys","matcheo": 0, "datosPaciente": pacienteSintys}});
                         })
                         .catch((err) => {
                             console.error('Error consulta rest Sintys:' + err)
@@ -247,10 +247,10 @@ export class servicioSintys {
                     // setInterval(consultaSintys,100);
 
                 } else {
-                    resolve({"paciente": paciente, "matcheos": {"entidad": "Sintys","matcheo": 0}});
+                    resolve({"paciente": paciente, "matcheos": {"entidad": "Sintys","matcheo": 0, "datosPaciente": pacienteSintys}});
                 }
             } else {
-                resolve({"paciente": paciente, "matcheos": {"entidad": "Sintys","matcheo": 0}});
+                resolve({"paciente": paciente, "matcheos": {"entidad": "Sintys","matcheo": 0, "datosPaciente": pacienteSintys}});
             }
         })
 
