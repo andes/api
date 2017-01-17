@@ -13,13 +13,13 @@ import {
 
 var router = express.Router();
 
-router.get('/bloques/:id', function (req, res, next) {
-    if (req.params.id) {
-        var filtro = "claveBlocking." + req.params.id;
+router.get('/bloques/:idTipoBloque', function (req, res, next) {
+    if (req.params.idTipoBloque) {
+        var filtro = "claveBlocking." + req.params.idTipoBloque;
         paciente.aggregate([{
             "$group": {
                 "_id": {
-                    "$arrayElemAt": ["$claveBlocking", Number(req.params.id)]
+                    "$arrayElemAt": ["$claveBlocking", Number(req.params.idTipoBloque)]
                 },
                 "count": {
                     "$sum": 1
@@ -48,11 +48,11 @@ router.get('/bloques/:id', function (req, res, next) {
     }
 });
 
-router.get('/bloque/paciente/:idb/:id', function (req, res, next) {
-    var filtro = "claveBlocking." + req.params.idb;
+router.get('/bloques/pacientes/:idTipoBloque/:idBloque', function (req, res, next) {
+    var filtro = "claveBlocking." + req.params.idTipoBloque;
     var query = {};
     query[filtro] = {
-        $eq: req.params.id
+        $eq: req.params.idBloque
     };
 
     //console.log('Parametros', query)
@@ -72,17 +72,15 @@ router.get('/bloque/paciente/:idb/:id', function (req, res, next) {
     })
 });
 
-router.get('/bloque/pacienteSisa/:idb/:id', function (req, res, next) {
-    var filtro = "claveBlocking." + req.params.idb;
+router.get('/bloques/pacientesSisa/:idTipoBloque/:idBloque', function (req, res, next) {
+    var filtro = "claveBlocking." + req.params.idTipoBloque;
     var query = {};
     query[filtro] = {
-        $eq: req.params.id
+        $eq: req.params.idBloque
     };
 
-    //console.log('Parametros', query)
     var listaPac = [];
     paciente.find(query, function (err, data) {
-        //console.log("Inicia Find");
         if (err) {
             next(err);
         };
@@ -102,7 +100,6 @@ router.get('/bloque/pacienteSisa/:idb/:id', function (req, res, next) {
             pacientesRes.push(servSisa.matchSisa(auxPac));
         })
         Promise.all(pacientesRes).then(values => {
-            //console.log("Inicia Promise All");
             var arrPacValidados;
             arrPacValidados = values;
             var arrSalida = [];
@@ -111,7 +108,6 @@ router.get('/bloque/pacienteSisa/:idb/:id', function (req, res, next) {
                 datoPac = pacVal;
                 if(datoPac.matcheos.matcheo >= 99 && datoPac.paciente.estado == 'temporal')
                 { 
-                    //console.log("Inicia Val sisa",datoPac);
                     arrSalida.push(servSisa.validarPaciente(datoPac, "Sisa"))
                 }else{
                     arrSalida.push(datoPac); 
@@ -119,7 +115,6 @@ router.get('/bloque/pacienteSisa/:idb/:id', function (req, res, next) {
             });
             
             Promise.all(arrSalida).then(PacSal => {
-              // console.log("devuelvo el array", PacSal); 
                 res.json(PacSal);
             }).catch(err => {
                 console.log(err);
@@ -134,11 +129,9 @@ router.get('/bloque/pacienteSisa/:idb/:id', function (req, res, next) {
     })
 });
 
-router.post('/bloque/paciente/fusionar', function (req, res, next) {
+router.post('/bloques/pacientes/fusionar', function (req, res, next) {
     var pacienteOriginal = new paciente(req.body.pacienteOriginal);
     var pacienteFusionar = new paciente(req.body.pacienteFusionar);
-    //console.log('pacienteOriginal',pacienteOriginal);
-    //console.log('pacienteFusionar',pacienteFusionar);
     var query = {"_id": pacienteFusionar._id};
     paciente.findOne(query, function (err, data) {
         if (err) {
@@ -154,7 +147,7 @@ router.post('/bloque/paciente/fusionar', function (req, res, next) {
             if(err){
                 return next(err);
             }else{
-               paciente.findByIdAndRemove(pacienteFusionar.id.toString(), function (err, elem) {
+               paciente.findByIdAndUpdate(pacienteFusionar._id.toString(), {"activo": false}, {new:true}, function (err, elem) {
                     if (err)
                         return next(err);
                     res.json(elem);
@@ -165,9 +158,9 @@ router.post('/bloque/paciente/fusionar', function (req, res, next) {
     });
 });
 
-router.delete('/bloque/paciente/:id', function (req, res, next) {
+router.delete('/bloques/pacientes/:id', function (req, res, next) {
     console.log(req.params.id);
-    paciente.findByIdAndRemove(req.params.id, function (err, data) {
+     paciente.findByIdAndUpdate(req.params.id, {"activo": false}, {new:true}, function (err, data) {
         if (err)
             return next(err);
 
@@ -176,14 +169,12 @@ router.delete('/bloque/paciente/:id', function (req, res, next) {
 });
 
 
-router.post('/bloque/paciente/validar', function (req, res, next) {
+router.post('/bloques/pacientes/validar', function (req, res, next) {
     console.log("Entra a validar",req.body);
     var pacienteVal = new paciente(req.body.paciente);
     var entidad = req.body.entidad;
     var servSisa = new servicioSisa();
-    //console.log("entidad",entidad);
     var datoCompleto = {"paciente": pacienteVal, "matcheos": {"entidad": entidad,"matcheo": 0, "datosPaciente": {}}};
-   // console.log("Dato Completo",datoCompleto);
     servSisa.validarPaciente(datoCompleto,entidad).then(resultado =>{
         res.json(resultado);
     })
@@ -194,7 +185,7 @@ router.post('/bloque/paciente/validar', function (req, res, next) {
 
 
 
-router.post('/bloque/paciente/validarActualizar', function (req, res, next) {
+router.post('/bloques/pacientes/validarActualizar', function (req, res, next) {
     console.log("Entra a validar",req.body);
     var pacienteVal = new paciente(req.body.paciente);
     var entidad = req.body.entidad;
@@ -214,17 +205,15 @@ router.post('/bloque/paciente/validarActualizar', function (req, res, next) {
 
 
 /************SYNTIS************** */
-router.get('/bloque/pacienteSintys/:idb/:id', function (req, res, next) {
+router.get('/bloques/pacientesSintys/:idb/:id', function (req, res, next) {
     var filtro = "claveBlocking." + req.params.idb;
     var query = {};
     query[filtro] = {
         $eq: req.params.id
     };
 
-    //console.log('Parametros', query)
     var listaPac = [];
     paciente.find(query, function (err, data) {
-        //console.log("Inicia Find");
         if (err) {
             next(err);
         };
@@ -254,7 +243,6 @@ router.get('/bloque/pacienteSintys/:idb/:id', function (req, res, next) {
                 datoPac = pacVal;
                 if(datoPac.matcheos.matcheo >= 99 && datoPac.paciente.estado == 'temporal')
                 { 
-                    //console.log("Inicia Val sisa",datoPac);
                     arrSalida.push(servSisa.validarPaciente(datoPac, "Sintys"))
                 }else{
                     arrSalida.push(datoPac); 
@@ -276,8 +264,5 @@ router.get('/bloque/pacienteSintys/:idb/:id', function (req, res, next) {
 
     })
 });
-
-
-
 
 export = router;
