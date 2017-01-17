@@ -227,8 +227,10 @@ export class servicioSisa {
                         .then((resultado) => {
                             if (resultado) {
                                 //Verifico el resultado devuelto por el rest de Sisa
+                                console.log("Renaper",resultado[1].Ciudadano.identificadoRenaper);
                                 if (resultado[0] == 200) {
-
+                                    if(resultado[1].Ciudadano.identificadoRenaper && resultado[1].Ciudadano.identificadoRenaper != "NULL")
+                                    {
                                     switch (resultado[1].Ciudadano.resultado) {
                                         case 'OK':
                                             pacienteSisa = this.formatearDatosSisa(resultado[1].Ciudadano);
@@ -263,6 +265,9 @@ export class servicioSisa {
                                         default:
                                             resolve({"paciente": paciente, "matcheos": {"entidad": "Sisa","matcheo": 0, "datosPaciente": null}});
                                             break;
+                                    }
+                                    }else{
+                                        resolve({"paciente": paciente, "matcheos": {"entidad": "Sisa","matcheo": 0, "datosPaciente": null}});
                                     }
 
                                 }
