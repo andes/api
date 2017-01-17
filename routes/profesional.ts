@@ -163,14 +163,24 @@ var router = express.Router();
  *         in: query
  *         description: especialidad del profesional
  *         required : false
- *         type: string    
+ *         type: string 
+ *       - name: skip
+ *         in: query
+ *         description: El valor numerico del skip
+ *         required: false
+ *         type: number
+ *       - name: limit
+ *         in: query
+ *         description: El valor del limit
+ *         required: false
+ *         type: number   
  *     responses:
  *       200:
  *         description: Un objeto profesional
  *         schema:
  *           $ref: '#/definitions/profesional'
  */
-router.get('/profesional/:_id*?', function (req, res, next) {
+router.get('/profesionales/:_id*?', function (req, res, next) {
     if (req.params.id) {
         profesional.findById(req.params._id, function (err, data) {
             if (err) {
@@ -214,9 +224,9 @@ router.get('/profesional/:_id*?', function (req, res, next) {
             };
         }
     }
-
-    query = profesional.find(opciones);
-
+    let skip: number = parseInt(req.query.skip || 0);
+    let limit: number = parseInt(req.query.limit || 10);
+    query = profesional.find(opciones).skip(skip).limit(limit);
     query.exec(function (err, data) {
         if (err) return next(err);
         res.json(data);
@@ -249,7 +259,7 @@ router.get('/profesional/:_id*?', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/profesional'
  */
-router.post('/profesional', function (req, res, next) {
+router.post('/profesionales', function (req, res, next) {
     var newProfesional = new profesional(req.body);
     newProfesional.save((err) => {
         if (err) {
@@ -291,8 +301,8 @@ router.post('/profesional', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/profesional'
  */
-router.put('/profesional/:_id', function (req, res, next) {
-    profesional.findByIdAndUpdate(req.params._id, req.body, {new:true}, function (err, data) {
+router.put('/profesionales/:_id', function (req, res, next) {
+    profesional.findByIdAndUpdate(req.params._id, req.body, { new: true }, function (err, data) {
         if (err)
             return next(err);
 
@@ -325,7 +335,7 @@ router.put('/profesional/:_id', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/profesional'
  */
-router.delete('/profesional/:_id', function (req, res, next) {
+router.delete('/profesionales/:_id', function (req, res, next) {
     profesional.findByIdAndRemove(req.params._id, function (err, data) {
         if (err)
             return next(err);

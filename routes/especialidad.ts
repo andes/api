@@ -52,6 +52,16 @@ var router = express.Router();
  *         description: El codigo sisa de la especialidad
  *         required: false
  *         type: string
+ *       - name: skip
+ *         in: query
+ *         description: El valor numerico del skip
+ *         required: false
+ *         type: number
+ *       - name: limit
+ *         in: query
+ *         description: El valor del limit
+ *         required: false
+ *         type: number
  *     responses:
  *       200:
  *         description: un arreglo de objetos especialidad
@@ -93,7 +103,7 @@ router.get('/especialidades/:id*?', function (req, res, next) {
         var query;
         query = especialidad.find({}).skip(skip).limit(limit); //Trae todos 
         if (req.query.codigoSisa)
-           query.where('codigo.sisa').equals(RegExp('^.*' + req.query.codigoSisa + '.*$', "i"));
+            query.where('codigo.sisa').equals(RegExp('^.*' + req.query.codigoSisa + '.*$', "i"));
         if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
         }
@@ -170,7 +180,7 @@ router.post('/especialidades', function (req, res, next) {
  *           $ref: '#/definitions/especialidad'
  */
 router.put('/especialidades/:id', function (req, res, next) {
-    especialidad.findByIdAndUpdate(req.params.id, req.body, {new:true}, function (err, data) {
+    especialidad.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
         if (err) {
             return next(err);
         }

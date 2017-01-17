@@ -89,6 +89,16 @@ var router = express.Router();
  *         description: El codigo sisa de la organizacion
  *         required: true
  *         type: string
+ *       - name: skip
+ *         in: query
+ *         description: El valor numerico del skip
+ *         required: false
+ *         type: number
+ *       - name: limit
+ *         in: query
+ *         description: El valor del limit
+ *         required: false
+ *         type: number
  *     responses:
  *       200:
  *         description: un arreglo de objetos organizacion
@@ -120,7 +130,7 @@ var router = express.Router();
  *         schema:
  *           $ref: '#/definitions/organizacion'
  */
-router.get('/organizacion/:id*?', function (req, res, next) {
+router.get('/organizaciones/:id*?', function (req, res, next) {
     if (req.params.id) {
         organizacion.findById(req.params.id, function (err, data) {
             if (err) {
@@ -184,7 +194,7 @@ router.get('/organizacion/:id*?', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/organizacion'
  */
-router.post('/organizacion', function (req, res, next) {
+router.post('/organizaciones', function (req, res, next) {
     var newOrganization = new organizacion(req.body);
     //console.log(req.body);
     newOrganization.save((err) => {
@@ -226,7 +236,7 @@ router.post('/organizacion', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/organizacion'
  */
-router.put('/organizacion/:id', function (req, res, next) {
+router.put('/organizaciones/:id', function (req, res, next) {
     console.log(req.body);
     organizacion.findByIdAndUpdate(req.params.id, req.body, function (err, data) {
         if (err)
@@ -261,7 +271,7 @@ router.put('/organizacion/:id', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/organizacion'
  */
-router.delete('/organizacion/:_id', function (req, res, next) {
+router.delete('/organizaciones/:_id', function (req, res, next) {
     organizacion.findByIdAndRemove(req.params._id, function (err, data) {
         if (err)
             return next(err);
