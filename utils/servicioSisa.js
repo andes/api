@@ -198,15 +198,20 @@ var servicioSisa = (function () {
                             //Verifico el resultado devuelto por el rest de Sisa
                             console.log("Renaper", resultado[1].Ciudadano.identificadoRenaper);
                             if (resultado[0] == 200) {
-                                if (resultado[1].Ciudadano.identificadoRenaper && resultado[1].Ciudadano.identificadoRenaper != "NULL") {
-                                    switch (resultado[1].Ciudadano.resultado) {
-                                        case 'OK':
+                                switch (resultado[1].Ciudadano.resultado) {
+                                    case 'OK':
+                                        if (resultado[1].Ciudadano.identificadoRenaper && resultado[1].Ciudadano.identificadoRenaper != "NULL") {
                                             pacienteSisa = _this.formatearDatosSisa(resultado[1].Ciudadano);
                                             matchPorcentaje = _this.matchPersonas(paciente, pacienteSisa);
                                             matchPorcentaje = (matchPorcentaje * 100);
                                             resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": matchPorcentaje, "datosPaciente": pacienteSisa } });
-                                            break;
-                                        case 'MULTIPLE_RESULTADO':
+                                        }
+                                        else {
+                                            resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0, "datosPaciente": null } });
+                                        }
+                                        break;
+                                    case 'MULTIPLE_RESULTADO':
+                                        if (resultado[1].Ciudadano.identificadoRenaper && resultado[1].Ciudadano.identificadoRenaper != "NULL") {
                                             var sexo = "F";
                                             if (paciente.sexo == "femenino") {
                                                 sexo = "F";
@@ -226,13 +231,14 @@ var servicioSisa = (function () {
                                                 .catch(function (err) {
                                                 reject(err);
                                             });
-                                        default:
+                                        }
+                                        else {
                                             resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0, "datosPaciente": null } });
-                                            break;
-                                    }
-                                }
-                                else {
-                                    resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0, "datosPaciente": null } });
+                                        }
+                                        break;
+                                    default:
+                                        resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0, "datosPaciente": null } });
+                                        break;
                                 }
                             }
                         }
