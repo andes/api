@@ -1,9 +1,9 @@
 "use strict";
-var validateFormatDate_1 = require('./validateFormatDate');
-var machingDeterministico_1 = require('./machingDeterministico');
-var paciente = require('../schemas/paciente');
-var https = require('https');
-var config = require('./config');
+var validateFormatDate_1 = require("./validateFormatDate");
+var machingDeterministico_1 = require("./machingDeterministico");
+var paciente = require("../core/mpi/schemas/paciente");
+var https = require("https");
+var config = require("../config");
 var to_json = require('xmljson').to_json;
 var servicioSisa = (function () {
     function servicioSisa() {

@@ -1,5 +1,5 @@
 "use strict";
-var validateFormatDate_1 = require('./validateFormatDate');
+var validateFormatDate_1 = require("./validateFormatDate");
 var ValidatePatient = (function () {
     function ValidatePatient() {
     }
