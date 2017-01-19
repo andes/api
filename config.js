@@ -12,17 +12,17 @@ exports.modules = {
     tm: {
         active: true,
         path: "./core/tm/routes",
-        route: "/api/core/tm"
+        route: "/core/tm"
     },
     mpi: {
         active: true,
         path: "./core/mpi/routes",
-        route: "/core/mpi"
+        route: "/mpi"
     },
     auditoria: {
         active: true,
         path: "./core/mpi/routes/auditoria",
-        route: "/core/mpi/auditoria"
+        route: "/mpi/auditoria"
     },
     turnos: {
         active: true,
