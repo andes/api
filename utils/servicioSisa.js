@@ -196,34 +196,46 @@ var servicioSisa = (function () {
                         .then(function (resultado) {
                         if (resultado) {
                             //Verifico el resultado devuelto por el rest de Sisa
+                            console.log("Renaper", resultado[1].Ciudadano.identificadoRenaper);
                             if (resultado[0] == 200) {
                                 switch (resultado[1].Ciudadano.resultado) {
                                     case 'OK':
-                                        pacienteSisa = _this.formatearDatosSisa(resultado[1].Ciudadano);
-                                        matchPorcentaje = _this.matchPersonas(paciente, pacienteSisa);
-                                        matchPorcentaje = (matchPorcentaje * 100);
-                                        resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": matchPorcentaje, "datosPaciente": pacienteSisa } });
+                                        if (resultado[1].Ciudadano.identificadoRenaper && resultado[1].Ciudadano.identificadoRenaper != "NULL") {
+                                            pacienteSisa = _this.formatearDatosSisa(resultado[1].Ciudadano);
+                                            matchPorcentaje = _this.matchPersonas(paciente, pacienteSisa);
+                                            matchPorcentaje = (matchPorcentaje * 100);
+                                            resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": matchPorcentaje, "datosPaciente": pacienteSisa } });
+                                        }
+                                        else {
+                                            resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0, "datosPaciente": null } });
+                                        }
                                         break;
                                     case 'MULTIPLE_RESULTADO':
-                                        var sexo = "F";
-                                        if (paciente.sexo == "femenino") {
-                                            sexo = "F";
-                                        }
-                                        if (paciente.sexo == "masculino") {
-                                            sexo = "M";
-                                        }
-                                        _this.getSisaCiudadano(paciente.documento, config.usuarioSisa, config.passwordSisa, sexo)
-                                            .then(function (res) {
-                                            if (res[1].Ciudadano.resultado == 'OK') {
-                                                pacienteSisa = _this.formatearDatosSisa(res[1].Ciudadano);
-                                                matchPorcentaje = _this.matchPersonas(paciente, pacienteSisa);
-                                                matchPorcentaje = (matchPorcentaje * 100);
-                                                resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": matchPorcentaje, "datosPaciente": pacienteSisa } });
+                                        if (resultado[1].Ciudadano.identificadoRenaper && resultado[1].Ciudadano.identificadoRenaper != "NULL") {
+                                            var sexo = "F";
+                                            if (paciente.sexo == "femenino") {
+                                                sexo = "F";
                                             }
-                                        })
-                                            .catch(function (err) {
-                                            reject(err);
-                                        });
+                                            if (paciente.sexo == "masculino") {
+                                                sexo = "M";
+                                            }
+                                            _this.getSisaCiudadano(paciente.documento, config.usuarioSisa, config.passwordSisa, sexo)
+                                                .then(function (res) {
+                                                if (res[1].Ciudadano.resultado == 'OK') {
+                                                    pacienteSisa = _this.formatearDatosSisa(res[1].Ciudadano);
+                                                    matchPorcentaje = _this.matchPersonas(paciente, pacienteSisa);
+                                                    matchPorcentaje = (matchPorcentaje * 100);
+                                                    resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": matchPorcentaje, "datosPaciente": pacienteSisa } });
+                                                }
+                                            })
+                                                .catch(function (err) {
+                                                reject(err);
+                                            });
+                                        }
+                                        else {
+                                            resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0, "datosPaciente": null } });
+                                        }
+                                        break;
                                     default:
                                         resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0, "datosPaciente": null } });
                                         break;

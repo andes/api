@@ -1,6 +1,10 @@
 import { ValidateFormatDate } from './validateFormatDate';
-import { machingDeterministico } from './machingDeterministico';
-import { IPerson } from './IPerson';
+import {
+    machingDeterministico
+} from './machingDeterministico';
+import {
+    IPerson
+} from './IPerson';
 import * as paciente from '../core/mpi/schemas/paciente';
 import * as https from 'https';
 import * as config from '../config';
@@ -223,43 +227,52 @@ export class servicioSisa {
                         .then((resultado) => {
                             if (resultado) {
                                 //Verifico el resultado devuelto por el rest de Sisa
+                                console.log("Renaper", resultado[1].Ciudadano.identificadoRenaper);
                                 if (resultado[0] == 200) {
 
                                     switch (resultado[1].Ciudadano.resultado) {
                                         case 'OK':
-                                            pacienteSisa = this.formatearDatosSisa(resultado[1].Ciudadano);
-                                            matchPorcentaje = this.matchPersonas(paciente, pacienteSisa);
-                                            matchPorcentaje = (matchPorcentaje * 100);
-                                            resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": matchPorcentaje, "datosPaciente": pacienteSisa } });
-
+                                            if (resultado[1].Ciudadano.identificadoRenaper && resultado[1].Ciudadano.identificadoRenaper != "NULL") {
+                                                pacienteSisa = this.formatearDatosSisa(resultado[1].Ciudadano);
+                                                matchPorcentaje = this.matchPersonas(paciente, pacienteSisa);
+                                                matchPorcentaje = (matchPorcentaje * 100);
+                                                resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": matchPorcentaje, "datosPaciente": pacienteSisa } });
+                                            } else {
+                                                resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0, "datosPaciente": null } });
+                                            }
                                             break;
                                         case 'MULTIPLE_RESULTADO':
-                                            var sexo = "F";
-                                            if (paciente.sexo == "femenino") {
-                                                sexo = "F";
+                                            if (resultado[1].Ciudadano.identificadoRenaper && resultado[1].Ciudadano.identificadoRenaper != "NULL") {
+                                                var sexo = "F";
+                                                if (paciente.sexo == "femenino") {
+                                                    sexo = "F";
+                                                }
+                                                if (paciente.sexo == "masculino") {
+                                                    sexo = "M";
+                                                }
+
+                                                this.getSisaCiudadano(paciente.documento, config.usuarioSisa, config.passwordSisa, sexo)
+                                                    .then((res) => {
+                                                        if (res[1].Ciudadano.resultado == 'OK') {
+                                                            pacienteSisa = this.formatearDatosSisa(res[1].Ciudadano);
+                                                            matchPorcentaje = this.matchPersonas(paciente, pacienteSisa);
+                                                            matchPorcentaje = (matchPorcentaje * 100);
+                                                            resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": matchPorcentaje, "datosPaciente": pacienteSisa } });
+                                                        }
+
+                                                    })
+                                                    .catch((err) => {
+                                                        reject(err);
+                                                    })
+                                            } else {
+                                                resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0, "datosPaciente": null } });
                                             }
-                                            if (paciente.sexo == "masculino") {
-                                                sexo = "M";
-                                            }
-
-                                            this.getSisaCiudadano(paciente.documento, config.usuarioSisa, config.passwordSisa, sexo)
-                                                .then((res) => {
-                                                    if (res[1].Ciudadano.resultado == 'OK') {
-                                                        pacienteSisa = this.formatearDatosSisa(res[1].Ciudadano);
-                                                        matchPorcentaje = this.matchPersonas(paciente, pacienteSisa);
-                                                        matchPorcentaje = (matchPorcentaje * 100);
-                                                        resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": matchPorcentaje, "datosPaciente": pacienteSisa } });
-                                                    }
-
-                                                })
-                                                .catch((err) => {
-                                                    reject(err);
-                                                })
-
+                                            break;
                                         default:
                                             resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0, "datosPaciente": null } });
                                             break;
                                     }
+
 
                                 }
 
