@@ -1,6 +1,6 @@
 "use strict";
-var express = require("express");
-var provincia = require("../schemas/provincia");
+var express = require('express');
+var provincia = require('../schemas/provincia');
 var router = express.Router();
 /**
  * @swagger

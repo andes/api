@@ -1,7 +1,7 @@
 "use strict";
-var mongoose = require("mongoose");
-var mongoosastic = require("mongoosastic");
-var ubicacionSchema = require("../../tm/schemas/ubicacion");
+var mongoose = require('mongoose');
+var mongoosastic = require('mongoosastic');
+var ubicacionSchema = require('../../tm/schemas/ubicacion');
 var pacienteSchema = new mongoose.Schema({
     identificadores: [{
             entidad: String,

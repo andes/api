@@ -1,6 +1,6 @@
 "use strict";
-var mongoose = require("mongoose");
-var lugarSchema = require("./lugar");
+var mongoose = require('mongoose');
+var lugarSchema = require('./lugar');
 var localidadSchema = new mongoose.Schema({
     nombre: String,
     provincia: lugarSchema
