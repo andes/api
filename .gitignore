@@ -3,6 +3,7 @@ logs
 *.log
 npm-debug.log*
 *.map
+*.js
 
 # Dependency directories
 node_modules
