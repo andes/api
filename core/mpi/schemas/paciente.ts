@@ -3,6 +3,7 @@ import * as mongoosastic from 'mongoosastic';
 import * as ubicacionSchema from '../../tm/schemas/ubicacion';
 import * as direccionSchema from '../../tm/schemas/direccion';
 import * as contactoSchema from '../../tm/schemas/contacto';
+import * as financiadorSchema from './financiador';
 import * as config from '../../../config';
 
 var pacienteSchema = new mongoose.Schema({
@@ -65,17 +66,7 @@ var pacienteSchema = new mongoose.Schema({
         apellido: String,
         documento: String
     }],
-    financiador: [{ //obrasocial, plan sumar 
-        entidad: {
-            id: mongoose.Schema.Types.ObjectId,
-            nombre: String
-        },
-        codigo: String,
-        activo: Boolean,
-        fechaAlta: Date,
-        fechaBaja: Date,
-        ranking: Number,
-    }],
+    financiador: [financiadorSchema],
     claveBlocking: [String],
     entidadesValidadoras: [String]
 });
