@@ -1,6 +1,6 @@
 "use strict";
-var mongoose = require("mongoose");
-var ubicacionSchema = require("./ubicacion");
+var mongoose = require('mongoose');
+var ubicacionSchema = require('./ubicacion');
 var schema = new mongoose.Schema({
     valor: String,
     codigoPostal: String,

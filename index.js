@@ -1,13 +1,13 @@
 "use strict";
-var express = require("express");
-var bodyParser = require("body-parser");
-var mongoose = require("mongoose");
-var config = require("./config");
+var express = require('express');
+var bodyParser = require('body-parser');
+var mongoose = require('mongoose');
+var config = require('./config');
 var requireDir = require('require-dir');
 var path = require('path');
 var app = express();
 // Configuración de Mongoose
-config.mongooseDebugMode && mongoose.set('debug', true);
+config.mongooseDebugMode && mongoose.set('debug', false);
 mongoose.connect(config.connectionStrings.mongoDB_main);
 mongoose.plugin(require('./plugins/defaults'));
 // Configura Express
@@ -32,6 +32,37 @@ for (var m in config.modules) {
             app.use('/api' + config.modules[m].route, routes[route]);
     }
 }
+// Not found: catch 404 and forward to error handler
+app.use(function (req, res, next) {
+    var err = new Error('Not Found');
+    err.status = 404;
+    next(err);
+});
+// Error handler
+app.use(function (err, req, res, next) {
+    // Parse err
+    var e;
+    if (!isNaN(err)) {
+        e = new Error(err == 400 ? "Parámetro incorrecto" : "No encontrado");
+        e.status = err;
+        err = e;
+    }
+    else if (typeof err == "string") {
+        e = new Error(err);
+        e.status = 400;
+        err = e;
+    }
+    // Send HTML or JSON
+    res.status(err.status || 500);
+    var response = {
+        message: err.message,
+        error: (app.get('env') === 'development') ? err : null
+    };
+    if (req.accepts('application/json'))
+        res.send(response);
+    else
+        res.render('error', response);
+});
 // Inicia el servidor
 var server = app.listen(3002, function () {
     console.log('Inicio del servidor en el puerto 3002');

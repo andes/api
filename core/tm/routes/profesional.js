@@ -1,7 +1,7 @@
 "use strict";
-var express = require("express");
-var profesional = require("../schemas/profesional");
-var utils = require("../../../utils/utils");
+var express = require('express');
+var profesional = require('../schemas/profesional');
+var utils = require('../../../utils/utils');
 var router = express.Router();
 /**
  * @swagger

@@ -1,6 +1,6 @@
 "use strict";
-var express = require("express");
-var busquedasAgenda = require("../schemas/busquedasAgenda");
+var express = require('express');
+var busquedasAgenda = require('../schemas/busquedasAgenda');
 var router = express.Router();
 router.get('/busquedasAgenda/:_id*?', function (req, res, next) {
     if (req.params._id) {

@@ -1,5 +1,5 @@
 "use strict";
-var validateFormatDate_1 = require("./validateFormatDate");
+var validateFormatDate_1 = require('./validateFormatDate');
 var ValidatePatient = (function () {
     function ValidatePatient() {
     }
@@ -9,7 +9,7 @@ var ValidatePatient = (function () {
         var estadoCivil = ["casado", "separado", "soltero", "divorciado", "viudo", "otro"];
         var sexo = ["femenino", "masculino", "otro"];
         var estado = ["temporal", "identificado", "validado", "recienNacido", "extranjero"];
-        var tipoContacto = ["Teléfono Fijo", "Teléfono Celular", "Email"];
+        var tipoContacto = ["fijo", "celular", "email"];
         var relaciones = ["padre", "madre", "hijo", "hermano", "tutor"];
         if (!patient.apellido) {
             valid = false;

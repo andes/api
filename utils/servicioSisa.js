@@ -1,9 +1,9 @@
 "use strict";
-var validateFormatDate_1 = require("./validateFormatDate");
-var machingDeterministico_1 = require("./machingDeterministico");
-var paciente = require("../core/mpi/schemas/paciente");
-var https = require("https");
-var config = require("../config");
+var validateFormatDate_1 = require('./validateFormatDate');
+var machingDeterministico_1 = require('./machingDeterministico');
+var paciente = require('../core/mpi/schemas/paciente');
+var https = require('https');
+var config = require('../config');
 var to_json = require('xmljson').to_json;
 var servicioSisa = (function () {
     function servicioSisa() {
@@ -211,30 +211,30 @@ var servicioSisa = (function () {
                                         }
                                         break;
                                     case 'MULTIPLE_RESULTADO':
-                                        if (resultado[1].Ciudadano.identificadoRenaper && resultado[1].Ciudadano.identificadoRenaper != "NULL") {
-                                            var sexo = "F";
-                                            if (paciente.sexo == "femenino") {
-                                                sexo = "F";
-                                            }
-                                            if (paciente.sexo == "masculino") {
-                                                sexo = "M";
-                                            }
-                                            _this.getSisaCiudadano(paciente.documento, config.usuarioSisa, config.passwordSisa, sexo)
-                                                .then(function (res) {
-                                                if (res[1].Ciudadano.resultado == 'OK') {
+                                        var sexo = "F";
+                                        if (paciente.sexo == "femenino") {
+                                            sexo = "F";
+                                        }
+                                        if (paciente.sexo == "masculino") {
+                                            sexo = "M";
+                                        }
+                                        _this.getSisaCiudadano(paciente.documento, config.usuarioSisa, config.passwordSisa, sexo)
+                                            .then(function (res) {
+                                            if (res[1].Ciudadano.resultado == 'OK') {
+                                                if (resultado[1].Ciudadano.identificadoRenaper && resultado[1].Ciudadano.identificadoRenaper != "NULL") {
                                                     pacienteSisa = _this.formatearDatosSisa(res[1].Ciudadano);
                                                     matchPorcentaje = _this.matchPersonas(paciente, pacienteSisa);
                                                     matchPorcentaje = (matchPorcentaje * 100);
                                                     resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": matchPorcentaje, "datosPaciente": pacienteSisa } });
                                                 }
-                                            })
-                                                .catch(function (err) {
-                                                reject(err);
-                                            });
-                                        }
-                                        else {
-                                            resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0, "datosPaciente": null } });
-                                        }
+                                                else {
+                                                    resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0, "datosPaciente": null } });
+                                                }
+                                            }
+                                        })
+                                            .catch(function (err) {
+                                            reject(err);
+                                        });
                                         break;
                                     default:
                                         resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0, "datosPaciente": null } });

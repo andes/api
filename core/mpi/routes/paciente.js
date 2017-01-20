@@ -132,7 +132,7 @@ var router = express.Router();
  */
 /**
  * @swagger
- * /paciente:
+ * /pacientes:
  *   get:
  *     tags:
  *       - Paciente
@@ -186,11 +186,11 @@ var router = express.Router();
  *       200:
  *         description: un arreglo de objetos paciente
  *         schema:
- *           $ref: '#/definitions/paciente'
+ *           $ref: '#/definitions/pacientes'
  *       400:
  *         description: Error- Agregar parámetro de búsqueda
  *
- * /paciente/{id}:
+ * /pacientes/{id}:
  *   get:
  *     tags:
  *       - Paciente
@@ -208,9 +208,9 @@ var router = express.Router();
  *       200:
  *         description: un arreglo con un paciente
  *         schema:
- *           $ref: '#/definitions/paciente'
+ *           $ref: '#/definitions/pacientes'
  */
-router.get('/paciente/:id*?', function (req, res, next) {
+router.get('/pacientes/:id*?', function (req, res, next) {
     if (req.params.id) {
         paciente.findById(req.params.id, function (err, data) {
             if (err) {
@@ -264,7 +264,7 @@ router.get('/paciente/:id*?', function (req, res, next) {
         });
     }
 });
-router.post('/paciente/search', function (req, res) {
+router.post('/pacientes/search', function (req, res) {
     var lPacientes;
     var obj = req.body.objetoBusqueda;
     var apellido = obj.apellido;
@@ -298,7 +298,7 @@ router.post('/paciente/search', function (req, res) {
 });
 /**
  * @swagger
- * /paciente:
+ * /pacientes:
  *   post:
  *     tags:
  *       - Paciente
@@ -314,16 +314,16 @@ router.post('/paciente/search', function (req, res) {
  *         in: body
  *         required: true
  *         schema:
- *           $ref: '#/definitions/paciente'
+ *           $ref: '#/definitions/pacientes'
  *     responses:
  *       200:
  *         description: Un objeto paciente
  *         schema:
- *           $ref: '#/definitions/paciente'
+ *           $ref: '#/definitions/pacientes'
  *       409:
  *         description: Un código de error con un array de mensajes de error
  */
-router.post('/paciente', function (req, res, next) {
+router.post('/pacientes', function (req, res, next) {
     /** TODO: resolver el buscar a los tutores */
     var arrRel = req.body.relaciones;
     var arrTutorSave = [];
@@ -359,7 +359,7 @@ router.post('/paciente', function (req, res, next) {
 });
 /**
  * @swagger
- * /paciente:
+ * /pacientes:
  *   put:
  *     tags:
  *       - Paciente
@@ -380,14 +380,14 @@ router.post('/paciente', function (req, res, next) {
  *         in: body
  *         required: true
  *         schema:
- *           $ref: '#/definitions/paciente'
+ *           $ref: '#/definitions/pacientes'
  *     responses:
  *       200:
  *         description: Un objeto paciente
  *         schema:
- *           $ref: '#/definitions/paciente'
+ *           $ref: '#/definitions/pacientes'
  */
-router.put('/paciente/:id', function (req, res, next) {
+router.put('/pacientes/:id', function (req, res, next) {
     //Validación de campos del paciente del lado de la api
     var continues = validatePatient_1.ValidatePatient.checkPatient(req.body);
     if (continues.valid) {
@@ -415,7 +415,7 @@ router.put('/paciente/:id', function (req, res, next) {
 });
 /**
  * @swagger
- * /paciente/{id}:
+ * /pacientes/{id}:
  *   delete:
  *     tags:
  *       - Paciente
@@ -436,9 +436,9 @@ router.put('/paciente/:id', function (req, res, next) {
  *       200:
  *         description: Un objeto paciente
  *         schema:
- *           $ref: '#/definitions/paciente'
+ *           $ref: '#/definitions/pacientes'
  */
-router.delete('/paciente/:id', function (req, res, next) {
+router.delete('/pacientes/:id', function (req, res, next) {
     paciente.findByIdAndRemove(req.params.id, function (err, data) {
         if (err)
             return next(err);

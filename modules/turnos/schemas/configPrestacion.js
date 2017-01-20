@@ -1,5 +1,5 @@
 "use strict";
-var mongoose = require("mongoose");
+var mongoose = require('mongoose');
 var configPrestacionSchema = new mongoose.Schema({
     prestacion: {
         // type: lugarSchema,//genera un _id con otro id por eso no quedo asi

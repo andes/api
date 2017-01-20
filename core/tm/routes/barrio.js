@@ -1,6 +1,6 @@
 "use strict";
-var express = require("express");
-var barrio = require("../schemas/barrio");
+var express = require('express');
+var barrio = require('../schemas/barrio');
 var router = express.Router();
 /**
  * @swagger

@@ -1,7 +1,10 @@
 "use strict";
-var mongoose = require("mongoose");
-var mongoosastic = require("mongoosastic");
-var ubicacionSchema = require("../../tm/schemas/ubicacion");
+var mongoose = require('mongoose');
+var mongoosastic = require('mongoosastic');
+var direccionSchema = require('../../tm/schemas/direccion');
+var contactoSchema = require('../../tm/schemas/contacto');
+var financiadorSchema = require('./financiador');
+var config = require('../../../config');
 var pacienteSchema = new mongoose.Schema({
     identificadores: [{
             entidad: String,
@@ -27,28 +30,8 @@ var pacienteSchema = new mongoose.Schema({
         es_indexed: true
     },
     alias: String,
-    contacto: [{
-            tipo: {
-                type: String,
-                enum: ["Teléfono Fijo", "Teléfono Celular", "Email", ""]
-            },
-            valor: String,
-            ranking: Number,
-            ultimaActualizacion: Date,
-            activo: Boolean
-        }],
-    direccion: [{
-            valor: String,
-            codigoPostal: String,
-            ubicacion: ubicacionSchema,
-            ranking: Number,
-            geoReferencia: {
-                type: [Number],
-                index: '2d' // create the geospatial index
-            },
-            ultimaActualizacion: Date,
-            activo: Boolean
-        }],
+    contacto: [contactoSchema],
+    direccion: [direccionSchema],
     sexo: {
         type: String,
         enum: ["femenino", "masculino", "otro", ""],
@@ -82,17 +65,7 @@ var pacienteSchema = new mongoose.Schema({
             apellido: String,
             documento: String
         }],
-    financiador: [{
-            entidad: {
-                id: mongoose.Schema.Types.ObjectId,
-                nombre: String
-            },
-            codigo: String,
-            activo: Boolean,
-            fechaAlta: Date,
-            fechaBaja: Date,
-            ranking: Number,
-        }],
+    financiador: [financiadorSchema],
     claveBlocking: [String],
     entidadesValidadoras: [String]
 });
@@ -106,7 +79,7 @@ pacienteSchema.index({
 });
 //conectamos con elasticSearch
 pacienteSchema.plugin(mongoosastic, {
-    hosts: ['localhost:9200'],
+    hosts: [config.connectionStrings.elastic_main],
     index: 'andes',
     type: 'paciente'
 });

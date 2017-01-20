@@ -8,7 +8,7 @@ export class ValidatePatient {
         var estadoCivil = ["casado", "separado", "soltero", "divorciado", "viudo", "otro"];
         var sexo = ["femenino", "masculino", "otro"];
         var estado = ["temporal", "identificado", "validado", "recienNacido", "extranjero"];
-        var tipoContacto = ["Teléfono Fijo", "Teléfono Celular", "Email"];
+        var tipoContacto = ["fijo", "celular", "email"];
         var relaciones = ["padre", "madre", "hijo", "hermano", "tutor"];
 
         if (!patient.apellido) {

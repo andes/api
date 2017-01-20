@@ -1,6 +1,6 @@
 "use strict";
-var mongoose = require("mongoose");
-var ubicacionSchema = require("../../tm/schemas/ubicacion");
+var mongoose = require('mongoose');
+var ubicacionSchema = require('../../tm/schemas/ubicacion');
 var matchingSchema = new mongoose.Schema({
     pacienteOriginal: {
         idPaciente: Number,

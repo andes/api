@@ -1,6 +1,6 @@
 "use strict";
-var express = require("express");
-var configPrestacion = require("../schemas/configPrestacion");
+var express = require('express');
+var configPrestacion = require('../schemas/configPrestacion');
 var router = express.Router();
 router.get('/configPrestacion/:id*?', function (req, res, next) {
     if (req.params.id) {
