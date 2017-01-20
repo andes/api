@@ -1,6 +1,6 @@
 "use strict";
-var express = require("express");
-var espacioFisico = require("../schemas/espacioFisico");
+var express = require('express');
+var espacioFisico = require('../schemas/espacioFisico');
 var router = express.Router();
 router.get('/espacioFisico/:_id*?', function (req, res, next) {
     if (req.params._id) {

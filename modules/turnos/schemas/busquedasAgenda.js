@@ -1,5 +1,5 @@
 "use strict";
-var mongoose = require("mongoose");
+var mongoose = require('mongoose');
 var busquedasAgendaSchema = new mongoose.Schema({
     idPrestacion: String,
     idProfesional: String,

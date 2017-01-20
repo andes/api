@@ -242,31 +242,33 @@ export class servicioSisa {
                                             }
                                             break;
                                         case 'MULTIPLE_RESULTADO':
-                                            if (resultado[1].Ciudadano.identificadoRenaper && resultado[1].Ciudadano.identificadoRenaper != "NULL") {
-                                                var sexo = "F";
-                                                if (paciente.sexo == "femenino") {
-                                                    sexo = "F";
-                                                }
-                                                if (paciente.sexo == "masculino") {
-                                                    sexo = "M";
-                                                }
 
-                                                this.getSisaCiudadano(paciente.documento, config.usuarioSisa, config.passwordSisa, sexo)
-                                                    .then((res) => {
-                                                        if (res[1].Ciudadano.resultado == 'OK') {
+                                            var sexo = "F";
+                                            if (paciente.sexo == "femenino") {
+                                                sexo = "F";
+                                            }
+                                            if (paciente.sexo == "masculino") {
+                                                sexo = "M";
+                                            }
+
+                                            this.getSisaCiudadano(paciente.documento, config.usuarioSisa, config.passwordSisa, sexo)
+                                                .then((res) => {
+                                                    if (res[1].Ciudadano.resultado == 'OK') {
+                                                        if (resultado[1].Ciudadano.identificadoRenaper && resultado[1].Ciudadano.identificadoRenaper != "NULL") {
                                                             pacienteSisa = this.formatearDatosSisa(res[1].Ciudadano);
                                                             matchPorcentaje = this.matchPersonas(paciente, pacienteSisa);
                                                             matchPorcentaje = (matchPorcentaje * 100);
                                                             resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": matchPorcentaje, "datosPaciente": pacienteSisa } });
+                                                        } else {
+                                                            resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0, "datosPaciente": null } });
                                                         }
+                                                    }
 
-                                                    })
-                                                    .catch((err) => {
-                                                        reject(err);
-                                                    })
-                                            } else {
-                                                resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0, "datosPaciente": null } });
-                                            }
+                                                })
+                                                .catch((err) => {
+                                                    reject(err);
+                                                })
+
                                             break;
                                         default:
                                             resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0, "datosPaciente": null } });

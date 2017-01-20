@@ -1,6 +1,9 @@
 import * as mongoose from 'mongoose';
 import * as mongoosastic from 'mongoosastic';
 import * as ubicacionSchema from '../../tm/schemas/ubicacion';
+import * as direccionSchema from '../../tm/schemas/direccion';
+import * as contactoSchema from '../../tm/schemas/contacto';
+import * as config from '../../../config';
 
 var pacienteSchema = new mongoose.Schema({
     identificadores: [{
@@ -27,28 +30,8 @@ var pacienteSchema = new mongoose.Schema({
         es_indexed: true
     },
     alias: String,
-    contacto: [{
-        tipo: {
-            type: String,
-            enum: ["Teléfono Fijo", "Teléfono Celular", "Email", ""]
-        },
-        valor: String,
-        ranking: Number, // Specify preferred order of use (1 = highest) // Podemos usar el rank para guardar un historico de puntos de contacto (le restamos valor si no es actual???)
-        ultimaActualizacion: Date,
-        activo: Boolean
-    }],
-    direccion: [{
-        valor: String,
-        codigoPostal: String,
-        ubicacion: ubicacionSchema,
-        ranking: Number,
-        geoReferencia: {
-            type: [Number], // [<longitude>, <latitude>]
-            index: '2d' // create the geospatial index
-        },
-        ultimaActualizacion: Date,
-        activo: Boolean
-    }],
+    contacto: [contactoSchema],
+    direccion: [direccionSchema],
     sexo: {
         type: String,
         enum: ["femenino", "masculino", "otro", ""],
@@ -59,7 +42,7 @@ var pacienteSchema = new mongoose.Schema({
         enum: ["femenino", "masculino", "otro", ""]
     }, // identidad autopercibida
     fechaNacimiento: {
-        type:Date, 
+        type: Date,
         es_indexed: true
     }, // Fecha Nacimiento
     fechaFallecimiento: Date,
@@ -109,7 +92,7 @@ pacienteSchema.index({
 
 //conectamos con elasticSearch
 pacienteSchema.plugin(mongoosastic, {
-    hosts: ['localhost:9200'],
+    hosts: [config.connectionStrings.elastic_main],
     index: 'andes',
     type: 'paciente'
 });

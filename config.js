@@ -5,7 +5,8 @@ exports.passwordSisa = '*123456';
 // Configuración de Mongoose
 exports.mongooseDebugMode = false;
 exports.connectionStrings = {
-    mongoDB_main: 'mongodb://10.1.62.17/andes'
+    mongoDB_main: 'mongodb://localhost/migracion',
+    elastic_main: 'localhost:9200'
 };
 // Habilita/deshabilita módulos de la API
 exports.modules = {

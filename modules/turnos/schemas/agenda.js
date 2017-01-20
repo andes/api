@@ -1,5 +1,5 @@
 "use strict";
-var mongoose = require("mongoose");
+var mongoose = require('mongoose');
 var agendaSchema = new mongoose.Schema({
     prestaciones: [{
             id: mongoose.Schema.Types.ObjectId,

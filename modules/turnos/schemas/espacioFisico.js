@@ -1,6 +1,6 @@
 "use strict";
-var mongoose = require("mongoose");
-var ubicacionSchema = require("../../../core/tm/schemas/ubicacion");
+var mongoose = require('mongoose');
+var ubicacionSchema = require('../../../core/tm/schemas/ubicacion');
 var espacioFisicoSchema = new mongoose.Schema({
     nombre: {
         type: String,

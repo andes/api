@@ -1,6 +1,6 @@
 "use strict";
-var express = require("express");
-var financiador = require("../schemas/financiador");
+var express = require('express');
+var financiador = require('../schemas/financiador');
 var router = express.Router();
 /**
  * @swagger

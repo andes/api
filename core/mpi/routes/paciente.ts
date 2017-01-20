@@ -297,7 +297,7 @@ router.post('/paciente/search', function (req, res) {
     //console.log(obj);
     //console.log('Las consulta a ejecutar es: ',myQuery);
 
-(paciente as any).search({
+    (paciente as any).search({
         query_string: {
             query: myQuery
         }
@@ -346,7 +346,6 @@ router.post('/paciente', function (req, res, next) {
     /** TODO: resolver el buscar a los tutores */
     var arrRel = req.body.relaciones;
     var arrTutorSave = [];
-
 
     //Validación de campos del paciente del lado de la api
     var continues = ValidatePatient.checkPatient(req.body);

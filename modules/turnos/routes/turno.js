@@ -1,6 +1,6 @@
 "use strict";
-var express = require("express");
-var agenda = require("../schemas/agenda");
+var express = require('express');
+var agenda = require('../schemas/agenda');
 var router = express.Router();
 //El put se usa para pasar el turno a estado asignado, ver con Juan
 router.put('/turno/:_id', function (req, res) {

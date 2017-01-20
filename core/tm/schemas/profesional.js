@@ -1,10 +1,10 @@
 "use strict";
-var mongoose = require("mongoose");
-var sexoSchema = require("./sexo");
-var estadoCivilSchema = require("./estadoCivil");
-var direccionSchema = require("./direccion");
-var contactoSchema = require("./contacto");
-var especialidadSchema = require("./especialidad");
+var mongoose = require('mongoose');
+var sexoSchema = require('./sexo');
+var estadoCivilSchema = require('./estadoCivil');
+var direccionSchema = require('./direccion');
+var contactoSchema = require('./contacto');
+var especialidadSchema = require('./especialidad');
 var profesionalSchema = new mongoose.Schema({
     documento: String,
     activo: {

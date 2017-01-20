@@ -1,5 +1,5 @@
 "use strict";
-var mongoose = require("mongoose");
+var mongoose = require('mongoose');
 var paisSchema = new mongoose.Schema({
     nombre: String
 });

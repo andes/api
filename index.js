@@ -1,8 +1,8 @@
 "use strict";
-var express = require("express");
-var bodyParser = require("body-parser");
-var mongoose = require("mongoose");
-var config = require("./config");
+var express = require('express');
+var bodyParser = require('body-parser');
+var mongoose = require('mongoose');
+var config = require('./config');
 var requireDir = require('require-dir');
 var path = require('path');
 var app = express();
