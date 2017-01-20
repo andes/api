@@ -6,6 +6,7 @@ var router = express.Router();
 router.put('/turno/:_id', function (req, res) {
     var etiquetaEstado = "bloques." + req.body.indiceBloque + ".turnos." + req.body.indiceTurno + ".estado";
     var etiquetaPaciente = "bloques." + req.body.indiceBloque + ".turnos." + req.body.indiceTurno + ".paciente";
+    var etiquetaPacientes = "bloques." + req.body.indiceBloque + ".turnos." + req.body.indiceTurno + ".pacientes";
     console.log(req.body.estado);
     var query = {
         _id: req.params._id
@@ -13,7 +14,10 @@ router.put('/turno/:_id', function (req, res) {
     query[etiquetaEstado] = "disponible"; //agrega un tag al json query
     var update = {};
     update[etiquetaEstado] = req.body.estado;
-    update[etiquetaPaciente] = req.body.paciente;
+    if (req.body.simultaneos)
+        update[etiquetaPacientes] = req.body.pacientes;
+    else
+        update[etiquetaPaciente] = req.body.paciente;
     agenda.findOneAndUpdate(query, { $set: update }, function (err, agen) {
         if (err)
             res.send(err);
