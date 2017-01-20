@@ -1,0 +1,1 @@
+{"version":3,"file":"edificio.js","sourceRoot":"","sources":["edificio.ts"],"names":[],"mappings":";AAAA,mCAAqC;AACrC,6CAA+C;AAC/C,2CAA6C;AAE7C,IAAI,cAAc,GAAG,IAAI,QAAQ,CAAC,MAAM,CAAC;IACrC,WAAW,EAAE,MAAM;IACnB,QAAQ,EAAE,cAAc;IACxB,SAAS,EAAE,eAAe;CAC7B,CAAC,CAAC;AAEH,iBAAS,cAAc,CAAC"}

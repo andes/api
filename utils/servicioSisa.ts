@@ -5,15 +5,15 @@ import {
 import {
     IPerson
 } from './IPerson';
-import * as paciente from '../schemas/paciente';
+import * as paciente from '../core/mpi/schemas/paciente';
 import * as https from 'https';
-import * as config from './config';
+import * as config from '../config';
 var to_json = require('xmljson').to_json;
 
 export class servicioSisa {
 
     matchPersonas(paciente, pacienteSisa) {
-        
+
         var m3 = new machingDeterministico();
         var weights = {
             identity: 0.3,
@@ -36,14 +36,14 @@ export class servicioSisa {
             birthDate: ValidateFormatDate.convertirFecha(pacienteSisa.fechaNacimiento),
             gender: pacienteSisa.sexo
         };
-       // console.log("Paciente Match: ",IPac,IPacSisa);
+        // console.log("Paciente Match: ",IPac,IPacSisa);
         var valorSisa = m3.maching(IPac, IPacSisa, weights);
         //console.log("Paciente Match: ",IPac,IPacSisa);
-       // console.log("Match: ",valorSisa);
+        // console.log("Match: ",valorSisa);
         return valorSisa;
     }
 
-    getSisaCiudadano(nroDocumento, usuario, clave, sexo ? : string) {
+    getSisaCiudadano(nroDocumento, usuario, clave, sexo?: string) {
         /**
          * Capítulo 5.2.2 - Ficha del ciudadano
          * Se obtienen los datos desde Sisa
@@ -187,7 +187,7 @@ export class servicioSisa {
     }
 
 
-    getPacienteSisa(nroDocumento, sexo ? : string) {
+    getPacienteSisa(nroDocumento, sexo?: string) {
         return new Promise((resolve, reject) => {
             var paciente = null;
             this.getSisaCiudadano(nroDocumento, config.usuarioSisa, config.passwordSisa)
@@ -227,48 +227,57 @@ export class servicioSisa {
                         .then((resultado) => {
                             if (resultado) {
                                 //Verifico el resultado devuelto por el rest de Sisa
+                                console.log("Renaper", resultado[1].Ciudadano.identificadoRenaper);
                                 if (resultado[0] == 200) {
 
                                     switch (resultado[1].Ciudadano.resultado) {
                                         case 'OK':
-                                            pacienteSisa = this.formatearDatosSisa(resultado[1].Ciudadano);
-                                            matchPorcentaje = this.matchPersonas(paciente, pacienteSisa);
-                                            matchPorcentaje = (matchPorcentaje * 100);
-                                            resolve({"paciente": paciente, "matcheos": {"entidad": "Sisa","matcheo": matchPorcentaje, "datosPaciente": pacienteSisa}});
-                                            
+                                            if (resultado[1].Ciudadano.identificadoRenaper && resultado[1].Ciudadano.identificadoRenaper != "NULL") {
+                                                pacienteSisa = this.formatearDatosSisa(resultado[1].Ciudadano);
+                                                matchPorcentaje = this.matchPersonas(paciente, pacienteSisa);
+                                                matchPorcentaje = (matchPorcentaje * 100);
+                                                resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": matchPorcentaje, "datosPaciente": pacienteSisa } });
+                                            } else {
+                                                resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0, "datosPaciente": null } });
+                                            }
                                             break;
                                         case 'MULTIPLE_RESULTADO':
-                                            var sexo = "F";
-                                            if (paciente.sexo == "femenino") {
-                                                sexo = "F";
+                                            if (resultado[1].Ciudadano.identificadoRenaper && resultado[1].Ciudadano.identificadoRenaper != "NULL") {
+                                                var sexo = "F";
+                                                if (paciente.sexo == "femenino") {
+                                                    sexo = "F";
+                                                }
+                                                if (paciente.sexo == "masculino") {
+                                                    sexo = "M";
+                                                }
+
+                                                this.getSisaCiudadano(paciente.documento, config.usuarioSisa, config.passwordSisa, sexo)
+                                                    .then((res) => {
+                                                        if (res[1].Ciudadano.resultado == 'OK') {
+                                                            pacienteSisa = this.formatearDatosSisa(res[1].Ciudadano);
+                                                            matchPorcentaje = this.matchPersonas(paciente, pacienteSisa);
+                                                            matchPorcentaje = (matchPorcentaje * 100);
+                                                            resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": matchPorcentaje, "datosPaciente": pacienteSisa } });
+                                                        }
+
+                                                    })
+                                                    .catch((err) => {
+                                                        reject(err);
+                                                    })
+                                            } else {
+                                                resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0, "datosPaciente": null } });
                                             }
-                                            if (paciente.sexo == "masculino") {
-                                                sexo = "M";
-                                            }
-
-                                            this.getSisaCiudadano(paciente.documento, config.usuarioSisa, config.passwordSisa, sexo)
-                                                .then((res) => {
-                                                    if (res[1].Ciudadano.resultado == 'OK') {
-                                                        pacienteSisa = this.formatearDatosSisa(res[1].Ciudadano);
-                                                        matchPorcentaje = this.matchPersonas(paciente, pacienteSisa);
-                                                        matchPorcentaje = (matchPorcentaje * 100);
-                                                        resolve({"paciente": paciente, "matcheos": {"entidad": "Sisa","matcheo": matchPorcentaje, "datosPaciente": pacienteSisa}});
-                                                    }
-
-                                                })
-                                                .catch((err) => {
-                                                    reject(err);
-                                                })
-
+                                            break;
                                         default:
-                                            resolve({"paciente": paciente, "matcheos": {"entidad": "Sisa","matcheo": 0, "datosPaciente": null}});
+                                            resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0, "datosPaciente": null } });
                                             break;
                                     }
+
 
                                 }
 
                             }
-                            resolve({"paciente": paciente, "matcheos": {"entidad": "Sisa","matcheo": 0, "datosPaciente": null}});
+                            resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0, "datosPaciente": null } });
 
 
                         })
@@ -280,10 +289,10 @@ export class servicioSisa {
                     // setInterval(consultaSisa,100);
 
                 } else {
-                    resolve({"paciente": paciente, "matcheos": {"entidad": "Sisa","matcheo": 0, "datosPaciente": null}});
+                    resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0, "datosPaciente": null } });
                 }
             } else {
-                resolve({"paciente": paciente, "matcheos": {"entidad": "Sisa","matcheo": 0,"datosPaciente": null}});
+                resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": 0, "datosPaciente": null } });
             }
         })
 
@@ -291,62 +300,62 @@ export class servicioSisa {
 
 
     //Cambiar el estado del paciente a validado y agregamos como entidad validadora a Sisa
-    validarPaciente(pacienteActualizar, entidad){
-         return new Promise((resolve, reject) => {
+    validarPaciente(pacienteActualizar, entidad) {
+        return new Promise((resolve, reject) => {
             pacienteActualizar.paciente.estado = "validado";
-            if(pacienteActualizar.paciente.entidadesValidadoras.indexOf(entidad) <= -1) {
+            if (pacienteActualizar.paciente.entidadesValidadoras.indexOf(entidad) <= -1) {
                 pacienteActualizar.paciente.entidadesValidadoras.push(entidad);
             }
-             console.log("Paciente Actualizar: ",pacienteActualizar);
-             paciente.findByIdAndUpdate(pacienteActualizar.paciente._id, pacienteActualizar.paciente, {
-                    new: true
-                }, function (err, data) {
-                    if (err){
-                         reject(err);
-                    }
-                    else{
-                        resolve({"paciente": data, "matcheos": pacienteActualizar.matcheos});
-                        }
-                });
+            console.log("Paciente Actualizar: ", pacienteActualizar);
+            paciente.findByIdAndUpdate(pacienteActualizar.paciente._id, pacienteActualizar.paciente, {
+                new: true
+            }, function (err, data) {
+                if (err) {
+                    reject(err);
+                }
+                else {
+                    resolve({ "paciente": data, "matcheos": pacienteActualizar.matcheos });
+                }
+            });
 
-         })
+        })
     }
 
 
 
-//Cambiar el estado del paciente a validado y agregamos como entidad validadora a Sisa
-    validarActualizarPaciente(pacienteActualizar,entidad,datosPacEntidad){
-         return new Promise((resolve, reject) => {
-             console.log("Datos a validar",datosPacEntidad);
+    //Cambiar el estado del paciente a validado y agregamos como entidad validadora a Sisa
+    validarActualizarPaciente(pacienteActualizar, entidad, datosPacEntidad) {
+        return new Promise((resolve, reject) => {
+            console.log("Datos a validar", datosPacEntidad);
             pacienteActualizar.paciente.estado = "validado";
-            if(pacienteActualizar.paciente.entidadesValidadoras.indexOf(entidad) <= -1) {
+            if (pacienteActualizar.paciente.entidadesValidadoras.indexOf(entidad) <= -1) {
                 pacienteActualizar.paciente.entidadesValidadoras.push(entidad);
             }
-            if(datosPacEntidad.apellido) {
+            if (datosPacEntidad.apellido) {
                 pacienteActualizar.paciente.apellido = datosPacEntidad.apellido;
             }
-            if(datosPacEntidad.nombre) {
+            if (datosPacEntidad.nombre) {
                 pacienteActualizar.paciente.nombre = datosPacEntidad.nombre;
             }
-            if(datosPacEntidad.direccion){
-                for(var i=0;i<datosPacEntidad.direccion.length;i++){
+            if (datosPacEntidad.direccion) {
+                for (var i = 0; i < datosPacEntidad.direccion.length; i++) {
                     pacienteActualizar.paciente.direccion.push(datosPacEntidad.direccion[i]);
                 }
-             }
-             console.log("Direccion Vieja: ",pacienteActualizar.paciente.direccion);
-             console.log("Direccion Nueva: ",datosPacEntidad.direccion);
-             paciente.findByIdAndUpdate(pacienteActualizar.paciente._id, pacienteActualizar.paciente, {
-                    new: true
-                }, function (err, data) {
-                    if (err){
-                         reject(err);
-                    }
-                    else{
-                        resolve({"paciente": data, "matcheos": pacienteActualizar.matcheos});
-                        }
-                });
+            }
+            console.log("Direccion Vieja: ", pacienteActualizar.paciente.direccion);
+            console.log("Direccion Nueva: ", datosPacEntidad.direccion);
+            paciente.findByIdAndUpdate(pacienteActualizar.paciente._id, pacienteActualizar.paciente, {
+                new: true
+            }, function (err, data) {
+                if (err) {
+                    reject(err);
+                }
+                else {
+                    resolve({ "paciente": data, "matcheos": pacienteActualizar.matcheos });
+                }
+            });
 
-         })
+        })
     }
 
 }

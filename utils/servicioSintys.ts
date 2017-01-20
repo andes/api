@@ -1,18 +1,14 @@
 import { ValidateFormatDate } from './validateFormatDate';
-import {
-    machingDeterministico
-} from './machingDeterministico';
-import {
-    IPerson
-} from './IPerson';
+import { machingDeterministico } from './machingDeterministico';
+import { IPerson } from './IPerson';
 import * as https from 'https';
-import * as config from './config';
+import * as config from '../config';
 var to_json = require('xmljson').to_json;
 
 export class servicioSintys {
 
     matchPersonas(paciente, pacienteSintys) {
-        
+
         var m3 = new machingDeterministico();
         var weights = {
             identity: 0.3,
@@ -37,16 +33,16 @@ export class servicioSintys {
         };
 
         console.log('El paciente prametro:', IPac);
-        console.log('El paciente Sintys' ,IPacSintys);
+        console.log('El paciente Sintys', IPacSintys);
 
         var valorSintys = m3.maching(IPac, IPacSintys, weights);
-        console.log('Valor del matcheo:',valorSintys);
+        console.log('Valor del matcheo:', valorSintys);
         return valorSintys;
     }
 
 
-    getPersonaSintys(nroDocumento : string) {
-        
+    getPersonaSintys(nroDocumento: string) {
+
         var datosParseados;
         var xml = '';
         var organizacion = new Object();
@@ -61,7 +57,7 @@ export class servicioSintys {
             host: 'www.saludnqn.gov.ar',
             port: 443,
             path: pathSintys,
-            method: 'GET', 
+            method: 'GET',
             rejectUnauthorized: false
         };
         // Realizar GET request
@@ -102,13 +98,13 @@ export class servicioSintys {
         var ciudadano;
         var fecha;
         ciudadano = new Object();
-       
+
         ciudadano.documento = datosSintys.Documento ? datosSintys.Documento.toString() : '';
 
         //VER con las chicas ya que sintys no trae separado nbe y apellido.
-        ciudadano.apellido = datosSintys.NombreCompleto  ? datosSintys.NombreCompleto : '';
+        ciudadano.apellido = datosSintys.NombreCompleto ? datosSintys.NombreCompleto : '';
         //ciudadano.apellido ?
-        
+
         //TEMA DE DIRECCIÓN VERS SI VALE LA PENA
         //No lo trae en este webService hay que invocar a otro con el idDelPaciente seleccionado, además no está funcionando ya hice el reclamo en sintys
         /*
@@ -153,14 +149,14 @@ export class servicioSintys {
             }
         }
 
-        
+
         if (datosSintys.FechaNacimiento) {
             fecha = datosSintys.FechaNacimiento.split("/");
             var fechaNac = new Date(fecha[2].substr(0, 4), fecha[1] - 1, fecha[0]);
             ciudadano.fechaNacimiento = fechaNac.toJSON();
 
         }
-        
+
         /*
         if (datosSintys.estadoCivil) {
             // estadoCivil: {
@@ -182,7 +178,7 @@ export class servicioSintys {
         */
 
 
-       // console.log('Muestra el objeto Persona: ',ciudadano);
+        // console.log('Muestra el objeto Persona: ',ciudadano);
         return ciudadano;
 
     }
@@ -234,10 +230,10 @@ export class servicioSintys {
                                     console.log('el % de matcheo es:', matchPorcentaje);
                                     paciente["matchSintys"] = matchPorcentaje;
                                     //console.log('Datos: ', paciente);
-                                    resolve({"paciente": paciente, "matcheos": {"entidad": "Sintys","matcheo": matchPorcentaje, "datosPaciente": pacienteSintys}});
+                                    resolve({ "paciente": paciente, "matcheos": { "entidad": "Sintys", "matcheo": matchPorcentaje, "datosPaciente": pacienteSintys } });
                                 }
                             }
-                            resolve({"paciente": paciente, "matcheos": {"entidad": "Sintys","matcheo": 0, "datosPaciente": pacienteSintys}});
+                            resolve({ "paciente": paciente, "matcheos": { "entidad": "Sintys", "matcheo": 0, "datosPaciente": pacienteSintys } });
                         })
                         .catch((err) => {
                             console.error('Error consulta rest Sintys:' + err)
@@ -247,10 +243,10 @@ export class servicioSintys {
                     // setInterval(consultaSintys,100);
 
                 } else {
-                    resolve({"paciente": paciente, "matcheos": {"entidad": "Sintys","matcheo": 0, "datosPaciente": pacienteSintys}});
+                    resolve({ "paciente": paciente, "matcheos": { "entidad": "Sintys", "matcheo": 0, "datosPaciente": pacienteSintys } });
                 }
             } else {
-                resolve({"paciente": paciente, "matcheos": {"entidad": "Sintys","matcheo": 0, "datosPaciente": pacienteSintys}});
+                resolve({ "paciente": paciente, "matcheos": { "entidad": "Sintys", "matcheo": 0, "datosPaciente": pacienteSintys } });
             }
         })
 

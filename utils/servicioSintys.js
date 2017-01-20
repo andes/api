@@ -1,7 +1,7 @@
 "use strict";
-var validateFormatDate_1 = require('./validateFormatDate');
-var machingDeterministico_1 = require('./machingDeterministico');
-var https = require('https');
+var validateFormatDate_1 = require("./validateFormatDate");
+var machingDeterministico_1 = require("./machingDeterministico");
+var https = require("https");
 var to_json = require('xmljson').to_json;
 var servicioSintys = (function () {
     function servicioSintys() {

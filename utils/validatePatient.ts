@@ -1,6 +1,4 @@
-import {
-    ValidateFormatDate
-} from './validateFormatDate';
+import { ValidateFormatDate } from './validateFormatDate';
 
 export class ValidatePatient {
 
@@ -73,9 +71,9 @@ export class ValidatePatient {
         if (patient.relaciones) {
 
             let long = 0;
-            while(patient.relaciones.length > long){
+            while (patient.relaciones.length > long) {
 
-                if(relaciones.indexOf(patient.relaciones[long].relacion) < 0){
+                if (relaciones.indexOf(patient.relaciones[long].relacion) < 0) {
                     valid = false;
                     errors.push("Existe al menos un tipo de parentezco que no pertenece al conjunto enumerado");
                     break;
@@ -87,15 +85,15 @@ export class ValidatePatient {
 
         if (patient.contacto) {
             let long = 0;
-            while(patient.contacto.length > long){
-                if(tipoContacto.indexOf(patient.contacto[long].tipo) < 0){
+            while (patient.contacto.length > long) {
+                if (tipoContacto.indexOf(patient.contacto[long].tipo) < 0) {
                     valid = false;
                     errors.push("Existe al menos un tipo de contacto que no pertenece al conjunto enumerado");
                     break;
                 }
                 long = long + 1;
             }
-           
+
         }
 
         return {
