@@ -8,6 +8,7 @@ var router = express.Router();
 router.put('/turno/:_id', function (req, res) {
   let etiquetaEstado: string = "bloques." + req.body.indiceBloque + ".turnos." + req.body.indiceTurno + ".estado";
   let etiquetaPaciente: string = "bloques." + req.body.indiceBloque + ".turnos." + req.body.indiceTurno + ".paciente";
+  let etiquetaPacientes: string = "bloques." + req.body.indiceBloque + ".turnos." + req.body.indiceTurno + ".pacientes";
   console.log(req.body.estado);
   
   let query = {
@@ -17,7 +18,10 @@ router.put('/turno/:_id', function (req, res) {
   
   let update: any = {};
   update[etiquetaEstado] = req.body.estado;
-  update[etiquetaPaciente] = req.body.paciente;
+  if (req.body.simultaneos)
+    update[etiquetaPacientes] = req.body.pacientes;
+  else
+    update[etiquetaPaciente] = req.body.paciente;
 
   agenda.findOneAndUpdate(query, { $set: update }, function (err, agen) {
     if (err)

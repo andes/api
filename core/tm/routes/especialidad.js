@@ -1,6 +1,6 @@
 "use strict";
-var express = require("express");
-var especialidad = require("../schemas/especialidad_model");
+var express = require('express');
+var especialidad = require('../schemas/especialidad_model');
 var router = express.Router();
 /**
  * @swagger

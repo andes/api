@@ -1,7 +1,7 @@
 "use strict";
-var express = require("express");
-var organizacion = require("../schemas/organizacion");
-var utils = require("../../../utils/utils");
+var express = require('express');
+var organizacion = require('../schemas/organizacion');
+var utils = require('../../../utils/utils');
 var router = express.Router();
 /**
  * @swagger

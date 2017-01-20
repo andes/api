@@ -1,5 +1,5 @@
 "use strict";
-var mongoose = require("mongoose");
+var mongoose = require('mongoose');
 var tipoEstablecimientoSchema = new mongoose.Schema({
     nombre: String,
     descripcion: String,

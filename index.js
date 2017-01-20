@@ -1,13 +1,13 @@
 "use strict";
-var express = require("express");
-var bodyParser = require("body-parser");
-var mongoose = require("mongoose");
-var config = require("./config");
+var express = require('express');
+var bodyParser = require('body-parser');
+var mongoose = require('mongoose');
+var config = require('./config');
 var requireDir = require('require-dir');
 var path = require('path');
 var app = express();
 // Configuración de Mongoose
-config.mongooseDebugMode && mongoose.set('debug', true);
+config.mongooseDebugMode && mongoose.set('debug', false);
 mongoose.connect(config.connectionStrings.mongoDB_main);
 mongoose.plugin(require('./plugins/defaults'));
 // Configura Express

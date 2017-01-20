@@ -3,9 +3,9 @@
 exports.usuarioSisa = 'bcpintos';
 exports.passwordSisa = '*123456';
 // Configuración de Mongoose
-exports.mongooseDebugMode = false;
+exports.mongooseDebugMode = true;
 exports.connectionStrings = {
-    mongoDB_main: 'mongodb://10.1.62.17/andes'
+    mongoDB_main: 'mongodb://localhost/andes'
 };
 // Habilita/deshabilita módulos de la API
 exports.modules = {

@@ -1,5 +1,5 @@
 "use strict";
-var libString_1 = require("./libString");
+var libString_1 = require('./libString');
 var machingDeterministico = (function () {
     function machingDeterministico() {
     }
@@ -110,6 +110,6 @@ var machingDeterministico = (function () {
         return value;
     };
     return machingDeterministico;
-}()); //fin class
-exports.machingDeterministico = machingDeterministico;
+}());
+exports.machingDeterministico = machingDeterministico; //fin class
 //# sourceMappingURL=machingDeterministico.js.map

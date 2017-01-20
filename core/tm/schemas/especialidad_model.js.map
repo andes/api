@@ -1,1 +1,1 @@
-{"version":3,"file":"especialidad_model.js","sourceRoot":"","sources":["especialidad_model.ts"],"names":[],"mappings":";AAAA,mCAAqC;AACrC,mDAAqD;AAErD,IAAI,kBAAkB,GAAG,QAAQ,CAAC,KAAK,CAAC,oBAAoB,EAAE,kBAAkB,EAAE,cAAc,CAAC,CAAC;AAElG,iBAAS,kBAAkB,CAAC"}
+{"version":3,"file":"especialidad_model.js","sourceRoot":"","sources":["especialidad_model.ts"],"names":[],"mappings":";AAAA,IAAY,QAAQ,WAAM,UAAU,CAAC,CAAA;AACrC,IAAY,kBAAkB,WAAM,gBAAgB,CAAC,CAAA;AAErD,IAAI,kBAAkB,GAAG,QAAQ,CAAC,KAAK,CAAC,oBAAoB,EAAE,kBAAkB,EAAE,cAAc,CAAC,CAAC;AAElG,iBAAS,kBAAkB,CAAC"}
