@@ -50,6 +50,16 @@ var router = express.Router();
  *         description: El codigo sisa de la especialidad
  *         required: false
  *         type: string
+ *       - name: skip
+ *         in: query
+ *         description: El valor numerico del skip
+ *         required: false
+ *         type: number
+ *       - name: limit
+ *         in: query
+ *         description: El valor del limit
+ *         required: false
+ *         type: number
  *     responses:
  *       200:
  *         description: un arreglo de objetos especialidad

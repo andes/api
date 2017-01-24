@@ -1,5 +1,5 @@
 import * as express from 'express'
-import * as pais from '../schemas/pais'
+import * as pais from '../schemas/pais_model'
 
 var router = express.Router();
 
