@@ -6,9 +6,49 @@ import * as prestacionSchema from '../../../core/tm/schemas/prestacion';
 import * as espacioFisicoSchema from '../../turnos/schemas/espacioFisico';
 
 var evolucionSchema = new mongoose.Schema({
+    // Evolucion Profesional
+
+    topografia: [
+        codificadorSchema
+    ],
+
+    // Informe
+    informe: [{
+        fechaRealizacion: Date,
+        proposito: {
+            type: String,
+            enum: ['control', 'diagnostica', 'tamizaje', 'otra']
+        },
+        profesionales: [
+            profesionalSchema
+        ],
+
+        //lista de problemas que surjan de la evolucion. Lo diagnosticos alimentan la lista de problemas de pacientes
+        diagnostico: [
+            codificadorSchema
+        ],
+        texto: String
+    }],
+
+    // campo destinado a segundas opiniones o auditorias de las prestaciones
+    segundaOpinion: [{
+        //usuario: usuarioSchema 
+        texto: String,
+        fechaRealizacion: Date
+    }],
+
+    valores: [
+        mongoose.Schema.Types.Mixed
+    ],
+
+    // Evolución gestion
+    momentoRealizacion: {
+        type: String,
+        enum: ['guardia pasiva', 'guardia activa', 'horario laboral']
+    },
 
     recursos: {
-        profesionales: [
+        otrosProfesionales: [
             profesionalSchema
         ],
         espaciosFisicos: [
@@ -25,22 +65,10 @@ var evolucionSchema = new mongoose.Schema({
         ]
     },
 
-    topografia: [
-        codificadorSchema
-    ],
-
-    diagnosticos: [
-        codificadorSchema
-    ],
-
-    // Evolución Administrativa
-    momentoRealizacion: {
-        type: String,
-        enum: ['guardia pasiva', 'guardia activa', 'horario laboral']
-    },
 
 
-    // Evolución de Calidad del proceso "3 horas"
+    // Evolución de Calidad del proceso
+
     tiempoRealizacion: {
         valor: String,
         unidad: String
@@ -51,31 +79,16 @@ var evolucionSchema = new mongoose.Schema({
         observaciones: String
     },
 
-    // Consultar a Grupo de Avanzada (?)
-    conclusion: {
-        finalizada: Boolean,
-        observaciones: String
-    },
-
-    // Informe
-    informe: {
-        fechaRealizacion: Date,
-        proposito: {
-            type: String,
-            enum: ['control', 'diagnostica', 'tamizaje', 'otra']
-        },
-        profesionales: [
-            profesionalSchema
-        ],
-        //lista de problemas que surjan de la evolucion
-        diagnostico: [
-            codificadorSchema]
-    },
-
-    valores: [
-        mongoose.Schema.Types.Mixed
-    ]
-
+    estado: [
+        {
+            timestamp: Date,
+            tipo: {
+                type: String,
+                enum: ["ejecucion", "dictado", "transcripcion", "informado", ".............."] // 
+            },
+            observaciones: String
+        }
+    ],
 
 })
 
