@@ -1,6 +1,6 @@
 "use strict";
 var express = require('express');
-var provincia = require('../schemas/provincia');
+var provincia = require('../schemas/provincia_model');
 var router = express.Router();
 /**
  * @swagger
@@ -83,7 +83,7 @@ router.get('/provincia/:id*?', function (req, res, next) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
         }
         if (req.query.pais) {
-            query.where('pais.id').equals(req.query.pais);
+            query.where('pais._id').equals(req.query.pais);
         }
         query.exec(function (err, data) {
             if (err)

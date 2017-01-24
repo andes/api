@@ -156,7 +156,7 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
             filtros['activo'] = req.query.activo;
         }
         var skip = parseInt(req.query.skip || 0);
-        var limit = parseInt(req.query.limit || 10);
+        var limit = parseInt(req.query.limit);
         query = organizacion.find(filtros).skip(skip).limit(limit).populate('tipoEstablecimiento');
         query.exec(function (err, data) {
             if (err)

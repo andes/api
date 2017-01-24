@@ -1,9 +1,9 @@
 "use strict";
-var validatePatient_1 = require("../../../utils/validatePatient");
-var validateFormatDate_1 = require("../../../utils/validateFormatDate");
-var express = require("express");
-var paciente = require("../schemas/paciente");
-var utils = require("../../../utils/utils");
+var validatePatient_1 = require('../../../utils/validatePatient');
+var validateFormatDate_1 = require('../../../utils/validateFormatDate');
+var express = require('express');
+var paciente = require('../schemas/paciente');
+var utils = require('../../../utils/utils');
 var router = express.Router();
 /**
  * @swagger
