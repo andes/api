@@ -85,7 +85,7 @@ pacienteSchema.index({
 pacienteSchema.plugin(mongoosastic, {
     hosts: [config.connectionStrings.elastic_main],
     index: 'andes',
-    type: 'paciente'
+    type: 'pacientes'
 });
 
 var paciente = mongoose.model('paciente', pacienteSchema, 'paciente');

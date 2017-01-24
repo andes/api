@@ -9,7 +9,23 @@ import * as organizacionSchema from '../../../core/tm/schemas/organizacion';
 import * as prestacionSchema from '../../../core/tm/schemas/prestacion';
 
 var solicitudSchema = new mongoose.Schema({
-    fechaSolicitud: Date,
+    fechaSolicitud: {
+        type: Date,
+        required: true
+    },
+    paciente: {
+        type: pacienteSchema,
+        required: true
+    },
+    prestacion: {
+        prestacionSchema
+    },
+    idSolicitudOrigen: mongoose.Schema.Types.ObjectId,
+    frecuencia: {
+        valor: String,
+        unidad: String
+    },
+    motivoConsultaPaciente: String,
 
     motivoConsulta: {
         codificadorSchema
@@ -17,10 +33,6 @@ var solicitudSchema = new mongoose.Schema({
 
     requiereTurno: Boolean,
     idTurno: mongoose.Schema.Types.ObjectId,
-
-    paciente: {
-        pacienteSchema
-    },
 
     otroContacto: {
         contactoSchema
@@ -31,15 +43,12 @@ var solicitudSchema = new mongoose.Schema({
     },
 
     profesionalSolicitud: {
-        profesionalSchema
+        type: profesionalSchema,
+        required: true
     },
 
     organizacion: {
         organizacionSchema
-    },
-
-    prestacion: {
-        prestacionSchema
     },
 
     estado: [
@@ -90,8 +99,9 @@ var solicitudSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.Mixed
     }],
 
-    evoluciones:
-    [evolucionSchema]
+    evoluciones: [
+        evolucionSchema
+    ]
 
 });
 

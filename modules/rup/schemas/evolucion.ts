@@ -11,7 +11,7 @@ var evolucionSchema = new mongoose.Schema({
         profesionales: [
             profesionalSchema
         ],
-        espacios_fisicos: [
+        espaciosFisicos: [
             espacioFisicoSchema
         ],
         medicamentos: [
@@ -59,9 +59,6 @@ var evolucionSchema = new mongoose.Schema({
 
     // Informe
     informe: {
-        motivoConsulta: [
-            codificadorSchema
-        ],
         fechaRealizacion: Date,
         proposito: {
             type: String,
@@ -69,13 +66,17 @@ var evolucionSchema = new mongoose.Schema({
         },
         profesionales: [
             profesionalSchema
-        ]
+        ],
+        //lista de problemas que surjan de la evolucion
+        diagnostico: [
+            codificadorSchema]
     },
 
-    valores: [{
-        type: mongoose.Schema.Types.Mixed,
-        valor: String
-    }]
+    valores: [
+        mongoose.Schema.Types.Mixed
+    ]
 
 
 })
+
+export = evolucionSchema;
