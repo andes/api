@@ -136,7 +136,7 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
                 next(err);
             }
             res.json(data);
-        }).populate('tipoEstablecimiento');
+        });
     }
     else {
         var query;
@@ -157,7 +157,7 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
         }
         var skip = parseInt(req.query.skip || 0);
         var limit = parseInt(req.query.limit);
-        query = organizacion.find(filtros).skip(skip).limit(limit).populate('tipoEstablecimiento');
+        query = organizacion.find(filtros).skip(skip).limit(limit);
         query.exec(function (err, data) {
             if (err)
                 return next(err);
