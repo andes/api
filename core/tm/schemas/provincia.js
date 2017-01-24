@@ -1,10 +1,9 @@
 "use strict";
 var mongoose = require('mongoose');
-var lugarSchema = require('./lugar');
+var paisSchema = require('./pais');
 var provinciaSchema = new mongoose.Schema({
     nombre: String,
-    pais: lugarSchema
+    pais: paisSchema
 });
-var provincia = mongoose.model('provincia', provinciaSchema, 'provincia');
-module.exports = provincia;
+module.exports = provinciaSchema;
 //# sourceMappingURL=provincia.js.map
