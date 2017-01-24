@@ -17,7 +17,7 @@ var organizacionSchema = new mongoose.Schema({
     tipoEstablecimiento: tipoEstablecimientoSchema,
     contacto: [contactoSchema],
     direccion: direccionSchema,
-    edificios: [edificioSchema],
+    edificio: [edificioSchema],
     nivelComplejidad: Number,
     activo: {
         type: Boolean,
