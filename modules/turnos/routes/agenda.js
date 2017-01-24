@@ -16,11 +16,9 @@ router.get('/agenda/:id*?', function (req, res, next) {
         var query;
         query = agenda.find({}); //Trae todos
         if (req.query.fechaDesde) {
-            console.log(req.query.fechaDesde);
             query.where('horaInicio').gte(req.query.fechaDesde);
         }
         if (req.query.fechaHasta) {
-            console.log(req.query.fechaHasta);
             query.where('horaFin').lte(req.query.fechaHasta);
         }
         if (req.query.idEspacioFisico) {
@@ -32,6 +30,16 @@ router.get('/agenda/:id*?', function (req, res, next) {
         if (req.query.idPrestacion) {
             query.where('prestaciones.id').equals(req.query.idPrestacion);
         }
+        //Dada una lista de prestaciones, filtra las agendas que tengan al menos una de las prestaciones
+        if (req.query.prestaciones) {
+            var arr_prestaciones = JSON.parse(req.query.prestaciones);
+            var variable_1 = [];
+            arr_prestaciones.forEach(function (prestacion, index) {
+                // console.log ("prestacion "+prestacion._id);
+                variable_1.push({ "prestaciones.id": prestacion._id });
+            });
+            query.or(variable_1);
+        }
         if (!Object.keys(query).length) {
             res.status(400).send("Debe ingresar al menos un parámetro");
             return next(400);
@@ -40,6 +48,7 @@ router.get('/agenda/:id*?', function (req, res, next) {
             fechaDesde: 1,
             fechaHasta: 1
         });
+        console.log("query ", query._conditions);
         query.exec(function (err, data) {
             if (err)
                 return next(err);

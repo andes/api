@@ -1,6 +1,6 @@
 "use strict";
 var express = require('express');
-var pais = require('../schemas/pais');
+var pais = require('../schemas/pais_model');
 var router = express.Router();
 /**
  * @swagger
