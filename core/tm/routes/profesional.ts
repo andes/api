@@ -1,6 +1,8 @@
+import { defaultLimit, maxLimit } from './../../../config';
 import * as express from 'express'
 import * as profesional from '../schemas/profesional'
-import * as utils from '../../../utils/utils';
+import * as utils from '../../../utils/utils'
+import * as config from '../../../config';
 
 var router = express.Router();
 
@@ -186,11 +188,11 @@ router.get('/profesionales/:_id*?', function (req, res, next) {
             if (err) {
                 next(err);
             };
-
+            //console.log(data);
             res.json(data);
         });
     } else {
-
+       
         var query;
         var opciones = {};
 
@@ -225,7 +227,7 @@ router.get('/profesionales/:_id*?', function (req, res, next) {
         }
     }
     let skip: number = parseInt(req.query.skip || 0);
-    let limit: number = parseInt(req.query.limit || 10);
+    let limit: number = Math.min(parseInt(req.query.limit || defaultLimit), maxLimit);
     query = profesional.find(opciones).skip(skip).limit(limit);
     query.exec(function (err, data) {
         if (err) return next(err);

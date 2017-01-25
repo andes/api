@@ -1,9 +1,9 @@
 import * as mongoose from 'mongoose';
-import * as lugarSchema from './lugar';
+import * as provinciaSchema from './provincia';
 
 var localidadSchema = new mongoose.Schema({
     nombre: String,
-    provincia: lugarSchema
+    provincia: provinciaSchema
 });
 
 var localidad = mongoose.model('localidad', localidadSchema, 'localidad');

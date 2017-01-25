@@ -16,12 +16,24 @@ var profesionalSchema = new mongoose.Schema({
     nombre: String,
     apellido: String,
     contacto: [contactoSchema],
-    sexo: sexoSchema,
-    genero: sexoSchema, // identidad autopercibida
+    //sexo: sexoSchema,
+     sexo:{
+        type: String,
+        enum: ["femenino", "masculino", "otro",""]
+    },
+    //genero: sexoSchema, // identidad autopercibida
+    genero: {
+        type: String,
+        enum: ["femenino", "masculino", "otro",""]
+    },
     fechaNacimiento: Date, // Fecha Nacimiento
     fechaFallecimiento: Date,
     direccion: [direccionSchema],
-    estadoCivil: estadoCivilSchema,
+    //estadoCivil: estadoCivilSchema,
+    estadoCivil:  {
+        type: String,
+        enum: ["casado", "separado", "divorciado", "viudo", "soltero", "otro"] 
+      },
     foto: String,
     rol: String, //Ejemplo Jefe de Terapia intensiva
     especialidades: [especialidadSchema],
