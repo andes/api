@@ -1,9 +1,9 @@
 "use strict";
 var mongoose = require('mongoose');
-var lugarSchema = require('./lugar');
+var provinciaSchema = require('./provincia');
 var localidadSchema = new mongoose.Schema({
     nombre: String,
-    provincia: lugarSchema
+    provincia: provinciaSchema
 });
 var localidad = mongoose.model('localidad', localidadSchema, 'localidad');
 module.exports = localidad;

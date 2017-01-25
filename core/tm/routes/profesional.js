@@ -1,4 +1,5 @@
 "use strict";
+var config_1 = require('./../../../config');
 var express = require('express');
 var profesional = require('../schemas/profesional');
 var utils = require('../../../utils/utils');
@@ -178,13 +179,14 @@ var router = express.Router();
  *         schema:
  *           $ref: '#/definitions/profesional'
  */
-router.get('/profesionales/:_id*?', function (req, res, next) {
+router.get('/profesionales/:id*?', function (req, res, next) {
     if (req.params.id) {
         profesional.findById(req.params._id, function (err, data) {
             if (err) {
                 next(err);
             }
             ;
+            //console.log(data);
             res.json(data);
         });
     }
@@ -217,7 +219,7 @@ router.get('/profesionales/:_id*?', function (req, res, next) {
         }
     }
     var skip = parseInt(req.query.skip || 0);
-    var limit = parseInt(req.query.limit || 10);
+    var limit = Math.min(parseInt(req.query.limit || config_1.defaultLimit), config_1.maxLimit);
     query = profesional.find(opciones).skip(skip).limit(limit);
     query.exec(function (err, data) {
         if (err)
@@ -290,7 +292,7 @@ router.post('/profesionales', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/profesional'
  */
-router.put('/profesionales/:_id', function (req, res, next) {
+router.put('/profesionales/:id', function (req, res, next) {
     profesional.findByIdAndUpdate(req.params._id, req.body, { new: true }, function (err, data) {
         if (err)
             return next(err);
@@ -322,7 +324,7 @@ router.put('/profesionales/:_id', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/profesional'
  */
-router.delete('/profesionales/:_id', function (req, res, next) {
+router.delete('/profesionales/:id', function (req, res, next) {
     profesional.findByIdAndRemove(req.params._id, function (err, data) {
         if (err)
             return next(err);

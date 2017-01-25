@@ -273,7 +273,7 @@ router.put('/organizaciones/:id', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/organizacion'
  */
-router.delete('/organizaciones/:_id', function (req, res, next) {
+router.delete('/organizaciones/:id', function (req, res, next) {
     organizacion.findByIdAndRemove(req.params._id, function (err, data) {
         if (err)
             return next(err);
