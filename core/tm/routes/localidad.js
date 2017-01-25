@@ -66,7 +66,7 @@ var router = express.Router();
  *         schema:
  *           $ref: '#/definitions/localidad'
  */
-router.get('/localidad/:id*?', function (req, res, next) {
+router.get('/localidades/:id*?', function (req, res, next) {
     if (req.params.id) {
         localidad.findById(req.params.id, function (err, data) {
             if (err) {

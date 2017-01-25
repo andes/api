@@ -69,7 +69,7 @@ var router = express.Router();
  *         schema:
  *           $ref: '#/definitions/provincia'
  */
-router.get('/provincia/:id*?', function(req, res, next) {
+router.get('/provincias/:id*?', function(req, res, next) {
 
    if (req.params.id) {
        provincia.findById(req.params.id, function (err, data) {

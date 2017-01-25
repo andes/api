@@ -54,7 +54,7 @@ var router = express.Router();
  *         schema:
  *           $ref: '#/definitions/financiador'
  */
-router.get('/financiador/:id*?', function(req, res, next) {
+router.get('/financiadores/:id*?', function(req, res, next) {
 
    if (req.params.id) {
        financiador.findById(req.params.id, function (err, data) {

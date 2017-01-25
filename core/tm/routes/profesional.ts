@@ -182,7 +182,7 @@ var router = express.Router();
  *         schema:
  *           $ref: '#/definitions/profesional'
  */
-router.get('/profesionales/:_id*?', function (req, res, next) {
+router.get('/profesionales/:id*?', function (req, res, next) {
     if (req.params.id) {
         profesional.findById(req.params._id, function (err, data) {
             if (err) {
@@ -303,7 +303,7 @@ router.post('/profesionales', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/profesional'
  */
-router.put('/profesionales/:_id', function (req, res, next) {
+router.put('/profesionales/:id', function (req, res, next) {
     profesional.findByIdAndUpdate(req.params._id, req.body, { new: true }, function (err, data) {
         if (err)
             return next(err);
@@ -337,7 +337,7 @@ router.put('/profesionales/:_id', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/profesional'
  */
-router.delete('/profesionales/:_id', function (req, res, next) {
+router.delete('/profesionales/:id', function (req, res, next) {
     profesional.findByIdAndRemove(req.params._id, function (err, data) {
         if (err)
             return next(err);
