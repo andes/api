@@ -1,7 +1,5 @@
 "use strict";
 var mongoose = require('mongoose');
-var sexoSchema = require('./sexo');
-var estadoCivilSchema = require('./estadoCivil');
 var direccionSchema = require('./direccion');
 var contactoSchema = require('./contacto');
 var especialidadSchema = require('./especialidad');
@@ -15,12 +13,24 @@ var profesionalSchema = new mongoose.Schema({
     nombre: String,
     apellido: String,
     contacto: [contactoSchema],
-    sexo: sexoSchema,
-    genero: sexoSchema,
+    //sexo: sexoSchema,
+    sexo: {
+        type: String,
+        enum: ["femenino", "masculino", "otro", ""]
+    },
+    //genero: sexoSchema, // identidad autopercibida
+    genero: {
+        type: String,
+        enum: ["femenino", "masculino", "otro", ""]
+    },
     fechaNacimiento: Date,
     fechaFallecimiento: Date,
     direccion: [direccionSchema],
-    estadoCivil: estadoCivilSchema,
+    //estadoCivil: estadoCivilSchema,
+    estadoCivil: {
+        type: String,
+        enum: ["casado", "separado", "divorciado", "viudo", "soltero", "otro"]
+    },
     foto: String,
     rol: String,
     especialidades: [especialidadSchema],

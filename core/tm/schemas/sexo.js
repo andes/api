@@ -1,8 +1,10 @@
 "use strict";
 var mongoose = require('mongoose');
 var schema = new mongoose.Schema({
-    type: String,
-    enum: ["femenino", "masculino", "otro"],
-});
+    sexo: {
+        type: String,
+        enum: ["femenino", "masculino", "otro", ""]
+    }
+}, { strict: false });
 module.exports = schema;
 //# sourceMappingURL=sexo.js.map

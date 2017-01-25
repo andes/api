@@ -64,7 +64,7 @@ var solicitudSchema = new mongoose.Schema({
     problemas: [
         codificadorSchema
     ],
-
+    //ambito
     procedencia: {
         type: String,
         enum: ['ambulatorio', 'guardia', 'internación']
@@ -75,10 +75,10 @@ var solicitudSchema = new mongoose.Schema({
         enum: ['no prioritario', 'urgencia', 'emergencia']
     },
 
-    proposito: {
+    proposito: [{
         type: String,
         enum: ['control', 'diganostica', 'tamizaje', 'otra']
-    },
+    }],
 
     estadoPaciente: {
         type: String,

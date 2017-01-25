@@ -1,4 +1,5 @@
 "use strict";
+var config_1 = require('./../../../config');
 var express = require('express');
 var profesional = require('../schemas/profesional');
 var utils = require('../../../utils/utils');
@@ -185,6 +186,7 @@ router.get('/profesionales/:_id*?', function (req, res, next) {
                 next(err);
             }
             ;
+            //console.log(data);
             res.json(data);
         });
     }
@@ -217,7 +219,7 @@ router.get('/profesionales/:_id*?', function (req, res, next) {
         }
     }
     var skip = parseInt(req.query.skip || 0);
-    var limit = parseInt(req.query.limit || 10);
+    var limit = Math.min(parseInt(req.query.limit || config_1.defaultLimit), config_1.maxLimit);
     query = profesional.find(opciones).skip(skip).limit(limit);
     query.exec(function (err, data) {
         if (err)
