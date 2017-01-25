@@ -1,5 +1,6 @@
 import * as express from 'express'
 import * as especialidad from '../schemas/especialidad_model'
+import { defaultLimit, maxLimit } from './../../../config';
 
 var router = express.Router();
 
@@ -99,7 +100,7 @@ router.get('/especialidades/:id*?', function (req, res, next) {
         });
     } else {
         let skip: number = parseInt(req.query.skip || 0);
-        let limit: number = parseInt(req.query.limit || 10);
+        let limit: number = Math.min(parseInt(req.query.limit || defaultLimit), maxLimit);
         var query;
         query = especialidad.find({}).skip(skip).limit(limit); //Trae todos 
         if (req.query.codigoSisa)

@@ -1,7 +1,6 @@
 import * as mongoose from 'mongoose';
 import * as ubicacionSchema from './ubicacion';
-import * as sexoSchema from './sexo';
-import * as estadoCivilSchema from './estadoCivil';
+import * as constantes from './constantes';
 import * as direccionSchema from './direccion';
 import * as contactoSchema from './contacto';
 import * as especialidadSchema from './especialidad';
@@ -16,24 +15,12 @@ var profesionalSchema = new mongoose.Schema({
     nombre: String,
     apellido: String,
     contacto: [contactoSchema],
-    //sexo: sexoSchema,
-     sexo:{
-        type: String,
-        enum: ["femenino", "masculino", "otro",""]
-    },
-    //genero: sexoSchema, // identidad autopercibida
-    genero: {
-        type: String,
-        enum: ["femenino", "masculino", "otro",""]
-    },
+    sexo:constantes.sexo,
+    genero: constantes.sexo,
     fechaNacimiento: Date, // Fecha Nacimiento
     fechaFallecimiento: Date,
     direccion: [direccionSchema],
-    //estadoCivil: estadoCivilSchema,
-    estadoCivil:  {
-        type: String,
-        enum: ["casado", "separado", "divorciado", "viudo", "soltero", "otro"] 
-      },
+    estadoCivil:constantes.estadoCivil,
     foto: String,
     rol: String, //Ejemplo Jefe de Terapia intensiva
     especialidades: [especialidadSchema],
