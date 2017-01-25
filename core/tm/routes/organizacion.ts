@@ -1,6 +1,7 @@
 import * as express from 'express'
 import * as organizacion from '../schemas/organizacion'
 import * as utils from '../../../utils/utils';
+import { defaultLimit, maxLimit } from './../../../config';
 
 var router = express.Router();
 /**
@@ -160,7 +161,7 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
         }
         
         let skip: number = parseInt(req.query.skip || 0);
-        let limit: number = parseInt(req.query.limit);
+        let limit: number = Math.min(parseInt(req.query.limit || defaultLimit), maxLimit);
         
         
         query = organizacion.find(filtros).skip(skip).limit(limit).populate('tipoEstablecimiento');
