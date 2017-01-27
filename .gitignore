@@ -2,13 +2,8 @@
 logs
 *.log
 npm-debug.log*
-*.map
-*.js
-*.js.map
 # Dependency directories
 node_modules
 typings
 .vscode
 config.ts
-config.js
-config.js.map
