@@ -1,1 +1,0 @@
-{"version":3,"file":"tipoEstablecimiento.js","sourceRoot":"","sources":["tipoEstablecimiento.ts"],"names":[],"mappings":";AAAA,IAAY,QAAQ,WAAM,UAAU,CAAC,CAAA;AAErC,IAAI,yBAAyB,GAAG,IAAI,QAAQ,CAAC,MAAM,CAAC;IAChD,MAAM,EAAE,MAAM;IACd,WAAW,EAAE,MAAM;IACnB,aAAa,EAAE,MAAM;IACrB,aAAa,EAAE,MAAM;CACxB,CAAC,CAAC;AAEH,iBAAS,yBAAyB,CAAC"}
