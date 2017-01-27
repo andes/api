@@ -9,5 +9,6 @@ npm-debug.log*
 # Dependency directories
 node_modules
 typings
+typings/*
 .vscode
 config.ts
