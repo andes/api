@@ -48,7 +48,7 @@ router.get('/agenda/:id*?', function (req, res, next) {
             fechaDesde: 1,
             fechaHasta: 1
         });
-        console.log("query ", query._conditions);
+        //console.log("query ", query._conditions)
         query.exec(function (err, data) {
             if (err)
                 return next(err);

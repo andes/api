@@ -9,7 +9,6 @@ router.put('/turno/:_id', function (req, res) {
   let etiquetaEstado: string = "bloques." + req.body.indiceBloque + ".turnos." + req.body.indiceTurno + ".estado";
   let etiquetaPaciente: string = "bloques." + req.body.indiceBloque + ".turnos." + req.body.indiceTurno + ".paciente";
   let etiquetaPacientes: string = "bloques." + req.body.indiceBloque + ".turnos." + req.body.indiceTurno + ".pacientes";
-  console.log(req.body.estado);
   
   let query = {
     _id: req.params._id
