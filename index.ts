@@ -1,138 +1,79 @@
-import * as http from "http";
+import * as http from 'http';
 import * as express from 'express'
 import * as bodyParser from 'body-parser'
 import * as mongoose from 'mongoose'
+import * as config from './config';
 
 var requireDir = require('require-dir');
-var swaggerJSDoc = require('swagger-jsdoc');
 var path = require('path');
 var app = express();
 
-mongoose.connect('mongodb://10.1.62.17/andes');
+// Configuración de Mongoose
+config.mongooseDebugMode && mongoose.set('debug', false);
+mongoose.connect(config.connectionStrings.mongoDB_main);
 mongoose.plugin(require('./plugins/defaults'));
-// swagger definition
-var swaggerDefinition = {
-  info: {
-    title: 'API ANDES',
-    version: '1.0.0',
-    description: 'APIs de tablas maestras ANDES',
-  },
-  host: 'localhost:3002',
-  basePath: '/api',
-  definitions: {
-        "referencia":{
-            "type": "object",
-            "properties":{
-                "id":
-                    {"type": "string"},
-                "nombre":
-                    {"type": "string"}
-            }
-        },
-        "ubicacion":{
-            "type": "object",
-            "properties":{
-                "barrio": {
-                    $ref: '#/definitions/referencia'
-                },
-                "localidad": {
-                    $ref: '#/definitions/referencia'
-                },
-                "provincia": {
-                    $ref: '#/definitions/referencia'
-                },
-                "pais": {
-                    $ref: '#/definitions/referencia'
-                }
-            }
-        },
-        "direccion": {
-            "type": "object",
-            "properties":{
-                "valor": 
-                    {"type": "string"},
-                "codigoPostal": 
-                    {"type": "string"},
-                "ubicacion": {
-                    $ref: '#/definitions/ubicacion'
-                    },
-                "ranking": 
-                    {"type": "number"},
-                "geoReferencia":
-                    {"type": "array",
-                     "items": {"type":"number"}}, 
-                "ultimaActualizacion": 
-                    {"type": "string","format": "date" },
-                "activo": 
-                    {"type": "boolean"}
-            }
-        },
-        "contacto": {
-            "type": "object",
-            "properties":{
-                "proposito": 
-                    {"type": "String"},
-                "nombre":
-                    {"type": "String"},
-                "apellido":
-                    {"type": "String"},
-                "tipo":
-                    {"type": "String",
-                     "enum": ["telefonoFijo", "telefonoCelular", "email"]
-                    },
-                 "valor": 
-                    {"type": "string"},   
-                 "activo": 
-                    {"type": "boolean"}
-            }
-        }
-    }
-  
-};
 
-// options for the swagger docs
-var options = {
-  // import swaggerDefinitions
-  swaggerDefinition: swaggerDefinition,
-  // path to the API docs
-   apis: [path.join(__dirname,'/routes/*.js')],
-  
-};
-
-// initialize swagger-jsdoc
-var swaggerSpec = swaggerJSDoc(options);
-
-
+// Configura Express
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
     extended: true
 }));
-
-app.all('*', function(req, res, next) {
+app.all('*', function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header('Access-Control-Allow-Methods', 'OPTIONS,GET,POST,PUT,DELETE');
     res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
-    if ('OPTIONS' == req.method){
+    if ('OPTIONS' == req.method) {
         return res.send(200);
     }
     next();
 });
 
-var routes = requireDir('./routes/');
-for (var route in routes)
-    app.use('/api', routes[route]);
+// Carga los módulos y rutas
+for (let m in config.modules) {
+    if (config.modules[m].active) {
+        var routes = requireDir(config.modules[m].path);
+        for (var route in routes)
+            app.use('/api' + config.modules[m].route, routes[route]);
+    }
+}
 
-//serve swagger
-app.get('/swagger.json', function(req, res) {
-  res.setHeader('Content-Type', 'application/json');
-  res.send(swaggerSpec);
+// Not found: catch 404 and forward to error handler
+app.use(function (req, res, next) {
+    var err = new Error('Not Found');
+    (err as any).status = 404;
+    next(err);
 });
 
-//Incluimos swagger-ui
-app.use('/api-docs', express.static(__dirname + '/api-docs'));
+// Error handler
+app.use(function (err, req, res, next) {
+    // Parse err
+    var e;
+    if (!isNaN(err)) {
+        e = new Error(err == 400 ? "Parámetro incorrecto" : "No encontrado");
+        e.status = err;
+        err = e;
+    } else if (typeof err == "string") {
+        e = new Error(err);
+        e.status = 400;
+        err = e;
+    }
 
+    // Send HTML or JSON
+    res.status(err.status || 500);
+    var response = {
+        message: err.message,
+        error: (app.get('env') === 'development') ? err : null
+    };
+
+    if (req.accepts('application/json'))
+        res.send(response);
+    else
+        res.render('error', response);
+});
+
+// Inicia el servidor
 var server = app.listen(3002, function () {
-    console.log('Inicio web Server local http://127.0.0.1:3002/');
+    console.log('Inicio del servidor en el puerto 3002');
 });
 
 export = app
