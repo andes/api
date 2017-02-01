@@ -1,52 +1,36 @@
 import * as express from 'express'
 import * as tipoPrestacion from '../schemas/tipoPrestacion'
-
 var router = express.Router();
 
 router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
-    tipoPrestacion.find({})
-        .populate({
-            path: 'ejecucion.tipoPrestacion',
-            model: 'tipoPrestacion',
-            populate: {
-                path: 'tipoPrestacion',
-                model: 'tipoPrestacion'
-            }
-        })
-        .exec(function (err, data) {
-            if (err) {
-                next(err);
-            };
-            res.json(data);
-        });
+
+    var query;
+
     if (req.params.id) {
-        // tipoPrestacion.findById(req.params.id)
-        //     .populate({
-        //         path: 'ejecucion.tipoPrestacion',
-        //         model: 'tipoPrestacion'
-        //     })
-        //     .exec(function (err, data) {
-        //         if (err) {
-        //             next(err);
-        //         };
-        //         res.json(data);
-        //     });
+
+        query = tipoPrestacion.findById(req.params.id);
+
     } else {
-        // var query;
-        // query = tipoPrestacion.find({}); //Trae todos 
-        // if (req.query.nombre) {
-        //     query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
-        // }
 
-        // if (req.query.key) {
-        //     query.where('key').equals(RegExp('^.*' + req.query.key + '.*$', "i"));
-        // }
+        query = tipoPrestacion.find({}); //Trae todos 
 
-        // query.exec((err, data) => {
-        //     if (err) return next(err);
-        //     res.json(data);
-        // });
+        if (req.query.nombre) {
+            query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
+        }
+
+        if (req.query.key) {
+            query.where('key').equals(RegExp('^.*' + req.query.key + '.*$', "i"));
+        }
     }
+
+    query.populate('ejecucion').exec(function (err, data) {
+        if (err) {
+            next(err);
+        };
+        res.json(data);
+    });
+
+
 });
 
 router.post('/tiposPrestaciones', function (req, res, next) {
