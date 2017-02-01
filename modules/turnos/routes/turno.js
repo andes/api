@@ -2,17 +2,18 @@
 var express = require('express');
 var agenda = require('../schemas/agenda');
 var router = express.Router();
-//El put se usa para pasar el turno a estado asignado, ver con Juan
 router.put('/turno/:_id', function (req, res) {
     var etiquetaEstado = "bloques." + req.body.indiceBloque + ".turnos." + req.body.indiceTurno + ".estado";
     var etiquetaPaciente = "bloques." + req.body.indiceBloque + ".turnos." + req.body.indiceTurno + ".paciente";
     var etiquetaPacientes = "bloques." + req.body.indiceBloque + ".turnos." + req.body.indiceTurno + ".pacientes";
+    var etiquetaPrestacion = "bloques." + req.body.indiceBloque + ".turnos." + req.body.indiceTurno + ".prestacion";
     var query = {
         _id: req.params._id
     };
     query[etiquetaEstado] = "disponible"; //agrega un tag al json query
     var update = {};
     update[etiquetaEstado] = req.body.estado;
+    update[etiquetaPrestacion] = req.body.prestacion;
     if (req.body.simultaneos)
         update[etiquetaPacientes] = req.body.pacientes;
     else
