@@ -37,7 +37,10 @@ var agendaSchema = new mongoose.Schema({
         cantidadBloque: Number,
         turnos: [{
             horaInicio: Date,
-            asistencia: Boolean,
+            asistencia: {
+                type: Boolean,
+                default: false
+            },
             estado: {
                 type: String,
                 enum: ["disponible", "asignado"]
@@ -72,9 +75,9 @@ agendaSchema.virtual('turnosDisponibles').get(function () {
     this.bloques.forEach(function (bloque) {
         bloque.turnos.forEach(function (turno) {
             if (turno.estado == "disponible") {
-                if (bloque.pacienteSimultaneos){
-                     cantidad = bloque.cantidadSimultaneos - turno.pacientes.length;
-                     turnosDisponibles = turnosDisponibles+cantidad;
+                if (bloque.pacienteSimultaneos) {
+                    cantidad = bloque.cantidadSimultaneos - turno.pacientes.length;
+                    turnosDisponibles = turnosDisponibles + cantidad;
                 }
                 else
                     turnosDisponibles++;
