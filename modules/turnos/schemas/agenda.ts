@@ -1,10 +1,9 @@
+import * as prestacionSchema from './prestacion';
 import * as mongoose from 'mongoose';
 
 var agendaSchema = new mongoose.Schema({
-    prestaciones: [{
-        id: mongoose.Schema.Types.ObjectId,
-        nombre: String
-    }],
+
+    prestaciones: [prestacionSchema],
 
     profesionales: [{
         id: mongoose.Schema.Types.ObjectId,
@@ -25,10 +24,7 @@ var agendaSchema = new mongoose.Schema({
         cantidadTurnos: Number,
         duracionTurno: Number,
         descripcion: String,
-        prestaciones: [{
-            id: mongoose.Schema.Types.ObjectId,
-            nombre: String
-        }],
+        prestaciones: [prestacionSchema],
 
         accesoDirectoDelDia: Number,
         accesoDirectoProgramado: Number,
@@ -41,8 +37,7 @@ var agendaSchema = new mongoose.Schema({
         cantidadBloque: Number,
         turnos: [{
             horaInicio: Date,
-            estado:
-            {
+            estado: {
                 type: String,
                 enum: ["disponible", "asignado"]
             },
@@ -50,7 +45,8 @@ var agendaSchema = new mongoose.Schema({
                 id: mongoose.Schema.Types.ObjectId,
                 nombre: String,
                 apellido: String,
-                documento: String
+                documento: String,
+                telefono: String
             },
             pacientes: [{//este array se va a usar solo en el caso de pacientes simultaneos
                 id: mongoose.Schema.Types.ObjectId,
@@ -58,10 +54,7 @@ var agendaSchema = new mongoose.Schema({
                 apellido: String,
                 documento: String
             }],
-            prestacion: {
-                id: mongoose.Schema.Types.ObjectId,
-                nombre: String
-            }
+            prestacion: prestacionSchema
         }],
     }],
 

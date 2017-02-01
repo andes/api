@@ -1,5 +1,5 @@
 import * as express from 'express'
-import * as prestacion from '../schemas/prestacion'
+import * as prestacion from '../schemas/prestacion_model'
 
 var router = express.Router();
 
