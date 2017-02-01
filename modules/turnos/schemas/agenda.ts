@@ -37,6 +37,7 @@ var agendaSchema = new mongoose.Schema({
         cantidadBloque: Number,
         turnos: [{
             horaInicio: Date,
+            asistencia: Boolean,
             estado: {
                 type: String,
                 enum: ["disponible", "asignado"]
