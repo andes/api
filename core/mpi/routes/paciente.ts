@@ -480,4 +480,53 @@ router.delete('/pacientes/:id', function (req, res, next) {
     });
 })
 
+/**
+ * @swagger
+ * /pacientes/{id}:
+ *   patch:
+ *     tags:
+ *       - Paciente
+ *     description: Modificar ciertos datos de un paciente
+ *     summary: Modificar ciertos datos de un paciente
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         description: Id de un paciente
+ *         required: true
+ *         type: string
+ *
+ *     responses:
+ *       200:
+ *         description: Un objeto paciente
+ *         schema:
+ *           $ref: '#/definitions/pacientes'
+ */
+router.patch('/pacientes/:id', function (req, res, next) {
+    let changes = req.body;
+    let conditions = {
+        _id: req.params.id
+    }
+
+    let update: any = {};
+    if (changes.telefono){
+        conditions['contacto.ranking'] = 1;
+        update['contacto.$.valor'] = changes.telefono;
+        update['contacto.$.ultimaActualizacion'] = new Date();
+    }
+    if (changes.nombre)
+        update['nombre'] = changes.nombre;
+    
+    // query.findOneAndUpdate(conditions, update, callback)
+    paciente.findOneAndUpdate(conditions, { $set: update }, function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        res.json(data);
+    });
+});
+
 export = router;

@@ -5,17 +5,12 @@ var router = express.Router();
 var soap = require('soap');
 var libxmljs = require("libxmljs");
 
-// var url = 'http://localhost/prueba_ws/GetNombre.asmx?WSDL';
-
-
 var urlOperador = 'http://192.168.20.119:8080/Carrier/carrier?wsdl'
 var urlNumero = 'http://192.168.20.119:8080/MobileOutBackup/MobileOut?wsdl';
 
-router.get('/sms/:telefono', function (req, res, next) {
-    // let args = { numero: req.params.telefono }
+router.get('/sms/:telefono', function (req, res, next) {    
 
-    var argsOperador = { telefono: req.params.telefono };
-    // console.log("teléfono: ", argsOperador);
+    let argsOperador = { telefono: req.params.telefono };    
 
     let opciones = {
         ignoredNamespaces: {
@@ -30,9 +25,7 @@ router.get('/sms/:telefono', function (req, res, next) {
         client.recuperarOperador(argsOperador, function (err, result, raw) {
 
             var xml = result.return;
-
             var xmlDoc = libxmljs.parseXml(xml);
-
             var xmlDato = xmlDoc.get('//dato');
 
             let carrier = operador(xmlDato.text());
@@ -46,9 +39,17 @@ router.get('/sms/:telefono', function (req, res, next) {
             }
 
             soap.createClient(urlNumero, opciones, function (err, client) {
-                client.envioSMSOperador(argsNumero, function (err, result, raw) {
+                client.envioSMSOperador(argsNumero, function (err, result, raw) {                    
 
-                    console.log(result);
+                    var xml = result.return;
+                    var xmlDoc = libxmljs.parseXml(xml);
+                    var xmlDato = xmlDoc.get('//status');
+                    let status = xmlDato.text();
+
+                    if (err)
+                        return next(err);
+                    else
+                        return res.json(status);
                 })
             });
         })
