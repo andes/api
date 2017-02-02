@@ -11,9 +11,9 @@ import * as tipoPrestacionSchema    from './tipoPrestacion';
 
 
 var prestacionSchema = new mongoose.Schema({
-    nombre: String,
-    descripcion: String,
-    codigo: [codificadorSchema],
+    // nombre: String,
+    // descripcion: String,
+    // codigo: [codificadorSchema],
     idSolicitudOrigen: mongoose.Schema.Types.ObjectId, // prestacion desde la que se solicita
     paciente: {
         type: pacienteSchema,
@@ -52,8 +52,11 @@ var prestacionSchema = new mongoose.Schema({
         profesional: profesionalSchema,
         // organizacion desde la que se solicita la prestacion
         organizacion: organizacionSchema,
-        // lista de problemas del paciente por el cual se solicita la prsetacion
-        listaProblemas: [problemaSchema],
+        // lista de problemas del paciente por el cual se solicita la prestacion
+        listaProblemas: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'problemas'
+        }],
         // prestacion de origen por la cual se solicita esta nueva
         idPrestacionOrigen: {
             type: mongoose.Schema.Types.ObjectId,
@@ -70,7 +73,7 @@ var prestacionSchema = new mongoose.Schema({
             unidad: String
         },
         // motivo de consulta autoreferido por el paciente
-        motivoConsultaPaciente: String,
+        // motivoConsultaPaciente: String,
         // motivoConsulta: {
         //     codificadorSchema
         // },
@@ -100,10 +103,15 @@ var prestacionSchema = new mongoose.Schema({
 
 
     ejecucion: {
-        listaProblemas: [problemaSchema],
+        // listaProblemas: [problemaSchema],
         fecha: Date,
         organizacion: organizacionSchema,
         profesional: profesionalSchema,
+        // TODO: Definir evoluciones y prestacionesSolicitadas bajo
+        // que objeto van a estar,... solicitud .. ejecucion .. ¿postEjecucion?
+        evoluciones: [
+            evolucionSchema
+        ],
         datosPropios: {
             type: mongoose.Schema.Types.Mixed
         }
@@ -114,19 +122,14 @@ var prestacionSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'prestaciones'
     }],
-
-    // TODO: Definir evoluciones y prestacionesSolicitadas bajo
-    // que objeto van a estar,... solicitud .. ejecucion .. ¿postEjecucion?
-    evoluciones: [
-        evolucionSchema
-    ],
+    
 
     estado: [
         {
             timestamp: Date,
             tipo: {
                 type: String,
-                enum: ['pendiente', 'en auditoría', 'aceptada', 'rechazada']
+                enum: ['pendiente', 'en auditoría', 'aceptada', 'rechazada', 'validada']
             }
         }
     ]
