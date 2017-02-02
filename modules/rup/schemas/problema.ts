@@ -6,7 +6,8 @@ import * as tipoProblemaSchema  from './tipoProblema';
 
 var problemaSchema = new mongoose.Schema({
     tipoProblema:{
-        type: mongoose.Schema.Types.ObjectId
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'tipoProblema'
     },
     idProblemaOrigen: [{
         type: mongoose.Schema.Types.ObjectId
