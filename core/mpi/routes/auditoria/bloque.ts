@@ -2,7 +2,7 @@ import { servicioSintys } from '../../../../utils/servicioSintys';
 import { machingDeterministico } from '../../../../utils/machingDeterministico';
 import { IPerson } from '../../../../utils/IPerson';
 import * as express from 'express'
-import * as paciente from '../../schemas/paciente'
+import { paciente } from '../../schemas/paciente'
 import { servicioSisa } from '../../../../utils/servicioSisa'
 
 var router = express.Router();
@@ -100,14 +100,13 @@ router.get('/bloques/pacientesSisa/:idTipoBloque/:idBloque', function (req, res,
             arrPacValidados.forEach(function (pacVal) {
                 var datoPac;
                 datoPac = pacVal;
-                if(datoPac.matcheos.matcheo >= 99 && datoPac.paciente.estado == 'temporal')
-                { 
+                if (datoPac.matcheos.matcheo >= 99 && datoPac.paciente.estado == 'temporal') {
                     arrSalida.push(servSisa.validarPaciente(datoPac, "Sisa"))
-                }else{
-                    arrSalida.push(datoPac); 
+                } else {
+                    arrSalida.push(datoPac);
                 }
             });
-            
+
             Promise.all(arrSalida).then(PacSal => {
                 res.json(PacSal);
             }).catch(err => {
@@ -126,35 +125,34 @@ router.get('/bloques/pacientesSisa/:idTipoBloque/:idBloque', function (req, res,
 router.post('/bloques/pacientes/fusionar', function (req, res, next) {
     var pacienteOriginal = new paciente(req.body.pacienteOriginal);
     var pacienteFusionar = new paciente(req.body.pacienteFusionar);
-    var query = {"_id": pacienteFusionar._id};
+    var query = { "_id": pacienteFusionar._id };
     paciente.findOne(query, function (err, data) {
         if (err) {
-          return next(err);
+            return next(err);
         };
         var pacAux;
         pacAux = data;
-        console.log('pacAux',pacAux);
+        console.log('pacAux', pacAux);
         var arrayIds = pacAux.identificadores;
-        paciente.update({"_id":pacienteOriginal._id}, {$addToSet: { "identificadores" : {$each: arrayIds}}}, {upsert:true}, 
-        function(err)
-        {
-            if(err){
-                return next(err);
-            }else{
-               paciente.findByIdAndUpdate(pacienteFusionar._id.toString(), {"activo": false}, {new:true}, function (err, elem) {
-                    if (err)
-                        return next(err);
-                    res.json(elem);
-                });
-            } 
-        });
+        paciente.update({ "_id": pacienteOriginal._id }, { $addToSet: { "identificadores": { $each: arrayIds } } }, { upsert: true },
+            function (err) {
+                if (err) {
+                    return next(err);
+                } else {
+                    paciente.findByIdAndUpdate(pacienteFusionar._id.toString(), { "activo": false }, { new: true }, function (err, elem) {
+                        if (err)
+                            return next(err);
+                        res.json(elem);
+                    });
+                }
+            });
 
     });
 });
 
 router.delete('/bloques/pacientes/:id', function (req, res, next) {
     console.log(req.params.id);
-     paciente.findByIdAndUpdate(req.params.id, {"activo": false}, {new:true}, function (err, data) {
+    paciente.findByIdAndUpdate(req.params.id, { "activo": false }, { new: true }, function (err, data) {
         if (err)
             return next(err);
 
@@ -164,37 +162,37 @@ router.delete('/bloques/pacientes/:id', function (req, res, next) {
 
 
 router.post('/bloques/pacientes/validar', function (req, res, next) {
-    console.log("Entra a validar",req.body);
+    console.log("Entra a validar", req.body);
     var pacienteVal = new paciente(req.body.paciente);
     var entidad = req.body.entidad;
     var servSisa = new servicioSisa();
-    var datoCompleto = {"paciente": pacienteVal, "matcheos": {"entidad": entidad,"matcheo": 0, "datosPaciente": {}}};
-    servSisa.validarPaciente(datoCompleto,entidad).then(resultado =>{
+    var datoCompleto = { "paciente": pacienteVal, "matcheos": { "entidad": entidad, "matcheo": 0, "datosPaciente": {} } };
+    servSisa.validarPaciente(datoCompleto, entidad).then(resultado => {
         res.json(resultado);
     })
-    .catch(err=>{
-        return next(err);
-    })
+        .catch(err => {
+            return next(err);
+        })
 });
 
 
 
 router.post('/bloques/pacientes/validarActualizar', function (req, res, next) {
-    console.log("Entra a validar",req.body);
+    console.log("Entra a validar", req.body);
     var pacienteVal = new paciente(req.body.paciente);
     var entidad = req.body.entidad;
     var datosPacEntidad = req.body.DatoPacEntidad;
-    
+
     var servSisa = new servicioSisa();
-    console.log("entidad",entidad);
-    var datoCompleto = {"paciente": pacienteVal, "matcheos": {"entidad": entidad,"matcheo": 0, "datosPaciente": datosPacEntidad}};
-    console.log("Dato Completo",datoCompleto);
-    servSisa.validarActualizarPaciente(datoCompleto,entidad,datosPacEntidad).then(resultado =>{
+    console.log("entidad", entidad);
+    var datoCompleto = { "paciente": pacienteVal, "matcheos": { "entidad": entidad, "matcheo": 0, "datosPaciente": datosPacEntidad } };
+    console.log("Dato Completo", datoCompleto);
+    servSisa.validarActualizarPaciente(datoCompleto, entidad, datosPacEntidad).then(resultado => {
         res.json(resultado);
     })
-    .catch(err=>{
-        return next(err);
-    })
+        .catch(err => {
+            return next(err);
+        })
 });
 
 
@@ -235,20 +233,19 @@ router.get('/bloques/pacientesSintys/:idb/:id', function (req, res, next) {
             arrPacValidados.forEach(function (pacVal) {
                 var datoPac;
                 datoPac = pacVal;
-                if(datoPac.matcheos.matcheo >= 99 && datoPac.paciente.estado == 'temporal')
-                { 
+                if (datoPac.matcheos.matcheo >= 99 && datoPac.paciente.estado == 'temporal') {
                     arrSalida.push(servSisa.validarPaciente(datoPac, "Sintys"))
-                }else{
-                    arrSalida.push(datoPac); 
+                } else {
+                    arrSalida.push(datoPac);
                 }
             });
-            
+
             Promise.all(arrSalida).then(PacSal => {
-               //console.log("devuelvo el array", PacSal); 
+                //console.log("devuelvo el array", PacSal); 
                 res.json(PacSal);
             }).catch(err => {
-               console.log(err);
-               return next(err);
+                console.log(err);
+                return next(err);
             })
 
         }).catch(err => {

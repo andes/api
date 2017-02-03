@@ -5,7 +5,7 @@ import {
 import {
     IPerson
 } from './IPerson';
-import * as paciente from '../core/mpi/schemas/paciente';
+import { paciente } from '../core/mpi/schemas/paciente';
 import * as https from 'https';
 import * as config from '../config';
 var to_json = require('xmljson').to_json;

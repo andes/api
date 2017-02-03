@@ -1,13 +1,13 @@
 "use strict";
 var servicioSintys_1 = require('../../../../utils/servicioSintys');
 var express = require('express');
-var paciente = require('../../schemas/paciente');
+var paciente_1 = require('../../schemas/paciente');
 var servicioSisa_1 = require('../../../../utils/servicioSisa');
 var router = express.Router();
 router.get('/bloques/:idTipoBloque', function (req, res, next) {
     if (req.params.idTipoBloque) {
         var filtro = "claveBlocking." + req.params.idTipoBloque;
-        paciente.aggregate([{
+        paciente_1.paciente.aggregate([{
                 "$group": {
                     "_id": {
                         "$arrayElemAt": ["$claveBlocking", Number(req.params.idTipoBloque)]
@@ -44,7 +44,7 @@ router.get('/bloques/pacientes/:idTipoBloque/:idBloque', function (req, res, nex
         $eq: req.params.idBloque
     };
     //console.log('Parametros', query)
-    paciente.find(query, function (err, data) {
+    paciente_1.paciente.find(query, function (err, data) {
         if (err) {
             next(err);
         }
@@ -66,7 +66,7 @@ router.get('/bloques/pacientesSisa/:idTipoBloque/:idBloque', function (req, res,
         $eq: req.params.idBloque
     };
     var listaPac = [];
-    paciente.find(query, function (err, data) {
+    paciente_1.paciente.find(query, function (err, data) {
         if (err) {
             next(err);
         }
@@ -113,10 +113,10 @@ router.get('/bloques/pacientesSisa/:idTipoBloque/:idBloque', function (req, res,
     });
 });
 router.post('/bloques/pacientes/fusionar', function (req, res, next) {
-    var pacienteOriginal = new paciente(req.body.pacienteOriginal);
-    var pacienteFusionar = new paciente(req.body.pacienteFusionar);
+    var pacienteOriginal = new paciente_1.paciente(req.body.pacienteOriginal);
+    var pacienteFusionar = new paciente_1.paciente(req.body.pacienteFusionar);
     var query = { "_id": pacienteFusionar._id };
-    paciente.findOne(query, function (err, data) {
+    paciente_1.paciente.findOne(query, function (err, data) {
         if (err) {
             return next(err);
         }
@@ -125,12 +125,12 @@ router.post('/bloques/pacientes/fusionar', function (req, res, next) {
         pacAux = data;
         console.log('pacAux', pacAux);
         var arrayIds = pacAux.identificadores;
-        paciente.update({ "_id": pacienteOriginal._id }, { $addToSet: { "identificadores": { $each: arrayIds } } }, { upsert: true }, function (err) {
+        paciente_1.paciente.update({ "_id": pacienteOriginal._id }, { $addToSet: { "identificadores": { $each: arrayIds } } }, { upsert: true }, function (err) {
             if (err) {
                 return next(err);
             }
             else {
-                paciente.findByIdAndUpdate(pacienteFusionar._id.toString(), { "activo": false }, { new: true }, function (err, elem) {
+                paciente_1.paciente.findByIdAndUpdate(pacienteFusionar._id.toString(), { "activo": false }, { new: true }, function (err, elem) {
                     if (err)
                         return next(err);
                     res.json(elem);
@@ -141,7 +141,7 @@ router.post('/bloques/pacientes/fusionar', function (req, res, next) {
 });
 router.delete('/bloques/pacientes/:id', function (req, res, next) {
     console.log(req.params.id);
-    paciente.findByIdAndUpdate(req.params.id, { "activo": false }, { new: true }, function (err, data) {
+    paciente_1.paciente.findByIdAndUpdate(req.params.id, { "activo": false }, { new: true }, function (err, data) {
         if (err)
             return next(err);
         res.json(data);
@@ -149,7 +149,7 @@ router.delete('/bloques/pacientes/:id', function (req, res, next) {
 });
 router.post('/bloques/pacientes/validar', function (req, res, next) {
     console.log("Entra a validar", req.body);
-    var pacienteVal = new paciente(req.body.paciente);
+    var pacienteVal = new paciente_1.paciente(req.body.paciente);
     var entidad = req.body.entidad;
     var servSisa = new servicioSisa_1.servicioSisa();
     var datoCompleto = { "paciente": pacienteVal, "matcheos": { "entidad": entidad, "matcheo": 0, "datosPaciente": {} } };
@@ -162,7 +162,7 @@ router.post('/bloques/pacientes/validar', function (req, res, next) {
 });
 router.post('/bloques/pacientes/validarActualizar', function (req, res, next) {
     console.log("Entra a validar", req.body);
-    var pacienteVal = new paciente(req.body.paciente);
+    var pacienteVal = new paciente_1.paciente(req.body.paciente);
     var entidad = req.body.entidad;
     var datosPacEntidad = req.body.DatoPacEntidad;
     var servSisa = new servicioSisa_1.servicioSisa();
@@ -184,7 +184,7 @@ router.get('/bloques/pacientesSintys/:idb/:id', function (req, res, next) {
         $eq: req.params.id
     };
     var listaPac = [];
-    paciente.find(query, function (err, data) {
+    paciente_1.paciente.find(query, function (err, data) {
         if (err) {
             next(err);
         }

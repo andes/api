@@ -6,7 +6,7 @@ import * as contactoSchema from '../../tm/schemas/contacto';
 import * as financiadorSchema from './financiador';
 import * as config from '../../../config';
 
-var pacienteSchema = new mongoose.Schema({
+export var pacienteSchema = new mongoose.Schema({
     identificadores: [{
         entidad: String,
         valor: String
@@ -107,7 +107,7 @@ pacienteSchema.plugin(mongoosastic, {
     type: 'pacientes'
 });
 
-var paciente = mongoose.model('paciente', pacienteSchema, 'paciente');
+export var paciente = mongoose.model('paciente', pacienteSchema, 'paciente');
 
 /**
  * mongoosastic create mappings
@@ -141,4 +141,3 @@ stream.on('error', function (err) {
     console.log(err);
 });
 */
-export = paciente;

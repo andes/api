@@ -1,9 +1,9 @@
 import * as mongoose from 'mongoose';
 import * as codificadorSchema from './codificador';
-import * as profesionalSchema from '../../../core/tm/schemas/profesional';
-import * as organizacionSchema from '../../../core/tm/schemas/organizacion';
+import { profesionalSchema } from '../../../core/tm/schemas/profesional';
+import { organizacionSchema } from '../../../core/tm/schemas/organizacion';
 import * as prestacionSchema from '../../../core/tm/schemas/prestacion';
-import * as espacioFisicoSchema from '../../turnos/schemas/espacioFisico';
+import { espacioFisicoSchema } from '../../turnos/schemas/espacioFisico';
 
 var evolucionSchema = new mongoose.Schema({
     // Evolucion Profesional

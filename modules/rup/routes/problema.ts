@@ -2,17 +2,17 @@ import * as express from 'express'
 import * as problema from '../schemas/problema'
 var router = express.Router();
 
-router.get('/pacientes/id/problemas/:idP*?', function (req, res, next) {
+router.get('/pacientes/:idPaciente/problemas/:idProblema*?', function (req, res, next) {
 
     var query;
 
-    if (req.params.idP) {
+    if (req.params.idProblema) {
         query = problema.findById(req.params.id);
 
     } else {
 
         query = problema.find({}); //Trae todos 
-        query.where('paciente').equals(req.params.idP);
+        query.where('paciente').equals(req.params.idPaciente);
     }
 
     query.populate('tipoProblema').exec(function (err, data) {

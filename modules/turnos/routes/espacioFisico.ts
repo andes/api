@@ -1,5 +1,5 @@
 import * as express from 'express'
-import * as espacioFisico from '../schemas/espacioFisico'
+import { espacioFisico } from '../schemas/espacioFisico'
 
 var router = express.Router();
 
@@ -10,7 +10,7 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
                 next(err);
             };
 
-            res.json(data); 
+            res.json(data);
         });
     } else {
         var query;

@@ -1,16 +1,16 @@
-import * as mongoose                from 'mongoose';
-import * as codificadorSchema       from './codificador';
-import * as contactoSchema          from '../../../core/tm/schemas/contacto';
-import * as evolucionSchema         from './evolucion';
-import * as financiadorSchema       from '../../../core/mpi/schemas/financiador';
-import * as organizacionSchema      from '../../../core/tm/schemas/organizacion';
-import * as pacienteSchema          from '../../../core/mpi/schemas/paciente';
-import * as problemaSchema          from './problema';
-import * as profesionalSchema       from '../../../core/tm/schemas/profesional';
-import * as tipoPrestacionSchema    from './tipoPrestacion';
+import * as mongoose from 'mongoose';
+import * as codificadorSchema from './codificador';
+import * as contactoSchema from '../../../core/tm/schemas/contacto';
+import * as evolucionSchema from './evolucion';
+import * as financiadorSchema from '../../../core/mpi/schemas/financiador';
+import { organizacionSchema } from '../../../core/tm/schemas/organizacion';
+import { pacienteSchema } from '../../../core/mpi/schemas/paciente';
+import * as problemaSchema from './problema';
+import { profesionalSchema } from '../../../core/tm/schemas/profesional';
+import { tipoPrestacionSchema } from './tipoPrestacion';
 
 
-var prestacionSchema = new mongoose.Schema({
+export var prestacionPacienteSchema = new mongoose.Schema({
     // nombre: String,
     // descripcion: String,
     // codigo: [codificadorSchema],
@@ -135,4 +135,4 @@ var prestacionSchema = new mongoose.Schema({
     ]
 });
 
-export = prestacionSchema;
+export var prestacionPaciente = mongoose.model('prestacionPaciente', prestacionPacienteSchema, 'prestacionPaciente');

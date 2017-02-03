@@ -1,7 +1,7 @@
-import * as mongoose            from 'mongoose';
-import * as codificadorSchema   from './codificador';
+import * as mongoose from 'mongoose';
+import * as codificadorSchema from './codificador';
 
-var tipoPrestacionSchema = new mongoose.Schema({
+export var tipoPrestacionSchema = new mongoose.Schema({
     // valor por el cual vamos a leer/guardar en nuestra BD
     key: String,
     nombre: String,
@@ -25,6 +25,5 @@ var tipoPrestacionSchema = new mongoose.Schema({
     componente: String
 });
 
-var tipoPrestacion = mongoose.model('tipoPrestacion', tipoPrestacionSchema, 'tipoPrestacion');
+export var tipoPrestacion = mongoose.model('tipoPrestacion', tipoPrestacionSchema, 'tipoPrestacion');
 
-export = tipoPrestacion;
