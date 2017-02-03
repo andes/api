@@ -46,8 +46,8 @@ app.use(function (req, res, next) {
 });
 
 // Error handler
-/*
-app.use(function (err, req, res, next) {
+
+app.use(function (err: any, req, res, next) {
     // Parse err
     var e;
     if (!isNaN(err)) {
@@ -72,7 +72,8 @@ app.use(function (err, req, res, next) {
     else
         res.render('error', response);
 });
-*/
+
+
 // Inicia el servidor
 var server = app.listen(3002, function () {
     console.log('Inicio del servidor en el puerto 3002');
