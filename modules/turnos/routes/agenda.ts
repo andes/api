@@ -2,6 +2,11 @@ import * as express from 'express'
 import * as agenda from '../schemas/agenda'
 import * as utils from '../../../utils/utils';
 
+var jsonpatch1 = require('fast-json-patch')
+
+var jsonpatch = require('jsonpatch/lib/jsonpatch');
+// var expect = require('jsonpatch/test/vendor/expect.js');
+
 var router = express.Router();
 
 router.get('/agenda/:id*?', function (req, res, next) {
@@ -44,7 +49,7 @@ router.get('/agenda/:id*?', function (req, res, next) {
             let variable: any[] = [];
             arr_prestaciones.forEach((prestacion, index) => {
                 // console.log ("prestacion "+prestacion._id);
-                variable.push({"prestaciones.id": prestacion._id})
+                variable.push({ "prestaciones.id": prestacion._id })
             });
             query.or(variable);
         }
@@ -87,6 +92,101 @@ router.put('/agenda/:_id', function (req, res, next) {
     });
 });
 
+
+router.patch('/agenda/:_id', function (req, res, next) {
+    agenda.findById(req.params._id, function (err, data) {
+
+        var myobj = {
+            agenda: {
+                'bloques': [{
+                    'turnos': [{
+                        'asistencia': true
+                    }]
+                }]
+            }
+        };
+
+        // let thepatch = [
+        //     { "op": "replace", "path": "/bloques/0/turnos/0/asistencia", "value": "boo" }
+        // ]
+        // let patcheddoc = jsonpatch.apply_patch(myobj, thepatch);
+        // console.log("Patttt ", JSON.stringify(patcheddoc));
+        // patcheddoc now equals {"baz": "boo", "foo": "bar"}}
+
+        let conditions = {
+            _id: req.params._id
+        }
+         let update = {};
+         update[req.body.path] = req.body.value;
+
+        //let update = JSON.stringify(req.body.path + '=' + req.body.value);//JSON.stringify(patcheddoc);
+
+        console.log("Json ", update)
+
+        agenda.findOneAndUpdate(conditions, { $set: update }, function (err, data) {
+            if (err) {
+                return next(err);
+            }
+            res.json(data);
+        });
+        // let updateObject = req.body;
+
+        // agenda.findByIdAndUpdate(req.params._id, { $set: updateObject }, function (err, data) {
+        //     if (err) {
+        //         return next(err);
+        //     }
+        //     res.json(data);
+        // });
+    });
+});
+
+// router.patch('/agenda/:_id', function (req, res, next) {
+//     let update: any = {};
+
+//      console.log("Entraaa ");
+//     agenda.findById(req.params._id, function (err, data) {
+//         if (err) {
+//             return next(err);
+//         }        
+
+//         switch (req.body.operacion) {
+
+//             case "asistencia":
+//                 next("No se puede sust");
+
+//             //    data.bloques[0].turnos[0].estado = req.body.idTurno;
+//         }
+
+//         data.bloques[0].turnos[0].asistencia = true;
+
+//         data.save((err) => {
+//             if (err) {
+//                 return next(err);
+//             }
+//             res.json(data);
+//         })
+
+
+//     });
+// });
+
+// router.patch('/agenda/:_id', function (req, res, next) {
+//     var updateObject = req.body; // {last_name : "smith", age: 44}
+//     var id = req.params.id;
+
+//     console.log('Entroooo ', id, ' capo ', updateObject);
+
+//     agenda.update(req.params._id, req.body , {
+//         $set: updateObject, function(err, data) {
+//             if (err)
+//                 return next(err)
+
+
+//             res.json(data);
+//         }
+//     });
+// });
+
 router.delete('/agenda/:_id', function (req, res, next) {
     agenda.findByIdAndRemove(req.params._id, req.body, function (err, data) {
         if (err)
@@ -95,5 +195,7 @@ router.delete('/agenda/:_id', function (req, res, next) {
         res.json(data);
     });
 })
+
+});
 
 export = router;

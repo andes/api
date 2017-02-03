@@ -10,12 +10,12 @@ router.put('/turno/:id', function (req, res, next) {
   let etiquetaPaciente: string = "bloques." + req.body.indiceBloque + ".turnos." + req.body.indiceTurno + ".paciente";
   let etiquetaPacientes: string = "bloques." + req.body.indiceBloque + ".turnos." + req.body.indiceTurno + ".pacientes";
   let etiquetaPrestacion: string = "bloques." + req.body.indiceBloque + ".turnos." + req.body.indiceTurno + ".prestacion";
-  
+
   let query = {
     _id: req.params.id
   }
   query[etiquetaEstado] = "disponible"; //agrega un tag al json query
-  
+
   let update: any = {};
   update[etiquetaEstado] = req.body.estado;
   update[etiquetaPrestacion] = req.body.prestacion;
@@ -24,8 +24,10 @@ router.put('/turno/:id', function (req, res, next) {
   else
     update[etiquetaPaciente] = req.body.paciente;
 
+  console.log("Update   ", update);
+  
   agenda.findOneAndUpdate(query, { $set: update }, function (err, agen) {
-    if (err){
+    if (err) {
       return next(err);
     }
     res.json(agen);
