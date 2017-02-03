@@ -5,7 +5,7 @@ import * as direccionSchema from './direccion';
 import * as contactoSchema from './contacto';
 import * as tipoEstablecimientoSchema from './tipoEstablecimiento';
 
-var organizacionSchema = new mongoose.Schema({
+export var organizacionSchema = new mongoose.Schema({
     codigo: {
         sisa: {
             type: String,
@@ -24,10 +24,10 @@ var organizacionSchema = new mongoose.Schema({
         type: Boolean,
         required: true,
         default: true
-    },  
+    },
     fechaAlta: Date,
     fechaBaja: Date
 });
 
-var organizacion = mongoose.model('organizacion', organizacionSchema, 'organizacion');
-export = organizacion;
+export var organizacion = mongoose.model('organizacion', organizacionSchema, 'organizacion');
+//export = organizacion;

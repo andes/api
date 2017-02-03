@@ -1,6 +1,6 @@
 import { defaultLimit, maxLimit } from './../../../config';
 import * as express from 'express'
-import * as profesional from '../schemas/profesional'
+import { profesional } from '../schemas/profesional'
 import * as utils from '../../../utils/utils'
 import * as config from '../../../config';
 
@@ -192,7 +192,7 @@ router.get('/profesionales/:id*?', function (req, res, next) {
             res.json(data);
         });
     } else {
-       
+
         var query;
         var opciones = {};
 

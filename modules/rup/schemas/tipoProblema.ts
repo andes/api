@@ -1,5 +1,5 @@
-import * as mongoose            from 'mongoose';
-import * as codificadorSchema   from './codificador';
+import * as mongoose from 'mongoose';
+import * as codificadorSchema from './codificador';
 
 var tipoProblemaSchema = new mongoose.Schema({
     nombre: String,
@@ -9,4 +9,6 @@ var tipoProblemaSchema = new mongoose.Schema({
     activo: Boolean
 });
 
-export = tipoProblemaSchema;
+var tipoProblema = mongoose.model('tipoProblema', tipoProblemaSchema, 'tipoProblema');
+
+export = tipoProblema;

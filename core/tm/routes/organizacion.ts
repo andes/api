@@ -1,5 +1,5 @@
 import * as express from 'express'
-import * as organizacion from '../schemas/organizacion'
+import { organizacion } from '../schemas/organizacion'
 import * as utils from '../../../utils/utils';
 import { defaultLimit, maxLimit } from './../../../config';
 
@@ -143,8 +143,8 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
     else {
         var query;
         let act: Boolean = true;
-        var filtros = {"activo": act};
-        console.log("query ",req.query);
+        var filtros = { "activo": act };
+        console.log("query ", req.query);
         if (req.query.nombre) {
             filtros['nombre'] = { '$regex': utils.makePattern(req.query.nombre) };
         }
@@ -159,11 +159,11 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
         if (req.query.activo) {
             filtros['activo'] = req.query.activo;
         }
-        
+
         let skip: number = parseInt(req.query.skip || 0);
         let limit: number = Math.min(parseInt(req.query.limit || defaultLimit), maxLimit);
-        
-        
+
+
         query = organizacion.find(filtros).skip(skip).limit(limit)
         query.exec(function (err, data) {
             if (err) return next(err);
