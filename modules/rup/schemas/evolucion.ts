@@ -7,12 +7,16 @@ import * as espacioFisicoSchema from '../../turnos/schemas/espacioFisico';
 
 var evolucionSchema = new mongoose.Schema({
     // Evolucion Profesional
-
     topografia: [
         codificadorSchema
     ],
 
-    // Informe
+    // valores que se almacen al evolucionar la prestacion
+    valores: [
+        mongoose.Schema.Types.Mixed
+    ],
+
+    // Informe en caso de existir por el tipo de prestacion
     informe: [{
         fechaRealizacion: Date,
         proposito: {
@@ -24,9 +28,10 @@ var evolucionSchema = new mongoose.Schema({
         ],
 
         //lista de problemas que surjan de la evolucion. Lo diagnosticos alimentan la lista de problemas de pacientes
-        diagnostico: [
-            codificadorSchema
-        ],
+        diagnostico: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'problemas'
+        }],
         texto: String
     }],
 
@@ -36,10 +41,6 @@ var evolucionSchema = new mongoose.Schema({
         texto: String,
         fechaRealizacion: Date
     }],
-
-    valores: [
-        mongoose.Schema.Types.Mixed
-    ],
 
     // Evolución gestion
     momentoRealizacion: {
@@ -64,8 +65,6 @@ var evolucionSchema = new mongoose.Schema({
             codificadorSchema
         ]
     },
-
-
 
     // Evolución de Calidad del proceso
 
