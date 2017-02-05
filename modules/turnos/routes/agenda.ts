@@ -2,11 +2,6 @@ import * as express from 'express'
 import * as agenda from '../schemas/agenda'
 import * as utils from '../../../utils/utils';
 
-var jsonpatch1 = require('fast-json-patch')
-
-var jsonpatch = require('jsonpatch/lib/jsonpatch');
-// var expect = require('jsonpatch/test/vendor/expect.js');
-
 var router = express.Router();
 
 router.get('/agenda/:id*?', function (req, res, next) {
@@ -103,11 +98,9 @@ router.patch('/agenda/:_id', function (req, res, next) {
         let update = {};
         update[req.body.path] = req.body.value;
 
-        agenda.findOneAndUpdate(conditions, { $set: update }, function (err, data) {
-            if (err) {
-                return next(err);
-            }
-            res.json(data);
+        agenda.findOneAndUpdate(conditions, { $set: update }, { new: true }, function (err, result) {
+
+            res.json(result);
         });
     });
 });
