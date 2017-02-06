@@ -1,10 +1,10 @@
 import * as mongoose from 'mongoose';
-import * as lugarSchema from '../../../core/tm/schemas/lugar';
+import * as nombreSchema from '../../../core/tm/schemas/nombre';
 
 
 var configPrestacionSchema = new mongoose.Schema({   
     prestacion: {
-        // type: lugarSchema,//genera un _id con otro id por eso no quedo asi
+        // type: nombreSchema,//genera un _id con otro id por eso no quedo asi
         type : {
             id: mongoose.Schema.Types.ObjectId,
             nombre: String
