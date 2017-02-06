@@ -79,7 +79,18 @@ router.patch('/agenda/:_id', function (req, res, next) {
             _id: req.params._id
         };
         var update = {};
-        update[req.body.path] = req.body.value;
+        console.log("pepe ", req.body.path[0]);
+        switch (req.body.op) {
+            case "asistenciaTurno":
+                update[req.body.path] = req.body.value;
+                break;
+            case "cancelarTurno":
+                update[req.body.path[0].estado] = req.body.path[0].value;
+                update[req.body.path[1].paciente] = req.body.path[1].value;
+                update[req.body.path[2].prestacion] = req.body.path[2].value;
+                break;
+        }
+        console.log("Update  ", update);
         agenda.findOneAndUpdate(conditions, { $set: update }, { new: true }, function (err, result) {
             res.json(result);
         });
