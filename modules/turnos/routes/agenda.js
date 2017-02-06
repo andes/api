@@ -21,24 +21,32 @@ router.get('/agenda/:id*?', function (req, res, next) {
         if (req.query.fechaHasta) {
             query.where('horaFin').lte(req.query.fechaHasta);
         }
-        if (req.query.idEspacioFisico) {
-            query.where('espacioFisico.id').equals(req.query.idEspacioFisico);
-        }
         if (req.query.idProfesional) {
-            query.where('profesionales.id').equals(req.query.idProfesional);
+            query.where('profesionales._id').equals(req.query.idProfesional);
         }
         if (req.query.idPrestacion) {
-            query.where('prestaciones.id').equals(req.query.idPrestacion);
+            query.where('prestaciones._id').equals(req.query.idPrestacion);
         }
-        //Dada una lista de prestaciones, filtra las agendas que tengan al menos una de las prestaciones
+        //Dada una lista de prestaciones, filtra las agendas que tengan al menos una de ellas como prestación
         if (req.query.prestaciones) {
             var arr_prestaciones = JSON.parse(req.query.prestaciones);
             var variable_1 = [];
             arr_prestaciones.forEach(function (prestacion, index) {
-                // console.log ("prestacion "+prestacion._id);
-                variable_1.push({ "prestaciones.id": prestacion._id });
+                variable_1.push({ "prestaciones._id": prestacion.id });
             });
             query.or(variable_1);
+        }
+        //Dada una lista de profesionales, filtra las agendas que tengan al menos uno de ellos
+        if (req.query.profesionales) {
+            var arr_profesionales = JSON.parse(req.query.profesionales);
+            var variable_2 = [];
+            arr_profesionales.forEach(function (profesional, index) {
+                variable_2.push({ "profesionales._id": profesional.id });
+            });
+            query.or(variable_2);
+        }
+        if (req.query.espacioFisico) {
+            query.or({ 'espacioFisico._id': req.query.espacioFisico });
         }
         if (!Object.keys(query).length) {
             res.status(400).send("Debe ingresar al menos un parámetro");
@@ -48,7 +56,6 @@ router.get('/agenda/:id*?', function (req, res, next) {
             fechaDesde: 1,
             fechaHasta: 1
         });
-        //console.log("query ", query._conditions)
         query.exec(function (err, data) {
             if (err)
                 return next(err);
