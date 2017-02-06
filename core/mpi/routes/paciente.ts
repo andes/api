@@ -614,7 +614,7 @@ router.post('/pacientes/search/simplequery', function(req, res, next) {
 router.post('/pacientes/search/match/:field', function(req, res, next) {
     // Se realiza la búsqueda match por el documento en elastic
 
-    let dto = req.body.objetoBusqueda;
+    var dto = req.body.objetoBusqueda;
     let connElastic = new Client({
         host: config.connectionStrings.elastic_main,
         log: 'trace'
@@ -639,18 +639,15 @@ router.post('/pacientes/search/match/:field', function(req, res, next) {
         body: body
     })
         .then((searchResult) => {
-
             let results: Array<any> = ((searchResult.hits || {}).hits || [])// extract results from elastic response
-                .map((hit) => function(hit) {
+                .filter(function(hit) {
                     let paciente = hit._source;
-
                     let weights = {
                         identity: 0.4,
                         name: 0.6,
                         gender: 0,
                         birthDate: 0
                     };
-
                     let pac: IPerson = {
                         identity: paciente.documento,
                         firstname: paciente.nombre,
@@ -660,7 +657,7 @@ router.post('/pacientes/search/match/:field', function(req, res, next) {
                     };
 
                     let pacDto: IPerson = {
-                        identity: dto.documento,
+                        identity: dto.documento.toString(),
                         firstname: dto.nombre,
                         lastname: dto.apellido,
                         birthDate: ValidateFormatDate.convertirFecha(paciente.fechaNacimiento),
@@ -669,10 +666,11 @@ router.post('/pacientes/search/match/:field', function(req, res, next) {
 
                     let m3 = new machingDeterministico();
                     let valorMatching = m3.maching(pac, pacDto, weights);
-                    console.log(valorMatching, pac);
-                    if (valorMatching >= 0.7)
+                    if (valorMatching >= 0.60)
                         return paciente;
                 })
+            results = results.map((hit) => hit._source);
+            console.log(results);
             res.send(results)
         })
         .catch((error) => {
