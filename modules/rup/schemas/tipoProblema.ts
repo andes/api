@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
 import * as codificadorSchema from './codificador';
 
-var tipoProblemaSchema = new mongoose.Schema({
+export var tipoProblemaSchema = new mongoose.Schema({
     nombre: String,
     tipo: String,
     descripcion: String,
@@ -9,6 +9,4 @@ var tipoProblemaSchema = new mongoose.Schema({
     activo: Boolean
 });
 
-var tipoProblema = mongoose.model('tipoProblema', tipoProblemaSchema, 'tipoProblema');
-
-export = tipoProblema;
+export var tipoProblema = mongoose.model('tipoProblema', tipoProblemaSchema, 'tipoProblema');

@@ -25,6 +25,14 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             query.where('paciente._id').equals(req.query.paciente.id);
         }
         
+        query.populate({
+            path: 'solicitud.listaProblemas',
+            model: 'problema',
+            populate: {
+                path: 'tipoProblema',
+                model: 'tipoProblema'
+            }
+        });
     }
 
     query.exec(function (err, data) {
