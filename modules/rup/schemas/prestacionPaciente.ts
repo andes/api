@@ -14,7 +14,10 @@ export var prestacionPacienteSchema = new mongoose.Schema({
     // nombre: String,
     // descripcion: String,
     // codigo: [codificadorSchema],
-    idSolicitudOrigen: mongoose.Schema.Types.ObjectId, // prestacion desde la que se solicita
+    idPrestacionOrigen: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'prestacionPaciente'
+    }, // prestacion desde la que se solicita
     paciente: {
         type: pacienteSchema,
         required: true
@@ -57,11 +60,7 @@ export var prestacionPacienteSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'problemas'
         }],
-        // prestacion de origen por la cual se solicita esta nueva
-        idPrestacionOrigen: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'paciente'
-        },
+
         // datos propios de la solicitud
         datosPropios: {
             type: mongoose.Schema.Types.Mixed // estos datos vienen desde un componente dinamico
