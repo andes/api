@@ -12,7 +12,7 @@ var app = express();
 config.mongooseDebugMode && mongoose.set('debug', false);
 mongoose.connect(config.connectionStrings.mongoDB_main);
 mongoose.plugin(require('./plugins/defaults'));
-//mongoose.set('debug', true);
+mongoose.set('debug', true);
 
 // Configura Express
 app.use(bodyParser.json());
