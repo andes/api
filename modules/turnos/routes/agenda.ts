@@ -26,27 +26,38 @@ router.get('/agenda/:id*?', function (req, res, next) {
             query.where('horaFin').lte(req.query.fechaHasta);
         }
 
-        if (req.query.idEspacioFisico) {
-            query.where('espacioFisico.id').equals(req.query.idEspacioFisico);
-        }
+        
 
         if (req.query.idProfesional) {
-            query.where('profesionales.id').equals(req.query.idProfesional);
+            query.where('profesionales._id').equals(req.query.idProfesional);
         }
 
         if (req.query.idPrestacion) {
-            query.where('prestaciones.id').equals(req.query.idPrestacion);
+            query.where('prestaciones._id').equals(req.query.idPrestacion);
         }
 
-        //Dada una lista de prestaciones, filtra las agendas que tengan al menos una de las prestaciones
+        //Dada una lista de prestaciones, filtra las agendas que tengan al menos una de ellas como prestación
         if (req.query.prestaciones) {
             let arr_prestaciones: any[] = JSON.parse(req.query.prestaciones);
             let variable: any[] = [];
             arr_prestaciones.forEach((prestacion, index) => {
-                // console.log ("prestacion "+prestacion._id);
-                variable.push({"prestaciones.id": prestacion._id})
+                variable.push({"prestaciones._id": prestacion.id})
             });
             query.or(variable);
+        }
+
+        //Dada una lista de profesionales, filtra las agendas que tengan al menos uno de ellos
+        if (req.query.profesionales) {
+            let arr_profesionales: any[] = JSON.parse(req.query.profesionales);
+            let variable: any[] = [];
+            arr_profesionales.forEach((profesional, index) => {
+                variable.push({"profesionales._id": profesional.id})
+            });
+            query.or(variable);
+        }
+
+        if (req.query.espacioFisico) {
+            query.or({'espacioFisico._id': req.query.espacioFisico});
         }
 
         if (!Object.keys(query).length) {
@@ -59,7 +70,6 @@ router.get('/agenda/:id*?', function (req, res, next) {
             fechaHasta: 1
         });
 
-        //console.log("query ", query._conditions)
         query.exec(function (err, data) {
             if (err) return next(err);
             res.json(data);
