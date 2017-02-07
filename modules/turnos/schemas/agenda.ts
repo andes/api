@@ -40,12 +40,6 @@ var agendaSchema = new mongoose.Schema({
                 documento: String,
                 telefono: String
             },
-            pacientes: [{//este array se va a usar solo en el caso de pacientes simultaneos
-                id: mongoose.Schema.Types.ObjectId,
-                nombre: String,
-                apellido: String,
-                documento: String
-            }],
             prestacion: prestacionSchema
         }],
     }],
@@ -63,12 +57,7 @@ agendaSchema.virtual('turnosDisponibles').get(function () {
     this.bloques.forEach(function (bloque) {
         bloque.turnos.forEach(function (turno) {
             if (turno.estado == "disponible") {
-                if (bloque.pacienteSimultaneos){
-                     cantidad = bloque.cantidadSimultaneos - turno.pacientes.length;
-                     turnosDisponibles = turnosDisponibles+cantidad;
-                }
-                else
-                    turnosDisponibles++;
+                turnosDisponibles++;
             }
         });
     });
