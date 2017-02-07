@@ -628,7 +628,7 @@ router.post('/pacientes/search/multimatch/:query', function (req, res, next) {
         router.post('/pacientes/search/match/:field', function (req, res, next) {
             // Se realiza la búsqueda match por el documento en elastic
 
-<<<<<<< HEAD
+
             let dto = req.body.objetoBusqueda;
             let connElastic = new Client({
                 host: config.connectionStrings.elastic_main,
@@ -693,70 +693,6 @@ router.post('/pacientes/search/multimatch/:query', function (req, res, next) {
                 .catch((error) => {
                     next(error)
                 });
-=======
-    var dto = req.body.objetoBusqueda;
-    let connElastic = new Client({
-        host: config.connectionStrings.elastic_main,
-        log: 'trace'
-    });
-    let condicion = {
-        match: {
-            documento: {
-                query: dto.documento,
-                minimum_should_match: 3,
-                fuzziness: 2
-            }
-        }
-    }
-    let body = {
-        size: 40,
-        from: 0,
-        query: condicion,
-    };
-
-    connElastic.search({
-        index: 'migrasips',   // andes
-        body: body
-    })
-        .then((searchResult) => {
-            let results: Array<any> = ((searchResult.hits || {}).hits || [])// extract results from elastic response
-                .filter(function(hit) {
-                    let paciente = hit._source;
-                    let weights = {
-                        identity: 0.4,
-                        name: 0.6,
-                        gender: 0,
-                        birthDate: 0
-                    };
-                    let pac: IPerson = {
-                        identity: paciente.documento,
-                        firstname: paciente.nombre,
-                        lastname: paciente.apellido,
-                        birthDate: ValidateFormatDate.convertirFecha(paciente.fechaNacimiento),
-                        gender: paciente.sexo
-                    };
-
-                    let pacDto: IPerson = {
-                        identity: dto.documento.toString(),
-                        firstname: dto.nombre,
-                        lastname: dto.apellido,
-                        birthDate: ValidateFormatDate.convertirFecha(paciente.fechaNacimiento),
-                        gender: paciente.sexo
-                    };
-
-                    let m3 = new machingDeterministico();
-                    let valorMatching = m3.maching(pac, pacDto, weights);
-                    if (valorMatching >= 0.60)
-                        return paciente;
-                })
-            results = results.map((hit) => hit._source);
-            console.log(results);
-            res.send(results)
-        })
-        .catch((error) => {
-            next(error)
-        });
->>>>>>> e8a9cfafe2683de41983e058a1b88e156133bdce
 
         });
 
