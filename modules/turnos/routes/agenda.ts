@@ -91,26 +91,18 @@ router.put('/agenda/:_id', function (req, res, next) {
 router.patch('/agenda/:_id', function (req, res, next) {
     agenda.findById(req.params._id, function (err, data) {
 
-        let conditions = {
-            _id: req.params._id
+        switch (req.body.op) {
+            case 'asistenciaTurno': data = darAsistencia(req, data);
+                break;
+            case 'cancelarTurno': data = cancelarAsistencia(req, data);
+                break;
         }
 
-        let update = {};
+        data.save(function (err) {
+            if (err)
+                console.log("Error", err);
 
-        switch (req.body.op) {
-            case "suspenderAgenda": update[req.body.path] = req.body.value;
-                break;
-            case "asistenciaTurno": update[req.body.path] = req.body.value;
-                break;
-            case "cancelarTurno": update[req.body.path[0].estado] = req.body.path[0].value;
-                update[req.body.path[1].paciente] = req.body.path[1].value;
-                update[req.body.path[2].prestacion] = req.body.path[2].value;
-                break;
-        }        
-
-        agenda.findOneAndUpdate(conditions, { $set: update }, { new: true }, function (err, result) {
-
-            res.json(result);
+            return res.json(data);
         });
     });
 });
@@ -123,5 +115,37 @@ router.delete('/agenda/:_id', function (req, res, next) {
         res.json(data);
     });
 })
+
+
+function darAsistencia(req, data) {
+
+    let turno;
+
+    for (let x = 0; x < Object.keys(data).length; x++) {
+        if (data.bloques[x] != null) {
+            turno = (data as any).bloques[x].turnos.id(req.body.idTurno);
+        }
+    }
+
+    turno.asistencia = req.body.asistencia;
+
+    return data;
+}
+
+function cancelarAsistencia(req, data) {
+    let turno;
+
+    for (let x = 0; x < Object.keys(data).length; x++) {
+        if (data.bloques[x] != null) {
+            turno = (data as any).bloques[x].turnos.id(req.body.idTurno);
+        }
+    }
+
+    turno.estado = req.body.estado;
+    turno.paciente = req.body.paciente;
+    turno.prestacion = req.body.prestacion;
+
+    return data;
+}
 
 export = router;

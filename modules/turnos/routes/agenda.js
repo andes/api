@@ -75,25 +75,18 @@ router.put('/agenda/:_id', function (req, res, next) {
 });
 router.patch('/agenda/:_id', function (req, res, next) {
     agenda.findById(req.params._id, function (err, data) {
-        var conditions = {
-            _id: req.params._id
-        };
-        var update = {};
         switch (req.body.op) {
-            case "suspenderAgenda":
-                update[req.body.path] = req.body.value;
+            case 'asistenciaTurno':
+                data = darAsistencia(req, data);
                 break;
-            case "asistenciaTurno":
-                update[req.body.path] = req.body.value;
-                break;
-            case "cancelarTurno":
-                update[req.body.path[0].estado] = req.body.path[0].value;
-                update[req.body.path[1].paciente] = req.body.path[1].value;
-                update[req.body.path[2].prestacion] = req.body.path[2].value;
+            case 'cancelarTurno':
+                data = cancelarAsistencia(req, data);
                 break;
         }
-        agenda.findOneAndUpdate(conditions, { $set: update }, { new: true }, function (err, result) {
-            res.json(result);
+        data.save(function (err) {
+            if (err)
+                console.log("Error", err);
+            return res.json(data);
         });
     });
 });
@@ -104,5 +97,27 @@ router.delete('/agenda/:_id', function (req, res, next) {
         res.json(data);
     });
 });
+function darAsistencia(req, data) {
+    var turno;
+    for (var x = 0; x < Object.keys(data).length; x++) {
+        if (data.bloques[x] != null) {
+            turno = data.bloques[x].turnos.id(req.body.idTurno);
+        }
+    }
+    turno.asistencia = req.body.asistencia;
+    return data;
+}
+function cancelarAsistencia(req, data) {
+    var turno;
+    for (var x = 0; x < Object.keys(data).length; x++) {
+        if (data.bloques[x] != null) {
+            turno = data.bloques[x].turnos.id(req.body.idTurno);
+        }
+    }
+    turno.estado = req.body.estado;
+    turno.paciente = req.body.paciente;
+    turno.prestacion = req.body.prestacion;
+    return data;
+}
 module.exports = router;
 //# sourceMappingURL=agenda.js.map

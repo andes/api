@@ -58,15 +58,16 @@ var agendaSchema = new mongoose.Schema({
                 apellido: String,
                 documento: String
             }],
-            prestacion: prestacionSchema
+            prestacion: [prestacionSchema]
         }],
     }],
 
     estado: {
         type: String,
-        enum: ["", "Planificada", "Publicada"]
+        enum: ["", "Planificada", "Publicada", "Suspendida"]
     }
 });
+// },{validateBeforeSave:false});
 
 //Defino Virtuals
 agendaSchema.virtual('turnosDisponibles').get(function () {
