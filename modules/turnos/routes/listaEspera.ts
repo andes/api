@@ -1,5 +1,5 @@
-import * as express from 'express'
-import * as listaEspera from '../schemas/listaEspera'
+import * as express from 'express';
+import * as listaEspera from '../schemas/listaEspera';
 import * as utils from '../../../utils/utils';
 import { defaultLimit, maxLimit } from './../../../config';
 import * as config from '../../../config';
@@ -35,17 +35,15 @@ router.get('/listaEspera/:id*?', function (req, res, next) {
         var query;
         var opciones = {};
 
-        /*if (req.query.paciente.nombre) {
-            opciones['paciente.nombre'] = {
-                '$regex': utils.makePattern(req.query.paciente.nombre)
-            };
+         if (req.query.nombre) {
+            opciones['paciente.nombre'] =
+                RegExp('^.*' + req.query.nombre + '.*$', "i")
         }
 
-        if (req.query.paciente.apellido) {
-            opciones['paciente.apellido'] = {
-                '$regex': utils.makePattern(req.query.paciente.apellido)
-            };
-        }*/
+        if (req.query.apellido) {
+            opciones['paciente.apellido'] =
+                RegExp('^.*' + req.query.apellido + '.*$', "i")
+        }
 
         if (req.query.documento) {
             opciones['paciente.documento'] = utils.makePattern(req.query.documento)
