@@ -76,6 +76,25 @@ pacienteSchema.virtual('nombreCompleto').get(function () {
     return this.nombre + ' ' + this.apellido;
 });
 
+pacienteSchema.virtual('edad').get(function () {
+    var edad = null;
+    if (this.fechaNacimiento) {
+        var birthDate = new Date(this.fechaNacimiento);
+        var currentDate = new Date();
+        var years = (currentDate.getFullYear() - birthDate.getFullYear());
+        if (currentDate.getMonth() < birthDate.getMonth() ||
+            currentDate.getMonth() == birthDate.getMonth() && currentDate.getDate() < birthDate.getDate()) {
+            years--;
+        }
+
+        edad = years;
+    }
+
+    return edad;
+
+
+});
+
 //Creo un indice para fulltext Search
 pacienteSchema.index({
     '$**': 'text'

@@ -32,7 +32,6 @@ router.post('/espacioFisico', function (req, res, next) {
             return next(err);
         }
         res.json(newEspacioFisico);
-        console.log(newEspacioFisico);
     })
 });
 
