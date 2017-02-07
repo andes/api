@@ -548,153 +548,150 @@ router.patch('/pacientes/:id', function (req, res, next) {
 });
 
 router.post('/pacientes/search/multimatch/:query', function (req, res, next) {
-            console.log(req.params.query);
-            var connElastic = new Client({
-                host: 'http://localhost:9200',
-                //  log: 'trace'
-            });
-            let body = {
-                size: 30,
-                from: 0,
-                query: {
-                    multi_match: {
-                        query: req.params.query,
-                        type: 'cross_fields',
-                        fields: ['documento^5','nombre', 'apellido^3'],
-                        //tie_breaker: 0.3
-                    }
-                   
-                }
-                }
-                
-                let pacientesMatch = connElastic.search({
-                    index: 'andes', // andes
-                    body: body
-                    // Se comenta la siguiente linea q: `nombre:${value}`
-                });
-                connElastic.search({
-                    index: 'andes', // andes
-                    body: body
-                    // Se comenta la siguiente linea q: `nombre:${value}`
-                })
-                .then((searchResult) => {
-                    let results: Array < any > = ((searchResult.hits || {}).hits || []) // extract results from elastic response
-                        .map((hit) => hit._source)
-                    res.send(results)
-                })
-                .catch((error) => {
-                    next(error)
-                });
-
-            });
-
-        router.post('/pacientes/search/simplequery', function (req, res, next) {
-            let dto = req.body.objetoBusqueda;
-
-            let connElastic = new Client({
-                host: config.connectionStrings.elastic_main,
-                //  log: 'trace'
-            });
-            let condicion = {
-                simple_query_string: {
-                    query: '\"' + dto.documento + '\" + \"' + dto.apellido + '\" + \"' + dto.nombre + '\" +' + dto.sexo,
-                    // "analyzer": "snowball",
-                    fields: ["documento", "apellido", "nombre", "sexo"],
-                    default_operator: 'and'
-                }
+    console.log(req.params.query);
+    var connElastic = new Client({
+        host: 'http://localhost:9200',
+        //  log: 'trace'
+    });
+    let body = {
+        size: 30,
+        from: 0,
+        query: {
+            multi_match: {
+                query: req.params.query,
+                type: 'cross_fields',
+                fields: ['documento^5', 'nombre', 'apellido^3'],
+                //tie_breaker: 0.3
             }
 
-            let body = {
-                size: 40,
-                from: 0,
-                query: condicion,
-            };
+        }
+    }
 
-            connElastic.search({
-                    index: 'andes', // andes
-                    body: body
-                })
-                .then((searchResult) => {
-                    let results: Array < any > = ((searchResult.hits || {}).hits || []) // extract results from elastic response
-                        .map((hit) => hit._source)
-                    res.send(results)
-                })
-                .catch((error) => {
-                    next(error)
-                });
-
+    let pacientesMatch = connElastic.search({
+        index: 'andes', // andes
+        body: body
+        // Se comenta la siguiente linea q: `nombre:${value}`
+    });
+    connElastic.search({
+            index: 'andes', // andes
+            body: body
+            // Se comenta la siguiente linea q: `nombre:${value}`
+        })
+        .then((searchResult) => {
+            let results: Array < any > = ((searchResult.hits || {}).hits || []) // extract results from elastic response
+                .map((hit) => hit._source)
+            res.send(results)
+        })
+        .catch((error) => {
+            next(error)
         });
 
-        router.post('/pacientes/search/match/:field', function (req, res, next) {
-            // Se realiza la búsqueda match por el documento en elastic
+});
 
+router.post('/pacientes/search/simplequery', function (req, res, next) {
+    let dto = req.body.objetoBusqueda;
 
-            let dto = req.body.objetoBusqueda;
-            let connElastic = new Client({
-                host: config.connectionStrings.elastic_main,
-                log: 'trace'
-            });
-            let condicion = {
-                match: {
-                    documento: {
-                        query: dto.documento,
-                        minimum_should_match: 3,
-                        fuzziness: 2
-                    }
-                }
+    let connElastic = new Client({
+        host: config.connectionStrings.elastic_main,
+        //  log: 'trace'
+    });
+    let condicion = {
+        simple_query_string: {
+            query: '\"' + dto.documento + '\" + \"' + dto.apellido + '\" + \"' + dto.nombre + '\" +' + dto.sexo,
+            // "analyzer": "snowball",
+            fields: ["documento", "apellido", "nombre", "sexo"],
+            default_operator: 'and'
+        }
+    }
+
+    let body = {
+        size: 40,
+        from: 0,
+        query: condicion,
+    };
+
+    connElastic.search({
+            index: 'andes', // andes
+            body: body
+        })
+        .then((searchResult) => {
+            let results: Array < any > = ((searchResult.hits || {}).hits || []) // extract results from elastic response
+                .map((hit) => hit._source)
+            res.send(results)
+        })
+        .catch((error) => {
+            next(error)
+        });
+
+});
+
+router.post('/pacientes/search/match/:field', function (req, res, next) {
+    // Se realiza la búsqueda match por el documento en elastic
+
+    var dto = req.body.objetoBusqueda;
+    let connElastic = new Client({
+        host: config.connectionStrings.elastic_main,
+        log: 'trace'
+    });
+    let condicion = {
+        match: {
+            documento: {
+                query: dto.documento,
+                minimum_should_match: 3,
+                fuzziness: 2
             }
-            let body = {
-                size: 40,
-                from: 0,
-                query: condicion,
-            };
+        }
+    }
+    let body = {
+        size: 40,
+        from: 0,
+        query: condicion,
+    };
 
-            connElastic.search({
-                    index: 'andes', // andes
-                    body: body
+    connElastic.search({
+            index: 'andes', // andes
+            body: body
+        })
+        .then((searchResult) => {
+            let results: Array < any > = ((searchResult.hits || {}).hits || []) // extract results from elastic response
+                .filter(function (hit) {
+                    let paciente = hit._source;
+                    let weights = {
+                        identity: 0.4,
+                        name: 0.6,
+                        gender: 0,
+                        birthDate: 0
+                    };
+                    let pac: IPerson = {
+                        identity: paciente.documento,
+                        firstname: paciente.nombre,
+                        lastname: paciente.apellido,
+                        birthDate: ValidateFormatDate.convertirFecha(paciente.fechaNacimiento),
+                        gender: paciente.sexo
+                    };
+
+                    let pacDto: IPerson = {
+                        identity: dto.documento.toString(),
+                        firstname: dto.nombre,
+                        lastname: dto.apellido,
+                        birthDate: ValidateFormatDate.convertirFecha(paciente.fechaNacimiento),
+                        gender: paciente.sexo
+                    };
+
+                    let m3 = new machingDeterministico();
+                    let valorMatching = m3.maching(pac, pacDto, weights);
+                    if (valorMatching >= 0.60)
+                        return paciente;
                 })
-                .then((searchResult) => {
-
-                    let results: Array < any > = ((searchResult.hits || {}).hits || []) // extract results from elastic response
-                        .map((hit) => function (hit) {
-                            let paciente = hit._source;
-
-                            let weights = {
-                                identity: 0.4,
-                                name: 0.6,
-                                gender: 0,
-                                birthDate: 0
-                            };
-
-                            let pac: IPerson = {
-                                identity: paciente.documento,
-                                firstname: paciente.nombre,
-                                lastname: paciente.apellido,
-                                birthDate: ValidateFormatDate.convertirFecha(paciente.fechaNacimiento),
-                                gender: paciente.sexo
-                            };
-
-                            let pacDto: IPerson = {
-                                identity: dto.documento,
-                                firstname: dto.nombre,
-                                lastname: dto.apellido,
-                                birthDate: ValidateFormatDate.convertirFecha(paciente.fechaNacimiento),
-                                gender: paciente.sexo
-                            };
-
-                            let m3 = new machingDeterministico();
-                            let valorMatching = m3.maching(pac, pacDto, weights);
-                            console.log(valorMatching, pac);
-                            if (valorMatching >= 0.7)
-                                return paciente;
-                        })
-                    res.send(results)
-                })
-                .catch((error) => {
-                    next(error)
-                });
-
+            results = results.map((hit) => hit._source);
+            console.log(results)
+            res.send(results)
+        })
+        .catch((error) => {
+            next(error)
         });
 
+});
 
-        export = router;
+
+export = router;
