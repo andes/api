@@ -85,6 +85,7 @@ router.patch('/agenda/:_id', function (req, res, next) {
             case 'editarAgenda':
                 data = editarAgenda(req, data);
                 break;
+            case 'suspenderAgenda': data = suspenderAgenda(req, data);
         }
         data.save(function (err) {
             if (err)
@@ -125,6 +126,10 @@ function cancelarAsistencia(req, data) {
 function editarAgenda(req, data) {
     data.profesionales = req.body.profesional;
     data.espacioFisico = req.body.espacioFisico;
+    return data;
+}
+function suspenderAgenda(req, data) {
+    data.estado = 'Suspendida';
     return data;
 }
 module.exports = router;
