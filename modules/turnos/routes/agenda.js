@@ -82,6 +82,9 @@ router.patch('/agenda/:_id', function (req, res, next) {
             case 'cancelarTurno':
                 data = cancelarAsistencia(req, data);
                 break;
+            case 'editarAgenda':
+                data = editarAgenda(req, data);
+                break;
         }
         data.save(function (err) {
             if (err)
@@ -117,6 +120,11 @@ function cancelarAsistencia(req, data) {
     turno.estado = req.body.estado;
     turno.paciente = req.body.paciente;
     turno.prestacion = req.body.prestacion;
+    return data;
+}
+function editarAgenda(req, data) {
+    data.profesionales = req.body.profesional;
+    data.espacioFisico = req.body.espacioFisico;
     return data;
 }
 module.exports = router;
