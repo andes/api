@@ -25,7 +25,7 @@ router.get('/pacientes/:idPaciente/problemas/:idProblema*?', function (req, res,
 
 });
 
-router.post('/pacientes/problemas/', function (req, res, next) {
+router.post('/problemas/', function (req, res, next) {
     var problema = new problema(req.body)
     problema.save((err) => {
         if (err) {
@@ -35,16 +35,36 @@ router.post('/pacientes/problemas/', function (req, res, next) {
     })
 });
 
-router.put('/pacientes/problemas/:id', function (req, res, next) {
-    problema.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
-        if (err) {
-            return next(err);
-        }
-        res.json(data);
-    });
+router.put('/problemas/:id', function (req, res, next) {
+    console.log(req.body);
+
+    if (req.params.id) {
+        problema.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
+            if (err) {
+                return next(err);
+            }
+            res.json(data);
+        });
+    } else {
+        var listaProblemas = req.body.problemas;
+        var listaResultado = [];
+        listaProblemas.forEach(element => {
+            problema.findByIdAndUpdate(element.id, element, { new: true }, function (err, data) {
+                if (err) {
+                    return next(err);
+                }
+                listaResultado.push(data);
+            });
+
+            if (listaProblemas.length <= listaResultado.length) {
+                res.json(listaResultado);
+            }
+        });
+
+    }
 });
 
-router.delete('/tiposProblemas/:id', function (req, res, next) {
+router.delete('/problemas/:id', function (req, res, next) {
     problema.findByIdAndRemove(req.params.id, function (err, data) {
         if (err)
             return next(err);
