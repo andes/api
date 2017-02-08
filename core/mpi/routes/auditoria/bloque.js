@@ -1,8 +1,8 @@
 "use strict";
-var servicioSintys_1 = require("../../../../utils/servicioSintys");
-var express = require("express");
-var paciente_1 = require("../../schemas/paciente");
-var servicioSisa_1 = require("../../../../utils/servicioSisa");
+var servicioSintys_1 = require('../../../../utils/servicioSintys');
+var express = require('express');
+var paciente_1 = require('../../schemas/paciente');
+var servicioSisa_1 = require('../../../../utils/servicioSisa');
 var router = express.Router();
 router.get('/bloques/:idTipoBloque', function (req, res, next) {
     if (req.params.idTipoBloque) {
