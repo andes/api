@@ -1,5 +1,6 @@
 import * as express from 'express'
 import { paciente } from '../../schemas/paciente'
+import { servicioSisa } from '../../../../utils/servicioSisa'
 
 var router = express.Router();
 
@@ -20,6 +21,66 @@ router.get('/matching/:id*?', function (req, res, next) {
             res.json(data);
         });
     }
+});
+
+/*CORREGIR ESTO VER LO DE AGENDAS HACER UN PATCH POR OPERACION */
+router.get('/matching/:id', function (req, res, next) {
+    
+    console.log('entreeee');
+    var filtro = req.params.id;
+    var query = {};
+    query[filtro] = {
+        $eq: req.params.id
+    };
+
+    paciente.find(query, function (err, data) {
+        if (err) {
+            next(err);
+        };
+        var servSisa = new servicioSisa();
+        
+        var weights = {
+            identity: 0.3,
+            name: 0.3,
+            gender: 0.1,
+            birthDate: 0.3
+        };
+        var pacienteOriginal;
+        var pacienteAux;
+        pacienteOriginal = data;
+        pacienteAux = data;
+        var pacientesRes = [];
+        
+        pacientesRes.push(servSisa.matchSisa(pacienteAux));
+        
+        Promise.all(pacientesRes).then(values => {
+
+            var arrPacValidados;
+            arrPacValidados = values;
+            var arrSalida = [];
+            arrPacValidados.forEach(function (pacVal) {
+                var datoPac;
+                datoPac = pacVal;
+                if (datoPac.matcheos.matcheo >= 99 && datoPac.paciente.estado == 'temporal') {
+                    arrSalida.push(servSisa.validarPaciente(datoPac, "Sisa"))
+                } else {
+                    arrSalida.push(datoPac);
+                }
+            });
+
+            Promise.all(arrSalida).then(PacSal => {
+                res.json(PacSal);
+            }).catch(err => {
+                console.log(err);
+                next(err);
+            })
+
+        }).catch(err => {
+            console.log(err);
+            next(err);
+        })
+
+    })
 });
 
 // router.post('/matching', function (req, res, next) {
