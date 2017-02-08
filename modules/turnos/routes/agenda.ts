@@ -26,7 +26,7 @@ router.get('/agenda/:id*?', function (req, res, next) {
             query.where('horaFin').lte(req.query.fechaHasta);
         }
 
-        
+
 
         if (req.query.idProfesional) {
             query.where('profesionales._id').equals(req.query.idProfesional);
@@ -42,7 +42,7 @@ router.get('/agenda/:id*?', function (req, res, next) {
             let variable: any[] = [];
             arr_prestaciones.forEach((prestacion, index) => {
 
-                variable.push({"prestaciones._id": prestacion.id})
+                variable.push({ "prestaciones._id": prestacion.id })
             });
             query.or(variable);
         }
@@ -52,13 +52,13 @@ router.get('/agenda/:id*?', function (req, res, next) {
             let arr_profesionales: any[] = JSON.parse(req.query.profesionales);
             let variable: any[] = [];
             arr_profesionales.forEach((profesional, index) => {
-                variable.push({"profesionales._id": profesional.id})
+                variable.push({ "profesionales._id": profesional.id })
             });
             query.or(variable);
         }
 
         if (req.query.espacioFisico) {
-            query.or({'espacioFisico._id': req.query.espacioFisico});
+            query.or({ 'espacioFisico._id': req.query.espacioFisico });
         }
 
         if (!Object.keys(query).length) {
