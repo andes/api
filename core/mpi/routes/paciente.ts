@@ -1,13 +1,25 @@
-import { ValidatePatient } from '../../../utils/validatePatient';
-import { ValidateFormatDate } from '../../../utils/validateFormatDate';
-import { machingDeterministico } from '../../../utils/machingDeterministico';
+import {
+    ValidatePatient
+} from '../../../utils/validatePatient';
+import {
+    ValidateFormatDate
+} from '../../../utils/validateFormatDate';
+import {
+    machingDeterministico
+} from '../../../utils/machingDeterministico';
 import * as express from 'express'
-import { paciente } from '../schemas/paciente';
+import {
+    paciente
+} from '../schemas/paciente';
 import * as utils from '../../../utils/utils';
 import * as mongoosastic from 'mongoosastic';
-import { Client } from 'elasticsearch';
+import {
+    Client
+} from 'elasticsearch';
 import * as config from '../../../config';
-import { IPerson } from '../../../utils/IPerson';
+import {
+    IPerson
+} from '../../../utils/IPerson';
 
 var router = express.Router();
 
@@ -218,10 +230,10 @@ var router = express.Router();
  *         schema:
  *           $ref: '#/definitions/pacientes'
  */
-router.get('/pacientes/:id*?', function(req, res, next) {
+router.get('/pacientes/:id*?', function (req, res, next) {
     if (req.params.id) {
 
-        paciente.findById(req.params.id, function(err, data) {
+        paciente.findById(req.params.id, function (err, data) {
             if (err) {
                 next(err);
             };
@@ -269,7 +281,7 @@ router.get('/pacientes/:id*?', function(req, res, next) {
             nombre: 1
         });
 
-        query.exec(function(err, data) {
+        query.exec(function (err, data) {
             if (err) return next(err);
             res.json(data);
         });
@@ -279,7 +291,7 @@ router.get('/pacientes/:id*?', function(req, res, next) {
 });
 
 
-router.post('/pacientes/search', function(req, res) {
+router.post('/pacientes/search', function (req, res) {
     console.log('Search')
     var lPacientes;
     var obj = req.body.objetoBusqueda;
@@ -306,14 +318,14 @@ router.post('/pacientes/search', function(req, res) {
             query: myQuery
         }
     }, {
-            from: 0,
-            size: 50,
-        }, function(err, results) {
-            var pacientes = results.hits.hits.map(function(element) {
-                return element._source;
-            });
-            res.send(pacientes);
+        from: 0,
+        size: 50,
+    }, function (err, results) {
+        var pacientes = results.hits.hits.map(function (element) {
+            return element._source;
         });
+        res.send(pacientes);
+    });
 });
 
 
@@ -346,7 +358,7 @@ router.post('/pacientes/search', function(req, res) {
  */
 
 
-router.post('/pacientes', function(req, res, next) {
+router.post('/pacientes', function (req, res, next) {
     /** TODO: resolver el buscar a los tutores */
     var arrRel = req.body.relaciones;
     var arrTutorSave = [];
@@ -362,7 +374,7 @@ router.post('/pacientes', function(req, res, next) {
             if (err) {
                 next(err);
             }
-            (newPatient as any).on('es-indexed', function() {
+            (newPatient as any).on('es-indexed', function () {
                 console.log('paciente indexed');
             });
             res.json(newPatient);
@@ -416,14 +428,14 @@ router.post('/pacientes', function(req, res, next) {
  *         schema:
  *           $ref: '#/definitions/pacientes'
  */
-router.put('/pacientes/:id', function(req, res, next) {
+router.put('/pacientes/:id', function (req, res, next) {
 
     //Validación de campos del paciente del lado de la api
     var continues = ValidatePatient.checkPatient(req.body);
     if (continues.valid) {
         paciente.findByIdAndUpdate(req.params.id, req.body, {
             new: true
-        }, function(err, data) {
+        }, function (err, data) {
             if (err)
                 return next(err);
             res.json(data);
@@ -472,12 +484,12 @@ router.put('/pacientes/:id', function(req, res, next) {
  *         schema:
  *           $ref: '#/definitions/pacientes'
  */
-router.delete('/pacientes/:id', function(req, res, next) {
-    paciente.findByIdAndRemove(req.params.id, function(err, data) {
+router.delete('/pacientes/:id', function (req, res, next) {
+    paciente.findByIdAndRemove(req.params.id, function (err, data) {
         if (err)
             return next(err);
         /* Docuemnt is unindexed elasticsearch */
-        paciente.on('es-removed', function(err, res) {
+        paciente.on('es-removed', function (err, res) {
             if (err) return next(err);
         });
         res.json(data);
@@ -509,7 +521,7 @@ router.delete('/pacientes/:id', function(req, res, next) {
  *         schema:
  *           $ref: '#/definitions/pacientes'
  */
-router.patch('/pacientes/:id', function(req, res, next) {
+router.patch('/pacientes/:id', function (req, res, next) {
     let changes = req.body;
     let conditions = {
         _id: req.params.id
@@ -525,7 +537,9 @@ router.patch('/pacientes/:id', function(req, res, next) {
         update['nombre'] = changes.nombre;
 
     // query.findOneAndUpdate(conditions, update, callback)
-    paciente.findOneAndUpdate(conditions, { $set: update }, function(err, data) {
+    paciente.findOneAndUpdate(conditions, {
+        $set: update
+    }, function (err, data) {
         if (err) {
             return next(err);
         }
@@ -533,38 +547,38 @@ router.patch('/pacientes/:id', function(req, res, next) {
     });
 });
 
-router.post('/pacientes/search/multimatch/:query', function(req, res, next) {
+router.post('/pacientes/search/multimatch/:query', function (req, res, next) {
     console.log(req.params.query);
     var connElastic = new Client({
         host: 'http://localhost:9200',
         //  log: 'trace'
     });
     let body = {
-        size: 40,
+        size: 30,
         from: 0,
         query: {
             multi_match: {
                 query: req.params.query,
                 type: 'cross_fields',
-                fields: ['documento', 'nombre', 'apellido'],
-                // minimum_should_match: 4,
-                // operator: 'or'
+                fields: ['documento^5', 'nombre', 'apellido^3'],
+                //tie_breaker: 0.3
             }
+
         }
-    };
+    }
 
     let pacientesMatch = connElastic.search({
-        index: 'migrasips',   // andes
+        index: 'andes', // andes
         body: body
         // Se comenta la siguiente linea q: `nombre:${value}`
     });
     connElastic.search({
-        index: 'migrasips',   // andes
-        body: body
-        // Se comenta la siguiente linea q: `nombre:${value}`
-    })
+            index: 'andes', // andes
+            body: body
+            // Se comenta la siguiente linea q: `nombre:${value}`
+        })
         .then((searchResult) => {
-            let results: Array<any> = ((searchResult.hits || {}).hits || [])// extract results from elastic response
+            let results: Array < any > = ((searchResult.hits || {}).hits || []) // extract results from elastic response
                 .map((hit) => hit._source)
             res.send(results)
         })
@@ -574,7 +588,7 @@ router.post('/pacientes/search/multimatch/:query', function(req, res, next) {
 
 });
 
-router.post('/pacientes/search/simplequery', function(req, res, next) {
+router.post('/pacientes/search/simplequery', function (req, res, next) {
     let dto = req.body.objetoBusqueda;
 
     let connElastic = new Client({
@@ -597,11 +611,11 @@ router.post('/pacientes/search/simplequery', function(req, res, next) {
     };
 
     connElastic.search({
-        index: 'migrasips',   // andes
-        body: body
-    })
+            index: 'andes', // andes
+            body: body
+        })
         .then((searchResult) => {
-            let results: Array<any> = ((searchResult.hits || {}).hits || [])// extract results from elastic response
+            let results: Array < any > = ((searchResult.hits || {}).hits || []) // extract results from elastic response
                 .map((hit) => hit._source)
             res.send(results)
         })
@@ -611,7 +625,7 @@ router.post('/pacientes/search/simplequery', function(req, res, next) {
 
 });
 
-router.post('/pacientes/search/match/:field', function(req, res, next) {
+router.post('/pacientes/search/match/:field', function (req, res, next) {
     // Se realiza la búsqueda match por el documento en elastic
 
     var dto = req.body.objetoBusqueda;
@@ -635,12 +649,12 @@ router.post('/pacientes/search/match/:field', function(req, res, next) {
     };
 
     connElastic.search({
-        index: 'migrasips',   // andes
-        body: body
-    })
+            index: 'andes', // andes
+            body: body
+        })
         .then((searchResult) => {
-            let results: Array<any> = ((searchResult.hits || {}).hits || [])// extract results from elastic response
-                .filter(function(hit) {
+            let results: Array < any > = ((searchResult.hits || {}).hits || []) // extract results from elastic response
+                .filter(function (hit) {
                     let paciente = hit._source;
                     let weights = {
                         identity: 0.4,
@@ -670,7 +684,7 @@ router.post('/pacientes/search/match/:field', function(req, res, next) {
                         return paciente;
                 })
             results = results.map((hit) => hit._source);
-            console.log(results);
+            console.log(results)
             res.send(results)
         })
         .catch((error) => {
