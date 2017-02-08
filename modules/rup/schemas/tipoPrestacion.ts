@@ -22,7 +22,10 @@ export var tipoPrestacionSchema = new mongoose.Schema({
     // requiereEvolucionAdministrativa: Boolean,
     // requiereEvolucionCalidad: Boolean,
     activo: Boolean,
-    componente: String
+    componente: {
+        ruta: String,
+        nombre: String
+    }
 });
 
 export var tipoPrestacion = mongoose.model('tipoPrestacion', tipoPrestacionSchema, 'tipoPrestacion');
