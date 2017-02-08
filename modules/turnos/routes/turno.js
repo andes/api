@@ -16,6 +16,7 @@ router.put('/turno/:id', function (req, res, next) {
     update[etiquetaEstado] = req.body.estado;
     update[etiquetaPrestacion] = req.body.prestacion;
     update[etiquetaPaciente] = req.body.paciente;
+    console.log("Update   ", update);
     agenda.findOneAndUpdate(query, { $set: update }, function (err, agen) {
         if (err) {
             return next(err);
