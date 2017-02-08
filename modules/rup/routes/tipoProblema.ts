@@ -1,5 +1,5 @@
 import * as express from 'express'
-import * as tipoProblema from '../schemas/tipoProblema'
+import { tipoProblema } from '../schemas/tipoProblema'
 var router = express.Router();
 
 router.get('/tiposProblemas/:id*?', function (req, res, next) {
