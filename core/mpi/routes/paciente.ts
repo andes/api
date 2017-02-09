@@ -363,11 +363,11 @@ router.post('/pacientes', function (req, res, next) {
     var arrRel = req.body.relaciones;
     var arrTutorSave = [];
 
-    //Validación de campos del paciente del lado de la api
+    // Validación de campos del paciente del lado de la api
     var continues = ValidatePatient.checkPatient(req.body);
     console.log(continues.errors);
     if (continues.valid) {
-        req.body.fechaNacimiento = ValidateFormatDate.obtenerFecha(req.body.fechaNacimiento);
+        // req.body.fechaNacimiento = ValidateFormatDate.obtenerFecha(req.body.fechaNacimiento);
 
         var newPatient = new paciente(req.body);
         newPatient.save((err) => {
@@ -550,7 +550,7 @@ router.patch('/pacientes/:id', function (req, res, next) {
 router.post('/pacientes/search/multimatch/:query', function (req, res, next) {
     console.log(req.params.query);
     var connElastic = new Client({
-        host: 'http://localhost:9200',
+        host: config.connectionStrings.elastic_main,
         //  log: 'trace'
     });
     let body = {
@@ -579,7 +579,7 @@ router.post('/pacientes/search/multimatch/:query', function (req, res, next) {
         })
         .then((searchResult) => {
             let results: Array < any > = ((searchResult.hits || {}).hits || []) // extract results from elastic response
-                .map((hit) => hit._source)
+                .map((hit) => {let elem = hit._source; elem['id'] = hit._id; return elem})
             res.send(results)
         })
         .catch((error) => {
@@ -616,7 +616,7 @@ router.post('/pacientes/search/simplequery', function (req, res, next) {
         })
         .then((searchResult) => {
             let results: Array < any > = ((searchResult.hits || {}).hits || []) // extract results from elastic response
-                .map((hit) => hit._source)
+                .map((hit) => {let elem = hit._source; elem['id'] = hit._id; return elem})
             res.send(results)
         })
         .catch((error) => {
@@ -683,7 +683,7 @@ router.post('/pacientes/search/match/:field', function (req, res, next) {
                     if (valorMatching >= 0.60)
                         return paciente;
                 })
-            results = results.map((hit) => hit._source);
+            results = results.map((hit) => {let elem = hit._source; elem['id'] = hit._id; return elem});
             console.log(results)
             res.send(results)
         })
