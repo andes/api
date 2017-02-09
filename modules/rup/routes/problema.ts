@@ -26,18 +26,24 @@ router.get('/pacientes/:idPaciente/problemas/:idProblema*?', function (req, res,
 });
 
 router.post('/problemas/', function (req, res, next) {
-    var problema = new problema(req.body)
-    problema.save((err) => {
+    console.log(req.body);
+    var newProblema = new problema(req.body)
+
+    newProblema.save((err) => {
         if (err) {
             return next(err);
         }
-        res.json(problema);
+
+        problema.findById(newProblema.id.toString()).populate('tipoProblema').exec(function (err, data) {
+            if (err) {
+                return next(err);
+            }
+            res.json(data);
+        });
     })
 });
 
-router.put('/problemas/:id', function (req, res, next) {
-    console.log(req.body);
-
+router.put('/problemas/:id?', function (req, res, next) {
     if (req.params.id) {
         problema.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
             if (err) {
@@ -46,7 +52,8 @@ router.put('/problemas/:id', function (req, res, next) {
             res.json(data);
         });
     } else {
-        var listaProblemas = req.body.problemas;
+        console.log("Ingreso a put problemas", req.body);
+        var listaProblemas = req.body;
         var listaResultado = [];
         listaProblemas.forEach(element => {
             problema.findByIdAndUpdate(element.id, element, { new: true }, function (err, data) {
@@ -54,11 +61,13 @@ router.put('/problemas/:id', function (req, res, next) {
                     return next(err);
                 }
                 listaResultado.push(data);
+                console.log("listaResultado.length", listaResultado.length);
+                if (listaProblemas.length == listaResultado.length) {
+                    console.log("listaResultado.length Final", listaResultado.length);
+                    res.json(listaResultado);
+                }
             });
 
-            if (listaProblemas.length <= listaResultado.length) {
-                res.json(listaResultado);
-            }
         });
 
     }
