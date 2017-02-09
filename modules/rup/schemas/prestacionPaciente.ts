@@ -119,7 +119,7 @@ export var prestacionPacienteSchema = new mongoose.Schema({
     // a futuro que se ejecuta
     prestacionesSolicitadas: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'prestaciones'
+        ref: 'prestacionPaciente'
     }],
 
     estado: [
