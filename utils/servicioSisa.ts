@@ -207,7 +207,7 @@ export class servicioSisa {
 
 
     matchSisa(paciente) {
-        console.log('entro el paciente:', paciente);
+       
         //Verifica si el paciente tiene un documento valido y realiza la búsqueda a través de Sisa
         var matchPorcentaje = 0;
         var pacienteSisa = {};
