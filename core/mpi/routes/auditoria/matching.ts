@@ -58,13 +58,13 @@ router.patch('/matching/:id', function (req, res, next) {
                     arrPacValidados.forEach(function (pacVal) {
                         var datoPac;
                         datoPac = pacVal.matcheos.datosPaciente;
-                        console.log(datoPac);
-                        arrPacientesSisa.push(datoPac);
-                        res.send(arrPacientesSisa);
+                        if(datoPac)
+                            arrPacientesSisa.push(datoPac);
                     });
+                        res.send(arrPacientesSisa);
                 })
                 .catch(error => {
-                    console.log(error);
+                    console.log('Error:', error);
                     next(error)
                 })
         }
