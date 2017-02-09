@@ -1,6 +1,6 @@
 "use strict";
-var express = require("express");
-var agenda = require("../schemas/agenda");
+var express = require('express');
+var agenda = require('../schemas/agenda');
 var router = express.Router();
 router.get('/agenda/:id*?', function (req, res, next) {
     if (req.params.id) {
@@ -80,6 +80,27 @@ router.put('/agenda/:_id', function (req, res, next) {
         res.json(data);
     });
 });
+router.patch('/agenda/:_id', function (req, res, next) {
+    agenda.findById(req.params._id, function (err, data) {
+        switch (req.body.op) {
+            case 'asistenciaTurno':
+                data = darAsistencia(req, data);
+                break;
+            case 'cancelarTurno':
+                data = cancelarAsistencia(req, data);
+                break;
+            case 'editarAgenda':
+                data = editarAgenda(req, data);
+                break;
+            case 'suspenderAgenda': data = suspenderAgenda(req, data);
+        }
+        data.save(function (err) {
+            if (err)
+                console.log("Error", err);
+            return res.json(data);
+        });
+    });
+});
 router.delete('/agenda/:_id', function (req, res, next) {
     agenda.findByIdAndRemove(req.params._id, req.body, function (err, data) {
         if (err)
@@ -87,5 +108,36 @@ router.delete('/agenda/:_id', function (req, res, next) {
         res.json(data);
     });
 });
+function darAsistencia(req, data) {
+    var turno;
+    for (var x = 0; x < Object.keys(data).length; x++) {
+        if (data.bloques[x] != null) {
+            turno = data.bloques[x].turnos.id(req.body.idTurno);
+        }
+    }
+    turno.asistencia = req.body.asistencia;
+    return data;
+}
+function cancelarAsistencia(req, data) {
+    var turno;
+    for (var x = 0; x < Object.keys(data).length; x++) {
+        if (data.bloques[x] != null) {
+            turno = data.bloques[x].turnos.id(req.body.idTurno);
+        }
+    }
+    turno.estado = req.body.estado;
+    turno.paciente = req.body.paciente;
+    turno.prestacion = req.body.prestacion;
+    return data;
+}
+function editarAgenda(req, data) {
+    data.profesionales = req.body.profesional;
+    data.espacioFisico = req.body.espacioFisico;
+    return data;
+}
+function suspenderAgenda(req, data) {
+    data.estado = 'Suspendida';
+    return data;
+}
 module.exports = router;
 //# sourceMappingURL=agenda.js.map
