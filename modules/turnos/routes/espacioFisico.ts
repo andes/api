@@ -23,7 +23,7 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
         
         query.select('_id, nombre');
         
-        query.sort('nombre:1');
+        query.sort('nombre');
         
         query.exec((err, data) => {
             if (err) return next(err);
