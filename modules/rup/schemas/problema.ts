@@ -19,6 +19,7 @@ var problemaSchema = new mongoose.Schema({
     },
     codificador: codificadorSchema,
     fechaInicio: Date,
+    activo: Boolean,
     evoluciones: [{
         fecha: Date,
         activo: Boolean,

@@ -29,6 +29,10 @@ var agendaSchema = new mongoose.Schema({
         cantidadBloque: Number,
         turnos: [{
             horaInicio: Date,
+            asistencia: {
+                type: Boolean,
+                default: false
+            },
             estado: {
                 type: String,
                 enum: ["disponible", "asignado"]
@@ -46,9 +50,10 @@ var agendaSchema = new mongoose.Schema({
 
     estado: {
         type: String,
-        enum: ["", "Planificada", "Publicada"]
+        enum: ["", "Planificada", "Publicada", "Suspendida"]
     }
 });
+// },{validateBeforeSave:false});
 
 //Defino Virtuals
 agendaSchema.virtual('turnosDisponibles').get(function () {

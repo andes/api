@@ -9,7 +9,6 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
             if (err) {
                 next(err);
             };
-
             res.json(data);
         });
     } else {
@@ -18,6 +17,14 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
         if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
         }
+        if (req.query.descripcion) {
+            query.where('descripcion').equals(RegExp('^.*' + req.query.descripcion + '.*$', "i"));
+        }
+        
+        //query.select('_id, nombre');
+        
+        query.sort('nombre');
+        
         query.exec((err, data) => {
             if (err) return next(err);
             res.json(data);
