@@ -150,7 +150,10 @@ function bloquearTurno(req, data) {
             turno = data.bloques[x].turnos.id(req.body.idTurno);
         }
     }
-    turno.estado = 'bloqueado';
+    if (turno.estado != 'bloqueado')
+        turno.estado = 'bloqueado';
+    else
+        turno.estado = 'disponible';
     return data;
 }
 function editarAgenda(req, data) {

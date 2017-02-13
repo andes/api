@@ -180,7 +180,10 @@ function bloquearTurno(req, data) {
         }
     }
 
-    turno.estado = 'bloqueado';
+    if (turno.estado != 'bloqueado')
+        turno.estado = 'bloqueado';
+    else
+        turno.estado = 'disponible';
 
     return data;
 }
