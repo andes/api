@@ -101,23 +101,27 @@ router.put('/agenda/:_id', function (req, res, next) {
 
 router.patch('/agenda/:_id', function (req, res, next) {
     agenda.findById(req.params._id, function (err, data) {
+        if (err)
+            return next(err);
 
         switch (req.body.op) {
-            case 'asistenciaTurno': data = darAsistencia(req, data);
+            case 'asistenciaTurno': darAsistencia(req, data);
                 break;
-            case 'cancelarTurno': data = cancelarAsistencia(req, data);
+            case 'cancelarTurno': cancelarAsistencia(req, data);
                 break;
-            case 'editarAgenda': data = editarAgenda(req, data);
+            case 'bloquearTurno': bloquearTurno(req, data);
                 break;
-            case 'suspenderAgenda': data = suspenderAgenda(req, data);
+            case 'editarAgenda': editarAgenda(req, data);
                 break;
-            case 'publicarAgenda': data = publicarAgenda(req, data);
+            case 'suspenderAgenda': suspenderAgenda(req, data);
+                break;
+            case 'publicarAgenda': publicarAgenda(req, data);
                 break;
         }
 
         data.save(function (err) {
             if (err)
-                console.log("Error", err);
+                return next(err);
 
             return res.json(data);
         });
@@ -143,7 +147,10 @@ function darAsistencia(req, data) {
         }
     }
 
-    turno.asistencia = req.body.asistencia;
+    if (turno.asistencia)
+        turno.asistencia = false;
+    else
+        turno.asistencia = true;
 
     return data;
 }
@@ -157,9 +164,23 @@ function cancelarAsistencia(req, data) {
         }
     }
 
-    turno.estado = req.body.estado;
-    turno.paciente = req.body.paciente;
-    turno.prestacion = req.body.prestacion;
+    turno.estado = 'disponible';
+    turno.paciente = {};
+    turno.prestacion = null;
+
+    return data;
+}
+
+function bloquearTurno(req, data) {
+    let turno;
+
+    for (let x = 0; x < Object.keys(data).length; x++) {
+        if (data.bloques[x] != null) {
+            turno = (data as any).bloques[x].turnos.id(req.body.idTurno);
+        }
+    }
+
+    turno.estado = 'bloqueado';
 
     return data;
 }
