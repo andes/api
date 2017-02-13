@@ -128,7 +128,7 @@ export var prestacionPacienteSchema = new mongoose.Schema({
             tipo: {
                 type: String,
 
-                enum: ['pendiente', 'en auditoría', 'aceptada', 'rechazada', 'validada']
+                enum: ['pendiente', 'ejecucion','en auditoría', 'aceptada', 'rechazada', 'validada']
             }
         }
     ]
