@@ -26,8 +26,6 @@ router.get('/agenda/:id*?', function (req, res, next) {
             query.where('horaFin').lte(req.query.fechaHasta);
         }
 
-
-
         if (req.query.idProfesional) {
             query.where('profesionales._id').equals(req.query.idProfesional);
         }
@@ -65,19 +63,15 @@ router.get('/agenda/:id*?', function (req, res, next) {
             res.status(400).send("Debe ingresar al menos un parámetro");
             return next(400);
         }
-
-        query = agenda.find(query).sort({
-            fechaDesde: 1,
-            fechaHasta: 1
-        });
-
+        
+        query.sort({'horaInicio':1});
+        
         query.exec(function (err, data) {
             if (err) return next(err);
             res.json(data);
         });
     }
 });
-
 
 router.post('/agenda', function (req, res, next) {
     var newAgenda = new agenda(req.body);
@@ -136,7 +130,6 @@ router.delete('/agenda/:_id', function (req, res, next) {
         res.json(data);
     });
 })
-
 
 function darAsistencia(req, data) {
     let turno;
