@@ -82,26 +82,31 @@ router.put('/agenda/:_id', function (req, res, next) {
 });
 router.patch('/agenda/:_id', function (req, res, next) {
     agenda.findById(req.params._id, function (err, data) {
+        if (err)
+            return next(err);
         switch (req.body.op) {
             case 'asistenciaTurno':
-                data = darAsistencia(req, data);
+                darAsistencia(req, data);
                 break;
             case 'cancelarTurno':
-                data = cancelarAsistencia(req, data);
+                cancelarAsistencia(req, data);
+                break;
+            case 'bloquearTurno':
+                bloquearTurno(req, data);
                 break;
             case 'editarAgenda':
-                data = editarAgenda(req, data);
+                editarAgenda(req, data);
                 break;
             case 'suspenderAgenda':
-                data = suspenderAgenda(req, data);
+                suspenderAgenda(req, data);
                 break;
             case 'publicarAgenda':
-                data = publicarAgenda(req, data);
+                publicarAgenda(req, data);
                 break;
         }
         data.save(function (err) {
             if (err)
-                console.log("Error", err);
+                return next(err);
             return res.json(data);
         });
     });
@@ -120,7 +125,10 @@ function darAsistencia(req, data) {
             turno = data.bloques[x].turnos.id(req.body.idTurno);
         }
     }
-    turno.asistencia = req.body.asistencia;
+    if (turno.asistencia)
+        turno.asistencia = false;
+    else
+        turno.asistencia = true;
     return data;
 }
 function cancelarAsistencia(req, data) {
@@ -130,9 +138,22 @@ function cancelarAsistencia(req, data) {
             turno = data.bloques[x].turnos.id(req.body.idTurno);
         }
     }
-    turno.estado = req.body.estado;
-    turno.paciente = req.body.paciente;
-    turno.prestacion = req.body.prestacion;
+    turno.estado = 'disponible';
+    turno.paciente = {};
+    turno.prestacion = null;
+    return data;
+}
+function bloquearTurno(req, data) {
+    var turno;
+    for (var x = 0; x < Object.keys(data).length; x++) {
+        if (data.bloques[x] != null) {
+            turno = data.bloques[x].turnos.id(req.body.idTurno);
+        }
+    }
+    if (turno.estado != 'bloqueado')
+        turno.estado = 'bloqueado';
+    else
+        turno.estado = 'disponible';
     return data;
 }
 function editarAgenda(req, data) {

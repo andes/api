@@ -35,7 +35,7 @@ var agendaSchema = new mongoose.Schema({
             },
             estado: {
                 type: String,
-                enum: ["disponible", "asignado"]
+                enum: ["disponible", "asignado", "bloqueado"]
             },
             paciente: {//pensar que otros datos del paciente conviene tener
                 id: mongoose.Schema.Types.ObjectId,
