@@ -1,25 +1,13 @@
 import * as express from 'express';
 import * as listaEspera from '../schemas/listaEspera';
+import * as agenda from '../schemas/agenda';
 import * as utils from '../../../utils/utils';
 import { defaultLimit, maxLimit } from './../../../config';
 import * as config from '../../../config';
 
+var async = require('async');
+
 var router = express.Router();
-
-/*router.get('/listaEspera/:id*?', function (req, res, next) {
-    if (req.params.id) {
-        listaEspera.find(query).sort({
-            estado: 1,
-            fecha: 1
-        });
-
-        //console.log("query ", query._conditions)
-        query.exec(function (err, data) {
-            if (err) return next(err);
-            res.json(data);
-        });
-    }
-});*/
 
 router.get('/listaEspera/:id*?', function (req, res, next) {
     if (req.params.id) {
@@ -27,7 +15,7 @@ router.get('/listaEspera/:id*?', function (req, res, next) {
             if (err) {
                 next(err);
             };
-            //console.log(data);
+
             res.json(data);
         });
     } else {
@@ -35,7 +23,7 @@ router.get('/listaEspera/:id*?', function (req, res, next) {
         var query;
         var opciones = {};
 
-         if (req.query.nombre) {
+        if (req.query.nombre) {
             opciones['paciente.nombre'] =
                 RegExp('^.*' + req.query.nombre + '.*$', "i")
         }
@@ -79,6 +67,40 @@ router.put('/listaEspera/:_id', function (req, res, next) {
     });
 });
 
+/*Si viene un id es porque se están enviando pacientes a la lista de espera desde una agenda suspendida*/
+router.patch('/listaEspera/:_id', function (req, res, next) {
+    agenda.findById(req.params._id, function (err, data) {
+        if (err)
+            return next(err);
+
+        var listaEsperaPaciente: any[] = [];
+        switch (req.body.op) {
+            case 'listaEsperaSuspensionAgenda': listaEsperaPaciente = listaEsperaSuspensionAgenda(req, data, next);
+                break;
+        }
+
+        async.each(listaEsperaPaciente, function (listaEsperaData, callback) {
+            var newItem = new listaEspera(listaEsperaData);
+
+            newItem.save(function (err, item) {
+                if (err) {
+                    console.log(err);
+                }
+
+                // console.log('Grabó', item);
+                callback();
+            });
+
+        }, function (error) {
+            if (error) res.json(500, { error: error });
+
+            // console.log('Lista Guardada');
+            return res.json(201, { msg: 'Guardado' });
+        });
+    });
+});
+
+
 router.delete('/listaEspera/:_id', function (req, res, next) {
     listaEspera.findByIdAndRemove(req.params._id, req.body, function (err, data) {
         if (err)
@@ -87,5 +109,34 @@ router.delete('/listaEspera/:_id', function (req, res, next) {
         res.json(data);
     });
 })
+
+function listaEsperaSuspensionAgenda(req, data, next) {
+
+    let profesional = {
+        id: (data as any).profesionales[0].id,
+        nombre: (data as any).profesionales[0].nombre,
+        apellido: (data as any).profesionales[0].apellido
+    };
+
+    let prestacion = {
+        id: (data as any).bloques[0].turnos[0].prestacion.id,
+        nombre: (data as any).bloques[0].turnos[0].prestacion.nombre,
+    }
+    console.log("Prestacion Capooooooo ", prestacion);
+
+    var listaEspera = [];
+
+    for (var i = 0; i < req.body.pacientes.length; i++) {
+        var newListaEspera = {};
+        newListaEspera['estado'] = 'Agenda Suspendida',
+            newListaEspera['prestacion'] = prestacion,
+            newListaEspera['profesional'] = profesional,
+            newListaEspera['paciente'] = req.body.pacientes[i].paciente;
+
+        listaEspera.push(newListaEspera);
+    }
+
+    return listaEspera;
+}
 
 export = router;
