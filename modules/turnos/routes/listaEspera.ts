@@ -4,6 +4,7 @@ import * as agenda from '../schemas/agenda';
 import * as utils from '../../../utils/utils';
 import { defaultLimit, maxLimit } from './../../../config';
 import * as config from '../../../config';
+import * as moment from 'moment';
 
 var async = require('async');
 
@@ -68,7 +69,7 @@ router.put('/listaEspera/:_id', function (req, res, next) {
 });
 
 /*Si viene un id es porque se están enviando pacientes a la lista de espera desde una agenda suspendida*/
-router.patch('/listaEspera/:_id', function (req, res, next) {
+router.post('/listaEspera/IdAgenda/:_id', function (req, res, next) {
     agenda.findById(req.params._id, function (err, data) {
         if (err)
             return next(err);
@@ -87,14 +88,12 @@ router.patch('/listaEspera/:_id', function (req, res, next) {
                     console.log(err);
                 }
 
-                // console.log('Grabó', item);
                 callback();
             });
 
         }, function (error) {
             if (error) res.json(500, { error: error });
 
-            // console.log('Lista Guardada');
             return res.json(201, { msg: 'Guardado' });
         });
     });
@@ -112,25 +111,15 @@ router.delete('/listaEspera/:_id', function (req, res, next) {
 
 function listaEsperaSuspensionAgenda(req, data, next) {
 
-    let profesional = {
-        id: (data as any).profesionales[0].id,
-        nombre: (data as any).profesionales[0].nombre,
-        apellido: (data as any).profesionales[0].apellido
-    };
-
-    let prestacion = {
-        id: (data as any).bloques[0].turnos[0].prestacion.id,
-        nombre: (data as any).bloques[0].turnos[0].prestacion.nombre,
-    }
-    console.log("Prestacion Capooooooo ", prestacion);
-
     var listaEspera = [];
 
     for (var i = 0; i < req.body.pacientes.length; i++) {
         var newListaEspera = {};
-        newListaEspera['estado'] = 'Agenda Suspendida',
-            newListaEspera['prestacion'] = prestacion,
-            newListaEspera['profesional'] = profesional,
+
+        newListaEspera['fecha'] = moment().format(),
+            newListaEspera['estado'] = 'Agenda Suspendida',
+            newListaEspera['prestacion'] = req.body.pacientes[i].prestacion,
+            newListaEspera['profesional'] = data.profesionales[0],
             newListaEspera['paciente'] = req.body.pacientes[i].paciente;
 
         listaEspera.push(newListaEspera);

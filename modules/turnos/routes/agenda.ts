@@ -133,13 +133,13 @@ router.delete('/agenda/:_id', function (req, res, next) {
 
 function darAsistencia(req, data) {
     let turno;
-console.log("Veo turno", req.body.idTurno);
+
     for (let x = 0; x < Object.keys(data).length; x++) {
         if (data.bloques[x] != null) {
             turno = (data as any).bloques[x].turnos.id(req.body.idTurno);
         }
     }
-console.log("Veo turno", turno);
+
     if (turno.asistencia)
         turno.asistencia = false;
     else
