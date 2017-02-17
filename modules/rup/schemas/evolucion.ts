@@ -83,7 +83,7 @@ var evolucionSchema = new mongoose.Schema({
             timestamp: Date,
             tipo: {
                 type: String,
-                enum: ["ejecucion", "dictado", "transcripcion", "informado", ".............."] // 
+                enum: ["ejecucion", "dictado", "transcripcion", "informado", ""] // 
             },
             observaciones: String
         }
