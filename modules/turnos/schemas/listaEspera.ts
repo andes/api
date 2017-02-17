@@ -17,7 +17,7 @@ let listaEsperaSchema = new mongoose.Schema({
         apellido: String
     },
     fecha: Date, // si es una solicitud es la fecha en que se solicitó
-                 // si es demanda rechazada es la fecha en que no se atendió la demanda
+    // si es demanda rechazada es la fecha en que no se atendió la demanda
     vencimiento: Date,
     estado: String, // Enumerado {solicitud, demandaRechazada}  hay oferta en el mes / no hay
 });

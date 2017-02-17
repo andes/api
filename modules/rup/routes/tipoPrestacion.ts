@@ -21,6 +21,15 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
         if (req.query.key) {
             query.where('key').equals(RegExp('^.*' + req.query.key + '.*$', "i"));
         }
+
+        if (req.query.excluir) {
+            let ids = req.query.excluir.split(",");
+            query.where("_id").nin(ids);
+        }
+
+        if (req.query.turneable) {
+            query.where('turneable').equals(req.query.nombre);
+        }
     }
 
     query.populate('ejecucion').exec(function (err, data) {

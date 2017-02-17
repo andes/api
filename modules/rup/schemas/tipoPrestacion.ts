@@ -21,6 +21,7 @@ export var tipoPrestacionSchema = new mongoose.Schema({
     //reglasVisibilidad: [reglaSchema] // TODO
     // requiereEvolucionAdministrativa: Boolean,
     // requiereEvolucionCalidad: Boolean,
+    turneable: Boolean,
     activo: Boolean,
     componente: {
         ruta: String,

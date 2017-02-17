@@ -52,10 +52,7 @@ router.get('/agenda/:id*?', function (req, res, next) {
             res.status(400).send("Debe ingresar al menos un parámetro");
             return next(400);
         }
-        query = agenda.find(query).sort({
-            fechaDesde: 1,
-            fechaHasta: 1
-        });
+        query.sort({ 'horaInicio': 1 });
         query.exec(function (err, data) {
             if (err)
                 return next(err);
@@ -86,7 +83,7 @@ router.patch('/agenda/:_id', function (req, res, next) {
             return next(err);
         switch (req.body.op) {
             case 'asistenciaTurno':
-                darAsistencia(req, data);
+                data = darAsistencia(req, data);
                 break;
             case 'cancelarTurno':
                 cancelarAsistencia(req, data);
