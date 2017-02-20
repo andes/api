@@ -150,6 +150,39 @@ var router = express.Router();
  */
 
 
+
+
+/*Consulta de cantidades*/
+router.get('/pacientes/counts/', function (req, res, next){
+     let filtro;
+     console.log(req.query.consulta);
+     
+     switch (req.query.consulta){
+        case 'validados' : 
+            filtro = {estado : 'validado'};
+            break;
+        case 'temporales':
+            filtro = {estado : 'temporal'};
+            break;
+        case 'fallecidos':
+            filtro = {fechaFallecimiento:{$exists:true}};
+            break;
+     }
+
+    console.log('este es el valor de filtro: ', filtro);
+     let query = paciente.find(filtro).count();
+
+     query.exec(function (err, data){
+         if (err) return next(err);
+
+         console.log(data);
+         res.json(data)
+     }) 
+
+
+})
+
+
 /**
  * @swagger
  * /pacientes:
@@ -230,6 +263,7 @@ var router = express.Router();
  *         schema:
  *           $ref: '#/definitions/pacientes'
  */
+
 router.get('/pacientes/:id*?', function (req, res, next) {
     if (req.params.id) {
 
@@ -289,6 +323,7 @@ router.get('/pacientes/:id*?', function (req, res, next) {
     }
 
 });
+
 
 
 router.post('/pacientes/search', function (req, res) {
