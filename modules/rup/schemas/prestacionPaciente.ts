@@ -7,7 +7,7 @@ import { organizacionSchema } from '../../../core/tm/schemas/organizacion';
 import { pacienteSchema } from '../../../core/mpi/schemas/paciente';
 import * as problemaSchema from './problema';
 import { profesionalSchema } from '../../../core/tm/schemas/profesional';
-import { tipoPrestacionSchema } from './tipoPrestacion';
+import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 
 
 export var prestacionPacienteSchema = new mongoose.Schema({
@@ -128,7 +128,7 @@ export var prestacionPacienteSchema = new mongoose.Schema({
             tipo: {
                 type: String,
 
-                enum: ['pendiente', 'ejecucion','en auditoría', 'aceptada', 'rechazada', 'validada']
+                enum: ['pendiente', 'ejecucion', 'en auditoría', 'aceptada', 'rechazada', 'validada']
             }
         }
     ]

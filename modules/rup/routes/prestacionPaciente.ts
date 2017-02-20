@@ -1,8 +1,7 @@
-import { tipoPrestacion } from './../schemas/tipoPrestacion';
 import * as express from 'express'
-// import * as prestacionPaciente from '../schemas/prestacionPaciente'
 import { prestacionPaciente } from '../schemas/prestacionPaciente'
 import { paciente } from '../../../core/mpi/schemas/paciente'
+import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 
 var router = express.Router();
 router.get('/prestaciones/:id*?', function (req, res, next) {

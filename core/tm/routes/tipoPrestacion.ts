@@ -28,12 +28,13 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
         }
 
         if (req.query.turneable) {
-            query.where('turneable').equals(req.query.nombre);
+            query.where('turneable').equals(req.query.turneable);
         }
     }
 
     query.populate('ejecucion').exec(function (err, data) {
         if (err) {
+            console.log(err);
             next(err);
         };
         res.json(data);

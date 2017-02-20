@@ -1,5 +1,5 @@
 import * as mongoose from 'mongoose';
-import * as codificadorSchema from './codificador';
+import * as codificadorSchema from '../../../modules/rup/schemas/codificador';
 
 export var tipoPrestacionSchema = new mongoose.Schema({
     // valor por el cual vamos a leer/guardar en nuestra BD
