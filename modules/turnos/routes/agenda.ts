@@ -63,9 +63,9 @@ router.get('/agenda/:id*?', function (req, res, next) {
             res.status(400).send("Debe ingresar al menos un parámetro");
             return next(400);
         }
-        
-        query.sort({'horaInicio':1});
-        
+
+        query.sort({ 'horaInicio': 1 });
+
         query.exec(function (err, data) {
             if (err) return next(err);
             res.json(data);
@@ -104,6 +104,8 @@ router.patch('/agenda/:_id', function (req, res, next) {
             case 'cancelarTurno': cancelarAsistencia(req, data);
                 break;
             case 'bloquearTurno': bloquearTurno(req, data);
+                break;
+            case 'reasignarTurno': reasignarTurno(req, data);
                 break;
             case 'editarAgenda': editarAgenda(req, data);
                 break;
@@ -177,6 +179,24 @@ function bloquearTurno(req, data) {
         turno.estado = 'bloqueado';
     else
         turno.estado = 'disponible';
+
+    return data;
+}
+
+function reasignarTurno(req, data) {
+    let turno;
+
+    for (let x = 0; x < Object.keys(data).length; x++) {
+        if (data.bloques[x] != null) {
+            turno = (data as any).bloques[x].turnos.id(req.body.idTurno);
+        }
+    }
+
+    turno.paciente = {};
+    turno.prestacion = null;
+    turno.estado = 'disponible';
+
+    console.log("Turnitosss ", turno);
 
     return data;
 }

@@ -91,6 +91,9 @@ router.patch('/agenda/:_id', function (req, res, next) {
             case 'bloquearTurno':
                 bloquearTurno(req, data);
                 break;
+            case 'reasignarTurno':
+                reasignarTurno(req, data);
+                break;
             case 'editarAgenda':
                 editarAgenda(req, data);
                 break;
@@ -151,6 +154,19 @@ function bloquearTurno(req, data) {
         turno.estado = 'bloqueado';
     else
         turno.estado = 'disponible';
+    return data;
+}
+function reasignarTurno(req, data) {
+    var turno;
+    for (var x = 0; x < Object.keys(data).length; x++) {
+        if (data.bloques[x] != null) {
+            turno = data.bloques[x].turnos.id(req.body.idTurno);
+        }
+    }
+    turno.paciente = {};
+    turno.prestacion = null;
+    turno.estado = 'disponible';
+    console.log("Turnitosss ", turno);
     return data;
 }
 function editarAgenda(req, data) {
