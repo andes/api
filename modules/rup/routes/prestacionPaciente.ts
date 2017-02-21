@@ -27,6 +27,13 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         if (req.query.idPrestacionOrigen) {
             query.where('idPrestacionOrigen').equals(req.query.idPrestacionOrigen);
         }
+
+        if (req.query.turnos) {
+            let idsTurnos = req.query.turnos.split(",");
+            query.where("solicitud.idTurno").in(idsTurnos);
+        }
+
+
     }
 
     // populamos todo lo necesario luego del find
