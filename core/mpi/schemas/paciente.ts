@@ -54,7 +54,7 @@ export var pacienteSchema = new mongoose.Schema({
         enum: ["casado", "separado", "divorciado", "viudo", "soltero", "concubino", "otro", ""]
     },
     foto: String,
-    Nacionalidad: String,
+    nacionalidad: String,
     relaciones: [{
         relacion: {
             type: String,
