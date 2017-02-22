@@ -96,7 +96,6 @@ pacienteSchema.virtual('edad').get(function () {
 
 });
 
-
 //ADD L.L 22/02/2017
 pacienteSchema.virtual('edadReal').get(function () { 
 
