@@ -5,6 +5,7 @@ import * as direccionSchema from '../../tm/schemas/direccion';
 import * as contactoSchema from '../../tm/schemas/contacto';
 import * as financiadorSchema from './financiador';
 import * as config from '../../../config';
+import * as moment from 'moment';
 
 export var pacienteSchema = new mongoose.Schema({
     identificadores: [{
@@ -94,6 +95,39 @@ pacienteSchema.virtual('edad').get(function () {
 
 
 });
+
+
+//ADD L.L 22/02/2017
+pacienteSchema.virtual('edadReal').get(function () { 
+
+                var edad         : Object;
+                var fechaNac     : any;
+                var fechaActual  : Date = new Date();
+                var fechaAct     : any;
+                var difAnios     : any;
+                var difDias      : any;
+                var difMeses     : any;
+                var difHs        : any;
+                var difD         : any; 
+
+                fechaNac = moment(this.fechaNacimiento, "YYYY-MM-DD HH:mm:ss");                    
+                fechaAct = moment(this.fechaActual, "YYYY-MM-DD HH:mm:ss");
+                difDias  = this.fechaAct.diff(this.fechaNac, 'd'); //Diferencia en días                                       
+                difAnios = Math.trunc(this.difDias / 365.25) 
+                difMeses = Math.trunc(this.difDias / 30.4375)
+                difHs    = this.fechaAct.diff(this.fechaNac, 'h'); //Diferencia en horas 
+                  
+                if (difAnios != 0)  {edad = { valor: difAnios, unidad:'Años' }}
+                else
+                    if (difMeses != 0)  {edad = { valor:difMeses, unidad:'Mes'}}
+                    else
+                        if (difDias != 0 ) {edad = { valor:difDias, unidad:'Dias'} }
+                        else                
+                            if (difHs !=0) {edad = { valor:difHs, unidad: 'Horas'}}
+
+                return edad
+
+}); //ADD L.L 22/02/2017
 
 //Creo un indice para fulltext Search
 pacienteSchema.index({
