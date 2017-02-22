@@ -23,7 +23,6 @@ import * as config from '../../../config';
 import {
     IPerson
 } from '../../../utils/IPerson';
-import { dbMpi } from '../../../dbMpi';
 
 var router = express.Router();
 
