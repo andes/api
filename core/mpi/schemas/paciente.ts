@@ -5,6 +5,7 @@ import * as direccionSchema from '../../tm/schemas/direccion';
 import * as contactoSchema from '../../tm/schemas/contacto';
 import * as financiadorSchema from './financiador';
 import * as config from '../../../config';
+import { connectMpi} from '../../../connectMpi';
 
 export var pacienteSchema = new mongoose.Schema({
     identificadores: [{
@@ -95,6 +96,8 @@ pacienteSchema.virtual('edad').get(function () {
 
 });
 
+//var pacienteSchemaMpi = pacienteSchema;
+
 //Creo un indice para fulltext Search
 pacienteSchema.index({
     '$**': 'text'
@@ -104,10 +107,18 @@ pacienteSchema.index({
 pacienteSchema.plugin(mongoosastic, {
     hosts: [config.connectionStrings.elastic_main],
     index: 'andes',
-    type: 'pacientes'
+    type: 'paciente'
 });
 
+// pacienteSchemaMpi.plugin(mongoosastic, {
+//     hosts: [config.connectionStrings.elastic_main],
+//     index: 'andes',
+//     type: 'paciente'
+// });
+
+
 export var paciente = mongoose.model('paciente', pacienteSchema, 'paciente');
+export var pacienteMpi = connectMpi.model('paciente', pacienteSchema, 'paciente');
 
 /**
  * mongoosastic create mappings
