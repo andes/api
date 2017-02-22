@@ -63,6 +63,18 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             }
         }
     });
+    query.populate({
+        path: 'prestacionesEjecutadas',
+        model: 'prestacionPaciente',
+        populate: {
+            path: 'solicitud.listaProblemas',
+            model: 'problema',
+            populate: {
+                path: 'tipoProblema',
+                model: 'tipoProblema'
+            }
+        }
+    });
     query.exec(function (err, data) {
         if (err) {
             next(err);

@@ -122,6 +122,12 @@ export var prestacionPacienteSchema = new mongoose.Schema({
         ref: 'prestacionPaciente'
     }],
 
+    // resumen de las prestaciones que se ejecutaron
+    prestacionesEjecutadas: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'prestacionPaciente'
+    }],
+
     estado: [
         {
             timestamp: Date,
