@@ -77,13 +77,20 @@ router.put('/agenda/:_id', function (req, res, next) {
         res.json(data);
     });
 });
+router.delete('/agenda/:_id', function (req, res, next) {
+    agenda.findByIdAndRemove(req.params._id, req.body, function (err, data) {
+        if (err)
+            return next(err);
+        res.json(data);
+    });
+});
 router.patch('/agenda/:_id', function (req, res, next) {
     agenda.findById(req.params._id, function (err, data) {
         if (err)
             return next(err);
         switch (req.body.op) {
             case 'asistenciaTurno':
-                data = darAsistencia(req, data);
+                darAsistencia(req, data);
                 break;
             case 'cancelarTurno':
                 cancelarAsistencia(req, data);
@@ -114,20 +121,8 @@ router.patch('/agenda/:_id', function (req, res, next) {
         });
     });
 });
-router.delete('/agenda/:_id', function (req, res, next) {
-    agenda.findByIdAndRemove(req.params._id, req.body, function (err, data) {
-        if (err)
-            return next(err);
-        res.json(data);
-    });
-});
 function darAsistencia(req, data) {
-    var turno;
-    for (var x = 0; x < Object.keys(data).length; x++) {
-        if (data.bloques[x] != null) {
-            turno = data.bloques[x].turnos.id(req.body.idTurno);
-        }
-    }
+    var turno = getTurno(req, data);
     if (turno.asistencia)
         turno.asistencia = false;
     else
@@ -135,24 +130,14 @@ function darAsistencia(req, data) {
     return data;
 }
 function cancelarAsistencia(req, data) {
-    var turno;
-    for (var x = 0; x < Object.keys(data).length; x++) {
-        if (data.bloques[x] != null) {
-            turno = data.bloques[x].turnos.id(req.body.idTurno);
-        }
-    }
+    var turno = getTurno(req, data);
     turno.estado = 'disponible';
     turno.paciente = {};
     turno.prestacion = null;
     return data;
 }
 function bloquearTurno(req, data) {
-    var turno;
-    for (var x = 0; x < Object.keys(data).length; x++) {
-        if (data.bloques[x] != null) {
-            turno = data.bloques[x].turnos.id(req.body.idTurno);
-        }
-    }
+    var turno = getTurno(req, data);
     if (turno.estado != 'bloqueado')
         turno.estado = 'bloqueado';
     else
@@ -160,24 +145,14 @@ function bloquearTurno(req, data) {
     return data;
 }
 function suspenderTurno(req, data) {
-    var turno;
-    for (var x = 0; x < Object.keys(data).length; x++) {
-        if (data.bloques[x] != null) {
-            turno = data.bloques[x].turnos.id(req.body.idTurno);
-        }
-    }
+    var turno = getTurno(req, data);
     turno.estado = 'bloqueado';
     turno.paciente = {};
     turno.prestacion = null;
     return data;
 }
 function reasignarTurno(req, data) {
-    var turno;
-    for (var x = 0; x < Object.keys(data).length; x++) {
-        if (data.bloques[x] != null) {
-            turno = data.bloques[x].turnos.id(req.body.idTurno);
-        }
-    }
+    var turno = getTurno(req, data);
     turno.estado = 'disponible';
     turno.paciente = {};
     turno.prestacion = null;
@@ -196,6 +171,15 @@ function suspenderAgenda(req, data) {
 function publicarAgenda(req, data) {
     data.estado = req.body.estado;
     return data;
+}
+function getTurno(req, data) {
+    var turno;
+    for (var x = 0; x < Object.keys(data).length; x++) {
+        if (data.bloques[x] != null) {
+            turno = data.bloques[x].turnos.id(req.body.idTurno);
+        }
+    }
+    return turno;
 }
 module.exports = router;
 //# sourceMappingURL=agenda.js.map
