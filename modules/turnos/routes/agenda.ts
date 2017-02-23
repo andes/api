@@ -182,7 +182,9 @@ function bloquearTurno(req, data) {
 }
 
 function editarAgenda(req, data) {
-    data.profesionales = req.body.profesional;
+    if (req.body.profesional){
+        data.profesionales = req.body.profesional;
+    }
     data.espacioFisico = req.body.espacioFisico;
 
     return data;
