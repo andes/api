@@ -105,6 +105,8 @@ router.patch('/agenda/:_id', function (req, res, next) {
                 break;
             case 'bloquearTurno': bloquearTurno(req, data);
                 break;
+            case 'suspenderTurno': suspenderTurno(req, data);
+                break;
             case 'reasignarTurno': reasignarTurno(req, data);
                 break;
             case 'editarAgenda': editarAgenda(req, data);
@@ -183,6 +185,22 @@ function bloquearTurno(req, data) {
     return data;
 }
 
+function suspenderTurno(req, data) {
+    let turno;
+
+    for (let x = 0; x < Object.keys(data).length; x++) {
+        if (data.bloques[x] != null) {
+            turno = (data as any).bloques[x].turnos.id(req.body.idTurno);
+        }
+    }
+
+    turno.estado = 'bloqueado';
+    turno.paciente = {};
+    turno.prestacion = null;
+
+    return data;
+}
+
 function reasignarTurno(req, data) {
     let turno;
 
@@ -192,11 +210,11 @@ function reasignarTurno(req, data) {
         }
     }
 
+    turno.estado = 'disponible';
     turno.paciente = {};
     turno.prestacion = null;
-    turno.estado = 'disponible';
 
-    console.log("Turnitosss ", turno);
+    console.log("Turnss ", turno);
 
     return data;
 }
