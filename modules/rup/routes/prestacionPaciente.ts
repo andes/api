@@ -91,21 +91,13 @@ router.post('/prestaciones', function (req, res, next) {
     var prestacion;
     prestacion = new prestacionPaciente(req.body);
 
-    paciente.findById(req.body.paciente, function (err, data) {
+    prestacion.save((err) => {
         if (err) {
             return next(err);
         }
 
-        prestacion.paciente = data;
-        prestacion.save((err) => {
-            if (err) {
-                return next(err);
-            }
-
-            res.json(prestacion);
-        });
-
-    })
+        res.json(prestacion);
+    });
 });
 
 router.put('/prestaciones/:id', function (req, res, next) {
