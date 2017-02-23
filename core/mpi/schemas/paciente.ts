@@ -111,11 +111,11 @@ pacienteSchema.virtual('edadReal').get(function () {
                 var difD         : any;
 
                 fechaNac = moment(this.fechaNacimiento, "YYYY-MM-DD HH:mm:ss");
-                fechaAct = moment(this.fechaActual, "YYYY-MM-DD HH:mm:ss");
-                difDias  = this.fechaAct.diff(this.fechaNac, 'd'); //Diferencia en días
-                difAnios = Math.trunc(this.difDias / 365.25)
-                difMeses = Math.trunc(this.difDias / 30.4375)
-                difHs    = this.fechaAct.diff(this.fechaNac, 'h'); //Diferencia en horas
+                fechaAct = moment(fechaActual, "YYYY-MM-DD HH:mm:ss");
+                difDias  = fechaAct.diff(fechaNac, 'd'); //Diferencia en días
+                difAnios = Math.trunc(difDias / 365.25)
+                difMeses = Math.trunc(difDias / 30.4375)
+                difHs    = fechaAct.diff(fechaNac, 'h'); //Diferencia en horas
 
                 if (difAnios != 0)  {edad = { valor: difAnios, unidad:'Años' }}
                 else
