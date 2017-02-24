@@ -156,31 +156,31 @@ var router = express.Router();
 
 
 /*Consulta de cantidades*/
-router.get('/pacientes/counts/', function (req, res, next){
-     let filtro;
-     console.log(req.query.consulta);
+router.get('/pacientes/counts/', function(req, res, next) {
+    let filtro;
+    console.log(req.query.consulta);
 
-     switch (req.query.consulta){
-        case 'validados' :
-            filtro = {estado : 'validado'};
+    switch (req.query.consulta) {
+        case 'validados':
+            filtro = { estado: 'validado' };
             break;
         case 'temporales':
-            filtro = {estado : 'temporal'};
+            filtro = { estado: 'temporal' };
             break;
         case 'fallecidos':
-            filtro = {fechaFallecimiento:{$exists:true}};
+            filtro = { fechaFallecimiento: { $exists: true } };
             break;
-     }
+    }
 
     console.log('este es el valor de filtro: ', filtro);
-     let query = paciente.find(filtro).count();
+    let query = paciente.find(filtro).count();
 
-     query.exec(function (err, data){
-         if (err) return next(err);
+    query.exec(function(err, data) {
+        if (err) return next(err);
 
-         console.log(data);
-         res.json(data)
-     })
+        console.log(data);
+        res.json(data)
+    })
 
 
 })
@@ -268,7 +268,7 @@ router.get('/pacientes/counts/', function (req, res, next){
  */
 
 
-router.get('/pacientes/:id*?', function (req, res, next) {
+router.get('/pacientes/:id*?', function(req, res, next) {
 
     if (req.params.id) {
 
@@ -281,10 +281,10 @@ router.get('/pacientes/:id*?', function (req, res, next) {
                     res.json(data);
                 } else {
                     pacienteMpi.findById(req.params.id, function(err, dataMpi) {
-                      if (err) {
-                          next(err);
-                      }
-                      res.json(dataMpi);
+                        if (err) {
+                            next(err);
+                        }
+                        res.json(dataMpi);
 
                     })
                 }
@@ -343,7 +343,7 @@ router.get('/pacientes/:id*?', function (req, res, next) {
 });
 
 
-router.post('/pacientes/search', function (req, res) {
+router.post('/pacientes/search', function(req, res) {
 
     console.log('Search')
     var lPacientes;
@@ -430,6 +430,7 @@ router.post('/pacientes', function(req, res, next) {
             (newPatient as any).on('es-indexed', function() {
                 console.log('paciente indexed');
             });
+            //connElastic.create(newPatient);
             res.json(newPatient);
         });
     } else {
@@ -678,28 +679,53 @@ router.post('/pacientes/search/simplequery', function(req, res, next) {
 
 });
 
-router.post('/pacientes/search/match/:field', function(req, res, next) {
-    // Se realiza la búsqueda match por el documento en elastic
+router.post('/pacientes/search/match/:field/:mode', function(req, res, next) {
+    // Se realiza la búsqueda match por el field
+    // La búsqueda se realiza por la clave de blocking
+    // Valores posibles para el campo field
+    // claveBlocking, nombre, apellido, documento
+    /* El modo puede ser suggest or exactMatch
+      suggest: a partir de un subconjunto de campós mínimos de una persona,
+      y de la cota mínima de matcheo devuelve un array con posibles pacientes
+      exactMatch: utiliza todos los campos mínimos y la cota superior de matcheo
+      con el objetivo de devolver la misma persona
+      */
 
-    var dto = req.body.objetoBusqueda;
-    let connElastic = new Client({
-        host: config.connectionStrings.elastic_main,
-        log: 'trace'
-    });
-    let condicion = {
-        match: {
-            documento: {
-                query: dto.documento,
-                minimum_should_match: 3,
-                fuzziness: 2
-            }
+    let dto = req.body.objetoBusqueda;
+    let condicion = {};
+    let queryMatch = dto.documento;
+    let weights = config.configMpi.weightsDefault;
+    let porcentajeMatch = config.configMpi.cotaMatchMax;
+
+    // Se verifica el modo en que se realiza la búsqueda de pacientes
+    if (req.params.mode) {
+        if (req.params.mode == "suggest") {
+            weights = config.configMpi.weightsMin;
+            porcentajeMatch = config.configMpi.cotaMatchMin;
         }
     }
+
+    let campo = req.params.field;
+    let condicionMatch = {};
+    condicionMatch[campo] = {
+        query: dto[campo],
+        minimum_should_match: 3,
+        fuzziness: 2
+    }
+    condicion = {
+        match: condicionMatch
+    };
+
     let body = {
         size: 40,
         from: 0,
         query: condicion,
     };
+
+    let connElastic = new Client({
+        host: config.connectionStrings.elastic_main,
+        log: 'trace'
+    });
 
     connElastic.search({
         index: 'andes', // andes
@@ -709,12 +735,7 @@ router.post('/pacientes/search/match/:field', function(req, res, next) {
             let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
                 .filter(function(hit) {
                     let paciente = hit._source;
-                    let weights = {
-                        identity: 0.4,
-                        name: 0.6,
-                        gender: 0,
-                        birthDate: 0
-                    };
+                    console.log(paciente);
                     let pac: IPerson = {
                         identity: paciente.documento,
                         firstname: paciente.nombre,
@@ -722,22 +743,20 @@ router.post('/pacientes/search/match/:field', function(req, res, next) {
                         birthDate: ValidateFormatDate.convertirFecha(paciente.fechaNacimiento),
                         gender: paciente.sexo
                     };
-
                     let pacDto: IPerson = {
-                        identity: dto.documento.toString(),
-                        firstname: dto.nombre,
-                        lastname: dto.apellido,
-                        birthDate: ValidateFormatDate.convertirFecha(paciente.fechaNacimiento),
-                        gender: paciente.sexo
+                        identity: dto.documento ? dto.documento.toString() : paciente.documento,
+                        firstname: dto.nombre ? dto.nombre : paciente.nombre,
+                        lastname: dto.apellido ? dto.apellido : paciente.apellido,
+                        birthDate: dto.fechaNacimiento ? dto.fechaNacimiento : ValidateFormatDate.convertirFecha(paciente.fechaNacimiento),
+                        gender: dto.sexo ? dto.sexo : paciente.sexo
                     };
-
                     let m3 = new machingDeterministico();
                     let valorMatching = m3.maching(pac, pacDto, weights);
-                    if (valorMatching >= 0.60)
-                        return paciente;
+                    if (valorMatching >= porcentajeMatch)
+                        console.log(valorMatching);
+                    return paciente;
                 })
             results = results.map((hit) => { let elem = hit._source; elem['id'] = hit._id; return elem });
-            console.log(results)
             res.send(results)
         })
         .catch((error) => {
