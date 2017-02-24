@@ -69,7 +69,7 @@ export var pacienteSchema = new mongoose.Schema({
         documento: String
     }],
     financiador: [financiadorSchema],
-    claveBlocking: [String],
+    claveBlocking: {type: [String] , es_indexed: true},
     entidadesValidadoras: [String]
 });
 
@@ -141,7 +141,7 @@ pacienteSchema.plugin(mongoosastic, {
     hosts: [config.connectionStrings.elastic_main],
     index: 'andes',
     type: 'paciente'
-});
+} );
 
 // pacienteSchemaMpi.plugin(mongoosastic, {
 //     hosts: [config.connectionStrings.elastic_main],
