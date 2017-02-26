@@ -37,6 +37,7 @@ var agendaSchema = new mongoose.Schema({
                 type: String,
                 enum: ["disponible", "asignado", "bloqueado"]
             },
+            nota: String,
             paciente: {//pensar que otros datos del paciente conviene tener
                 id: mongoose.Schema.Types.ObjectId,
                 nombre: String,
