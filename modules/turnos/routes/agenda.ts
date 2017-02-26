@@ -117,6 +117,8 @@ router.patch('/agenda/:_id', function (req, res, next) {
                 break;
             case 'reasignarTurno': reasignarTurno(req, data);
                 break;
+            case 'guardarNotaTurno': guardarNotaTurno(req, data);
+                break;
             case 'editarAgenda': editarAgenda(req, data);
                 break;
             case 'suspenderAgenda': suspenderAgenda(req, data);
@@ -189,7 +191,7 @@ function reasignarTurno(req, data) {
 }
 
 function editarAgenda(req, data) {
-    if (req.body.profesional){
+    if (req.body.profesional) {
         data.profesionales = req.body.profesional;
     }
     data.espacioFisico = req.body.espacioFisico;
@@ -205,6 +207,14 @@ function suspenderAgenda(req, data) {
 
 function publicarAgenda(req, data) {
     data.estado = req.body.estado;
+
+    return data;
+}
+
+function guardarNotaTurno(req, data) {
+    let turno = getTurno(req, data);
+
+    turno.nota = req.body.textoNota;
 
     return data;
 }

@@ -104,6 +104,9 @@ router.patch('/agenda/:_id', function (req, res, next) {
             case 'reasignarTurno':
                 reasignarTurno(req, data);
                 break;
+            case 'guardarNotaTurno':
+                guardarNotaTurno(req, data);
+                break;
             case 'editarAgenda':
                 editarAgenda(req, data);
                 break;
@@ -172,6 +175,11 @@ function suspenderAgenda(req, data) {
 }
 function publicarAgenda(req, data) {
     data.estado = req.body.estado;
+    return data;
+}
+function guardarNotaTurno(req, data) {
+    var turno = getTurno(req, data);
+    turno.nota = req.body.textoNota;
     return data;
 }
 function getTurno(req, data) {
