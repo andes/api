@@ -112,8 +112,12 @@ router.delete('/listaEspera/:_id', function (req, res, next) {
 function listaEsperaSuspensionAgenda(req, data, next) {
 
     var listaEspera = [];
+    let paciente = {};
 
-    for (var i = 0; i < req.body.pacientes.length; i++) {
+    console.log("verrr: ", req.body);
+
+    if (req.body.pacientes.length > 0) {
+       for (var i = 0; i < req.body.pacientes.length; i++) {
         var newListaEspera = {};
 
         newListaEspera['fecha'] = moment().format(),
@@ -124,6 +128,21 @@ function listaEsperaSuspensionAgenda(req, data, next) {
 
         listaEspera.push(newListaEspera);
     }
+    } else {
+        // paciente = req.body.pacientes;
+
+        var newListaEspera = {};
+
+        newListaEspera['fecha'] = moment().format(),
+            newListaEspera['estado'] = 'Turno Canceladdo',
+            newListaEspera['prestacion'] = req.body.pacientes.prestacion,
+            newListaEspera['profesional'] = data.profesionales[0],
+            newListaEspera['paciente'] = req.body.pacientes.paciente;
+
+        listaEspera.push(newListaEspera);
+    }
+
+    
 
     return listaEspera;
 }
