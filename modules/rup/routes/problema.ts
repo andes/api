@@ -15,7 +15,9 @@ router.get('/pacientes/:idPaciente/problemas/:idProblema*?', function (req, res,
         query.where('paciente').equals(req.params.idPaciente);
     }
 
-    query.populate('tipoProblema').exec(function (err, data) {
+    query.populate('tipoProblema').sort({ "fechaInicio": -1 });
+
+    query.exec(function (err, data) {
         if (err) {
             next(err);
         };

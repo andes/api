@@ -4,6 +4,25 @@ import { paciente } from '../../../core/mpi/schemas/paciente'
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 
 var router = express.Router();
+
+router.get('/prestaciones/forKey/:key', function (req, res, next) {
+
+    var filtro = "ejecucion.evoluciones.valores." + req.params.key;
+    var query = {};
+    query[filtro] = {
+        $exists: true
+    };
+
+    var consulta = prestacionPaciente.find(query).sort({ "ejecucion.fecha": -1 }).limit(1);
+    consulta.exec(function (err, data) {
+        if (err) {
+            next(err);
+        };
+        //console.log(query);
+        res.json(data);
+    });
+});
+
 router.get('/prestaciones/:id*?', function (req, res, next) {
     var query;
     if (req.params.id) {
@@ -17,12 +36,11 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             query = prestacionPaciente.find({}); //Trae todos 
         }
 
-
         if (req.query.idTipoPrestacion) {
             query.where('solicitud.tipoPrestacion._id').equals(req.query.idTipoPrestacion);
         }
         if (req.query.idPaciente) {
-            query.where('paciente._id').equals(req.query.paciente.id);
+            query.where('paciente._id').equals(req.query.idPaciente);
         }
         if (req.query.idPrestacionOrigen) {
             query.where('idPrestacionOrigen').equals(req.query.idPrestacionOrigen);
@@ -32,8 +50,6 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             let idsTurnos = req.query.turnos.split(",");
             query.where("solicitud.idTurno").in(idsTurnos);
         }
-
-
     }
 
     // populamos todo lo necesario luego del find
@@ -75,6 +91,14 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             }
         }
     });
+
+    query.sort({ "solicitud.fecha": -1 });
+
+    if (req.query.limit) {
+        query.limit(parseInt(req.query.limit));
+    }
+
+
     query.exec(function (err, data) {
         if (err) {
             next(err);
@@ -82,10 +106,9 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         //console.log(query);
         res.json(data);
     });
-
-
-
 });
+
+
 
 router.post('/prestaciones', function (req, res, next) {
     var prestacion;
