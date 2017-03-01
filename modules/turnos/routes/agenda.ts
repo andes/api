@@ -109,7 +109,7 @@ router.patch('/agenda/:_id', function (req, res, next) {
         switch (req.body.op) {
             case 'asistenciaTurno': darAsistencia(req, data);
                 break;
-            case 'cancelarTurno': cancelarAsistencia(req, data);
+            case 'liberarTurno': liberarTurno(req, data);
                 break;
             case 'bloquearTurno': bloquearTurno(req, data);
                 break;
@@ -147,7 +147,7 @@ function darAsistencia(req, data) {
     return data;
 }
 
-function cancelarAsistencia(req, data) {
+function liberarTurno(req, data) {
     let turno = getTurno(req, data);
 
     turno.estado = 'disponible';

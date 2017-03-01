@@ -92,8 +92,8 @@ router.patch('/agenda/:_id', function (req, res, next) {
             case 'asistenciaTurno':
                 darAsistencia(req, data);
                 break;
-            case 'cancelarTurno':
-                cancelarAsistencia(req, data);
+            case 'liberarTurno':
+                liberarTurno(req, data);
                 break;
             case 'bloquearTurno':
                 bloquearTurno(req, data);
@@ -132,7 +132,7 @@ function darAsistencia(req, data) {
         turno.asistencia = true;
     return data;
 }
-function cancelarAsistencia(req, data) {
+function liberarTurno(req, data) {
     var turno = getTurno(req, data);
     turno.estado = 'disponible';
     turno.paciente = {};
