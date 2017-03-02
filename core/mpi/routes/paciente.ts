@@ -740,14 +740,14 @@ router.post('/pacientes/search/match/:field/:mode', function (req, res, next) {
                         identity: paciente.documento,
                         firstname: paciente.nombre,
                         lastname: paciente.apellido,
-                        birthDate: ValidateFormatDate.convertirFecha(paciente.fechaNacimiento),
+                        birthDate: paciente.fechaNacimiento,
                         gender: paciente.sexo
                     };
                     let pacDto: IPerson = {
                         identity: dto.documento ? dto.documento.toString() : paciente.documento,
                         firstname: dto.nombre ? dto.nombre : paciente.nombre,
                         lastname: dto.apellido ? dto.apellido : paciente.apellido,
-                        birthDate: dto.fechaNacimiento ? dto.fechaNacimiento : ValidateFormatDate.convertirFecha(paciente.fechaNacimiento),
+                        birthDate: dto.fechaNacimiento ? dto.fechaNacimiento :paciente.fechaNacimiento,
                         gender: dto.sexo ? dto.sexo : paciente.sexo
                     };
                     let m3 = new machingDeterministico();
