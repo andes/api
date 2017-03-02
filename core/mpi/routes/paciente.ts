@@ -679,7 +679,7 @@ router.post('/pacientes/search/simplequery', function (req, res, next) {
 
 });
 
-router.post('/pacientes/search/match/:field/:mode', function (req, res, next) {
+router.post('/pacientes/search/match/:field/:mode/:percentage', function (req, res, next) {
     // Se realiza la búsqueda match por el field
     // La búsqueda se realiza por la clave de blocking
     // Valores posibles para el campo field
@@ -696,7 +696,8 @@ router.post('/pacientes/search/match/:field/:mode', function (req, res, next) {
     let queryMatch = dto.documento;
     let weights = config.configMpi.weightsDefault;
     let porcentajeMatch = config.configMpi.cotaMatchMax;
-
+    let devolverPorcentaje = req.params.percentage;
+    let listaPacientes = [];
     // Se verifica el modo en que se realiza la búsqueda de pacientes
     if (req.params.mode) {
         if (req.params.mode == "suggest") {
@@ -747,18 +748,24 @@ router.post('/pacientes/search/match/:field/:mode', function (req, res, next) {
                         identity: dto.documento ? dto.documento.toString() : paciente.documento,
                         firstname: dto.nombre ? dto.nombre : paciente.nombre,
                         lastname: dto.apellido ? dto.apellido : paciente.apellido,
-                        birthDate: dto.fechaNacimiento ? dto.fechaNacimiento :paciente.fechaNacimiento,
+                        birthDate: dto.fechaNacimiento ? dto.fechaNacimiento : paciente.fechaNacimiento,
                         gender: dto.sexo ? dto.sexo : paciente.sexo
                     };
                     let m3 = new machingDeterministico();
                     let valorMatching = m3.maching(pac, pacDto, weights);
                     if (valorMatching >= porcentajeMatch) {
+                        listaPacientes.push({ paciente: paciente, match: valorMatching })
                         console.log(valorMatching);
                         return paciente;
                     }
                 })
-            results = results.map((hit) => { let elem = hit._source; elem['id'] = hit._id; return elem });
-            res.send(results)
+            if (devolverPorcentaje) {
+                console.log(listaPacientes);
+                res.send(listaPacientes)
+            } else {
+                results = results.map((hit) => { let elem = hit._source; elem['id'] = hit._id; return elem });
+                res.send(results)
+            }
         })
         .catch((error) => {
             next(error)
