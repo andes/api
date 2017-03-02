@@ -156,7 +156,7 @@ var router = express.Router();
 
 
 /*Consulta de cantidades*/
-router.get('/pacientes/counts/', function(req, res, next) {
+router.get('/pacientes/counts/', function (req, res, next) {
     let filtro;
     console.log(req.query.consulta);
 
@@ -175,7 +175,7 @@ router.get('/pacientes/counts/', function(req, res, next) {
     console.log('este es el valor de filtro: ', filtro);
     let query = paciente.find(filtro).count();
 
-    query.exec(function(err, data) {
+    query.exec(function (err, data) {
         if (err) return next(err);
 
         console.log(data);
@@ -268,11 +268,11 @@ router.get('/pacientes/counts/', function(req, res, next) {
  */
 
 
-router.get('/pacientes/:id*?', function(req, res, next) {
+router.get('/pacientes/:id*?', function (req, res, next) {
 
     if (req.params.id) {
 
-        paciente.findById(req.params.id, function(err, data) {
+        paciente.findById(req.params.id, function (err, data) {
             if (err) {
                 next(err);
             }
@@ -280,7 +280,7 @@ router.get('/pacientes/:id*?', function(req, res, next) {
                 if (data) {
                     res.json(data);
                 } else {
-                    pacienteMpi.findById(req.params.id, function(err, dataMpi) {
+                    pacienteMpi.findById(req.params.id, function (err, dataMpi) {
                         if (err) {
                             next(err);
                         }
@@ -333,7 +333,7 @@ router.get('/pacientes/:id*?', function(req, res, next) {
             nombre: 1
         });
 
-        query.exec(function(err, data) {
+        query.exec(function (err, data) {
             if (err) return next(err);
             res.json(data);
         });
@@ -343,7 +343,7 @@ router.get('/pacientes/:id*?', function(req, res, next) {
 });
 
 
-router.post('/pacientes/search', function(req, res) {
+router.post('/pacientes/search', function (req, res) {
 
     console.log('Search')
     var lPacientes;
@@ -373,8 +373,8 @@ router.post('/pacientes/search', function(req, res) {
     }, {
             from: 0,
             size: 50,
-        }, function(err, results) {
-            var pacientes = results.hits.hits.map(function(element) {
+        }, function (err, results) {
+            var pacientes = results.hits.hits.map(function (element) {
                 return element._source;
             });
             res.send(pacientes);
@@ -411,7 +411,7 @@ router.post('/pacientes/search', function(req, res) {
  */
 
 
-router.post('/pacientes', function(req, res, next) {
+router.post('/pacientes', function (req, res, next) {
     /** TODO: resolver el buscar a los tutores */
     var arrRel = req.body.relaciones;
     var arrTutorSave = [];
@@ -427,7 +427,7 @@ router.post('/pacientes', function(req, res, next) {
             if (err) {
                 next(err);
             }
-            (newPatient as any).on('es-indexed', function() {
+            (newPatient as any).on('es-indexed', function () {
                 console.log('paciente indexed');
             });
             //connElastic.create(newPatient);
@@ -482,14 +482,14 @@ router.post('/pacientes', function(req, res, next) {
  *         schema:
  *           $ref: '#/definitions/pacientes'
  */
-router.put('/pacientes/:id', function(req, res, next) {
+router.put('/pacientes/:id', function (req, res, next) {
 
     //Validación de campos del paciente del lado de la api
     var continues = ValidatePatient.checkPatient(req.body);
     if (continues.valid) {
         paciente.findByIdAndUpdate(req.params.id, req.body, {
             new: true
-        }, function(err, data) {
+        }, function (err, data) {
             if (err)
                 return next(err);
             res.json(data);
@@ -538,12 +538,12 @@ router.put('/pacientes/:id', function(req, res, next) {
  *         schema:
  *           $ref: '#/definitions/pacientes'
  */
-router.delete('/pacientes/:id', function(req, res, next) {
-    paciente.findByIdAndRemove(req.params.id, function(err, data) {
+router.delete('/pacientes/:id', function (req, res, next) {
+    paciente.findByIdAndRemove(req.params.id, function (err, data) {
         if (err)
             return next(err);
         /* Docuemnt is unindexed elasticsearch */
-        paciente.on('es-removed', function(err, res) {
+        paciente.on('es-removed', function (err, res) {
             if (err) return next(err);
         });
         res.json(data);
@@ -575,7 +575,7 @@ router.delete('/pacientes/:id', function(req, res, next) {
  *         schema:
  *           $ref: '#/definitions/pacientes'
  */
-router.patch('/pacientes/:id', function(req, res, next) {
+router.patch('/pacientes/:id', function (req, res, next) {
     let changes = req.body;
     let conditions = {
         _id: req.params.id
@@ -593,7 +593,7 @@ router.patch('/pacientes/:id', function(req, res, next) {
     // query.findOneAndUpdate(conditions, update, callback)
     paciente.findOneAndUpdate(conditions, {
         $set: update
-    }, function(err, data) {
+    }, function (err, data) {
         if (err) {
             return next(err);
         }
@@ -601,7 +601,7 @@ router.patch('/pacientes/:id', function(req, res, next) {
     });
 });
 
-router.post('/pacientes/search/multimatch/:query', function(req, res, next) {
+router.post('/pacientes/search/multimatch/:query', function (req, res, next) {
     console.log(req.params.query);
     var connElastic = new Client({
         host: config.connectionStrings.elastic_main,
@@ -642,7 +642,7 @@ router.post('/pacientes/search/multimatch/:query', function(req, res, next) {
 
 });
 
-router.post('/pacientes/search/simplequery', function(req, res, next) {
+router.post('/pacientes/search/simplequery', function (req, res, next) {
     let dto = req.body.objetoBusqueda;
 
     let connElastic = new Client({
@@ -679,7 +679,7 @@ router.post('/pacientes/search/simplequery', function(req, res, next) {
 
 });
 
-router.post('/pacientes/search/match/:field/:mode', function(req, res, next) {
+router.post('/pacientes/search/match/:field/:mode', function (req, res, next) {
     // Se realiza la búsqueda match por el field
     // La búsqueda se realiza por la clave de blocking
     // Valores posibles para el campo field
@@ -724,7 +724,7 @@ router.post('/pacientes/search/match/:field/:mode', function(req, res, next) {
 
     let connElastic = new Client({
         host: config.connectionStrings.elastic_main,
-        log: 'trace'
+        //log: 'trace'
     });
 
     connElastic.search({
@@ -733,9 +733,9 @@ router.post('/pacientes/search/match/:field/:mode', function(req, res, next) {
     })
         .then((searchResult) => {
             let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
-                .filter(function(hit) {
+                .filter(function (hit) {
                     let paciente = hit._source;
-                    console.log(paciente);
+                    //console.log(paciente);
                     let pac: IPerson = {
                         identity: paciente.documento,
                         firstname: paciente.nombre,
@@ -752,9 +752,10 @@ router.post('/pacientes/search/match/:field/:mode', function(req, res, next) {
                     };
                     let m3 = new machingDeterministico();
                     let valorMatching = m3.maching(pac, pacDto, weights);
-                    if (valorMatching >= porcentajeMatch)
+                    if (valorMatching >= porcentajeMatch) {
                         console.log(valorMatching);
-                    return paciente;
+                        return paciente;
+                    }
                 })
             results = results.map((hit) => { let elem = hit._source; elem['id'] = hit._id; return elem });
             res.send(results)
