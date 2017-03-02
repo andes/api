@@ -5,10 +5,10 @@ import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 
 var router = express.Router();
 
-router.get('/prestaciones/forKey/:key', function (req, res, next) {
+router.get('/prestaciones/forKey', function (req, res, next) {
 
-    var filtro = "ejecucion.evoluciones.valores." + req.params.key;
-    var query = {};
+    var filtro = "ejecucion.evoluciones.valores." + req.query.key;
+    var query = { "paciente._id": req.query.idPaciente };
     query[filtro] = {
         $exists: true
     };
