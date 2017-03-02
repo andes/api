@@ -30,8 +30,8 @@ router.get('/agenda/:id*?', function (req, res, next) {
             query.where('profesionales._id').equals(req.query.idProfesional);
         }
 
-        if (req.query.idPrestacion) {
-            query.where('prestaciones._id').equals(req.query.idPrestacion);
+        if (req.query.idTipoPrestacion) {
+            query.where('tipoPrestaciones._id').equals(req.query.idTipoPrestacion);
         }
 
         //Dada una lista de prestaciones, filtra las agendas que tengan al menos una de ellas como prestación
