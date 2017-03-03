@@ -754,13 +754,13 @@ router.post('/pacientes/search/match/:field/:mode/:percentage', function (req, r
                     let m3 = new machingDeterministico();
                     let valorMatching = m3.maching(pac, pacDto, weights);
                     if (valorMatching >= porcentajeMatch) {
-                        listaPacientes.push({ paciente: paciente, match: valorMatching })
-                        console.log(valorMatching);
+                        listaPacientes.push({id: hit._id, paciente: paciente, match: valorMatching })
+                        //console.log(valorMatching);
                         return paciente;
                     }
                 })
             if (devolverPorcentaje) {
-                console.log(listaPacientes);
+                console.log("LISTA PACIENTES ::"+listaPacientes);
                 res.send(listaPacientes)
             } else {
                 results = results.map((hit) => { let elem = hit._source; elem['id'] = hit._id; return elem });
