@@ -1,0 +1,7 @@
+{
+    "watch": ["*.ts"],
+    "ignore": ["*.spec.ts"],
+    "execMap": {
+        "tsc": "tsc"
+    }
+}

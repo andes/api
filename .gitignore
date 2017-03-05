@@ -1,14 +1,18 @@
+# Archivos de configuración
+config.ts
+
 # Logs
 logs
-*.log
-*.js
-*.map
+**/*.log
+**/*.log*
+**/*.js
+**/*.map
+
 #excepto este archivo JS
 !plugins/default.js
-npm-debug.log*
+
 # Dependency directories
 node_modules
 typings
 typings/*
 .vscode
-config.ts
