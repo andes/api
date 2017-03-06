@@ -12,7 +12,9 @@ router.get('/problemas/:idProblema*?', function (req, res, next) {
     } else {
 
         query = problema.find({}); //Trae todos 
-        query.where('paciente').equals(req.params.idPaciente);
+        if (req.query.idPaciente) {
+            query.where('paciente').equals(req.query.idPaciente);
+        }
     }
 
     query.populate('tipoProblema').sort({ "fechaInicio": -1 });
