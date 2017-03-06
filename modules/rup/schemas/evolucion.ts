@@ -1,9 +1,10 @@
 import * as mongoose from 'mongoose';
 import * as codificadorSchema from './codificador';
-import { profesionalSchema } from '../../../core/tm/schemas/profesional';
-import { organizacionSchema } from '../../../core/tm/schemas/organizacion';
 import * as prestacionSchema from '../../../core/tm/schemas/prestacion';
 import { espacioFisicoSchema } from '../../turnos/schemas/espacioFisico';
+import { organizacionSchema } from '../../../core/tm/schemas/organizacion';
+import { profesionalSchema } from '../../../core/tm/schemas/profesional';
+import { segundaOpinionSchema } from './segundaOpinion';
 
 var evolucionSchema = new mongoose.Schema({
     // Evolucion Profesional
@@ -36,11 +37,7 @@ var evolucionSchema = new mongoose.Schema({
     }],
 
     // campo destinado a segundas opiniones o auditorias de las prestaciones
-    segundaOpinion: [{
-        //usuario: usuarioSchema 
-        texto: String,
-        fechaRealizacion: Date
-    }],
+    segundaOpinion: [segundaOpinionSchema],
 
     // Evolución gestion
     momentoRealizacion: {
