@@ -8,9 +8,6 @@ logs
 **/*.js
 **/*.map
 
-#excepto este archivo JS
-!plugins/default.js
-
 # Dependency directories
 node_modules
 typings

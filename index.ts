@@ -3,6 +3,7 @@ import * as bodyParser from 'body-parser';
 import * as mongoose from 'mongoose';
 import * as config from './config';
 import { Auth } from './auth/auth.class';
+import { schemaDefaults } from './mongoose/defaults';
 
 let requireDir = require('require-dir');
 let app = express();
@@ -12,7 +13,7 @@ if (config.mongooseDebugMode) {
     mongoose.set('debug', false);
 }
 mongoose.connect(config.connectionStrings.mongoDB_main);
-mongoose.plugin(require('./plugins/defaults'));
+mongoose.plugin(schemaDefaults);
 
 // Inicializa la autenticación con Password/JWT
 Auth.initialize(app);
