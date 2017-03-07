@@ -55,6 +55,16 @@ router.get('/agenda/:id*?', function (req, res, next) {
             query.or(variable);
         }
 
+        //Si rango es true  se buscan las agendas que se solapen con la actual en algún punto
+        if (req.query.rango) {
+            let variable: any[] = [];
+            // ((originalIni <= actualIni && actualIni <= originalFin)
+            //                     || (originalIni <= actualFin && actualFin <= originalFin))
+            variable.push({ "horaInicio": { '$lte': req.query.desde }, "horaFin": {'$gt': req.query.desde}})
+            variable.push({ "horaInicio": { '$lte': req.query.hasta }, "horaFin": {'$gt': req.query.hasta}})
+            query.or(variable);
+        }
+
         if (req.query.espacioFisico) {
             query.or({ 'espacioFisico._id': req.query.espacioFisico });
         }
@@ -189,7 +199,7 @@ function reasignarTurno(req, data) {
 }
 
 function editarAgenda(req, data) {
-    if (req.body.profesional){
+    if (req.body.profesional) {
         data.profesionales = req.body.profesional;
     }
     data.espacioFisico = req.body.espacioFisico;
