@@ -25,13 +25,6 @@ export class ValidatePatient {
             valid = false;
             errors.push("Paciente no posee fecha de nacimiento")
         }
-        // else {
-        //
-        //     if (!ValidateFormatDate.validateDate(patient.fechaNacimiento)) {
-        //         valid = false;
-        //         errors.push("Paciente posee fecha de nacimiento con formato inválido")
-        //     }
-        // }
 
         if (!patient.sexo) {
             valid = false;

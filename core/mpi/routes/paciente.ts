@@ -1,28 +1,13 @@
-import {
-    ValidatePatient
-} from '../../../utils/validatePatient';
-import {
-    ValidateFormatDate
-} from '../../../utils/validateFormatDate';
-import {
-    machingDeterministico
-} from '../../../utils/machingDeterministico';
+import { ValidatePatient } from '../../../utils/validatePatient';
+import { ValidateFormatDate } from '../../../utils/validateFormatDate';
+import  { matching } from "andes-match/matching";
 import * as express from 'express'
-import {
-    paciente
-} from '../schemas/paciente';
-import {
-    pacienteMpi
-} from '../schemas/paciente';
+import { paciente } from '../schemas/paciente';
+import { pacienteMpi } from '../schemas/paciente';
 import * as utils from '../../../utils/utils';
 import * as mongoosastic from 'mongoosastic';
-import {
-    Client
-} from 'elasticsearch';
+import { Client } from 'elasticsearch';
 import * as config from '../../../config';
-import {
-    IPerson
-} from '../../../utils/IPerson';
 
 var router = express.Router();
 
@@ -415,6 +400,7 @@ router.post('/pacientes', function (req, res, next) {
     /** TODO: resolver el buscar a los tutores */
     var arrRel = req.body.relaciones;
     var arrTutorSave = [];
+    let match = new matching();
 
     // Validación de campos del paciente del lado de la api
     var continues = ValidatePatient.checkPatient(req.body);
@@ -422,7 +408,10 @@ router.post('/pacientes', function (req, res, next) {
     if (continues.valid) {
         // req.body.fechaNacimiento = ValidateFormatDate.obtenerFecha(req.body.fechaNacimiento);
 
-        var newPatient = new paciente(req.body);
+        let newPatient = new paciente(req.body);
+        // Se genera la clave de blocking
+        let claves = match.crearClavesBlocking(newPatient);
+        newPatient["claveBlocking"] = claves;
         newPatient.save((err) => {
             if (err) {
                 next(err);
@@ -430,17 +419,17 @@ router.post('/pacientes', function (req, res, next) {
             (newPatient as any).on('es-indexed', function () {
                 console.log('paciente indexed');
             });
-            //connElastic.create(newPatient);
+            // connElastic.create(newPatient);
             res.json(newPatient);
         });
     } else {
-        //Devuelvo el conjunto de mensajes de error junto con el código
-        var err = {
+        // Devuelvo el conjunto de mensajes de error junto con el código
+        let err = {
             status: "409",
             messages: continues.errors
-        }
+        };
 
-        var errores = "";
+        let errores = "";
         continues.errors.forEach(element => {
             errores = errores + " | " + element
         });
@@ -735,23 +724,16 @@ router.post('/pacientes/search/match/:field/:mode', function (req, res, next) {
             let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
                 .filter(function (hit) {
                     let paciente = hit._source;
-                    //console.log(paciente);
-                    let pac: IPerson = {
-                        identity: paciente.documento,
-                        firstname: paciente.nombre,
-                        lastname: paciente.apellido,
-                        birthDate: paciente.fechaNacimiento,
-                        gender: paciente.sexo
-                    };
-                    let pacDto: IPerson = {
+
+                    let pacDto = {
                         identity: dto.documento ? dto.documento.toString() : paciente.documento,
                         firstname: dto.nombre ? dto.nombre : paciente.nombre,
                         lastname: dto.apellido ? dto.apellido : paciente.apellido,
-                        birthDate: dto.fechaNacimiento ? dto.fechaNacimiento :paciente.fechaNacimiento,
+                        birthDate: dto.fechaNacimiento ? dto.fechaNacimiento : paciente.fechaNacimiento,
                         gender: dto.sexo ? dto.sexo : paciente.sexo
                     };
-                    let m3 = new machingDeterministico();
-                    let valorMatching = m3.maching(pac, pacDto, weights);
+                    let match = new matching();
+                    let valorMatching = match.matchPersonas(paciente, pacDto, weights);
                     if (valorMatching >= porcentajeMatch) {
                         console.log(valorMatching);
                         return paciente;
