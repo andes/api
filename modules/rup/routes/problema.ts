@@ -2,17 +2,19 @@ import * as express from 'express'
 import * as problema from '../schemas/problema'
 var router = express.Router();
 
-router.get('/pacientes/:idPaciente/problemas/:idProblema*?', function (req, res, next) {
+router.get('/problemas/:idProblema*?', function (req, res, next) {
 
     var query;
 
     if (req.params.idProblema) {
-        query = problema.findById(req.params.id);
+        query = problema.findById(req.params.idProblema);
 
     } else {
 
         query = problema.find({}); //Trae todos 
-        query.where('paciente').equals(req.params.idPaciente);
+        if (req.query.idPaciente) {
+            query.where('paciente').equals(req.query.idPaciente);
+        }
     }
 
     query.populate('tipoProblema').sort({ "fechaInicio": -1 });
