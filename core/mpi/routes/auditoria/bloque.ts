@@ -1,9 +1,8 @@
 import { servicioSintys } from '../../../../utils/servicioSintys';
-import { machingDeterministico } from '../../../../utils/machingDeterministico';
-import { IPerson } from '../../../../utils/IPerson';
-import * as express from 'express'
-import { paciente } from '../../schemas/paciente'
-import { servicioSisa } from '../../../../utils/servicioSisa'
+import * as express from 'express';
+import { paciente } from '../../schemas/paciente';
+import { servicioSisa } from '../../../../utils/servicioSisa';
+import * as config from '../../../../config';
 
 var router = express.Router();
 
@@ -73,20 +72,15 @@ router.get('/bloques/pacientesSisa/:idTipoBloque/:idBloque', function (req, res,
         $eq: req.params.idBloque
     };
 
-    var listaPac = [];
+    let listaPac = [];
     paciente.find(query, function (err, data) {
         if (err) {
             next(err);
         };
-        var servSisa = new servicioSisa();
-        var pacientesRes = [];
-        var weights = {
-            identity: 0.3,
-            name: 0.3,
-            gender: 0.1,
-            birthDate: 0.3
-        };
-        var listaPac;
+        let servSisa = new servicioSisa();
+        let pacientesRes = [];
+        let weights = config.configMpi.weightsDefault;
+        let listaPac;
         listaPac = data;
         listaPac.forEach(function (elem) {
             var valorSisa = 0;
@@ -212,12 +206,7 @@ router.get('/bloques/pacientesSintys/:idb/:id', function (req, res, next) {
         var servSintys = new servicioSintys();
         var servSisa = new servicioSisa();
         var pacientesRes = [];
-        var weights = {
-            identity: 0.3,
-            name: 0.3,
-            gender: 0.1,
-            birthDate: 0.3
-        };
+        var weights = config.configMpi.weightsDefault;
         var listaPac;
         listaPac = data;
         listaPac.forEach(function (elem) {
@@ -241,7 +230,7 @@ router.get('/bloques/pacientesSintys/:idb/:id', function (req, res, next) {
             });
 
             Promise.all(arrSalida).then(PacSal => {
-                //console.log("devuelvo el array", PacSal); 
+                //console.log("devuelvo el array", PacSal);
                 res.json(PacSal);
             }).catch(err => {
                 console.log(err);
