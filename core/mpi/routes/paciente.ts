@@ -376,7 +376,7 @@ router.post('/pacientes/mpi', function (req, res, next) {
         newPatient["claveBlocking"] = claves;
         newPatient.save((err) => {
             if (err) {
-                next(err);
+               return next(err);
             }
             (newPatient as any).on('es-indexed', function () {
                 console.log('paciente indexed');
