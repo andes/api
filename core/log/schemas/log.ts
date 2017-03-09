@@ -3,8 +3,7 @@ import { organizacionSchema } from '../../../core/tm/schemas/organizacion';
 
 export let logSchema = new mongoose.Schema({
     fecha: [{
-        type: Date,
-        required: true
+        type: Date
     }],
     id: {
         id: Number
@@ -17,8 +16,7 @@ export let logSchema = new mongoose.Schema({
         documento: Number
     },
     organizacion: {
-        organizacion: organizacionSchema,
-        required: true
+        organizacion: organizacionSchema
     },
     modulo: {
         type: String,
