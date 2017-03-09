@@ -43,5 +43,5 @@ let hardcoded = {
 }
 
 router.post('/log/', function (req, res, next) {
-    var loguear = logService.LogFunction.loguear(this.hadcoded, next, res);
+   logService.LogFunction.loguear(this.hadcoded, next, res);
 });
