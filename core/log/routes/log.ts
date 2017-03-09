@@ -26,6 +26,7 @@ let token = {
 };
 
 let hardcoded = {
+
     fecha: '09/03/2017',
     id: token.id,
     usuario: token.usuario,
@@ -43,5 +44,10 @@ let hardcoded = {
 }
 
 router.post('/log/', function (req, res, next) {
-   logService.LogFunction.loguear(this.hadcoded, next, res);
+    let resultado = logService.LogFunction.logging(this.hadcoded, res, function (err) {
+        if (err) {
+            return next(err);
+        }
+        res.json(resultado);
+    });
 });
