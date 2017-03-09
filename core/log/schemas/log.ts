@@ -6,15 +6,21 @@ export let logSchema = new mongoose.Schema({
         type: Date,
         required: true
     }],
+    id: {
+        id: Number
+    },
     usuario: {
-        type: String,
-        es_indexed: true
+        nombreCompleto: String,
+        nombre: String,
+        apellido: String,
+        username: Number,
+        documento: Number
     },
     organizacion: {
         organizacion: organizacionSchema,
         required: true
     },
-     modulo: {
+    modulo: {
         type: String,
         enum: ['turnos', 'pacientes']
     },
