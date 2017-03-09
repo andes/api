@@ -31,8 +31,8 @@ router.get('/problemas/:idProblema*?', function (req, res, next) {
 
 router.post('/problemas/', function (req, res, next) {
     console.log(req.body);
-    var newProblema = new problema(req.body)
 
+    var newProblema = new problema(req.body)
     newProblema.save((err) => {
         if (err) {
             return next(err);
