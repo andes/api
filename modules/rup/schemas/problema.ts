@@ -23,7 +23,6 @@ var problemaSchema = new mongoose.Schema({
     // activo: Boolean,  
     evoluciones: [{
         fecha: Date,
-        activo: Boolean,
         observacion: String,
         profesional: [profesionalSchema],
         organizacion: organizacionSchema,

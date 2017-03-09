@@ -1,5 +1,3 @@
-import { machingDeterministico } from '../../../../utils/machingDeterministico';
-import { IPerson } from '../../../../utils/IPerson';
 import * as express from 'express'
 import * as paciente from '../../schemas/paciente'
 import { servicioSintys } from '../../../../utils/servicioSintys'
