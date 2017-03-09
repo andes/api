@@ -1,6 +1,6 @@
 import { ValidatePatient } from '../../../utils/validatePatient';
 import { ValidateFormatDate } from '../../../utils/validateFormatDate';
-import  { matching } from "andes-match/matching";
+import  { matching } from "@andes/match/matching";
 import * as express from 'express'
 import { paciente } from '../schemas/paciente';
 import { pacienteMpi } from '../schemas/paciente';
