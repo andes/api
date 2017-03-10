@@ -2,7 +2,7 @@ import * as mongoose from "mongoose";
 import * as config from './config';
 
 
-let connectMpi = mongoose.createConnection(config.connectionStrings.mongoDB_main);
+let connectMpi = mongoose.createConnection(config.connectionStrings.mongoDB_mpi);
 
 connectMpi.on("error", function(err) {
     if (err) throw err;
