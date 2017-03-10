@@ -11,7 +11,7 @@ router.get('/problemas/:idProblema*?', function (req, res, next) {
 
     } else {
         query = problema.find({
-            $where: "this.evoluciones[this.evoluciones.length - 1].vigencia != 'transformado'";
+            $where: "this.evoluciones[this.evoluciones.length - 1].vigencia != 'transformado'"
         });
         if (req.query.idPaciente) {
             query.where('paciente').equals(req.query.idPaciente);
