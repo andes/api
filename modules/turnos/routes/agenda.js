@@ -70,7 +70,6 @@ router.get('/agenda/:id*?', function (req, res, next) {
     }
 });
 router.post('/agenda', function (req, res, next) {
-    //var continues = validateAgenda.checkAgenda(req.body);
     var newAgenda = new agenda(req.body);
     newAgenda.save(function (err) {
         if (err) {

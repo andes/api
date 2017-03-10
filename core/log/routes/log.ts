@@ -41,13 +41,19 @@ let hardcoded = {
     servidor: {
         ip: '127.0.0.1',
     }
-}
+};
 
 router.post('/log/', function (req, res, next) {
-    let resultado = logService.LogFunction.logging(this.hadcoded, res, function (err) {
+
+    let resultado = logService.LogFunction.logging(hardcoded, res, function (err) {
+
         if (err) {
             return next(err);
         }
         res.json(resultado);
+
     });
+
 });
+
+module.exports = router;

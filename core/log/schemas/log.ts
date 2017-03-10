@@ -2,11 +2,8 @@ import * as mongoose from 'mongoose';
 import { organizacionSchema } from '../../../core/tm/schemas/organizacion';
 
 export let logSchema = new mongoose.Schema({
-    fecha: [{
+    fecha: {
         type: Date
-    }],
-    id: {
-        id: Number
     },
     usuario: {
         nombreCompleto: String,
