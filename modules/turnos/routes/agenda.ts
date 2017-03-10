@@ -119,13 +119,15 @@ router.patch('/agenda/:_id', function (req, res, next) {
         switch (req.body.op) {
             case 'asistenciaTurno': darAsistencia(req, data);
                 break;
-            case 'cancelarTurno': cancelarAsistencia(req, data);
+            case 'liberarTurno': liberarTurno(req, data);
                 break;
             case 'bloquearTurno': bloquearTurno(req, data);
                 break;
             case 'suspenderTurno': suspenderTurno(req, data);
                 break;
             case 'reasignarTurno': reasignarTurno(req, data);
+                break;
+            case 'guardarNotaTurno': guardarNotaTurno(req, data);
                 break;
             case 'editarAgenda': editarAgenda(req, data);
                 break;
@@ -155,7 +157,7 @@ function darAsistencia(req, data) {
     return data;
 }
 
-function cancelarAsistencia(req, data) {
+function liberarTurno(req, data) {
     let turno = getTurno(req, data);
 
     turno.estado = 'disponible';
@@ -215,6 +217,14 @@ function suspenderAgenda(req, data) {
 
 function publicarAgenda(req, data) {
     data.estado = req.body.estado;
+
+    return data;
+}
+
+function guardarNotaTurno(req, data) {
+    let turno = getTurno(req, data);
+
+    turno.nota = req.body.textoNota;
 
     return data;
 }
