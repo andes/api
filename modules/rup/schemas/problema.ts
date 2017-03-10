@@ -3,6 +3,7 @@ import * as codificadorSchema from './codificador';
 import { organizacionSchema } from '../../../core/tm/schemas/organizacion';
 import { profesionalSchema } from '../../../core/tm/schemas/profesional';
 import * as tipoProblemaSchema from './tipoProblema';
+import { segundaOpinionSchema } from './segundaOpinion';
 
 var problemaSchema = new mongoose.Schema({
     tipoProblema: {
@@ -19,14 +20,23 @@ var problemaSchema = new mongoose.Schema({
     },
     codificador: codificadorSchema,
     fechaInicio: Date,
-    activo: Boolean,
+    // activo: Boolean,  
     evoluciones: [{
         fecha: Date,
-        activo: Boolean,
         observacion: String,
         profesional: [profesionalSchema],
         organizacion: organizacionSchema,
         //ambito: // TODO
+        duracion: {
+            type: String,
+            enum: ['cronico', 'agudo']
+        },
+        vigencia: {
+            type: String,
+            enum: ['activo', 'inactivo', 'resuelto', 'transformado', 'enmendado']
+        },
+        // campo destinado a segundas opiniones o auditorias de las prestaciones
+        segundaOpinion: [segundaOpinionSchema]
     }]
 });
 

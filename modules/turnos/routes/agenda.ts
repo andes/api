@@ -30,8 +30,8 @@ router.get('/agenda/:id*?', function (req, res, next) {
             query.where('profesionales._id').equals(req.query.idProfesional);
         }
 
-        if (req.query.idPrestacion) {
-            query.where('prestaciones._id').equals(req.query.idPrestacion);
+        if (req.query.idTipoPrestacion) {
+            query.where('tipoPrestaciones._id').equals(req.query.idTipoPrestacion);
         }
 
         //Dada una lista de prestaciones, filtra las agendas que tengan al menos una de ellas como prestación
@@ -52,6 +52,16 @@ router.get('/agenda/:id*?', function (req, res, next) {
             arr_profesionales.forEach((profesional, index) => {
                 variable.push({ "profesionales._id": profesional.id })
             });
+            query.or(variable);
+        }
+
+        //Si rango es true  se buscan las agendas que se solapen con la actual en algún punto
+        if (req.query.rango) {
+            let variable: any[] = [];
+            // ((originalIni <= actualIni && actualIni <= originalFin)
+            //                     || (originalIni <= actualFin && actualFin <= originalFin))
+            variable.push({ "horaInicio": { '$lte': req.query.desde }, "horaFin": {'$gt': req.query.desde}})
+            variable.push({ "horaInicio": { '$lte': req.query.hasta }, "horaFin": {'$gt': req.query.hasta}})
             query.or(variable);
         }
 

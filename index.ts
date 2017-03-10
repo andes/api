@@ -1,18 +1,22 @@
-import * as http from 'http';
-import * as express from 'express'
-import * as bodyParser from 'body-parser'
-import * as mongoose from 'mongoose'
+import * as express from 'express';
+import * as bodyParser from 'body-parser';
+import * as mongoose from 'mongoose';
 import * as config from './config';
+import { Auth } from './auth/auth.class';
+import { schemaDefaults } from './mongoose/defaults';
 
-var requireDir = require('require-dir');
-var path = require('path');
-var app = express();
+let requireDir = require('require-dir');
+let app = express();
 
 // Configuración de Mongoose
-//config.mongooseDebugMode && mongoose.set('debug', false);
+if (config.mongooseDebugMode) {
+    mongoose.set('debug', false);
+}
 mongoose.connect(config.connectionStrings.mongoDB_main);
-mongoose.plugin(require('./plugins/defaults'));
-mongoose.set('debug', true);
+mongoose.plugin(schemaDefaults);
+
+// Inicializa la autenticación con Password/JWT
+Auth.initialize(app);
 
 // Configura Express
 app.use(bodyParser.json());
@@ -20,10 +24,10 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 app.all('*', function (req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
+    res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'OPTIONS,GET,POST,PUT,DELETE,PATCH');
-    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With");
-    if ('OPTIONS' == req.method) {
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    if ('OPTIONS' === req.method) {
         return res.send(200);
     }
     next();
@@ -32,29 +36,33 @@ app.all('*', function (req, res, next) {
 // Carga los módulos y rutas
 for (let m in config.modules) {
     if (config.modules[m].active) {
-        var routes = requireDir(config.modules[m].path);
-        for (var route in routes)
-            app.use('/api' + config.modules[m].route, routes[route]);
+        let routes = requireDir(config.modules[m].path);
+        for (let route in routes) {
+            if (config.modules[m].auth) {
+                app.use('/api' + config.modules[m].route, Auth.authenticate(), routes[route]);
+            } else {
+                app.use('/api' + config.modules[m].route, routes[route]);
+            }
+        }
     }
 }
 
 // Not found: catch 404 and forward to error handler
 app.use(function (req, res, next) {
-    var err = new Error('Not Found');
+    let err = new Error('Not Found');
     (err as any).status = 404;
     next(err);
 });
 
 // Error handler
-
 app.use(function (err: any, req, res, next) {
     // Parse err
-    var e;
+    let e;
     if (!isNaN(err)) {
-        e = new Error(err == 400 ? "Parámetro incorrecto" : "No encontrado");
+        e = new Error(err === 400 ? 'Parámetro incorrecto' : 'No encontrado');
         e.status = err;
         err = e;
-    } else if (typeof err == "string") {
+    } else if (typeof err === 'string') {
         e = new Error(err);
         e.status = 400;
         err = e;
@@ -62,21 +70,22 @@ app.use(function (err: any, req, res, next) {
 
     // Send HTML or JSON
     res.status(err.status || 500);
-    var response = {
+    let response = {
         message: err.message,
         error: (app.get('env') === 'development') ? err : null
     };
 
-    if (req.accepts('application/json'))
+    if (req.accepts('application/json')) {
         res.send(response);
-    else
+    } else {
         res.render('error', response);
+    }
 });
 
 
 // Inicia el servidor
-var server = app.listen(3002, function () {
+app.listen(3002, function () {
     console.log('Inicio del servidor en el puerto 3002');
 });
 
-export = app
+export = app;

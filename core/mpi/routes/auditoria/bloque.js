@@ -1,8 +1,9 @@
 "use strict";
-var servicioSintys_1 = require('../../../../utils/servicioSintys');
-var express = require('express');
-var paciente_1 = require('../../schemas/paciente');
-var servicioSisa_1 = require('../../../../utils/servicioSisa');
+var servicioSintys_1 = require("../../../../utils/servicioSintys");
+var express = require("express");
+var paciente_1 = require("../../schemas/paciente");
+var servicioSisa_1 = require("../../../../utils/servicioSisa");
+var config = require("../../../../config");
 var router = express.Router();
 router.get('/bloques/:idTipoBloque', function (req, res, next) {
     if (req.params.idTipoBloque) {
@@ -73,12 +74,7 @@ router.get('/bloques/pacientesSisa/:idTipoBloque/:idBloque', function (req, res,
         ;
         var servSisa = new servicioSisa_1.servicioSisa();
         var pacientesRes = [];
-        var weights = {
-            identity: 0.3,
-            name: 0.3,
-            gender: 0.1,
-            birthDate: 0.3
-        };
+        var weights = config.configMpi.weightsDefault;
         var listaPac;
         listaPac = data;
         listaPac.forEach(function (elem) {
@@ -192,12 +188,7 @@ router.get('/bloques/pacientesSintys/:idb/:id', function (req, res, next) {
         var servSintys = new servicioSintys_1.servicioSintys();
         var servSisa = new servicioSisa_1.servicioSisa();
         var pacientesRes = [];
-        var weights = {
-            identity: 0.3,
-            name: 0.3,
-            gender: 0.1,
-            birthDate: 0.3
-        };
+        var weights = config.configMpi.weightsDefault;
         var listaPac;
         listaPac = data;
         listaPac.forEach(function (elem) {
@@ -221,7 +212,7 @@ router.get('/bloques/pacientesSintys/:idb/:id', function (req, res, next) {
                 }
             });
             Promise.all(arrSalida).then(function (PacSal) {
-                //console.log("devuelvo el array", PacSal); 
+                //console.log("devuelvo el array", PacSal);
                 res.json(PacSal);
             }).catch(function (err) {
                 console.log(err);

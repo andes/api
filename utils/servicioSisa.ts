@@ -1,10 +1,5 @@
 import { ValidateFormatDate } from './validateFormatDate';
-import {
-    machingDeterministico
-} from './machingDeterministico';
-import {
-    IPerson
-} from './IPerson';
+import  { matching } from '@andes/match/matching';
 import { paciente } from '../core/mpi/schemas/paciente';
 import * as https from 'https';
 import * as config from '../config';
@@ -12,36 +7,6 @@ var to_json = require('xmljson').to_json;
 
 export class servicioSisa {
 
-    matchPersonas(paciente, pacienteSisa) {
-
-        var m3 = new machingDeterministico();
-        var weights = {
-            identity: 0.3,
-            name: 0.3,
-            gender: 0.1,
-            birthDate: 0.3
-        };
-        var IPac: IPerson = {
-            identity: paciente.documento,
-            firstname: paciente.nombre,
-            lastname: paciente.apellido,
-            birthDate: ValidateFormatDate.convertirFecha(paciente.fechaNacimiento),
-            gender: paciente.sexo
-        };
-
-        var IPacSisa: IPerson = {
-            identity: pacienteSisa.documento,
-            firstname: pacienteSisa.nombre,
-            lastname: pacienteSisa.apellido,
-            birthDate: ValidateFormatDate.convertirFecha(pacienteSisa.fechaNacimiento),
-            gender: pacienteSisa.sexo
-        };
-        // console.log("Paciente Match: ",IPac,IPacSisa);
-        var valorSisa = m3.maching(IPac, IPacSisa, weights);
-        //console.log("Paciente Match: ",IPac,IPacSisa);
-        // console.log("Match: ",valorSisa);
-        return valorSisa;
-    }
 
     getSisaCiudadano(nroDocumento, usuario, clave, sexo?: string) {
         /**
@@ -207,18 +172,14 @@ export class servicioSisa {
 
 
     matchSisa(paciente) {
-       
-        //Verifica si el paciente tiene un documento valido y realiza la búsqueda a través de Sisa
-        var matchPorcentaje = 0;
-        var pacienteSisa = {};
-        var weights = {
-            identity: 0.3, //0.2
-            name: 0.3, //0.3
-            gender: 0.1, //0.4
-            birthDate: 0.3 //0.1
-        };
+
+        // Verifica si el paciente tiene un documento valido y realiza la búsqueda a través de Sisa
+        let matchPorcentaje = 0;
+        let pacienteSisa = {};
+        let weights = config.configMpi.weightsDefault;
+        let match = new matching();
         paciente["matchSisa"] = 0;
-        //Se buscan los datos en sisa y se obtiene el paciente
+        // Se buscan los datos en sisa y se obtiene el paciente
         return new Promise((resolve, reject) => {
 
             if (paciente.documento) {
@@ -227,7 +188,7 @@ export class servicioSisa {
                     this.getSisaCiudadano(paciente.documento, config.usuarioSisa, config.passwordSisa)
                         .then((resultado) => {
                             if (resultado) {
-                                //Verifico el resultado devuelto por el rest de Sisa
+                                // Verifico el resultado devuelto por el rest de Sisa
                                 console.log("Renaper", resultado[1].Ciudadano.identificadoRenaper);
                                 if (resultado[0] == 200) {
 
@@ -235,7 +196,7 @@ export class servicioSisa {
                                         case 'OK':
                                             if (resultado[1].Ciudadano.identificadoRenaper && resultado[1].Ciudadano.identificadoRenaper != "NULL") {
                                                 pacienteSisa = this.formatearDatosSisa(resultado[1].Ciudadano);
-                                                matchPorcentaje = this.matchPersonas(paciente, pacienteSisa);
+                                                matchPorcentaje =  match.matchPersonas(paciente, pacienteSisa, weights);
                                                 matchPorcentaje = (matchPorcentaje * 100);
                                                 resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": matchPorcentaje, "datosPaciente": pacienteSisa } });
                                             } else {
@@ -257,7 +218,7 @@ export class servicioSisa {
                                                     if (res[1].Ciudadano.resultado == 'OK') {
                                                         if (resultado[1].Ciudadano.identificadoRenaper && resultado[1].Ciudadano.identificadoRenaper != "NULL") {
                                                             pacienteSisa = this.formatearDatosSisa(res[1].Ciudadano);
-                                                            matchPorcentaje = this.matchPersonas(paciente, pacienteSisa);
+                                                            matchPorcentaje = match.matchPersonas(paciente, pacienteSisa, weights);
                                                             matchPorcentaje = (matchPorcentaje * 100);
                                                             resolve({ "paciente": paciente, "matcheos": { "entidad": "Sisa", "matcheo": matchPorcentaje, "datosPaciente": pacienteSisa } });
                                                         } else {
@@ -326,7 +287,7 @@ export class servicioSisa {
 
 
 
-    //Cambiar el estado del paciente a validado y agregamos como entidad validadora a Sisa
+    // Cambiar el estado del paciente a validado y agregamos como entidad validadora a Sisa
     validarActualizarPaciente(pacienteActualizar, entidad, datosPacEntidad) {
         return new Promise((resolve, reject) => {
             console.log("Datos a validar", datosPacEntidad);

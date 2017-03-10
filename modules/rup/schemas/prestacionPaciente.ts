@@ -44,7 +44,7 @@ export var prestacionPacienteSchema = new mongoose.Schema({
         // proposito por el cual voy a ejecutar
         proposito: [{
             type: String,
-            enum: ['control', 'diganostica', 'tamizaje', 'otra']
+            enum: ['control', 'diagnostica', 'tamizaje', 'otra']
         }],
         // estado del paciente en el episodio
         estadoPaciente: {
@@ -80,9 +80,9 @@ export var prestacionPacienteSchema = new mongoose.Schema({
         requiereTurno: Boolean,
         idTurno: mongoose.Schema.Types.ObjectId,
         // contactos del paciente
-        otroContacto: {
-            contactoSchema
-        },
+        // otroContacto: {
+        //     contactoSchema
+        // },
         // Deben ser los financiadorse que tiene le paciente
         financiador: {
             financiadorSchema
@@ -102,10 +102,15 @@ export var prestacionPacienteSchema = new mongoose.Schema({
 
 
     ejecucion: {
+        // resumen de las prestaciones que se ejecutaron
+        prestaciones: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'prestacionPaciente'
+        }],
         // listaProblemas: [problemaSchema],
         fecha: Date,
         organizacion: organizacionSchema,
-        profesional: profesionalSchema,
+        profesionales: [profesionalSchema],
         // TODO: Definir evoluciones y prestacionesSolicitadas bajo
         // que objeto van a estar,... solicitud .. ejecucion .. ¿postEjecucion?
         evoluciones: [
@@ -122,11 +127,11 @@ export var prestacionPacienteSchema = new mongoose.Schema({
         ref: 'prestacionPaciente'
     }],
 
-    // resumen de las prestaciones que se ejecutaron
-    prestacionesEjecutadas: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'prestacionPaciente'
-    }],
+    // // resumen de las prestaciones que se ejecutaron
+    // prestacionesEjecutadas: [{
+    //     type: mongoose.Schema.Types.ObjectId,
+    //     ref: 'prestacionPaciente'
+    // }],
 
     estado: [
         {

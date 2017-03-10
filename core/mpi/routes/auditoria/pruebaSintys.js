@@ -1,6 +1,6 @@
 "use strict";
-var express = require('express');
-var servicioSintys_1 = require('../../../../utils/servicioSintys');
+var express = require("express");
+var servicioSintys_1 = require("../../../../utils/servicioSintys");
 var router = express.Router();
 router.get('/pacientesMatchSintys/', function (req, res, next) {
     var unPaciente = {

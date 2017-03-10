@@ -8,7 +8,7 @@ router.put('/turno/:id', function (req, res, next) {
   let changes = req.body;
   let etiquetaEstado: string = "bloques." + req.body.indiceBloque + ".turnos." + req.body.indiceTurno + ".estado";
   let etiquetaPaciente: string = "bloques." + req.body.indiceBloque + ".turnos." + req.body.indiceTurno + ".paciente";
-  let etiquetaPrestacion: string = "bloques." + req.body.indiceBloque + ".turnos." + req.body.indiceTurno + ".prestacion";
+  let etiquetaPrestacion: string = "bloques." + req.body.indiceBloque + ".turnos." + req.body.indiceTurno + ".tipoPrestacion";
 
   let query = {
     _id: req.params.id
@@ -17,7 +17,7 @@ router.put('/turno/:id', function (req, res, next) {
 
   let update: any = {};
   update[etiquetaEstado] = req.body.estado;
-  update[etiquetaPrestacion] = req.body.prestacion;
+  update[etiquetaPrestacion] = req.body.tipoPrestacion;
   update[etiquetaPaciente] = req.body.paciente;
 
   console.log("Update   ", update);

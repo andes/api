@@ -1,7 +1,7 @@
 "use strict";
-var express = require('express');
-var paciente_1 = require('../../schemas/paciente');
-var servicioSisa_1 = require('../../../../utils/servicioSisa');
+var express = require("express");
+var paciente_1 = require("../../schemas/paciente");
+var servicioSisa_1 = require("../../../../utils/servicioSisa");
 var router = express.Router();
 router.get('/matching/:id*?', function (req, res, next) {
     if (req.params.id) {
