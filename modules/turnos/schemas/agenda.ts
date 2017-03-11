@@ -1,6 +1,6 @@
 import { tipoPrestacion } from './../../../core/tm/schemas/tipoPrestacion';
 import * as prestacionSchema from './prestacion';
-import {tipoPrestacionSchema} from '../../../core/tm/schemas/tipoPrestacion';
+import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import * as nombreApellidoSchema from '../../../core/tm/schemas/nombreApellido';
 import * as mongoose from 'mongoose';
@@ -40,6 +40,10 @@ var agendaSchema = new mongoose.Schema({
                 enum: ["disponible", "asignado", "bloqueado"]
             },
             nota: String,
+            motivoSuspension: {
+                type: String,
+                enum: ["Edilicia", "Profesional", "Organizacion"]
+            },
             paciente: {//pensar que otros datos del paciente conviene tener
                 id: mongoose.Schema.Types.ObjectId,
                 nombre: String,
