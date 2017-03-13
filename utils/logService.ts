@@ -1,42 +1,22 @@
 import * as log from '../core/log/schemas/log';
 
 
-export class LogFunction {
+export class Logger {
 
-    public static logging(hardcoded, res, op?, data?, callback?): any {
+    public static log(res, hardcoded, callback?): any {
         let newLog = new log.log(hardcoded);
-        if (op && data) {
-            console.log('INSIDE OP & DATA');
-            newLog.update(
-                { operacion: op },
-                { datosOperacion: data }
-            );
-        }
-        newLog.save(
-            function (err) {
-                console.log(err);
-            });
-        return newLog;
-    }
-}
-
-
-/*export class LogFunction {
-
-    public static logging(hardcoded, res, op?, data?, callback?): any {
-        let newLog = new log.log(hardcoded);
-        if (op && data) {
-            console.log('INSIDE OP & DATA');
-            newLog.update(
-                { operacion: op },
-                { datosOperacion: data }
-            );
-        }
+        console.log(hardcoded)
         newLog.save(callback);
-        console.log(newLog);
-        console.log(2);
         return newLog;
     }
 
+    public static logParams(res, hardcoded, mod, op, callback?): any {
+        console.log(hardcoded)
+        hardcoded.operacion = op;
+        hardcoded.modulo = mod;
+        let newLog = new log.log(hardcoded);
+        newLog.save(callback);
+        return newLog;
+    }
 
-}*/
+}

@@ -1,6 +1,7 @@
 import * as express from 'express';
 import * as log from '../../../core/log/schemas/log';
-import * as logService from '../../../utils/logService';
+import { Logger } from '../../../utils/logService';
+import { Auth } from '../../../auth/auth.class';
 
 let router = express.Router();
 
@@ -42,24 +43,28 @@ let hardcoded = {
     }
 };
 
-router.post('/log/', function (req, res, next) {
-    let resultado = logService.LogFunction.logging(hardcoded, res, function (err) {
+router.post('/log/', Auth.authenticate(), function (req, res, next) {
+    let resultado = Logger.log(res, hardcoded, function (err) {
         if (err) {
             console.log(err);
             return next(err);
         }
         res.json(resultado);
-        console.log('FIN POST');
     });
 });
 
-router.post('/log/:op/:data', function (req, res, next) {
+router.post('/log/:module/:op', function (req, res, next) {
     let operacion = '';
+    let modulo = '';
     if (req.params.op) {
-        operacion = 'asignar turno';
+        operacion = 'lista espera';
     }
-    let resultado = logService.LogFunction.logging(hardcoded, res, operacion, '', function (err) {
+    if (req.params.module) {
+        modulo = req.params.module;
+    }
+    let resultado = Logger.logParams(res, hardcoded, modulo, operacion, function (err) {
         if (err) {
+            console.log(err);
             return next(err);
         }
         res.json(resultado);
