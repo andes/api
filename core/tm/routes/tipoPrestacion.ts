@@ -1,5 +1,7 @@
 import * as express from 'express'
 import { tipoPrestacion } from '../schemas/tipoPrestacion'
+import { defaultLimit, maxLimit } from './../../../config'
+
 var router = express.Router();
 
 router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
@@ -13,6 +15,12 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
     } else {
 
         query = tipoPrestacion.find({}); //Trae todos 
+
+        //ver skip limit
+        if (req.query.skip && req.query.limit) {
+            let skip: number = parseInt(req.query.skip || 0);
+            let limit: number = Math.min(parseInt(req.query.limit || defaultLimit), maxLimit); 
+        query = query.skip(skip).limit(limit)}
 
         if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
@@ -30,6 +38,15 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
         if (req.query.turneable) {
             query.where('turneable').equals(req.query.turneable);
         }
+
+        if (req.query.granularidad) {
+            query.where('granularidad').equals(req.query.granularidad);
+        }
+
+
+
+
+
     }
 
     query.populate('ejecucion').exec(function (err, data) {
