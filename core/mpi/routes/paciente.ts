@@ -401,6 +401,18 @@ router.post('/pacientes/mpi', function (req, res, next) {
     }
 });
 
+router.delete('/pacientes/mpi/:id', function (req, res, next) {
+    pacienteMpi.findByIdAndRemove(req.params.id, function (err, data) {
+        if (err)
+            return next(err);
+        /* Docuemnt is unindexed elasticsearch */
+        pacienteMpi.on('es-removed', function (err, res) {
+            if (err) return next(err);
+        });
+        res.json(data);
+    });
+});
+
 /**
  * @swagger
  * /pacientes:
