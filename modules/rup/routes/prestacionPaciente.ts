@@ -3,17 +3,17 @@ import { prestacionPaciente } from '../schemas/prestacionPaciente'
 import { paciente } from '../../../core/mpi/schemas/paciente'
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 
-var router = express.Router();
+let router = express.Router();
 
 router.get('/prestaciones/forKey', function (req, res, next) {
 
-    var filtro = "ejecucion.evoluciones.valores." + req.query.key;
-    var query = { "paciente._id": req.query.idPaciente };
+    let filtro = 'ejecucion.evoluciones.valores.' + req.query.key;
+    let query = { 'paciente._id': req.query.idPaciente };
     query[filtro] = {
         $exists: true
     };
 
-    var consulta = prestacionPaciente.find(query).sort({ "ejecucion.fecha": -1 }).limit(1);
+    let consulta = prestacionPaciente.find(query).sort({ 'ejecucion.fecha': -1 }).limit(1);
     consulta.exec(function (err, data) {
         if (err) {
             next(err);
@@ -24,7 +24,7 @@ router.get('/prestaciones/forKey', function (req, res, next) {
 });
 
 router.get('/prestaciones/:id*?', function (req, res, next) {
-    var query;
+    let query;
     if (req.params.id) {
         query = prestacionPaciente.findById(req.params.id);
     } else {
@@ -48,11 +48,11 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
 
         if (req.query.turnos) {
             let idsTurnos = req.query.turnos.split(",");
-            query.where("solicitud.idTurno").in(idsTurnos);
+            query.where('solicitud.idTurno').in(idsTurnos);
         }
     }
 
-    // populamos todo lo necesario luego del find
+    // populamos todo lo necesario de la solicitud luego del find
     query.populate({
         path: 'solicitud.listaProblemas',
         model: 'problema',
@@ -68,7 +68,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
     });
 
     query.populate({
-        path: 'prestacionesSolicitadas',
+        path: 'solicitud.tipoPrestacion.ejecucion.prestaciones',
         model: 'prestacionPaciente',
         populate: {
             path: 'solicitud.listaProblemas',
@@ -79,8 +79,37 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             }
         }
     });
+
     query.populate({
-        path: 'prestacionesEjecutadas',
+        path: 'solicitud.tipoPrestacion.ejecucion.prestaciones',
+        model: 'prestacionPaciente',
+        populate: {
+            path: 'solicitud.listaProblemas',
+            model: 'problema',
+            populate: {
+                path: 'tipoProblema',
+                model: 'tipoProblema'
+            }
+        }
+    });
+
+    //populuamos todo lo necesario de la ejecucion
+    query.populate({
+        path: 'ejecucion.prestaciones',
+        model: 'prestacionPaciente',
+        populate: {
+            path: 'solicitud.listaProblemas',
+            model: 'problema',
+            populate: {
+                path: 'tipoProblema',
+                model: 'tipoProblema'
+            }
+        }
+    });
+
+    //populuamos las prestaciones a futuro
+    query.populate({
+        path: 'prestacionesSolicitadas',
         model: 'prestacionPaciente',
         populate: {
             path: 'solicitud.listaProblemas',

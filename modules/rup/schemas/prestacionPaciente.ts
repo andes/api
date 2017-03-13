@@ -1,16 +1,14 @@
 import * as mongoose from 'mongoose';
-import * as codificadorSchema from './codificador';
-import * as contactoSchema from '../../../core/tm/schemas/contacto';
 import * as evolucionSchema from './evolucion';
 import * as financiadorSchema from '../../../core/mpi/schemas/financiador';
+import { problemaSchema } from './problema';
 import { organizacionSchema } from '../../../core/tm/schemas/organizacion';
 import { pacienteSchema } from '../../../core/mpi/schemas/paciente';
-import * as problemaSchema from './problema';
 import { profesionalSchema } from '../../../core/tm/schemas/profesional';
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 
 
-export var prestacionPacienteSchema = new mongoose.Schema({
+export let prestacionPacienteSchema = new mongoose.Schema({
     // nombre: String,
     // descripcion: String,
     // codigo: [codificadorSchema],
@@ -107,7 +105,7 @@ export var prestacionPacienteSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'prestacionPaciente'
         }],
-        // listaProblemas: [problemaSchema],
+        listaProblemas: [problemaSchema],
         fecha: Date,
         organizacion: organizacionSchema,
         profesionales: [profesionalSchema],
@@ -145,4 +143,4 @@ export var prestacionPacienteSchema = new mongoose.Schema({
     ]
 });
 
-export var prestacionPaciente = mongoose.model('prestacionPaciente', prestacionPacienteSchema, 'prestacionPaciente');
+export let prestacionPaciente = mongoose.model('prestacionPaciente', prestacionPacienteSchema, 'prestacionPaciente');

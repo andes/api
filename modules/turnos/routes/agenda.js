@@ -70,7 +70,6 @@ router.get('/agenda/:id*?', function (req, res, next) {
     }
 });
 router.post('/agenda', function (req, res, next) {
-    //var continues = validateAgenda.checkAgenda(req.body);
     var newAgenda = new agenda(req.body);
     newAgenda.save(function (err) {
         if (err) {
@@ -102,8 +101,8 @@ router.patch('/agenda/:_id', function (req, res, next) {
             case 'asistenciaTurno':
                 darAsistencia(req, data);
                 break;
-            case 'cancelarTurno':
-                cancelarAsistencia(req, data);
+            case 'liberarTurno':
+                liberarTurno(req, data);
                 break;
             case 'bloquearTurno':
                 bloquearTurno(req, data);
@@ -113,6 +112,9 @@ router.patch('/agenda/:_id', function (req, res, next) {
                 break;
             case 'reasignarTurno':
                 reasignarTurno(req, data);
+                break;
+            case 'guardarNotaTurno':
+                guardarNotaTurno(req, data);
                 break;
             case 'editarAgenda':
                 editarAgenda(req, data);
@@ -139,7 +141,7 @@ function darAsistencia(req, data) {
         turno.asistencia = true;
     return data;
 }
-function cancelarAsistencia(req, data) {
+function liberarTurno(req, data) {
     var turno = getTurno(req, data);
     turno.estado = 'disponible';
     turno.paciente = {};
@@ -182,6 +184,11 @@ function suspenderAgenda(req, data) {
 }
 function publicarAgenda(req, data) {
     data.estado = req.body.estado;
+    return data;
+}
+function guardarNotaTurno(req, data) {
+    var turno = getTurno(req, data);
+    turno.nota = req.body.textoNota;
     return data;
 }
 function getTurno(req, data) {
