@@ -678,6 +678,8 @@ router.post('/pacientes/search/match/:field/:mode/:percentage', function (req, r
       y de la cota mínima de matcheo devuelve un array con posibles pacientes
       exactMatch: utiliza todos los campos mínimos y la cota superior de matcheo
       con el objetivo de devolver la misma persona
+
+      Percentage: es un valor booleano que indica si se devuelve o no el porcentaje de matcheo
       */
 
     let dto = req.body.objetoBusqueda;

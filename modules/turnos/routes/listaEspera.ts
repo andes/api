@@ -5,6 +5,7 @@ import * as utils from '../../../utils/utils';
 import { defaultLimit, maxLimit } from './../../../config';
 import * as config from '../../../config';
 import * as moment from 'moment';
+import * as logService from '../../../utils/logService';
 
 var async = require('async');
 
@@ -50,13 +51,56 @@ router.get('/listaEspera/:id*?', function (req, res, next) {
 });
 
 router.post('/listaEspera', function (req, res, next) {
-    var newItem = new listaEspera(req.body);
+    let token = {
+        id: '26108063',
+        usuario: {
+            nombreCompleto: 'Juan Francisco Gabriel',
+            nombre: 'Juan',
+            apellido: 'Gabriel',
+            username: '26108063',
+            documento: '26108063'
+        },
+        roles: ['medico'],
+        organizacion: {
+            id: 1,
+            nombre: 'Hospital Provincial Neuquén'
+        },
+        permisos: [
+            'printer:xpc5000:print',
+            'printer:xpc4000:*',
+            'printer:hp,samsung:read',
+        ]
+    };
+
+    let hardcoded = {
+        fecha: '09/03/2017',
+        id: token.id,
+        usuario: token.usuario,
+        organizacion: { nombre: token.organizacion.nombre },
+        modulo: 'turnos',
+        operacion: 'cancelar turno',
+        datosOperacion: 'aqui van los datos de la operacion',
+        cliente: {
+            ip: '127.0.0.1',
+            app: 'escritorio'
+        },
+        servidor: {
+            ip: '127.0.0.1',
+        }
+    };
+
+    let newItem = new listaEspera(req.body);
     newItem.save((err) => {
         if (err) {
             return next(err);
         }
+        console.log(1);
+        let newLog = logService.LogFunction.logging(hardcoded, res);
+        console.log(3);
+        console.log(newLog);
         res.json(newItem);
-    })
+    });
+
 });
 
 router.put('/listaEspera/:_id', function (req, res, next) {
@@ -71,9 +115,9 @@ router.put('/listaEspera/:_id', function (req, res, next) {
 /*Si viene un id es porque se están enviando pacientes a la lista de espera desde una agenda suspendida*/
 router.post('/listaEspera/IdAgenda/:_id', function (req, res, next) {
     agenda.findById(req.params._id, function (err, data) {
-        if (err)
+        if (err) {
             return next(err);
-
+        }
         var listaEsperaPaciente: any[] = [];
         switch (req.body.op) {
             case 'listaEsperaSuspensionAgenda': listaEsperaPaciente = listaEsperaSuspensionAgenda(req, data, next);

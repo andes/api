@@ -28,7 +28,6 @@ let token = {
 let hardcoded = {
 
     fecha: '09/03/2017',
-    id: token.id,
     usuario: token.usuario,
     organizacion: { nombre: token.organizacion.nombre },
     modulo: 'turnos',
@@ -44,16 +43,27 @@ let hardcoded = {
 };
 
 router.post('/log/', function (req, res, next) {
-
     let resultado = logService.LogFunction.logging(hardcoded, res, function (err) {
+        if (err) {
+            console.log(err);
+            return next(err);
+        }
+        res.json(resultado);
+        console.log('FIN POST');
+    });
+});
 
+router.post('/log/:op/:data', function (req, res, next) {
+    let operacion = '';
+    if (req.params.op) {
+        operacion = 'asignar turno';
+    }
+    let resultado = logService.LogFunction.logging(hardcoded, res, operacion, '', function (err) {
         if (err) {
             return next(err);
         }
         res.json(resultado);
-
     });
-
 });
 
 module.exports = router;
