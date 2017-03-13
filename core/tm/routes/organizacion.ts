@@ -1,9 +1,9 @@
-import * as express from 'express'
-import { organizacion } from '../schemas/organizacion'
+import * as express from 'express';
+import * as organizacion from '../schemas/organizacion';
 import * as utils from '../../../utils/utils';
 import { defaultLimit, maxLimit } from './../../../config';
 
-var router = express.Router();
+let router = express.Router();
 /**
  * @swagger
  * definition:
@@ -11,7 +11,7 @@ var router = express.Router();
  *     properties:
  *       codigo:
  *          type: object
- *          properties: 
+ *          properties:
  *            sisa:
  *              type: string
  *            cuie:
@@ -48,15 +48,15 @@ var router = express.Router();
  *                      format: date
  *                  activo:
  *                      type: boolean
- *       direccion:    
+ *       direccion:
  *          type: array
  *          items:
- *              $ref: '#/definitions/direccion'         
+ *              $ref: '#/definitions/direccion'
  *       contacto:
  *          type: array
  *          items:
- *              $ref: '#/definitions/contacto'  
- *       nivelComplejidad: 
+ *              $ref: '#/definitions/contacto'
+ *       nivelComplejidad:
  *          type: number
  *          format: float
  *       activo:
@@ -124,7 +124,7 @@ var router = express.Router();
  *         description: _Id de una organizacion
  *         required: true
  *         type: string
- *              
+ *
  *     responses:
  *       200:
  *         description: An array of especialidades
@@ -133,18 +133,17 @@ var router = express.Router();
  */
 router.get('/organizaciones/:id*?', function (req, res, next) {
     if (req.params.id) {
-        organizacion.findById(req.params.id, function (err, data) {
+        organizacion.model.findById(req.params.id, function (err, data) {
             if (err) {
-                next(err);
+                return next(err);
             }
             res.json(data);
-        })
-    }
-    else {
-        var query;
+        });
+    } else {
+        let query;
         let act: Boolean = true;
-        var filtros = { "activo": act };
-        console.log("query ", req.query);
+        let filtros = { 'activo': act };
+        console.log('query ', req.query);
         if (req.query.nombre) {
             filtros['nombre'] = { '$regex': utils.makePattern(req.query.nombre) };
         }
@@ -160,13 +159,15 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
             filtros['activo'] = req.query.activo;
         }
 
-        let skip: number = parseInt(req.query.skip || 0);
-        let limit: number = Math.min(parseInt(req.query.limit || defaultLimit), maxLimit);
+        let skip: number = parseInt(req.query.skip || 0, 10);
+        let limit: number = Math.min(parseInt(req.query.limit || defaultLimit, 10), maxLimit);
 
 
-        query = organizacion.find(filtros).skip(skip).limit(limit)
+        query = organizacion.model.find(filtros).skip(skip).limit(limit);
         query.exec(function (err, data) {
-            if (err) return next(err);
+            if (err) {
+                return next(err);
+            }
             res.json(data);
         });
     }
@@ -198,12 +199,10 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
  *           $ref: '#/definitions/organizacion'
  */
 router.post('/organizaciones', function (req, res, next) {
-    var newOrganization = new organizacion(req.body);
-    //console.log(req.body);
+    let newOrganization = new organizacion.model(req.body);
     newOrganization.save((err) => {
         if (err) {
-            //console.log(err);
-            next(err);
+            return next(err);
         }
         res.json(newOrganization);
     });
@@ -240,10 +239,11 @@ router.post('/organizaciones', function (req, res, next) {
  *           $ref: '#/definitions/organizacion'
  */
 router.put('/organizaciones/:id', function (req, res, next) {
-    console.log(req.body);
-    organizacion.findByIdAndUpdate(req.params.id, req.body, function (err, data) {
-        if (err)
+    console.log('TODO: Reemplazar/validar uso de findByIdAndUpdate');
+    organizacion.model.findByIdAndUpdate(req.params.id, req.body, function (err, data) {
+        if (err) {
             return next(err);
+        }
 
         res.json(data);
     });
@@ -275,12 +275,13 @@ router.put('/organizaciones/:id', function (req, res, next) {
  *           $ref: '#/definitions/organizacion'
  */
 router.delete('/organizaciones/:id', function (req, res, next) {
-    organizacion.findByIdAndRemove(req.params._id, function (err, data) {
-        if (err)
+    organizacion.model.findByIdAndRemove(req.params._id, function (err, data) {
+        if (err) {
             return next(err);
+        }
 
         res.json(data);
     });
-})
+});
 
 export = router;

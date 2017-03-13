@@ -2,7 +2,6 @@ import * as mongoose from 'mongoose';
 import * as codificadorSchema from './codificador';
 import * as prestacionSchema from '../../../core/tm/schemas/prestacion';
 import { espacioFisicoSchema } from '../../turnos/schemas/espacioFisico';
-import { organizacionSchema } from '../../../core/tm/schemas/organizacion';
 import { profesionalSchema } from '../../../core/tm/schemas/profesional';
 import { segundaOpinionSchema } from './segundaOpinion';
 
