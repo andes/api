@@ -329,16 +329,14 @@ router.get('/pacientes/:id*?', function (req, res, next) {
 
 
 router.post('/pacientes/search', function (req, res) {
-
-    console.log('Search')
-    var lPacientes;
-    var obj = req.body.objetoBusqueda;
-    var apellido = obj.apellido;
-    var nombre = obj.nombre;
-    var documento = obj.documento;
-    var fechaNacimiento = obj.fechaNacimiento;
-    var sexo = obj.sexo;
-    var myQuery = "";
+    let lPacientes;
+    let obj = req.body.objetoBusqueda;
+    let apellido = obj.apellido;
+    let nombre = obj.nombre;
+    let documento = obj.documento;
+    let fechaNacimiento = obj.fechaNacimiento;
+    let sexo = obj.sexo;
+    let myQuery = "";
 
     if (fechaNacimiento == "*") {
         //Tengo que controlar esta parte porque si en la fecha le mando comodín (*) falla la consulta.
@@ -367,6 +365,54 @@ router.post('/pacientes/search', function (req, res) {
 });
 
 
+router.post('/pacientes/mpi', function (req, res, next) {
+    let match = new matching();
+    // Validación de campos del paciente del lado de la api
+    let continues = ValidatePatient.checkPatient(req.body);
+    if (continues.valid) {
+        let newPatient = new pacienteMpi(req.body);
+        // Se genera la clave de blocking
+        let claves = match.crearClavesBlocking(newPatient);
+        newPatient["claveBlocking"] = claves;
+        newPatient.save((err) => {
+            if (err) {
+               return next(err);
+            }
+            (newPatient as any).on('es-indexed', function () {
+                console.log('paciente indexed');
+            });
+            // connElastic.create(newPatient);
+            res.json(newPatient);
+        });
+    } else {
+        // Devuelvo el conjunto de mensajes de error junto con el código
+        let err = {
+            status: "409",
+            messages: continues.errors
+        };
+
+        let errores = "";
+        continues.errors.forEach(element => {
+            errores = errores + " | " + element
+        });
+
+        res.status(409).send("Errores de validación: " + errores)
+        return next(err)
+    }
+});
+
+router.delete('/pacientes/mpi/:id', function (req, res, next) {
+    pacienteMpi.findByIdAndRemove(req.params.id, function (err, data) {
+        if (err)
+            return next(err);
+        /* Docuemnt is unindexed elasticsearch */
+        pacienteMpi.on('es-removed', function (err, res) {
+            if (err) return next(err);
+        });
+        res.json(data);
+    });
+});
+
 /**
  * @swagger
  * /pacientes:
@@ -394,8 +440,6 @@ router.post('/pacientes/search', function (req, res) {
  *       409:
  *         description: Un código de error con un array de mensajes de error
  */
-
-
 router.post('/pacientes', function (req, res, next) {
     /** TODO: resolver el buscar a los tutores */
     var arrRel = req.body.relaciones;
@@ -729,11 +773,11 @@ router.post('/pacientes/search/match/:field/:mode/:percentage', function (req, r
                     let paciente = hit._source;
 
                     let pacDto = {
-                        identity: dto.documento ? dto.documento.toString() : paciente.documento,
-                        firstname: dto.nombre ? dto.nombre : paciente.nombre,
-                        lastname: dto.apellido ? dto.apellido : paciente.apellido,
-                        birthDate: dto.fechaNacimiento ? dto.fechaNacimiento : paciente.fechaNacimiento,
-                        gender: dto.sexo ? dto.sexo : paciente.sexo
+                        documento: dto.documento ? dto.documento.toString() : paciente.documento,
+                        nombre: dto.nombre ? dto.nombre : paciente.nombre,
+                        apellido: dto.apellido ? dto.apellido : paciente.apellido,
+                        fechaNacimiento: dto.fechaNacimiento ? dto.fechaNacimiento : paciente.fechaNacimiento,
+                        sexo: dto.sexo ? dto.sexo : paciente.sexo
                     };
                     let match = new matching();
                     let valorMatching = match.matchPersonas(paciente, pacDto, weights);

@@ -119,6 +119,7 @@ router.post('/listaEspera/IdAgenda/:_id', function (req, res, next) {
             return next(err);
         }
         var listaEsperaPaciente: any[] = [];
+
         switch (req.body.op) {
             case 'listaEsperaSuspensionAgenda': listaEsperaPaciente = listaEsperaSuspensionAgenda(req, data, next);
                 break;
@@ -138,7 +139,8 @@ router.post('/listaEspera/IdAgenda/:_id', function (req, res, next) {
         }, function (error) {
             if (error) res.json(500, { error: error });
 
-            return res.json(201, { msg: 'Guardado' });
+            return res.json(data);
+            // return res.json(201, { msg: 'Guardado' });
         });
     });
 });
@@ -157,14 +159,26 @@ function listaEsperaSuspensionAgenda(req, data, next) {
 
     var listaEspera = [];
 
-    for (var i = 0; i < req.body.pacientes.length; i++) {
+    if (req.body.pacientes.length > 0) {
+        for (var i = 0; i < req.body.pacientes.length; i++) {
+            var newListaEspera = {};
+
+            newListaEspera['fecha'] = moment().format(),
+                newListaEspera['estado'] = 'Agenda Suspendida',
+                newListaEspera['prestacion'] = req.body.pacientes[i].prestacion,
+                newListaEspera['profesional'] = data.profesionales[0],
+                newListaEspera['paciente'] = req.body.pacientes[i].paciente;
+
+            listaEspera.push(newListaEspera);
+        }
+    } else {
         var newListaEspera = {};
 
         newListaEspera['fecha'] = moment().format(),
-            newListaEspera['estado'] = 'Agenda Suspendida',
-            newListaEspera['prestacion'] = req.body.pacientes[i].prestacion,
+            newListaEspera['estado'] = 'Turno Canceladdo',
+            newListaEspera['prestacion'] = req.body.pacientes.prestacion,
             newListaEspera['profesional'] = data.profesionales[0],
-            newListaEspera['paciente'] = req.body.pacientes[i].paciente;
+            newListaEspera['paciente'] = req.body.pacientes.paciente;
 
         listaEspera.push(newListaEspera);
     }

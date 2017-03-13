@@ -1,11 +1,10 @@
 import * as mongoose from 'mongoose';
 import * as codificadorSchema from './codificador';
-import { organizacionSchema } from '../../../core/tm/schemas/organizacion';
+import * as organizacion from '../../../core/tm/schemas/organizacion';
 import { profesionalSchema } from '../../../core/tm/schemas/profesional';
-import * as tipoProblemaSchema from './tipoProblema';
 import { segundaOpinionSchema } from './segundaOpinion';
 
-var problemaSchema = new mongoose.Schema({
+export let problemaSchema = new mongoose.Schema({
     tipoProblema: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'tipoProblema'
@@ -20,12 +19,11 @@ var problemaSchema = new mongoose.Schema({
     },
     codificador: codificadorSchema,
     fechaInicio: Date,
-    // activo: Boolean,  
     evoluciones: [{
         fecha: Date,
         observacion: String,
         profesional: [profesionalSchema],
-        organizacion: organizacionSchema,
+        organizacion: organizacion.schema,
         //ambito: // TODO
         duracion: {
             type: String,
@@ -40,6 +38,4 @@ var problemaSchema = new mongoose.Schema({
     }]
 });
 
-var problema = mongoose.model('problema', problemaSchema, 'problema');
-
-export = problema;
+export let problema = mongoose.model('problema', problemaSchema, 'problema');
