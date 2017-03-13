@@ -80,6 +80,7 @@ router.post('/agenda', function (req, res, next) {
 });
 router.put('/agenda/:_id', function (req, res, next) {
     agenda.findByIdAndUpdate(req.params._id, req.body, { new: true }, function (err, data) {
+        console.log("entraa");
         if (err) {
             return next(err);
         }

@@ -2,6 +2,7 @@ import { tipoPrestacion } from './../../../core/tm/schemas/tipoPrestacion';
 import * as prestacionSchema from './prestacion';
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
+import * as notasSchema from './notas';
 import * as nombreApellidoSchema from '../../../core/tm/schemas/nombreApellido';
 import * as mongoose from 'mongoose';
 

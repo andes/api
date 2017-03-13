@@ -60,8 +60,8 @@ router.get('/agenda/:id*?', function (req, res, next) {
             let variable: any[] = [];
             // ((originalIni <= actualIni && actualIni <= originalFin)
             //                     || (originalIni <= actualFin && actualFin <= originalFin))
-            variable.push({ "horaInicio": { '$lte': req.query.desde }, "horaFin": {'$gt': req.query.desde}})
-            variable.push({ "horaInicio": { '$lte': req.query.hasta }, "horaFin": {'$gt': req.query.hasta}})
+            variable.push({ "horaInicio": { '$lte': req.query.desde }, "horaFin": { '$gt': req.query.desde } })
+            variable.push({ "horaInicio": { '$lte': req.query.hasta }, "horaFin": { '$gt': req.query.hasta } })
             query.or(variable);
         }
 
@@ -95,6 +95,7 @@ router.post('/agenda', function (req, res, next) {
 
 router.put('/agenda/:_id', function (req, res, next) {
     agenda.findByIdAndUpdate(req.params._id, req.body, { new: true }, function (err, data) {
+        console.log("entraa");
         if (err) {
             return next(err);
         }
@@ -184,7 +185,7 @@ function suspenderTurno(req, data) {
     turno.estado = 'bloqueado';
     turno.paciente = {};
     turno.tipoPrestacion = null;
-    turno.motivoSuspension = req.body.motivoSuspension;   
+    turno.motivoSuspension = req.body.motivoSuspension;
 
     return data;
 }
