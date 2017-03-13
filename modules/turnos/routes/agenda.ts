@@ -1,8 +1,8 @@
-import * as express from 'express'
-import * as agenda from '../schemas/agenda'
-import * as utils from '../../../utils/utils';
+import { Auth } from './../../../auth/auth.class';
+import * as express from 'express';
+import * as agenda from '../schemas/agenda';
 
-var router = express.Router();
+let router = express.Router();
 
 router.get('/agenda/:id*?', function (req, res, next) {
     if (req.params.id) {
@@ -15,8 +15,8 @@ router.get('/agenda/:id*?', function (req, res, next) {
             res.json(data);
         });
     } else {
-        var query;
-        query = agenda.find({}); //Trae todos
+        let query;
+        query = agenda.find({});
 
         if (req.query.fechaDesde) {
             query.where('horaInicio').gte(req.query.fechaDesde);
@@ -34,34 +34,34 @@ router.get('/agenda/:id*?', function (req, res, next) {
             query.where('tipoPrestaciones._id').equals(req.query.idTipoPrestacion);
         }
 
-        //Dada una lista de prestaciones, filtra las agendas que tengan al menos una de ellas como prestación
+        // Dada una lista de prestaciones, filtra las agendas que tengan al menos una de ellas como prestación
         if (req.query.prestaciones) {
             let arr_prestaciones: any[] = JSON.parse(req.query.prestaciones);
             let variable: any[] = [];
             arr_prestaciones.forEach((prestacion, index) => {
 
-                variable.push({ "prestaciones._id": prestacion.id })
+                variable.push({ 'prestaciones._id': prestacion.id })
             });
             query.or(variable);
         }
 
-        //Dada una lista de profesionales, filtra las agendas que tengan al menos uno de ellos
+        // Dada una lista de profesionales, filtra las agendas que tengan al menos uno de ellos
         if (req.query.profesionales) {
             let arr_profesionales: any[] = JSON.parse(req.query.profesionales);
             let variable: any[] = [];
             arr_profesionales.forEach((profesional, index) => {
-                variable.push({ "profesionales._id": profesional.id })
+                variable.push({ 'profesionales._id': profesional.id })
             });
             query.or(variable);
         }
 
-        //Si rango es true  se buscan las agendas que se solapen con la actual en algún punto
+        // Si rango es true  se buscan las agendas que se solapen con la actual en algún punto
         if (req.query.rango) {
             let variable: any[] = [];
             // ((originalIni <= actualIni && actualIni <= originalFin)
             //                     || (originalIni <= actualFin && actualFin <= originalFin))
-            variable.push({ "horaInicio": { '$lte': req.query.desde }, "horaFin": {'$gt': req.query.desde}})
-            variable.push({ "horaInicio": { '$lte': req.query.hasta }, "horaFin": {'$gt': req.query.hasta}})
+            variable.push({ 'horaInicio': { '$lte': req.query.desde }, 'horaFin': { '$gt': req.query.desde } })
+            variable.push({ 'horaInicio': { '$lte': req.query.hasta }, 'horaFin': { '$gt': req.query.hasta } })
             query.or(variable);
         }
 
@@ -70,31 +70,25 @@ router.get('/agenda/:id*?', function (req, res, next) {
         }
 
         if (!Object.keys(query).length) {
-            res.status(400).send("Debe ingresar al menos un parámetro");
+            res.status(400).send('Debe ingresar al menos un parámetro');
             return next(400);
         }
 
         query.sort({ 'horaInicio': 1 });
 
         query.exec(function (err, data) {
-            if (err) return next(err);
+            if (err) {
+                return next(err);
+            }
             res.json(data);
         });
     }
 });
 
 router.post('/agenda', function (req, res, next) {
-    var newAgenda = new agenda(req.body);
-    newAgenda.save((err) => {
-        if (err) {
-            return next(err);
-        }
-        res.json(newAgenda);
-    })
-});
-
-router.put('/agenda/:_id', function (req, res, next) {
-    agenda.findByIdAndUpdate(req.params._id, req.body, { new: true }, function (err, data) {
+    let data = new agenda(req.body);
+    Auth.audit(data, req);
+    data.save((err) => {
         if (err) {
             return next(err);
         }
@@ -102,19 +96,30 @@ router.put('/agenda/:_id', function (req, res, next) {
     });
 });
 
-router.delete('/agenda/:_id', function (req, res, next) {
-    agenda.findByIdAndRemove(req.params._id, req.body, function (err, data) {
-        if (err)
+router.put('/agenda/:id', function (req, res, next) {
+    agenda.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
+        if (err) {
             return next(err);
+        }
+        res.json(data);
+    });
+});
+
+router.delete('/agenda/:id', function (req, res, next) {
+    agenda.findByIdAndRemove(req.params.id, req.body, function (err, data) {
+        if (err) {
+            return next(err);
+        }
 
         res.json(data);
     });
-})
+});
 
-router.patch('/agenda/:_id', function (req, res, next) {
-    agenda.findById(req.params._id, function (err, data) {
-        if (err)
+router.patch('/agenda/:id', function (req, res, next) {
+    agenda.findById(req.params.id, function (err, data) {
+        if (err) {
             return next(err);
+        }
 
         switch (req.body.op) {
             case 'asistenciaTurno': darAsistencia(req, data);
@@ -137,9 +142,10 @@ router.patch('/agenda/:_id', function (req, res, next) {
                 break;
         }
 
-        data.save(function (err) {
-            if (err)
-                return next(err);
+        data.save(function (err2) {
+            if (err) {
+                return next(err2);
+            }
 
             return res.json(data);
         });
@@ -148,34 +154,24 @@ router.patch('/agenda/:_id', function (req, res, next) {
 
 function darAsistencia(req, data) {
     let turno = getTurno(req, data);
-
-    if (turno.asistencia)
-        turno.asistencia = false;
-    else
-        turno.asistencia = true;
-
-    return data;
+    turno.asistencia = !turno.asistencia;
 }
 
 function liberarTurno(req, data) {
     let turno = getTurno(req, data);
-
     turno.estado = 'disponible';
     turno.paciente = {};
     turno.prestacion = null;
-
-    return data;
 }
 
 function bloquearTurno(req, data) {
     let turno = getTurno(req, data);
 
-    if (turno.estado != 'bloqueado')
+    if (turno.estado !== 'bloqueado') {
         turno.estado = 'bloqueado';
-    else
+    } else {
         turno.estado = 'disponible';
-
-    return data;
+    }
 }
 
 function suspenderTurno(req, data) {
@@ -184,8 +180,6 @@ function suspenderTurno(req, data) {
     turno.estado = 'bloqueado';
     turno.paciente = {};
     turno.prestacion = null;
-
-    return data;
 }
 
 function reasignarTurno(req, data) {
@@ -194,10 +188,6 @@ function reasignarTurno(req, data) {
     turno.estado = 'disponible';
     turno.paciente = {};
     turno.prestacion = null;
-
-    console.log("Turnss ", turno);
-
-    return data;
 }
 
 function editarAgenda(req, data) {
@@ -205,28 +195,20 @@ function editarAgenda(req, data) {
         data.profesionales = req.body.profesional;
     }
     data.espacioFisico = req.body.espacioFisico;
-
-    return data;
 }
 
 function suspenderAgenda(req, data) {
     data.estado = req.body.estado;
-
-    return data;
 }
 
 function publicarAgenda(req, data) {
     data.estado = req.body.estado;
-
-    return data;
 }
 
 function guardarNotaTurno(req, data) {
     let turno = getTurno(req, data);
 
     turno.nota = req.body.textoNota;
-
-    return data;
 }
 
 function getTurno(req, data) {
