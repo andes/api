@@ -38,7 +38,7 @@ router.post('/problemas/', function (req, res, next) {
             return next(err);
         }
 
-        problema.findById(newProblema.id.toString()).populate('tipoProblema').exec(function (err, data) {
+        problema.findById(newProblema._id.toString()).populate('tipoProblema').exec(function (err, data) {
             if (err) {
                 return next(err);
             }

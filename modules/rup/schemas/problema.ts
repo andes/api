@@ -1,8 +1,7 @@
 import * as mongoose from 'mongoose';
 import * as codificadorSchema from './codificador';
-import { organizacionSchema } from '../../../core/tm/schemas/organizacion';
+import * as organizacion from '../../../core/tm/schemas/organizacion';
 import { profesionalSchema } from '../../../core/tm/schemas/profesional';
-import * as tipoProblemaSchema from './tipoProblema';
 import { segundaOpinionSchema } from './segundaOpinion';
 
 var problemaSchema = new mongoose.Schema({
@@ -26,7 +25,7 @@ var problemaSchema = new mongoose.Schema({
         activo: Boolean,
         observacion: String,
         profesional: [profesionalSchema],
-        organizacion: organizacionSchema,
+        organizacion: organizacion.schema,
         //ambito: // TODO
         duracion: {
             type: String,

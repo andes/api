@@ -3,7 +3,7 @@ import * as codificadorSchema from './codificador';
 import * as contactoSchema from '../../../core/tm/schemas/contacto';
 import * as evolucionSchema from './evolucion';
 import * as financiadorSchema from '../../../core/mpi/schemas/financiador';
-import { organizacionSchema } from '../../../core/tm/schemas/organizacion';
+import * as organizacion from '../../../core/tm/schemas/organizacion';
 import { pacienteSchema } from '../../../core/mpi/schemas/paciente';
 import * as problemaSchema from './problema';
 import { profesionalSchema } from '../../../core/tm/schemas/profesional';
@@ -54,7 +54,7 @@ export var prestacionPacienteSchema = new mongoose.Schema({
         // profesional que solicita la prestacion
         profesional: profesionalSchema,
         // organizacion desde la que se solicita la prestacion
-        organizacion: organizacionSchema,
+        organizacion: organizacion.schema,
         // lista de problemas del paciente por el cual se solicita la prestacion
         listaProblemas: [{
             type: mongoose.Schema.Types.ObjectId,
@@ -109,7 +109,7 @@ export var prestacionPacienteSchema = new mongoose.Schema({
         }],
         // listaProblemas: [problemaSchema],
         fecha: Date,
-        organizacion: organizacionSchema,
+        organizacion: organizacion.schema,
         profesionales: [profesionalSchema],
         // TODO: Definir evoluciones y prestacionesSolicitadas bajo
         // que objeto van a estar,... solicitud .. ejecucion .. ¿postEjecucion?
