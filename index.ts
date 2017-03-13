@@ -12,7 +12,7 @@ let app = express();
 
 // Configuración de Mongoose
 if (config.mongooseDebugMode) {
-    mongoose.set('debug', false);
+    mongoose.set('debug', true);
 }
 mongoose.connect(config.connectionStrings.mongoDB_main);
 mongoose.plugin(schemaDefaults);
