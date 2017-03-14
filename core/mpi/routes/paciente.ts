@@ -722,6 +722,8 @@ router.post('/pacientes/search/match/:field/:mode/:percentage', function (req, r
       y de la cota mínima de matcheo devuelve un array con posibles pacientes
       exactMatch: utiliza todos los campos mínimos y la cota superior de matcheo
       con el objetivo de devolver la misma persona
+
+      Percentage: es un valor booleano que indica si se devuelve o no el porcentaje de matcheo
       */
 
     let dto = req.body.objetoBusqueda;
@@ -780,13 +782,13 @@ router.post('/pacientes/search/match/:field/:mode/:percentage', function (req, r
                     let match = new matching();
                     let valorMatching = match.matchPersonas(paciente, pacDto, weights);
                     if (valorMatching >= porcentajeMatch) {
-                        listaPacientes.push({ paciente: paciente, match: valorMatching })
-                        console.log(valorMatching);
+                        listaPacientes.push({id: hit._id, paciente: paciente, match: valorMatching })
+                        //console.log(valorMatching);
                         return paciente;
                     }
                 })
             if (devolverPorcentaje) {
-                console.log(listaPacientes);
+                console.log("LISTA PACIENTES ::"+listaPacientes);
                 res.send(listaPacientes)
             } else {
                 results = results.map((hit) => { let elem = hit._source; elem['id'] = hit._id; return elem });
