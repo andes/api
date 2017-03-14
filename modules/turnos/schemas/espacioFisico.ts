@@ -8,6 +8,7 @@ export var espacioFisicoSchema = new mongoose.Schema({
         required: true
     },
     descripcion: String,
+    //organizacion: xxxx
     edificio: edificioSchema,
     detalle: String,
     activo: Boolean
