@@ -13,7 +13,7 @@ router.get('/problemas/:idProblema*?', function (req, res, next) {
 
         if (req.query.vigencia) {
             query = problema.find({
-                $where: "this.evoluciones[this.evoluciones.length - 1].vigencia != '" + req.query.vigencia + "'";
+                $where: "this.evoluciones[this.evoluciones.length - 1].vigencia != '" + req.query.vigencia + "'"
             });
         } else {
             // filtro por defecto para que no muestre los problemas transformados
