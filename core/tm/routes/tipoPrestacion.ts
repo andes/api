@@ -61,9 +61,12 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
 });
 
 router.post('/tiposPrestaciones', function (req, res, next) {
+    console.log(req.body)    
     var tipoPrestacion = new tipoPrestacion(req.body)
+    console.log(tipoPrestacion)
     tipoPrestacion.save((err) => {
         if (err) {
+            console.log(err);
             return next(err);
         }
         res.json(tipoPrestacion);
