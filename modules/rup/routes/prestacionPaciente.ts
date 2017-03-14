@@ -107,8 +107,6 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         }
     });
 
-<<<<<<< HEAD
-=======
     query.populate({
         path: 'ejecucion.listaProblemas',
         model: 'problema',
@@ -118,7 +116,6 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         }
     });
 
->>>>>>> orientacionProblemas
     //populuamos las prestaciones a futuro
     query.populate({
         path: 'prestacionesSolicitadas',
