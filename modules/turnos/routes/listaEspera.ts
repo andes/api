@@ -5,7 +5,7 @@ import * as utils from '../../../utils/utils';
 import { defaultLimit, maxLimit } from './../../../config';
 import * as config from '../../../config';
 import * as moment from 'moment';
-import * as logService from '../../../utils/logService';
+import { Logger } from '../../../utils/logService';
 
 var async = require('async');
 
@@ -94,10 +94,7 @@ router.post('/listaEspera', function (req, res, next) {
         if (err) {
             return next(err);
         }
-        console.log(1);
-        let newLog = logService.LogFunction.logging(hardcoded, res);
-        console.log(3);
-        console.log(newLog);
+        Logger.logParams(req, 'turnos', 'lista espera' );
         res.json(newItem);
     });
 

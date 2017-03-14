@@ -1,6 +1,5 @@
 import * as mongoose from 'mongoose';
-import { organizacionSchema } from '../../../core/tm/schemas/organizacion';
-
+import * as organizacion from '../../../core/tm/schemas/organizacion';
 export let logSchema = new mongoose.Schema({
     fecha: {
         type: Date
@@ -12,9 +11,7 @@ export let logSchema = new mongoose.Schema({
         username: Number,
         documento: Number
     },
-    organizacion: {
-        organizacion: organizacionSchema
-    },
+    organizacion: { type: organizacion },
     modulo: {
         type: String,
         enum: ['turnos', 'pacientes']
@@ -23,14 +20,13 @@ export let logSchema = new mongoose.Schema({
         type: String,
         enum: ['asignar turno', 'cancelar turno', 'lista espera']
     },
-    datosOperacion: [
-        mongoose.Schema.Types.Mixed
-    ],
+    datosOperacion: mongoose.Schema.Types.Mixed
+    ,
     cliente: {
         ip: String,
         app: {
             type: String,
-            enum: ['escritorio', 'móvil']
+            enum: ['desktop', 'mobile']
         }
     },
     servidor: {
