@@ -1,6 +1,6 @@
 import * as express from 'express'
-import { tipoPrestacion } from '../schemas/tipoPrestacion'
 import { defaultLimit, maxLimit } from './../../../config'
+import { tipoPrestacion } from "../schemas/tipoPrestacion";
 
 var router = express.Router();
 
@@ -60,16 +60,13 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
 
 });
 
-router.post('/tiposPrestaciones', function (req, res, next) {
-    console.log(req.body)    
-    var tipoPrestacion = new tipoPrestacion(req.body)
-    console.log(tipoPrestacion)
-    tipoPrestacion.save((err) => {
-        if (err) {
-            console.log(err);
+router.post('/tiposPrestaciones', function (req, res, next) {  
+    let tp = new tipoPrestacion(req.body);
+    tp.save((err) => {
+        if (err) {            
             return next(err);
         }
-        res.json(tipoPrestacion);
+        res.json(tp);
     })
 });
 

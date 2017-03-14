@@ -27,7 +27,7 @@ export var tipoPrestacionSchema = new mongoose.Schema({
         ruta: String,
         nombre: String
     },
-    granularidad:String
+    granularidad:String,
 });
 
 export var tipoPrestacion = mongoose.model('tipoPrestacion', tipoPrestacionSchema, 'tipoPrestacion');
