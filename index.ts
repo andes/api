@@ -3,17 +3,25 @@ import * as bodyParser from 'body-parser';
 import * as mongoose from 'mongoose';
 import * as config from './config';
 import { Auth } from './auth/auth.class';
+import * as HttpStatus from 'http-status-codes';
 import { schemaDefaults } from './mongoose/defaults';
 
+// Inicializa express
 let requireDir = require('require-dir');
 let app = express();
 
 // Configuración de Mongoose
 if (config.mongooseDebugMode) {
-    mongoose.set('debug', false);
+    mongoose.set('debug', true);
 }
 mongoose.connect(config.connectionStrings.mongoDB_main);
 mongoose.plugin(schemaDefaults);
+mongoose.connection.on('connected', function () {
+    console.log('Mongoose connect');
+});
+mongoose.connection.on('error', function (err) {
+    console.log('Mongoose error: ' + err);
+});
 
 // Inicializa la autenticación con Password/JWT
 Auth.initialize(app);
@@ -25,11 +33,8 @@ app.use(bodyParser.urlencoded({
 }));
 app.all('*', function (req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'OPTIONS,GET,POST,PUT,DELETE,PATCH');
+    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-    if ('OPTIONS' === req.method) {
-        return res.send(200);
-    }
     next();
 });
 
@@ -49,35 +54,40 @@ for (let m in config.modules) {
 
 // Not found: catch 404 and forward to error handler
 app.use(function (req, res, next) {
-    let err = new Error('Not Found');
-    (err as any).status = 404;
-    next(err);
+    next(404);
 });
 
 // Error handler
 app.use(function (err: any, req, res, next) {
     // Parse err
-    let e;
+    let e: Error;
     if (!isNaN(err)) {
-        e = new Error(err === 400 ? 'Parámetro incorrecto' : 'No encontrado');
-        e.status = err;
+        e = new Error(HttpStatus.getStatusText(err));
+        (e as any).status = err;
         err = e;
-    } else if (typeof err === 'string') {
-        e = new Error(err);
-        e.status = 400;
-        err = e;
+    } else {
+        if (typeof err === 'string') {
+            e = new Error(err);
+            (e as any).status = 400;
+            err = e;
+        } else {
+            e = new Error(HttpStatus.getStatusText(500));
+            (e as any).status = 500;
+            err = e;
+        }
     }
 
     // Send HTML or JSON
-    res.status(err.status || 500);
     let response = {
         message: err.message,
         error: (app.get('env') === 'development') ? err : null
     };
 
     if (req.accepts('application/json')) {
+        res.status(err.status);
         res.send(response);
     } else {
+        res.status(err.status);
         res.render('error', response);
     }
 });
@@ -87,5 +97,4 @@ app.use(function (err: any, req, res, next) {
 app.listen(3002, function () {
     console.log('Inicio del servidor en el puerto 3002');
 });
-
 export = app;

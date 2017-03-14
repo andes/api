@@ -1,20 +1,11 @@
 import * as express from 'express';
+import * as mongoose from 'mongoose';
 import * as passport from 'passport';
 import * as passportJWT from 'passport-jwt';
 import * as config from '../config';
 
 export class Auth {
     static initialize(app: express.Express) {
-        // Inicializa los métodos de passport
-        // passport.serializeUser(function (user, done) {
-        //     console.log('serializeUser');
-        //     done(null, user);
-        // });
-        // passport.deserializeUser(function (user, done) {
-        //     console.log('deserializeUser');
-        //     done(null, user);
-        // });
-
         // Configura passport para que utilice JWT
         passport.use(new passportJWT.Strategy(
             {
@@ -33,5 +24,10 @@ export class Auth {
 
     static authenticate() {
         return passport.authenticate('jwt', { session: false });
+    }
+
+    static audit(document: mongoose.Document, req) {
+        // El método 'audit' lo define el plugin 'audit'
+        (document as any).audit(req.user.usuario);
     }
 }

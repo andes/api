@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 import * as evolucionSchema from './evolucion';
 import * as financiadorSchema from '../../../core/mpi/schemas/financiador';
 import { problemaSchema } from './problema';
-import { organizacionSchema } from '../../../core/tm/schemas/organizacion';
+import * as organizacion from '../../../core/tm/schemas/organizacion';
 import { pacienteSchema } from '../../../core/mpi/schemas/paciente';
 import { profesionalSchema } from '../../../core/tm/schemas/profesional';
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
@@ -52,7 +52,7 @@ export let prestacionPacienteSchema = new mongoose.Schema({
         // profesional que solicita la prestacion
         profesional: profesionalSchema,
         // organizacion desde la que se solicita la prestacion
-        organizacion: organizacionSchema,
+        organizacion: organizacion.schema,
         // lista de problemas del paciente por el cual se solicita la prestacion
         listaProblemas: [{
             type: mongoose.Schema.Types.ObjectId,
@@ -107,7 +107,7 @@ export let prestacionPacienteSchema = new mongoose.Schema({
         }],
         listaProblemas: [problemaSchema],
         fecha: Date,
-        organizacion: organizacionSchema,
+        organizacion: organizacion.schema,
         profesionales: [profesionalSchema],
         // TODO: Definir evoluciones y prestacionesSolicitadas bajo
         // que objeto van a estar,... solicitud .. ejecucion .. ¿postEjecucion?

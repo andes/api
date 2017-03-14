@@ -1,11 +1,9 @@
-import { tipoPrestacion } from './../../../core/tm/schemas/tipoPrestacion';
-import * as prestacionSchema from './prestacion';
-import {tipoPrestacionSchema} from '../../../core/tm/schemas/tipoPrestacion';
+import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import * as nombreApellidoSchema from '../../../core/tm/schemas/nombreApellido';
 import * as mongoose from 'mongoose';
 
-var agendaSchema = new mongoose.Schema({
+let schema = new mongoose.Schema({
     tipoPrestaciones: [tipoPrestacionSchema],
     profesionales: [nombreApellidoSchema],
     espacioFisico: nombreSchema,
@@ -37,10 +35,10 @@ var agendaSchema = new mongoose.Schema({
             },
             estado: {
                 type: String,
-                enum: ["disponible", "asignado", "bloqueado"]
+                enum: ['disponible', 'asignado', 'bloqueado']
             },
             nota: String,
-            paciente: {//pensar que otros datos del paciente conviene tener
+            paciente: { // pensar que otros datos del paciente conviene tener
                 id: mongoose.Schema.Types.ObjectId,
                 nombre: String,
                 apellido: String,
@@ -57,18 +55,16 @@ var agendaSchema = new mongoose.Schema({
 
     estado: {
         type: String,
-        enum: ["", "Planificada", "Publicada", "Suspendida"]
+        enum: ['Planificada', 'Publicada', 'Suspendida']
     }
 });
-// },{validateBeforeSave:false});
 
-//Defino Virtuals
-agendaSchema.virtual('turnosDisponibles').get(function () {
+// Defino Virtuals
+schema.virtual('turnosDisponibles').get(function () {
     let turnosDisponibles = 0;
-    let cantidad = 0;
     this.bloques.forEach(function (bloque) {
         bloque.turnos.forEach(function (turno) {
-            if (turno.estado == "disponible") {
+            if (turno.estado === 'disponible') {
                 turnosDisponibles++;
             }
         });
@@ -76,6 +72,9 @@ agendaSchema.virtual('turnosDisponibles').get(function () {
     return turnosDisponibles;
 });
 
-var agenda = mongoose.model('agenda', agendaSchema, 'agenda');
+// Habilitar plugin de auditoría
+schema.plugin(require('../../../mongoose/audit'));
 
-export = agenda;
+// Exportar modelo
+let model = mongoose.model('agenda', schema, 'agenda');
+export = model;

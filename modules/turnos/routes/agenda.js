@@ -1,4 +1,5 @@
 "use strict";
+var auth_class_1 = require("./../../../auth/auth.class");
 var express = require("express");
 var agenda = require("../schemas/agenda");
 var router = express.Router();
@@ -13,8 +14,8 @@ router.get('/agenda/:id*?', function (req, res, next) {
         });
     }
     else {
-        var query;
-        query = agenda.find({}); //Trae todos
+        var query = void 0;
+        query = agenda.find({});
         if (req.query.fechaDesde) {
             query.where('horaInicio').gte(req.query.fechaDesde);
         }
@@ -27,76 +28,80 @@ router.get('/agenda/:id*?', function (req, res, next) {
         if (req.query.idTipoPrestacion) {
             query.where('tipoPrestaciones._id').equals(req.query.idTipoPrestacion);
         }
-        //Dada una lista de prestaciones, filtra las agendas que tengan al menos una de ellas como prestación
+        // Dada una lista de prestaciones, filtra las agendas que tengan al menos una de ellas como prestación
         if (req.query.prestaciones) {
             var arr_prestaciones = JSON.parse(req.query.prestaciones);
             var variable_1 = [];
             arr_prestaciones.forEach(function (prestacion, index) {
-                variable_1.push({ "prestaciones._id": prestacion.id });
+                variable_1.push({ 'prestaciones._id': prestacion.id });
             });
             query.or(variable_1);
         }
-        //Dada una lista de profesionales, filtra las agendas que tengan al menos uno de ellos
+        // Dada una lista de profesionales, filtra las agendas que tengan al menos uno de ellos
         if (req.query.profesionales) {
             var arr_profesionales = JSON.parse(req.query.profesionales);
             var variable_2 = [];
             arr_profesionales.forEach(function (profesional, index) {
-                variable_2.push({ "profesionales._id": profesional.id });
+                variable_2.push({ 'profesionales._id': profesional.id });
             });
             query.or(variable_2);
         }
-        //Si rango es true  se buscan las agendas que se solapen con la actual en algún punto
+        // Si rango es true  se buscan las agendas que se solapen con la actual en algún punto
         if (req.query.rango) {
             var variable = [];
             // ((originalIni <= actualIni && actualIni <= originalFin)
             //                     || (originalIni <= actualFin && actualFin <= originalFin))
-            variable.push({ "horaInicio": { '$lte': req.query.desde }, "horaFin": { '$gt': req.query.desde } });
-            variable.push({ "horaInicio": { '$lte': req.query.hasta }, "horaFin": { '$gt': req.query.hasta } });
+            variable.push({ 'horaInicio': { '$lte': req.query.desde }, 'horaFin': { '$gt': req.query.desde } });
+            variable.push({ 'horaInicio': { '$lte': req.query.hasta }, 'horaFin': { '$gt': req.query.hasta } });
             query.or(variable);
         }
         if (req.query.espacioFisico) {
             query.or({ 'espacioFisico._id': req.query.espacioFisico });
         }
         if (!Object.keys(query).length) {
-            res.status(400).send("Debe ingresar al menos un parámetro");
+            res.status(400).send('Debe ingresar al menos un parámetro');
             return next(400);
         }
         query.sort({ 'horaInicio': 1 });
         query.exec(function (err, data) {
-            if (err)
+            if (err) {
                 return next(err);
+            }
             res.json(data);
         });
     }
 });
 router.post('/agenda', function (req, res, next) {
-    var newAgenda = new agenda(req.body);
-    newAgenda.save(function (err) {
-        if (err) {
-            return next(err);
-        }
-        res.json(newAgenda);
-    });
-});
-router.put('/agenda/:_id', function (req, res, next) {
-    agenda.findByIdAndUpdate(req.params._id, req.body, { new: true }, function (err, data) {
+    var data = new agenda(req.body);
+    auth_class_1.Auth.audit(data, req);
+    data.save(function (err) {
         if (err) {
             return next(err);
         }
         res.json(data);
     });
 });
-router.delete('/agenda/:_id', function (req, res, next) {
-    agenda.findByIdAndRemove(req.params._id, req.body, function (err, data) {
-        if (err)
+router.put('/agenda/:id', function (req, res, next) {
+    agenda.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
+        if (err) {
             return next(err);
+        }
         res.json(data);
     });
 });
-router.patch('/agenda/:_id', function (req, res, next) {
-    agenda.findById(req.params._id, function (err, data) {
-        if (err)
+router.delete('/agenda/:id', function (req, res, next) {
+    agenda.findByIdAndRemove(req.params.id, req.body, function (err, data) {
+        if (err) {
             return next(err);
+        }
+        res.json(data);
+    });
+});
+router.patch('/agenda/:id', function (req, res, next) {
+    agenda.findById(req.params.id, function (err, data) {
+        if (err) {
+            return next(err);
+        }
         switch (req.body.op) {
             case 'asistenciaTurno':
                 darAsistencia(req, data);
@@ -126,70 +131,60 @@ router.patch('/agenda/:_id', function (req, res, next) {
                 publicarAgenda(req, data);
                 break;
         }
-        data.save(function (err) {
-            if (err)
-                return next(err);
+        data.save(function (err2) {
+            if (err) {
+                return next(err2);
+            }
             return res.json(data);
         });
     });
 });
 function darAsistencia(req, data) {
     var turno = getTurno(req, data);
-    if (turno.asistencia)
-        turno.asistencia = false;
-    else
-        turno.asistencia = true;
-    return data;
+    turno.asistencia = !turno.asistencia;
 }
 function liberarTurno(req, data) {
     var turno = getTurno(req, data);
     turno.estado = 'disponible';
     turno.paciente = {};
     turno.prestacion = null;
-    return data;
 }
 function bloquearTurno(req, data) {
     var turno = getTurno(req, data);
-    if (turno.estado != 'bloqueado')
+    if (turno.estado !== 'bloqueado') {
         turno.estado = 'bloqueado';
-    else
+    }
+    else {
         turno.estado = 'disponible';
-    return data;
+    }
 }
 function suspenderTurno(req, data) {
     var turno = getTurno(req, data);
     turno.estado = 'bloqueado';
     turno.paciente = {};
     turno.prestacion = null;
-    return data;
 }
 function reasignarTurno(req, data) {
     var turno = getTurno(req, data);
     turno.estado = 'disponible';
     turno.paciente = {};
     turno.prestacion = null;
-    console.log("Turnss ", turno);
-    return data;
 }
 function editarAgenda(req, data) {
     if (req.body.profesional) {
         data.profesionales = req.body.profesional;
     }
     data.espacioFisico = req.body.espacioFisico;
-    return data;
 }
 function suspenderAgenda(req, data) {
     data.estado = req.body.estado;
-    return data;
 }
 function publicarAgenda(req, data) {
     data.estado = req.body.estado;
-    return data;
 }
 function guardarNotaTurno(req, data) {
     var turno = getTurno(req, data);
     turno.nota = req.body.textoNota;
-    return data;
 }
 function getTurno(req, data) {
     var turno;
