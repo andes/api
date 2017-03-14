@@ -1,6 +1,7 @@
 import * as mongoose from 'mongoose';
 import * as ubicacionSchema from '../../../core/tm/schemas/ubicacion';
 import * as edificioSchema from '../../../core/tm/schemas/edificio';
+import * as organizacion from '../../../core/tm/schemas/organizacion';
 
 export var espacioFisicoSchema = new mongoose.Schema({
     nombre: {
@@ -8,7 +9,7 @@ export var espacioFisicoSchema = new mongoose.Schema({
         required: true
     },
     descripcion: String,
-    //organizacion: xxxx
+    organizacion: organizacion.schema,
     edificio: edificioSchema,
     detalle: String,
     activo: Boolean
