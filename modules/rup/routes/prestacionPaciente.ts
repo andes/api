@@ -1,6 +1,6 @@
-import * as express from 'express'
-import { prestacionPaciente } from '../schemas/prestacionPaciente'
-import { paciente } from '../../../core/mpi/schemas/paciente'
+import * as express from 'express';
+import { prestacionPaciente } from '../schemas/prestacionPaciente';
+import { paciente } from '../../../core/mpi/schemas/paciente';
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 
 let router = express.Router();
@@ -107,6 +107,18 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         }
     });
 
+<<<<<<< HEAD
+=======
+    query.populate({
+        path: 'ejecucion.listaProblemas',
+        model: 'problema',
+        populate: {
+            path: 'tipoProblema',
+            model: 'tipoProblema'
+        }
+    });
+
+>>>>>>> orientacionProblemas
     //populuamos las prestaciones a futuro
     query.populate({
         path: 'prestacionesSolicitadas',
