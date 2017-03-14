@@ -10,11 +10,24 @@ router.get('/problemas/:idProblema*?', function (req, res, next) {
         query = problema.findById(req.params.idProblema);
 
     } else {
-        query = problema.find({
-            $where: "this.evoluciones[this.evoluciones.length - 1].vigencia != 'transformado'"
-        });
+
+        if (req.query.vigencia) {
+            query = problema.find({
+                $where: "this.evoluciones[this.evoluciones.length - 1].vigencia != '" + req.query.vigencia + "'";
+            });
+        } else {
+            // filtro por defecto para que no muestre los problemas transformados
+            query = problema.find({
+                $where: "this.evoluciones[this.evoluciones.length - 1].vigencia != 'transformado'"
+            });
+        }
+
         if (req.query.idPaciente) {
             query.where('paciente').equals(req.query.idPaciente);
+        }
+
+        if (req.query.idTipoProblema) {
+            query.where('tipoProblema').equals(req.query.idTipoProblema);
         }
     }
 

@@ -1,6 +1,6 @@
-import * as express from 'express'
-import { prestacionPaciente } from '../schemas/prestacionPaciente'
-import { paciente } from '../../../core/mpi/schemas/paciente'
+import * as express from 'express';
+import { prestacionPaciente } from '../schemas/prestacionPaciente';
+import { paciente } from '../../../core/mpi/schemas/paciente';
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 
 let router = express.Router();
@@ -52,7 +52,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         }
     }
 
-    // populamos todo lo necesario luego del find
+    // populamos todo lo necesario de la solicitud luego del find
     query.populate({
         path: 'solicitud.listaProblemas',
         model: 'problema',
@@ -68,7 +68,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
     });
 
     query.populate({
-        path: 'prestacionesSolicitadas',
+        path: 'solicitud.tipoPrestacion.ejecucion.prestaciones',
         model: 'prestacionPaciente',
         populate: {
             path: 'solicitud.listaProblemas',
@@ -79,8 +79,46 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             }
         }
     });
+
     query.populate({
-        path: 'prestacionesEjecutadas',
+        path: 'solicitud.tipoPrestacion.ejecucion.prestaciones',
+        model: 'prestacionPaciente',
+        populate: {
+            path: 'solicitud.listaProblemas',
+            model: 'problema',
+            populate: {
+                path: 'tipoProblema',
+                model: 'tipoProblema'
+            }
+        }
+    });
+
+    //populuamos todo lo necesario de la ejecucion
+    query.populate({
+        path: 'ejecucion.prestaciones',
+        model: 'prestacionPaciente',
+        populate: {
+            path: 'solicitud.listaProblemas',
+            model: 'problema',
+            populate: {
+                path: 'tipoProblema',
+                model: 'tipoProblema'
+            }
+        }
+    });
+
+    query.populate({
+        path: 'ejecucion.listaProblemas',
+        model: 'problema',
+        populate: {
+            path: 'tipoProblema',
+            model: 'tipoProblema'
+        }
+    });
+
+    //populuamos las prestaciones a futuro
+    query.populate({
+        path: 'prestacionesSolicitadas',
         model: 'prestacionPaciente',
         populate: {
             path: 'solicitud.listaProblemas',
