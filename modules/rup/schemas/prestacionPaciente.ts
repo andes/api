@@ -105,7 +105,10 @@ export let prestacionPacienteSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'prestacionPaciente'
         }],
-        listaProblemas: [problemaSchema],
+        listaProblemas: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'problemas'
+        }],
         fecha: Date,
         organizacion: organizacion.schema,
         profesionales: [profesionalSchema],
