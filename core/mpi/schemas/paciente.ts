@@ -10,6 +10,7 @@ import { connectMpi} from '../../../connectMpi';
 
 export var pacienteSchema = new mongoose.Schema({
     identificadores: [{
+        _id: false,
         entidad: String,
         valor: String
     }],
