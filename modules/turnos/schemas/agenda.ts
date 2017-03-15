@@ -4,6 +4,7 @@ import * as nombreApellidoSchema from '../../../core/tm/schemas/nombreApellido';
 import * as mongoose from 'mongoose';
 
 let schema = new mongoose.Schema({
+    organizacion: nombreSchema,
     tipoPrestaciones: [tipoPrestacionSchema],
     profesionales: [nombreApellidoSchema],
     espacioFisico: nombreSchema,
