@@ -33,10 +33,17 @@ app.use(bodyParser.urlencoded({
 }));
 app.all('*', function (req, res, next) {
     res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH');
+    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-    next();
+
+    // Permitir que el método OPTIONS funcione sin autenticación
+    if ('OPTIONS' === req.method) {
+        res.send(200);
+    } else {
+        next();
+    }
 });
+
 
 // Carga los módulos y rutas
 for (let m in config.modules) {

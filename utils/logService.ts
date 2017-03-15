@@ -10,7 +10,7 @@ export class Logger {
         return newLog;
     }*/
 
-    public static logParams(req, mod, op, data?, callback?): any {
+    public static log(req, mod, op, data?, callback?): any {
         let newLog = new log.log({
             fecha: new Date(),
             usuario: req.user.usuario,
@@ -22,10 +22,8 @@ export class Logger {
             servidor: {
                 ip: req.connection.localAddress
             }
-
         });
         newLog.save(callback);
         return newLog;
     }
-
 }
