@@ -18,6 +18,7 @@
     "http": "0.0.0",
     "http-status-codes": "^1.1.6",
     "jsonwebtoken": "^7.3.0",
+    "ldapjs": "^1.0.1",
     "libxmljs": "^0.18.4",
     "mongoosastic": "^4.2.4",
     "mongoose": "^4.5.10",
@@ -25,6 +26,7 @@
     "passport": "^0.3.2",
     "passport-jwt": "^2.2.1",
     "require-dir": "^0.3.0",
+    "shiro-trie": "^0.3.12",
     "soap": "^0.18.0",
     "swagger-jsdoc": "^1.7.0",
     "xmljson": "^0.2.0"
