@@ -1,5 +1,4 @@
 "use strict";
-var auth_class_1 = require("./../../../auth/auth.class");
 var express = require("express");
 var agenda = require("../schemas/agenda");
 var router = express.Router();
@@ -73,7 +72,7 @@ router.get('/agenda/:id*?', function (req, res, next) {
 });
 router.post('/agenda', function (req, res, next) {
     var data = new agenda(req.body);
-    auth_class_1.Auth.audit(data, req);
+    // Auth.audit(data, req);
     data.save(function (err) {
         if (err) {
             return next(err);
