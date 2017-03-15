@@ -87,7 +87,7 @@ router.get('/agenda/:id*?', function (req, res, next) {
 
 router.post('/agenda', function (req, res, next) {
     let data = new agenda(req.body);
-    Auth.audit(data, req);
+    // Auth.audit(data, req);
     data.save((err) => {
         if (err) {
             return next(err);

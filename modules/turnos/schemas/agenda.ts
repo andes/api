@@ -37,6 +37,10 @@ let schema = new mongoose.Schema({
                 type: String,
                 enum: ['disponible', 'asignado', 'bloqueado']
             },
+            tipoTurno: {
+                type: String,
+                enum: ['delDia', 'programado', 'gestion', 'profesional']
+            },
             nota: String,
             paciente: { // pensar que otros datos del paciente conviene tener
                 id: mongoose.Schema.Types.ObjectId,
@@ -55,7 +59,7 @@ let schema = new mongoose.Schema({
 
     estado: {
         type: String,
-        enum: ['Planificada', 'Publicada', 'Suspendida']
+        enum: ['Planificacion', 'Disponible', 'Publicada', 'Suspendida', 'Pausada']
     }
 });
 
@@ -73,7 +77,7 @@ schema.virtual('turnosDisponibles').get(function () {
 });
 
 // Habilitar plugin de auditoría
-schema.plugin(require('../../../mongoose/audit'));
+// schema.plugin(require('../../../mongoose/audit'));
 
 // Exportar modelo
 let model = mongoose.model('agenda', schema, 'agenda');
