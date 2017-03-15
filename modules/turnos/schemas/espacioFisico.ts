@@ -1,9 +1,8 @@
 import * as mongoose from 'mongoose';
-import * as ubicacionSchema from '../../../core/tm/schemas/ubicacion';
 import * as edificioSchema from '../../../core/tm/schemas/edificio';
 import * as organizacion from '../../../core/tm/schemas/organizacion';
 
-export var espacioFisicoSchema = new mongoose.Schema({
+export let espacioFisicoSchema = new mongoose.Schema({
     nombre: {
         type: String,
         required: true
@@ -15,4 +14,4 @@ export var espacioFisicoSchema = new mongoose.Schema({
     activo: Boolean
 });
 
-export var espacioFisico = mongoose.model('espacioFisico', espacioFisicoSchema, 'espacioFisico');
+export let espacioFisico = mongoose.model('espacioFisico', espacioFisicoSchema, 'espacioFisico');
