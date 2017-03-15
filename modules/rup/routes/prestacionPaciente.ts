@@ -80,31 +80,26 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         }
     });
 
-    query.populate({
-        path: 'solicitud.tipoPrestacion.ejecucion.prestaciones',
-        model: 'prestacionPaciente',
-        populate: {
-            path: 'solicitud.listaProblemas',
-            model: 'problema',
-            populate: {
-                path: 'tipoProblema',
-                model: 'tipoProblema'
-            }
-        }
-    });
-
-    //populuamos todo lo necesario de la ejecucion
+   //populuamos todo lo necesario de la ejecucion
     query.populate({
         path: 'ejecucion.prestaciones',
         model: 'prestacionPaciente',
-        populate: {
+        populate: [{
             path: 'solicitud.listaProblemas',
             model: 'problema',
             populate: {
                 path: 'tipoProblema',
                 model: 'tipoProblema'
-            }
-        }
+            },
+        },
+        {
+            path: 'ejecucion.listaProblemas',
+            model: 'problema',
+            populate: {
+                path: 'tipoProblema',
+                model: 'tipoProblema'
+            },
+        }]
     });
 
     query.populate({
