@@ -516,11 +516,15 @@ router.post('/pacientes', function (req, res, next) {
  *           $ref: '#/definitions/pacientes'
  */
 router.put('/pacientes/:id', function (req, res, next) {
+    let match = new matching();
+    // Validación de campos del paciente del lado de la api
 
-    //Validación de campos del paciente del lado de la api
     var continues = ValidatePatient.checkPatient(req.body);
+    var pac = req.body;
+    let claves = match.crearClavesBlocking(pac);
+    pac["claveBlocking"] = claves;
     if (continues.valid) {
-        paciente.findByIdAndUpdate(req.params.id, req.body, {
+        paciente.findByIdAndUpdate(pac.id, pac, {
             new: true
         }, function (err, data) {
             if (err)
@@ -528,7 +532,7 @@ router.put('/pacientes/:id', function (req, res, next) {
             res.json(data);
         });
     } else {
-        //Devuelvo el conjunto de mensajes de error junto con el código
+        // Devuelvo el conjunto de mensajes de error junto con el código
         var err = {
             status: "409",
             messages: continues.errors
