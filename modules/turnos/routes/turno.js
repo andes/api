@@ -5,15 +5,15 @@ var router = express.Router();
 // next como tercer parametro
 router.put('/turno/:id', function (req, res, next) {
     var changes = req.body;
-    var etiquetaEstado = "bloques." + req.body.indiceBloque + ".turnos." + req.body.indiceTurno + ".estado";
-    var etiquetaPaciente = "bloques." + req.body.indiceBloque + ".turnos." + req.body.indiceTurno + ".paciente";
-    var etiquetaPrestacion = "bloques." + req.body.indiceBloque + ".turnos." + req.body.indiceTurno + ".tipoPrestacion";
+    var etiquetaEstado = 'bloques.' + req.body.indiceBloque + '.turnos.' + req.body.indiceTurno + '.estado';
+    var etiquetaPaciente = 'bloques.' + req.body.indiceBloque + '.turnos.' + req.body.indiceTurno + '.paciente';
+    var etiquetaPrestacion = 'bloques.' + req.body.indiceBloque + '.turnos.' + req.body.indiceTurno + '.tipoPrestacion';
     var query = {
         _id: req.params.id
     };
-    query[etiquetaEstado] = "disponible"; //agrega un tag al json query
+    query[etiquetaEstado] = 'disponible'; // agrega un tag al json query
     var update = {};
-    update[etiquetaEstado] = req.body.estado;
+    update[etiquetaEstado] = 'asignado';
     update[etiquetaPrestacion] = req.body.tipoPrestacion;
     update[etiquetaPaciente] = req.body.paciente;
     // console.log("Update   ", update);
@@ -53,14 +53,14 @@ router.patch('/turno/:id', function (req, res, next) {
         var etiquetaPaciente = 'bloques.' + posBloque + '.turnos.' + posTurno + '.paciente';
         var etiquetaPrestacion = 'bloques.' + posBloque + '.turnos.' + posTurno + '.tipoPrestacion';
         var update = {};
-        update[etiquetaEstado] = req.body.estado;
+        update[etiquetaEstado] = 'asignado';
         update[etiquetaPrestacion] = req.body.tipoPrestacion;
         update[etiquetaPaciente] = req.body.paciente;
-        // agenda.findByIdAndUpdate(req.params.idAgenda, function (err2, data2) {
-        //   if (err2) {
-        //     return next(err2);
-        //   }
-        // });
+        agenda.findByIdAndUpdate(req.params.id, update, function (err2, data2) {
+            if (err2) {
+                return next(err2);
+            }
+        });
         res.json(data);
     });
 });
