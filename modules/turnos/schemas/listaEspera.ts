@@ -1,4 +1,5 @@
 import * as mongoose from 'mongoose';
+import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 
 let listaEsperaSchema = new mongoose.Schema({
     paciente: {
@@ -7,10 +8,7 @@ let listaEsperaSchema = new mongoose.Schema({
         apellido: String,
         documento: String
     },
-    prestacion: {
-        id: mongoose.Schema.Types.ObjectId,
-        nombre: String
-    },
+    tipoPrestacion: tipoPrestacionSchema,
     profesional: {
         id: mongoose.Schema.Types.ObjectId,
         nombre: String,
