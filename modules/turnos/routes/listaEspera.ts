@@ -121,7 +121,7 @@ function listaEsperaSuspensionAgenda(req, data, next) {
 
             newListaEspera['fecha'] = moment().format(),
                 newListaEspera['estado'] = 'Agenda Suspendida',
-                newListaEspera['prestacion'] = req.body.pacientes[i].prestacion,
+                newListaEspera['tipoPrestacion'] = req.body.pacientes[i].tipoPrestacion,
                 newListaEspera['profesional'] = data.profesionales[0],
                 newListaEspera['paciente'] = req.body.pacientes[i].paciente;
 
@@ -132,10 +132,10 @@ function listaEsperaSuspensionAgenda(req, data, next) {
 
         newListaEspera['fecha'] = moment().format(),
             newListaEspera['estado'] = 'Turno Canceladdo',
-            newListaEspera['prestacion'] = req.body.pacientes.prestacion,
+            newListaEspera['tipoPrestacion'] = req.body.pacientes.tipoPrestacion,
             newListaEspera['profesional'] = data.profesionales[0],
             newListaEspera['paciente'] = req.body.pacientes.paciente;
-
+console.log("Entraaa ", newListaEspera);
         listaEspera.push(newListaEspera);
     }
 
