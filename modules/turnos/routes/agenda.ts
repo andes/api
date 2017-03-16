@@ -181,7 +181,11 @@ function suspenderTurno(req, data) {
 
     turno.estado = 'bloqueado';
     turno.paciente = {};
-    turno.prestacion = null;
+    turno.tipoPrestacion = null;
+    turno.motivoSuspension = req.body.motivoSuspension;
+
+    return data;
+
 }
 
 function reasignarTurno(req, data) {

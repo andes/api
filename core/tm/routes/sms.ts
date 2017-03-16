@@ -22,6 +22,9 @@ router.get('/sms/:telefono', function (req, res, next) {
     var argsNumero = {};
 
     soap.createClient(urlOperador, opciones, function (err, client) {
+
+        /** Validar si "client" trae algo para que no tire error*/
+        
         client.recuperarOperador(argsOperador, function (err, result, raw) {
 
             var xml = result.return;

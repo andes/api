@@ -14,6 +14,9 @@ let app = express();
 if (config.mongooseDebugMode) {
     mongoose.set('debug', true);
 }
+
+mongoose.set('debug', true);
+
 mongoose.connect(config.connectionStrings.mongoDB_main);
 mongoose.plugin(schemaDefaults);
 mongoose.connection.on('connected', function () {

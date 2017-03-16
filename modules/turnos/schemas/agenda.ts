@@ -1,5 +1,6 @@
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
+import * as notasSchema from './notas';
 import * as nombreApellidoSchema from '../../../core/tm/schemas/nombreApellido';
 import * as mongoose from 'mongoose';
 
@@ -43,7 +44,11 @@ let schema = new mongoose.Schema({
                 enum: ['delDia', 'programado', 'gestion', 'profesional']
             },
             nota: String,
-            paciente: { // pensar que otros datos del paciente conviene tener
+            motivoSuspension: {
+                type: String,
+                enum: ["Edilicia", "Profesional", "Organizacion"]
+            },
+            paciente: {//pensar que otros datos del paciente conviene tener
                 id: mongoose.Schema.Types.ObjectId,
                 nombre: String,
                 apellido: String,
