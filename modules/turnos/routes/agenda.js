@@ -27,6 +27,12 @@ router.get('/agenda/:id*?', function (req, res, next) {
         if (req.query.idTipoPrestacion) {
             query.where('tipoPrestaciones._id').equals(req.query.idTipoPrestacion);
         }
+        if (req.query.espacioFisico) {
+            query.where('espacioFisico._id').equals(req.query.espacioFisico);
+        }
+        if (req.query.organizacion) {
+            query.where('organizacion._id').equals(req.query.organizacion);
+        }
         // Dada una lista de prestaciones, filtra las agendas que tengan al menos una de ellas como prestación
         if (req.query.prestaciones) {
             var arr_prestaciones = JSON.parse(req.query.prestaciones);
@@ -48,14 +54,9 @@ router.get('/agenda/:id*?', function (req, res, next) {
         // Si rango es true  se buscan las agendas que se solapen con la actual en algún punto
         if (req.query.rango) {
             var variable = [];
-            // ((originalIni <= actualIni && actualIni <= originalFin)
-            //                     || (originalIni <= actualFin && actualFin <= originalFin))
             variable.push({ 'horaInicio': { '$lte': req.query.desde }, 'horaFin': { '$gt': req.query.desde } });
             variable.push({ 'horaInicio': { '$lte': req.query.hasta }, 'horaFin': { '$gt': req.query.hasta } });
             query.or(variable);
-        }
-        if (req.query.espacioFisico) {
-            query.or({ 'espacioFisico._id': req.query.espacioFisico });
         }
         if (!Object.keys(query).length) {
             res.status(400).send('Debe ingresar al menos un parámetro');

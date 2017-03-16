@@ -17,12 +17,9 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
         if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
-        if (req.query.descripcion) {
-            query.where('descripcion').equals(RegExp('^.*' + req.query.descripcion + '.*$', 'i'));
+        if (req.query.organizacion) {
+            query.where('organizacion._id').equals(req.query.organizacion);
         }
-
-        // query.select('_id, nombre');
-
         query.sort('nombre');
 
         query.exec((err, data) => {
