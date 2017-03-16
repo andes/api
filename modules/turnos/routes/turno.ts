@@ -71,14 +71,19 @@ router.patch('/agenda/:idAgenda/turno/:idTurno', function (req, res, next) {
     query[etiquetaEstado] = 'disponible'; // agrega un tag al json query
     console.log(query);
 
-    (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true, passRawResult: true }, function (err2, doc2, writeOpResult) {
-      if (err2) {
-        console.log('ERR2: ' + err2);
-        return next(err2);
-      }
-      console.log('NUEVO DOCUMENTO: ' + doc2);
-      Logger.log(req, 'agenda', 'modificar agenda');
-    });
+    (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true, passRawResult: true },
+      function (err2, doc2, writeOpResult) {
+        if (err2) {
+          console.log('ERR2: ' + err2);
+          return next(err2);
+        }
+        let datosOp = {
+          estado: update[etiquetaEstado],
+          paciente: update[etiquetaPaciente],
+          prestacion: update[etiquetaPrestacion]
+        };
+        Logger.log(req, 'agenda', 'modificar agenda', datosOp);
+      });
     res.json(data);
   });
 

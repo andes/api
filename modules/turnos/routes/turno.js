@@ -67,8 +67,12 @@ router.patch('/agenda/:idAgenda/turno/:idTurno', function (req, res, next) {
                 console.log('ERR2: ' + err2);
                 return next(err2);
             }
-            console.log('NUEVO DOCUMENTO: ' + doc2);
-            logService_1.Logger.log(req, 'agenda', 'modificar agenda');
+            var datosOp = {
+                estado: update[etiquetaEstado],
+                paciente: update[etiquetaPaciente],
+                prestacion: update[etiquetaPrestacion]
+            };
+            logService_1.Logger.log(req, 'agenda', 'modificar agenda', datosOp);
         });
         res.json(data);
     });
