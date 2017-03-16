@@ -1,7 +1,6 @@
 import * as express from 'express';
 import * as agenda from '../schemas/agenda';
-import * as utils from '../../../utils/utils';
-
+import { Logger } from '../../../utils/logService';
 let router = express.Router();
 // next como tercer parametro
 router.put('/turno/:id', function (req, res, next) {
@@ -45,7 +44,7 @@ router.patch('/turno/:id', function (req, res, next) {
     for (let x = 0; x < (data as any).bloques.length; x++) {
       if ((data as any).bloques[x]._id.equals(req.body.idBloque)) {
         posBloque = x;
-        console.log('POSBLOQUE: ' + posBloque);
+        // console.log('POSBLOQUE: ' + posBloque);
       }
     }
 
@@ -54,7 +53,7 @@ router.patch('/turno/:id', function (req, res, next) {
       // console.log(req.body.idTurno)
       if ((data as any).bloques[posBloque].turnos[y]._id.equals(req.body.idTurno)) {
         posTurno = y;
-        console.log('POSTURNO: ' + posTurno);
+        // console.log('POSTURNO: ' + posTurno);
       }
     }
 
@@ -66,10 +65,11 @@ router.patch('/turno/:id', function (req, res, next) {
     update[etiquetaPrestacion] = req.body.tipoPrestacion;
     update[etiquetaPaciente] = req.body.paciente;
 
-    agenda.findByIdAndUpdate(req.params.id,update, function (err2, data2) {
+    agenda.findByIdAndUpdate(req.params.id, update, function (err2, data2) {
       if (err2) {
         return next(err2);
       }
+      Logger.log(req, 'turnos', 'asignar turno' );
     });
     res.json(data);
   });

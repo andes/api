@@ -1,6 +1,7 @@
 "use strict";
 var express = require("express");
 var agenda = require("../schemas/agenda");
+var logService_1 = require("../../../utils/logService");
 var router = express.Router();
 // next como tercer parametro
 router.put('/turno/:id', function (req, res, next) {
@@ -38,7 +39,7 @@ router.patch('/turno/:id', function (req, res, next) {
         for (var x = 0; x < data.bloques.length; x++) {
             if (data.bloques[x]._id.equals(req.body.idBloque)) {
                 posBloque = x;
-                console.log('POSBLOQUE: ' + posBloque);
+                // console.log('POSBLOQUE: ' + posBloque);
             }
         }
         for (var y = 0; y < data.bloques[posBloque].turnos.length; y++) {
@@ -46,7 +47,7 @@ router.patch('/turno/:id', function (req, res, next) {
             // console.log(req.body.idTurno)
             if (data.bloques[posBloque].turnos[y]._id.equals(req.body.idTurno)) {
                 posTurno = y;
-                console.log('POSTURNO: ' + posTurno);
+                // console.log('POSTURNO: ' + posTurno);
             }
         }
         var etiquetaEstado = 'bloques.' + posBloque + '.turnos.' + posTurno + '.estado';
@@ -60,6 +61,7 @@ router.patch('/turno/:id', function (req, res, next) {
             if (err2) {
                 return next(err2);
             }
+            logService_1.Logger.log(req, 'turnos', 'asignar turno');
         });
         res.json(data);
     });
