@@ -25,8 +25,8 @@ router.put('/turno/:id', function (req, res, next) {
         res.json(agen);
     });
 });
-router.patch('/turno/:id', function (req, res, next) {
-    agenda.findById(req.params.id, function (err, data) {
+router.patch('/agenda/:idAgenda/turno/:idTurno', function (req, res, next) {
+    agenda.findById(req.params.idAgenda, function (err, data) {
         if (err) {
             return next(err);
         }
@@ -45,9 +45,9 @@ router.patch('/turno/:id', function (req, res, next) {
         for (var y = 0; y < data.bloques[posBloque].turnos.length; y++) {
             // console.log((data as any).bloques[posBloque].turnos[y]._id)
             // console.log(req.body.idTurno)
-            if (data.bloques[posBloque].turnos[y]._id.equals(req.body.idTurno)) {
+            if (data.bloques[posBloque].turnos[y]._id.equals(req.params.idTurno)) {
                 posTurno = y;
-                // console.log('POSTURNO: ' + posTurno);
+                console.log('POSTURNO: ' + posTurno);
             }
         }
         var etiquetaEstado = 'bloques.' + posBloque + '.turnos.' + posTurno + '.estado';
@@ -57,11 +57,18 @@ router.patch('/turno/:id', function (req, res, next) {
         update[etiquetaEstado] = 'asignado';
         update[etiquetaPrestacion] = req.body.tipoPrestacion;
         update[etiquetaPaciente] = req.body.paciente;
-        agenda.findByIdAndUpdate(req.params.id, update, function (err2, data2) {
+        var query = {
+            _id: req.params.idAgenda,
+        };
+        query[etiquetaEstado] = 'disponible'; // agrega un tag al json query
+        console.log(query);
+        agenda.findOneAndUpdate(query, { $set: update }, { new: true, passRawResult: true }, function (err2, doc2, writeOpResult) {
             if (err2) {
+                console.log('ERR2: ' + err2);
                 return next(err2);
             }
-            logService_1.Logger.log(req, 'turnos', 'asignar turno');
+            console.log('NUEVO DOCUMENTO: ' + doc2);
+            logService_1.Logger.log(req, 'agenda', 'modificar agenda');
         });
         res.json(data);
     });
