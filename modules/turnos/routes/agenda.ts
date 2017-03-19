@@ -143,7 +143,7 @@ router.patch('/agenda/:id', function (req, res, next) {
             case 'publicarAgenda': publicarAgenda(req, data);
                 break;
         }
-
+        console.log("Datatta ", data.bloques[0].turnos);
         data.save(function (err2) {
             if (err) {
                 return next(err2);
@@ -163,7 +163,7 @@ function liberarTurno(req, data) {
     let turno = getTurno(req, data);
     turno.estado = 'disponible';
     turno.paciente = {};
-    turno.prestacion = null;
+    turno.tipoPrestacion = null;
 }
 
 function bloquearTurno(req, data) {
@@ -185,7 +185,6 @@ function suspenderTurno(req, data) {
     turno.motivoSuspension = req.body.motivoSuspension;
 
     return data;
-
 }
 
 function reasignarTurno(req, data) {
@@ -194,6 +193,7 @@ function reasignarTurno(req, data) {
     turno.estado = 'disponible';
     turno.paciente = {};
     turno.prestacion = null;
+    turno.motivoSuspension = null;
 }
 
 function editarAgenda(req, data) {
