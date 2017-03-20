@@ -115,14 +115,14 @@ pacienteSchema.virtual('edadReal').get(function () {
                 else
                     if (difMeses !== 0)  {edad = { valor: difMeses, unidad: 'Mes'}}
                     else
-                        if (difDias !== 0 ) {edad = { valor: difDias, unidad: 'Dias'} }
+                        if (difDias !== 0 ) {edad = { valor: difDias, unidad: 'Dias'}}
                         else
-                            if (difHs !==0) {edad = { valor:difHs, unidad: 'Horas'}}
+                            if (difHs !== 0) {edad = { valor: difHs, unidad: 'Horas'}}
 
                 return edad
 
 });
-// Creo un indice para fulltext Search
+/* Creo un indice para fulltext Search */
 pacienteSchema.index({
     '$**': 'text'
 });
@@ -132,13 +132,17 @@ pacienteSchema.plugin(mongoosastic, {
     index: 'andes',
     type: 'paciente'
 } );
+export let paciente = mongoose.model('paciente', pacienteSchema, 'paciente');
+export let pacienteMpi = connectMpi.model('paciente', pacienteSchema, 'paciente');
+
+
+/* EVALUAR SI LO BORRAMOS DE UNA VEZ O LO VAMOS A USAR */
+
 // pacienteSchemaMpi.plugin(mongoosastic, {
 //     hosts: [config.connectionStrings.elastic_main],
 //     index: 'andes',
 //     type: 'paciente'
 // });
-export let paciente = mongoose.model('paciente', pacienteSchema, 'paciente');
-export let pacienteMpi = connectMpi.model('paciente', pacienteSchema, 'paciente');
 /**
  * mongoosastic create mappings
  */
@@ -153,7 +157,6 @@ paciente.createMapping(function (err, mapping) {
     }
 });
 */
-
 /**
  * mongoosastic synchronize
  */
