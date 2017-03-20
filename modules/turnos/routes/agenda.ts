@@ -66,8 +66,9 @@ router.get('/agenda/:id*?', function (req, res, next) {
         // Si rango es true  se buscan las agendas que se solapen con la actual en algún punto
         if (req.query.rango) {
             let variable: any[] = [];
-            variable.push({ 'horaInicio': { '$lte': req.query.desde }, 'horaFin': { '$gt': req.query.desde } })
-            variable.push({ 'horaInicio': { '$lte': req.query.hasta }, 'horaFin': { '$gt': req.query.hasta } })
+            variable.push({ 'horaInicio': { '$lte': req.query.desde }, 'horaFin': { '$gt': req.query.desde } });
+            variable.push({ 'horaInicio': { '$lte': req.query.hasta }, 'horaFin': { '$gt': req.query.hasta } });
+            variable.push({ 'horaInicio': { '$gt': req.query.desde, '$lte': req.query.hasta}});
             query.or(variable);
         }
 
