@@ -27,7 +27,7 @@ router.get('/tiposProblemas/:id*?', function (req, res, next) {
         }
     }
 
-    query.exec(function (err, data) {
+    query.sort({ 'nombre': 1 }).exec(function (err, data) {
         if (err) {
             next(err);
         };
