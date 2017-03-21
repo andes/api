@@ -3,7 +3,8 @@ import * as agenda from '../schemas/agenda';
 import { Logger } from '../../../utils/logService';
 import { ValidateDarTurno } from '../../../utils/validateDarTurno';
 import { paciente } from '../../../core/mpi/schemas/paciente';
-import { tipoPrestacion } from "../../../core/tm/schemas/tipoPrestacion";
+import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
+
 let router = express.Router();
 // next como tercer parametro
 router.put('/turno/:id', function (req, res, next) {
@@ -35,20 +36,29 @@ router.put('/turno/:id', function (req, res, next) {
 
 
 router.patch('/agenda/:idAgenda/bloque/:idBloque/turno/:idTurno', function (req, res, next) {
+  // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
+
   let continues = ValidateDarTurno.checkTurno(req.body);
-  //console.log(continues);
   if (continues.valid) {
+
+    // se verifica la existencia del paciente 
+
     paciente.findById(req.body.paciente.id, function verificarPaciente(err, cant) {
       if (err) {
         console.log('PACIENTE INEXISTENTE', err);
         return next(err)
       } else {
+
+        // se verifica la existencia del tipoPrestacion
+
         tipoPrestacion.findById(req.body.tipoPrestacion._id, function verificarTipoPrestacion(err, data) {
           if (err) {
             console.log('TIPO PRESTACION INEXISTENTE', err);
-            return next(err)
+            return next(err);
           } else {
-            console.log(cant)
+            console.log(cant);
+
+            // se obtiene la agenda que se va a modificar
 
             agenda.findById(req.params.idAgenda, function getAgenda(err, data) {
               if (err) {
@@ -85,6 +95,8 @@ router.patch('/agenda/:idAgenda/bloque/:idBloque/turno/:idTurno', function (req,
               };
               query[etiquetaEstado] = 'disponible'; // agrega un tag al json query
               console.log('QUERY ' + query);
+
+              // se hace el update con findOneAndUpdate para garantizar la atomicidad de la operacion
 
               (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true, passRawResult: true },
                 function actualizarAgenda(err2, doc2, writeOpResult) {

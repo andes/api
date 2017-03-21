@@ -42,24 +42,6 @@ export class ValidateDarTurno {
             errors.push('Paciente no tiene especificado el documento');
         }
 
-        // paciente.count({ _id: data.paciente.id }, function (err, cant) {
-        //     console.log('ENTROOOO-------------------------------------')
-        //     if (!cant) {
-        //         valid = false;
-        //     }
-        // });
-
-        // paciente.findById(data.paciente.id, function (err, doc) {
-        //     if (doc) {
-        //         console.log('LOG DE VALIDATEDARTURNO: ', doc);
-        //     }
-        //     if (err) {
-        //         valid = false;
-        //     }
-        //     console.log('ERR DE VALIDATEDARTURNO', err);
-        // });
-
-
         return {
             valid: valid,
             errors: errors

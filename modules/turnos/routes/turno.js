@@ -29,15 +29,17 @@ router.put('/turno/:id', function (req, res, next) {
     });
 });
 router.patch('/agenda/:idAgenda/bloque/:idBloque/turno/:idTurno', function (req, res, next) {
+    // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
     var continues = validateDarTurno_1.ValidateDarTurno.checkTurno(req.body);
-    //console.log(continues);
     if (continues.valid) {
+        // se verifica la existencia del paciente 
         paciente_1.paciente.findById(req.body.paciente.id, function verificarPaciente(err, cant) {
             if (err) {
                 console.log('PACIENTE INEXISTENTE', err);
                 return next(err);
             }
             else {
+                // se verifica la existencia del tipoPrestacion
                 tipoPrestacion_1.tipoPrestacion.findById(req.body.tipoPrestacion._id, function verificarTipoPrestacion(err, data) {
                     if (err) {
                         console.log('TIPO PRESTACION INEXISTENTE', err);
@@ -45,6 +47,7 @@ router.patch('/agenda/:idAgenda/bloque/:idBloque/turno/:idTurno', function (req,
                     }
                     else {
                         console.log(cant);
+                        // se obtiene la agenda que se va a modificar
                         agenda.findById(req.params.idAgenda, function getAgenda(err, data) {
                             if (err) {
                                 return next(err);
@@ -76,6 +79,7 @@ router.patch('/agenda/:idAgenda/bloque/:idBloque/turno/:idTurno', function (req,
                             };
                             query[etiquetaEstado] = 'disponible'; // agrega un tag al json query
                             console.log('QUERY ' + query);
+                            // se hace el update con findOneAndUpdate para garantizar la atomicidad de la operacion
                             agenda.findOneAndUpdate(query, { $set: update }, { new: true, passRawResult: true }, function actualizarAgenda(err2, doc2, writeOpResult) {
                                 if (err2) {
                                     console.log('ERR2: ' + err2);
