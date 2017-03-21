@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
 import * as codificadorSchema from '../../../modules/rup/schemas/codificador';
 
-export var tipoPrestacionSchema = new mongoose.Schema({
+export let tipoPrestacionSchema = new mongoose.Schema({
     // valor por el cual vamos a leer/guardar en nuestra BD
     key: String,
     nombre: String,
@@ -27,8 +27,8 @@ export var tipoPrestacionSchema = new mongoose.Schema({
         ruta: String,
         nombre: String
     },
-    granularidad:String,
+    granularidad: String,
 });
 
-export var tipoPrestacion = mongoose.model('tipoPrestacion', tipoPrestacionSchema, 'tipoPrestacion');
+export let tipoPrestacion = mongoose.model('tipoPrestacion', tipoPrestacionSchema, 'tipoPrestacion');
 

@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-var especialidadSchema = new mongoose.Schema({
+let especialidadSchema = new mongoose.Schema({
     nombre: {
         type: String,
         required: true
