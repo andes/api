@@ -10,6 +10,10 @@ const constantes = {
      PARENTEZCO : {
         type: String,
         enum: ['padre', 'madre', 'hijo', 'hermano', 'tutor']
+     },
+     ESTADO : {
+         type: String,
+         enum: ['temporal', 'validado', 'recienNacido', 'extranjero']
      }
 };
 export = constantes;
