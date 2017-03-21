@@ -19,12 +19,7 @@ export let pacienteSchema = new mongoose.Schema({
         es_indexed: true
     },
     activo: Boolean,
-    estado: {
-        type: String,
-        required: true,
-        enum: constantes.ESTADO,
-        es_indexed: true
-    },
+    estado: constantes.ESTADO,
     nombre: {
         type: String,
         es_indexed: true
@@ -36,31 +31,18 @@ export let pacienteSchema = new mongoose.Schema({
     alias: String,
     contacto: [contactoSchema],
     direccion: [direccionSchema],
-    sexo: {
-        type: String,
-        enum: constantes.SEXO,
-        es_indexed: true
-    },
-    genero: {
-        type: String,
-        enum: constantes.SEXO,
-    },
+    sexo: constantes.SEXO,
+    genero: constantes.SEXO,
     fechaNacimiento: {
         type: Date,
         es_indexed: true
     },
     fechaFallecimiento: Date,
-    estadoCivil: {
-        type: String,
-        enum: constantes.ESTADOCIVIL,
-    },
+    estadoCivil: constantes.ESTADOCIVIL,
     foto: String,
     nacionalidad: String,
     relaciones: [{
-        relacion: {
-            type: String,
-            enum: constantes.PARENTEZCO,
-        },
+        relacion: constantes.PARENTEZCO,
         referencia: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'paciente'

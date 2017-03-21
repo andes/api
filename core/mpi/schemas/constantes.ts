@@ -1,6 +1,8 @@
 const constantes = {
     SEXO: {
         type: String,
+        required: true,
+        es_indexed: true,
         enum: ['femenino', 'masculino', 'otro']
     },
     ESTADOCIVIL: {
@@ -12,8 +14,10 @@ const constantes = {
         enum: ['padre', 'madre', 'hijo', 'hermano', 'tutor']
      },
      ESTADO : {
-         type: String,
-         enum: ['temporal', 'validado', 'recienNacido', 'extranjero']
+        type: String,
+        required: true,
+        es_indexed: true,
+        enum: ['temporal', 'validado', 'recienNacido', 'extranjero']
      }
 };
 export = constantes;
