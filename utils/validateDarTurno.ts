@@ -1,4 +1,6 @@
 import { ValidateFormatDate } from './validateFormatDate';
+import * as express from 'express';
+import { paciente } from '../core/mpi/schemas/paciente';
 
 export class ValidateDarTurno {
 
@@ -15,11 +17,7 @@ export class ValidateDarTurno {
         let errors = [];
         let valid = true;
 
-         if (!data.idBloque) {
-            valid = false;
-            errors.push('Falta el ID del bloque');
-        }
-         if (!data.tipoPrestacion) {
+        if (!data.tipoPrestacion) {
             valid = false;
             errors.push('Falta el tipo de prestación');
         }
@@ -44,10 +42,23 @@ export class ValidateDarTurno {
             errors.push('Paciente no tiene especificado el documento');
         }
 
-        // if (!data.paciente.telefono) {
-        //  valid = false;
-        //     errors.push('Paciente no tiene especificado el teléfono');
-        // }
+        // paciente.count({ _id: data.paciente.id }, function (err, cant) {
+        //     console.log('ENTROOOO-------------------------------------')
+        //     if (!cant) {
+        //         valid = false;
+        //     }
+        // });
+
+        // paciente.findById(data.paciente.id, function (err, doc) {
+        //     if (doc) {
+        //         console.log('LOG DE VALIDATEDARTURNO: ', doc);
+        //     }
+        //     if (err) {
+        //         valid = false;
+        //     }
+        //     console.log('ERR DE VALIDATEDARTURNO', err);
+        // });
+
 
         return {
             valid: valid,
