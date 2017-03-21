@@ -35,20 +35,21 @@ router.put('/turno/:id', function (req, res, next) {
 
 
 router.patch('/agenda/:idAgenda/bloque/:idBloque/turno/:idTurno', function (req, res, next) {
-  paciente.findById(req.body.paciente.id, function verificarPaciente(err, cant) {
-    if (err) {
-      console.log('PACIENTE INEXISTENTE', err);
-      return next(err)
-    } else {
-      tipoPrestacion.findById(req.body.tipoPrestacion._id, function verificarTipoPrestacion(err, data) {
-        if (err) {
-          console.log('TIPO PRESTACION INEXISTENTE', err);
-          return next(err)
-        } else {
-          console.log(cant)
-          let continues = ValidateDarTurno.checkTurno(req.body);
-          //console.log(continues);
-          if (continues.valid) {
+  let continues = ValidateDarTurno.checkTurno(req.body);
+  //console.log(continues);
+  if (continues.valid) {
+    paciente.findById(req.body.paciente.id, function verificarPaciente(err, cant) {
+      if (err) {
+        console.log('PACIENTE INEXISTENTE', err);
+        return next(err)
+      } else {
+        tipoPrestacion.findById(req.body.tipoPrestacion._id, function verificarTipoPrestacion(err, data) {
+          if (err) {
+            console.log('TIPO PRESTACION INEXISTENTE', err);
+            return next(err)
+          } else {
+            console.log(cant)
+
             agenda.findById(req.params.idAgenda, function getAgenda(err, data) {
               if (err) {
                 return next(err);
@@ -102,14 +103,16 @@ router.patch('/agenda/:idAgenda/bloque/:idBloque/turno/:idTurno', function (req,
             });
 
 
-          } else {
-            console.log('NO VALIDO')
-          }
-        }
-      });
 
-    }
-  });
+          }
+        });
+
+      }
+    });
+  } else {
+    console.log('NO VALIDO');
+    return next();
+  }
 });
 
 export = router;
