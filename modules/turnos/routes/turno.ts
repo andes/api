@@ -32,68 +32,68 @@ router.put('/turno/:id', function (req, res, next) {
   });
 });
 
-router.patch('/agenda/:idAgenda/turno/:idTurno', function (req, res, next) {
-  let continues = ValidateDarTurno.checkTurno(req.body);
-  console.log(continues);
-  if (continues.valid) {
-    agenda.findById(req.params.idAgenda, function (err, data) {
-      if (err) {
-        return next(err);
+
+router.patch('/agenda/:idAgenda/bloque/:idBloque/turno/:idTurno', function (req, res, next) {
+
+  // let continues = ValidateDarTurno.checkTurno(req.body);
+  // console.log(continues);
+  // if (continues.valid) {
+  agenda.findById(req.params.idAgenda, function (err, data) {
+    if (err) {
+      return next(err);
+    }
+    let posBloque: number;
+    let posTurno: number;
+
+    // Los siguientes 2 for ubican el indice del bloque y del turno
+
+    for (let x = 0; x < (data as any).bloques.length; x++) {
+      if ((data as any).bloques[x]._id.equals(req.params.idBloque)) {
+        posBloque = x;
+         console.log('POSBLOQUE: ' + posBloque);
       }
-      let posBloque: number;
-      let posTurno: number;
-      // console.log((data as any).bloques.length)
-      // console.log('ID BLOQUE: ' + req.body.idBloque)
-      // console.log('ID TURNO: ' + req.body.idTurno)
-      // console.log('POSBLOQUE: ' + (data as any).bloques.indexOf((data as any).bloques[0]))
-      for (let x = 0; x < (data as any).bloques.length; x++) {
-        if ((data as any).bloques[x]._id.equals(req.body.idBloque)) {
-          posBloque = x;
-          // console.log('POSBLOQUE: ' + posBloque);
+    }
+    for (let y = 0; y < (data as any).bloques[posBloque].turnos.length; y++) {
+      if ((data as any).bloques[posBloque].turnos[y]._id.equals(req.params.idTurno)) {
+        posTurno = y;
+        console.log('POSTURNO: ' + posTurno);
+      }
+    }
+
+    let etiquetaEstado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.estado';
+    let etiquetaPaciente: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.paciente';
+    let etiquetaPrestacion: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.tipoPrestacion';
+    let update: any = {};
+    update[etiquetaEstado] = 'asignado';
+    update[etiquetaPrestacion] = req.body.tipoPrestacion;
+    update[etiquetaPaciente] = req.body.paciente;
+
+    let query = {
+      _id: req.params.idAgenda,
+    };
+    query[etiquetaEstado] = 'disponible'; // agrega un tag al json query
+    console.log('QUERY ' + query);
+
+    (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true, passRawResult: true, runValidators: true },
+      function (err2, doc2, writeOpResult) {
+        if (err2) {
+          console.log('ERR2: ' + err2);
+          return next(err2);
         }
-      }
-
-      for (let y = 0; y < (data as any).bloques[posBloque].turnos.length; y++) {
-        // console.log((data as any).bloques[posBloque].turnos[y]._id)
-        // console.log(req.body.idTurno)
-        if ((data as any).bloques[posBloque].turnos[y]._id.equals(req.params.idTurno)) {
-          posTurno = y;
-          console.log('POSTURNO: ' + posTurno);
-        }
-      }
-
-      let etiquetaEstado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.estado';
-      let etiquetaPaciente: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.paciente';
-      let etiquetaPrestacion: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.tipoPrestacion';
-      let update: any = {};
-      update[etiquetaEstado] = 'asignado';
-      update[etiquetaPrestacion] = req.body.tipoPrestacion;
-      update[etiquetaPaciente] = req.body.paciente;
-
-      let query = {
-        _id: req.params.idAgenda,
-      };
-      query[etiquetaEstado] = 'disponible'; // agrega un tag al json query
-      console.log(query);
-
-      (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true, passRawResult: true },
-        function (err2, doc2, writeOpResult) {
-          if (err2) {
-            console.log('ERR2: ' + err2);
-            return next(err2);
-          }
-          let datosOp = {
-            estado: update[etiquetaEstado],
-            paciente: update[etiquetaPaciente],
-            prestacion: update[etiquetaPrestacion]
-          };
-          Logger.log(req, 'agenda', 'modificar agenda', datosOp);
-        });
-      res.json(data);
-    });
+        let datosOp = {
+          estado: update[etiquetaEstado],
+          paciente: update[etiquetaPaciente],
+          prestacion: update[etiquetaPrestacion]
+        };
+        Logger.log(req, 'agenda', 'modificar agenda', datosOp);
+      });
+    res.json(data);
+  });
 
 
-  }
+  // } else {
+  //   console.log('NO VALIDO')
+  // }
 });
 
 export = router;
