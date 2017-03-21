@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
 import * as ubicacionSchema from './ubicacion';
 
-var schema = new mongoose.Schema({
+let schema = new mongoose.Schema({
     valor: String,
     codigoPostal: String,
     ubicacion: ubicacionSchema,
@@ -14,9 +14,7 @@ var schema = new mongoose.Schema({
         type: Boolean,
         required: true,
         default: true
-    },  
-
-    // REVISAR
+    },
     ultimaActualizacion: Date,
 });
 
