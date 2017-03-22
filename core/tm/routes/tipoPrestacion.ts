@@ -1,6 +1,7 @@
+import { tipoProblema } from './../../../modules/rup/schemas/tipoProblema';
 import * as express from 'express'
 import { defaultLimit, maxLimit } from './../../../config'
-import { tipoPrestacion } from "../schemas/tipoPrestacion";
+import { tipoPrestacion } from '../schemas/tipoPrestacion';
 
 var router = express.Router();
 
@@ -19,20 +20,22 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
         //ver skip limit
         if (req.query.skip && req.query.limit) {
             let skip: number = parseInt(req.query.skip || 0);
-            let limit: number = Math.min(parseInt(req.query.limit || defaultLimit), maxLimit); 
-        query = query.skip(skip).limit(limit)}
+            let limit: number = Math.min(parseInt(req.query.limit || defaultLimit), maxLimit);
+
+            query = query.skip(skip).limit(limit);
+        }
 
         if (req.query.nombre) {
-            query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
+            query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
 
         if (req.query.key) {
-            query.where('key').equals(RegExp('^.*' + req.query.key + '.*$', "i"));
+            query.where('key').equals(RegExp('^.*' + req.query.key + '.*$', 'i'));
         }
 
         if (req.query.excluir) {
-            let ids = req.query.excluir.split(",");
-            query.where("_id").nin(ids);
+            let ids = req.query.excluir.split(',');
+            query.where('_id').nin(ids);
         }
 
         if (req.query.turneable) {
@@ -43,8 +46,10 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
             query.where('granularidad').equals(req.query.granularidad);
         }
 
-
-
+        query.populate({
+            path: 'tipoProblemas',
+            model: 'tipoProblema'
+        });
 
 
     }
