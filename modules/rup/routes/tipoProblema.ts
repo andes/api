@@ -1,10 +1,11 @@
-import * as express from 'express'
-import { tipoProblema } from '../schemas/tipoProblema'
-var router = express.Router();
+import * as express from 'express';
+import { tipoProblema } from '../schemas/tipoProblema';
+
+let router = express.Router();
 
 router.get('/tiposProblemas/:id*?', function (req, res, next) {
 
-    var query;
+    let query;
 
     if (req.params.id) {
 
@@ -15,7 +16,7 @@ router.get('/tiposProblemas/:id*?', function (req, res, next) {
         query = tipoProblema.find({}); //Trae todos 
 
         if (req.query.nombre) {
-            query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
+            query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
 
         if (req.query.activo) {
@@ -24,6 +25,11 @@ router.get('/tiposProblemas/:id*?', function (req, res, next) {
 
         if (req.query.origen) {
             query.where('codigo.origen').equals(req.query.origen);
+        }
+
+        if (req.query.tiposProblemas) {
+            let idsTiposProblemas = req.query.tiposProblemas.split(',');
+            query.where('id').in(idsTiposProblemas);
         }
     }
 
@@ -38,13 +44,13 @@ router.get('/tiposProblemas/:id*?', function (req, res, next) {
 });
 
 router.post('/tiposProblemas', function (req, res, next) {
-    var tipoProblema = new tipoProblema(req.body)
+    let tipoProblema; tipoProblema = new tipoProblema(req.body);
     tipoProblema.save((err) => {
         if (err) {
             return next(err);
         }
         res.json(tipoProblema);
-    })
+    });
 });
 
 router.put('/tiposProblemas/:id', function (req, res, next) {
@@ -58,8 +64,9 @@ router.put('/tiposProblemas/:id', function (req, res, next) {
 
 router.delete('/tiposProblemas/:id', function (req, res, next) {
     tipoProblema.findByIdAndRemove(req.params.id, function (err, data) {
-        if (err)
+        if (err) {
             return next(err);
+        }
 
         res.json(data);
     });

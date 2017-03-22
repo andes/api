@@ -1,12 +1,16 @@
 
 const constantes = {
-    sexo: {
+    SEXO: {
         type: String,
-        enum: ["femenino", "masculino", "otro", ""]
+        enum: ['femenino', 'masculino', 'otro']
     },
-    estadoCivil: {
+    ESTADOCIVIL: {
         type: String,
-        enum: ["casado", "separado", "divorciado", "viudo", "soltero", "otro"]
+        enum: ['casado', 'separado', 'divorciado', 'viudo', 'soltero', 'otro']
+    },
+    CONTACTO: {
+        type: String,
+        enum: ['fijo', 'celular', 'email']
     }
-}
+};
 export = constantes;

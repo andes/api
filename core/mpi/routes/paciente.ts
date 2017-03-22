@@ -1,7 +1,7 @@
 import { ValidatePatient } from '../../../utils/validatePatient';
 import { ValidateFormatDate } from '../../../utils/validateFormatDate';
 import  { matching } from "@andes/match/matching";
-import * as express from 'express'
+import * as express from 'express';
 import { paciente } from '../schemas/paciente';
 import { pacienteMpi } from '../schemas/paciente';
 import * as utils from '../../../utils/utils';
@@ -9,7 +9,7 @@ import * as mongoosastic from 'mongoosastic';
 import { Client } from 'elasticsearch';
 import * as config from '../../../config';
 
-var router = express.Router();
+let router = express.Router();
 
 /**
  * @swagger
@@ -138,13 +138,9 @@ var router = express.Router();
  */
 
 
-
-
-/*Consulta de cantidades*/
+/*Consultas de estado de pacientes para el panel de información*/
 router.get('/pacientes/counts/', function (req, res, next) {
     let filtro;
-    console.log(req.query.consulta);
-
     switch (req.query.consulta) {
         case 'validados':
             filtro = { estado: 'validado' };
@@ -156,19 +152,14 @@ router.get('/pacientes/counts/', function (req, res, next) {
             filtro = { fechaFallecimiento: { $exists: true } };
             break;
     }
-
-    console.log('este es el valor de filtro: ', filtro);
     let query = paciente.find(filtro).count();
-
     query.exec(function (err, data) {
-        if (err) return next(err);
-
-        console.log(data);
-        res.json(data)
-    })
-
-
-})
+        if (err) {
+            return next(err);
+        }
+        res.json(data);
+    });
+});
 
 
 /**
