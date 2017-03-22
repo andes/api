@@ -399,7 +399,7 @@ router.delete('/pacientes/mpi/:id', function (req, res, next) {
     let query = {
         _id: objectId
     };
-      paciente.findById(query, function (err, patientFound) {
+    paciente.findById(query, function (err, patientFound) {
         if (err) {
             return next(err);
         }
@@ -569,13 +569,13 @@ router.delete('/pacientes/:id', function (req, res, next) {
     let query = {
         _id: objectId
     };
-      paciente.findById(query, function (err, patientFound) {
+    paciente.findById(query, function (err, patientFound) {
         if (err) {
             return next(err);
         }
         patientFound.remove();
         /* Docuemnt is unindexed elasticsearch */
-        paciente.on('es-removed', function (err, res) {
+        patientFound.on('es-removed', function (err, res) {
             if (err) {
                 return next(err);
             };
@@ -610,11 +610,14 @@ router.delete('/pacientes/:id', function (req, res, next) {
  *           $ref: '#/definitions/pacientes'
  */
 
+/* Funciones  de operaciones PATCH */
 function updateContactos(req, data) {
     data.markModified('contacto');
     data.contacto = req.body.contacto;
 }
+
 function updateRelaciones(req, data) {
+    data.markModified('relaciones');
     data.relaciones = req.body.relaciones;
 }
 
@@ -628,20 +631,29 @@ router.patch('/pacientes/:id', function (req, res, next) {
         if (err) {
             return next(err);
         }
-         switch (req.body.op) {
-            case 'updateContactos': updateContactos(req, patientFound);
+        switch (req.body.op) {
+            case 'updateContactos':
+                updateContactos(req, patientFound);
                 break;
-            case 'upadteRelaciones': updateRelaciones(req, patientFound);
+            case 'upadteRelaciones':
+                updateRelaciones(req, patientFound);
                 break;
-         }
-         console.log(patientFound);
-         patientFound.save(function (err2) {
-            if (err2) {
-                console.log(err2);
-                return next(err2);
+        }
+        patientFound.save(function (errPatch) {
+            if (errPatch) {
+                return next(errPatch);
             }
-            return res.json(patientFound);
+            patientFound.on('es-indexed', function (errElastic, res) {
+                if (errElastic) {
+                    return next(errElastic);
+                }
+                console.log('paciente indexado en elastic');
+            });
+            if (err) {
+                return next(err);
+            };
         });
+        return res.json(patientFound);
     });
 });
 
@@ -658,7 +670,6 @@ router.post('/pacientes/search/multimatch/:query', function (req, res, next) {
                 query: req.params.query,
                 type: 'cross_fields',
                 fields: ['documento^5', 'nombre', 'apellido^3'],
-                //tie_breaker: 0.3
             }
 
         }
