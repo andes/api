@@ -69,37 +69,40 @@ app.use(function (req, res, next) {
 
 // Error handler
 app.use(function (err: any, req, res, next) {
-    // Parse err
-    let e: Error;
-    if (!isNaN(err)) {
-        e = new Error(HttpStatus.getStatusText(err));
-        (e as any).status = err;
-        err = e;
-    } else {
-        if (typeof err === 'string') {
-            e = new Error(err);
-            (e as any).status = 400;
+
+    if ( err ){
+        // Parse err
+        let e: Error;
+        if (!isNaN(err)) {
+            e = new Error(HttpStatus.getStatusText(err));
+            (e as any).status = err;
             err = e;
         } else {
-            e = new Error(HttpStatus.getStatusText(500));
-            (e as any).status = 500;
-            err = e;
+            if (typeof err === 'string') {
+                e = new Error(err);
+                (e as any).status = 400;
+                err = e;
+            } else {
+                e = err;
+                (e as any).status = 500;
+            }
+        }
+
+        // Send HTML or JSON
+        let response = {
+            message: err.message,
+            error: (app.get('env') === 'development') ? err : null
+        };
+
+        if (req.accepts('application/json')) {
+            res.status(err.status);
+            res.send(response);
+        } else {
+            res.status(err.status);
+            res.render('error', response);
         }
     }
 
-    // Send HTML or JSON
-    let response = {
-        message: err.message,
-        error: (app.get('env') === 'development') ? err : null
-    };
-
-    if (req.accepts('application/json')) {
-        res.status(err.status);
-        res.send(response);
-    } else {
-        res.status(err.status);
-        res.render('error', response);
-    }
 });
 
 

@@ -1,6 +1,10 @@
 import * as mongoose from 'mongoose';
 
 var nombreSchema = new mongoose.Schema({  
-    nombre: String
+    nombre: {
+        type: String,
+        required: true
+    }
 });
+
 export = nombreSchema;

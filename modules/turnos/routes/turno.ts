@@ -2,6 +2,7 @@ import * as express from 'express';
 import * as agenda from '../schemas/agenda';
 import { Logger } from '../../../utils/logService';
 let router = express.Router();
+
 // next como tercer parametro
 router.put('/turno/:id', function (req, res, next) {
   let changes = req.body;

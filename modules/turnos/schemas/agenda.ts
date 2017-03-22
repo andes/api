@@ -4,68 +4,116 @@ import * as nombreApellidoSchema from '../../../core/tm/schemas/nombreApellido';
 import * as mongoose from 'mongoose';
 
 let schema = new mongoose.Schema({
-    organizacion: nombreSchema,
-    tipoPrestaciones: [tipoPrestacionSchema],
+    organizacion: {
+        type: nombreSchema,
+        required: true
+    },
+    tipoPrestaciones: {
+        type: [tipoPrestacionSchema],
+        required: true
+    },
     profesionales: [nombreApellidoSchema],
     espacioFisico: nombreSchema,
-    horaInicio: Date,
-    horaFin: Date,
-    intercalar: Boolean,
-    bloques: [{
-        horaInicio: Date,
-        horaFin: Date,
-        cantidadTurnos: Number,
-        duracionTurno: Number,
-        descripcion: String,
-        tipoPrestaciones: [tipoPrestacionSchema],
-
-        accesoDirectoDelDia: Number,
-        accesoDirectoProgramado: Number,
-        reservadoGestion: Number,
-        reservadoProfesional: Number,
-
-        pacienteSimultaneos: Boolean,
-        cantidadSimultaneos: Number,
-        citarPorBloque: Boolean,
-        cantidadBloque: Number,
-        turnos: [{
+    horaInicio: {
+        type: Date,
+        required: true
+    },
+    horaFin: {
+        type: Date,
+        required: true
+    },
+    intercalar: {
+        type: Boolean,
+        default: false
+    },
+    bloques: {
+        type: Array,
+        required: true,
+        value: [{
             horaInicio: Date,
-            asistencia: {
+            horaFin: Date,
+            cantidadTurnos: {
+                type: Number,
+                required: true
+            },
+            duracionTurno: {
+                type: Number,
+                required: true
+            },
+            descripcion: String,
+            tipoPrestaciones: {
+                type: [tipoPrestacionSchema],
+                required: true
+            },
+            accesoDirectoDelDia: {
+                type: Number,
+                default: 0
+            },
+            accesoDirectoProgramado: {
+                type: Number,
+                default: 0
+            },
+            reservadoGestion: {
+                type: Number,
+                default: 0
+            },
+            reservadoProfesional: {
+                type: Number,
+                default: 0
+            },
+            pacienteSimultaneos: {
                 type: Boolean,
                 default: false
             },
+            cantidadSimultaneos: Number,
+            citarPorBloque: {
+                type: Boolean,
+                default: false
+            },
+            cantidadBloque: Number,
             estado: {
                 type: String,
-                enum: ['disponible', 'asignado', 'bloqueado']
+                enum: ['Planificacion', 'Disponible', 'Publicada', 'Suspendida', 'Pausada'],
+                required: true,
+                default: 'Planificacion'
             },
-            tipoTurno: {
-                type: String,
-                enum: ['delDia', 'programado', 'gestion', 'profesional']
-            },
-            nota: String,
-            motivoSuspension: {
-                type: String,
-                enum: ["Edilicia", "Profesional", "Organizacion"]
-            },
-            paciente: {//pensar que otros datos del paciente conviene tener
-                id: mongoose.Schema.Types.ObjectId,
-                nombre: String,
-                apellido: String,
-                documento: String,
-                telefono: String
-            },
-            tipoPrestacion: tipoPrestacionSchema,
-            idPrestacionPaciente: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'prestacionPaciente'
-            }
-        }],
-    }],
-
-    estado: {
-        type: String,
-        enum: ['Planificacion', 'Disponible', 'Publicada', 'Suspendida', 'Pausada']
+            turnos: [{
+                horaInicio: Date,
+                asistencia: {
+                    type: Boolean,
+                    default: false
+                },
+                estado: {
+                    type: String,
+                    enum: ['disponible', 'asignado', 'bloqueado'],
+                    default: 'disponible'
+                },
+                tipoTurno: {
+                    type: String,
+                    enum: ['delDia', 'programado', 'gestion', 'profesional']
+                },
+                nota: String,
+                motivoSuspension: {
+                    type: String,
+                    enum: ["Edilicia", "Profesional", "Organizacion"]
+                },
+                paciente: { // pensar que otros datos del paciente conviene tener
+                    id: mongoose.Schema.Types.ObjectId,
+                    nombre: String,
+                    apellido: String,
+                    documento: String,
+                    telefono: String
+                },
+                tipoPrestacion: tipoPrestacionSchema,
+                // TODO: Enlace con RUP? cuando alguien defina ALGO
+                idPrestacionPaciente: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: 'prestacionPaciente'
+                }
+            }]
+        }]
     }
+
 });
 
 // Defino Virtuals
@@ -81,9 +129,37 @@ schema.virtual('turnosDisponibles').get(function () {
     return turnosDisponibles;
 });
 
+// Validaciones
+schema.pre('save', function (next) {
+
+
+    // Intercalar
+    if (!/true|false/i.test(this.intercalar)) {
+        next(new Error("invalido"));
+
+        // TODO: loopear bloques y definir si horaInicio/Fin son required
+
+        // TODO: si pacientesSimultaneos, tiene que haber cantidadSimultaneos (> 0)
+
+        // TODO: si citarPorBloque, tiene que haber cantidadBloque (> 0)
+
+    }
+
+
+
+
+    // Continuar con la respuesta del servidor
+    next();
+
+});
+
+
+
+
 // Habilitar plugin de auditoría
-// schema.plugin(require('../../../mongoose/audit'));
+schema.plugin(require('../../../mongoose/audit'));
 
 // Exportar modelo
 let model = mongoose.model('agenda', schema, 'agenda');
+
 export = model;

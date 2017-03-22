@@ -90,7 +90,7 @@ router.get('/agenda/:id*?', function (req, res, next) {
 
 router.post('/agenda', function (req, res, next) {
     let data = new agenda(req.body);
-    // Auth.audit(data, req);
+    Auth.audit(data, req);
     data.save((err) => {
         if (err) {
             return next(err);
@@ -119,7 +119,9 @@ router.delete('/agenda/:id', function (req, res, next) {
 });
 
 router.patch('/agenda/:id', function (req, res, next) {
+
     agenda.findById(req.params.id, function (err, data) {
+
         if (err) {
             return next(err);
         }
@@ -144,15 +146,18 @@ router.patch('/agenda/:id', function (req, res, next) {
             case 'publicarAgenda': publicarAgenda(req, data);
                 break;
         }
-        console.log("Datatta ", data.bloques[0].turnos);
-        data.save(function (err2) {
+        
+        data.save(function (err) {
+
             if (err) {
-                return next(err2);
+                return next(err);
             }
 
             return res.json(data);
         });
+
     });
+    
 });
 
 function darAsistencia(req, data) {
