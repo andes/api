@@ -621,6 +621,11 @@ function updateRelaciones(req, data) {
     data.relaciones = req.body.relaciones;
 }
 
+function updateDireccion(req, data) {
+    data.markModified('direccion');
+    data.direccion = req.body.direccion;
+}
+
 router.patch('/pacientes/:id', function (req, res, next) {
     let ObjectId = mongoose.Types.ObjectId;
     let objectId = new ObjectId(req.params.id);
@@ -638,6 +643,8 @@ router.patch('/pacientes/:id', function (req, res, next) {
             case 'upadteRelaciones':
                 updateRelaciones(req, patientFound);
                 break;
+            case 'updateDireccion':
+                updateDireccion(req, patientFound);
         }
         patientFound.save(function (errPatch) {
             if (errPatch) {
