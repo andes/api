@@ -26,6 +26,12 @@ let schema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    estado: {
+        type: String,
+        enum: ['Planificacion', 'Disponible', 'Publicada', 'Suspendida', 'Pausada'],
+        required: true,
+        default: 'Planificacion'
+    },
     bloques: {
         type: Array,
         required: true,
@@ -71,12 +77,6 @@ let schema = new mongoose.Schema({
                 default: false
             },
             cantidadBloque: Number,
-            estado: {
-                type: String,
-                enum: ['Planificacion', 'Disponible', 'Publicada', 'Suspendida', 'Pausada'],
-                required: true,
-                default: 'Planificacion'
-            },
             turnos: [{
                 horaInicio: Date,
                 asistencia: {
