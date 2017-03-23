@@ -1,5 +1,6 @@
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
+import * as bloqueSchema from '../../../modules/turnos/schemas/bloque';
 import * as nombreApellidoSchema from '../../../core/tm/schemas/nombreApellido';
 import * as mongoose from 'mongoose';
 
@@ -32,87 +33,7 @@ let schema = new mongoose.Schema({
         required: true,
         default: 'Planificacion'
     },
-    bloques: {
-        type: Array,
-        required: true,
-        value: [{
-            horaInicio: Date,
-            horaFin: Date,
-            cantidadTurnos: {
-                type: Number,
-                required: true
-            },
-            duracionTurno: {
-                type: Number,
-                required: true
-            },
-            descripcion: String,
-            tipoPrestaciones: {
-                type: [tipoPrestacionSchema],
-                required: true
-            },
-            accesoDirectoDelDia: {
-                type: Number,
-                default: 0
-            },
-            accesoDirectoProgramado: {
-                type: Number,
-                default: 0
-            },
-            reservadoGestion: {
-                type: Number,
-                default: 0
-            },
-            reservadoProfesional: {
-                type: Number,
-                default: 0
-            },
-            pacienteSimultaneos: {
-                type: Boolean,
-                default: false
-            },
-            cantidadSimultaneos: Number,
-            citarPorBloque: {
-                type: Boolean,
-                default: false
-            },
-            cantidadBloque: Number,
-            turnos: [{
-                horaInicio: Date,
-                asistencia: {
-                    type: Boolean,
-                    default: false
-                },
-                estado: {
-                    type: String,
-                    enum: ['disponible', 'asignado', 'bloqueado'],
-                    default: 'disponible'
-                },
-                tipoTurno: {
-                    type: String,
-                    enum: ['delDia', 'programado', 'gestion', 'profesional']
-                },
-                nota: String,
-                motivoSuspension: {
-                    type: String,
-                    enum: ["Edilicia", "Profesional", "Organizacion"]
-                },
-                paciente: { // pensar que otros datos del paciente conviene tener
-                    id: mongoose.Schema.Types.ObjectId,
-                    nombre: String,
-                    apellido: String,
-                    documento: String,
-                    telefono: String
-                },
-                tipoPrestacion: tipoPrestacionSchema,
-                // TODO: Enlace con RUP? cuando alguien defina ALGO
-                idPrestacionPaciente: {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: 'prestacionPaciente'
-                }
-            }]
-        }]
-    }
+    bloques: [bloqueSchema]
 
 });
 
