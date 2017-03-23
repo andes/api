@@ -271,9 +271,9 @@ router.get('/pacientes/:id', function (req, res, next) {
             if (data) {
                 res.json(data);
             } else {
-                pacienteMpi.findById(req.params.id, function (err, dataMpi) {
-                    if (err) {
-                        next(err);
+                pacienteMpi.findById(req.params.id, function (err2, dataMpi) {
+                    if (err2) {
+                        next(err2);
                     }
                     res.json(dataMpi);
 
