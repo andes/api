@@ -293,7 +293,6 @@ router.get('/pacientes', function (req, res, next) {
     });
 
     let query;
-    console.log('lo que viene por parametros: ', req.query);
     switch (req.query.type) {
         case 'simplequery':
             {
@@ -358,7 +357,6 @@ router.get('/pacientes', function (req, res, next) {
                 let results: Array < any > = ((searchResult.hits || {}).hits || []) // extract results from elastic response
                     .filter(function (hit) {
                         let paciente = hit._source;
-                        console.log('mi paciente', paciente);
                         let pacDto = {
                             documento: req.query.documento ? req.query.documento.toString() : '',
                             nombre: req.query.nombre ? req.query.nombre : '',
@@ -366,11 +364,8 @@ router.get('/pacientes', function (req, res, next) {
                             fechaNacimiento: req.query.fechaNacimiento ? req.query.fechaNacimiento : new Date(),
                             sexo: req.query.sexo ? req.query.sexo : ''
                         };
-                        console.log('-------------------------------------------------');
-                        console.log(pacDto);
                         let match = new matching();
                         let valorMatching = match.matchPersonas(paciente, pacDto, weights);
-                        console.log('% de match', valorMatching);
                         if (valorMatching >= porcentajeMatch) {
                             listaPacientes.push({
                                 id: hit._id,
@@ -388,7 +383,6 @@ router.get('/pacientes', function (req, res, next) {
                         elem['id'] = hit._id;
                         return elem;
                     });
-                    console.log('resultados del suggest:', results);
                     res.send(results);
                 }
             })
@@ -407,7 +401,6 @@ router.get('/pacientes', function (req, res, next) {
                         elem['id'] = hit._id;
                         return elem;
                     });
-                console.log('devulevo datos');
                 res.send(results);
             })
             .catch((error) => {
@@ -428,7 +421,6 @@ router.post('/pacientes/mpi', function (req, res, next) {
             return next(err);
         }
         (newPatientMpi as any).on('es-indexed', function () {
-            console.log('paciente indexed');
         });
         // connElastic.create(newPatient);
         res.json(newPatientMpi);
@@ -496,7 +488,7 @@ router.post('/pacientes', function (req, res, next) {
             return next(err);
         }
         (newPatient as any).on('es-indexed', function () {
-            console.log('paciente indexed');
+           // console.log('paciente indexed');
         });
         // connElastic.create(newPatient);
         res.json(newPatient);
@@ -568,11 +560,11 @@ router.put('/pacientes/:id', function (req, res, next) {
 
             patientFound.save(function (err) {
                 if (err) {
-                    console.log('dio error el save');
+                   // console.log('dio error el save');
                     next(err);
                 }
                 patientFound.on('es-indexed', function () {
-                    console.log('paciente indexado en elastic');
+                   // console.log('paciente indexado en elastic');
                 });
                 res.json(patientFound);
             });
@@ -696,7 +688,7 @@ router.patch('/pacientes/:id', function (req, res, next) {
                 if (errElastic) {
                     return next(errElastic);
                 }
-                console.log('paciente indexado en elastic');
+              //  console.log('paciente indexado en elastic');
             });
             if (err) {
                 return next(err);
