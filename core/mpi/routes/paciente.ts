@@ -1,7 +1,4 @@
 import {
-    ValidatePatient
-} from '../../../utils/validatePatient';
-import {
     ValidateFormatDate
 } from '../../../utils/validateFormatDate';
 import {
@@ -536,7 +533,7 @@ router.put('/pacientes/:id', function (req, res, next) {
     };
     let match = new matching();
 
-    paciente.findById(query, function (err, patientFound) {
+    paciente.findById(query, function (err, patientFound: any) {
         if (!err) {
             /*Update de paciente de todos los campos salvo que esté validado*/
             if (patientFound.estado !== 'validado') {
@@ -558,10 +555,10 @@ router.put('/pacientes/:id', function (req, res, next) {
             patientFound.contacto = req.body.contacto;
             patientFound.identificadores = req.body.identificadores;
 
-            patientFound.save(function (err) {
-                if (err) {
+            patientFound.save(function (err2) {
+                if (err2) {
                    // console.log('dio error el save');
-                    next(err);
+                    return next(err2);
                 }
                 patientFound.on('es-indexed', function () {
                    // console.log('paciente indexado en elastic');
@@ -609,9 +606,9 @@ router.delete('/pacientes/:id', function (req, res, next) {
         }
         patientFound.remove();
         /* Docuemnt is unindexed elasticsearch */
-        patientFound.on('es-removed', function (err, res) {
-            if (err) {
-                return next(err);
+        patientFound.on('es-removed', function (err2, res) {
+            if (err2) {
+                return next(err2);
             };
         });
         res.json(patientFound);
@@ -699,100 +696,100 @@ router.patch('/pacientes/:id', function (req, res, next) {
 });
 
 // ESTE ES PARA REVISAR CREO QUE NO VA A IR MAS!!!
-router.post('/pacientes/search/match/:field/:mode/:percentage', function (req, res, next) {
-    // Se realiza la búsqueda match por el field
-    // La búsqueda se realiza por la clave de blocking
-    // Valores posibles para el campo field
-    // claveBlocking, nombre, apellido, documento
-    /* El modo puede ser suggest or exactMatch
-      suggest: a partir de un subconjunto de campós mínimos de una persona,
-      y de la cota mínima de matcheo devuelve un array con posibles pacientes
-      exactMatch: utiliza todos los campos mínimos y la cota superior de matcheo
-      con el objetivo de devolver la misma persona
+// router.post('/pacientes/search/match/:field/:mode/:percentage', function (req, res, next) {
+//     // Se realiza la búsqueda match por el field
+//     // La búsqueda se realiza por la clave de blocking
+//     // Valores posibles para el campo field
+//     // claveBlocking, nombre, apellido, documento
+//     /* El modo puede ser suggest or exactMatch
+//       suggest: a partir de un subconjunto de campós mínimos de una persona,
+//       y de la cota mínima de matcheo devuelve un array con posibles pacientes
+//       exactMatch: utiliza todos los campos mínimos y la cota superior de matcheo
+//       con el objetivo de devolver la misma persona
 
-      Percentage: es un valor booleano que indica si se devuelve o no el porcentaje de matcheo
-      */
+//       Percentage: es un valor booleano que indica si se devuelve o no el porcentaje de matcheo
+//       */
 
-    let dto = req.body.objetoBusqueda;
-    let condicion = {};
-    let queryMatch = dto.documento;
-    let weights = config.configMpi.weightsDefault;
-    let porcentajeMatch = config.configMpi.cotaMatchMax;
-    let devolverPorcentaje = req.params.percentage;
-    let listaPacientes = [];
-    // Se verifica el modo en que se realiza la búsqueda de pacientes
-    if (req.params.mode) {
-        if (req.params.mode === 'suggest') {
-            weights = config.configMpi.weightsMin;
-            porcentajeMatch = config.configMpi.cotaMatchMin;
-        }
-    }
+//     let dto = req.body.objetoBusqueda;
+//     let condicion = {};
+//     let queryMatch = dto.documento;
+//     let weights = config.configMpi.weightsDefault;
+//     let porcentajeMatch = config.configMpi.cotaMatchMax;
+//     let devolverPorcentaje = req.params.percentage;
+//     let listaPacientes = [];
+//     // Se verifica el modo en que se realiza la búsqueda de pacientes
+//     if (req.params.mode) {
+//         if (req.params.mode === 'suggest') {
+//             weights = config.configMpi.weightsMin;
+//             porcentajeMatch = config.configMpi.cotaMatchMin;
+//         }
+//     }
 
-    let campo = req.params.field;
-    let condicionMatch = {};
-    condicionMatch[campo] = {
-        query: dto[campo],
-        minimum_should_match: 3,
-        fuzziness: 2
-    }
-    condicion = {
-        match: condicionMatch
-    };
+//     let campo = req.params.field;
+//     let condicionMatch = {};
+//     condicionMatch[campo] = {
+//         query: dto[campo],
+//         minimum_should_match: 3,
+//         fuzziness: 2
+//     }
+//     condicion = {
+//         match: condicionMatch
+//     };
 
-    let body = {
-        size: 40,
-        from: 0,
-        query: condicion,
-    };
+//     let body = {
+//         size: 40,
+//         from: 0,
+//         query: condicion,
+//     };
 
-    let connElastic = new Client({
-        host: config.connectionStrings.elastic_main,
-    });
+//     let connElastic = new Client({
+//         host: config.connectionStrings.elastic_main,
+//     });
 
-    connElastic.search({
-            index: 'andes',
-            body: body
-        })
-        .then((searchResult) => {
-            let results: Array < any > = ((searchResult.hits || {}).hits || []) // extract results from elastic response
-                .filter(function (hit) {
-                    let paciente = hit._source;
+//     connElastic.search({
+//             index: 'andes',
+//             body: body
+//         })
+//         .then((searchResult) => {
+//             let results: Array < any > = ((searchResult.hits || {}).hits || []) // extract results from elastic response
+//                 .filter(function (hit) {
+//                     let paciente = hit._source;
 
-                    let pacDto = {
-                        documento: dto.documento ? dto.documento.toString() : paciente.documento,
-                        nombre: dto.nombre ? dto.nombre : paciente.nombre,
-                        apellido: dto.apellido ? dto.apellido : paciente.apellido,
-                        fechaNacimiento: dto.fechaNacimiento ? dto.fechaNacimiento : paciente.fechaNacimiento,
-                        sexo: dto.sexo ? dto.sexo : paciente.sexo
-                    };
-                    let match = new matching();
-                    let valorMatching = match.matchPersonas(paciente, pacDto, weights);
-                    if (valorMatching >= porcentajeMatch) {
-                        listaPacientes.push({
-                            id: hit._id,
-                            paciente: paciente,
-                            match: valorMatching
-                        });
-                        return paciente;
-                    }
-                });
-            if (devolverPorcentaje) {
-                // console.log('LISTA PACIENTES ::' + listaPacientes);
-                res.send(listaPacientes);
-            } else {
-                results = results.map((hit) => {
-                    let elem = hit._source;
-                    elem['id'] = hit._id;
-                    return elem;
-                });
-                res.send(results);
-            }
-        })
-        .catch((error) => {
-            next(error);
-        });
+//                     let pacDto = {
+//                         documento: dto.documento ? dto.documento.toString() : paciente.documento,
+//                         nombre: dto.nombre ? dto.nombre : paciente.nombre,
+//                         apellido: dto.apellido ? dto.apellido : paciente.apellido,
+//                         fechaNacimiento: dto.fechaNacimiento ? dto.fechaNacimiento : paciente.fechaNacimiento,
+//                         sexo: dto.sexo ? dto.sexo : paciente.sexo
+//                     };
+//                     let match = new matching();
+//                     let valorMatching = match.matchPersonas(paciente, pacDto, weights);
+//                     if (valorMatching >= porcentajeMatch) {
+//                         listaPacientes.push({
+//                             id: hit._id,
+//                             paciente: paciente,
+//                             match: valorMatching
+//                         });
+//                         return paciente;
+//                     }
+//                 });
+//             if (devolverPorcentaje) {
+//                 // console.log('LISTA PACIENTES ::' + listaPacientes);
+//                 res.send(listaPacientes);
+//             } else {
+//                 results = results.map((hit) => {
+//                     let elem = hit._source;
+//                     elem['id'] = hit._id;
+//                     return elem;
+//                 });
+//                 res.send(results);
+//             }
+//         })
+//         .catch((error) => {
+//             next(error);
+//         });
 
-});
+// });
 
 
 export = router;
