@@ -316,15 +316,16 @@ router.get('/pacientes', function (req, res, next) {
         case 'suggest':
             {
                 let condicion = {};
+
                 // Sugiere pacientes que tengan la misma clave de blocking
                 let campo = req.query.claveBlocking;
                 let condicionMatch = {};
                 condicionMatch[campo] = {
-                    query: campo,
+                    query: req.query.documento,
                     minimum_should_match: 3,
                     fuzziness: 2
                 };
-                condicion = {
+                query = {
                     match: condicionMatch
                 };
             }
@@ -338,20 +339,21 @@ router.get('/pacientes', function (req, res, next) {
     };
 
     if (req.query.type === 'suggest') {
+
+
         connElastic.search({
-                index: 'andes',
-                body: body
-            })
+            index: 'andes',
+            body: body
+        })
             .then((searchResult) => {
-                let weights = config.configMpi.weightsDefault;
-                let porcentajeMatch = config.configMpi.cotaMatchMax;
+                // Asigno los valores para el suggest
+                let weights = config.configMpi.weightsMin;
+                let porcentajeMatch = config.configMpi.cotaMatchMin;
+
                 let listaPacientes = [];
                 let devolverPorcentaje = req.query.percentage;
-                // Asigno los valores para el suggest
-                weights = config.configMpi.weightsMin;
-                porcentajeMatch = config.configMpi.cotaMatchMin;
 
-                let results: Array < any > = ((searchResult.hits || {}).hits || []) // extract results from elastic response
+                let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
                     .filter(function (hit) {
                         let paciente = hit._source;
                         let pacDto = {
@@ -362,7 +364,10 @@ router.get('/pacientes', function (req, res, next) {
                             sexo: req.query.sexo ? req.query.sexo : ''
                         };
                         let match = new matching();
+                        //console.log("pacDto: ", pacDto);
+                        //console.log("paciente original: ", paciente);
                         let valorMatching = match.matchPersonas(paciente, pacDto, weights);
+                        console.log("valorMatching: ", valorMatching);
                         if (valorMatching >= porcentajeMatch) {
                             listaPacientes.push({
                                 id: hit._id,
@@ -373,6 +378,7 @@ router.get('/pacientes', function (req, res, next) {
                         }
                     });
                 if (devolverPorcentaje) {
+                    console.log("Pacientes con % ", listaPacientes);
                     res.send(listaPacientes);
                 } else {
                     results = results.map((hit) => {
@@ -388,11 +394,11 @@ router.get('/pacientes', function (req, res, next) {
             });
     } else { // Es para los casos de multimatch y singlequery
         connElastic.search({
-                index: 'andes',
-                body: body
-            })
+            index: 'andes',
+            body: body
+        })
             .then((searchResult) => {
-                let results: Array < any > = ((searchResult.hits || {}).hits || []) // extract results from elastic response
+                let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
                     .map((hit) => {
                         let elem = hit._source;
                         elem['id'] = hit._id;
@@ -412,9 +418,11 @@ router.post('/pacientes/mpi', function (req, res, next) {
     // Se genera la clave de blocking
     let claves = match.crearClavesBlocking(newPatientMpi);
     newPatientMpi['claveBlocking'] = claves;
+    console.log("nuevo Paciente", newPatientMpi);
     /*Los repetidos son controlados desde el mpi updater, este post no debería usarse desde un frontend ----> sólo de mpiUpdater*/
     newPatientMpi.save((err) => {
         if (err) {
+            //console.log(err);
             return next(err);
         }
         (newPatientMpi as any).on('es-indexed', function () {
@@ -485,7 +493,7 @@ router.post('/pacientes', function (req, res, next) {
             return next(err);
         }
         (newPatient as any).on('es-indexed', function () {
-           // console.log('paciente indexed');
+            // console.log('paciente indexed');
         });
         // connElastic.create(newPatient);
         res.json(newPatient);
@@ -532,9 +540,10 @@ router.put('/pacientes/:id', function (req, res, next) {
         _id: objectId
     };
     let match = new matching();
-
+    console.log("Body: ", req.body);
     paciente.findById(query, function (err, patientFound: any) {
         if (!err) {
+            console.log("patientFound: ", patientFound);
             /*Update de paciente de todos los campos salvo que esté validado*/
             if (patientFound.estado !== 'validado') {
                 patientFound.documento = req.body.documento;
@@ -547,6 +556,7 @@ router.put('/pacientes/:id', function (req, res, next) {
                 let claves = match.crearClavesBlocking(patientFound);
                 patientFound.claveBlocking = claves;
             }
+            patientFound.genero = req.body.genero;
             patientFound.estadoCivil = req.body.estadoCivil;
             patientFound.entidadesValidadoras = req.body.entidadesValidadoras;
             patientFound.financiador = req.body.financiador;
@@ -557,11 +567,11 @@ router.put('/pacientes/:id', function (req, res, next) {
 
             patientFound.save(function (err2) {
                 if (err2) {
-                   // console.log('dio error el save');
+                    console.log('dio error el save', err2);
                     return next(err2);
                 }
                 patientFound.on('es-indexed', function () {
-                   // console.log('paciente indexado en elastic');
+                    // console.log('paciente indexado en elastic');
                 });
                 res.json(patientFound);
             });
@@ -685,7 +695,7 @@ router.patch('/pacientes/:id', function (req, res, next) {
                 if (errElastic) {
                     return next(errElastic);
                 }
-              //  console.log('paciente indexado en elastic');
+                //  console.log('paciente indexado en elastic');
             });
             if (err) {
                 return next(err);
@@ -695,7 +705,7 @@ router.patch('/pacientes/:id', function (req, res, next) {
     });
 });
 
-// ESTE ES PARA REVISAR CREO QUE NO VA A IR MAS!!!
+//ESTE ES PARA REVISAR CREO QUE NO VA A IR MAS!!!
 // router.post('/pacientes/search/match/:field/:mode/:percentage', function (req, res, next) {
 //     // Se realiza la búsqueda match por el field
 //     // La búsqueda se realiza por la clave de blocking
@@ -747,11 +757,11 @@ router.patch('/pacientes/:id', function (req, res, next) {
 //     });
 
 //     connElastic.search({
-//             index: 'andes',
-//             body: body
-//         })
+//         index: 'andes',
+//         body: body
+//     })
 //         .then((searchResult) => {
-//             let results: Array < any > = ((searchResult.hits || {}).hits || []) // extract results from elastic response
+//             let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
 //                 .filter(function (hit) {
 //                     let paciente = hit._source;
 
