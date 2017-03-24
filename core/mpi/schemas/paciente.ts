@@ -114,45 +114,11 @@ pacienteSchema.plugin(mongoosastic, {
     index: 'andes',
     type: 'paciente'
 } );
+
+// Habilitar plugin de auditoría
+pacienteSchema.plugin(require('../../../mongoose/audit'));
+
+
 export let paciente = mongoose.model('paciente', pacienteSchema, 'paciente');
 export let pacienteMpi = connectMpi.model('paciente', pacienteSchema, 'paciente');
 
-
-/* EVALUAR SI LO BORRAMOS DE UNA VEZ O LO VAMOS A USAR */
-
-// pacienteSchemaMpi.plugin(mongoosastic, {
-//     hosts: [config.connectionStrings.elastic_main],
-//     index: 'andes',
-//     type: 'paciente'
-// });
-/**
- * mongoosastic create mappings
- */
-/*
-paciente.createMapping(function (err, mapping) {
-    if (err) {
-        console.log('error creating mapping (you can safely ignore this)');
-        console.log(err);
-    } else {
-        console.log('mapping created!');
-        console.log(mapping);
-    }
-});
-*/
-/**
- * mongoosastic synchronize
- */
-/*var stream = paciente.synchronize(function (err) {
-        console.log(err);
-    }),
-    count = 0;
-stream.on('data', function (err, doc) {
-    count++;
-});
-stream.on('close', function () {
-    console.log('indexed ' + count + ' documents from LeadSearch!');
-});
-stream.on('error', function (err) {
-    console.log(err);
-});
-*/

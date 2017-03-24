@@ -18,6 +18,7 @@ import {
     Client
 } from 'elasticsearch';
 import * as config from '../../../config';
+import { Auth } from './../../../auth/auth.class';
 
 let router = express.Router();
 
@@ -488,14 +489,18 @@ router.post('/pacientes', function (req, res, next) {
     let claves = match.crearClavesBlocking(newPatient);
     newPatient['claveBlocking'] = claves;
     /*Antes del save se podría realizar una búsqueda y matching para evitar cargar repetidos, actualmente este proceso sólo se realiza del lado de la app*/
+    Auth.audit(newPatient, req);
     newPatient.save((err) => {
         if (err) {
+            console.log(err);
             return next(err);
         }
         (newPatient as any).on('es-indexed', function () {
             // console.log('paciente indexed');
         });
         // connElastic.create(newPatient);
+        console.log('todo ok');
+        
         res.json(newPatient);
     });
 });
@@ -564,7 +569,7 @@ router.put('/pacientes/:id', function (req, res, next) {
             patientFound.direccion = req.body.direccion;
             patientFound.contacto = req.body.contacto;
             patientFound.identificadores = req.body.identificadores;
-
+            Auth.audit(patientFound, req);
             patientFound.save(function (err2) {
                 if (err2) {
                     console.log('dio error el save', err2);
@@ -573,6 +578,7 @@ router.put('/pacientes/:id', function (req, res, next) {
                 patientFound.on('es-indexed', function () {
                     // console.log('paciente indexado en elastic');
                 });
+                
                 res.json(patientFound);
             });
         };
@@ -614,6 +620,7 @@ router.delete('/pacientes/:id', function (req, res, next) {
         if (err) {
             return next(err);
         }
+        Auth.audit(patientFound, req);
         patientFound.remove();
         /* Docuemnt is unindexed elasticsearch */
         patientFound.on('es-removed', function (err2, res) {
