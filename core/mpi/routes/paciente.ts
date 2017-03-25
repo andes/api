@@ -343,7 +343,7 @@ router.get('/pacientes', function (req, res, next) {
     };
 
     // Logger de la consulta a ejecutar
-    Logger.log(req, 'pacientes', 'buscar paciente', query);
+    Logger.log(req, 'pacientes', 'buscar paciente', 'Busqueda usando elastic search: ' + query);
 
     if (req.query.type === 'suggest') {
 
@@ -503,8 +503,7 @@ router.post('/pacientes', function (req, res, next) {
             // console.log('paciente indexed');
         });
         // connElastic.create(newPatient);
-        console.log('todo ok');
-        
+        Logger.log(req, 'pacientes', 'Paciente Nuevo ' + newPatient);
         res.json(newPatient);
     });
 });
@@ -582,7 +581,7 @@ router.put('/pacientes/:id', function (req, res, next) {
                 patientFound.on('es-indexed', function () {
                     // console.log('paciente indexado en elastic');
                 });
-                
+                Logger.log(req, 'pacientes', 'put paciente', 'Paciente Actualizado ' + patientFound);
                 res.json(patientFound);
             });
         };
@@ -632,6 +631,7 @@ router.delete('/pacientes/:id', function (req, res, next) {
                 return next(err2);
             };
         });
+        Logger.log(req, 'pacientes', 'delete paciente', 'Borrado de un paciente: ' + patientFound);
         res.json(patientFound);
     });
 });
