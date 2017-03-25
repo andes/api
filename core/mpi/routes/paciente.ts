@@ -18,6 +18,8 @@ import {
     Client
 } from 'elasticsearch';
 import * as config from '../../../config';
+import { Auth } from './../../../auth/auth.class';
+import { Logger } from '../../../utils/logService';
 
 let router = express.Router();
 
@@ -269,6 +271,8 @@ router.get('/pacientes/:id', function (req, res, next) {
             next(err);
         } else {
             if (data) {
+                // Logger de paciente buscado por ID
+                Logger.log(req, 'pacientes', 'buscar paciente', data);
                 res.json(data);
             } else {
                 pacienteMpi.findById(req.params.id, function (err2, dataMpi) {
@@ -338,8 +342,10 @@ router.get('/pacientes', function (req, res, next) {
         query: query,
     };
 
-    if (req.query.type === 'suggest') {
+    // Logger de la consulta a ejecutar
+    Logger.log(req, 'pacientes', 'buscar paciente', 'Busqueda usando elastic search: ' + query);
 
+    if (req.query.type === 'suggest') {
 
         connElastic.search({
             index: 'andes',
@@ -367,7 +373,7 @@ router.get('/pacientes', function (req, res, next) {
                         //console.log("pacDto: ", pacDto);
                         //console.log("paciente original: ", paciente);
                         let valorMatching = match.matchPersonas(paciente, pacDto, weights);
-                        console.log("valorMatching: ", valorMatching);
+                        // console.log("valorMatching: ", valorMatching);
                         if (valorMatching >= porcentajeMatch) {
                             listaPacientes.push({
                                 id: hit._id,
@@ -378,7 +384,7 @@ router.get('/pacientes', function (req, res, next) {
                         }
                     });
                 if (devolverPorcentaje) {
-                    console.log("Pacientes con % ", listaPacientes);
+                    //console.log("Pacientes con % ", listaPacientes);
                     res.send(listaPacientes);
                 } else {
                     results = results.map((hit) => {
@@ -418,7 +424,6 @@ router.post('/pacientes/mpi', function (req, res, next) {
     // Se genera la clave de blocking
     let claves = match.crearClavesBlocking(newPatientMpi);
     newPatientMpi['claveBlocking'] = claves;
-    console.log("nuevo Paciente", newPatientMpi);
     /*Los repetidos son controlados desde el mpi updater, este post no debería usarse desde un frontend ----> sólo de mpiUpdater*/
     newPatientMpi.save((err) => {
         if (err) {
@@ -488,14 +493,17 @@ router.post('/pacientes', function (req, res, next) {
     let claves = match.crearClavesBlocking(newPatient);
     newPatient['claveBlocking'] = claves;
     /*Antes del save se podría realizar una búsqueda y matching para evitar cargar repetidos, actualmente este proceso sólo se realiza del lado de la app*/
+    Auth.audit(newPatient, req);
     newPatient.save((err) => {
         if (err) {
+            console.log(err);
             return next(err);
         }
         (newPatient as any).on('es-indexed', function () {
             // console.log('paciente indexed');
         });
         // connElastic.create(newPatient);
+        Logger.log(req, 'pacientes', 'Paciente Nuevo ' + newPatient);
         res.json(newPatient);
     });
 });
@@ -564,7 +572,7 @@ router.put('/pacientes/:id', function (req, res, next) {
             patientFound.direccion = req.body.direccion;
             patientFound.contacto = req.body.contacto;
             patientFound.identificadores = req.body.identificadores;
-
+            Auth.audit(patientFound, req);
             patientFound.save(function (err2) {
                 if (err2) {
                     console.log('dio error el save', err2);
@@ -573,6 +581,7 @@ router.put('/pacientes/:id', function (req, res, next) {
                 patientFound.on('es-indexed', function () {
                     // console.log('paciente indexado en elastic');
                 });
+                Logger.log(req, 'pacientes', 'put paciente', 'Paciente Actualizado ' + patientFound);
                 res.json(patientFound);
             });
         };
@@ -614,6 +623,7 @@ router.delete('/pacientes/:id', function (req, res, next) {
         if (err) {
             return next(err);
         }
+        Auth.audit(patientFound, req);
         patientFound.remove();
         /* Docuemnt is unindexed elasticsearch */
         patientFound.on('es-removed', function (err2, res) {
@@ -621,6 +631,7 @@ router.delete('/pacientes/:id', function (req, res, next) {
                 return next(err2);
             };
         });
+        Logger.log(req, 'pacientes', 'delete paciente', 'Borrado de un paciente: ' + patientFound);
         res.json(patientFound);
     });
 });

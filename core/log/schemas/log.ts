@@ -18,7 +18,7 @@ export let logSchema = new mongoose.Schema({
     },
     operacion: {
         type: String,
-        enum: ['asignar turno', 'cancelar turno', 'lista espera', 'modificar agenda']
+        enum: ['asignar turno', 'cancelar turno', 'lista espera', 'modificar agenda', 'buscar paciente', 'post paciente', 'put paciente', 'delete paciente']
     },
     datosOperacion: mongoose.Schema.Types.Mixed
     ,
