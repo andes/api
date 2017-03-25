@@ -19,6 +19,7 @@ import {
 } from 'elasticsearch';
 import * as config from '../../../config';
 import { Auth } from './../../../auth/auth.class';
+import { Logger } from '../../../utils/logService';
 
 let router = express.Router();
 
@@ -270,6 +271,8 @@ router.get('/pacientes/:id', function (req, res, next) {
             next(err);
         } else {
             if (data) {
+                // Logger de paciente buscado por ID
+                Logger.log(req, 'pacientes', 'buscar paciente', data);
                 res.json(data);
             } else {
                 pacienteMpi.findById(req.params.id, function (err2, dataMpi) {
@@ -339,8 +342,10 @@ router.get('/pacientes', function (req, res, next) {
         query: query,
     };
 
-    if (req.query.type === 'suggest') {
+    // Logger de la consulta a ejecutar
+    Logger.log(req, 'pacientes', 'buscar paciente', query);
 
+    if (req.query.type === 'suggest') {
 
         connElastic.search({
             index: 'andes',
@@ -368,7 +373,7 @@ router.get('/pacientes', function (req, res, next) {
                         //console.log("pacDto: ", pacDto);
                         //console.log("paciente original: ", paciente);
                         let valorMatching = match.matchPersonas(paciente, pacDto, weights);
-                        console.log("valorMatching: ", valorMatching);
+                        // console.log("valorMatching: ", valorMatching);
                         if (valorMatching >= porcentajeMatch) {
                             listaPacientes.push({
                                 id: hit._id,
@@ -379,7 +384,7 @@ router.get('/pacientes', function (req, res, next) {
                         }
                     });
                 if (devolverPorcentaje) {
-                    console.log("Pacientes con % ", listaPacientes);
+                    //console.log("Pacientes con % ", listaPacientes);
                     res.send(listaPacientes);
                 } else {
                     results = results.map((hit) => {
@@ -419,7 +424,6 @@ router.post('/pacientes/mpi', function (req, res, next) {
     // Se genera la clave de blocking
     let claves = match.crearClavesBlocking(newPatientMpi);
     newPatientMpi['claveBlocking'] = claves;
-    console.log("nuevo Paciente", newPatientMpi);
     /*Los repetidos son controlados desde el mpi updater, este post no debería usarse desde un frontend ----> sólo de mpiUpdater*/
     newPatientMpi.save((err) => {
         if (err) {
