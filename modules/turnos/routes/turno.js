@@ -90,7 +90,7 @@ router.patch('/agenda/:idAgenda/bloque/:idBloque/turno/:idTurno', function (req,
                                     paciente: update[etiquetaPaciente],
                                     prestacion: update[etiquetaPrestacion]
                                 };
-                                logService_1.Logger.log(req, 'agenda', 'modificar agenda', datosOp);
+                                logService_1.Logger.log(req, 'turnos', 'update', datosOp);
                             });
                             res.json(data);
                         });

@@ -7,6 +7,6 @@ initAPI(app);
 
 // Inicia el servidor
 app.listen(3002, function () {
-    console.log('Inicio del servidor en el puerto 3002');
+    console.log('[API] Escuchando en http://localhost:/3002');
 });
 export = app;

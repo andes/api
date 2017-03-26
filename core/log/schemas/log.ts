@@ -14,11 +14,18 @@ export let logSchema = new mongoose.Schema({
     organizacion: { type: organizacion },
     modulo: {
         type: String,
-        enum: ['turnos', 'pacientes', 'agenda']
+        enum: ['mpi', 'turnos', 'rup']
     },
     operacion: {
         type: String,
-        enum: ['asignar turno', 'cancelar turno', 'lista espera', 'modificar agenda', 'buscar paciente', 'post paciente', 'put paciente', 'delete paciente']
+        enum: [
+            // Operaciones genéricas
+            'query', 'insert', 'update', 'delete', 'scan',
+            // Operaciones de módulos
+            // ... Turnos
+            'asignarTurno', 'cancelarTurno', 'listaEspera'
+            // ... RUP
+        ]
     },
     datosOperacion: mongoose.Schema.Types.Mixed
     ,

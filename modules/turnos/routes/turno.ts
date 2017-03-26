@@ -110,7 +110,8 @@ router.patch('/agenda/:idAgenda/bloque/:idBloque/turno/:idTurno', function (req,
                     paciente: update[etiquetaPaciente],
                     prestacion: update[etiquetaPrestacion]
                   };
-                  Logger.log(req, 'agenda', 'modificar agenda', datosOp);
+
+                  Logger.log(req, 'turnos', 'update', datosOp);
                 });
               res.json(data);
             });
