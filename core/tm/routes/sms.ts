@@ -90,40 +90,50 @@ router.get('/sms', function (req, res, next) {
     let argsNumero = {};
 
     soap.createClient(urlOperador, opciones, function (err, client) {
+        if (err) {
+            console.log(err);
+            return next('No ha sido posible enviar el sms');
+        } else {
+            if (client) {
+                client.recuperarOperador(argsOperador, function (err, result, raw) {
 
-        if (client) {
-            client.recuperarOperador(argsOperador, function (err, result, raw) {
+                    let xml = result.return;
+                    let xmlDoc = libxmljs.parseXml(xml);
+                    let xmlDato = xmlDoc.get('//dato');
 
-                let xml = result.return;
-                let xmlDoc = libxmljs.parseXml(xml);
-                let xmlDato = xmlDoc.get('//dato');
+                    let carrier = operador(xmlDato.text());
 
-                let carrier = operador(xmlDato.text());
-
-                argsNumero = {
-                    destino: req.query.telefono,
-                    mensaje: req.query.mensaje,
-                    operador: carrier,
-                    aplicacion: '',
-                    mobilein: '1'
-                }
-
-                soap.createClient(urlNumero, opciones, function (err, client) {
-                    client.envioSMSOperador(argsNumero, function (err, result, raw) {
-
-                        let xml = result.return;
-                        let xmlDoc = libxmljs.parseXml(xml);
-                        let xmlDato = xmlDoc.get('//status');
-                        let status = xmlDato.text();
-
-                        if (err) {
-                            return next(err);
-                        } else {
-                            return res.json(status);
+                    if (carrier) {
+                        argsNumero = {
+                            destino: req.query.telefono,
+                            mensaje: req.query.mensaje,
+                            operador: carrier,
+                            aplicacion: '',
+                            mobilein: '1'
                         }
-                    });
+
+                        soap.createClient(urlNumero, opciones, function (err, client) {
+                            client.envioSMSOperador(argsNumero, function (err, result, raw) {
+
+                                let xml = result.return;
+                                let xmlDoc = libxmljs.parseXml(xml);
+                                let xmlDato = xmlDoc.get('//status');
+                                let status = xmlDato.text();
+
+                                if (err) {
+                                    return next(err);
+                                } else {
+                                    return res.json(status);
+                                }
+                            });
+                        });
+                    } else {
+                        return next('No se ha podido reconocer el operador');
+                    }
                 });
-            })
+            } else {
+                return next('No es posible conectarse al servidor de envio de mensajes');
+            }
         }
     });
 

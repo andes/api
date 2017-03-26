@@ -565,6 +565,7 @@ router.put('/pacientes/:id', function (req, res, next) {
                 patientFound.claveBlocking = claves;
             }
             patientFound.genero = req.body.genero;
+            patientFound.alias = req.body.alias;
             patientFound.estadoCivil = req.body.estadoCivil;
             patientFound.entidadesValidadoras = req.body.entidadesValidadoras;
             patientFound.financiador = req.body.financiador;

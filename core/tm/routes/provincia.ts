@@ -79,20 +79,20 @@ router.get('/provincias/:id*?', function (req, res, next) {
 
             res.json(data);
         });
-    }
-    else {
+    } else {
         var query;
         query = provincia.find({});
 
         if (req.query.nombre) {
-            query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
+            query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
         if (req.query.pais) {
             query.where('pais._id').equals(req.query.pais);
         }
 
         query.sort({ 'nombre': 1 }).exec((err, data) => {
-            if (err) return next(err);
+            if (err) { return next(err); }
+
             res.json(data);
         });
     }
