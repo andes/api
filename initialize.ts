@@ -56,11 +56,6 @@ export function initAPI(app: Express) {
         }
     }
 
-    // Not found: catch 404 and forward to error handler
-    app.use(function (req, res, next) {
-        next(404);
-    });
-
     // Error handler
     app.use(function (err: any, req, res, next) {
         if (err) {
