@@ -71,24 +71,16 @@ export function initAPI(app: Express) {
                     (e as any).status = 400;
                     err = e;
                 } else {
-                    e = err;
-                    (e as any).status = 500;
+                    err.status = 500;
                 }
             }
 
-            // Send HTML or JSON
-            let response = {
+            // Send response
+            res.status(err.status);
+            res.send({
                 message: err.message,
                 error: (app.get('env') === 'development') ? err : null
-            };
-
-            if (req.accepts('application/json')) {
-                res.status(err.status);
-                res.send(response);
-            } else {
-                res.status(err.status);
-                res.render('error', response);
-            }
+            });
         }
     });
 }
