@@ -1,10 +1,10 @@
 import * as mongoose from 'mongoose';
-import * as lugarSchema from './lugar';
+import * as nombreSchema from './nombre';
 
-var ubicacionSchema = new mongoose.Schema({
-    localidad: lugarSchema,
-    provincia: lugarSchema,
-    pais: lugarSchema
+let ubicacionSchema = new mongoose.Schema({
+    localidad: nombreSchema,
+    provincia: nombreSchema,
+    pais: nombreSchema
 });
 
 export = ubicacionSchema;

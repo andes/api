@@ -1,95 +1,86 @@
+import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
+import * as nombreSchema from '../../../core/tm/schemas/nombre';
+import * as bloqueSchema from '../../../modules/turnos/schemas/bloque';
+import * as nombreApellidoSchema from '../../../core/tm/schemas/nombreApellido';
 import * as mongoose from 'mongoose';
 
-var agendaSchema = new mongoose.Schema({
-    prestaciones: [{
-        id: mongoose.Schema.Types.ObjectId,
-        nombre: String
-    }],
-
-    profesionales: [{
-        id: mongoose.Schema.Types.ObjectId,
-        nombre: String,
-        apellido: String
-    }],
-
-    espacioFisico: {
-        id: mongoose.Schema.Types.ObjectId,
-        nombre: String
+let schema = new mongoose.Schema({
+    organizacion: {
+        type: nombreSchema,
+        required: true
     },
-    horaInicio: Date,
-    horaFin: Date,
-    intercalar: Boolean,
-    bloques: [{
-        horaInicio: Date,
-        horaFin: Date,
-        cantidadTurnos: Number,
-        duracionTurno: Number,
-        descripcion: String,
-        prestaciones: [{
-            id: mongoose.Schema.Types.ObjectId,
-            nombre: String
-        }],
-
-        accesoDirectoDelDia: Number,
-        accesoDirectoProgramado: Number,
-        reservadoGestion: Number,
-        reservadoProfesional: Number,
-
-        pacienteSimultaneos: Boolean,
-        cantidadSimultaneos: Number,
-        citarPorBloque: Boolean,
-        cantidadBloque: Number,
-        turnos: [{
-            horaInicio: Date,
-            estado:
-            {
-                type: String,
-                enum: ["disponible", "asignado"]
-            },
-            paciente: {//pensar que otros datos del paciente conviene tener
-                id: mongoose.Schema.Types.ObjectId,
-                nombre: String,
-                apellido: String,
-                documento: String
-            },
-            pacientes: [{//este array se va a usar solo en el caso de pacientes simultaneos
-                id: mongoose.Schema.Types.ObjectId,
-                nombre: String,
-                apellido: String,
-                documento: String
-            }],
-            prestacion: {
-                id: mongoose.Schema.Types.ObjectId,
-                nombre: String
-            }
-        }],
-    }],
-
+    tipoPrestaciones: {
+        type: [tipoPrestacionSchema],
+        required: true
+    },
+    profesionales: [nombreApellidoSchema],
+    espacioFisico: nombreSchema,
+    horaInicio: {
+        type: Date,
+        required: true
+    },
+    horaFin: {
+        type: Date,
+        required: true
+    },
+    intercalar: {
+        type: Boolean,
+        default: false
+    },
     estado: {
         type: String,
-        enum: ["", "Planificada", "Publicada"]
-    }
+        enum: ['Planificacion', 'Disponible', 'Publicada', 'Suspendida', 'Pausada'],
+        required: true,
+        default: 'Planificacion'
+    },
+    bloques: [bloqueSchema]
+
 });
 
-//Defino Virtuals
-agendaSchema.virtual('turnosDisponibles').get(function () {
+// Defino Virtuals
+schema.virtual('turnosDisponibles').get(function () {
     let turnosDisponibles = 0;
-    let cantidad = 0;
     this.bloques.forEach(function (bloque) {
         bloque.turnos.forEach(function (turno) {
-            if (turno.estado == "disponible") {
-                if (bloque.pacienteSimultaneos){
-                     cantidad = bloque.cantidadSimultaneos - turno.pacientes.length;
-                     turnosDisponibles = turnosDisponibles+cantidad;
-                }
-                else
-                    turnosDisponibles++;
+            if (turno.estado === 'disponible') {
+                turnosDisponibles++;
             }
         });
     });
     return turnosDisponibles;
 });
 
-var agenda = mongoose.model('agenda', agendaSchema, 'agenda');
+// Validaciones
+schema.pre('save', function (next) {
 
-export = agenda;
+
+    // Intercalar
+    if (!/true|false/i.test(this.intercalar)) {
+        next(new Error("invalido"));
+
+        // TODO: loopear bloques y definir si horaInicio/Fin son required
+
+        // TODO: si pacientesSimultaneos, tiene que haber cantidadSimultaneos (> 0)
+
+        // TODO: si citarPorBloque, tiene que haber cantidadBloque (> 0)
+
+    }
+
+
+
+
+    // Continuar con la respuesta del servidor
+    next();
+
+});
+
+
+
+
+// Habilitar plugin de auditoría
+schema.plugin(require('../../../mongoose/audit'));
+
+// Exportar modelo
+let model = mongoose.model('agenda', schema, 'agenda');
+
+export = model;

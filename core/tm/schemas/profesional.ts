@@ -5,24 +5,24 @@ import * as direccionSchema from './direccion';
 import * as contactoSchema from './contacto';
 import * as especialidadSchema from './especialidad';
 
-var profesionalSchema = new mongoose.Schema({
+export let profesionalSchema = new mongoose.Schema({
     documento: String,
     activo: {
         type: Boolean,
         required: true,
         default: true
-    },  
+    },
     nombre: String,
     apellido: String,
     contacto: [contactoSchema],
-    sexo:constantes.sexo,
-    genero: constantes.sexo,
+    sexo: constantes.SEXO,
+    genero: constantes.SEXO,
     fechaNacimiento: Date, // Fecha Nacimiento
     fechaFallecimiento: Date,
     direccion: [direccionSchema],
-    estadoCivil:constantes.estadoCivil,
+    estadoCivil: constantes.ESTADOCIVIL,
     foto: String,
-    rol: String, //Ejemplo Jefe de Terapia intensiva
+    rol: String, // Ejemplo Jefe de Terapia intensiva
     especialidades: [especialidadSchema],
     matriculas: [{
         numero: Number,
@@ -33,13 +33,12 @@ var profesionalSchema = new mongoose.Schema({
             fin: Date
         },
     }],
-})
+});
 
-//Defino Virtuals
-profesionalSchema.virtual('nombreCompleto').get(function() {  
+// Defino Virtuals
+profesionalSchema.virtual('nombreCompleto').get(function () {
     return this.nombre + ' ' + this.apellido;
 });
 
 
-var profesional = mongoose.model('profesional', profesionalSchema, 'profesional');
-export = profesional;
+export let profesional = mongoose.model('profesional', profesionalSchema, 'profesional');

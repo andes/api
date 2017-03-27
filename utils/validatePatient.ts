@@ -7,7 +7,7 @@ export class ValidatePatient {
         var valid = true;
         var estadoCivil = ["casado", "separado", "soltero", "divorciado", "viudo", "otro"];
         var sexo = ["femenino", "masculino", "otro"];
-        var estado = ["temporal", "identificado", "validado", "recienNacido", "extranjero"];
+        var estado = ["temporal", "validado", "recienNacido", "extranjero"];
         var tipoContacto = ["fijo", "celular", "email"];
         var relaciones = ["padre", "madre", "hijo", "hermano", "tutor"];
 
@@ -24,17 +24,17 @@ export class ValidatePatient {
         if (!patient.fechaNacimiento) {
             valid = false;
             errors.push("Paciente no posee fecha de nacimiento")
-        } else {
-
-            if (!ValidateFormatDate.validateDate(patient.fechaNacimiento)) {
-                valid = false;
-                errors.push("Paciente posee fecha de nacimiento con formato inválido")
-            }
         }
 
         if (!patient.sexo) {
             valid = false;
-            errors.push("Paciente no posee fecha de nacimiento")
+            errors.push("Paciente no tiene especificado el sexo")
+        }
+        else {
+            if (sexo.indexOf(patient.sexo) < 0) {
+                valid = false;
+                errors.push("El sexo del paciente no pertenece al conjunto enumerado")
+            }
         }
 
         if (patient.estado) {
@@ -44,6 +44,7 @@ export class ValidatePatient {
                 errors.push("El estado del paciente no pertenece al conjunto enumerado")
             }
         }
+
         if (patient.estadoCivil) {
 
             if (estadoCivil.indexOf(patient.estadoCivil) < 0) {
@@ -52,14 +53,7 @@ export class ValidatePatient {
             }
 
         }
-        if (patient.sexo) {
 
-            if (sexo.indexOf(patient.sexo) < 0) {
-                valid = false;
-                errors.push("El sexo del paciente no pertenece al conjunto enumerado")
-            }
-
-        }
         if (patient.genero) {
 
             if (sexo.indexOf(patient.genero) < 0) {

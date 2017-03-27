@@ -9,7 +9,7 @@ var prestacionSchema = new mongoose.Schema({
     activo: Boolean    
 });
 
-var prestacion = mongoose.model('prestacion', prestacionSchema, 'prestacion');
+//var prestacion = mongoose.model('prestacion', prestacionSchema, 'prestacion');
 
-export = prestacion;
+export = prestacionSchema;
 

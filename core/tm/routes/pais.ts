@@ -55,29 +55,29 @@ var router = express.Router();
  *         schema:
  *           $ref: '#/definitions/pais'
  */
-router.get('/paises/:id*?', function(req, res, next) {
+router.get('/paises/:id*?', function (req, res, next) {
 
-   if (req.params.id) {
-       pais.findById(req.params.id, function (err, data) {
-       if (err) {
-           next(err);
-       };
+    if (req.params.id) {
+        pais.findById(req.params.id, function (err, data) {
+            if (err) {
+                next(err);
+            };
 
-       res.json(data);
-   });
-   }
-   else{
-       var query;
-        
+            res.json(data);
+        });
+    }
+    else {
+        var query;
+
         query = pais.find({});
-        if (req.query.nombre){
+        if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
         }
-        query.exec((err, data)=> {
-           if (err) return next(err);
-           res.json(data);
+        query.sort({ 'nombre': 1 }).exec((err, data) => {
+            if (err) return next(err);
+            res.json(data);
         });
-   }
+    }
 });
 
 export = router;

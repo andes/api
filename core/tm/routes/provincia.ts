@@ -69,33 +69,33 @@ var router = express.Router();
  *         schema:
  *           $ref: '#/definitions/provincia'
  */
-router.get('/provincias/:id*?', function(req, res, next) {
+router.get('/provincias/:id*?', function (req, res, next) {
 
-   if (req.params.id) {
-       provincia.findById(req.params.id, function (err, data) {
-       if (err) {
-           next(err);
-       };
+    if (req.params.id) {
+        provincia.findById(req.params.id, function (err, data) {
+            if (err) {
+                next(err);
+            };
 
-       res.json(data);
-   });
-   }
-   else{
-       var query;
+            res.json(data);
+        });
+    } else {
+        var query;
         query = provincia.find({});
 
-        if (req.query.nombre){
-            query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
+        if (req.query.nombre) {
+            query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
-        if (req.query.pais){
+        if (req.query.pais) {
             query.where('pais._id').equals(req.query.pais);
         }
 
-        query.exec((err, data)=> {
-           if (err) return next(err);
-           res.json(data);
+        query.sort({ 'nombre': 1 }).exec((err, data) => {
+            if (err) { return next(err); }
+
+            res.json(data);
         });
-   }
+    }
 });
 
 export = router;

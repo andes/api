@@ -5,17 +5,12 @@ var router = express.Router();
 var soap = require('soap');
 var libxmljs = require("libxmljs");
 
-// var url = 'http://localhost/prueba_ws/GetNombre.asmx?WSDL';
-
-
-var urlOperador = 'http://192.168.20.119:8080/Carrier/carrier?wsdl'
+var urlOperador = 'http://192.168.20.119:8080/Carrier/carrier?wsdl';
 var urlNumero = 'http://192.168.20.119:8080/MobileOutBackup/MobileOut?wsdl';
 
 router.get('/sms/:telefono', function (req, res, next) {
-    // let args = { numero: req.params.telefono }
 
-    var argsOperador = { telefono: req.params.telefono };
-    // console.log("teléfono: ", argsOperador);
+    let argsOperador = { telefono: req.params.telefono };
 
     let opciones = {
         ignoredNamespaces: {
@@ -27,12 +22,13 @@ router.get('/sms/:telefono', function (req, res, next) {
     var argsNumero = {};
 
     soap.createClient(urlOperador, opciones, function (err, client) {
+
+        /** Validar si "client" trae algo para que no tire error*/
+
         client.recuperarOperador(argsOperador, function (err, result, raw) {
 
             var xml = result.return;
-
             var xmlDoc = libxmljs.parseXml(xml);
-
             var xmlDato = xmlDoc.get('//dato');
 
             let carrier = operador(xmlDato.text());
@@ -48,7 +44,15 @@ router.get('/sms/:telefono', function (req, res, next) {
             soap.createClient(urlNumero, opciones, function (err, client) {
                 client.envioSMSOperador(argsNumero, function (err, result, raw) {
 
-                    console.log(result);
+                    var xml = result.return;
+                    var xmlDoc = libxmljs.parseXml(xml);
+                    var xmlDato = xmlDoc.get('//status');
+                    let status = xmlDato.text();
+
+                    if (err)
+                        return next(err);
+                    else
+                        return res.json(status);
                 })
             });
         })
@@ -70,5 +74,85 @@ router.get('/sms/:telefono', function (req, res, next) {
         return idOperador;
     }
 });
+
+
+router.get('/sms', function (req, res, next) {
+
+    let argsOperador = { telefono: req.query.telefono };
+
+    let opciones = {
+        ignoredNamespaces: {
+            namespaces: ['ws'],
+            override: true
+        }
+    }
+
+    let argsNumero = {};
+
+    soap.createClient(urlOperador, opciones, function (err, client) {
+        if (err) {
+            console.log(err);
+            return next('No ha sido posible enviar el sms');
+        } else {
+            if (client) {
+                client.recuperarOperador(argsOperador, function (err, result, raw) {
+
+                    let xml = result.return;
+                    let xmlDoc = libxmljs.parseXml(xml);
+                    let xmlDato = xmlDoc.get('//dato');
+
+                    let carrier = operador(xmlDato.text());
+
+                    if (carrier) {
+                        argsNumero = {
+                            destino: req.query.telefono,
+                            mensaje: req.query.mensaje,
+                            operador: carrier,
+                            aplicacion: '',
+                            mobilein: '1'
+                        }
+
+                        soap.createClient(urlNumero, opciones, function (err, client) {
+                            client.envioSMSOperador(argsNumero, function (err, result, raw) {
+
+                                let xml = result.return;
+                                let xmlDoc = libxmljs.parseXml(xml);
+                                let xmlDato = xmlDoc.get('//status');
+                                let status = xmlDato.text();
+
+                                if (err) {
+                                    return next(err);
+                                } else {
+                                    return res.json(status);
+                                }
+                            });
+                        });
+                    } else {
+                        return next('No se ha podido reconocer el operador');
+                    }
+                });
+            } else {
+                return next('No es posible conectarse al servidor de envio de mensajes');
+            }
+        }
+    });
+
+    function operador(operador) {
+        let idOperador = '';
+
+        switch (operador) {
+            case 'MOVISTAR': idOperador = '1'
+                break;
+            case 'CLARO': idOperador = '3'
+                break;
+            case 'PERSONAL': idOperador = '4'
+                break;
+            default: 'No existe operador';
+        }
+
+        return idOperador;
+    }
+});
+
 
 export = router;
