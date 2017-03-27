@@ -4,6 +4,23 @@ import * as agenda from '../schemas/agenda';
 
 let router = express.Router();
 
+router.get('/agenda/paciente/:idPaciente', function (req, res, next) {
+    if (req.params.idPaciente) {
+        let query;
+        query = agenda.find({ 'bloques.turnos.paciente.id': req.params.idPaciente });
+        query.limit(10);
+        query.sort({ horaInicio: -1 });
+        // query.select({ 'organizacion.nombre':1 });
+        query.exec(function (err, data) {
+            if (err) {
+                return next(err);
+            }
+            // console.log(data);
+            res.json(data);
+        });
+    }
+})
+
 router.get('/agenda/:id*?', function (req, res, next) {
     if (req.params.id) {
 
@@ -68,7 +85,7 @@ router.get('/agenda/:id*?', function (req, res, next) {
             let variable: any[] = [];
             variable.push({ 'horaInicio': { '$lte': req.query.desde }, 'horaFin': { '$gt': req.query.desde } });
             variable.push({ 'horaInicio': { '$lte': req.query.hasta }, 'horaFin': { '$gt': req.query.hasta } });
-            variable.push({ 'horaInicio': { '$gt': req.query.desde, '$lte': req.query.hasta}});
+            variable.push({ 'horaInicio': { '$gt': req.query.desde, '$lte': req.query.hasta } });
             query.or(variable);
         }
 
@@ -146,7 +163,7 @@ router.patch('/agenda/:id', function (req, res, next) {
             case 'publicarAgenda': publicarAgenda(req, data);
                 break;
         }
-        
+
         data.save(function (err) {
 
             if (err) {
@@ -157,7 +174,7 @@ router.patch('/agenda/:id', function (req, res, next) {
         });
 
     });
-    
+
 });
 
 function darAsistencia(req, data) {
