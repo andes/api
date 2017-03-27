@@ -2,14 +2,6 @@ import * as log from '../core/log/schemas/log';
 
 
 export class Logger {
-
-   /* public static log(res, hardcoded, callback?): any {
-        let newLog = new log.log(hardcoded);
-        console.log(hardcoded);
-        newLog.save(callback);
-        return newLog;
-    }*/
-
     public static log(req, mod, op, data?, callback?): any {
         let newLog = new log.log({
             fecha: new Date(),

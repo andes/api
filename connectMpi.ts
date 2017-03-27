@@ -5,11 +5,11 @@ import * as config from './config';
 let connectMpi = mongoose.createConnection(config.connectionStrings.mongoDB_mpi);
 
 connectMpi.on('error', function (err) {
-    console.log('No se pudo conectar a MPI: ', err);
+    console.log('[Mongoose] No se pudo conectar a MPI');
 });
 
 connectMpi.once('open', function callback() {
-    console.log('Mongo db conectado a MPI');
+    console.log('[Mongoose] Conexión a MPI OK');
 });
 
 export {

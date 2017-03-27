@@ -66,8 +66,9 @@ router.get('/agenda/:id*?', function (req, res, next) {
         // Si rango es true  se buscan las agendas que se solapen con la actual en algún punto
         if (req.query.rango) {
             let variable: any[] = [];
-            variable.push({ 'horaInicio': { '$lte': req.query.desde }, 'horaFin': { '$gt': req.query.desde } })
-            variable.push({ 'horaInicio': { '$lte': req.query.hasta }, 'horaFin': { '$gt': req.query.hasta } })
+            variable.push({ 'horaInicio': { '$lte': req.query.desde }, 'horaFin': { '$gt': req.query.desde } });
+            variable.push({ 'horaInicio': { '$lte': req.query.hasta }, 'horaFin': { '$gt': req.query.hasta } });
+            variable.push({ 'horaInicio': { '$gt': req.query.desde, '$lte': req.query.hasta}});
             query.or(variable);
         }
 
@@ -89,7 +90,7 @@ router.get('/agenda/:id*?', function (req, res, next) {
 
 router.post('/agenda', function (req, res, next) {
     let data = new agenda(req.body);
-    // Auth.audit(data, req);
+    Auth.audit(data, req);
     data.save((err) => {
         if (err) {
             return next(err);
@@ -118,7 +119,9 @@ router.delete('/agenda/:id', function (req, res, next) {
 });
 
 router.patch('/agenda/:id', function (req, res, next) {
+
     agenda.findById(req.params.id, function (err, data) {
+
         if (err) {
             return next(err);
         }
@@ -143,15 +146,18 @@ router.patch('/agenda/:id', function (req, res, next) {
             case 'publicarAgenda': publicarAgenda(req, data);
                 break;
         }
+        
+        data.save(function (err) {
 
-        data.save(function (err2) {
             if (err) {
-                return next(err2);
+                return next(err);
             }
 
             return res.json(data);
         });
+
     });
+    
 });
 
 function darAsistencia(req, data) {
@@ -163,7 +169,7 @@ function liberarTurno(req, data) {
     let turno = getTurno(req, data);
     turno.estado = 'disponible';
     turno.paciente = {};
-    turno.prestacion = null;
+    turno.tipoPrestacion = null;
 }
 
 function bloquearTurno(req, data) {
@@ -185,7 +191,6 @@ function suspenderTurno(req, data) {
     turno.motivoSuspension = req.body.motivoSuspension;
 
     return data;
-
 }
 
 function reasignarTurno(req, data) {
@@ -194,6 +199,7 @@ function reasignarTurno(req, data) {
     turno.estado = 'disponible';
     turno.paciente = {};
     turno.prestacion = null;
+    turno.motivoSuspension = null;
 }
 
 function editarAgenda(req, data) {

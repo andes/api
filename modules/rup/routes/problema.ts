@@ -31,7 +31,17 @@ router.get('/problemas/:idProblema*?', function (req, res, next) {
         }
     }
 
-    query.populate('idProblemaOrigen');
+    // query.populate('idProblemaOrigen');
+    query.populate({
+        path: 'idProblemaOrigen',
+        model: 'problema',
+        populate: {
+            path: 'tipoProblema',
+            model: 'tipoProblema'
+        }
+    });
+
+
     query.populate('tipoProblema').sort({ 'fechaInicio': -1 });
 
     query.exec(function (err, data) {

@@ -1,7 +1,12 @@
 import * as express from 'express';
 import * as agenda from '../schemas/agenda';
 import { Logger } from '../../../utils/logService';
+import { ValidateDarTurno } from '../../../utils/validateDarTurno';
+import { paciente } from '../../../core/mpi/schemas/paciente';
+import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
+
 let router = express.Router();
+
 // next como tercer parametro
 router.put('/turno/:id', function (req, res, next) {
   let changes = req.body;
@@ -30,64 +35,98 @@ router.put('/turno/:id', function (req, res, next) {
   });
 });
 
-router.patch('/agenda/:idAgenda/turno/:idTurno', function (req, res, next) {
-  agenda.findById(req.params.idAgenda, function (err, data) {
-    if (err) {
-      return next(err);
-    }
-    let posBloque: number;
-    let posTurno: number;
-    // console.log((data as any).bloques.length)
-    // console.log('ID BLOQUE: ' + req.body.idBloque)
-    // console.log('ID TURNO: ' + req.body.idTurno)
-    // console.log('POSBLOQUE: ' + (data as any).bloques.indexOf((data as any).bloques[0]))
-    for (let x = 0; x < (data as any).bloques.length; x++) {
-      if ((data as any).bloques[x]._id.equals(req.body.idBloque)) {
-        posBloque = x;
-        // console.log('POSBLOQUE: ' + posBloque);
+
+router.patch('/agenda/:idAgenda/bloque/:idBloque/turno/:idTurno', function (req, res, next) {
+  // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
+
+  let continues = ValidateDarTurno.checkTurno(req.body);
+  if (continues.valid) {
+
+    // se verifica la existencia del paciente 
+
+    paciente.findById(req.body.paciente.id, function verificarPaciente(err, cant) {
+      if (err) {
+        console.log('PACIENTE INEXISTENTE', err);
+        return next(err)
+      } else {
+
+        // se verifica la existencia del tipoPrestacion
+
+        tipoPrestacion.findById(req.body.tipoPrestacion._id, function verificarTipoPrestacion(err, data) {
+          if (err) {
+            console.log('TIPO PRESTACION INEXISTENTE', err);
+            return next(err);
+          } else {
+            console.log(cant);
+
+            // se obtiene la agenda que se va a modificar
+
+            agenda.findById(req.params.idAgenda, function getAgenda(err, data) {
+              if (err) {
+                return next(err);
+              }
+              let posBloque: number;
+              let posTurno: number;
+
+              // Los siguientes 2 for ubican el indice del bloque y del turno
+
+              for (let x = 0; x < (data as any).bloques.length; x++) {
+                if ((data as any).bloques[x]._id.equals(req.params.idBloque)) {
+                  posBloque = x;
+                  console.log('POSBLOQUE: ' + posBloque);
+                }
+              }
+              for (let y = 0; y < (data as any).bloques[posBloque].turnos.length; y++) {
+                if ((data as any).bloques[posBloque].turnos[y]._id.equals(req.params.idTurno)) {
+                  posTurno = y;
+                  console.log('POSTURNO: ' + posTurno);
+                }
+              }
+
+              let etiquetaEstado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.estado';
+              let etiquetaPaciente: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.paciente';
+              let etiquetaPrestacion: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.tipoPrestacion';
+              let update: any = {};
+              update[etiquetaEstado] = 'asignado';
+              update[etiquetaPrestacion] = req.body.tipoPrestacion;
+              update[etiquetaPaciente] = req.body.paciente;
+
+              let query = {
+                _id: req.params.idAgenda,
+              };
+              query[etiquetaEstado] = 'disponible'; // agrega un tag al json query
+              console.log('QUERY ' + query);
+
+              // se hace el update con findOneAndUpdate para garantizar la atomicidad de la operacion
+
+              (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true, passRawResult: true },
+                function actualizarAgenda(err2, doc2, writeOpResult) {
+                  if (err2) {
+                    console.log('ERR2: ' + err2);
+                    return next(err2);
+                  }
+                  let datosOp = {
+                    estado: update[etiquetaEstado],
+                    paciente: update[etiquetaPaciente],
+                    prestacion: update[etiquetaPrestacion]
+                  };
+
+                  Logger.log(req, 'turnos', 'update', datosOp);
+                });
+              res.json(data);
+            });
+
+
+
+          }
+        });
+
       }
-    }
-
-    for (let y = 0; y < (data as any).bloques[posBloque].turnos.length; y++) {
-      // console.log((data as any).bloques[posBloque].turnos[y]._id)
-      // console.log(req.body.idTurno)
-      if ((data as any).bloques[posBloque].turnos[y]._id.equals(req.params.idTurno)) {
-        posTurno = y;
-        console.log('POSTURNO: ' + posTurno);
-      }
-    }
-
-    let etiquetaEstado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.estado';
-    let etiquetaPaciente: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.paciente';
-    let etiquetaPrestacion: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.tipoPrestacion';
-    let update: any = {};
-    update[etiquetaEstado] = 'asignado';
-    update[etiquetaPrestacion] = req.body.tipoPrestacion;
-    update[etiquetaPaciente] = req.body.paciente;
-
-    let query = {
-      _id: req.params.idAgenda,
-    };
-    query[etiquetaEstado] = 'disponible'; // agrega un tag al json query
-    console.log(query);
-
-    (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true, passRawResult: true },
-      function (err2, doc2, writeOpResult) {
-        if (err2) {
-          console.log('ERR2: ' + err2);
-          return next(err2);
-        }
-        let datosOp = {
-          estado: update[etiquetaEstado],
-          paciente: update[etiquetaPaciente],
-          prestacion: update[etiquetaPrestacion]
-        };
-        Logger.log(req, 'agenda', 'modificar agenda', datosOp);
-      });
-    res.json(data);
-  });
-
-
+    });
+  } else {
+    console.log('NO VALIDO');
+    return next();
+  }
 });
 
 export = router;

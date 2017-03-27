@@ -1,15 +1,14 @@
-import { ValidatePatient } from '../../../utils/validatePatient';
-import { ValidateFormatDate } from '../../../utils/validateFormatDate';
-import  { matching } from "@andes/match/matching";
-import * as express from 'express'
+import { matching } from '@andes/match/matching';
+import * as express from 'express';
+import * as mongoose from 'mongoose';
 import { paciente } from '../schemas/paciente';
 import { pacienteMpi } from '../schemas/paciente';
-import * as utils from '../../../utils/utils';
-import * as mongoosastic from 'mongoosastic';
 import { Client } from 'elasticsearch';
 import * as config from '../../../config';
+import { Auth } from './../../../auth/auth.class';
+import { Logger } from '../../../utils/logService';
 
-var router = express.Router();
+let router = express.Router();
 
 /**
  * @swagger
@@ -138,37 +137,36 @@ var router = express.Router();
  */
 
 
-
-
-/*Consulta de cantidades*/
+/*Consultas de estado de pacientes para el panel de información*/
 router.get('/pacientes/counts/', function (req, res, next) {
     let filtro;
-    console.log(req.query.consulta);
-
     switch (req.query.consulta) {
         case 'validados':
-            filtro = { estado: 'validado' };
+            filtro = {
+                estado: 'validado'
+            };
             break;
         case 'temporales':
-            filtro = { estado: 'temporal' };
+            filtro = {
+                estado: 'temporal'
+            };
             break;
         case 'fallecidos':
-            filtro = { fechaFallecimiento: { $exists: true } };
+            filtro = {
+                fechaFallecimiento: {
+                    $exists: true
+                }
+            };
             break;
     }
-
-    console.log('este es el valor de filtro: ', filtro);
     let query = paciente.find(filtro).count();
-
     query.exec(function (err, data) {
-        if (err) return next(err);
-
-        console.log(data);
-        res.json(data)
-    })
-
-
-})
+        if (err) {
+            return next(err);
+        }
+        res.json(data);
+    });
+});
 
 
 /**
@@ -252,164 +250,193 @@ router.get('/pacientes/counts/', function (req, res, next) {
  *           $ref: '#/definitions/pacientes'
  */
 
+// Simple mongodb query by ObjectId --> better performance
+router.get('/pacientes/:id', function (req, res, next) {
+    paciente.findById(req.params.id, function (err, data) {
+        if (err) {
+            next(err);
+        } else {
+            if (data) {
+                // Logger de paciente buscado por ID
+                Logger.log(req, 'mpi', 'query', { mongoDB: data });
+                res.json(data);
+            } else {
+                pacienteMpi.findById(req.params.id, function (err2, dataMpi) {
+                    if (err2) {
+                        next(err2);
+                    }
+                    res.json(dataMpi);
 
-router.get('/pacientes/:id*?', function (req, res, next) {
-
-    if (req.params.id) {
-
-        paciente.findById(req.params.id, function (err, data) {
-            if (err) {
-                next(err);
+                });
             }
-            else {
-                if (data) {
-                    res.json(data);
-                } else {
-                    pacienteMpi.findById(req.params.id, function (err, dataMpi) {
-                        if (err) {
-                            next(err);
+        }
+    });
+});
+
+// Search using elastic search
+router.get('/pacientes', function (req, res, next) {
+    let connElastic = new Client({
+        host: config.connectionStrings.elastic_main,
+    });
+
+    let query;
+    switch (req.query.type) {
+        case 'simplequery':
+            {
+                query = {
+                    simple_query_string: {
+                        query: '\"' + req.query.documento + '\" + \"' + req.query.apellido + '\" + \"' + req.query.nombre + '\" +' + req.query.sexo,
+                        fields: ['documento', 'apellido', 'nombre', 'sexo'],
+                        default_operator: 'and'
+                    }
+                };
+            }
+            break;
+        case 'multimatch':
+            {
+                query = {
+                    multi_match: {
+                        query: req.query.cadenaInput,
+                        type: 'cross_fields',
+                        fields: ['documento^5', 'nombre', 'apellido^3'],
+                    }
+                };
+            }
+            break;
+        case 'suggest':
+            {
+                let condicion = {};
+
+                // Sugiere pacientes que tengan la misma clave de blocking
+                let campo = req.query.claveBlocking;
+                let condicionMatch = {};
+                condicionMatch[campo] = {
+                    query: req.query.documento,
+                    minimum_should_match: 3,
+                    fuzziness: 2
+                };
+                query = {
+                    match: condicionMatch
+                };
+            }
+            break;
+    };
+    // Configuramos la cantidad de resultados que quiero que se devuelva y la query correspondiente
+    let body = {
+        size: 40,
+        from: 0,
+        query: query,
+    };
+
+    // Logger de la consulta a ejecutar
+    Logger.log(req, 'mpi', 'query', { elasticSearch: query });
+
+    if (req.query.type === 'suggest') {
+
+        connElastic.search({
+            index: 'andes',
+            body: body
+        })
+            .then((searchResult) => {
+                // Asigno los valores para el suggest
+                let weights = config.configMpi.weightsMin;
+                let porcentajeMatch = config.configMpi.cotaMatchMin;
+
+                let listaPacientes = [];
+                let devolverPorcentaje = req.query.percentage;
+
+                let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
+                    .filter(function (hit) {
+                        let paciente = hit._source;
+                        let pacDto = {
+                            documento: req.query.documento ? req.query.documento.toString() : '',
+                            nombre: req.query.nombre ? req.query.nombre : '',
+                            apellido: req.query.apellido ? req.query.apellido : '',
+                            fechaNacimiento: req.query.fechaNacimiento ? req.query.fechaNacimiento : new Date(),
+                            sexo: req.query.sexo ? req.query.sexo : ''
+                        };
+                        let match = new matching();
+                        //console.log("pacDto: ", pacDto);
+                        //console.log("paciente original: ", paciente);
+                        let valorMatching = match.matchPersonas(paciente, pacDto, weights);
+                        // console.log("valorMatching: ", valorMatching);
+                        if (valorMatching >= porcentajeMatch) {
+                            listaPacientes.push({
+                                id: hit._id,
+                                paciente: paciente,
+                                match: valorMatching
+                            });
+                            return paciente;
                         }
-                        res.json(dataMpi);
-
-                    })
+                    });
+                if (devolverPorcentaje) {
+                    //console.log("Pacientes con % ", listaPacientes);
+                    res.send(listaPacientes);
+                } else {
+                    results = results.map((hit) => {
+                        let elem = hit._source;
+                        elem['id'] = hit._id;
+                        return elem;
+                    });
+                    res.send(results);
                 }
-            }
-
-
-        });
-    } else {
-        var query;
-        var opciones = {};
-
-        if (req.query.nombre) {
-            opciones["nombre"] = {
-                "$regex": utils.makePattern(req.query.nombre)
-            }
-        }
-        if (req.query.apellido) {
-            opciones["apellido"] = {
-                "$regex": utils.makePattern(req.query.apellido)
-            }
-        }
-        if (req.query.documento) {
-            opciones["documento"] = {
-                "$regex": utils.makePattern(req.query.documento)
-            }
-        }
-        if (req.query.fechaNacimiento) {
-            opciones["fechaNacimiento"] = {
-                "$regex": utils.makePattern(req.query.fechaNacimiento)
-            }
-        }
-        if (req.query.sexo) {
-            opciones["sexo"] = req.query.sexo;
-        }
-        if (req.query.estado) {
-            opciones["estado"] = req.query.estado;
-        }
-
-        if (!Object.keys(opciones).length) {
-            res.status(400).send("Debe ingresar al menos un parámetro");
-            return next(400);
-        }
-
-        query = paciente.find(opciones).sort({
-            apellido: 1,
-            nombre: 1
-        });
-
-        query.exec(function (err, data) {
-            if (err) return next(err);
-            res.json(data);
-        });
-
-    }
-
-});
-
-
-router.post('/pacientes/search', function (req, res) {
-    let lPacientes;
-    let obj = req.body.objetoBusqueda;
-    let apellido = obj.apellido;
-    let nombre = obj.nombre;
-    let documento = obj.documento;
-    let fechaNacimiento = obj.fechaNacimiento;
-    let sexo = obj.sexo;
-    let myQuery = "";
-
-    if (fechaNacimiento == "*") {
-        //Tengo que controlar esta parte porque si en la fecha le mando comodín (*) falla la consulta.
-        myQuery = 'apellido: ' + apellido + ' AND nombre: ' + nombre + ' AND documento: ' + documento + ' AND sexo: ' + sexo;
-    } else {
-        myQuery = 'apellido: ' + apellido + ' AND nombre: ' + nombre + ' AND documento: ' + documento + ' AND sexo: ' + sexo + ' AND fechaNacimiento: ' + fechaNacimiento;
-    }
-
-
-    //console.log(obj);
-    //console.log('Las consulta a ejecutar es: ',myQuery);
-
-    (paciente as any).search({
-        query_string: {
-            query: myQuery
-        }
-    }, {
-            from: 0,
-            size: 50,
-        }, function (err, results) {
-            var pacientes = results.hits.hits.map(function (element) {
-                return element._source;
+            })
+            .catch((error) => {
+                next(error);
             });
-            res.send(pacientes);
-        });
+    } else { // Es para los casos de multimatch y singlequery
+        connElastic.search({
+            index: 'andes',
+            body: body
+        })
+            .then((searchResult) => {
+                let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
+                    .map((hit) => {
+                        let elem = hit._source;
+                        elem['id'] = hit._id;
+                        return elem;
+                    });
+                res.send(results);
+            })
+            .catch((error) => {
+                next(error);
+            });
+    }
 });
-
 
 router.post('/pacientes/mpi', function (req, res, next) {
     let match = new matching();
-    // Validación de campos del paciente del lado de la api
-    let continues = ValidatePatient.checkPatient(req.body);
-    if (continues.valid) {
-        let newPatient = new pacienteMpi(req.body);
-        // Se genera la clave de blocking
-        let claves = match.crearClavesBlocking(newPatient);
-        newPatient["claveBlocking"] = claves;
-        newPatient.save((err) => {
-            if (err) {
-               return next(err);
-            }
-            (newPatient as any).on('es-indexed', function () {
-                console.log('paciente indexed');
-            });
-            // connElastic.create(newPatient);
-            res.json(newPatient);
-        });
-    } else {
-        // Devuelvo el conjunto de mensajes de error junto con el código
-        let err = {
-            status: "409",
-            messages: continues.errors
-        };
-
-        let errores = "";
-        continues.errors.forEach(element => {
-            errores = errores + " | " + element
-        });
-
-        res.status(409).send("Errores de validación: " + errores)
-        return next(err)
-    }
+    let newPatientMpi = new paciente(req.body);
+    // Se genera la clave de blocking
+    let claves = match.crearClavesBlocking(newPatientMpi);
+    newPatientMpi['claveBlocking'] = claves;
+    /*Los repetidos son controlados desde el mpi updater, este post no debería usarse desde un frontend ----> sólo de mpiUpdater*/
+    newPatientMpi.save((err) => {
+        if (err) {
+            return next(err);
+        }
+        res.json(newPatientMpi);
+    });
 });
 
 router.delete('/pacientes/mpi/:id', function (req, res, next) {
-    pacienteMpi.findByIdAndRemove(req.params.id, function (err, data) {
-        if (err)
+    let ObjectId = (require('mongoose').Types.ObjectId);
+    let objectId = new ObjectId(req.params.id);
+    let query = {
+        _id: objectId
+    };
+    paciente.findById(query, function (err, patientFound) {
+        if (err) {
             return next(err);
-        /* Docuemnt is unindexed elasticsearch */
-        pacienteMpi.on('es-removed', function (err, res) {
-            if (err) return next(err);
-        });
-        res.json(data);
+        }
+        patientFound.remove();
+        // Rever este código
+        // pacienteMpi.on('es-removed', function (err, res) {
+        //     if (err) {
+        //         return next(err);
+        //     };
+        // });
+        res.json(patientFound);
     });
 });
 
@@ -441,48 +468,21 @@ router.delete('/pacientes/mpi/:id', function (req, res, next) {
  *         description: Un código de error con un array de mensajes de error
  */
 router.post('/pacientes', function (req, res, next) {
-    /** TODO: resolver el buscar a los tutores */
-    var arrRel = req.body.relaciones;
-    var arrTutorSave = [];
+
     let match = new matching();
-
-    // Validación de campos del paciente del lado de la api
-    var continues = ValidatePatient.checkPatient(req.body);
-    console.log(continues.errors);
-    if (continues.valid) {
-        // req.body.fechaNacimiento = ValidateFormatDate.obtenerFecha(req.body.fechaNacimiento);
-
-        let newPatient = new paciente(req.body);
-        // Se genera la clave de blocking
-        let claves = match.crearClavesBlocking(newPatient);
-        newPatient["claveBlocking"] = claves;
-        newPatient.save((err) => {
-            if (err) {
-                next(err);
-            }
-            (newPatient as any).on('es-indexed', function () {
-                console.log('paciente indexed');
-            });
-            // connElastic.create(newPatient);
-            res.json(newPatient);
-        });
-    } else {
-        // Devuelvo el conjunto de mensajes de error junto con el código
-        let err = {
-            status: "409",
-            messages: continues.errors
-        };
-
-        let errores = "";
-        continues.errors.forEach(element => {
-            errores = errores + " | " + element
-        });
-
-        res.status(409).send("Errores de validación: " + errores)
-        return next(err)
-
-    }
-
+    let newPatient = new paciente(req.body);
+    // Se genera la clave de blocking
+    let claves = match.crearClavesBlocking(newPatient);
+    newPatient['claveBlocking'] = claves;
+    /*Antes del save se podría realizar una búsqueda y matching para evitar cargar repetidos, actualmente este proceso sólo se realiza del lado de la app*/
+    Auth.audit(newPatient, req);
+    newPatient.save((err) => {
+        if (err) {
+            return next(err);
+        }
+        Logger.log(req, 'mpi', 'insert', newPatient);
+        res.json(newPatient);
+    });
 });
 
 /**
@@ -515,39 +515,56 @@ router.post('/pacientes', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/pacientes'
  */
-router.put('/pacientes/:id', function (req, res, next) {
-    let match = new matching();
-    // Validación de campos del paciente del lado de la api
 
-    var continues = ValidatePatient.checkPatient(req.body);
-    var pac = req.body;
-    let claves = match.crearClavesBlocking(pac);
-    pac["claveBlocking"] = claves;
-    if (continues.valid) {
-        paciente.findByIdAndUpdate(pac.id, pac, {
-            new: true
-        }, function (err, data) {
-            if (err)
-                return next(err);
-            res.json(data);
-        });
-    } else {
-        // Devuelvo el conjunto de mensajes de error junto con el código
-        var err = {
-            status: "409",
-            messages: continues.errors
+
+router.put('/pacientes/:id', function (req, res, next) {
+    let ObjectId = mongoose.Types.ObjectId;
+    let objectId = new ObjectId(req.params.id);
+    let query = {
+        _id: objectId
+    };
+    let match = new matching();
+
+    paciente.findById(query, function (err, patientFound: any) {
+        if (err) {
+            return next(404);
         }
 
-        var errores = "";
-        continues.errors.forEach(element => {
-            errores = errores + " | " + element
+        // Guarda los valores originales para el logger
+        let pacienteOriginal = patientFound.toObject();
+
+        /*Update de paciente de todos los campos salvo que esté validado*/
+        if (patientFound.estado !== 'validado') {
+            patientFound.documento = req.body.documento;
+            patientFound.estado = req.body.estado;
+            patientFound.nombre = req.body.nombre;
+            patientFound.apellido = req.body.apellido;
+            patientFound.sexo = req.body.sexo;
+            patientFound.fechaNacimiento = req.body.fechaNacimiento;
+            /*Si es distinto de validado debo generar una nueva clave de blocking */
+            let claves = match.crearClavesBlocking(patientFound);
+            patientFound.claveBlocking = claves;
+        }
+        patientFound.genero = req.body.genero;
+        patientFound.alias = req.body.alias;
+        patientFound.estadoCivil = req.body.estadoCivil;
+        patientFound.entidadesValidadoras = req.body.entidadesValidadoras;
+        patientFound.financiador = req.body.financiador;
+        patientFound.relaciones = req.body.relaciones;
+        patientFound.direccion = req.body.direccion;
+        patientFound.contacto = req.body.contacto;
+        patientFound.identificadores = req.body.identificadores;
+
+        // Habilita auditoria y guarda
+        Auth.audit(patientFound, req);
+        patientFound.save(function (err2) {
+            if (err2) {
+                return next(err2);
+            }
+            Logger.log(req, 'mpi', 'update', { original: pacienteOriginal, nuevo: patientFound });
+            res.json(patientFound);
         });
-
-        res.status(409).send("Errores de validación: " + errores)
-        return next(err)
-
-    }
-
+    });
 });
 
 /**
@@ -576,16 +593,29 @@ router.put('/pacientes/:id', function (req, res, next) {
  *           $ref: '#/definitions/pacientes'
  */
 router.delete('/pacientes/:id', function (req, res, next) {
-    paciente.findByIdAndRemove(req.params.id, function (err, data) {
-        if (err)
+    let ObjectId = mongoose.Types.ObjectId;
+    let objectId = new ObjectId(req.params.id);
+    let query = {
+        _id: objectId
+    };
+    paciente.findById(query, function (err, patientFound) {
+        if (err) {
             return next(err);
-        /* Docuemnt is unindexed elasticsearch */
-        paciente.on('es-removed', function (err, res) {
-            if (err) return next(err);
-        });
-        res.json(data);
+        }
+        Auth.audit(patientFound, req);
+        patientFound.remove();
+
+        // jgabriel | 26/03/2017 | Rever este código porque el error ninguna llega al usuario
+        // patientFound.on('es-removed', function (err2, res) {
+        //     if (err2) {
+        //         return next(err2);
+        //     };
+        // });
+
+        Logger.log(req, 'pacientes', 'delete', patientFound);
+        res.json(patientFound);
     });
-})
+});
 
 /**
  * @swagger
@@ -612,198 +642,158 @@ router.delete('/pacientes/:id', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/pacientes'
  */
+
+/* Funciones  de operaciones PATCH */
+function updateContactos(req, data) {
+    data.markModified('contacto');
+    data.contacto = req.body.contacto;
+}
+
+function updateRelaciones(req, data) {
+    data.markModified('relaciones');
+    data.relaciones = req.body.relaciones;
+}
+
+function updateDireccion(req, data) {
+    data.markModified('direccion');
+    data.direccion = req.body.direccion;
+}
+
 router.patch('/pacientes/:id', function (req, res, next) {
-    let changes = req.body;
-    let conditions = {
-        _id: req.params.id
-    }
-
-    let update: any = {};
-    if (changes.telefono) {
-        conditions['contacto.ranking'] = 1;
-        update['contacto.$.valor'] = changes.telefono;
-        update['contacto.$.ultimaActualizacion'] = new Date();
-    }
-    if (changes.nombre)
-        update['nombre'] = changes.nombre;
-
-    // query.findOneAndUpdate(conditions, update, callback)
-    paciente.findOneAndUpdate(conditions, {
-        $set: update
-    }, function (err, data) {
+    let ObjectId = mongoose.Types.ObjectId;
+    let objectId = new ObjectId(req.params.id);
+    let query = {
+        _id: objectId
+    };
+    paciente.findById(query, function (err, patientFound) {
         if (err) {
             return next(err);
         }
-        res.json(data);
-    });
-});
-
-router.post('/pacientes/search/multimatch/:query', function (req, res, next) {
-    console.log(req.params.query);
-    var connElastic = new Client({
-        host: config.connectionStrings.elastic_main,
-        //  log: 'trace'
-    });
-    let body = {
-        size: 30,
-        from: 0,
-        query: {
-            multi_match: {
-                query: req.params.query,
-                type: 'cross_fields',
-                fields: ['documento^5', 'nombre', 'apellido^3'],
-                //tie_breaker: 0.3
+        switch (req.body.op) {
+            case 'updateContactos':
+                updateContactos(req, patientFound);
+                break;
+            case 'upadteRelaciones':
+                updateRelaciones(req, patientFound);
+                break;
+            case 'updateDireccion':
+                updateDireccion(req, patientFound);
+        }
+        patientFound.save(function (errPatch) {
+            if (errPatch) {
+                return next(errPatch);
             }
 
-        }
-    }
-
-    let pacientesMatch = connElastic.search({
-        index: 'andes', // andes
-        body: body
-        // Se comenta la siguiente linea q: `nombre:${value}`
-    });
-    connElastic.search({
-        index: 'andes', // andes
-        body: body
-        // Se comenta la siguiente linea q: `nombre:${value}`
-    })
-        .then((searchResult) => {
-            let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
-                .map((hit) => { let elem = hit._source; elem['id'] = hit._id; return elem })
-            res.send(results)
-        })
-        .catch((error) => {
-            next(error)
+            // Rever este código
+            // patientFound.on('es-indexed', function (errElastic, res) {
+            //     if (errElastic) {
+            //         return next(errElastic);
+            //     }
+            //     //  console.log('paciente indexado en elastic');
+            // });
+            if (err) {
+                return next(err);
+            };
+            return res.json(patientFound);
         });
-
+    });
 });
 
-router.post('/pacientes/search/simplequery', function (req, res, next) {
-    let dto = req.body.objetoBusqueda;
+// ESTE ES PARA REVISAR CREO QUE NO VA A IR MAS!!!
+// router.post('/pacientes/search/match/:field/:mode/:percentage', function (req, res, next) {
+//     // Se realiza la búsqueda match por el field
+//     // La búsqueda se realiza por la clave de blocking
+//     // Valores posibles para el campo field
+//     // claveBlocking, nombre, apellido, documento
+//     /* El modo puede ser suggest or exactMatch
+//       suggest: a partir de un subconjunto de campós mínimos de una persona,
+//       y de la cota mínima de matcheo devuelve un array con posibles pacientes
+//       exactMatch: utiliza todos los campos mínimos y la cota superior de matcheo
+//       con el objetivo de devolver la misma persona
 
-    let connElastic = new Client({
-        host: config.connectionStrings.elastic_main,
-        //  log: 'trace'
-    });
-    let condicion = {
-        simple_query_string: {
-            query: '\"' + dto.documento + '\" + \"' + dto.apellido + '\" + \"' + dto.nombre + '\" +' + dto.sexo,
-            // "analyzer": "snowball",
-            fields: ["documento", "apellido", "nombre", "sexo"],
-            default_operator: 'and'
-        }
-    }
+//       Percentage: es un valor booleano que indica si se devuelve o no el porcentaje de matcheo
+//       */
 
-    let body = {
-        size: 40,
-        from: 0,
-        query: condicion,
-    };
+//     let dto = req.body.objetoBusqueda;
+//     let condicion = {};
+//     let queryMatch = dto.documento;
+//     let weights = config.configMpi.weightsDefault;
+//     let porcentajeMatch = config.configMpi.cotaMatchMax;
+//     let devolverPorcentaje = req.params.percentage;
+//     let listaPacientes = [];
+//     // Se verifica el modo en que se realiza la búsqueda de pacientes
+//     if (req.params.mode) {
+//         if (req.params.mode === 'suggest') {
+//             weights = config.configMpi.weightsMin;
+//             porcentajeMatch = config.configMpi.cotaMatchMin;
+//         }
+//     }
 
-    connElastic.search({
-        index: 'andes', // andes
-        body: body
-    })
-        .then((searchResult) => {
-            let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
-                .map((hit) => { let elem = hit._source; elem['id'] = hit._id; return elem })
-            res.send(results)
-        })
-        .catch((error) => {
-            next(error)
-        });
+//     let campo = req.params.field;
+//     let condicionMatch = {};
+//     condicionMatch[campo] = {
+//         query: dto[campo],
+//         minimum_should_match: 3,
+//         fuzziness: 2
+//     }
+//     condicion = {
+//         match: condicionMatch
+//     };
 
-});
+//     let body = {
+//         size: 40,
+//         from: 0,
+//         query: condicion,
+//     };
 
-router.post('/pacientes/search/match/:field/:mode/:percentage', function (req, res, next) {
-    // Se realiza la búsqueda match por el field
-    // La búsqueda se realiza por la clave de blocking
-    // Valores posibles para el campo field
-    // claveBlocking, nombre, apellido, documento
-    /* El modo puede ser suggest or exactMatch
-      suggest: a partir de un subconjunto de campós mínimos de una persona,
-      y de la cota mínima de matcheo devuelve un array con posibles pacientes
-      exactMatch: utiliza todos los campos mínimos y la cota superior de matcheo
-      con el objetivo de devolver la misma persona
+//     let connElastic = new Client({
+//         host: config.connectionStrings.elastic_main,
+//     });
 
-      Percentage: es un valor booleano que indica si se devuelve o no el porcentaje de matcheo
-      */
+//     connElastic.search({
+//         index: 'andes',
+//         body: body
+//     })
+//         .then((searchResult) => {
+//             let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
+//                 .filter(function (hit) {
+//                     let paciente = hit._source;
 
-    let dto = req.body.objetoBusqueda;
-    let condicion = {};
-    let queryMatch = dto.documento;
-    let weights = config.configMpi.weightsDefault;
-    let porcentajeMatch = config.configMpi.cotaMatchMax;
-    let devolverPorcentaje = req.params.percentage;
-    let listaPacientes = [];
-    // Se verifica el modo en que se realiza la búsqueda de pacientes
-    if (req.params.mode) {
-        if (req.params.mode == "suggest") {
-            weights = config.configMpi.weightsMin;
-            porcentajeMatch = config.configMpi.cotaMatchMin;
-        }
-    }
+//                     let pacDto = {
+//                         documento: dto.documento ? dto.documento.toString() : paciente.documento,
+//                         nombre: dto.nombre ? dto.nombre : paciente.nombre,
+//                         apellido: dto.apellido ? dto.apellido : paciente.apellido,
+//                         fechaNacimiento: dto.fechaNacimiento ? dto.fechaNacimiento : paciente.fechaNacimiento,
+//                         sexo: dto.sexo ? dto.sexo : paciente.sexo
+//                     };
+//                     let match = new matching();
+//                     let valorMatching = match.matchPersonas(paciente, pacDto, weights);
+//                     if (valorMatching >= porcentajeMatch) {
+//                         listaPacientes.push({
+//                             id: hit._id,
+//                             paciente: paciente,
+//                             match: valorMatching
+//                         });
+//                         return paciente;
+//                     }
+//                 });
+//             if (devolverPorcentaje) {
+//                 // console.log('LISTA PACIENTES ::' + listaPacientes);
+//                 res.send(listaPacientes);
+//             } else {
+//                 results = results.map((hit) => {
+//                     let elem = hit._source;
+//                     elem['id'] = hit._id;
+//                     return elem;
+//                 });
+//                 res.send(results);
+//             }
+//         })
+//         .catch((error) => {
+//             next(error);
+//         });
 
-    let campo = req.params.field;
-    let condicionMatch = {};
-    condicionMatch[campo] = {
-        query: dto[campo],
-        minimum_should_match: 3,
-        fuzziness: 2
-    }
-    condicion = {
-        match: condicionMatch
-    };
-
-    let body = {
-        size: 40,
-        from: 0,
-        query: condicion,
-    };
-
-    let connElastic = new Client({
-        host: config.connectionStrings.elastic_main,
-        //log: 'trace'
-    });
-
-    connElastic.search({
-        index: 'andes', // andes
-        body: body
-    })
-        .then((searchResult) => {
-            let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
-                .filter(function (hit) {
-                    let paciente = hit._source;
-
-                    let pacDto = {
-                        documento: dto.documento ? dto.documento.toString() : paciente.documento,
-                        nombre: dto.nombre ? dto.nombre : paciente.nombre,
-                        apellido: dto.apellido ? dto.apellido : paciente.apellido,
-                        fechaNacimiento: dto.fechaNacimiento ? dto.fechaNacimiento : paciente.fechaNacimiento,
-                        sexo: dto.sexo ? dto.sexo : paciente.sexo
-                    };
-                    let match = new matching();
-                    let valorMatching = match.matchPersonas(paciente, pacDto, weights);
-                    if (valorMatching >= porcentajeMatch) {
-                        listaPacientes.push({id: hit._id, paciente: paciente, match: valorMatching })
-                        //console.log(valorMatching);
-                        return paciente;
-                    }
-                })
-            if (devolverPorcentaje) {
-                console.log("LISTA PACIENTES ::"+listaPacientes);
-                res.send(listaPacientes)
-            } else {
-                results = results.map((hit) => { let elem = hit._source; elem['id'] = hit._id; return elem });
-                res.send(results)
-            }
-        })
-        .catch((error) => {
-            next(error)
-        });
-
-});
+// });
 
 
 export = router;
