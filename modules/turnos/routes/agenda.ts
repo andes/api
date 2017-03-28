@@ -38,6 +38,10 @@ router.get('/agenda/:id*?', function (req, res, next) {
             query.where('espacioFisico._id').equals(req.query.espacioFisico);
         }
 
+        if (req.query.estado) {
+            query.where('estado').equals(req.query.estado);
+        }
+
         if (req.query.organizacion) {
             query.where('organizacion._id').equals(req.query.organizacion);
         }
@@ -141,18 +145,22 @@ router.patch('/agenda/:id', function (req, res, next) {
                 break;
             case 'editarAgenda': editarAgenda(req, data);
                 break;
-            case 'suspenderAgenda': suspenderAgenda(req, data);
+            case 'Disponible': 
+            case 'Publicada': 
+            case 'Pausada': 
+            case 'prePausada': 
+            case 'Suspendida': actualizarEstado(req, data);
                 break;
-            case 'publicarAgenda': publicarAgenda(req, data);
-                break;
+            default:
+                next('Error: No se seleccionó ninguna opción.');
+            break;
         }
         
+        Auth.audit(data, req);
         data.save(function (err) {
-
             if (err) {
                 return next(err);
             }
-
             return res.json(data);
         });
 
@@ -209,13 +217,30 @@ function editarAgenda(req, data) {
     data.espacioFisico = req.body.espacioFisico;
 }
 
-function suspenderAgenda(req, data) {
-    data.estado = req.body.estado;
+
+function actualizarEstado(req, data) {
+    
+    // Si se pasa a estado Pausada, guardamos el estado previo
+    if (req.body.estado === 'Pausada') {
+        data.prePausada = data.estado;
+    }
+
+    // Cuando se reanuda de un estado Pausada, se setea el estado guardado en prePausa
+    if (req.body.estado === 'prePausada') {
+        data.estado = data.prePausada;
+    } else {
+        data.estado = req.body.estado;
+    }
+
 }
 
-function publicarAgenda(req, data) {
-    data.estado = req.body.estado;
-}
+// function suspenderAgenda(req, data) {
+//     data.estado = req.body.estado;
+// }
+
+// function publicarAgenda(req, data) {
+//     data.estado = req.body.estado;
+// }
 
 function guardarNotaTurno(req, data) {
     let turno = getTurno(req, data);

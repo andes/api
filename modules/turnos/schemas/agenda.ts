@@ -33,6 +33,11 @@ let schema = new mongoose.Schema({
         required: true,
         default: 'Planificacion'
     },
+    // Se debe persistir el valor previo al estado de Pausada, para poder reanudar la agenda
+    prePausada: {
+        type: String,
+        enum: ['Planificacion', 'Disponible', 'Publicada', 'Suspendida']
+    },
     bloques: [bloqueSchema]
 
 });
@@ -50,32 +55,24 @@ schema.virtual('turnosDisponibles').get(function () {
     return turnosDisponibles;
 });
 
-// Validaciones
-schema.pre('save', function (next) {
 
-
-    // Intercalar
-    if (!/true|false/i.test(this.intercalar)) {
-        next(new Error("invalido"));
-
-        // TODO: loopear bloques y definir si horaInicio/Fin son required
-
-        // TODO: si pacientesSimultaneos, tiene que haber cantidadSimultaneos (> 0)
-
-        // TODO: si citarPorBloque, tiene que haber cantidadBloque (> 0)
-
-    }
-
-
-
-
-    // Continuar con la respuesta del servidor
-    next();
-
+schema.virtual('estadosAgendas').get(function () {
+    return this.schema.path('estado').enumValues;
 });
 
 
-
+// Validaciones
+schema.pre('save', function (next) {
+    // Intercalar
+    if (!/true|false/i.test(this.intercalar)) {
+        next(new Error("invalido"));
+        // TODO: loopear bloques y definir si horaInicio/Fin son required
+        // TODO: si pacientesSimultaneos, tiene que haber cantidadSimultaneos (> 0)
+        // TODO: si citarPorBloque, tiene que haber cantidadBloque (> 0)
+    }
+    // Continuar con la respuesta del servidor
+    next();
+});
 
 // Habilitar plugin de auditoría
 schema.plugin(require('../../../mongoose/audit'));
