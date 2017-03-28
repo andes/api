@@ -5,8 +5,8 @@ import * as contactoSchema from '../../tm/schemas/contacto';
 import * as financiadorSchema from './financiador';
 import * as constantes from './constantes';
 import * as config from '../../../config';
-import * as moment from 'moment';
 import { connectMpi} from '../../../connectMpi';
+import * as moment from 'moment';
 
 export let pacienteSchema = new mongoose.Schema({
     identificadores: [{
@@ -76,31 +76,32 @@ pacienteSchema.virtual('edad').get(function () {
 });
 pacienteSchema.virtual('edadReal').get(function () {
 
+                //Calcula Edad de una persona (Redondea -- 30.5 años = 30 años)
                 let edad: Object;
                 let fechaNac: any;
                 let fechaActual: Date = new Date();
                 let fechaAct: any;
-                let difAnios: any;
+                let difAnios: any;              
                 let difDias: any;
                 let difMeses: any;
                 let difHs: any;
                 let difD: any;
 
-                fechaNac = moment(this.fechaNacimiento, 'YYYY-MM-DD HH:mm:ss');
-                fechaAct = moment(fechaActual, 'YYYY-MM-DD HH:mm:ss');
-                difDias  = fechaAct.diff(fechaNac, 'd'); // Diferencia en días
-                difAnios = Math.trunc(difDias / 365.25);
-                difMeses = Math.trunc(difDias / 30.4375);
+                fechaNac    = moment(this.fechaNacimiento, 'YYYY-MM-DD HH:mm:ss');
+                fechaAct    = moment(fechaActual, 'YYYY-MM-DD HH:mm:ss');
+                difDias     = fechaAct.diff(fechaNac, 'd'); // Diferencia en días
+                difAnios    = Math.floor(difDias / 365.25);                
+                difMeses = Math.floor(difDias / 30.4375);
                 difHs    = fechaAct.diff(fechaNac, 'h'); // Diferencia en horas
+
 
                 if (difAnios !== 0)  {edad = { valor: difAnios, unidad: 'Años'}}
                 else
-                    if (difMeses !== 0)  {edad = { valor: difMeses, unidad: 'Mes'}}
+                    if (difMeses !== 0)  {edad = { valor: difMeses, unidad: 'Meses'}}
                     else
                         if (difDias !== 0 ) {edad = { valor: difDias, unidad: 'Dias'}}
                         else
-                            if (difHs !== 0) {edad = { valor: difHs, unidad: 'Horas'}}
-
+                            if (difHs !== 0) {edad = { valor: difHs, unidad: 'Horas'}}       
                 return edad
 
 });
