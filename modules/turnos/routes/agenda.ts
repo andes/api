@@ -59,6 +59,13 @@ router.get('/agenda/:id*?', function (req, res, next) {
             query.where('organizacion._id').equals(req.query.organizacion);
         }
 
+        // Filtra por el array de tipoPrestacion enviado como parametro
+        if (req.query.tipoPrestaciones) {
+            console.log('1', req.query.tipoPrestaciones)
+            query.where('tipoPrestaciones._id').in(req.query.tipoPrestaciones);
+        }
+
+
         // Dada una lista de prestaciones, filtra las agendas que tengan al menos una de ellas como prestación
         if (req.query.prestaciones) {
             let arr_prestaciones: any[] = JSON.parse(req.query.prestaciones);
