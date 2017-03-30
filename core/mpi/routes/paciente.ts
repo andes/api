@@ -325,8 +325,17 @@ router.get('/pacientes', function (req, res, next) {
     let body = {
         size: 40,
         from: 0,
-        query: query,
+        query: query
     };
+
+    /*
+    
+        sort: [
+            { 'nombre': { 'order': 'asc' } },
+            { 'apellido': { 'order': 'asc' } }
+        ],
+     */
+
 
     // Logger de la consulta a ejecutar
     Logger.log(req, 'mpi', 'query', { elasticSearch: query });
@@ -339,10 +348,16 @@ router.get('/pacientes', function (req, res, next) {
         })
             .then((searchResult) => {
                 // Asigno los valores para el suggest
-                let weights = config.configMpi.weightsMin;
-                let porcentajeMatch = config.configMpi.cotaMatchMin;
+                let weights = config.configMpi.weightsDefault;
 
-                let listaPacientes = [];
+                if (req.query.escaneado) {
+                    weights = config.configMpi.weightsScan;
+                }
+
+                let porcentajeMatchMax = config.configMpi.cotaMatchMax;
+                let porcentajeMatchMin = config.configMpi.cotaMatchMin;
+                let listaPacientesMax = [];
+                let listaPacientesMin = [];
                 let devolverPorcentaje = req.query.percentage;
 
                 let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
@@ -356,30 +371,39 @@ router.get('/pacientes', function (req, res, next) {
                             sexo: req.query.sexo ? req.query.sexo : ''
                         };
                         let match = new matching();
-                        //console.log("pacDto: ", pacDto);
-                        //console.log("paciente original: ", paciente);
                         let valorMatching = match.matchPersonas(paciente, pacDto, weights);
-                        // console.log("valorMatching: ", valorMatching);
-                        if (valorMatching >= porcentajeMatch) {
-                            listaPacientes.push({
+                        paciente['id'] = hit._id;
+                        if (valorMatching >= porcentajeMatchMax) {
+                            listaPacientesMax.push({
                                 id: hit._id,
                                 paciente: paciente,
                                 match: valorMatching
                             });
-                            return paciente;
+                        } else {
+                            if (valorMatching > porcentajeMatchMin && valorMatching < porcentajeMatchMax) {
+                                listaPacientesMin.push({
+                                    id: hit._id,
+                                    paciente: paciente,
+                                    match: valorMatching
+                                });
+                            }
                         }
                     });
-                if (devolverPorcentaje) {
-                    //console.log("Pacientes con % ", listaPacientes);
-                    res.send(listaPacientes);
+                //if (devolverPorcentaje) {
+
+                if (listaPacientesMax.length > 0) {
+                    res.send(listaPacientesMax);
                 } else {
-                    results = results.map((hit) => {
-                        let elem = hit._source;
-                        elem['id'] = hit._id;
-                        return elem;
-                    });
-                    res.send(results);
+                    res.send(listaPacientesMin);
                 }
+                // } else {
+                //     results = results.map((hit) => {
+                //         let elem = hit._source;
+                //         elem['id'] = hit._id;
+                //         return elem;
+                //     });
+                //     res.send(results);
+                // }
             })
             .catch((error) => {
                 next(error);
