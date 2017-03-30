@@ -1,13 +1,12 @@
-import { tipoProblema } from './../../../modules/rup/schemas/tipoProblema';
-import * as express from 'express'
-import { defaultLimit, maxLimit } from './../../../config'
+import * as express from 'express';
+import { defaultLimit, maxLimit } from './../../../config';
 import { tipoPrestacion } from '../schemas/tipoPrestacion';
 
 var router = express.Router();
 
 router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
 
-    var query;
+    let query;
 
     if (req.params.id) {
 
@@ -15,9 +14,9 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
 
     } else {
 
-        query = tipoPrestacion.find({}); //Trae todos 
+        query = tipoPrestacion.find({}); // Trae todos
 
-        //ver skip limit
+        // ver skip limit
         if (req.query.skip && req.query.limit) {
             let skip: number = parseInt(req.query.skip || 0);
             let limit: number = Math.min(parseInt(req.query.limit || defaultLimit), maxLimit);
@@ -54,7 +53,7 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
 
     }
 
-    query.populate('ejecucion').exec(function (err, data) {
+    query.populate('ejecucion').sort({ 'nombre': 1 }).exec(function (err, data) {
         if (err) {
             console.log(err);
             next(err);
@@ -65,14 +64,15 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
 
 });
 
-router.post('/tiposPrestaciones', function (req, res, next) {  
+router.post('/tiposPrestaciones', function (req, res, next) {
     let tp = new tipoPrestacion(req.body);
     tp.save((err) => {
-        if (err) {            
+        if (err) {
             return next(err);
         }
+
         res.json(tp);
-    })
+    });
 });
 
 router.put('/tiposPrestaciones/:id', function (req, res, next) {
@@ -86,11 +86,12 @@ router.put('/tiposPrestaciones/:id', function (req, res, next) {
 
 router.delete('/tiposPrestaciones/:id', function (req, res, next) {
     tipoPrestacion.findByIdAndRemove(req.params.id, function (err, data) {
-        if (err)
+        if (err) {
             return next(err);
+        }
 
         res.json(data);
     });
-})
+});
 
 export = router;

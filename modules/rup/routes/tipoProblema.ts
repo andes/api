@@ -4,7 +4,6 @@ import { tipoProblema } from '../schemas/tipoProblema';
 let router = express.Router();
 
 router.get('/tiposProblemas/:id*?', function (req, res, next) {
-
     let query;
 
     if (req.params.id) {
@@ -12,8 +11,7 @@ router.get('/tiposProblemas/:id*?', function (req, res, next) {
         query = tipoProblema.findById(req.params.id);
 
     } else {
-
-        query = tipoProblema.find({}); //Trae todos 
+        query = tipoProblema.find({}); // Trae todos
 
         if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
@@ -29,14 +27,15 @@ router.get('/tiposProblemas/:id*?', function (req, res, next) {
 
         if (req.query.tiposProblemas) {
             let idsTiposProblemas = req.query.tiposProblemas.split(',');
-            query.where('id').in(idsTiposProblemas);
+            query.where('_id').in(idsTiposProblemas);
         }
     }
 
     query.sort({ 'nombre': 1 }).exec(function (err, data) {
         if (err) {
             next(err);
-        };
+        }
+
         res.json(data);
     });
 
