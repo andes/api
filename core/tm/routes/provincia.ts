@@ -80,7 +80,7 @@ router.get('/provincias/:id*?', function (req, res, next) {
             res.json(data);
         });
     } else {
-        var query;
+        let query;
         query = provincia.find({});
 
         if (req.query.nombre) {

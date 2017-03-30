@@ -76,18 +76,19 @@ router.get('/barrios/:id*?', function(req, res, next) {
        };
        res.json(data);
    });
-   }
-   else{
-       var query;
+   } else {
+       let query;
         query = barrio.find({});
-        if (req.query.nombre){
+        if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
         }
-        if (req.query.localidad){
+        if (req.query.localidad) {
             query.where('localidad._id').equals(req.query.localidad);
         }
-        query.exec((err, data)=> {
-           if (err) return next(err);
+        query.exec((err, data) => {
+            if (err) {
+                return next(err);
+            };
            res.json(data);
         });
    }

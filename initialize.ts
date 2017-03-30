@@ -62,25 +62,25 @@ export function initAPI(app: Express) {
             // Parse err
             let e: Error;
             if (!isNaN(err)) {
-                e = new Error(HttpStatus.getStatusText(err));
-                (e as any).status = err;
-                err = e;
+                // e = new Error(HttpStatus.getStatusText(err));
+                // (e as any).status = err;
+                // err = e;
             } else {
                 if (typeof err === 'string') {
-                    e = new Error(err);
-                    (e as any).status = 400;
-                    err = e;
+                    //  e = new Error(err);
+                    //  (e as any).status = 400;
+                    //  err = e;
                 } else {
-                    err.status = 500;
+                    //err.status = 500;
                 }
             }
 
             // Send response
             res.status(err.status);
-            res.send({
-                message: err.message,
-                error: (app.get('env') === 'development') ? err : null
-            });
+            //  res.send({
+            //      message: err.message,
+            //      error: (app.get('env') === 'development') ? err : null
+            //  });
         }
     });
 }

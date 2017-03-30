@@ -1,7 +1,7 @@
-import * as express from 'express'
-import * as localidad from '../schemas/localidad'
+import * as express from 'express';
+import * as localidad from '../schemas/localidad';
 
-var router = express.Router();
+let router = express.Router();
 
 /**
  * @swagger
@@ -78,18 +78,21 @@ router.get('/localidades/:id*?', function(req, res, next) {
 
        res.json(data);
    });
-   }
-   else{
-       var query;
+   } else {
+       let query;
         query = localidad.find({}).sort({nombre:1});
-        if (req.query.nombre){
+        if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
         }
-        if (req.query.provincia){
+        if (req.query.provincia) {
+            console.log('la provincia por parametro: ', req.query.provincia);
             query.where('provincia._id').equals(req.query.provincia);
         }
-        query.exec((err, data)=> {
-           if (err) return next(err);
+        query.exec((err, data) => {
+           if (err) {
+            return next(err);
+           }
+           console.log('datitos: ', data);
            res.json(data);
         });
    }
