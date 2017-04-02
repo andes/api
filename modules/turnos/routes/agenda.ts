@@ -4,6 +4,23 @@ import * as agenda from '../schemas/agenda';
 
 let router = express.Router();
 
+router.get('/agenda/paciente/:idPaciente', function (req, res, next) {
+    if (req.params.idPaciente) {
+        let query;
+        query = agenda.find({ 'bloques.turnos.paciente.id': req.params.idPaciente });
+        query.limit(10);
+        query.sort({ horaInicio: -1 });
+        // query.select({ 'organizacion.nombre':1 });
+        query.exec(function (err, data) {
+            if (err) {
+                return next(err);
+            }
+            // console.log(data);
+            res.json(data);
+        });
+    }
+})
+
 router.get('/agenda/:id*?', function (req, res, next) {
     if (req.params.id) {
 
@@ -38,9 +55,20 @@ router.get('/agenda/:id*?', function (req, res, next) {
             query.where('espacioFisico._id').equals(req.query.espacioFisico);
         }
 
+        if (req.query.estado) {
+            query.where('estado').equals(req.query.estado);
+        }
+
         if (req.query.organizacion) {
             query.where('organizacion._id').equals(req.query.organizacion);
         }
+
+        // Filtra por el array de tipoPrestacion enviado como parametro
+        if (req.query.tipoPrestaciones) {
+            console.log('1', req.query.tipoPrestaciones)
+            query.where('tipoPrestaciones._id').in(req.query.tipoPrestaciones);
+        }
+
 
         // Dada una lista de prestaciones, filtra las agendas que tengan al menos una de ellas como prestación
         if (req.query.prestaciones) {
@@ -68,7 +96,7 @@ router.get('/agenda/:id*?', function (req, res, next) {
             let variable: any[] = [];
             variable.push({ 'horaInicio': { '$lte': req.query.desde }, 'horaFin': { '$gt': req.query.desde } });
             variable.push({ 'horaInicio': { '$lte': req.query.hasta }, 'horaFin': { '$gt': req.query.hasta } });
-            variable.push({ 'horaInicio': { '$gt': req.query.desde, '$lte': req.query.hasta}});
+            variable.push({ 'horaInicio': { '$gt': req.query.desde, '$lte': req.query.hasta } });
             query.or(variable);
         }
 
@@ -141,23 +169,31 @@ router.patch('/agenda/:id', function (req, res, next) {
                 break;
             case 'editarAgenda': editarAgenda(req, data);
                 break;
-            case 'suspenderAgenda': suspenderAgenda(req, data);
+            case 'Disponible': 
+            case 'Publicada': 
+            case 'Pausada': 
+            case 'prePausada': 
+            case 'Suspendida': actualizarEstado(req, data);
                 break;
-            case 'publicarAgenda': publicarAgenda(req, data);
-                break;
+            default:
+                next('Error: No se seleccionó ninguna opción.');
+            break;
         }
+<<<<<<< HEAD
         
-        data.save(function (err) {
+        Auth.audit(data, req);
+=======
 
+>>>>>>> local
+        data.save(function (err) {
             if (err) {
                 return next(err);
             }
-
             return res.json(data);
         });
 
     });
-    
+
 });
 
 function darAsistencia(req, data) {
@@ -209,13 +245,30 @@ function editarAgenda(req, data) {
     data.espacioFisico = req.body.espacioFisico;
 }
 
-function suspenderAgenda(req, data) {
-    data.estado = req.body.estado;
+
+function actualizarEstado(req, data) {
+    
+    // Si se pasa a estado Pausada, guardamos el estado previo
+    if (req.body.estado === 'Pausada') {
+        data.prePausada = data.estado;
+    }
+
+    // Cuando se reanuda de un estado Pausada, se setea el estado guardado en prePausa
+    if (req.body.estado === 'prePausada') {
+        data.estado = data.prePausada;
+    } else {
+        data.estado = req.body.estado;
+    }
+
 }
 
-function publicarAgenda(req, data) {
-    data.estado = req.body.estado;
-}
+// function suspenderAgenda(req, data) {
+//     data.estado = req.body.estado;
+// }
+
+// function publicarAgenda(req, data) {
+//     data.estado = req.body.estado;
+// }
 
 function guardarNotaTurno(req, data) {
     let turno = getTurno(req, data);
