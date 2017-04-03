@@ -179,12 +179,7 @@ router.patch('/agenda/:id', function (req, res, next) {
                 next('Error: No se seleccionó ninguna opción.');
             break;
         }
-<<<<<<< HEAD
-        
         Auth.audit(data, req);
-=======
-
->>>>>>> local
         data.save(function (err) {
             if (err) {
                 return next(err);
