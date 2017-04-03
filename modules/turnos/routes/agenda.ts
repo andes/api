@@ -76,7 +76,7 @@ router.get('/agenda/:id*?', function (req, res, next) {
             let variable: any[] = [];
             arr_prestaciones.forEach((prestacion, index) => {
 
-                variable.push({ 'prestaciones._id': prestacion.id })
+                variable.push({ 'prestaciones._id': prestacion.id });
             });
             query.or(variable);
         }
@@ -169,22 +169,20 @@ router.patch('/agenda/:id', function (req, res, next) {
                 break;
             case 'editarAgenda': editarAgenda(req, data);
                 break;
-            case 'Disponible': 
-            case 'Publicada': 
-            case 'Pausada': 
-            case 'prePausada': 
+            case 'Disponible':
+            case 'Publicada': actualizarEstado(req, data);
+                break;
+            case 'Pausada':
+            case 'prePausada':
             case 'Suspendida': actualizarEstado(req, data);
                 break;
             default:
                 next('Error: No se seleccionó ninguna opción.');
-            break;
+                break;
         }
-<<<<<<< HEAD
-        
-        Auth.audit(data, req);
-=======
 
->>>>>>> local
+        Auth.audit(data, req);
+
         data.save(function (err) {
             if (err) {
                 return next(err);
@@ -247,10 +245,18 @@ function editarAgenda(req, data) {
 
 
 function actualizarEstado(req, data) {
-    
+
     // Si se pasa a estado Pausada, guardamos el estado previo
     if (req.body.estado === 'Pausada') {
         data.prePausada = data.estado;
+    }
+    // Si se pasa a Publicada
+    if (req.body.estado === 'Publicada') {
+        data.estado = 'Publicada';
+        data.bloques.forEach((bloque, index) => {
+            bloque.accesoDirectoProgramado = bloque.accesoDirectoProgramado + bloque.reservadoProfesional;
+            bloque.reservadoProfesional = 0;
+        });
     }
 
     // Cuando se reanuda de un estado Pausada, se setea el estado guardado en prePausa
