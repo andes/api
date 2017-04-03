@@ -1,5 +1,4 @@
 import * as mongoose from 'mongoose';
-import * as ubicacionSchema from './ubicacion';
 import * as constantes from './constantes';
 import * as direccionSchema from './direccion';
 import * as contactoSchema from './contacto';
