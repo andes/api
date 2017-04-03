@@ -47,8 +47,8 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         }
 
         if (req.query.turnos) {
-            let idsTurnos = req.query.turnos.split(",");
-            query.where('solicitud.idTurno').in(idsTurnos);
+            //let idsTurnos = req.query.turnos.split(",");
+            query.where('solicitud.idTurno').in(req.query.turnos);
         }
     }
 

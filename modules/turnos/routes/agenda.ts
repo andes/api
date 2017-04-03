@@ -181,6 +181,7 @@ router.patch('/agenda/:id', function (req, res, next) {
                 break;
         }
 
+
         Auth.audit(data, req);
 
         data.save(function (err) {
