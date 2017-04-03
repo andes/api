@@ -82,7 +82,7 @@ router.patch('/agenda/:idAgenda/bloque/:idBloque/turno/:idTurno', function (req,
                   console.log('POSTURNO: ' + posTurno);
                 }
               }
-
+              let etiquetaTipoTurno: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.tipoTurno';
               let etiquetaEstado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.estado';
               let etiquetaPaciente: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.paciente';
               let etiquetaPrestacion: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.tipoPrestacion';
@@ -90,6 +90,7 @@ router.patch('/agenda/:idAgenda/bloque/:idBloque/turno/:idTurno', function (req,
               update[etiquetaEstado] = 'asignado';
               update[etiquetaPrestacion] = req.body.tipoPrestacion;
               update[etiquetaPaciente] = req.body.paciente;
+              update[etiquetaTipoTurno] = req.body.tipoTurno;
 
               let query = {
                 _id: req.params.idAgenda,
@@ -108,7 +109,8 @@ router.patch('/agenda/:idAgenda/bloque/:idBloque/turno/:idTurno', function (req,
                   let datosOp = {
                     estado: update[etiquetaEstado],
                     paciente: update[etiquetaPaciente],
-                    prestacion: update[etiquetaPrestacion]
+                    prestacion: update[etiquetaPrestacion],
+                    tipoTurno: update[etiquetaTipoTurno]
                   };
 
                   Logger.log(req, 'turnos', 'update', datosOp);

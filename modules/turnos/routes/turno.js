@@ -67,6 +67,7 @@ router.patch('/agenda/:idAgenda/bloque/:idBloque/turno/:idTurno', function (req,
                                     console.log('POSTURNO: ' + posTurno);
                                 }
                             }
+                            var etiquetaTipoTurno = 'bloques.' + posBloque + '.turnos.' + posTurno + '.tipoTurno';
                             var etiquetaEstado = 'bloques.' + posBloque + '.turnos.' + posTurno + '.estado';
                             var etiquetaPaciente = 'bloques.' + posBloque + '.turnos.' + posTurno + '.paciente';
                             var etiquetaPrestacion = 'bloques.' + posBloque + '.turnos.' + posTurno + '.tipoPrestacion';
@@ -74,6 +75,7 @@ router.patch('/agenda/:idAgenda/bloque/:idBloque/turno/:idTurno', function (req,
                             update[etiquetaEstado] = 'asignado';
                             update[etiquetaPrestacion] = req.body.tipoPrestacion;
                             update[etiquetaPaciente] = req.body.paciente;
+                            update[etiquetaTipoTurno] = req.body.tipoTurno;
                             var query = {
                                 _id: req.params.idAgenda,
                             };
@@ -88,7 +90,8 @@ router.patch('/agenda/:idAgenda/bloque/:idBloque/turno/:idTurno', function (req,
                                 var datosOp = {
                                     estado: update[etiquetaEstado],
                                     paciente: update[etiquetaPaciente],
-                                    prestacion: update[etiquetaPrestacion]
+                                    prestacion: update[etiquetaPrestacion],
+                                    tipoTurno: update[etiquetaTipoTurno]
                                 };
                                 logService_1.Logger.log(req, 'turnos', 'update', datosOp);
                             });
