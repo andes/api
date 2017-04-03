@@ -6,6 +6,7 @@ import * as config from '../../config';
 import { Auth } from './../auth.class';
 import * as organizacion from '../schemas/organizacion';
 import * as permisos from '../schemas/permisos';
+import { profesional } from './../../core/tm/schemas/profesional';
 
 let router = express.Router();
 
@@ -29,8 +30,9 @@ router.post('/login', function (req, res, next) {
         Promise.all([
             organizacion.model.findById(req.body.organizacion, { nombre: true }),
             permisos.model.findOne({ usuario: req.body.usuario, organizacion: req.body.organizacion }),
+            profesional.findOne({ documento: req.body.usuario }, {matriculas: true, especialidad: true}),
         ]).then((data: any[]) => {
-            // Verifica que la organización sea válida
+            // Verifica que la organización sea válida y que tenga permisos asignados
             if (!data[0] || !data[1] || data[1].length === 0) {
                 return next(403);
             }
@@ -46,6 +48,7 @@ router.post('/login', function (req, res, next) {
                     documento: data[1].usuario
                 },
                 roles: [data[1].roles],
+                profesional: data[2],
                 organizacion: data[0],
                 permisos: data[1].permisos
             };
