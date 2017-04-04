@@ -10,6 +10,11 @@ import { Logger } from '../../../utils/logService';
 
 let router = express.Router();
 
+
+function sortMatching(a, b) {
+    return b.match - a.match;
+}
+
 /**
  * @swagger
  * definition:
@@ -380,7 +385,7 @@ router.get('/pacientes', function (req, res, next) {
                                 match: valorMatching
                             });
                         } else {
-                            if (valorMatching > porcentajeMatchMin && valorMatching < porcentajeMatchMax) {
+                            if (valorMatching >= porcentajeMatchMin && valorMatching < porcentajeMatchMax) {
                                 listaPacientesMin.push({
                                     id: hit._id,
                                     paciente: paciente,
@@ -392,8 +397,10 @@ router.get('/pacientes', function (req, res, next) {
                 //if (devolverPorcentaje) {
 
                 if (listaPacientesMax.length > 0) {
+                    listaPacientesMax.sort(sortMatching);
                     res.send(listaPacientesMax);
                 } else {
+                    listaPacientesMin.sort(sortMatching);
                     res.send(listaPacientesMin);
                 }
                 // } else {
