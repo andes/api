@@ -53,7 +53,8 @@ export let pacienteSchema = new mongoose.Schema({
     }],
     financiador: [financiadorSchema],
     claveBlocking: {type: [String] , es_indexed: true},
-    entidadesValidadoras: [String]
+    entidadesValidadoras: [String],
+    scan: String
 });
 
 /* Se definen los campos virtuals */
