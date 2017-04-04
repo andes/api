@@ -1,4 +1,5 @@
 import * as express from 'express';
+import { Auth } from './../../../auth/auth.class';
 import { prestacionPaciente } from '../schemas/prestacionPaciente';
 import { paciente } from '../../../core/mpi/schemas/paciente';
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
@@ -147,6 +148,7 @@ router.post('/prestaciones', function (req, res, next) {
     var prestacion;
     prestacion = new prestacionPaciente(req.body);
 
+    Auth.audit(prestacion, req);
     prestacion.save((err) => {
         if (err) {
             return next(err);
@@ -157,6 +159,7 @@ router.post('/prestaciones', function (req, res, next) {
 });
 
 router.put('/prestaciones/:id', function (req, res, next) {
+    // Auth.audit(prestacion, req);
     prestacionPaciente.findByIdAndUpdate(req.params.id, req.body, {
         new: true
     }, function (err, data) {
