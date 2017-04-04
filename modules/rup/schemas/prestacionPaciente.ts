@@ -146,4 +146,7 @@ export let prestacionPacienteSchema = new mongoose.Schema({
     ]
 });
 
+// Habilitar plugin de auditoría
+prestacionPacienteSchema.plugin(require('../../../mongoose/audit'));
+
 export let prestacionPaciente = mongoose.model('prestacionPaciente', prestacionPacienteSchema, 'prestacionPaciente');
