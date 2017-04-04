@@ -5,7 +5,7 @@ import * as contactoSchema from '../../tm/schemas/contacto';
 import * as financiadorSchema from './financiador';
 import * as constantes from './constantes';
 import * as config from '../../../config';
-import { connectMpi} from '../../../connectMpi';
+import { connectMpi } from '../../../connectMpi';
 import * as moment from 'moment';
 
 export let pacienteSchema = new mongoose.Schema({
@@ -52,9 +52,13 @@ export let pacienteSchema = new mongoose.Schema({
         documento: String
     }],
     financiador: [financiadorSchema],
-    claveBlocking: {type: [String] , es_indexed: true},
+    claveBlocking: { type: [String], es_indexed: true },
     entidadesValidadoras: [String],
-    scan: String
+    scan: {
+        type: String,
+        es_indexed: true
+    },
+    reportarError: Boolean
 });
 
 /* Se definen los campos virtuals */
@@ -77,33 +81,33 @@ pacienteSchema.virtual('edad').get(function () {
 });
 pacienteSchema.virtual('edadReal').get(function () {
 
-                //Calcula Edad de una persona (Redondea -- 30.5 años = 30 años)
-                let edad: Object;
-                let fechaNac: any;
-                let fechaActual: Date = new Date();
-                let fechaAct: any;
-                let difAnios: any;              
-                let difDias: any;
-                let difMeses: any;
-                let difHs: any;
-                let difD: any;
+    //Calcula Edad de una persona (Redondea -- 30.5 años = 30 años)
+    let edad: Object;
+    let fechaNac: any;
+    let fechaActual: Date = new Date();
+    let fechaAct: any;
+    let difAnios: any;
+    let difDias: any;
+    let difMeses: any;
+    let difHs: any;
+    let difD: any;
 
-                fechaNac    = moment(this.fechaNacimiento, 'YYYY-MM-DD HH:mm:ss');
-                fechaAct    = moment(fechaActual, 'YYYY-MM-DD HH:mm:ss');
-                difDias     = fechaAct.diff(fechaNac, 'd'); // Diferencia en días
-                difAnios    = Math.floor(difDias / 365.25);                
-                difMeses = Math.floor(difDias / 30.4375);
-                difHs    = fechaAct.diff(fechaNac, 'h'); // Diferencia en horas
+    fechaNac = moment(this.fechaNacimiento, 'YYYY-MM-DD HH:mm:ss');
+    fechaAct = moment(fechaActual, 'YYYY-MM-DD HH:mm:ss');
+    difDias = fechaAct.diff(fechaNac, 'd'); // Diferencia en días
+    difAnios = Math.floor(difDias / 365.25);
+    difMeses = Math.floor(difDias / 30.4375);
+    difHs = fechaAct.diff(fechaNac, 'h'); // Diferencia en horas
 
 
-                if (difAnios !== 0)  {edad = { valor: difAnios, unidad: 'Años'}}
-                else
-                    if (difMeses !== 0)  {edad = { valor: difMeses, unidad: 'Meses'}}
-                    else
-                        if (difDias !== 0 ) {edad = { valor: difDias, unidad: 'Dias'}}
-                        else
-                            if (difHs !== 0) {edad = { valor: difHs, unidad: 'Horas'}}       
-                return edad
+    if (difAnios !== 0) { edad = { valor: difAnios, unidad: 'Años' } }
+    else
+        if (difMeses !== 0) { edad = { valor: difMeses, unidad: 'Meses' } }
+        else
+            if (difDias !== 0) { edad = { valor: difDias, unidad: 'Dias' } }
+            else
+                if (difHs !== 0) { edad = { valor: difHs, unidad: 'Horas' } }
+    return edad
 
 });
 /* Creo un indice para fulltext Search */
@@ -115,7 +119,7 @@ pacienteSchema.plugin(mongoosastic, {
     hosts: [config.connectionStrings.elastic_main],
     index: 'andes',
     type: 'paciente'
-} );
+});
 
 // Habilitar plugin de auditoría
 pacienteSchema.plugin(require('../../../mongoose/audit'));

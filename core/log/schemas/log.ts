@@ -1,3 +1,4 @@
+import { configMpi } from './../../../config';
 import * as mongoose from 'mongoose';
 import * as organizacion from '../../../core/tm/schemas/organizacion';
 export let logSchema = new mongoose.Schema({
@@ -22,6 +23,8 @@ export let logSchema = new mongoose.Schema({
             // Operaciones genéricas
             'query', 'insert', 'update', 'delete', 'scan',
             // Operaciones de módulos
+            // ... Mpi
+            'macheoAlto', 'posibleDuplicado', 'reportarError',
             // ... Turnos
             'asignarTurno', 'cancelarTurno', 'listaEspera'
             // ... RUP
