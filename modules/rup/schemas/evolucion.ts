@@ -12,9 +12,7 @@ var evolucionSchema = new mongoose.Schema({
     ],
 
     // valores que se almacen al evolucionar la prestacion
-    valores: [
-        mongoose.Schema.Types.Mixed
-    ],
+    valores: mongoose.Schema.Types.Mixed,
 
     // Informe en caso de existir por el tipo de prestacion
     informe: [{
