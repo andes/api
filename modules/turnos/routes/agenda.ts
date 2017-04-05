@@ -155,7 +155,9 @@ router.patch('/agenda/:id', function (req, res, next) {
         }
 
         switch (req.body.op) {
-            case 'asistenciaTurno': darAsistencia(req, data);
+            case 'darAsistencia': darAsistencia(req, data);
+                break;
+            case 'sacarAsistencia': sacarAsistencia(req, data);
                 break;
             case 'liberarTurno': liberarTurno(req, data);
                 break;
@@ -197,7 +199,11 @@ router.patch('/agenda/:id', function (req, res, next) {
 
 function darAsistencia(req, data) {
     let turno = getTurno(req, data);
-    turno.asistencia = !turno.asistencia;
+    turno.asistencia = true;
+}
+function sacarAsistencia(req, data) {
+    let turno = getTurno(req, data);
+    turno.asistencia = false;
 }
 
 function liberarTurno(req, data) {
