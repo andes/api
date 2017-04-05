@@ -696,10 +696,11 @@ function updateDireccion(req, data) {
 router.patch('/pacientes/:id', function (req, res, next) {
     let ObjectId = mongoose.Types.ObjectId;
     let objectId = new ObjectId(req.params.id);
-    let query = {
-        _id: objectId
-    };
-    paciente.findById(query, function (err, patientFound) {
+    // let query = {
+    //     _id: objectId
+    // };
+    paciente.findById(req.params.id, function (err, patientFound) {
+
         if (err) {
             return next(err);
         }
@@ -707,14 +708,17 @@ router.patch('/pacientes/:id', function (req, res, next) {
             case 'updateContactos':
                 updateContactos(req, patientFound);
                 break;
-            case 'upadteRelaciones':
+            case 'updateRelaciones':
                 updateRelaciones(req, patientFound);
                 break;
             case 'updateDireccion':
                 updateDireccion(req, patientFound);
         }
+        Auth.audit(patientFound, req);
+        console.log('paciente Encontrado:', patientFound)
         patientFound.save(function (errPatch) {
             if (errPatch) {
+                console.log('ERROR:', errPatch);
                 return next(errPatch);
             }
 
@@ -731,6 +735,7 @@ router.patch('/pacientes/:id', function (req, res, next) {
             return res.json(patientFound);
         });
     });
+
 });
 
 // ESTE ES PARA REVISAR CREO QUE NO VA A IR MAS!!!
