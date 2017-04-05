@@ -585,9 +585,11 @@ router.put('/pacientes/:id', function (req, res, next) {
         patientFound.contacto = req.body.contacto;
         patientFound.identificadores = req.body.identificadores;
         patientFound.scan = req.body.scan;
+        patientFound.reportarError = req.body.reportarError;
 
         // Habilita auditoria y guarda
         Auth.audit(patientFound, req);
+        console.log("Paciente a Guardar", patientFound);
         patientFound.save(function (err2) {
             if (err2) {
                 console.log(err2);
