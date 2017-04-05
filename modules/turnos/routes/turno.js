@@ -58,13 +58,13 @@ router.patch('/agenda/:idAgenda/bloque/:idBloque/turno/:idTurno', function (req,
                             for (var x = 0; x < data.bloques.length; x++) {
                                 if (data.bloques[x]._id.equals(req.params.idBloque)) {
                                     posBloque = x;
+                                    for (var y = 0; y < data.bloques[posBloque].turnos.length; y++) {
+                                        if (data.bloques[posBloque].turnos[y]._id.equals(req.params.idTurno)) {
+                                            posTurno = y;
+                                            console.log('POSTURNO: ' + posTurno);
+                                        }
+                                    }
                                     console.log('POSBLOQUE: ' + posBloque);
-                                }
-                            }
-                            for (var y = 0; y < data.bloques[posBloque].turnos.length; y++) {
-                                if (data.bloques[posBloque].turnos[y]._id.equals(req.params.idTurno)) {
-                                    posTurno = y;
-                                    console.log('POSTURNO: ' + posTurno);
                                 }
                             }
                             var etiquetaTipoTurno = 'bloques.' + posBloque + '.turnos.' + posTurno + '.tipoTurno';
@@ -87,15 +87,21 @@ router.patch('/agenda/:idAgenda/bloque/:idBloque/turno/:idTurno', function (req,
                                     console.log('ERR2: ' + err2);
                                     return next(err2);
                                 }
-                                var datosOp = {
-                                    estado: update[etiquetaEstado],
-                                    paciente: update[etiquetaPaciente],
-                                    prestacion: update[etiquetaPrestacion],
-                                    tipoTurno: update[etiquetaTipoTurno]
-                                };
-                                logService_1.Logger.log(req, 'turnos', 'update', datosOp);
+                                console.log('WRITE OP RESULT', writeOpResult.value);
+                                if (writeOpResult.value === null) {
+                                    return next('El turno ya fue asignado');
+                                }
+                                else {
+                                    var datosOp = {
+                                        estado: update[etiquetaEstado],
+                                        paciente: update[etiquetaPaciente],
+                                        prestacion: update[etiquetaPrestacion],
+                                        tipoTurno: update[etiquetaTipoTurno]
+                                    };
+                                    logService_1.Logger.log(req, 'turnos', 'update', datosOp);
+                                }
+                                res.json(data);
                             });
-                            res.json(data);
                         });
                     }
                 });
@@ -104,7 +110,7 @@ router.patch('/agenda/:idAgenda/bloque/:idBloque/turno/:idTurno', function (req,
     }
     else {
         console.log('NO VALIDO');
-        return next();
+        return next('Los datos del paciente son inválidos');
     }
 });
 module.exports = router;

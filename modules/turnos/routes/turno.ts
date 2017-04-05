@@ -47,7 +47,7 @@ router.patch('/agenda/:idAgenda/bloque/:idBloque/turno/:idTurno', function (req,
     paciente.findById(req.body.paciente.id, function verificarPaciente(err, cant) {
       if (err) {
         console.log('PACIENTE INEXISTENTE', err);
-        return next(err)
+        return next(err);
       } else {
 
         // se verifica la existencia del tipoPrestacion
@@ -73,15 +73,16 @@ router.patch('/agenda/:idAgenda/bloque/:idBloque/turno/:idTurno', function (req,
               for (let x = 0; x < (data as any).bloques.length; x++) {
                 if ((data as any).bloques[x]._id.equals(req.params.idBloque)) {
                   posBloque = x;
+                  for (let y = 0; y < (data as any).bloques[posBloque].turnos.length; y++) {
+                    if ((data as any).bloques[posBloque].turnos[y]._id.equals(req.params.idTurno)) {
+                      posTurno = y;
+                      console.log('POSTURNO: ' + posTurno);
+                    }
+                  }
                   console.log('POSBLOQUE: ' + posBloque);
                 }
               }
-              for (let y = 0; y < (data as any).bloques[posBloque].turnos.length; y++) {
-                if ((data as any).bloques[posBloque].turnos[y]._id.equals(req.params.idTurno)) {
-                  posTurno = y;
-                  console.log('POSTURNO: ' + posTurno);
-                }
-              }
+
               let etiquetaTipoTurno: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.tipoTurno';
               let etiquetaEstado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.estado';
               let etiquetaPaciente: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.paciente';
@@ -106,20 +107,22 @@ router.patch('/agenda/:idAgenda/bloque/:idBloque/turno/:idTurno', function (req,
                     console.log('ERR2: ' + err2);
                     return next(err2);
                   }
-                  let datosOp = {
-                    estado: update[etiquetaEstado],
-                    paciente: update[etiquetaPaciente],
-                    prestacion: update[etiquetaPrestacion],
-                    tipoTurno: update[etiquetaTipoTurno]
-                  };
+                  console.log('WRITE OP RESULT', writeOpResult.value);
+                  if (writeOpResult.value === null) {
+                    return next('El turno ya fue asignado');
+                  } else {
+                    let datosOp = {
+                      estado: update[etiquetaEstado],
+                      paciente: update[etiquetaPaciente],
+                      prestacion: update[etiquetaPrestacion],
+                      tipoTurno: update[etiquetaTipoTurno]
+                    };
 
-                  Logger.log(req, 'turnos', 'update', datosOp);
+                    Logger.log(req, 'turnos', 'update', datosOp);
+                  }
+                  res.json(data);
                 });
-              res.json(data);
             });
-
-
-
           }
         });
 
@@ -127,7 +130,7 @@ router.patch('/agenda/:idAgenda/bloque/:idBloque/turno/:idTurno', function (req,
     });
   } else {
     console.log('NO VALIDO');
-    return next();
+    return next('Los datos del paciente son inválidos');
   }
 });
 
