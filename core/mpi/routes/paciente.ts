@@ -7,6 +7,7 @@ import { Client } from 'elasticsearch';
 import * as config from '../../../config';
 import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
+import * as moment from 'moment';
 
 let router = express.Router();
 
@@ -333,15 +334,6 @@ router.get('/pacientes', function (req, res, next) {
         query: query
     };
 
-    /*
-    
-        sort: [
-            { 'nombre': { 'order': 'asc' } },
-            { 'apellido': { 'order': 'asc' } }
-        ],
-     */
-
-
     // Logger de la consulta a ejecutar
     Logger.log(req, 'mpi', 'query', { elasticSearch: query });
 
@@ -368,6 +360,7 @@ router.get('/pacientes', function (req, res, next) {
                 let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
                     .filter(function (hit) {
                         let paciente = hit._source;
+                        paciente.fechaNacimiento = moment(paciente.fechaNacimiento).format('YYYY-MM-DD');
                         let pacDto = {
                             documento: req.query.documento ? req.query.documento.toString() : '',
                             nombre: req.query.nombre ? req.query.nombre : '',
@@ -441,6 +434,7 @@ router.post('/pacientes/mpi', function (req, res, next) {
     // Se genera la clave de blocking
     let claves = match.crearClavesBlocking(newPatientMpi);
     newPatientMpi['claveBlocking'] = claves;
+
     /*Los repetidos son controlados desde el mpi updater, este post no debería usarse desde un frontend ----> sólo de mpiUpdater*/
     newPatientMpi.save((err) => {
         if (err) {
@@ -505,6 +499,8 @@ router.post('/pacientes', function (req, res, next) {
     // Se genera la clave de blocking
     let claves = match.crearClavesBlocking(newPatient);
     newPatient['claveBlocking'] = claves;
+    newPatient['apellido'] = newPatient['apellido'].toUpperCase();
+    newPatient['nombre'] = newPatient['nombre'].toUpperCase();
     /*Antes del save se podría realizar una búsqueda y matching para evitar cargar repetidos, actualmente este proceso sólo se realiza del lado de la app*/
     Auth.audit(newPatient, req);
     newPatient.save((err) => {
@@ -575,6 +571,9 @@ router.put('/pacientes/:id', function (req, res, next) {
             /*Si es distinto de validado debo generar una nueva clave de blocking */
             let claves = match.crearClavesBlocking(patientFound);
             patientFound.claveBlocking = claves;
+        } else {
+            patientFound.nombre = req.body.nombre.toUpperCase();
+            patientFound.apellido = req.body.apellido.toUpperCase();
         }
         patientFound.genero = req.body.genero;
         patientFound.alias = req.body.alias;
@@ -585,11 +584,13 @@ router.put('/pacientes/:id', function (req, res, next) {
         patientFound.direccion = req.body.direccion;
         patientFound.contacto = req.body.contacto;
         patientFound.identificadores = req.body.identificadores;
+        patientFound.scan = req.body.scan;
 
         // Habilita auditoria y guarda
         Auth.audit(patientFound, req);
         patientFound.save(function (err2) {
             if (err2) {
+                console.log(err2);
                 return next(err2);
             }
             Logger.log(req, 'mpi', 'update', { original: pacienteOriginal, nuevo: patientFound });
