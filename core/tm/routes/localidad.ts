@@ -68,19 +68,19 @@ let router = express.Router();
  *         schema:
  *           $ref: '#/definitions/localidad'
  */
-router.get('/localidades/:id*?', function(req, res, next) {
+router.get('/localidades/:id*?', function (req, res, next) {
 
-   if (req.params.id) {
-       localidad.findById(req.params.id, function (err, data) {
-       if (err) {
-           next(err);
-       };
+    if (req.params.id) {
+        localidad.findById(req.params.id, function (err, data) {
+            if (err) {
+                next(err);
+            };
 
-       res.json(data);
-   });
-   } else {
-       let query;
-        query = localidad.find({}).sort({nombre:1});
+            res.json(data);
+        });
+    } else {
+        let query;
+        query = localidad.find({}).sort({ nombre: 1 });
         if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
         }
@@ -89,13 +89,12 @@ router.get('/localidades/:id*?', function(req, res, next) {
             query.where('provincia._id').equals(req.query.provincia);
         }
         query.exec((err, data) => {
-           if (err) {
-            return next(err);
-           }
-           console.log('datitos: ', data);
-           res.json(data);
+            if (err) {
+                return next(err);
+            }
+            res.json(data);
         });
-   }
+    }
 });
 
 export = router;

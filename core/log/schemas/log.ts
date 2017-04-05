@@ -21,7 +21,7 @@ export let logSchema = new mongoose.Schema({
         type: String,
         enum: [
             // Operaciones genéricas
-            'query', 'insert', 'update', 'delete', 'scan',
+            'query', 'insert', 'update', 'delete', 'scan', 'scanFail',
             // Operaciones de módulos
             // ... Mpi
             'macheoAlto', 'posibleDuplicado', 'reportarError',
