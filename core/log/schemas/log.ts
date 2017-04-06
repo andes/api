@@ -1,6 +1,18 @@
 import { configMpi } from './../../../config';
 import * as mongoose from 'mongoose';
 import * as organizacion from '../../../core/tm/schemas/organizacion';
+
+/**
+ * Descripcion Operaciones logs:
+ * MPI:
+ * scan == escaneo exitoso
+ * scanFail == escaneo fallido
+ * macheoAlto == Macheo con un % superior a 90
+ * posibleDuplicado == Nuevo paciente, pero matchea con un porcentaje entre 80 y 90 con otro.
+ * validadoScan == 'Paciente encontrado por el string del scan'
+ * 
+ */
+
 export let logSchema = new mongoose.Schema({
     fecha: {
         type: Date
@@ -24,7 +36,7 @@ export let logSchema = new mongoose.Schema({
             'query', 'insert', 'update', 'delete', 'scan', 'scanFail',
             // Operaciones de módulos
             // ... Mpi
-            'macheoAlto', 'posibleDuplicado', 'reportarError',
+            'macheoAlto', 'posibleDuplicado', 'reportarError', 'validadoScan',
             // ... Turnos
             'asignarTurno', 'cancelarTurno', 'listaEspera'
             // ... RUP
