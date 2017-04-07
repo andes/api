@@ -7,35 +7,6 @@ import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 
 let router = express.Router();
 
-// next como tercer parametro
-router.put('/turno/:id', function (req, res, next) {
-  let changes = req.body;
-  let etiquetaEstado: string = 'bloques.' + req.body.indiceBloque + '.turnos.' + req.body.indiceTurno + '.estado';
-  let etiquetaPaciente: string = 'bloques.' + req.body.indiceBloque + '.turnos.' + req.body.indiceTurno + '.paciente';
-  let etiquetaPrestacion: string = 'bloques.' + req.body.indiceBloque + '.turnos.' + req.body.indiceTurno + '.tipoPrestacion';
-
-  let query = {
-    _id: req.params.id
-  };
-
-  query[etiquetaEstado] = 'disponible'; // agrega un tag al json query
-
-  let update: any = {};
-  update[etiquetaEstado] = 'asignado';
-  update[etiquetaPrestacion] = req.body.tipoPrestacion;
-  update[etiquetaPaciente] = req.body.paciente;
-
-  // console.log("Update   ", update);
-
-  agenda.findOneAndUpdate(query, { $set: update }, function (err, agen) {
-    if (err) {
-      return next(err);
-    }
-    res.json(agen);
-  });
-});
-
-
 router.patch('/agenda/:idAgenda/bloque/:idBloque/turno/:idTurno', function (req, res, next) {
   // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
 
