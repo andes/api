@@ -298,30 +298,39 @@ router.get('/pacientes/:id', function (req, res, next) {
  *              - multimatch
  *              - suggest
  *       - name: cadenaInput
+ *         description: pámetro requerido para multimatch
  *         in: body
  *         type: string
  *       - name: claveBlocking
+ *         description: pámetro requerido para suggest
  *         in: body
  *         type: string
  *       - name: percentage
+ *         description: pámetro requerido para suggest
  *         in: body
  *         type: boolean
  *       - name: documento
+ *         description: pámetro requerido para suggest y simplequery
  *         in: body
  *         type: string
  *       - name: nombre
+ *         description: pámetro requerido para suggest y simplequery
  *         in: body
  *         type: string
  *       - name: apellido
+ *         description: pámetro requerido para suggest y simplequery
  *         in: body
  *         type: string
  *       - name: sexo
+ *         description: pámetro requerido para suggest y simplequery
  *         in: body
  *         type: string
  *       - name: fechaNacimiento
+ *         description: pámetro requerido para suggest
  *         in: body
  *         type: Date
  *       - name: escaneado
+ *         description: pámetro requerido para suggest
  *         in: body
  *         type: boolean
  *     responses:
@@ -482,10 +491,11 @@ router.get('/pacientes', function (req, res, next) {
 
 /**
  * @swagger
- * /pacientes:
+ * /pacientes/mpi:
  *   post:
  *     tags:
  *       - Paciente
+ *     summary: Carga de pacientes al core de MPI
  *     description: Carga de pacientes al core de MPI
  *     consumes:
  *       - application/json
@@ -524,11 +534,12 @@ router.post('/pacientes/mpi', function (req, res, next) {
 
 /**
  * @swagger
- * /pacientes/{id}:
+ * /pacientes/mpi/{id}:
  *   delete:
  *     tags:
  *       - Paciente
  *     description: Eliminar un paciente del core de MPI
+ *     summary: Eliminar un paciente del core de MPI
  *     consumes:
  *       - application/json
  *     produces:
