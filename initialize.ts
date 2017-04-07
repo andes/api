@@ -2,6 +2,7 @@ import * as bodyParser from 'body-parser';
 import * as mongoose from 'mongoose';
 import * as config from './config';
 import { Auth } from './auth/auth.class';
+import { Swagger } from './swagger';
 import * as HttpStatus from 'http-status-codes';
 import { schemaDefaults } from './mongoose/defaults';
 import { Express } from 'express';
@@ -23,6 +24,9 @@ export function initAPI(app: Express) {
 
     // Inicializa la autenticación con Password/JWT
     Auth.initialize(app);
+
+    // Inicializa swagger
+    Swagger.initialize(app);
 
     // Configura Express
     app.use(bodyParser.json());

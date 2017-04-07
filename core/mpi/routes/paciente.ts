@@ -231,7 +231,7 @@ router.get('/pacientes/counts/', function (req, res, next) {
  *       200:
  *         description: un arreglo de objetos paciente
  *         schema:
- *           $ref: '#/definitions/pacientes'
+ *           $ref: '#/definitions/paciente'
  *       400:
  *         description: Error- Agregar parámetro de búsqueda
  *
@@ -253,7 +253,7 @@ router.get('/pacientes/counts/', function (req, res, next) {
  *       200:
  *         description: un arreglo con un paciente
  *         schema:
- *           $ref: '#/definitions/pacientes'
+ *           $ref: '#/definitions/paciente'
  */
 
 // Simple mongodb query by ObjectId --> better performance
@@ -483,12 +483,12 @@ router.delete('/pacientes/mpi/:id', function (req, res, next) {
  *         in: body
  *         required: true
  *         schema:
- *           $ref: '#/definitions/pacientes'
+ *           $ref: '#/definitions/paciente'
  *     responses:
  *       200:
  *         description: Un objeto paciente
  *         schema:
- *           $ref: '#/definitions/pacientes'
+ *           $ref: '#/definitions/paciente'
  *       409:
  *         description: Un código de error con un array de mensajes de error
  */
@@ -535,12 +535,12 @@ router.post('/pacientes', function (req, res, next) {
  *         in: body
  *         required: true
  *         schema:
- *           $ref: '#/definitions/pacientes'
+ *           $ref: '#/definitions/paciente'
  *     responses:
  *       200:
  *         description: Un objeto paciente
  *         schema:
- *           $ref: '#/definitions/pacientes'
+ *           $ref: '#/definitions/paciente'
  */
 
 
@@ -624,7 +624,7 @@ router.put('/pacientes/:id', function (req, res, next) {
  *       200:
  *         description: Un objeto paciente
  *         schema:
- *           $ref: '#/definitions/pacientes'
+ *           $ref: '#/definitions/paciente'
  */
 router.delete('/pacientes/:id', function (req, res, next) {
     let ObjectId = mongoose.Types.ObjectId;
@@ -674,7 +674,7 @@ router.delete('/pacientes/:id', function (req, res, next) {
  *       200:
  *         description: Un objeto paciente
  *         schema:
- *           $ref: '#/definitions/pacientes'
+ *           $ref: '#/definitions/paciente'
  */
 
 /* Funciones  de operaciones PATCH */
