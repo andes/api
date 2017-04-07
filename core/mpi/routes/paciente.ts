@@ -1,12 +1,24 @@
-import { matching } from '@andes/match/matching';
+import {
+    matching
+} from '@andes/match/matching';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
-import { paciente } from '../schemas/paciente';
-import { pacienteMpi } from '../schemas/paciente';
-import { Client } from 'elasticsearch';
+import {
+    paciente
+} from '../schemas/paciente';
+import {
+    pacienteMpi
+} from '../schemas/paciente';
+import {
+    Client
+} from 'elasticsearch';
 import * as config from '../../../config';
-import { Auth } from './../../../auth/auth.class';
-import { Logger } from '../../../utils/logService';
+import {
+    Auth
+} from './../../../auth/auth.class';
+import {
+    Logger
+} from '../../../utils/logService';
 import * as moment from 'moment';
 
 let router = express.Router();
@@ -262,7 +274,9 @@ router.get('/pacientes/:id', function (req, res, next) {
         } else {
             if (data) {
                 // Logger de paciente buscado por ID
-                Logger.log(req, 'mpi', 'query', { mongoDB: data });
+                Logger.log(req, 'mpi', 'query', {
+                    mongoDB: data
+                });
                 res.json(data);
             } else {
                 pacienteMpi.findById(req.params.id, function (err2, dataMpi) {
@@ -396,14 +410,16 @@ router.get('/pacientes', function (req, res, next) {
     };
 
     // Logger de la consulta a ejecutar
-    Logger.log(req, 'mpi', 'query', { elasticSearch: query });
+    Logger.log(req, 'mpi', 'query', {
+        elasticSearch: query
+    });
 
     if (req.query.type === 'suggest') {
 
         connElastic.search({
-            index: 'andes',
-            body: body
-        })
+                index: 'andes',
+                body: body
+            })
             .then((searchResult) => {
                 // Asigno los valores para el suggest
                 let weights = config.configMpi.weightsDefault;
@@ -418,7 +434,7 @@ router.get('/pacientes', function (req, res, next) {
                 let listaPacientesMin = [];
                 let devolverPorcentaje = req.query.percentage;
 
-                let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
+                let results: Array < any > = ((searchResult.hits || {}).hits || []) // extract results from elastic response
                     .filter(function (hit) {
                         let paciente = hit._source;
                         paciente.fechaNacimiento = moment(paciente.fechaNacimiento).format('YYYY-MM-DD');
@@ -471,11 +487,11 @@ router.get('/pacientes', function (req, res, next) {
             });
     } else { // Es para los casos de multimatch y singlequery
         connElastic.search({
-            index: 'andes',
-            body: body
-        })
+                index: 'andes',
+                body: body
+            })
             .then((searchResult) => {
-                let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
+                let results: Array < any > = ((searchResult.hits || {}).hits || []) // extract results from elastic response
                     .map((hit) => {
                         let elem = hit._source;
                         elem['id'] = hit._id;
@@ -620,10 +636,15 @@ router.post('/pacientes', function (req, res, next) {
         if (err) {
             return next(err);
         }
-        Logger.log(req, 'mpi', 'insert', newPatient);
-        res.json(newPatient);
+        newPatient.on('es-indexed', function (err2, res2) {
+            if (err2)
+                {console.log(err2)}
+        });
     });
+    Logger.log(req, 'mpi', 'insert', newPatient);
+    res.json(newPatient);
 });
+
 
 /**
  * @swagger
@@ -708,7 +729,16 @@ router.put('/pacientes/:id', function (req, res, next) {
                 console.log(err2);
                 return next(err2);
             }
-            Logger.log(req, 'mpi', 'update', { original: pacienteOriginal, nuevo: patientFound });
+
+             patientFound.on('es-indexed', function (err3, res3) {
+            if (err3)
+                {console.log(err3)}
+            });
+
+            Logger.log(req, 'mpi', 'update', {
+                original: pacienteOriginal,
+                nuevo: patientFound
+            });
             res.json(patientFound);
         });
     });
