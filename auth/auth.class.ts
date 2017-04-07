@@ -73,7 +73,9 @@ export class Auth {
      */
     static audit(document: mongoose.Document, req: express.Request) {
         // El método 'audit' lo define el plugin 'audit'
-        (document as any).audit((req as any).user.usuario);
+        let userAndOrg = (Object as any).assign({}, (req as any).user.usuario);
+        userAndOrg.organizacion = (req as any).user.organizacion;
+        (document as any).audit(userAndOrg);
     }
 
     /**
