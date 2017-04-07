@@ -279,6 +279,60 @@ router.get('/pacientes/:id', function (req, res, next) {
     });
 });
 
+/**
+ * @swagger
+ * /pacientes:
+ *   get:
+ *     tags:
+ *       - Paciente
+ *     description: Retorna un arreglo de objetos Paciente
+ *     summary: Buscar pacientes usando ElasticSearch
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: type
+ *         description: tipo de búsqueda
+ *         in: body
+ *         required: true
+ *         type: string
+ *         enum:
+ *              - simplequery
+ *              - multimatch
+ *              - suggest
+ *       - name: cadenaInput
+ *         in: body
+ *         type: string
+ *       - name: claveBlocking
+ *         in: body
+ *         type: string
+ *       - name: percentage
+ *         in: body
+ *         type: boolean
+ *       - name: documento
+ *         in: body
+ *         type: string
+ *       - name: nombre
+ *         in: body
+ *         type: string
+ *       - name: apellido
+ *         in: body
+ *         type: string
+ *       - name: sexo
+ *         in: body
+ *         type: string
+ *       - name: fechaNacimiento
+ *         in: body
+ *         type: Date
+ *       - name: escaneado
+ *         in: body
+ *         type: boolean
+ *     responses:
+ *       200:
+ *         description: un arreglo de objetos paciente
+ *       400:
+ *         description: Error- Agregar parámetro de búsqueda
+ *
+ */
 // Search using elastic search
 router.get('/pacientes', function (req, res, next) {
     let connElastic = new Client({
