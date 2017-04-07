@@ -105,8 +105,6 @@ function sortMatching(a, b) {
  *                          - madre
  *                          - hijo
  *                          - tutor
- *                  referencia:
- *                      $ref: '#/definitions/referencia'
  *                  nombre:
  *                      type: string
  *                  apellido:
@@ -482,6 +480,32 @@ router.get('/pacientes', function (req, res, next) {
     }
 });
 
+/**
+ * @swagger
+ * /pacientes:
+ *   post:
+ *     tags:
+ *       - Paciente
+ *     description: Carga de pacientes al core de MPI
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: organizacion
+ *         description: objeto paciente
+ *         in: body
+ *         required: true
+ *         schema:
+ *           $ref: '#/definitions/paciente'
+ *     responses:
+ *       200:
+ *         description: Un objeto paciente
+ *         schema:
+ *           $ref: '#/definitions/paciente'
+ *       409:
+ *         description: Un código de error con un array de mensajes de error
+ */
 router.post('/pacientes/mpi', function (req, res, next) {
     let match = new matching();
     let newPatientMpi = new paciente(req.body);
@@ -498,6 +522,30 @@ router.post('/pacientes/mpi', function (req, res, next) {
     });
 });
 
+/**
+ * @swagger
+ * /pacientes/{id}:
+ *   delete:
+ *     tags:
+ *       - Paciente
+ *     description: Eliminar un paciente del core de MPI
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         description: Id de un paciente
+ *         required: true
+ *         type: string
+ *
+ *     responses:
+ *       200:
+ *         description: Un objeto paciente
+ *         schema:
+ *           $ref: '#/definitions/paciente'
+ */
 router.delete('/pacientes/mpi/:id', function (req, res, next) {
     let ObjectId = (require('mongoose').Types.ObjectId);
     let objectId = new ObjectId(req.params.id);
