@@ -21,7 +21,7 @@ export class Swagger {
                 version: '1.0.0',
                 description: 'APIs de tablas maestras ANDES',
             },
-            host: 'localhost:3002',
+            host: '10.1.62.17',
             basePath: '/api',
             definitions: {
                 "referencia": {

@@ -22,8 +22,16 @@ export let problemaSchema = new mongoose.Schema({
     evoluciones: [{
         fecha: Date,
         observacion: String,
-        profesional: [profesionalSchema],
-        organizacion: organizacion.schema,
+        //profesional: [profesionalSchema],
+        profesional:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'profesional'
+    },
+    organizacion:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'organizacion'
+    },
+        //organizacion: organizacion.schema,
         //ambito: // TODO
         duracion: {
             type: String,
