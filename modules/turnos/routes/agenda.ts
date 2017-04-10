@@ -1,6 +1,7 @@
 import { Auth } from './../../../auth/auth.class';
 import * as express from 'express';
 import * as agenda from '../schemas/agenda';
+import * as mongoose from 'mongoose';
 
 let router = express.Router();
 
@@ -22,7 +23,8 @@ router.get('/agenda/paciente/:idPaciente', function (req, res, next) {
 })
 
 router.get('/agenda/:id*?', function (req, res, next) {
-    if (req.params.id) {
+
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
 
         agenda.findById(req.params.id, function (err, data) {
             if (err) {
@@ -146,7 +148,13 @@ router.delete('/agenda/:id', function (req, res, next) {
     });
 });
 
-router.patch('/agenda/:id', function (req, res, next) {
+router.patch('/agenda/:id*?', function (req, res, next) {
+
+
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        return next('ID Inválido');
+    }
+    
 
     agenda.findById(req.params.id, function (err, data) {
 
@@ -154,67 +162,124 @@ router.patch('/agenda/:id', function (req, res, next) {
             return next(err);
         }
 
-        switch (req.body.op) {
-            case 'darAsistencia': darAsistencia(req, data);
-                break;
-            case 'sacarAsistencia': sacarAsistencia(req, data);
-                break;
-            case 'liberarTurno': liberarTurno(req, data);
-                break;
-            case 'bloquearTurno': bloquearTurno(req, data);
-                break;
-            case 'suspenderTurno': suspenderTurno(req, data);
-                break;
-            case 'reasignarTurno': reasignarTurno(req, data);
-                break;
-            case 'guardarNotaTurno': guardarNotaTurno(req, data);
-                break;
-            case 'editarAgenda': editarAgenda(req, data);
-                break;
-            case 'Disponible':
-            case 'Publicada': actualizarEstado(req, data);
-                break;
-            case 'Pausada':
-            case 'prePausada':
-            case 'Suspendida': actualizarEstado(req, data);
-                break;
-            default:
-                next('Error: No se seleccionó ninguna opción.');
-                break;
-        }
+        if (req.body.turnos) {
 
+            let turnos = req.body.turnos;
 
-        Auth.audit(data, req);
+            // TODO: REFACTOR SWITCH & métodos
+            for (let y = 0; y < turnos.length; y++) {
+                switch (req.body.op) {
+                    case 'darAsistencia': darAsistencia(req, data, turnos[y]._id);
+                        break;
+                    case 'sacarAsistencia': sacarAsistencia(req, data, turnos[y]._id);
+                        break;
+                    case 'liberarTurno': liberarTurno(req, data, turnos[y]._id);
+                        break;
+                    case 'bloquearTurno': bloquearTurno(req, data, turnos[y]._id);
+                        break;
+                    case 'suspenderTurno': suspenderTurno(req, data, turnos[y]._id);
+                        break;
+                    case 'reasignarTurno': reasignarTurno(req, data, turnos[y]._id);
+                        break;
+                    case 'guardarNotaTurno': guardarNotaTurno(req, data, turnos[y]._id);
+                        break;
+                    case 'editarAgenda': editarAgenda(req, data);
+                        break;
+                    case 'Disponible':
+                    case 'Publicada': actualizarEstado(req, data);
+                        break;
+                    case 'Pausada':
+                    case 'prePausada':
+                    case 'Suspendida': actualizarEstado(req, data);
+                        break;
+                    default:
+                        next('Error: No se seleccionó ninguna opción.');
+                        break;
+                }
 
-        data.save(function (err) {
-            if (err) {
-                return next(err);
+                Auth.audit(data, req);
+
+                data.save(function (err) {
+                    if (err) {
+                        return next(err);
+                    }
+                });
+
             }
             return res.json(data);
-        });
+
+        } else {
+
+            switch (req.body.op) {
+                case 'darAsistencia': darAsistencia(req, data);
+                    break;
+                case 'sacarAsistencia': sacarAsistencia(req, data);
+                    break;
+                case 'liberarTurno': liberarTurno(req, data);
+                    break;
+                case 'bloquearTurno': bloquearTurno(req, data);
+                    break;
+                case 'suspenderTurno': suspenderTurno(req, data);
+                    break;
+                case 'reasignarTurno': reasignarTurno(req, data);
+                    break;
+                case 'guardarNotaTurno': guardarNotaTurno(req, data);
+                    break;
+                case 'editarAgenda': editarAgenda(req, data);
+                    break;
+                case 'Disponible':
+                case 'Publicada': actualizarEstado(req, data);
+                    break;
+                case 'Pausada':
+                case 'prePausada':
+                case 'Suspendida': actualizarEstado(req, data);
+                    break;
+                default:
+                    next('Error: No se seleccionó ninguna opción.');
+                    break;
+            }
+
+
+            Auth.audit(data, req);
+
+            data.save(function (err) {
+                if (err) {
+                    return next(err);
+                }
+                return res.json(data);
+            });
+
+        }
 
     });
 
 });
 
-function darAsistencia(req, data) {
-    let turno = getTurno(req, data);
+
+// Turno
+function darAsistencia(req, data, tid = null) {
+    let turno = getTurno(req, data, tid);
     turno.asistencia = true;
 }
-function sacarAsistencia(req, data) {
-    let turno = getTurno(req, data);
+
+// Turno
+function sacarAsistencia(req, data, tid = null) {
+    let turno = getTurno(req, data, tid);
     turno.asistencia = false;
 }
 
-function liberarTurno(req, data) {
-    let turno = getTurno(req, data);
+// Turno
+function liberarTurno(req, data, tid = null) {
+    let turno = getTurno(req, data, tid);
     turno.estado = 'disponible';
-    turno.paciente = {};
+    delete turno.paciente;
     turno.tipoPrestacion = null;
 }
 
-function bloquearTurno(req, data) {
-    let turno = getTurno(req, data);
+// Turno
+function bloquearTurno(req, data, tid = null) {
+
+    let turno = getTurno(req, data, tid);
 
     if (turno.estado !== 'bloqueado') {
         turno.estado = 'bloqueado';
@@ -223,26 +288,29 @@ function bloquearTurno(req, data) {
     }
 }
 
-function suspenderTurno(req, data) {
-    let turno = getTurno(req, data);
+// Turno
+function suspenderTurno(req, data, tid = null) {
+    let turno = getTurno(req, data, tid);
 
     turno.estado = 'bloqueado';
-    turno.paciente = {};
-    turno.tipoPrestacion = null;
+    delete turno.paciente;
+    delete turno.tipoPrestacion;
     turno.motivoSuspension = req.body.motivoSuspension;
 
     return data;
 }
 
-function reasignarTurno(req, data) {
-    let turno = getTurno(req, data);
+// Turno
+function reasignarTurno(req, data, tid = null) {
+    let turno = getTurno(req, data, tid);
 
     turno.estado = 'disponible';
-    turno.paciente = {};
+    delete turno.paciente;
     turno.prestacion = null;
     turno.motivoSuspension = null;
 }
 
+// Agenda
 function editarAgenda(req, data) {
     if (req.body.profesional) {
         data.profesionales = req.body.profesional;
@@ -250,7 +318,7 @@ function editarAgenda(req, data) {
     data.espacioFisico = req.body.espacioFisico;
 }
 
-
+// Agenda
 function actualizarEstado(req, data) {
 
     // Si se pasa a estado Pausada, guardamos el estado previo
@@ -283,18 +351,21 @@ function actualizarEstado(req, data) {
 //     data.estado = req.body.estado;
 // }
 
-function guardarNotaTurno(req, data) {
-    let turno = getTurno(req, data);
+// Turno
+function guardarNotaTurno(req, data, tid = null) {
+    let turno = getTurno(req, data, tid);
 
     turno.nota = req.body.textoNota;
 }
 
-function getTurno(req, data) {
+function getTurno(req, data, idTurno = null) {
     let turno;
+
+    idTurno = idTurno || req.body.idTurno;
 
     for (let x = 0; x < Object.keys(data).length; x++) {
         if (data.bloques[x] != null) {
-            turno = (data as any).bloques[x].turnos.id(req.body.idTurno);
+            turno = (data as any).bloques[x].turnos.id(idTurno);
         }
     }
 

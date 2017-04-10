@@ -5,8 +5,11 @@ var router = express.Router();
 var soap = require('soap');
 var libxmljs = require("libxmljs");
 
-var urlOperador = 'http://192.168.20.119:8080/Carrier/carrier?wsdl';
-var urlNumero = 'http://192.168.20.119:8080/MobileOutBackup/MobileOut?wsdl';
+// 192.168.20.119
+var url = 'sms.neuquen.gov.ar';
+
+var urlOperador = 'http://' + url + ':8080/Carrier/carrier?wsdl';
+var urlNumero = 'http://' + url + ':8080/MobileOutBackup/MobileOut?wsdl';
 
 // router.get('/sms/:telefono', function (req, res, next) {
 
@@ -104,8 +107,6 @@ router.get('/sms', function (req, res, next) {
     }
 
     let argsNumero = {};
-
-    // console.log(req.query);
 
     soap.createClient(urlOperador, opciones, function (err, client) {
         if (err) {
