@@ -36,7 +36,7 @@ router.get('/prestaciones/forKey', function(req, res, next) {
                     });
 
                     if (listaValores.length > 0) {
-                        listakey.push({ 'valor': listaValores[listaValores.length-1], 'fecha:': prestacion.ejecucion.fecha });
+                        listakey.push({ 'valor': listaValores[listaValores.length-1], 'fecha': prestacion.ejecucion.fecha });
                         listaValores = [];
                     }
                     //}
