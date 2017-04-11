@@ -152,13 +152,13 @@ router.delete('/agenda/:id', function (req, res, next) {
     });
 });
 
-router.patch('/agenda/:id*?', function (req, res, next) {
+router.patch('/agenda/:id?', function (req, res, next) {
 
 
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         return next('ID Inválido');
     }
-    
+
 
     agenda.findById(req.params.id, function (err, data) {
 
@@ -200,20 +200,15 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                         next('Error: No se seleccionó ninguna opción.');
                         break;
                 }
-
                 Auth.audit(data, req);
-
                 data.save(function (err) {
                     if (err) {
                         return next(err);
                     }
                     return res.json(data);
                 });
-
             }
-
         } else {
-
             switch (req.body.op) {
                 case 'darAsistencia': darAsistencia(req, data);
                     break;
@@ -242,19 +237,14 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                     next('Error: No se seleccionó ninguna opción.');
                     break;
             }
-
-
             Auth.audit(data, req);
-
             data.save(function (err) {
                 if (err) {
                     return next(err);
                 }
                 return res.json(data);
             });
-
         }
-
     });
 
 });
