@@ -83,15 +83,19 @@ router.get('/agenda/:id*?', function (req, res, next) {
             query.or(variable);
         }
 
-        // Dada una lista de profesionales, filtra las agendas que tengan al menos uno de ellos
         if (req.query.profesionales) {
-            let arr_profesionales: any[] = JSON.parse(req.query.profesionales);
-            let variable: any[] = [];
-            arr_profesionales.forEach((profesional, index) => {
-                variable.push({ 'profesionales._id': profesional.id })
-            });
-            query.or(variable);
+            query.where('profesionales._id').in(req.query.profesionales);
         }
+
+        // Dada una lista de profesionales, filtra las agendas que tengan al menos uno de ellos
+        // if (req.query.profesionales) {
+        //     let arr_profesionales: any[] = JSON.parse(req.query.profesionales);
+        //     let variable: any[] = [];
+        //     arr_profesionales.forEach((profesional, index) => {
+        //         variable.push({ 'profesionales._id': profesional.id })
+        //     });
+        //     query.or(variable);
+        // }
 
         // Si rango es true  se buscan las agendas que se solapen con la actual en algún punto
         if (req.query.rango) {
@@ -166,7 +170,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
 
             let turnos = req.body.turnos;
 
-            // TODO: REFACTOR SWITCH & métodos
+            // TODO: REFACTOR SWITCH & métodos (no se rían, pueden tener un hijo igual)
             for (let y = 0; y < turnos.length; y++) {
                 switch (req.body.op) {
                     case 'darAsistencia': darAsistencia(req, data, turnos[y]._id);
@@ -353,6 +357,7 @@ function actualizarEstado(req, data) {
 
 // Turno
 function guardarNotaTurno(req, data, tid = null) {
+
     let turno = getTurno(req, data, tid);
 
     turno.nota = req.body.textoNota;
