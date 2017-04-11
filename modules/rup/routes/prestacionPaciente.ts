@@ -6,25 +6,66 @@ import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 
 let router = express.Router();
 
-router.get('/prestaciones/forKey', function (req, res, next) {
+router.get('/prestaciones/forKey', function(req, res, next) {
 
-    let filtro = 'ejecucion.evoluciones.valores.' + req.query.key;
+    let filtro = 'ejecucion.evoluciones.valores';
+    let key = req.query.key;
     let query = { 'paciente._id': req.query.idPaciente };
     query[filtro] = {
         $exists: true
     };
-
-    let consulta = prestacionPaciente.find(query).sort({ 'ejecucion.fecha': -1 }).limit(1);
-    consulta.exec(function (err, data) {
+    let consulta = prestacionPaciente.find(query).sort({ 'ejecucion.fecha': -1 });
+    consulta.exec(function(err, data) {
         if (err) {
             next(err);
-        };
-        //console.log(query);
-        res.json(data);
+        } else {
+            // Se recorren las prestaciones del paciente para obtener las prestaciones que incluyan la key recibida
+            let prestaciones = data;
+            if (prestaciones.length > 0) {
+              prestaciones.forEach(prestacion => {
+                  prestacion.ejecucion.evoluciones.forEach(evolucion => {
+                      let valor = evolucion.valores;
+                      let lista = findValues(valor, key);
+                      if (lista.length > 0) {
+                          res.json(prestacion);
+                      }
+                  });
+              });
+            }
+            res.json({});
+        }
     });
+
 });
 
-router.get('/prestaciones/:id*?', function (req, res, next) {
+function findValues(obj, key) {  //funcion para buscar una key y recuperar la prestacion que la contiene
+    return findValuesHelper(obj, key, []);
+}
+
+function findValuesHelper(obj, key, list) {
+    let i;
+    let children;
+    if (!obj) return list;
+    if (obj instanceof Array) {
+        for (i in obj) {
+            list = list.concat(findValuesHelper(obj[i], key, []));
+        }
+        return list;
+    }
+    if (obj[key]) { list.push(obj[key]); return list }
+
+    if ((typeof obj == "object") && (obj !== null)) {
+        children = Object.keys(obj);
+        if (children.length > 0) {
+            for (i = 0; i < children.length; i++) {
+                list = list.concat(findValuesHelper(obj[children[i]], key, []));
+            }
+        }
+    }
+    return list;
+}
+
+router.get('/prestaciones/:id*?', function(req, res, next) {
     let query;
     if (req.params.id) {
         query = prestacionPaciente.findById(req.params.id);
@@ -34,7 +75,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
                 $where: "this.estado[this.estado.length - 1].tipo == '" + req.query.estado + "'"
             })
         } else {
-            query = prestacionPaciente.find({}); //Trae todos 
+            query = prestacionPaciente.find({}); //Trae todos
         }
 
         if (req.query.idTipoPrestacion) {
@@ -81,7 +122,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         }
     });
 
-   //populuamos todo lo necesario de la ejecucion
+    //populuamos todo lo necesario de la ejecucion
     query.populate({
         path: 'ejecucion.prestaciones',
         model: 'prestacionPaciente',
@@ -93,14 +134,14 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
                 model: 'tipoProblema'
             },
         },
-        {
-            path: 'ejecucion.listaProblemas',
-            model: 'problema',
-            populate: {
-                path: 'tipoProblema',
-                model: 'tipoProblema'
-            },
-        }]
+            {
+                path: 'ejecucion.listaProblemas',
+                model: 'problema',
+                populate: {
+                    path: 'tipoProblema',
+                    model: 'tipoProblema'
+                },
+            }]
     });
 
     query.populate({
@@ -133,7 +174,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
     }
 
 
-    query.exec(function (err, data) {
+    query.exec(function(err, data) {
         if (err) {
             next(err);
         };
@@ -144,7 +185,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
 
 
 
-router.post('/prestaciones', function (req, res, next) {
+router.post('/prestaciones', function(req, res, next) {
     var prestacion;
     prestacion = new prestacionPaciente(req.body);
 
@@ -158,11 +199,11 @@ router.post('/prestaciones', function (req, res, next) {
     });
 });
 
-router.put('/prestaciones/:id', function (req, res, next) {
+router.put('/prestaciones/:id', function(req, res, next) {
     // Auth.audit(prestacion, req);
     prestacionPaciente.findByIdAndUpdate(req.params.id, req.body, {
         new: true
-    }, function (err, data) {
+    }, function(err, data) {
         if (err) {
             return next(err);
         }
@@ -170,8 +211,8 @@ router.put('/prestaciones/:id', function (req, res, next) {
     });
 });
 
-router.delete('/prestaciones/:id', function (req, res, next) {
-    prestacionPaciente.findByIdAndRemove(req.params.id, function (err, data) {
+router.delete('/prestaciones/:id', function(req, res, next) {
+    prestacionPaciente.findByIdAndRemove(req.params.id, function(err, data) {
         if (err)
             return next(err);
         res.json(data);
