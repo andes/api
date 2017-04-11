@@ -158,7 +158,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         return next('ID Inválido');
     }
-    
+
 
     agenda.findById(req.params.id, function (err, data) {
 
@@ -263,6 +263,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
 // Turno
 function darAsistencia(req, data, tid = null) {
     let turno = getTurno(req, data, tid);
+    console.log(turno);
     turno.asistencia = true;
 }
 
@@ -363,6 +364,14 @@ function guardarNotaTurno(req, data, tid = null) {
     turno.nota = req.body.textoNota;
 }
 
+/**
+ * 
+ * @param req 
+ * @param data 
+ * @param idTurno 
+ * 
+ * 
+ */
 function getTurno(req, data, idTurno = null) {
     let turno;
 
@@ -372,9 +381,10 @@ function getTurno(req, data, idTurno = null) {
         if (data.bloques[x] != null) {
             turno = (data as any).bloques[x].turnos.id(idTurno);
         }
+        if (turno !== null) {
+            return turno;
+        }
     }
-
-    return turno;
 }
 
 export = router;
