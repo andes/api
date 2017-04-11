@@ -10,6 +10,7 @@ router.get('/prestaciones/forKey', function(req, res, next) {
 
     let filtro = 'ejecucion.evoluciones.valores';
     let key = req.query.key;
+    let prest = {};
     let query = { 'paciente._id': req.query.idPaciente };
     query[filtro] = {
         $exists: true
@@ -21,18 +22,22 @@ router.get('/prestaciones/forKey', function(req, res, next) {
         } else {
             // Se recorren las prestaciones del paciente para obtener las prestaciones que incluyan la key recibida
             let prestaciones = data;
+            let lista = [];
             if (prestaciones.length > 0) {
               prestaciones.forEach(prestacion => {
+                if (lista.length <= 0) {
                   prestacion.ejecucion.evoluciones.forEach(evolucion => {
                       let valor = evolucion.valores;
-                      let lista = findValues(valor, key);
+                      lista = findValues(valor, key);
                       if (lista.length > 0) {
-                          res.json(prestacion);
+                          prest = prestacion;
                       }
                   });
+                }
+
               });
             }
-            res.json({});
+            res.json(prest);
         }
     });
 
