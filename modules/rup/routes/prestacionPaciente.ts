@@ -10,7 +10,7 @@ router.get('/prestaciones/forKey', function(req, res, next) {
 
     let filtro = 'ejecucion.evoluciones.valores';
     let key = req.query.key;
-    let prest = {};
+    let listakey = [];
     let query = { 'paciente._id': req.query.idPaciente };
     query[filtro] = {
         $exists: true
@@ -23,21 +23,27 @@ router.get('/prestaciones/forKey', function(req, res, next) {
             // Se recorren las prestaciones del paciente para obtener las prestaciones que incluyan la key recibida
             let prestaciones = data;
             let lista = [];
+              let listaValores = [];
             if (prestaciones.length > 0) {
-              prestaciones.forEach(prestacion => {
-                if (lista.length <= 0) {
-                  prestacion.ejecucion.evoluciones.forEach(evolucion => {
-                      let valor = evolucion.valores;
-                      lista = findValues(valor, key);
-                      if (lista.length > 0) {
-                          prest = prestacion;
-                      }
-                  });
-                }
+                prestaciones.forEach(prestacion => {
+                    //if (lista.length <= 0) {
+                    prestacion.ejecucion.evoluciones.forEach(evolucion => {
+                        let valor = evolucion.valores;
+                        lista = findValues(valor, key);
+                        if (lista.length > 0) {
+                            listaValores = listaValores.concat(lista);
+                        }
+                    });
 
-              });
+                    if (listaValores.length > 0) {
+                        listakey.push({ 'valor': listaValores[listaValores.length-1], 'fecha:': prestacion.ejecucion.fecha });
+                        listaValores = [];
+                    }
+                    //}
+
+                });
             }
-            res.json(prest);
+            res.json(listakey);
         }
     });
 
