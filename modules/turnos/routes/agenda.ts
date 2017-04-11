@@ -207,10 +207,10 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                     if (err) {
                         return next(err);
                     }
+                    return res.json(data);
                 });
 
             }
-            return res.json(data);
 
         } else {
 
