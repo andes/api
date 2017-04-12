@@ -7,7 +7,7 @@ import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 
 let router = express.Router();
 
-router.patch('/agenda/:idAgenda/bloque/:idBloque/turno/:idTurno', function (req, res, next) {
+router.patch('/demo/:idAgenda/bloque/:idBloque/turno/:idTurno', function (req, res, next) {
   // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
 
   let continues = ValidateDarTurno.checkTurno(req.body);
