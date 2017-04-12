@@ -6,29 +6,7 @@ var validateDarTurno_1 = require("../../../utils/validateDarTurno");
 var paciente_1 = require("../../../core/mpi/schemas/paciente");
 var tipoPrestacion_1 = require("../../../core/tm/schemas/tipoPrestacion");
 var router = express.Router();
-// next como tercer parametro
-router.put('/turno/:id', function (req, res, next) {
-    var changes = req.body;
-    var etiquetaEstado = 'bloques.' + req.body.indiceBloque + '.turnos.' + req.body.indiceTurno + '.estado';
-    var etiquetaPaciente = 'bloques.' + req.body.indiceBloque + '.turnos.' + req.body.indiceTurno + '.paciente';
-    var etiquetaPrestacion = 'bloques.' + req.body.indiceBloque + '.turnos.' + req.body.indiceTurno + '.tipoPrestacion';
-    var query = {
-        _id: req.params.id
-    };
-    query[etiquetaEstado] = 'disponible'; // agrega un tag al json query
-    var update = {};
-    update[etiquetaEstado] = 'asignado';
-    update[etiquetaPrestacion] = req.body.tipoPrestacion;
-    update[etiquetaPaciente] = req.body.paciente;
-    // console.log("Update   ", update);
-    agenda.findOneAndUpdate(query, { $set: update }, function (err, agen) {
-        if (err) {
-            return next(err);
-        }
-        res.json(agen);
-    });
-});
-router.patch('/agenda/:idAgenda/bloque/:idBloque/turno/:idTurno', function (req, res, next) {
+router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda', function (req, res, next) {
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
     var continues = validateDarTurno_1.ValidateDarTurno.checkTurno(req.body);
     if (continues.valid) {
