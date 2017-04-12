@@ -20,7 +20,7 @@ router.get('/agenda/paciente/:idPaciente', function (req, res, next) {
             res.json(data);
         });
     }
-})
+});
 
 router.get('/agenda/:id*?', function (req, res, next) {
 
@@ -152,13 +152,11 @@ router.delete('/agenda/:id', function (req, res, next) {
     });
 });
 
-router.patch('/agenda/:id?', function (req, res, next) {
-
+router.patch('/agenda/:id*?', function (req, res, next) {
 
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         return next('ID Inválido');
     }
-
 
     agenda.findById(req.params.id, function (err, data) {
 
@@ -370,9 +368,9 @@ function getTurno(req, data, idTurno = null) {
     for (let x = 0; x < Object.keys(data).length; x++) {
         if (data.bloques[x] != null) {
             turno = (data as any).bloques[x].turnos.id(idTurno);
-        }
-        if (turno !== null) {
-            return turno;
+            if (turno !== null) {
+                return turno;
+            }
         }
     }
 }
