@@ -87,16 +87,6 @@ router.get('/agenda/:id*?', function (req, res, next) {
             query.where('profesionales._id').in(req.query.profesionales);
         }
 
-        // Dada una lista de profesionales, filtra las agendas que tengan al menos uno de ellos
-        // if (req.query.profesionales) {
-        //     let arr_profesionales: any[] = JSON.parse(req.query.profesionales);
-        //     let variable: any[] = [];
-        //     arr_profesionales.forEach((profesional, index) => {
-        //         variable.push({ 'profesionales._id': profesional.id })
-        //     });
-        //     query.or(variable);
-        // }
-
         // Si rango es true  se buscan las agendas que se solapen con la actual en algún punto
         if (req.query.rango) {
             let variable: any[] = [];
@@ -131,6 +121,71 @@ router.post('/agenda', function (req, res, next) {
         }
         res.json(data);
     });
+});
+
+// Este post recibe el id de la agenda a clonar y un array con las fechas en las cuales se va a clonar
+router.post('/agenda/clonar', function (req, res, next) {
+    let idagenda = req.body.idAgenda;
+    let clones = req.body.clones;
+    let cloncitos = [];
+    if (idagenda) {
+        agenda.findById(idagenda, function (err, data) {
+            if (err) {
+                return next(err);
+            };
+            clones.forEach(clon => {
+                clon = new Date(clon);
+                if (clon) {
+                    data._id = mongoose.Types.ObjectId();
+                    data.isNew = true;
+                    let nueva = new agenda(data);
+                    let newHoraInicio = combinarFechas(clon, new Date(data['horaInicio']));
+                    let newHoraFin = combinarFechas(clon, new Date(data['horaFin']));
+                    nueva['horaInicio'] = newHoraInicio;
+                    nueva['horaFin'] = newHoraFin;
+                    nueva['updatedBy'] = undefined;
+                    nueva['updatedAt'] = undefined;
+                    let newIniBloque: any;
+                    let newFinBloque: any;
+                    let newIniTurno: any;
+                    nueva['bloques'] = data['bloques'];
+                    nueva['bloques'].forEach((bloque, index) => {
+                        newIniBloque = combinarFechas(clon, bloque.horaInicio);
+                        newFinBloque = combinarFechas(clon, bloque.horaFin);
+                        bloque.horaInicio = newIniBloque;
+                        bloque.horaFin = newFinBloque;
+                        bloque._id = undefined;
+                        bloque.turnos.forEach((turno, index1) => {
+                            newIniTurno = combinarFechas(clon, turno.horaInicio);
+                            turno.horaInicio = newIniTurno;
+                            turno.estado = 'disponible';
+                            turno.asistencia = false;
+                            turno.paciente = null;
+                            turno.tipoPrestacion = null;
+                            turno.idPrestacionPaciente = null;
+                            turno._id = undefined;
+                            if (turno.tipoTurno) {
+                                turno.tipoTurno = undefined;
+                            }
+                        });
+                    });
+                    nueva['estado'] = 'Planificacion';
+                    Auth.audit(nueva, req);
+                    nueva.save((err) => {
+                        if (err) {
+                            return next(err);
+                        }
+                        cloncitos.push(nueva);
+                        console.log('cloncitos ', cloncitos.length);
+                        console.log('clones ', clones.length);
+                        if (cloncitos.length === clones.length) {
+                            res.json(cloncitos);
+                        }
+                    });
+                }
+            });
+        });
+    }
 });
 
 router.put('/agenda/:id', function (req, res, next) {
@@ -247,6 +302,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
 
 });
 
+// TODO: Hacer una clase para colocar las siguiente funciones
 
 // Turno
 function darAsistencia(req, data, tid = null) {
@@ -303,6 +359,14 @@ function reasignarTurno(req, data, tid = null) {
     turno.motivoSuspension = null;
 }
 
+// Turno
+function guardarNotaTurno(req, data, tid = null) {
+
+    let turno = getTurno(req, data, tid);
+
+    turno.nota = req.body.textoNota;
+}
+
 // Agenda
 function editarAgenda(req, data) {
     if (req.body.profesional) {
@@ -313,7 +377,6 @@ function editarAgenda(req, data) {
 
 // Agenda
 function actualizarEstado(req, data) {
-
     // Si se pasa a estado Pausada, guardamos el estado previo
     if (req.body.estado === 'Pausada') {
         data.prePausada = data.estado;
@@ -333,36 +396,10 @@ function actualizarEstado(req, data) {
     } else {
         data.estado = req.body.estado;
     }
-
 }
 
-// function suspenderAgenda(req, data) {
-//     data.estado = req.body.estado;
-// }
-
-// function publicarAgenda(req, data) {
-//     data.estado = req.body.estado;
-// }
-
-// Turno
-function guardarNotaTurno(req, data, tid = null) {
-
-    let turno = getTurno(req, data, tid);
-
-    turno.nota = req.body.textoNota;
-}
-
-/**
- * 
- * @param req 
- * @param data 
- * @param idTurno 
- * 
- * 
- */
 function getTurno(req, data, idTurno = null) {
     let turno;
-
     idTurno = idTurno || req.body.idTurno;
 
     for (let x = 0; x < Object.keys(data).length; x++) {
@@ -372,6 +409,23 @@ function getTurno(req, data, idTurno = null) {
                 return turno;
             }
         }
+    }
+}
+
+
+function combinarFechas(fecha1, fecha2) {
+    if (fecha1 && fecha2) {
+        let horas: number;
+        let minutes: number;
+        let auxiliar: Date;
+
+        auxiliar = new Date(fecha1);
+        horas = fecha2.getHours();
+        minutes = fecha2.getMinutes();
+        auxiliar.setHours(horas, minutes, 0, 0);
+        return auxiliar;
+    } else {
+        return null;
     }
 }
 
