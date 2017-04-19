@@ -208,6 +208,17 @@ router.get('/profesionales/:id*?', function (req, res, next) {
             };
         }
 
+
+        if (req.query.nombreCompleto) {
+            opciones['nombre'] = {
+                '$regex': utils.makePattern(req.query.nombreCompleto)
+            };
+            opciones['apellido'] = {
+                '$regex': utils.makePattern(req.query.nombreCompleto)
+            };
+        }
+        
+
         if (req.query.documento) {
             opciones['documento'] = utils.makePattern(req.query.documento)
         }
@@ -226,9 +237,18 @@ router.get('/profesionales/:id*?', function (req, res, next) {
             };
         }
     }
+
     let skip: number = parseInt(req.query.skip || 0);
     let limit: number = Math.min(parseInt(req.query.limit || defaultLimit), maxLimit);
-    query = profesional.find(opciones).skip(skip).limit(limit);
+
+    if (req.query.nombreCompleto) {   
+        query = profesional.find({ apellido: { '$regex': utils.makePattern(req.query.nombreCompleto) }});
+        //query.or({ nombre: { '$regex': utils.makePattern(req.query.nombreCompleto) }});
+        query.skip(skip).limit(limit);
+    } else {
+        query = profesional.find(opciones).skip(skip).limit(limit);
+    }
+
     query.exec(function (err, data) {
         if (err) return next(err);
         res.json(data);
