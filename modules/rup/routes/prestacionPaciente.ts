@@ -210,17 +210,59 @@ router.post('/prestaciones', function(req, res, next) {
     });
 });
 
+// router.put('/prestaciones/:id', function(req, res, next) {
+//     // Auth.audit(prestacion, req);
+//     prestacionPaciente.findByIdAndUpdate(req.params.id, req.body, {
+//         new: true
+//     }, function(err, data) {
+//         if (err) {
+//             return next(err);
+//         }
+//         res.json(data);
+//     });
+// });
+
 router.put('/prestaciones/:id', function(req, res, next) {
-    // Auth.audit(prestacion, req);
-    prestacionPaciente.findByIdAndUpdate(req.params.id, req.body, {
-        new: true
+var prestacion;
+prestacion = new prestacionPaciente(req.body);
+
+let evolucion = prestacion.ejecucion.evoluciones[prestacion.ejecucion.evoluciones.length-1];
+
+prestacionPaciente.findById(prestacion.id, function (err, data) {
+
+       if (err) {
+           return next(err);
+       }
+
+     let evoluciones = data.ejecucion.evoluciones;
+     evoluciones.push(evolucion);
+     prestacion.ejecucion.evoluciones = evoluciones;
+
+     Auth.audit(prestacion, req);
+
+    prestacionPaciente.findByIdAndUpdate(prestacion.id, prestacion, {
+    new: true
     }, function(err, data) {
         if (err) {
             return next(err);
         }
         res.json(data);
     });
+
+
+
+})
+
 });
+
+
+
+// router.patch('/prestaciones/:id/evoluciones', function(req, res, next) {
+//     let prestacion = req.body;
+//     let evolucion = prestacion.ejecucion.evoluciones[prestacion.ejecucion.evoluciones.length-1];
+
+// });
+
 
 router.delete('/prestaciones/:id', function(req, res, next) {
     prestacionPaciente.findByIdAndRemove(req.params.id, function(err, data) {
