@@ -64,13 +64,16 @@ router.get('/agenda/:id*?', function (req, res, next) {
             query.where('estado').equals(req.query.estado);
         }
 
+        if (req.query.estados) {
+            query.where('estado').in(req.query.estados);
+        }
+
         if (req.query.organizacion) {
             query.where('organizacion._id').equals(req.query.organizacion);
         }
 
         // Filtra por el array de tipoPrestacion enviado como parametro
         if (req.query.tipoPrestaciones) {
-            console.log('1', req.query.tipoPrestaciones)
             query.where('tipoPrestaciones._id').in(req.query.tipoPrestaciones);
         }
 
