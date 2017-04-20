@@ -26,7 +26,7 @@ router.get('/prestaciones/forKey', function(req, res, next) {
             let listaValores = [];
             if (prestaciones.length > 0) {
                 prestaciones.forEach(prestacion => {
-                    //if (lista.length <= 0) {
+                    // if (lista.length <= 0) {
                     prestacion.ejecucion.evoluciones.forEach(evolucion => {
                         let valor = evolucion.valores;
                         lista = findValues(valor, key);
@@ -49,7 +49,7 @@ router.get('/prestaciones/forKey', function(req, res, next) {
 
 });
 
-function findValues(obj, key) {  //funcion para buscar una key y recuperar la prestacion que la contiene
+function findValues(obj, key) {  // funcion para buscar una key y recuperar la prestacion que la contiene
     return findValuesHelper(obj, key, []);
 }
 
@@ -65,7 +65,7 @@ function findValuesHelper(obj, key, list) {
     }
     if (obj[key]) { list.push(obj[key]); return list }
 
-    if ((typeof obj == "object") && (obj !== null)) {
+    if ((typeof obj == 'object') && (obj !== null)) {
         children = Object.keys(obj);
         if (children.length > 0) {
             for (i = 0; i < children.length; i++) {
@@ -259,16 +259,14 @@ router.put('/prestaciones/:id', function(req, res, next) {
 
 router.patch('/prestaciones/:id/listaProblemas', function(req, res, next) {
 
-    prestacionPaciente.update({ '_id': req.params.id }, { $addToSet: { 'ejecucion.listaProblemas': req.body.problema } }, { upsert: true },
-        function(errUpdate, data) {
-            if (errUpdate) {
-                return next(errUpdate);
-            } else {
-                res.json(data);
+    prestacionPaciente.findByIdAndUpdate(req.params.id, { $set: { 'ejecucion.listaProblemas': req.body.problemas } }, { upsert: true },
+        function(err, data) {
+            if (err) {
+                return next(err);
             }
-
+            res.json(data);
         });
-})
+});
 
 
 router.delete('/prestaciones/:id', function(req, res, next) {
