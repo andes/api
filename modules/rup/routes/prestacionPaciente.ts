@@ -23,7 +23,7 @@ router.get('/prestaciones/forKey', function(req, res, next) {
             // Se recorren las prestaciones del paciente para obtener las prestaciones que incluyan la key recibida
             let prestaciones = data;
             let lista = [];
-              let listaValores = [];
+            let listaValores = [];
             if (prestaciones.length > 0) {
                 prestaciones.forEach(prestacion => {
                     //if (lista.length <= 0) {
@@ -36,7 +36,7 @@ router.get('/prestaciones/forKey', function(req, res, next) {
                     });
 
                     if (listaValores.length > 0) {
-                        listakey.push({ 'valor': listaValores[listaValores.length-1], 'fecha': prestacion.ejecucion.fecha });
+                        listakey.push({ 'valor': listaValores[listaValores.length - 1], 'fecha': prestacion.ejecucion.fecha });
                         listaValores = [];
                     }
                     //}
@@ -223,45 +223,52 @@ router.post('/prestaciones', function(req, res, next) {
 // });
 
 router.put('/prestaciones/:id', function(req, res, next) {
-var prestacion;
-prestacion = new prestacionPaciente(req.body);
+    var prestacion;
+    prestacion = new prestacionPaciente(req.body);
 
-let evolucion = prestacion.ejecucion.evoluciones[prestacion.ejecucion.evoluciones.length-1];
+    let evolucion = prestacion.ejecucion.evoluciones[prestacion.ejecucion.evoluciones.length - 1];
 
-prestacionPaciente.findById(prestacion.id, function (err, data) {
+    prestacionPaciente.findById(prestacion.id, function(err, data) {
 
-       if (err) {
-           return next(err);
-       }
-
-     let evoluciones = data.ejecucion.evoluciones;
-     evoluciones.push(evolucion);
-     prestacion.ejecucion.evoluciones = evoluciones;
-
-     Auth.audit(prestacion, req);
-
-    prestacionPaciente.findByIdAndUpdate(prestacion.id, prestacion, {
-    new: true
-    }, function(err, data) {
         if (err) {
             return next(err);
         }
-        res.json(data);
-    });
+
+        let evoluciones = data.ejecucion.evoluciones;
+        evoluciones.push(evolucion);
+        prestacion.ejecucion.evoluciones = evoluciones;
+
+        Auth.audit(prestacion, req);
+
+        prestacionPaciente.findByIdAndUpdate(prestacion.id, prestacion, {
+            new: true
+        }, function(err, data) {
+            if (err) {
+                return next(err);
+            }
+            res.json(data);
+        });
 
 
 
-})
+    })
 
 });
 
 
 
-// router.patch('/prestaciones/:id/evoluciones', function(req, res, next) {
-//     let prestacion = req.body;
-//     let evolucion = prestacion.ejecucion.evoluciones[prestacion.ejecucion.evoluciones.length-1];
+router.patch('/prestaciones/:id/listaProblemas', function(req, res, next) {
 
-// });
+    prestacionPaciente.update({ '_id': req.params.id }, { $addToSet: { 'ejecucion.listaProblemas': req.body.problema } }, { upsert: true },
+        function(errUpdate, data) {
+            if (errUpdate) {
+                return next(errUpdate);
+            } else {
+                res.json(data);
+            }
+
+        });
+})
 
 
 router.delete('/prestaciones/:id', function(req, res, next) {
