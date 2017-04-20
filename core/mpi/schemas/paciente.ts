@@ -58,7 +58,8 @@ export let pacienteSchema = new mongoose.Schema({
         type: String,
         es_indexed: true
     },
-    reportarError: Boolean
+    reportarError: Boolean,
+    notaError:String
 });
 
 /* Se definen los campos virtuals */
