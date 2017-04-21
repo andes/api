@@ -214,19 +214,13 @@ router.post('/agenda/clonar', function (req, res, next) {
                             return next(err);
                         }
                         cloncitos.push(nueva);
-                        
-                        console.log('cloncitos ', cloncitos.length);
-                        console.log('clones ', clones.length);
-
                         if (cloncitos.length === clones.length) {
                             res.json(cloncitos);
-                        } 
-
+                        }
                     });
-
                 }
             });
-            res.end();
+            // res.end();
         });
     }
 });
