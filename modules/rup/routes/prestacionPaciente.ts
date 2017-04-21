@@ -23,10 +23,10 @@ router.get('/prestaciones/forKey', function(req, res, next) {
             // Se recorren las prestaciones del paciente para obtener las prestaciones que incluyan la key recibida
             let prestaciones = data;
             let lista = [];
-              let listaValores = [];
+            let listaValores = [];
             if (prestaciones.length > 0) {
                 prestaciones.forEach(prestacion => {
-                    //if (lista.length <= 0) {
+                    // if (lista.length <= 0) {
                     prestacion.ejecucion.evoluciones.forEach(evolucion => {
                         let valor = evolucion.valores;
                         lista = findValues(valor, key);
@@ -36,7 +36,7 @@ router.get('/prestaciones/forKey', function(req, res, next) {
                     });
 
                     if (listaValores.length > 0) {
-                        listakey.push({ 'valor': listaValores[listaValores.length-1], 'fecha': prestacion.ejecucion.fecha });
+                        listakey.push({ 'valor': listaValores[listaValores.length - 1], 'fecha': prestacion.ejecucion.fecha });
                         listaValores = [];
                     }
                     //}
@@ -49,7 +49,7 @@ router.get('/prestaciones/forKey', function(req, res, next) {
 
 });
 
-function findValues(obj, key) {  //funcion para buscar una key y recuperar la prestacion que la contiene
+function findValues(obj, key) {  // funcion para buscar una key y recuperar la prestacion que la contiene
     return findValuesHelper(obj, key, []);
 }
 
@@ -65,7 +65,7 @@ function findValuesHelper(obj, key, list) {
     }
     if (obj[key]) { list.push(obj[key]); return list }
 
-    if ((typeof obj == "object") && (obj !== null)) {
+    if ((typeof obj == 'object') && (obj !== null)) {
         children = Object.keys(obj);
         if (children.length > 0) {
             for (i = 0; i < children.length; i++) {
@@ -210,17 +210,64 @@ router.post('/prestaciones', function(req, res, next) {
     });
 });
 
+// router.put('/prestaciones/:id', function(req, res, next) {
+//     // Auth.audit(prestacion, req);
+//     prestacionPaciente.findByIdAndUpdate(req.params.id, req.body, {
+//         new: true
+//     }, function(err, data) {
+//         if (err) {
+//             return next(err);
+//         }
+//         res.json(data);
+//     });
+// });
+
 router.put('/prestaciones/:id', function(req, res, next) {
-    // Auth.audit(prestacion, req);
-    prestacionPaciente.findByIdAndUpdate(req.params.id, req.body, {
-        new: true
-    }, function(err, data) {
+    var prestacion;
+    prestacion = new prestacionPaciente(req.body);
+
+    let evolucion = prestacion.ejecucion.evoluciones[prestacion.ejecucion.evoluciones.length - 1];
+
+    prestacionPaciente.findById(prestacion.id, function(err, data) {
+
         if (err) {
             return next(err);
         }
-        res.json(data);
-    });
+
+        let evoluciones = data.ejecucion.evoluciones;
+        evoluciones.push(evolucion);
+        prestacion.ejecucion.evoluciones = evoluciones;
+
+        Auth.audit(prestacion, req);
+
+        prestacionPaciente.findByIdAndUpdate(prestacion.id, prestacion, {
+            new: true
+        }, function(err, data) {
+            if (err) {
+                return next(err);
+            }
+            res.json(data);
+        });
+
+
+
+    })
+
 });
+
+
+
+router.patch('/prestaciones/:id/listaProblemas', function(req, res, next) {
+
+    prestacionPaciente.findByIdAndUpdate(req.params.id, { $set: { 'ejecucion.listaProblemas': req.body.problemas } }, { upsert: true },
+        function(err, data) {
+            if (err) {
+                return next(err);
+            }
+            res.json(data);
+        });
+});
+
 
 router.delete('/prestaciones/:id', function(req, res, next) {
     prestacionPaciente.findByIdAndRemove(req.params.id, function(err, data) {

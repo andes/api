@@ -1,7 +1,7 @@
 import * as log from '../core/log/schemas/log';
 
-
 export class Logger {
+
     public static log(req, mod, op, data?, callback?): any {
         let newLog = new log.log({
             fecha: new Date(),
@@ -10,7 +10,10 @@ export class Logger {
             modulo: mod,
             operacion: op,
             datosOperacion: data,
-            cliente: { ip: req.ip, app: 'desktop' },
+            cliente: { 
+                ip: req.ip, 
+                app: 'desktop'
+            },
             servidor: {
                 ip: req.connection.localAddress
             }
@@ -18,4 +21,5 @@ export class Logger {
         newLog.save(callback);
         return newLog;
     }
+
 }

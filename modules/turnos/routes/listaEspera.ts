@@ -124,10 +124,10 @@ function listaEsperaSuspensionAgenda(req, data, next) {
             var newListaEspera = {};
 
             newListaEspera['fecha'] = moment().format(),
-                newListaEspera['estado'] = 'Agenda Suspendida',
-                newListaEspera['tipoPrestacion'] = req.body.pacientes[i].tipoPrestacion,
-                newListaEspera['profesional'] = data.profesionales[0],
-                newListaEspera['paciente'] = req.body.pacientes[i].paciente;
+            newListaEspera['estado'] = 'Agenda Suspendida',
+            newListaEspera['tipoPrestacion'] = req.body.pacientes[i].tipoPrestacion,
+            newListaEspera['profesional'] = data.profesionales[0],
+            newListaEspera['paciente'] = req.body.pacientes[i].paciente;
 
             listaEspera.push(newListaEspera);
         }
@@ -135,11 +135,11 @@ function listaEsperaSuspensionAgenda(req, data, next) {
         var newListaEspera = {};
 
         newListaEspera['fecha'] = moment().format(),
-            newListaEspera['estado'] = 'Turno Canceladdo',
-            newListaEspera['tipoPrestacion'] = req.body.pacientes.tipoPrestacion,
-            newListaEspera['profesional'] = data.profesionales[0],
-            newListaEspera['paciente'] = req.body.pacientes.paciente;
-console.log("Entraaa ", newListaEspera);
+        newListaEspera['estado'] = 'Turno Canceladdo',
+        newListaEspera['tipoPrestacion'] = req.body.pacientes.tipoPrestacion,
+        newListaEspera['profesional'] = data.profesionales[0],
+        newListaEspera['paciente'] = req.body.pacientes.paciente;
+        console.log("Entraaa ", newListaEspera);
         listaEspera.push(newListaEspera);
     }
 

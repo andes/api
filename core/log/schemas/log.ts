@@ -33,19 +33,22 @@ export let logSchema = new mongoose.Schema({
         type: String,
         enum: [
             // Operaciones genéricas
-            'query', 'insert', 'update', 'delete', 'scan', 'scanFail',
+            'query', 'insert', 'update', 'delete',
             // Operaciones de módulos
             // ... Mpi
+<<<<<<< HEAD
             'macheoAlto', 'posibleDuplicado', 'reportarError', 'validadoScan',
             // OperacionesElastic
             'elasticInsert', 'elasticUpdate', 'elasticDelete',
+=======
+            'macheoAlto', 'posibleDuplicado', 'reportarError', 'validadoScan', 'scan', 'scanFail',
+>>>>>>> develop
             // ... Turnos
             'asignarTurno', 'cancelarTurno', 'listaEspera'
             // ... RUP
         ]
     },
-    datosOperacion: mongoose.Schema.Types.Mixed
-    ,
+    datosOperacion: mongoose.Schema.Types.Mixed,
     cliente: {
         ip: String,
         app: {
