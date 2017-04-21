@@ -114,12 +114,14 @@ pacienteSchema.virtual('edadReal').get(function () {
 pacienteSchema.index({
     '$**': 'text'
 });
+
+
 /*conectamos con elasticSearch*/
-pacienteSchema.plugin(mongoosastic, {
-    hosts: [config.connectionStrings.elastic_main],
-    index: 'andes',
-    type: 'paciente'
-});
+// pacienteSchema.plugin(mongoosastic, {
+//     hosts: [config.connectionStrings.elastic_main],
+//     index: 'andes',
+//     type: 'paciente'
+// });
 
 // Habilitar plugin de auditoría
 pacienteSchema.plugin(require('../../../mongoose/audit'));
@@ -127,4 +129,3 @@ pacienteSchema.plugin(require('../../../mongoose/audit'));
 
 export let paciente = mongoose.model('paciente', pacienteSchema, 'paciente');
 export let pacienteMpi = connectMpi.model('paciente', pacienteSchema, 'paciente');
-

@@ -37,6 +37,8 @@ export let logSchema = new mongoose.Schema({
             // Operaciones de módulos
             // ... Mpi
             'macheoAlto', 'posibleDuplicado', 'reportarError', 'validadoScan',
+            // OperacionesElastic
+            'elasticInsert', 'elasticUpdate', 'elasticDelete',
             // ... Turnos
             'asignarTurno', 'cancelarTurno', 'listaEspera'
             // ... RUP
