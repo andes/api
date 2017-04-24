@@ -64,13 +64,16 @@ router.get('/agenda/:id*?', function (req, res, next) {
             query.where('estado').equals(req.query.estado);
         }
 
+        if (req.query.estados) {
+            query.where('estado').in(req.query.estados);
+        }
+
         if (req.query.organizacion) {
             query.where('organizacion._id').equals(req.query.organizacion);
         }
 
         // Filtra por el array de tipoPrestacion enviado como parametro
         if (req.query.tipoPrestaciones) {
-            console.log('1', req.query.tipoPrestaciones)
             query.where('tipoPrestaciones._id').in(req.query.tipoPrestaciones);
         }
 
@@ -177,7 +180,7 @@ router.post('/agenda/clonar', function (req, res, next) {
                         newFinBloque = combinarFechas(clon, bloque.horaFin);
                         bloque.horaInicio = newIniBloque;
                         bloque.horaFin = newFinBloque;
-                        bloque._id = undefined;
+                        bloque._id = mongoose.Types.ObjectId();
                         bloque.turnos.forEach((turno, index1) => {
                             newIniTurno = combinarFechas(clon, turno.horaInicio);
                             turno.horaInicio = newIniTurno;
@@ -186,7 +189,7 @@ router.post('/agenda/clonar', function (req, res, next) {
                             turno.paciente = null;
                             turno.tipoPrestacion = null;
                             turno.idPrestacionPaciente = null;
-                            turno._id = undefined;
+                            turno._id = mongoose.Types.ObjectId();
                             if (turno.tipoTurno) {
                                 turno.tipoTurno = undefined;
                             }
@@ -211,17 +214,19 @@ router.post('/agenda/clonar', function (req, res, next) {
                             return next(err);
                         }
                         cloncitos.push(nueva);
+                        
                         console.log('cloncitos ', cloncitos.length);
                         console.log('clones ', clones.length);
 
                         if (cloncitos.length === clones.length) {
                             res.json(cloncitos);
-                        }
+                        } 
 
                     });
 
                 }
             });
+            res.end();
         });
     }
 });

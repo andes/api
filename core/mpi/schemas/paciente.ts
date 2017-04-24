@@ -58,7 +58,8 @@ export let pacienteSchema = new mongoose.Schema({
         type: String,
         es_indexed: true
     },
-    reportarError: Boolean
+    reportarError: Boolean,
+    notaError:String
 });
 
 /* Se definen los campos virtuals */
@@ -115,11 +116,11 @@ pacienteSchema.index({
     '$**': 'text'
 });
 /*conectamos con elasticSearch*/
-pacienteSchema.plugin(mongoosastic, {
-    hosts: [config.connectionStrings.elastic_main],
-    index: 'andes',
-    type: 'paciente'
-});
+// pacienteSchema.plugin(mongoosastic, {
+//     hosts: [config.connectionStrings.elastic_main],
+//     index: 'andes',
+//     type: 'paciente'
+// });
 
 // Habilitar plugin de auditoría
 pacienteSchema.plugin(require('../../../mongoose/audit'));
