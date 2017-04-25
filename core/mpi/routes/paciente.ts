@@ -180,9 +180,14 @@ router.get('/pacientes/counts/', function (req, res, next) {
         if (err) {
             return next(err);
         }
-
-        
-        res.json(data);
+        let queryMPI = pacienteMpi.find(filtro).count();
+        queryMPI.exec(function (err1, data1) {
+            if (err1) {
+                return next(err1);
+            }
+            let total = data + data1;
+            res.json(total);
+        });
     });
 });
 
@@ -419,9 +424,9 @@ router.get('/pacientes', function (req, res, next) {
     if (req.query.type === 'suggest') {
 
         connElastic.search({
-                index: 'andes',
-                body: body
-            })
+            index: 'andes',
+            body: body
+        })
             .then((searchResult) => {
                 // Asigno los valores para el suggest
                 let weights = config.configMpi.weightsDefault;
@@ -436,7 +441,7 @@ router.get('/pacientes', function (req, res, next) {
                 let listaPacientesMin = [];
                 let devolverPorcentaje = req.query.percentage;
 
-                let results: Array < any > = ((searchResult.hits || {}).hits || []) // extract results from elastic response
+                let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
                     .filter(function (hit) {
                         let paciente = hit._source;
                         paciente.fechaNacimiento = moment(paciente.fechaNacimiento).format('YYYY-MM-DD');
@@ -489,11 +494,11 @@ router.get('/pacientes', function (req, res, next) {
             });
     } else { // Es para los casos de multimatch y singlequery
         connElastic.search({
-                index: 'andes',
-                body: body
-            })
+            index: 'andes',
+            body: body
+        })
             .then((searchResult) => {
-                let results: Array < any > = ((searchResult.hits || {}).hits || []) // extract results from elastic response
+                let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
                     .map((hit) => {
                         let elem = hit._source;
                         elem['id'] = hit._id;
@@ -787,7 +792,7 @@ router.put('/pacientes/:id', function (req, res, next) {
                     index: 'andes',
                     type: 'paciente',
                     id: patientFound._id.toString(),
-                    body:  {doc: pacAct}
+                    body: { doc: pacAct }
                 }, function (error, response) {
                     if (error) {
                         console.log('Error sincronizacion Elastic', error);
