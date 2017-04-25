@@ -6,7 +6,7 @@ import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 
 let router = express.Router();
 
-router.get('/prestaciones/forKey', function(req, res, next) {
+router.get('/prestaciones/forKey', function (req, res, next) {
 
     let filtro = 'ejecucion.evoluciones.valores';
     let key = req.query.key;
@@ -16,7 +16,7 @@ router.get('/prestaciones/forKey', function(req, res, next) {
         $exists: true
     };
     let consulta = prestacionPaciente.find(query).sort({ 'ejecucion.fecha': -1 });
-    consulta.exec(function(err, data) {
+    consulta.exec(function (err, data) {
         if (err) {
             next(err);
         } else {
@@ -76,7 +76,7 @@ function findValuesHelper(obj, key, list) {
     return list;
 }
 
-router.get('/prestaciones/:id*?', function(req, res, next) {
+router.get('/prestaciones/:id*?', function (req, res, next) {
     let query;
     if (req.params.id) {
         query = prestacionPaciente.findById(req.params.id);
@@ -145,14 +145,14 @@ router.get('/prestaciones/:id*?', function(req, res, next) {
                 model: 'tipoProblema'
             },
         },
-            {
-                path: 'ejecucion.listaProblemas',
-                model: 'problema',
-                populate: {
-                    path: 'tipoProblema',
-                    model: 'tipoProblema'
-                },
-            }]
+        {
+            path: 'ejecucion.listaProblemas',
+            model: 'problema',
+            populate: {
+                path: 'tipoProblema',
+                model: 'tipoProblema'
+            },
+        }]
     });
 
     query.populate({
@@ -185,7 +185,7 @@ router.get('/prestaciones/:id*?', function(req, res, next) {
     }
 
 
-    query.exec(function(err, data) {
+    query.exec(function (err, data) {
         if (err) {
             next(err);
         };
@@ -196,7 +196,7 @@ router.get('/prestaciones/:id*?', function(req, res, next) {
 
 
 
-router.post('/prestaciones', function(req, res, next) {
+router.post('/prestaciones', function (req, res, next) {
     var prestacion;
     prestacion = new prestacionPaciente(req.body);
 
@@ -222,13 +222,13 @@ router.post('/prestaciones', function(req, res, next) {
 //     });
 // });
 
-router.put('/prestaciones/:id', function(req, res, next) {
+router.put('/prestaciones/:id', function (req, res, next) {
     var prestacion;
     prestacion = new prestacionPaciente(req.body);
 
     let evolucion = prestacion.ejecucion.evoluciones[prestacion.ejecucion.evoluciones.length - 1];
 
-    prestacionPaciente.findById(prestacion.id, function(err, data) {
+    prestacionPaciente.findById(prestacion.id, function (err, data) {
 
         if (err) {
             return next(err);
@@ -242,7 +242,7 @@ router.put('/prestaciones/:id', function(req, res, next) {
 
         prestacionPaciente.findByIdAndUpdate(prestacion.id, prestacion, {
             new: true
-        }, function(err, data) {
+        }, function (err, data) {
             if (err) {
                 return next(err);
             }
@@ -257,20 +257,43 @@ router.put('/prestaciones/:id', function(req, res, next) {
 
 
 
-router.patch('/prestaciones/:id/listaProblemas', function(req, res, next) {
+router.patch('/prestaciones/:id', function (req, res, next) {
 
-    prestacionPaciente.findByIdAndUpdate(req.params.id, { $set: { 'ejecucion.listaProblemas': req.body.problemas } }, { upsert: true },
-        function(err, data) {
-            if (err) {
-                return next(err);
+    let modificacion = {};
+
+    switch (req.body.op) {
+        case 'estado':
+            if (req.body.estado) {
+                modificacion = { $set : {'estado': req.body.estado } }
             }
-            res.json(data);
-        });
+            break;
+        case 'listaProblemas':
+            if (req.body.Problema) {
+                // modificacion = { 'ejecucion.listaProblemas': req.body.Problema }
+                modificacion = {"$push": { "ejecucion.listaProblemas": req.body.Problema } }
+            }
+            break;
+        default:
+            next('Error: No se seleccionó ninguna opción.');
+            break;
+    }
+
+    if (modificacion) {
+        prestacionPaciente.findByIdAndUpdate(req.params.id, modificacion , { upsert: true },
+            function (err, data) {
+                if (err) {
+                    return next(err);
+                }
+                res.json(data);
+            });
+    } //if (modificacion)
+
+
 });
 
 
-router.delete('/prestaciones/:id', function(req, res, next) {
-    prestacionPaciente.findByIdAndRemove(req.params.id, function(err, data) {
+router.delete('/prestaciones/:id', function (req, res, next) {
+    prestacionPaciente.findByIdAndRemove(req.params.id, function (err, data) {
         if (err)
             return next(err);
         res.json(data);

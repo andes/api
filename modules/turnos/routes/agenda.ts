@@ -9,7 +9,6 @@ let router = express.Router();
 router.get('/agenda/paciente/:idPaciente', function (req, res, next) {
 
     if (req.params.idPaciente) {
-        
         let query = agenda
             .find({ 'bloques.turnos.paciente.id': req.params.idPaciente })
             .limit(10)
@@ -136,32 +135,18 @@ router.post('/agenda', function (req, res, next) {
 
 // Este post recibe el id de la agenda a clonar y un array con las fechas en las cuales se va a clonar
 router.post('/agenda/clonar', function (req, res, next) {
-    
     let idagenda = req.body.idAgenda;
     let clones = req.body.clones;
     let cloncitos = [];
 
     if (idagenda) {
         agenda.findById(idagenda, function (err, data) {
-            
-            // Logger.log(req, 'turnos', 'query', {
-            //     accion: 'Traer Agenda por ObjectID',
-            //     ruta: req.url,
-            //     method: req.method,
-            //     data: data,
-            //     err: err || false
-            // });
-
             if (err) {
                 return next(err);
             };
-
             clones.forEach(clon => {
-
                 clon = new Date(clon);
-
                 if ( clon ) {
-
                     data._id = mongoose.Types.ObjectId();
                     data.isNew = true;
                     let nueva = new agenda(data);
@@ -195,13 +180,9 @@ router.post('/agenda/clonar', function (req, res, next) {
                             }
                         });
                     });
-                    
                     nueva['estado'] = 'Planificacion';
-
                     Auth.audit(nueva, req);
-
                     nueva.save((err) => {
-
                         Logger.log(req, 'turnos', 'insert', {
                             accion: 'Clonar Agenda',
                             ruta: req.url,
@@ -216,18 +197,17 @@ router.post('/agenda/clonar', function (req, res, next) {
                         cloncitos.push(nueva);
                         if (cloncitos.length === clones.length) {
                             res.json(cloncitos);
-                        }
+
+                        };
                     });
                 }
             });
-            // res.end();
         });
     }
 });
 
 router.put('/agenda/:id', function (req, res, next) {
     agenda.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
-        
         Logger.log(req, 'turnos', 'update', {
             accion: 'Editar Agenda en estado Planificación',
             ruta: req.url,
@@ -235,11 +215,9 @@ router.put('/agenda/:id', function (req, res, next) {
             data: data,
             err: err || false
         });
-        
         if (err) {
             return next(err);
         }
-        
         res.json(data);
     });
 });
@@ -300,7 +278,6 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                     data: data,
                     err: err || false
                 });
-                
                 if (err) {
                     return next(err);
                 }
@@ -350,19 +327,16 @@ function bloquearTurno(req, data, tid = null) {
 // Turno
 function suspenderTurno(req, data, tid = null) {
     let turno = getTurno(req, data, tid);
-
     turno.estado = 'bloqueado';
     delete turno.paciente;
     delete turno.tipoPrestacion;
     turno.motivoSuspension = req.body.motivoSuspension;
-
     return data;
 }
 
 // Turno
 function reasignarTurno(req, data, tid = null) {
     let turno = getTurno(req, data, tid);
-
     turno.estado = 'disponible';
     delete turno.paciente;
     turno.prestacion = null;
@@ -371,9 +345,7 @@ function reasignarTurno(req, data, tid = null) {
 
 // Turno
 function guardarNotaTurno(req, data, tid = null) {
-
     let turno = getTurno(req, data, tid);
-
     turno.nota = req.body.textoNota;
 }
 
@@ -399,7 +371,6 @@ function actualizarEstado(req, data) {
             bloque.reservadoProfesional = 0;
         });
     }
-
     // Cuando se reanuda de un estado Pausada, se setea el estado guardado en prePausa
     if (req.body.estado === 'prePausada') {
         data.estado = data.prePausada;
@@ -412,10 +383,8 @@ function actualizarEstado(req, data) {
 function getTurno(req, data, idTurno = null) {
     let turno;
     idTurno = idTurno || req.body.idTurno;
-
     // Loop en los bloques
     for (let x = 0; x < Object.keys(data).length; x++) {
-        
         // Si existe este bloque...
         if (data.bloques[x] != null) {
             // Buscamos y asignamos el turno con id que coincida (si no coincide "asigna" null)
@@ -424,10 +393,9 @@ function getTurno(req, data, idTurno = null) {
             // Si encontró el turno dentro de alguno de los bloques, lo devuelve
             if (turno !== null) {
                 return turno;
-            } 
+            }
         }
     }
-
     return false;
 }
 
@@ -447,5 +415,4 @@ function combinarFechas(fecha1, fecha2) {
         return null;
     }
 }
-
 export = router;
