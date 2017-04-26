@@ -20,6 +20,7 @@ import {
     Logger
 } from '../../../utils/logService';
 import * as moment from 'moment';
+import { log } from '../../log/schemas/log';
 
 let router = express.Router();
 
@@ -189,6 +190,75 @@ router.get('/pacientes/counts/', function (req, res, next) {
             res.json(total);
         });
     });
+});
+
+router.get('/pacientes/dashboard/', function (req, res, next) {
+    let result = {
+        paciente: null,
+        pacienteMpi: null,
+        logs: null
+    };
+
+    paciente.aggregate([{
+        $group: {
+            '_id': {
+                'estado': '$estado'
+            },
+            'count': {
+                '$sum': 1
+            }
+        }
+    }],
+        function (err, data) {
+            if (err) {
+                return next(err);
+            }
+            result.paciente = data;
+            pacienteMpi.aggregate([{
+                $group: {
+                    '_id': {
+                        'estado': '$estado'
+                    },
+                    'count': {
+                        '$sum': 1
+                    }
+                }
+            }],
+                function (err1, data1) {
+                    if (err1) {
+                        return next(err1);
+                    }
+
+                    result.pacienteMpi = data1;
+                    log.aggregate([{
+                        $group: {
+                            '_id': {
+                                'operacion': '$operacion',
+                                'modulo': '$modulo'
+                            },
+                            'count': {
+                                '$sum': 1
+                            }
+                        }
+                    },
+                    {
+                        $match: {
+                            '_id.modulo': 'mpi'
+                        }
+                    }
+                    ],
+                        function (err2, data2) {
+                            if (err2) {
+                                return next(err2);
+                            }
+                            result.logs = data2;
+                            res.json(result);
+                        });
+                }
+            );
+        }
+    );
+
 });
 
 
