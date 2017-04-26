@@ -67,6 +67,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                       console.log('POSTURNO: ' + posTurno);
                     }
 
+                    // Restamos los turnos asignados de a cuenta
                     if ((data as any).bloques[posBloque].turnos[y].estado === 'asignado') {
                       if ( esHoy ) {
                         switch ((data as any).bloques[posBloque].turnos[y].tipoTurno) {
@@ -87,9 +88,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                           switch ((data as any).bloques[posBloque].turnos[y].tipoTurno) {
                             case ('programado'):
                               countBloques[x].programado--;
-                            break;
-                            case ('profesional'):
-                              countBloques[x].profesional--;
                             break;
                             case ('profesional'):
                               countBloques[x].profesional--;
