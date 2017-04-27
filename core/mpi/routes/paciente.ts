@@ -623,10 +623,9 @@ router.post('/pacientes/mpi', function (req, res, next) {
     // Se genera la clave de blocking
     let claves = match.crearClavesBlocking(newPatientMpi);
     newPatientMpi['claveBlocking'] = claves;
-    // (req as any).user = 'mpiUpdater';
-    // (req as any).organizacion = 'mpiUpdater';
+
     Auth.audit(newPatientMpi, req);
-    /*Los repetidos son controlados desde el mpi updater, este post no debería usarse desde la app ----> sólo de mpiUpdater*/
+
     newPatientMpi.save((err) => {
         if (err) {
             console.log('Error al insertar un paciente en MPI: ', err);
@@ -698,9 +697,6 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
             patientFound.scan = req.body.scan;
             patientFound.reportarError = req.body.reportarError;
 
-            // Habilita auditoria y guarda
-            // (req as any).user = 'mpiUpdater';
-            // (req as any).organizacion = 'mpiUpdater';
             Auth.audit(patientFound, req);
             patientFound.save(function (err2) {
                 if (err2) {
@@ -715,7 +711,7 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
                     q: patientFound._id.toString()
                 }).then(function (body) {
                     let hits = body.hits.hits;
-                    if (hits.length > 0) { //Si existe
+                    if (hits.length > 0) {
                         connElastic.update({
                             index: 'andes',
                             type: 'paciente',
@@ -727,10 +723,10 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
                             if (error) {
                                 console.log('Error en update Elastic', error);
                             }
-                            // Logger.log(req, 'mpi', 'update', {
-                            //     original: pacienteOriginal,
-                            //     nuevo: patientFound
-                            // });
+                            Logger.log(req, 'mpi', 'update', {
+                                original: pacienteOriginal,
+                                nuevo: patientFound
+                            });
                             res.json(patientFound);
                         });
                     } else {
@@ -762,17 +758,13 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
             newPatient['claveBlocking'] = claves;
             newPatient['apellido'] = newPatient['apellido'].toUpperCase();
             newPatient['nombre'] = newPatient['nombre'].toUpperCase();
-            /*Antes del save se podría realizar una búsqueda y matching para evitar cargar repetidos, actualmente este proceso sólo se realiza del lado de la app*/
-            // (req as any).user = 'mpiUpdater';
-            // (req as any).organizacion = 'mpiUpdater';
+  
             Auth.audit(newPatient, req);
             newPatient.save((err) => {
                 if (err) {
                     console.log('Error al persistir los datos: ', err);
                     return next(err);
                 }
-                // Cargamos el paciente en elastic
-                // El campo _id no puede ir dentro del body
                 let nuevoPac = JSON.parse(JSON.stringify(newPatient));
                 delete nuevoPac._id;
 
@@ -895,17 +887,14 @@ router.post('/pacientes', function (req, res, next) {
     newPatient['claveBlocking'] = claves;
     newPatient['apellido'] = newPatient['apellido'].toUpperCase();
     newPatient['nombre'] = newPatient['nombre'].toUpperCase();
-    /*Antes del save se podría realizar una búsqueda y matching para evitar cargar repetidos, actualmente este proceso sólo se realiza del lado de la app*/
-    // (req as any).user = 'prueba';
-    // (req as any).organizacion = 'prueba';
+
     Auth.audit(newPatient, req);
     newPatient.save((err) => {
         if (err) {
             console.log('Error al persistir los datos: ', err);
             return next(err);
         }
-        // Cargamos el paciente en elastic
-        // El campo _id no puede ir dentro del body
+
         let nuevoPac = JSON.parse(JSON.stringify(newPatient));
         delete nuevoPac._id;
 
@@ -1012,8 +1001,6 @@ router.put('/pacientes/:id', function (req, res, next) {
             patientFound.reportarError = req.body.reportarError;
 
             // Habilita auditoria y guarda
-            // (req as any).user = 'prueba';
-            // (req as any).organizacion = 'prueba';
             Auth.audit(patientFound, req);
             patientFound.save(function (err2) {
                 if (err2) {
@@ -1023,7 +1010,7 @@ router.put('/pacientes/:id', function (req, res, next) {
 
                 let pacAct = JSON.parse(JSON.stringify(patientFound));
                 delete pacAct._id;
-                
+
                 connElastic.search({
                     q: patientFound._id.toString()
                 }).then(function (body) {
@@ -1074,15 +1061,13 @@ router.put('/pacientes/:id', function (req, res, next) {
             newPatient['apellido'] = newPatient['apellido'].toUpperCase();
             newPatient['nombre'] = newPatient['nombre'].toUpperCase();
             /*Antes del save se podría realizar una búsqueda y matching para evitar cargar repetidos, actualmente este proceso sólo se realiza del lado de la app*/
-            // (req as any).user = 'prueba';
-            // (req as any).organizacion = 'prueba';
+
             Auth.audit(newPatient, req);
             newPatient.save((err) => {
                 if (err) {
                     return next(err);
                 }
-                // Cargamos el paciente en elastic
-                // El campo _id no puede ir dentro del body
+
                 let nuevoPac = JSON.parse(JSON.stringify(newPatient));
                 delete nuevoPac._id;
 
@@ -1091,7 +1076,7 @@ router.put('/pacientes/:id', function (req, res, next) {
                 }).then(function (body) {
                     let hits = body.hits.hits;
                     console.log('resulatdo de hits en andes: ', hits);
-                    if (hits.length > 0) { //Si existe
+                    if (hits.length > 0) {
                          console.log('hay q actualizar el docmento en elastic');
                         connElastic.update({
                             index: 'andes',
@@ -1111,7 +1096,6 @@ router.put('/pacientes/:id', function (req, res, next) {
                             res.json(newPatient);
                         });
                     } else {
-                        console.log('hay q craerla');
                         connElastic.create({
                             index: 'andes',
                             type: 'paciente',
