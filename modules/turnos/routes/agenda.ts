@@ -378,7 +378,7 @@ function actualizarEstado(req, data) {
     }
 }
 
-// Dada una Agenda completa y un id de Turno, busca y devuelve el Turno completo
+// Dada una Agenda completa + un id de Turno, busca y devuelve el Turno completo
 function getTurno(req, data, idTurno = null) {
     let turno;
     idTurno = idTurno || req.body.idTurno;
