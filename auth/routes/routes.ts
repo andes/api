@@ -7,6 +7,7 @@ import { Auth } from './../auth.class';
 import * as organizacion from '../schemas/organizacion';
 import * as permisos from '../schemas/permisos';
 import { profesional } from './../../core/tm/schemas/profesional';
+import { UserToken } from './../schemas/user-token.interface';
 
 let router = express.Router();
 
@@ -38,22 +39,9 @@ router.post('/login', function (req, res, next) {
             }
 
             // Crea el token con los datos de sesión
-            let token = {
-                id: mongoose.Types.ObjectId(),
-                usuario: {
-                    nombreCompleto: nombre + ' ' + apellido,
-                    nombre: nombre,
-                    apellido: apellido,
-                    username: data[1].usuario,
-                    documento: data[1].usuario
-                },
-                roles: [data[1].roles],
-                profesional: data[2],
-                organizacion: data[0],
-                permisos: data[1].permisos
-            };
+            console.log(Auth.generateAppToken('mpiUpdate', organizacion, ['mpi']));
             res.json({
-                token: jwt.sign(token, config.auth.privateKey, { expiresIn: 3000000 })
+                token: Auth.generateUserToken(nombre, apellido, data[0], data[1], data[2])
             });
         });
     };

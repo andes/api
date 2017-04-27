@@ -1,7 +1,10 @@
+import { AppToken } from './schemas/app-token.interface';
+import { UserToken } from './schemas/user-token.interface';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import * as passport from 'passport';
 import * as passportJWT from 'passport-jwt';
+import * as jwt from 'jsonwebtoken';
 import * as config from '../config';
 let shiroTrie = require('shiro-trie');
 
@@ -72,10 +75,12 @@ export class Auth {
      * @memberOf Auth
      */
     static audit(document: mongoose.Document, req: express.Request) {
+        // Obtiene el usuario o app que está autenticada
+        let i = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
+        // Copia la organización desde el token
+        i.organizacion = (req as any).user.organizacion;
         // El método 'audit' lo define el plugin 'audit'
-        let userAndOrg = (Object as any).assign({}, (req as any).user.usuario);
-        userAndOrg.organizacion = (req as any).user.organizacion;
-        (document as any).audit(userAndOrg);
+        (document as any).audit(i);
     }
 
     /**
@@ -112,5 +117,61 @@ export class Auth {
         } else {
             return this.getShiro(req).permissions(string);
         }
+    }
+
+    /**
+     * Genera un token de usuario firmado
+     * 
+     * @static
+     * @param {string} nombre Nombre del usuario
+     * @param {string} apellido Apellido del usuario
+     * @param {*} organizacion Organización (corresponde a schemas/organizacion)
+     * @param {*} permisos Permisos (corresponde a schemas/permisos)
+     * @param {*} profesional Permisos (corresponde a core/schemas/profesional)
+     * @returns {*} JWT
+     *
+     * @memberOf Auth
+     */
+    static generateUserToken(nombre: string, apellido: string, organizacion: any, permisos: any, profesional: any): any {
+        // Crea el token con los datos de sesión
+        let token: UserToken = {
+            id: mongoose.Types.ObjectId(),
+            usuario: {
+                nombreCompleto: nombre + ' ' + apellido,
+                nombre: nombre,
+                apellido: apellido,
+                username: permisos.usuario,
+                documento: permisos.usuario
+            },
+            roles: [permisos.roles],
+            profesional: profesional,
+            organizacion: organizacion,
+            permisos: permisos.permisos
+        };
+        return jwt.sign(token, config.auth.privateKey, { expiresIn: 60 * 60 * 24 * 10 /* 10 días */ });
+    }
+
+    /**
+     * Genera un token de aplicación firmado
+     *
+     * @static
+     * @param {string} nombre Nombre de la aplicación
+     * @param {*} organizacion Organización (corresponde a schemas/organizacion)
+     * @param {string[]} permisos Array de permisos asignados a la aplicación
+     * @returns {*} JWT
+     *
+     * @memberOf Auth
+     */
+    static generateAppToken(nombre: string, organizacion: any, permisos: string[]): any {
+        // Crea el token con los datos de sesión
+        let token: AppToken = {
+            id: mongoose.Types.ObjectId(),
+            app: {
+                nombre: nombre
+            },
+            organizacion: organizacion,
+            permisos: permisos
+        };
+        return jwt.sign(token, config.auth.privateKey);
     }
 }
