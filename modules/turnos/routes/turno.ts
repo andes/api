@@ -17,7 +17,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
 
     // Se verifica la existencia del paciente 
     paciente.findById(req.body.paciente.id, function verificarPaciente(err, cant) {
-      
       if (err) {
         console.log('PACIENTE INEXISTENTE', err);
         return next(err);
@@ -25,7 +24,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
 
         // Se verifica la existencia del tipoPrestacion
         tipoPrestacion.findById(req.body.tipoPrestacion._id, function verificarTipoPrestacion(err, data) {
-          
           if (err) {
             console.log('TIPO PRESTACION INEXISTENTE', err);
             return next(err);
@@ -64,7 +62,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                   for (let y = 0; y < (data as any).bloques[posBloque].turnos.length; y++) {
                     if ((data as any).bloques[posBloque].turnos[y]._id.equals(req.params.idTurno)) {
                       posTurno = y;
-                      console.log('POSTURNO: ' + posTurno);
                     }
 
                     // Restamos los turnos asignados de a cuenta
@@ -99,11 +96,8 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                       }
                     }
                   }
-                  console.log('POSBLOQUE: ' + posBloque);
                 }
               }
-
-              console.log('countBloques: ', countBloques);
 
               if ( (countBloques[req.body.tipoTurno] as number) === 0 ) {
                 return next({
@@ -128,7 +122,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
 
               // Agrega un tag al JSON query
               query[etiquetaEstado] = 'disponible';
-              console.log('QUERY ' + query);
 
               // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
               (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true, passRawResult: true },
@@ -137,7 +130,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                     console.log('ERR2: ' + err2);
                     return next(err2);
                   }
-                  console.log('WRITE OP RESULT', writeOpResult.value);
                   if (writeOpResult.value === null) {
                     return next('El turno ya fue asignado');
                   } else {
