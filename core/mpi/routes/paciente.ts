@@ -2,9 +2,6 @@ import {
     tipoPrestacion
 } from './../../tm/schemas/tipoPrestacion';
 import {
-    pacienteMpi
-} from './../schemas/paciente';
-import {
     matching
 } from '@andes/match/matching';
 import * as express from 'express';
@@ -26,6 +23,7 @@ import {
     Logger
 } from '../../../utils/logService';
 import * as moment from 'moment';
+import { log } from '../../log/schemas/log';
 
 let router = express.Router();
 
@@ -187,9 +185,85 @@ router.get('/pacientes/counts/', function (req, res, next) {
             return next(err);
         }
 
+        let queryMPI = pacienteMpi.find(filtro).count();
+        queryMPI.exec(function (err1, data1) {
+            if (err1) {
+                return next(err1);
+            }
+            let total = data + data1;
+            res.json(total);
+        });
 
-        res.json(data);
     });
+});
+
+router.get('/pacientes/dashboard/', function (req, res, next) {
+    let result = {
+        paciente: null,
+        pacienteMpi: null,
+        logs: null
+    };
+
+    paciente.aggregate([{
+        $group: {
+            '_id': {
+                'estado': '$estado'
+            },
+            'count': {
+                '$sum': 1
+            }
+        }
+    }],
+        function (err, data) {
+            if (err) {
+                return next(err);
+            }
+            result.paciente = data;
+            pacienteMpi.aggregate([{
+                $group: {
+                    '_id': {
+                        'estado': '$estado'
+                    },
+                    'count': {
+                        '$sum': 1
+                    }
+                }
+            }],
+                function (err1, data1) {
+                    if (err1) {
+                        return next(err1);
+                    }
+
+                    result.pacienteMpi = data1;
+                    log.aggregate([{
+                        $group: {
+                            '_id': {
+                                'operacion': '$operacion',
+                                'modulo': '$modulo'
+                            },
+                            'count': {
+                                '$sum': 1
+                            }
+                        }
+                    },
+                    {
+                        $match: {
+                            '_id.modulo': 'mpi'
+                        }
+                    }
+                    ],
+                        function (err2, data2) {
+                            if (err2) {
+                                return next(err2);
+                            }
+                            result.logs = data2;
+                            res.json(result);
+                        });
+                }
+            );
+        }
+    );
+
 });
 
 
@@ -425,9 +499,9 @@ router.get('/pacientes', function (req, res, next) {
     if (req.query.type === 'suggest') {
 
         connElastic.search({
-                index: 'andes',
-                body: body
-            })
+            index: 'andes',
+            body: body
+        })
             .then((searchResult) => {
                 // Asigno los valores para el suggest
                 let weights = config.configMpi.weightsDefault;
@@ -442,7 +516,7 @@ router.get('/pacientes', function (req, res, next) {
                 let listaPacientesMin = [];
                 let devolverPorcentaje = req.query.percentage;
 
-                let results: Array < any > = ((searchResult.hits || {}).hits || []) // extract results from elastic response
+                let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
                     .filter(function (hit) {
                         let paciente = hit._source;
                         paciente.fechaNacimiento = moment(paciente.fechaNacimiento).format('YYYY-MM-DD');
@@ -495,11 +569,11 @@ router.get('/pacientes', function (req, res, next) {
             });
     } else { // Es para los casos de multimatch y singlequery
         connElastic.search({
-                index: 'andes',
-                body: body
-            })
+            index: 'andes',
+            body: body
+        })
             .then((searchResult) => {
-                let results: Array < any > = ((searchResult.hits || {}).hits || []) // extract results from elastic response
+                let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
                     .map((hit) => {
                         let elem = hit._source;
                         elem['id'] = hit._id;
@@ -949,7 +1023,7 @@ router.put('/pacientes/:id', function (req, res, next) {
 
                 let pacAct = JSON.parse(JSON.stringify(patientFound));
                 delete pacAct._id;
-
+                
                 connElastic.search({
                     q: patientFound._id.toString()
                 }).then(function (body) {
