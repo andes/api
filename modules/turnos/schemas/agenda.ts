@@ -47,7 +47,7 @@ schema.virtual('turnosDisponibles').get(function () {
     let turnosDisponibles = 0;
     this.bloques.forEach(function (bloque) {
         bloque.turnos.forEach(function (turno) {
-            if (turno.estado === 'disponible') {
+            if (turno.estado === 'disponible' && turno.horaInicio >= new Date()) {
                 turnosDisponibles++;
             }
         });
@@ -65,7 +65,7 @@ schema.virtual('estadosAgendas').get(function () {
 schema.pre('save', function (next) {
     // Intercalar
     if (!/true|false/i.test(this.intercalar)) {
-        next(new Error("invalido"));
+        next(new Error('invalido'));
         // TODO: loopear bloques y definir si horaInicio/Fin son required
         // TODO: si pacientesSimultaneos, tiene que haber cantidadSimultaneos (> 0)
         // TODO: si citarPorBloque, tiene que haber cantidadBloque (> 0)
