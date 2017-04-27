@@ -252,6 +252,8 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                     break;
                 case 'guardarNotaTurno': guardarNotaTurno(req, data, turnos[y]._id);
                     break;
+                case 'notaAgenda': guardarNotaAgenda(req, data);
+                    break;
                 case 'editarAgenda': editarAgenda(req, data);
                     break;
                 case 'Disponible':
@@ -346,6 +348,11 @@ function reasignarTurno(req, data, tid = null) {
 function guardarNotaTurno(req, data, tid = null) {
     let turno = getTurno(req, data, tid);
     turno.nota = req.body.textoNota;
+}
+
+// Agenda
+function guardarNotaAgenda(req, data) {
+     data.nota = req.body.nota;
 }
 
 // Agenda

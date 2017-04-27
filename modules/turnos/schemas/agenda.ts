@@ -38,7 +38,8 @@ let schema = new mongoose.Schema({
         type: String,
         enum: ['Planificacion', 'Disponible', 'Publicada', 'Suspendida']
     },
-    bloques: [bloqueSchema]
+    bloques: [bloqueSchema],
+    nota: String
 
 });
 
