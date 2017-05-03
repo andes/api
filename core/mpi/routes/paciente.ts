@@ -640,9 +640,12 @@ router.post('/pacientes/mpi', function (req, res, next) {
             body: nuevoPac
         }, function (error, response) {
             if (error) {
-                console.log('Error de sincronización con ElasticSearch: ', error);
+               // Logger.log(req, 'pacientes', 'elasticError', error);
                 next(error);
             }
+             Logger.log(req, 'mpi', 'elasticInsert', {
+                                nuevo: nuevoPac,
+                            });
             res.json(newPatientMpi);
         });
     });
@@ -696,11 +699,10 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
             patientFound.identificadores = req.body.identificadores;
             patientFound.scan = req.body.scan;
             patientFound.reportarError = req.body.reportarError;
-
             Auth.audit(patientFound, req);
             patientFound.save(function (err2) {
                 if (err2) {
-                    console.log('Error Save', err2);
+                    console.log('Error Save:               ', err2);
                     return next(err2);
                 }
 
@@ -721,9 +723,10 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
                             }
                         }, function (error, response) {
                             if (error) {
-                                console.log('Error en update Elastic', error);
+                                console.log('Error al actualizar elastic en PUT:       ', error);
+                                // Logger.log(req, 'pacientes', 'elasticError', error);
                             }
-                            Logger.log(req, 'mpi', 'update', {
+                            Logger.log(req, 'mpi', 'elasticUpdate', {
                                 original: pacienteOriginal,
                                 nuevo: patientFound
                             });
@@ -736,15 +739,11 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
                             id: patientFound._id.toString(),
                             body: pacAct
                         }, function (error, response) {
-                            console.log('Error create Elastic', response);
                             if (error) {
-                                console.log(error);
-                                Logger.log(req, 'mpi', 'elasticInsert', {
-                                    error: error,
-                                    data: patientFound
-                                });
+                                console.log('Error al actualizar elastic en PUT NEW:            ', error);
+                                //Logger.log(req, 'pacientes', 'elasticError', error);
                             }
-                            Logger.log(req, 'mpi', 'insert', patientFound);
+                            Logger.log(req, 'mpi', 'elasticInsert', patientFound);
                             res.json(patientFound);
                         });
                     }
@@ -758,7 +757,7 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
             newPatient['claveBlocking'] = claves;
             newPatient['apellido'] = newPatient['apellido'].toUpperCase();
             newPatient['nombre'] = newPatient['nombre'].toUpperCase();
-  
+
             Auth.audit(newPatient, req);
             newPatient.save((err) => {
                 if (err) {
@@ -775,15 +774,11 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
                     id: newPatient._id.toString(),
                     body: nuevoPac
                 }, function (error, response) {
-                    console.log('Respuesta elastic', response);
                     if (error) {
-                        console.log(error);
-                        Logger.log(req, 'mpi', 'elasticInsert', {
-                            error: error,
-                            data: newPatient
-                        });
+                        console.log('Error en elastic al hacer un insert desde el PUT:          ', error);
+                        // Logger.log(req, 'pacientes', 'elasticError', error);
                     }
-                    Logger.log(req, 'mpi', 'insert', newPatient);
+                    Logger.log(req, 'mpi', 'elasticInsertInPut', newPatient);
                     res.json(newPatient);
                 });
             });
@@ -840,9 +835,10 @@ router.delete('/pacientes/mpi/:id', function (req, res, next) {
             id: patientFound._id.toString(),
         }, function (error, response) {
             if (error) {
-                console.log(error);
+                console.log('Error en el borrado del indice de elastic en mpi:  ',error);
+                //Logger.log(req, 'pacientes', 'elasticError', error);
             }
-            Logger.log(req, 'pacientes', 'delete', patientFound);
+            //Logger.log(req, 'pacientes', 'elasticDelete', patientFound);
             res.json(patientFound);
         });
     });
@@ -907,10 +903,6 @@ router.post('/pacientes', function (req, res, next) {
             console.log('Respuesta elastic', response);
             if (error) {
                 console.log(error);
-                Logger.log(req, 'mpi', 'elasticInsert', {
-                    error: error,
-                    data: newPatient
-                });
             }
             Logger.log(req, 'mpi', 'insert', newPatient);
             res.json(newPatient);
@@ -1105,7 +1097,7 @@ router.put('/pacientes/:id', function (req, res, next) {
                             console.log('Error create Elastic', response);
                             if (error) {
                                 console.log(error);
-                                Logger.log(req, 'mpi', 'elasticInsert', {
+                                Logger.log(req, 'mpi', 'insert', {
                                     error: error,
                                     data: newPatient
                                 });
@@ -1150,6 +1142,7 @@ router.put('/pacientes/:id', function (req, res, next) {
  *           $ref: '#/definitions/paciente'
  */
 router.delete('/pacientes/:id', function (req, res, next) {
+    console.log('ingreso a borrar api');
     let ObjectId = mongoose.Types.ObjectId;
     let connElastic = new Client({
         host: config.connectionStrings.elastic_main,
@@ -1160,11 +1153,15 @@ router.delete('/pacientes/:id', function (req, res, next) {
     };
     paciente.findById(query, function (err, patientFound) {
         if (err) {
+            console.log('No encontro el paciente a borrar:   ', err);
             return next(err);
         }
         // (req as any).user = 'prueba';
         // (req as any).organizacion = 'prueba';
+        console.log('antes del audit');
+        console.log('el paciente encontrado es:   ', patientFound);
         Auth.audit(patientFound, req);
+        console.log('despues del audit');
         patientFound.remove();
         connElastic.delete({
             index: 'andes',
@@ -1175,7 +1172,8 @@ router.delete('/pacientes/:id', function (req, res, next) {
             if (error) {
                 console.log('Error en elastic Search delete: ', error);
             }
-            Logger.log(req, 'pacientes', 'delete', patientFound);
+            console.log('borro ok va a loguear');
+            //Logger.log(req, 'pacientes', 'delete', patientFound);
             res.json(patientFound);
         });
 
