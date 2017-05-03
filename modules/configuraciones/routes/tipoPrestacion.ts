@@ -20,17 +20,21 @@ router.get('/tipoPrestacion/:id*?', function (req, res, next) {
     } else {
         let query;
         query = configTipoPrestacion.find({}); // Trae todos 
-        
+
         if (req.query.nombre) {
             query.where('tipoPrestacion.nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
-        
+
         if (req.query.organizacion) {
             query.where('organizacion._id').equals(req.query.organizacion);
         }
-        
+
+        if (req.query.activa) {
+            query.where('activa').equals(req.query.activa);
+        }
+
         query.sort('tipoPrestacion.nombre');
-        
+
         query.exec((err, data) => {
             if (err) {
                 return next(err);
@@ -43,10 +47,10 @@ router.get('/tipoPrestacion/:id*?', function (req, res, next) {
 router.post('/tipoPrestacion', function (req, res, next) {
 
     let newConfigTipoPrestacion = new configTipoPrestacion(req.body)
-    
+
     // Debe ir antes del save, y ser una instancia del modelo
     Auth.audit(newConfigTipoPrestacion, req);
-    
+
     newConfigTipoPrestacion.save((err) => {
 
         Logger.log(req, 'configTipoPrestacion', 'insert', {
@@ -74,7 +78,7 @@ router.put('/tipoPrestacion/:id', function (req, res, next) {
         };
 
         Auth.audit(data, req);
-        
+
         data.save((err) => {
 
             Logger.log(req, 'configTipoPrestacion', 'update', {

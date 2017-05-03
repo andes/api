@@ -12,7 +12,8 @@ export let configTipoPrestacionSchema = new mongoose.Schema({
         required: true
     },
     tipoPrestacion: tipoPrestacionSchema,
-    llave: llaveSchema
+    llave: llaveSchema,
+    activa: Boolean
 });
 
 // Habilitar plugin de auditoría
