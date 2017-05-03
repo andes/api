@@ -13,6 +13,7 @@ export let configTipoPrestacionSchema = new mongoose.Schema({
     },
     tipoPrestacion: tipoPrestacionSchema,
     llave: llaveSchema,
+    auditable: Boolean,
     activa: Boolean
 });
 
