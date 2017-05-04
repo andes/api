@@ -6,7 +6,10 @@ export let llaveSchema = new mongoose.Schema({
         desde: Number,
         hasta: Number
     },
-    sexo: constantes.SEXO,
+    sexo: {
+        type: String,
+        enum: ['femenino', 'masculino', 'otro', '']
+    },
     solicitud: {
         requerida: Boolean,
         vencimiento: Date

@@ -70,31 +70,24 @@ router.post('/tipoPrestacion', function (req, res, next) {
 
 router.put('/tipoPrestacion/:id', function (req, res, next) {
 
-    let idLlave = req.params.id;
+    let data = new configTipoPrestacion(req.body);
 
-    configTipoPrestacion.findById(idLlave, function (errFind, data) {
+    Auth.audit(data, req);
 
-        if (errFind) {
-            return next(errFind);
-        };
+    data.save((errSave) => {
 
-        Auth.audit(data, req);
-
-        data.save((errSave) => {
-
-            Logger.log(req, 'configTipoPrestacion', 'update', {
-                accion: 'Actualizar configuración de TipoPrestacion',
-                ruta: req.url,
-                method: req.method,
-                data: data,
-                err: errSave || false
-            });
-
-            if (errSave) {
-                return next(errSave);
-            }
-            res.json(data);
+        Logger.log(req, 'configTipoPrestacion', 'update', {
+            accion: 'Actualizar configuración de TipoPrestacion',
+            ruta: req.url,
+            method: req.method,
+            data: data,
+            err: errSave || false
         });
+
+        if (errSave) {
+            return next(errSave);
+        }
+        res.json(data);
     });
 });
 
