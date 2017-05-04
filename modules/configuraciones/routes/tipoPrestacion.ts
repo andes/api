@@ -70,7 +70,7 @@ router.post('/tipoPrestacion', function (req, res, next) {
 
 router.put('/tipoPrestacion/:id', function (req, res, next) {
 
-    let idLlave = req.body.idLlave;
+    let idLlave = req.params.id;
 
     configTipoPrestacion.findById(idLlave, function (err, data) {
         if (err) {
