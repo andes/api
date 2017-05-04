@@ -72,25 +72,26 @@ router.put('/tipoPrestacion/:id', function (req, res, next) {
 
     let idLlave = req.params.id;
 
-    configTipoPrestacion.findById(idLlave, function (err, data) {
-        if (err) {
-            return next(err);
+    configTipoPrestacion.findById(idLlave, function (errFind, data) {
+
+        if (errFind) {
+            return next(errFind);
         };
 
         Auth.audit(data, req);
 
-        data.save((err) => {
+        data.save((errSave) => {
 
             Logger.log(req, 'configTipoPrestacion', 'update', {
                 accion: 'Actualizar configuración de TipoPrestacion',
                 ruta: req.url,
                 method: req.method,
                 data: data,
-                err: err || false
+                err: errSave || false
             });
 
-            if (err) {
-                return next(err);
+            if (errSave) {
+                return next(errSave);
             }
             res.json(data);
         });
