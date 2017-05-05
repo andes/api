@@ -74,7 +74,7 @@ router.put('/tipoPrestacion/:id', function (req, res, next) {
 
     Auth.audit(data, req);
 
-    data.save((errSave) => {
+    data.update((errSave) => {
 
         Logger.log(req, 'configTipoPrestacion', 'update', {
             accion: 'Actualizar configuración de TipoPrestacion',
@@ -88,7 +88,7 @@ router.put('/tipoPrestacion/:id', function (req, res, next) {
             return next(errSave);
         }
         res.json(data);
-    });
+    }, { runValidators: true });
 });
 
 router.delete('/tipoPrestacion/:id', function (req, res, next) {
