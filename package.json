@@ -37,7 +37,8 @@
     "start": "concurrently \"npm run tsc:w\" \"npm run node\" ",
     "node": "nodemon ./index.js",
     "tsc": "tsc",
-    "tsc:w": "tsc -w"
+    "tsc:w": "tsc -w",
+    "postinstall": "node ./postinstall/index.js"
   },
   "repository": {
     "type": "git",

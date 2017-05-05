@@ -1,4 +1,5 @@
 import * as express from 'express';
+import * as mongoose from 'mongoose';
 import { configTipoPrestacion } from '../schemas/configTipoPrestacion';
 import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
@@ -46,49 +47,78 @@ router.get('/tipoPrestacion/:id*?', function (req, res, next) {
 
 router.post('/tipoPrestacion', function (req, res, next) {
 
-    let newConfigTipoPrestacion = new configTipoPrestacion(req.body)
+    let insertConfigTipoPrestacion = new configTipoPrestacion(req.body)
 
     // Debe ir antes del save, y ser una instancia del modelo
-    Auth.audit(newConfigTipoPrestacion, req);
+    Auth.audit(insertConfigTipoPrestacion, req);
 
-    newConfigTipoPrestacion.save((err) => {
+    insertConfigTipoPrestacion.save((errOnInsert) => {
 
         Logger.log(req, 'configTipoPrestacion', 'insert', {
             accion: 'Agregar configuración de TipoPrestacion',
             ruta: req.url,
             method: req.method,
-            data: newConfigTipoPrestacion,
-            err: err || false
+            data: insertConfigTipoPrestacion,
+            errOnInsert: errOnInsert || false
         });
 
-        if (err) {
-            return next(err);
+        if (errOnInsert) {
+            return next(errOnInsert);
         }
-        res.json(newConfigTipoPrestacion);
+        res.json(insertConfigTipoPrestacion);
     })
 });
 
 router.put('/tipoPrestacion/:id', function (req, res, next) {
 
-    let data = new configTipoPrestacion(req.body);
+    let updateConfigTipoPrestacion = new configTipoPrestacion(req.body);
 
-    Auth.audit(data, req);
+    Auth.audit(updateConfigTipoPrestacion, req);
 
-    data.update((errSave) => {
+    updateConfigTipoPrestacion.isNew = false;
+    updateConfigTipoPrestacion.save((errOnUpdate) => {
 
         Logger.log(req, 'configTipoPrestacion', 'update', {
             accion: 'Actualizar configuración de TipoPrestacion',
             ruta: req.url,
             method: req.method,
-            data: data,
-            err: errSave || false
+            data: updateConfigTipoPrestacion,
+            err: errOnUpdate || false
         });
 
-        if (errSave) {
-            return next(errSave);
+        if (errOnUpdate) {
+            return next(errOnUpdate);
         }
-        res.json(data);
-    }, { runValidators: true });
+        res.json(updateConfigTipoPrestacion);
+    });
+});
+
+router.patch('/tipoPrestacion/:id', function (req, res, next) {
+
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        return next('ObjectID Inválido');
+    }
+
+    let patchConfigTipoPrestacion = new configTipoPrestacion(req.body);
+
+    Auth.audit(patchConfigTipoPrestacion, req);
+
+    patchConfigTipoPrestacion.save(function (errOnPatch) {
+
+        Logger.log(req, 'configTipoPrestacion', 'update', {
+            accion: req.body.op,
+            ruta: req.url,
+            method: req.method,
+            data: patchConfigTipoPrestacion,
+            err: errOnPatch || false
+        });
+        
+        if (errOnPatch) {
+            return next(errOnPatch);
+        }
+
+        return res.json(patchConfigTipoPrestacion);
+    });
 });
 
 router.delete('/tipoPrestacion/:id', function (req, res, next) {

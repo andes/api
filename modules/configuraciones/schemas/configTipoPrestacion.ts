@@ -14,7 +14,11 @@ export let configTipoPrestacionSchema = new mongoose.Schema({
     tipoPrestacion: tipoPrestacionSchema,
     llave: llaveSchema,
     auditable: Boolean,
-    activa: Boolean
+    activa: {
+        type: Boolean,
+        required: true,
+        default: false
+    }
 });
 
 // Habilitar plugin de auditoría
