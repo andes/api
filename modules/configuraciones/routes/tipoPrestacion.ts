@@ -93,32 +93,41 @@ router.put('/tipoPrestacion/:id', function (req, res, next) {
     });
 });
 
+// [A] 2017-05-08: Los patch de ANDES son una mentira
 router.patch('/tipoPrestacion/:id', function (req, res, next) {
 
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         return next('ObjectID Inválido');
     }
 
-    let patchConfigTipoPrestacion = new configTipoPrestacion(req.body);
+    configTipoPrestacion.findById(req.params.id, (err, data) => {
 
-    Auth.audit(patchConfigTipoPrestacion, req);
+        // let patchConfigTipoPrestacion = new configTipoPrestacion(data);
 
-    patchConfigTipoPrestacion.save(function (errOnPatch) {
+        Auth.audit(data, req);
 
-        Logger.log(req, 'configTipoPrestacion', 'update', {
-            accion: req.body.op,
-            ruta: req.url,
-            method: req.method,
-            data: patchConfigTipoPrestacion,
-            err: errOnPatch || false
+        // Patch
+        data.set(req.body.key, req.body.value);
+
+        data.save(function (errOnPatch) {
+
+            Logger.log(req, 'configTipoPrestacion', 'update', {
+                accion: 'Actualizar configuración de TipoPrestacion',
+                ruta: req.url,
+                method: req.method,
+                data: data,
+                err: errOnPatch || false
+            });
+
+            if (errOnPatch) {
+                return next(errOnPatch);
+            }
+
+            return res.json(data);
         });
-        
-        if (errOnPatch) {
-            return next(errOnPatch);
-        }
 
-        return res.json(patchConfigTipoPrestacion);
     });
+
 });
 
 router.delete('/tipoPrestacion/:id', function (req, res, next) {
