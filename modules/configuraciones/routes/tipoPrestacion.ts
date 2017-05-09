@@ -13,6 +13,7 @@ let router = express.Router();
 router.get('/tipoPrestacion/:id*?', function (req, res, next) {
     let query;
     if (req.params.id) {
+        query = configTipoPrestacion.find({});
         query.where('_id').equals(req.params.id);
         query.where('organizacion._id').equals(Auth.getOrganization(req));
         if (req.params.activa){
