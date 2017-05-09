@@ -23,7 +23,7 @@ router.get('/tipoPrestacion/:id*?', function (req, res, next) {
             if (err) {
                 return next(err);
             }
-            res.json(data);
+            res.json(data[0]);
         });
     } else {
         query = configTipoPrestacion.find({}); // Trae todos
