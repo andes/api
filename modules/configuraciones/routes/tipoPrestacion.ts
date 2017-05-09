@@ -11,24 +11,29 @@ import { Logger } from '../../../utils/logService';
 let router = express.Router();
 
 router.get('/tipoPrestacion/:id*?', function (req, res, next) {
+    let query;
     if (req.params.id) {
-        configTipoPrestacion.findById(req.params.id, function (err, data) {
+        query.where('_id').equals(req.params.id);
+        query.where('organizacion._id').equals(Auth.getOrganization(req));
+        if (req.params.activa){
+            query.where('activa').equals(req.params.activa);
+        }
+        query.exec((err, data) => {
             if (err) {
-                next(err);
-            };
+                return next(err);
+            }
             res.json(data);
         });
     } else {
-        let query;
         query = configTipoPrestacion.find({}); // Trae todos
-
+        query.where('organizacion._id').equals(Auth.getOrganization(req));
         if (req.query.nombre) {
             query.where('tipoPrestacion.nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
 
-        if (req.query.organizacion) {
-            query.where('organizacion._id').equals(req.query.organizacion);
-        }
+        // if (req.query.organizacion) {
+        //     query.where('organizacion._id').equals(req.query.organizacion);
+        // }
 
         if (req.query.activa) {
             query.where('activa').equals(req.query.activa);
