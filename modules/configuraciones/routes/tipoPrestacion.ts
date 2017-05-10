@@ -16,9 +16,7 @@ router.get('/tipoPrestacion/:id*?', function (req, res, next) {
         query = configTipoPrestacion.find({});
         query.where('_id').equals(req.params.id);
         query.where('organizacion._id').equals(Auth.getOrganization(req));
-        if (req.params.activa){
-            query.where('activa').equals(req.params.activa);
-        }
+        query.where('activa').equals(true);
         query.exec((err, data) => {
             if (err) {
                 return next(err);
