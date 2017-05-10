@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-export let llaveEdad = {
+export let rangoTiempo = {
     valor: Number,
     unidad: {
         type: String,

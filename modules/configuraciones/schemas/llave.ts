@@ -1,10 +1,10 @@
 import * as mongoose from 'mongoose';
-import { llaveEdad } from './llaveEdad';
+import { rangoTiempo } from './rangoTiempo';
 
 export let llaveSchema = new mongoose.Schema({
     edad: {
-        desde: llaveEdad,
-        hasta: llaveEdad
+        desde: rangoTiempo,
+        hasta: rangoTiempo
     },
     sexo: {
         type: String,
@@ -12,6 +12,6 @@ export let llaveSchema = new mongoose.Schema({
     },
     solicitud: {
         requerida: Boolean,
-        vencimiento: Date
+        vencimiento: rangoTiempo
     }
 });
