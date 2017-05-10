@@ -1,14 +1,14 @@
 import * as mongoose from 'mongoose';
-import * as constantes from '../../../core/mpi/schemas/constantes';
+import { llaveEdad } from './llaveEdad';
 
 export let llaveSchema = new mongoose.Schema({
     edad: {
-        desde: Number,
-        hasta: Number
+        desde: llaveEdad,
+        hasta: llaveEdad
     },
     sexo: {
         type: String,
-        enum: ['femenino', 'masculino', 'otro', '']
+        enum: [ 'femenino', 'masculino', 'otro', '' ]
     },
     solicitud: {
         requerida: Boolean,

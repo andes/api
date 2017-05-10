@@ -59,7 +59,7 @@ export let pacienteSchema = new mongoose.Schema({
         es_indexed: true
     },
     reportarError: Boolean,
-    notaError:String
+    notaError: String
 });
 
 /* Se definen los campos virtuals */
@@ -101,13 +101,28 @@ pacienteSchema.virtual('edadReal').get(function () {
     difHs = fechaAct.diff(fechaNac, 'h'); // Diferencia en horas
 
 
-    if (difAnios !== 0) { edad = { valor: difAnios, unidad: 'Años' } }
-    else
-        if (difMeses !== 0) { edad = { valor: difMeses, unidad: 'Meses' } }
-        else
-            if (difDias !== 0) { edad = { valor: difDias, unidad: 'Dias' } }
-            else
-                if (difHs !== 0) { edad = { valor: difHs, unidad: 'Horas' } }
+    if (difAnios !== 0) {
+        edad = {
+            valor: difAnios,
+            unidad: 'Años'
+        };
+    } else if (difMeses !== 0) {
+        edad = {
+            valor: difMeses,
+            unidad: 'Meses'
+        };
+    } else if (difDias !== 0) {
+        edad = {
+            valor: difDias,
+            unidad: 'Días'
+        };
+    } else if (difHs !== 0) {
+        edad = {
+            valor: difHs,
+            unidad: 'Horas'
+        };
+    }
+
     return edad
 
 });
@@ -115,6 +130,8 @@ pacienteSchema.virtual('edadReal').get(function () {
 pacienteSchema.index({
     '$**': 'text'
 });
+
+
 /*conectamos con elasticSearch*/
 // pacienteSchema.plugin(mongoosastic, {
 //     hosts: [config.connectionStrings.elastic_main],
@@ -128,4 +145,3 @@ pacienteSchema.plugin(require('../../../mongoose/audit'));
 
 export let paciente = mongoose.model('paciente', pacienteSchema, 'paciente');
 export let pacienteMpi = connectMpi.model('paciente', pacienteSchema, 'paciente');
-
