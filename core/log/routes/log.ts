@@ -1,5 +1,6 @@
 import * as express from 'express';
 import { Logger } from '../../../utils/logService';
+import { log } from '../schemas/log';
 
 let router = express.Router();
 
@@ -9,6 +10,34 @@ router.post('/log/:module/:op', function (req, res, next) {
             return next(err);
         }
         res.json(resultado);
+    });
+});
+
+router.get('/log/:module?', function (req, res, next) {
+    let query;
+
+    query = log.find({});
+
+    if (req.params.module) {
+        query.where('modulo').equals(req.params.module).sort({ fecha: -1 });
+    }
+    if (req.query.op) {
+        query.where('operacion').equals(req.query.op).count();
+    }
+    if (req.query.usuario) {
+        query.where('usuario.username').equals(req.query.usuario);
+    }
+    if (req.query.organizacion) {
+        query.where('organizacion._id').equals(req.query.organizacion);
+    }
+    if (req.query.count) {
+        query.count();
+    }
+    query.exec((err, data) => {
+        if (err) {
+            return next(err);
+        };
+        res.json(data);
     });
 });
 

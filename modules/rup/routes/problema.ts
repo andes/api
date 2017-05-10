@@ -31,6 +31,13 @@ router.get('/problemas/:idProblema*?', function (req, res, next) {
         }
     }
 
+
+    query.populate({
+        path: 'evoluciones.profesional',
+        model: 'profesional'
+    });
+
+
     // query.populate('idProblemaOrigen');
     query.populate({
         path: 'idProblemaOrigen',
