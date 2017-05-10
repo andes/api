@@ -946,7 +946,9 @@ router.post('/pacientes', function (req, res, next) {
 router.put('/pacientes/:id', function (req, res, next) {
     let ObjectId = mongoose.Types.ObjectId;
     let objectId = new ObjectId(req.params.id);
-    let query = {
+	console.log("ID PARAMETRO: ", req.params.id);
+	console.log("REQ.BODY:  ", req.body);    
+let query = {
         _id: objectId
     };
     let connElastic = new Client({
@@ -961,6 +963,7 @@ router.put('/pacientes/:id', function (req, res, next) {
         }
 
         let pacienteOriginal = null;
+console.log("paciente encontrado", patientFound);
         if (patientFound) {
             // Guarda los valores originales para el logger
             pacienteOriginal = patientFound.toObject();
@@ -1047,13 +1050,15 @@ router.put('/pacientes/:id', function (req, res, next) {
                 });
             });
         } else {
+console.log("paciente no encotrado, creamos uno nuevo");
+req.body._id = req.body.id;
             let newPatient = new paciente(req.body);
             let claves = match.crearClavesBlocking(newPatient);
             newPatient['claveBlocking'] = claves;
             newPatient['apellido'] = newPatient['apellido'].toUpperCase();
             newPatient['nombre'] = newPatient['nombre'].toUpperCase();
             /*Antes del save se podría realizar una búsqueda y matching para evitar cargar repetidos, actualmente este proceso sólo se realiza del lado de la app*/
-
+		console.log("NUEVO PACIENTE QUE GUARDAMOS:  ", newPatient);
             Auth.audit(newPatient, req);
             newPatient.save((err) => {
                 if (err) {
