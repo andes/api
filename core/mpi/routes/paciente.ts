@@ -946,7 +946,7 @@ router.post('/pacientes', function (req, res, next) {
 router.put('/pacientes/:id', function (req, res, next) {
     let ObjectId = mongoose.Types.ObjectId;
     let objectId = new ObjectId(req.params.id);
-    let query = {
+let query = {
         _id: objectId
     };
     let connElastic = new Client({
@@ -1047,13 +1047,13 @@ router.put('/pacientes/:id', function (req, res, next) {
                 });
             });
         } else {
+req.body._id = req.body.id;
             let newPatient = new paciente(req.body);
             let claves = match.crearClavesBlocking(newPatient);
             newPatient['claveBlocking'] = claves;
             newPatient['apellido'] = newPatient['apellido'].toUpperCase();
             newPatient['nombre'] = newPatient['nombre'].toUpperCase();
             /*Antes del save se podría realizar una búsqueda y matching para evitar cargar repetidos, actualmente este proceso sólo se realiza del lado de la app*/
-
             Auth.audit(newPatient, req);
             newPatient.save((err) => {
                 if (err) {

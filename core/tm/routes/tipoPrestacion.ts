@@ -45,6 +45,8 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
             query.where('granularidad').equals(req.query.granularidad);
         }
 
+        query.where('activo').equals(1);
+
         query.populate({
             path: 'tipoProblemas',
             model: 'tipoProblema'
