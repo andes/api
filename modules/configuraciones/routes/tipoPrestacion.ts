@@ -39,44 +39,44 @@ router.get('/tipoPrestacion/:id*?', function (req, res, next) {
         }
 
         query.sort('tipoPrestacion.nombre');
-        let band = false;
+        // let band = false;
         query.exec((err, data) => {
             if (err) {
                 return next(err);
             }
             // Verifica en cada llave que requiere solicitud si está vencida En ese caso, inactiva la llave
-            for (let i = 0; i < data.length; i++) {
-                if (data[i].llave.solicitud.requerida) {
-                    if (data[i].llave.solicitud.vencimiento < new Date()) {
-                        // Patch
-                        data[i].set('activa', false);
-                        Auth.audit(data[i], req);
-                        data[i].save(function (errOnPatch) {
+            // for (let i = 0; i < data.length; i++) {
+            //     if (data[i].llave.solicitud.requerida) {
+            //         if (data[i].llave.solicitud.vencimiento < new Date()) {
+            //             // Patch
+            //             data[i].set('activa', false);
+            //             Auth.audit(data[i], req);
+            //             data[i].save(function (errOnPatch) {
 
-                            Logger.log(req, 'configTipoPrestacion', 'update', {
-                                accion: 'Actualizar configuración de TipoPrestacion',
-                                ruta: req.url,
-                                method: req.method,
-                                data: data[i],
-                                err: errOnPatch || false
-                            });
+            //                 Logger.log(req, 'configTipoPrestacion', 'update', {
+            //                     accion: 'Actualizar configuración de TipoPrestacion',
+            //                     ruta: req.url,
+            //                     method: req.method,
+            //                     data: data[i],
+            //                     err: errOnPatch || false
+            //                 });
 
-                            if (errOnPatch) {
-                                return next(errOnPatch);
-                            }
-                        }).then(() => {
-                            if (i === data.length - 1) {
-                                band = true;
-                                res.json(data);
-                            }
+            //                 if (errOnPatch) {
+            //                     return next(errOnPatch);
+            //                 }
+            //             }).then(() => {
+            //                 if (i === data.length - 1) {
+            //                     band = true;
+            //                     res.json(data);
+            //                 }
 
-                        });
-                    }
-                }
-            }
-            if (!band) {
-                res.json(data);
-            }
+            //             });
+            //         }
+            //     }
+            // }
+            // if (!band) {
+            // }
+            res.json(data);
         });
     }
 });
