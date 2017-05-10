@@ -21,8 +21,6 @@ router.get('/tipoPrestacion/:id*?', function (req, res, next) {
     } else {
         let query;
         query = configTipoPrestacion.find({}); // Trae todos
-        console.log('req.query ', req.query)
-
         query.where('organizacion._id').equals(Auth.getOrganization(req));
 
         if (req.query.nombre) {
@@ -30,7 +28,6 @@ router.get('/tipoPrestacion/:id*?', function (req, res, next) {
         }
 
         if (req.query.idTipoPrestacion) {
-            
             query.where('tipoPrestacion._id').equals(req.query.idTipoPrestacion);
         }
         // if (req.query.organizacion) {
