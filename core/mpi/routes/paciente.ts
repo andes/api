@@ -524,7 +524,7 @@ router.get('/pacientes', function (req, res, next) {
                             documento: req.query.documento ? req.query.documento.toString() : '',
                             nombre: req.query.nombre ? req.query.nombre : '',
                             apellido: req.query.apellido ? req.query.apellido : '',
-                            fechaNacimiento: req.query.fechaNacimiento ? req.query.fechaNacimiento : new Date(),
+                            fechaNacimiento: req.query.fechaNacimiento ? moment(req.query.fechaNacimiento).format('YYYY-MM-DD') : new Date(),
                             sexo: req.query.sexo ? req.query.sexo : ''
                         };
                         let match = new matching();
