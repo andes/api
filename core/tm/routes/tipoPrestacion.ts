@@ -8,8 +8,6 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
 
     let query;
 
-    console.log('req.query',req.query);
-
     if (req.params.id) {
 
         query = tipoPrestacion.findById(req.params.id);
