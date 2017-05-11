@@ -8,6 +8,8 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
 
     let query;
 
+    console.log('req.query',req.query);
+
     if (req.params.id) {
 
         query = tipoPrestacion.findById(req.params.id);
@@ -43,6 +45,10 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
 
         if (req.query.granularidad) {
             query.where('granularidad').equals(req.query.granularidad);
+        }
+
+        if (req.query.autonoma) {
+            query.where('autonoma').equals(req.query.autonoma);
         }
 
         query.where('activo').equals(1);
