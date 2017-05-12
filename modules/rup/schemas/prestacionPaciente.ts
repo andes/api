@@ -6,6 +6,7 @@ import * as organizacion from '../../../core/tm/schemas/organizacion';
 import { pacienteSchema } from '../../../core/mpi/schemas/paciente';
 import { profesionalSchema } from '../../../core/tm/schemas/profesional';
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
+import { auditoriaPrestacionPacienteSchema } from '../../auditorias/schemas/auditoriaPrestacionPaciente';
 
 
 export let prestacionPacienteSchema = new mongoose.Schema({
@@ -96,6 +97,9 @@ export let prestacionPacienteSchema = new mongoose.Schema({
             observaciones: String,
             idProfesionalAsignado: mongoose.Schema.Types.ObjectId
         },
+
+        auditoria: auditoriaPrestacionPacienteSchema
+
     },
 
 

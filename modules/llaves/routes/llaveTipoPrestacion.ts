@@ -1,6 +1,6 @@
 import * as express from 'express';
 import * as mongoose from 'mongoose';
-import { configTipoPrestacion } from '../schemas/configTipoPrestacion';
+import { llaveTipoPrestacion } from '../schemas/llaveTipoPrestacion';
 import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
 
@@ -12,7 +12,7 @@ let router = express.Router();
 
 router.get('/tipoPrestacion/:id*?', function (req, res, next) {
     if (req.params.id) {
-        configTipoPrestacion.findById(req.params.id, function (err, data) {
+        llaveTipoPrestacion.findById(req.params.id, function (err, data) {
             if (err) {
                 next(err);
             };
@@ -20,7 +20,7 @@ router.get('/tipoPrestacion/:id*?', function (req, res, next) {
         });
     } else {
         let query;
-        query = configTipoPrestacion.find({}); // Trae todos
+        query = llaveTipoPrestacion.find({}); // Trae todos
         query.where('organizacion._id').equals(Auth.getOrganization(req));
 
         if (req.query.nombre) {
@@ -53,7 +53,7 @@ router.get('/tipoPrestacion/:id*?', function (req, res, next) {
             //             Auth.audit(data[i], req);
             //             data[i].save(function (errOnPatch) {
 
-            //                 Logger.log(req, 'configTipoPrestacion', 'update', {
+            //                 Logger.log(req, 'llaveTipoPrestacion', 'update', {
             //                     accion: 'Actualizar configuración de TipoPrestacion',
             //                     ruta: req.url,
             //                     method: req.method,
@@ -82,46 +82,46 @@ router.get('/tipoPrestacion/:id*?', function (req, res, next) {
 });
 
 router.post('/tipoPrestacion', function (req, res, next) {
-    let insertConfigTipoPrestacion = new configTipoPrestacion(req.body)
+    let insertLlaveTipoPrestacion = new llaveTipoPrestacion(req.body)
 
     // Debe ir antes del save, y ser una instancia del modelo
-    Auth.audit(insertConfigTipoPrestacion, req);
-    insertConfigTipoPrestacion.save((errOnInsert) => {
-        Logger.log(req, 'configTipoPrestacion', 'insert', {
+    Auth.audit(insertLlaveTipoPrestacion, req);
+    insertLlaveTipoPrestacion.save((errOnInsert) => {
+        Logger.log(req, 'llaveTipoPrestacion', 'insert', {
             accion: 'Agregar configuración de TipoPrestacion',
             ruta: req.url,
             method: req.method,
-            data: insertConfigTipoPrestacion,
+            data: insertLlaveTipoPrestacion,
             errOnInsert: errOnInsert || false
         });
         if (errOnInsert) {
             return next(errOnInsert);
         }
-        res.json(insertConfigTipoPrestacion);
+        res.json(insertLlaveTipoPrestacion);
     })
 });
 
 router.put('/tipoPrestacion/:id', function (req, res, next) {
 
-    let updateConfigTipoPrestacion = new configTipoPrestacion(req.body);
+    let updateLlaveTipoPrestacion = new llaveTipoPrestacion(req.body);
 
-    Auth.audit(updateConfigTipoPrestacion, req);
+    Auth.audit(updateLlaveTipoPrestacion, req);
 
-    updateConfigTipoPrestacion.isNew = false;
-    updateConfigTipoPrestacion.save((errOnUpdate) => {
+    updateLlaveTipoPrestacion.isNew = false;
+    updateLlaveTipoPrestacion.save((errOnUpdate) => {
 
-        Logger.log(req, 'configTipoPrestacion', 'update', {
+        Logger.log(req, 'llaveTipoPrestacion', 'update', {
             accion: 'Actualizar configuración de TipoPrestacion',
             ruta: req.url,
             method: req.method,
-            data: updateConfigTipoPrestacion,
+            data: updateLlaveTipoPrestacion,
             err: errOnUpdate || false
         });
 
         if (errOnUpdate) {
             return next(errOnUpdate);
         }
-        res.json(updateConfigTipoPrestacion);
+        res.json(updateLlaveTipoPrestacion);
     });
 });
 
@@ -132,9 +132,9 @@ router.patch('/tipoPrestacion/:id', function (req, res, next) {
         return next('ObjectID Inválido');
     }
 
-    configTipoPrestacion.findById(req.params.id, (err, data) => {
+    llaveTipoPrestacion.findById(req.params.id, (err, data) => {
 
-        // let patchConfigTipoPrestacion = new configTipoPrestacion(data);
+        // let patchLlaveTipoPrestacion = new llaveTipoPrestacion(data);
 
         Auth.audit(data, req);
 
@@ -143,7 +143,7 @@ router.patch('/tipoPrestacion/:id', function (req, res, next) {
 
         data.save(function (errOnPatch) {
 
-            Logger.log(req, 'configTipoPrestacion', 'update', {
+            Logger.log(req, 'llaveTipoPrestacion', 'update', {
                 accion: 'Actualizar configuración de TipoPrestacion',
                 ruta: req.url,
                 method: req.method,
@@ -163,9 +163,9 @@ router.patch('/tipoPrestacion/:id', function (req, res, next) {
 });
 
 router.delete('/tipoPrestacion/:id', function (req, res, next) {
-    configTipoPrestacion.findByIdAndRemove(req.params.id, function (err, data) {
+    llaveTipoPrestacion.findByIdAndRemove(req.params.id, function (err, data) {
 
-        Logger.log(req, 'configTipoPrestacion', 'delete', {
+        Logger.log(req, 'llaveTipoPrestacion', 'delete', {
             accion: 'Eliminar Configuración de TipoPrestacion',
             ruta: req.url,
             method: req.method,
