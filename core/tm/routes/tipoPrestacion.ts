@@ -14,15 +14,18 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
 
     } else {
 
-        query = tipoPrestacion.find({}); // Trae todos
+        query = tipoPrestacion.find({}); // Trae todos      
 
-        // ver skip limit
-        if (req.query.skip && req.query.limit) {
-            let skip: number = parseInt(req.query.skip || 0);
-            let limit: number = Math.min(parseInt(req.query.limit || defaultLimit), maxLimit);
-
-            query = query.skip(skip).limit(limit);
+         if (req.query.skip) {
+            let skip: number = parseInt(req.query.skip || 0);            
+            query = query.skip(skip);
         }
+
+        if (req.query.limit) {            
+            let limit: number = Math.min(parseInt(req.query.limit || defaultLimit), maxLimit);
+            query = query.limit(limit);
+        }
+
 
         if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
@@ -44,6 +47,12 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
         if (req.query.granularidad) {
             query.where('granularidad').equals(req.query.granularidad);
         }
+
+        if (req.query.autonoma) {
+            query.where('autonoma').equals(req.query.autonoma);
+        }
+
+        query.where('activo').equals(1);
 
         query.populate({
             path: 'tipoProblemas',

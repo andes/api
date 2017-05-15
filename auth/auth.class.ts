@@ -120,6 +120,23 @@ export class Auth {
     }
 
     /**
+     * Obtiene la organización
+     *
+     * @static
+     * @param {express.Request} req Corresponde al request actual
+     * @returns {string} id de la organización
+     *
+     * @memberOf Auth
+     */
+    static getOrganization(req: express.Request): string {
+        if (!(req as any).user || !(req as any).user.organizacion) {
+            return null;
+        } else {
+            return (req as any).user.organizacion.id;
+        }
+    }
+
+    /**
      * Genera un token de usuario firmado
      * 
      * @static
