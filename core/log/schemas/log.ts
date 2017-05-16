@@ -40,8 +40,9 @@ export let logSchema = new mongoose.Schema({
             // OperacionesElastic
             'elasticInsert', 'elasticInsertInPut' , 'elasticUpdate', 'elasticDelete', 'elasticError',
             // ... Turnos
-            'asignarTurno', 'cancelarTurno', 'listaEspera'
+            'asignarTurno', 'cancelarTurno', 'listaEspera',
             // ... RUP
+            'pacientes'
         ]
     },
     datosOperacion: mongoose.Schema.Types.Mixed,
