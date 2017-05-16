@@ -3,10 +3,8 @@ import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import { llaveSchema } from './llave';
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 
-let permisos = 'configTipoPrestacion:prestaciones:';
-
 // Exportar Schema
-export let configTipoPrestacionSchema = new mongoose.Schema({
+export let llaveTipoPrestacionSchema = new mongoose.Schema({
     organizacion: {
         type: nombreSchema,
         required: true
@@ -25,7 +23,7 @@ export let configTipoPrestacionSchema = new mongoose.Schema({
 });
 
 // Habilitar plugin de auditoría
-configTipoPrestacionSchema.plugin(require('../../../mongoose/audit'));
+llaveTipoPrestacionSchema.plugin(require('../../../mongoose/audit'));
 
 // Exportar Model
-export let configTipoPrestacion = mongoose.model('configTipoPrestacion', configTipoPrestacionSchema, 'configTipoPrestacion');
+export let llaveTipoPrestacion = mongoose.model('llaveTipoPrestacion', llaveTipoPrestacionSchema, 'llaveTipoPrestacion');
