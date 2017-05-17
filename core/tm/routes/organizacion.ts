@@ -9,8 +9,6 @@ let router = express.Router();
 
 router.get('/organizaciones/georef', function (req, res, next) {
     let query;
-
-    // query = organizacion.model.find({ 'direccion.geoReferencia': { $exists: true } }, { nombre: 1, 'direccion.geoReferencia': 1 }, { limit: 10 });
     query = organizacion.model.aggregate([
         {
             '$match': {
@@ -23,9 +21,7 @@ router.get('/organizaciones/georef', function (req, res, next) {
                 'lat': { $arrayElemAt: ['$direccion.geoReferencia', 0] },
                 'lng': { $arrayElemAt: ['$direccion.geoReferencia', 1] }
             }
-
         }]);
-
     query.exec(function (err, data) {
         if (err) {
             console.log('ERROR GET GEOREF:  ', err);
@@ -33,13 +29,8 @@ router.get('/organizaciones/georef', function (req, res, next) {
         }
         console.log('DATA:  ', data);
         let geoJsonData = GeoJSON.parse(data, { Point: ['lat', 'lng'], include: ['nombre'] });
-        // data.forEach(elem => {
-        //     // geoJsonData.push(elem.direccion.geoReferencia);
-        //     geoJsonData.push(GeoJSON.parse(elem, { Point: ['elem.direccion.geoReferencia[1]', 'elem.direccion.geoReferencia[0]'] }));
-        // });
         res.json(geoJsonData);
     });
-
 });
 
 /**
@@ -60,7 +51,7 @@ router.get('/organizaciones/georef', function (req, res, next) {
  *          type: string
  *       tipoEstablecimiento:
  *          type: object
- *          properties: 
+ *          properties:
  *            id:
  *              type: string
  *            nombre:
@@ -102,7 +93,7 @@ router.get('/organizaciones/georef', function (req, res, next) {
  *       fechaAlta:
  *          type: string
  *          format: date
- *       fechaBaja: 
+ *       fechaBaja:
  *          type: string
  *          format: date
  */
