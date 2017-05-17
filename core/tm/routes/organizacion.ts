@@ -3,7 +3,45 @@ import * as organizacion from '../schemas/organizacion';
 import * as utils from '../../../utils/utils';
 import { defaultLimit, maxLimit } from './../../../config';
 
+let GeoJSON = require('geojson');
+
 let router = express.Router();
+
+router.get('/organizaciones/georef', function (req, res, next) {
+    let query;
+
+    // query = organizacion.model.find({ 'direccion.geoReferencia': { $exists: true } }, { nombre: 1, 'direccion.geoReferencia': 1 }, { limit: 10 });
+    query = organizacion.model.aggregate([
+        {
+            '$match': {
+                'direccion.geoReferencia': { $exists: true }
+            }
+        }, {
+            '$project': {
+                '_id': 0,
+                'nombre': '$nombre',
+                'lat': { $arrayElemAt: ['$direccion.geoReferencia', 0] },
+                'lng': { $arrayElemAt: ['$direccion.geoReferencia', 1] }
+            }
+
+        }]);
+
+    query.exec(function (err, data) {
+        if (err) {
+            console.log('ERROR GET GEOREF:  ', err);
+            return next(err);
+        }
+        console.log('DATA:  ', data);
+        let geoJsonData = GeoJSON.parse(data, { Point: ['lat', 'lng'], include: ['nombre'] });
+        // data.forEach(elem => {
+        //     // geoJsonData.push(elem.direccion.geoReferencia);
+        //     geoJsonData.push(GeoJSON.parse(elem, { Point: ['elem.direccion.geoReferencia[1]', 'elem.direccion.geoReferencia[0]'] }));
+        // });
+        res.json(geoJsonData);
+    });
+
+});
+
 /**
  * @swagger
  * definition:
