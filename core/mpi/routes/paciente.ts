@@ -520,11 +520,12 @@ router.get('/pacientes', function (req, res, next) {
                     .filter(function (hit) {
                         let paciente = hit._source;
                         paciente.fechaNacimiento = moment(paciente.fechaNacimiento).format('YYYY-MM-DD');
+
                         let pacDto = {
                             documento: req.query.documento ? req.query.documento.toString() : '',
                             nombre: req.query.nombre ? req.query.nombre : '',
                             apellido: req.query.apellido ? req.query.apellido : '',
-                            fechaNacimiento: req.query.fechaNacimiento ? moment(req.query.fechaNacimiento).format('YYYY-MM-DD') : new Date(),
+                            fechaNacimiento: req.query.fechaNacimiento ? req.query.fechaNacimiento : new Date(),
                             sexo: req.query.sexo ? req.query.sexo : ''
                         };
                         let match = new matching();

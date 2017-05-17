@@ -160,7 +160,16 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         populate: {
             path: 'tipoProblema',
             model: 'tipoProblema'
-        }
+        }       
+    });
+
+    query.populate({
+        path: 'ejecucion.listaProblemas',
+        model: 'problema',
+        populate: {
+            path: 'evoluciones.profesional',
+            model: 'profesional'
+        }       
     });
 
     //populuamos las prestaciones a futuro
