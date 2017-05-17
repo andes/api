@@ -7,6 +7,7 @@ import * as constantes from './constantes';
 import * as config from '../../../config';
 import { connectMpi } from '../../../connectMpi';
 import * as moment from 'moment';
+import * as nombreSchema from '../../../core/tm/schemas/nombre';
 
 export let pacienteSchema = new mongoose.Schema({
     identificadores: [{
@@ -59,7 +60,11 @@ export let pacienteSchema = new mongoose.Schema({
         es_indexed: true
     },
     reportarError: Boolean,
-    notaError: String
+    notaError: String,
+    carpetaEfectores: [{
+        organizacion: nombreSchema,
+        nroCarpeta: String
+    }]
 });
 
 /* Se definen los campos virtuals */
