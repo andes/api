@@ -3,6 +3,7 @@ import * as organizacion from '../schemas/organizacion';
 import * as utils from '../../../utils/utils';
 import { defaultLimit, maxLimit } from './../../../config';
 import * as https from 'https';
+import * as config from '../../../config';
 
 let GeoJSON = require('geojson');
 
@@ -24,7 +25,7 @@ router.get('/organizaciones/georef/:id?', function (req, res, next) {
             let pais = organizacion.direccion.ubicacion.pais;
             let pathGoogleApi = '';
             let jsonGoogle = '';
-            pathGoogleApi = '/maps/api/geocode/json?address=' + dir + ',+' + localidad + ',+' + provincia + ',+' + 'AR' + '&key=AIzaSyC__of8PZKirB_IvkjzI7XTlfYtLieGRh0';
+            pathGoogleApi = '/maps/api/geocode/json?address=' + dir + ',+' + localidad + ',+' + provincia + ',+' + 'AR' + '&key=' + config.geoKey;
 
             pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
             pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
@@ -62,7 +63,7 @@ router.get('/organizaciones/georef/:id?', function (req, res, next) {
             });
             req.on('error', (e) => {
                 console.error(e);
-                 return next(e);
+                return next(e);
             });
             reqGet.end();
         });
