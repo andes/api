@@ -46,27 +46,32 @@ router.get('/organizaciones/georef/:id?', function (req, res, next) {
                 rejectUnauthorized: false
             };
 
-            let reqGet = https.request(optionsgetmsg, function (res2) {
-                res2.on('data', function (d, error) {
-                    jsonGoogle = jsonGoogle + d.toString();
-                    console.log('RESPONSE: ', jsonGoogle);
-                });
+            if (dir !== '' && localidad !== '' && provincia !== '') {
+                let reqGet = https.request(optionsgetmsg, function (res2) {
+                    res2.on('data', function (d, error) {
+                        jsonGoogle = jsonGoogle + d.toString();
+                        console.log('RESPONSE: ', jsonGoogle);
+                    });
 
-                res2.on('end', function () {
-                    let salida = JSON.parse(jsonGoogle);
-                    if (salida.status == 'OK') {
-                        res.json(salida.results[0].geometry.location);
-                    } else {
-                        res.json('');
-                    }
+                    res2.on('end', function () {
+                        let salida = JSON.parse(jsonGoogle);
+                        if (salida.status === 'OK') {
+                            res.json(salida.results[0].geometry.location);
+                        } else {
+                            res.json('');
+                        }
+                    });
                 });
-            });
-            req.on('error', (e) => {
-                console.error(e);
-                return next(e);
-            });
-            reqGet.end();
+                req.on('error', (e) => {
+                    console.error(e);
+                    return next(e);
+                });
+                reqGet.end();
+            } else {
+                return next('Datos de dirección incompletos');
+            }
         });
+
     } else {
         let query;
         query = organizacion.model.aggregate([
