@@ -52,19 +52,19 @@ router.get('/organizaciones/georef/:id?', function (req, res, next) {
                 });
 
                 res2.on('end', function () {
-                    if (jsonGoogle) {
-                        let salida = JSON.parse(jsonGoogle);
+                    let salida = JSON.parse(jsonGoogle);
+                    if (salida.status == 'OK') {
                         res.json(salida.results[0].geometry.location);
                     } else {
                         res.json('');
                     }
                 });
             });
-            reqGet.end();
-            reqGet.on('error', function (e) {
-                return next(e);
+            req.on('error', (e) => {
+                console.error(e);
+                 return next(e);
             });
-
+            reqGet.end();
         });
     } else {
         let query;
