@@ -24,13 +24,80 @@ import {
 } from '../../../utils/logService';
 import * as moment from 'moment';
 import { log } from '../../log/schemas/log';
-
+import * as https from 'https';
 let router = express.Router();
 
+let GeoJSON = require('geojson');
 
 function sortMatching(a, b) {
     return b.match - a.match;
 }
+
+router.get('/pacientes/georef/:id', function (req, res, next) {
+    // if (req.params.id) {
+    pacienteMpi.findById(req.params.id, function (err, data) {
+        if (err) {
+            console.log('ERROR GET GEOREF:  ', err);
+            return next(err);
+        }
+        console.log('DATA:  ',data);
+        let paciente;
+            paciente = data;
+        if (paciente && paciente.direccion[0].valor && paciente.direccion[0].ubicacion.localidad && paciente.direccion[0].ubicacion.provincia) {
+
+            let dir = paciente.direccion[0].valor;
+            let localidad = paciente.direccion[0].ubicacion.localidad.nombre;
+            let provincia = paciente.direccion[0].ubicacion.provincia.nombre;
+            let pais = paciente.direccion[0].ubicacion.pais;
+            let pathGoogleApi = '';
+            let jsonGoogle = '';
+            pathGoogleApi = '/maps/api/geocode/json?address=' + dir + ',+' + localidad + ',+' + provincia + ',+' + 'AR' + '&key=' + config.geoKey;
+
+            pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
+            pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
+            pathGoogleApi = pathGoogleApi.replace(/é/gi, 'e');
+            pathGoogleApi = pathGoogleApi.replace(/í/gi, 'i');
+            pathGoogleApi = pathGoogleApi.replace(/ó/gi, 'o');
+            pathGoogleApi = pathGoogleApi.replace(/ú/gi, 'u');
+            pathGoogleApi = pathGoogleApi.replace(/ü/gi, 'u');
+            pathGoogleApi = pathGoogleApi.replace(/ñ/gi, 'n');
+
+            console.log('PATH CONSULTA GOOGLE API:   ', pathGoogleApi);
+
+            let optionsgetmsg = {
+                host: 'maps.googleapis.com',
+                port: 443,
+                path: pathGoogleApi,
+                method: 'GET',
+                rejectUnauthorized: false
+            };
+
+
+            let reqGet = https.request(optionsgetmsg, function (res2) {
+                res2.on('data', function (d, error) {
+                    jsonGoogle = jsonGoogle + d.toString();
+                    console.log('RESPONSE: ', jsonGoogle);
+                });
+
+                res2.on('end', function () {
+                    let salida = JSON.parse(jsonGoogle);
+                    if (salida.status === 'OK') {
+                        res.json(salida.results[0].geometry.location);
+                    } else {
+                        res.json('');
+                    }
+                });
+            });
+            req.on('error', (e) => {
+                console.error(e);
+                return next(e);
+            });
+            reqGet.end();
+        } else {
+            return next('Datos incorrectos');
+        }
+    });
+});
 
 /**
  * @swagger
@@ -641,12 +708,12 @@ router.post('/pacientes/mpi', function (req, res, next) {
             body: nuevoPac
         }, function (error, response) {
             if (error) {
-               // Logger.log(req, 'pacientes', 'elasticError', error);
+                // Logger.log(req, 'pacientes', 'elasticError', error);
                 next(error);
             }
-             Logger.log(req, 'mpi', 'elasticInsert', {
-                                nuevo: nuevoPac,
-                            });
+            Logger.log(req, 'mpi', 'elasticInsert', {
+                nuevo: nuevoPac,
+            });
             res.json(newPatientMpi);
         });
     });
@@ -836,7 +903,7 @@ router.delete('/pacientes/mpi/:id', function (req, res, next) {
             id: patientFound._id.toString(),
         }, function (error, response) {
             if (error) {
-                console.log('Error en el borrado del indice de elastic en mpi:  ',error);
+                console.log('Error en el borrado del indice de elastic en mpi:  ', error);
                 //Logger.log(req, 'pacientes', 'elasticError', error);
             }
             //Logger.log(req, 'pacientes', 'elasticDelete', patientFound);
@@ -947,7 +1014,7 @@ router.post('/pacientes', function (req, res, next) {
 router.put('/pacientes/:id', function (req, res, next) {
     let ObjectId = mongoose.Types.ObjectId;
     let objectId = new ObjectId(req.params.id);
-let query = {
+    let query = {
         _id: objectId
     };
     let connElastic = new Client({
@@ -1007,8 +1074,8 @@ let query = {
                 connElastic.search({
                     q: patientFound._id.toString()
                 }).then(function (body) {
-                     let hits = body.hits.hits;
-                     if (hits.length > 0) {
+                    let hits = body.hits.hits;
+                    if (hits.length > 0) {
                         connElastic.update({
                             index: 'andes',
                             type: 'paciente',
@@ -1026,7 +1093,7 @@ let query = {
                             });
                             res.json(patientFound);
                         });
-                     } else {
+                    } else {
                         connElastic.create({
                             index: 'andes',
                             type: 'paciente',
@@ -1044,11 +1111,11 @@ let query = {
                             });
                             res.json(patientFound);
                         });
-                     }
+                    }
                 });
             });
         } else {
-req.body._id = req.body.id;
+            req.body._id = req.body.id;
             let newPatient = new paciente(req.body);
             let claves = match.crearClavesBlocking(newPatient);
             newPatient['claveBlocking'] = claves;
@@ -1070,7 +1137,7 @@ req.body._id = req.body.id;
                     let hits = body.hits.hits;
                     console.log('resulatdo de hits en andes: ', hits);
                     if (hits.length > 0) {
-                         console.log('hay q actualizar el docmento en elastic');
+                        console.log('hay q actualizar el docmento en elastic');
                         connElastic.update({
                             index: 'andes',
                             type: 'paciente',
@@ -1224,6 +1291,11 @@ function updateDireccion(req, data) {
     data.direccion = req.body.direccion;
 }
 
+function updateCarpetaEfectores(req, data) {
+    data.markModified('carpetaEfectores');
+    data.carpetaEfectores = req.body.carpetaEfectores;
+}
+
 router.patch('/pacientes/:id', function (req, res, next) {
     let ObjectId = mongoose.Types.ObjectId;
     let connElastic = new Client({
@@ -1247,6 +1319,10 @@ router.patch('/pacientes/:id', function (req, res, next) {
                 break;
             case 'updateDireccion':
                 updateDireccion(req, patientFound);
+                break;
+            case 'updateCarpetaEfectores':
+                updateCarpetaEfectores(req, patientFound);
+                break;
         }
         Auth.audit(patientFound, req);
         console.log('paciente Encontrado:', patientFound)

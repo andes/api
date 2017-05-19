@@ -80,7 +80,18 @@ router.get('/carpetasPacientes/:id*?', function(req, res, next) {
             if (err) {
                 return next(err);
             };
-           res.json(data);
+            if (data && data.length > 0) {
+                let carpetaEfector = data[0].carpetaEfectores.find((carpeta) => {
+                    return (carpeta.organizacion.id === req.query.organizacion);
+                });
+                if (carpetaEfector) {
+                    res.json(carpetaEfector);
+                }
+
+            } else {
+                res.json({});
+            }
+
         });
     }
 
