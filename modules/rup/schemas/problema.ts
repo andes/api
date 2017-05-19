@@ -18,7 +18,9 @@ export let problemaSchema = new mongoose.Schema({
         ref: 'paciente'
     },
     codificador: codificadorSchema,
+    fechaIdentificacion: Date,
     fechaInicio: Date,
+    descripcion:String,
     evoluciones: [{
         fecha: Date,
         observacion: String,
@@ -33,11 +35,8 @@ export let problemaSchema = new mongoose.Schema({
     },
         //organizacion: organizacion.schema,
         //ambito: // TODO
-        duracion: {
-            type: String,
-            enum: ['cronico', 'agudo']
-        },
-        vigencia: {
+        cronico: Boolean,
+        estado: {
             type: String,
             enum: ['activo', 'inactivo', 'resuelto', 'transformado', 'enmendado']
         },
