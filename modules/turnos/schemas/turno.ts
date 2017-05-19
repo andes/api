@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
-import * as organizacion from '../../../core/tm/schemas/organizacion';
+// import * as organizacion from '../../../core/tm/schemas/organizacion';
 
 var turnoSchema = new mongoose.Schema({
     horaInicio: Date,
@@ -35,14 +35,8 @@ var turnoSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'prestacionPaciente'
     },
-    usuario: {
-        nombreCompleto: String,
-        nombre: String,
-        apellido: String,
-        username: Number,
-        documento: Number,
-        organizacion: { type: organizacion }
-    }
+    updatedAt: Date,
+    updatedBy: mongoose.Schema.Types.Mixed
 });
 
 export = turnoSchema;

@@ -116,14 +116,16 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
               let etiquetaEstado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.estado';
               let etiquetaPaciente: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.paciente';
               let etiquetaPrestacion: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.tipoPrestacion';
-              let etiquetaUsuario: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.usuario';
+              let etiquetaUpdateAt: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedAt';
+              let etiquetaUpdateBy: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedBy';
               let update: any = {};
 
               update[etiquetaEstado] = 'asignado';
               update[etiquetaPrestacion] = req.body.tipoPrestacion;
               update[etiquetaPaciente] = req.body.paciente;
               update[etiquetaTipoTurno] = req.body.tipoTurno;
-              update[etiquetaUsuario] = usuario;
+              update[etiquetaUpdateAt] = new Date();
+              update[etiquetaUpdateBy] = usuario;
 
               console.log('update ', update);
               let query = {
