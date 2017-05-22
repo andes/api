@@ -28,11 +28,11 @@ export let problemaSchema = new mongoose.Schema({
         profesional:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'profesional'
-    },
-    organizacion:{
+        },
+        organizacion:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'organizacion'
-    },
+        },
         //organizacion: organizacion.schema,
         //ambito: // TODO
         cronico: Boolean,
