@@ -4,6 +4,7 @@ import { Logger } from '../../../utils/logService';
 import { ValidateDarTurno } from '../../../utils/validateDarTurno';
 import { paciente } from '../../../core/mpi/schemas/paciente';
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
+import { Auth } from './../../../auth/auth.class';
 import * as moment from 'moment';
 
 let router = express.Router();
@@ -17,7 +18,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
 
   if (continues.valid) {
 
-    // Se verifica la existencia del paciente 
+    // Se verifica la existencia del paciente
     paciente.findById(req.body.paciente.id, function verificarPaciente(err, cant) {
       if (err) {
         console.log('PACIENTE INEXISTENTE', err);
@@ -68,56 +69,65 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
 
                     // Restamos los turnos asignados de a cuenta
                     if ((data as any).bloques[posBloque].turnos[y].estado === 'asignado') {
-                      if ( esHoy ) {
+                      if (esHoy) {
                         switch ((data as any).bloques[posBloque].turnos[y].tipoTurno) {
                           case ('delDia'):
                             countBloques[x].delDia--;
-                          break;
+                            break;
                           case ('programado'):
                             countBloques[x].delDia--;
-                          break;
+                            break;
                           case ('profesional'):
                             countBloques[x].profesional--;
-                          break;
+                            break;
                           case ('gestion'):
                             countBloques[x].gestion--;
-                          break;
+                            break;
                         }
                       } else {
-                          switch ((data as any).bloques[posBloque].turnos[y].tipoTurno) {
-                            case ('programado'):
-                              countBloques[x].programado--;
+                        switch ((data as any).bloques[posBloque].turnos[y].tipoTurno) {
+                          case ('programado'):
+                            countBloques[x].programado--;
                             break;
-                            case ('profesional'):
-                              countBloques[x].profesional--;
+                          case ('profesional'):
+                            countBloques[x].profesional--;
                             break;
-                            case ('gestion'):
-                              countBloques[x].gestion--;
+                          case ('gestion'):
+                            countBloques[x].gestion--;
                             break;
-                          }
+                        }
                       }
                     }
                   }
                 }
               }
 
-              if ( (countBloques[req.body.tipoTurno] as number) === 0 ) {
+              if ((countBloques[req.body.tipoTurno] as number) === 0) {
                 return next({
                   err: 'No quedan turnos del tipo ' + req.body.tipoTurno
                 });
               }
 
+              let usuario = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
+              // Copia la organización desde el token
+              usuario.organizacion = (req as any).user.organizacion;
+
               let etiquetaTipoTurno: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.tipoTurno';
               let etiquetaEstado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.estado';
               let etiquetaPaciente: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.paciente';
               let etiquetaPrestacion: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.tipoPrestacion';
+              let etiquetaUpdateAt: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedAt';
+              let etiquetaUpdateBy: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedBy';
               let update: any = {};
 
               update[etiquetaEstado] = 'asignado';
               update[etiquetaPrestacion] = req.body.tipoPrestacion;
               update[etiquetaPaciente] = req.body.paciente;
               update[etiquetaTipoTurno] = req.body.tipoTurno;
+              update[etiquetaUpdateAt] = new Date();
+              update[etiquetaUpdateBy] = usuario;
 
+              console.log('update ', update);
               let query = {
                 _id: req.params.idAgenda,
               };
@@ -142,8 +152,9 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                       tipoTurno: update[etiquetaTipoTurno]
                     };
 
-                    Logger.log(req, 'turnos', 'update', datosOp);
+                    Logger.log(req, 'turnos', 'asignarTurno', datosOp);
                   }
+
                   res.json(data);
                 });
             });
