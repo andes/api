@@ -586,17 +586,22 @@ router.get('/pacientes', function (req, res, next) {
                 let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
                     .filter(function (hit) {
                         let paciente = hit._source;
-                        paciente.fechaNacimiento = moment(paciente.fechaNacimiento).format('YYYY-MM-DD');
-
                         let pacDto = {
                             documento: req.query.documento ? req.query.documento.toString() : '',
                             nombre: req.query.nombre ? req.query.nombre : '',
                             apellido: req.query.apellido ? req.query.apellido : '',
-                            fechaNacimiento: req.query.fechaNacimiento ? req.query.fechaNacimiento : new Date(),
+                            fechaNacimiento: req.query.fechaNacimiento ? moment(req.query.fechaNacimiento).format('YYYY-MM-DD'): '',
                             sexo: req.query.sexo ? req.query.sexo : ''
                         };
+                        let pacElastic = {
+                            documento: paciente.documento ? paciente.documento.toString() : '',
+                            nombre: paciente.nombre ? paciente.nombre : '',
+                            apellido: paciente.apellido ? paciente.apellido : '',
+                            fechaNacimiento: paciente.fechaNacimiento ? moment(paciente.fechaNacimiento).format('YYYY-MM-DD') : '',
+                            sexo: paciente.sexo ? paciente.sexo : ''
+                        };
                         let match = new matching();
-                        let valorMatching = match.matchPersonas(paciente, pacDto, weights);
+                        let valorMatching = match.matchPersonas(pacElastic, pacDto, weights);
                         paciente['id'] = hit._id;
                         if (valorMatching >= porcentajeMatchMax) {
                             listaPacientesMax.push({
@@ -958,7 +963,7 @@ router.post('/pacientes', function (req, res, next) {
             console.log('Error al persistir los datos: ', err);
             return next(err);
         }
-
+      //  console.log("NEW PATIENT:   ", newPatient['fechaNacimiento']);
         let nuevoPac = JSON.parse(JSON.stringify(newPatient));
         delete nuevoPac._id;
 
@@ -968,7 +973,8 @@ router.post('/pacientes', function (req, res, next) {
             id: newPatient._id.toString(),
             body: nuevoPac
         }, function (error, response) {
-            console.log('Respuesta elastic', response);
+         //   console.log("PACIENTE ELASTIC EN POST:  ",nuevoPac);
+            //console.log('Respuesta elastic', response);
             if (error) {
                 console.log(error);
             }
@@ -1027,12 +1033,13 @@ router.put('/pacientes/:id', function (req, res, next) {
             console.log('Error del findByID: ', err);
             return next(404);
         }
-
+      //  console.log("REQ BODY ---------------------- ",req.body);
         let pacienteOriginal = null;
         if (patientFound) {
+           
             // Guarda los valores originales para el logger
             pacienteOriginal = patientFound.toObject();
-
+             
             /*Update de paciente de todos los campos salvo que esté validado*/
             if (patientFound.estado !== 'validado') {
                 patientFound.documento = req.body.documento;
@@ -1040,6 +1047,7 @@ router.put('/pacientes/:id', function (req, res, next) {
                 patientFound.nombre = req.body.nombre;
                 patientFound.apellido = req.body.apellido;
                 patientFound.sexo = req.body.sexo;
+
                 patientFound.fechaNacimiento = req.body.fechaNacimiento;
                 /*Si es distinto de validado debo generar una nueva clave de blocking */
                 let claves = match.crearClavesBlocking(patientFound);
@@ -1048,6 +1056,7 @@ router.put('/pacientes/:id', function (req, res, next) {
                 patientFound.nombre = req.body.nombre.toUpperCase();
                 patientFound.apellido = req.body.apellido.toUpperCase();
             }
+
             patientFound.genero = req.body.genero;
             patientFound.alias = req.body.alias;
             patientFound.estadoCivil = req.body.estadoCivil;
@@ -1059,7 +1068,7 @@ router.put('/pacientes/:id', function (req, res, next) {
             patientFound.identificadores = req.body.identificadores;
             patientFound.scan = req.body.scan;
             patientFound.reportarError = req.body.reportarError;
-
+         //   console.log("PATIENT FOUND ------------------",patientFound)
             // Habilita auditoria y guarda
             Auth.audit(patientFound, req);
             patientFound.save(function (err2) {
@@ -1117,6 +1126,8 @@ router.put('/pacientes/:id', function (req, res, next) {
         } else {
             req.body._id = req.body.id;
             let newPatient = new paciente(req.body);
+
+           // console.log("NEW PATIENT---------------",newPatient);
             let claves = match.crearClavesBlocking(newPatient);
             newPatient['claveBlocking'] = claves;
             newPatient['apellido'] = newPatient['apellido'].toUpperCase();
