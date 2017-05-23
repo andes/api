@@ -309,7 +309,8 @@ function sacarAsistencia(req, data, tid = null) {
 function liberarTurno(req, data, tid = null) {
     let turno = getTurno(req, data, tid);
     turno.estado = 'disponible';
-    delete turno.paciente;
+    // delete turno.paciente;
+    turno.paciente = null;
     turno.tipoPrestacion = null;
 }
 
