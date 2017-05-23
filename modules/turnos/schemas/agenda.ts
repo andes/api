@@ -29,14 +29,14 @@ let schema = new mongoose.Schema({
     },
     estado: {
         type: String,
-        enum: ['Planificacion', 'Disponible', 'Publicada', 'Suspendida', 'Pausada'],
+        enum: ['planificacion', 'disponible', 'publicada', 'suspendida', 'pausada'],
         required: true,
-        default: 'Planificacion'
+        default: 'planificacion'
     },
     // Se debe persistir el valor previo al estado de Pausada, para poder reanudar la agenda
     prePausada: {
         type: String,
-        enum: ['Planificacion', 'Disponible', 'Publicada', 'Suspendida']
+        enum: ['planificacion', 'disponible', 'publicada', 'suspendida']
     },
     bloques: [bloqueSchema],
     nota: String
