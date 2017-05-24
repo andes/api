@@ -2,8 +2,103 @@ import * as express from 'express';
 import * as organizacion from '../schemas/organizacion';
 import * as utils from '../../../utils/utils';
 import { defaultLimit, maxLimit } from './../../../config';
+import * as https from 'https';
+import * as config from '../../../config';
+
+let GeoJSON = require('geojson');
 
 let router = express.Router();
+
+
+router.get('/organizaciones/georef/:id?', function (req, res, next) {
+    if (req.params.id) {
+        organizacion.model.findById(req.params.id, function (err, data) {
+            if (err) {
+                console.log('ERROR GET GEOREF:  ', err);
+                return next(err);
+            }
+            let organizacion;
+            organizacion = data;
+            let dir = organizacion.direccion.valor;
+            let localidad = organizacion.direccion.ubicacion.localidad.nombre;
+            let provincia = organizacion.direccion.ubicacion.provincia.nombre;
+            let pais = organizacion.direccion.ubicacion.pais;
+            let pathGoogleApi = '';
+            let jsonGoogle = '';
+            pathGoogleApi = '/maps/api/geocode/json?address=' + dir + ',+' + localidad + ',+' + provincia + ',+' + 'AR' + '&key=' + config.geoKey;
+
+            pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
+            pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
+            pathGoogleApi = pathGoogleApi.replace(/é/gi, 'e');
+            pathGoogleApi = pathGoogleApi.replace(/í/gi, 'i');
+            pathGoogleApi = pathGoogleApi.replace(/ó/gi, 'o');
+            pathGoogleApi = pathGoogleApi.replace(/ú/gi, 'u');
+            pathGoogleApi = pathGoogleApi.replace(/ü/gi, 'u');
+            pathGoogleApi = pathGoogleApi.replace(/ñ/gi, 'n');
+
+            console.log('PATH CONSULTA GOOGLE API:   ', pathGoogleApi);
+
+            let optionsgetmsg = {
+                host: 'maps.googleapis.com',
+                port: 443,
+                path: pathGoogleApi,
+                method: 'GET',
+                rejectUnauthorized: false
+            };
+
+            if (dir !== '' && localidad !== '' && provincia !== '') {
+                let reqGet = https.request(optionsgetmsg, function (res2) {
+                    res2.on('data', function (d, error) {
+                        jsonGoogle = jsonGoogle + d.toString();
+                        console.log('RESPONSE: ', jsonGoogle);
+                    });
+
+                    res2.on('end', function () {
+                        let salida = JSON.parse(jsonGoogle);
+                        if (salida.status === 'OK') {
+                            res.json(salida.results[0].geometry.location);
+                        } else {
+                            res.json('');
+                        }
+                    });
+                });
+                req.on('error', (e) => {
+                    console.error(e);
+                    return next(e);
+                });
+                reqGet.end();
+            } else {
+                return next('Datos de dirección incompletos');
+            }
+        });
+
+    } else {
+        let query;
+        query = organizacion.model.aggregate([
+            {
+                '$match': {
+                    'direccion.geoReferencia': { $exists: true }
+                }
+            }, {
+                '$project': {
+                    '_id': 0,
+                    'nombre': '$nombre',
+                    'lat': { $arrayElemAt: ['$direccion.geoReferencia', 0] },
+                    'lng': { $arrayElemAt: ['$direccion.geoReferencia', 1] }
+                }
+            }]);
+        query.exec(function (err, data) {
+            if (err) {
+                console.log('ERROR GET GEOREF:  ', err);
+                return next(err);
+            }
+            console.log('DATA:  ', data);
+            let geoJsonData = GeoJSON.parse(data, { Point: ['lat', 'lng'], include: ['nombre'] });
+            res.json(geoJsonData);
+        });
+    }
+});
+
 /**
  * @swagger
  * definition:
@@ -22,7 +117,7 @@ let router = express.Router();
  *          type: string
  *       tipoEstablecimiento:
  *          type: object
- *          properties: 
+ *          properties:
  *            id:
  *              type: string
  *            nombre:
@@ -64,7 +159,7 @@ let router = express.Router();
  *       fechaAlta:
  *          type: string
  *          format: date
- *       fechaBaja: 
+ *       fechaBaja:
  *          type: string
  *          format: date
  */

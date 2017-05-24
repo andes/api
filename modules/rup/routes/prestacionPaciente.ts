@@ -88,6 +88,20 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             query = prestacionPaciente.find({}); //Trae todos
         }
 
+        if (req.query.fechaDesde) {
+            
+            query.where('ejecucion.fecha').gte(req.query.fechaDesde);
+        }
+
+        if (req.query.fechaHasta) {
+            query.where('ejecucion.fecha').lte(req.query.fechaHasta);
+        }
+
+        if (req.query.idProfesional) {
+            console.log(req.query);
+            query.where('estado.profesional._id').equals(req.query.idProfesional);
+        }
+
         if (req.query.idTipoPrestacion) {
             query.where('solicitud.tipoPrestacion._id').equals(req.query.idTipoPrestacion);
         }
@@ -160,7 +174,16 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         populate: {
             path: 'tipoProblema',
             model: 'tipoProblema'
-        }
+        }       
+    });
+
+    query.populate({
+        path: 'ejecucion.listaProblemas',
+        model: 'problema',
+        populate: {
+            path: 'evoluciones.profesional',
+            model: 'profesional'
+        }       
     });
 
     //populuamos las prestaciones a futuro
