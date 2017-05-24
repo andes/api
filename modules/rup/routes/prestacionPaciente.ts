@@ -282,11 +282,10 @@ router.patch('/prestaciones/:id', function (req, res, next) {
     }
 
     if (modificacion) {
-        prestacionPaciente.findByIdAndUpdate(req.params.id, modificacion , function (err, data) {
+        prestacionPaciente.findByIdAndUpdate(req.params.id, modificacion, {upsert: false} , function(err, data) {
             if (err) {
                 return next(err);
-            }
-     
+            }           
             res.json(data);
         });
     } //if (modificacion)
