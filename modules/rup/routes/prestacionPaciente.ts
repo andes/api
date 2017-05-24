@@ -98,7 +98,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         }
 
         if (req.query.idProfesional) {
-            console.log(req.query);
+            //console.log(req.query);
             query.where('estado.profesional._id').equals(req.query.idProfesional);
         }
 
@@ -282,11 +282,11 @@ router.patch('/prestaciones/:id', function (req, res, next) {
     }
 
     if (modificacion) {
-        prestacionPaciente.findByIdAndUpdate(req.params.id, modificacion , { upsert: true },
-        function (err, data) {
+        prestacionPaciente.findByIdAndUpdate(req.params.id, modificacion , function (err, data) {
             if (err) {
                 return next(err);
             }
+     
             res.json(data);
         });
     } //if (modificacion)
