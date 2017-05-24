@@ -62,7 +62,7 @@ router.get('/problemas/:idProblema*?', function (req, res, next) {
 });
 
 router.post('/problemas/', function (req, res, next) {
-    console.log(req.body);
+    //console.log(req.body);
 
     let newProblema = new problema(req.body)
     newProblema.save((err) => {
@@ -88,7 +88,7 @@ router.put('/problemas/:id?', function (req, res, next) {
             res.json(data);
         });
     } else {
-        console.log('Ingreso a put problemas', req.body);
+        //console.log('Ingreso a put problemas', req.body);
         let listaProblemas = req.body;
         let listaResultado = [];
         listaProblemas.forEach(element => {
@@ -97,9 +97,9 @@ router.put('/problemas/:id?', function (req, res, next) {
                     return next(err);
                 }
                 listaResultado.push(data);
-                console.log('listaResultado.length', listaResultado.length);
+                // console.log('listaResultado.length', listaResultado.length);
                 if (listaProblemas.length === listaResultado.length) {
-                    console.log('listaResultado.length Final', listaResultado.length);
+                    // console.log('listaResultado.length Final', listaResultado.length);
                     res.json(listaResultado);
                 }
             });
