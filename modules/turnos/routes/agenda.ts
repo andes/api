@@ -239,6 +239,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
         let turnos = req.body.turnos || [''];
 
         for (let y = 0; y < turnos.length; y++) {
+            console.log('entro');
             switch (req.body.op) {
                 case 'darAsistencia': darAsistencia(req, data, turnos[y]._id);
                     break;
@@ -270,7 +271,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                     break;
             }
 
-            console.log('data ', (data as any).bloques[0].turnos);
+            // console.log('data ', (data as any).bloques[0].turnos);
             Auth.audit(data, req);
             data.save(function (err) {
 
