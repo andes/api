@@ -13,7 +13,7 @@ export function initAPI(app: Express) {
     if (config.mongooseDebugMode) {
         mongoose.set('debug', true);
     }
-    mongoose.connect(config.connectionStrings.mongoDB_main);
+    mongoose.connect(config.connectionStrings.mongoDB_main, { db: { bufferMaxEntries: 0 } });
     mongoose.plugin(schemaDefaults);
     mongoose.connection.on('connected', function () {
         console.log('[Mongoose] Conexión OK');

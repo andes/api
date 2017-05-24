@@ -5,7 +5,7 @@ import * as contactoSchema from '../../tm/schemas/contacto';
 import * as financiadorSchema from './financiador';
 import * as constantes from './constantes';
 import * as config from '../../../config';
-import { connectMpi } from '../../../connectMpi';
+import { connection } from '../../../connectMpi';
 import * as moment from 'moment';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 
@@ -154,4 +154,4 @@ pacienteSchema.plugin(require('../../../mongoose/audit'));
 
 
 export let paciente = mongoose.model('paciente', pacienteSchema, 'paciente');
-export let pacienteMpi = connectMpi.model('paciente', pacienteSchema, 'paciente');
+export let pacienteMpi = connection.model('paciente', pacienteSchema, 'paciente');
