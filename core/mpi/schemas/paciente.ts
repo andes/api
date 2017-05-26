@@ -5,7 +5,7 @@ import * as contactoSchema from '../../tm/schemas/contacto';
 import * as financiadorSchema from './financiador';
 import * as constantes from './constantes';
 import * as config from '../../../config';
-import { connectMpi } from '../../../connectMpi';
+import { connection } from '../../../connectMpi';
 import * as moment from 'moment';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 
@@ -43,7 +43,7 @@ export let pacienteSchema = new mongoose.Schema({
     foto: String,
     nacionalidad: String,
     relaciones: [{
-        relacion: constantes.PARENTEZCO,
+        relacion: String,
         referencia: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'paciente'
@@ -64,6 +64,11 @@ export let pacienteSchema = new mongoose.Schema({
     carpetaEfectores: [{
         organizacion: nombreSchema,
         nroCarpeta: String
+    }],
+    notas: [{
+        fecha: Date,
+        nota: String,
+        destacada: Boolean
     }]
 });
 
@@ -149,4 +154,4 @@ pacienteSchema.plugin(require('../../../mongoose/audit'));
 
 
 export let paciente = mongoose.model('paciente', pacienteSchema, 'paciente');
-export let pacienteMpi = connectMpi.model('paciente', pacienteSchema, 'paciente');
+export let pacienteMpi = connection.model('paciente', pacienteSchema, 'paciente');
