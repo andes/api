@@ -23,6 +23,7 @@ export let prestacionPacienteSchema = new mongoose.Schema({
     },
 
     solicitud: {
+        motivoSolicitud: String,
         // tipo de prsetacion a ejecutarse
         tipoPrestacion: tipoPrestacionSchema,
         // fecha de solicitud
@@ -126,7 +127,7 @@ export let prestacionPacienteSchema = new mongoose.Schema({
         }
     },
 
-    // a futuro que se ejecuta
+    // planes a ejecutarse a futuro
     prestacionesSolicitadas: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'prestacionPaciente'

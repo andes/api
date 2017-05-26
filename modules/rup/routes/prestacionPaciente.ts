@@ -276,6 +276,11 @@ router.patch('/prestaciones/:id', function (req, res, next) {
             modificacion = {"$push": { "ejecucion.listaProblemas": req.body.problema } }
         }
     break;
+    case 'listaProblemasSolicitud':
+        if (req.body.problema) {                
+            modificacion = {"$push": { "solicitud.listaProblemas": req.body.problema } }
+        }
+    break;
     default:
         next('Error: No se seleccionó ninguna opción.');
     break;
