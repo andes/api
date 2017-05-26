@@ -49,7 +49,8 @@ router.get('/problemas/:idProblema*?', function (req, res, next) {
     });
 
 
-    query.populate('tipoProblema').sort({ 'fechaInicio': -1 });
+    // query.populate('tipoProblema').sort({ 'fechaInicio': -1 });
+    query.sort({ 'fechaInicio': -1 });
 
     query.exec(function (err, data) {
         if (err) {
@@ -70,12 +71,14 @@ router.post('/problemas/', function (req, res, next) {
             return next(err);
         }
 
-        problema.findById(newProblema._id.toString()).populate('tipoProblema').exec(function (err, data) {
-            if (err) {
-                return next(err);
-            }
-            res.json(data);
-        });
+        // TODO: Ya no se necesita el populate
+        // problema.findById(newProblema._id.toString()).populate('tipoProblema').exec(function (err, data) {
+        //     if (err) {
+        //         return next(err);
+        //     }
+        //     res.json(data);
+        // });
+        res.json(newProblema);
     })
 });
 

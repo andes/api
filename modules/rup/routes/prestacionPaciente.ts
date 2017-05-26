@@ -122,10 +122,10 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
     query.populate({
         path: 'solicitud.listaProblemas',
         model: 'problema',
-        populate: {
-            path: 'tipoProblema',
-            model: 'tipoProblema'
-        }
+        // populate: {
+        //     path: 'tipoProblema',
+        //     model: 'tipoProblema'
+        // }
     });
 
     query.populate({
@@ -139,10 +139,10 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         populate: {
             path: 'solicitud.listaProblemas',
             model: 'problema',
-            populate: {
-                path: 'tipoProblema',
-                model: 'tipoProblema'
-            }
+            // populate: {
+            //     path: 'tipoProblema',
+            //     model: 'tipoProblema'
+            // }
         }
     });
 
@@ -153,28 +153,28 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         populate: [{
             path: 'solicitud.listaProblemas',
             model: 'problema',
-            populate: {
-                path: 'tipoProblema',
-                model: 'tipoProblema'
-            },
+            // populate: {
+            //     path: 'tipoProblema',
+            //     model: 'tipoProblema'
+            // },
         },
         {
             path: 'ejecucion.listaProblemas',
             model: 'problema',
-            populate: {
-                path: 'tipoProblema',
-                model: 'tipoProblema'
-            },
+            // populate: {
+            //     path: 'tipoProblema',
+            //     model: 'tipoProblema'
+            // },
         }]
     });
 
     query.populate({
         path: 'ejecucion.listaProblemas',
         model: 'problema',
-        populate: {
-            path: 'tipoProblema',
-            model: 'tipoProblema'
-        }       
+        // populate: {
+        //     path: 'tipoProblema',
+        //     model: 'tipoProblema'
+        // }       
     });
 
     query.populate({
@@ -193,10 +193,10 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         populate: {
             path: 'solicitud.listaProblemas',
             model: 'problema',
-            populate: {
-                path: 'tipoProblema',
-                model: 'tipoProblema'
-            }
+            // populate: {
+            //     path: 'tipoProblema',
+            //     model: 'tipoProblema'
+            // }
         }
     });
 
