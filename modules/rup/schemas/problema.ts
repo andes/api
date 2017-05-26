@@ -6,8 +6,9 @@ import { segundaOpinionSchema } from './segundaOpinion';
 
 export let problemaSchema = new mongoose.Schema({
     tipoProblema: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'tipoProblema'
+        // type: mongoose.Schema.Types.ObjectId,
+        // ref: 'tipoProblema'
+        type: mongoose.Schema.Types.Mixed
     },
     idProblemaOrigen: [{
         type: mongoose.Schema.Types.ObjectId
