@@ -98,7 +98,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         }
 
         if (req.query.idProfesional) {
-            console.log(req.query);
+            //console.log(req.query);
             query.where('estado.profesional._id').equals(req.query.idProfesional);
         }
 
@@ -122,10 +122,10 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
     query.populate({
         path: 'solicitud.listaProblemas',
         model: 'problema',
-        populate: {
-            path: 'tipoProblema',
-            model: 'tipoProblema'
-        }
+        // populate: {
+        //     path: 'tipoProblema',
+        //     model: 'tipoProblema'
+        // }
     });
 
     query.populate({
@@ -139,10 +139,10 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         populate: {
             path: 'solicitud.listaProblemas',
             model: 'problema',
-            populate: {
-                path: 'tipoProblema',
-                model: 'tipoProblema'
-            }
+            // populate: {
+            //     path: 'tipoProblema',
+            //     model: 'tipoProblema'
+            // }
         }
     });
 
@@ -153,28 +153,28 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         populate: [{
             path: 'solicitud.listaProblemas',
             model: 'problema',
-            populate: {
-                path: 'tipoProblema',
-                model: 'tipoProblema'
-            },
+            // populate: {
+            //     path: 'tipoProblema',
+            //     model: 'tipoProblema'
+            // },
         },
         {
             path: 'ejecucion.listaProblemas',
             model: 'problema',
-            populate: {
-                path: 'tipoProblema',
-                model: 'tipoProblema'
-            },
+            // populate: {
+            //     path: 'tipoProblema',
+            //     model: 'tipoProblema'
+            // },
         }]
     });
 
     query.populate({
         path: 'ejecucion.listaProblemas',
         model: 'problema',
-        populate: {
-            path: 'tipoProblema',
-            model: 'tipoProblema'
-        }       
+        // populate: {
+        //     path: 'tipoProblema',
+        //     model: 'tipoProblema'
+        // }       
     });
 
     query.populate({
@@ -193,10 +193,10 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         populate: {
             path: 'solicitud.listaProblemas',
             model: 'problema',
-            populate: {
-                path: 'tipoProblema',
-                model: 'tipoProblema'
-            }
+            // populate: {
+            //     path: 'tipoProblema',
+            //     model: 'tipoProblema'
+            // }
         }
     });
 
@@ -276,17 +276,21 @@ router.patch('/prestaciones/:id', function (req, res, next) {
             modificacion = {"$push": { "ejecucion.listaProblemas": req.body.problema } }
         }
     break;
+    case 'listaProblemasSolicitud':
+        if (req.body.problema) {                
+            modificacion = {"$push": { "solicitud.listaProblemas": req.body.problema } }
+        }
+    break;
     default:
         next('Error: No se seleccionó ninguna opción.');
     break;
     }
 
     if (modificacion) {
-        prestacionPaciente.findByIdAndUpdate(req.params.id, modificacion , { upsert: true },
-        function (err, data) {
+        prestacionPaciente.findByIdAndUpdate(req.params.id, modificacion, {upsert: false} , function(err, data) {
             if (err) {
                 return next(err);
-            }
+            }           
             res.json(data);
         });
     } //if (modificacion)

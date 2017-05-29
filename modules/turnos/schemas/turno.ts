@@ -10,7 +10,7 @@ var turnoSchema = new mongoose.Schema({
     },
     estado: {
         type: String,
-        enum: ['disponible', 'asignado', 'bloqueado'],
+        enum: ['disponible', 'asignado', 'suspendido'],
         default: 'disponible'
     },
     tipoTurno: {
@@ -20,7 +20,7 @@ var turnoSchema = new mongoose.Schema({
     nota: String,
     motivoSuspension: {
         type: String,
-        enum: ["Edilicia", "Profesional", "Organizacion"]
+        enum: ['edilicia', 'profesional', 'organizacion']
     },
     paciente: { // pensar que otros datos del paciente conviene tener
         id: mongoose.Schema.Types.ObjectId,
