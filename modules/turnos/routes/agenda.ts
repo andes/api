@@ -156,6 +156,7 @@ router.post('/agenda/clonar', function (req, res, next) {
                     nueva['horaFin'] = newHoraFin;
                     nueva['updatedBy'] = undefined;
                     nueva['updatedAt'] = undefined;
+                    nueva['nota'] = null;
                     let newIniBloque: any;
                     let newFinBloque: any;
                     let newIniTurno: any;
@@ -174,6 +175,7 @@ router.post('/agenda/clonar', function (req, res, next) {
                             turno.paciente = null;
                             turno.tipoPrestacion = null;
                             turno.idPrestacionPaciente = null;
+                            turno.nota = null;
                             turno._id = mongoose.Types.ObjectId();
                             if (turno.tipoTurno) {
                                 turno.tipoTurno = undefined;
@@ -312,6 +314,7 @@ function liberarTurno(req, data, tid = null) {
     // delete turno.paciente;
     turno.paciente = null;
     turno.tipoPrestacion = null;
+    turno.nota = null;
 }
 
 // Turno
