@@ -770,20 +770,20 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
             pacienteOriginal = patientFound.toObject();
 
             /*Update de paciente de todos los campos salvo que esté validado*/
-            if (patientFound.estado !== 'validado') {
-                patientFound.documento = req.body.documento;
-                patientFound.estado = req.body.estado;
-                patientFound.nombre = req.body.nombre;
-                patientFound.apellido = req.body.apellido;
-                patientFound.sexo = req.body.sexo;
-                patientFound.fechaNacimiento = req.body.fechaNacimiento;
-                /*Si es distinto de validado debo generar una nueva clave de blocking */
-                let claves = match.crearClavesBlocking(patientFound);
-                patientFound.claveBlocking = claves;
-            } else {
-                patientFound.nombre = req.body.nombre.toUpperCase();
-                patientFound.apellido = req.body.apellido.toUpperCase();
-            }
+            //if (patientFound.estado !== 'validado') {
+            patientFound.documento = req.body.documento;
+            patientFound.estado = req.body.estado;
+            patientFound.nombre = req.body.nombre.toUpperCase();
+            patientFound.apellido = req.body.apellido.toUpperCase();
+            patientFound.sexo = req.body.sexo;
+            patientFound.fechaNacimiento = req.body.fechaNacimiento;
+            /*Si es distinto de validado debo generar una nueva clave de blocking */
+            let claves = match.crearClavesBlocking(patientFound);
+            patientFound.claveBlocking = claves;
+            // } else {
+            //     patientFound.nombre = req.body.nombre.toUpperCase();
+            //     patientFound.apellido = req.body.apellido.toUpperCase();
+            // }
             patientFound.genero = req.body.genero;
             patientFound.alias = req.body.alias;
             patientFound.estadoCivil = req.body.estadoCivil;
