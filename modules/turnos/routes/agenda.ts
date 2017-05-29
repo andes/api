@@ -180,7 +180,7 @@ router.post('/agenda/clonar', function (req, res, next) {
                             }
                         });
                     });
-                    nueva['estado'] = 'Planificacion';
+                    nueva['estado'] = 'planificacion';
                     Auth.audit(nueva, req);
                     nueva.save((err) => {
                         Logger.log(req, 'turnos', 'insert', {
@@ -256,12 +256,12 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                     break;
                 case 'editarAgenda': editarAgenda(req, data);
                     break;
-                case 'Disponible':
-                case 'Publicada': actualizarEstado(req, data);
+                case 'disponible':
+                case 'publicada': actualizarEstado(req, data);
                     break;
-                case 'Pausada':
+                case 'pausada':
                 case 'prePausada':
-                case 'Suspendida': actualizarEstado(req, data);
+                case 'suspendida': actualizarEstado(req, data);
                     break;
                 default:
                     next('Error: No se seleccionó ninguna opción.');
@@ -319,8 +319,8 @@ function bloquearTurno(req, data, tid = null) {
 
     let turno = getTurno(req, data, tid);
 
-    if (turno.estado !== 'bloqueado') {
-        turno.estado = 'bloqueado';
+    if (turno.estado !== 'suspendido') {
+        turno.estado = 'suspendido';
     } else {
         turno.estado = 'disponible';
     }
@@ -329,7 +329,7 @@ function bloquearTurno(req, data, tid = null) {
 // Turno
 function suspenderTurno(req, data, tid = null) {
     let turno = getTurno(req, data, tid);
-    turno.estado = 'bloqueado';
+    turno.estado = 'suspendido';
     delete turno.paciente;
     delete turno.tipoPrestacion;
     turno.motivoSuspension = req.body.motivoSuspension;
@@ -367,18 +367,18 @@ function editarAgenda(req, data) {
 // Agenda
 function actualizarEstado(req, data) {
     // Si se pasa a estado Pausada, guardamos el estado previo
-    if (req.body.estado === 'Pausada') {
+    if (req.body.estado === 'pausada') {
         data.prePausada = data.estado;
     }
-    // Si se pasa a Publicada
-    if (req.body.estado === 'Publicada') {
-        data.estado = 'Publicada';
+    // Si se pasa a publicada
+    if (req.body.estado === 'publicada') {
+        data.estado = 'publicada';
         data.bloques.forEach((bloque, index) => {
             bloque.accesoDirectoProgramado = bloque.accesoDirectoProgramado + bloque.reservadoProfesional;
             bloque.reservadoProfesional = 0;
         });
     }
-    // Cuando se reanuda de un estado Pausada, se setea el estado guardado en prePausa
+    // Cuando se reanuda de un estado pausada, se setea el estado guardado en prePausa
     if (req.body.estado === 'prePausada') {
         data.estado = data.prePausada;
     } else {
