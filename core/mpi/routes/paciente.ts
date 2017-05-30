@@ -335,35 +335,6 @@ router.get('/pacientes/dashboard/', function (req, res, next) {
 });
 
 
-function buscarPaciente(id) {
-    return new Promise((resolve, reject) => {
-        paciente.findById(id, function (err, data) {
-            if (err) {
-                reject(err);
-            } else {
-                if (data) {
-                    let resultado = {
-                        db: 'andes',
-                        paciente: data
-                    };
-                    resolve(resultado);
-                } else {
-                    pacienteMpi.findById(id, function (err2, dataMpi) {
-                        if (err2) {
-                            reject(err2);
-                        }
-                        let resultado = {
-                            db: 'mpi',
-                            paciente: dataMpi
-                        };
-                        resolve(resultado);
-
-                    });
-                }
-            }
-        });
-    });
-}
 
 /**
  * @swagger
@@ -1286,6 +1257,36 @@ router.delete('/pacientes/:id', function (req, res, next) {
     });
 });
 
+
+function buscarPaciente(id) {
+    return new Promise((resolve, reject) => {
+        paciente.findById(id, function (err, data) {
+            if (err) {
+                reject(err);
+            } else {
+                if (data) {
+                    let resultado = {
+                        db: 'andes',
+                        paciente: data
+                    };
+                    resolve(resultado);
+                } else {
+                    pacienteMpi.findById(id, function (err2, dataMpi) {
+                        if (err2) {
+                            reject(err2);
+                        }
+                        let resultado = {
+                            db: 'mpi',
+                            paciente: dataMpi
+                        };
+                        resolve(resultado);
+                    });
+                }
+            }
+        });
+    });
+}
+
 /**
  * @swagger
  * /pacientes/{id}:
@@ -1334,7 +1335,8 @@ function updateCarpetaEfectores(req, data) {
 }
 
 function updateRelacion(req, data) {
-    if (data.relaciones) {
+    console.log("DATA UPDATE RELACION -------------", data);
+    if (data && data.relaciones) {
         let objRel = data.relaciones.find(elem => {
             if (elem.referencia = req.body.dto.referencia) {
                 return elem;
@@ -1354,10 +1356,6 @@ router.patch('/pacientes/:id', function (req, res, next) {
         host: config.connectionStrings.elastic_main,
     });
     let objectId = new ObjectId(req.params.id);
-    // let query = {
-    //     _id: objectId
-    // };
-
     buscarPaciente(req.params.id).then((resultado) => {
         if (resultado) {
             switch (req.body.op) {
@@ -1379,25 +1377,29 @@ router.patch('/pacientes/:id', function (req, res, next) {
                     break;
             }
             Auth.audit(resultado.paciente, req);
-            console.log('paciente Encontrado:', resultado.paciente);
             resultado.paciente.save(function (errPatch) {
                 if (errPatch) {
                     console.log('ERROR:', errPatch);
                     return next(errPatch);
                 }
-                let pacAct = JSON.parse(JSON.stringify(resultado.paciente));
-                delete pacAct._id;
-                connElastic.update({
-                    index: 'andes',
-                    type: 'paciente',
-                    id: resultado.paciente._id.toString(),
-                    body: pacAct
-                }, function (error, response) {
-                    if (error) {
-                        console.log(error);
-                    }
-                    return res.json(resultado.paciente);
-                });
+
+                // No se realiza el update de elastic ya que el patch
+                // cambia campos no searcheables
+
+                // let pacAct = JSON.parse(JSON.stringify(resultado.paciente));
+                // delete pacAct._id;
+                // pacAct.relaciones = [];
+                // connElastic.update({
+                //     index: 'andes',
+                //     type: 'paciente',
+                //     id: resultado.paciente._id.toString(),
+                //     body: pacAct
+                // }, function (error, response) {
+                //     if (error) {
+                //         console.log("ERROR ELASTIC -------------",error);
+                //     }
+                //     return res.json(resultado.paciente);
+                // });
 
             });
         }
