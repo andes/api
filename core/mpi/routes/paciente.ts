@@ -1335,10 +1335,10 @@ function updateCarpetaEfectores(req, data) {
 }
 
 function updateRelacion(req, data) {
-    console.log("DATA UPDATE RELACION -------------", data);
+    //console.log("DATA UPDATE RELACION -------------", data);
     if (data && data.relaciones) {
         let objRel = data.relaciones.find(elem => {
-            if (elem.referencia = req.body.dto.referencia) {
+            if (elem.referencia === req.body.dto.referencia) {
                 return elem;
             }
         });
@@ -1346,6 +1346,7 @@ function updateRelacion(req, data) {
         if (!objRel) {
             data.markModified('relaciones');
             data.relaciones.push(req.body.dto);
+            console.log("REQ BODY DTO------",req.body.dto);
         }
     }
 }
@@ -1356,6 +1357,11 @@ router.patch('/pacientes/:id', function (req, res, next) {
         host: config.connectionStrings.elastic_main,
     });
     let objectId = new ObjectId(req.params.id);
+    // let query = {
+    //     _id: objectId
+    // };
+    console.log("DATA PATCH ---------- ", req.params);
+    //console.log("BODY PATCH ---------- ", req.body);
     buscarPaciente(req.params.id).then((resultado) => {
         if (resultado) {
             switch (req.body.op) {
@@ -1373,19 +1379,19 @@ router.patch('/pacientes/:id', function (req, res, next) {
                     break;
 
                 case 'updateRelacion':
+                   // console.log("RESULTADO BUSQUEDApACIENTE--------", resultado);
                     updateRelacion(req, resultado.paciente);
                     break;
             }
             Auth.audit(resultado.paciente, req);
+            //console.log('paciente Encontrado:', resultado.paciente);
             resultado.paciente.save(function (errPatch) {
                 if (errPatch) {
                     console.log('ERROR:', errPatch);
                     return next(errPatch);
                 }
 
-                // No se realiza el update de elastic ya que el patch
-                // cambia campos no searcheables
-
+                
                 // let pacAct = JSON.parse(JSON.stringify(resultado.paciente));
                 // delete pacAct._id;
                 // pacAct.relaciones = [];
@@ -1398,9 +1404,9 @@ router.patch('/pacientes/:id', function (req, res, next) {
                 //     if (error) {
                 //         console.log("ERROR ELASTIC -------------",error);
                 //     }
-                //     return res.json(resultado.paciente);
+                  
                 // });
-
+                 return res.json(resultado.paciente);
             });
         }
     }).catch((err) => {
