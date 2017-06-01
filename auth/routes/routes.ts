@@ -36,7 +36,6 @@ router.post('/login', function (req, res, next) {
             }
 
             // Crea el token con los datos de sesión
-            console.log(Auth.generateAppToken('mpiUpdate', organizacion, ['mpi']));
             res.json({
                 token: Auth.generateUserToken(nombre, apellido, data[0], data[1], data[2])
             });

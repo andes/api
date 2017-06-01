@@ -5,13 +5,10 @@ import { log } from '../schemas/log';
 let router = express.Router();
 
 router.post('/:module/:op', function (req, res, next) {
-    console.log(req.params.op);
     let resultado = Logger.log(req, req.params.module, req.params.op, req.body.data, function (err) {
-
         if (err) {
             return next(err);
         }
-        console.log(resultado);
         res.json(resultado);
     });
 });
@@ -27,7 +24,6 @@ router.get('/:module?', function (req, res, next) {
     if (req.query.op) {
         query.where('operacion').equals(req.query.op).count();
     }
-    
     if (req.query.usuario) {
         query.where('usuario.username').equals(req.query.usuario);
     }
