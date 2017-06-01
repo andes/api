@@ -1,11 +1,10 @@
 // !!!!!!!! ATENCIÓN !!!!!!!!
 // Todas los datos privado (credenciales, IPs, ...) deben quedar en el archivo config.private.ts
-import * as configPrivate from './config.private';
+// !!!!!!!!!!!!!!!!!!!!!!!!!!
 
 // Configuración de Passport
 export const auth = {
     useLdap: false,
-    ldapServer: `ldap://${configPrivate.hosts.ldap}`,
     ldapOU: 'ou=People,o=integrabilidad,o=neuquen',
 };
 

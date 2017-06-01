@@ -1,13 +1,11 @@
 import * as express from 'express';
-import * as mongoose from 'mongoose';
-import * as jwt from 'jsonwebtoken';
 import * as ldapjs from 'ldapjs';
 import * as config from '../../config';
+import * as configPrivate from '../../config.private';
 import { Auth } from './../auth.class';
 import * as organizacion from '../schemas/organizacion';
 import * as permisos from '../schemas/permisos';
 import { profesional } from './../../core/tm/schemas/profesional';
-import { UserToken } from './../schemas/user-token.interface';
 
 let router = express.Router();
 
@@ -58,7 +56,7 @@ router.post('/login', function (req, res, next) {
     } else {
         // Conecta a LDAP
         let dn = 'uid=' + req.body.usuario + ',' + config.auth.ldapOU;
-        let ldap = ldapjs.createClient({ url: config.auth.ldapServer });
+        let ldap = ldapjs.createClient({ url: `ldap://${configPrivate.hosts.ldap}` });
         ldap.bind(dn, req.body.password, function (err) {
             if (err) {
                 return next(ldapjs.InvalidCredentialsError ? 403 : err);
