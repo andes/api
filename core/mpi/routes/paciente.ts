@@ -1,33 +1,18 @@
-import {
-    tipoPrestacion
-} from './../../tm/schemas/tipoPrestacion';
-import {
-    matching
-} from '@andes/match/matching';
+import { matching } from '@andes/match';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
-import {
-    paciente
-} from '../schemas/paciente';
-import {
-    pacienteMpi
-} from '../schemas/paciente';
-import {
-    Client
-} from 'elasticsearch';
+import { paciente } from '../schemas/paciente';
+import { pacienteMpi } from '../schemas/paciente';
+import { Client } from 'elasticsearch';
+import * as configPrivate from '../../../config.private';
 import * as config from '../../../config';
-import {
-    Auth
-} from './../../../auth/auth.class';
-import {
-    Logger
-} from '../../../utils/logService';
+import { Auth } from './../../../auth/auth.class';
+import { Logger } from '../../../utils/logService';
 import * as moment from 'moment';
 import { log } from '../../log/schemas/log';
 import * as https from 'https';
-let router = express.Router();
 
-let GeoJSON = require('geojson');
+let router = express.Router();
 
 function sortMatching(a, b) {
     return b.match - a.match;
@@ -40,9 +25,9 @@ router.get('/pacientes/georef/:id', function (req, res, next) {
             console.log('ERROR GET GEOREF:  ', err);
             return next(err);
         }
-        console.log('DATA:  ',data);
+        console.log('DATA:  ', data);
         let paciente;
-            paciente = data;
+        paciente = data;
         if (paciente && paciente.direccion[0].valor && paciente.direccion[0].ubicacion.localidad && paciente.direccion[0].ubicacion.provincia) {
 
             let dir = paciente.direccion[0].valor;
@@ -51,7 +36,7 @@ router.get('/pacientes/georef/:id', function (req, res, next) {
             let pais = paciente.direccion[0].ubicacion.pais;
             let pathGoogleApi = '';
             let jsonGoogle = '';
-            pathGoogleApi = '/maps/api/geocode/json?address=' + dir + ',+' + localidad + ',+' + provincia + ',+' + 'AR' + '&key=' + config.geoKey;
+            pathGoogleApi = '/maps/api/geocode/json?address=' + dir + ',+' + localidad + ',+' + provincia + ',+' + 'AR' + '&key=' + configPrivate.geoKey;
 
             pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
             pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
@@ -505,9 +490,7 @@ router.get('/pacientes/:id', function (req, res, next) {
  */
 // Search using elastic search
 router.get('/pacientes', function (req, res, next) {
-    let connElastic = new Client({
-        host: config.connectionStrings.elastic_main,
-    });
+    let connElastic = new Client({ host: configPrivate.hosts.elastic_main });
 
     let query;
     switch (req.query.type) {
@@ -571,14 +554,14 @@ router.get('/pacientes', function (req, res, next) {
         })
             .then((searchResult) => {
                 // Asigno los valores para el suggest
-                let weights = config.configMpi.weightsDefault;
+                let weights = config.mpi.weightsDefault;
 
                 if (req.query.escaneado) {
-                    weights = config.configMpi.weightsScan;
+                    weights = config.mpi.weightsScan;
                 }
 
-                let porcentajeMatchMax = config.configMpi.cotaMatchMax;
-                let porcentajeMatchMin = config.configMpi.cotaMatchMin;
+                let porcentajeMatchMax = config.mpi.cotaMatchMax;
+                let porcentajeMatchMin = config.mpi.cotaMatchMin;
                 let listaPacientesMax = [];
                 let listaPacientesMin = [];
                 let devolverPorcentaje = req.query.percentage;
@@ -590,7 +573,7 @@ router.get('/pacientes', function (req, res, next) {
                             documento: req.query.documento ? req.query.documento.toString() : '',
                             nombre: req.query.nombre ? req.query.nombre : '',
                             apellido: req.query.apellido ? req.query.apellido : '',
-                            fechaNacimiento: req.query.fechaNacimiento ? moment(req.query.fechaNacimiento).format('YYYY-MM-DD'): '',
+                            fechaNacimiento: req.query.fechaNacimiento ? moment(req.query.fechaNacimiento).format('YYYY-MM-DD') : '',
                             sexo: req.query.sexo ? req.query.sexo : ''
                         };
                         let pacElastic = {
@@ -691,7 +674,7 @@ router.post('/pacientes/mpi', function (req, res, next) {
     let match = new matching();
     let newPatientMpi = new pacienteMpi(req.body);
     let connElastic = new Client({
-        host: config.connectionStrings.elastic_main,
+        host: configPrivate.hosts.elastic_main,
     });
     // Se genera la clave de blocking
     let claves = match.crearClavesBlocking(newPatientMpi);
@@ -731,7 +714,7 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
         _id: objectId
     };
     let connElastic = new Client({
-        host: config.connectionStrings.elastic_main,
+        host: configPrivate.hosts.elastic_main,
     });
     let match = new matching();
 
@@ -889,7 +872,7 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
 router.delete('/pacientes/mpi/:id', function (req, res, next) {
 
     let connElastic = new Client({
-        host: config.connectionStrings.elastic_main,
+        host: configPrivate.hosts.elastic_main,
     });
 
     let ObjectId = (require('mongoose').Types.ObjectId);
@@ -948,7 +931,7 @@ router.post('/pacientes', function (req, res, next) {
     let match = new matching();
     let newPatient = new paciente(req.body);
     let connElastic = new Client({
-        host: config.connectionStrings.elastic_main,
+        host: configPrivate.hosts.elastic_main,
     });
 
     // Se genera la clave de blocking
@@ -963,7 +946,7 @@ router.post('/pacientes', function (req, res, next) {
             console.log('Error al persistir los datos: ', err);
             return next(err);
         }
-      //  console.log("NEW PATIENT:   ", newPatient['fechaNacimiento']);
+        //  console.log("NEW PATIENT:   ", newPatient['fechaNacimiento']);
         let nuevoPac = JSON.parse(JSON.stringify(newPatient));
         delete nuevoPac._id;
 
@@ -973,7 +956,7 @@ router.post('/pacientes', function (req, res, next) {
             id: newPatient._id.toString(),
             body: nuevoPac
         }, function (error, response) {
-         //   console.log("PACIENTE ELASTIC EN POST:  ",nuevoPac);
+            //   console.log("PACIENTE ELASTIC EN POST:  ",nuevoPac);
             //console.log('Respuesta elastic', response);
             if (error) {
                 console.log(error);
@@ -1024,7 +1007,7 @@ router.put('/pacientes/:id', function (req, res, next) {
         _id: objectId
     };
     let connElastic = new Client({
-        host: config.connectionStrings.elastic_main,
+        host: configPrivate.hosts.elastic_main,
     });
     let match = new matching();
 
@@ -1033,13 +1016,13 @@ router.put('/pacientes/:id', function (req, res, next) {
             console.log('Error del findByID: ', err);
             return next(404);
         }
-      //  console.log("REQ BODY ---------------------- ",req.body);
+        //  console.log("REQ BODY ---------------------- ",req.body);
         let pacienteOriginal = null;
         if (patientFound) {
-           
+
             // Guarda los valores originales para el logger
             pacienteOriginal = patientFound.toObject();
-             
+
             /*Update de paciente de todos los campos salvo que esté validado*/
             if (patientFound.estado !== 'validado') {
                 patientFound.documento = req.body.documento;
@@ -1068,7 +1051,7 @@ router.put('/pacientes/:id', function (req, res, next) {
             patientFound.identificadores = req.body.identificadores;
             patientFound.scan = req.body.scan;
             patientFound.reportarError = req.body.reportarError;
-         //   console.log("PATIENT FOUND ------------------",patientFound)
+            //   console.log("PATIENT FOUND ------------------",patientFound)
             // Habilita auditoria y guarda
             Auth.audit(patientFound, req);
             patientFound.save(function (err2) {
@@ -1127,7 +1110,7 @@ router.put('/pacientes/:id', function (req, res, next) {
             req.body._id = req.body.id;
             let newPatient = new paciente(req.body);
 
-           // console.log("NEW PATIENT---------------",newPatient);
+            // console.log("NEW PATIENT---------------",newPatient);
             let claves = match.crearClavesBlocking(newPatient);
             newPatient['claveBlocking'] = claves;
             newPatient['apellido'] = newPatient['apellido'].toUpperCase();
@@ -1224,7 +1207,7 @@ router.delete('/pacientes/:id', function (req, res, next) {
     console.log('ingreso a borrar api');
     let ObjectId = mongoose.Types.ObjectId;
     let connElastic = new Client({
-        host: config.connectionStrings.elastic_main,
+        host: configPrivate.hosts.elastic_main,
     });
     let objectId = new ObjectId(req.params.id);
     let query = {
@@ -1310,12 +1293,9 @@ function updateCarpetaEfectores(req, data) {
 router.patch('/pacientes/:id', function (req, res, next) {
     let ObjectId = mongoose.Types.ObjectId;
     let connElastic = new Client({
-        host: config.connectionStrings.elastic_main,
+        host: configPrivate.hosts.elastic_main,
     });
-    let objectId = new ObjectId(req.params.id);
-    // let query = {
-    //     _id: objectId
-    // };
+
     paciente.findById(req.params.id, function (err, patientFound) {
 
         if (err) {

@@ -1,5 +1,5 @@
 # Archivos de configuración
-config.ts
+config.private.ts
 
 # Logs
 logs

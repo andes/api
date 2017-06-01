@@ -25,7 +25,7 @@ router.get('/prestaciones/forKey', function (req, res, next) {
             let lista = [];
             let listaValores = [];
             if (prestaciones.length > 0) {
-                prestaciones.forEach( prestacion => {   
+                prestaciones.forEach((prestacion: any) => {
                     prestacion.ejecucion.evoluciones.forEach(evolucion => {
                         let valor = evolucion.valores;
                         lista = findValues(valor, key);
@@ -160,7 +160,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         populate: {
             path: 'tipoProblema',
             model: 'tipoProblema'
-        }       
+        }
     });
 
     query.populate({
@@ -169,7 +169,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         populate: {
             path: 'evoluciones.profesional',
             model: 'profesional'
-        }       
+        }
     });
 
     //populuamos las prestaciones a futuro
@@ -220,29 +220,29 @@ router.post('/prestaciones', function (req, res, next) {
 
 
 router.put('/prestaciones/:id', function (req, res, next) {
-   let prestacion;
-   prestacion = new prestacionPaciente(req.body);
-   let evolucion = prestacion.ejecucion.evoluciones[prestacion.ejecucion.evoluciones.length - 1];
-   prestacionPaciente.findById(prestacion.id, function (err, data) {
-       if (err) {
-           return next(err);
-       }
-       let prest;    
-       prest = data;
-       let evoluciones = prest.ejecucion.evoluciones;
-       evoluciones.push(evolucion);
-       prestacion.ejecucion.evoluciones =  evoluciones;      
-       Auth.audit(prestacion, req);
+    let prestacion;
+    prestacion = new prestacionPaciente(req.body);
+    let evolucion = prestacion.ejecucion.evoluciones[prestacion.ejecucion.evoluciones.length - 1];
+    prestacionPaciente.findById(prestacion.id, function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        let prest;
+        prest = data;
+        let evoluciones = prest.ejecucion.evoluciones;
+        evoluciones.push(evolucion);
+        prestacion.ejecucion.evoluciones = evoluciones;
+        Auth.audit(prestacion, req);
 
-       prestacionPaciente.findByIdAndUpdate(prestacion.id, prestacion, {
-           new: true
-       }, function (err2, data2) {
-           if (err2) {
-               return next(err2);
-           }
-           res.json(data2);
-       });
-   });
+        prestacionPaciente.findByIdAndUpdate(prestacion.id, prestacion, {
+            new: true
+        }, function (err2, data2) {
+            if (err2) {
+                return next(err2);
+            }
+            res.json(data2);
+        });
+    });
 });
 
 
@@ -252,29 +252,29 @@ router.patch('/prestaciones/:id', function (req, res, next) {
     let modificacion = {};
 
     switch (req.body.op) {
-    case 'estado':
-        if (req.body.estado) {
-            modificacion = { $set : {'estado': req.body.estado } }
-        }
-    break;
-    case 'listaProblemas':
-        if (req.body.problema) {                
-            modificacion = {"$push": { "ejecucion.listaProblemas": req.body.problema } }
-        }
-    break;
-    default:
-        next('Error: No se seleccionó ninguna opción.');
-    break;
+        case 'estado':
+            if (req.body.estado) {
+                modificacion = { $set: { 'estado': req.body.estado } }
+            }
+            break;
+        case 'listaProblemas':
+            if (req.body.problema) {
+                modificacion = { "$push": { "ejecucion.listaProblemas": req.body.problema } }
+            }
+            break;
+        default:
+            next('Error: No se seleccionó ninguna opción.');
+            break;
     }
 
     if (modificacion) {
-        prestacionPaciente.findByIdAndUpdate(req.params.id, modificacion , { upsert: true },
-        function (err, data) {
-            if (err) {
-                return next(err);
-            }
-            res.json(data);
-        });
+        prestacionPaciente.findByIdAndUpdate(req.params.id, modificacion, { upsert: true },
+            function (err, data) {
+                if (err) {
+                    return next(err);
+                }
+                res.json(data);
+            });
     } //if (modificacion)
 
 });

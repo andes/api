@@ -1,4 +1,4 @@
-import { configMpi } from './../../../config';
+import { mpi } from './../../../config';
 import * as mongoose from 'mongoose';
 import * as organizacion from '../../../core/tm/schemas/organizacion';
 

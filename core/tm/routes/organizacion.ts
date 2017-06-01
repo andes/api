@@ -3,12 +3,10 @@ import * as organizacion from '../schemas/organizacion';
 import * as utils from '../../../utils/utils';
 import { defaultLimit, maxLimit } from './../../../config';
 import * as https from 'https';
-import * as config from '../../../config';
+import * as configPrivate from '../../../config.private';
 
 let GeoJSON = require('geojson');
-
 let router = express.Router();
-
 
 router.get('/organizaciones/georef/:id?', function (req, res, next) {
     if (req.params.id) {
@@ -25,7 +23,7 @@ router.get('/organizaciones/georef/:id?', function (req, res, next) {
             let pais = organizacion.direccion.ubicacion.pais;
             let pathGoogleApi = '';
             let jsonGoogle = '';
-            pathGoogleApi = '/maps/api/geocode/json?address=' + dir + ',+' + localidad + ',+' + provincia + ',+' + 'AR' + '&key=' + config.geoKey;
+            pathGoogleApi = '/maps/api/geocode/json?address=' + dir + ',+' + localidad + ',+' + provincia + ',+' + 'AR' + '&key=' + configPrivate.geoKey;
 
             pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
             pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
