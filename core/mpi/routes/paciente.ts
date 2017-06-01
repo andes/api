@@ -2,9 +2,7 @@ import { ValidateDarTurno } from './../../../utils/validateDarTurno';
 import {
     tipoPrestacion
 } from './../../tm/schemas/tipoPrestacion';
-import {
-    matching
-} from '@andes/match/matching';
+import { matching } from '@andes/match';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import {

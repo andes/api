@@ -22,6 +22,15 @@ export function initAPI(app: Express) {
         console.log('[Mongoose] No se pudo conectar al servidor');
     });
 
+    // conexión hacia snomed
+    let snomed_db = mongoose.createConnection(config.connectionStrings.snomed);
+
+    snomed_db.on('connected', function() {  
+        console.log('             oo                  ');
+        console.log(". . . __/\_/\_/`'                  ");
+        console.log('[Mongoose] Conexión SNOMED OK      ');
+    });
+
     // Inicializa la autenticación con Password/JWT
     Auth.initialize(app);
 
