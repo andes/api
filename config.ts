@@ -2,12 +2,6 @@
 // Todas los datos privado (credenciales, IPs, ...) deben quedar en el archivo config.private.ts
 // !!!!!!!!!!!!!!!!!!!!!!!!!!
 
-// Configuración de Passport
-export const auth = {
-    useLdap: false,
-    ldapOU: 'ou=People,o=integrabilidad,o=neuquen',
-};
-
 // Habilita/deshabilita módulos de la API
 export const modules = {
     auth: {

@@ -1,6 +1,5 @@
 import * as express from 'express';
 import * as ldapjs from 'ldapjs';
-import * as config from '../../config';
 import * as configPrivate from '../../config.private';
 import { Auth } from './../auth.class';
 import * as organizacion from '../schemas/organizacion';
@@ -50,12 +49,12 @@ router.post('/login', function (req, res, next) {
     }
 
     // Usar LDAP?
-    if (!config.auth.useLdap) {
+    if (!configPrivate.auth.useLdap) {
         // Access de prueba
         login(req.body.usuario, req.body.usuario);
     } else {
         // Conecta a LDAP
-        let dn = 'uid=' + req.body.usuario + ',' + config.auth.ldapOU;
+        let dn = 'uid=' + req.body.usuario + ',' + configPrivate.auth.ldapOU;
         let ldap = ldapjs.createClient({ url: `ldap://${configPrivate.hosts.ldap}` });
         ldap.bind(dn, req.body.password, function (err) {
             if (err) {
