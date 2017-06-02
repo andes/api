@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as swaggerJSDoc from 'swagger-jsdoc';
 import * as express from 'express';
 import * as passport from 'passport';
+import * as configPrivate from './config.private';
 
 export class Swagger {
     /**
@@ -13,6 +14,10 @@ export class Swagger {
      * @memberOf Auth
      */
     static initialize(app: express.Express) {
+        if (!configPrivate.enableSwagger) {
+            return;
+        }
+
         // Configura passport para que utilice JWT
         // swagger definition
         let swaggerDefinition = {
@@ -24,73 +29,73 @@ export class Swagger {
             host: '10.1.62.17',
             basePath: '/api',
             definitions: {
-                "referencia": {
-                    "type": "object",
-                    "properties": {
-                        "id":
-                        { "type": "string" },
-                        "nombre":
-                        { "type": "string" }
+                'referencia': {
+                    'type': 'object',
+                    'properties': {
+                        'id':
+                        { 'type': 'string' },
+                        'nombre':
+                        { 'type': 'string' }
                     }
                 },
-                "ubicacion": {
-                    "type": "object",
-                    "properties": {
-                        "barrio": {
+                'ubicacion': {
+                    'type': 'object',
+                    'properties': {
+                        'barrio': {
                             $ref: '#/definitions/referencia'
                         },
-                        "localidad": {
+                        'localidad': {
                             $ref: '#/definitions/referencia'
                         },
-                        "provincia": {
+                        'provincia': {
                             $ref: '#/definitions/referencia'
                         },
-                        "pais": {
+                        'pais': {
                             $ref: '#/definitions/referencia'
                         }
                     }
                 },
-                "direccion": {
-                    "type": "object",
-                    "properties": {
-                        "valor":
-                        { "type": "string" },
-                        "codigoPostal":
-                        { "type": "string" },
-                        "ubicacion": {
+                'direccion': {
+                    'type': 'object',
+                    'properties': {
+                        'valor':
+                        { 'type': 'string' },
+                        'codigoPostal':
+                        { 'type': 'string' },
+                        'ubicacion': {
                             $ref: '#/definitions/ubicacion'
                         },
-                        "ranking":
-                        { "type": "number" },
-                        "geoReferencia":
+                        'ranking':
+                        { 'type': 'number' },
+                        'geoReferencia':
                         {
-                            "type": "array",
-                            "items": { "type": "number" }
+                            'type': 'array',
+                            'items': { 'type': 'number' }
                         },
-                        "ultimaActualizacion":
-                        { "type": "string", "format": "date" },
-                        "activo":
-                        { "type": "boolean" }
+                        'ultimaActualizacion':
+                        { 'type': 'string', 'format': 'date' },
+                        'activo':
+                        { 'type': 'boolean' }
                     }
                 },
-                "contacto": {
-                    "type": "object",
-                    "properties": {
-                        "proposito":
-                        { "type": "String" },
-                        "nombre":
-                        { "type": "String" },
-                        "apellido":
-                        { "type": "String" },
-                        "tipo":
+                'contacto': {
+                    'type': 'object',
+                    'properties': {
+                        'proposito':
+                        { 'type': 'String' },
+                        'nombre':
+                        { 'type': 'String' },
+                        'apellido':
+                        { 'type': 'String' },
+                        'tipo':
                         {
-                            "type": "String",
-                            "enum": ["Teléfono Fijo", "Teléfono Celular", "Email"]
+                            'type': 'String',
+                            'enum': ['Teléfono Fijo', 'Teléfono Celular', 'Email']
                         },
-                        "valor":
-                        { "type": "string" },
-                        "activo":
-                        { "type": "boolean" }
+                        'valor':
+                        { 'type': 'string' },
+                        'activo':
+                        { 'type': 'boolean' }
                     }
                 }
             }
@@ -114,11 +119,10 @@ export class Swagger {
             res.send(swaggerSpec);
         });
 
-        //Incluimos swagger-ui
+        // Incluimos swagger-ui
         app.use('/api-docs', express.static(__dirname + '/api-docs'));
 
         // Inicializa passport
         app.use(passport.initialize());
     }
-
 }

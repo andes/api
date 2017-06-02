@@ -83,7 +83,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
     } else {
         if (req.query.estado) {
             query = prestacionPaciente.find({
-                $where: 'this.estado[this.estado.length - 1].tipo == "' + req.query.estado + '"';
+                $where: 'this.estado[this.estado.length - 1].tipo == "' + req.query.estado + '"'
             });
         } else {
             query = prestacionPaciente.find({}); // Trae todos

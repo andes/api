@@ -398,7 +398,7 @@ router.get('/pacientes/dashboard/', function (req, res, next) {
 
 // Simple mongodb query by ObjectId --> better performance
 router.get('/pacientes/:id', function (req, res, next) {
-    buscarPaciente(req.params.id).then((resultado) => {
+    buscarPaciente(req.params.id).then((resultado: any) => {
         if (resultado) {
             Logger.log(req, 'mpi', 'query', {
                 mongoDB: resultado.paciente

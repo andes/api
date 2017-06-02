@@ -1,7 +1,6 @@
 import * as mongoose from 'mongoose';
 import * as evolucionSchema from './evolucion';
 import * as financiadorSchema from '../../../core/mpi/schemas/financiador';
-import { problemaSchema } from './problema';
 import * as organizacion from '../../../core/tm/schemas/organizacion';
 import { pacienteSchema } from '../../../core/mpi/schemas/paciente';
 import { profesionalSchema } from '../../../core/tm/schemas/profesional';
@@ -100,7 +99,6 @@ export let prestacionPacienteSchema = new mongoose.Schema({
         },
 
         auditoria: auditoriaPrestacionPacienteSchema
-
     },
 
 

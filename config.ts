@@ -1,5 +1,5 @@
 // !!!!!!!! ATENCIÓN !!!!!!!!
-// Todas los datos privado (credenciales, IPs, ...) deben quedar en el archivo config.private.ts
+// Todas los datos privados (credenciales, IPs, ...) deben quedar en el archivo config.private.ts
 // !!!!!!!!!!!!!!!!!!!!!!!!!!
 
 // Habilita/deshabilita módulos de la API
@@ -77,24 +77,24 @@ export const maxLimit = 1000;
 
 // Configuracion MPI
 export const mpi = {
-   cotaMatchMin: 0.80,
-   cotaMatchMax: 0.90,
-   weightsDefault: {
-       identity: 0.55,
-       name: 0.10,
-       gender: 0.25,
-       birthDate: 0.10
-   },
-   weightsMin: {
-       identity: 0.4,
-       name: 0.6,
-       gender: 0,
-       birthDate: 0
-   },
-   weightsScan: {
-       identity: 0.55,
-       name: 0.10,
-       gender: 0.25,
-       birthDate: 0.10
-   }
+    cotaMatchMin: 0.80,
+    cotaMatchMax: 0.90,
+    weightsDefault: {
+        identity: 0.55,
+        name: 0.10,
+        gender: 0.3,
+        birthDate: 0.05
+    },
+    weightsMin: {
+        identity: 0.4,
+        name: 0.6,
+        gender: 0,
+        birthDate: 0
+    },
+    weightsScan: {
+        identity: 0.55,
+        name: 0.10,
+        gender: 0.3,
+        birthDate: 0.05
+    }
 };
