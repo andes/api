@@ -6,13 +6,17 @@ import { Swagger } from './swagger';
 import * as HttpStatus from 'http-status-codes';
 import { schemaDefaults } from './mongoose/defaults';
 import { Express } from 'express';
+
+//import { snomedDB } from './snomed';
 let requireDir = require('require-dir');
 
 export function initAPI(app: Express) {
+    
     // Configuración de Mongoose
     if (config.mongooseDebugMode) {
         mongoose.set('debug', true);
     }
+    
     mongoose.connect(config.connectionStrings.mongoDB_main, { db: { bufferMaxEntries: 0 } });
     mongoose.plugin(schemaDefaults);
     mongoose.connection.on('connected', function () {
@@ -21,15 +25,24 @@ export function initAPI(app: Express) {
     mongoose.connection.on('error', function (err) {
         console.log('[Mongoose] No se pudo conectar al servidor');
     });
+    
 
+    /*
     // conexión hacia snomed
-    let snomed_db = mongoose.createConnection(config.connectionStrings.snomed);
-
-    snomed_db.on('connected', function() {  
+    let snomedDB = mongoose.createConnection(config.connectionStrings.snomed);
+    //mongoose.createConnection(config.connectionStrings.snomed);
+    //mongoose.connect(config.connectionStrings.snomed);
+    
+    snomedDB.on('error', function(err){
+        if(err) throw err;
+    });
+    snomedDB.on('connected', function() {  
         console.log('             oo                  ');
         console.log(". . . __/\_/\_/`'                  ");
         console.log('[Mongoose] Conexión SNOMED OK      ');
     });
+    */
+   
 
     // Inicializa la autenticación con Password/JWT
     Auth.initialize(app);
