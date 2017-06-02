@@ -10,7 +10,7 @@ var turnoSchema = new mongoose.Schema({
     },
     estado: {
         type: String,
-        enum: ['disponible', 'asignado', 'suspendido'],
+        enum: ['disponible', 'asignado', 'suspendido', 'turnoDoble'],
         default: 'disponible'
     },
     tipoTurno: {
