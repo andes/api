@@ -1,5 +1,5 @@
 import { ValidateFormatDate } from './validateFormatDate';
-import  { matching } from "@andes/match/matching";
+import  { matching } from "@andes/match";
 import * as config from '../config';
 import * as https from 'https';
 var to_json = require('xmljson').to_json;
@@ -169,7 +169,7 @@ export class servicioSintys {
         // Verifica si el paciente tiene un documento valido y realiza la búsqueda a través de Sintys
         let matchPorcentaje = 0;
         let pacienteSintys = {};
-        let weights = config.configMpi.weightsDefault;
+        let weights = config.mpi.weightsDefault;
         let match = new matching();
 
         paciente["matchSintys"] = 0;

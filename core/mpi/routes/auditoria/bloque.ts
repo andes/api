@@ -1,7 +1,7 @@
 import { servicioSintys } from '../../../../utils/servicioSintys';
 import * as express from 'express';
 import { paciente } from '../../schemas/paciente';
-import { servicioSisa } from '../../../../utils/servicioSisa';
+import { ServicioSisa } from '../../../../utils/servicioSisa';
 import * as config from '../../../../config';
 
 var router = express.Router();
@@ -77,9 +77,9 @@ router.get('/bloques/pacientesSisa/:idTipoBloque/:idBloque', function (req, res,
         if (err) {
             next(err);
         };
-        let servSisa = new servicioSisa();
+        let servSisa = new ServicioSisa();
         let pacientesRes = [];
-        let weights = config.configMpi.weightsDefault;
+        let weights = config.mpi.weightsDefault;
         let listaPac;
         listaPac = data;
         listaPac.forEach(function (elem) {
@@ -159,7 +159,7 @@ router.post('/bloques/pacientes/validar', function (req, res, next) {
     console.log("Entra a validar", req.body);
     var pacienteVal = new paciente(req.body.paciente);
     var entidad = req.body.entidad;
-    var servSisa = new servicioSisa();
+    var servSisa = new ServicioSisa();
     var datoCompleto = { "paciente": pacienteVal, "matcheos": { "entidad": entidad, "matcheo": 0, "datosPaciente": {} } };
     servSisa.validarPaciente(datoCompleto, entidad).then(resultado => {
         res.json(resultado);
@@ -177,7 +177,7 @@ router.post('/bloques/pacientes/validarActualizar', function (req, res, next) {
     var entidad = req.body.entidad;
     var datosPacEntidad = req.body.DatoPacEntidad;
 
-    var servSisa = new servicioSisa();
+    var servSisa = new ServicioSisa();
     console.log("entidad", entidad);
     var datoCompleto = { "paciente": pacienteVal, "matcheos": { "entidad": entidad, "matcheo": 0, "datosPaciente": datosPacEntidad } };
     console.log("Dato Completo", datoCompleto);
@@ -204,9 +204,9 @@ router.get('/bloques/pacientesSintys/:idb/:id', function (req, res, next) {
             next(err);
         };
         var servSintys = new servicioSintys();
-        var servSisa = new servicioSisa();
+        var servSisa = new ServicioSisa();
         var pacientesRes = [];
-        var weights = config.configMpi.weightsDefault;
+        var weights = config.mpi.weightsDefault;
         var listaPac;
         listaPac = data;
         listaPac.forEach(function (elem) {

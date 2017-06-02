@@ -270,8 +270,8 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                     break;
             }
 
+            console.log('data ', (data as any).bloques[0].turnos);
             Auth.audit(data, req);
-
             data.save(function (err) {
 
                 Logger.log(req, 'turnos', 'update', {

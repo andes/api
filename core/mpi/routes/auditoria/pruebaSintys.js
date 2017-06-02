@@ -1,6 +1,6 @@
 "use strict";
-var express = require("express");
-var servicioSintys_1 = require("../../../../utils/servicioSintys");
+const express = require("express");
+const servicioSintys_1 = require("../../../../utils/servicioSintys");
 var router = express.Router();
 router.get('/pacientesMatchSintys/', function (req, res, next) {
     var unPaciente = {
@@ -70,11 +70,11 @@ router.get('/pacienteSintys/:id', function (req, res, next) {
         birthDate: 0.3
     };
     var datos = servSintys.getPacienteSintys(unDocumento);
-    Promise.all(pacientesRes).then(function (values) {
+    Promise.all(pacientesRes).then(values => {
         console.log(values);
         pacientesRes.push(values);
         res.json(values);
-    }).catch(function (err) {
+    }).catch(err => {
         console.log(err);
         next(err);
     });

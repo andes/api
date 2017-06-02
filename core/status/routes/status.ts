@@ -1,14 +1,13 @@
 import * as express from 'express';
-import * as mongoose from 'mongoose';
-import { connection } from './../../../connectMpi';
+import { Connections } from './../../../connections';
 
 let router = express.Router();
 
 router.get('/', function (req, res, next) {
     res.json({
         API: 'OK',
-        DB: mongoose.connection.readyState !== 1 ? 'Error' : 'OK',
-        MPI: connection.readyState !== 1 ? 'Error' : 'OK',
+        DB: Connections.main.readyState !== 1 ? 'Error' : 'OK',
+        MPI: Connections.mpi.readyState !== 1 ? 'Error' : 'OK',
     });
 });
 

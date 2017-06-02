@@ -5,7 +5,7 @@ import * as mongoose from 'mongoose';
 import * as passport from 'passport';
 import * as passportJWT from 'passport-jwt';
 import * as jwt from 'jsonwebtoken';
-import * as config from '../config';
+import * as configPrivate from '../config.private';
 let shiroTrie = require('shiro-trie');
 
 export class Auth {
@@ -40,7 +40,7 @@ export class Auth {
         // Configura passport para que utilice JWT
         passport.use(new passportJWT.Strategy(
             {
-                secretOrKey: config.auth.privateKey,
+                secretOrKey: configPrivate.auth.jwtKey,
                 jwtFromRequest: passportJWT.ExtractJwt.fromAuthHeader()
             },
             function (jwt_payload, done) {
@@ -165,7 +165,7 @@ export class Auth {
             organizacion: organizacion,
             permisos: permisos.permisos
         };
-        return jwt.sign(token, config.auth.privateKey, { expiresIn: 60 * 60 * 24 * 10 /* 10 días */ });
+        return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: 60 * 60 * 24 * 10 /* 10 días */ });
     }
 
     /**
@@ -189,6 +189,6 @@ export class Auth {
             organizacion: organizacion,
             permisos: permisos
         };
-        return jwt.sign(token, config.auth.privateKey);
+        return jwt.sign(token, configPrivate.auth.jwtKey);
     }
 }
