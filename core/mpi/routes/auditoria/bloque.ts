@@ -1,7 +1,8 @@
 import { servicioSintys } from '../../../../utils/servicioSintys';
 import * as express from 'express';
 import { paciente } from '../../schemas/paciente';
-import { ServicioSisa } from '../../../../utils/servicioSisa';
+import * as  ServicioSisa from '../../../../utils/servicioSisa';
+import * as  validarSisa from '../../../../utils/validarPacienteSisa';
 import * as config from '../../../../config';
 
 var router = express.Router();
@@ -77,7 +78,7 @@ router.get('/bloques/pacientesSisa/:idTipoBloque/:idBloque', function (req, res,
         if (err) {
             next(err);
         };
-        let servSisa = new ServicioSisa();
+        //let servSisa = new ServicioSisa();
         let pacientesRes = [];
         let weights = config.mpi.weightsDefault;
         let listaPac;
@@ -85,7 +86,7 @@ router.get('/bloques/pacientesSisa/:idTipoBloque/:idBloque', function (req, res,
         listaPac.forEach(function (elem) {
             var valorSisa = 0;
             var auxPac = elem;
-            pacientesRes.push(servSisa.matchSisa(auxPac));
+            pacientesRes.push(ServicioSisa.matchSisa(auxPac));
         })
         Promise.all(pacientesRes).then(values => {
             var arrPacValidados;
@@ -95,7 +96,7 @@ router.get('/bloques/pacientesSisa/:idTipoBloque/:idBloque', function (req, res,
                 var datoPac;
                 datoPac = pacVal;
                 if (datoPac.matcheos.matcheo >= 99 && datoPac.paciente.estado == 'temporal') {
-                    arrSalida.push(servSisa.validarPaciente(datoPac, "Sisa"))
+                    arrSalida.push(validarSisa.validarPaciente(datoPac, "Sisa"))
                 } else {
                     arrSalida.push(datoPac);
                 }
@@ -159,9 +160,9 @@ router.post('/bloques/pacientes/validar', function (req, res, next) {
     console.log("Entra a validar", req.body);
     var pacienteVal = new paciente(req.body.paciente);
     var entidad = req.body.entidad;
-    var servSisa = new ServicioSisa();
+    //var servSisa = new ServicioSisa();
     var datoCompleto = { "paciente": pacienteVal, "matcheos": { "entidad": entidad, "matcheo": 0, "datosPaciente": {} } };
-    servSisa.validarPaciente(datoCompleto, entidad).then(resultado => {
+    validarSisa.validarPaciente(datoCompleto, entidad).then(resultado => {
         res.json(resultado);
     })
         .catch(err => {
@@ -177,11 +178,11 @@ router.post('/bloques/pacientes/validarActualizar', function (req, res, next) {
     var entidad = req.body.entidad;
     var datosPacEntidad = req.body.DatoPacEntidad;
 
-    var servSisa = new ServicioSisa();
+    //var servSisa = new ServicioSisa();
     console.log("entidad", entidad);
     var datoCompleto = { "paciente": pacienteVal, "matcheos": { "entidad": entidad, "matcheo": 0, "datosPaciente": datosPacEntidad } };
     console.log("Dato Completo", datoCompleto);
-    servSisa.validarActualizarPaciente(datoCompleto, entidad, datosPacEntidad).then(resultado => {
+    validarSisa.validarActualizarPaciente(datoCompleto, entidad, datosPacEntidad).then(resultado => {
         res.json(resultado);
     })
         .catch(err => {
@@ -204,7 +205,7 @@ router.get('/bloques/pacientesSintys/:idb/:id', function (req, res, next) {
             next(err);
         };
         var servSintys = new servicioSintys();
-        var servSisa = new ServicioSisa();
+        //var servSisa = new ServicioSisa();
         var pacientesRes = [];
         var weights = config.mpi.weightsDefault;
         var listaPac;
@@ -223,7 +224,7 @@ router.get('/bloques/pacientesSintys/:idb/:id', function (req, res, next) {
                 var datoPac;
                 datoPac = pacVal;
                 if (datoPac.matcheos.matcheo >= 99 && datoPac.paciente.estado == 'temporal') {
-                    arrSalida.push(servSisa.validarPaciente(datoPac, "Sintys"))
+                    arrSalida.push(validarSisa.validarPaciente(datoPac, "Sintys"))
                 } else {
                     arrSalida.push(datoPac);
                 }
