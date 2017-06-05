@@ -1014,8 +1014,8 @@ router.put('/pacientes/:id', function (req, res, next) {
             // Guarda los valores originales para el logger
             pacienteOriginal = patientFound.toObject();
 
-            /*Update de paciente de todos los campos salvo que esté validado*/
-            if (patientFound.estado !== 'validado') {
+            /*Update de paciente de todos los campos salvo que esté validado o halla sido escaneado*/
+            if (patientFound.estado !== 'validado' || patientFound.isScan) {
                 patientFound.documento = req.body.documento;
                 patientFound.estado = req.body.estado;
                 patientFound.nombre = req.body.nombre;
