@@ -21,6 +21,8 @@ export function getSisaCiudadano(nroDocumento, usuario, clave, sexo?: string) {
         pathSisa = '/sisa/services/rest/cmdb/obtener?nrodoc=' + nroDocumento + '&sexo=' + sexo + '&usuario=' + usuario + '&clave=' + clave;
     }
 
+    console.log('El path de sisa es: ', pathSisa)
+
     let optionsgetmsg = {
         host: 'sisa.msal.gov.ar', // nombre del dominio // (no http/https !)
         port: 443,
@@ -170,17 +172,18 @@ export function matchSisa(paciente) {
     paciente['matchSisa'] = 0;
     // Se buscan los datos en sisa y se obtiene el paciente
     return new Promise((resolve, reject) => {
-
         if (paciente.documento) {
             if (paciente.documento.length >= 7) {
-
-                this.getSisaCiudadano(paciente.documento, configPrivate.sisa.username, configPrivate.sisa.password)
+                let sexo = null;
+                if (paciente.sexo) {
+                    sexo = (paciente.sexo === 'femenino') ? 'F' : 'M';
+                }
+                // OJO: Es sólo para pacientes con SEXO debido a que pueden existir distintos pacientes con el mismo DNI
+                this.getSisaCiudadano(paciente.documento, configPrivate.sisa.username, configPrivate.sisa.password, sexo)
                     .then((resultado) => {
                         if (resultado) {
                             // Verifico el resultado devuelto por el rest de Sisa
-                            console.log('Renaper', resultado[1].Ciudadano.identificadoRenaper);
                             if (resultado[0] === 200) {
-
                                 switch (resultado[1].Ciudadano.resultado) {
                                     case 'OK':
                                         if (resultado[1].Ciudadano.identificadoRenaper && resultado[1].Ciudadano.identificadoRenaper !== 'NULL') {
@@ -192,35 +195,36 @@ export function matchSisa(paciente) {
                                             resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sisa', 'matcheo': 0, 'datosPaciente': null } });
                                         }
                                         break;
-                                    case 'MULTIPLE_RESULTADO':
+                                    // case 'MULTIPLE_RESULTADO':
+                                    //     let sexo = 'F';
+                                    //     if (paciente.sexo === 'femenino') {
+                                    //         sexo = 'F';
+                                    //     }
+                                    //     if (paciente.sexo === 'masculino') {
+                                    //         sexo = 'M';
+                                    //     }
+                                    //     // Esta promise no funcionaba porque pasaba de largo
+                                    //     this.getSisaCiudadano(paciente.documento, configPrivate.sisa.username, configPrivate.sisa.password, sexo)
+                                    //         .then((res) => {
+                                    //             console.log('El RES que tengoq que ver!!! ', res);
+                                    //             if (res[1].Ciudadano.resultado === 'OK') {
+                                    //                 console.log('Si paso por aca no debería enviar a rejected');
+                                    //                 if (resultado[1].Ciudadano.identificadoRenaper && resultado[1].Ciudadano.identificadoRenaper !== 'NULL') {
+                                    //                     pacienteSisa = this.formatearDatosSisa(res[1].Ciudadano);
+                                    //                     matchPorcentaje = match.matchPersonas(paciente, pacienteSisa, weights);
+                                    //                     matchPorcentaje = (matchPorcentaje * 100);
+                                    //                     resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sisa', 'matcheo': matchPorcentaje, 'datosPaciente': pacienteSisa } });
+                                    //                 } else {
+                                    //                     resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sisa', 'matcheo': 0, 'datosPaciente': null } });
+                                    //                 }
+                                    //             }
 
-                                        let sexo = 'F';
-                                        if (paciente.sexo === 'femenino') {
-                                            sexo = 'F';
-                                        }
-                                        if (paciente.sexo === 'masculino') {
-                                            sexo = 'M';
-                                        }
+                                    //         })
+                                    //         .catch((err) => {
+                                    //             reject(err);
+                                    //         })
 
-                                        this.getSisaCiudadano(paciente.documento, configPrivate.sisa.username, configPrivate.sisa.password, sexo)
-                                            .then((res) => {
-                                                if (res[1].Ciudadano.resultado === 'OK') {
-                                                    if (resultado[1].Ciudadano.identificadoRenaper && resultado[1].Ciudadano.identificadoRenaper !== 'NULL') {
-                                                        pacienteSisa = this.formatearDatosSisa(res[1].Ciudadano);
-                                                        matchPorcentaje = match.matchPersonas(paciente, pacienteSisa, weights);
-                                                        matchPorcentaje = (matchPorcentaje * 100);
-                                                        resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sisa', 'matcheo': matchPorcentaje, 'datosPaciente': pacienteSisa } });
-                                                    } else {
-                                                        resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sisa', 'matcheo': 0, 'datosPaciente': null } });
-                                                    }
-                                                }
-
-                                            })
-                                            .catch((err) => {
-                                                reject(err);
-                                            })
-
-                                        break;
+                                    //     break;
                                     default:
                                         resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sisa', 'matcheo': 0, 'datosPaciente': null } });
                                         break;
@@ -235,7 +239,7 @@ export function matchSisa(paciente) {
 
                     })
                     .catch((err) => {
-                        console.error('Error consulta rest Sisa:' + err)
+                        console.error('Error consulta rest Sisa:' + err);
                         reject(err);
                     });
 
