@@ -127,7 +127,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
               update[etiquetaUpdateAt] = new Date();
               update[etiquetaUpdateBy] = usuario;
 
-              console.log('update ', update);
               let query = {
                 _id: req.params.idAgenda,
               };
