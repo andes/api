@@ -68,7 +68,6 @@ router.get('/carpetasPacientes/:id*?', function(req, res, next) {
     } else {
         let query;
         query = carpetaPaciente.find({});
-        console.log(req.query);
         if (req.query.documento) {
             query.where('documento').equals(req.query.documento);
         }
