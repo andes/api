@@ -1,12 +1,13 @@
 import * as mongoose from 'mongoose';
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
+import { cie10Schema } from '../../../core/term/schemas/cie10';
 // import * as organizacion from '../../../core/tm/schemas/organizacion';
 
 var turnoSchema = new mongoose.Schema({
     horaInicio: Date,
     asistencia: {
-        type: Boolean,
-        default: false
+        type: String,
+        enum: ['asistio', 'noAsistio', 'sinDatos']
     },
     estado: {
         type: String,
@@ -35,6 +36,15 @@ var turnoSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'prestacionPaciente'
     },
+    diagnosticoPrincipal: {
+        codificacion: cie10Schema,
+        primeraVez: Boolean,
+        ilegible: Boolean,
+    },
+    diagnosticoSecundario: [{
+        codificacion: cie10Schema,
+        ilegible: Boolean,
+    }],
     updatedAt: Date,
     updatedBy: mongoose.Schema.Types.Mixed
 });
