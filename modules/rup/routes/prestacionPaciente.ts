@@ -105,11 +105,17 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         if (req.query.idTipoPrestacion) {
             query.where('solicitud.tipoPrestacion._id').equals(req.query.idTipoPrestacion);
         }
+
         if (req.query.idPaciente) {
             query.where('paciente._id').equals(req.query.idPaciente);
         }
+
         if (req.query.idPrestacionOrigen) {
             query.where('idPrestacionOrigen').equals(req.query.idPrestacionOrigen);
+        }
+
+        if (req.query.turneables) {
+            query.where('solicitud.tipoPrestacion.turneable').equals(true);
         }
 
         if (req.query.turnos) {

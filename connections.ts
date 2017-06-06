@@ -21,9 +21,10 @@ export class Connections {
         }
 
         // Conecta y configura conexiones
-        mongoose.connect(`mongodb://${configPrivate.hosts.mongoDB_main}/andes`, { server: { reconnectTries: Number.MAX_VALUE } });
+        mongoose.connect(`mongodb://${configPrivate.hosts.mongoDB_main.host}`, { auth: configPrivate.hosts.mongoDB_mpi.auth, server: configPrivate.hosts.mongoDB_mpi.server });
         this.main = mongoose.connection;
-        this.mpi = mongoose.createConnection(`mongodb://${configPrivate.hosts.mongoDB_mpi}/andes`, { server: { reconnectTries: Number.MAX_VALUE } });
+
+        this.mpi = mongoose.createConnection(`mongodb://${configPrivate.hosts.mongoDB_mpi.host}`, { auth: configPrivate.hosts.mongoDB_mpi.auth, server: configPrivate.hosts.mongoDB_mpi.server });
 
         // Configura eventos
         this.configEvents('MongoDB', this.main);
