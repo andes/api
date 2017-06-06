@@ -22,7 +22,7 @@ router.get('/:module?', function (req, res, next) {
         query.where('modulo').equals(req.params.module).sort({ fecha: -1 });
     }
     if (req.query.op) {
-        query.where('operacion').equals(req.query.op).count();
+        query.where('operacion').equals(req.query.op);
     }
     if (req.query.usuario) {
         query.where('usuario.username').equals(req.query.usuario);

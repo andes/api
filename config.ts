@@ -78,7 +78,7 @@ export const maxLimit = 1000;
 // Configuracion MPI
 export const mpi = {
     cotaMatchMin: 0.80,
-    cotaMatchMax: 0.90,
+    cotaMatchMax: 0.94,
     weightsDefault: {
         identity: 0.55,
         name: 0.10,
