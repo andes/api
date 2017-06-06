@@ -21,8 +21,6 @@ export function getSisaCiudadano(nroDocumento, usuario, clave, sexo?: string) {
         pathSisa = '/sisa/services/rest/cmdb/obtener?nrodoc=' + nroDocumento + '&sexo=' + sexo + '&usuario=' + usuario + '&clave=' + clave;
     }
 
-    console.log('El path de sisa es: ', pathSisa)
-
     let optionsgetmsg = {
         host: 'sisa.msal.gov.ar', // nombre del dominio // (no http/https !)
         port: 443,
