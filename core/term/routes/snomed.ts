@@ -104,7 +104,7 @@ let defaultDiacriticsRemovalMap = [
 ];
 let changes;
 
-router.get('/', function (req, res, next) {
+router.get('/snomed', function (req, res, next) {
     /*
     // El browser de SNOMED utiliza estos parametros, investigarlos.
     http://browser.ihtsdotools.org/?perspective=full&conceptId1=280137006&edition=es-edition&release=v20170430&server=https://prod-browser-exten.ihtsdotools.org/api/snomed&langRefset=450828004
