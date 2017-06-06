@@ -1,7 +1,5 @@
 import * as express from 'express';
 import { snomedModel } from '../schemas/snomed';
-//import { util } from '../../../utils/utils';
-let util = require('../../../utils/utils');
 
 let router = express.Router();
 
