@@ -949,7 +949,7 @@ router.post('/pacientes', function (req, res, next) {
         //  console.log("NEW PATIENT:   ", newPatient['fechaNacimiento']);
         let nuevoPac = JSON.parse(JSON.stringify(newPatient));
         delete nuevoPac._id;
-
+        delete nuevoPac.relaciones;
         connElastic.create({
             index: 'andes',
             type: 'paciente',
