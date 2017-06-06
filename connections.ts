@@ -5,6 +5,7 @@ import * as configPrivate from './config.private';
 export class Connections {
     static main: mongoose.Connection;
     static mpi: mongoose.Connection;
+    static snomed: mongoose.Connection;
 
     /**
      * Inicializa las conexiones a MongoDB
@@ -26,9 +27,12 @@ export class Connections {
 
         this.mpi = mongoose.createConnection(`mongodb://${configPrivate.hosts.mongoDB_mpi.host}`, { auth: configPrivate.hosts.mongoDB_mpi.auth, server: configPrivate.hosts.mongoDB_mpi.server });
 
+        this.snomed = mongoose.createConnection(`mongodb://${configPrivate.hosts.snomed}/es-edition`, { server: { reconnectTries: Number.MAX_VALUE } });
+
         // Configura eventos
         this.configEvents('MongoDB', this.main);
         this.configEvents('MPI', this.mpi);
+        this.configEvents('SNOMED', this.snomed);
     }
 
     private static configEvents(name: string, connection: mongoose.Connection) {

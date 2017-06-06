@@ -543,6 +543,7 @@ router.get('/pacientes', function (req, res, next) {
             body: body
         })
             .then((searchResult) => {
+               
                 // Asigno los valores para el suggest
                 let weights = config.mpi.weightsDefault;
 
@@ -576,6 +577,7 @@ router.get('/pacientes', function (req, res, next) {
                         let match = new matching();
                         let valorMatching = match.matchPersonas(pacElastic, pacDto, weights);
                         paciente['id'] = hit._id;
+                        
                         if (valorMatching >= porcentajeMatchMax) {
                             listaPacientesMax.push({
                                 id: hit._id,
@@ -591,13 +593,18 @@ router.get('/pacientes', function (req, res, next) {
                                 });
                             }
                         }
+                        // console.log("SEARCHRESULT-------------",paciente.documento,paciente.apellido,valorMatching);
                     });
+                    
                 //if (devolverPorcentaje) {
                 let sortMatching = function (a, b) {
                     return b.match - a.match;
                 };
 
-                if (listaPacientesMax.length > 0) {
+                // cambiamos la condición para lograr que nos devuelva más de una sugerencia
+                // ya que la 1ra sugerencia es el mismo paciente.
+                // if (listaPacientesMax.length > 0) {
+                if (listaPacientesMax.length > 1) {
                     listaPacientesMax.sort(sortMatching);
                     res.send(listaPacientesMax);
                 } else {

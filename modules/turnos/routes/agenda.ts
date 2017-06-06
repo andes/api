@@ -6,14 +6,14 @@ import { Logger } from '../../../utils/logService';
 
 let router = express.Router();
 
-router.get('/agenda/paciente/:idPaciente', function(req, res, next) {
+router.get('/agenda/paciente/:idPaciente', function (req, res, next) {
 
     if (req.params.idPaciente) {
         let query = agenda
             .find({ 'bloques.turnos.paciente.id': req.params.idPaciente })
             .limit(10)
             .sort({ horaInicio: -1 })
-            .exec(function(err, data) {
+            .exec(function (err, data) {
                 if (err) {
                     return next(err);
                 }
@@ -23,11 +23,11 @@ router.get('/agenda/paciente/:idPaciente', function(req, res, next) {
 
 });
 
-router.get('/agenda/:id*?', function(req, res, next) {
+router.get('/agenda/:id*?', function (req, res, next) {
 
     if (mongoose.Types.ObjectId.isValid(req.params.id)) {
 
-        agenda.findById(req.params.id, function(err, data) {
+        agenda.findById(req.params.id, function (err, data) {
             if (err) {
                 next(err);
             };
@@ -106,7 +106,7 @@ router.get('/agenda/:id*?', function(req, res, next) {
 
         query.sort({ 'horaInicio': 1 });
 
-        query.exec(function(err, data) {
+        query.exec(function (err, data) {
             if (err) {
                 return next(err);
             }
@@ -115,7 +115,7 @@ router.get('/agenda/:id*?', function(req, res, next) {
     }
 });
 
-router.post('/agenda', function(req, res, next) {
+router.post('/agenda', function (req, res, next) {
     let data = new agenda(req.body);
     Auth.audit(data, req);
     data.save((err) => {
@@ -134,13 +134,13 @@ router.post('/agenda', function(req, res, next) {
 });
 
 // Este post recibe el id de la agenda a clonar y un array con las fechas en las cuales se va a clonar
-router.post('/agenda/clonar', function(req, res, next) {
+router.post('/agenda/clonar', function (req, res, next) {
     let idagenda = req.body.idAgenda;
     let clones = req.body.clones;
     let cloncitos = [];
 
     if (idagenda) {
-        agenda.findById(idagenda, function(err, data) {
+        agenda.findById(idagenda, function (err, data) {
             if (err) {
                 return next(err);
             };
@@ -207,8 +207,8 @@ router.post('/agenda/clonar', function(req, res, next) {
     }
 });
 
-router.put('/agenda/:id', function(req, res, next) {
-    agenda.findByIdAndUpdate(req.params.id, req.body, { new: true }, function(err, data) {
+router.put('/agenda/:id', function (req, res, next) {
+    agenda.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
         Logger.log(req, 'turnos', 'update', {
             accion: 'Editar Agenda en estado Planificación',
             ruta: req.url,
@@ -223,13 +223,13 @@ router.put('/agenda/:id', function(req, res, next) {
     });
 });
 
-router.patch('/agenda/:id*?', function(req, res, next) {
+router.patch('/agenda/:id*?', function (req, res, next) {
 
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         return next('ObjectID Inválido');
     }
 
-    agenda.findById(req.params.id, function(err, data) {
+    agenda.findById(req.params.id, function (err, data) {
 
         if (err) {
             return next(err);
@@ -260,6 +260,8 @@ router.patch('/agenda/:id*?', function(req, res, next) {
                     break;
                 case 'editarAgenda': editarAgenda(req, data);
                     break;
+                case 'agregarSobreturno': agregarSobreturno(req, data);
+                    break;
                 case 'disponible':
                 case 'publicada': actualizarEstado(req, data);
                     break;
@@ -274,7 +276,7 @@ router.patch('/agenda/:id*?', function(req, res, next) {
 
             Auth.audit(data, req);
 
-            data.save(function(err) {
+            data.save(function (err) {
 
 
                 Logger.log(req, 'turnos', 'update', {
@@ -389,6 +391,20 @@ function editarAgenda(req, data) {
 }
 
 // Agenda
+function agregarSobreturno(req, data) {
+    let sobreturno = req.body.sobreturno;
+    if (sobreturno) {
+        let usuario = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
+        // Copia la organización desde el token
+        usuario.organizacion = (req as any).user.organizacion;
+        sobreturno.updatedAt = new Date();
+        sobreturno.updatedBy = usuario;
+        data.sobreturnos.push(sobreturno);
+        // console.log('sobreturno ', req.body.sobreturno);
+    }
+}
+
+// Agenda
 function actualizarEstado(req, data) {
     // Si se pasa a estado Pausada, guardamos el estado previo
     if (req.body.estado === 'pausada') {
@@ -426,6 +442,11 @@ function getTurno(req, data, idTurno = null) {
                 return turno;
             }
         }
+    }
+    // sobreturnos
+    turno = data.sobreturnos.id(idTurno);
+    if (turno !== null) {
+        return turno;
     }
     return false;
 }
