@@ -11,4 +11,4 @@ export let snomedSchema = new mongoose.Schema({
     definitionStatus: String
 });
 
-export let snomedModel = snomedDB.model('snomed', snomedSchema, 'v20160430');
+export let snomedModel = snomedDB.model('snomed', snomedSchema, 'v20160430tx');
