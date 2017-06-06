@@ -17,3 +17,5 @@ node_modules
 typings
 typings/*
 .vscode
+
+.DS_Store
