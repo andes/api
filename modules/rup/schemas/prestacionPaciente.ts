@@ -142,7 +142,7 @@ export let prestacionPacienteSchema = new mongoose.Schema({
             timestamp: Date,
             tipo: {
                 type: String,
-                enum: ['pendiente', 'ejecucion', 'en auditoría', 'aceptada', 'rechazada', 'validada']
+                enum: ['pendiente', 'ejecucion', 'en auditoría', 'aceptada', 'rechazada', 'validada', 'anulada']
             },
             profesional: profesionalSchema
         }

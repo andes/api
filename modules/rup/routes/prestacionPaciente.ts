@@ -1,6 +1,7 @@
 import * as express from 'express';
 import { Auth } from './../../../auth/auth.class';
 import { prestacionPaciente } from '../schemas/prestacionPaciente';
+import * as mongoose from 'mongoose';
 
 let router = express.Router();
 
@@ -268,6 +269,11 @@ router.put('/prestaciones/:id', function (req, res, next) {
 
 router.patch('/prestaciones/:id', function (req, res, next) {
 
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        return next('ID inválido');
+    }
+    console.log(req.body);
+
     let modificacion = {};
 
     switch (req.body.op) {
@@ -284,6 +290,11 @@ router.patch('/prestaciones/:id', function (req, res, next) {
         case 'listaProblemasSolicitud':
             if (req.body.problema) {
                 modificacion = { '$push': { 'solicitud.listaProblemas': req.body.problema } }
+            }
+            break;
+        case 'desvincularPlan':
+            if (req.body.idPrestacionFutura) {
+                modificacion = { '$pull': { 'prestacionesSolicitadas': req.body.idPrestacionFutura } };
             }
             break;
         default:
