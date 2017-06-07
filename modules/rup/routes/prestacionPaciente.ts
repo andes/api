@@ -108,7 +108,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         }
 
         if (req.query.idPaciente) {
-            query.where('paciente._id').equals(req.query.idPaciente);
+            query.where('paciente.id').equals(req.query.idPaciente);
         }
 
         if (req.query.idPrestacionOrigen) {
@@ -134,7 +134,6 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         //     model: 'tipoProblema'
         // }
     });
-
     query.populate({
         path: 'solicitud.tipoPrestacion.ejecucion',
         model: 'tipoPrestacion'

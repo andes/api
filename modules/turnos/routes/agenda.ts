@@ -303,14 +303,14 @@ router.patch('/agenda/:id*?', function (req, res, next) {
 // Turno
 function darAsistencia(req, data, tid = null) {
     let turno = getTurno(req, data, tid);
-    turno.asistencia = true;
-    crearPrestacionVacia(turno, req);
+    turno.asistencia = 'asistio';
+    // crearPrestacionVacia(turno, req);
 }
 
 // Turno
 function sacarAsistencia(req, data, tid = null) {
     let turno = getTurno(req, data, tid);
-    turno.asistencia = false;
+    turno.asistencia = undefined;
 }
 
 // Turno
@@ -483,6 +483,7 @@ function combinarFechas(fecha1, fecha2) {
     }
 }
 
+// Dado un turno, se crea una prestacionPaciente
 function crearPrestacionVacia(turno, req) {
     let prestacion;
     let nuevaPrestacion;

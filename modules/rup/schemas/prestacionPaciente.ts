@@ -17,7 +17,13 @@ export let prestacionPacienteSchema = new mongoose.Schema({
         ref: 'prestacionPaciente'
     }, // prestacion desde la que se solicita
     paciente: {
-        type: pacienteSchema,
+        type: { // pensar que otros datos del paciente conviene tener
+            id: mongoose.Schema.Types.ObjectId,
+            nombre: String,
+            apellido: String,
+            documento: String,
+            telefono: String
+        },
         required: true
     },
 
