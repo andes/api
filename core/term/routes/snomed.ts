@@ -192,7 +192,8 @@ router.get('/snomed', function (req, res, next) {
     let query = snomedModel.find(conditions, projection);
 
     // limitamos resultados
-    query.limit(req.query.limit | 10);
+    //query.limit(req.query.limit | 10);
+    query.limit(1000);
     query.exec(function (err, data) {
         if (err) {
             next(err);
@@ -208,6 +209,8 @@ router.get('/snomed', function (req, res, next) {
                 return 1;
             return 0;
         });
+
+        data = data.slice(0, 10);
 
         res.json(data);
 
