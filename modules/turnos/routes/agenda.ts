@@ -1,3 +1,5 @@
+import { prestacionPaciente } from './../../rup/schemas/prestacionPaciente';
+import { paciente } from './../../../core/mpi/schemas/paciente';
 import { Auth } from './../../../auth/auth.class';
 import * as express from 'express';
 import * as agenda from '../schemas/agenda';
@@ -278,7 +280,6 @@ router.patch('/agenda/:id*?', function (req, res, next) {
 
             data.save(function (err) {
 
-
                 Logger.log(req, 'turnos', 'update', {
                     accion: req.body.op,
                     ruta: req.url,
@@ -303,6 +304,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
 function darAsistencia(req, data, tid = null) {
     let turno = getTurno(req, data, tid);
     turno.asistencia = true;
+    crearPrestacionVacia(turno, req);
 }
 
 // Turno
@@ -324,8 +326,6 @@ function liberarTurno(req, data, tid = null) {
     if (turnoDoble) {
         turnoDoble.estado = 'disponible';
     }
-
-
 }
 
 // Turno
@@ -400,7 +400,6 @@ function agregarSobreturno(req, data) {
         sobreturno.updatedAt = new Date();
         sobreturno.updatedBy = usuario;
         data.sobreturnos.push(sobreturno);
-        // console.log('sobreturno ', req.body.sobreturno);
     }
 }
 
@@ -483,4 +482,36 @@ function combinarFechas(fecha1, fecha2) {
         return null;
     }
 }
+
+function crearPrestacionVacia(turno, req) {
+    let prestacion;
+    let nuevaPrestacion;
+    let pacienteTurno = turno.paciente;
+
+    pacienteTurno['_id'] = turno.paciente.id;
+    paciente.findById(pacienteTurno.id, (err, data) => {
+        nuevaPrestacion = {
+            paciente: data,
+            solicitud: {
+                tipoPrestacion: turno.tipoPrestacion,
+                fecha: new Date(),
+                listaProblemas: [],
+                idTurno: turno.id,
+            },
+            estado: {
+                timestamp: new Date(),
+                tipo: 'pendiente'
+            },
+            ejecucion: {
+                fecha: new Date(),
+                evoluciones: []
+            }
+        };
+        prestacion = new prestacionPaciente(nuevaPrestacion);
+
+        Auth.audit(prestacion, req);
+        prestacion.save();
+    });
+}
+
 export = router;
