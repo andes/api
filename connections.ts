@@ -16,6 +16,7 @@ export class Connections {
      */
     static initialize() {
         // Configura Mongoose
+        (mongoose as any).Promise = global.Promise;
         mongoose.plugin(schemaDefaults);
         if (configPrivate.mongooseDebugMode) {
             mongoose.set('debug', true);
