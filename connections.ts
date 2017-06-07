@@ -22,12 +22,12 @@ export class Connections {
         }
 
         // Conecta y configura conexiones
-        mongoose.connect(`mongodb://${configPrivate.hosts.mongoDB_main.host}`, { auth: configPrivate.hosts.mongoDB_mpi.auth, server: configPrivate.hosts.mongoDB_mpi.server });
+        mongoose.connect(`${configPrivate.hosts.mongoDB_main.host}`, { auth: configPrivate.hosts.mongoDB_mpi.auth, server: configPrivate.hosts.mongoDB_mpi.server });
         this.main = mongoose.connection;
 
-        this.mpi = mongoose.createConnection(`mongodb://${configPrivate.hosts.mongoDB_mpi.host}`, { auth: configPrivate.hosts.mongoDB_mpi.auth, server: configPrivate.hosts.mongoDB_mpi.server });
+        this.mpi = mongoose.createConnection(`${configPrivate.hosts.mongoDB_mpi.host}`, { auth: configPrivate.hosts.mongoDB_mpi.auth, server: configPrivate.hosts.mongoDB_mpi.server });
 
-        this.snomed = mongoose.createConnection(`mongodb://${configPrivate.hosts.mongoDB_snomed.host}/es-edition`, { auth: configPrivate.hosts.mongoDB_mpi.auth, server: configPrivate.hosts.mongoDB_snomed.server });
+        this.snomed = mongoose.createConnection(`${configPrivate.hosts.mongoDB_snomed.host}/es-edition`, { auth: configPrivate.hosts.mongoDB_snomed.auth, server: configPrivate.hosts.mongoDB_snomed.server });
 
         // Configura eventos
         this.configEvents('MongoDB', this.main);
