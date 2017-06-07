@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-export let schema = new mongoose.Schema({
+export let cie10Schema = new mongoose.Schema({
     causa: String,
     subcausa: String,
     codigo: String,
@@ -9,4 +9,4 @@ export let schema = new mongoose.Schema({
     c2: Boolean
 });
 
-export let model = mongoose.model('cie10', schema, 'cie10');
+export let model = mongoose.model('cie10', cie10Schema, 'cie10');
