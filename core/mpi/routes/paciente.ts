@@ -14,7 +14,8 @@ import * as https from 'https';
 let router = express.Router();
 
 router.get('/pacientes/georef/:id', function (req, res, next) {
-    // if (req.params.id) {
+    /* Este método es público no requiere auth check */
+
     pacienteMpi.findById(req.params.id, function (err, data) {
         if (err) {
             console.log('ERROR GET GEOREF:  ', err);
@@ -204,8 +205,10 @@ router.get('/pacientes/georef/:id', function (req, res, next) {
  */
 
 
+
 /*Consultas de estado de pacientes para el panel de información*/
 router.get('/pacientes/counts/', function (req, res, next) {
+    /* Este get es público ya que muestra sólamente la cantidad de pacientes en MPI */
     let filtro;
     switch (req.query.consulta) {
         case 'validados':
@@ -245,6 +248,12 @@ router.get('/pacientes/counts/', function (req, res, next) {
 });
 
 router.get('/pacientes/dashboard/', function (req, res, next) {
+    /**
+     * Se requiere autorización para acceder al dashboard de MPI
+     */
+    if (!Auth.check(req, 'mpi:dashboard:*')) {
+        return next(403);
+    }
     let result = {
         paciente: null,
         pacienteMpi: null,
@@ -398,6 +407,9 @@ router.get('/pacientes/dashboard/', function (req, res, next) {
 
 // Simple mongodb query by ObjectId --> better performance
 router.get('/pacientes/:id', function (req, res, next) {
+    if (!Auth.check(req, 'mpi:get:byId')) {
+        return next(403);
+    }
     buscarPaciente(req.params.id).then((resultado: any) => {
         if (resultado) {
             Logger.log(req, 'mpi', 'query', {
@@ -478,6 +490,9 @@ router.get('/pacientes/:id', function (req, res, next) {
  */
 // Search using elastic search
 router.get('/pacientes', function (req, res, next) {
+    if (!Auth.check(req, 'mpi:get:simplequery,multimatch,suggest')) {
+        return next(403);
+    }
     let connElastic = new Client({
         host: configPrivate.hosts.elastic_main,
     });
@@ -664,6 +679,10 @@ router.get('/pacientes', function (req, res, next) {
  *         description: Un código de error con un array de mensajes de error
  */
 router.post('/pacientes/mpi', function (req, res, next) {
+    if (!Auth.check(req, '  ')) {
+        return next(403);
+    }
+
     let match = new matching();
     let newPatientMpi = new pacienteMpi(req.body);
     let connElastic = new Client({
@@ -701,6 +720,9 @@ router.post('/pacientes/mpi', function (req, res, next) {
 });
 
 router.put('/pacientes/mpi/:id', function (req, res, next) {
+    if (!Auth.check(req, 'mpi:put:mpi:byId')) {
+        return next(403);
+    }
     let ObjectId = mongoose.Types.ObjectId;
     let objectId = new ObjectId(req.params.id);
     let query = {
@@ -863,6 +885,9 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
  *           $ref: '#/definitions/paciente'
  */
 router.delete('/pacientes/mpi/:id', function (req, res, next) {
+    if (!Auth.check(req, 'mpi:delete:mpi:byId')) {
+        return next(403);
+    }
 
     let connElastic = new Client({
         host: configPrivate.hosts.elastic_main,
@@ -921,6 +946,9 @@ router.delete('/pacientes/mpi/:id', function (req, res, next) {
  *         description: Un código de error con un array de mensajes de error
  */
 router.post('/pacientes', function (req, res, next) {
+    if (!Auth.check(req, 'mpi:post:andes')) {
+        return next(403);
+    }
     let match = new matching();
     let newPatient = new paciente(req.body);
     let connElastic = new Client({
@@ -992,6 +1020,9 @@ router.post('/pacientes', function (req, res, next) {
 
 
 router.put('/pacientes/:id', function (req, res, next) {
+    if (!Auth.check(req, 'mpi:put:andes:byId')) {
+        return next(403);
+    }
     let ObjectId = mongoose.Types.ObjectId;
     let objectId = new ObjectId(req.params.id);
     let query = {
@@ -1198,7 +1229,10 @@ router.put('/pacientes/:id', function (req, res, next) {
  *           $ref: '#/definitions/paciente'
  */
 router.delete('/pacientes/:id', function (req, res, next) {
-    console.log('ingreso a borrar api');
+    if (!Auth.check(req, 'mpi:delete:andes:byId')) {
+        return next(403);
+    }
+
     let ObjectId = mongoose.Types.ObjectId;
     let connElastic = new Client({
         host: configPrivate.hosts.elastic_main,
@@ -1330,6 +1364,9 @@ function updateRelacion(req, data) {
 }
 
 router.patch('/pacientes/:id', function (req, res, next) {
+    if (!Auth.check(req, 'mpi:patch:andes:byId')) {
+        return next(403);
+    }
     buscarPaciente(req.params.id).then((resultado: any) => {
         if (resultado) {
             switch (req.body.op) {
