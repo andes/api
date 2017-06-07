@@ -28,7 +28,7 @@ var turnoSchema = new mongoose.Schema({
         nombre: String,
         apellido: String,
         documento: String,
-        telefono: String
+        telefono: String,
     },
     tipoPrestacion: tipoPrestacionSchema,
     // TODO: Enlace con RUP? cuando alguien defina ALGO
