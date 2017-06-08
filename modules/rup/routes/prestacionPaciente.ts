@@ -272,13 +272,20 @@ router.patch('/prestaciones/:id', function (req, res, next) {
         return next('ID inválido');
     }
     console.log(req.body);
+    console.log(req.params.id);
 
     let modificacion = {};
 
     switch (req.body.op) {
         case 'estado':
             if (req.body.estado) {
-                modificacion = { $set: { 'estado': req.body.estado } }
+                modificacion = { '$set': { 'estado': req.body.estado } }
+            }
+            break;
+        case 'estadoPush':
+            if (req.body.estado) {
+                modificacion = { '$push': { 'estado': { tipo: req.body.estado } } }
+                // modificacion = { '$push': { 'estado': req.body.problema } }
             }
             break;
         case 'listaProblemas':
@@ -289,6 +296,11 @@ router.patch('/prestaciones/:id', function (req, res, next) {
         case 'listaProblemasSolicitud':
             if (req.body.problema) {
                 modificacion = { '$push': { 'solicitud.listaProblemas': req.body.problema } }
+            }
+            break;
+        case 'desvincularProblema':
+            if (req.body.idProblema) {
+                modificacion = { '$pull': { 'ejecucion.listaProblemas': req.body.idProblema } };
             }
             break;
         case 'desvincularPlan':
