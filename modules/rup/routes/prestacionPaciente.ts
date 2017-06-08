@@ -298,6 +298,11 @@ router.patch('/prestaciones/:id', function (req, res, next) {
                 modificacion = { '$push': { 'solicitud.listaProblemas': req.body.problema } }
             }
             break;
+        case 'desvincularProblema':
+            if (req.body.idProblema) {
+                modificacion = { '$pull': { 'ejecucion.listaProblemas': req.body.idProblema } };
+            }
+            break;
         case 'desvincularPlan':
             if (req.body.idPrestacionFutura) {
                 modificacion = { '$pull': { 'prestacionesSolicitadas': req.body.idPrestacionFutura } };
