@@ -28,7 +28,7 @@ export class Connections {
 
         this.mpi = mongoose.createConnection(`mongodb://${configPrivate.hosts.mongoDB_mpi.host}`, { auth: configPrivate.hosts.mongoDB_mpi.auth, server: configPrivate.hosts.mongoDB_mpi.server });
 
-        this.snomed = mongoose.createConnection(`mongodb://${configPrivate.hosts.mongoDB_snomed.host}/es-edition`, { auth: configPrivate.hosts.mongoDB_mpi.auth, server: configPrivate.hosts.mongoDB_snomed.server });
+        this.snomed = mongoose.createConnection(`mongodb://${configPrivate.hosts.mongoDB_snomed.host}`, { auth: configPrivate.hosts.mongoDB_mpi.auth, server: configPrivate.hosts.mongoDB_snomed.server });
 
         // Configura eventos
         this.configEvents('MongoDB', this.main);
