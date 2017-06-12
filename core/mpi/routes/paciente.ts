@@ -686,7 +686,7 @@ router.get('/pacientes', function (req, res, next) {
  *         description: Un código de error con un array de mensajes de error
  */
 router.post('/pacientes/mpi', function (req, res, next) {
-    if (!Auth.check(req, '  ')) {
+    if (!Auth.check(req, 'mpi:post:mpi')) {
         return next(403);
     }
 
