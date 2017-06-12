@@ -558,7 +558,7 @@ router.get('/pacientes', function (req, res, next) {
             body: body
         })
             .then((searchResult) => {
-               
+
                 // Asigno los valores para el suggest
                 let weights = config.mpi.weightsDefault;
 
@@ -592,7 +592,7 @@ router.get('/pacientes', function (req, res, next) {
                         let match = new matching();
                         let valorMatching = match.matchPersonas(pacElastic, pacDto, weights);
                         paciente['id'] = hit._id;
-                        
+
                         if (valorMatching >= porcentajeMatchMax) {
                             listaPacientesMax.push({
                                 id: hit._id,
@@ -610,7 +610,7 @@ router.get('/pacientes', function (req, res, next) {
                         }
                         // console.log("SEARCHRESULT-------------",paciente.documento,paciente.apellido,valorMatching);
                     });
-                    
+
                 //if (devolverPorcentaje) {
                 let sortMatching = function (a, b) {
                     return b.match - a.match;
@@ -1358,7 +1358,7 @@ function updateCarpetaEfectores(req, data) {
 function updateRelacion(req, data) {
     if (data && data.relaciones) {
         let objRel = data.relaciones.find(elem => {
-            if (elem.referencia === req.body.dto.referencia) {
+            if (elem.referencia.toString() === req.body.dto.referencia.toString()) {
                 return elem;
             }
         });
@@ -1367,6 +1367,15 @@ function updateRelacion(req, data) {
             data.markModified('relaciones');
             data.relaciones.push(req.body.dto);
         }
+    }
+}
+function deleteRelacion(req, data) {
+    if (data && data.relaciones) {
+        data.relaciones.find(function (value, index, array) {
+            if (value && value.referencia.toString() === req.body.dto.referencia.toString()) {
+                array.splice(index, 1);
+            }
+        });
     }
 }
 
@@ -1393,6 +1402,10 @@ router.patch('/pacientes/:id', function (req, res, next) {
                 case 'updateRelacion':
                     // console.log("RESULTADO BUSQUEDApACIENTE--------", resultado);
                     updateRelacion(req, resultado.paciente);
+                    break;
+                case 'deleteRelacion':
+                    // console.log("RESULTADO BUSQUEDApACIENTE--------", resultado);
+                    deleteRelacion(req, resultado.paciente);
                     break;
             }
             Auth.audit(resultado.paciente, req);
