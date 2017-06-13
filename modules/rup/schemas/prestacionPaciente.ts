@@ -150,7 +150,14 @@ export let prestacionPacienteSchema = new mongoose.Schema({
                 type: String,
                 enum: ['pendiente', 'ejecucion', 'en auditoría', 'aceptada', 'rechazada', 'validada', 'desvinculada']
             },
-            profesional: profesionalSchema
+            profesional: {
+                 type: { // pensar que otros datos del paciente conviene tener
+                    id: mongoose.Schema.Types.ObjectId,
+                    nombre: String,
+                    apellido: String,
+                    documento: String
+                }
+            }
         }
     ]
 });
