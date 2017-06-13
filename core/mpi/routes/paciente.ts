@@ -1358,8 +1358,10 @@ function updateCarpetaEfectores(req, data) {
 function updateRelacion(req, data) {
     if (data && data.relaciones) {
         let objRel = data.relaciones.find(elem => {
-            if (elem.referencia.toString() === req.body.dto.referencia.toString()) {
-                return elem;
+            if (elem && req.body.dto && elem.referencia && req.body.dto.referencia) {
+                if (elem.referencia.toString() === req.body.dto.referencia.toString()) {
+                    return elem;
+                }
             }
         });
 
@@ -1372,8 +1374,10 @@ function updateRelacion(req, data) {
 function deleteRelacion(req, data) {
     if (data && data.relaciones) {
         data.relaciones.find(function (value, index, array) {
-            if (value && value.referencia.toString() === req.body.dto.referencia.toString()) {
-                array.splice(index, 1);
+            if (value && value.referencia && req.body.dto && req.body.dto.referencia) {
+                if (value.referencia.toString() === req.body.dto.referencia.toString()) {
+                    array.splice(index, 1);
+                }
             }
         });
     }
