@@ -185,6 +185,7 @@ router.post('/agenda/clonar', function (req, res, next) {
                         });
                     });
                     nueva['estado'] = 'planificacion';
+                    nueva['sobreturnos'] = [];
                     Auth.audit(nueva, req);
                     nueva.save((err) => {
                         Logger.log(req, 'turnos', 'insert', {
