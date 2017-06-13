@@ -16,12 +16,12 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
 
         query = tipoPrestacion.find({}); // Trae todos      
 
-         if (req.query.skip) {
-            let skip: number = parseInt(req.query.skip || 0);            
+        if (req.query.skip) {
+            let skip: number = parseInt(req.query.skip || 0);
             query = query.skip(skip);
         }
 
-        if (req.query.limit) {            
+        if (req.query.limit) {
             let limit: number = Math.min(parseInt(req.query.limit || defaultLimit), maxLimit);
             query = query.limit(limit);
         }
@@ -38,6 +38,11 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
         if (req.query.excluir) {
             let ids = req.query.excluir.split(',');
             query.where('_id').nin(ids);
+        }
+
+        if (req.query.incluir) {
+            let idsIn = req.query.incluir.split(',');
+            query.where('_id').in(idsIn);
         }
 
         if (req.query.turneable) {
