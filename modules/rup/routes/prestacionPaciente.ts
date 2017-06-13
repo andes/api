@@ -274,35 +274,39 @@ router.patch('/prestaciones/:id', function (req, res, next) {
     }
     console.log(req.body);
     console.log(req.params.id);
-
+/*
     prestacionPaciente.findById(req.params.id, function (err, data) {
 
         if (err) {
             return next(err);
         }
-
+*/
         let modificacion = {};
 
         switch (req.body.op) {
             case 'estado':
                 if (req.body.estado) {
                     modificacion = { '$set': { 'estado': req.body.estado } }
+                    //data.set('estado', req.body.estado);
                 }
                 break;
             case 'estadoPush':
                 if (req.body.estado) {
                     //modificacion = { '$push': { 'estado': { tipo: req.body.estado } } }
                     modificacion = { '$push': { 'estado': req.body.estado } }
+                    //data['estado'].push(req.body.estado);
                 }
                 break;
             case 'listaProblemas':
                 if (req.body.problema) {
                     modificacion = { '$push': { 'ejecucion.listaProblemas': req.body.problema } }
+                    //data['ejecucion'].listaProblemas.push(req.body.problema);
                 }
                 break;
             case 'listaProblemasSolicitud':
                 if (req.body.problema) {
                     modificacion = { '$push': { 'solicitud.listaProblemas': req.body.problema } }
+                    //data['solicitud'].listaProblemas.push(req.body.problema);
                 }
                 break;
             case 'desvincularProblema':
@@ -320,19 +324,19 @@ router.patch('/prestaciones/:id', function (req, res, next) {
                 break;
         }
 
-        Auth.audit(data, req);
+        //Auth.audit(data, req);
         
         if (!modificacion) {
             return next('Opcion inválida');
         }
 
-        //prestacionPaciente.findByIdAndUpdate(req.params.id, modificacion, { upsert: false }, function (err, data) {
-        data.save(function (err, data) {
+        prestacionPaciente.findByIdAndUpdate(req.params.id, modificacion, { upsert: false }, function (err, data) {
+        //data.update(req.params.id, modificacion, function (err, data) {
             if (err) {
                 return next(err);
             }
 
-            Logger.log(req, 'turnos', 'update', {
+            Logger.log(req, 'prestacionPaciente', 'update', {
                 accion: req.body.op,
                 ruta: req.url,
                 method: req.method,
@@ -342,7 +346,7 @@ router.patch('/prestaciones/:id', function (req, res, next) {
 
             res.json(data);
         });
-    }
+    //}
 });
 
 
