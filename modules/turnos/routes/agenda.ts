@@ -173,7 +173,7 @@ router.post('/agenda/clonar', function (req, res, next) {
                             newIniTurno = combinarFechas(clon, turno.horaInicio);
                             turno.horaInicio = newIniTurno;
                             turno.estado = 'disponible';
-                            turno.asistencia = false;
+                            turno.asistencia = undefined;
                             turno.paciente = null;
                             turno.tipoPrestacion = null;
                             turno.idPrestacionPaciente = null;
