@@ -2,6 +2,7 @@ import * as express from 'express';
 import { Auth } from './../../../auth/auth.class';
 import { prestacionPaciente } from '../schemas/prestacionPaciente';
 import * as mongoose from 'mongoose';
+import { Logger } from '../../../utils/logService';
 
 let router = express.Router();
 
@@ -273,54 +274,79 @@ router.patch('/prestaciones/:id', function (req, res, next) {
     }
     console.log(req.body);
     console.log(req.params.id);
+/*
+    prestacionPaciente.findById(req.params.id, function (err, data) {
 
-    let modificacion = {};
+        if (err) {
+            return next(err);
+        }
+*/
+        let modificacion = {};
 
-    switch (req.body.op) {
-        case 'estado':
-            if (req.body.estado) {
-                modificacion = { '$set': { 'estado': req.body.estado } }
-            }
-            break;
-        case 'estadoPush':
-            if (req.body.estado) {
-                modificacion = { '$push': { 'estado': { tipo: req.body.estado } } }
-                // modificacion = { '$push': { 'estado': req.body.problema } }
-            }
-            break;
-        case 'listaProblemas':
-            if (req.body.problema) {
-                modificacion = { '$push': { 'ejecucion.listaProblemas': req.body.problema } }
-            }
-            break;
-        case 'listaProblemasSolicitud':
-            if (req.body.problema) {
-                modificacion = { '$push': { 'solicitud.listaProblemas': req.body.problema } }
-            }
-            break;
-        case 'desvincularProblema':
-            if (req.body.idProblema) {
-                modificacion = { '$pull': { 'ejecucion.listaProblemas': req.body.idProblema } };
-            }
-            break;
-        case 'desvincularPlan':
-            if (req.body.idPrestacionFutura) {
-                modificacion = { '$pull': { 'prestacionesSolicitadas': req.body.idPrestacionFutura } };
-            }
-            break;
-        default:
-            next('Error: No se seleccionó ninguna opción.');
-            break;
-    }
+        switch (req.body.op) {
+            case 'estado':
+                if (req.body.estado) {
+                    modificacion = { '$set': { 'estado': req.body.estado } }
+                    //data.set('estado', req.body.estado);
+                }
+                break;
+            case 'estadoPush':
+                if (req.body.estado) {
+                    //modificacion = { '$push': { 'estado': { tipo: req.body.estado } } }
+                    modificacion = { '$push': { 'estado': req.body.estado } }
+                    //data['estado'].push(req.body.estado);
+                }
+                break;
+            case 'listaProblemas':
+                if (req.body.problema) {
+                    modificacion = { '$push': { 'ejecucion.listaProblemas': req.body.problema } }
+                    //data['ejecucion'].listaProblemas.push(req.body.problema);
+                }
+                break;
+            case 'listaProblemasSolicitud':
+                if (req.body.problema) {
+                    modificacion = { '$push': { 'solicitud.listaProblemas': req.body.problema } }
+                    //data['solicitud'].listaProblemas.push(req.body.problema);
+                }
+                break;
+            case 'desvincularProblema':
+                if (req.body.idProblema) {
+                    modificacion = { '$pull': { 'ejecucion.listaProblemas': req.body.idProblema } };
+                }
+                break;
+            case 'desvincularPlan':
+                if (req.body.idPrestacionFutura) {
+                    modificacion = { '$pull': { 'prestacionesSolicitadas': req.body.idPrestacionFutura } };
+                }
+                break;
+            default:
+                next('Error: No se seleccionó ninguna opción.');
+                break;
+        }
 
-    if (modificacion) {
+        //Auth.audit(data, req);
+        
+        if (!modificacion) {
+            return next('Opcion inválida');
+        }
+
         prestacionPaciente.findByIdAndUpdate(req.params.id, modificacion, { upsert: false }, function (err, data) {
+        //data.update(req.params.id, modificacion, function (err, data) {
             if (err) {
                 return next(err);
             }
+
+            Logger.log(req, 'prestacionPaciente', 'update', {
+                accion: req.body.op,
+                ruta: req.url,
+                method: req.method,
+                data: data,
+                err: err || false
+            });
+
             res.json(data);
         });
-    }
+    //}
 });
 
 

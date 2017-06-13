@@ -49,7 +49,7 @@ router.post('/login', function (req, res, next) {
             }),
             permisos.model.findOneAndUpdate(
                 {usuario: req.body.usuario},
-                {password: sha1Hash(req.body.password)},
+                {password: sha1Hash(req.body.password), nombre: nombre, apellido: apellido},
             )
         ]).then((data: any[]) => {
             // Verifica que la organización sea válida y que tenga permisos asignados
