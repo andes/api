@@ -1,6 +1,6 @@
 import * as express from 'express';
 import * as mongoose from 'mongoose';
-import { llaveTipoPrestacion } from '../../llaves/schemas/llaveTipoPrestacion';
+// import { llaveTipoPrestacion } from '../../llaves/schemas/llaveTipoPrestacion';
 import { auditoriaPrestacionPaciente as auditoria } from '../schemas/auditoriaPrestacionPaciente';
 import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
@@ -33,7 +33,6 @@ router.get('/prestacionPaciente/:id*?', function (req, res, next) {
         }
 
         query.sort('llaveTipoPrestacion.tipoPrestacion.nombre');
-        // let band = false;
         query.exec((err, data) => {
             if (err) {
                 return next(err);
@@ -76,7 +75,7 @@ router.get('/prestacionPaciente/:id*?', function (req, res, next) {
 });
 
 router.post('/auditoria', function (req, res, next) {
-    let insertAuditoria = new auditoria(req.body)
+    let insertAuditoria = new auditoria(req.body);
 
     // Debe ir antes del save, y ser una instancia del modelo
     Auth.audit(insertAuditoria, req);
@@ -92,7 +91,7 @@ router.post('/auditoria', function (req, res, next) {
             return next(errOnInsert);
         }
         res.json(insertAuditoria);
-    })
+    });
 });
 
 router.put('/prestacionPaciente/:id', function (req, res, next) {
@@ -125,18 +124,12 @@ router.patch('/prestacionPaciente/:id', function (req, res, next) {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         return next('ObjectID Inválido');
     }
-
     auditoria.findById(req.params.id, (err, data) => {
-
         // let patchAuditoria = new auditoria(data);
-
         Auth.audit(data, req);
-
         // Patch
         data.set(req.body.key, req.body.value);
-
         data.save(function (errOnPatch) {
-
             Logger.log(req, 'auditoria', 'update', {
                 accion: 'Actualizar auditoría de prestacionPaciente',
                 ruta: req.url,
@@ -144,21 +137,16 @@ router.patch('/prestacionPaciente/:id', function (req, res, next) {
                 data: data,
                 err: errOnPatch || false
             });
-
             if (errOnPatch) {
                 return next(errOnPatch);
             }
-
             return res.json(data);
         });
-
     });
-
 });
 
 router.delete('/prestacionPaciente/:id', function (req, res, next) {
     auditoria.findByIdAndRemove(req.params.id, function (err, data) {
-
         Logger.log(req, 'auditoria', 'delete', {
             accion: 'Eliminar Aditoría de prestacionPaciente',
             ruta: req.url,
@@ -166,11 +154,9 @@ router.delete('/prestacionPaciente/:id', function (req, res, next) {
             data: data,
             err: err || false
         });
-
         if (err) {
             return next(err);
         }
-
         res.json(data);
     });
 });

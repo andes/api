@@ -35,9 +35,7 @@ router.get('/problemas/:idProblema', function (req, res, next) {
     query.populate({
         path: 'evoluciones.profesional',
         model: 'profesional'
-    });     
-
-
+    });
     // query.populate('idProblemaOrigen');
     query.populate({
         path: 'idProblemaOrigen',
@@ -47,7 +45,6 @@ router.get('/problemas/:idProblema', function (req, res, next) {
         //     model: 'tipoProblema'
         // }
     });
-
 
     // query.populate('tipoProblema').sort({ 'fechaInicio': -1 });
     query.sort({ 'fechaInicio': -1 });
@@ -90,9 +87,7 @@ router.get('/problemas', function (req, res, next) {
     query.populate({
         path: 'evoluciones.profesional',
         model: 'profesional'
-    });     
-
-
+    });
     // // query.populate('idProblemaOrigen');
     // query.populate({
     //     path: 'idProblemaOrigen',
@@ -102,8 +97,6 @@ router.get('/problemas', function (req, res, next) {
     //         model: 'tipoProblema'
     //     }
     // });
-
-
     // query.populate('tipoProblema').sort({ 'fechaInicio': -1 });
     query.sort({ 'fechaInicio': -1 });
 
@@ -118,7 +111,7 @@ router.get('/problemas', function (req, res, next) {
 });
 
 router.post('/problemas/', function (req, res, next) {
-    //console.log(req.body);
+    // console.log(req.body);
 
     let newProblema = new problema(req.body)
     newProblema.save((err) => {
@@ -134,7 +127,7 @@ router.post('/problemas/', function (req, res, next) {
         //     res.json(data);
         // });
         res.json(newProblema);
-    })
+    });
 });
 
 router.put('/problemas/:id?', function (req, res, next) {
@@ -146,7 +139,7 @@ router.put('/problemas/:id?', function (req, res, next) {
             res.json(data);
         });
     } else {
-        //console.log('Ingreso a put problemas', req.body);
+        // console.log('Ingreso a put problemas', req.body);
         let listaProblemas = req.body;
         let listaResultado = [];
         listaProblemas.forEach(element => {

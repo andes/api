@@ -8,7 +8,7 @@ import { Logger } from '../../../utils/logService';
  * Configuración de Tipo Prestación, incluye llaves
  */
 
-let router = express.Router(); 
+let router = express.Router();
 
 router.get('/tipoPrestacion/:id*?', function (req, res, next) {
     if (req.params.id) {
@@ -98,7 +98,7 @@ router.post('/tipoPrestacion', function (req, res, next) {
             return next(errOnInsert);
         }
         res.json(insertLlaveTipoPrestacion);
-    })
+    });
 });
 
 router.put('/tipoPrestacion/:id', function (req, res, next) {

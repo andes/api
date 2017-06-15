@@ -69,6 +69,6 @@ router.delete('/tiposProblemas/:id', function (req, res, next) {
 
         res.json(data);
     });
-})
+});
 
 export = router;

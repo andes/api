@@ -2,7 +2,7 @@ import * as express from 'express';
 import * as mongoose from 'mongoose';
 import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
-import { log } from './../../../core/log/schemas/log';
+// import { log } from './../../../core/log/schemas/log';
 import { prestacionPaciente } from '../schemas/prestacionPaciente';
 
 let router = express.Router();
@@ -277,7 +277,6 @@ router.patch('/prestaciones/:id', function (req, res, next) {
     console.log(req.params.id);
     /*
         prestacionPaciente.findById(req.params.id, function (err, data) {
-    
             if (err) {
                 return next(err);
             }
@@ -288,26 +287,26 @@ router.patch('/prestaciones/:id', function (req, res, next) {
         case 'estado':
             if (req.body.estado) {
                 modificacion = { '$set': { 'estado': req.body.estado } }
-                //data.set('estado', req.body.estado);
+                // data.set('estado', req.body.estado);
             }
             break;
         case 'estadoPush':
             if (req.body.estado) {
-                //modificacion = { '$push': { 'estado': { tipo: req.body.estado } } }
+                // modificacion = { '$push': { 'estado': { tipo: req.body.estado } } }
                 modificacion = { '$push': { 'estado': req.body.estado } }
-                //data['estado'].push(req.body.estado);
+                // data['estado'].push(req.body.estado);
             }
             break;
         case 'listaProblemas':
             if (req.body.problema) {
                 modificacion = { '$push': { 'ejecucion.listaProblemas': req.body.problema } }
-                //data['ejecucion'].listaProblemas.push(req.body.problema);
+                // data['ejecucion'].listaProblemas.push(req.body.problema);
             }
             break;
         case 'listaProblemasSolicitud':
             if (req.body.problema) {
                 modificacion = { '$push': { 'solicitud.listaProblemas': req.body.problema } }
-                //data['solicitud'].listaProblemas.push(req.body.problema);
+                // ata['solicitud'].listaProblemas.push(req.body.problema);
             }
             break;
         case 'desvincularProblema':
@@ -368,7 +367,7 @@ router.patch('/prestaciones/:id', function (req, res, next) {
     // });
 
     prestacionPaciente.findByIdAndUpdate(req.params.id, modificacion, { upsert: false }, function (err, data) {
-        //data.update(req.params.id, modificacion, function (err, data) {
+        // data.update(req.params.id, modificacion, function (err, data) {
         if (err) {
             return next(err);
         }
@@ -384,7 +383,6 @@ router.patch('/prestaciones/:id', function (req, res, next) {
 
         res.json(data);
     });
-    //}
 });
 
 

@@ -1,4 +1,4 @@
-import * as mongoose from 'mongoose';
+// import * as mongoose from 'mongoose';
 
 export let rangoTiempo = {
     valor: Number,

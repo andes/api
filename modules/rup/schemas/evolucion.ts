@@ -1,11 +1,11 @@
 import * as mongoose from 'mongoose';
 import * as codificadorSchema from './codificador';
-import * as prestacionSchema from '../../../core/tm/schemas/prestacion';
+// import * as prestacionSchema from '../../../core/tm/schemas/prestacion';
 import { espacioFisicoSchema } from '../../turnos/schemas/espacioFisico';
 import { profesionalSchema } from '../../../core/tm/schemas/profesional';
 import { segundaOpinionSchema } from './segundaOpinion';
 
-var evolucionSchema = new mongoose.Schema({
+let evolucionSchema = new mongoose.Schema({
     // Evolucion Profesional
     topografia: [
         codificadorSchema
@@ -25,7 +25,7 @@ var evolucionSchema = new mongoose.Schema({
             profesionalSchema
         ],
 
-        //lista de problemas que surjan de la evolucion. Lo diagnosticos alimentan la lista de problemas de pacientes
+        // lista de problemas que surjan de la evolucion. Lo diagnosticos alimentan la lista de problemas de pacientes
         diagnostico: [{
             type: mongoose.Schema.Types.ObjectId,
             ref: 'problemas'
@@ -77,12 +77,11 @@ var evolucionSchema = new mongoose.Schema({
             timestamp: Date,
             tipo: {
                 type: String,
-                enum: ["ejecucion", "dictado", "transcripcion", "informado", ""] // 
+                enum: ['ejecucion', 'dictado', 'transcripcion', 'informado', '']
             },
             observaciones: String
         }
     ],
 
-})
-
+});
 export = evolucionSchema;
