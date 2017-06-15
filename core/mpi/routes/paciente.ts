@@ -523,7 +523,7 @@ router.get('/pacientes', function (req, res, next) {
             break;
         case 'suggest':
             {
-                let condicion = {};
+                // let condicion = {};
 
                 // Sugiere pacientes que tengan la misma clave de blocking
                 let campo = req.query.claveBlocking;
@@ -570,7 +570,7 @@ router.get('/pacientes', function (req, res, next) {
                 let porcentajeMatchMin = config.mpi.cotaMatchMin;
                 let listaPacientesMax = [];
                 let listaPacientesMin = [];
-                let devolverPorcentaje = req.query.percentage;
+                // let devolverPorcentaje = req.query.percentage;
 
                 let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
                     .filter(function (hit) {
@@ -611,7 +611,7 @@ router.get('/pacientes', function (req, res, next) {
                         // console.log("SEARCHRESULT-------------",paciente.documento,paciente.apellido,valorMatching);
                     });
 
-                //if (devolverPorcentaje) {
+                // if (devolverPorcentaje) {
                 let sortMatching = function (a, b) {
                     return b.match - a.match;
                 };
@@ -752,7 +752,7 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
             pacienteOriginal = patientFound.toObject();
 
             /*Update de paciente de todos los campos salvo que esté validado*/
-            //if (patientFound.estado !== 'validado') {
+            // if (patientFound.estado !== 'validado') {
             patientFound.documento = req.body.documento;
             patientFound.estado = req.body.estado;
             patientFound.nombre = req.body.nombre.toUpperCase();
@@ -780,7 +780,7 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
             Auth.audit(patientFound, req);
             patientFound.save(function (err2) {
                 if (err2) {
-                    console.log('Error Save:               ', err2);
+                    // console.log('Error Save:               ', err2);
                     return next(err2);
                 }
 
@@ -819,14 +819,15 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
                         }, function (error, response) {
                             if (error) {
                                 console.log('Error al actualizar elastic en PUT NEW:            ', error);
-                                //Logger.log(req, 'pacientes', 'elasticError', error);
+                                // Logger.log(req, 'pacientes', 'elasticError', error);
                             }
                             Logger.log(req, 'mpi', 'elasticInsert', patientFound);
                             res.json(patientFound);
                         });
                     }
                 }, function (error) {
-                    console.trace(error.message);
+                    return next(error);
+                    // console.trace(error.message);
                 });
             });
         } else {
@@ -837,10 +838,10 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
             newPatient['nombre'] = newPatient['nombre'].toUpperCase();
 
             Auth.audit(newPatient, req);
-            newPatient.save((err) => {
-                if (err) {
-                    console.log('Error al persistir los datos: ', err);
-                    return next(err);
+            newPatient.save((err2) => {
+                if (err2) {
+                    console.log('Error al persistir los datos: ', err2);
+                    return next(err2);
                 }
                 let nuevoPac = JSON.parse(JSON.stringify(newPatient));
                 delete nuevoPac._id;
@@ -917,9 +918,9 @@ router.delete('/pacientes/mpi/:id', function (req, res, next) {
         }, function (error, response) {
             if (error) {
                 console.log('Error en el borrado del indice de elastic en mpi:  ', error);
-                //Logger.log(req, 'pacientes', 'elasticError', error);
+                // Logger.log(req, 'pacientes', 'elasticError', error);
             }
-            //Logger.log(req, 'pacientes', 'elasticDelete', patientFound);
+            // Logger.log(req, 'pacientes', 'elasticDelete', patientFound);
             res.json(patientFound);
         });
     });
@@ -1270,7 +1271,7 @@ router.delete('/pacientes/:id', function (req, res, next) {
                 console.log('Error en elastic Search delete: ', error);
             }
             console.log('borro ok va a loguear');
-            //Logger.log(req, 'pacientes', 'delete', patientFound);
+            // Logger.log(req, 'pacientes', 'delete', patientFound);
             res.json(patientFound);
         });
 
