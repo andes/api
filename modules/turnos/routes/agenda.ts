@@ -11,7 +11,7 @@ let router = express.Router();
 router.get('/agenda/paciente/:idPaciente', function (req, res, next) {
 
     if (req.params.idPaciente) {
-        let query = agenda
+        agenda
             .find({ 'bloques.turnos.paciente.id': req.params.idPaciente })
             .limit(10)
             .sort({ horaInicio: -1 })
@@ -33,10 +33,8 @@ router.get('/agenda/:id*?', function (req, res, next) {
             if (err) {
                 next(err);
             };
-
             res.json(data);
         });
-
     } else {
         let query;
         query = agenda.find({});
@@ -187,17 +185,17 @@ router.post('/agenda/clonar', function (req, res, next) {
                     nueva['estado'] = 'planificacion';
                     nueva['sobreturnos'] = [];
                     Auth.audit(nueva, req);
-                    nueva.save((err) => {
+                    nueva.save((err2) => {
                         Logger.log(req, 'turnos', 'insert', {
                             accion: 'Clonar Agenda',
                             ruta: req.url,
                             method: req.method,
                             data: nueva,
-                            err: err || false
+                            err: err2 || false
                         });
 
-                        if (err) {
-                            return next(err);
+                        if (err2) {
+                            return next(err2);
                         }
                         cloncitos.push(nueva);
                         if (cloncitos.length === clones.length) {
@@ -279,17 +277,17 @@ router.patch('/agenda/:id*?', function (req, res, next) {
 
             Auth.audit(data, req);
 
-            data.save(function (err) {
+            data.save(function (error) {
 
                 Logger.log(req, 'turnos', 'update', {
                     accion: req.body.op,
                     ruta: req.url,
                     method: req.method,
                     data: data,
-                    err: err || false
+                    err: error || false
                 });
-                if (err) {
-                    return next(err);
+                if (error) {
+                    return next(error);
                 }
 
             });

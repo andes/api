@@ -1,6 +1,5 @@
 import * as os from 'os';
 import * as process from 'process';
-import * as util from 'util';
 import * as cp from 'child_process';
 
 
@@ -8,7 +7,7 @@ import * as cp from 'child_process';
 console.log('+-----------------------------+');
 console.log('|                             |');
 console.log('|   ¡Bienvenidos a ANDES!     |');
-console.log('|                             |');
+console.log('| ¡recordá lintear el código! |');
 console.log('+-----------------------------+');
 
 process.stdin.resume();
@@ -17,7 +16,6 @@ process.stdin.setEncoding('utf8');
 console.log('Se requiere el paquete nodemon.');
 console.log('¿Desea instalarlo? S/N:');
 process.stdin.on('data', function (confirmar) {
-    // console.log('>>>', util.inspect(confirmar));
     if (confirmar.toUpperCase() === 'S\n') {
         if (os.type() === 'Windows_NT') {
             cp.execSync('npm install -g nodemon');
