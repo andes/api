@@ -541,7 +541,7 @@ router.get('/pacientes', function (req, res, next) {
     };
     // Configuramos la cantidad de resultados que quiero que se devuelva y la query correspondiente
     let body = {
-        size: 40,
+        size: 100,
         from: 0,
         query: query
     };
@@ -619,7 +619,7 @@ router.get('/pacientes', function (req, res, next) {
                 // cambiamos la condición para lograr que nos devuelva más de una sugerencia
                 // ya que la 1ra sugerencia es el mismo paciente.
                 // if (listaPacientesMax.length > 0) {
-                if (listaPacientesMax.length > 1) {
+                if (listaPacientesMax.length > 0) {
                     listaPacientesMax.sort(sortMatching);
                     res.send(listaPacientesMax);
                 } else {
