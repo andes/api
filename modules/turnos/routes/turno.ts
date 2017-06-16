@@ -4,7 +4,7 @@ import { Logger } from '../../../utils/logService';
 import { ValidateDarTurno } from '../../../utils/validateDarTurno';
 import { paciente } from '../../../core/mpi/schemas/paciente';
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
-import { Auth } from './../../../auth/auth.class';
+// import { Auth } from './../../../auth/auth.class';
 import * as moment from 'moment';
 
 let router = express.Router();
@@ -51,7 +51,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function(req,
 
                                     // Ver si el día de la agenda coincide con el día de hoy
                                     if ((data as any).horaInicio >= moment(new Date()).startOf('day').toDate() && (data as any).horaInicio <= moment(new Date()).endOf('day').toDate()) {
-                                        let esHoy = true;
+                                        // let esHoy = true;
                                     }
 
                                     // Contadores de "delDia" y "programado" varían según si es el día de hoy o no

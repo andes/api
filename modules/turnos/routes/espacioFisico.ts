@@ -13,7 +13,7 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
         });
     } else {
         let query;
-        query = espacioFisico.find({}); // Trae todos 
+        query = espacioFisico.find({}); // Trae todos
         if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
@@ -51,7 +51,7 @@ router.post('/espacioFisico', function (req, res, next) {
             return next(err);
         }
         res.json(newEspacioFisico);
-    })
+    });
 });
 
 router.put('/espacioFisico/:id', function (req, res, next) {

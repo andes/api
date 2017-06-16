@@ -7,5 +7,4 @@ let edificioSchema = new mongoose.Schema({
     contacto: contactoSchema,
     direccion: direccionSchema
 });
-
 export = edificioSchema;

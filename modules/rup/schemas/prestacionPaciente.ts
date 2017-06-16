@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 import * as evolucionSchema from './evolucion';
 import * as financiadorSchema from '../../../core/mpi/schemas/financiador';
 import * as organizacion from '../../../core/tm/schemas/organizacion';
-import { pacienteSchema } from '../../../core/mpi/schemas/paciente';
+// import { pacienteSchema } from '../../../core/mpi/schemas/paciente';
 import { profesionalSchema } from '../../../core/tm/schemas/profesional';
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 import { auditoriaPrestacionPacienteSchema } from '../../auditorias/schemas/auditoriaPrestacionPaciente';
@@ -178,5 +178,4 @@ export let prestacionPacienteSchema = new mongoose.Schema({
 
 // Habilitar plugin de auditoría
 prestacionPacienteSchema.plugin(require('../../../mongoose/audit'));
-
 export let prestacionPaciente = mongoose.model('prestacionPaciente', prestacionPacienteSchema, 'prestacionPaciente');

@@ -3,7 +3,6 @@ import * as express from 'express';
 import * as mongoose from 'mongoose';
 import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
-import { log } from './../../../core/log/schemas/log';
 
 let router = express.Router();
 
@@ -217,8 +216,12 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
 
     query.exec(function (err, data) {
         if (err) {
-            next(err);
+
+            res.status(404).json({ message: 'Prestación no encontrada' });
+
+            next(404);
         };
+
         res.json(data);
     });
 });
@@ -243,17 +246,24 @@ router.post('/prestaciones', function (req, res, next) {
 router.put('/prestaciones/:id', function (req, res, next) {
     let prestacion;
     prestacion = new prestacionPaciente(req.body);
-    let evolucion = prestacion.ejecucion.evoluciones[prestacion.ejecucion.evoluciones.length - 1];
+
+    //let evolucion = prestacion.ejecucion.evoluciones[prestacion.ejecucion.evoluciones.length - 1];
+
     prestacionPaciente.findById(prestacion.id, function (err, data) {
 
         if (err) {
             return next(err);
         }
 
-        let prest: any = data;
+        /*
+        let prest;
+        prest = data;
+
         let evoluciones = prest.ejecucion.evoluciones;
         evoluciones.push(evolucion);
         prestacion.ejecucion.evoluciones = evoluciones;
+        */
+        Auth.audit(prestacion, req);
 
         Auth.audit(prestacion, req);
         prestacionPaciente.findByIdAndUpdate(prestacion.id, prestacion, {
@@ -283,7 +293,6 @@ router.patch('/prestaciones/:id', function (req, res, next) {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         next('ID inválido');
     }
-
     let modificacion = {};
 
     switch (req.body.op) {

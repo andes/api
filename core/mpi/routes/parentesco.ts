@@ -1,7 +1,7 @@
-import * as express from 'express'
-import * as parenteso from '../schemas/parentesco'
+import * as express from 'express';
+import * as parenteso from '../schemas/parentesco';
 
-var router = express.Router();
+let router = express.Router();
 
 /**
  * @swagger

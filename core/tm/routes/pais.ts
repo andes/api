@@ -1,7 +1,7 @@
-import * as express from 'express'
-import * as pais from '../schemas/pais_model'
+import * as express from 'express';
+import * as pais from '../schemas/pais_model';
 
-var router = express.Router();
+let router = express.Router();
 
 /**
  * @swagger
@@ -65,16 +65,15 @@ router.get('/paises/:id*?', function (req, res, next) {
 
             res.json(data);
         });
-    }
-    else {
-        var query;
+    } else {
+        let query;
 
         query = pais.find({});
         if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
         }
         query.sort({ 'nombre': 1 }).exec((err, data) => {
-            if (err) return next(err);
+            if (err) {return next(err); };
             res.json(data);
         });
     }

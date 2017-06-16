@@ -20,7 +20,7 @@ router.get('/organizaciones/georef/:id?', function (req, res, next) {
             let dir = organizacion.direccion.valor;
             let localidad = organizacion.direccion.ubicacion.localidad.nombre;
             let provincia = organizacion.direccion.ubicacion.provincia.nombre;
-            let pais = organizacion.direccion.ubicacion.pais;
+            // let pais = organizacion.direccion.ubicacion.pais;
             let pathGoogleApi = '';
             let jsonGoogle = '';
             pathGoogleApi = '/maps/api/geocode/json?address=' + dir + ',+' + localidad + ',+' + provincia + ',+' + 'AR' + '&key=' + configPrivate.geoKey;

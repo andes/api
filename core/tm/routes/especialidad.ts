@@ -1,8 +1,8 @@
-import * as express from 'express'
-import * as especialidad from '../schemas/especialidad_model'
+import * as express from 'express';
+import * as especialidad from '../schemas/especialidad_model';
 import { defaultLimit, maxLimit } from './../../../config';
 
-var router = express.Router();
+let router = express.Router();
 
 /**
  * @swagger
@@ -99,17 +99,15 @@ router.get('/especialidades/:id*?', function (req, res, next) {
             res.json(data);
         });
     } else {
-        let skip: number = parseInt(req.query.skip || 0);
-        let limit: number = Math.min(parseInt(req.query.limit || defaultLimit), maxLimit);
-        var query;
-        query = especialidad.find({}).skip(skip).limit(limit); //Trae todos 
-        if (req.query.codigoSisa)
-            query.where('codigo.sisa').equals(RegExp('^.*' + req.query.codigoSisa + '.*$', "i"));
-        if (req.query.nombre) {
-            query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
-        }
+        let radix = 10;
+        let skip: number = parseInt(req.query.skip || 0, radix);
+        let limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
+        let query;
+        query = especialidad.find({}).skip(skip).limit(limit); // Trae todos 
+        if (req.query.codigoSisa) {query.where('codigo.sisa').equals(RegExp('^.*' + req.query.codigoSisa + '.*$', 'i')); }
+        if (req.query.nombre) { query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i')); }
         query.exec((err, data) => {
-            if (err) return next(err);
+            if (err) {return next(err); }
             res.json(data);
         });
     }
@@ -141,13 +139,13 @@ router.get('/especialidades/:id*?', function (req, res, next) {
  *           $ref: '#/definitions/especialidad'
  */
 router.post('/especialidades', function (req, res, next) {
-    var newEspecialidad = new especialidad(req.body)
+    let newEspecialidad = new especialidad(req.body);
     newEspecialidad.save((err) => {
         if (err) {
             return next(err);
         }
         res.json(newEspecialidad);
-    })
+    });
 });
 
 /**
