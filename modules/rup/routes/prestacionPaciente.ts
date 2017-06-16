@@ -217,8 +217,12 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
 
     query.exec(function (err, data) {
         if (err) {
-            next(err);
+            
+            res.status(404).json({message: 'Prestación no encontrada'});
+
+            next(404);
         };
+
         res.json(data);
     });
 });
@@ -243,16 +247,22 @@ router.post('/prestaciones', function (req, res, next) {
 router.put('/prestaciones/:id', function (req, res, next) {
     let prestacion;
     prestacion = new prestacionPaciente(req.body);
-    let evolucion = prestacion.ejecucion.evoluciones[prestacion.ejecucion.evoluciones.length - 1];
+
+    //let evolucion = prestacion.ejecucion.evoluciones[prestacion.ejecucion.evoluciones.length - 1];
+
     prestacionPaciente.findById(prestacion.id, function (err, data) {
         if (err) {
             return next(err);
         }
+
+        /*
         let prest;
         prest = data;
+
         let evoluciones = prest.ejecucion.evoluciones;
         evoluciones.push(evolucion);
         prestacion.ejecucion.evoluciones = evoluciones;
+        */
         Auth.audit(prestacion, req);
 
         prestacionPaciente.findByIdAndUpdate(prestacion.id, prestacion, {
