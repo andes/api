@@ -16,7 +16,7 @@ process.stdin.setEncoding('utf8');
 
 console.log('Se requiere el paquete nodemon.');
 console.log('¿Desea instalarlo? S/N:');
-process.stdin.on('data', function (confirmar) {
+process.stdin.on('data', (confirmar) => {
     // console.log('>>>', util.inspect(confirmar));
     if (confirmar.toUpperCase() === 'S\n') {
         if (os.type() === 'Windows_NT') {
@@ -24,9 +24,12 @@ process.stdin.on('data', function (confirmar) {
         } else {
             cp.execSync('sudo npm install -g nodemon');
         }
-        process.exit();
-    } else {
-        process.exit();
     }
+
+});
+
+process.stdout.on('end', () => {
+    process.stdout.write(`Recordá ejecutar 'node-gyp rebuild' ;-)`);
+    process.exit();
 });
 

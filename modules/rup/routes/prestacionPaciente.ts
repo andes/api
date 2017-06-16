@@ -1,9 +1,9 @@
+import { prestacionPaciente } from './../schemas/prestacionPaciente';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
 import { log } from './../../../core/log/schemas/log';
-import { prestacionPaciente } from '../schemas/prestacionPaciente';
 
 let router = express.Router();
 
@@ -245,19 +245,29 @@ router.put('/prestaciones/:id', function (req, res, next) {
     prestacion = new prestacionPaciente(req.body);
     let evolucion = prestacion.ejecucion.evoluciones[prestacion.ejecucion.evoluciones.length - 1];
     prestacionPaciente.findById(prestacion.id, function (err, data) {
+
         if (err) {
             return next(err);
         }
-        let prest;
-        prest = data;
+
+        let prest: any = data;
         let evoluciones = prest.ejecucion.evoluciones;
         evoluciones.push(evolucion);
         prestacion.ejecucion.evoluciones = evoluciones;
-        Auth.audit(prestacion, req);
 
+        Auth.audit(prestacion, req);
         prestacionPaciente.findByIdAndUpdate(prestacion.id, prestacion, {
             new: true
         }, function (err2, data2) {
+
+            Logger.log(req, 'rup', 'insert', {
+                accion: req.body.op,
+                ruta: req.url,
+                method: req.method,
+                data: data,
+                err: err2 || false
+            });
+
             if (err2) {
                 return next(err2);
             }
@@ -273,41 +283,28 @@ router.patch('/prestaciones/:id', function (req, res, next) {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         next('ID inválido');
     }
-    console.log(req.body);
-    console.log(req.params.id);
-    /*
-        prestacionPaciente.findById(req.params.id, function (err, data) {
-    
-            if (err) {
-                return next(err);
-            }
-    */
+
     let modificacion = {};
 
     switch (req.body.op) {
         case 'estado':
             if (req.body.estado) {
                 modificacion = { '$set': { 'estado': req.body.estado } }
-                //data.set('estado', req.body.estado);
             }
             break;
         case 'estadoPush':
             if (req.body.estado) {
-                //modificacion = { '$push': { 'estado': { tipo: req.body.estado } } }
                 modificacion = { '$push': { 'estado': req.body.estado } }
-                //data['estado'].push(req.body.estado);
             }
             break;
         case 'listaProblemas':
             if (req.body.problema) {
                 modificacion = { '$push': { 'ejecucion.listaProblemas': req.body.problema } }
-                //data['ejecucion'].listaProblemas.push(req.body.problema);
             }
             break;
         case 'listaProblemasSolicitud':
             if (req.body.problema) {
                 modificacion = { '$push': { 'solicitud.listaProblemas': req.body.problema } }
-                //data['solicitud'].listaProblemas.push(req.body.problema);
             }
             break;
         case 'desvincularProblema':
@@ -315,15 +312,9 @@ router.patch('/prestaciones/:id', function (req, res, next) {
                 modificacion = { '$pull': { 'ejecucion.listaProblemas': req.body.idProblema } };
             }
             break;
-        // case 'desvincularPlan':
-        //     if (req.body.idPrestacionFutura) {
-        //         modificacion = { '$pull': { 'prestacionesSolicitadas': req.body.idPrestacionFutura } };
-        //     }
-        //     break;
         case 'desvincularPlan':
             if (req.body.idProblema) {
                 modificacion = { '$pull': { 'solicitud.listaProblemas': req.body.idProblema } };
-                console.log(modificacion);
             }
             break;
         default:
@@ -336,28 +327,26 @@ router.patch('/prestaciones/:id', function (req, res, next) {
         return next('Opción inválida.');
     }
 
-
-    // TODO: refactor findByIdAndUpdate
+    // TODO: ver por qué las modificaciones no funcionan con save()
     // prestacionPaciente.findById(req.params.id, (errFind, data) => {
 
     //     if (errFind) {
     //         return next(errFind);
     //     }
 
-    //     let pp = new prestacionPaciente(data);
+    //     Auth.audit(data, req);
 
-    //     Auth.audit(pp, req);
-
-    //     pp.save(modificacion, (errSave, data) => {
+    //     data.isNew = false;
+    //     data.save(modificacion, (errSave, data2) => {
     //         if (errSave) {
     //             return next(errSave);
     //         }
 
-    //         Logger.log(req, 'prestacionPaciente', 'update', {
+    //         Logger.log(req, 'rup', 'update', {
     //             accion: req.body.op,
     //             ruta: req.url,
     //             method: req.method,
-    //             data: data,
+    //             data: data2,
     //             err: errSave || false
     //         });
 
@@ -367,14 +356,14 @@ router.patch('/prestaciones/:id', function (req, res, next) {
 
     // });
 
+    // TODO: refactor findByIdAndUpdate
     prestacionPaciente.findByIdAndUpdate(req.params.id, modificacion, { upsert: false }, function (err, data) {
-        //data.update(req.params.id, modificacion, function (err, data) {
         if (err) {
             return next(err);
         }
 
-        // Auth.audit(data, req);
-        Logger.log(req, 'prestacionPaciente', 'update', {
+        Auth.audit(data, req);
+        Logger.log(req, 'rup', 'update', {
             accion: req.body.op,
             ruta: req.url,
             method: req.method,
@@ -384,7 +373,6 @@ router.patch('/prestaciones/:id', function (req, res, next) {
 
         res.json(data);
     });
-    //}
 });
 
 
