@@ -248,12 +248,12 @@ router.get('/pacientes/counts/', function (req, res, next) {
 });
 
 router.get('/pacientes/temporales/', function (req, res, next) {
-    //  /**
-    //  * Se requiere autorización para acceder a los pacientes temporales
-    //  */
-    // if (!Auth.check(req, 'mpi:')) {
-    //     return next(403);
-    // }
+     /**
+     * Se requiere autorización para acceder a los pacientes temporales
+     */
+    if (!Auth.check(req, 'mpi:get:temporales')) {
+        return next(403);
+    }
     let filtro = {
         estado: 'temporal'
     };
