@@ -40,5 +40,5 @@ export let schema = new mongoose.Schema({
     }]
 });
 
-export let model = mongoose.model('elementoRUP', schema, 'elementosRUP');
+export let elementoRUP = mongoose.model('elementoRUP', schema, 'elementosRUP');
 

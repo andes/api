@@ -51,12 +51,7 @@ export const modules = {
         route: '/modules/turnos',
         auth: true,
     },
-    rup: {
-        active: true,
-        path: './modules/rup/routes',
-        route: '/modules/rup',
-        auth: true,
-    },
+    
     llaves: {
         active: true,
         path: './modules/llaves/routes',

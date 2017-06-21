@@ -1,4 +1,4 @@
-import { prestacionPaciente } from './../../rup/schemas/prestacionPaciente';
+//import { prestacionPaciente } from './../../rup/schemas/prestacionPaciente';
 import { paciente } from './../../../core/mpi/schemas/paciente';
 import { Auth } from './../../../auth/auth.class';
 import * as express from 'express';
