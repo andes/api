@@ -47,7 +47,7 @@ export function getSisaCiudadano(nroDocumento, usuario, clave, sexo?: string) {
                             resolve([500, {}]);
                         } else {
                             // console.log(data);
-                            resolve([res.statusCode, data])
+                            resolve([res.statusCode, data]);
                         }
                     });
                 } else {
@@ -151,7 +151,7 @@ export function getPacienteSisa(nroDocumento, sexo?: string) {
                     let dato = this.formatearDatosSisa(resultado[1].Ciudadano);
                     resolve(dato);
                 }
-                resolve(null)
+                resolve(null);
             })
             .catch((err) => {
                 reject(err);
@@ -177,7 +177,10 @@ export function matchSisa(paciente) {
                     sexo = (paciente.sexo === 'femenino') ? 'F' : 'M';
                 }
                 // OJO: Es sólo para pacientes con SEXO debido a que pueden existir distintos pacientes con el mismo DNI
-                this.getSisaCiudadano(paciente.documento, configPrivate.sisa.username, configPrivate.sisa.password, sexo)
+                // this.getSisaCiudadano(paciente.documento, configPrivate.sisa.username, configPrivate.sisa.password, sexo)
+
+                // La linea original de arriba llevaba un this que pinchaba... <---------------- posible BREAKING CHANGE
+                getSisaCiudadano(paciente.documento, configPrivate.sisa.username, configPrivate.sisa.password, sexo)
                     .then((resultado) => {
                         if (resultado) {
                             // Verifico el resultado devuelto por el rest de Sisa
@@ -249,7 +252,7 @@ export function matchSisa(paciente) {
         } else {
             resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sisa', 'matcheo': 0, 'datosPaciente': null } });
         }
-    })
+    });
 
 }
 
