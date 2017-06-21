@@ -1,5 +1,5 @@
 import * as mongoose from 'mongoose';
-import { SnomedConcept } from './snomed';
+import { SnomedConcept } from './snomed-concept';
 
 export let schema = new mongoose.Schema({
     // Valor por el cual vamos a leer/guardar en nuestra BD
@@ -8,6 +8,9 @@ export let schema = new mongoose.Schema({
     nombre: String,
     // Indica si este elemento está activo
     activo: Boolean,
+    // Indica si este elemento puede existir por si mismo (ej: prestaciones turneables)
+    // Los elementos no autónomos estarán siempre dentro un elemento autónomo.
+    autonomo: Boolean,
     // Vinculación al componente de la aplicación Angular
     componente: {
         ruta: String,

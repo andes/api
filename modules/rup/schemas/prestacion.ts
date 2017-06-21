@@ -1,5 +1,7 @@
 import * as mongoose from 'mongoose';
-import { SnomedConcept } from './snomed';
+import { SnomedConcept } from './snomed-concept';
+import * as registro from './prestacion.registro';
+import * as estado from './prestacion.estado';
 import { auditoriaPrestacionPacienteSchema } from '../../auditorias/schemas/auditoriaPrestacionPaciente';
 
 export let schema = new mongoose.Schema({
@@ -60,6 +62,9 @@ export let schema = new mongoose.Schema({
         // Fecha que fue realizada la prestación
         fecha: Date,
         // Profesionales que realizan
+        // Nota: a veces el usuario que registra la prestación (que se guarda en el array registros a través del plugin audit)
+        //       no necesariamente es el mismo que ejecuta. Por ejemplo, un residente tipea un informe y el médico de planta lo valida digitalmente.
+        //       En este caso, ambos dos figuran en 'profesionales' pero sólo el residente en 'registros'.
         profesionales: [{
             type: {
                 id: mongoose.Schema.Types.ObjectId,
@@ -76,35 +81,13 @@ export let schema = new mongoose.Schema({
             }
         },
         // Registros de la ejecución
-        registros: [{
-            concepto: SnomedConcept,
-            elementoRup: mongoose.Schema.Types.ObjectId,
-            valor: mongoose.Schema.Types.Mixed,
-            relacionadoCon: [SnomedConcept],
-        }],
+        registros: [registro.schema],
     },
-
-    estado: [
-        {
-            fecha: Date,
-            tipo: {
-                type: String,
-                enum: ['anulada', ' pendiente', 'ejecucion', 'en auditoría', 'aceptada', 'rechazada', 'validada', 'desvinculada']
-            },
-
-            profesional: {
-                type: { // pensar que otros datos del paciente conviene tener
-                    id: mongoose.Schema.Types.ObjectId,
-                    nombre: String,
-                    apellido: String,
-                    documento: String
-
-                }
-            }
-        }
-    ]
+    // Historia de estado de la prestación
+    estados: [estado.schema]
 });
 
 // Habilitar plugin de auditoría
 schema.plugin(require('../../../mongoose/audit'));
+
 export let model = mongoose.model('prestacion', schema, 'prestaciones');
