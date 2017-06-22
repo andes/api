@@ -4,11 +4,72 @@ import { Logger } from '../../../utils/logService';
 import { ValidateDarTurno } from '../../../utils/validateDarTurno';
 import { paciente } from '../../../core/mpi/schemas/paciente';
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
-// import { Auth } from './../../../auth/auth.class';
+import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 
 let router = express.Router();
 
+router.get('/turno', function (req, res, next) {
+    agenda.findById(req.query.idAgenda, function (err, data) {
+        if (err) {
+            next(err);
+        };
+        let resultado = data as any;
+        let indiceBloque = resultado.bloques.findIndex(y => Object.is(req.query.idBloque, String(y._id)));
+        let indiceTurno = resultado.bloques[indiceBloque].turnos.findIndex(y => Object.is(req.query.idTurno, String(y._id)));
+        let bloque = resultado.bloques[indiceBloque];
+        let turno = resultado.bloques[indiceBloque].turnos[indiceTurno];
+        console.log('hora ', moment(turno.horaInicio).format('HH:mm'));
+        agenda.aggregate([
+            {
+                $match:
+                {
+                    'tipoPrestaciones._id': mongoose.Types.ObjectId(turno.tipoPrestacion._id),
+                    '_id': { '$ne': mongoose.Types.ObjectId(req.query.idAgenda) },
+                    'bloques.duracionTurno': bloque.duracionTurno
+                }
+            }
+
+        ], function (err, data) {
+            if (err) {
+                return next(err);
+            }
+            let resultado = [];
+            data.forEach(function (a) {
+                a.bloques.forEach(function (b) {
+                    // console.log('b', b);
+
+                    b.turnos.forEach(function (t) {
+                        let horaIni = moment(t.horaInicio).format('HH:mm');
+                        if (horaIni.toString() === moment(turno.horaInicio).format('HH:mm')) {
+                            resultado.push(a);
+                        }
+                    });
+                })
+                // res.json(data);
+            });
+            res.json(resultado);
+
+            // let query = agenda.find({});
+            // query.where('_id').ne(req.query.idAgenda);
+
+            // query.where('tipoPrestaciones._id').equals(turno.tipoPrestacion._id);
+
+            // // Filtro las agendas que tengan al menos un bloque con la misma duración del turno
+            // query.where('bloques').elemMatch(function (elem) {
+            //     elem.where('duracionTurno', bloque.duracionTurno);
+            // });
+
+            // query.exec(function (err, data) {
+            //     if (err) {
+            //         return next(err);
+            //     }
+
+            //     res.json(data);
+            // });
+        });
+    });
+});
 
 router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function(req, res, next) {
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
