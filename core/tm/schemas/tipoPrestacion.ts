@@ -1,13 +1,11 @@
-// import { tipoProblema } from './../../../modules/rup/schemas/tipoProblema';
 import * as mongoose from 'mongoose';
-import * as codificadorSchema from '../../../modules/rup/schemas/codificador';
 
 export let tipoPrestacionSchema = new mongoose.Schema({
     // valor por el cual vamos a leer/guardar en nuestra BD
     key: String,
     nombre: String,
     descripcion: String,
-    codigo: [codificadorSchema],
+    codigo: [String],
     autonoma: Boolean,
     solicitud: [{
         type: mongoose.Schema.Types.ObjectId,
@@ -18,8 +16,7 @@ export let tipoPrestacionSchema = new mongoose.Schema({
         ref: 'tipoPrestacion'
     }],
     tipoProblemas: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'tipoProblema'
+        type: mongoose.Schema.Types.ObjectId
     }],
     turneable: Boolean,
     activo: Boolean,

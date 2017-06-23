@@ -44,10 +44,7 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
             query.where('autonoma').equals(req.query.autonoma);
         }
         query.where('activo').equals(1);
-        query.populate({
-            path: 'tipoProblemas',
-            model: 'tipoProblema'
-        });
+
     }
 
     query.populate('ejecucion').sort({ 'nombre': 1 }).exec(function (err, data) {

@@ -51,11 +51,17 @@ export const modules = {
         route: '/modules/turnos',
         auth: true,
     },
-    
+
     llaves: {
         active: true,
         path: './modules/llaves/routes',
         route: '/modules/llaves',
+        auth: true,
+    },
+    rup: {
+        active: true,
+        path: './modules/rup/routes',
+        route: '/modules/rup',
         auth: true,
     },
     auditorias: { // Auditorías RUP (prestacionPaciente)

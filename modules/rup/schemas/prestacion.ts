@@ -4,6 +4,13 @@ import * as registro from './prestacion.registro';
 import * as estado from './prestacion.estado';
 import { auditoriaPrestacionPacienteSchema } from '../../auditorias/schemas/auditoriaPrestacionPaciente';
 
+let profesional = {
+    id: mongoose.Schema.Types.ObjectId,
+    nombre: String,
+    apellido: String,
+    documento: String
+};
+
 export let schema = new mongoose.Schema({
     // Datos principales del paciente
     paciente: {
@@ -65,14 +72,7 @@ export let schema = new mongoose.Schema({
         // Nota: a veces el usuario que registra la prestación (que se guarda en el array registros a través del plugin audit)
         //       no necesariamente es el mismo que ejecuta. Por ejemplo, un residente tipea un informe y el médico de planta lo valida digitalmente.
         //       En este caso, ambos dos figuran en 'profesionales' pero sólo el residente en 'registros'.
-        profesionales: [{
-            type: {
-                id: mongoose.Schema.Types.ObjectId,
-                nombre: String,
-                apellido: String,
-                documento: String
-            }
-        }],
+        profesionales: [profesional],
         // Lugar donde se realiza
         organizacion: {
             type: {
@@ -90,4 +90,4 @@ export let schema = new mongoose.Schema({
 // Habilitar plugin de auditoría
 schema.plugin(require('../../../mongoose/audit'));
 
-export let model = mongoose.model('prestacion', schema, 'prestaciones');
+export let prestacion = mongoose.model('prestacion', schema, 'prestacion');

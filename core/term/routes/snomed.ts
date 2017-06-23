@@ -128,7 +128,9 @@ router.get('/snomed', function (req, res, next) {
         '$and': [], 'active': true, 'conceptActive': true,
         '$or': [
             { semanticTag: 'hallazgo' },
-            { semanticTag: 'trastorno' }
+            { semanticTag: 'trastorno' },
+            { semanticTag: 'procedimento' },
+            { semanticTag: 'entidad observable' }
         ]
     };
     words.forEach(function (word) {
@@ -174,13 +176,14 @@ router.get('/snomed', function (req, res, next) {
     const projection = {
         conceptId: 1,
         term: 1,
-        active: 1,
-        conceptActive: 1,
-        'descriptions.term': 1,
-        'descriptions.lang': 1,
+        // active: 1,
+        // conceptActive: 1,
+        // 'descriptions.term': 1,
+        // 'descriptions.lang': 1,
         fsn: 1,
-        module: 1,
-        definitionStatus: 1
+        // module: 1,
+        // definitionStatus: 1,
+        semanticTag: 1
     };
 
     // preparamos query

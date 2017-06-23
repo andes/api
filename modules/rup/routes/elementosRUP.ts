@@ -4,7 +4,7 @@ import { elementoRUP } from '../schemas/elementoRUP';
 
 let router = express.Router();
 
-router.get('/elementoRUP/:id*?', function (req, res, next) {
+router.get('/elementosRUP/:id*?', function (req, res, next) {
     let query;
     if (req.params.id) {
         query = elementoRUP.findById(req.params.id);
@@ -41,14 +41,16 @@ router.get('/elementoRUP/:id*?', function (req, res, next) {
             query.where('autonoma').equals(req.query.autonoma);
         }
         query.where('activo').equals(1);
-        
+
     }
     query.populate('frecuentes');
     query.populate('requeridos').sort({ 'nombre': 1 }).exec(function (err, data) {
         if (err) {
-            console.log(err);
             next(err);
         };
         res.json(data);
     });
 });
+
+
+export = router;
