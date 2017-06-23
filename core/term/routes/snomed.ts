@@ -129,7 +129,7 @@ router.get('/snomed', function (req, res, next) {
         '$or': [
             { semanticTag: 'hallazgo' },
             { semanticTag: 'trastorno' },
-            { semanticTag: 'procedimento' },
+            { semanticTag: 'procedimiento' },
             { semanticTag: 'entidad observable' }
         ]
     };
@@ -191,7 +191,7 @@ router.get('/snomed', function (req, res, next) {
 
     // limitamos resultados
     // query.limit(req.query.limit | 10);
-    query.limit(1000);
+    query.limit(10000);
     query.exec(function (err, data) {
         if (err) {
             next(err);

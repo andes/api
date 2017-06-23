@@ -7,12 +7,17 @@ let router = express.Router();
 
 router.get('/prestaciones/:id*?', function (req, res, next) {
     let query;
+    let mensajeError = "";
+
     if (req.params.id) {
         query = prestacion.findById(req.params.id);
+
+        mensajeError = "Prestación no encontrada";
+
     } else {
         if (req.query.estado) {
             query = prestacion.find({
-                $where: 'this.estado[this.estado.length - 1].tipo == "' + req.query.estado + '"'
+                $where: 'this.estados[this.estados.length - 1].tipo == "' + req.query.estado + '"'
             });
         } else {
             query = prestacion.find({}); // Trae todos
@@ -54,84 +59,11 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
     }
 
 
-    // query.populate({
-    //     path: 'solicitud.tipoPrestacion.ejecucion',
-    //     model: 'tipoPrestacion'
-    // });
-
-    // query.populate({
-    //     path: 'solicitud.tipoPrestacion.ejecucion.prestaciones',
-    //     model: 'prestacion',
-    //     populate: {
-    //         path: 'solicitud.listaProblemas',
-    //         model: 'problema',
-    //         // populate: {
-    //         //     path: 'tipoProblema',
-    //         //     model: 'tipoProblema'
-    //         // }
-    //     }
-    // });
-
-    // // populuamos todo lo necesario de la ejecucion
-    // query.populate({
-    //     path: 'ejecucion.prestaciones',
-    //     model: 'prestacion',
-    //     populate: [{
-    //         path: 'solicitud.listaProblemas',
-    //         model: 'problema',
-    //         // populate: {
-    //         //     path: 'tipoProblema',
-    //         //     model: 'tipoProblema'
-    //         // },
-    //     },
-    //     {
-    //         path: 'ejecucion.listaProblemas',
-    //         model: 'problema',
-    //         // populate: {
-    //         //     path: 'tipoProblema',
-    //         //     model: 'tipoProblema'
-    //         // },
-    //     }]
-    // });
-
-    // query.populate({
-    //     path: 'ejecucion.listaProblemas',
-    //     model: 'problema',
-    //     // populate: {
-    //     //     path: 'tipoProblema',
-    //     //     model: 'tipoProblema'
-    //     // }
-    // });
-
-    // query.populate({
-    //     path: 'ejecucion.listaProblemas',
-    //     model: 'problema',
-    //     populate: {
-    //         path: 'evoluciones.profesional',
-    //         model: 'profesional'
-    //     }
-    // });
-
-    // // populuamos las prestaciones a futuro
-    // query.populate({
-    //     path: 'prestacionesSolicitadas',
-    //     model: 'prestacion',
-    //     populate: {
-    //         path: 'solicitud.listaProblemas',
-    //         model: 'problema',
-    //         // populate: {
-    //         //     path: 'tipoProblema',
-    //         //     model: 'tipoProblema'
-    //         // }
-    //     }
-    // });
-
     query.sort({ 'solicitud.fecha': -1 });
 
     if (req.query.limit) {
         query.limit(parseInt(req.query.limit, 10));
     }
-
 
     query.exec(function (err, data) {
         if (err) {
@@ -161,6 +93,92 @@ router.post('/prestaciones', function (req, res, next) {
 
         res.json(unaPrestacion);
     });
+});
+
+router.patch('/prestaciones/:id', function (req, res, next) {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+        next('ID inválido');
+    }
+
+    prestacion.findById(req.params.id, (err, data) => {
+        if (err) {
+            next(err);
+        }
+
+        let modificacion = {};
+        switch (req.body.op) {
+            case 'estado':
+                if (req.body.estado) {
+                    modificacion = { '$set': { 'estados': req.body.estado } }
+                    // data.set('estado', req.body.estado);
+                }
+                break;
+            case 'estadoPush':
+                if (req.body.estado) {
+                    // modificacion = { '$push': { 'estado': { tipo: req.body.estado } } }
+
+                    //modificacion = { '$push': { 'estados': req.body.estado } }
+                    data['estados'].push(req.body.estado);
+                }
+                break;
+            case 'listaProblemas':
+                if (req.body.problema) {
+                    modificacion = { '$push': { 'ejecucion.listaProblemas': req.body.problema } }
+                    // data['ejecucion'].listaProblemas.push(req.body.problema);
+                }
+                break;
+            case 'listaProblemasSolicitud':
+                if (req.body.problema) {
+                    modificacion = { '$push': { 'solicitud.listaProblemas': req.body.problema } }
+                    // ata['solicitud'].listaProblemas.push(req.body.problema);
+                }
+                break;
+            case 'desvincularProblema':
+                if (req.body.idProblema) {
+                    modificacion = { '$pull': { 'ejecucion.listaProblemas': req.body.idProblema } };
+                }
+                break;
+            // case 'desvincularPlan':
+            //     if (req.body.idPrestacionFutura) {
+            //         modificacion = { '$pull': { 'prestacionesSolicitadas': req.body.idPrestacionFutura } };
+            //     }
+            //     break;
+            case 'desvincularPlan':
+                if (req.body.idProblema) {
+                    modificacion = { '$pull': { 'solicitud.listaProblemas': req.body.idProblema } };
+                }
+                break;
+            default:
+                next('Error: No se seleccionó ninguna opción.');
+                break;
+        }
+
+        if (!modificacion) {
+            return next('Opción inválida.');
+        }
+        // TODO: refactor findByIdAndUpdate
+
+        Auth.audit(data, req);
+        //prestacion.findByIdAndUpdate(req.params.id, modificacion, { upsert: false }, function (err, data) {
+        data.save(function (err, data) {
+            if (err) {
+                return next(err);
+            }
+            // Auth.audit(data, req);
+            /*
+            Logger.log(req, 'prestacionPaciente', 'update', {
+                accion: req.body.op,
+                ruta: req.url,
+                method: req.method,
+                data: data,
+                err: err || false
+            });
+            */
+            res.json(data);
+        });
+    });
+
+    
 });
 
 
