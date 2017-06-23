@@ -27,6 +27,7 @@ router.get('/turno', function (req, res, next) {
                 $match:
                 {
                     'horaInicio': { '$gte': horaAgendaOrig }, // Que sean agendas futuras
+                    '$or': [{ estado: 'disponible' }, { estado: 'publicada'}],
                     'tipoPrestaciones._id': mongoose.Types.ObjectId(turno.tipoPrestacion._id), // Que tengan incluída la prestación del turno
                     '_id': { '$ne': mongoose.Types.ObjectId(req.query.idAgenda) }, // Que no sea la agenda original
                     'bloques.duracionTurno': bloque.duracionTurno // Que al menos un bloque esté configurado con la misma duracion que el turno
