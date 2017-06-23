@@ -15,6 +15,8 @@ router.get('/turno', function (req, res, next) {
             next(err);
         };
         let resultado = data as any;
+        let today = new Date();
+        today.setHours(resultado.horaInicio.getHours(), resultado.horaInicio.getMinutes(),0, 0)
         let indiceBloque = resultado.bloques.findIndex(y => Object.is(req.query.idBloque, String(y._id)));
         let indiceTurno = resultado.bloques[indiceBloque].turnos.findIndex(y => Object.is(req.query.idTurno, String(y._id)));
         let bloque = resultado.bloques[indiceBloque];
@@ -24,6 +26,7 @@ router.get('/turno', function (req, res, next) {
             {
                 $match:
                 {
+                    'horaInicio': { '$gte': today },
                     'tipoPrestaciones._id': mongoose.Types.ObjectId(turno.tipoPrestacion._id),
                     '_id': { '$ne': mongoose.Types.ObjectId(req.query.idAgenda) },
                     'bloques.duracionTurno': bloque.duracionTurno
@@ -34,7 +37,7 @@ router.get('/turno', function (req, res, next) {
             if (err) {
                 return next(err);
             }
-            let resultado = [];
+            let out = [];
             data.forEach(function (a) {
                 a.bloques.forEach(function (b) {
                     // console.log('b', b);
@@ -42,13 +45,13 @@ router.get('/turno', function (req, res, next) {
                     b.turnos.forEach(function (t) {
                         let horaIni = moment(t.horaInicio).format('HH:mm');
                         if (horaIni.toString() === moment(turno.horaInicio).format('HH:mm')) {
-                            resultado.push(a);
+                            out.push(a);
                         }
                     });
                 })
                 // res.json(data);
             });
-            res.json(resultado);
+            res.json(out);
 
             // let query = agenda.find({});
             // query.where('_id').ne(req.query.idAgenda);
@@ -71,7 +74,7 @@ router.get('/turno', function (req, res, next) {
     });
 });
 
-router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function(req, res, next) {
+router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, res, next) {
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
 
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
@@ -230,7 +233,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function(req,
 });
 
 
-router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function(req, res, next) {
+router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, res, next) {
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
     let continues = ValidateDarTurno.checkTurno(req.body.turno);
 
@@ -284,9 +287,9 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function(req, r
                 });
         });
     } else {
-    console.log('NO VALIDO');
-    return next('Los datos del paciente son inválidos');
-}
+        console.log('NO VALIDO');
+        return next('Los datos del paciente son inválidos');
+    }
 });
 
 export = router;
