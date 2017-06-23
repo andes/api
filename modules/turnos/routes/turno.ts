@@ -10,45 +10,47 @@ import * as moment from 'moment';
 let router = express.Router();
 
 router.get('/turno', function (req, res, next) {
+    // Busco la agenda completa que contiene el turno a reasignar
     agenda.findById(req.query.idAgenda, function (err, data) {
         if (err) {
             next(err);
         };
         let resultado = data as any;
+        let horaAgendaOrig = new Date();
+        horaAgendaOrig.setHours(resultado.horaInicio.getHours(), resultado.horaInicio.getMinutes(),0, 0)
         let indiceBloque = resultado.bloques.findIndex(y => Object.is(req.query.idBloque, String(y._id)));
         let indiceTurno = resultado.bloques[indiceBloque].turnos.findIndex(y => Object.is(req.query.idTurno, String(y._id)));
         let bloque = resultado.bloques[indiceBloque];
         let turno = resultado.bloques[indiceBloque].turnos[indiceTurno];
-        console.log('hora ', moment(turno.horaInicio).format('HH:mm'));
         agenda.aggregate([
             {
                 $match:
                 {
-                    'tipoPrestaciones._id': mongoose.Types.ObjectId(turno.tipoPrestacion._id),
-                    '_id': { '$ne': mongoose.Types.ObjectId(req.query.idAgenda) },
-                    'bloques.duracionTurno': bloque.duracionTurno
+                    'horaInicio': { '$gte': horaAgendaOrig }, // Que sean agendas futuras
+                    '$or': [{ estado: 'disponible' }, { estado: 'publicada'}],
+                    'tipoPrestaciones._id': mongoose.Types.ObjectId(turno.tipoPrestacion._id), // Que tengan incluída la prestación del turno
+                    '_id': { '$ne': mongoose.Types.ObjectId(req.query.idAgenda) }, // Que no sea la agenda original
+                    'bloques.duracionTurno': bloque.duracionTurno // Que al menos un bloque esté configurado con la misma duracion que el turno
                 }
             }
 
-        ], function (err, data) {
+        ], function (err1, data1) {
             if (err) {
                 return next(err);
             }
-            let resultado = [];
-            data.forEach(function (a) {
+            let out = [];
+            // verifico que existe un turno con el mismo horario del turno a reasignar y que esté disponible
+            data1.forEach(function (a) {
                 a.bloques.forEach(function (b) {
-                    // console.log('b', b);
-
                     b.turnos.forEach(function (t) {
                         let horaIni = moment(t.horaInicio).format('HH:mm');
-                        if (horaIni.toString() === moment(turno.horaInicio).format('HH:mm')) {
-                            resultado.push(a);
+                        if (horaIni.toString() === moment(turno.horaInicio).format('HH:mm') && t.estado === 'disponible') {
+                            out.push(a);
                         }
                     });
-                })
-                // res.json(data);
+                });
             });
-            res.json(resultado);
+            res.json(out);
 
             // let query = agenda.find({});
             // query.where('_id').ne(req.query.idAgenda);
@@ -71,7 +73,7 @@ router.get('/turno', function (req, res, next) {
     });
 });
 
-router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function(req, res, next) {
+router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, res, next) {
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
 
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
@@ -230,7 +232,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function(req,
 });
 
 
-router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function(req, res, next) {
+router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, res, next) {
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
     let continues = ValidateDarTurno.checkTurno(req.body.turno);
 
@@ -284,9 +286,9 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function(req, r
                 });
         });
     } else {
-    console.log('NO VALIDO');
-    return next('Los datos del paciente son inválidos');
-}
+        console.log('NO VALIDO');
+        return next('Los datos del paciente son inválidos');
+    }
 });
 
 export = router;
