@@ -7,12 +7,44 @@ import * as express from 'express';
 let router = express.Router();
 
 router.post('/login', function (req, res, next) {
-    var userInfo = setUserInfo(req.body.user);
+    var email = req.body.email;
+    var password = req.body.password;
 
-    res.status(200).json({
-        token: 'JWT ' + generateToken(userInfo),
-        user: userInfo
+    if (!email) {
+        return res.status(422).send({ error: 'Se debe ingresar una dirección de e-mail' });
+    }
+
+    if (!password) {
+        return res.status(422).send({ error: 'Debe ingresar una clave' });
+    }
+
+    pacienteApp.findOne({ email }, (err, existingUser: any) => {
+
+        if (err) {
+            return next(err);
+        }
+
+        existingUser.comparePassword(password, (err, isMatch) => {
+            if (err) {
+                return next(err);
+            }
+            if (isMatch) {
+
+                var userInfo = setUserInfo(existingUser);
+
+                res.status(200).json({
+                    token: 'JWT ' + generateToken(userInfo),
+                    user: userInfo
+                });
+                return;
+            } else {
+                return res.status(422).send({ error: 'e-mail o password incorrecto' });
+            }
+        });
     });
+    /*
+    
+    */
 });
 
 router.post('/registro', function (req, res, next) {
