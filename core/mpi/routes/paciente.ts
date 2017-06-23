@@ -755,6 +755,7 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
             // if (patientFound.estado !== 'validado') {
             patientFound.documento = req.body.documento;
             patientFound.estado = req.body.estado;
+            patientFound.activo = req.body.activo;
             patientFound.nombre = req.body.nombre.toUpperCase();
             patientFound.apellido = req.body.apellido.toUpperCase();
             patientFound.sexo = req.body.sexo;
@@ -993,8 +994,6 @@ router.post('/pacientes', function (req, res, next) {
         });
     });
 });
-
-
 /**
  * @swagger
  * /pacientes:
@@ -1072,6 +1071,7 @@ router.put('/pacientes/:id', function (req, res, next) {
 
             patientFound.genero = req.body.genero;
             patientFound.alias = req.body.alias;
+            patientFound.activo = req.body.activo;
             patientFound.estadoCivil = req.body.estadoCivil;
             patientFound.entidadesValidadoras = req.body.entidadesValidadoras;
             patientFound.financiador = req.body.financiador;
@@ -1356,6 +1356,20 @@ function updateCarpetaEfectores(req, data) {
     data.carpetaEfectores = req.body.carpetaEfectores;
 }
 
+function updateIdentificadores(req, data) {
+    data.markModified('identificadores');
+    if (data.identificadores) {
+        data.identificadores.push(req.body.dto);
+    } else {
+        data.identificadores = [req.body.dto]; // Primer elemento del array
+    }
+}
+
+function desactivarPaciente(req, data) {
+    data.markModified('activo');
+    data.activo = req.body.dto;
+}
+
 function updateRelacion(req, data) {
     if (data && data.relaciones) {
         let objRel = data.relaciones.find(elem => {
@@ -1403,7 +1417,13 @@ router.patch('/pacientes/:id', function (req, res, next) {
                 case 'updateCarpetaEfectores':
                     updateCarpetaEfectores(req, resultado.paciente);
                     break;
-
+                case 'updateIdentificadores':
+                    updateIdentificadores(req, resultado.paciente);
+                    break;
+                case 'desactivarPaciente':
+                    console.log('entro por aca y resultado es:', resultado);
+                    desactivarPaciente(req, resultado.paciente);
+                    break;
                 case 'updateRelacion':
                     // console.log("RESULTADO BUSQUEDApACIENTE--------", resultado);
                     updateRelacion(req, resultado.paciente);

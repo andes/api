@@ -1,11 +1,37 @@
 import { servicioSintys } from '../../../../utils/servicioSintys';
 import * as express from 'express';
 import { paciente } from '../../schemas/paciente';
+import { pacienteMpi } from '../../schemas/paciente';
 import * as  ServicioSisa from '../../../../utils/servicioSisa';
 import * as  validarSisa from '../../../../utils/validarPacienteSisa';
 import * as config from '../../../../config';
 
 let router = express.Router();
+
+
+/* Obtengo los pacientes que tienen la misma clave de blocking */
+router.get('/bloques/pacientes/:idTipoBloque/:idBloque', function (req, res, next) {
+    let redix = 10;
+    let idTipoBloque: number = parseInt(req.params.idTipoBloque, redix);
+    let filtro = 'claveBlocking.' + idTipoBloque;
+    let query = {activo: true};
+    let lista = [];
+
+    query[filtro] = {
+        $eq: req.params.idBloque,
+    };
+
+    Promise.all([
+        paciente.find(query),
+        pacienteMpi.find(query)
+    ]).then((data: any[]) => {
+        data.forEach(listaPac => {
+            lista = lista.concat(listaPac);
+        });
+        res.json(lista);
+    });
+});
+
 
 router.get('/bloques/:idTipoBloque', function (req, res, next) {
     if (req.params.idTipoBloque) {
@@ -41,31 +67,6 @@ router.get('/bloques/:idTipoBloque', function (req, res, next) {
         })
     }
 });
-
-router.get('/bloques/pacientes/:idTipoBloque/:idBloque', function (req, res, next) {
-    let filtro = 'claveBlocking.' + req.params.idTipoBloque;
-    let query = {};
-    query[filtro] = {
-        $eq: req.params.idBloque
-    };
-
-    // console.log('Parametros', query)
-    paciente.find(query, function (err, data) {
-        if (err) {
-            next(err);
-        };
-
-        let lista;
-        lista = data.map(ele => {
-            return {
-                'paciente': ele,
-                'matcheos': null
-            };
-        });
-        res.json(lista);
-    });
-});
-
 router.get('/bloques/pacientesSisa/:idTipoBloque/:idBloque', function (req, res, next) {
     let filtro = 'claveBlocking.' + req.params.idTipoBloque;
     let query = {};

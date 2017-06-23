@@ -1,6 +1,6 @@
 import * as express from 'express';
 import { paciente } from '../../schemas/paciente';
-import { ServicioSisa } from '../../../../utils/servicioSisa';
+import * as servicioSisa from '../../../../utils/servicioSisa';
 
 let router = express.Router();
 
@@ -34,13 +34,12 @@ router.get('/matching/:id*?', function (req, res, next) {
 router.patch('/matching/:id', function (req, res, next) {
     paciente.findById(req.params.id, function (err, data) {
         if (req.body.op === 'validarSisa') {
-            let servSisa = new ServicioSisa();
             let pacienteOriginal;
             let pacienteAux;
             pacienteOriginal = data;
             pacienteAux = data;
             let pacientesRes = [];
-            servSisa.matchSisa(pacienteAux)
+            servicioSisa.matchSisa(pacienteAux)
                 .then(resultado => {
                     pacientesRes.push(resultado);
                     let arrPacValidados;
