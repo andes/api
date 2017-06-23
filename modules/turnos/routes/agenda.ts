@@ -5,6 +5,7 @@ import * as express from 'express';
 import * as agenda from '../schemas/agenda';
 import * as mongoose from 'mongoose';
 import { Logger } from '../../../utils/logService';
+import * as moment from 'moment';
 
 let router = express.Router();
 
@@ -371,9 +372,31 @@ function guardarNotaTurno(req, data, tid = null) {
 }
 
 // Turno
-function darTurnoDoble(req, data, tid = null) {
-    let turno = getTurno(req, data, tid);
-    turno.estado = 'turnoDoble';
+function darTurnoDoble(req, data, tid = null) {   //NUEVO
+    let position = getPosition(req, data, tid);
+    let agenda = data;
+    if ((position.indexBloque > -1) && (position.indexTurno > -1)) {
+        let turnoAnterior = agenda.bloques[position.indexBloque].turnos[position.indexTurno];
+
+        // Verifico si existen turnos disponibles del tipo correspondiente
+        let countBloques = calcularContadoresTipoTurno(position.indexBloque, position.indexTurno, agenda);
+        if ((countBloques[turnoAnterior.tipoTurno] as number) === 0) {
+            return ({
+                err: 'No se puede asignar el turno doble ' + req.body.tipoTurno
+            });
+        } else {
+            // se controla la disponibilidad de los tipos de turnos
+            // el turno doble se otorgarpa si existe disponibilidad de la cantidad de tipo del turno asociado
+            let turno = getTurno(req, data, tid);
+            turno.estado = 'turnoDoble';
+        }
+
+    } else {
+        return ({
+            err: 'No se puede asignar el turno doble'
+        });
+    }
+
 }
 
 // Agenda
@@ -449,18 +472,34 @@ function getTurno(req, data, idTurno = null) {
     return false;
 }
 
-function getTurnoSiguiente(req, agenda, idTurno = null) {
+function getPosition(req, agenda, idTurno = null) {
     idTurno = idTurno || req.body.idTurno;
-    let index;
+    let index = -1;
     let turnos;
+    let position = { indexBloque: -1, indexTurno: -1 };
     // Loop en los bloques
     for (let x = 0; x < agenda.bloques.length; x++) {
         // Si existe este bloque...
         turnos = agenda.bloques[x].turnos;
-        index = turnos.findIndex((t) => { return t._id == idTurno; });
-        if (index > -1 && (index < turnos.length - 1) && (turnos[index + 1].estado === 'turnoDoble')) {
-            return turnos[index + 1];
+        index = turnos.findIndex((t) => { return t._id.toString() === idTurno.toString(); });
+        if (index > -1) {
+            position.indexBloque = x;
+            position.indexTurno = index;
         }
+    }
+    return position;
+}
+
+
+function getTurnoSiguiente(req, agenda, idTurno = null) {
+    let position = getPosition(req, agenda, idTurno = null);
+    let index = position.indexTurno;
+    let turnos = [];
+    if (position.indexBloque > -1) {
+        turnos = agenda.bloques[position.indexBloque].turnos;
+    }
+    if ((index > -1) && (index < turnos.length - 1) && (turnos[index + 1].estado === 'turnoDoble')) {
+        return turnos[index + 1];
     }
     return null;
 }
@@ -480,6 +519,57 @@ function combinarFechas(fecha1, fecha2) {
     } else {
         return null;
     }
+}
+
+function calcularContadoresTipoTurno(posBloque, posTurno, agenda) {
+    // Los siguientes 2 for ubican el indice del bloque y del turno
+    let countBloques;
+    let esHoy = false;
+    // Ver si el día de la agenda coincide con el día de hoy
+    if (agenda.horaInicio >= moment(new Date()).startOf('day').toDate() && agenda.horaInicio <= moment(new Date()).endOf('day').toDate()) {
+        esHoy = true;
+    }
+
+    // Contadores de "delDia" y "programado" varían según si es el día de hoy o no
+    countBloques = {
+        delDia: esHoy ? ((agenda.bloques[posBloque].accesoDirectoDelDia as number) + (agenda.bloques[posBloque].accesoDirectoProgramado as number)) : agenda.bloques[posBloque].accesoDirectoDelDia,
+        programado: esHoy ? 0 : agenda.bloques[posBloque].accesoDirectoProgramado,
+        gestion: agenda.bloques[posBloque].reservadoGestion,
+        profesional: agenda.bloques[posBloque].reservadoProfesional
+    };
+
+    // Restamos los turnos asignados de a cuenta
+    if (agenda.bloques[posBloque].turnos[posTurno].estado === 'asignado') {
+        if (esHoy) {
+            switch (agenda.bloques[posBloque].turnos[posTurno].tipoTurno) {
+                case ('delDia'):
+                    countBloques.delDia--;
+                    break;
+                case ('programado'):
+                    countBloques.delDia--;
+                    break;
+                case ('profesional'):
+                    countBloques.profesional--;
+                    break;
+                case ('gestion'):
+                    countBloques.gestion--;
+                    break;
+            }
+        } else {
+            switch (agenda.bloques[posBloque].turnos[posTurno].tipoTurno) {
+                case ('programado'):
+                    countBloques.programado--;
+                    break;
+                case ('profesional'):
+                    countBloques.profesional--;
+                    break;
+                case ('gestion'):
+                    countBloques.gestion--;
+                    break;
+            }
+        }
+    }
+    return countBloques;
 }
 
 // Dado un turno, se crea una prestacionPaciente

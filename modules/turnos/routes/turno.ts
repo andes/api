@@ -4,13 +4,76 @@ import { Logger } from '../../../utils/logService';
 import { ValidateDarTurno } from '../../../utils/validateDarTurno';
 import { paciente } from '../../../core/mpi/schemas/paciente';
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
-// import { Auth } from './../../../auth/auth.class';
+import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 
 let router = express.Router();
 
+router.get('/turno', function (req, res, next) {
+    // Busco la agenda completa que contiene el turno a reasignar
+    agenda.findById(req.query.idAgenda, function (err, data) {
+        if (err) {
+            next(err);
+        };
+        let resultado = data as any;
+        let horaAgendaOrig = new Date();
+        horaAgendaOrig.setHours(resultado.horaInicio.getHours(), resultado.horaInicio.getMinutes(),0, 0)
+        let indiceBloque = resultado.bloques.findIndex(y => Object.is(req.query.idBloque, String(y._id)));
+        let indiceTurno = resultado.bloques[indiceBloque].turnos.findIndex(y => Object.is(req.query.idTurno, String(y._id)));
+        let bloque = resultado.bloques[indiceBloque];
+        let turno = resultado.bloques[indiceBloque].turnos[indiceTurno];
+        agenda.aggregate([
+            {
+                $match:
+                {
+                    'horaInicio': { '$gte': horaAgendaOrig }, // Que sean agendas futuras
+                    '$or': [{ estado: 'disponible' }, { estado: 'publicada'}],
+                    'tipoPrestaciones._id': mongoose.Types.ObjectId(turno.tipoPrestacion._id), // Que tengan incluída la prestación del turno
+                    '_id': { '$ne': mongoose.Types.ObjectId(req.query.idAgenda) }, // Que no sea la agenda original
+                    'bloques.duracionTurno': bloque.duracionTurno // Que al menos un bloque esté configurado con la misma duracion que el turno
+                }
+            }
 
-router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function(req, res, next) {
+        ], function (err1, data1) {
+            if (err) {
+                return next(err);
+            }
+            let out = [];
+            // verifico que existe un turno con el mismo horario del turno a reasignar y que esté disponible
+            data1.forEach(function (a) {
+                a.bloques.forEach(function (b) {
+                    b.turnos.forEach(function (t) {
+                        let horaIni = moment(t.horaInicio).format('HH:mm');
+                        if (horaIni.toString() === moment(turno.horaInicio).format('HH:mm') && t.estado === 'disponible') {
+                            out.push(a);
+                        }
+                    });
+                });
+            });
+            res.json(out);
+
+            // let query = agenda.find({});
+            // query.where('_id').ne(req.query.idAgenda);
+
+            // query.where('tipoPrestaciones._id').equals(turno.tipoPrestacion._id);
+
+            // // Filtro las agendas que tengan al menos un bloque con la misma duración del turno
+            // query.where('bloques').elemMatch(function (elem) {
+            //     elem.where('duracionTurno', bloque.duracionTurno);
+            // });
+
+            // query.exec(function (err, data) {
+            //     if (err) {
+            //         return next(err);
+            //     }
+
+            //     res.json(data);
+            // });
+        });
+    });
+});
+
+router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, res, next) {
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
 
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
@@ -31,7 +94,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function(req,
                         console.log('TIPO PRESTACION INEXISTENTE', err);
                         return next(err);
                     } else {
-                        console.log(cant);
 
                         // Se obtiene la agenda que se va a modificar
                         agenda.findById(req.params.idAgenda, function getAgenda(err, data) {
@@ -41,7 +103,8 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function(req,
                             let posBloque: number;
                             let posTurno: number;
 
-                            let countBloques = [];
+                            // let countBloques = [];
+                            let countBloques;
                             let esHoy = false;
 
                             // Los siguientes 2 for ubican el indice del bloque y del turno
@@ -55,12 +118,12 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function(req,
                                     }
 
                                     // Contadores de "delDia" y "programado" varían según si es el día de hoy o no
-                                    countBloques.push({
+                                    countBloques = {
                                         delDia: esHoy ? (((data as any).bloques[x].accesoDirectoDelDia as number) + ((data as any).bloques[x].accesoDirectoProgramado as number)) : (data as any).bloques[x].accesoDirectoDelDia,
                                         programado: esHoy ? 0 : (data as any).bloques[x].accesoDirectoProgramado,
                                         gestion: (data as any).bloques[x].reservadoGestion,
                                         profesional: (data as any).bloques[x].reservadoProfesional
-                                    });
+                                    };
 
                                     for (let y = 0; y < (data as any).bloques[posBloque].turnos.length; y++) {
                                         if ((data as any).bloques[posBloque].turnos[y]._id.equals(req.params.idTurno)) {
@@ -72,28 +135,29 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function(req,
                                             if (esHoy) {
                                                 switch ((data as any).bloques[posBloque].turnos[y].tipoTurno) {
                                                     case ('delDia'):
-                                                        countBloques[x].delDia--;
+                                                        // countBloques[x].delDia--;
+                                                        countBloques.delDia--;
                                                         break;
                                                     case ('programado'):
-                                                        countBloques[x].delDia--;
+                                                        countBloques.delDia--;
                                                         break;
                                                     case ('profesional'):
-                                                        countBloques[x].profesional--;
+                                                        countBloques.profesional--;
                                                         break;
                                                     case ('gestion'):
-                                                        countBloques[x].gestion--;
+                                                        countBloques.gestion--;
                                                         break;
                                                 }
                                             } else {
                                                 switch ((data as any).bloques[posBloque].turnos[y].tipoTurno) {
                                                     case ('programado'):
-                                                        countBloques[x].programado--;
+                                                        countBloques.programado--;
                                                         break;
                                                     case ('profesional'):
-                                                        countBloques[x].profesional--;
+                                                        countBloques.profesional--;
                                                         break;
                                                     case ('gestion'):
-                                                        countBloques[x].gestion--;
+                                                        countBloques.gestion--;
                                                         break;
                                                 }
                                             }
@@ -138,7 +202,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function(req,
                             (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true, passRawResult: true },
                                 function actualizarAgenda(err2, doc2, writeOpResult) {
                                     if (err2) {
-                                        console.log('ERR2: ' + err2);
                                         return next(err2);
                                     }
                                     if (writeOpResult.value === null) {
@@ -169,7 +232,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function(req,
 });
 
 
-router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function(req, res, next) {
+router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, res, next) {
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
     let continues = ValidateDarTurno.checkTurno(req.body.turno);
 
@@ -204,7 +267,6 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function(req, r
             let query = {
                 _id: req.params.idAgenda,
             };
-            console.log('PUT EN TURNOS', etiquetaTurno);
             // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
             (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true, passRawResult: true },
                 function actualizarAgenda(err2, doc2, writeOpResult) {
@@ -224,9 +286,9 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function(req, r
                 });
         });
     } else {
-    console.log('NO VALIDO');
-    return next('Los datos del paciente son inválidos');
-}
+        console.log('NO VALIDO');
+        return next('Los datos del paciente son inválidos');
+    }
 });
 
 export = router;
