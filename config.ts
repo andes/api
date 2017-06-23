@@ -69,6 +69,12 @@ export const modules = {
         route: '/modules/auditorias',
         auth: true,
     },
+    turnos_mobile: {
+        active: true,
+        path: './modules/turnosmobile/routes',
+        route: '/modules/turnosmobile',
+        auth: false,
+    },
 };
 
 // Cotas de consumo de APIs
