@@ -20,6 +20,21 @@ export let pacienteAppSchema = new mongoose.Schema({
     usuario: {
         type: String
     },
+    documento: {
+        type: String
+    },
+    nacionalidad: {
+        type: String
+    },
+    sexo: {
+        type: String
+    },
+    genero: {
+        type: String
+    },
+    telefono: {
+        type: String
+    },
     password: {
         type: String,
         required: true
