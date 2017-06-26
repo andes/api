@@ -1376,7 +1376,7 @@ function updateCarpetaEfectores(req, data) {
     data.carpetaEfectores = req.body.carpetaEfectores;
 }
 
-function updateIdentificadores(req, data) {
+function linkIdentificadores(req, data) {
     data.markModified('identificadores');
     if (data.identificadores) {
         data.identificadores.push(req.body.dto);
@@ -1385,7 +1385,14 @@ function updateIdentificadores(req, data) {
     }
 }
 
-function desactivarPaciente(req, data) {
+function unlinkIdentificadores(req, data) {
+    data.markModified('identificadores');
+    if (data.identificadores) {
+        data.identificadores = data.identificadores.filter(x => x.valor !== req.body.dto);
+    }
+}
+
+function updateActivo(req, data) {
     data.markModified('activo');
     data.activo = req.body.dto;
 }
@@ -1437,12 +1444,14 @@ router.patch('/pacientes/:id', function (req, res, next) {
                 case 'updateCarpetaEfectores':
                     updateCarpetaEfectores(req, resultado.paciente);
                     break;
-                case 'updateIdentificadores':
-                    updateIdentificadores(req, resultado.paciente);
+                case 'linkIdentificadores':
+                    linkIdentificadores(req, resultado.paciente);
                     break;
-                case 'desactivarPaciente':
-                    console.log('entro por aca y resultado es:', resultado);
-                    desactivarPaciente(req, resultado.paciente);
+                case 'unlinkIdentificadores':
+                    unlinkIdentificadores(req, resultado.paciente);
+                    break;
+                case 'updateActivo':
+                    updateActivo(req, resultado.paciente);
                     break;
                 case 'updateRelacion':
                     // console.log("RESULTADO BUSQUEDApACIENTE--------", resultado);
