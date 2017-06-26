@@ -6,7 +6,8 @@ let router = express.Router();
 router.get('/app', function (req, res, next) {
 
     console.log("Entra a Pacientess desde adentro");
-    pacienteApp.find(req.params.idOrganizacion, function (err, data) {
+
+    pacienteApp.find(function (err, data) {
         if (err) {
             next(err);
         };
