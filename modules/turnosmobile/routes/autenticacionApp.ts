@@ -54,6 +54,7 @@ router.post('/registro', function (req, res, next) {
         email: req.body.email,
         password: req.body.password,
         telefono: req.body.telefono,
+        envioCodigoCount: 0,
         nacionalidad: req.body.nacionalidad,
         documento: req.body.documento,
         fechaNacimiento: req.body.fechaNacimiento,
@@ -91,7 +92,7 @@ router.post('/registro', function (req, res, next) {
             }
 
             var userInfo = setUserInfo(user);
-            console.log("User", user);
+
             enviarCodigoVerificacion(user);
 
             res.status(201).json({
@@ -105,8 +106,48 @@ router.post('/registro', function (req, res, next) {
 
 });
 
+router.post('/reenviarCodigo', function (req, res, next) {
+    console.log("Reenviar ");
+    // enviarCodigoVerificacion(req);
+});
+
+//Verifica el código de validación enviado por mail o SMS
+router.post('/verificarCodigo', function (req, res, next) {
+    let email = req.body.email;
+    let codigoIngresado = req.body.codigo;
+
+    pacienteApp.findOne({ email: email }, function (err, datosUsuario) {
+
+        if (verificarCodigo(codigoIngresado.codigo, datosUsuario.codigoVerificacion)) {
+
+            datosUsuario.activacionApp = true;
+            datosUsuario.estadoCodigo = true;
+
+            datosUsuario.save(function (err, data) {
+                if (err) {
+                    return next(err);
+                }
+
+                res.json(data);
+            });
+        }
+        else {
+            // datosUsuario.
+            console.log("Naa que ver");
+
+        }
+    });
+});
+
+function verificarCodigo(codigoIngresado, codigo) {
+    if (codigoIngresado === codigo)
+        return true
+    else
+        return false
+}
 
 function enviarCodigoVerificacion(user) {
+    console.log("Enviando mail...");
     let transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',
         port: 465,
@@ -119,19 +160,30 @@ function enviarCodigoVerificacion(user) {
 
     // setup email data with unicode symbols
     let mailOptions = {
-        from: '"Salud 👻" <publicacionsaludnqn@gmail.com>', // sender address
+        from: '"Salud 🏥" <publicacionsaludnqn@gmail.com>', // sender address
         to: user.email, // list of receivers
         subject: 'Hola ' + user.nombre + ' ✔', // Subject line
         text: 'Ingrese su código de verificación en la app', // plain text body
-        html: '<b>El código es: ' + user.codigoVerificacion + '</b>' // html body
+        html: '<b>El código de vrificación es: ' + user.codigoVerificacion + '</b>' // html body
     };
 
     // send mail with defined transport object
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
-            return console.log(error);
+            return console.log("Error al mandar mail: ", error);
         }
-        console.log('Message %s sent: %s', info.messageId, info.response);
+
+        envioCodigoCount(user);
+        console.log('Mensaje %s enviado: %s', info.messageId, info.response);
+    });
+}
+
+function envioCodigoCount(user) {
+    pacienteApp.findById(user.id, function (err, data) {
+
+
+        data.envioCodigoCount = data.envioCodigoCount + 1;
+        console.log("Cant de codigo", data.envioCodigoCount);
     });
 }
 
