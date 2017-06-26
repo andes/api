@@ -32,6 +32,9 @@ export let pacienteAppSchema = new mongoose.Schema({
     genero: {
         type: String
     },
+    fechaNacimiento: {
+        type: Date
+    },
     telefono: {
         type: String
     },

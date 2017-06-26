@@ -56,6 +56,7 @@ router.post('/registro', function (req, res, next) {
         telefono: req.body.telefono,
         nacionalidad: req.body.nacionalidad,
         documento: req.body.documento,
+        fechaNacimiento: req.body.fechaNacimiento,
         sexo: req.body.sexo,
         genero: req.body.genero,
         codigoVerificacion: generarCodigoVerificacion()
