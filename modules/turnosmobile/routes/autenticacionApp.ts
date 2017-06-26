@@ -54,6 +54,10 @@ router.post('/registro', function (req, res, next) {
         email: req.body.email,
         password: req.body.password,
         telefono: req.body.telefono,
+        nacionalidad: req.body.nacionalidad,
+        documento: req.body.documento,
+        sexo: req.body.sexo,
+        genero: req.body.genero,
         codigoVerificacion: generarCodigoVerificacion()
     }
 
@@ -72,7 +76,7 @@ router.post('/registro', function (req, res, next) {
         }
 
         if (existingUser) {
-            return res.status(422).send({ error: 'El e-Mail ingresado está en uso' });
+            return res.status(422).send({ 'email': 'El e-mail ingresado está en uso' });
         }
 
         var user = new pacienteApp(
