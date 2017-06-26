@@ -7,12 +7,10 @@ import { SnomedConcept } from './snomed-concept';
 // Ej: en "Control de niño sano" el médico, el odontólogo y el enfermero generan tres registros.
 export let schema = new mongoose.Schema({
     // Contiene los valores de los elementos RUP
-    valores: [{
-        concepto: SnomedConcept,
-        elementoRup: mongoose.Schema.Types.ObjectId,
-        valor: mongoose.Schema.Types.Mixed,
-        relacionadoCon: [SnomedConcept]
-    }]
+    concepto: SnomedConcept,
+    elementoRup: mongoose.Schema.Types.ObjectId,
+    valor: mongoose.Schema.Types.Mixed,
+    relacionadoCon: [SnomedConcept]
 });
 
 // Habilitar plugin de auditoría
