@@ -116,7 +116,7 @@ router.post('/verificarCodigo', function (req, res, next) {
     let email = req.body.email;
     let codigoIngresado = req.body.codigo;
 
-    pacienteApp.findOne({ email: email }, function (err, datosUsuario) {
+    pacienteApp.findOne({ email: email }, function (err, datosUsuario: any) {
 
         if (verificarCodigo(codigoIngresado.codigo, datosUsuario.codigoVerificacion)) {
 
@@ -178,8 +178,8 @@ function enviarCodigoVerificacion(user) {
     });
 }
 
-function envioCodigoCount(user) {
-    pacienteApp.findById(user.id, function (err, data) {
+function envioCodigoCount(user: any) {
+    pacienteApp.findById(user.id, function (err, data: any) {
 
 
         data.envioCodigoCount = data.envioCodigoCount + 1;
