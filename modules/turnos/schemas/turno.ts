@@ -14,6 +14,10 @@ let turnoSchema = new mongoose.Schema({
         enum: ['disponible', 'asignado', 'suspendido', 'turnoDoble'],
         default: 'disponible'
     },
+    reasignado: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'agenda'
+    },
     tipoTurno: {
         type: String,
         enum: ['delDia', 'programado', 'gestion', 'profesional']

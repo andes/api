@@ -248,11 +248,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                     break;
                 case 'liberarTurno': liberarTurno(req, data, turnos[y]._id);
                     break;
-                case 'bloquearTurno': bloquearTurno(req, data, turnos[y]._id);
-                    break;
                 case 'suspenderTurno': suspenderTurno(req, data, turnos[y]._id);
-                    break;
-                case 'reasignarTurno': reasignarTurno(req, data, turnos[y]._id);
                     break;
                 case 'guardarNotaTurno': guardarNotaTurno(req, data, turnos[y]._id);
                     break;
@@ -271,6 +267,10 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 case 'prePausada':
                 case 'suspendida': actualizarEstado(req, data);
                     break;
+                // case 'reasignarTurno': reasignarTurno(req, data, turnos[y]._id);
+                //     break;
+                // case 'bloquearTurno': bloquearTurno(req, data, turnos[y]._id);
+                //     break;
                 default:
                     next('Error: No se seleccionó ninguna opción.');
                     break;
@@ -328,17 +328,6 @@ function liberarTurno(req, data, tid = null) {
     }
 }
 
-// Turno
-function bloquearTurno(req, data, tid = null) {
-
-    let turno = getTurno(req, data, tid);
-
-    if (turno.estado !== 'suspendido') {
-        turno.estado = 'suspendido';
-    } else {
-        turno.estado = 'disponible';
-    }
-}
 
 // Turno
 function suspenderTurno(req, data, tid = null) {
@@ -356,14 +345,26 @@ function suspenderTurno(req, data, tid = null) {
     return data;
 }
 
-// Turno
-function reasignarTurno(req, data, tid = null) {
-    let turno = getTurno(req, data, tid);
-    turno.estado = 'disponible';
-    delete turno.paciente;
-    turno.prestacion = null;
-    turno.motivoSuspension = null;
-}
+// // Turno
+// function bloquearTurno(req, data, tid = null) {
+
+//     let turno = getTurno(req, data, tid);
+
+//     if (turno.estado !== 'suspendido') {
+//         turno.estado = 'suspendido';
+//     } else {
+//         turno.estado = 'disponible';
+//     }
+// }
+
+// // Turno
+// function reasignarTurno(req, data, tid = null) {
+//     let turno = getTurno(req, data, tid);
+//     turno.estado = 'disponible';
+//     delete turno.paciente;
+//     turno.prestacion = null;
+//     turno.motivoSuspension = null;
+// }
 
 // Turno
 function guardarNotaTurno(req, data, tid = null) {
