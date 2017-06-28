@@ -1,23 +1,23 @@
 import * as express from 'express';
+import * as mongoose from 'mongoose';
 import { defaultLimit, maxLimit } from './../../../config';
 import { elementoRUP } from '../schemas/elementoRUP';
 
 let router = express.Router();
 
 router.get('/elementosRUP/:id*?', function (req, res, next) {
-    let query;
+    let query: mongoose.DocumentQuery<any, mongoose.Document>;
     if (req.params.id) {
         query = elementoRUP.findById(req.params.id);
     } else {
         query = elementoRUP.find({}); // Trae todos
-        let redix = 10;
         if (req.query.skip) {
-            let skip: number = parseInt(req.query.skip || 0, redix);
+            let skip: number = parseInt(req.query.skip || 0, 10);
             query = query.skip(skip);
         }
 
         if (req.query.limit) {
-            let limit: number = Math.min(parseInt(req.query.limit || defaultLimit, redix), maxLimit);
+            let limit: number = Math.min(parseInt(req.query.limit || defaultLimit, 10), maxLimit);
             query = query.limit(limit);
         }
         if (req.query.nombre) {
@@ -37,11 +37,7 @@ router.get('/elementosRUP/:id*?', function (req, res, next) {
         if (req.query.granularidad) {
             query.where('tipo').equals(req.query.tipo);
         }
-        if (req.query.autonoma) {
-            query.where('autonoma').equals(req.query.autonoma);
-        }
-        query.where('activo').equals(1);
-
+        query.where('activo').equals(true);
     }
     query.populate('frecuentes');
     query.populate('requeridos').sort({ 'nombre': 1 }).exec(function (err, data) {
@@ -51,6 +47,5 @@ router.get('/elementosRUP/:id*?', function (req, res, next) {
         res.json(data);
     });
 });
-
 
 export = router;

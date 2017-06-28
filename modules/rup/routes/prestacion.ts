@@ -1,20 +1,24 @@
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import { Auth } from './../../../auth/auth.class';
-import { prestacion } from '../schemas/prestacion';
+import { model as prestacion } from '../schemas/prestacion';
 
 let router = express.Router();
 
 router.get('/prestaciones/:id*?', function (req, res, next) {
-    let query;
-    let mensajeError = "";
-
     if (req.params.id) {
-        query = prestacion.findById(req.params.id);
-
-        mensajeError = "Prestación no encontrada";
-
+        let query = prestacion.findById(req.params.id);
+        query.exec(function (err, data) {
+            if (err) {
+                return next(err);
+            }
+            if (!data) {
+                return next(404);
+            }
+            res.json(data);
+        });
     } else {
+        let query: mongoose.DocumentQuery<mongoose.Document[], mongoose.Document>;
         if (req.query.estado) {
             query = prestacion.find({
                 $where: 'this.estados[this.estados.length - 1].tipo == "' + req.query.estado + '"'
@@ -24,7 +28,6 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         }
 
         if (req.query.fechaDesde) {
-
             query.where('ejecucion.fecha').gte(req.query.fechaDesde);
         }
 
@@ -36,10 +39,6 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             query.where('estado.profesional._id').equals(req.query.idProfesional);
         }
 
-        // if (req.query.idTipoPrestacion) {
-        //     query.where('solicitud.tipoPrestacion._id').equals(req.query.idTipoPrestacion);
-        // }
-
         if (req.query.idPaciente) {
             query.where('paciente.id').equals(req.query.idPaciente);
         }
@@ -48,50 +47,37 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             query.where('solicitud.idPrestacionOrigen').equals(req.query.idPrestacionOrigen);
         }
 
-        if (req.query.turneables) {
-            query.where('solicitud.tipoPrestacion.turneable').equals(true);
-        }
-
         if (req.query.turnos) {
-            // let idsTurnos = req.query.turnos.split(',');
             query.where('solicitud.idTurno').in(req.query.turnos);
         }
+
+        query.sort({ 'solicitud.fecha': -1 });
+        if (req.query.limit) {
+            query.limit(parseInt(req.query.limit, 10));
+        }
+
+        query.exec(function (err, data) {
+            if (err) {
+                return next(err);
+            }
+            if (req.params.id && !data) {
+                return next(404);
+            }
+            res.json(data);
+        });
     }
-
-
-    query.sort({ 'solicitud.fecha': -1 });
-
-    if (req.query.limit) {
-        query.limit(parseInt(req.query.limit, 10));
-    }
-
-    query.exec(function (err, data) {
-        if (err) {
-
-            res.status(404).json({ message: 'Prestación no encontrada' });
-
-            next(404);
-        };
-
-        res.json(data);
-    });
 });
 
 
 
 router.post('/prestaciones', function (req, res, next) {
-    let unaPrestacion;
-    console.log("Prestacion Body", req.body);
-    unaPrestacion = new prestacion(req.body);
-
-    Auth.audit(unaPrestacion, req);
-    unaPrestacion.save((err) => {
+    let data = new prestacion(req.body);
+    Auth.audit(data, req);
+    data.save((err) => {
         if (err) {
-            console.log(err);
             return next(err);
         }
-
-        res.json(unaPrestacion);
+        res.json(data);
     });
 });
 
@@ -117,7 +103,7 @@ router.patch('/prestaciones/:id', function (req, res, next) {
                 if (req.body.estado) {
                     // modificacion = { '$push': { 'estado': { tipo: req.body.estado } } }
 
-                    //modificacion = { '$push': { 'estados': req.body.estado } }
+                    // modificacion = { '$push': { 'estados': req.body.estado } }
                     data['estados'].push(req.body.estado);
                 }
                 break;
@@ -159,7 +145,6 @@ router.patch('/prestaciones/:id', function (req, res, next) {
         // TODO: refactor findByIdAndUpdate
 
         Auth.audit(data, req);
-        //prestacion.findByIdAndUpdate(req.params.id, modificacion, { upsert: false }, function (err, data) {
         data.save(function (err, data) {
             if (err) {
                 return next(err);
@@ -177,51 +162,47 @@ router.patch('/prestaciones/:id', function (req, res, next) {
             res.json(data);
         });
     });
-
-    
 });
 
 
-router.put('/prestaciones/:id', function (req, res, next) {
-    let prestacion;
-    prestacion = new prestacion(req.body);
+// router.put('/prestaciones/:id', function (req, res, next) {
+//     let prestacion;
+//     prestacion = new prestacion(req.body);
 
-    //let evolucion = prestacion.ejecucion.evoluciones[prestacion.ejecucion.evoluciones.length - 1];
+//     //let evolucion = prestacion.ejecucion.evoluciones[prestacion.ejecucion.evoluciones.length - 1];
 
-    prestacion.findById(prestacion.id, function (err, data) {
-        if (err) {
-            return next(err);
-        }
+//     prestacion.findById(prestacion.id, function (err, data) {
+//         if (err) {
+//             return next(err);
+//         }
 
-        /*
-        let prest;
-        prest = data;
-        let evoluciones = prest.ejecucion.evoluciones;
-        evoluciones.push(evolucion);
-        prestacion.ejecucion.evoluciones = evoluciones;
-        */
-        Auth.audit(prestacion, req);
+//         /*
+//         let prest;
+//         prest = data;
+//         let evoluciones = prest.ejecucion.evoluciones;
+//         evoluciones.push(evolucion);
+//         prestacion.ejecucion.evoluciones = evoluciones;
+//         */
+//         Auth.audit(prestacion, req);
 
-        prestacion.findByIdAndUpdate(prestacion.id, prestacion, {
-            new: true
-        }, function (err2, data2) {
-            if (err2) {
-                return next(err2);
-            }
-            res.json(data2);
-        });
-    });
-});
+//         prestacion.findByIdAndUpdate(prestacion.id, prestacion, {
+//             new: true
+//         }, function (err2, data2) {
+//             if (err2) {
+//                 return next(err2);
+//             }
+//             res.json(data2);
+//         });
+//     });
+// });
 
-
-
-router.delete('/prestaciones/:id', function (req, res, next) {
-    prestacion.findByIdAndRemove(req.params.id, function (err, data) {
-        if (err) {
-            return next(err);
-        }
-        res.json(data);
-    });
-});
+// router.delete('/prestaciones/:id', function (req, res, next) {
+//     prestacion.findByIdAndRemove(req.params.id, function (err, data) {
+//         if (err) {
+//             return next(err);
+//         }
+//         res.json(data);
+//     });
+// });
 
 export = router;

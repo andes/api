@@ -4,6 +4,6 @@ export let SnomedConcept = {
     fsn: String,
     semanticTag: {
         type: String,
-        enum: ['hallazgo', 'trastorno', 'antecedenteFamiliar', 'procedimiento', 'entidad observable']
+        enum: ['procedimiento', 'solicitud', 'hallazgo', 'trastorno', 'antecedenteFamiliar']
     }
 };

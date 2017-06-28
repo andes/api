@@ -4,13 +4,6 @@ import * as registro from './prestacion.registro';
 import * as estado from './prestacion.estado';
 import { auditoriaPrestacionPacienteSchema } from '../../auditorias/schemas/auditoriaPrestacionPaciente';
 
-let profesional = {
-    id: mongoose.Schema.Types.ObjectId,
-    nombre: String,
-    apellido: String,
-    documento: String
-};
-
 export let schema = new mongoose.Schema({
     // Datos principales del paciente
     paciente: {
@@ -30,7 +23,8 @@ export let schema = new mongoose.Schema({
     solicitud: {
         // Tipo de prestación de ejecutarse
         tipoPrestacion: SnomedConcept,
-        // Fecha de la solicitud
+        // Fecha de solicitud
+        // Nota: Este dato podría obtener del array de estados, pero está aquí para facilidad de consulta
         fecha: {
             type: Date,
             required: true
@@ -49,36 +43,37 @@ export let schema = new mongoose.Schema({
             type: {
                 id: mongoose.Schema.Types.ObjectId,
                 nombre: String
-            }
+            },
+            required: true
         },
-        // problemas/hallazgos/trastornos por los cuales se solicita la prestación
-        hallazgos: [SnomedConcept],
-        // ID del turnos a través del cual se generó esta prestacaión
-        idTurno: mongoose.Schema.Types.ObjectId,
         // ID de la prestación desde la que se generó esta solicitud
-        idPrestacionOrigen: {
+        prestacionOrigen: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'prestacion'
         },
+        // problemas/hallazgos/trastornos por los cuales se solicita la prestación
+        relacionadoCon: [SnomedConcept],
         // Datos de auditoría sobre el estado de la solicitud (aprobada, desaprobada, ...)
         auditoria: auditoriaPrestacionPacienteSchema
     },
 
     // Datos de la ejecución (i.e. realización)
     ejecucion: {
-        // Fecha que fue realizada la prestación
-        fecha: Date,
-        // Profesionales que realizan
-        // Nota: a veces el usuario que registra la prestación (que se guarda en el array registros a través del plugin audit)
-        //       no necesariamente es el mismo que ejecuta. Por ejemplo, un residente tipea un informe y el médico de planta lo valida digitalmente.
-        //       En este caso, ambos dos figuran en 'profesionales' pero sólo el residente en 'registros'.
-        profesionales: [profesional],
+        // Fecha de ejecución
+        // Nota: Este dato podría obtener del array de estados, pero está aquí para facilidad de consulta
+        fecha: {
+            type: Date,
+            required: true
+        },
+        // ID del turno relacionado con esta prestación
+        turno: mongoose.Schema.Types.ObjectId,
         // Lugar donde se realiza
         organizacion: {
             type: {
                 id: mongoose.Schema.Types.ObjectId,
                 nombre: String
-            }
+            },
+            required: true
         },
         // Registros de la ejecución
         registros: [registro.schema],
@@ -90,4 +85,4 @@ export let schema = new mongoose.Schema({
 // Habilitar plugin de auditoría
 schema.plugin(require('../../../mongoose/audit'));
 
-export let prestacion = mongoose.model('prestacion', schema, 'prestacion');
+export let model = mongoose.model('prestacion', schema, 'prestacion');

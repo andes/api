@@ -4,13 +4,8 @@ import { SnomedConcept } from './snomed-concept';
 export let schema = new mongoose.Schema({
     // Valor por el cual vamos a leer/guardar en nuestra BD
     key: String,
-    // Nombre descriptivo del elemento. Ejemplo: "Signos vitales"
-    nombre: String,
     // Indica si este elemento está activo
     activo: Boolean,
-    // Indica si este elemento puede existir por si mismo (ej: prestaciones turneables)
-    // Los elementos no autónomos estarán siempre dentro un elemento autónomo.
-    autonomo: Boolean,
     // Vinculación al componente de la aplicación Angular
     componente: {
         ruta: String,
@@ -22,18 +17,18 @@ export let schema = new mongoose.Schema({
         enum: ['atomo', 'molecula', 'formula']
     },
     // Conceptos SNOMED relacionados que se muestran e implementan de la misma manera.
-    // Por ejemplo: "Toma de temperatura del paciente (SCTID: 56342008)" y 
-    //              "Toma de temperatura rectal del paciente (SCTID: 18649001") 
+    // Por ejemplo: "Toma de temperatura del paciente (SCTID: 56342008)" y
+    //              "Toma de temperatura rectal del paciente (SCTID: 18649001")
     //              se implementan con el mismo elemento RUP "Toma de temperatura"
     conceptos: [SnomedConcept],
     // Elementos RUP requeridos para la ejecución.
-    // Por ejemplo, en "Control de Niño sano" es obligatorio ejecutar "Toma de peso" 
+    // Por ejemplo, en "Control de Niño sano" es obligatorio ejecutar "Toma de peso"
     requeridos: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'elementoRUP'
     }],
     // Elementos RUP más frecuentes para la ejecución.
-    // Por ejemplo, en "Consulta de medicina general" se puede sugerir ejecutar "Signos vitales" 
+    // Por ejemplo, en "Consulta de medicina general" se puede sugerir ejecutar "Signos vitales"
     frecuentes: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'elementoRUP'
