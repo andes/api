@@ -103,7 +103,7 @@ router.post('/registro', function (req, res, next) {
             res.status(201).json({
                 token: 'JWT ' + generateToken(userInfo),
                 user: user
-            })
+            });
 
         });
 
@@ -121,25 +121,29 @@ router.post('/verificarCodigo', function (req, res, next) {
     let email = req.body.email;
     let codigoIngresado = req.body.codigo;
 
-    pacienteApp.findOne({ email: email }, function (err, datosUsuario) {
+    pacienteApp.findOne({ email: email }, function (err, datosUsuario: any) {
+        if (err) {
+            return next(err);
+        }
 
         if (verificarCodigo(codigoIngresado.codigo, datosUsuario.codigoVerificacion)) {
 
             datosUsuario.activacionApp = true;
             datosUsuario.estadoCodigo = true;
 
-            datosUsuario.save(function (err, data) {
+            datosUsuario.save(function (err, user) {
                 if (err) {
                     return next(err);
                 }
 
-                res.json(data);
+                var userInfo = setUserInfo(user);
+                res.status(200).json({
+                    token: 'JWT ' + generateToken(userInfo),
+                    user: user
+                });
             });
-        }
-        else {
-            // datosUsuario.
-            console.log("Naa que ver");
-
+        } else {
+            res.status(422).send({ message: 'codigo no coicide' });
         }
     });
 });
@@ -169,7 +173,7 @@ function enviarCodigoVerificacion(user) {
         to: user.email, // list of receivers
         subject: 'Hola ' + user.nombre + ' ✔', // Subject line
         text: 'Ingrese su código de verificación en la app', // plain text body
-        html: '<b>El código de vrificación es: ' + user.codigoVerificacion + '</b>' // html body
+        html: '<b>El código de verificación es: ' + user.codigoVerificacion + '</b>' // html body
     };
 
     // send mail with defined transport object
@@ -185,8 +189,6 @@ function enviarCodigoVerificacion(user) {
 
 function envioCodigoCount(user) {
     pacienteApp.findById(user.id, function (err, data) {
-
-
         data.envioCodigoCount = data.envioCodigoCount + 1;
         console.log("Cant de codigo", data.envioCodigoCount);
     });
