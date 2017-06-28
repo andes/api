@@ -126,7 +126,7 @@ router.post('/verificarCodigo', function (req, res, next) {
             return next(err);
         }
 
-        if (verificarCodigo(codigoIngresado.codigo, datosUsuario.codigoVerificacion)) {
+        if (verificarCodigo(codigoIngresado, datosUsuario.codigoVerificacion)) {
 
             datosUsuario.activacionApp = true;
             datosUsuario.estadoCodigo = true;
