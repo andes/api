@@ -40,13 +40,14 @@ router.get('/turno', function (req, res, next) {
                 return next(err);
             }
             let out = [];
-            // verifico que existe un turno con el mismo horario del turno a reasignar y que esté disponible
+            // verifico que existe un turno con el mismo horario del turno a reasignar y que esté disponible y sin reasignar
             data1.forEach(function (a) {
                 a.bloques.forEach(function (b) {
                     b.turnos.forEach(function (t) {
                         let horaIni = moment(t.horaInicio).format('HH:mm');
                         if (horaIni.toString() === moment(turno.horaInicio).format('HH:mm')
                             && t.estado === 'disponible'
+                            && !t.reasignacion
                             && b.duracionTurno === bloque.duracionTurno
                             && b.tipoPrestaciones.findIndex(x => String(x._id) === String(turno.tipoPrestacion._id)) >= 0) {
                             out.push(a);
