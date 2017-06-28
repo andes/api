@@ -24,6 +24,11 @@ router.post('/login', function (req, res, next) {
             return next(err);
         }
 
+        if (!existingUser.activacionApp) {
+            res.status(422).send({ message: 'cuenta no verificada' });
+            return;
+        }
+
         existingUser.comparePassword(password, (err, isMatch) => {
             if (err) {
                 return next(err);
@@ -34,7 +39,7 @@ router.post('/login', function (req, res, next) {
 
                 res.status(200).json({
                     token: 'JWT ' + generateToken(userInfo),
-                    user: userInfo
+                    user: existingUser
                 });
                 return;
             } else {
