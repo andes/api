@@ -1,17 +1,19 @@
-import { matching } from '@andes/match';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
-import { paciente } from '../schemas/paciente';
-import { pacienteMpi } from '../schemas/paciente';
-import { Client } from 'elasticsearch';
 import * as config from '../../../config';
 import * as configPrivate from '../../../config.private';
-import { Auth } from './../../../auth/auth.class';
-import { Logger } from '../../../utils/logService';
 import * as moment from 'moment';
-import { log } from '../../log/schemas/log';
 import * as https from 'https';
+import { matching } from '@andes/match';
+import { Client } from 'elasticsearch';
+import { Auth } from './../../../auth/auth.class';
 let router = express.Router();
+// Services
+import { Logger } from '../../../utils/logService';
+// Schemas
+import { pacienteMpi } from '../schemas/paciente';
+import { paciente } from '../schemas/paciente';
+import { log } from '../../log/schemas/log';
 
 router.get('/pacientes/georef/:id', function (req, res, next) {
     /* Este método es público no requiere auth check */
@@ -255,7 +257,8 @@ router.get('/pacientes/temporales/', function (req, res, next) {
         return next(403);
     }
     let filtro = {
-        estado: 'temporal'
+        estado: 'temporal',
+        activo: true
     };
 
     let query = paciente.find(filtro);
@@ -775,6 +778,7 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
             // if (patientFound.estado !== 'validado') {
             patientFound.documento = req.body.documento;
             patientFound.estado = req.body.estado;
+            patientFound.activo = req.body.activo;
             patientFound.nombre = req.body.nombre.toUpperCase();
             patientFound.apellido = req.body.apellido.toUpperCase();
             patientFound.sexo = req.body.sexo;
@@ -1013,8 +1017,6 @@ router.post('/pacientes', function (req, res, next) {
         });
     });
 });
-
-
 /**
  * @swagger
  * /pacientes:
@@ -1092,6 +1094,7 @@ router.put('/pacientes/:id', function (req, res, next) {
 
             patientFound.genero = req.body.genero;
             patientFound.alias = req.body.alias;
+            patientFound.activo = req.body.activo;
             patientFound.estadoCivil = req.body.estadoCivil;
             patientFound.entidadesValidadoras = req.body.entidadesValidadoras;
             patientFound.financiador = req.body.financiador;
@@ -1376,6 +1379,27 @@ function updateCarpetaEfectores(req, data) {
     data.carpetaEfectores = req.body.carpetaEfectores;
 }
 
+function linkIdentificadores(req, data) {
+    data.markModified('identificadores');
+    if (data.identificadores) {
+        data.identificadores.push(req.body.dto);
+    } else {
+        data.identificadores = [req.body.dto]; // Primer elemento del array
+    }
+}
+
+function unlinkIdentificadores(req, data) {
+    data.markModified('identificadores');
+    if (data.identificadores) {
+        data.identificadores = data.identificadores.filter(x => x.valor !== req.body.dto);
+    }
+}
+
+function updateActivo(req, data) {
+    data.markModified('activo');
+    data.activo = req.body.dto;
+}
+
 function updateRelacion(req, data) {
     if (data && data.relaciones) {
         let objRel = data.relaciones.find(elem => {
@@ -1423,7 +1447,15 @@ router.patch('/pacientes/:id', function (req, res, next) {
                 case 'updateCarpetaEfectores':
                     updateCarpetaEfectores(req, resultado.paciente);
                     break;
-
+                case 'linkIdentificadores':
+                    linkIdentificadores(req, resultado.paciente);
+                    break;
+                case 'unlinkIdentificadores':
+                    unlinkIdentificadores(req, resultado.paciente);
+                    break;
+                case 'updateActivo':
+                    updateActivo(req, resultado.paciente);
+                    break;
                 case 'updateRelacion':
                     // console.log("RESULTADO BUSQUEDApACIENTE--------", resultado);
                     updateRelacion(req, resultado.paciente);

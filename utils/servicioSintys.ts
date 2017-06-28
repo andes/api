@@ -1,5 +1,5 @@
 import { ValidateFormatDate } from './validateFormatDate';
-import  { matching } from "@andes/match";
+import  { matching } from '@andes/match';
 import * as config from '../config';
 import * as https from 'https';
 var to_json = require('xmljson').to_json;
@@ -13,15 +13,15 @@ export class servicioSintys {
         var xml = '';
         var organizacion = new Object();
         var pathSintys = ''
-        var pathSintys = '/WCFSINTyS/wsPersona.asmx/GetPersona?dni=' + nroDocumento;
+        var pathSintys = 'www.saludnqn.gov.ar/WCFSINTyS/wsPersona.asmx/GetPersona?dni=' + nroDocumento;
 
         var optionsgetmsg = {
             /*Este servicio debe ser llamado directamente desde los WS
             que están publicados en el servidor 10.1.232.8 ya que por cuestiones
             de seguridad de Sintys, sólo nos dejan consumir datos desde este servidor.
             */
-            host: 'www.saludnqn.gov.ar',
-            port: 443,
+            host: 'cors-anywhere.herokuapp.com/',
+            // port: 443,
             path: pathSintys,
             method: 'GET',
             rejectUnauthorized: false
@@ -105,19 +105,19 @@ export class servicioSintys {
         */
 
         if (datosSintys.Sexo) {
-            if (datosSintys.Sexo == "FEMENINO") {
-                ciudadano.sexo = "femenino";
-                ciudadano.genero = "femenino";
+            if (datosSintys.Sexo == 'FEMENINO') {
+                ciudadano.sexo = 'femenino';
+                ciudadano.genero = 'femenino';
             } else {
-                ciudadano.sexo = "masculino";
-                ciudadano.genero = "masculino";
+                ciudadano.sexo = 'masculino';
+                ciudadano.genero = 'masculino';
 
             }
         }
 
 
         if (datosSintys.FechaNacimiento) {
-            fecha = datosSintys.FechaNacimiento.split("/");
+            fecha = datosSintys.FechaNacimiento.split('/');
             var fechaNac = new Date(fecha[2].substr(0, 4), fecha[1] - 1, fecha[0]);
             ciudadano.fechaNacimiento = fechaNac.toJSON();
 
@@ -172,7 +172,7 @@ export class servicioSintys {
         let weights = config.mpi.weightsDefault;
         let match = new matching();
 
-        paciente["matchSintys"] = 0;
+        paciente['matchSintys'] = 0;
         // Se buscan los datos en sintys y se obtiene el paciente
         return new Promise((resolve, reject) => {
 
@@ -188,11 +188,11 @@ export class servicioSintys {
                                     pacienteSintys = this.formatearDatosSintys(JSON.parse(resultado[1])[0]);
                                     matchPorcentaje = match.matchPersonas(paciente, pacienteSintys, weights);
                                     console.log('el % de matcheo es:', matchPorcentaje);
-                                    paciente["matchSintys"] = matchPorcentaje;
-                                    resolve({ "paciente": paciente, "matcheos": { "entidad": "Sintys", "matcheo": matchPorcentaje, "datosPaciente": pacienteSintys } });
+                                    paciente['matchSintys'] = matchPorcentaje;
+                                    resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sintys', 'matcheo': matchPorcentaje, 'datosPaciente': pacienteSintys } });
                                 }
                             }
-                            resolve({ "paciente": paciente, "matcheos": { "entidad": "Sintys", "matcheo": 0, "datosPaciente": pacienteSintys } });
+                            resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sintys', 'matcheo': 0, 'datosPaciente': pacienteSintys } });
                         })
                         .catch((err) => {
                             console.error('Error consulta rest Sintys:' + err)
@@ -202,10 +202,10 @@ export class servicioSintys {
                     // setInterval(consultaSintys,100);
 
                 } else {
-                    resolve({ "paciente": paciente, "matcheos": { "entidad": "Sintys", "matcheo": 0, "datosPaciente": pacienteSintys } });
+                    resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sintys', 'matcheo': 0, 'datosPaciente': pacienteSintys } });
                 }
             } else {
-                resolve({ "paciente": paciente, "matcheos": { "entidad": "Sintys", "matcheo": 0, "datosPaciente": pacienteSintys } });
+                resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sintys', 'matcheo': 0, 'datosPaciente': pacienteSintys } });
             }
         })
 
