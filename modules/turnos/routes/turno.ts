@@ -9,8 +9,113 @@ import * as moment from 'moment';
 
 let router = express.Router();
 
+router.get('/turno/:id*?', function (req, res, next) {
+
+    let pipelineTurno = [];
+    let turnos = [];
+    let turno;
+
+    pipelineTurno = [{
+        '$match': {
+            'bloques.turnos._id': mongoose.Types.ObjectId(req.params.id),
+        }
+    },
+    // Unwind cada array
+    { '$unwind': '$bloques' },
+    { '$unwind': '$bloques.turnos' },
+    // Filtra los elementos que matchean
+    {
+        '$match': {
+            'bloques.turnos._id': mongoose.Types.ObjectId(req.params.id)
+        }
+    },
+    {
+        '$group': {
+            '_id': { 'id': '$_id', 'bloqueId': '$bloques._id' },
+            'turnos': { $push: '$bloques.turnos' }
+        }
+    },
+    {
+        '$group': {
+            '_id': '$_id.id',
+            'bloques': { $push: { '_id': '$_id.bloqueId', 'turnos': '$turnos' } }
+        }
+    }];
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+        agenda.aggregate(pipelineTurno,
+            function (err, data) {
+                if (err) {
+                    console.log(data);
+                    return next(err);
+                }
+                if (data && data.bloques && data.bloques.turnos && data.bloques.turnos >= 0) {
+                    res.json(data.bloques.turnos[0]);
+                } else {
+                    res.json(data);
+                }
+            });
+    } else {
+        // Se modifica el pipeline en la posición 0 y 3, que son las posiciones
+        // donde se realiza el match
+        let matchTurno = {};
+        if (req.query.estado) {
+            matchTurno['bloques.turnos.estado'] = req.query.estado;
+        };
+
+        if (req.query.usuario) {
+            matchTurno['updatedBy.username'] = req.query.usuario.username;
+            matchTurno['updatedBy.documento'] = req.query.usuario.documento;
+        };
+
+        if (req.query.asistencia) {
+            matchTurno['bloques.turnos.asistencia'] = { '$exists': req.query.asistencia };
+        };
+
+        if (req.query.codificado) {
+            matchTurno['bloques.turnos.diagnosticoPrincipal'] = { '$exists': true };
+        };
+
+        if (req.query.horaInicio) {
+            matchTurno['bloques.turnos.horaInicio'] = req.query.horaInicio;
+        };
+
+        if (req.query.tiposTurno) {
+            matchTurno['bloques.turnos.tipoTurno'] = { '$in': req.query.tiposTurno };
+        };
+
+        pipelineTurno[0] = { '$match': matchTurno };
+        pipelineTurno[3] = { '$match': matchTurno };
+        pipelineTurno[6] = { '$unwind': '$bloques' };
+        pipelineTurno[7] = { '$unwind': '$bloques.turnos' };
+        pipelineTurno[8] = {
+            '$lookup': {
+                'from': 'paciente',
+                'localField': 'bloques.turnos.paciente.id',
+                'foreignField': '_id',
+                'as': 'pacientes_docs'
+            }
+        };
+        pipelineTurno[9] = {
+            $match: { 'pacientes_docs': { $ne: [] } }
+        };
+
+        agenda.aggregate(pipelineTurno,
+            function (err2, data2) {
+                if (err2) {
+                    return next(err2);
+                }
+                data2.forEach(elem => {
+                    turno = elem.bloques.turnos;
+                    turno.paciente = elem.pacientes_docs.length > 0 ? elem.pacientes_docs[0] : elem.bloques.turnos.paciente;
+                    turnos.push(turno);
+                });
+                res.json(turnos);
+            });
+    }
+
+});
+
 router.get('/turno/reasignar', function (req, res, next) {
-    // Busco la agenda completa que contiene el turno a reasignar
     agenda.findById(req.query.idAgenda, function (err, data) {
         if (err) {
             next(err);
