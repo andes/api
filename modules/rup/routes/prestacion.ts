@@ -28,11 +28,11 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         }
 
         if (req.query.fechaDesde) {
-            query.where('ejecucion.fecha').gte(req.query.fechaDesde);
+            query.where('estados.fecha').gte(req.query.fechaDesde);
         }
 
         if (req.query.fechaHasta) {
-            query.where('ejecucion.fecha').lte(req.query.fechaHasta);
+            query.where('estados.fecha').lte(req.query.fechaHasta);
         }
 
         if (req.query.idProfesional) {
@@ -51,7 +51,11 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             query.where('solicitud.idTurno').in(req.query.turnos);
         }
 
-        query.sort({ 'solicitud.fecha': -1 });
+        // Ordenar por fecha de solicitud
+        if (req.query.ordenFecha) {
+            query.sort({ 'estados.fecha': -1 });
+        }
+
         if (req.query.limit) {
             query.limit(parseInt(req.query.limit, 10));
         }
