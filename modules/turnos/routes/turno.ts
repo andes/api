@@ -9,7 +9,74 @@ import * as moment from 'moment';
 
 let router = express.Router();
 
-router.get('/turno/:id*?', function (req, res, next) {
+router.get('/turno/reasignar', function (req, res, next) {
+    agenda.findById(req.query.idAgenda, function (err, data) {
+        if (err) {
+            next(err);
+        };
+        let resultado = data as any;
+        let horaAgendaOrig = new Date();
+        horaAgendaOrig.setHours(resultado.horaInicio.getHours(), resultado.horaInicio.getMinutes(), 0, 0)
+        let indiceBloque = resultado.bloques.findIndex(y => Object.is(req.query.idBloque, String(y._id)));
+        let indiceTurno = resultado.bloques[indiceBloque].turnos.findIndex(y => Object.is(req.query.idTurno, String(y._id)));
+        let bloque = resultado.bloques[indiceBloque];
+        // turno a reasignar
+        let turno = resultado.bloques[indiceBloque].turnos[indiceTurno];
+        agenda.aggregate([
+            {
+                $match:
+                {
+                    'horaInicio': { '$gte': horaAgendaOrig }, // Que sean agendas futuras
+                    '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
+                    'tipoPrestaciones._id': mongoose.Types.ObjectId(turno.tipoPrestacion._id), // Que tengan incluída la prestación del turno
+                    '_id': { '$ne': mongoose.Types.ObjectId(req.query.idAgenda) }, // Que no sea la agenda original
+                    'bloques.duracionTurno': bloque.duracionTurno // Que al menos un bloque esté configurado con la misma duracion que el turno
+                }
+            }
+
+        ], function (err1, data1) {
+            if (err) {
+                return next(err);
+            }
+            let out = [];
+            // verifico que existe un turno con el mismo horario del turno a reasignar y que esté disponible y sin reasignar
+            data1.forEach(function (a) {
+                a.bloques.forEach(function (b) {
+                    b.turnos.forEach(function (t) {
+                        let horaIni = moment(t.horaInicio).format('HH:mm');
+                        if (horaIni.toString() === moment(turno.horaInicio).format('HH:mm')
+                            && t.estado === 'disponible'
+                            && b.duracionTurno === bloque.duracionTurno
+                            && b.tipoPrestaciones.findIndex(x => String(x._id) === String(turno.tipoPrestacion._id)) >= 0) {
+                            out.push(a);
+                        }
+                    });
+                });
+            });
+            res.json(out);
+
+            // let query = agenda.find({});
+            // query.where('_id').ne(req.query.idAgenda);
+
+            // query.where('tipoPrestaciones._id').equals(turno.tipoPrestacion._id);
+
+            // // Filtro las agendas que tengan al menos un bloque con la misma duración del turno
+            // query.where('bloques').elemMatch(function (elem) {
+            //     elem.where('duracionTurno', bloque.duracionTurno);
+            // });
+
+            // query.exec(function (err, data) {
+            //     if (err) {
+            //         return next(err);
+            //     }
+
+            //     res.json(data);
+            // });
+        });
+    });
+});
+
+router.get('/turno/:id', function (req, res, next) {
 
     let pipelineTurno = [];
     let turnos = [];
@@ -121,73 +188,6 @@ router.get('/turno/:id*?', function (req, res, next) {
 
 });
 
-router.get('/turno/reasignar', function (req, res, next) {
-    agenda.findById(req.query.idAgenda, function (err, data) {
-        if (err) {
-            next(err);
-        };
-        let resultado = data as any;
-        let horaAgendaOrig = new Date();
-        horaAgendaOrig.setHours(resultado.horaInicio.getHours(), resultado.horaInicio.getMinutes(), 0, 0)
-        let indiceBloque = resultado.bloques.findIndex(y => Object.is(req.query.idBloque, String(y._id)));
-        let indiceTurno = resultado.bloques[indiceBloque].turnos.findIndex(y => Object.is(req.query.idTurno, String(y._id)));
-        let bloque = resultado.bloques[indiceBloque];
-        // turno a reasignar
-        let turno = resultado.bloques[indiceBloque].turnos[indiceTurno];
-        agenda.aggregate([
-            {
-                $match:
-                {
-                    'horaInicio': { '$gte': horaAgendaOrig }, // Que sean agendas futuras
-                    '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
-                    'tipoPrestaciones._id': mongoose.Types.ObjectId(turno.tipoPrestacion._id), // Que tengan incluída la prestación del turno
-                    '_id': { '$ne': mongoose.Types.ObjectId(req.query.idAgenda) }, // Que no sea la agenda original
-                    'bloques.duracionTurno': bloque.duracionTurno // Que al menos un bloque esté configurado con la misma duracion que el turno
-                }
-            }
-
-        ], function (err1, data1) {
-            if (err) {
-                return next(err);
-            }
-            let out = [];
-            // verifico que existe un turno con el mismo horario del turno a reasignar y que esté disponible y sin reasignar
-            data1.forEach(function (a) {
-                a.bloques.forEach(function (b) {
-                    b.turnos.forEach(function (t) {
-                        let horaIni = moment(t.horaInicio).format('HH:mm');
-                        if (horaIni.toString() === moment(turno.horaInicio).format('HH:mm')
-                            && t.estado === 'disponible'
-                            && b.duracionTurno === bloque.duracionTurno
-                            && b.tipoPrestaciones.findIndex(x => String(x._id) === String(turno.tipoPrestacion._id)) >= 0) {
-                            out.push(a);
-                        }
-                    });
-                });
-            });
-            res.json(out);
-
-            // let query = agenda.find({});
-            // query.where('_id').ne(req.query.idAgenda);
-
-            // query.where('tipoPrestaciones._id').equals(turno.tipoPrestacion._id);
-
-            // // Filtro las agendas que tengan al menos un bloque con la misma duración del turno
-            // query.where('bloques').elemMatch(function (elem) {
-            //     elem.where('duracionTurno', bloque.duracionTurno);
-            // });
-
-            // query.exec(function (err, data) {
-            //     if (err) {
-            //         return next(err);
-            //     }
-
-            //     res.json(data);
-            // });
-        });
-    });
-});
-
 router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, res, next) {
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
 
@@ -229,7 +229,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
 
                                     // Ver si el día de la agenda coincide con el día de hoy
                                     if ((data as any).horaInicio >= moment(new Date()).startOf('day').toDate() && (data as any).horaInicio <= moment(new Date()).endOf('day').toDate()) {
-                                        // let esHoy = true;
+                                        esHoy = true;
                                     }
 
                                     // Contadores de "delDia" y "programado" varían según si es el día de hoy o no
