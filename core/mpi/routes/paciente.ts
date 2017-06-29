@@ -250,9 +250,9 @@ router.get('/pacientes/counts/', function (req, res, next) {
 });
 
 router.get('/pacientes/temporales/', function (req, res, next) {
-     /**
-     * Se requiere autorización para acceder a los pacientes temporales
-     */
+    /**
+    * Se requiere autorización para acceder a los pacientes temporales
+    */
     if (!Auth.check(req, 'mpi:get:temporales')) {
         return next(403);
     }
@@ -1361,7 +1361,14 @@ function buscarPaciente(id) {
 /* Funciones  de operaciones PATCH */
 function updateContactos(req, data) {
     data.markModified('contacto');
+    Logger.log(req, 'mpi', 'update', {
+            accion: 'updateContacto',
+            ruta: req.url,
+            method: req.method,
+            data: data.contacto,
+    });
     data.contacto = req.body.contacto;
+    // Logger de la consulta a ejecutar
 }
 
 function updateRelaciones(req, data) {
