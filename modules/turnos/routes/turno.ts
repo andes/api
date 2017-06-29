@@ -150,6 +150,10 @@ router.get('/turno/:id', function (req, res, next) {
             matchTurno['bloques.turnos.tipoTurno'] = { '$in': req.query.tiposTurno };
         };
 
+        if (req.query.pacienteId) {
+            matchTurno['bloques.turnos.paciente.id'] = mongoose.Types.ObjectId(req.query.pacienteId);
+        };
+
         pipelineTurno[0] = { '$match': matchTurno };
         pipelineTurno[3] = { '$match': matchTurno };
         pipelineTurno[6] = { '$unwind': '$bloques' };
@@ -229,7 +233,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
 
                                     // Ver si el día de la agenda coincide con el día de hoy
                                     if ((data as any).horaInicio >= moment(new Date()).startOf('day').toDate() && (data as any).horaInicio <= moment(new Date()).endOf('day').toDate()) {
-                                        // let esHoy = true;
+                                        esHoy = true;
                                     }
 
                                     // Contadores de "delDia" y "programado" varían según si es el día de hoy o no
