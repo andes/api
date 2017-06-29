@@ -30,6 +30,9 @@ router.get('/:module?', function (req, res, next) {
     if (req.query.organizacion) {
         query.where('organizacion._id').equals(req.query.organizacion);
     }
+    if (req.query.accion) {
+        query.where('datosOperacion.accion').equals(req.query.accion);
+    }
     if (req.query.count) {
         query.count();
     }

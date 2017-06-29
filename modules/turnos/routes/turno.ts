@@ -76,7 +76,7 @@ router.get('/turno/:id*?', function (req, res, next) {
         };
 
         if (req.query.horaInicio) {
-            matchTurno['bloques.turnos.horaInicio'] = req.query.horaInicio;
+            matchTurno['bloques.turnos.horaInicio'] = { '$gte': req.query.horaInicio };
         };
 
         if (req.query.tiposTurno) {
@@ -96,7 +96,7 @@ router.get('/turno/:id*?', function (req, res, next) {
             }
         };
         pipelineTurno[9] = {
-            $match: { 'pacientes_docs': { $ne: [] } }
+            '$match': { 'pacientes_docs': { $ne: [] } }
         };
 
         agenda.aggregate(pipelineTurno,
@@ -107,7 +107,13 @@ router.get('/turno/:id*?', function (req, res, next) {
                 data2.forEach(elem => {
                     turno = elem.bloques.turnos;
                     turno.paciente = elem.pacientes_docs.length > 0 ? elem.pacientes_docs[0] : elem.bloques.turnos.paciente;
-                    turnos.push(turno);
+                    if (req.query.horaInicio) {
+                        if ((moment(req.query.horaInicio).format('HH:mm')).toString() === moment(turno.horaInicio).format('HH:mm')) {
+                            turnos.push(turno);
+                        }
+                    } else {
+                        turnos.push(turno);
+                    }
                 });
                 res.json(turnos);
             });
