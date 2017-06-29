@@ -9,7 +9,7 @@ import * as moment from 'moment';
 
 let router = express.Router();
 
-router.get('/turno', function (req, res, next) {
+router.get('/turno/reasignar', function (req, res, next) {
     // Busco la agenda completa que contiene el turno a reasignar
     agenda.findById(req.query.idAgenda, function (err, data) {
         if (err) {
@@ -47,7 +47,6 @@ router.get('/turno', function (req, res, next) {
                         let horaIni = moment(t.horaInicio).format('HH:mm');
                         if (horaIni.toString() === moment(turno.horaInicio).format('HH:mm')
                             && t.estado === 'disponible'
-                            && !t.reasignacion
                             && b.duracionTurno === bloque.duracionTurno
                             && b.tipoPrestaciones.findIndex(x => String(x._id) === String(turno.tipoPrestacion._id)) >= 0) {
                             out.push(a);
