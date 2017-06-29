@@ -83,6 +83,10 @@ router.get('/turno/:id*?', function (req, res, next) {
             matchTurno['bloques.turnos.tipoTurno'] = { '$in': req.query.tiposTurno };
         };
 
+        if (req.query.pacienteId) {
+            matchTurno['bloques.turnos.paciente.id'] = mongoose.Types.ObjectId(req.query.pacienteId);
+        };
+
         pipelineTurno[0] = { '$match': matchTurno };
         pipelineTurno[3] = { '$match': matchTurno };
         pipelineTurno[6] = { '$unwind': '$bloques' };
