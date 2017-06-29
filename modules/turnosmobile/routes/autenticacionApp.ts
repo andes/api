@@ -65,7 +65,7 @@ router.post('/registro', function (req, res, next) {
         fechaNacimiento: req.body.fechaNacimiento,
         sexo: req.body.sexo,
         genero: req.body.genero,
-        codigoVerificacion: generarCodigoVerificacion()
+        codigoVerificacion: '123465' /* only for demo */  /*generarCodigoVerificacion()*/
     }
 
     if (!dataPacienteApp.email) {
