@@ -3,6 +3,11 @@ import { pacienteApp } from '../schemas/pacienteApp';
 import { authApp } from '../../../config.private';
 const nodemailer = require('nodemailer');
 import * as express from 'express';
+import { Client } from 'elasticsearch';
+import * as config from '../../../config';
+import * as configPrivate from '../../../config.private';
+import * as moment from 'moment';
+import { matching } from '@andes/match';
 
 let router = express.Router();
 
@@ -86,24 +91,43 @@ router.post('/registro', function (req, res, next) {
             return res.status(422).send({ 'email': 'El e-mail ingresado está en uso' });
         }
 
-        var user = new pacienteApp(
-            dataPacienteApp
-        );
+        var user = new pacienteApp(dataPacienteApp);
 
-        user.save(function (err, user) {
+        user.save(function (err, user: any) {
 
             if (err) {
                 return next(err);
             }
 
-            var userInfo = setUserInfo(user);
+            // var userInfo = setUserInfo(user);
 
-            enviarCodigoVerificacion(user);
 
-            res.status(201).json({
-                token: 'JWT ' + generateToken(userInfo),
-                user: user
+            matchPaciente(user).then(pacientes => {
+                console.log(pacientes);
+                let paciente = pacientes[0].paciente;
+
+                let valid = false;
+                if (paciente.estado == 'validado') {
+                    enviarCodigoVerificacion(user);
+                    user.idPaciente = paciente.id;
+                    user.save();
+                    valid = true;
+                }
+
+                res.status(200).json({
+                    valid: valid
+                    // token: 'JWT ' + generateToken(userInfo),
+                    // user: user
+                });
+            }).catch(err => {
+                console.log(err);
+                res.status(200).json({
+                    valid: false
+                    // token: 'JWT ' + generateToken(userInfo),
+                    // user: user
+                });
             });
+
 
         });
 
@@ -217,6 +241,114 @@ function setUserInfo(request) {
         _id: request._id,
         email: request.email
     };
+}
+
+function matchPaciente(data) {
+    return new Promise((resolve, reject) => {
+
+        let connElastic = new Client({
+            host: configPrivate.hosts.elastic_main,
+        });
+
+        let campo = 'documento';
+        let condicionMatch = {};
+        condicionMatch[campo] = {
+            query: data.documento,
+            minimum_should_match: 3,
+            fuzziness: 2
+        };
+        let query = {
+            match: condicionMatch
+        };
+        let body = {
+            size: 100,
+            from: 0,
+            query: query
+        };
+        connElastic.search({
+            index: 'andes',
+            body: body
+        }).then((searchResult) => {
+
+            // Asigno los valores para el suggest
+            let weights = config.mpi.weightsDefault;
+
+            // if (req.query.escaneado) {
+            //     weights = config.mpi.weightsScan;
+            // }
+
+            let porcentajeMatchMax = config.mpi.cotaMatchMax;
+            let porcentajeMatchMin = config.mpi.cotaMatchMin;
+            let listaPacientesMax = [];
+            let listaPacientesMin = [];
+            // let devolverPorcentaje = data.percentage;
+
+            let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
+                .filter(function (hit) {
+                    let paciente = hit._source;
+                    let pacDto = {
+                        documento: data.documento ? data.documento.toString() : '',
+                        nombre: data.nombre ? data.nombre : '',
+                        apellido: data.apellido ? data.apellido : '',
+                        fechaNacimiento: data.fechaNacimiento ? data.fechaNacimiento : '',
+                        sexo: data.genero ? data.genero : ''
+                    };
+                    let pacElastic = {
+                        documento: paciente.documento ? paciente.documento.toString() : '',
+                        nombre: paciente.nombre ? paciente.nombre : '',
+                        apellido: paciente.apellido ? paciente.apellido : '',
+                        fechaNacimiento: paciente.fechaNacimiento ? moment(paciente.fechaNacimiento).format('YYYY-MM-DD') : '',
+                        sexo: paciente.sexo ? paciente.sexo : ''
+                    };
+                    let match = new matching();
+                    let valorMatching = match.matchPersonas(pacElastic, pacDto, weights);
+                    paciente['id'] = hit._id;
+
+                    if (valorMatching >= porcentajeMatchMax) {
+                        listaPacientesMax.push({
+                            id: hit._id,
+                            paciente: paciente,
+                            match: valorMatching
+                        });
+                    } else {
+                        if (valorMatching >= porcentajeMatchMin && valorMatching < porcentajeMatchMax) {
+                            listaPacientesMin.push({
+                                id: hit._id,
+                                paciente: paciente,
+                                match: valorMatching
+                            });
+                        }
+                    }
+                    // console.log("SEARCHRESULT-------------",paciente.documento,paciente.apellido,valorMatching);
+                });
+
+            // if (devolverPorcentaje) {
+            let sortMatching = function (a, b) {
+                return b.match - a.match;
+            };
+
+            // cambiamos la condición para lograr que nos devuelva más de una sugerencia
+            // ya que la 1ra sugerencia es el mismo paciente.
+            // if (listaPacientesMax.length > 0) {
+            if (listaPacientesMax.length > 0) {
+                listaPacientesMax.sort(sortMatching);
+                resolve(listaPacientesMax);
+            } else {
+                listaPacientesMin.sort(sortMatching);
+                resolve(listaPacientesMin);
+            }
+            // } else {
+            //     results = results.map((hit) => {
+            //         let elem = hit._source;
+            //         elem['id'] = hit._id;
+            //         return elem;
+            //     });
+            //     res.send(results);
+            // }
+        }).catch((error) => {
+            reject(error);
+        });
+    });
 }
 
 
