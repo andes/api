@@ -40,9 +40,7 @@ router.post('/login', function (req, res, next) {
                 return next(err);
             }
             if (isMatch) {
-
                 var userInfo = setUserInfo(existingUser);
-
                 res.status(200).json({
                     token: 'JWT ' + generateToken(userInfo),
                     user: existingUser
@@ -72,7 +70,8 @@ router.post('/registro', function (req, res, next) {
         sexo: req.body.sexo,
         genero: req.body.genero,
         codigoVerificacion: generarCodigoVerificacion(),
-        expirationTime: new Date(Date.now() + expirationOffset)
+        expirationTime: new Date(Date.now() + expirationOffset),
+        permisos: []
     }
 
     if (!dataPacienteApp.email) {
@@ -136,7 +135,7 @@ router.post('/reenviar-codigo', function (req, res, next) {
                 message: 'acount_not_exists'
             });
         }
-        if (!user.activacionApp /*&& user.idPaciente*/) {
+        if (!user.activacionApp && user.idPaciente) {
 
             user.codigoVerificacion = generarCodigoVerificacion();
             user.expirationTime = new Date(Date.now() + expirationOffset);
@@ -262,7 +261,9 @@ function generarCodigoVerificacion() {
 function setUserInfo(request) {
     return {
         _id: request._id,
-        email: request.email
+        email: request.email,
+        idPaciente: request.idPaciente,
+        permisos: request.permisos
     };
 }
 

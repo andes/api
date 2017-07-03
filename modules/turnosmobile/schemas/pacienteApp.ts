@@ -48,6 +48,10 @@ export let pacienteAppSchema = new mongoose.Schema({
         /* required: true */
     },
     // Si fue usado o no
+    idPaciente: {
+        type: mongoose.Schema.Types.ObjectId,
+        default: null
+    },
     estadoCodigo: {
         type: Boolean,
         default: false
