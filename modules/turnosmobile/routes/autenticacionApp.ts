@@ -128,7 +128,6 @@ router.post('/registro', function (req, res, next) {
 
 });
 
-<<<<<<< HEAD
 router.post('/reenviar-codigo', function (req, res, next) {
     let email = req.body.email;
     pacienteApp.findOne({ email: email }, function (err, user: any) {
@@ -162,19 +161,6 @@ router.post('/reenviar-codigo', function (req, res, next) {
         }
 
     });
-=======
-router.post('/reenviarCodigo', function (req, res, next) {
-    let email = req.body.email;
-
-    pacienteApp.findOne({ email: email }, function (err, datosUsuario: any) {
-        if (err) {
-            return next(err);
-        }
-        console.log("Enviando coood ", datosUsuario);
-        enviarCodigoVerificacion(datosUsuario);
-    });
-    // enviarCodigoVerificacion(req);
->>>>>>> 6e293e3cd8e88f4239a1cb93b13febb8b32a0832
 });
 
 //Verifica el código de validación enviado por mail o SMS
@@ -252,7 +238,7 @@ function enviarCodigoVerificacion(user) {
 
 }
 
-function envioCodigoCount(user: any) {    
+function envioCodigoCount(user: any) {
     //TODO: Implementar si se decide poner un límite al envío de códigos    
 }
 
