@@ -158,17 +158,19 @@ router.get('/turno/:id', function (req, res, next) {
         pipelineTurno[3] = { '$match': matchTurno };
         pipelineTurno[6] = { '$unwind': '$bloques' };
         pipelineTurno[7] = { '$unwind': '$bloques.turnos' };
-        pipelineTurno[8] = {
-            '$lookup': {
-                'from': 'paciente',
-                'localField': 'bloques.turnos.paciente.id',
-                'foreignField': '_id',
-                'as': 'pacientes_docs'
-            }
-        };
-        pipelineTurno[9] = {
-            '$match': { 'pacientes_docs': { $ne: [] } }
-        };
+        if (!req.query.pacienteId) {
+            pipelineTurno[8] = {
+                '$lookup': {
+                    'from': 'paciente',
+                    'localField': 'bloques.turnos.paciente.id',
+                    'foreignField': '_id',
+                    'as': 'pacientes_docs'
+                }
+            };
+            pipelineTurno[9] = {
+                '$match': { 'pacientes_docs': { $ne: [] } }
+            };
+        }
 
         agenda.aggregate(pipelineTurno,
             function (err2, data2) {
@@ -177,7 +179,7 @@ router.get('/turno/:id', function (req, res, next) {
                 }
                 data2.forEach(elem => {
                     turno = elem.bloques.turnos;
-                    turno.paciente = elem.pacientes_docs.length > 0 ? elem.pacientes_docs[0] : elem.bloques.turnos.paciente;
+                    turno.paciente = elem.pacientes_docs && elem.pacientes_docs.length > 0 ? elem.pacientes_docs[0] : elem.bloques.turnos.paciente;
                     if (req.query.horaInicio) {
                         if ((moment(req.query.horaInicio).format('HH:mm')).toString() === moment(turno.horaInicio).format('HH:mm')) {
                             turnos.push(turno);
