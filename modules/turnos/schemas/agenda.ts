@@ -20,9 +20,6 @@ let schema = new mongoose.Schema({
     espacioFisico: {
         type: espacioFisicoSchema
     },
-    // servicio: nombreSchema,
-    // sector: nombreSchema,
-    // edficio: edificioSchema,
     horaInicio: {
         type: Date,
         required: true

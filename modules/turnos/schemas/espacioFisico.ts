@@ -6,7 +6,6 @@ export let espacioFisicoSchema = new mongoose.Schema({
     nombre: String,
     detalle: String,
     descripcion: String,
-    organizacion: nombreSchema,
     edificio: edificioSchema,
     sector: nombreSchema,
     servicio: nombreSchema,
