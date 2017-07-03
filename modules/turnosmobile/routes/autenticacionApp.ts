@@ -128,6 +128,7 @@ router.post('/registro', function (req, res, next) {
 
 });
 
+<<<<<<< HEAD
 router.post('/reenviar-codigo', function (req, res, next) {
     let email = req.body.email;
     pacienteApp.findOne({ email: email }, function (err, user: any) {
@@ -161,6 +162,19 @@ router.post('/reenviar-codigo', function (req, res, next) {
         }
 
     });
+=======
+router.post('/reenviarCodigo', function (req, res, next) {
+    let email = req.body.email;
+
+    pacienteApp.findOne({ email: email }, function (err, datosUsuario: any) {
+        if (err) {
+            return next(err);
+        }
+        console.log("Enviando coood ", datosUsuario);
+        enviarCodigoVerificacion(datosUsuario);
+    });
+    // enviarCodigoVerificacion(req);
+>>>>>>> 6e293e3cd8e88f4239a1cb93b13febb8b32a0832
 });
 
 //Verifica el código de validación enviado por mail o SMS
@@ -209,41 +223,37 @@ function verificarCodigo(codigoIngresado, codigo) {
 function enviarCodigoVerificacion(user) {
     console.log("Enviando mail...");
     let transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
+        host: 'smtp.hushmail.com',
         port: 465,
-        secure: true, // secure:true for port 465, secure:false for port 587
+        secure: true,
         auth: {
-            user: 'publicacionsaludnqn@gmail.com',
-            pass: 'saludnqn'
+            user: 'saludneuquen@hushmail.com',
+            pass: 'saludneuquen'
         }
     });
 
     // setup email data with unicode symbols
     let mailOptions = {
-        from: '"Salud 🏥" <publicacionsaludnqn@gmail.com>', // sender address
+        from: '"Salud 🏥" <saludneuquen@hushmail.com>', // sender address
         to: user.email, // list of receivers
         subject: 'Hola ' + user.nombre + ' ✔', // Subject line
         text: 'Ingrese su código de verificación en la app', // plain text body
         html: '<b>El código de verificación es: ' + user.codigoVerificacion + '</b>' // html body
     };
 
-    // send mail with defined transport object
+
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
             return console.log("Error al mandar mail: ", error);
         }
 
-        envioCodigoCount(user);
         console.log('Mensaje %s enviado: %s', info.messageId, info.response);
     });
+
 }
 
-function envioCodigoCount(user: any) {
-    pacienteApp.findById(user.id, function (err, data: any) {
-
-        data.envioCodigoCount = data.envioCodigoCount + 1;
-        console.log("Cant de codigo", data.envioCodigoCount);
-    });
+function envioCodigoCount(user: any) {    
+    //TODO: Implementar si se decide poner un límite al envío de códigos    
 }
 
 function generateToken(user) {
