@@ -10,6 +10,7 @@ import * as moment from 'moment';
 import { matching } from '@andes/match';
 
 let router = express.Router();
+const expirationOffset = 1000 * 60 * 60 * 24;
 
 router.post('/login', function (req, res, next) {
     var email = req.body.email;
@@ -70,7 +71,8 @@ router.post('/registro', function (req, res, next) {
         fechaNacimiento: req.body.fechaNacimiento,
         sexo: req.body.sexo,
         genero: req.body.genero,
-        codigoVerificacion: '123465' /* only for demo */  /*generarCodigoVerificacion()*/
+        codigoVerificacion: generarCodigoVerificacion(),
+        expirationTime: new Date(Date.now() + expirationOffset)
     }
 
     if (!dataPacienteApp.email) {
@@ -99,11 +101,7 @@ router.post('/registro', function (req, res, next) {
                 return next(err);
             }
 
-            // var userInfo = setUserInfo(user);
-
-
             matchPaciente(user).then(pacientes => {
-                console.log(pacientes);
                 let paciente = pacientes[0].paciente;
 
                 let valid = false;
@@ -116,15 +114,10 @@ router.post('/registro', function (req, res, next) {
 
                 res.status(200).json({
                     valid: valid
-                    // token: 'JWT ' + generateToken(userInfo),
-                    // user: user
                 });
             }).catch(err => {
-                console.log(err);
                 res.status(200).json({
                     valid: false
-                    // token: 'JWT ' + generateToken(userInfo),
-                    // user: user
                 });
             });
 
@@ -135,13 +128,43 @@ router.post('/registro', function (req, res, next) {
 
 });
 
-router.post('/reenviarCodigo', function (req, res, next) {
-    console.log("Reenviar ");
-    // enviarCodigoVerificacion(req);
+router.post('/reenviar-codigo', function (req, res, next) {
+    let email = req.body.email;
+    pacienteApp.findOne({ email: email }, function (err, user: any) {
+        if (!user) {
+            return res.status(422).json({
+                message: 'acount_not_exists'
+            });
+        }
+        if (!user.activacionApp /*&& user.idPaciente*/) {
+
+            user.codigoVerificacion = generarCodigoVerificacion();
+            user.expirationTime = new Date(Date.now() + expirationOffset);
+            user.save(function (err, user) {
+                if (err) {
+                    return next(err);
+                }
+
+                enviarCodigoVerificacion(user);
+                res.status(200).json({
+                    valid: true
+                });
+
+            });
+
+        } else {
+            if (!user.idPaciente) {
+                res.status(422).send({ message: 'account_active' });
+            } else {
+                res.status(422).send({ message: 'account_not_verified' });
+            }
+        }
+
+    });
 });
 
 //Verifica el código de validación enviado por mail o SMS
-router.post('/verificarCodigo', function (req, res, next) {
+router.post('/verificar-codigo', function (req, res, next) {
     let email = req.body.email;
     let codigoIngresado = req.body.codigo;
 
@@ -149,25 +172,29 @@ router.post('/verificarCodigo', function (req, res, next) {
         if (err) {
             return next(err);
         }
-
         if (verificarCodigo(codigoIngresado, datosUsuario.codigoVerificacion)) {
+            if (datosUsuario.expirationTime.getTime() + expirationOffset >= new Date().getTime()) {
+                datosUsuario.activacionApp = true;
+                datosUsuario.estadoCodigo = true;
+                datosUsuario.codigoVerificacion = null;
+                datosUsuario.expirationTime = null;
 
-            datosUsuario.activacionApp = true;
-            datosUsuario.estadoCodigo = true;
+                datosUsuario.save(function (err, user) {
+                    if (err) {
+                        return next(err);
+                    }
 
-            datosUsuario.save(function (err, user) {
-                if (err) {
-                    return next(err);
-                }
-
-                var userInfo = setUserInfo(user);
-                res.status(200).json({
-                    token: 'JWT ' + generateToken(userInfo),
-                    user: user
+                    var userInfo = setUserInfo(user);
+                    res.status(200).json({
+                        token: 'JWT ' + generateToken(userInfo),
+                        user: user
+                    });
                 });
-            });
+            } else {
+                res.status(422).send({ message: 'code_expired' });
+            }
         } else {
-            res.status(422).send({ message: 'codigo no coicide' });
+            res.status(422).send({ message: 'code_mismatch' });
         }
     });
 });
