@@ -7,11 +7,11 @@ import { paciente } from '../../../core/mpi/schemas/paciente';
 import * as agendaCtrl from '../../turnos/controller/agenda';
 import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
+import { INotification, PushClient } from '../controller/PushClient';
 
 let router = express.Router();
 
 router.get('/turnos', function (req: any, res, next) {
-
     let pipelineTurno = [];
     let turnos = [];
     let turno;
