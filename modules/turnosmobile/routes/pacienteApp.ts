@@ -5,7 +5,8 @@ import * as moment from 'moment';
 import * as agenda from '../../turnos/schemas/agenda';
 import { paciente } from '../../../core/mpi/schemas/paciente';
 import * as agendaCtrl from '../../turnos/controller/agenda';
-
+import { Auth } from './../../../auth/auth.class';
+import { Logger } from '../../../utils/logService';
 
 let router = express.Router();
 
@@ -31,11 +32,11 @@ router.get('/turnos', function (req: any, res, next) {
     };
 
     if (req.query.horaInicio) {
-        matchTurno['bloques.turnos.horaInicio'] = { '$gte': req.query.horaInicio };
+        matchTurno['bloques.turnos.horaInicio'] = { '$gte': new Date(req.query.horaInicio) };
     };
 
     if (req.query.horaFinal) {
-        matchTurno['bloques.turnos.horaInicio'] = { '$lt': req.query.horaFinal };
+        matchTurno['bloques.turnos.horaInicio'] = { '$lt': new Date(req.query.horaFinal) };
     };
 
     if (req.query.tiposTurno) {
@@ -106,6 +107,13 @@ router.get('/turnos', function (req: any, res, next) {
 
 });
 
+/**
+ * Cancela un turno de un paciente
+ * 
+ * @param turno_id {string} Id del turno
+ * @param  agenda_id {string} id de la agenda
+ */
+
 router.post('/turnos/cancelar', function (req: any, res, next) {
     let pacienteId = req.user.idPaciente;
     let turnoId = req.body.turno_id;
@@ -117,27 +125,35 @@ router.post('/turnos/cancelar', function (req: any, res, next) {
 
     agenda.findById(agendaId, function (err, agendaObj) {
         if (err) {
-            return next(err);
+            return res.status(422).send({ message: 'agenda_id_invalid' });
         }
-
         let turno = agendaCtrl.getTurno(req, agendaObj, turnoId);
         if (turno) {
-            console.log(turno);
-            if (turno.paciente.id === pacienteId) {
+            if (turno.paciente.id.toString() === pacienteId) {
+
                 agendaCtrl.liberarTurno(req, agendaObj, turnoId);
-                return res.json({});
+
+                Auth.audit(agendaObj, req);
+                agendaObj.save(function (error) {
+                    Logger.log(req, 'turnos', 'update', {
+                        accion: req.body.op,
+                        ruta: req.url,
+                        method: req.method,
+                        data: agendaObj,
+                        err: error || false
+                    });
+                    if (error) {
+                        return next(error);
+                    }
+                });
+                return res.json({ message: 'OK' });
             } else {
                 return res.status(422).send({ message: 'unauthorized' });
             }
         } else {
             return res.status(422).send({ message: 'turno_id_invalid' });
         }
-
-
-
     });
-
-
 });
 
 export = router;

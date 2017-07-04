@@ -185,7 +185,7 @@ export function getPosition(req, agenda, idTurno = null) {
     for (let x = 0; x < agenda.bloques.length; x++) {
         // Si existe este bloque...
         turnos = agenda.bloques[x].turnos;
-        index = turnos.findIndex((t) => { return t._id.toString() === idTurno.toString(); });
+        index = turnos.findIndex((t) => { return t._id.toString() === idTurno; });
         if (index > -1) {
             position.indexBloque = x;
             position.indexTurno = index;
