@@ -10,7 +10,6 @@ import * as moment from 'moment';
 let router = express.Router();
 
 router.get('/turno/:id*?', function (req, res, next) {
-    console.log(req.params, req.query);
 
     let pipelineTurno = [];
     let turnos = [];
