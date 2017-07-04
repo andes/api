@@ -5,12 +5,16 @@ import { pacienteMpi } from '../../schemas/paciente';
 import * as  ServicioSisa from '../../../../utils/servicioSisa';
 import * as  validarSisa from '../../../../utils/validarPacienteSisa';
 import * as config from '../../../../config';
+import { Auth } from '../../../../auth/auth.class';
 
 let router = express.Router();
 
 
 /* Obtengo los pacientes que tienen la misma clave de blocking */
 router.get('/bloques/pacientes/:idTipoBloque/:idBloque', function (req, res, next) {
+    if (!Auth.check(req, 'auditoria:paciente:get:bloques')) {
+        return next(403);
+    }
     let redix = 10;
     let idTipoBloque: number = parseInt(req.params.idTipoBloque, redix);
     let filtro = 'claveBlocking.' + idTipoBloque;
@@ -64,7 +68,7 @@ router.get('/bloques/:idTipoBloque', function (req, res, next) {
             });
 
             res.json(claves);
-        })
+        });
     }
 });
 router.get('/bloques/pacientesSisa/:idTipoBloque/:idBloque', function (req, res, next) {

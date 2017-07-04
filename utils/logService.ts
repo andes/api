@@ -10,8 +10,8 @@ export class Logger {
             modulo: mod,
             operacion: op,
             datosOperacion: data,
-            cliente: { 
-                ip: req.ip, 
+            cliente: {
+                ip: req.ip,
                 app: 'desktop'
             },
             servidor: {

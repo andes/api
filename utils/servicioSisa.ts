@@ -2,6 +2,8 @@ import { matching } from '@andes/match';
 import * as https from 'https';
 import * as config from '../config';
 import * as configPrivate from '../config.private';
+// Services
+// import { Logger } from '../utils/logService';
 let to_json = require('xmljson').to_json;
 
 
@@ -15,15 +17,16 @@ export function getSisaCiudadano(nroDocumento, usuario, clave, sexo?: string) {
     // options for GET
     // Agregar a la consulta el sexo para evitar el problema de dni repetidos
     let xml = '';
-    let pathSisa = 'https://sisa.msal.gov.ar/sisa/services/rest/cmdb/obtener?nrodoc=' + nroDocumento + '&usuario=' + usuario + '&clave=' + clave;
+    // let pathSisa = 'https://sisa.msal.gov.ar/sisa/services/rest/cmdb/obtener?nrodoc=' + nroDocumento + '&usuario=' + usuario + '&clave=' + clave;
+    let pathSisa = '/sisa/services/rest/cmdb/obtener?nrodoc=' + nroDocumento + '&usuario=' + usuario + '&clave=' + clave;
 
     if (sexo) {
         pathSisa = 'https://sisa.msal.gov.ar/sisa/services/rest/cmdb/obtener?nrodoc=' + nroDocumento + '&sexo=' + sexo + '&usuario=' + usuario + '&clave=' + clave;
     }
 
     let optionsgetmsg = {
-        host: 'cors-anywhere.herokuapp.com/', // nombre del dominio // (no http/https !)
-        // port: 443,
+        host: 'sisa.msal.gov.ar', // nombre del dominio // (no http/https !)
+        port: 443,
         path: pathSisa, // '/sisa/services/rest/puco/' + nroDocumento,
         method: 'GET', // do GET,
         rejectUnauthorized: false,
@@ -63,7 +66,7 @@ export function getSisaCiudadano(nroDocumento, usuario, clave, sexo?: string) {
             reject(e);
         });
 
-    })
+    });
 }
 
 export function formatearDatosSisa(datosSisa) {
@@ -163,7 +166,7 @@ export function getPacienteSisa(nroDocumento, sexo?: string) {
 
 
 export function matchSisa(paciente) {
-
+    // console.log("PACIENTE EN MATCHSISA----------->",paciente);
     // Verifica si el paciente tiene un documento valido y realiza la búsqueda a través de Sisa
     let matchPorcentaje = 0;
     let pacienteSisa = {};
@@ -179,8 +182,6 @@ export function matchSisa(paciente) {
                     sexo = (paciente.sexo === 'femenino') ? 'F' : 'M';
                 }
                 // OJO: Es sólo para pacientes con SEXO debido a que pueden existir distintos pacientes con el mismo DNI
-                // this.getSisaCiudadano(paciente.documento, configPrivate.sisa.username, configPrivate.sisa.password, sexo)
-                // La linea original de arriba llevaba un this que pinchaba... <---------------- posible BREAKING CHANGE
                 getSisaCiudadano(paciente.documento, configPrivate.sisa.username, configPrivate.sisa.password, sexo)
                     .then((resultado) => {
                         if (resultado) {
@@ -192,6 +193,10 @@ export function matchSisa(paciente) {
                                             pacienteSisa = formatearDatosSisa(resultado[1].Ciudadano);
                                             matchPorcentaje = match.matchPersonas(paciente, pacienteSisa, weights);
                                             matchPorcentaje = (matchPorcentaje * 100);
+                                            // TODO
+                                            // Logger.log(req, 'auditoria', 'busqueda:sisa', {
+                                            //     resultado: resultado
+                                            // });
                                             resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sisa', 'matcheo': matchPorcentaje, 'datosPaciente': pacienteSisa } });
                                         } else {
                                             resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sisa', 'matcheo': 0, 'datosPaciente': null } });

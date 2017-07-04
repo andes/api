@@ -249,27 +249,6 @@ router.get('/pacientes/counts/', function (req, res, next) {
     });
 });
 
-router.get('/pacientes/temporales/', function (req, res, next) {
-    /**
-    * Se requiere autorización para acceder a los pacientes temporales
-    */
-    if (!Auth.check(req, 'mpi:get:temporales')) {
-        return next(403);
-    }
-    let filtro = {
-        estado: 'temporal',
-        activo: true
-    };
-
-    let query = paciente.find(filtro);
-    query.exec(function (err, data) {
-        if (err) {
-            return next(err);
-        }
-        res.json(data);
-    });
-});
-
 router.get('/pacientes/dashboard/', function (req, res, next) {
     /**
      * Se requiere autorización para acceder al dashboard de MPI
