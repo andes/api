@@ -15,8 +15,16 @@ let turnoSchema = new mongoose.Schema({
         default: 'disponible'
     },
     reasignado: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'agenda'
+        anterior: {
+            idAgenda: mongoose.Schema.Types.ObjectId,
+            idBloque: mongoose.Schema.Types.ObjectId,
+            idTurno: mongoose.Schema.Types.ObjectId
+        },
+        siguiente: {
+            idAgenda: mongoose.Schema.Types.ObjectId,
+            idBloque: mongoose.Schema.Types.ObjectId,
+            idTurno: mongoose.Schema.Types.ObjectId
+        }
     },
     tipoTurno: {
         type: String,
