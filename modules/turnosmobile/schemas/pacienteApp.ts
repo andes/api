@@ -44,19 +44,27 @@ export let pacienteAppSchema = new mongoose.Schema({
     },
     codigoVerificacion: {
         type: String,
-        unique: true,
-        required: true
+        /* unique: true, */
+        /* required: true */
     },
     // Si fue usado o no
+    idPaciente: {
+        type: mongoose.Schema.Types.ObjectId,
+        default: null
+    },
     estadoCodigo: {
         type: Boolean,
         default: false
+    },
+    expirationTime: {
+        type: Date
     },
     envioCodigoCount: Number,
     activacionApp: {
         type: Boolean,
         default: false
-    }
+    },
+    permisos: [String]
 }, {
         timestamps: true
     });

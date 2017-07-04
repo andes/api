@@ -69,11 +69,17 @@ export const modules = {
         route: '/modules/auditorias',
         auth: true,
     },
+    turnos_mobile_auth: {
+        active: true,
+        path: './modules/turnosmobile/auth_routes',
+        route: '/modules/turnosmobile',
+        auth: false,
+    },
     turnos_mobile: {
         active: true,
         path: './modules/turnosmobile/routes',
         route: '/modules/turnosmobile',
-        auth: false,
+        auth: true,
     },
 };
 

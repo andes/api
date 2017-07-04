@@ -10,6 +10,7 @@ import * as moment from 'moment';
 import { matching } from '@andes/match';
 
 let router = express.Router();
+const expirationOffset = 1000 * 60 * 60 * 24;
 
 router.post('/login', function (req, res, next) {
     var email = req.body.email;
@@ -39,9 +40,7 @@ router.post('/login', function (req, res, next) {
                 return next(err);
             }
             if (isMatch) {
-
                 var userInfo = setUserInfo(existingUser);
-
                 res.status(200).json({
                     token: 'JWT ' + generateToken(userInfo),
                     user: existingUser
@@ -70,7 +69,9 @@ router.post('/registro', function (req, res, next) {
         fechaNacimiento: req.body.fechaNacimiento,
         sexo: req.body.sexo,
         genero: req.body.genero,
-        codigoVerificacion: '123465' /* only for demo */  /*generarCodigoVerificacion()*/
+        codigoVerificacion: generarCodigoVerificacion(),
+        expirationTime: new Date(Date.now() + expirationOffset),
+        permisos: []
     }
 
     if (!dataPacienteApp.email) {
@@ -99,11 +100,7 @@ router.post('/registro', function (req, res, next) {
                 return next(err);
             }
 
-            // var userInfo = setUserInfo(user);
-
-
             matchPaciente(user).then(pacientes => {
-                console.log(pacientes);
                 let paciente = pacientes[0].paciente;
 
                 let valid = false;
@@ -116,15 +113,10 @@ router.post('/registro', function (req, res, next) {
 
                 res.status(200).json({
                     valid: valid
-                    // token: 'JWT ' + generateToken(userInfo),
-                    // user: user
                 });
             }).catch(err => {
-                console.log(err);
                 res.status(200).json({
                     valid: false
-                    // token: 'JWT ' + generateToken(userInfo),
-                    // user: user
                 });
             });
 
@@ -135,13 +127,43 @@ router.post('/registro', function (req, res, next) {
 
 });
 
-router.post('/reenviarCodigo', function (req, res, next) {
-    console.log("Reenviar ");
-    // enviarCodigoVerificacion(req);
+router.post('/reenviar-codigo', function (req, res, next) {
+    let email = req.body.email;
+    pacienteApp.findOne({ email: email }, function (err, user: any) {
+        if (!user) {
+            return res.status(422).json({
+                message: 'acount_not_exists'
+            });
+        }
+        if (!user.activacionApp && user.idPaciente) {
+
+            user.codigoVerificacion = generarCodigoVerificacion();
+            user.expirationTime = new Date(Date.now() + expirationOffset);
+            user.save(function (err, user) {
+                if (err) {
+                    return next(err);
+                }
+
+                enviarCodigoVerificacion(user);
+                res.status(200).json({
+                    valid: true
+                });
+
+            });
+
+        } else {
+            if (!user.idPaciente) {
+                res.status(422).send({ message: 'account_active' });
+            } else {
+                res.status(422).send({ message: 'account_not_verified' });
+            }
+        }
+
+    });
 });
 
 //Verifica el código de validación enviado por mail o SMS
-router.post('/verificarCodigo', function (req, res, next) {
+router.post('/verificar-codigo', function (req, res, next) {
     let email = req.body.email;
     let codigoIngresado = req.body.codigo;
 
@@ -149,25 +171,29 @@ router.post('/verificarCodigo', function (req, res, next) {
         if (err) {
             return next(err);
         }
-
         if (verificarCodigo(codigoIngresado, datosUsuario.codigoVerificacion)) {
+            if (datosUsuario.expirationTime.getTime() + expirationOffset >= new Date().getTime()) {
+                datosUsuario.activacionApp = true;
+                datosUsuario.estadoCodigo = true;
+                datosUsuario.codigoVerificacion = null;
+                datosUsuario.expirationTime = null;
 
-            datosUsuario.activacionApp = true;
-            datosUsuario.estadoCodigo = true;
+                datosUsuario.save(function (err, user) {
+                    if (err) {
+                        return next(err);
+                    }
 
-            datosUsuario.save(function (err, user) {
-                if (err) {
-                    return next(err);
-                }
-
-                var userInfo = setUserInfo(user);
-                res.status(200).json({
-                    token: 'JWT ' + generateToken(userInfo),
-                    user: user
+                    var userInfo = setUserInfo(user);
+                    res.status(200).json({
+                        token: 'JWT ' + generateToken(userInfo),
+                        user: user
+                    });
                 });
-            });
+            } else {
+                res.status(422).send({ message: 'code_expired' });
+            }
         } else {
-            res.status(422).send({ message: 'codigo no coicide' });
+            res.status(422).send({ message: 'code_mismatch' });
         }
     });
 });
@@ -182,41 +208,37 @@ function verificarCodigo(codigoIngresado, codigo) {
 function enviarCodigoVerificacion(user) {
     console.log("Enviando mail...");
     let transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
+        host: 'smtp.hushmail.com',
         port: 465,
-        secure: true, // secure:true for port 465, secure:false for port 587
+        secure: true,
         auth: {
-            user: 'publicacionsaludnqn@gmail.com',
-            pass: 'saludnqn'
+            user: 'saludneuquen@hushmail.com',
+            pass: 'saludneuquen'
         }
     });
 
     // setup email data with unicode symbols
     let mailOptions = {
-        from: '"Salud 🏥" <publicacionsaludnqn@gmail.com>', // sender address
+        from: '"Salud 🏥" <saludneuquen@hushmail.com>', // sender address
         to: user.email, // list of receivers
         subject: 'Hola ' + user.nombre + ' ✔', // Subject line
         text: 'Ingrese su código de verificación en la app', // plain text body
         html: '<b>El código de verificación es: ' + user.codigoVerificacion + '</b>' // html body
     };
 
-    // send mail with defined transport object
+
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
             return console.log("Error al mandar mail: ", error);
         }
 
-        envioCodigoCount(user);
         console.log('Mensaje %s enviado: %s', info.messageId, info.response);
     });
+
 }
 
 function envioCodigoCount(user: any) {
-    pacienteApp.findById(user.id, function (err, data: any) {
-
-        data.envioCodigoCount = data.envioCodigoCount + 1;
-        console.log("Cant de codigo", data.envioCodigoCount);
-    });
+    //TODO: Implementar si se decide poner un límite al envío de códigos    
 }
 
 function generateToken(user) {
@@ -239,7 +261,9 @@ function generarCodigoVerificacion() {
 function setUserInfo(request) {
     return {
         _id: request._id,
-        email: request.email
+        email: request.email,
+        idPaciente: request.idPaciente,
+        permisos: request.permisos
     };
 }
 
