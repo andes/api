@@ -75,6 +75,12 @@ export const modules = {
         route: '/modules/turnosmobile',
         auth: false,
     },
+    fuentesAutenticas: {
+        active: true,
+        path: './modules/fuentesAutenticas/routes',
+        route: '/modules/fuentesAutenticas',
+        auth: true,
+    },
 };
 
 // Cotas de consumo de APIs

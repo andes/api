@@ -10,7 +10,7 @@ import * as organizacion from '../../../core/tm/schemas/organizacion';
  * macheoAlto == Macheo con un % superior a 90
  * posibleDuplicado == Nuevo paciente, pero matchea con un porcentaje entre 80 y 90 con otro.
  * validadoScan == 'Paciente encontrado por el string del scan'
- * 
+ *
  */
 
 export let logSchema = new mongoose.Schema({
