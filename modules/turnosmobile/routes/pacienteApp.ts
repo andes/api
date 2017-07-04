@@ -129,8 +129,7 @@ router.post('/turnos/cancelar', function (req: any, res, next) {
         }
         let turno = agendaCtrl.getTurno(req, agendaObj, turnoId);
         if (turno) {
-            if (turno.paciente.id.toString() === pacienteId) {
-
+            if (String(turno.paciente.id) === pacienteId) {
                 agendaCtrl.liberarTurno(req, agendaObj, turnoId);
 
                 Auth.audit(agendaObj, req);

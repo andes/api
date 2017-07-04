@@ -154,7 +154,7 @@ export function actualizarEstado(req, data) {
 // Dada una Agenda completa + un id de Turno, busca y devuelve el Turno completo
 export function getTurno(req, data, idTurno = null) {
     let turno;
-    idTurno = idTurno || req.body.idTurno;
+    idTurno = String(idTurno) || req.body.idTurno;
     // Loop en los bloques
     for (let x = 0; x < data.bloques.length; x++) {
         // Si existe este bloque...
