@@ -44,7 +44,7 @@ router.get('/agenda/candidatas', function (req, res, next) {
             {
                 $match:
                 {
-                    'horaInicio': { '$gte': new Date (horaAgendaOrig) }, 
+                    'horaInicio': { '$gte': horaAgendaOrig },
                     '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
                     'tipoPrestaciones._id': mongoose.Types.ObjectId(turno.tipoPrestacion._id), // Que tengan incluída la prestación del turno
                     '_id': { '$ne': mongoose.Types.ObjectId(req.query.idAgenda) }, // Que no sea la agenda original
@@ -61,9 +61,11 @@ router.get('/agenda/candidatas', function (req, res, next) {
             data1.forEach(function (a) {
                 a.bloques.forEach(function (b) {
                     b.turnos.forEach(function (t) {
+                        console.log('turno.reasignado', turno.reasignado);
+                        console.log('t', t.estado);
                         let horaIni = moment(t.horaInicio).format('HH:mm');
                         if (horaIni.toString() === moment(turno.horaInicio).format('HH:mm')
-                            && t.estado === 'disponible' || (t.estado === 'asignado' && turno.reasignado !== undefined)
+                            && t.estado === 'disponible' || (t.estado === 'asignado' && t.reasignado && t.reasignado.anterior === turno.id)
                             && b.duracionTurno === bloque.duracionTurno
                             && b.tipoPrestaciones.findIndex(x => String(x._id) === String(turno.tipoPrestacion._id)) >= 0) {
                             out.push(a);
