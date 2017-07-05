@@ -1,4 +1,3 @@
-import { log } from './../../../core/log/schemas/log';
 import * as express from 'express';
 import * as agenda from '../schemas/agenda';
 import { Logger } from '../../../utils/logService';
@@ -10,7 +9,7 @@ import * as moment from 'moment';
 
 let router = express.Router();
 
-router.get('/turno/:id', function (req, res, next) {
+router.get('/turno/:id*?', function (req, res, next) {
 
     let pipelineTurno = [];
     let turnos = [];
@@ -18,7 +17,6 @@ router.get('/turno/:id', function (req, res, next) {
 
     pipelineTurno = [{
         '$match': {
-            'bloques.turnos._id': mongoose.Types.ObjectId(req.params.id),
         }
     },
     // Unwind cada array
@@ -27,7 +25,6 @@ router.get('/turno/:id', function (req, res, next) {
     // Filtra los elementos que matchean
     {
         '$match': {
-            'bloques.turnos._id': mongoose.Types.ObjectId(req.params.id)
         }
     },
     {
@@ -43,6 +40,14 @@ router.get('/turno/:id', function (req, res, next) {
         }
     }];
     if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+        let matchId = {
+            '$match': {
+                'bloques.turnos._id': mongoose.Types.ObjectId(req.params.id),
+            }
+        };
+        pipelineTurno[0] = matchId;
+        pipelineTurno[3] = matchId;
+
         agenda.aggregate(pipelineTurno,
             function (err, data) {
                 if (err) {
@@ -64,8 +69,8 @@ router.get('/turno/:id', function (req, res, next) {
         };
 
         if (req.query.usuario) {
-            matchTurno['updatedBy.username'] = req.query.usuario.username;
-            matchTurno['updatedBy.documento'] = req.query.usuario.documento;
+            matchTurno['updatedBy.username'] = req.query.userName;
+            matchTurno['updatedBy.documento'] = req.query.userDoc;
         };
 
         if (req.query.asistencia) {
@@ -92,20 +97,17 @@ router.get('/turno/:id', function (req, res, next) {
         pipelineTurno[3] = { '$match': matchTurno };
         pipelineTurno[6] = { '$unwind': '$bloques' };
         pipelineTurno[7] = { '$unwind': '$bloques.turnos' };
-        if (!req.query.pacienteId) {
-            pipelineTurno[8] = {
-                '$lookup': {
-                    'from': 'paciente',
-                    'localField': 'bloques.turnos.paciente.id',
-                    'foreignField': '_id',
-                    'as': 'pacientes_docs'
-                }
-            };
-            pipelineTurno[9] = {
-                '$match': { 'pacientes_docs': { $ne: [] } }
-            };
-        }
-
+        pipelineTurno[8] = {
+            '$lookup': {
+                'from': 'paciente',
+                'localField': 'bloques.turnos.paciente.id',
+                'foreignField': '_id',
+                'as': 'pacientes_docs'
+            }
+        };
+        pipelineTurno[9] = {
+            '$match': { 'pacientes_docs': { $ne: [] } }
+        };
         agenda.aggregate(pipelineTurno,
             function (err2, data2) {
                 if (err2) {
@@ -113,14 +115,8 @@ router.get('/turno/:id', function (req, res, next) {
                 }
                 data2.forEach(elem => {
                     turno = elem.bloques.turnos;
-                    turno.paciente = elem.pacientes_docs && elem.pacientes_docs.length > 0 ? elem.pacientes_docs[0] : elem.bloques.turnos.paciente;
-                    if (req.query.horaInicio) {
-                        if ((moment(req.query.horaInicio).format('HH:mm')).toString() === moment(turno.horaInicio).format('HH:mm')) {
-                            turnos.push(turno);
-                        }
-                    } else {
-                        turnos.push(turno);
-                    }
+                    turno.paciente = elem.pacientes_docs.length > 0 ? elem.pacientes_docs[0] : elem.bloques.turnos.paciente;
+                    turnos.push(turno);
                 });
                 res.json(turnos);
             });

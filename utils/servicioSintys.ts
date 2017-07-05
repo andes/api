@@ -1,20 +1,14 @@
-import { ValidateFormatDate } from './validateFormatDate';
 import { matching } from '@andes/match';
 import * as config from '../config';
 import * as https from 'https';
-var to_json = require('xmljson').to_json;
 
-
-
+let to_json = require('xmljson').to_json;
 
 export function getPersonaSintys(nroDocumento: string) {
+    let xml = '';
+    let pathSintys = '/WCFSINTyS/wsPersona.asmx/GetPersona?dni=' + nroDocumento;
 
-    var datosParseados;
-    var xml = '';
-    var organizacion = new Object();
-    var pathSintys = '/WCFSINTyS/wsPersona.asmx/GetPersona?dni=' + nroDocumento;
-
-    var optionsgetmsg = {
+    let optionsgetmsg = {
         /*Este servicio debe ser llamado directamente desde los WS
         que están publicados en el servidor 10.1.232.8 ya que por cuestiones
         de seguridad de Sintys, sólo nos dejan consumir datos desde este servidor.
@@ -27,7 +21,7 @@ export function getPersonaSintys(nroDocumento: string) {
     };
     // Realizar GET request
     return new Promise((resolve, reject) => {
-        var reqGet = https.request(optionsgetmsg, function (res) {
+        let reqGet = https.request(optionsgetmsg, function (res) {
             res.on('data', function (d) {
                 if (d.toString()) {
                     xml = xml + d.toString();
@@ -37,18 +31,19 @@ export function getPersonaSintys(nroDocumento: string) {
             res.on('end', function () {
 
                 if (xml) {
-                    //Se parsea el xml obtenido a JSON
-                    //console.log('el xml obtenido',xml);
+                    // Se parsea el xml obtenido a JSON
+                    // console.log('el xml obtenido',xml);
                     to_json(xml, function (error, data) {
                         if (error) {
                             resolve([500, {}]);
                         } else {
-                            //console.log('XML parseado a JSON:',data.string._);
-                            resolve([res.statusCode, data.string._])
+                            // console.log('XML parseado a JSON:',data.string._);
+                            resolve([res.statusCode, data.string._]);
                         }
                     });
-                } else
+                } else {
                     resolve([res.statusCode, {}]);
+                }
             });
 
         });
@@ -57,23 +52,23 @@ export function getPersonaSintys(nroDocumento: string) {
             reject(e);
         });
 
-    })
+    });
 }
 
 export function formatearDatosSintys(datosSintys) {
-    var ciudadano;
-    var fecha;
+    let ciudadano;
+    let fecha;
     ciudadano = new Object();
     // console.log('DATOSSINTYS----------->', datosSintys);
 
     ciudadano.documento = datosSintys.Documento ? datosSintys.Documento.toString() : '';
 
-    //VER con las chicas ya que sintys no trae separado nbe y apellido.
+    // VER con las chicas ya que sintys no trae separado nbe y apellido.
     ciudadano.apellido = datosSintys.NombreCompleto ? datosSintys.NombreCompleto : '';
-    //ciudadano.apellido ?
+    // ciudadano.apellido ?
 
-    //TEMA DE DIRECCIÓN VERS SI VALE LA PENA
-    //No lo trae en este webService hay que invocar a otro con el idDelPaciente seleccionado, además no está funcionando ya hice el reclamo en sintys
+    // TEMA DE DIRECCIÓN VERS SI VALE LA PENA
+    // No lo trae en este webService hay que invocar a otro con el idDelPaciente seleccionado, además no está funcionando ya hice el reclamo en sintys
     /*
     ciudadano.direccion = [];
     var domicilio;
@@ -106,7 +101,7 @@ export function formatearDatosSintys(datosSintys) {
     */
 
     if (datosSintys.Sexo) {
-        if (datosSintys.Sexo == 'FEMENINO') {
+        if (datosSintys.Sexo === 'FEMENINO') {
             ciudadano.sexo = 'femenino';
             ciudadano.genero = 'femenino';
         } else {
@@ -119,7 +114,7 @@ export function formatearDatosSintys(datosSintys) {
 
     if (datosSintys.FechaNacimiento) {
         fecha = datosSintys.FechaNacimiento.split('/');
-        var fechaNac = new Date(fecha[2].substr(0, 4), fecha[1] - 1, fecha[0]);
+        let fechaNac = new Date(fecha[2].substr(0, 4), fecha[1] - 1, fecha[0]);
         ciudadano.fechaNacimiento = fechaNac.toJSON();
 
     }
@@ -150,14 +145,13 @@ export function formatearDatosSintys(datosSintys) {
 
 export function getPacienteSintys(nroDocumento) {
     return new Promise((resolve, reject) => {
-        var paciente = null;
         this.getPersonaSintys(nroDocumento)
             .then((resultado) => {
                 if (resultado) {
-                    var dato = this.formatearDatosSintys(JSON.parse(resultado[1])[0]);
+                    let dato = this.formatearDatosSintys(JSON.parse(resultado[1])[0]);
                     resolve(dato);
                 }
-                resolve(null)
+                resolve(null);
             })
             .catch((err) => {
                 reject(err);
@@ -179,7 +173,6 @@ export function matchSintys(paciente) {
 
         if (paciente.documento) {
             if (paciente.documento.length >= 7) {
-                console.log('antes del getPersonaSintys');
                 getPersonaSintys(paciente.documento)
                     .then((resultado) => {
                         if (resultado) {
@@ -197,7 +190,7 @@ export function matchSintys(paciente) {
                         resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sintys', 'matcheo': 0, 'datosPaciente': pacienteSintys } });
                     })
                     .catch((err) => {
-                        console.error('Error consulta rest Sintys:' + err)
+                        console.error('Error consulta rest Sintys:' + err);
                         reject(err);
                     });
 
@@ -209,7 +202,7 @@ export function matchSintys(paciente) {
         } else {
             resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sintys', 'matcheo': 0, 'datosPaciente': pacienteSintys } });
         }
-    })
+    });
 
 }
 
