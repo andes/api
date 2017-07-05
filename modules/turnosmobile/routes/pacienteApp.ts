@@ -12,6 +12,7 @@ import { INotification, PushClient } from '../controller/PushClient';
 let router = express.Router();
 
 router.get('/turnos', function (req: any, res, next) {
+
     let pipelineTurno = [];
     let turnos = [];
     let turno;
@@ -42,10 +43,6 @@ router.get('/turnos', function (req: any, res, next) {
     if (req.query.tiposTurno) {
         matchTurno['bloques.turnos.tipoTurno'] = { '$in': req.query.tiposTurno };
     };
-
-    // if (req.query.pacienteId) {
-
-    // };
 
     pipelineTurno.push({ '$match': matchTurno });
     pipelineTurno.push({ '$unwind': '$bloques' });
@@ -90,18 +87,14 @@ router.get('/turnos', function (req: any, res, next) {
                 turno.espacioFisico = elem.espacioFisico;
                 turno.agenda_id = elem.agenda_id;
                 turnos.push(turno);
-
-                /*
-                if (req.query.horaInicio) {
-                    if ((moment(req.query.horaInicio).format('HH:mm')).toString() === moment(turno.horaInicio).format('HH:mm')) {
-                        turnos.push(turno);
-                    }
-                } else {
-                    
-                }
-                */
             });
             res.json(turnos);
+            /*
+            let user_id = req.user._id;
+            pacienteApp.findById(user_id, function (err, user: any) {
+                new PushClient().send(user.devices[0].device_id, { body: 'Tus turnos' });
+            });
+            */
         }
     );
 
@@ -154,5 +147,6 @@ router.post('/turnos/cancelar', function (req: any, res, next) {
         }
     });
 });
+
 
 export = router;

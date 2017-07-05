@@ -2,6 +2,7 @@ import * as mongoose from 'mongoose';
 import * as bcrypt from 'bcrypt-nodejs';
 
 import { pacienteSchema } from '../../../core/mpi/schemas/paciente';
+import { deviceSchema } from './device';
 
 export let pacienteAppSchema = new mongoose.Schema({
 
@@ -64,7 +65,8 @@ export let pacienteAppSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
-    permisos: [String]
+    permisos: [String],
+    devices: [deviceSchema]
 }, {
         timestamps: true
     });
