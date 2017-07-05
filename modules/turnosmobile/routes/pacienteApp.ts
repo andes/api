@@ -55,7 +55,8 @@ router.get('/turnos', function (req: any, res, next) {
             'turnos': { $push: '$bloques.turnos' },
             'profesionales': { $first: '$profesionales' },
             'espacioFisico': { $first: '$espacioFisico' },
-            'organizacion': { $first: '$organizacion' }
+            'organizacion': { $first: '$organizacion' },
+            'duracionTurno': { $first: '$bloques.duracionTurno' }
         }
     });
     pipelineTurno.push({
@@ -65,7 +66,8 @@ router.get('/turnos', function (req: any, res, next) {
             'bloques': { $push: { '_id': '$_id.bloqueId', 'turnos': '$turnos' } },
             'profesionales': { $first: '$profesionales' },
             'espacioFisico': { $first: '$espacioFisico' },
-            'organizacion': { $first: '$organizacion' }
+            'organizacion': { $first: '$organizacion' },
+            'duracionTurno': { $first: '$duracionTurno' }
         }
     });
 
@@ -86,15 +88,16 @@ router.get('/turnos', function (req: any, res, next) {
                 turno.organizacion = elem.organizacion;
                 turno.espacioFisico = elem.espacioFisico;
                 turno.agenda_id = elem.agenda_id;
+                turno.duracionTurno = elem.duracionTurno;
                 turnos.push(turno);
             });
             res.json(turnos);
-            /*
+
             let user_id = req.user._id;
             pacienteApp.findById(user_id, function (err, user: any) {
                 new PushClient().send(user.devices[0].device_id, { body: 'Tus turnos' });
             });
-            */
+
         }
     );
 
