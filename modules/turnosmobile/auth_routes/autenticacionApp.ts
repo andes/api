@@ -1,11 +1,12 @@
 import * as jwt from 'jsonwebtoken';
 import { pacienteApp } from '../schemas/pacienteApp';
 import { authApp } from '../../../config.private';
-const nodemailer = require('nodemailer');
+// const nodemailer = require('nodemailer');
 import * as express from 'express';
 import { Client } from 'elasticsearch';
 import * as config from '../../../config';
 import * as configPrivate from '../../../config.private';
+import { sendMail, MailOptions } from '../../../utils/sendMail';
 import * as moment from 'moment';
 import { matching } from '@andes/match';
 
@@ -94,6 +95,7 @@ router.post('/registro', function (req, res, next) {
 
         var user = new pacienteApp(dataPacienteApp);
 
+        enviarCodigoVerificacion(user);
         user.save(function (err, user: any) {
 
             if (err) {
@@ -207,34 +209,16 @@ function verificarCodigo(codigoIngresado, codigo) {
 
 function enviarCodigoVerificacion(user) {
     console.log("Enviando mail...");
-    let transporter = nodemailer.createTransport({
-        host: 'smtp.hushmail.com',
-        port: 465,
-        secure: true,
-        auth: {
-            user: 'saludneuquen@hushmail.com',
-            pass: 'saludneuquen'
-        }
-    });
 
-    // setup email data with unicode symbols
-    let mailOptions = {
-        from: '"Salud 🏥" <saludneuquen@hushmail.com>', // sender address
-        to: user.email, // list of receivers
-        subject: 'Hola ' + user.nombre + ' ✔', // Subject line
-        text: 'Ingrese su código de verificación en la app', // plain text body
-        html: '<b>El código de verificación es: ' + user.codigoVerificacion + '</b>' // html body
+    let options: MailOptions = {
+        from: configPrivate.enviarMail.options.from,
+        to: user.nombre,
+        subject: 'Hola ' + user.email,
+        text: 'Ingrese su código de verificación en la app',
+        html: 'El código de verificación es: ' + user.codigoVerificacion
     };
 
-
-    transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-            return console.log("Error al mandar mail: ", error);
-        }
-
-        console.log('Mensaje %s enviado: %s', info.messageId, info.response);
-    });
-
+    sendMail(options);
 }
 
 function envioCodigoCount(user: any) {
