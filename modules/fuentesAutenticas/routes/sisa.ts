@@ -13,6 +13,7 @@ import { Auth } from "../../../auth/auth.class";
 let router = express.Router();
 
 router.get('/validar', function (req, res, next) {
+    console.log('lalala');
    if (!Auth.check(req, 'fa:get:sisa')) {
         return next(403);
     }
