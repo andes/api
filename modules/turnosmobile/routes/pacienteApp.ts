@@ -93,10 +93,12 @@ router.get('/turnos', function (req: any, res, next) {
             });
             res.json(turnos);
 
+            /*
             let user_id = req.user._id;
             pacienteApp.findById(user_id, function (err, user: any) {
                 new PushClient().send(user.devices[0].device_id, { body: 'Tus turnos' });
             });
+            */
 
         }
     );
