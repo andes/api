@@ -73,6 +73,7 @@ router.get('/turnos', function (req: any, res, next) {
 
     pipelineTurno.push({ '$unwind': '$bloques' });
     pipelineTurno.push({ '$unwind': '$bloques.turnos' });
+    pipelineTurno.push({ '$sort': { 'bloques.turnos.horaInicio': 1 } });
 
     agenda.aggregate(
         pipelineTurno,
