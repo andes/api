@@ -206,7 +206,7 @@ router.get('/snomed/term', function (req, res, next) {
             return 0;
         });
 
-        data = data.slice(0, 10);
+        data = data.slice(0, 100);
 
         res.json(data);
 
@@ -327,7 +327,7 @@ router.get('/snomed/procedimiento', function (req, res, next) {
         'lang': 'spanish',
         '$and': [], 'active': true, 'conceptActive': true,
         '$or': [
-           { semanticTag: 'procedimiento' }
+            { semanticTag: 'procedimiento' }
         ]
     };
     words.forEach(function (word) {
