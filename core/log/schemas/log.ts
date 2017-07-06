@@ -10,7 +10,7 @@ import * as organizacion from '../../../core/tm/schemas/organizacion';
  * macheoAlto == Macheo con un % superior a 90
  * posibleDuplicado == Nuevo paciente, pero matchea con un porcentaje entre 80 y 90 con otro.
  * validadoScan == 'Paciente encontrado por el string del scan'
- * 
+ *
  */
 
 export let logSchema = new mongoose.Schema({
@@ -27,7 +27,7 @@ export let logSchema = new mongoose.Schema({
     organizacion: { type: organizacion },
     modulo: {
         type: String,
-        enum: ['mpi', 'turnos', 'rup', 'configTipoPrestacion']
+        enum: ['mpi', 'turnos', 'rup', 'configTipoPrestacion', 'fa_sintys', 'fa_sisa']
     },
     operacion: {
         type: String,
@@ -38,11 +38,13 @@ export let logSchema = new mongoose.Schema({
             // ... Mpi
             'macheoAlto', 'posibleDuplicado', 'reportarError', 'validadoScan', 'scan', 'scanFail',
             // OperacionesElastic
-            'elasticInsert', 'elasticInsertInPut' , 'elasticUpdate', 'elasticDelete', 'elasticError',
+            'elasticInsert', 'elasticInsertInPut', 'elasticUpdate', 'elasticDelete', 'elasticError',
             // ... Turnos
             'asignarTurno', 'cancelarTurno', 'listaEspera',
             // ... RUP
-            'pacientes'
+            'pacientes',
+            // ...Fuentes Autenticas
+            'validar', 'error'
         ]
     },
     datosOperacion: mongoose.Schema.Types.Mixed,

@@ -13,6 +13,7 @@
     "@types/jasmine": "^2.2.30",
     "@types/mongoose": "^4.7.8",
     "@types/node": "^6.0.42",
+    "aggregate-error": "^1.0.0",
     "async": "^2.4.0",
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "^1.15.2",

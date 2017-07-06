@@ -3,14 +3,12 @@ import * as edificioSchema from '../../../core/tm/schemas/edificio';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 
 export let espacioFisicoSchema = new mongoose.Schema({
-    nombre: {
-        type: String,
-        required: true
-    },
-    descripcion: String,
-    organizacion: nombreSchema,
-    edificio: edificioSchema,
+    nombre: String,
     detalle: String,
+    descripcion: String,
+    edificio: edificioSchema,
+    sector: nombreSchema,
+    servicio: nombreSchema,
     activo: Boolean
 });
 
