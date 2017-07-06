@@ -19,6 +19,7 @@ router.get('/turnos', function (req: any, res, next) {
     let matchTurno = {};
 
     matchTurno['bloques.turnos.paciente.id'] = mongoose.Types.ObjectId(req.user.idPaciente);
+    matchTurno['estado'] = 'publicada';
 
     if (req.query.estado) {
         matchTurno['bloques.turnos.estado'] = req.query.estado;
@@ -81,7 +82,7 @@ router.get('/turnos', function (req: any, res, next) {
             if (err2) {
                 return next(err2);
             }
-
+            let promisesStack = [];
             data2.forEach(elem => {
                 turno = elem.bloques.turnos;
                 turno.paciente = elem.bloques.turnos.paciente;
@@ -90,14 +91,45 @@ router.get('/turnos', function (req: any, res, next) {
                 turno.espacioFisico = elem.espacioFisico;
                 turno.agenda_id = elem.agenda_id;
                 turno.duracionTurno = elem.duracionTurno;
+
+                /* Busco el turno anterior cuando fue reasignado */
+                if (turno.reasignado && turno.reasignado.anterior) {
+                    let promise = new Promise((resolve, reject) => {
+                        let datos = turno.reasignado.anterior;
+                        agenda.findById(datos.idAgenda, function (err, ag: any) {
+                            if (err) {
+                                resolve();
+                            }
+                            let bloque = ag.bloques.id(datos.idBloque);
+                            if (bloque) {
+                                let t = bloque.turnos.id(datos.idTurno);
+                                turno.turno_previo = t;
+                                resolve();
+                            } else {
+                                resolve();
+                            }
+                        });
+                    });
+                    promisesStack.push(promise);
+                }
                 turnos.push(turno);
             });
-            res.json(turnos);
+
+            if (promisesStack.length == 0) {
+                promisesStack.push(Promise.resolve());
+            }
+
+            Promise.all(promisesStack).then(() => {
+                res.json(turnos);
+            }).catch((err) => {
+                res.status(422).json({ message: err });
+            });
 
             /*
             let user_id = req.user._id;
             pacienteApp.findById(user_id, function (err, user: any) {
-                new PushClient().send(user.devices[0].device_id, { body: 'Tus turnos' });
+                //new PushClient().send(user.devices[0].device_id, { body: 'Tus turnos' });
+                console.log(user.devices.map(item => item.device_id));
             });
             */
 
