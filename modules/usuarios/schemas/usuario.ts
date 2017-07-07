@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
 
 export let usuarioSchema = new mongoose.Schema({
-    usuario: String,
+    usuario: Number,
     activo: Boolean,
     nombre: String,
     apellido: String,
