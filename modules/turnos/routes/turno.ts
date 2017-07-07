@@ -1,3 +1,4 @@
+import { log } from './../../../core/log/schemas/log';
 import * as express from 'express';
 import * as agenda from '../schemas/agenda';
 import { Logger } from '../../../utils/logService';
@@ -265,12 +266,12 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                             query[etiquetaEstado] = 'disponible';
 
                             // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
-                            (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true, passRawResult: true },
+                            (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true },
                                 function actualizarAgenda(err2, doc2, writeOpResult) {
                                     if (err2) {
                                         return next(err2);
                                     }
-                                    if (writeOpResult.value === null) {
+                                    if (writeOpResult && writeOpResult.value === null) {
                                         return next('El turno ya fue asignado');
                                     } else {
                                         let datosOp = {
@@ -328,19 +329,19 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, 
             let etiquetaTurno: string = 'bloques.' + posBloque + '.turnos.' + posTurno;
             let update: any = {};
 
+
+            console.log('etiquetaTurno', etiquetaTurno);
+
             update[etiquetaTurno] = req.body.turno;
 
-            let query = {
-                _id: req.params.idAgenda,
-            };
             // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
-            (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true, passRawResult: true },
+            (agenda as any).findOneAndUpdate(req.params.idAgenda, update, { new: true },
                 function actualizarAgenda(err2, doc2, writeOpResult) {
                     if (err2) {
                         console.log('ERR2: ' + err2);
                         return next(err2);
                     }
-                    if (writeOpResult.value === null) {
+                    if (writeOpResult && writeOpResult.value === null) {
                         return next('No se pudo actualizar los datos del turno');
                     } else {
                         let datosOp = {
