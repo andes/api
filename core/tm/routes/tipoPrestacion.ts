@@ -8,11 +8,11 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
     let query;
     if (req.params.id) {
         query = tipoPrestacion.findById(req.params.id);
-    } 
+    }
+
     if (req.query.term) {
-         query = tipoPrestacion.find({term: {'$regex': utils.makePattern(req.query.term) }});
-     }
-    else {
+        query = tipoPrestacion.find({ term: { '$regex': utils.makePattern(req.query.term) } });
+    } else {
         query = tipoPrestacion.find({}); // Trae todos
 
     }

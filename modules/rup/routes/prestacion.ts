@@ -19,24 +19,31 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         });
     } else {
         let query: mongoose.DocumentQuery<mongoose.Document[], mongoose.Document>;
+        let filtrosEstado = 'true ';
         if (req.query.estado) {
+            filtrosEstado += ' && this.estados[this.estados.length - 1].tipo == "' + req.query.estado + '"';
+        }
+
+        if (req.query.fechaDesde) {
+            filtrosEstado += ' && this.estados[this.estados.length - 1].createdAt >= new ISODate("' + req.query.fechaDesde + '")';
+        }
+
+        if (req.query.fechaHasta) {
+            filtrosEstado += ' && this.estados[this.estados.length - 1].createdAt <= new ISODate("' + req.query.fechaHasta + '")';
+            //query.where['this.estados[this.estados.length - 1].createdAt'].lte(req.query.fechaHasta);
+        }
+
+
+        if (filtrosEstado !== 'true ') {
             query = prestacion.find({
-                $where: 'this.estados[this.estados.length - 1].tipo == "' + req.query.estado + '"'
+                $where: filtrosEstado
             });
         } else {
             query = prestacion.find({}); // Trae todos
         }
 
-        if (req.query.fechaDesde) {
-            query.where('estados.fecha').gte(req.query.fechaDesde);
-        }
-
-        if (req.query.fechaHasta) {
-            query.where('estados.fecha').lte(req.query.fechaHasta);
-        }
-
         if (req.query.idProfesional) {
-            query.where('estado.profesional._id').equals(req.query.idProfesional);
+            query.where('solicitud.profesional.id').equals(req.query.idProfesional);
         }
 
         if (req.query.idPaciente) {
@@ -44,7 +51,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         }
 
         if (req.query.idPrestacionOrigen) {
-            query.where('solicitud.idPrestacionOrigen').equals(req.query.idPrestacionOrigen);
+            query.where('solicitud.prestacionOrigen').equals(req.query.idPrestacionOrigen);
         }
 
         if (req.query.turnos) {
@@ -53,7 +60,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
 
         // Ordenar por fecha de solicitud
         if (req.query.ordenFecha) {
-            query.sort({ 'estados.fecha': -1 });
+            query.sort({ 'estados.createdAt': -1 });
         }
 
         if (req.query.limit) {
@@ -67,6 +74,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             if (req.params.id && !data) {
                 return next(404);
             }
+            console.log(data);
             res.json(data);
         });
     }
