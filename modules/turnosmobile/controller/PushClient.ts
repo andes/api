@@ -13,7 +13,7 @@ export interface INotification {
 
 export class PushClient {
     private pushServer = null;
-    private defaultTitle = "Salud neuquen";
+    private defaultTitle = "ANDES";
 
 
     constructor() {

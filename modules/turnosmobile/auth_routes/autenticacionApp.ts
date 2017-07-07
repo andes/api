@@ -27,8 +27,8 @@ router.post('/login', function (req, res, next) {
 
     pacienteApp.findOne({ email }, (err, existingUser: any) => {
 
-        if (err) {
-            return next(err);
+        if (!existingUser) {
+            return res.status(422).send({ error: 'Cuenta inexistente' });
         }
 
         if (!existingUser.activacionApp) {

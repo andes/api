@@ -273,9 +273,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
 
                                         Logger.log(req, 'turnos', 'asignarTurno', datosOp);
 
-                                        if (req.body.reasignado) {
-                                            NotificationService.notificarReasignar(req.params);
-                                        }
                                     }
 
                                     res.json(data);
@@ -344,6 +341,11 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, 
                         Logger.log(req, 'turnos', 'update', datosOp);
                     }
                     res.json(data);
+
+                    if (req.body.turno.reasignado && req.body.turno.reasignado.siguiente) {
+                        NotificationService.notificarReasignar(req.params);
+                    }
+
                 });
         });
     } else {

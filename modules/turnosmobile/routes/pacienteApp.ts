@@ -91,6 +91,8 @@ router.get('/turnos', function (req: any, res, next) {
                 turno.espacioFisico = elem.espacioFisico;
                 turno.agenda_id = elem.agenda_id;
                 turno.duracionTurno = elem.duracionTurno;
+                delete turno.updatedBy;
+                delete turno.updatedAt;
 
                 /* Busco el turno anterior cuando fue reasignado */
                 if (turno.reasignado && turno.reasignado.anterior) {
@@ -103,7 +105,9 @@ router.get('/turnos', function (req: any, res, next) {
                             let bloque = ag.bloques.id(datos.idBloque);
                             if (bloque) {
                                 let t = bloque.turnos.id(datos.idTurno);
-                                turno.turno_previo = t;
+                                turno.reasignado_anterior = t;
+                                turno.confirmadoAt = turno.reasignado.confirmadoAt;
+                                delete turno['reasignado'];
                                 resolve();
                             } else {
                                 resolve();
@@ -166,7 +170,7 @@ router.post('/turnos/cancelar', function (req: any, res, next) {
                 Auth.audit(agendaObj, req);
                 agendaObj.save(function (error) {
                     Logger.log(req, 'turnos', 'update', {
-                        accion: req.body.op,
+                        accion: "liberarTurno",
                         ruta: req.url,
                         method: req.method,
                         data: agendaObj,
@@ -175,8 +179,68 @@ router.post('/turnos/cancelar', function (req: any, res, next) {
                     if (error) {
                         return next(error);
                     }
+                    return res.json({ message: 'OK' });
                 });
-                return res.json({ message: 'OK' });
+
+            } else {
+                return res.status(422).send({ message: 'unauthorized' });
+            }
+        } else {
+            return res.status(422).send({ message: 'turno_id_invalid' });
+        }
+    });
+});
+
+/**
+ * Confirma un turno reasginado
+ * 
+ * @param turno_id {string} Id del turno
+ * @param  agenda_id {string} id de la agenda
+ */
+
+router.post('/turnos/confirmar', function (req: any, res, next) {
+    let pacienteId = req.user.idPaciente;
+    let turnoId = req.body.turno_id;
+    let agendaId = req.body.agenda_id;
+
+    if (!mongoose.Types.ObjectId.isValid(agendaId)) {
+        return next('ObjectID Inválido');
+    }
+
+    agenda.findById(agendaId, function (err, agendaObj) {
+        if (err) {
+            return res.status(422).send({ message: 'agenda_id_invalid' });
+        }
+        let turno = agendaCtrl.getTurno(req, agendaObj, turnoId);
+        if (turno) {
+            if (String(turno.paciente.id) === pacienteId) {
+
+                if (turno.reasignado && turno.reasignado.anterior) {
+                    if (!turno.reasignado.confirmadoAt) {
+
+                        turno.reasignado.confirmadoAt = new Date();
+
+                        Auth.audit(agendaObj, req);
+                        agendaObj.save(function (error) {
+                            Logger.log(req, 'turnos', 'update', {
+                                accion: "confirmar",
+                                ruta: req.url,
+                                method: req.method,
+                                data: agendaObj,
+                                err: error || false
+                            });
+                            if (error) {
+                                return next(error);
+                            } else {
+                                return res.json({ message: 'OK' });
+                            }
+                        });
+                    } else {
+                        return res.status(422).send({ message: 'turno_corfirmado' });
+                    }
+                } else {
+                    return res.status(422).send({ message: 'turno_not_reasignado' });
+                }
             } else {
                 return res.status(422).send({ message: 'unauthorized' });
             }

@@ -1,7 +1,7 @@
 import { INotification, PushClient } from './PushClient';
 import { pacienteApp } from '../schemas/pacienteApp';
 import * as agenda from '../../turnos/schemas/agenda';
-
+import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 
 export class NotificationService {
@@ -9,9 +9,10 @@ export class NotificationService {
         this.findTurno(datosTurno).then((turno: any) => {
             let idPaciente = turno.paciente.id;
             pacienteApp.findOne({ 'idPaciente': idPaciente }, function (err, doc: any) {
-                let devices = doc.devices.map(item => item.device_id)
-                let body = 'El turno del ' + turno.horaInicio + ' fue REASIGNADO';
-                new PushClient().send(devices, { body });
+                let devices = doc.devices.map(item => item.device_id);
+                let date = moment(turno.horaInicio).format('DD [de] MMMM');
+                let body = 'Su turno del ' + date + ' fue reasignado. Haz click para más información.';
+                new PushClient().send(devices, { body, extraData: { action: 'reasignar' } });
             });
         }).catch(() => { console.log("ERROR"); })
     }
@@ -32,5 +33,4 @@ export class NotificationService {
             });
         });
     }
-
 }
