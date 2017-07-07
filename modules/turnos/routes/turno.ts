@@ -30,16 +30,18 @@ router.get('/turno/:id*?', function (req, res, next) {
     {
         '$group': {
             '_id': { 'id': '$_id', 'bloqueId': '$bloques._id' },
+            'agenda_id': { $first: '$_id' },
             'organizacion': { $first: '$organizacion' },
-             'profesionales': { $first: '$profesionales' },
+            'profesionales': { $first: '$profesionales' },
             'turnos': { $push: '$bloques.turnos' }
         }
     },
     {
         '$group': {
             '_id': '$_id.id',
+            'agenda_id': { $first: '$agenda_id' },
             'organizacion': { $first: '$organizacion' },
-             'profesionales': { $first: '$profesionales' },
+            'profesionales': { $first: '$profesionales' },
             'bloques': { $push: { '_id': '$_id.bloqueId', 'turnos': '$turnos' } }
         }
     }];
@@ -55,7 +57,6 @@ router.get('/turno/:id*?', function (req, res, next) {
         agenda.aggregate(pipelineTurno,
             function (err, data) {
                 if (err) {
-                    console.log(data);
                     return next(err);
                 }
                 if (data && data.bloques && data.bloques.turnos && data.bloques.turnos >= 0) {
@@ -121,6 +122,7 @@ router.get('/turno/:id*?', function (req, res, next) {
                 }
                 data2.forEach(elem => {
                     turno = elem.bloques.turnos;
+                    turno.agenda_id = elem.agenda_id;
                     turno.organizacion = elem.organizacion;
                     turno.profesionales = elem.profesionales;
                     turno.paciente = (elem.pacientes_docs && elem.pacientes_docs.length > 0) ? elem.pacientes_docs[0] : elem.bloques.turnos.paciente;
