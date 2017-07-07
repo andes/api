@@ -31,12 +31,16 @@ router.get('/turno/:id*?', function (req, res, next) {
     {
         '$group': {
             '_id': { 'id': '$_id', 'bloqueId': '$bloques._id' },
+            'organizacion': { $first: '$organizacion' },
+             'profesionales': { $first: '$profesionales' },
             'turnos': { $push: '$bloques.turnos' }
         }
     },
     {
         '$group': {
             '_id': '$_id.id',
+            'organizacion': { $first: '$organizacion' },
+             'profesionales': { $first: '$profesionales' },
             'bloques': { $push: { '_id': '$_id.bloqueId', 'turnos': '$turnos' } }
         }
     }];
@@ -98,17 +102,19 @@ router.get('/turno/:id*?', function (req, res, next) {
         pipelineTurno[3] = { '$match': matchTurno };
         pipelineTurno[6] = { '$unwind': '$bloques' };
         pipelineTurno[7] = { '$unwind': '$bloques.turnos' };
-        pipelineTurno[8] = {
-            '$lookup': {
-                'from': 'paciente',
-                'localField': 'bloques.turnos.paciente.id',
-                'foreignField': '_id',
-                'as': 'pacientes_docs'
-            }
-        };
-        pipelineTurno[9] = {
-            '$match': { 'pacientes_docs': { $ne: [] } }
-        };
+        if (!req.query.pacienteId) {
+            pipelineTurno[8] = {
+                '$lookup': {
+                    'from': 'paciente',
+                    'localField': 'bloques.turnos.paciente.id',
+                    'foreignField': '_id',
+                    'as': 'pacientes_docs'
+                }
+            };
+            pipelineTurno[9] = {
+                '$match': { 'pacientes_docs': { $ne: [] } }
+            };
+        }
         agenda.aggregate(pipelineTurno,
             function (err2, data2) {
                 if (err2) {
@@ -116,7 +122,9 @@ router.get('/turno/:id*?', function (req, res, next) {
                 }
                 data2.forEach(elem => {
                     turno = elem.bloques.turnos;
-                    turno.paciente = elem.pacientes_docs.length > 0 ? elem.pacientes_docs[0] : elem.bloques.turnos.paciente;
+                    turno.organizacion = elem.organizacion;
+                    turno.profesionales = elem.profesionales;
+                    turno.paciente = (elem.pacientes_docs && elem.pacientes_docs.length > 0) ? elem.pacientes_docs[0] : elem.bloques.turnos.paciente;
                     turnos.push(turno);
                 });
                 res.json(turnos);
