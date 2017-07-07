@@ -1,3 +1,4 @@
+import { log } from './../../../core/log/schemas/log';
 import * as express from 'express';
 import * as agenda from '../schemas/agenda';
 import { Logger } from '../../../utils/logService';
@@ -30,16 +31,18 @@ router.get('/turno/:id*?', function (req, res, next) {
     {
         '$group': {
             '_id': { 'id': '$_id', 'bloqueId': '$bloques._id' },
+            'agenda_id': { $first: '$_id' },
             'organizacion': { $first: '$organizacion' },
-             'profesionales': { $first: '$profesionales' },
+            'profesionales': { $first: '$profesionales' },
             'turnos': { $push: '$bloques.turnos' }
         }
     },
     {
         '$group': {
             '_id': '$_id.id',
+            'agenda_id': { $first: '$agenda_id' },
             'organizacion': { $first: '$organizacion' },
-             'profesionales': { $first: '$profesionales' },
+            'profesionales': { $first: '$profesionales' },
             'bloques': { $push: { '_id': '$_id.bloqueId', 'turnos': '$turnos' } }
         }
     }];
@@ -55,7 +58,6 @@ router.get('/turno/:id*?', function (req, res, next) {
         agenda.aggregate(pipelineTurno,
             function (err, data) {
                 if (err) {
-                    console.log(data);
                     return next(err);
                 }
                 if (data && data.bloques && data.bloques.turnos && data.bloques.turnos >= 0) {
@@ -121,6 +123,7 @@ router.get('/turno/:id*?', function (req, res, next) {
                 }
                 data2.forEach(elem => {
                     turno = elem.bloques.turnos;
+                    turno.agenda_id = elem.agenda_id;
                     turno.organizacion = elem.organizacion;
                     turno.profesionales = elem.profesionales;
                     turno.paciente = (elem.pacientes_docs && elem.pacientes_docs.length > 0) ? elem.pacientes_docs[0] : elem.bloques.turnos.paciente;
@@ -263,12 +266,12 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                             query[etiquetaEstado] = 'disponible';
 
                             // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
-                            (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true, passRawResult: true },
+                            (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true },
                                 function actualizarAgenda(err2, doc2, writeOpResult) {
                                     if (err2) {
                                         return next(err2);
                                     }
-                                    if (writeOpResult.value === null) {
+                                    if (writeOpResult && writeOpResult.value === null) {
                                         return next('El turno ya fue asignado');
                                     } else {
                                         let datosOp = {
@@ -326,19 +329,19 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, 
             let etiquetaTurno: string = 'bloques.' + posBloque + '.turnos.' + posTurno;
             let update: any = {};
 
+
+            console.log('etiquetaTurno', etiquetaTurno);
+
             update[etiquetaTurno] = req.body.turno;
 
-            let query = {
-                _id: req.params.idAgenda,
-            };
             // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
-            (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true, passRawResult: true },
+            (agenda as any).findOneAndUpdate(req.params.idAgenda, update, { new: true },
                 function actualizarAgenda(err2, doc2, writeOpResult) {
                     if (err2) {
                         console.log('ERR2: ' + err2);
                         return next(err2);
                     }
-                    if (writeOpResult.value === null) {
+                    if (writeOpResult && writeOpResult.value === null) {
                         return next('No se pudo actualizar los datos del turno');
                     } else {
                         let datosOp = {
