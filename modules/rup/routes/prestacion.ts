@@ -74,7 +74,6 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             if (req.params.id && !data) {
                 return next(404);
             }
-            console.log(data);
             res.json(data);
         });
     }

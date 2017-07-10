@@ -16,10 +16,13 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
         query = tipoPrestacion.find({}); // Trae todos
 
     }
+    if (req.query.incluir) {
+        let idsIn = req.query.incluir.split(',');
+        query.where('_id').in(idsIn);
+    }
 
     query.sort({ 'term': 1 }).exec(function (err, data) {
         if (err) {
-            console.log(err);
             next(err);
         };
         res.json(data);
