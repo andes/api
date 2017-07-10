@@ -10,7 +10,10 @@ router.get('/elementosRUP/:id*?', function (req, res, next) {
     if (req.params.id) {
         query = elementoRUP.findById(req.params.id);
     } else {
+        
         query = elementoRUP.find({}); // Trae todos
+        console.log(query);
+        console.log('query');
         if (req.query.skip) {
             let skip: number = parseInt(req.query.skip || 0, 10);
             query = query.skip(skip);
@@ -39,7 +42,7 @@ router.get('/elementosRUP/:id*?', function (req, res, next) {
         }
         query.where('activo').equals(true);
     }
-    query.populate('frecuentes');
+    // query.populate('frecuentes');
     query.populate('requeridos').sort({ 'nombre': 1 }).exec(function (err, data) {
         if (err) {
             next(err);
