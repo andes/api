@@ -35,9 +35,9 @@ router.post('/alta', function (req, res, next) {
 });
 
 router.put('/:id', function (req, res, next) {
-    // if (!Auth.check(req, 'usuarios:put')) {
-    //     return next(403);
-    // }
+    if (!Auth.check(req, 'usuarios:put')) {
+        return next(403);
+    }
     permisos.model.findById(req.params.id).then((resultado: any) => {
         if (resultado) {
             resultado.usuario = req.body.usuario;
@@ -68,9 +68,9 @@ router.put('/:id', function (req, res, next) {
 
 // Simple mongodb query by ObjectId --> better performance
 router.get('/:id', function (req, res, next) {
-    // if (!Auth.check(req, 'usuarios:get:byId')) {
-    //     return next(403);
-    // }
+    if (!Auth.check(req, 'usuarios:get:byId')) {
+        return next(403);
+    }
     permisos.model.findById(req.params.id).then((resultado: any) => {
         if (resultado) {
             // Logger.log(req, 'mpi', 'query', {
@@ -104,9 +104,9 @@ router.get('/local/:organizacion/:usuario', function (req, res, next) {
 });
 
 router.get('/ldap/:id', function (req, res, next) {
-    // if (!Auth.check(req, 'usuarios:get:ldap')) {
-    //     return next(403);
-    // }
+    if (!Auth.check(req, 'usuarios:get:ldap')) {
+        return next(403);
+    }
     let server = configPrivate.hosts.ldap + configPrivate.ports.ldapPort;
     isReachable(server).then(reachable => {
         if (!reachable) {
@@ -149,9 +149,9 @@ router.get('/ldap/:id', function (req, res, next) {
 });
 
 router.get('', function (req, res, next) {
-    // if (!Auth.check(req, 'usuarios:get')) {
-    //     return next(403);
-    // }
+    if (!Auth.check(req, 'usuarios:get')) {
+        return next(403);
+    }
     permisos.model.find({}).then((resultado: any) => {
         if (resultado) {
             // Logger.log(req, 'mpi', 'query', {
