@@ -91,7 +91,7 @@ export const modules = {
         active: true,
         path: './modules/usuarios/routes',
         route: '/modules/usuarios',
-        auth: false,
+        auth: true,
     }
 };
 
