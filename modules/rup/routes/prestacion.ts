@@ -97,19 +97,21 @@ router.patch('/prestaciones/:id', function (req, res, next) {
         next('ID inválido');
     }
 
-    prestacion.findById(req.params.id, (err, data) => {
+    prestacion.findById(req.params.id, (err, data: any) => {
         if (err) {
             next(err);
         }
 
         let modificacion = {};
         switch (req.body.op) {
+            /*
             case 'estado':
                 if (req.body.estado) {
                     modificacion = { '$set': { 'estados': req.body.estado } }
                     // data.set('estado', req.body.estado);
                 }
                 break;
+            */
             case 'estadoPush':
                 if (req.body.estado) {
                     // modificacion = { '$push': { 'estado': { tipo: req.body.estado } } }
@@ -117,7 +119,16 @@ router.patch('/prestaciones/:id', function (req, res, next) {
                     // modificacion = { '$push': { 'estados': req.body.estado } }
                     data['estados'].push(req.body.estado);
                 }
-                break;
+            break;
+            case 'registros':
+                if (req.body.registros) {
+                    // modificacion = { '$push': { 'estado': { tipo: req.body.estado } } }
+
+                    // modificacion = { '$push': { 'estados': req.body.estado } }
+                    data.ejecucion.registros = req.body.registros;
+                }
+            break;
+            /*
             case 'listaProblemas':
                 if (req.body.problema) {
                     modificacion = { '$push': { 'ejecucion.listaProblemas': req.body.problema } }
@@ -145,6 +156,7 @@ router.patch('/prestaciones/:id', function (req, res, next) {
                     modificacion = { '$pull': { 'solicitud.listaProblemas': req.body.idProblema } };
                 }
                 break;
+            */
             default:
                 next('Error: No se seleccionó ninguna opción.');
                 break;
