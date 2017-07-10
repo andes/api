@@ -49,10 +49,18 @@ export let pacienteAppSchema = new mongoose.Schema({
         /* required: true */
     },
     // Si fue usado o no
-    idPaciente: {
-        type: mongoose.Schema.Types.ObjectId,
-        default: null
-    },
+    pacientes: [
+        {
+            id: mongoose.Schema.Types.ObjectId,
+            relacion: {
+                type: String,
+                enum: ['principal', 'pariente'],
+                default: 'principal'
+            },
+            addedAt: Date
+        }
+    ],
+
     estadoCodigo: {
         type: Boolean,
         default: false

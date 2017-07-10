@@ -17,8 +17,9 @@ router.get('/turnos', function (req: any, res, next) {
     let turnos = [];
     let turno;
     let matchTurno = {};
+    let pacienteId = req.user.pacientes[0].id;
 
-    matchTurno['bloques.turnos.paciente.id'] = mongoose.Types.ObjectId(req.user.idPaciente);
+    matchTurno['bloques.turnos.paciente.id'] = mongoose.Types.ObjectId(pacienteId);
     matchTurno['estado'] = 'publicada';
 
     if (req.query.estado) {
@@ -130,13 +131,17 @@ router.get('/turnos', function (req: any, res, next) {
             });
 
             /*
-            let user_id = req.user._id;
-            pacienteApp.findById(user_id, function (err, user: any) {
-                //new PushClient().send(user.devices[0].device_id, { body: 'Tus turnos' });
-                console.log(user.devices.map(item => item.device_id));
+            pacienteApp.find({ 'pacientes.id': pacienteId }, function (err, docs: any[]) {
+                docs.forEach(user => {
+                    let devices = user.devices.map(item => item.device_id);
+
+                    //let date = moment(turno.horaInicio).format('DD [de] MMMM');
+                    let body = 'Su turno del  fue reasignado. Haz click para más información.';
+                    new PushClient().send(devices, { body, extraData: { action: 'reasignar' } });
+
+                });
             });
             */
-
         }
     );
 
@@ -150,7 +155,9 @@ router.get('/turnos', function (req: any, res, next) {
  */
 
 router.post('/turnos/cancelar', function (req: any, res, next) {
-    let pacienteId = req.user.idPaciente;
+    /* Por el momento usamos el primer paciente */
+    let pacienteId = req.user.pacientes[0].id;
+
     let turnoId = req.body.turno_id;
     let agendaId = req.body.agenda_id;
 
@@ -199,7 +206,9 @@ router.post('/turnos/cancelar', function (req: any, res, next) {
  */
 
 router.post('/turnos/confirmar', function (req: any, res, next) {
-    let pacienteId = req.user.idPaciente;
+    /* Por el momento usamos el primer paciente */
+    let pacienteId = req.user.pacientes[0].id;
+
     let turnoId = req.body.turno_id;
     let agendaId = req.body.agenda_id;
 

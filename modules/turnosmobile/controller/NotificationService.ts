@@ -5,19 +5,20 @@ import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 
 export class NotificationService {
+
     public static notificarReasignar(datosTurno) {
         this.findTurno(datosTurno).then((turno: any) => {
             let idPaciente = turno.paciente.id;
-            pacienteApp.findOne({ 'idPaciente': idPaciente }, function (err, doc: any) {
-                let devices = doc.devices.map(item => item.device_id);
-                let date = moment(turno.horaInicio).format('DD [de] MMMM');
-                let body = 'Su turno del ' + date + ' fue reasignado. Haz click para más información.';
-                new PushClient().send(devices, { body, extraData: { action: 'reasignar' } });
-            });
+            let date = moment(turno.horaInicio).format('DD [de] MMMM');
+            let body = 'Su turno del ' + date + ' fue reasignado. Haz click para más información.';
+            let notificacion = { body, extraData: { action: 'reasignar' } };
+
+            this.sendByPaciente(idPaciente, notificacion);
+
         }).catch(() => { console.log("ERROR"); })
     }
 
-    public static findTurno(datosTurno) {
+    private static findTurno(datosTurno) {
         return new Promise((resolve, reject) => {
             agenda.findById(datosTurno.idAgenda, function (err, ag: any) {
                 if (err) {
@@ -33,4 +34,17 @@ export class NotificationService {
             });
         });
     }
+
+    private static sendByPaciente(pacienteId, notification) {
+        pacienteApp.find({ 'pacientes.id': pacienteId }, function (err, docs: any[]) {
+            docs.forEach(user => {
+                let devices = user.devices.map(item => item.device_id);
+
+                new PushClient().send(devices, notification);
+
+            });
+        });
+    }
+
+
 }
