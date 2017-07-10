@@ -4,20 +4,74 @@ import * as ldapjs from 'ldapjs';
 
 // import { Auth } from './../../../auth/auth.class';
 let router = express.Router();
-let sha1Hash = require('sha1');
 // Services
 import { Logger } from '../../../utils/logService';
 // Schemas
-import { usuario } from '../schemas/usuario';
+import * as permisos from '../../../auth/schemas/permisos';
+import { Auth } from "../../../auth/auth.class";
 // import { log } from '../../log/schemas/log';
 
 const isReachable = require('is-reachable');
-// Simple mongodb query by ObjectId --> better performance
-router.get('/:id', function (req, res, next) {
-    // if (!Auth.check(req, 'mpi:get:byId')) {
+
+router.post('/alta', function (req, res, next) {
+    // if (!Auth.check(req, 'usuarios:post')) {
     //     return next(403);
     // }
-    usuario.findById(req.params.id).then((resultado: any) => {
+    let data = new permisos.model(req.body);
+    data.save((err) => {
+        if (err) {
+            return next(err);
+        }
+        Logger.log(req, 'usuarios', 'insert', {
+            accion: 'Crear Usuario',
+            ruta: req.url,
+            method: req.method,
+            data: data,
+            err: err || false
+        });
+        res.json(data);
+    });
+
+});
+
+router.put('/:id', function (req, res, next) {
+    // if (!Auth.check(req, 'usuarios:put')) {
+    //     return next(403);
+    // }
+    permisos.model.findById(req.params.id).then((resultado: any) => {
+        if (resultado) {
+            resultado.usuario = req.body.usuario;
+            resultado.nombre = req.body.nombre;
+            resultado.apellido = req.body.apellido;
+            resultado.organizacion = req.body.organizacion;
+            resultado.permisos = req.body.permisos;
+            resultado.save((err) => {
+                if (err) {
+                    return next(err);
+                }
+                Logger.log(req, 'usuarios', 'update', {
+                    accion: 'Crear Usuario',
+                    ruta: req.url,
+                    method: req.method,
+                    data: resultado,
+                    err: err || false
+                });
+                res.json(resultado);
+            });
+        }
+    }).catch((err) => {
+        return next(err);
+    });
+
+
+});
+
+// Simple mongodb query by ObjectId --> better performance
+router.get('/:id', function (req, res, next) {
+    // if (!Auth.check(req, 'usuarios:get:byId')) {
+    //     return next(403);
+    // }
+    permisos.model.findById(req.params.id).then((resultado: any) => {
         if (resultado) {
             // Logger.log(req, 'mpi', 'query', {
             //     mongoDB: resultado.paciente
@@ -30,14 +84,14 @@ router.get('/:id', function (req, res, next) {
 });
 
 router.get('/local/:organizacion/:usuario', function (req, res, next) {
-    // if (!Auth.check(req, 'mpi:get:byId')) {
+    // if (!Auth.check(req, 'usuarios:get:byId:byOrganizacion')) {
     //     return next(403);
     // }
     let filtro = {
         usuario: req.params.usuario,
         organizacion: req.params.organizacion
     };
-    usuario.find(filtro).then((resultado: any) => {
+    permisos.model.find(filtro).then((resultado: any) => {
         if (resultado) {
             // Logger.log(req, 'mpi', 'query', {
             //     mongoDB: resultado.paciente
@@ -50,10 +104,13 @@ router.get('/local/:organizacion/:usuario', function (req, res, next) {
 });
 
 router.get('/ldap/:id', function (req, res, next) {
+    // if (!Auth.check(req, 'usuarios:get:ldap')) {
+    //     return next(403);
+    // }
     let server = configPrivate.hosts.ldap + configPrivate.ports.ldapPort;
     isReachable(server).then(reachable => {
         if (!reachable) {
-            console.log('LDAP no reachable');
+            // console.log('LDAP no reachable');
             return next('Error de Conexión');
         } else {
             let dn = 'uid=' + req.params.id + ',' + configPrivate.auth.ldapOU;
@@ -64,7 +121,7 @@ router.get('/ldap/:id', function (req, res, next) {
                 if (err) {
                     return next(ldapjs.InvalidCredentialsError ? 403 : err);
                 }
-                console.log('req.body.usuario: ' + req.params.id);
+                // console.log('req.body.usuario: ' + req.params.id);
                 // Busca el usuario con el UID correcto.
                 ldap.search(dn, {
                     scope: 'sub',
@@ -73,15 +130,15 @@ router.get('/ldap/:id', function (req, res, next) {
                     sizeLimit: 1
                 }, function (err2, searchResult) {
                     if (err2) {
-                        console.log('err2: ', err2);
+                        // console.log('err2: ', err2);
                         return next(err2);
                     }
                     searchResult.on('searchEntry', function (entry) {
-                        console.log('entry: ' + JSON.stringify(entry.object));
+                        // console.log('entry: ' + JSON.stringify(entry.object));
                         res.send(entry.object);
                     });
                     searchResult.on('error', function (err3) {
-                        console.log('error: ' + err3.message);
+                        // console.log('error: ' + err3.message);
                         return next('Usuario inexistente');
                     });
                 });
@@ -92,10 +149,10 @@ router.get('/ldap/:id', function (req, res, next) {
 });
 
 router.get('', function (req, res, next) {
-    // if (!Auth.check(req, 'mpi:get:byId')) {
+    // if (!Auth.check(req, 'usuarios:get')) {
     //     return next(403);
     // }
-    usuario.find({}).then((resultado: any) => {
+    permisos.model.find({}).then((resultado: any) => {
         if (resultado) {
             // Logger.log(req, 'mpi', 'query', {
             //     mongoDB: resultado.paciente
