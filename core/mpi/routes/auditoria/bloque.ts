@@ -1,4 +1,4 @@
-import { servicioSintys } from '../../../../utils/servicioSintys';
+import { matchSintys } from '../../../../utils/servicioSintys';
 import * as express from 'express';
 import { paciente } from '../../schemas/paciente';
 import { pacienteMpi } from '../../schemas/paciente';
@@ -207,7 +207,6 @@ router.get('/bloques/pacientesSintys/:idb/:id', function (req, res, next) {
         if (err) {
             next(err);
         };
-        let servSintys = new servicioSintys();
         // var servSisa = new ServicioSisa();
         let pacientesRes = [];
         // let weights = config.mpi.weightsDefault;
@@ -216,7 +215,7 @@ router.get('/bloques/pacientesSintys/:idb/:id', function (req, res, next) {
         listaPac.forEach(function (elem) {
             // let valorSisa = 0;
             let auxPac = elem;
-            pacientesRes.push(servSintys.matchSintys(auxPac));
+            pacientesRes.push(matchSintys(auxPac));
         });
         Promise.all(pacientesRes).then(values => {
             // console.log("Inicia Promise All");
