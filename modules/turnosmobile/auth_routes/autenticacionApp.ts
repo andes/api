@@ -225,26 +225,5 @@ router.post('/verificar-codigo', function (req, res, next) {
     });
 });
 
-/**
- * Crea un usuario apartir de un paciente
- * @param id {string} ID del paciente a crear
- */
-
-router.post('/create/:id', function (req, res, next) {
-    let pacienteId = req.params.id;
-    if (!mongoose.Types.ObjectId.isValid(pacienteId)) {
-        return res.status(422).send({ error: 'ObjectID Inválido' });
-    }
-    authController.buscarPaciente(pacienteId).then((pacienteObj) => {
-        authController.createUserFromPaciente(pacienteObj).then(() => {
-            return res.send({ message: 'OK' });
-        }).catch((error) => {
-            return res.send(error);
-        });
-    }).catch(() => {
-        return res.send({ error: 'paciente_error' });
-    });
-});
-
 
 export = router;

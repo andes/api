@@ -91,27 +91,56 @@ export function buscarPaciente(id) {
     });
 }
 
+
+function searchContacto(paciente, key) {
+    for (let i = 0; i < paciente.contacto.length; i++) {
+        if (paciente.contacto[i].tipo == key) {
+            return paciente.contacto[i].valor;
+        }
+    }
+    return null;
+}
+
+export function checkAppAccounts(paciente) {
+    return new Promise((resolve, reject) => {
+        pacienteApp.find({ 'pacientes.id': paciente.id }, function (err, docs: any[]) {
+            if (docs.length > 0) {
+                return reject({ error: 'account_assigned', account: docs[0] });
+            } else {
+
+                let email = searchContacto(paciente, 'email');
+                if (email) {
+
+                    pacienteApp.findOne({ email }, function (err, existingUser) {
+                        if (existingUser) {
+                            return reject({ error: 'email_exists' });
+                        } else {
+                            return resolve(true);
+                        }
+                    });
+
+                } else {
+                    reject({ error: 'email_not_found' });
+                }
+            }
+        });
+    });
+}
+
+
+
 /**
  * Crea un usuario de la app mobile apartir de un paciente
  * @param paciente {pacienteSchema}
  */
 export function createUserFromPaciente(paciente) {
     return new Promise((resolve, reject) => {
-        function searchContacto(key) {
-            for (let i = 0; i < paciente.contacto.length; i++) {
-                if (paciente.contacto[i].tipo == key) {
-                    return paciente.contacto[i].valor;
-                }
-            }
-            return null;
-        }
-
         var dataPacienteApp: any = {
             nombre: paciente.nombre,
             apellido: paciente.apellido,
-            email: searchContacto('email'),
+            email: searchContacto(paciente, 'email'),
             password: generarCodigoVerificacion(),
-            telefono: searchContacto('celular'),
+            telefono: searchContacto(paciente, 'celular'),
             envioCodigoCount: 0,
             nacionalidad: 'Argentina',
             documento: paciente.documento,

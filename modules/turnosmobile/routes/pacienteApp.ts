@@ -8,6 +8,7 @@ import * as agendaCtrl from '../../turnos/controller/agenda';
 import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
 import { INotification, PushClient } from '../controller/PushClient';
+import * as authController from '../controller/AuthController';
 
 let router = express.Router();
 
@@ -259,5 +260,47 @@ router.post('/turnos/confirmar', function (req: any, res, next) {
     });
 });
 
+/**
+ * Crea un usuario apartir de un paciente
+ * @param id {string} ID del paciente a crear
+ */
+
+router.post('/create/:id', function (req, res, next) {
+    let pacienteId = req.params.id;
+    if (!mongoose.Types.ObjectId.isValid(pacienteId)) {
+        return res.status(422).send({ error: 'ObjectID Inválido' });
+    }
+    authController.buscarPaciente(pacienteId).then((pacienteObj) => {
+        authController.createUserFromPaciente(pacienteObj).then(() => {
+            return res.send({ message: 'OK' });
+        }).catch((error) => {
+            return res.send(error);
+        });
+    }).catch(() => {
+        return res.send({ error: 'paciente_error' });
+    });
+});
+
+/**
+ * Check estado de la cuenta
+ * @param id {string} ID del paciente a chequear
+ */
+
+router.get('/check/:id', function (req, res, next) {
+    let pacienteId = req.params.id;
+    if (!mongoose.Types.ObjectId.isValid(pacienteId)) {
+        return res.status(422).send({ error: 'ObjectID Inválido' });
+    }
+    authController.buscarPaciente(pacienteId).then((pacienteObj) => {
+
+        authController.checkAppAccounts(pacienteObj).then(() => {
+            return res.send({ message: 'OK' });
+        }).catch((error) => {
+            return res.send(error);
+        });
+    }).catch(() => {
+        return res.send({ error: 'paciente_error' });
+    });
+});
 
 export = router;
