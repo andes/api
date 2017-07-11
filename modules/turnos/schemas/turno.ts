@@ -24,7 +24,8 @@ let turnoSchema = new mongoose.Schema({
             idAgenda: mongoose.Schema.Types.ObjectId,
             idBloque: mongoose.Schema.Types.ObjectId,
             idTurno: mongoose.Schema.Types.ObjectId
-        }
+        },
+        confirmadoAt: Date
     },
     tipoTurno: {
         type: String,

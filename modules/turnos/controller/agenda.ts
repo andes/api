@@ -154,7 +154,7 @@ export function actualizarEstado(req, data) {
 // Dada una Agenda completa + un id de Turno, busca y devuelve el Turno completo
 export function getTurno(req, data, idTurno = null) {
     let turno;
-    idTurno = idTurno || req.body.idTurno;
+    idTurno = String(idTurno) || req.body.idTurno;
     // Loop en los bloques
     for (let x = 0; x < data.bloques.length; x++) {
         // Si existe este bloque...
@@ -185,7 +185,7 @@ export function getPosition(req, agenda, idTurno = null) {
     for (let x = 0; x < agenda.bloques.length; x++) {
         // Si existe este bloque...
         turnos = agenda.bloques[x].turnos;
-        index = turnos.findIndex((t) => { return t._id.toString() === idTurno.toString(); });
+        index = turnos.findIndex((t) => { return t._id.toString() === idTurno; });
         if (index > -1) {
             position.indexBloque = x;
             position.indexTurno = index;
