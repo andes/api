@@ -32,6 +32,7 @@
     "mongoosastic": "^4.2.4",
     "mongoose": "^4.10.2",
     "mssql": "^3.3.0",
+    "node-pushnotifications": "^1.0.18",
     "nodemailer": "^4.0.1",
     "passport": "^0.3.2",
     "passport-jwt": "^2.2.1",

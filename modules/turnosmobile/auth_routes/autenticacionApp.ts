@@ -1,16 +1,19 @@
 import * as jwt from 'jsonwebtoken';
 import { pacienteApp } from '../schemas/pacienteApp';
-import { authApp } from '../../../config.private';
-const nodemailer = require('nodemailer');
+import { paciente, pacienteMpi } from '../../../core/mpi/schemas/paciente';
 import * as express from 'express';
-import { Client } from 'elasticsearch';
-import * as config from '../../../config';
-import * as configPrivate from '../../../config.private';
-import * as moment from 'moment';
-import { matching } from '@andes/match';
+import * as authController from '../controller/AuthController';
+import * as mongoose from 'mongoose';
 
 let router = express.Router();
-const expirationOffset = 1000 * 60 * 60 * 24;
+
+
+/**
+ * Login a la app mobile
+ * 
+ * @param email {string} email del usuario
+ * @param password {string} password del usuario
+ */
 
 router.post('/login', function (req, res, next) {
     var email = req.body.email;
@@ -26,8 +29,8 @@ router.post('/login', function (req, res, next) {
 
     pacienteApp.findOne({ email }, (err, existingUser: any) => {
 
-        if (err) {
-            return next(err);
+        if (!existingUser) {
+            return res.status(422).send({ error: 'Cuenta inexistente' });
         }
 
         if (!existingUser.activacionApp) {
@@ -40,9 +43,9 @@ router.post('/login', function (req, res, next) {
                 return next(err);
             }
             if (isMatch) {
-                var userInfo = setUserInfo(existingUser);
+                var userInfo = authController.setUserInfo(existingUser);
                 res.status(200).json({
-                    token: 'JWT ' + generateToken(userInfo),
+                    token: 'JWT ' + authController.generateToken(userInfo),
                     user: existingUser
                 });
                 return;
@@ -55,6 +58,11 @@ router.post('/login', function (req, res, next) {
     
     */
 });
+
+/**
+ * Registro de un usuario desde la app mobile
+ * Espera todos los datos del paciente más del usuario
+ */
 
 router.post('/registro', function (req, res, next) {
     var dataPacienteApp = {
@@ -69,9 +77,10 @@ router.post('/registro', function (req, res, next) {
         fechaNacimiento: req.body.fechaNacimiento,
         sexo: req.body.sexo,
         genero: req.body.genero,
-        codigoVerificacion: generarCodigoVerificacion(),
-        expirationTime: new Date(Date.now() + expirationOffset),
-        permisos: []
+        codigoVerificacion: authController.generarCodigoVerificacion(),
+        expirationTime: new Date(Date.now() + authController.expirationOffset),
+        permisos: [],
+        pacientes: []
     }
 
     if (!dataPacienteApp.email) {
@@ -94,22 +103,31 @@ router.post('/registro', function (req, res, next) {
 
         var user = new pacienteApp(dataPacienteApp);
 
+        // enviarCodigoVerificacion(user);
         user.save(function (err, user: any) {
 
             if (err) {
                 return next(err);
             }
 
-            matchPaciente(user).then(pacientes => {
+            authController.matchPaciente(user).then(pacientes => {
                 let paciente = pacientes[0].paciente;
 
                 let valid = false;
                 if (paciente.estado == 'validado') {
-                    enviarCodigoVerificacion(user);
-                    user.idPaciente = paciente.id;
-                    user.save();
+                    authController.enviarCodigoVerificacion(user);
+                    user.pacientes = [
+                        {
+                            id: paciente.id,
+                            relacion: 'principal',
+                            addedAt: new Date()
+                        }
+                    ];
                     valid = true;
+                } else {
+                    user.codigoVerificacion = null;
                 }
+                user.save();
 
                 res.status(200).json({
                     valid: valid
@@ -127,6 +145,11 @@ router.post('/registro', function (req, res, next) {
 
 });
 
+/**
+ * Reenvío del código de verificacion
+ * @param email {string} email del usuario
+ */
+
 router.post('/reenviar-codigo', function (req, res, next) {
     let email = req.body.email;
     pacienteApp.findOne({ email: email }, function (err, user: any) {
@@ -135,16 +158,16 @@ router.post('/reenviar-codigo', function (req, res, next) {
                 message: 'acount_not_exists'
             });
         }
-        if (!user.activacionApp && user.idPaciente) {
+        if (!user.activacionApp && user.pacientes.length > 0) {
 
-            user.codigoVerificacion = generarCodigoVerificacion();
-            user.expirationTime = new Date(Date.now() + expirationOffset);
+            user.codigoVerificacion = authController.generarCodigoVerificacion();
+            user.expirationTime = new Date(Date.now() + authController.expirationOffset);
             user.save(function (err, user) {
                 if (err) {
                     return next(err);
                 }
 
-                enviarCodigoVerificacion(user);
+                authController.enviarCodigoVerificacion(user);
                 res.status(200).json({
                     valid: true
                 });
@@ -152,7 +175,7 @@ router.post('/reenviar-codigo', function (req, res, next) {
             });
 
         } else {
-            if (!user.idPaciente) {
+            if (!(user.pacientes.length > 0)) {
                 res.status(422).send({ message: 'account_active' });
             } else {
                 res.status(422).send({ message: 'account_not_verified' });
@@ -162,7 +185,11 @@ router.post('/reenviar-codigo', function (req, res, next) {
     });
 });
 
-//Verifica el código de validación enviado por mail o SMS
+/**
+ * Verifica el código de validación enviado por mail o SMS
+ * @param email {string} email del usuario
+ * @param codigo {string} codigo de verificacion
+ */
 router.post('/verificar-codigo', function (req, res, next) {
     let email = req.body.email;
     let codigoIngresado = req.body.codigo;
@@ -171,8 +198,8 @@ router.post('/verificar-codigo', function (req, res, next) {
         if (err) {
             return next(err);
         }
-        if (verificarCodigo(codigoIngresado, datosUsuario.codigoVerificacion)) {
-            if (datosUsuario.expirationTime.getTime() + expirationOffset >= new Date().getTime()) {
+        if (authController.verificarCodigo(codigoIngresado, datosUsuario.codigoVerificacion)) {
+            if (datosUsuario.expirationTime.getTime() + authController.expirationOffset >= new Date().getTime()) {
                 datosUsuario.activacionApp = true;
                 datosUsuario.estadoCodigo = true;
                 datosUsuario.codigoVerificacion = null;
@@ -183,9 +210,9 @@ router.post('/verificar-codigo', function (req, res, next) {
                         return next(err);
                     }
 
-                    var userInfo = setUserInfo(user);
+                    var userInfo = authController.setUserInfo(user);
                     res.status(200).json({
-                        token: 'JWT ' + generateToken(userInfo),
+                        token: 'JWT ' + authController.generateToken(userInfo),
                         user: user
                     });
                 });
@@ -197,183 +224,6 @@ router.post('/verificar-codigo', function (req, res, next) {
         }
     });
 });
-
-function verificarCodigo(codigoIngresado, codigo) {
-    if (codigoIngresado === codigo)
-        return true
-    else
-        return false
-}
-
-function enviarCodigoVerificacion(user) {
-    console.log("Enviando mail...");
-    let transporter = nodemailer.createTransport({
-        host: 'smtp.hushmail.com',
-        port: 465,
-        secure: true,
-        auth: {
-            user: 'saludneuquen@hushmail.com',
-            pass: 'saludneuquen'
-        }
-    });
-
-    // setup email data with unicode symbols
-    let mailOptions = {
-        from: '"Salud 🏥" <saludneuquen@hushmail.com>', // sender address
-        to: user.email, // list of receivers
-        subject: 'Hola ' + user.nombre + ' ✔', // Subject line
-        text: 'Ingrese su código de verificación en la app', // plain text body
-        html: '<b>El código de verificación es: ' + user.codigoVerificacion + '</b>' // html body
-    };
-
-
-    transporter.sendMail(mailOptions, (error, info) => {
-        if (error) {
-            return console.log("Error al mandar mail: ", error);
-        }
-
-        console.log('Mensaje %s enviado: %s', info.messageId, info.response);
-    });
-
-}
-
-function envioCodigoCount(user: any) {
-    //TODO: Implementar si se decide poner un límite al envío de códigos    
-}
-
-function generateToken(user) {
-    return jwt.sign(user, authApp.secret, {
-        expiresIn: 10080
-    });
-}
-
-function generarCodigoVerificacion() {
-    let codigo = "";
-    let length = 6;
-    let caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    for (let i = 0; i < length; i++) {
-        codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
-    }
-
-    return codigo;
-}
-
-function setUserInfo(request) {
-    return {
-        _id: request._id,
-        email: request.email,
-        idPaciente: request.idPaciente,
-        permisos: request.permisos
-    };
-}
-
-function matchPaciente(data) {
-    return new Promise((resolve, reject) => {
-
-        let connElastic = new Client({
-            host: configPrivate.hosts.elastic_main,
-        });
-
-        let campo = 'documento';
-        let condicionMatch = {};
-        condicionMatch[campo] = {
-            query: data.documento,
-            minimum_should_match: 3,
-            fuzziness: 2
-        };
-        let query = {
-            match: condicionMatch
-        };
-        let body = {
-            size: 100,
-            from: 0,
-            query: query
-        };
-        connElastic.search({
-            index: 'andes',
-            body: body
-        }).then((searchResult) => {
-
-            // Asigno los valores para el suggest
-            let weights = config.mpi.weightsDefault;
-
-            // if (req.query.escaneado) {
-            //     weights = config.mpi.weightsScan;
-            // }
-
-            let porcentajeMatchMax = config.mpi.cotaMatchMax;
-            let porcentajeMatchMin = config.mpi.cotaMatchMin;
-            let listaPacientesMax = [];
-            let listaPacientesMin = [];
-            // let devolverPorcentaje = data.percentage;
-
-            let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
-                .filter(function (hit) {
-                    let paciente = hit._source;
-                    let pacDto = {
-                        documento: data.documento ? data.documento.toString() : '',
-                        nombre: data.nombre ? data.nombre : '',
-                        apellido: data.apellido ? data.apellido : '',
-                        fechaNacimiento: data.fechaNacimiento ? data.fechaNacimiento : '',
-                        sexo: data.genero ? data.genero : ''
-                    };
-                    let pacElastic = {
-                        documento: paciente.documento ? paciente.documento.toString() : '',
-                        nombre: paciente.nombre ? paciente.nombre : '',
-                        apellido: paciente.apellido ? paciente.apellido : '',
-                        fechaNacimiento: paciente.fechaNacimiento ? moment(paciente.fechaNacimiento).format('YYYY-MM-DD') : '',
-                        sexo: paciente.sexo ? paciente.sexo : ''
-                    };
-                    let match = new matching();
-                    let valorMatching = match.matchPersonas(pacElastic, pacDto, weights);
-                    paciente['id'] = hit._id;
-
-                    if (valorMatching >= porcentajeMatchMax) {
-                        listaPacientesMax.push({
-                            id: hit._id,
-                            paciente: paciente,
-                            match: valorMatching
-                        });
-                    } else {
-                        if (valorMatching >= porcentajeMatchMin && valorMatching < porcentajeMatchMax) {
-                            listaPacientesMin.push({
-                                id: hit._id,
-                                paciente: paciente,
-                                match: valorMatching
-                            });
-                        }
-                    }
-                    // console.log("SEARCHRESULT-------------",paciente.documento,paciente.apellido,valorMatching);
-                });
-
-            // if (devolverPorcentaje) {
-            let sortMatching = function (a, b) {
-                return b.match - a.match;
-            };
-
-            // cambiamos la condición para lograr que nos devuelva más de una sugerencia
-            // ya que la 1ra sugerencia es el mismo paciente.
-            // if (listaPacientesMax.length > 0) {
-            if (listaPacientesMax.length > 0) {
-                listaPacientesMax.sort(sortMatching);
-                resolve(listaPacientesMax);
-            } else {
-                listaPacientesMin.sort(sortMatching);
-                resolve(listaPacientesMin);
-            }
-            // } else {
-            //     results = results.map((hit) => {
-            //         let elem = hit._source;
-            //         elem['id'] = hit._id;
-            //         return elem;
-            //     });
-            //     res.send(results);
-            // }
-        }).catch((error) => {
-            reject(error);
-        });
-    });
-}
 
 
 export = router;
