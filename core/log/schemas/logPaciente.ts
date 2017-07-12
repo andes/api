@@ -13,8 +13,8 @@ export let logPacienteSchema = new mongoose.Schema({
             'turnos:dar',
             'turnos:liberar',
             'turnos:suspender',
-            'turno:reasignar',
-            'turno:confirmarReasignacion',
+            'turnos:reasignar',
+            'turnos:confirmarReasignacion',
             'notificacion:sms',
             'notificacion:email',
             'notificacion:push'

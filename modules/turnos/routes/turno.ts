@@ -8,6 +8,7 @@ import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import { NotificationService } from '../../turnosmobile/controller/NotificationService';
+import { LoggerPaciente } from '../../../utils/loggerPaciente';
 let router = express.Router();
 
 router.get('/turno/:id*?', function (req, res, next) {
@@ -268,7 +269,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
 
                             // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
                             (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true },
-                                function actualizarAgenda(err2, doc2, writeOpResult) {
+                                function actualizarAgenda(err2, doc2: any, writeOpResult) {
                                     if (err2) {
                                         return next(err2);
                                     }
@@ -281,8 +282,14 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                                             prestacion: update[etiquetaPrestacion],
                                             tipoTurno: update[etiquetaTipoTurno]
                                         };
-
                                         Logger.log(req, 'turnos', 'asignarTurno', datosOp);
+
+
+                                        if (!req.body.reasignado) {
+                                            let turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
+                                            LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turno, req.params.idBloque, req.params.idAgenda);
+                                        }
+
 
                                     }
 
@@ -355,6 +362,9 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, 
                     res.json(data);
 
                     if (req.body.turno.reasignado && req.body.turno.reasignado.siguiente) {
+                        let turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
+                        LoggerPaciente.logTurno(req, 'turnos:reasignar', req.body.turno.paciente, turno, req.params.idBloque, req.params.idAgenda);
+
                         NotificationService.notificarReasignar(req.params);
                     }
 
