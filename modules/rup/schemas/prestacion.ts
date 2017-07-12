@@ -55,6 +55,8 @@ export let schema = new mongoose.Schema({
         },
         // problemas/hallazgos/trastornos por los cuales se solicita la prestación
         relacionadoCon: [SnomedConcept],
+        // Registros de la solicitud ... para los planes o prestaciones futuras
+        registros: [registro.schema],
         // Datos de auditoría sobre el estado de la solicitud (aprobada, desaprobada, ...)
         auditoria: auditoriaPrestacionPacienteSchema
     },

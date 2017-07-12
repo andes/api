@@ -13,7 +13,8 @@ export let schema = new mongoose.Schema({
     },
     valor: mongoose.Schema.Types.Mixed,
     destacado: Boolean,
-    relacionadoCon: SnomedConcept
+    relacionadoCon: SnomedConcept,
+    tipo: String
 });
 
 // Habilitar plugin de auditoría
