@@ -196,7 +196,7 @@ export function getPosition(req, agenda, idTurno = null) {
 
 
 export function getTurnoSiguiente(req, agenda, idTurno = null) {
-    let position = getPosition(req, agenda, idTurno = null);
+    let position = getPosition(req, agenda, idTurno);
     let index = position.indexTurno;
     let turnos = [];
     if (position.indexBloque > -1) {

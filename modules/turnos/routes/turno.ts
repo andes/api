@@ -329,13 +329,14 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, 
             let etiquetaTurno: string = 'bloques.' + posBloque + '.turnos.' + posTurno;
             let update: any = {};
 
-
-            console.log('etiquetaTurno', etiquetaTurno);
+            let query = {
+                _id: req.params.idAgenda,
+            };
 
             update[etiquetaTurno] = req.body.turno;
 
             // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
-            (agenda as any).findOneAndUpdate(req.params.idAgenda, update, { new: true },
+            (agenda as any).findOneAndUpdate(query, update, { new: true },
                 function actualizarAgenda(err2, doc2, writeOpResult) {
                     if (err2) {
                         console.log('ERR2: ' + err2);

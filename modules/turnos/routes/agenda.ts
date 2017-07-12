@@ -356,8 +356,4 @@ router.patch('/agenda/:id*?', function (req, res, next) {
 
 });
 
-// TODO: Ver si se puede hacer una clase para colocar las siguiente funciones?
-
-
-
 export = router;
