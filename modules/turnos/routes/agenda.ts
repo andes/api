@@ -78,6 +78,10 @@ router.get('/agenda/candidatas', function (req, res, next) {
                     });
                 });
             });
+            let sortCandidatas = function (a, b) {
+                return a.horaInicio - b.horaInicio;
+            };
+            out.sort(sortCandidatas);
             res.json(out);
 
         });
