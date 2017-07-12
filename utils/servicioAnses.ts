@@ -65,7 +65,8 @@ function solicitarServicio(sesion, filtro) {
             if (err4) {
                 console.log('Error 2 : ', err4);
             }
-            console.log(JSON.stringify(result2));
+            console.log(JSON.stringify(result2.return.Resultado['$value']));
+            console.log(Buffer.from(result2.return.Resultado['$value'], 'base64').toString('ascii'));
         });
     });
 }
