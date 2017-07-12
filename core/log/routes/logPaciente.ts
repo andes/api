@@ -10,4 +10,6 @@ router.get('/logPaciente:id*?', function(req, res, next){
 //    logPaciente.findById()
 });
 
+export = router;
+
 
