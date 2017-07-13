@@ -32,7 +32,7 @@ router.get('/agenda/candidatas', function (req, res, next) {
         };
         let resultado = data as any;
         let horaAgendaOrig = new Date();
-        horaAgendaOrig.setHours(resultado.horaInicio.getHours(), resultado.horaInicio.getMinutes(), 0, 0)
+        horaAgendaOrig.setHours(0, 0, 0, 0);
         let indiceBloque = resultado.bloques.findIndex(y => Object.is(req.query.idBloque, String(y._id)));
         let indiceTurno = resultado.bloques[indiceBloque].turnos.findIndex(y => Object.is(req.query.idTurno, String(y._id)));
         let bloque = resultado.bloques[indiceBloque];
@@ -61,9 +61,9 @@ router.get('/agenda/candidatas', function (req, res, next) {
             }
             let out = [];
             // Verifico que existe un turno disponible o ya reasignado para el mismo tipo de prestación del turno
-            data1.forEach(function (a) {
-                a.bloques.forEach(function (b) {
-                    b.turnos.forEach(function (t) {
+            data1.forEach(function (a, indiceA) {
+                a.bloques.forEach(function (b, indiceB) {
+                    b.turnos.forEach(function (t, indiceT) {
                         let horaIni = moment(t.horaInicio).format('HH:mm');
                         if (
                             b.tipoPrestaciones.findIndex(x => String(x._id) === String(turno.tipoPrestacion._id)) >= 0 // mismo tipo de prestacion
@@ -71,6 +71,7 @@ router.get('/agenda/candidatas', function (req, res, next) {
                                 && req.query.horario ? horaIni.toString() === moment(turno.horaInicio).format('HH:mm') : true // si filtro por horario verifico que sea el mismo
                                     && req.query.duracion ? b.duracionTurno === bloque.duracionTurno : true  // si filtro por duracion verifico que sea la mismo
                         ) {
+
                             if (out.indexOf(a) < 0) {
                                 out.push(a);
                             }
