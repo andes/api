@@ -14,7 +14,7 @@ router.get('/anses', function (req, res, next) {
     if (req.query) {
         let paciente = req.query;
         try {
-            getServicioAnses();
+            getServicioAnses(paciente);
         } catch (err) {
             //  Logger.log(req, 'fa_sisa', 'error', {
             //         error: err

@@ -85,7 +85,7 @@ export const modules = {
         active: true,
         path: './modules/fuentesAutenticas/routes',
         route: '/modules/fuentesAutenticas',
-        auth: true,
+        auth: false,
     },
     usuarios: {
         active: true,
