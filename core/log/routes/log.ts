@@ -4,7 +4,7 @@ import { log } from '../schemas/log';
 
 let router = express.Router();
 
-router.post('/:module/:op', function (req, res, next) {
+router.post('/operaciones/:module/:op', function (req, res, next) {
     let resultado = Logger.log(req, req.params.module, req.params.op, req.body.data, function (err) {
         if (err) {
             return next(err);
@@ -13,7 +13,8 @@ router.post('/:module/:op', function (req, res, next) {
     });
 });
 
-router.get('/:module?', function (req, res, next) {
+router.get('/operaciones/:module?', function (req, res, next) {
+    console.log('LOG');
     let query;
 
     query = log.find({});
