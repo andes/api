@@ -9,6 +9,7 @@ import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
 import { INotification, PushClient } from '../controller/PushClient';
 import * as authController from '../controller/AuthController';
+import { LoggerPaciente } from '../../../utils/loggerPaciente';
 
 let router = express.Router();
 
@@ -21,7 +22,8 @@ router.get('/turnos', function (req: any, res, next) {
     let pacienteId = req.user.pacientes[0].id;
 
     matchTurno['bloques.turnos.paciente.id'] = mongoose.Types.ObjectId(pacienteId);
-    matchTurno['estado'] = 'publicada';
+
+    //matchTurno['estado'] = 'publicada';
 
     if (req.query.estado) {
         matchTurno['bloques.turnos.estado'] = req.query.estado;
@@ -55,6 +57,7 @@ router.get('/turnos', function (req: any, res, next) {
         '$group': {
             '_id': { 'id': '$_id', 'bloqueId': '$bloques._id' },
             'agenda_id': { $first: '$_id' },
+            'agenda_estado': { $first: '$estado' },
             'turnos': { $push: '$bloques.turnos' },
             'profesionales': { $first: '$profesionales' },
             'espacioFisico': { $first: '$espacioFisico' },
@@ -66,6 +69,8 @@ router.get('/turnos', function (req: any, res, next) {
         '$group': {
             '_id': '$_id.id',
             'agenda_id': { $first: '$agenda_id' },
+            'bloque_id': { $first: '$_id.bloqueId' },
+            'agenda_estado': { $first: '$agenda_estado' },
             'bloques': { $push: { '_id': '$_id.bloqueId', 'turnos': '$turnos' } },
             'profesionales': { $first: '$profesionales' },
             'espacioFisico': { $first: '$espacioFisico' },
@@ -93,10 +98,16 @@ router.get('/turnos', function (req: any, res, next) {
                 turno.espacioFisico = elem.espacioFisico;
                 turno.agenda_id = elem.agenda_id;
                 turno.duracionTurno = elem.duracionTurno;
+                turno.bloque_id = elem.bloque_id;
+                turno.agenda_estado = elem.agenda_estado;
+
                 delete turno.updatedBy;
                 delete turno.updatedAt;
 
                 /* Busco el turno anterior cuando fue reasignado */
+                let suspendido = turno.estado == 'suspendido' || turno.agenda_estado == 'suspendida';
+                let reasignado = turno.reasignado && turno.reasignado.siguiente;
+
                 if (turno.reasignado && turno.reasignado.anterior) {
                     let promise = new Promise((resolve, reject) => {
                         let datos = turno.reasignado.anterior;
@@ -116,9 +127,13 @@ router.get('/turnos', function (req: any, res, next) {
                             }
                         });
                     });
+
                     promisesStack.push(promise);
                 }
-                turnos.push(turno);
+                /* si el turno fue reasignado mostramos el proximo turno y no este */
+                if (!reasignado) {
+                    turnos.push(turno);
+                }
             });
 
             if (promisesStack.length == 0) {
@@ -161,6 +176,7 @@ router.post('/turnos/cancelar', function (req: any, res, next) {
 
     let turnoId = req.body.turno_id;
     let agendaId = req.body.agenda_id;
+    let bloqueId = req.body.bloque_id;
 
     if (!mongoose.Types.ObjectId.isValid(agendaId)) {
         return next('ObjectID Inválido');
@@ -173,7 +189,9 @@ router.post('/turnos/cancelar', function (req: any, res, next) {
         let turno = agendaCtrl.getTurno(req, agendaObj, turnoId);
         if (turno) {
             if (String(turno.paciente.id) === pacienteId) {
-                agendaCtrl.liberarTurno(req, agendaObj, turnoId);
+                LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, bloqueId, agendaId);
+
+                agendaCtrl.liberarTurno(req, agendaObj, turno);
 
                 Auth.audit(agendaObj, req);
                 agendaObj.save(function (error) {
@@ -189,6 +207,7 @@ router.post('/turnos/cancelar', function (req: any, res, next) {
                     }
                     return res.json({ message: 'OK' });
                 });
+
 
             } else {
                 return res.status(422).send({ message: 'unauthorized' });
@@ -212,6 +231,7 @@ router.post('/turnos/confirmar', function (req: any, res, next) {
 
     let turnoId = req.body.turno_id;
     let agendaId = req.body.agenda_id;
+    let bloqueId = req.body.bloque_id;
 
     if (!mongoose.Types.ObjectId.isValid(agendaId)) {
         return next('ObjectID Inválido');
@@ -239,6 +259,10 @@ router.post('/turnos/confirmar', function (req: any, res, next) {
                                 data: agendaObj,
                                 err: error || false
                             });
+
+
+                            LoggerPaciente.logTurno(req, 'turnos:confirmarReasignacion', turno.paciente, turno, bloqueId, agendaId);
+
                             if (error) {
                                 return next(error);
                             } else {
@@ -265,7 +289,10 @@ router.post('/turnos/confirmar', function (req: any, res, next) {
  * @param id {string} ID del paciente a crear
  */
 
-router.post('/create/:id', function (req, res, next) {
+router.post('/create/:id', function (req: any, res, next) {
+    if (!req.user.usuario) {
+        return res.status(401).send('unauthorized');
+    }
     let pacienteId = req.params.id;
     if (!mongoose.Types.ObjectId.isValid(pacienteId)) {
         return res.status(422).send({ error: 'ObjectID Inválido' });
@@ -286,7 +313,11 @@ router.post('/create/:id', function (req, res, next) {
  * @param id {string} ID del paciente a chequear
  */
 
-router.get('/check/:id', function (req, res, next) {
+router.get('/check/:id', function (req: any, res, next) {
+    if (!req.user.usuario) {
+        return res.status(401).send('unauthorized');
+    }
+
     let pacienteId = req.params.id;
     if (!mongoose.Types.ObjectId.isValid(pacienteId)) {
         return res.status(422).send({ error: 'ObjectID Inválido' });

@@ -9,6 +9,7 @@ export class NotificationService {
     public static notificarReasignar(datosTurno) {
         this.findTurno(datosTurno).then((turno: any) => {
             let idPaciente = turno.paciente.id;
+            moment.locale('es');
             let date = moment(turno.horaInicio).format('DD [de] MMMM');
             let body = 'Su turno del ' + date + ' fue reasignado. Haz click para más información.';
             let notificacion = { body, extraData: { action: 'reasignar' } };

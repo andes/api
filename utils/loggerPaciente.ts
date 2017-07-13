@@ -12,7 +12,7 @@ export class LoggerPaciente {
                 idBloque: bloque,
                 idAgenda: agenda
             },
-            createdBy: req.user.usuario
+            createdBy: req.user.usuario || req.user
 
         });
         newLogTurno.save(callback);
@@ -28,7 +28,7 @@ export class LoggerPaciente {
                 medios: medios
             },
             createdAt: new Date(),
-            createdBy: req.user.usuario
+            createdBy: req.user.usuario || req.user
         });
         newLogNotificacion.save(callback);
         return newLogNotificacion;
