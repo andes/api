@@ -67,7 +67,7 @@ export let schema = new mongoose.Schema({
         // Nota: Este dato podría obtener del array de estados, pero está aquí para facilidad de consulta
         fecha: {
             type: Date,
-            required: true
+            //required: true
         },
         // Lugar donde se realiza
         organizacion: {
@@ -75,7 +75,7 @@ export let schema = new mongoose.Schema({
                 id: mongoose.Schema.Types.ObjectId,
                 nombre: String
             },
-            required: true
+            //required: true
         },
         // Registros de la ejecución
         registros: [registro.schema],
