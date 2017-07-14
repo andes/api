@@ -327,7 +327,8 @@ router.get('/snomed/procedimiento', function (req, res, next) {
         'lang': 'spanish',
         '$and': [], 'active': true, 'conceptActive': true,
         '$or': [
-            { semanticTag: 'procedimiento' }
+            { semanticTag: 'procedimiento' },
+            { semanticTag: 'entidad observable' }
         ]
     };
     words.forEach(function (word) {
@@ -361,7 +362,7 @@ router.get('/snomed/procedimiento', function (req, res, next) {
             if (a.term.length > b.term.length) { return 1; }
             return 0;
         });
-        data = data.slice(0, 10);
+        data = data.slice(0, 50);
         res.json(data);
     });
 });
