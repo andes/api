@@ -89,6 +89,8 @@ router.get('/pacientes/georef/:id', function (req, res, next) {
  *     properties:
  *       documento:
  *          type: string
+ *       cuil:
+ *          type: string
  *       activo:
  *          type: boolean
  *       estado:
@@ -743,7 +745,6 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
 
     pacienteMpi.findById(query, function (err, patientFound: any) {
         if (err) {
-            console.log('Error del findByID: ', err);
             return next(404);
         }
 
@@ -782,7 +783,6 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
             Auth.audit(patientFound, req);
             patientFound.save(function (err2) {
                 if (err2) {
-                    // console.log('Error Save:               ', err2);
                     return next(err2);
                 }
 
@@ -829,7 +829,6 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
                     }
                 }, function (error) {
                     return next(error);
-                    // console.trace(error.message);
                 });
             });
         } else {
@@ -970,7 +969,7 @@ router.post('/pacientes', function (req, res, next) {
     newPatient['claveBlocking'] = claves;
     newPatient['apellido'] = newPatient['apellido'].toUpperCase();
     newPatient['nombre'] = newPatient['nombre'].toUpperCase();
-    // Habilitamos el paciente como activo
+    // Habilitamos el paciente como activo cuando es nuevo
     newPatient['activo'] = true;
 
     Auth.audit(newPatient, req);
@@ -1164,7 +1163,7 @@ router.put('/pacientes/:id', function (req, res, next) {
                 }).then(function (body) {
                     let hits = body.hits.hits;
                     if (hits.length > 0) {
-                        console.log('hay q actualizar el docmento en elastic');
+                        // console.log('hay q actualizar el docmento en elastic');
                         connElastic.update({
                             index: 'andes',
                             type: 'paciente',
@@ -1191,7 +1190,7 @@ router.put('/pacientes/:id', function (req, res, next) {
                         }, function (error, response) {
                             console.log('Error create Elastic', response);
                             if (error) {
-                                console.log(error);
+                                // console.log(error);
                                 Logger.log(req, 'mpi', 'insert', {
                                     error: error,
                                     data: newPatient
@@ -1202,7 +1201,7 @@ router.put('/pacientes/:id', function (req, res, next) {
                         });
                     }
                 }, function (error) {
-                    console.log(error.message);
+                    // console.log(error.message);
                 });
             });
         }
@@ -1254,12 +1253,7 @@ router.delete('/pacientes/:id', function (req, res, next) {
             console.log('No encontro el paciente a borrar:   ', err);
             return next(err);
         }
-        // (req as any).user = 'prueba';
-        // (req as any).organizacion = 'prueba';
-        console.log('antes del audit');
-        console.log('el paciente encontrado es:   ', patientFound);
         Auth.audit(patientFound, req);
-        console.log('despues del audit');
         patientFound.remove();
         connElastic.delete({
             index: 'andes',
@@ -1270,7 +1264,7 @@ router.delete('/pacientes/:id', function (req, res, next) {
             if (error) {
                 console.log('Error en elastic Search delete: ', error);
             }
-            console.log('borro ok va a loguear');
+            
             // Logger.log(req, 'pacientes', 'delete', patientFound);
             res.json(patientFound);
         });
