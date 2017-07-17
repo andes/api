@@ -138,7 +138,7 @@ export class Auth {
 
     /**
      * Genera un token de usuario firmado
-     * 
+     *
      * @static
      * @param {string} nombre Nombre del usuario
      * @param {string} apellido Apellido del usuario

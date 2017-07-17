@@ -36,11 +36,14 @@ export function getServicioAnses(paciente) {
 
             if (resultado.codigo === 0 && resultado.array) {
                 let pacienteAnses = {
-                    nombreCompleto : resultado.array[0],
-                    documento : resultado.array[1],
-                    fechaNacimiento:resultado.array[2],
-                    sexo : resultado.array[3]
+                    nombreCompleto: resultado.array[0],
+                    documento: resultado.array[1],
+                    fechaNacimiento: resultado.array[2],
+                    sexo: resultado.array[3]
                 };
+                return ({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sintys', 'matcheo': 0, 'datosPaciente': pacienteAnses } });
+            } else {
+                return ({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sintys', 'matcheo': 0, 'datosPaciente': {} } });
             }
             //TODO APLICAR matchAndes
 
@@ -80,18 +83,6 @@ function consultaAnses(sesion, tipo, filtro) {
                     console.error('Error consulta soap anses:' + error);
                     reject(error);
                 }
-
-                // solicitarServicio(sesion, tipo, filtro).then((resultado: any) => {
-                //     console.log('...volviendo de la 1er solicitud');
-                //     if (tipo === 'Documento' && resultado.codigo === 0) {
-                //         console.log('solicitando servicio nuevamente');
-                //         solicitarServicio(sesion, 'Cuil', resultado.array[1]).then(resultadoCuil => {
-                //             console.log('resultadoCuil: ', JSON.stringify(resultadoCuil));
-                //         });
-                //     }
-                // }).catch((errorSolicitud) => {
-                //     return console.error('Error consulta soap anses:' + errorSolicitud);
-                // });
             });
         });
     });

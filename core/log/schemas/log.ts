@@ -27,7 +27,7 @@ export let logSchema = new mongoose.Schema({
     organizacion: { type: organizacion },
     modulo: {
         type: String,
-        enum: ['mpi', 'turnos', 'rup', 'configTipoPrestacion', 'fa_sintys', 'fa_sisa', 'usuarios']
+        enum: ['mpi', 'turnos', 'rup', 'configTipoPrestacion', 'fa_sintys', 'fa_sisa', 'fa_anses', 'usuarios']
     },
     operacion: {
         type: String,

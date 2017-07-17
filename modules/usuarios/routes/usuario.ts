@@ -31,6 +31,7 @@ router.post('/alta', function (req, res, next) {
         res.json(data);
     });
 });
+
 router.put('/:id', function (req, res, next) {
     if (!Auth.check(req, 'usuarios:put')) {
         return next(403);
@@ -60,6 +61,7 @@ router.put('/:id', function (req, res, next) {
         return next(err);
     });
 });
+
 router.get('/:id', function (req, res, next) {
     if (!Auth.check(req, 'usuarios:get:byId')) {
         return next(403);
@@ -72,6 +74,7 @@ router.get('/:id', function (req, res, next) {
         return next(err);
     });
 });
+
 router.get('/local/:organizacion/:usuario', function (req, res, next) {
     if (!Auth.check(req, 'usuarios:get:byId:byOrganizacion')) {
         return next(403);
@@ -88,6 +91,7 @@ router.get('/local/:organizacion/:usuario', function (req, res, next) {
         return next(err);
     });
 });
+
 router.get('/ldap/:id', function (req, res, next) {
     if (!Auth.check(req, 'usuarios:get:ldap')) {
         return next(403);
@@ -126,6 +130,7 @@ router.get('/ldap/:id', function (req, res, next) {
         }
     });
 });
+
 router.get('', function (req, res, next) {
     if (!Auth.check(req, 'usuarios:get')) {
         return next(403);
