@@ -19,6 +19,10 @@ export let pacienteSchema = new mongoose.Schema({
         type: String,
         es_indexed: true
     },
+    cuil: {
+        type: String,
+        es_indexed: true
+    },
     activo: Boolean,
     estado: constantes.ESTADO,
     nombre: {
