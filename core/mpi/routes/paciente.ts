@@ -700,7 +700,7 @@ router.post('/pacientes/mpi', function (req, res, next) {
     // Se genera la clave de blocking
     let claves = match.crearClavesBlocking(newPatientMpi);
     newPatientMpi['claveBlocking'] = claves;
-
+    
     Auth.audit(newPatientMpi, req);
 
     newPatientMpi.save((err) => {
@@ -717,7 +717,6 @@ router.post('/pacientes/mpi', function (req, res, next) {
             body: nuevoPac
         }, function (error, response) {
             if (error) {
-                // Logger.log(req, 'pacientes', 'elasticError', error);
                 next(error);
             }
             Logger.log(req, 'mpi', 'elasticInsert', {
@@ -971,6 +970,8 @@ router.post('/pacientes', function (req, res, next) {
     newPatient['claveBlocking'] = claves;
     newPatient['apellido'] = newPatient['apellido'].toUpperCase();
     newPatient['nombre'] = newPatient['nombre'].toUpperCase();
+    // Habilitamos el paciente como activo
+    newPatient['activo'] = true;
 
     Auth.audit(newPatient, req);
     newPatient.save((err) => {
@@ -1044,7 +1045,6 @@ router.put('/pacientes/:id', function (req, res, next) {
 
     paciente.findById(query, function (err, patientFound: any) {
         if (err) {
-            console.log('Error del findByID: ', err);
             return next(404);
         }
         //  console.log("REQ BODY ---------------------- ",req.body);
@@ -1084,8 +1084,6 @@ router.put('/pacientes/:id', function (req, res, next) {
             patientFound.scan = req.body.scan;
             patientFound.reportarError = req.body.reportarError;
             patientFound.notas = req.body.notas;
-
-            //   console.log("PATIENT FOUND ------------------",patientFound)
             // Habilita auditoria y guarda
             Auth.audit(patientFound, req);
             patientFound.save(function (err2) {
