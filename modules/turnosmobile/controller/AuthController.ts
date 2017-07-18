@@ -301,3 +301,61 @@ export function matchPaciente(data) {
         });
     });
 }
+
+/**
+ * Actualiza los datos de la cuenta mobile
+ * @param data {object} password, email, telefono
+ */
+
+export function updateAccount(account, data) {
+    return new Promise((resolve, reject) => {
+
+        let promise: any = Promise.resolve();
+        let promise_password: any = Promise.resolve();
+
+        if (data.password) {
+            promise_password = new Promise((resolve, reject) => {
+                account.comparePassword(data.old_password, (err, isMatch) => {
+                    if (err) {
+                        return reject({ password: 'wrong_password' });
+                    }
+                    if (isMatch) {
+                        account.password = data.password;
+                        return resolve();
+                    } else {
+                        return reject({ password: 'wrong_password' });
+                    }
+                });
+            });
+        }
+
+        if (data.telefono) {
+            account.telefono = data.telefono;
+        }
+
+        if (data.email) {
+            account.email = data.email;
+            promise = new Promise((resolve, reject) => {
+                pacienteApp.findOne({ email: data.email }, function (err, acts) {
+                    if (!acts) {
+                        resolve();
+                    } else {
+                        reject({ email: 'account_exists' });
+                    }
+                })
+            });
+        }
+
+        Promise.all([promise, promise_password]).then(() => {
+
+            account.save(function (err) {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(account);
+            });
+
+        }).catch((err) => reject(err));
+
+    });
+}
