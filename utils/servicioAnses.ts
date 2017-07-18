@@ -1,15 +1,12 @@
 import * as config from '../config';
+import * as configPrivate from '../config.private';
 import { matching } from '@andes/match';
 let soap = require('soap');
 let url = 'http://192.168.20.63:8080/scripts/Autenticacion.exe/wsdl/IAutenticacion';
 let serv = 'http://192.168.20.64:8080/scripts/autorizacion.exe/wsdl/IAutorizacion';
 let serv2 = 'http://192.168.20.63:8080/scripts/Autenticacion.exe/wsdl/IAutenticacion';
-let usuario = 'Sistemas_Andes_Salud';
 
-let argsNumero = {
-    Usuario: 'Sistemas_Andes_Salud',
-    Password: 'spvB0452'
-};
+let login = configPrivate.anses;
 
 export function getServicioAnses(paciente) {
     let match = new matching();
@@ -24,7 +21,7 @@ export function getServicioAnses(paciente) {
                     console.log('Error en creacion cliente soap anses', err);
                     reject(err);
                 }
-                client.LoginPecas(argsNumero, async function (err2, result) {
+                client.LoginPecas(login, async function (err2, result) {
                     if (err2) {
                         console.log('Error LoginPecas servicioAnses : ', err2);
                         reject(err2);
@@ -133,7 +130,7 @@ function solicitarServicio(sesion, tipo, filtro) {
                 Proveedor: 'GN-ANSES',
                 Servicio: tipo,
                 DatoAuditado: filtro,
-                Operador: usuario,
+                Operador: login.username,
                 Cuerpo: 'hola',
                 CuerpoFirmado: false,
                 CuerpoEncriptado: false
