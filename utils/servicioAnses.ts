@@ -48,7 +48,6 @@ export function getServicioAnses(paciente) {
                     if (resultado.codigo === 0 && resultado.array) {
                         if (resultado.array[2]) {
                             fecha = new Date(resultado.array[2].substring(4), resultado.array[2].substring(3, 4) - 1, resultado.array[2].substring(0, 2));
-                            // console.log("FECHA:  ", fecha)
                         } else {
                             fecha = '';
                         }
@@ -63,8 +62,6 @@ export function getServicioAnses(paciente) {
                             fechaNacimiento: fecha,
                             sexo: sex
                         };
-                        // console.log("paciente-------->", paciente);
-                        // console.log("pacienteAnses-------->", pacienteAnses);
                         try {
                             matchPorcentaje = await match.matchPersonas(paciente, pacienteAnses, weights) * 100;
                         } catch (error) {
@@ -76,8 +73,6 @@ export function getServicioAnses(paciente) {
                     } else {
                         resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Anses', 'matcheo': 0, 'datosPaciente': {} } });
                     }
-                    //TODO APLICAR matchAndes
-
                 });
             });
         } else {
@@ -90,7 +85,6 @@ function consultaAnses(sesion, tipo, filtro) {
     let resultadoCuil: any;
     let resultado: any;
     return new Promise((resolve, reject) => {
-        // console.log('sesion: ', sesion.return['$value']);
         soap.createClient(serv2, function (err, client) {
             let args = {
                 IdSesion: sesion.return['$value'],
@@ -108,16 +102,13 @@ function consultaAnses(sesion, tipo, filtro) {
                     console.error('Error consulta soap anses:' + error);
                     reject(error);
                 }
-                // console.log('...volviendo de la 1er solicitud');
                 if (tipo === 'Documento' && resultado.codigo === 0) {
-                    // console.log('solicitando servicio nuevamente');
                     try {
                         resultadoCuil = await solicitarServicio(sesion, 'Cuil', resultado.array[1]);
                     } catch (error) {
                         console.error('Error consulta soap anses:' + error);
                         reject(error);
                     }
-                    // console.log('resultadoCuil: ', JSON.stringify(resultadoCuil));
                     resolve(resultadoCuil);
                 } else {
                     console.log('resultado: ', JSON.stringify(resultado));
@@ -153,9 +144,6 @@ function solicitarServicio(sesion, tipo, filtro) {
                         console.log('Error solicitar_servicio servicioAnses : ', err4);
                         reject(err4);
                     }
-                    // console.log('RESULTADO ------------------->', result2);
-                    // console.log(JSON.stringify(result2.return.Resultado['$value']));
-                    // console.log(Buffer.from(result2.return.Resultado['$value'], 'base64').toString('ascii'));
                     let codigoResultado = result2.return.CodResultado['$value'];
                     if (result2.return.Resultado['$value']) {
                         let resultado = Buffer.from(result2.return.Resultado['$value'], 'base64').toString('ascii');
