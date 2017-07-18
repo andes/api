@@ -7,17 +7,18 @@ import { Auth } from '../../../auth/auth.class';
 
 let router = express.Router();
 
-router.get('/anses', function (req, res, next) {
+router.get('/anses', async function (req, res, next) {
     if (!Auth.check(req, 'fa:get:anses')) {
         return next(403);
     }
     if (req.query) {
         let paciente = req.query;
         try {
-            getServicioAnses(paciente);
-            // Logger.log(req, 'fa_anses', 'validar', {
-            //     resultado: ----
-            // });
+            let resultado =  await getServicioAnses(paciente);
+            res.json(resultado);
+            Logger.log(req, 'fa_anses', 'validar', {
+                resultado: resultado
+            });
         } catch (err) {
             Logger.log(req, 'fa_anses', 'error', {
                 error: err

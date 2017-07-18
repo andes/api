@@ -181,7 +181,7 @@ export function matchSintys(paciente) {
                                 console.log('entro por 200');
 
                                 pacienteSintys = formatearDatosSintys(JSON.parse(resultado[1])[0]);
-                                matchPorcentaje = match.matchPersonas(paciente, pacienteSintys, weights);
+                                matchPorcentaje = match.matchPersonas(paciente, pacienteSintys, weights) * 100;
                                 console.log('el % de matcheo es:', matchPorcentaje);
                                 paciente['matchSintys'] = matchPorcentaje;
                                 resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sintys', 'matcheo': matchPorcentaje, 'datosPaciente': pacienteSintys } });
