@@ -1,9 +1,8 @@
 import * as mongoose from 'mongoose';
 import * as evolucionSchema from './evolucion';
 import * as financiadorSchema from '../../../core/mpi/schemas/financiador';
-import { problemaSchema } from './problema';
 import * as organizacion from '../../../core/tm/schemas/organizacion';
-import { pacienteSchema } from '../../../core/mpi/schemas/paciente';
+// import { pacienteSchema } from '../../../core/mpi/schemas/paciente';
 import { profesionalSchema } from '../../../core/tm/schemas/profesional';
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 import { auditoriaPrestacionPacienteSchema } from '../../auditorias/schemas/auditoriaPrestacionPaciente';
@@ -18,11 +17,18 @@ export let prestacionPacienteSchema = new mongoose.Schema({
         ref: 'prestacionPaciente'
     }, // prestacion desde la que se solicita
     paciente: {
-        type: pacienteSchema,
+        type: { // pensar que otros datos del paciente conviene tener
+            id: mongoose.Schema.Types.ObjectId,
+            nombre: String,
+            apellido: String,
+            documento: String,
+            telefono: String
+        },
         required: true
     },
 
     solicitud: {
+        motivoSolicitud: String,
         // tipo de prsetacion a ejecutarse
         tipoPrestacion: tipoPrestacionSchema,
         // fecha de solicitud
@@ -51,9 +57,21 @@ export let prestacionPacienteSchema = new mongoose.Schema({
             enum: ['ambulatorio', 'internado']
         },
         // profesional que solicita la prestacion
-        profesional: profesionalSchema,
+        profesional: {
+            type: { // pensar que otros datos del paciente conviene tener
+                id: mongoose.Schema.Types.ObjectId,
+                nombre: String,
+                apellido: String,
+                documento: String
+            }
+        },
         // organizacion desde la que se solicita la prestacion
-        organizacion: organizacion.schema,
+        organizacion: {
+            type: { // pensar que otros datos del paciente conviene tener
+                id: mongoose.Schema.Types.ObjectId,
+                nombre: String
+            }
+        },
         // lista de problemas del paciente por el cual se solicita la prestacion
         listaProblemas: [{
             type: mongoose.Schema.Types.ObjectId,
@@ -99,7 +117,6 @@ export let prestacionPacienteSchema = new mongoose.Schema({
         },
 
         auditoria: auditoriaPrestacionPacienteSchema
-
     },
 
 
@@ -126,7 +143,7 @@ export let prestacionPacienteSchema = new mongoose.Schema({
         }
     },
 
-    // a futuro que se ejecuta
+    // planes a ejecutarse a futuro
     prestacionesSolicitadas: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'prestacionPaciente'
@@ -143,8 +160,17 @@ export let prestacionPacienteSchema = new mongoose.Schema({
             timestamp: Date,
             tipo: {
                 type: String,
+                enum: ['pendiente', 'ejecucion', 'en auditoría', 'aceptada', 'rechazada', 'validada', 'desvinculada']
+            },
 
-                enum: ['pendiente', 'ejecucion', 'en auditoría', 'aceptada', 'rechazada', 'validada']
+            profesional: {
+                type: { // pensar que otros datos del paciente conviene tener
+                    id: mongoose.Schema.Types.ObjectId,
+                    nombre: String,
+                    apellido: String,
+                    documento: String
+
+                }
             }
         }
     ]
@@ -152,5 +178,4 @@ export let prestacionPacienteSchema = new mongoose.Schema({
 
 // Habilitar plugin de auditoría
 prestacionPacienteSchema.plugin(require('../../../mongoose/audit'));
-
 export let prestacionPaciente = mongoose.model('prestacionPaciente', prestacionPacienteSchema, 'prestacionPaciente');

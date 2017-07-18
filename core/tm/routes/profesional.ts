@@ -1,10 +1,10 @@
 import { defaultLimit, maxLimit } from './../../../config';
-import * as express from 'express'
-import { profesional } from '../schemas/profesional'
-import * as utils from '../../../utils/utils'
-import * as config from '../../../config';
+import * as express from 'express';
+import { profesional } from '../schemas/profesional';
+import * as utils from '../../../utils/utils';
+// import * as config from '../../../config';
 
-var router = express.Router();
+let router = express.Router();
 
 /**
  * @swagger
@@ -183,6 +183,9 @@ var router = express.Router();
  *           $ref: '#/definitions/profesional'
  */
 router.get('/profesionales/:id*?', function (req, res, next) {
+    let opciones = {};
+    let query;
+
     if (req.params.id) {
         profesional.findById(req.params._id, function (err, data) {
             if (err) {
@@ -191,9 +194,6 @@ router.get('/profesionales/:id*?', function (req, res, next) {
             res.json(data);
         });
     } else {
-        var query;
-        var opciones = {};
-
         if (req.query.nombre) {
             opciones['nombre'] = {
                 '$regex': utils.makePattern(req.query.nombre)
@@ -234,8 +234,9 @@ router.get('/profesionales/:id*?', function (req, res, next) {
         }
     }
 
-    let skip: number = parseInt(req.query.skip || 0);
-    let limit: number = Math.min(parseInt(req.query.limit || defaultLimit), maxLimit);
+    let radix = 10;
+    let skip: number = parseInt(req.query.skip || 0, radix);
+    let limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
 
     if (req.query.nombreCompleto) {
         query = profesional.find({ apellido: { '$regex': utils.makePattern(req.query.nombreCompleto) } }).

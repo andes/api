@@ -12,17 +12,29 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
             res.json(data);
         });
     } else {
-        let query;
-        query = espacioFisico.find({}); // Trae todos 
+        // Trae todos
+        let query = espacioFisico.find({});
+
+        let nombres: any[] = [];
+
         if (req.query.nombre) {
+            // nombres.push({ 'nombre': RegExp('^.*' + req.query.nombre + '.*$', 'i') });
+            // nombres.push({ 'sector.nombre': RegExp('^.*' + req.query.nombre + '.*$', 'i') });
+            // nombres.push({ 'servicio.nombre': RegExp('^.*' + req.query.nombre + '.*$', 'i') });
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
+
+        if (req.query.edificio) {
+            query.where('edificio.descripcion').equals(RegExp('^.*' + req.query.edificio + '.*$', 'i'));
+            console.log(req.query.edificio);
+        }
+
         if (req.query.descripcion) {
             query.where('descripcion').equals(RegExp('^.*' + req.query.descripcion + '.*$', 'i'));
         }
-        if (req.query.organizacion) {
-            query.where('organizacion._id').equals(req.query.organizacion);
-        }
+        // if (req.query.organizacion) {
+        // query.where('organizacion._id').equals(req.query.organizacion);
+        // }
         query.sort('nombre');
         query.exec((err, data) => {
             if (err) {
@@ -51,7 +63,7 @@ router.post('/espacioFisico', function (req, res, next) {
             return next(err);
         }
         res.json(newEspacioFisico);
-    })
+    });
 });
 
 router.put('/espacioFisico/:id', function (req, res, next) {
@@ -63,8 +75,8 @@ router.put('/espacioFisico/:id', function (req, res, next) {
     });
 });
 
-router.delete('/espacioFisico/:_id', function (req, res, next) {
-    espacioFisico.findByIdAndRemove(req.params._id, function (err, data) {
+router.delete('/espacioFisico/:id', function (req, res, next) {
+    espacioFisico.findByIdAndRemove(req.params.id, function (err, data) {
         if (err) {
             return next(err);
         }

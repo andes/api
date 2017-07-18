@@ -3,13 +3,16 @@ import * as express from 'express';
 import * as agenda from '../schemas/agenda';
 import * as mongoose from 'mongoose';
 import { Logger } from '../../../utils/logService';
+import * as moment from 'moment';
+import * as agendaCtrl from '../controller/agenda';
+import { LoggerPaciente } from '../../../utils/loggerPaciente';
 
 let router = express.Router();
 
 router.get('/agenda/paciente/:idPaciente', function (req, res, next) {
 
     if (req.params.idPaciente) {
-        let query = agenda
+        agenda
             .find({ 'bloques.turnos.paciente.id': req.params.idPaciente })
             .limit(10)
             .sort({ horaInicio: -1 })
@@ -23,7 +26,71 @@ router.get('/agenda/paciente/:idPaciente', function (req, res, next) {
 
 });
 
-router.get('/agenda/:id*?', function (req, res, next) {
+router.get('/agenda/candidatas', function (req, res, next) {
+    agenda.findById(req.query.idAgenda, function (err, data) {
+        if (err) {
+            next(err);
+        };
+        let resultado = data as any;
+        let horaAgendaOrig = new Date();
+        horaAgendaOrig.setHours(0, 0, 0, 0);
+        let indiceBloque = resultado.bloques.findIndex(y => Object.is(req.query.idBloque, String(y._id)));
+        let indiceTurno = resultado.bloques[indiceBloque].turnos.findIndex(y => Object.is(req.query.idTurno, String(y._id)));
+        let bloque = resultado.bloques[indiceBloque];
+        // turno a reasignar
+        let turno = resultado.bloques[indiceBloque].turnos[indiceTurno];
+
+        let match = {
+            'horaInicio': { '$gte': horaAgendaOrig },
+            '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
+            'tipoPrestaciones._id': mongoose.Types.ObjectId(turno.tipoPrestacion._id), // Que tengan incluída la prestación del turno
+            '_id': { '$ne': mongoose.Types.ObjectId(req.query.idAgenda) }, // Que no sea la agenda original
+        };
+
+        if (req.query.duracion) {
+            match['bloques.duracionTurno'] = bloque.duracionTurno;
+        }
+
+        agenda.aggregate([
+            {
+                $match: match
+            }
+
+        ], function (err1, data1) {
+            if (err) {
+                return next(err);
+            }
+            let out = [];
+            // Verifico que existe un turno disponible o ya reasignado para el mismo tipo de prestación del turno
+            data1.forEach(function (a, indiceA) {
+                a.bloques.forEach(function (b, indiceB) {
+                    b.turnos.forEach(function (t, indiceT) {
+                        let horaIni = moment(t.horaInicio).format('HH:mm');
+                        if (
+                            b.tipoPrestaciones.findIndex(x => String(x._id) === String(turno.tipoPrestacion._id)) >= 0 // mismo tipo de prestacion
+                                && (t.estado === 'disponible' || (t.estado === 'asignado' && typeof t.reasignado !== 'undefined' && t.reasignado.anterior && t.reasignado.anterior.idTurno === req.query.idTurno)) // turno disponible o al que se reasigno
+                                && req.query.horario ? horaIni.toString() === moment(turno.horaInicio).format('HH:mm') : true // si filtro por horario verifico que sea el mismo
+                                    && req.query.duracion ? b.duracionTurno === bloque.duracionTurno : true  // si filtro por duracion verifico que sea la mismo
+                        ) {
+
+                            if (out.indexOf(a) < 0) {
+                                out.push(a);
+                            }
+                        }
+                    });
+                });
+            });
+            let sortCandidatas = function (a, b) {
+                return a.horaInicio - b.horaInicio;
+            };
+            out.sort(sortCandidatas);
+            res.json(out);
+
+        });
+    });
+});
+
+router.get('/agenda/:id?', function (req, res, next) {
 
     if (mongoose.Types.ObjectId.isValid(req.params.id)) {
 
@@ -31,10 +98,8 @@ router.get('/agenda/:id*?', function (req, res, next) {
             if (err) {
                 next(err);
             };
-
             res.json(data);
         });
-
     } else {
         let query;
         query = agenda.find({});
@@ -146,12 +211,12 @@ router.post('/agenda/clonar', function (req, res, next) {
             };
             clones.forEach(clon => {
                 clon = new Date(clon);
-                if ( clon ) {
+                if (clon) {
                     data._id = mongoose.Types.ObjectId();
                     data.isNew = true;
                     let nueva = new agenda(data);
-                    let newHoraInicio = combinarFechas(clon, new Date(data['horaInicio']));
-                    let newHoraFin = combinarFechas(clon, new Date(data['horaFin']));
+                    let newHoraInicio = agendaCtrl.combinarFechas(clon, new Date(data['horaInicio']));
+                    let newHoraFin = agendaCtrl.combinarFechas(clon, new Date(data['horaFin']));
                     nueva['horaInicio'] = newHoraInicio;
                     nueva['horaFin'] = newHoraFin;
                     nueva['updatedBy'] = undefined;
@@ -162,16 +227,16 @@ router.post('/agenda/clonar', function (req, res, next) {
                     let newIniTurno: any;
                     nueva['bloques'] = data['bloques'];
                     nueva['bloques'].forEach((bloque, index) => {
-                        newIniBloque = combinarFechas(clon, bloque.horaInicio);
-                        newFinBloque = combinarFechas(clon, bloque.horaFin);
+                        newIniBloque = agendaCtrl.combinarFechas(clon, bloque.horaInicio);
+                        newFinBloque = agendaCtrl.combinarFechas(clon, bloque.horaFin);
                         bloque.horaInicio = newIniBloque;
                         bloque.horaFin = newFinBloque;
                         bloque._id = mongoose.Types.ObjectId();
                         bloque.turnos.forEach((turno, index1) => {
-                            newIniTurno = combinarFechas(clon, turno.horaInicio);
+                            newIniTurno = agendaCtrl.combinarFechas(clon, turno.horaInicio);
                             turno.horaInicio = newIniTurno;
                             turno.estado = 'disponible';
-                            turno.asistencia = false;
+                            turno.asistencia = undefined;
                             turno.paciente = null;
                             turno.tipoPrestacion = null;
                             turno.idPrestacionPaciente = null;
@@ -183,18 +248,19 @@ router.post('/agenda/clonar', function (req, res, next) {
                         });
                     });
                     nueva['estado'] = 'planificacion';
+                    nueva['sobreturnos'] = [];
                     Auth.audit(nueva, req);
-                    nueva.save((err) => {
+                    nueva.save((err2) => {
                         Logger.log(req, 'turnos', 'insert', {
                             accion: 'Clonar Agenda',
                             ruta: req.url,
                             method: req.method,
                             data: nueva,
-                            err: err || false
+                            err: err2 || false
                         });
 
-                        if (err) {
-                            return next(err);
+                        if (err2) {
+                            return next(err2);
                         }
                         cloncitos.push(nueva);
                         if (cloncitos.length === clones.length) {
@@ -234,196 +300,93 @@ router.patch('/agenda/:id*?', function (req, res, next) {
         if (err) {
             return next(err);
         }
-
         // Loopear los turnos, si viene vacío, es porque viene un id solo
         let turnos = req.body.turnos || [''];
 
         for (let y = 0; y < turnos.length; y++) {
-            console.log('entro');
+            let turno;
             switch (req.body.op) {
-                case 'darAsistencia': darAsistencia(req, data, turnos[y]._id);
+                case 'darAsistencia': agendaCtrl.darAsistencia(req, data, turnos[y]._id);
                     break;
-                case 'sacarAsistencia': sacarAsistencia(req, data, turnos[y]._id);
+                case 'sacarAsistencia': agendaCtrl.sacarAsistencia(req, data, turnos[y]._id);
                     break;
-                case 'liberarTurno': liberarTurno(req, data, turnos[y]._id);
+                case 'liberarTurno':
+                    // console.log(turno);
+                    turno = agendaCtrl.getTurno(req, data, turnos[y]._id);
+                    if (turno.paciente.id) {
+                        LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, agendaCtrl.getBloque(data, turno), data._id);
+                    }
+                    agendaCtrl.liberarTurno(req, data, turno);
                     break;
-                case 'bloquearTurno': bloquearTurno(req, data, turnos[y]._id);
+                case 'suspenderTurno':
+                    turno = agendaCtrl.getTurno(req, data, turnos[y]._id);
+                    if (turno.paciente.id) {
+                        LoggerPaciente.logTurno(req, 'turnos:suspender', turno.paciente, turno, agendaCtrl.getBloque(data, turno), data._id);
+                    }
+                    agendaCtrl.suspenderTurno(req, data, turno);
                     break;
-                case 'suspenderTurno': suspenderTurno(req, data, turnos[y]._id);
+                case 'guardarNotaTurno': agendaCtrl.guardarNotaTurno(req, data, turnos[y]._id);
                     break;
-                case 'reasignarTurno': reasignarTurno(req, data, turnos[y]._id);
+                case 'darTurnoDoble': agendaCtrl.darTurnoDoble(req, data, turnos[y]._id);
                     break;
-                case 'guardarNotaTurno': guardarNotaTurno(req, data, turnos[y]._id);
+                case 'notaAgenda': agendaCtrl.guardarNotaAgenda(req, data);
                     break;
-                case 'notaAgenda': guardarNotaAgenda(req, data);
+                case 'editarAgenda': agendaCtrl.editarAgenda(req, data);
                     break;
-                case 'editarAgenda': editarAgenda(req, data);
+                case 'agregarSobreturno': agendaCtrl.agregarSobreturno(req, data);
                     break;
                 case 'disponible':
-                case 'publicada': actualizarEstado(req, data);
+                case 'publicada': agendaCtrl.actualizarEstado(req, data);
                     break;
                 case 'pausada':
                 case 'prePausada':
-                case 'suspendida': actualizarEstado(req, data);
+                case 'suspendida': agendaCtrl.actualizarEstado(req, data);
                     break;
+                // case 'reasignarTurno': reasignarTurno(req, data, turnos[y]._id);
+                //     break;
+                // case 'bloquearTurno': bloquearTurno(req, data, turnos[y]._id);
+                //     break;
                 default:
                     next('Error: No se seleccionó ninguna opción.');
                     break;
             }
 
-            // console.log('data ', (data as any).bloques[0].turnos);
             Auth.audit(data, req);
-            data.save(function (err) {
+
+            data.save(function (error) {
 
                 Logger.log(req, 'turnos', 'update', {
                     accion: req.body.op,
                     ruta: req.url,
                     method: req.method,
                     data: data,
-                    err: err || false
+                    err: error || false
                 });
-                if (err) {
-                    return next(err);
+                if (error) {
+                    return next(error);
                 }
 
             });
+
+            if (req.body.op == 'suspendida') {
+                (data as any).bloques.forEach(bloque => {
+
+                    bloque.turnos.forEach(turno => {
+
+                        if (turno.paciente.id) {
+
+                            LoggerPaciente.logTurno(req, 'turnos:suspender', turno.paciente, turno, bloque._id, data._id);
+
+                        }
+
+                    });
+
+                });
+            }
         }
         return res.json(data);
     });
 
 });
 
-// TODO: Ver si se puede hacer una clase para colocar las siguiente funciones?
-
-// Turno
-function darAsistencia(req, data, tid = null) {
-    let turno = getTurno(req, data, tid);
-    console.log(turno);
-    turno.asistencia = true;
-}
-
-// Turno
-function sacarAsistencia(req, data, tid = null) {
-    let turno = getTurno(req, data, tid);
-    turno.asistencia = false;
-}
-
-// Turno
-function liberarTurno(req, data, tid = null) {
-    let turno = getTurno(req, data, tid);
-    turno.estado = 'disponible';
-    // delete turno.paciente;
-    turno.paciente = null;
-    turno.tipoPrestacion = null;
-    turno.nota = null;
-}
-
-// Turno
-function bloquearTurno(req, data, tid = null) {
-
-    let turno = getTurno(req, data, tid);
-
-    if (turno.estado !== 'suspendido') {
-        turno.estado = 'suspendido';
-    } else {
-        turno.estado = 'disponible';
-    }
-}
-
-// Turno
-function suspenderTurno(req, data, tid = null) {
-    let turno = getTurno(req, data, tid);
-    turno.estado = 'suspendido';
-    delete turno.paciente;
-    delete turno.tipoPrestacion;
-    turno.motivoSuspension = req.body.motivoSuspension;
-    return data;
-}
-
-// Turno
-function reasignarTurno(req, data, tid = null) {
-    let turno = getTurno(req, data, tid);
-    turno.estado = 'disponible';
-    delete turno.paciente;
-    turno.prestacion = null;
-    turno.motivoSuspension = null;
-}
-
-// Turno
-function guardarNotaTurno(req, data, tid = null) {
-    let turno = getTurno(req, data, tid);
-    turno.nota = req.body.textoNota;
-}
-
-// Agenda
-function guardarNotaAgenda(req, data) {
-     data.nota = req.body.nota;
-}
-
-// Agenda
-function editarAgenda(req, data) {
-    if (req.body.profesional) {
-        data.profesionales = req.body.profesional;
-    }
-    data.espacioFisico = req.body.espacioFisico;
-}
-
-// Agenda
-function actualizarEstado(req, data) {
-    // Si se pasa a estado Pausada, guardamos el estado previo
-    if (req.body.estado === 'pausada') {
-        data.prePausada = data.estado;
-    }
-    // Si se pasa a publicada
-    if (req.body.estado === 'publicada') {
-        data.estado = 'publicada';
-        data.bloques.forEach((bloque, index) => {
-            bloque.accesoDirectoProgramado = bloque.accesoDirectoProgramado + bloque.reservadoProfesional;
-            bloque.reservadoProfesional = 0;
-        });
-    }
-    // Cuando se reanuda de un estado pausada, se setea el estado guardado en prePausa
-    if (req.body.estado === 'prePausada') {
-        data.estado = data.prePausada;
-    } else {
-        data.estado = req.body.estado;
-    }
-}
-
-// Dada una Agenda completa + un id de Turno, busca y devuelve el Turno completo
-function getTurno(req, data, idTurno = null) {
-    let turno;
-    idTurno = idTurno || req.body.idTurno;
-    // Loop en los bloques
-    for (let x = 0; x < Object.keys(data).length; x++) {
-        // Si existe este bloque...
-        if (data.bloques[x] != null) {
-            // Buscamos y asignamos el turno con id que coincida (si no coincide "asigna" null)
-            turno = (data as any).bloques[x].turnos.id(idTurno);
-
-            // Si encontró el turno dentro de alguno de los bloques, lo devuelve
-            if (turno !== null) {
-                return turno;
-            }
-        }
-    }
-    return false;
-}
-
-
-function combinarFechas(fecha1, fecha2) {
-    if (fecha1 && fecha2) {
-        let horas: number;
-        let minutes: number;
-        let auxiliar: Date;
-
-        auxiliar = new Date(fecha1);
-        horas = fecha2.getHours();
-        minutes = fecha2.getMinutes();
-        auxiliar.setHours(horas, minutes, 0, 0);
-        return auxiliar;
-    } else {
-        return null;
-    }
-}
 export = router;

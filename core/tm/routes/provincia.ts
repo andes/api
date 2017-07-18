@@ -1,9 +1,9 @@
-import * as mongoose from 'mongoose';
-import * as express from 'express'
-import * as provincia from '../schemas/provincia_model'
-import * as utils from '../../../utils/utils';
+// import * as mongoose from 'mongoose';
+import * as express from 'express';
+import * as provincia from '../schemas/provincia_model';
+// import * as utils from '../../../utils/utils';
 
-var router = express.Router();
+let router = express.Router();
 /**
  * @swagger
  * definition:
@@ -15,12 +15,12 @@ var router = express.Router();
  *          type: string
  *      pais:
  *          type: object
- *          properties: 
- *              id: 
+ *          properties:
+ *              id:
  *                  type: string
  *              nombre:
  *                  type: string
- * 
+ *
  */
 
 /**

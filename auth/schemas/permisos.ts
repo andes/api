@@ -2,7 +2,15 @@ import * as mongoose from 'mongoose';
 
 let schema = new mongoose.Schema({
     usuario: Number,
-    organizacion: mongoose.Schema.Types.ObjectId,
+    activo: Boolean,
+    nombre: String,
+    apellido: String,
+    password: String,
+    foto: String,
+    organizacion: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'organizacion'
+        },
     roles: [String],
     permisos: [String]
 });

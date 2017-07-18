@@ -1,4 +1,4 @@
-import { tipoProblema } from './../../../modules/rup/schemas/tipoProblema';
+// import { tipoProblema } from './../../../modules/rup/schemas/tipoProblema';
 import * as mongoose from 'mongoose';
 import * as codificadorSchema from '../../../modules/rup/schemas/codificador';
 
@@ -21,11 +21,6 @@ export let tipoPrestacionSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'tipoProblema'
     }],
-    //reglasSolicitud: [reglaSchema] // TODO
-    //reglasEjecucion: [reglaSchema] // TODO
-    //reglasVisibilidad: [reglaSchema] // TODO
-    // requiereEvolucionAdministrativa: Boolean,
-    // requiereEvolucionCalidad: Boolean,
     turneable: Boolean,
     activo: Boolean,
     componente: {

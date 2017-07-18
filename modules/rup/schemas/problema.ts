@@ -1,13 +1,14 @@
 import * as mongoose from 'mongoose';
 import * as codificadorSchema from './codificador';
-import * as organizacion from '../../../core/tm/schemas/organizacion';
-import { profesionalSchema } from '../../../core/tm/schemas/profesional';
+// import * as organizacion from '../../../core/tm/schemas/organizacion';
+// import { profesionalSchema } from '../../../core/tm/schemas/profesional';
 import { segundaOpinionSchema } from './segundaOpinion';
 
 export let problemaSchema = new mongoose.Schema({
     tipoProblema: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'tipoProblema'
+        // type: mongoose.Schema.Types.ObjectId,
+        // ref: 'tipoProblema'
+        type: mongoose.Schema.Types.Mixed
     },
     idProblemaOrigen: [{
         type: mongoose.Schema.Types.ObjectId
@@ -20,11 +21,11 @@ export let problemaSchema = new mongoose.Schema({
     codificador: codificadorSchema,
     fechaIdentificacion: Date,
     fechaInicio: Date,
-    descripcion:String,
+    descripcion: String,
     evoluciones: [{
         fecha: Date,
         observacion: String,
-        //profesional: [profesionalSchema],
+        // profesional: [profesionalSchema],
         profesional:{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'profesional'
@@ -33,8 +34,8 @@ export let problemaSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'organizacion'
         },
-        //organizacion: organizacion.schema,
-        //ambito: // TODO
+        // organizacion: organizacion.schema,
+        // ambito: // TODO
         cronico: Boolean,
         estado: {
             type: String,

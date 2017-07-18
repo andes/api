@@ -1,17 +1,31 @@
 import * as mongoose from 'mongoose';
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
+import { cie10Schema } from '../../../core/term/schemas/cie10';
 // import * as organizacion from '../../../core/tm/schemas/organizacion';
 
-var turnoSchema = new mongoose.Schema({
+let turnoSchema = new mongoose.Schema({
     horaInicio: Date,
     asistencia: {
-        type: Boolean,
-        default: false
+        type: String,
+        enum: ['asistio', 'noAsistio', 'sinDatos']
     },
     estado: {
         type: String,
-        enum: ['disponible', 'asignado', 'suspendido'],
+        enum: ['disponible', 'asignado', 'suspendido', 'turnoDoble'],
         default: 'disponible'
+    },
+    reasignado: {
+        anterior: {
+            idAgenda: mongoose.Schema.Types.ObjectId,
+            idBloque: mongoose.Schema.Types.ObjectId,
+            idTurno: mongoose.Schema.Types.ObjectId
+        },
+        siguiente: {
+            idAgenda: mongoose.Schema.Types.ObjectId,
+            idBloque: mongoose.Schema.Types.ObjectId,
+            idTurno: mongoose.Schema.Types.ObjectId
+        },
+        confirmadoAt: Date
     },
     tipoTurno: {
         type: String,
@@ -27,7 +41,7 @@ var turnoSchema = new mongoose.Schema({
         nombre: String,
         apellido: String,
         documento: String,
-        telefono: String
+        telefono: String,
     },
     tipoPrestacion: tipoPrestacionSchema,
     // TODO: Enlace con RUP? cuando alguien defina ALGO
@@ -35,6 +49,15 @@ var turnoSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'prestacionPaciente'
     },
+    diagnosticoPrincipal: {
+        codificacion: cie10Schema,
+        primeraVez: Boolean,
+        ilegible: Boolean,
+    },
+    diagnosticoSecundario: [{
+        codificacion: cie10Schema,
+        ilegible: Boolean,
+    }],
     updatedAt: Date,
     updatedBy: mongoose.Schema.Types.Mixed
 });

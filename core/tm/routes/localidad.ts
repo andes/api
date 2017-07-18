@@ -14,12 +14,12 @@ let router = express.Router();
  *          type: string
  *      provincia:
  *          type: object
- *          properties: 
- *              id: 
+ *          properties:
+ *              id:
  *                  type: string
  *              nombre:
  *                  type: string
- * 
+
  */
 
 /**
@@ -82,10 +82,9 @@ router.get('/localidades/:id*?', function (req, res, next) {
         let query;
         query = localidad.find({}).sort({ nombre: 1 });
         if (req.query.nombre) {
-            query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
+            query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
         if (req.query.provincia) {
-            console.log('la provincia por parametro: ', req.query.provincia);
             query.where('provincia._id').equals(req.query.provincia);
         }
         query.exec((err, data) => {

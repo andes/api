@@ -1,6 +1,9 @@
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
+import * as edificioSchema from '../../../core/tm/schemas/edificio';
+import * as espacioFisicoSchema from '../../../modules/turnos/schemas/espacioFisico';
 import * as bloqueSchema from '../../../modules/turnos/schemas/bloque';
+import * as turnoSchema from '../../../modules/turnos/schemas/turno';
 import * as nombreApellidoSchema from '../../../core/tm/schemas/nombreApellido';
 import * as mongoose from 'mongoose';
 
@@ -14,7 +17,9 @@ let schema = new mongoose.Schema({
         required: true
     },
     profesionales: [nombreApellidoSchema],
-    espacioFisico: nombreSchema,
+    espacioFisico: {
+        type: espacioFisicoSchema
+    },
     horaInicio: {
         type: Date,
         required: true
@@ -39,7 +44,8 @@ let schema = new mongoose.Schema({
         enum: ['planificacion', 'disponible', 'publicada', 'suspendida']
     },
     bloques: [bloqueSchema],
-    nota: String
+    nota: String,
+    sobreturnos: [turnoSchema]
 
 });
 

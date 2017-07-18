@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 import * as turnoSchema from '../../../modules/turnos/schemas/turno';
 
-var bloqueSchema = new mongoose.Schema({  
+let bloqueSchema = new mongoose.Schema({
     horaInicio: Date,
     horaFin: Date,
     cantidadTurnos: {

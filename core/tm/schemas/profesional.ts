@@ -40,5 +40,4 @@ profesionalSchema.virtual('nombreCompleto').get(function () {
     return ((this.nombre || '') + ' ' + (this.apellido || '')).trim();
 });
 
-
 export let profesional = mongoose.model('profesional', profesionalSchema, 'profesional');

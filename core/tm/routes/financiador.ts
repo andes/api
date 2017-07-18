@@ -1,7 +1,7 @@
 import * as express from 'express'
 import * as financiador from '../schemas/financiador'
 
-var router = express.Router();
+let router = express.Router();
 /**
  * @swagger
  * definition:
@@ -64,15 +64,14 @@ router.get('/financiadores/:id*?', function(req, res, next) {
 
        res.json(data);
    });
-   }
-   else{
-       var query;
+   } else {
+       let query;
         query = financiador.find({});
-        if (req.query.nombre){
-            query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
+        if (req.query.nombre) {
+            query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
-        query.exec((err, data)=> {
-           if (err) return next(err);
+        query.exec((err, data) => {
+           if (err) {return next(err); };
            res.json(data);
         });
    }

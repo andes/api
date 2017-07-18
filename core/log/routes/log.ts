@@ -1,22 +1,27 @@
 import * as express from 'express';
 import { Logger } from '../../../utils/logService';
 import { log } from '../schemas/log';
+import { Auth } from "../../../auth/auth.class";
 
 let router = express.Router();
 
-router.post('/:module/:op', function (req, res, next) {
-    console.log(req.params.op);
+router.post('/operaciones/:module/:op', function (req, res, next) {
+    if (!Auth.check(req, 'log:post')) {
+        return next(403);
+    }
     let resultado = Logger.log(req, req.params.module, req.params.op, req.body.data, function (err) {
-
         if (err) {
             return next(err);
         }
-        console.log(resultado);
         res.json(resultado);
     });
 });
 
-router.get('/:module?', function (req, res, next) {
+router.get('/operaciones/:module?', function (req, res, next) {
+    if (!Auth.check(req, 'log:get')) {
+        return next(403);
+    }
+    console.log('LOG');
     let query;
 
     query = log.find({});
@@ -25,14 +30,16 @@ router.get('/:module?', function (req, res, next) {
         query.where('modulo').equals(req.params.module).sort({ fecha: -1 });
     }
     if (req.query.op) {
-        query.where('operacion').equals(req.query.op).count();
+        query.where('operacion').equals(req.query.op);
     }
-    
     if (req.query.usuario) {
         query.where('usuario.username').equals(req.query.usuario);
     }
     if (req.query.organizacion) {
         query.where('organizacion._id').equals(req.query.organizacion);
+    }
+    if (req.query.accion) {
+        query.where('datosOperacion.accion').equals(req.query.accion);
     }
     if (req.query.count) {
         query.count();

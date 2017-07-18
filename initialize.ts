@@ -3,30 +3,22 @@ import * as mongoose from 'mongoose';
 import * as config from './config';
 import { Auth } from './auth/auth.class';
 import { Swagger } from './swagger';
+import { Connections } from './connections';
 import * as HttpStatus from 'http-status-codes';
-import { schemaDefaults } from './mongoose/defaults';
 import { Express } from 'express';
+
+//import { snomedDB } from './snomed';
 let requireDir = require('require-dir');
 
 export function initAPI(app: Express) {
-    // Configuración de Mongoose
-    if (config.mongooseDebugMode) {
-        mongoose.set('debug', true);
-    }
-    mongoose.connect(config.connectionStrings.mongoDB_main);
-    mongoose.plugin(schemaDefaults);
-    mongoose.connection.on('connected', function () {
-        console.log('[Mongoose] Conexión OK');
-    });
-    mongoose.connection.on('error', function (err) {
-        console.log('[Mongoose] No se pudo conectar al servidor');
-    });
-
     // Inicializa la autenticación con Password/JWT
     Auth.initialize(app);
 
     // Inicializa swagger
     Swagger.initialize(app);
+
+    // Inicializa Mongoose
+    Connections.initialize();
 
     // Configura Express
     app.use(bodyParser.json());
@@ -40,7 +32,7 @@ export function initAPI(app: Express) {
 
         // Permitir que el método OPTIONS funcione sin autenticación
         if ('OPTIONS' === req.method) {
-            res.send(200);
+            res.sendStatus(200);
         } else {
             next();
         }

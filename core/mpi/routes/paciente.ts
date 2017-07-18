@@ -1,103 +1,20 @@
-import {
-    tipoPrestacion
-} from './../../tm/schemas/tipoPrestacion';
-import {
-    matching
-} from '@andes/match/matching';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
-import {
-    paciente
-} from '../schemas/paciente';
-import {
-    pacienteMpi
-} from '../schemas/paciente';
-import {
-    Client
-} from 'elasticsearch';
 import * as config from '../../../config';
-import {
-    Auth
-} from './../../../auth/auth.class';
-import {
-    Logger
-} from '../../../utils/logService';
+import * as configPrivate from '../../../config.private';
 import * as moment from 'moment';
-import { log } from '../../log/schemas/log';
-import * as https from 'https';
+import { matching } from '@andes/match';
+import { Client } from 'elasticsearch';
+import { Auth } from './../../../auth/auth.class';
 let router = express.Router();
-
-let GeoJSON = require('geojson');
-
-function sortMatching(a, b) {
-    return b.match - a.match;
-}
-
-router.get('/pacientes/georef/:id', function (req, res, next) {
-    // if (req.params.id) {
-    pacienteMpi.findById(req.params.id, function (err, data) {
-        if (err) {
-            console.log('ERROR GET GEOREF:  ', err);
-            return next(err);
-        }
-        console.log('DATA:  ',data);
-        let paciente;
-            paciente = data;
-        if (paciente && paciente.direccion[0].valor && paciente.direccion[0].ubicacion.localidad && paciente.direccion[0].ubicacion.provincia) {
-
-            let dir = paciente.direccion[0].valor;
-            let localidad = paciente.direccion[0].ubicacion.localidad.nombre;
-            let provincia = paciente.direccion[0].ubicacion.provincia.nombre;
-            let pais = paciente.direccion[0].ubicacion.pais;
-            let pathGoogleApi = '';
-            let jsonGoogle = '';
-            pathGoogleApi = '/maps/api/geocode/json?address=' + dir + ',+' + localidad + ',+' + provincia + ',+' + 'AR' + '&key=' + config.geoKey;
-
-            pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
-            pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
-            pathGoogleApi = pathGoogleApi.replace(/é/gi, 'e');
-            pathGoogleApi = pathGoogleApi.replace(/í/gi, 'i');
-            pathGoogleApi = pathGoogleApi.replace(/ó/gi, 'o');
-            pathGoogleApi = pathGoogleApi.replace(/ú/gi, 'u');
-            pathGoogleApi = pathGoogleApi.replace(/ü/gi, 'u');
-            pathGoogleApi = pathGoogleApi.replace(/ñ/gi, 'n');
-
-            console.log('PATH CONSULTA GOOGLE API:   ', pathGoogleApi);
-
-            let optionsgetmsg = {
-                host: 'maps.googleapis.com',
-                port: 443,
-                path: pathGoogleApi,
-                method: 'GET',
-                rejectUnauthorized: false
-            };
+// Services
+import { Logger } from '../../../utils/logService';
+// Schemas
+import { pacienteMpi } from '../schemas/paciente';
+import { paciente } from '../schemas/paciente';
+import { log } from '../../log/schemas/log';
 
 
-            let reqGet = https.request(optionsgetmsg, function (res2) {
-                res2.on('data', function (d, error) {
-                    jsonGoogle = jsonGoogle + d.toString();
-                    console.log('RESPONSE: ', jsonGoogle);
-                });
-
-                res2.on('end', function () {
-                    let salida = JSON.parse(jsonGoogle);
-                    if (salida.status === 'OK') {
-                        res.json(salida.results[0].geometry.location);
-                    } else {
-                        res.json('');
-                    }
-                });
-            });
-            req.on('error', (e) => {
-                console.error(e);
-                return next(e);
-            });
-            reqGet.end();
-        } else {
-            return next('Datos incorrectos');
-        }
-    });
-});
 
 /**
  * @swagger
@@ -105,6 +22,8 @@ router.get('/pacientes/georef/:id', function (req, res, next) {
  *   paciente:
  *     properties:
  *       documento:
+ *          type: string
+ *       cuil:
  *          type: string
  *       activo:
  *          type: boolean
@@ -224,8 +143,10 @@ router.get('/pacientes/georef/:id', function (req, res, next) {
  */
 
 
+
 /*Consultas de estado de pacientes para el panel de información*/
 router.get('/pacientes/counts/', function (req, res, next) {
+    /* Este get es público ya que muestra sólamente la cantidad de pacientes en MPI */
     let filtro;
     switch (req.query.consulta) {
         case 'validados':
@@ -265,6 +186,12 @@ router.get('/pacientes/counts/', function (req, res, next) {
 });
 
 router.get('/pacientes/dashboard/', function (req, res, next) {
+    /**
+     * Se requiere autorización para acceder al dashboard de MPI
+     */
+    if (!Auth.check(req, 'mpi:paciente:dashboard')) {
+        return next(403);
+    }
     let result = {
         paciente: null,
         pacienteMpi: null,
@@ -332,7 +259,6 @@ router.get('/pacientes/dashboard/', function (req, res, next) {
     );
 
 });
-
 
 /**
  * @swagger
@@ -417,27 +343,23 @@ router.get('/pacientes/dashboard/', function (req, res, next) {
 
 // Simple mongodb query by ObjectId --> better performance
 router.get('/pacientes/:id', function (req, res, next) {
-    paciente.findById(req.params.id, function (err, data) {
-        if (err) {
-            return next(err);
+    // busca en pacienteAndes y en pacienteMpi
+    if (!Auth.check(req, 'mpi:paciente:getbyId')) {
+        return next(403);
+    }
+    buscarPaciente(req.params.id).then((resultado: any) => {
+        if (resultado) {
+            Logger.log(req, 'mpi', 'query', {
+                mongoDB: resultado.paciente
+            });
+            res.json(resultado.paciente);
         } else {
-            if (data) {
-                // Logger de paciente buscado por ID
-                Logger.log(req, 'mpi', 'query', {
-                    mongoDB: data
-                });
-                res.json(data);
-            } else {
-                pacienteMpi.findById(req.params.id, function (err2, dataMpi) {
-                    if (err2) {
-                        return next(err2);
-                    }
-                    res.json(dataMpi);
-
-                });
-            }
+            return next(500);
         }
+    }).catch((err) => {
+        return next(err);
     });
+
 });
 
 /**
@@ -505,8 +427,11 @@ router.get('/pacientes/:id', function (req, res, next) {
  */
 // Search using elastic search
 router.get('/pacientes', function (req, res, next) {
+    if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
+        return next(403);
+    }
     let connElastic = new Client({
-        host: config.connectionStrings.elastic_main,
+        host: configPrivate.hosts.elastic_main,
     });
 
     let query;
@@ -535,7 +460,7 @@ router.get('/pacientes', function (req, res, next) {
             break;
         case 'suggest':
             {
-                let condicion = {};
+                // let condicion = {};
 
                 // Sugiere pacientes que tengan la misma clave de blocking
                 let campo = req.query.claveBlocking;
@@ -553,7 +478,7 @@ router.get('/pacientes', function (req, res, next) {
     };
     // Configuramos la cantidad de resultados que quiero que se devuelva y la query correspondiente
     let body = {
-        size: 40,
+        size: 100,
         from: 0,
         query: query
     };
@@ -570,27 +495,28 @@ router.get('/pacientes', function (req, res, next) {
             body: body
         })
             .then((searchResult) => {
+
                 // Asigno los valores para el suggest
-                let weights = config.configMpi.weightsDefault;
+                let weights = config.mpi.weightsDefault;
 
                 if (req.query.escaneado) {
-                    weights = config.configMpi.weightsScan;
+                    weights = config.mpi.weightsScan;
                 }
 
-                let porcentajeMatchMax = config.configMpi.cotaMatchMax;
-                let porcentajeMatchMin = config.configMpi.cotaMatchMin;
+                let porcentajeMatchMax = config.mpi.cotaMatchMax;
+                let porcentajeMatchMin = config.mpi.cotaMatchMin;
                 let listaPacientesMax = [];
                 let listaPacientesMin = [];
-                let devolverPorcentaje = req.query.percentage;
+                // let devolverPorcentaje = req.query.percentage;
 
-                let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
+                ((searchResult.hits || {}).hits || []) // extract results from elastic response
                     .filter(function (hit) {
                         let paciente = hit._source;
                         let pacDto = {
                             documento: req.query.documento ? req.query.documento.toString() : '',
                             nombre: req.query.nombre ? req.query.nombre : '',
                             apellido: req.query.apellido ? req.query.apellido : '',
-                            fechaNacimiento: req.query.fechaNacimiento ? moment(req.query.fechaNacimiento).format('YYYY-MM-DD'): '',
+                            fechaNacimiento: req.query.fechaNacimiento ? moment(new Date(req.query.fechaNacimiento)).format('YYYY-MM-DD') : '',
                             sexo: req.query.sexo ? req.query.sexo : ''
                         };
                         let pacElastic = {
@@ -603,6 +529,7 @@ router.get('/pacientes', function (req, res, next) {
                         let match = new matching();
                         let valorMatching = match.matchPersonas(pacElastic, pacDto, weights);
                         paciente['id'] = hit._id;
+
                         if (valorMatching >= porcentajeMatchMax) {
                             listaPacientesMax.push({
                                 id: hit._id,
@@ -618,9 +545,17 @@ router.get('/pacientes', function (req, res, next) {
                                 });
                             }
                         }
+                        // console.log("SEARCHRESULT-------------",paciente.documento,paciente.apellido,valorMatching);
                     });
-                //if (devolverPorcentaje) {
 
+                // if (devolverPorcentaje) {
+                let sortMatching = function (a, b) {
+                    return b.match - a.match;
+                };
+
+                // cambiamos la condición para lograr que nos devuelva más de una sugerencia
+                // ya que la 1ra sugerencia es el mismo paciente.
+                // if (listaPacientesMax.length > 0) {
                 if (listaPacientesMax.length > 0) {
                     listaPacientesMax.sort(sortMatching);
                     res.send(listaPacientesMax);
@@ -688,15 +623,19 @@ router.get('/pacientes', function (req, res, next) {
  *         description: Un código de error con un array de mensajes de error
  */
 router.post('/pacientes/mpi', function (req, res, next) {
+    if (!Auth.check(req, 'mpi:paciente:postMpi')) {
+        return next(403);
+    }
+
     let match = new matching();
     let newPatientMpi = new pacienteMpi(req.body);
     let connElastic = new Client({
-        host: config.connectionStrings.elastic_main,
+        host: configPrivate.hosts.elastic_main,
     });
     // Se genera la clave de blocking
     let claves = match.crearClavesBlocking(newPatientMpi);
     newPatientMpi['claveBlocking'] = claves;
-
+    
     Auth.audit(newPatientMpi, req);
 
     newPatientMpi.save((err) => {
@@ -713,7 +652,6 @@ router.post('/pacientes/mpi', function (req, res, next) {
             body: nuevoPac
         }, function (error, response) {
             if (error) {
-                // Logger.log(req, 'pacientes', 'elasticError', error);
                 next(error);
             }
             Logger.log(req, 'mpi', 'elasticInsert', {
@@ -725,19 +663,21 @@ router.post('/pacientes/mpi', function (req, res, next) {
 });
 
 router.put('/pacientes/mpi/:id', function (req, res, next) {
+    if (!Auth.check(req, 'mpi:paciente:putMpi')) {
+        return next(403);
+    }
     let ObjectId = mongoose.Types.ObjectId;
     let objectId = new ObjectId(req.params.id);
     let query = {
         _id: objectId
     };
     let connElastic = new Client({
-        host: config.connectionStrings.elastic_main,
+        host: configPrivate.hosts.elastic_main,
     });
     let match = new matching();
 
     pacienteMpi.findById(query, function (err, patientFound: any) {
         if (err) {
-            console.log('Error del findByID: ', err);
             return next(404);
         }
 
@@ -747,20 +687,21 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
             pacienteOriginal = patientFound.toObject();
 
             /*Update de paciente de todos los campos salvo que esté validado*/
-            if (patientFound.estado !== 'validado') {
-                patientFound.documento = req.body.documento;
-                patientFound.estado = req.body.estado;
-                patientFound.nombre = req.body.nombre;
-                patientFound.apellido = req.body.apellido;
-                patientFound.sexo = req.body.sexo;
-                patientFound.fechaNacimiento = req.body.fechaNacimiento;
-                /*Si es distinto de validado debo generar una nueva clave de blocking */
-                let claves = match.crearClavesBlocking(patientFound);
-                patientFound.claveBlocking = claves;
-            } else {
-                patientFound.nombre = req.body.nombre.toUpperCase();
-                patientFound.apellido = req.body.apellido.toUpperCase();
-            }
+            // if (patientFound.estado !== 'validado') {
+            patientFound.documento = req.body.documento;
+            patientFound.estado = req.body.estado;
+            patientFound.activo = req.body.activo;
+            patientFound.nombre = req.body.nombre.toUpperCase();
+            patientFound.apellido = req.body.apellido.toUpperCase();
+            patientFound.sexo = req.body.sexo;
+            patientFound.fechaNacimiento = req.body.fechaNacimiento;
+            /*Si es distinto de validado debo generar una nueva clave de blocking */
+            let claves = match.crearClavesBlocking(patientFound);
+            patientFound.claveBlocking = claves;
+            // } else {
+            //     patientFound.nombre = req.body.nombre.toUpperCase();
+            //     patientFound.apellido = req.body.apellido.toUpperCase();
+            // }
             patientFound.genero = req.body.genero;
             patientFound.alias = req.body.alias;
             patientFound.estadoCivil = req.body.estadoCivil;
@@ -775,7 +716,6 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
             Auth.audit(patientFound, req);
             patientFound.save(function (err2) {
                 if (err2) {
-                    console.log('Error Save:               ', err2);
                     return next(err2);
                 }
 
@@ -814,14 +754,14 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
                         }, function (error, response) {
                             if (error) {
                                 console.log('Error al actualizar elastic en PUT NEW:            ', error);
-                                //Logger.log(req, 'pacientes', 'elasticError', error);
+                                // Logger.log(req, 'pacientes', 'elasticError', error);
                             }
                             Logger.log(req, 'mpi', 'elasticInsert', patientFound);
                             res.json(patientFound);
                         });
                     }
                 }, function (error) {
-                    console.trace(error.message);
+                    return next(error);
                 });
             });
         } else {
@@ -832,10 +772,10 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
             newPatient['nombre'] = newPatient['nombre'].toUpperCase();
 
             Auth.audit(newPatient, req);
-            newPatient.save((err) => {
-                if (err) {
-                    console.log('Error al persistir los datos: ', err);
-                    return next(err);
+            newPatient.save((err2) => {
+                if (err2) {
+                    console.log('Error al persistir los datos: ', err2);
+                    return next(err2);
                 }
                 let nuevoPac = JSON.parse(JSON.stringify(newPatient));
                 delete nuevoPac._id;
@@ -887,9 +827,12 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
  *           $ref: '#/definitions/paciente'
  */
 router.delete('/pacientes/mpi/:id', function (req, res, next) {
+    if (!Auth.check(req, 'mpi:paciente:deleteMpi')) {
+        return next(403);
+    }
 
     let connElastic = new Client({
-        host: config.connectionStrings.elastic_main,
+        host: configPrivate.hosts.elastic_main,
     });
 
     let ObjectId = (require('mongoose').Types.ObjectId);
@@ -909,9 +852,9 @@ router.delete('/pacientes/mpi/:id', function (req, res, next) {
         }, function (error, response) {
             if (error) {
                 console.log('Error en el borrado del indice de elastic en mpi:  ', error);
-                //Logger.log(req, 'pacientes', 'elasticError', error);
+                // Logger.log(req, 'pacientes', 'elasticError', error);
             }
-            //Logger.log(req, 'pacientes', 'elasticDelete', patientFound);
+            // Logger.log(req, 'pacientes', 'elasticDelete', patientFound);
             res.json(patientFound);
         });
     });
@@ -945,10 +888,13 @@ router.delete('/pacientes/mpi/:id', function (req, res, next) {
  *         description: Un código de error con un array de mensajes de error
  */
 router.post('/pacientes', function (req, res, next) {
+    if (!Auth.check(req, 'mpi:paciente:postAndes')) {
+        return next(403);
+    }
     let match = new matching();
     let newPatient = new paciente(req.body);
     let connElastic = new Client({
-        host: config.connectionStrings.elastic_main,
+        host: configPrivate.hosts.elastic_main,
     });
 
     // Se genera la clave de blocking
@@ -956,6 +902,8 @@ router.post('/pacientes', function (req, res, next) {
     newPatient['claveBlocking'] = claves;
     newPatient['apellido'] = newPatient['apellido'].toUpperCase();
     newPatient['nombre'] = newPatient['nombre'].toUpperCase();
+    // Habilitamos el paciente como activo cuando es nuevo
+    newPatient['activo'] = true;
 
     Auth.audit(newPatient, req);
     newPatient.save((err) => {
@@ -963,18 +911,16 @@ router.post('/pacientes', function (req, res, next) {
             console.log('Error al persistir los datos: ', err);
             return next(err);
         }
-      //  console.log("NEW PATIENT:   ", newPatient['fechaNacimiento']);
+        //  console.log("NEW PATIENT:   ", newPatient['fechaNacimiento']);
         let nuevoPac = JSON.parse(JSON.stringify(newPatient));
         delete nuevoPac._id;
-
+        delete nuevoPac.relaciones;
         connElastic.create({
             index: 'andes',
             type: 'paciente',
             id: newPatient._id.toString(),
             body: nuevoPac
         }, function (error, response) {
-         //   console.log("PACIENTE ELASTIC EN POST:  ",nuevoPac);
-            //console.log('Respuesta elastic', response);
             if (error) {
                 console.log(error);
             }
@@ -983,8 +929,6 @@ router.post('/pacientes', function (req, res, next) {
         });
     });
 });
-
-
 /**
  * @swagger
  * /pacientes:
@@ -1018,30 +962,32 @@ router.post('/pacientes', function (req, res, next) {
 
 
 router.put('/pacientes/:id', function (req, res, next) {
+    if (!Auth.check(req, 'mpi:paciente:putAndes')) {
+        return next(403);
+    }
     let ObjectId = mongoose.Types.ObjectId;
     let objectId = new ObjectId(req.params.id);
     let query = {
         _id: objectId
     };
     let connElastic = new Client({
-        host: config.connectionStrings.elastic_main,
+        host: configPrivate.hosts.elastic_main,
     });
     let match = new matching();
 
     paciente.findById(query, function (err, patientFound: any) {
         if (err) {
-            console.log('Error del findByID: ', err);
             return next(404);
         }
-      //  console.log("REQ BODY ---------------------- ",req.body);
+        //  console.log("REQ BODY ---------------------- ",req.body);
         let pacienteOriginal = null;
         if (patientFound) {
-           
+
             // Guarda los valores originales para el logger
             pacienteOriginal = patientFound.toObject();
-             
-            /*Update de paciente de todos los campos salvo que esté validado*/
-            if (patientFound.estado !== 'validado') {
+
+            /*Update de paciente de todos los campos salvo que esté validado o halla sido escaneado*/
+            if (patientFound.estado !== 'validado' || patientFound.isScan) {
                 patientFound.documento = req.body.documento;
                 patientFound.estado = req.body.estado;
                 patientFound.nombre = req.body.nombre;
@@ -1059,6 +1005,7 @@ router.put('/pacientes/:id', function (req, res, next) {
 
             patientFound.genero = req.body.genero;
             patientFound.alias = req.body.alias;
+            patientFound.activo = req.body.activo;
             patientFound.estadoCivil = req.body.estadoCivil;
             patientFound.entidadesValidadoras = req.body.entidadesValidadoras;
             patientFound.financiador = req.body.financiador;
@@ -1068,7 +1015,7 @@ router.put('/pacientes/:id', function (req, res, next) {
             patientFound.identificadores = req.body.identificadores;
             patientFound.scan = req.body.scan;
             patientFound.reportarError = req.body.reportarError;
-         //   console.log("PATIENT FOUND ------------------",patientFound)
+            patientFound.notas = req.body.notas;
             // Habilita auditoria y guarda
             Auth.audit(patientFound, req);
             patientFound.save(function (err2) {
@@ -1079,10 +1026,11 @@ router.put('/pacientes/:id', function (req, res, next) {
 
                 let pacAct = JSON.parse(JSON.stringify(patientFound));
                 delete pacAct._id;
-
+                delete pacAct.relaciones;
                 connElastic.search({
-                    q: patientFound._id.toString()
+                    q: '_id:' + patientFound.id.toString()
                 }).then(function (body) {
+
                     let hits = body.hits.hits;
                     if (hits.length > 0) {
                         connElastic.update({
@@ -1127,28 +1075,28 @@ router.put('/pacientes/:id', function (req, res, next) {
             req.body._id = req.body.id;
             let newPatient = new paciente(req.body);
 
-           // console.log("NEW PATIENT---------------",newPatient);
+            // console.log("NEW PATIENT---------------",newPatient);
             let claves = match.crearClavesBlocking(newPatient);
             newPatient['claveBlocking'] = claves;
             newPatient['apellido'] = newPatient['apellido'].toUpperCase();
             newPatient['nombre'] = newPatient['nombre'].toUpperCase();
             /*Antes del save se podría realizar una búsqueda y matching para evitar cargar repetidos, actualmente este proceso sólo se realiza del lado de la app*/
             Auth.audit(newPatient, req);
-            newPatient.save((err) => {
-                if (err) {
-                    return next(err);
+            newPatient.save((err2) => {
+                if (err2) {
+                    return next(err2);
                 }
 
                 let nuevoPac = JSON.parse(JSON.stringify(newPatient));
                 delete nuevoPac._id;
+                delete nuevoPac.relaciones;
 
                 connElastic.search({
-                    q: newPatient._id.toString()
+                    q: '_id:' + newPatient._id.toString()
                 }).then(function (body) {
                     let hits = body.hits.hits;
-                    console.log('resulatdo de hits en andes: ', hits);
                     if (hits.length > 0) {
-                        console.log('hay q actualizar el docmento en elastic');
+                        // console.log('hay q actualizar el docmento en elastic');
                         connElastic.update({
                             index: 'andes',
                             type: 'paciente',
@@ -1175,7 +1123,7 @@ router.put('/pacientes/:id', function (req, res, next) {
                         }, function (error, response) {
                             console.log('Error create Elastic', response);
                             if (error) {
-                                console.log(error);
+                                // console.log(error);
                                 Logger.log(req, 'mpi', 'insert', {
                                     error: error,
                                     data: newPatient
@@ -1186,7 +1134,7 @@ router.put('/pacientes/:id', function (req, res, next) {
                         });
                     }
                 }, function (error) {
-                    console.trace(error.message);
+                    // console.log(error.message);
                 });
             });
         }
@@ -1221,10 +1169,13 @@ router.put('/pacientes/:id', function (req, res, next) {
  *           $ref: '#/definitions/paciente'
  */
 router.delete('/pacientes/:id', function (req, res, next) {
-    console.log('ingreso a borrar api');
+    if (!Auth.check(req, 'mpi:paciente:deleteAndes')) {
+        return next(403);
+    }
+
     let ObjectId = mongoose.Types.ObjectId;
     let connElastic = new Client({
-        host: config.connectionStrings.elastic_main,
+        host: configPrivate.hosts.elastic_main,
     });
     let objectId = new ObjectId(req.params.id);
     let query = {
@@ -1235,12 +1186,7 @@ router.delete('/pacientes/:id', function (req, res, next) {
             console.log('No encontro el paciente a borrar:   ', err);
             return next(err);
         }
-        // (req as any).user = 'prueba';
-        // (req as any).organizacion = 'prueba';
-        console.log('antes del audit');
-        console.log('el paciente encontrado es:   ', patientFound);
         Auth.audit(patientFound, req);
-        console.log('despues del audit');
         patientFound.remove();
         connElastic.delete({
             index: 'andes',
@@ -1251,14 +1197,44 @@ router.delete('/pacientes/:id', function (req, res, next) {
             if (error) {
                 console.log('Error en elastic Search delete: ', error);
             }
-            console.log('borro ok va a loguear');
-            //Logger.log(req, 'pacientes', 'delete', patientFound);
+            
+            // Logger.log(req, 'pacientes', 'delete', patientFound);
             res.json(patientFound);
         });
 
 
     });
 });
+
+
+function buscarPaciente(id) {
+    return new Promise((resolve, reject) => {
+        paciente.findById(id, function (err, data) {
+            if (err) {
+                reject(err);
+            } else {
+                if (data) {
+                    let resultado = {
+                        db: 'andes',
+                        paciente: data
+                    };
+                    resolve(resultado);
+                } else {
+                    pacienteMpi.findById(id, function (err2, dataMpi) {
+                        if (err2) {
+                            reject(err2);
+                        }
+                        let resultado = {
+                            db: 'mpi',
+                            paciente: dataMpi
+                        };
+                        resolve(resultado);
+                    });
+                }
+            }
+        });
+    });
+}
 
 /**
  * @swagger
@@ -1289,7 +1265,14 @@ router.delete('/pacientes/:id', function (req, res, next) {
 /* Funciones  de operaciones PATCH */
 function updateContactos(req, data) {
     data.markModified('contacto');
+    Logger.log(req, 'mpi', 'update', {
+            accion: 'updateContacto',
+            ruta: req.url,
+            method: req.method,
+            data: data.contacto,
+    });
     data.contacto = req.body.contacto;
+    // Logger de la consulta a ejecutar
 }
 
 function updateRelaciones(req, data) {
@@ -1307,61 +1290,173 @@ function updateCarpetaEfectores(req, data) {
     data.carpetaEfectores = req.body.carpetaEfectores;
 }
 
-router.patch('/pacientes/:id', function (req, res, next) {
-    let ObjectId = mongoose.Types.ObjectId;
-    let connElastic = new Client({
-        host: config.connectionStrings.elastic_main,
-    });
-    let objectId = new ObjectId(req.params.id);
-    // let query = {
-    //     _id: objectId
-    // };
-    paciente.findById(req.params.id, function (err, patientFound) {
+function linkIdentificadores(req, data) {
+    data.markModified('identificadores');
+    if (data.identificadores) {
+        data.identificadores.push(req.body.dto);
+    } else {
+        data.identificadores = [req.body.dto]; // Primer elemento del array
+    }
+}
 
-        if (err) {
-            return next(err);
-        }
-        switch (req.body.op) {
-            case 'updateContactos':
-                updateContactos(req, patientFound);
-                break;
-            case 'updateRelaciones':
-                updateRelaciones(req, patientFound);
-                break;
-            case 'updateDireccion':
-                updateDireccion(req, patientFound);
-                break;
-            case 'updateCarpetaEfectores':
-                updateCarpetaEfectores(req, patientFound);
-                break;
-        }
-        Auth.audit(patientFound, req);
-        console.log('paciente Encontrado:', patientFound)
-        patientFound.save(function (errPatch) {
-            if (errPatch) {
-                console.log('ERROR:', errPatch);
-                return next(errPatch);
-            }
-            if (err) {
-                return next(err);
-            };
-            let pacAct = JSON.parse(JSON.stringify(patientFound));
-            delete pacAct._id;
-            connElastic.update({
-                index: 'andes',
-                type: 'paciente',
-                id: patientFound._id.toString(),
-                body: pacAct
-            }, function (error, response) {
-                if (error) {
-                    console.log(error);
+function unlinkIdentificadores(req, data) {
+    data.markModified('identificadores');
+    if (data.identificadores) {
+        data.identificadores = data.identificadores.filter(x => x.valor !== req.body.dto);
+    }
+}
+
+function updateActivo(req, data) {
+    data.markModified('activo');
+    data.activo = req.body.dto;
+}
+
+function updateRelacion(req, data) {
+    if (data && data.relaciones) {
+        let objRel = data.relaciones.find(elem => {
+            if (elem && req.body.dto && elem.referencia && req.body.dto.referencia) {
+                if (elem.referencia.toString() === req.body.dto.referencia.toString()) {
+                    return elem;
                 }
-                return res.json(patientFound);
-            });
-
+            }
         });
-    });
 
+        if (!objRel) {
+            data.markModified('relaciones');
+            data.relaciones.push(req.body.dto);
+        }
+    }
+}
+
+function deleteRelacion(req, data) {
+    if (data && data.relaciones) {
+        data.relaciones.find(function (value, index, array) {
+            if (value && value.referencia && req.body.dto && req.body.dto.referencia) {
+                if (value.referencia.toString() === req.body.dto.referencia.toString()) {
+                    array.splice(index, 1);
+                }
+            }
+        });
+    }
+}
+
+router.patch('/pacientes/:id', function (req, res, next) {
+    if (!Auth.check(req, 'mpi:paciente:patchAndes')) {
+        return next(403);
+    }
+    buscarPaciente(req.params.id).then((resultado: any) => {
+        if (resultado) {
+            switch (req.body.op) {
+                case 'updateContactos':
+                    updateContactos(req, resultado.paciente);
+                    break;
+                case 'updateRelaciones':
+                    updateRelaciones(req, resultado.paciente);
+                    break;
+                case 'updateDireccion':
+                    updateDireccion(req, resultado.paciente);
+                    break;
+                case 'updateCarpetaEfectores':
+                    updateCarpetaEfectores(req, resultado.paciente);
+                    break;
+                case 'linkIdentificadores':
+                    linkIdentificadores(req, resultado.paciente);
+                    break;
+                case 'unlinkIdentificadores':
+                    unlinkIdentificadores(req, resultado.paciente);
+                    break;
+                case 'updateActivo':
+                    updateActivo(req, resultado.paciente);
+                    break;
+                case 'updateRelacion':
+                    // console.log("RESULTADO BUSQUEDApACIENTE--------", resultado);
+                    updateRelacion(req, resultado.paciente);
+                    break;
+                case 'deleteRelacion':
+                    // console.log("RESULTADO BUSQUEDApACIENTE--------", resultado);
+                    deleteRelacion(req, resultado.paciente);
+                    break;
+            }
+            Auth.audit(resultado.paciente, req);
+            resultado.paciente.save(function (errPatch) {
+                if (errPatch) {
+                    console.log('ERROR:', errPatch);
+                    return next(errPatch);
+                }
+                return res.json(resultado.paciente);
+            });
+        }
+    }).catch((err) => {
+        return next(err);
+    });
 });
+
+// Comentado hasta incorporar esta funcionalidad
+//
+// router.get('/pacientes/georef/:id', function (req, res, next) {
+//     /* Este método es público no requiere auth check */
+//     pacienteMpi.findById(req.params.id, function (err, data) {
+//         if (err) {
+//             console.log('ERROR GET GEOREF:  ', err);
+//             return next(err);
+//         }
+//         console.log('DATA:  ', data);
+//         let paciente;
+//         paciente = data;
+//         if (paciente && paciente.direccion[0].valor && paciente.direccion[0].ubicacion.localidad && paciente.direccion[0].ubicacion.provincia) {
+
+//             let dir = paciente.direccion[0].valor;
+//             let localidad = paciente.direccion[0].ubicacion.localidad.nombre;
+//             let provincia = paciente.direccion[0].ubicacion.provincia.nombre;
+//             // let pais = paciente.direccion[0].ubicacion.pais;
+//             let pathGoogleApi = '';
+//             let jsonGoogle = '';
+//             pathGoogleApi = '/maps/api/geocode/json?address=' + dir + ',+' + localidad + ',+' + provincia + ',+' + 'AR' + '&key=' + configPrivate.geoKey;
+
+//             pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
+//             pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
+//             pathGoogleApi = pathGoogleApi.replace(/é/gi, 'e');
+//             pathGoogleApi = pathGoogleApi.replace(/í/gi, 'i');
+//             pathGoogleApi = pathGoogleApi.replace(/ó/gi, 'o');
+//             pathGoogleApi = pathGoogleApi.replace(/ú/gi, 'u');
+//             pathGoogleApi = pathGoogleApi.replace(/ü/gi, 'u');
+//             pathGoogleApi = pathGoogleApi.replace(/ñ/gi, 'n');
+
+//             console.log('PATH CONSULTA GOOGLE API:   ', pathGoogleApi);
+
+//             let optionsgetmsg = {
+//                 host: 'maps.googleapis.com',
+//                 port: 443,
+//                 path: pathGoogleApi,
+//                 method: 'GET',
+//                 rejectUnauthorized: false
+//             };
+
+
+//             let reqGet = https.request(optionsgetmsg, function (res2) {
+//                 res2.on('data', function (d, error) {
+//                     jsonGoogle = jsonGoogle + d.toString();
+//                     console.log('RESPONSE: ', jsonGoogle);
+//                 });
+
+//                 res2.on('end', function () {
+//                     let salida = JSON.parse(jsonGoogle);
+//                     if (salida.status === 'OK') {
+//                         res.json(salida.results[0].geometry.location);
+//                     } else {
+//                         res.json('');
+//                     }
+//                 });
+//             });
+//             req.on('error', (e) => {
+//                 console.error(e);
+//                 return next(e);
+//             });
+//             reqGet.end();
+//         } else {
+//             return next('Datos incorrectos');
+//         }
+//     });
+// });
 
 export = router;

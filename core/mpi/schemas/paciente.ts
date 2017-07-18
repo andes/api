@@ -1,13 +1,13 @@
+import { parentezcoSchema } from './parentesco';
 import * as mongoose from 'mongoose';
-import * as mongoosastic from 'mongoosastic';
+import { Connections } from './../../../connections';
 import * as direccionSchema from '../../tm/schemas/direccion';
 import * as contactoSchema from '../../tm/schemas/contacto';
 import * as financiadorSchema from './financiador';
 import * as constantes from './constantes';
-import * as config from '../../../config';
-import { connectMpi } from '../../../connectMpi';
 import * as moment from 'moment';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
+
 
 export let pacienteSchema = new mongoose.Schema({
     identificadores: [{
@@ -16,6 +16,10 @@ export let pacienteSchema = new mongoose.Schema({
         valor: String
     }],
     documento: {
+        type: String,
+        es_indexed: true
+    },
+    cuil: {
         type: String,
         es_indexed: true
     },
@@ -43,7 +47,7 @@ export let pacienteSchema = new mongoose.Schema({
     foto: String,
     nacionalidad: String,
     relaciones: [{
-        relacion: constantes.PARENTEZCO,
+        relacion: parentezcoSchema,
         referencia: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'paciente'
@@ -64,6 +68,11 @@ export let pacienteSchema = new mongoose.Schema({
     carpetaEfectores: [{
         organizacion: nombreSchema,
         nroCarpeta: String
+    }],
+    notas: [{
+        fecha: Date,
+        nota: String,
+        destacada: Boolean
     }]
 });
 
@@ -86,8 +95,7 @@ pacienteSchema.virtual('edad').get(function () {
     return edad;
 });
 pacienteSchema.virtual('edadReal').get(function () {
-
-    //Calcula Edad de una persona (Redondea -- 30.5 años = 30 años)
+    // Calcula Edad de una persona (Redondea -- 30.5 años = 30 años)
     let edad: Object;
     let fechaNac: any;
     let fechaActual: Date = new Date();
@@ -96,7 +104,6 @@ pacienteSchema.virtual('edadReal').get(function () {
     let difDias: any;
     let difMeses: any;
     let difHs: any;
-    let difD: any;
 
     fechaNac = moment(this.fechaNacimiento, 'YYYY-MM-DD HH:mm:ss');
     fechaAct = moment(fechaActual, 'YYYY-MM-DD HH:mm:ss');
@@ -128,25 +135,16 @@ pacienteSchema.virtual('edadReal').get(function () {
         };
     }
 
-    return edad
-
+    return edad;
 });
+
 /* Creo un indice para fulltext Search */
 pacienteSchema.index({
     '$**': 'text'
 });
 
-
-/*conectamos con elasticSearch*/
-// pacienteSchema.plugin(mongoosastic, {
-//     hosts: [config.connectionStrings.elastic_main],
-//     index: 'andes',
-//     type: 'paciente'
-// });
-
 // Habilitar plugin de auditoría
 pacienteSchema.plugin(require('../../../mongoose/audit'));
 
-
 export let paciente = mongoose.model('paciente', pacienteSchema, 'paciente');
-export let pacienteMpi = connectMpi.model('paciente', pacienteSchema, 'paciente');
+export let pacienteMpi = Connections.mpi.model('paciente', pacienteSchema, 'paciente');
