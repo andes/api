@@ -198,6 +198,7 @@ router.post('/verificar-codigo', function (req, res, next) {
         if (err) {
             return next(err);
         }
+
         if (authController.verificarCodigo(codigoIngresado, datosUsuario.codigoVerificacion)) {
             if (datosUsuario.expirationTime.getTime() + authController.expirationOffset >= new Date().getTime()) {
                 datosUsuario.activacionApp = true;
