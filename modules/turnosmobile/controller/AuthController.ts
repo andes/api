@@ -7,6 +7,7 @@ import { Client } from 'elasticsearch';
 import * as config from '../../../config';
 import * as configPrivate from '../../../config.private';
 import { sendMail, MailOptions } from '../../../utils/sendMail';
+import { sendSms, SmsOptions } from '../../../utils/sendSms';
 import * as moment from 'moment';
 import { matching } from '@andes/match';
 import * as constantes from '../../../core/tm/schemas/constantes';
@@ -31,7 +32,7 @@ export function verificarCodigo(codigoIngresado, codigo) {
 export function enviarCodigoVerificacion(user) {
     console.log("Enviando mail...");
 
-    let options: MailOptions = {
+    let mailOptions: MailOptions = {
         from: configPrivate.enviarMail.options.from,
         to: user.nombre,
         subject: 'Hola ' + user.email,
@@ -39,14 +40,18 @@ export function enviarCodigoVerificacion(user) {
         html: 'El código de verificación es: ' + user.codigoVerificacion
     };
 
-    sendMail(options);
+    let smsOptions: SmsOptions = {
+        telefono: user.telefono,
+        codigoVerificacion: user.codigoVerificacion
+    }
+
+    sendMail(mailOptions);
+    sendSms(smsOptions);
 }
 
 export function envioCodigoCount(user: any) {
     //TODO: Implementar si se decide poner un límite al envío de códigos    
 }
-
-
 
 export function generarCodigoVerificacion() {
     let codigo = "";

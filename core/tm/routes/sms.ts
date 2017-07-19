@@ -94,7 +94,7 @@ let urlNumero = 'http://' + url + ':8080/MobileOutBackup/MobileOut?wsdl';
 router.get('/sms', function (req, res, next) {
 
     let argsOperador = { telefono: req.query.telefono };
-
+console.log("Entra a telefono ", argsOperador);
     let opciones = {
         ignoredNamespaces: {
             namespaces: ['ws'],
