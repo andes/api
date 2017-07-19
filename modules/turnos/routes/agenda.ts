@@ -340,6 +340,8 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                     break;
                 case 'pausada':
                 case 'prePausada':
+                case 'asistenciaCerrada':
+                case 'codificada':
                 case 'suspendida': agendaCtrl.actualizarEstado(req, data);
                     break;
                 // case 'reasignarTurno': reasignarTurno(req, data, turnos[y]._id);
