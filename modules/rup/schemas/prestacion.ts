@@ -46,8 +46,6 @@ export let schema = new mongoose.Schema({
             },
             required: true
         },
-        // ID del turno relacionado con esta prestación
-        turno: mongoose.Schema.Types.ObjectId,
         // ID de la prestación desde la que se generó esta solicitud
         prestacionOrigen: {
             type: mongoose.Schema.Types.ObjectId,
@@ -69,6 +67,8 @@ export let schema = new mongoose.Schema({
             type: Date,
             //required: true
         },
+        // ID del turno relacionado con esta prestación
+        turno: mongoose.Schema.Types.ObjectId,
         // Lugar donde se realiza
         organizacion: {
             type: {
