@@ -5,6 +5,7 @@ import * as mongoose from 'mongoose';
 import { Logger } from '../../../utils/logService';
 import * as moment from 'moment';
 import * as agendaCtrl from '../controller/agenda';
+import { LoggerPaciente } from '../../../utils/loggerPaciente';
 
 let router = express.Router();
 
@@ -32,7 +33,7 @@ router.get('/agenda/candidatas', function (req, res, next) {
         };
         let resultado = data as any;
         let horaAgendaOrig = new Date();
-        horaAgendaOrig.setHours(resultado.horaInicio.getHours(), resultado.horaInicio.getMinutes(), 0, 0)
+        horaAgendaOrig.setHours(0, 0, 0, 0);
         let indiceBloque = resultado.bloques.findIndex(y => Object.is(req.query.idBloque, String(y._id)));
         let indiceTurno = resultado.bloques[indiceBloque].turnos.findIndex(y => Object.is(req.query.idTurno, String(y._id)));
         let bloque = resultado.bloques[indiceBloque];
@@ -61,9 +62,9 @@ router.get('/agenda/candidatas', function (req, res, next) {
             }
             let out = [];
             // Verifico que existe un turno disponible o ya reasignado para el mismo tipo de prestación del turno
-            data1.forEach(function (a) {
-                a.bloques.forEach(function (b) {
-                    b.turnos.forEach(function (t) {
+            data1.forEach(function (a, indiceA) {
+                a.bloques.forEach(function (b, indiceB) {
+                    b.turnos.forEach(function (t, indiceT) {
                         let horaIni = moment(t.horaInicio).format('HH:mm');
                         if (
                             b.tipoPrestaciones.findIndex(x => String(x._id) === String(turno.tipoPrestacion._id)) >= 0 // mismo tipo de prestacion
@@ -71,6 +72,7 @@ router.get('/agenda/candidatas', function (req, res, next) {
                                 && req.query.horario ? horaIni.toString() === moment(turno.horaInicio).format('HH:mm') : true // si filtro por horario verifico que sea el mismo
                                     && req.query.duracion ? b.duracionTurno === bloque.duracionTurno : true  // si filtro por duracion verifico que sea la mismo
                         ) {
+
                             if (out.indexOf(a) < 0) {
                                 out.push(a);
                             }
@@ -78,6 +80,10 @@ router.get('/agenda/candidatas', function (req, res, next) {
                     });
                 });
             });
+            let sortCandidatas = function (a, b) {
+                return a.horaInicio - b.horaInicio;
+            };
+            out.sort(sortCandidatas);
             res.json(out);
 
         });
@@ -294,19 +300,30 @@ router.patch('/agenda/:id*?', function (req, res, next) {
         if (err) {
             return next(err);
         }
-
         // Loopear los turnos, si viene vacío, es porque viene un id solo
         let turnos = req.body.turnos || [''];
 
         for (let y = 0; y < turnos.length; y++) {
+            let turno;
             switch (req.body.op) {
                 case 'darAsistencia': agendaCtrl.darAsistencia(req, data, turnos[y]._id);
                     break;
                 case 'sacarAsistencia': agendaCtrl.sacarAsistencia(req, data, turnos[y]._id);
                     break;
-                case 'liberarTurno': agendaCtrl.liberarTurno(req, data, turnos[y]._id);
+                case 'liberarTurno':
+                    // console.log(turno);
+                    turno = agendaCtrl.getTurno(req, data, turnos[y]._id);
+                    if (turno.paciente.id) {
+                        LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, agendaCtrl.getBloque(data, turno), data._id);
+                    }
+                    agendaCtrl.liberarTurno(req, data, turno);
                     break;
-                case 'suspenderTurno': agendaCtrl.suspenderTurno(req, data, turnos[y]._id);
+                case 'suspenderTurno':
+                    turno = agendaCtrl.getTurno(req, data, turnos[y]._id);
+                    if (turno.paciente.id) {
+                        LoggerPaciente.logTurno(req, 'turnos:suspender', turno.paciente, turno, agendaCtrl.getBloque(data, turno), data._id);
+                    }
+                    agendaCtrl.suspenderTurno(req, data, turno);
                     break;
                 case 'guardarNotaTurno': agendaCtrl.guardarNotaTurno(req, data, turnos[y]._id);
                     break;
@@ -350,14 +367,26 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 }
 
             });
+
+            if (req.body.op == 'suspendida') {
+                (data as any).bloques.forEach(bloque => {
+
+                    bloque.turnos.forEach(turno => {
+
+                        if (turno.paciente.id) {
+
+                            LoggerPaciente.logTurno(req, 'turnos:suspender', turno.paciente, turno, bloque._id, data._id);
+
+                        }
+
+                    });
+
+                });
+            }
         }
         return res.json(data);
     });
 
 });
-
-// TODO: Ver si se puede hacer una clase para colocar las siguiente funciones?
-
-
 
 export = router;

@@ -17,15 +17,15 @@ export function sacarAsistencia(req, data, tid = null) {
 }
 
 // Turno
-export function liberarTurno(req, data, tid = null) {
-    let turno = getTurno(req, data, tid);
+export function liberarTurno(req, data, turno) {
+    // let turno = getTurno(req, data, tid);
     turno.estado = 'disponible';
     // delete turno.paciente;
     turno.paciente = null;
     turno.tipoPrestacion = null;
     turno.nota = null;
 
-    let turnoDoble = getTurnoSiguiente(req, data, tid);
+    let turnoDoble = getTurnoSiguiente(req, data, turno._id);
     if (turnoDoble) {
         turnoDoble.estado = 'disponible';
     }
@@ -33,14 +33,13 @@ export function liberarTurno(req, data, tid = null) {
 
 
 // Turno
-export function suspenderTurno(req, data, tid = null) {
-    let turno = getTurno(req, data, tid);
+export function suspenderTurno(req, data, turno) {
     turno.estado = 'suspendido';
     delete turno.paciente;
     delete turno.tipoPrestacion;
     turno.motivoSuspension = req.body.motivoSuspension;
     // Se verifica si tiene un turno doble asociado
-    let turnoDoble = getTurnoSiguiente(req, data, tid);
+    let turnoDoble = getTurnoSiguiente(req, data, turno._id);
     if (turnoDoble) {
         turnoDoble.estado = 'suspendido';
         turnoDoble.motivoSuspension = req.body.motivoSuspension;
@@ -196,7 +195,7 @@ export function getPosition(req, agenda, idTurno = null) {
 
 
 export function getTurnoSiguiente(req, agenda, idTurno = null) {
-    let position = getPosition(req, agenda, idTurno = null);
+    let position = getPosition(req, agenda, idTurno);
     let index = position.indexTurno;
     let turnos = [];
     if (position.indexBloque > -1) {
@@ -306,4 +305,17 @@ export function crearPrestacionVacia(turno, req) {
         Auth.audit(prestacion, req);
         prestacion.save();
     });
+}
+
+export function getBloque(agenda, turno) {
+    for (let i = 0; i < agenda.bloques.length; i++) {
+        let bloque = agenda.bloques[i];
+        for (let j = 0; j < bloque.turnos.length; j++) {
+            let turnoTemp = bloque.turnos[j];
+            if (turnoTemp._id == turno._id) {
+                return bloque;
+            }
+        }
+    }
+    return null;
 }

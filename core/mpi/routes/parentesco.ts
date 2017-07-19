@@ -1,5 +1,6 @@
 import * as express from 'express';
-import * as parenteso from '../schemas/parentesco';
+import * as parentesco from '../schemas/parentesco';
+import { Auth } from '../../../auth/auth.class';
 
 let router = express.Router();
 
@@ -58,9 +59,11 @@ let router = express.Router();
  *           $ref: '#/definitions/parentesco'
  */
 router.get('/parentescos/:id*?', function (req, res, next) {
-
+ if (!Auth.check(req, 'mpi:parentesco:get')) {
+        return next(403);
+    }
     if (req.params.id) {
-        parenteso.modelParentesco.findById(req.params.id, function (err, data) {
+        parentesco.modelParentesco.findById(req.params.id, function (err, data) {
             if (err) {
                 next(err);
             };
@@ -70,7 +73,7 @@ router.get('/parentescos/:id*?', function (req, res, next) {
     } else {
         let query;
 
-        query = parenteso.modelParentesco.find({});
+        query = parentesco.modelParentesco.find({});
         if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }

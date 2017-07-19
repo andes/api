@@ -3,7 +3,6 @@ import * as mongoose from 'mongoose';
 import * as config from '../../../config';
 import * as configPrivate from '../../../config.private';
 import * as moment from 'moment';
-import * as https from 'https';
 import { matching } from '@andes/match';
 import { Client } from 'elasticsearch';
 import { Auth } from './../../../auth/auth.class';
@@ -15,72 +14,7 @@ import { pacienteMpi } from '../schemas/paciente';
 import { paciente } from '../schemas/paciente';
 import { log } from '../../log/schemas/log';
 
-router.get('/pacientes/georef/:id', function (req, res, next) {
-    /* Este método es público no requiere auth check */
 
-    pacienteMpi.findById(req.params.id, function (err, data) {
-        if (err) {
-            console.log('ERROR GET GEOREF:  ', err);
-            return next(err);
-        }
-        console.log('DATA:  ', data);
-        let paciente;
-        paciente = data;
-        if (paciente && paciente.direccion[0].valor && paciente.direccion[0].ubicacion.localidad && paciente.direccion[0].ubicacion.provincia) {
-
-            let dir = paciente.direccion[0].valor;
-            let localidad = paciente.direccion[0].ubicacion.localidad.nombre;
-            let provincia = paciente.direccion[0].ubicacion.provincia.nombre;
-            // let pais = paciente.direccion[0].ubicacion.pais;
-            let pathGoogleApi = '';
-            let jsonGoogle = '';
-            pathGoogleApi = '/maps/api/geocode/json?address=' + dir + ',+' + localidad + ',+' + provincia + ',+' + 'AR' + '&key=' + configPrivate.geoKey;
-
-            pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
-            pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
-            pathGoogleApi = pathGoogleApi.replace(/é/gi, 'e');
-            pathGoogleApi = pathGoogleApi.replace(/í/gi, 'i');
-            pathGoogleApi = pathGoogleApi.replace(/ó/gi, 'o');
-            pathGoogleApi = pathGoogleApi.replace(/ú/gi, 'u');
-            pathGoogleApi = pathGoogleApi.replace(/ü/gi, 'u');
-            pathGoogleApi = pathGoogleApi.replace(/ñ/gi, 'n');
-
-            console.log('PATH CONSULTA GOOGLE API:   ', pathGoogleApi);
-
-            let optionsgetmsg = {
-                host: 'maps.googleapis.com',
-                port: 443,
-                path: pathGoogleApi,
-                method: 'GET',
-                rejectUnauthorized: false
-            };
-
-
-            let reqGet = https.request(optionsgetmsg, function (res2) {
-                res2.on('data', function (d, error) {
-                    jsonGoogle = jsonGoogle + d.toString();
-                    console.log('RESPONSE: ', jsonGoogle);
-                });
-
-                res2.on('end', function () {
-                    let salida = JSON.parse(jsonGoogle);
-                    if (salida.status === 'OK') {
-                        res.json(salida.results[0].geometry.location);
-                    } else {
-                        res.json('');
-                    }
-                });
-            });
-            req.on('error', (e) => {
-                console.error(e);
-                return next(e);
-            });
-            reqGet.end();
-        } else {
-            return next('Datos incorrectos');
-        }
-    });
-});
 
 /**
  * @swagger
@@ -88,6 +22,8 @@ router.get('/pacientes/georef/:id', function (req, res, next) {
  *   paciente:
  *     properties:
  *       documento:
+ *          type: string
+ *       cuil:
  *          type: string
  *       activo:
  *          type: boolean
@@ -253,7 +189,7 @@ router.get('/pacientes/dashboard/', function (req, res, next) {
     /**
      * Se requiere autorización para acceder al dashboard de MPI
      */
-    if (!Auth.check(req, 'mpi:dashboard:*')) {
+    if (!Auth.check(req, 'mpi:paciente:dashboard')) {
         return next(403);
     }
     let result = {
@@ -323,8 +259,6 @@ router.get('/pacientes/dashboard/', function (req, res, next) {
     );
 
 });
-
-
 
 /**
  * @swagger
@@ -409,7 +343,8 @@ router.get('/pacientes/dashboard/', function (req, res, next) {
 
 // Simple mongodb query by ObjectId --> better performance
 router.get('/pacientes/:id', function (req, res, next) {
-    if (!Auth.check(req, 'mpi:get:byId')) {
+    // busca en pacienteAndes y en pacienteMpi
+    if (!Auth.check(req, 'mpi:paciente:getbyId')) {
         return next(403);
     }
     buscarPaciente(req.params.id).then((resultado: any) => {
@@ -492,7 +427,7 @@ router.get('/pacientes/:id', function (req, res, next) {
  */
 // Search using elastic search
 router.get('/pacientes', function (req, res, next) {
-    if (!Auth.check(req, 'mpi:get:simplequery,multimatch,suggest')) {
+    if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
         return next(403);
     }
     let connElastic = new Client({
@@ -574,7 +509,7 @@ router.get('/pacientes', function (req, res, next) {
                 let listaPacientesMin = [];
                 // let devolverPorcentaje = req.query.percentage;
 
-                let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
+                ((searchResult.hits || {}).hits || []) // extract results from elastic response
                     .filter(function (hit) {
                         let paciente = hit._source;
                         let pacDto = {
@@ -688,7 +623,7 @@ router.get('/pacientes', function (req, res, next) {
  *         description: Un código de error con un array de mensajes de error
  */
 router.post('/pacientes/mpi', function (req, res, next) {
-    if (!Auth.check(req, 'mpi:post:mpi')) {
+    if (!Auth.check(req, 'mpi:paciente:postMpi')) {
         return next(403);
     }
 
@@ -700,7 +635,7 @@ router.post('/pacientes/mpi', function (req, res, next) {
     // Se genera la clave de blocking
     let claves = match.crearClavesBlocking(newPatientMpi);
     newPatientMpi['claveBlocking'] = claves;
-
+    
     Auth.audit(newPatientMpi, req);
 
     newPatientMpi.save((err) => {
@@ -717,7 +652,6 @@ router.post('/pacientes/mpi', function (req, res, next) {
             body: nuevoPac
         }, function (error, response) {
             if (error) {
-                // Logger.log(req, 'pacientes', 'elasticError', error);
                 next(error);
             }
             Logger.log(req, 'mpi', 'elasticInsert', {
@@ -729,7 +663,7 @@ router.post('/pacientes/mpi', function (req, res, next) {
 });
 
 router.put('/pacientes/mpi/:id', function (req, res, next) {
-    if (!Auth.check(req, 'mpi:put:mpi:byId')) {
+    if (!Auth.check(req, 'mpi:paciente:putMpi')) {
         return next(403);
     }
     let ObjectId = mongoose.Types.ObjectId;
@@ -744,7 +678,6 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
 
     pacienteMpi.findById(query, function (err, patientFound: any) {
         if (err) {
-            console.log('Error del findByID: ', err);
             return next(404);
         }
 
@@ -783,7 +716,6 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
             Auth.audit(patientFound, req);
             patientFound.save(function (err2) {
                 if (err2) {
-                    // console.log('Error Save:               ', err2);
                     return next(err2);
                 }
 
@@ -830,7 +762,6 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
                     }
                 }, function (error) {
                     return next(error);
-                    // console.trace(error.message);
                 });
             });
         } else {
@@ -896,7 +827,7 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
  *           $ref: '#/definitions/paciente'
  */
 router.delete('/pacientes/mpi/:id', function (req, res, next) {
-    if (!Auth.check(req, 'mpi:delete:mpi:byId')) {
+    if (!Auth.check(req, 'mpi:paciente:deleteMpi')) {
         return next(403);
     }
 
@@ -957,7 +888,7 @@ router.delete('/pacientes/mpi/:id', function (req, res, next) {
  *         description: Un código de error con un array de mensajes de error
  */
 router.post('/pacientes', function (req, res, next) {
-    if (!Auth.check(req, 'mpi:post:andes')) {
+    if (!Auth.check(req, 'mpi:paciente:postAndes')) {
         return next(403);
     }
     let match = new matching();
@@ -971,6 +902,8 @@ router.post('/pacientes', function (req, res, next) {
     newPatient['claveBlocking'] = claves;
     newPatient['apellido'] = newPatient['apellido'].toUpperCase();
     newPatient['nombre'] = newPatient['nombre'].toUpperCase();
+    // Habilitamos el paciente como activo cuando es nuevo
+    newPatient['activo'] = true;
 
     Auth.audit(newPatient, req);
     newPatient.save((err) => {
@@ -1029,7 +962,7 @@ router.post('/pacientes', function (req, res, next) {
 
 
 router.put('/pacientes/:id', function (req, res, next) {
-    if (!Auth.check(req, 'mpi:put:andes:byId')) {
+    if (!Auth.check(req, 'mpi:paciente:putAndes')) {
         return next(403);
     }
     let ObjectId = mongoose.Types.ObjectId;
@@ -1044,7 +977,6 @@ router.put('/pacientes/:id', function (req, res, next) {
 
     paciente.findById(query, function (err, patientFound: any) {
         if (err) {
-            console.log('Error del findByID: ', err);
             return next(404);
         }
         //  console.log("REQ BODY ---------------------- ",req.body);
@@ -1084,8 +1016,6 @@ router.put('/pacientes/:id', function (req, res, next) {
             patientFound.scan = req.body.scan;
             patientFound.reportarError = req.body.reportarError;
             patientFound.notas = req.body.notas;
-
-            //   console.log("PATIENT FOUND ------------------",patientFound)
             // Habilita auditoria y guarda
             Auth.audit(patientFound, req);
             patientFound.save(function (err2) {
@@ -1166,7 +1096,7 @@ router.put('/pacientes/:id', function (req, res, next) {
                 }).then(function (body) {
                     let hits = body.hits.hits;
                     if (hits.length > 0) {
-                        console.log('hay q actualizar el docmento en elastic');
+                        // console.log('hay q actualizar el docmento en elastic');
                         connElastic.update({
                             index: 'andes',
                             type: 'paciente',
@@ -1193,7 +1123,7 @@ router.put('/pacientes/:id', function (req, res, next) {
                         }, function (error, response) {
                             console.log('Error create Elastic', response);
                             if (error) {
-                                console.log(error);
+                                // console.log(error);
                                 Logger.log(req, 'mpi', 'insert', {
                                     error: error,
                                     data: newPatient
@@ -1204,7 +1134,7 @@ router.put('/pacientes/:id', function (req, res, next) {
                         });
                     }
                 }, function (error) {
-                    console.log(error.message);
+                    // console.log(error.message);
                 });
             });
         }
@@ -1239,7 +1169,7 @@ router.put('/pacientes/:id', function (req, res, next) {
  *           $ref: '#/definitions/paciente'
  */
 router.delete('/pacientes/:id', function (req, res, next) {
-    if (!Auth.check(req, 'mpi:delete:andes:byId')) {
+    if (!Auth.check(req, 'mpi:paciente:deleteAndes')) {
         return next(403);
     }
 
@@ -1256,12 +1186,7 @@ router.delete('/pacientes/:id', function (req, res, next) {
             console.log('No encontro el paciente a borrar:   ', err);
             return next(err);
         }
-        // (req as any).user = 'prueba';
-        // (req as any).organizacion = 'prueba';
-        console.log('antes del audit');
-        console.log('el paciente encontrado es:   ', patientFound);
         Auth.audit(patientFound, req);
-        console.log('despues del audit');
         patientFound.remove();
         connElastic.delete({
             index: 'andes',
@@ -1272,7 +1197,7 @@ router.delete('/pacientes/:id', function (req, res, next) {
             if (error) {
                 console.log('Error en elastic Search delete: ', error);
             }
-            console.log('borro ok va a loguear');
+            
             // Logger.log(req, 'pacientes', 'delete', patientFound);
             res.json(patientFound);
         });
@@ -1402,6 +1327,7 @@ function updateRelacion(req, data) {
         }
     }
 }
+
 function deleteRelacion(req, data) {
     if (data && data.relaciones) {
         data.relaciones.find(function (value, index, array) {
@@ -1415,7 +1341,7 @@ function deleteRelacion(req, data) {
 }
 
 router.patch('/pacientes/:id', function (req, res, next) {
-    if (!Auth.check(req, 'mpi:patch:andes:byId')) {
+    if (!Auth.check(req, 'mpi:paciente:patchAndes')) {
         return next(403);
     }
     buscarPaciente(req.params.id).then((resultado: any) => {
@@ -1464,5 +1390,73 @@ router.patch('/pacientes/:id', function (req, res, next) {
         return next(err);
     });
 });
+
+// Comentado hasta incorporar esta funcionalidad
+//
+// router.get('/pacientes/georef/:id', function (req, res, next) {
+//     /* Este método es público no requiere auth check */
+//     pacienteMpi.findById(req.params.id, function (err, data) {
+//         if (err) {
+//             console.log('ERROR GET GEOREF:  ', err);
+//             return next(err);
+//         }
+//         console.log('DATA:  ', data);
+//         let paciente;
+//         paciente = data;
+//         if (paciente && paciente.direccion[0].valor && paciente.direccion[0].ubicacion.localidad && paciente.direccion[0].ubicacion.provincia) {
+
+//             let dir = paciente.direccion[0].valor;
+//             let localidad = paciente.direccion[0].ubicacion.localidad.nombre;
+//             let provincia = paciente.direccion[0].ubicacion.provincia.nombre;
+//             // let pais = paciente.direccion[0].ubicacion.pais;
+//             let pathGoogleApi = '';
+//             let jsonGoogle = '';
+//             pathGoogleApi = '/maps/api/geocode/json?address=' + dir + ',+' + localidad + ',+' + provincia + ',+' + 'AR' + '&key=' + configPrivate.geoKey;
+
+//             pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
+//             pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
+//             pathGoogleApi = pathGoogleApi.replace(/é/gi, 'e');
+//             pathGoogleApi = pathGoogleApi.replace(/í/gi, 'i');
+//             pathGoogleApi = pathGoogleApi.replace(/ó/gi, 'o');
+//             pathGoogleApi = pathGoogleApi.replace(/ú/gi, 'u');
+//             pathGoogleApi = pathGoogleApi.replace(/ü/gi, 'u');
+//             pathGoogleApi = pathGoogleApi.replace(/ñ/gi, 'n');
+
+//             console.log('PATH CONSULTA GOOGLE API:   ', pathGoogleApi);
+
+//             let optionsgetmsg = {
+//                 host: 'maps.googleapis.com',
+//                 port: 443,
+//                 path: pathGoogleApi,
+//                 method: 'GET',
+//                 rejectUnauthorized: false
+//             };
+
+
+//             let reqGet = https.request(optionsgetmsg, function (res2) {
+//                 res2.on('data', function (d, error) {
+//                     jsonGoogle = jsonGoogle + d.toString();
+//                     console.log('RESPONSE: ', jsonGoogle);
+//                 });
+
+//                 res2.on('end', function () {
+//                     let salida = JSON.parse(jsonGoogle);
+//                     if (salida.status === 'OK') {
+//                         res.json(salida.results[0].geometry.location);
+//                     } else {
+//                         res.json('');
+//                     }
+//                 });
+//             });
+//             req.on('error', (e) => {
+//                 console.error(e);
+//                 return next(e);
+//             });
+//             reqGet.end();
+//         } else {
+//             return next('Datos incorrectos');
+//         }
+//     });
+// });
 
 export = router;
