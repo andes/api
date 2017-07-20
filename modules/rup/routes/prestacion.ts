@@ -6,7 +6,7 @@ import { model as prestacion } from '../schemas/prestacion';
 
 let router = express.Router();
 
-router.get('/prestaciones/:id*?', function (req, res, next) {
+router.get('/prestaciones/:id*?', function (req, res, next) {   
     if (req.params.id) {
         let query = prestacion.findById(req.params.id);
         query.exec(function (err, data) {
@@ -123,11 +123,31 @@ router.patch('/prestaciones/:id', function (req, res, next) {
             */
             case 'estadoPush':
                 if (req.body.estado) {
+                    if (data.estados[data.estados.length - 1].tipo === 'validada') {
+                        next('Prestación validada, no puede volver a validar.');
+
+                        return false;
+                    }
                     // modificacion = { '$push': { 'estado': { tipo: req.body.estado } } }
 
                     // modificacion = { '$push': { 'estados': req.body.estado } }
                     data['estados'].push(req.body.estado);
                 }
+            break;
+            case 'romperValidacion':
+                if (data.estados[data.estados.length - 1].tipo !== 'validada') {
+                    next('Para poder romper la validación, primero debe validar la prestación.');
+                    return false;
+                }
+                
+                if (req.user.documento !== data.estados[data.estados.length - 1].createdBy ) {
+                    next('Solo puede romper la validación el usuario que haya creado.');
+                    // mandamos al logger o email de operacion maliciosa ?
+                    return false;
+                }
+                
+
+                //data['estados'].push(req.body.estado);
             break;
             case 'registros':
                 if (req.body.registros) {
