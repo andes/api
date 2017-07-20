@@ -137,8 +137,9 @@ router.get('/agenda/:id?', function (req, res, next) {
             query.where('organizacion._id').equals(req.query.organizacion);
         }
 
-        if (req.query.nominalizada) {
-            query.where('nominalizada').equals(req.query.nominalizada);
+        // Trae las Agendas NO nominalizadas
+        if (req.query.nominalizada && req.query.nominalizada === false) {
+            query.where('nominalizada').equals(false);
         }
 
         // Filtra por el array de tipoPrestacion enviado como parametro
