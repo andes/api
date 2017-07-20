@@ -130,15 +130,14 @@ router.patch('/prestaciones/:id', function (req, res, next) {
                     next('Para poder romper la validación, primero debe validar la prestación.');
                     return false;
                 }
-                
-                if (req.user.documento !== data.estados[data.estados.length - 1].createdBy ) {
+
+                if (req.user.usuario.username !== data.estados[data.estados.length - 1].createdBy.documento ) {
                     next('Solo puede romper la validación el usuario que haya creado.');
                     // mandamos al logger o email de operacion maliciosa ?
                     return false;
                 }
                 
-
-                //data['estados'].push(req.body.estado);
+                data['estados'].push(req.body.estado);
             break;
             case 'registros':
                 if (req.body.registros) {
