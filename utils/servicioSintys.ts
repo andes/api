@@ -170,7 +170,7 @@ export function matchSintys(paciente) {
     // Se buscan los datos en sintys y se obtiene el paciente
     return new Promise((resolve, reject) => {
 
-        if (paciente.documento) {
+        if (paciente.documento && paciente.entidadesValidadoras && paciente.entidadesValidadoras.indexOf('sintys') < 0) {
             if (paciente.documento.length >= 7) {
                 if (paciente.nombre && paciente.apellido) {
                     paciente.apellido = paciente.apellido + ' ' + paciente.nombre;

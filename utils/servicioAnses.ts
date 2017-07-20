@@ -15,7 +15,7 @@ export function getServicioAnses(paciente) {
     let resultado: any;
     let fecha: any;
     return new Promise((resolve, reject) => {
-        if (paciente && paciente.documento) {
+        if (paciente && paciente.documento && paciente.entidadesValidadoras && paciente.entidadesValidadoras.indexOf('anses') < 0) {
             soap.createClient(url, function (err, client) {
                 if (err) {
                     console.log('Error en creacion cliente soap anses', err);
