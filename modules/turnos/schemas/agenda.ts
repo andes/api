@@ -45,7 +45,11 @@ let schema = new mongoose.Schema({
     },
     bloques: [bloqueSchema],
     nota: String,
-    sobreturnos: [turnoSchema]
+    sobreturnos: [turnoSchema],
+    nominalizada: {
+        type: Boolean,
+        default: true
+    }
 
 });
 

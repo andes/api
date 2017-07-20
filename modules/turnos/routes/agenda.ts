@@ -42,6 +42,7 @@ router.get('/agenda/candidatas', function (req, res, next) {
 
         let match = {
             'horaInicio': { '$gte': horaAgendaOrig },
+            'nominalizada': true,
             '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
             'tipoPrestaciones._id': mongoose.Types.ObjectId(turno.tipoPrestacion._id), // Que tengan incluída la prestación del turno
             '_id': { '$ne': mongoose.Types.ObjectId(req.query.idAgenda) }, // Que no sea la agenda original
@@ -134,6 +135,10 @@ router.get('/agenda/:id?', function (req, res, next) {
 
         if (req.query.organizacion) {
             query.where('organizacion._id').equals(req.query.organizacion);
+        }
+
+        if (req.query.nominalizada) {
+            query.where('nominalizada').equals(req.query.nominalizada);
         }
 
         // Filtra por el array de tipoPrestacion enviado como parametro
