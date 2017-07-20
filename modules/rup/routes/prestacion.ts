@@ -1,3 +1,4 @@
+import { paciente } from './../../../core/mpi/schemas/paciente';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import { Auth } from './../../../auth/auth.class';
@@ -104,6 +105,14 @@ router.patch('/prestaciones/:id', function (req, res, next) {
 
         let modificacion = {};
         switch (req.body.op) {
+
+             case 'paciente':
+                if (req.body.paciente) {
+                    data.paciente = req.body.paciente;
+                    // modificacion = { '$set': { 'paciente': req.body.paciente } }
+                    // data.set('estado', req.body.estado);
+                }
+                break;
             /*
             case 'estado':
                 if (req.body.estado) {
