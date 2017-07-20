@@ -1,5 +1,6 @@
 import { AppToken } from './schemas/app-token.interface';
 import { UserToken } from './schemas/user-token.interface';
+import { PacienteToken } from './schemas/paciente-token.interface';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import * as passport from 'passport';
@@ -191,4 +192,35 @@ export class Auth {
         };
         return jwt.sign(token, configPrivate.auth.jwtKey);
     }
+
+    /**
+     * Genera un token firmado para pacientes con la App Mobile
+     *
+     * @static
+     * @param {string} nombre Nombre del usuario
+     * @param {string} apellido Apellido del usuario
+     * @param {*} organizacion Organización (corresponde a schemas/organizacion)
+     * @param {*} permisos Permisos (corresponde a schemas/permisos)
+     * @param {*} profesional Permisos (corresponde a core/schemas/profesional)
+     * @returns {*} JWT
+     *
+     * @memberOf Auth
+     */
+    static generatePacienteToken(id: string, nombre: string, email: string, pacientes: any, permisos: any): any {
+        // Crea el token con los datos de sesión
+        let token: PacienteToken = {
+            id: mongoose.Types.ObjectId(),
+            usuario: {
+                id,
+                nombre,
+                email,
+            },
+            permisos: permisos,
+            pacientes: pacientes,
+            organizacion: null
+        };
+        return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: 60 * 60 * 24 * 10 /* 10 días */ });
+    }
+
+
 }

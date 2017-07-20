@@ -16,11 +16,23 @@ import { paciente, pacienteMpi } from '../../../core/mpi/schemas/paciente';
 
 export const expirationOffset = 1000 * 60 * 60 * 24;
 
+/*
 export function generateToken(user) {
     return jwt.sign(user, authApp.secret, {
         expiresIn: 60 * 60 * 24 * 10
     });
 }
+
+export function setUserInfo(request) {
+    return {
+        _id: request._id,
+        email: request.email,
+        pacientes: request.pacientes,
+        permisos: request.permisos
+    };
+}
+*/
+
 
 export function verificarCodigo(codigoIngresado, codigo) {
     if (codigoIngresado === codigo)
@@ -64,17 +76,6 @@ export function generarCodigoVerificacion() {
     return codigo;
 }
 
-export function setUserInfo(request) {
-    return {
-        _id: request._id,
-        email: request.email,
-        pacientes: request.pacientes,
-        permisos: request.permisos
-    };
-}
-
-
-
 export function buscarPaciente(id) {
     return new Promise((resolve, reject) => {
         paciente.findById(id, function (err, data) {
@@ -95,7 +96,6 @@ export function buscarPaciente(id) {
         });
     });
 }
-
 
 function searchContacto(paciente, key) {
     for (let i = 0; i < paciente.contacto.length; i++) {

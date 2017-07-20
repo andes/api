@@ -4,6 +4,7 @@ import { paciente, pacienteMpi } from '../../../core/mpi/schemas/paciente';
 import * as express from 'express';
 import * as authController from '../controller/AuthController';
 import * as mongoose from 'mongoose';
+import { Auth } from '../../../auth/auth.class';
 
 let router = express.Router();
 
@@ -27,26 +28,27 @@ router.post('/login', function (req, res, next) {
         return res.status(422).send({ error: 'Debe ingresar una clave' });
     }
 
-    pacienteApp.findOne({ email }, (err, existingUser: any) => {
+    pacienteApp.findOne({ email }, (err, user: any) => {
 
-        if (!existingUser) {
+        if (!user) {
             return res.status(422).send({ error: 'Cuenta inexistente' });
         }
 
-        if (!existingUser.activacionApp) {
+        if (!user.activacionApp) {
             res.status(422).send({ message: 'cuenta no verificada' });
             return;
         }
 
-        existingUser.comparePassword(password, (err, isMatch) => {
+        user.comparePassword(password, (err, isMatch) => {
             if (err) {
                 return next(err);
             }
             if (isMatch) {
-                var userInfo = authController.setUserInfo(existingUser);
+                // var userInfo = authController.setUserInfo(existingUser);
+                let token = Auth.generatePacienteToken(String(user.id), user.nombre + ' ' + user.apellido, user.email, user.pacientes, user.permisos);
                 res.status(200).json({
-                    token: 'JWT ' + authController.generateToken(userInfo),
-                    user: existingUser
+                    token: 'JWT ' + token,
+                    user: user
                 });
                 return;
             } else {
@@ -211,9 +213,9 @@ router.post('/verificar-codigo', function (req, res, next) {
                         return next(err);
                     }
 
-                    var userInfo = authController.setUserInfo(user);
+                    let token = Auth.generatePacienteToken(String(user.id), user.nombre + ' ' + user.apellido, user.email, user.pacientes, user.permisos);
                     res.status(200).json({
-                        token: 'JWT ' + authController.generateToken(userInfo),
+                        token: 'JWT ' + token,
                         user: user
                     });
                 });

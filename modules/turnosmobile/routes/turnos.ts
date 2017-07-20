@@ -290,7 +290,7 @@ router.post('/turnos/confirmar', function (req: any, res, next) {
  */
 
 router.post('/create/:id', function (req: any, res, next) {
-    if (!req.user.usuario) {
+    if (!req.user.profesional) {
         return res.status(401).send('unauthorized');
     }
     let pacienteId = req.params.id;
@@ -314,7 +314,7 @@ router.post('/create/:id', function (req: any, res, next) {
  */
 
 router.get('/check/:id', function (req: any, res, next) {
-    if (!req.user.usuario) {
+    if (!req.user.profesional) {
         return res.status(401).send('unauthorized');
     }
 
