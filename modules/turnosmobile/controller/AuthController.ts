@@ -18,7 +18,7 @@ export const expirationOffset = 1000 * 60 * 60 * 24;
 
 export function generateToken(user) {
     return jwt.sign(user, authApp.secret, {
-        expiresIn: 10080
+        expiresIn: 60 * 60 * 24 * 10
     });
 }
 
