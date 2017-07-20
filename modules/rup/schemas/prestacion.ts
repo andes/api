@@ -7,16 +7,14 @@ import { auditoriaPrestacionPacienteSchema } from '../../auditorias/schemas/audi
 export let schema = new mongoose.Schema({
     // Datos principales del paciente
     paciente: {
-        type: {
-            id: mongoose.Schema.Types.ObjectId,
-            nombre: String,
-            apellido: String,
-            documento: String,
-            telefono: String,
-            sexo: String,
-            fechaNacimiento: Date
-        },
-        required: true
+        // requirido, validar en middleware
+        id: mongoose.Schema.Types.ObjectId,
+        nombre: String,
+        apellido: String,
+        documento: String,
+        telefono: String,
+        sexo: String,
+        fechaNacimiento: Date
     },
 
     // Datos de la solicitud
@@ -31,20 +29,17 @@ export let schema = new mongoose.Schema({
         },
         // Profesional que solicita la prestacion
         profesional: {
-            type: {
-                id: mongoose.Schema.Types.ObjectId,
-                nombre: String,
-                apellido: String,
-                documento: String
-            }
+            // requerido, validar en middleware
+            id: mongoose.Schema.Types.ObjectId,
+            nombre: String,
+            apellido: String,
+            documento: String            
         },
         // Organizacion desde la que se solicita la prestacion
         organizacion: {
-            type: {
-                id: mongoose.Schema.Types.ObjectId,
-                nombre: String
-            },
-            required: true
+            // requirido, validar en middleware
+            id: mongoose.Schema.Types.ObjectId,
+            nombre: String
         },
         // ID de la prestación desde la que se generó esta solicitud
         prestacionOrigen: {
@@ -65,23 +60,42 @@ export let schema = new mongoose.Schema({
         // Nota: Este dato podría obtener del array de estados, pero está aquí para facilidad de consulta
         fecha: {
             type: Date,
-            //required: true
+            // requirido, validar en middleware
         },
         // ID del turno relacionado con esta prestación
         turno: mongoose.Schema.Types.ObjectId,
         // Lugar donde se realiza
         organizacion: {
-            type: {
-                id: mongoose.Schema.Types.ObjectId,
-                nombre: String
-            },
-            //required: true
+            // requirido, validar en middleware
+            id: mongoose.Schema.Types.ObjectId,
+            nombre: String
         },
         // Registros de la ejecución
         registros: [registro.schema],
     },
     // Historia de estado de la prestación
     estados: [estado.schema]
+});
+
+schema.pre('save', function(next){
+    let prestacion = this
+
+    if (!prestacion.paciente.id) {
+        var err = new Error('Debe seleccionar el paciente');
+        next(err);
+    }
+
+    if (!prestacion.solicitud.organizacion.id) {
+        var err = new Error('Debe seleccionar la organizacion desde la cual se solicita');
+        next(err);
+    }
+
+    if (!prestacion.solicitud.profesional.id) {
+        var err = new Error('Debe seleccionar el profesional que solicita');
+        next(err);
+    }
+
+    next();
 });
 
 // Habilitar plugin de auditoría
