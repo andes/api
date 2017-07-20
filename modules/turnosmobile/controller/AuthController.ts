@@ -13,7 +13,6 @@ import { matching } from '@andes/match';
 import * as constantes from '../../../core/tm/schemas/constantes';
 import { paciente, pacienteMpi } from '../../../core/mpi/schemas/paciente';
 
-
 export const expirationOffset = 1000 * 60 * 60 * 24;
 
 export function generateToken(user) {

@@ -103,6 +103,9 @@ router.post('/registro', function (req, res, next) {
 
         var user = new pacienteApp(dataPacienteApp);
 
+        //Sacara de acaaaaaaaa
+authController.enviarCodigoVerificacion(user);
+
         // enviarCodigoVerificacion(user);
         user.save(function (err, user: any) {
 
