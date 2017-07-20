@@ -5,33 +5,27 @@ import { Logger } from '../../../utils/logService';
 
 let router = express.Router();
 
-router.get('/sintys', function (req, res, next) {
-   if (!Auth.check(req, 'fa:get:sintys')) {
+router.get('/sintys', async function (req, res, next) {
+    if (!Auth.check(req, 'fa:get:sintys')) {
         return next(403);
     }
     if (req.query) {
         let paciente = req.query;
         try {
-            matchSintys(paciente).then(pacienteSisa => {
-                  Logger.log(req, 'fa_sintys', 'validar', {
-                     resultado: pacienteSisa
-                });
-                if (pacienteSisa) {
-                     res.json(pacienteSisa);
-                }
+            let pacienteSintys = await matchSintys(paciente);
+             res.json(pacienteSintys);
+            Logger.log(req, 'fa_sintys', 'validar', {
+                resultado: pacienteSintys
             });
         } catch (err) {
-             Logger.log(req, 'fa_sintys', 'error', {
-                    error: err
-                });
+            Logger.log(req, 'fa_sintys', 'error', {
+                error: err
+            });
             console.log('Error catch matchSisa:', err);
             return next(err);
         };
-    } else {
-         return next(500);
     }
 });
-
 
 module.exports = router;
 

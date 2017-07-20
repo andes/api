@@ -5,26 +5,22 @@ import { Logger } from '../../../utils/logService';
 
 let router = express.Router();
 
-router.get('/sisa', function (req, res, next) {
+router.get('/sisa', async function (req, res, next) {
     if (!Auth.check(req, 'fa:get:sisa')) {
         return next(403);
     }
     if (req.query) {
         let paciente = req.query;
         try {
-            matchSisa(paciente).then(pacienteSisa => {
-                Logger.log(req, 'fa_sisa', 'validar', {
-                    resultado: pacienteSisa
-                });
-                if (pacienteSisa) {
-                    // console.log('RES ----', res);
-                    res.json(pacienteSisa);
-                }
+            let pacienteSisa = await matchSisa(paciente);
+            res.json(pacienteSisa);
+            Logger.log(req, 'fa_sisa', 'validar', {
+                resultado: pacienteSisa
             });
         } catch (err) {
-             Logger.log(req, 'fa_sisa', 'error', {
-                    error: err
-                });
+            Logger.log(req, 'fa_sisa', 'error', {
+                error: err
+            });
             console.log('Error catch matchSisa:', err);
             return next(err);
         };
