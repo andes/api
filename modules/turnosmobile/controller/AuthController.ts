@@ -7,6 +7,7 @@ import { Client } from 'elasticsearch';
 import * as config from '../../../config';
 import * as configPrivate from '../../../config.private';
 import { sendMail, MailOptions } from '../../../utils/sendMail';
+import { sendSms, SmsOptions } from '../../../utils/sendSms';
 import * as moment from 'moment';
 import { matching } from '@andes/match';
 import * as constantes from '../../../core/tm/schemas/constantes';
@@ -31,7 +32,7 @@ export function verificarCodigo(codigoIngresado, codigo) {
 export function enviarCodigoVerificacion(user) {
     console.log("Enviando mail...");
 
-    let options: MailOptions = {
+    let mailOptions: MailOptions = {
         from: configPrivate.enviarMail.options.from,
         to: user.nombre,
         subject: 'Hola ' + user.email,
@@ -39,14 +40,18 @@ export function enviarCodigoVerificacion(user) {
         html: 'El código de verificación es: ' + user.codigoVerificacion
     };
 
-    sendMail(options);
+    let smsOptions: SmsOptions = {
+        telefono: user.telefono,
+        codigoVerificacion: user.codigoVerificacion
+    }
+
+    sendMail(mailOptions);
+    sendSms(smsOptions);
 }
 
 export function envioCodigoCount(user: any) {
     //TODO: Implementar si se decide poner un límite al envío de códigos    
 }
-
-
 
 export function generarCodigoVerificacion() {
     let codigo = "";
@@ -299,5 +304,63 @@ export function matchPaciente(data) {
         }).catch((error) => {
             reject(error);
         });
+    });
+}
+
+/**
+ * Actualiza los datos de la cuenta mobile
+ * @param data {object} password, email, telefono
+ */
+
+export function updateAccount(account, data) {
+    return new Promise((resolve, reject) => {
+
+        let promise: any = Promise.resolve();
+        let promise_password: any = Promise.resolve();
+
+        if (data.password) {
+            promise_password = new Promise((resolve, reject) => {
+                account.comparePassword(data.old_password, (err, isMatch) => {
+                    if (err) {
+                        return reject({ password: 'wrong_password' });
+                    }
+                    if (isMatch) {
+                        account.password = data.password;
+                        return resolve();
+                    } else {
+                        return reject({ password: 'wrong_password' });
+                    }
+                });
+            });
+        }
+
+        if (data.telefono) {
+            account.telefono = data.telefono;
+        }
+
+        if (data.email) {
+            account.email = data.email;
+            promise = new Promise((resolve, reject) => {
+                pacienteApp.findOne({ email: data.email }, function (err, acts) {
+                    if (!acts) {
+                        resolve();
+                    } else {
+                        reject({ email: 'account_exists' });
+                    }
+                })
+            });
+        }
+
+        Promise.all([promise, promise_password]).then(() => {
+
+            account.save(function (err) {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(account);
+            });
+
+        }).catch((err) => reject(err));
+
     });
 }
