@@ -150,41 +150,9 @@ router.patch('/prestaciones/:id', function (req, res, next) {
             break;
             case 'registros':
                 if (req.body.registros) {
-                    // modificacion = { '$push': { 'estado': { tipo: req.body.estado } } }
-
-                    // modificacion = { '$push': { 'estados': req.body.estado } }
                     data.ejecucion.registros = req.body.registros;
                 }
             break;
-            /*
-            case 'listaProblemas':
-                if (req.body.problema) {
-                    modificacion = { '$push': { 'ejecucion.listaProblemas': req.body.problema } }
-                    // data['ejecucion'].listaProblemas.push(req.body.problema);
-                }
-                break;
-            case 'listaProblemasSolicitud':
-                if (req.body.problema) {
-                    modificacion = { '$push': { 'solicitud.listaProblemas': req.body.problema } }
-                    // ata['solicitud'].listaProblemas.push(req.body.problema);
-                }
-                break;
-            case 'desvincularProblema':
-                if (req.body.idProblema) {
-                    modificacion = { '$pull': { 'ejecucion.listaProblemas': req.body.idProblema } };
-                }
-                break;
-            // case 'desvincularPlan':
-            //     if (req.body.idPrestacionFutura) {
-            //         modificacion = { '$pull': { 'prestacionesSolicitadas': req.body.idPrestacionFutura } };
-            //     }
-            //     break;
-            case 'desvincularPlan':
-                if (req.body.idProblema) {
-                    modificacion = { '$pull': { 'solicitud.listaProblemas': req.body.idProblema } };
-                }
-                break;
-            */
             default:
                 next('Error: No se seleccionó ninguna opción.');
                 break;

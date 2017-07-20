@@ -81,18 +81,31 @@ schema.pre('save', function(next){
     let prestacion = this
 
     if (!prestacion.paciente.id) {
-        var err = new Error('Debe seleccionar el paciente');
+        let err = new Error('Debe seleccionar el paciente');
         next(err);
     }
 
     if (!prestacion.solicitud.organizacion.id) {
-        var err = new Error('Debe seleccionar la organizacion desde la cual se solicita');
+        let err = new Error('Debe seleccionar la organizacion desde la cual se solicita');
         next(err);
     }
 
     if (!prestacion.solicitud.profesional.id) {
-        var err = new Error('Debe seleccionar el profesional que solicita');
+        let err = new Error('Debe seleccionar el profesional que solicita');
         next(err);
+    }
+
+    if (prestacion.estados[prestacion.estados.length - 1].tipo === 'ejecucion') {
+        if (!prestacion.ejecucion.fecha) {
+            let err = new Error('Debe seleccionar el profesional que solicita');
+            next(err);
+        }
+
+        if (!prestacion.ejecucion.organizacion.id) {
+            let err = new Error('Debe seleccionar la organizacion desde la cual se solicita')
+            next(err);
+        }
+    
     }
 
     next();
