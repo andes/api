@@ -12,7 +12,7 @@ import * as moment from 'moment';
 import { matching } from '@andes/match';
 import * as constantes from '../../../core/tm/schemas/constantes';
 import { paciente, pacienteMpi } from '../../../core/mpi/schemas/paciente';
-
+import * as mongoose from 'mongoose';
 
 export const expirationOffset = 1000 * 60 * 60 * 24;
 
@@ -132,10 +132,46 @@ export function checkAppAccounts(paciente) {
     });
 }
 
+/**
+ * Obtiene una cuenta desde un profesional
+ * @param profesional {profesionalSchema}
+ */
+export function getAccountByProfesional(id) {
+    return pacienteApp.findOne({ 'profesionalId': mongoose.Types.ObjectId(id) });
+}
 
 
 /**
- * Crea un usuario de la app mobile apartir de un paciente
+ * Crea un usuario de la app mobile a partir de un profesional
+ * @param profesional {profesionalSchema}
+ */
+export function createUserFromProfesional(profesional) {
+    var dataPacienteApp: any = {
+        profesionalId: profesional.id,
+        nombre: profesional.nombre,
+        apellido: profesional.apellido,
+        email: profesional.documento,
+        password: 'no-password',
+        telefono: '',
+        envioCodigoCount: 0,
+        nacionalidad: 'Argentina',
+        documento: profesional.documento,
+        fechaNacimiento: profesional.fechaNacimiento,
+        sexo: profesional.sexo,
+        genero: profesional.genero,
+        permisos: [],
+        pacientes: []
+    };
+
+    var user = new pacienteApp(dataPacienteApp);
+
+    return user.save();
+
+}
+
+
+/**
+ * Crea un usuario de la app mobile a partir de un paciente
  * @param paciente {pacienteSchema}
  */
 export function createUserFromPaciente(paciente) {
