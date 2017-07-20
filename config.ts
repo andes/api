@@ -80,6 +80,7 @@ export const modules = {
         path: './modules/turnosmobile/routes',
         route: '/modules/turnosmobile',
         auth: true,
+        allowPatients: true
     },
     fuentesAutenticas: {
         active: true,

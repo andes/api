@@ -67,6 +67,24 @@ export class Auth {
     }
 
     /**
+     * Middleware Denied patients access
+     *
+     * @static
+     * @returns Middleware de Express.js
+     *
+     * @memberOf Auth
+     */
+    static deniedPatients() {
+        return function (req, res, next) {
+            if (req.user.profesional) {
+                next();
+            } else {
+                next(403);
+            }
+        }
+    }
+
+    /**
      * Genera los registros de auditoría en el documento indicado
      *
      * @static
