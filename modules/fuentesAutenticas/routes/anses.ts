@@ -1,9 +1,7 @@
-
-import { getServicioAnses } from '../../../utils/servicioAnses';
 import * as express from 'express';
-// Services
-import { Logger } from '../../../utils/logService';
 import { Auth } from '../../../auth/auth.class';
+import { getServicioAnses } from '../../../utils/servicioAnses';
+import { Logger } from '../../../utils/logService';
 
 let router = express.Router();
 
