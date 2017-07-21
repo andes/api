@@ -155,7 +155,7 @@ export class Auth {
     }
 
     /**
-     *  Tiempo de vida del Token
+     *  TTL JWT Token
      *  @var expiresIn {number} 
      * 
      * @memberOf Auth

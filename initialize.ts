@@ -43,18 +43,13 @@ export function initAPI(app: Express) {
         if (config.modules[m].active) {
             let routes = requireDir(config.modules[m].path);
             for (let route in routes) {
-                if (config.modules[m].auth) {
 
-                    /* Restringe el acceso a los pacientes */
-                    let middlewate = [Auth.authenticate()];
-                    if (!config.modules[m].allowPatients) {
-                        middlewate.push(Auth.deniedPatients());
-                    }
-
-                    app.use('/api' + config.modules[m].route, middlewate, routes[route]);
+                if (config.modules[m].middleware) {
+                    app.use('/api' + config.modules[m].route, config.modules[m].middleware, routes[route]);
                 } else {
                     app.use('/api' + config.modules[m].route, routes[route]);
                 }
+
             }
         }
     }

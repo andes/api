@@ -47,7 +47,7 @@ router.post('/login', function (req, res, next) {
                 // var userInfo = authController.setUserInfo(existingUser);
                 let token = Auth.generatePacienteToken(String(user.id), user.nombre + ' ' + user.apellido, user.email, user.pacientes, user.permisos);
                 res.status(200).json({
-                    token: 'JWT ' + token,
+                    token: token,
                     user: user
                 });
                 return;
@@ -215,7 +215,7 @@ router.post('/verificar-codigo', function (req, res, next) {
 
                     let token = Auth.generatePacienteToken(String(user.id), user.nombre + ' ' + user.apellido, user.email, user.pacientes, user.permisos);
                     res.status(200).json({
-                        token: 'JWT ' + token,
+                        token: token,
                         user: user
                     });
                 });
