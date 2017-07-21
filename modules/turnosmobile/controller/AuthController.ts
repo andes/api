@@ -33,7 +33,7 @@ export function enviarCodigoVerificacion(user) {
 
     let mailOptions: MailOptions = {
         from: configPrivate.enviarMail.options.from,
-        to: user.nombre,
+        to: user.email,
         subject: 'Hola ' + user.email,
         text: 'El código de verificación es: ' + user.codigoVerificacion,
         html: 'El código de verificación es: ' + user.codigoVerificacion
