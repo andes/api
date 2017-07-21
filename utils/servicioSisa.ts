@@ -175,7 +175,7 @@ export function matchSisa(paciente) {
     paciente['matchSisa'] = 0;
     // Se buscan los datos en sisa y se obtiene el paciente
     return new Promise((resolve, reject) => {
-        if (paciente.documento) {
+        if (paciente.documento && paciente.entidadesValidadoras && paciente.entidadesValidadoras.indexOf('sisa') < 0) {
             if (paciente.documento.length >= 7) {
                 let sexo = null;
                 if (paciente.sexo) {

@@ -115,8 +115,7 @@ export function formatearDatosSintys(datosSintys) {
     if (datosSintys.FechaNacimiento) {
         fecha = datosSintys.FechaNacimiento.split('/');
         let fechaNac = new Date(fecha[2].substr(0, 4), fecha[1] - 1, fecha[0]);
-        ciudadano.fechaNacimiento = fechaNac.toJSON();
-
+        ciudadano.fechaNacimiento = fechaNac;
     }
 
     /*
@@ -171,8 +170,12 @@ export function matchSintys(paciente) {
     // Se buscan los datos en sintys y se obtiene el paciente
     return new Promise((resolve, reject) => {
 
-        if (paciente.documento) {
+        if (paciente.documento && paciente.entidadesValidadoras && paciente.entidadesValidadoras.indexOf('sintys') < 0) {
             if (paciente.documento.length >= 7) {
+                if (paciente.nombre && paciente.apellido) {
+                    paciente.apellido = paciente.apellido + ' ' + paciente.nombre;
+                    paciente.nombre = '';
+                }
                 getPersonaSintys(paciente.documento)
                     .then((resultado) => {
                         if (resultado) {
