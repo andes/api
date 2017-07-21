@@ -64,7 +64,7 @@ router.post('/login', function (req, res, next) {
  * Espera todos los datos del paciente más del usuario
  */
 
-router.post('/registro', function (req, res, next) {
+router.post('/registro', function (req, res, next) {    
     var dataPacienteApp = {
         nombre: req.body.nombre,
         apellido: req.body.apellido,
@@ -89,8 +89,8 @@ router.post('/registro', function (req, res, next) {
 
     if (!dataPacienteApp.password) {
         return res.status(422).send({ error: 'Debe ingresar una clave' });
-    }
-
+    }        
+    
     pacienteApp.findOne({ email: dataPacienteApp.email }, function (err, existingUser) {
 
         if (err) {
@@ -102,10 +102,7 @@ router.post('/registro', function (req, res, next) {
         }
 
         var user = new pacienteApp(dataPacienteApp);
-
-        //Sacara de acaaaaaaaa
-authController.enviarCodigoVerificacion(user);
-
+    
         // enviarCodigoVerificacion(user);
         user.save(function (err, user: any) {
 
