@@ -62,17 +62,17 @@ export const modules = {
         route: '/modules/turnos',
         middleware: appMiddleware
     },
-    rup: {
-        active: true,
-        path: './modules/rup/routes',
-        route: '/modules/rup',
-        middleware: appMiddleware
-    },
     llaves: {
         active: true,
         path: './modules/llaves/routes',
         route: '/modules/llaves',
         middleware: appMiddleware
+    },
+    rup: {
+        active: true,
+        path: './modules/rup/routes',
+        route: '/modules/rup',
+        auth: true,
     },
     auditorias: { // Auditorías RUP (prestacionPaciente)
         active: true,

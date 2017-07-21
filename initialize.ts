@@ -1,5 +1,4 @@
 import * as bodyParser from 'body-parser';
-import * as mongoose from 'mongoose';
 import * as config from './config';
 import { Auth } from './auth/auth.class';
 import { Swagger } from './swagger';
@@ -7,7 +6,6 @@ import { Connections } from './connections';
 import * as HttpStatus from 'http-status-codes';
 import { Express } from 'express';
 
-//import { snomedDB } from './snomed';
 let requireDir = require('require-dir');
 
 export function initAPI(app: Express) {

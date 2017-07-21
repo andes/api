@@ -1,38 +1,19 @@
 import * as jwt from 'jsonwebtoken';
 import { pacienteApp } from '../schemas/pacienteApp';
 import { authApp } from '../../../config.private';
-// const nodemailer = require('nodemailer');
-import * as express from 'express';
 import { Client } from 'elasticsearch';
-import * as config from '../../../config';
-import * as configPrivate from '../../../config.private';
 import { sendMail, MailOptions } from '../../../utils/sendMail';
 import { sendSms, SmsOptions } from '../../../utils/sendSms';
-import * as moment from 'moment';
 import { matching } from '@andes/match';
-import * as constantes from '../../../core/tm/schemas/constantes';
 import { paciente, pacienteMpi } from '../../../core/mpi/schemas/paciente';
+import * as express from 'express';
+import * as config from '../../../config';
+import * as configPrivate from '../../../config.private';
+import * as moment from 'moment';
+import * as constantes from '../../../core/tm/schemas/constantes';
 import * as mongoose from 'mongoose';
 
 export const expirationOffset = 1000 * 60 * 60 * 24;
-
-/*
-export function generateToken(user) {
-    return jwt.sign(user, authApp.secret, {
-        expiresIn: 60 * 60 * 24 * 10
-    });
-}
-
-export function setUserInfo(request) {
-    return {
-        _id: request._id,
-        email: request.email,
-        pacientes: request.pacientes,
-        permisos: request.permisos
-    };
-}
-*/
-
 
 export function verificarCodigo(codigoIngresado, codigo) {
     if (codigoIngresado === codigo)
@@ -46,7 +27,7 @@ export function enviarCodigoVerificacion(user) {
 
     let mailOptions: MailOptions = {
         from: configPrivate.enviarMail.options.from,
-        to: user.nombre,
+        to: user.email,
         subject: 'Hola ' + user.email,
         text: 'El código de verificación es: ' + user.codigoVerificacion,
         html: 'El código de verificación es: ' + user.codigoVerificacion
