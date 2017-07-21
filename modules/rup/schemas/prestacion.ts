@@ -27,6 +27,8 @@ export let schema = new mongoose.Schema({
             type: Date,
             required: true
         },
+        // ID del turno relacionado con esta prestación
+        turno: mongoose.Schema.Types.ObjectId,
         // Profesional que solicita la prestacion
         profesional: {
             // requerido, validar en middleware
@@ -62,8 +64,6 @@ export let schema = new mongoose.Schema({
             type: Date,
             // requirido, validar en middleware
         },
-        // ID del turno relacionado con esta prestación
-        turno: mongoose.Schema.Types.ObjectId,
         // Lugar donde se realiza
         organizacion: {
             // requirido, validar en middleware
@@ -108,8 +108,43 @@ schema.pre('save', function(next){
     
     }
 
+    if (prestacion.ejecucion.registros.length) {
+
+        prestacion.ejecucion.registros.forEach(r => {
+            iterate(r.valor, convertirId);
+            
+        }); 
+    }
+
     next();
 });
+
+/**
+ * Función recursiva que permite recorrer un objeto y todas sus propiedes
+ * y al llegar a un nodo hoja ejecutar una funcion
+ * @param {any} obj Objeto a recorrer
+ * @param {any} func Nombre de la función callback a ejecutar cuando llega a un nodo hoja
+ */
+function iterate(obj, func) {
+    for (var property in obj) {
+        if (obj.hasOwnProperty(property)) {
+            if (Array.isArray(obj[property])) {
+                iterate(obj[property], func);
+            }else  if (typeof obj[property] == "object") {
+                iterate(obj[property], func);
+            } else {
+                func(obj, property);
+            }
+        }
+    }
+}
+
+
+function convertirId(obj, property) {
+    if (property === 'id' || property === 'id') {
+        obj[property] = mongoose.Types.ObjectId(obj[property]);
+    }
+}
 
 // Habilitar plugin de auditoría
 schema.plugin(require('../../../mongoose/audit'));
