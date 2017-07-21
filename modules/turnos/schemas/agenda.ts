@@ -34,7 +34,7 @@ let schema = new mongoose.Schema({
     },
     estado: {
         type: String,
-        enum: ['planificacion', 'disponible', 'publicada', 'suspendida', 'pausada'],
+        enum: ['planificacion', 'disponible', 'publicada', 'suspendida', 'pausada', 'asistenciaCerrada', 'codificada'],
         required: true,
         default: 'planificacion'
     },
@@ -45,7 +45,11 @@ let schema = new mongoose.Schema({
     },
     bloques: [bloqueSchema],
     nota: String,
-    sobreturnos: [turnoSchema]
+    sobreturnos: [turnoSchema],
+    nominalizada: {
+        type: Boolean,
+        default: true
+    }
 
 });
 

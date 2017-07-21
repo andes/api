@@ -103,8 +103,8 @@ let defaultDiacriticsRemovalMap = [
 
 ];
 let changes;
-
-router.get('/snomed', function (req, res, next) {
+//Trae todo.. 
+router.get('/snomed/term', function (req, res, next) {
     /*
     // El browser de SNOMED utiliza estos parametros, investigarlos.
     http://browser.ihtsdotools.org/?perspective=full&conceptId1=280137006&edition=es-edition&release=v20170430&server=https://prod-browser-exten.ihtsdotools.org/api/snomed&langRefset=450828004
@@ -128,7 +128,9 @@ router.get('/snomed', function (req, res, next) {
         '$and': [], 'active': true, 'conceptActive': true,
         '$or': [
             { semanticTag: 'hallazgo' },
-            { semanticTag: 'trastorno' }
+            { semanticTag: 'trastorno' },
+            { semanticTag: 'procedimiento' },
+            { semanticTag: 'entidad observable' }
         ]
     };
     words.forEach(function (word) {
@@ -174,13 +176,14 @@ router.get('/snomed', function (req, res, next) {
     const projection = {
         conceptId: 1,
         term: 1,
-        active: 1,
-        conceptActive: 1,
-        'descriptions.term': 1,
-        'descriptions.lang': 1,
+        // active: 1,
+        // conceptActive: 1,
+        // 'descriptions.term': 1,
+        // 'descriptions.lang': 1,
         fsn: 1,
-        module: 1,
-        definitionStatus: 1
+        // module: 1,
+        // definitionStatus: 1,
+        semanticTag: 1
     };
 
     // preparamos query
@@ -188,7 +191,7 @@ router.get('/snomed', function (req, res, next) {
 
     // limitamos resultados
     // query.limit(req.query.limit | 10);
-    query.limit(1000);
+    query.limit(10000);
     query.exec(function (err, data) {
         if (err) {
             next(err);
@@ -203,7 +206,7 @@ router.get('/snomed', function (req, res, next) {
             return 0;
         });
 
-        data = data.slice(0, 10);
+        data = data.slice(0, 100);
 
         res.json(data);
 
@@ -264,6 +267,104 @@ router.get('/snomed', function (req, res, next) {
     });
     */
 
+});
+//Trae trastornos y hallazgos.
+router.get('/snomed/problema', function (req, res, next) {
+    console.log(req.query.tipo);
+    // creamos un array de palabras a partir de la separacion del espacio
+    let words = req.query.search.split(" ");
+    // let expWord = '';
+    let conditions = {
+        'lang': 'spanish',
+        '$and': [], 'active': true, 'conceptActive': true,
+        '$or': [
+            { semanticTag: 'hallazgo' },
+            { semanticTag: 'trastorno' },
+        ]
+    };
+    words.forEach(function (word) {
+        // normalizamos cada una de las palabras como hace
+        // SNOMED para poder buscar palabra a palabra
+        let expWord = '^' + removeDiacritics(regExpEscape(word).toLowerCase()) + '.*';
+        // agregamos la palabra a la condicion
+        conditions.$and.push({ 'words': { '$regex': expWord } });
+    });
+    // campos a projectar
+    const projection = {
+        conceptId: 1,
+        term: 1,
+        fsn: 1,
+        semanticTag: 1
+    };
+    // preparamos query
+    let query = snomedModel.find(conditions, projection);
+    // limitamos resultados
+    // query.limit(req.query.limit | 10);
+    query.limit(10000);
+    query.exec(function (err, data) {
+        if (err) {
+            next(err);
+        };
+        // ordenamos los resultados:
+        // llevamos hacia arriba los que tengan el largo de cadena
+        // mas corto, (deberia coincididr con lo que busco)
+        data.sort((a: any, b: any) => {
+            if (a.term.length < b.term.length) { return -1; }
+            if (a.term.length > b.term.length) { return 1; }
+            return 0;
+        });
+        data = data.slice(0, 10);
+        res.json(data);
+    });
+});
+
+router.get('/snomed/procedimiento', function (req, res, next) {
+    console.log(req.query.tipo);
+    // creamos un array de palabras a partir de la separacion del espacio
+    let words = req.query.search.split(" ");
+    // let expWord = '';
+    let conditions = {
+        'lang': 'spanish',
+        '$and': [], 'active': true, 'conceptActive': true,
+        '$or': [
+            { semanticTag: 'procedimiento' },
+            { semanticTag: 'entidad observable' }
+        ]
+    };
+    words.forEach(function (word) {
+        // normalizamos cada una de las palabras como hace
+        // SNOMED para poder buscar palabra a palabra
+        let expWord = '^' + removeDiacritics(regExpEscape(word).toLowerCase()) + '.*';
+        // agregamos la palabra a la condicion
+        conditions.$and.push({ 'words': { '$regex': expWord } });
+    });
+    // campos a projectar
+    const projection = {
+        conceptId: 1,
+        term: 1,
+        fsn: 1,
+        semanticTag: 1
+    };
+    // preparamos query
+    let query = snomedModel.find(conditions, projection);
+    // limitamos resultados
+    // query.limit(req.query.limit | 10);
+    query.limit(10000);
+    query.exec(function (err, data) {
+        if (err) {
+            next(err);
+        };
+        // ordenamos los resultados:
+        // llevamos hacia arriba los que tengan el largo de cadena
+        // mas corto, (deberia coincididr con lo que busco)
+        data.sort((a: any, b: any) => {
+            if (a.term.length < b.term.length) { return -1; }
+            if (a.term.length > b.term.length) { return 1; }
+            return 0;
+        });
+        data = data.slice(0, 50);
+        res.json(data);
+    });
 });
 
 // SNOMED : cambiamos caraceteres raros
