@@ -104,10 +104,10 @@ router.post('/login', function (req, res, next) {
             }
 
             if (req.body.mobile) {
-                checkMobile(data[2]._id).then(account => {
+                checkMobile(data[2]._id).then((account: any) => {
                     // Crea el token con los datos de sesión
                     res.json({
-                        token: Auth.generateUserToken(nombre, apellido, data[0], data[1], data[2]),
+                        token: Auth.generateUserToken(nombre, apellido, data[0], data[1], data[2], account._id),
                         user: account
                     });
 
@@ -146,13 +146,14 @@ router.post('/login', function (req, res, next) {
 
             let nombre = data[1].nombre;
             let apellido = data[1].apellido;
+            let profesional = data[2];
 
             // Crea el token con los datos de sesión
             if (req.body.mobile) {
-                checkMobile(data[2]._id).then(account => {
+                checkMobile(profesional._id).then((account: any) => {
                     // Crea el token con los datos de sesión
                     res.json({
-                        token: Auth.generateUserToken(nombre, apellido, data[0], data[1], data[2]),
+                        token: Auth.generateUserToken(nombre, apellido, data[0], data[1], profesional, account._id),
                         user: account
                     });
 
@@ -160,7 +161,7 @@ router.post('/login', function (req, res, next) {
             } else {
                 // Crea el token con los datos de sesión
                 res.json({
-                    token: Auth.generateUserToken(nombre, apellido, data[0], data[1], data[2])
+                    token: Auth.generateUserToken(nombre, apellido, data[0], data[1], profesional)
                 });
 
             }

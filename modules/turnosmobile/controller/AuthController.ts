@@ -151,7 +151,7 @@ export function createUserFromProfesional(profesional) {
         nombre: profesional.nombre,
         apellido: profesional.apellido,
         email: profesional.documento,
-        password: 'no-password',
+        password: generarCodigoVerificacion(),
         telefono: '',
         envioCodigoCount: 0,
         nacionalidad: 'Argentina',

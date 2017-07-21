@@ -45,7 +45,6 @@ export class Auth {
                 jwtFromRequest: passportJWT.ExtractJwt.fromAuthHeader()
             },
             function (jwt_payload, done) {
-                // TODO: Aquí se puede implementar un control del token, por ejemplo si está vencida, rechazada, etc.
                 done(null, jwt_payload);
             }
         ));
@@ -156,6 +155,15 @@ export class Auth {
     }
 
     /**
+     *  Tiempo de vida del Token
+     *  @var expiresIn {number} 
+     * 
+     * @memberOf Auth
+     */
+
+    static expiresIn = 60 * 60 * 24 * 10;  /* 10 días */
+
+    /**
      * Genera un token de usuario firmado
      *
      * @static
@@ -168,7 +176,7 @@ export class Auth {
      *
      * @memberOf Auth
      */
-    static generateUserToken(nombre: string, apellido: string, organizacion: any, permisos: any, profesional: any): any {
+    static generateUserToken(nombre: string, apellido: string, organizacion: any, permisos: any, profesional: any, account_id: string = null): any {
         // Crea el token con los datos de sesión
         let token: UserToken = {
             id: mongoose.Types.ObjectId(),
@@ -182,9 +190,10 @@ export class Auth {
             roles: [permisos.roles],
             profesional: profesional,
             organizacion: organizacion,
-            permisos: permisos.permisos
+            permisos: permisos.permisos,
+            account_id: account_id
         };
-        return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: 60 * 60 * 24 * 10 /* 10 días */ });
+        return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: this.expiresIn });
     }
 
     /**
@@ -206,7 +215,8 @@ export class Auth {
                 nombre: nombre
             },
             organizacion: organizacion,
-            permisos: permisos
+            permisos: permisos,
+            account_id: null
         };
         return jwt.sign(token, configPrivate.auth.jwtKey);
     }
@@ -224,21 +234,23 @@ export class Auth {
      *
      * @memberOf Auth
      */
-    static generatePacienteToken(id: string, nombre: string, email: string, pacientes: any, permisos: any): any {
+    static generatePacienteToken(account_id: string, nombre: string, email: string, pacientes: any, permisos: any): any {
         // Crea el token con los datos de sesión
         let token: PacienteToken = {
             id: mongoose.Types.ObjectId(),
             usuario: {
-                id,
                 nombre,
                 email,
             },
             permisos: permisos,
             pacientes: pacientes,
-            organizacion: null
+            organizacion: null,
+            account_id: account_id
         };
-        return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: 60 * 60 * 24 * 10 /* 10 días */ });
+        return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: this.expiresIn });
     }
+
+
 
 
 }

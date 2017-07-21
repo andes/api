@@ -21,7 +21,7 @@ let router = express.Router();
 
 router.post('/devices/register', function (req: any, res, next) {
     let token: string = req.headers.authorization.substring(4);
-    let user_id = req.user.usuario.id;
+    let user_id = req.user.account_id;
     pacienteApp.findById(user_id, function (err, user: any) {
         if (err) {
             return res.status(422).send({ message: 'user_invalid' });
@@ -56,7 +56,7 @@ router.post('/devices/register', function (req: any, res, next) {
 
 router.post('/devices/update', function (req: any, res, next) {
     let token: string = req.headers.authorization.substring(4);
-    let user_id = req.user.usuario.id;
+    let user_id = req.user.account_id;
     pacienteApp.findById(user_id, function (err, user: any) {
         if (err) {
             return res.status(422).send({ message: 'user_invalid' });
@@ -85,7 +85,7 @@ router.post('/devices/update', function (req: any, res, next) {
 
 router.post('/devices/delete', function (req: any, res, next) {
     let token: string = req.headers.authorization.substring(4);
-    let user_id = req.user.usuario.id;
+    let user_id = req.user.account_id;
 
     pacienteApp.findById(user_id, function (err, user: any) {
         if (err) {

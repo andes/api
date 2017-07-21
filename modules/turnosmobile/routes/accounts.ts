@@ -14,7 +14,7 @@ let router = express.Router();
  */
 
 router.put('/account', function (req: any, res, next) {
-    let id = req.user.usuario.id;
+    let id = req.user.account_id;
     pacienteApp.findById(mongoose.Types.ObjectId(id), (err, account: any) => {
         if (!account) {
             return res.status(422).send({ error: '' });
