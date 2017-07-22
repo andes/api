@@ -1,3 +1,4 @@
+import { paciente } from './../../../core/mpi/schemas/paciente';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import { Auth } from './../../../auth/auth.class';
@@ -5,7 +6,7 @@ import { model as prestacion } from '../schemas/prestacion';
 
 let router = express.Router();
 
-router.get('/prestaciones/:id*?', function (req, res, next) {
+router.get('/prestaciones/:id*?', function (req, res, next) {   
     if (req.params.id) {
         let query = prestacion.findById(req.params.id);
         query.exec(function (err, data) {
@@ -104,6 +105,14 @@ router.patch('/prestaciones/:id', function (req, res, next) {
 
         let modificacion = {};
         switch (req.body.op) {
+
+             case 'paciente':
+                if (req.body.paciente) {
+                    data.paciente = req.body.paciente;
+                    // modificacion = { '$set': { 'paciente': req.body.paciente } }
+                    // data.set('estado', req.body.estado);
+                }
+                break;
             /*
             case 'estado':
                 if (req.body.estado) {
@@ -114,49 +123,36 @@ router.patch('/prestaciones/:id', function (req, res, next) {
             */
             case 'estadoPush':
                 if (req.body.estado) {
+                    if (data.estados[data.estados.length - 1].tipo === 'validada') {
+                        next('Prestación validada, no puede volver a validar.');
+
+                        return false;
+                    }
                     // modificacion = { '$push': { 'estado': { tipo: req.body.estado } } }
 
                     // modificacion = { '$push': { 'estados': req.body.estado } }
                     data['estados'].push(req.body.estado);
                 }
             break;
+            case 'romperValidacion':
+                if (data.estados[data.estados.length - 1].tipo !== 'validada') {
+                    next('Para poder romper la validación, primero debe validar la prestación.');
+                    return false;
+                }
+
+                if (req.user.usuario.username !== data.estados[data.estados.length - 1].createdBy.documento ) {
+                    next('Solo puede romper la validación el usuario que haya creado.');
+                    // mandamos al logger o email de operacion maliciosa ?
+                    return false;
+                }
+                
+                data['estados'].push(req.body.estado);
+            break;
             case 'registros':
                 if (req.body.registros) {
-                    // modificacion = { '$push': { 'estado': { tipo: req.body.estado } } }
-
-                    // modificacion = { '$push': { 'estados': req.body.estado } }
                     data.ejecucion.registros = req.body.registros;
                 }
             break;
-            /*
-            case 'listaProblemas':
-                if (req.body.problema) {
-                    modificacion = { '$push': { 'ejecucion.listaProblemas': req.body.problema } }
-                    // data['ejecucion'].listaProblemas.push(req.body.problema);
-                }
-                break;
-            case 'listaProblemasSolicitud':
-                if (req.body.problema) {
-                    modificacion = { '$push': { 'solicitud.listaProblemas': req.body.problema } }
-                    // ata['solicitud'].listaProblemas.push(req.body.problema);
-                }
-                break;
-            case 'desvincularProblema':
-                if (req.body.idProblema) {
-                    modificacion = { '$pull': { 'ejecucion.listaProblemas': req.body.idProblema } };
-                }
-                break;
-            // case 'desvincularPlan':
-            //     if (req.body.idPrestacionFutura) {
-            //         modificacion = { '$pull': { 'prestacionesSolicitadas': req.body.idPrestacionFutura } };
-            //     }
-            //     break;
-            case 'desvincularPlan':
-                if (req.body.idProblema) {
-                    modificacion = { '$pull': { 'solicitud.listaProblemas': req.body.idProblema } };
-                }
-                break;
-            */
             default:
                 next('Error: No se seleccionó ninguna opción.');
                 break;
