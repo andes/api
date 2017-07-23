@@ -6,7 +6,7 @@ import { model as prestacion } from '../schemas/prestacion';
 
 let router = express.Router();
 
-router.get('/prestaciones/:id*?', function (req, res, next) {   
+router.get('/prestaciones/:id*?', function (req, res, next) {
     if (req.params.id) {
         let query = prestacion.findById(req.params.id);
         query.exec(function (err, data) {
@@ -106,7 +106,7 @@ router.patch('/prestaciones/:id', function (req, res, next) {
         let modificacion = {};
         switch (req.body.op) {
 
-             case 'paciente':
+            case 'paciente':
                 if (req.body.paciente) {
                     data.paciente = req.body.paciente;
                     // modificacion = { '$set': { 'paciente': req.body.paciente } }
@@ -124,44 +124,37 @@ router.patch('/prestaciones/:id', function (req, res, next) {
             case 'estadoPush':
                 if (req.body.estado) {
                     if (data.estados[data.estados.length - 1].tipo === 'validada') {
-                        next('Prestación validada, no puede volver a validar.');
-
-                        return false;
+                        return next('Prestación validada, no puede volver a validar.');
                     }
                     // modificacion = { '$push': { 'estado': { tipo: req.body.estado } } }
 
                     // modificacion = { '$push': { 'estados': req.body.estado } }
                     data['estados'].push(req.body.estado);
                 }
-            break;
+                break;
             case 'romperValidacion':
                 if (data.estados[data.estados.length - 1].tipo !== 'validada') {
-                    next('Para poder romper la validación, primero debe validar la prestación.');
-                    return false;
+                    return next('Para poder romper la validación, primero debe validar la prestación.');
                 }
 
-                if (req.user.usuario.username !== data.estados[data.estados.length - 1].createdBy.documento ) {
-                    next('Solo puede romper la validación el usuario que haya creado.');
-                    // mandamos al logger o email de operacion maliciosa ?
-                    return false;
+                if ((req as any).user.usuario.username !== data.estados[data.estados.length - 1].createdBy.documento) {
+                    return next('Solo puede romper la validación el usuario que haya creado.');
                 }
-                
+
                 data['estados'].push(req.body.estado);
-            break;
+                break;
             case 'registros':
                 if (req.body.registros) {
                     data.ejecucion.registros = req.body.registros;
                 }
-            break;
-            default:
-                next('Error: No se seleccionó ninguna opción.');
                 break;
+            default:
+                return next('Error: No se seleccionó ninguna opción.');
         }
 
         if (!modificacion) {
             return next('Opción inválida.');
         }
-        // TODO: refactor findByIdAndUpdate
 
         Auth.audit(data, req);
         data.save(function (err, data) {
@@ -182,46 +175,5 @@ router.patch('/prestaciones/:id', function (req, res, next) {
         });
     });
 });
-
-
-// router.put('/prestaciones/:id', function (req, res, next) {
-//     let prestacion;
-//     prestacion = new prestacion(req.body);
-
-//     //let evolucion = prestacion.ejecucion.evoluciones[prestacion.ejecucion.evoluciones.length - 1];
-
-//     prestacion.findById(prestacion.id, function (err, data) {
-//         if (err) {
-//             return next(err);
-//         }
-
-//         /*
-//         let prest;
-//         prest = data;
-//         let evoluciones = prest.ejecucion.evoluciones;
-//         evoluciones.push(evolucion);
-//         prestacion.ejecucion.evoluciones = evoluciones;
-//         */
-//         Auth.audit(prestacion, req);
-
-//         prestacion.findByIdAndUpdate(prestacion.id, prestacion, {
-//             new: true
-//         }, function (err2, data2) {
-//             if (err2) {
-//                 return next(err2);
-//             }
-//             res.json(data2);
-//         });
-//     });
-// });
-
-// router.delete('/prestaciones/:id', function (req, res, next) {
-//     prestacion.findByIdAndRemove(req.params.id, function (err, data) {
-//         if (err) {
-//             return next(err);
-//         }
-//         res.json(data);
-//     });
-// });
 
 export = router;

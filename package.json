@@ -31,7 +31,7 @@
         "libxmljs": "^0.18.4",
         "moment": "^2.18.1",
         "mongoosastic": "^4.2.4",
-        "mongoose": "^4.10.2",
+        "mongoose": "4.10.8",
         "mssql": "^3.3.0",
         "node-pushnotifications": "^1.0.18",
         "nodemailer": "^4.0.1",
