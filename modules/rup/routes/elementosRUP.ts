@@ -12,8 +12,6 @@ router.get('/elementosRUP/:id*?', function (req, res, next) {
     } else {
         
         query = elementoRUP.find({}); // Trae todos
-        console.log(query);
-        console.log('query');
         if (req.query.skip) {
             let skip: number = parseInt(req.query.skip || 0, 10);
             query = query.skip(skip);
