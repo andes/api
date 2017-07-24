@@ -64,11 +64,12 @@ router.post('/devices/update', function (req: any, res, next) {
 
         let device_data = req.body.device;
         let device = user.devices.id(device_data.id);
-        device.app_version = device_data.app_version;
-        device.device_id = device_data.device_id;
-        device.device_type = device_data.device_type;
-        device.session_id = token;
-
+        if (device) {
+            device.app_version = device_data.app_version;
+            device.device_id = device_data.device_id;
+            device.device_type = device_data.device_type;
+            device.session_id = token;
+        }
         user.save((err, u) => {
             if (err) {
                 next(err);

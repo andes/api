@@ -72,7 +72,7 @@ export const modules = {
         active: true,
         path: './modules/rup/routes',
         route: '/modules/rup',
-        auth: true,
+        middleware: appMiddleware
     },
     auditorias: { // Auditorías RUP (prestacionPaciente)
         active: true,
