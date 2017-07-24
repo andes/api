@@ -78,32 +78,32 @@ export let schema = new mongoose.Schema({
 });
 
 schema.pre('save', function(next){
-    let prestacion = this
+    let prestacion = this;
 
     if (!prestacion.paciente.id) {
         let err = new Error('Debe seleccionar el paciente');
-        next(err);
+        return next(err);
     }
 
     if (!prestacion.solicitud.organizacion.id) {
         let err = new Error('Debe seleccionar la organizacion desde la cual se solicita');
-        next(err);
+        return next(err);
     }
 
     if (!prestacion.solicitud.profesional.id) {
         let err = new Error('Debe seleccionar el profesional que solicita');
-        next(err);
+        return next(err);
     }
 
     if (prestacion.estados[prestacion.estados.length - 1].tipo === 'ejecucion') {
         if (!prestacion.ejecucion.fecha) {
-            let err = new Error('Debe seleccionar el profesional que solicita');
-            next(err);
+            let err = new Error('Debe seleccionar la fecha en que se solicita');
+            return next(err);
         }
 
         if (!prestacion.ejecucion.organizacion.id) {
             let err = new Error('Debe seleccionar la organizacion desde la cual se solicita')
-            next(err);
+            return next(err);
         }
     
     }
@@ -112,7 +112,6 @@ schema.pre('save', function(next){
 
         prestacion.ejecucion.registros.forEach(r => {
             iterate(r.valor, convertirId);
-            
         }); 
     }
 
