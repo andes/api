@@ -1,4 +1,5 @@
 import { pacienteApp } from '../schemas/pacienteApp';
+import { recordatorio } from '../schemas/recordatorio';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
@@ -11,10 +12,87 @@ import { INotification, PushClient } from '../controller/PushClient';
 import * as authController from '../controller/AuthController';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 
+var async = require('async');
+
 let router = express.Router();
 
-router.get('/turnos', function (req: any, res, next) {
+router.get('/turnos/recordatorioTurno', function (req, res, next) {
+    let startDay = moment.utc().add(1, 'days').startOf('day').toDate();
+    let endDay = moment.utc().add(1, 'days').endOf('day').toDate();
 
+    let pipelineTurno = [];
+    let turnos = [];
+    let turno;
+
+    pipelineTurno = [{
+        '$match': {
+        }
+    },
+    // Unwind cada array
+    { '$unwind': '$bloques' },
+    { '$unwind': '$bloques.turnos' },
+    // Filtra los elementos que matchean
+    {
+        '$match': {
+        }
+    },
+    {
+        '$group': {
+            '_id': { 'id': '$_id', 'bloqueId': '$bloques._id' },
+            'turnos': { $push: '$bloques.turnos' }
+        }
+    },
+    {
+        '$group': {
+            '_id': '$_id.id',
+            'bloques': { $push: { '_id': '$_id.bloqueId', 'turnos': '$turnos' } }
+        }
+    }];
+
+    // Se modifica el pipeline en la posición 0 y 3, que son las posiciones
+    // donde se realiza el match
+    let matchTurno = {};
+
+    matchTurno['bloques.turnos.horaInicio'] = { $gte: startDay, $lte: endDay };
+    matchTurno['bloques.turnos.estado'] = 'asignado';
+
+    pipelineTurno[0] = { '$match': matchTurno };
+    pipelineTurno[3] = { '$match': matchTurno };
+    pipelineTurno[6] = { '$unwind': '$bloques' };
+    pipelineTurno[7] = { '$unwind': '$bloques.turnos' };
+
+    agenda.aggregate(pipelineTurno,
+        function (err2, data2) {
+            if (err2) {
+                return next(err2);
+            }
+
+            data2.forEach(elem => {
+                turno = elem.bloques.turnos.paciente;
+                turno.tipoRecordatorio = 'turno';
+                turnos.push(turno);
+            });
+            
+            async.forEach(turnos, function (turno, callback) {
+            
+                let recordatorioTurno = new recordatorio({
+                    paciente: turno,
+                    tipoRecordatorio: turno.tipoRecordatorio,
+                    estadoEnvio: false
+                });
+
+                recordatorioTurno.save((err) => {
+                    if (err) {
+                        return next(err);
+                    }
+
+                });
+                next(turno);
+            });
+        });
+});
+
+router.get('/turnos', function (req: any, res, next) {
     let pipelineTurno = [];
     let turnos = [];
     let turno;
