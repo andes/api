@@ -6,24 +6,28 @@ let router = express.Router();
 
 router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
     let query;
+    // Búsqueda por un sólo ID
     if (req.params.id) {
         query = tipoPrestacion.findById(req.params.id);
-    }
-
-    if (req.query.term) {
-        query = tipoPrestacion.find({ term: { '$regex': utils.makePattern(req.query.term) } });
     } else {
-        query = tipoPrestacion.find({}); // Trae todos
+        // Búsqueda por tem
+        if (req.query.term) {
+            query = tipoPrestacion.find({ term: { '$regex': utils.makePattern(req.query.term) } });
+        } else {
+            // Si no, devuelve todos
+            query = tipoPrestacion.find({});
+        }
 
-    }
-    if (req.query.incluir) {
-        let idsIn = req.query.incluir.split(',');
-        query.where('_id').in(idsIn);
+        // Búsqueda por múltiples IDs
+        if (req.query.id) {
+            query.where('_id').in(req.query.id);
+        }
     }
 
+    // Consultar
     query.sort({ 'term': 1 }).exec(function (err, data) {
         if (err) {
-            next(err);
+            return next(err);
         };
         res.json(data);
     });
