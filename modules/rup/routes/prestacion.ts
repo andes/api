@@ -3,6 +3,7 @@ import * as express from 'express';
 import * as mongoose from 'mongoose';
 import { Auth } from './../../../auth/auth.class';
 import { model as prestacion } from '../schemas/prestacion';
+import * as moment from 'moment';
 
 let router = express.Router();
 
@@ -19,55 +20,38 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             res.json(data);
         });
     } else {
-        let query: mongoose.DocumentQuery<mongoose.Document[], mongoose.Document>;
-        let filtrosEstado = 'true ';
+        let query = prestacion.find({});
+
         if (req.query.estado) {
-            filtrosEstado += ' && this.estados[this.estados.length - 1].tipo == "' + req.query.estado + '"';
+            query.where('this.estados[this.estados.length - 1].tipo').equals(req.query.estado);
         }
-
         if (req.query.fechaDesde) {
-            filtrosEstado += ' && this.estados[this.estados.length - 1].createdAt >= new ISODate("' + req.query.fechaDesde + '")';
+            query.where('ejecucion.fecha').gte(moment(req.query.fechaDesde).startOf('day').toDate() as any);
         }
-
         if (req.query.fechaHasta) {
-            filtrosEstado += ' && this.estados[this.estados.length - 1].createdAt <= new ISODate("' + req.query.fechaHasta + '")';
-            //query.where['this.estados[this.estados.length - 1].createdAt'].lte(req.query.fechaHasta);
+            query.where('ejecucion.fecha').lte(moment(req.query.fechaHasta).endOf('day').toDate() as any);
         }
-
-
-        if (filtrosEstado !== 'true ') {
-            query = prestacion.find({
-                $where: filtrosEstado
-            });
-        } else {
-            query = prestacion.find({}); // Trae todos
-        }
-
         if (req.query.idProfesional) {
             query.where('solicitud.profesional.id').equals(req.query.idProfesional);
         }
-
         if (req.query.idPaciente) {
             query.where('paciente.id').equals(req.query.idPaciente);
         }
-
         if (req.query.idPrestacionOrigen) {
             query.where('solicitud.prestacionOrigen').equals(req.query.idPrestacionOrigen);
         }
-
         if (req.query.turnos) {
             query.where('solicitud.idTurno').in(req.query.turnos);
         }
 
         // Ordenar por fecha de solicitud
         if (req.query.ordenFecha) {
-            query.sort({ 'estados.createdAt': -1 });
+            query.sort({ 'solicitud.fecha': -1 });
         }
 
         if (req.query.limit) {
             query.limit(parseInt(req.query.limit, 10));
         }
-
         query.exec(function (err, data) {
             if (err) {
                 return next(err);
@@ -79,8 +63,6 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         });
     }
 });
-
-
 
 router.post('/prestaciones', function (req, res, next) {
     let data = new prestacion(req.body);
@@ -94,41 +76,22 @@ router.post('/prestaciones', function (req, res, next) {
 });
 
 router.patch('/prestaciones/:id', function (req, res, next) {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-        next('ID inválido');
-    }
-
     prestacion.findById(req.params.id, (err, data: any) => {
         if (err) {
-            next(err);
+            return next(err);
         }
 
-        let modificacion = {};
         switch (req.body.op) {
-
             case 'paciente':
                 if (req.body.paciente) {
                     data.paciente = req.body.paciente;
-                    // modificacion = { '$set': { 'paciente': req.body.paciente } }
-                    // data.set('estado', req.body.estado);
                 }
                 break;
-            /*
-            case 'estado':
-                if (req.body.estado) {
-                    modificacion = { '$set': { 'estados': req.body.estado } }
-                    // data.set('estado', req.body.estado);
-                }
-                break;
-            */
             case 'estadoPush':
                 if (req.body.estado) {
                     if (data.estados[data.estados.length - 1].tipo === 'validada') {
                         return next('Prestación validada, no puede volver a validar.');
                     }
-                    // modificacion = { '$push': { 'estado': { tipo: req.body.estado } } }
-
-                    // modificacion = { '$push': { 'estados': req.body.estado } }
                     data['estados'].push(req.body.estado);
                 }
                 break;
@@ -149,11 +112,7 @@ router.patch('/prestaciones/:id', function (req, res, next) {
                 }
                 break;
             default:
-                return next('Error: No se seleccionó ninguna opción.');
-        }
-
-        if (!modificacion) {
-            return next('Opción inválida.');
+                return next(500);
         }
 
         Auth.audit(data, req);

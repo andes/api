@@ -106,11 +106,11 @@ router.get('/agenda/:id?', function (req, res, next) {
         query = agenda.find({});
 
         if (req.query.fechaDesde) {
-            query.where('horaInicio').gte(req.query.fechaDesde);
+            query.where('horaInicio').gte(moment(req.query.fechaDesde).startOf('day').toDate() as any);
         }
 
         if (req.query.fechaHasta) {
-            query.where('horaFin').lte(req.query.fechaHasta);
+            query.where('horaFin').lte(moment(req.query.fechaHasta).endOf('day').toDate() as any);
         }
 
         if (req.query.idProfesional) {

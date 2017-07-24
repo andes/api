@@ -22,7 +22,7 @@ export let schema = new mongoose.Schema({
         // Tipo de prestación de ejecutarse
         tipoPrestacion: SnomedConcept,
         // Fecha de solicitud
-        // Nota: Este dato podría obtener del array de estados, pero está aquí para facilidad de consulta
+        // Nota: Este dato podría obtener del array de estados, pero está aquí para facilidar de consulta
         fecha: {
             type: Date,
             required: true
