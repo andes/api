@@ -350,6 +350,9 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 case 'codificada':
                 case 'suspendida': agendaCtrl.actualizarEstado(req, data);
                     break;
+                case 'avisos':
+                    agendaCtrl.agregarAviso(req, data);
+                    break;
                 // case 'reasignarTurno': reasignarTurno(req, data, turnos[y]._id);
                 //     break;
                 // case 'bloquearTurno': bloquearTurno(req, data, turnos[y]._id);

@@ -193,6 +193,26 @@ export function getPosition(req, agenda, idTurno = null) {
     return position;
 }
 
+export function agregarAviso(req, agenda) {
+    let profesionalId = req.body.profesionalId;
+    let estado = req.body.estado;
+    let fecha = new Date();
+
+    // if (!agenda.avisos) {
+    //     agenda.avisos = [];
+    // }
+    let index = agenda.avisos.findIndex(item => String(item.profesionalId) == profesionalId);
+    if (index < 0) {
+        agenda.avisos.push({
+            estado,
+            profesionalId,
+            fecha
+        });
+        return true;
+    }
+    return false;
+
+}
 
 export function getTurnoSiguiente(req, agenda, idTurno = null) {
     let position = getPosition(req, agenda, idTurno);

@@ -38,6 +38,14 @@ let schema = new mongoose.Schema({
         required: true,
         default: 'planificacion'
     },
+    avisos: [{
+        profesionalId: mongoose.Schema.Types.ObjectId,
+        fecha: Date,
+        estado: {
+            type: String,
+            enum: ['confirma', 'suspende']
+        }
+    }],
     // Se debe persistir el valor previo al estado de Pausada, para poder reanudar la agenda
     prePausada: {
         type: String,
