@@ -12,9 +12,26 @@ import { INotification, PushClient } from '../controller/PushClient';
 import * as authController from '../controller/AuthController';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 
+import { sendSms, SmsOptions } from '../../../utils/sendSms';
+
 var async = require('async');
 
 let router = express.Router();
+
+//Envía el sms al paciente recordando el turno con 24 Hs de antelación
+router.get('/turnos/smsRecordatorioTurno', function (req, res, next) {
+
+    recordatorio.find(function (err, data) {
+
+        let smsOptions: SmsOptions = {
+            telefono: data[0].paciente.telefono,
+            mensaje: 'Holaaa'
+        }
+        sendSms(smsOptions);
+        console.log("Opcionesss: ", smsOptions);
+        res.json(data);
+    });
+});
 
 router.get('/turnos/recordatorioTurno', function (req, res, next) {
     let startDay = moment.utc().add(1, 'days').startOf('day').toDate();
@@ -72,9 +89,9 @@ router.get('/turnos/recordatorioTurno', function (req, res, next) {
                 turno.tipoRecordatorio = 'turno';
                 turnos.push(turno);
             });
-            
+
             async.forEach(turnos, function (turno, callback) {
-            
+
                 let recordatorioTurno = new recordatorio({
                     paciente: turno,
                     tipoRecordatorio: turno.tipoRecordatorio,
@@ -228,11 +245,11 @@ router.get('/turnos', function (req: any, res, next) {
             pacienteApp.find({ 'pacientes.id': pacienteId }, function (err, docs: any[]) {
                 docs.forEach(user => {
                     let devices = user.devices.map(item => item.device_id);
-
+ 
                     //let date = moment(turno.horaInicio).format('DD [de] MMMM');
                     let body = 'Su turno del  fue reasignado. Haz click para más información.';
                     new PushClient().send(devices, { body, extraData: { action: 'reasignar' } });
-
+ 
                 });
             });
             */

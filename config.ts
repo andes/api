@@ -71,14 +71,14 @@ export const modules = {
     },
     turnos_mobile_auth: {
         active: true,
-        path: './modules/turnosmobile/auth_routes',
-        route: '/modules/turnosmobile',
+        path: './modules/mobileApp/auth_routes',
+        route: '/modules/mobileApp',
         auth: false,
     },
     turnos_mobile: {
         active: true,
-        path: './modules/turnosmobile/routes',
-        route: '/modules/turnosmobile',
+        path: './modules/mobileApp/routes',
+        route: '/modules/mobileApp',
         auth: true,
     },
     fuentesAutenticas: {

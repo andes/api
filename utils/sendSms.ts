@@ -6,12 +6,15 @@ let url = '192.168.20.119';
 let urlOperador = 'http://' + url + ':8080/Carrier/carrier?wsdl';
 let urlNumero = 'http://' + url + ':8080/MobileOutBackup/MobileOut?wsdl';
 
+//El mensaje puede ser el código de verificación, recordatorio de turno, etc.
 export interface SmsOptions {
     telefono: number;
-    codigoVerificacion: string;
+    mensaje: string;
 }
 
 export function sendSms(smsOptions: SmsOptions) {
+    console.log("Enviando SMS...");
+
     let argsOperador = {
         telefono: smsOptions.telefono
     };
@@ -51,7 +54,7 @@ export function sendSms(smsOptions: SmsOptions) {
                         if (carrier) {
                             argsNumero = {
                                 destino: argsOperador.telefono,
-                                mensaje: smsOptions.codigoVerificacion,
+                                mensaje: smsOptions.mensaje,
                                 operador: carrier,
                                 aplicacion: '',
                                 mobilein: '1'
