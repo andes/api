@@ -35,7 +35,7 @@ export function enviarCodigoVerificacion(user) {
 
     let smsOptions: SmsOptions = {
         telefono: user.telefono,
-        codigoVerificacion: user.codigoVerificacion
+        mensaje: user.codigoVerificacion
     }
 
     sendMail(mailOptions);
