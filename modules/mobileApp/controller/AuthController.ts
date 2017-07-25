@@ -279,6 +279,7 @@ export function matchPaciente(data) {
                         fechaNacimiento: paciente.fechaNacimiento ? moment(paciente.fechaNacimiento).format('YYYY-MM-DD') : '',
                         sexo: paciente.sexo ? paciente.sexo : ''
                     };
+                    console.log(pacElastic);
                     let match = new matching();
                     let valorMatching = match.matchPersonas(pacElastic, pacDto, weights);
                     paciente['id'] = hit._id;
