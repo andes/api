@@ -40,7 +40,11 @@ export function enviarCodigoVerificacion(user) {
     }
 
     sendMail(mailOptions);
-    sendSms(smsOptions);
+    sendSms(smsOptions, function (res) {
+        if (res === '0') {
+            console.log("El SMS se envío correctamente");
+        }
+    });
 }
 
 export function envioCodigoCount(user: any) {
