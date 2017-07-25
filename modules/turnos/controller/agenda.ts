@@ -1,5 +1,5 @@
 import * as moment from 'moment';
-import { prestacionPaciente } from './../../rup/schemas/prestacionPaciente';
+import { model as prestacion } from '../../rup/schemas/prestacion';
 import { paciente } from './../../../core/mpi/schemas/paciente';
 import { Auth } from './../../../auth/auth.class';
 
@@ -24,6 +24,7 @@ export function liberarTurno(req, data, turno) {
     turno.paciente = null;
     turno.tipoPrestacion = null;
     turno.nota = null;
+    turno.confirmedAt = null;
 
     let turnoDoble = getTurnoSiguiente(req, data, turno._id);
     if (turnoDoble) {
@@ -193,6 +194,26 @@ export function getPosition(req, agenda, idTurno = null) {
     return position;
 }
 
+export function agregarAviso(req, agenda) {
+    let profesionalId = req.body.profesionalId;
+    let estado = req.body.estado;
+    let fecha = new Date();
+
+    // if (!agenda.avisos) {
+    //     agenda.avisos = [];
+    // }
+    let index = agenda.avisos.findIndex(item => String(item.profesionalId) == profesionalId);
+    if (index < 0) {
+        agenda.avisos.push({
+            estado,
+            profesionalId,
+            fecha
+        });
+        return true;
+    }
+    return false;
+
+}
 
 export function getTurnoSiguiente(req, agenda, idTurno = null) {
     let position = getPosition(req, agenda, idTurno);
@@ -275,37 +296,42 @@ export function calcularContadoresTipoTurno(posBloque, posTurno, agenda) {
     return countBloques;
 }
 
+
+// export function crearPrestacionVacia(turno, req) {
+
+// }
+
 // Dado un turno, se crea una prestacionPaciente
-export function crearPrestacionVacia(turno, req) {
-    let prestacion;
-    let nuevaPrestacion;
-    let pacienteTurno = turno.paciente;
+// export function crearPrestacionVacia(turno, req) {
+//     let prestacion;
+//     let nuevaPrestacion;
+//     let pacienteTurno = turno.paciente;
 
-    pacienteTurno['_id'] = turno.paciente.id;
-    paciente.findById(pacienteTurno.id, (err, data) => {
-        nuevaPrestacion = {
-            paciente: data,
-            solicitud: {
-                tipoPrestacion: turno.tipoPrestacion,
-                fecha: new Date(),
-                listaProblemas: [],
-                idTurno: turno.id,
-            },
-            estado: {
-                timestamp: new Date(),
-                tipo: 'pendiente'
-            },
-            ejecucion: {
-                fecha: new Date(),
-                evoluciones: []
-            }
-        };
-        prestacion = new prestacionPaciente(nuevaPrestacion);
+//     pacienteTurno['_id'] = turno.paciente.id;
+//     paciente.findById(pacienteTurno.id, (err, data) => {
+//         nuevaPrestacion = {
+//             paciente: data,
+//             solicitud: {
+//                 tipoPrestacion: turno.tipoPrestacion,
+//                 fecha: new Date(),
+//                 listaProblemas: [],
+//                 idTurno: turno.id,
+//             },
+//             estado: {
+//                 timestamp: new Date(),
+//                 tipo: 'pendiente'
+//             },
+//             ejecucion: {
+//                 fecha: new Date(),
+//                 evoluciones: []
+//             }
+//         };
+//         prestacion = new prestacionPaciente(nuevaPrestacion);
 
-        Auth.audit(prestacion, req);
-        prestacion.save();
-    });
-}
+//         Auth.audit(prestacion, req);
+//         prestacion.save();
+//     });
+// }
 
 export function getBloque(agenda, turno) {
     for (let i = 0; i < agenda.bloques.length; i++) {

@@ -1,60 +1,88 @@
-
-
+import * as config from '../config';
+import * as configPrivate from '../config.private';
 import { matching } from '@andes/match';
 let soap = require('soap');
 let url = 'http://192.168.20.63:8080/scripts/Autenticacion.exe/wsdl/IAutenticacion';
 let serv = 'http://192.168.20.64:8080/scripts/autorizacion.exe/wsdl/IAutorizacion';
 let serv2 = 'http://192.168.20.63:8080/scripts/Autenticacion.exe/wsdl/IAutenticacion';
-let usuario = 'Sistemas_Andes_Salud';
 
-let argsNumero = {
-    Usuario: 'Sistemas_Andes_Salud',
-    Password: 'spvB0452'
-};
+let login = configPrivate.anses;
 
 export function getServicioAnses(paciente) {
-    // if (paciente && paciente.documento) {
-    soap.createClient(url, function (err, client) {
-        if (err) {
-            return console.log('Error en creacion cliente soap anses', err);
+    let match = new matching();
+    let weights = config.mpi.weightsDefault;
+    let matchPorcentaje = 0;
+    let resultado: any;
+    let fecha: any;
+    return new Promise((resolve, reject) => {
+        let band = (paciente.entidadesValidadoras) ? (paciente.entidadesValidadoras.indexOf('anses') < 0) : true;
+        if (paciente && paciente.documento && band) {
+            soap.createClient(url, function (err, client) {
+                if (err) {
+                    console.log('Error en creacion cliente soap anses', err);
+                    reject(err);
+                }
+                client.LoginPecas(login, async function (err2, result) {
+                    if (err2) {
+                        console.log('Error LoginPecas servicioAnses : ', err2);
+                        reject(err2);
+                    }
+                    let tipoConsulta = 'Documento';
+                    let filtro = paciente.documento;
+                    if (paciente.cuil && paciente.cuil.lenght > 10) {
+                        tipoConsulta = 'Cuil';
+                        filtro = paciente.cuil;
+                    }
+                    if (paciente.nombre && paciente.apellido) {
+                        paciente.nombre = paciente.apellido + ' ' + paciente.nombre;
+                        paciente.apellido = '';
+                    }
+                    try {
+                        resultado = await consultaAnses(result, tipoConsulta, filtro);
+                    } catch (error) {
+                        console.error('Error matchPersonas servicioAnses:' + error);
+                        reject(error);
+                    }
+                    if (resultado.codigo === 0 && resultado.array) {
+                        if (resultado.array[2]) {
+                            fecha = new Date(resultado.array[2].substring(4), resultado.array[2].substring(3, 4) - 1, resultado.array[2].substring(0, 2));
+                        } else {
+                            fecha = '';
+                        }
+                        let sex = '';
+                        if (resultado.array[3]) {
+                            (resultado.array[3] === 'M') ? sex = 'masculino' : sex = 'femenino';
+                        }
+                        let pacienteAnses = {
+                            nombre: resultado.array[0],
+                            apellido: '',
+                            documento: resultado.array[1],
+                            fechaNacimiento: fecha,
+                            sexo: sex
+                        };
+                        try {
+                            matchPorcentaje = await match.matchPersonas(paciente, pacienteAnses, weights) * 100;
+                        } catch (error) {
+                            console.error('Error matchPersonas servicioAnses:' + error);
+                            reject(error);
+                        }
+                        console.log('el % de matcheo es:', matchPorcentaje);
+                        resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Anses', 'matcheo': matchPorcentaje, 'datosPaciente': pacienteAnses } });
+                    } else {
+                        resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Anses', 'matcheo': 0, 'datosPaciente': {} } });
+                    }
+                });
+            });
+        } else {
+            resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Anses', 'matcheo': 0, 'datosPaciente': {} } });
         }
-        // console.log('Cliente: ', client);
-        client.LoginPecas(argsNumero, async function (err2, result) {
-            if (err2) {
-                return console.log('Error LoginPecas servicioAnses : ', err2);
-            }
-            // console.log(result);
-            let filtro = '20358643788';
-            let tipoConsulta = 'Cuil';
-            // let filtro = 'paciente.documento';
-            // let tipoConsulta = 'Documento';
-            if (paciente.cuil && paciente.cuil.lenght > 10) {
-                tipoConsulta = 'Cuil';
-                filtro = paciente.cuil;
-            }
-            let resultado: any = await consultaAnses(result, tipoConsulta, filtro);
-
-            if (resultado.codigo === 0 && resultado.array) {
-                let pacienteAnses = {
-                    nombreCompleto: resultado.array[0],
-                    documento: resultado.array[1],
-                    fechaNacimiento: resultado.array[2],
-                    sexo: resultado.array[3]
-                };
-                return ({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sintys', 'matcheo': 0, 'datosPaciente': pacienteAnses } });
-            } else {
-                return ({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sintys', 'matcheo': 0, 'datosPaciente': {} } });
-            }
-            //TODO APLICAR matchAndes
-
-        });
     });
-    // }
 }
 
 function consultaAnses(sesion, tipo, filtro) {
+    let resultadoCuil: any;
+    let resultado: any;
     return new Promise((resolve, reject) => {
-        // console.log('sesion: ', sesion.return['$value']);
         soap.createClient(serv2, function (err, client) {
             let args = {
                 IdSesion: sesion.return['$value'],
@@ -67,22 +95,24 @@ function consultaAnses(sesion, tipo, filtro) {
                     reject(err2);
                 }
                 try {
-                    let resultado: any = await solicitarServicio(sesion, tipo, filtro);
-                    // console.log('...volviendo de la 1er solicitud');
-
-                    if (tipo === 'Documento' && resultado.codigo === 0) {
-                        // console.log('solicitando servicio nuevamente');
-                        let resultadoCuil = await solicitarServicio(sesion, 'Cuil', resultado.array[1]);
-                        console.log('resultadoCuil: ', JSON.stringify(resultadoCuil));
-                        resolve(resultadoCuil);
-                    } else {
-                        console.log('resultado: ', JSON.stringify(resultado));
-                        resolve(resultado);
-                    }
+                    resultado = await solicitarServicio(sesion, tipo, filtro);
                 } catch (error) {
                     console.error('Error consulta soap anses:' + error);
                     reject(error);
                 }
+                if (tipo === 'Documento' && resultado.codigo === 0) {
+                    try {
+                        resultadoCuil = await solicitarServicio(sesion, 'Cuil', resultado.array[1]);
+                    } catch (error) {
+                        console.error('Error consulta soap anses:' + error);
+                        reject(error);
+                    }
+                    resolve(resultadoCuil);
+                } else {
+                    console.log('resultado: ', JSON.stringify(resultado));
+                    resolve(resultado);
+                }
+
             });
         });
     });
@@ -101,7 +131,7 @@ function solicitarServicio(sesion, tipo, filtro) {
                 Proveedor: 'GN-ANSES',
                 Servicio: tipo,
                 DatoAuditado: filtro,
-                Operador: usuario,
+                Operador: login.username,
                 Cuerpo: 'hola',
                 CuerpoFirmado: false,
                 CuerpoEncriptado: false
@@ -112,9 +142,6 @@ function solicitarServicio(sesion, tipo, filtro) {
                         console.log('Error solicitar_servicio servicioAnses : ', err4);
                         reject(err4);
                     }
-                    console.log('RESULTADO ------------------->', result2);
-                    // console.log(JSON.stringify(result2.return.Resultado['$value']));
-                    // console.log(Buffer.from(result2.return.Resultado['$value'], 'base64').toString('ascii'));
                     let codigoResultado = result2.return.CodResultado['$value'];
                     if (result2.return.Resultado['$value']) {
                         let resultado = Buffer.from(result2.return.Resultado['$value'], 'base64').toString('ascii');

@@ -1,5 +1,6 @@
 import { AppToken } from './schemas/app-token.interface';
 import { UserToken } from './schemas/user-token.interface';
+import { PacienteToken } from './schemas/paciente-token.interface';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import * as passport from 'passport';
@@ -9,6 +10,16 @@ import * as configPrivate from '../config.private';
 let shiroTrie = require('shiro-trie');
 
 export class Auth {
+
+    /**
+     *  TTL JWT Token
+     *  @var expiresIn {number}
+     *
+     * @memberOf Auth
+     */
+
+    static expiresIn = 60 * 60 * 24 * 10;  /* 10 días */
+
     /**
      * Devuelve una instancia de shiro. Implementa un cache en el request actual para mejorar la performance
      *
@@ -44,7 +55,6 @@ export class Auth {
                 jwtFromRequest: passportJWT.ExtractJwt.fromAuthHeader()
             },
             function (jwt_payload, done) {
-                // TODO: Aquí se puede implementar un control del token, por ejemplo si está vencida, rechazada, etc.
                 done(null, jwt_payload);
             }
         ));
@@ -63,6 +73,25 @@ export class Auth {
      */
     static authenticate() {
         return passport.authenticate('jwt', { session: false });
+    }
+
+    /**
+     * Middleware Denied patients access
+     *
+     * @static
+     * @returns Middleware de Express.js
+     *
+     * @memberOf Auth
+     */
+    static deniedPatients() {
+        return function (req, res, next) {
+            console.log(req.user.type);
+            if (req.user.type !== 'paciente-token') {
+                next();
+            } else {
+                next(403);
+            }
+        }
     }
 
     /**
@@ -136,6 +165,7 @@ export class Auth {
         }
     }
 
+
     /**
      * Genera un token de usuario firmado
      *
@@ -149,7 +179,7 @@ export class Auth {
      *
      * @memberOf Auth
      */
-    static generateUserToken(nombre: string, apellido: string, organizacion: any, permisos: any, profesional: any): any {
+    static generateUserToken(nombre: string, apellido: string, organizacion: any, permisos: any, profesional: any, account_id: string = null): any {
         // Crea el token con los datos de sesión
         let token: UserToken = {
             id: mongoose.Types.ObjectId(),
@@ -163,9 +193,11 @@ export class Auth {
             roles: [permisos.roles],
             profesional: profesional,
             organizacion: organizacion,
-            permisos: permisos.permisos
+            permisos: permisos.permisos,
+            account_id: account_id,
+            type: 'user-token'
         };
-        return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: 60 * 60 * 24 * 10 /* 10 días */ });
+        return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: this.expiresIn });
     }
 
     /**
@@ -187,8 +219,40 @@ export class Auth {
                 nombre: nombre
             },
             organizacion: organizacion,
-            permisos: permisos
+            permisos: permisos,
+            account_id: null,
+            type: 'app-token'
         };
         return jwt.sign(token, configPrivate.auth.jwtKey);
+    }
+
+    /**
+     * Genera un token firmado para pacientes con la App Mobile
+     *
+     * @static
+     * @param {string} nombre Nombre del usuario
+     * @param {string} apellido Apellido del usuario
+     * @param {*} organizacion Organización (corresponde a schemas/organizacion)
+     * @param {*} permisos Permisos (corresponde a schemas/permisos)
+     * @param {*} profesional Permisos (corresponde a core/schemas/profesional)
+     * @returns {*} JWT
+     *
+     * @memberOf Auth
+     */
+    static generatePacienteToken(account_id: string, nombre: string, email: string, pacientes: any, permisos: any): any {
+        // Crea el token con los datos de sesión
+        let token: PacienteToken = {
+            id: mongoose.Types.ObjectId(),
+            usuario: {
+                nombre,
+                email,
+            },
+            permisos: permisos,
+            pacientes: pacientes,
+            organizacion: null,
+            account_id: account_id,
+            type: 'paciente-token'
+        };
+        return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: this.expiresIn });
     }
 }

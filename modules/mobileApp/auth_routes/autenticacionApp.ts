@@ -4,20 +4,21 @@ import { paciente, pacienteMpi } from '../../../core/mpi/schemas/paciente';
 import * as express from 'express';
 import * as authController from '../controller/AuthController';
 import * as mongoose from 'mongoose';
+import { Auth } from '../../../auth/auth.class';
 
 let router = express.Router();
 
 
 /**
  * Login a la app mobile
- * 
+ *
  * @param email {string} email del usuario
  * @param password {string} password del usuario
  */
 
 router.post('/login', function (req, res, next) {
-    var email = req.body.email;
-    var password = req.body.password;
+    let email = req.body.email;
+    let password = req.body.password;
 
     if (!email) {
         return res.status(422).send({ error: 'Se debe ingresar una dirección de e-mail' });
@@ -27,26 +28,27 @@ router.post('/login', function (req, res, next) {
         return res.status(422).send({ error: 'Debe ingresar una clave' });
     }
 
-    pacienteApp.findOne({ email }, (err, existingUser: any) => {
+    pacienteApp.findOne({ email }, (err, user: any) => {
 
-        if (!existingUser) {
+        if (!user) {
             return res.status(422).send({ error: 'Cuenta inexistente' });
         }
 
-        if (!existingUser.activacionApp) {
+        if (!user.activacionApp) {
             res.status(422).send({ message: 'cuenta no verificada' });
             return;
         }
 
-        existingUser.comparePassword(password, (err, isMatch) => {
+        user.comparePassword(password, (err, isMatch) => {
             if (err) {
                 return next(err);
             }
             if (isMatch) {
-                var userInfo = authController.setUserInfo(existingUser);
+                // var userInfo = authController.setUserInfo(existingUser);
+                let token = Auth.generatePacienteToken(String(user.id), user.nombre + ' ' + user.apellido, user.email, user.pacientes, user.permisos);
                 res.status(200).json({
-                    token: 'JWT ' + authController.generateToken(userInfo),
-                    user: existingUser
+                    token: token,
+                    user: user
                 });
                 return;
             } else {
@@ -54,9 +56,6 @@ router.post('/login', function (req, res, next) {
             }
         });
     });
-    /*
-    
-    */
 });
 
 /**
@@ -65,7 +64,7 @@ router.post('/login', function (req, res, next) {
  */
 
 router.post('/registro', function (req, res, next) {
-    var dataPacienteApp = {
+    let dataPacienteApp = {
         nombre: req.body.nombre,
         apellido: req.body.apellido,
         email: req.body.email,
@@ -101,7 +100,7 @@ router.post('/registro', function (req, res, next) {
             return res.status(422).send({ 'email': 'El e-mail ingresado está en uso' });
         }
 
-        var user = new pacienteApp(dataPacienteApp);
+        let user = new pacienteApp(dataPacienteApp);
 
         // enviarCodigoVerificacion(user);
         user.save(function (err, user: any) {
@@ -114,7 +113,7 @@ router.post('/registro', function (req, res, next) {
                 let paciente = pacientes[0].paciente;
 
                 let valid = false;
-                if (paciente.estado == 'validado') {
+                if (paciente.estado === 'validado') {
                     authController.enviarCodigoVerificacion(user);
                     user.pacientes = [
                         {
@@ -198,6 +197,7 @@ router.post('/verificar-codigo', function (req, res, next) {
         if (err) {
             return next(err);
         }
+
         if (authController.verificarCodigo(codigoIngresado, datosUsuario.codigoVerificacion)) {
             if (datosUsuario.expirationTime.getTime() + authController.expirationOffset >= new Date().getTime()) {
                 datosUsuario.activacionApp = true;
@@ -210,9 +210,9 @@ router.post('/verificar-codigo', function (req, res, next) {
                         return next(err);
                     }
 
-                    var userInfo = authController.setUserInfo(user);
+                    let token = Auth.generatePacienteToken(String(user.id), user.nombre + ' ' + user.apellido, user.email, user.pacientes, user.permisos);
                     res.status(200).json({
-                        token: 'JWT ' + authController.generateToken(userInfo),
+                        token: token,
                         user: user
                     });
                 });

@@ -1,74 +1,66 @@
 import * as jwt from 'jsonwebtoken';
 import { pacienteApp } from '../schemas/pacienteApp';
 import { authApp } from '../../../config.private';
-// const nodemailer = require('nodemailer');
-import * as express from 'express';
 import { Client } from 'elasticsearch';
+import { sendMail, MailOptions } from '../../../utils/sendMail';
+import { sendSms, SmsOptions } from '../../../utils/sendSms';
+import { matching } from '@andes/match';
+import { paciente, pacienteMpi } from '../../../core/mpi/schemas/paciente';
+import * as express from 'express';
 import * as config from '../../../config';
 import * as configPrivate from '../../../config.private';
-import { sendMail, MailOptions } from '../../../utils/sendMail';
 import * as moment from 'moment';
-import { matching } from '@andes/match';
 import * as constantes from '../../../core/tm/schemas/constantes';
-import { paciente, pacienteMpi } from '../../../core/mpi/schemas/paciente';
-
+import * as mongoose from 'mongoose';
 
 export const expirationOffset = 1000 * 60 * 60 * 24;
 
-export function generateToken(user) {
-    return jwt.sign(user, authApp.secret, {
-        expiresIn: 10080
-    });
-}
-
 export function verificarCodigo(codigoIngresado, codigo) {
-    if (codigoIngresado === codigo)
-        return true
-    else
-        return false
+    if (codigoIngresado === codigo) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 export function enviarCodigoVerificacion(user) {
-    console.log("Enviando mail...");
+    console.log('Enviando mail...');
 
-    let options: MailOptions = {
+    let mailOptions: MailOptions = {
         from: configPrivate.enviarMail.options.from,
-        to: user.nombre,
+        to: user.email,
         subject: 'Hola ' + user.email,
         text: 'El código de verificación es: ' + user.codigoVerificacion,
         html: 'El código de verificación es: ' + user.codigoVerificacion
     };
 
-    sendMail(options);
+    let smsOptions: SmsOptions = {
+        telefono: user.telefono,
+        mensaje: user.codigoVerificacion
+    }
+
+    sendMail(mailOptions);
+    sendSms(smsOptions, function (res) {
+        if (res === '0') {
+            console.log("El SMS se envío correctamente");
+        }
+    });
 }
 
 export function envioCodigoCount(user: any) {
-    //TODO: Implementar si se decide poner un límite al envío de códigos    
+    // TODO: Implementar si se decide poner un límite al envío de códigos
 }
 
-
-
 export function generarCodigoVerificacion() {
-    let codigo = "";
+    let codigo = '';
     let length = 6;
-    let caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     for (let i = 0; i < length; i++) {
         codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
     }
 
     return codigo;
 }
-
-export function setUserInfo(request) {
-    return {
-        _id: request._id,
-        email: request.email,
-        pacientes: request.pacientes,
-        permisos: request.permisos
-    };
-}
-
-
 
 export function buscarPaciente(id) {
     return new Promise((resolve, reject) => {
@@ -91,10 +83,9 @@ export function buscarPaciente(id) {
     });
 }
 
-
 function searchContacto(paciente, key) {
     for (let i = 0; i < paciente.contacto.length; i++) {
-        if (paciente.contacto[i].tipo == key) {
+        if (paciente.contacto[i].tipo === key) {
             return paciente.contacto[i].valor;
         }
     }
@@ -127,15 +118,51 @@ export function checkAppAccounts(paciente) {
     });
 }
 
+/**
+ * Obtiene una cuenta desde un profesional
+ * @param profesional {profesionalSchema}
+ */
+export function getAccountByProfesional(id) {
+    return pacienteApp.findOne({ 'profesionalId': mongoose.Types.ObjectId(id) });
+}
 
 
 /**
- * Crea un usuario de la app mobile apartir de un paciente
+ * Crea un usuario de la app mobile a partir de un profesional
+ * @param profesional {profesionalSchema}
+ */
+export function createUserFromProfesional(profesional) {
+    let dataPacienteApp: any = {
+        profesionalId: profesional.id,
+        nombre: profesional.nombre,
+        apellido: profesional.apellido,
+        email: profesional.documento,
+        password: generarCodigoVerificacion(),
+        telefono: '',
+        envioCodigoCount: 0,
+        nacionalidad: 'Argentina',
+        documento: profesional.documento,
+        fechaNacimiento: profesional.fechaNacimiento,
+        sexo: profesional.sexo,
+        genero: profesional.genero,
+        permisos: [],
+        pacientes: []
+    };
+
+    let user = new pacienteApp(dataPacienteApp);
+
+    return user.save();
+
+}
+
+
+/**
+ * Crea un usuario de la app mobile a partir de un paciente
  * @param paciente {pacienteSchema}
  */
 export function createUserFromPaciente(paciente) {
     return new Promise((resolve, reject) => {
-        var dataPacienteApp: any = {
+        let dataPacienteApp: any = {
             nombre: paciente.nombre,
             apellido: paciente.apellido,
             email: searchContacto(paciente, 'email'),
@@ -172,7 +199,7 @@ export function createUserFromPaciente(paciente) {
                 return reject({ error: 'email_exists' });
             }
 
-            var user = new pacienteApp(dataPacienteApp);
+            let user = new pacienteApp(dataPacienteApp);
 
             user.save(function (err, user: any) {
 
@@ -299,5 +326,63 @@ export function matchPaciente(data) {
         }).catch((error) => {
             reject(error);
         });
+    });
+}
+
+/**
+ * Actualiza los datos de la cuenta mobile
+ * @param data {object} password, email, telefono
+ */
+
+export function updateAccount(account, data) {
+    return new Promise((resolve, reject) => {
+
+        let promise: any = Promise.resolve();
+        let promise_password: any = Promise.resolve();
+
+        if (data.password) {
+            promise_password = new Promise((resolve, reject) => {
+                account.comparePassword(data.old_password, (err, isMatch) => {
+                    if (err) {
+                        return reject({ password: 'wrong_password' });
+                    }
+                    if (isMatch) {
+                        account.password = data.password;
+                        return resolve();
+                    } else {
+                        return reject({ password: 'wrong_password' });
+                    }
+                });
+            });
+        }
+
+        if (data.telefono) {
+            account.telefono = data.telefono;
+        }
+
+        if (data.email) {
+            account.email = data.email;
+            promise = new Promise((resolve, reject) => {
+                pacienteApp.findOne({ email: data.email }, function (err, acts) {
+                    if (!acts) {
+                        resolve();
+                    } else {
+                        reject({ email: 'account_exists' });
+                    }
+                })
+            });
+        }
+
+        Promise.all([promise, promise_password]).then(() => {
+
+            account.save(function (err) {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(account);
+            });
+
+        }).catch((err) => reject(err));
+
     });
 }

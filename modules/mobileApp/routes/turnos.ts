@@ -1,4 +1,5 @@
 import { pacienteApp } from '../schemas/pacienteApp';
+import { recordatorio } from '../schemas/recordatorio';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
@@ -11,10 +12,124 @@ import { INotification, PushClient } from '../controller/PushClient';
 import * as authController from '../controller/AuthController';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 
+import { sendSms, SmsOptions } from '../../../utils/sendSms';
+
+let async = require('async');
+
 let router = express.Router();
 
-router.get('/turnos', function (req: any, res, next) {
+// Envía el sms al paciente recordando el turno con 24 Hs de antelación
+router.post('/turnos/smsRecordatorioTurno', function (req, res, next) {
 
+    recordatorio.find({ 'estadoEnvio': false }, function (err, data) {
+
+        data.forEach((turno, index) => {
+            let smsOptions: SmsOptions = {
+                telefono: data[index].paciente.telefono,
+                mensaje: 'Sr ' + data[index].paciente.apellido + 'Le recordamos que tiene un turno para el día: ' + moment(data[index].fechaTurno).format('DD/MM/YYYY')
+            }
+
+            sendSms(smsOptions, function (res) {
+                if (res === '0') {
+                    recordatorio.findById(data[0]._id, function (err, dato) {
+                        data[index].estadoEnvio = true;
+
+                        data[index].save();
+                    });
+                    console.log("El SMS se envío correctamente");
+                }
+            });
+        });
+
+        // data.forEach(function (turno, callback) {
+
+
+        // });
+
+        res.json(data);
+    });
+});
+
+router.get('/turnos/recordatorioTurno', function (req, res, next) {
+
+    let startDay = moment.utc().add(1, 'days').startOf('day').toDate();
+    let endDay = moment.utc().add(1, 'days').endOf('day').toDate();
+
+    let pipelineTurno = [];
+    let turnos = [];
+    let turno;
+
+    pipelineTurno = [{
+        '$match': {
+        }
+    },
+    // Unwind cada array
+    { '$unwind': '$bloques' },
+    { '$unwind': '$bloques.turnos' },
+    // Filtra los elementos que matchean
+    {
+        '$match': {
+        }
+    },
+    {
+        '$group': {
+            '_id': { 'id': '$_id', 'bloqueId': '$bloques._id' },
+            'turnos': { $push: '$bloques.turnos' }
+        }
+    },
+    {
+        '$group': {
+            '_id': '$_id.id',
+            'bloques': { $push: { '_id': '$_id.bloqueId', 'turnos': '$turnos' } }
+        }
+    }];
+
+    // Se modifica el pipeline en la posición 0 y 3, que son las posiciones
+    // donde se realiza el match
+    let matchTurno = {};
+
+    matchTurno['bloques.turnos.horaInicio'] = { $gte: startDay, $lte: endDay };
+    matchTurno['bloques.turnos.estado'] = 'asignado';
+
+    pipelineTurno[0] = { '$match': matchTurno };
+    pipelineTurno[3] = { '$match': matchTurno };
+    pipelineTurno[6] = { '$unwind': '$bloques' };
+    pipelineTurno[7] = { '$unwind': '$bloques.turnos' };
+
+    agenda.aggregate(pipelineTurno,
+        function (err2, data2) {
+            if (err2) {
+                return next(err2);
+            }
+
+            data2.forEach(elem => {
+                turno = elem.bloques.turnos;
+                turno.paciente = elem.bloques.turnos.paciente;
+                turno.tipoRecordatorio = 'turno';
+                turnos.push(turno);
+            });
+
+            async.forEach(turnos, function (turno, callback) {
+                console.log('Turnoo ', turno);
+                let recordatorioTurno = new recordatorio({
+                    fechaTurno: turno.horaInicio,
+                    paciente: turno.paciente,
+                    tipoRecordatorio: turno.tipoRecordatorio,
+                    estadoEnvio: false,
+                });
+
+                recordatorioTurno.save((err) => {
+                    if (err) {
+                        return next(err);
+                    }
+
+                });
+                next(turno);
+            });
+        });
+});
+
+router.get('/turnos', function (req: any, res, next) {
     let pipelineTurno = [];
     let turnos = [];
     let turno;
@@ -23,7 +138,7 @@ router.get('/turnos', function (req: any, res, next) {
 
     matchTurno['bloques.turnos.paciente.id'] = mongoose.Types.ObjectId(pacienteId);
 
-    //matchTurno['estado'] = 'publicada';
+    // matchTurno['estado'] = 'publicada';
 
     if (req.query.estado) {
         matchTurno['bloques.turnos.estado'] = req.query.estado;
@@ -105,7 +220,7 @@ router.get('/turnos', function (req: any, res, next) {
                 delete turno.updatedAt;
 
                 /* Busco el turno anterior cuando fue reasignado */
-                let suspendido = turno.estado == 'suspendido' || turno.agenda_estado == 'suspendida';
+                let suspendido = turno.estado === 'suspendido' || turno.agenda_estado === 'suspendida';
                 let reasignado = turno.reasignado && turno.reasignado.siguiente;
 
                 if (turno.reasignado && turno.reasignado.anterior) {
@@ -119,7 +234,7 @@ router.get('/turnos', function (req: any, res, next) {
                             if (bloque) {
                                 let t = bloque.turnos.id(datos.idTurno);
                                 turno.reasignado_anterior = t;
-                                turno.confirmadoAt = turno.reasignado.confirmadoAt;
+                                // turno.confirmadoAt = turno.reasignado.confirmadoAt;
                                 delete turno['reasignado'];
                                 resolve();
                             } else {
@@ -136,7 +251,7 @@ router.get('/turnos', function (req: any, res, next) {
                 }
             });
 
-            if (promisesStack.length == 0) {
+            if (promisesStack.length === 0) {
                 promisesStack.push(Promise.resolve());
             }
 
@@ -150,11 +265,11 @@ router.get('/turnos', function (req: any, res, next) {
             pacienteApp.find({ 'pacientes.id': pacienteId }, function (err, docs: any[]) {
                 docs.forEach(user => {
                     let devices = user.devices.map(item => item.device_id);
-
+ 
                     //let date = moment(turno.horaInicio).format('DD [de] MMMM');
                     let body = 'Su turno del  fue reasignado. Haz click para más información.';
                     new PushClient().send(devices, { body, extraData: { action: 'reasignar' } });
-
+ 
                 });
             });
             */
@@ -165,7 +280,7 @@ router.get('/turnos', function (req: any, res, next) {
 
 /**
  * Cancela un turno de un paciente
- * 
+ *
  * @param turno_id {string} Id del turno
  * @param  agenda_id {string} id de la agenda
  */
@@ -196,7 +311,7 @@ router.post('/turnos/cancelar', function (req: any, res, next) {
                 Auth.audit(agendaObj, req);
                 agendaObj.save(function (error) {
                     Logger.log(req, 'turnos', 'update', {
-                        accion: "liberarTurno",
+                        accion: 'liberarTurno',
                         ruta: req.url,
                         method: req.method,
                         data: agendaObj,
@@ -219,10 +334,11 @@ router.post('/turnos/cancelar', function (req: any, res, next) {
 });
 
 /**
- * Confirma un turno reasginado
- * 
+ * Confirma un turno
+ *
  * @param turno_id {string} Id del turno
- * @param  agenda_id {string} id de la agenda
+ * @param agenda_id {string} id de la agenda
+ * @param bloque_id {string} id del bloque
  */
 
 router.post('/turnos/confirmar', function (req: any, res, next) {
@@ -245,36 +361,36 @@ router.post('/turnos/confirmar', function (req: any, res, next) {
         if (turno) {
             if (String(turno.paciente.id) === pacienteId) {
 
-                if (turno.reasignado && turno.reasignado.anterior) {
-                    if (!turno.reasignado.confirmadoAt) {
+                // if (turno.reasignado && turno.reasignado.anterior) {
+                if (!turno.confirmedAt) {
 
-                        turno.reasignado.confirmadoAt = new Date();
+                    turno.confirmedAt = new Date();
 
-                        Auth.audit(agendaObj, req);
-                        agendaObj.save(function (error) {
-                            Logger.log(req, 'turnos', 'update', {
-                                accion: "confirmar",
-                                ruta: req.url,
-                                method: req.method,
-                                data: agendaObj,
-                                err: error || false
-                            });
-
-
-                            LoggerPaciente.logTurno(req, 'turnos:confirmarReasignacion', turno.paciente, turno, bloqueId, agendaId);
-
-                            if (error) {
-                                return next(error);
-                            } else {
-                                return res.json({ message: 'OK' });
-                            }
+                    Auth.audit(agendaObj, req);
+                    agendaObj.save(function (error) {
+                        Logger.log(req, 'turnos', 'update', {
+                            accion: 'confirmar',
+                            ruta: req.url,
+                            method: req.method,
+                            data: agendaObj,
+                            err: error || false
                         });
-                    } else {
-                        return res.status(422).send({ message: 'turno_corfirmado' });
-                    }
+
+
+                        LoggerPaciente.logTurno(req, 'turnos:confirmar', turno.paciente, turno, bloqueId, agendaId);
+
+                        if (error) {
+                            return next(error);
+                        } else {
+                            return res.json({ message: 'OK' });
+                        }
+                    });
                 } else {
-                    return res.status(422).send({ message: 'turno_not_reasignado' });
+                    return res.status(422).send({ message: 'turno_ya_corfirmado' });
                 }
+                // } else {
+                //     return res.status(422).send({ message: 'turno_not_reasignado' });
+                // }
             } else {
                 return res.status(422).send({ message: 'unauthorized' });
             }
@@ -290,7 +406,7 @@ router.post('/turnos/confirmar', function (req: any, res, next) {
  */
 
 router.post('/create/:id', function (req: any, res, next) {
-    if (!req.user.usuario) {
+    if (!req.user.profesional) {
         return res.status(401).send('unauthorized');
     }
     let pacienteId = req.params.id;
@@ -314,7 +430,7 @@ router.post('/create/:id', function (req: any, res, next) {
  */
 
 router.get('/check/:id', function (req: any, res, next) {
-    if (!req.user.usuario) {
+    if (!req.user.profesional) {
         return res.status(401).send('unauthorized');
     }
 

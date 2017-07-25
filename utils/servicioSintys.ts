@@ -115,8 +115,7 @@ export function formatearDatosSintys(datosSintys) {
     if (datosSintys.FechaNacimiento) {
         fecha = datosSintys.FechaNacimiento.split('/');
         let fechaNac = new Date(fecha[2].substr(0, 4), fecha[1] - 1, fecha[0]);
-        ciudadano.fechaNacimiento = fechaNac.toJSON();
-
+        ciudadano.fechaNacimiento = fechaNac;
     }
 
     /*
@@ -170,9 +169,13 @@ export function matchSintys(paciente) {
     paciente['matchSintys'] = 0;
     // Se buscan los datos en sintys y se obtiene el paciente
     return new Promise((resolve, reject) => {
-
-        if (paciente.documento) {
+        let band = (paciente.entidadesValidadoras) ? (paciente.entidadesValidadoras.indexOf('sintys') < 0) : true;
+        if (paciente.documento && band) {
             if (paciente.documento.length >= 7) {
+                if (paciente.nombre && paciente.apellido) {
+                    paciente.apellido = paciente.apellido + ' ' + paciente.nombre;
+                    paciente.nombre = '';
+                }
                 getPersonaSintys(paciente.documento)
                     .then((resultado) => {
                         if (resultado) {
@@ -181,7 +184,7 @@ export function matchSintys(paciente) {
                                 console.log('entro por 200');
 
                                 pacienteSintys = formatearDatosSintys(JSON.parse(resultado[1])[0]);
-                                matchPorcentaje = match.matchPersonas(paciente, pacienteSintys, weights);
+                                matchPorcentaje = match.matchPersonas(paciente, pacienteSintys, weights) * 100;
                                 console.log('el % de matcheo es:', matchPorcentaje);
                                 paciente['matchSintys'] = matchPorcentaje;
                                 resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sintys', 'matcheo': matchPorcentaje, 'datosPaciente': pacienteSintys } });

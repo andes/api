@@ -2,6 +2,17 @@
 // Todas los datos privados (credenciales, IPs, ...) deben quedar en el archivo config.private.ts
 // !!!!!!!!!!!!!!!!!!!!!!!!!!
 
+import { Auth } from './auth/auth.class';
+
+const appMiddleware = [
+    Auth.authenticate(),
+    Auth.deniedPatients()
+];
+
+const mobileMiddleware = [
+    Auth.authenticate()
+];
+
 // Habilita/deshabilita módulos de la API
 export const modules = {
     auth: {
@@ -13,85 +24,84 @@ export const modules = {
         active: true,
         path: './core/tm/routes',
         route: '/core/tm',
-        auth: false,
+        middleware: null,
     },
     term: {
         active: true,
         path: './core/term/routes',
         route: '/core/term',
-        auth: false,
+        middleware: null,
     },
     log: {
         active: true,
         path: './core/log/routes',
         route: '/core/log',
-        auth: true,
+        middleware: appMiddleware
     },
     status: {
         active: true,
         path: './core/status/routes',
         route: '/core/status',
-        auth: false, // Son APIs públicas
+        middleware: null, // Son APIs públicas
     },
     mpi: {
         active: true,
         path: './core/mpi/routes',
         route: '/core/mpi',
-        auth: true,
+        middleware: appMiddleware
     },
     auditoria: {
         active: true,
         path: './core/mpi/routes/auditoria',
         route: '/core/mpi/auditoria',
-        auth: true,
+        middleware: appMiddleware
     },
     turnos: {
         active: true,
         path: './modules/turnos/routes',
         route: '/modules/turnos',
-        auth: true,
-    },
-    rup: {
-        active: true,
-        path: './modules/rup/routes',
-        route: '/modules/rup',
-        auth: true,
+        middleware: appMiddleware
     },
     llaves: {
         active: true,
         path: './modules/llaves/routes',
         route: '/modules/llaves',
-        auth: true,
+        middleware: appMiddleware
+    },
+    rup: {
+        active: true,
+        path: './modules/rup/routes',
+        route: '/modules/rup',
+        middleware: appMiddleware
     },
     auditorias: { // Auditorías RUP (prestacionPaciente)
         active: true,
         path: './modules/auditorias/routes',
         route: '/modules/auditorias',
-        auth: true,
+        middleware: appMiddleware
     },
     turnos_mobile_auth: {
         active: true,
-        path: './modules/turnosmobile/auth_routes',
-        route: '/modules/turnosmobile',
-        auth: false,
+        path: './modules/mobileApp/auth_routes',
+        route: '/modules/mobileApp'
     },
     turnos_mobile: {
         active: true,
-        path: './modules/turnosmobile/routes',
-        route: '/modules/turnosmobile',
-        auth: true,
+        path: './modules/mobileApp/routes',
+        route: '/modules/mobileApp',
+        middleware: mobileMiddleware
     },
     fuentesAutenticas: {
         active: true,
         path: './modules/fuentesAutenticas/routes',
         route: '/modules/fuentesAutenticas',
-        auth: true,
+        middleware: appMiddleware
     },
     usuarios: {
         active: true,
         path: './modules/usuarios/routes',
         route: '/modules/usuarios',
-        auth: true,
+        middleware: appMiddleware
     }
 };
 

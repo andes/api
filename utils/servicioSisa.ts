@@ -175,7 +175,8 @@ export function matchSisa(paciente) {
     paciente['matchSisa'] = 0;
     // Se buscan los datos en sisa y se obtiene el paciente
     return new Promise((resolve, reject) => {
-        if (paciente.documento) {
+        let band = (paciente.entidadesValidadoras) ? (paciente.entidadesValidadoras.indexOf('sisa') < 0) : true;
+        if (paciente.documento && band) {
             if (paciente.documento.length >= 7) {
                 let sexo = null;
                 if (paciente.sexo) {
@@ -185,6 +186,7 @@ export function matchSisa(paciente) {
                 getSisaCiudadano(paciente.documento, configPrivate.sisa.username, configPrivate.sisa.password, sexo)
                     .then((resultado) => {
                         if (resultado) {
+                            console.log(resultado);
                             // Verifico el resultado devuelto por el rest de Sisa
                             if (resultado[0] === 200) {
                                 switch (resultado[1].Ciudadano.resultado) {
