@@ -61,6 +61,8 @@ export let pacienteAppSchema = new mongoose.Schema({
         }
     ],
 
+    profesionalId: mongoose.Schema.Types.ObjectId,
+
     estadoCodigo: {
         type: Boolean,
         default: false

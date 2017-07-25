@@ -1,25 +1,19 @@
 import * as jwt from 'jsonwebtoken';
 import { pacienteApp } from '../schemas/pacienteApp';
 import { authApp } from '../../../config.private';
-// const nodemailer = require('nodemailer');
-import * as express from 'express';
 import { Client } from 'elasticsearch';
-import * as config from '../../../config';
-import * as configPrivate from '../../../config.private';
 import { sendMail, MailOptions } from '../../../utils/sendMail';
 import { sendSms, SmsOptions } from '../../../utils/sendSms';
-import * as moment from 'moment';
 import { matching } from '@andes/match';
-import * as constantes from '../../../core/tm/schemas/constantes';
 import { paciente, pacienteMpi } from '../../../core/mpi/schemas/paciente';
+import * as express from 'express';
+import * as config from '../../../config';
+import * as configPrivate from '../../../config.private';
+import * as moment from 'moment';
+import * as constantes from '../../../core/tm/schemas/constantes';
+import * as mongoose from 'mongoose';
 
 export const expirationOffset = 1000 * 60 * 60 * 24;
-
-export function generateToken(user) {
-    return jwt.sign(user, authApp.secret, {
-        expiresIn: 10080
-    });
-}
 
 export function verificarCodigo(codigoIngresado, codigo) {
     if (codigoIngresado === codigo)
@@ -63,17 +57,6 @@ export function generarCodigoVerificacion() {
     return codigo;
 }
 
-export function setUserInfo(request) {
-    return {
-        _id: request._id,
-        email: request.email,
-        pacientes: request.pacientes,
-        permisos: request.permisos
-    };
-}
-
-
-
 export function buscarPaciente(id) {
     return new Promise((resolve, reject) => {
         paciente.findById(id, function (err, data) {
@@ -94,7 +77,6 @@ export function buscarPaciente(id) {
         });
     });
 }
-
 
 function searchContacto(paciente, key) {
     for (let i = 0; i < paciente.contacto.length; i++) {
@@ -131,10 +113,46 @@ export function checkAppAccounts(paciente) {
     });
 }
 
+/**
+ * Obtiene una cuenta desde un profesional
+ * @param profesional {profesionalSchema}
+ */
+export function getAccountByProfesional(id) {
+    return pacienteApp.findOne({ 'profesionalId': mongoose.Types.ObjectId(id) });
+}
 
 
 /**
- * Crea un usuario de la app mobile apartir de un paciente
+ * Crea un usuario de la app mobile a partir de un profesional
+ * @param profesional {profesionalSchema}
+ */
+export function createUserFromProfesional(profesional) {
+    var dataPacienteApp: any = {
+        profesionalId: profesional.id,
+        nombre: profesional.nombre,
+        apellido: profesional.apellido,
+        email: profesional.documento,
+        password: generarCodigoVerificacion(),
+        telefono: '',
+        envioCodigoCount: 0,
+        nacionalidad: 'Argentina',
+        documento: profesional.documento,
+        fechaNacimiento: profesional.fechaNacimiento,
+        sexo: profesional.sexo,
+        genero: profesional.genero,
+        permisos: [],
+        pacientes: []
+    };
+
+    var user = new pacienteApp(dataPacienteApp);
+
+    return user.save();
+
+}
+
+
+/**
+ * Crea un usuario de la app mobile a partir de un paciente
  * @param paciente {pacienteSchema}
  */
 export function createUserFromPaciente(paciente) {

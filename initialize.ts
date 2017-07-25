@@ -1,5 +1,4 @@
 import * as bodyParser from 'body-parser';
-import * as mongoose from 'mongoose';
 import * as config from './config';
 import { Auth } from './auth/auth.class';
 import { Swagger } from './swagger';
@@ -7,7 +6,6 @@ import { Connections } from './connections';
 import * as HttpStatus from 'http-status-codes';
 import { Express } from 'express';
 
-//import { snomedDB } from './snomed';
 let requireDir = require('require-dir');
 
 export function initAPI(app: Express) {
@@ -43,11 +41,13 @@ export function initAPI(app: Express) {
         if (config.modules[m].active) {
             let routes = requireDir(config.modules[m].path);
             for (let route in routes) {
-                if (config.modules[m].auth) {
-                    app.use('/api' + config.modules[m].route, Auth.authenticate(), routes[route]);
+
+                if (config.modules[m].middleware) {
+                    app.use('/api' + config.modules[m].route, config.modules[m].middleware, routes[route]);
                 } else {
                     app.use('/api' + config.modules[m].route, routes[route]);
                 }
+
             }
         }
     }

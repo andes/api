@@ -14,7 +14,7 @@ export let auditoriaPrestacionPacienteSchema = new mongoose.Schema({
     auditor: profesionalSchema,
     estado: {
         type: String,
-        enum: [ 'pendiente', 'aprobada', 'desaprobada' ],
+        enum: ['pendiente', 'aprobada', 'desaprobada'],
         required: true,
         default: 'pendiente'
     },

@@ -49,10 +49,18 @@ router.put('/paciente/:id', function (req: any, res, next) {
         authController.buscarPaciente(pacientes[index].id).then((paciente: any) => {
             let pacienteOriginal = paciente.toObject();
 
-            paciente.reportarError = req.body.reportarError;
-            paciente.notas = req.body.notas;
-            paciente.direccion = req.body.direccion;
-            paciente.contacto = req.body.contacto;
+            if (req.body.reportarError) {
+                paciente.reportarError = req.body.reportarError;
+                paciente.notaError = req.body.notas;
+            }
+
+            if (req.body.direccion) {
+                paciente.direccion = req.body.direccion;
+            }
+            if (req.body.contacto) {
+                paciente.contacto = req.body.contacto;
+            }
+
             Auth.audit(paciente, req);
 
             paciente.save(function (err2) {
@@ -63,14 +71,17 @@ router.put('/paciente/:id', function (req: any, res, next) {
                 res.send({ status: "OK" });
                 (new ElasticSync()).sync(paciente).then((updated) => {
                     if (updated) {
+                        console.log("BIEN");
                         Logger.log(req, 'mpi', 'elasticUpdate', {
                             original: pacienteOriginal,
                             nuevo: paciente
                         });
                     } else {
+                        console.log("BIEN I");
                         Logger.log(req, 'mpi', 'elasticInsert', paciente);
                     }
                 }).catch((error) => {
+                    console.log("MAL");
                     Logger.log(req, 'pacientes', 'elasticError', error);
                 });
             });

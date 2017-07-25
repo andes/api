@@ -42,6 +42,7 @@ router.get('/agenda/candidatas', function (req, res, next) {
 
         let match = {
             'horaInicio': { '$gte': horaAgendaOrig },
+            'nominalizada': true,
             '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
             'tipoPrestaciones._id': mongoose.Types.ObjectId(turno.tipoPrestacion._id), // Que tengan incluída la prestación del turno
             '_id': { '$ne': mongoose.Types.ObjectId(req.query.idAgenda) }, // Que no sea la agenda original
@@ -105,11 +106,11 @@ router.get('/agenda/:id?', function (req, res, next) {
         query = agenda.find({});
 
         if (req.query.fechaDesde) {
-            query.where('horaInicio').gte(req.query.fechaDesde);
+            query.where('horaInicio').gte(moment(req.query.fechaDesde).startOf('day').toDate() as any);
         }
 
         if (req.query.fechaHasta) {
-            query.where('horaFin').lte(req.query.fechaHasta);
+            query.where('horaFin').lte(moment(req.query.fechaHasta).endOf('day').toDate() as any);
         }
 
         if (req.query.idProfesional) {
@@ -134,6 +135,11 @@ router.get('/agenda/:id?', function (req, res, next) {
 
         if (req.query.organizacion) {
             query.where('organizacion._id').equals(req.query.organizacion);
+        }
+
+        // Trae las Agendas NO nominalizadas
+        if (req.query.nominalizada && req.query.nominalizada === false) {
+            query.where('nominalizada').equals(false);
         }
 
         // Filtra por el array de tipoPrestacion enviado como parametro
@@ -340,7 +346,12 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                     break;
                 case 'pausada':
                 case 'prePausada':
+                case 'asistenciaCerrada':
+                case 'codificada':
                 case 'suspendida': agendaCtrl.actualizarEstado(req, data);
+                    break;
+                case 'avisos':
+                    agendaCtrl.agregarAviso(req, data);
                     break;
                 // case 'reasignarTurno': reasignarTurno(req, data, turnos[y]._id);
                 //     break;
