@@ -1,19 +1,19 @@
 let soap = require('soap');
 let libxmljs = require('libxmljs');
 
-//let url = 'sms.neuquen.gov.ar';
+// let url = 'sms.neuquen.gov.ar';
 let url = '192.168.20.119';
 let urlOperador = 'http://' + url + ':8080/Carrier/carrier?wsdl';
 let urlNumero = 'http://' + url + ':8080/MobileOutBackup/MobileOut?wsdl';
 
-//El mensaje puede ser el código de verificación, recordatorio de turno, etc.
+// El mensaje puede ser el código de verificación, recordatorio de turno, etc.
 export interface SmsOptions {
     telefono: number;
     mensaje: string;
 }
 
 export function sendSms(smsOptions: SmsOptions, callback) {
-    console.log("Enviando SMS...");
+    console.log('Enviando SMS...');
 
     let argsOperador = {
         telefono: smsOptions.telefono
