@@ -11,14 +11,14 @@ let router = express.Router();
 
 /**
  * Login a la app mobile
- * 
+ *
  * @param email {string} email del usuario
  * @param password {string} password del usuario
  */
 
 router.post('/login', function (req, res, next) {
-    var email = req.body.email;
-    var password = req.body.password;
+    let email = req.body.email;
+    let password = req.body.password;
 
     if (!email) {
         return res.status(422).send({ error: 'Se debe ingresar una dirección de e-mail' });
@@ -56,9 +56,6 @@ router.post('/login', function (req, res, next) {
             }
         });
     });
-    /*
-    
-    */
 });
 
 /**
@@ -66,8 +63,8 @@ router.post('/login', function (req, res, next) {
  * Espera todos los datos del paciente más del usuario
  */
 
-router.post('/registro', function (req, res, next) {    
-    var dataPacienteApp = {
+router.post('/registro', function (req, res, next) {
+    let dataPacienteApp = {
         nombre: req.body.nombre,
         apellido: req.body.apellido,
         email: req.body.email,
@@ -91,8 +88,8 @@ router.post('/registro', function (req, res, next) {
 
     if (!dataPacienteApp.password) {
         return res.status(422).send({ error: 'Debe ingresar una clave' });
-    }        
-    
+    }
+
     pacienteApp.findOne({ email: dataPacienteApp.email }, function (err, existingUser) {
 
         if (err) {
@@ -103,8 +100,8 @@ router.post('/registro', function (req, res, next) {
             return res.status(422).send({ 'email': 'El e-mail ingresado está en uso' });
         }
 
-        var user = new pacienteApp(dataPacienteApp);
-    
+        let user = new pacienteApp(dataPacienteApp);
+
         // enviarCodigoVerificacion(user);
         user.save(function (err, user: any) {
 
@@ -116,7 +113,7 @@ router.post('/registro', function (req, res, next) {
                 let paciente = pacientes[0].paciente;
 
                 let valid = false;
-                if (paciente.estado == 'validado') {
+                if (paciente.estado === 'validado') {
                     authController.enviarCodigoVerificacion(user);
                     user.pacientes = [
                         {

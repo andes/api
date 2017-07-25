@@ -16,14 +16,15 @@ import * as mongoose from 'mongoose';
 export const expirationOffset = 1000 * 60 * 60 * 24;
 
 export function verificarCodigo(codigoIngresado, codigo) {
-    if (codigoIngresado === codigo)
-        return true
-    else
-        return false
+    if (codigoIngresado === codigo) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 export function enviarCodigoVerificacion(user) {
-    console.log("Enviando mail...");
+    console.log('Enviando mail...');
 
     let mailOptions: MailOptions = {
         from: configPrivate.enviarMail.options.from,
@@ -43,13 +44,13 @@ export function enviarCodigoVerificacion(user) {
 }
 
 export function envioCodigoCount(user: any) {
-    //TODO: Implementar si se decide poner un límite al envío de códigos    
+    // TODO: Implementar si se decide poner un límite al envío de códigos
 }
 
 export function generarCodigoVerificacion() {
-    let codigo = "";
+    let codigo = '';
     let length = 6;
-    let caracteres = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     for (let i = 0; i < length; i++) {
         codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
     }
@@ -80,7 +81,7 @@ export function buscarPaciente(id) {
 
 function searchContacto(paciente, key) {
     for (let i = 0; i < paciente.contacto.length; i++) {
-        if (paciente.contacto[i].tipo == key) {
+        if (paciente.contacto[i].tipo === key) {
             return paciente.contacto[i].valor;
         }
     }
@@ -127,7 +128,7 @@ export function getAccountByProfesional(id) {
  * @param profesional {profesionalSchema}
  */
 export function createUserFromProfesional(profesional) {
-    var dataPacienteApp: any = {
+    let dataPacienteApp: any = {
         profesionalId: profesional.id,
         nombre: profesional.nombre,
         apellido: profesional.apellido,
@@ -144,7 +145,7 @@ export function createUserFromProfesional(profesional) {
         pacientes: []
     };
 
-    var user = new pacienteApp(dataPacienteApp);
+    let user = new pacienteApp(dataPacienteApp);
 
     return user.save();
 
@@ -157,7 +158,7 @@ export function createUserFromProfesional(profesional) {
  */
 export function createUserFromPaciente(paciente) {
     return new Promise((resolve, reject) => {
-        var dataPacienteApp: any = {
+        let dataPacienteApp: any = {
             nombre: paciente.nombre,
             apellido: paciente.apellido,
             email: searchContacto(paciente, 'email'),
@@ -194,7 +195,7 @@ export function createUserFromPaciente(paciente) {
                 return reject({ error: 'email_exists' });
             }
 
-            var user = new pacienteApp(dataPacienteApp);
+            let user = new pacienteApp(dataPacienteApp);
 
             user.save(function (err, user: any) {
 
