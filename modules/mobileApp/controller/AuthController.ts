@@ -39,7 +39,7 @@ export function enviarCodigoVerificacion(user) {
         mensaje: user.codigoVerificacion
     }
 
-    sendMail(mailOptions);    
+    sendMail(mailOptions);
     sendSms(smsOptions, function (res) {
         if (res === '0') {
             console.log("El SMS se envío correctamente");

@@ -10,6 +10,16 @@ import * as configPrivate from '../config.private';
 let shiroTrie = require('shiro-trie');
 
 export class Auth {
+
+    /**
+     *  TTL JWT Token
+     *  @var expiresIn {number}
+     *
+     * @memberOf Auth
+     */
+
+    static expiresIn = 60 * 60 * 24 * 10;  /* 10 días */
+
     /**
      * Devuelve una instancia de shiro. Implementa un cache en el request actual para mejorar la performance
      *
@@ -75,7 +85,8 @@ export class Auth {
      */
     static deniedPatients() {
         return function (req, res, next) {
-            if (req.user.profesional) {
+            console.log(req.user.type);
+            if (req.user.type !== 'paciente-token') {
                 next();
             } else {
                 next(403);
@@ -154,14 +165,6 @@ export class Auth {
         }
     }
 
-    /**
-     *  TTL JWT Token
-     *  @var expiresIn {number} 
-     * 
-     * @memberOf Auth
-     */
-
-    static expiresIn = 60 * 60 * 24 * 10;  /* 10 días */
 
     /**
      * Genera un token de usuario firmado
@@ -191,7 +194,8 @@ export class Auth {
             profesional: profesional,
             organizacion: organizacion,
             permisos: permisos.permisos,
-            account_id: account_id
+            account_id: account_id,
+            type: 'user-token'
         };
         return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: this.expiresIn });
     }
@@ -216,7 +220,8 @@ export class Auth {
             },
             organizacion: organizacion,
             permisos: permisos,
-            account_id: null
+            account_id: null,
+            type: 'app-token'
         };
         return jwt.sign(token, configPrivate.auth.jwtKey);
     }
@@ -245,12 +250,9 @@ export class Auth {
             permisos: permisos,
             pacientes: pacientes,
             organizacion: null,
-            account_id: account_id
+            account_id: account_id,
+            type: 'paciente-token'
         };
         return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: this.expiresIn });
     }
-
-
-
-
 }

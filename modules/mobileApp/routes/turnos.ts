@@ -18,10 +18,10 @@ let async = require('async');
 
 let router = express.Router();
 
-//Envía el sms al paciente recordando el turno con 24 Hs de antelación
+// Envía el sms al paciente recordando el turno con 24 Hs de antelación
 router.post('/turnos/smsRecordatorioTurno', function (req, res, next) {
 
-    recordatorio.find({'estadoEnvio': false},function (err, data) {
+    recordatorio.find({ 'estadoEnvio': false }, function (err, data) {
 
         data.forEach((turno, index) => {
             let smsOptions: SmsOptions = {
@@ -110,7 +110,7 @@ router.get('/turnos/recordatorioTurno', function (req, res, next) {
             });
 
             async.forEach(turnos, function (turno, callback) {
-                console.log("Turnoo ", turno);
+                console.log('Turnoo ', turno);
                 let recordatorioTurno = new recordatorio({
                     fechaTurno: turno.horaInicio,
                     paciente: turno.paciente,

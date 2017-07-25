@@ -83,13 +83,13 @@ export const modules = {
     turnos_mobile_auth: {
         active: true,
         path: './modules/mobileApp/auth_routes',
-        route: '/modules/mobileApp'        
+        route: '/modules/mobileApp'
     },
     turnos_mobile: {
         active: true,
         path: './modules/mobileApp/routes',
-        route: '/modules/mobileApp',        
-        // middleware: mobileMiddleware
+        route: '/modules/mobileApp',
+        middleware: mobileMiddleware
     },
     fuentesAutenticas: {
         active: true,
