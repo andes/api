@@ -22,8 +22,6 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
     } else {
         let query = prestacion.find({});
 
-        console.log('req.query', req.query);
-
         if (req.query.estado) {
             query.where('this.estados[this.estados.length - 1].tipo').equals(req.query.estado);
         }
