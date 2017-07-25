@@ -19,28 +19,32 @@ let async = require('async');
 let router = express.Router();
 
 //Envía el sms al paciente recordando el turno con 24 Hs de antelación
-router.get('/turnos/smsRecordatorioTurno', function (req, res, next) {
+router.post('/turnos/smsRecordatorioTurno', function (req, res, next) {
 
-    recordatorio.find(function (err, data) {
-        
-        data.forEach(function (turno, callback) {
+    recordatorio.find({'estadoEnvio': false},function (err, data) {
+
+        data.forEach((turno, index) => {
             let smsOptions: SmsOptions = {
-                telefono: data[0].paciente.telefono,
-                mensaje: 'Le recordamos que tiene un turno para el día: ' + moment(data[0].fechaTurno).format('DD/MM/YYYY')
+                telefono: data[index].paciente.telefono,
+                mensaje: 'Sr ' + data[index].paciente.apellido + 'Le recordamos que tiene un turno para el día: ' + moment(data[index].fechaTurno).format('DD/MM/YYYY')
             }
 
             sendSms(smsOptions, function (res) {
                 if (res === '0') {
                     recordatorio.findById(data[0]._id, function (err, dato) {
-                        data[0].estadoEnvio = true;
-                        
-                        data[0].save();        
+                        data[index].estadoEnvio = true;
+
+                        data[index].save();
                     });
-
-                }                
+                    console.log("El SMS se envío correctamente");
+                }
             });
-
         });
+
+        // data.forEach(function (turno, callback) {
+
+
+        // });
 
         res.json(data);
     });
