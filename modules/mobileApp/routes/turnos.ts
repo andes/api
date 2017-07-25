@@ -18,22 +18,40 @@ let async = require('async');
 
 let router = express.Router();
 
-// Envía el sms al paciente recordando el turno con 24 Hs de antelación
-router.get('/turnos/smsRecordatorioTurno', function (req, res, next) {
+//Envía el sms al paciente recordando el turno con 24 Hs de antelación
+router.post('/turnos/smsRecordatorioTurno', function (req, res, next) {
 
-    recordatorio.find(function (err, data: any) {
+    recordatorio.find({'estadoEnvio': false},function (err, data) {
 
-        let smsOptions: SmsOptions = {
-            telefono: data[0].paciente.telefono,
-            mensaje: 'Holaaa'
-        }
-        sendSms(smsOptions);
-        console.log('Opcionesss: ', smsOptions);
+        data.forEach((turno, index) => {
+            let smsOptions: SmsOptions = {
+                telefono: data[index].paciente.telefono,
+                mensaje: 'Sr ' + data[index].paciente.apellido + 'Le recordamos que tiene un turno para el día: ' + moment(data[index].fechaTurno).format('DD/MM/YYYY')
+            }
+
+            sendSms(smsOptions, function (res) {
+                if (res === '0') {
+                    recordatorio.findById(data[0]._id, function (err, dato) {
+                        data[index].estadoEnvio = true;
+
+                        data[index].save();
+                    });
+                    console.log("El SMS se envío correctamente");
+                }
+            });
+        });
+
+        // data.forEach(function (turno, callback) {
+
+
+        // });
+
         res.json(data);
     });
 });
 
 router.get('/turnos/recordatorioTurno', function (req, res, next) {
+
     let startDay = moment.utc().add(1, 'days').startOf('day').toDate();
     let endDay = moment.utc().add(1, 'days').endOf('day').toDate();
 
@@ -85,17 +103,19 @@ router.get('/turnos/recordatorioTurno', function (req, res, next) {
             }
 
             data2.forEach(elem => {
-                turno = elem.bloques.turnos.paciente;
+                turno = elem.bloques.turnos;
+                turno.paciente = elem.bloques.turnos.paciente;
                 turno.tipoRecordatorio = 'turno';
                 turnos.push(turno);
             });
 
             async.forEach(turnos, function (turno, callback) {
-
+                console.log("Turnoo ", turno);
                 let recordatorioTurno = new recordatorio({
-                    paciente: turno,
+                    fechaTurno: turno.horaInicio,
+                    paciente: turno.paciente,
                     tipoRecordatorio: turno.tipoRecordatorio,
-                    estadoEnvio: false
+                    estadoEnvio: false,
                 });
 
                 recordatorioTurno.save((err) => {
