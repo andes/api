@@ -4,6 +4,8 @@ import * as registro from './prestacion.registro';
 import * as estado from './prestacion.estado';
 import { auditoriaPrestacionPacienteSchema } from '../../auditorias/schemas/auditoriaPrestacionPaciente';
 
+var ObjectId = require('mongoose').Types.ObjectId;
+
 export let schema = new mongoose.Schema({
     // Datos principales del paciente
     paciente: {
@@ -110,7 +112,7 @@ schema.pre('save', function(next){
 
     if (prestacion.ejecucion.registros.length) {
 
-        prestacion.ejecucion.registros.forEach(r => {
+        prestacion.ejecucion.registros.forEach(r => {           
             iterate(r.valor, convertirId);
         }); 
     }
@@ -141,7 +143,12 @@ function iterate(obj, func) {
 
 function convertirId(obj, property) {
     if (property === 'id' || property === 'id') {
-        obj[property] = mongoose.Types.ObjectId(obj[property]);
+        // verificamos si es un ObjectId valido y, ademas,
+        // si al castear a ObjectId los strings son iguales
+        // StackOverflow: https://stackoverflow.com/a/29231016
+        if (ObjectId.isValid(obj[property]) && new ObjectId(obj[property]) == obj[property]) {
+            obj[property] = mongoose.Types.ObjectId(obj[property]);
+        }
     }
 }
 
