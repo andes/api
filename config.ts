@@ -6,7 +6,7 @@ import { Auth } from './auth/auth.class';
 
 const appMiddleware = [
     Auth.authenticate(),
-    Auth.deniedPatients()
+    // Auth.deniedPatients()
 ];
 
 const mobileMiddleware = [
