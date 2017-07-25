@@ -6,7 +6,7 @@ import * as organizacion from '../schemas/organizacion';
 import * as permisos from '../schemas/permisos';
 import { profesional } from './../../core/tm/schemas/profesional';
 import * as mongoose from 'mongoose';
-import * as authMobile from '../../modules/turnosmobile/controller/AuthController';
+import * as authMobile from '../../modules/mobileApp/controller/AuthController';
 
 const isReachable = require('is-reachable');
 let sha1Hash = require('sha1');

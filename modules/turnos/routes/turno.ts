@@ -7,7 +7,7 @@ import { paciente } from '../../../core/mpi/schemas/paciente';
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
-import { NotificationService } from '../../turnosmobile/controller/NotificationService';
+import { NotificationService } from '../../mobileApp/controller/NotificationService';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 let router = express.Router();
 
