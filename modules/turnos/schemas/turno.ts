@@ -25,7 +25,6 @@ let turnoSchema = new mongoose.Schema({
             idBloque: mongoose.Schema.Types.ObjectId,
             idTurno: mongoose.Schema.Types.ObjectId
         },
-        confirmadoAt: Date
     },
     tipoTurno: {
         type: String,
@@ -58,6 +57,7 @@ let turnoSchema = new mongoose.Schema({
         codificacion: cie10Schema,
         ilegible: Boolean,
     }],
+    confirmedAt: Date, /* Confirmación del turno por el  paciente */
     updatedAt: Date,
     updatedBy: mongoose.Schema.Types.Mixed
 });

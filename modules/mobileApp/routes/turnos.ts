@@ -14,21 +14,21 @@ import { LoggerPaciente } from '../../../utils/loggerPaciente';
 
 import { sendSms, SmsOptions } from '../../../utils/sendSms';
 
-var async = require('async');
+let async = require('async');
 
 let router = express.Router();
 
-//Envía el sms al paciente recordando el turno con 24 Hs de antelación
+// Envía el sms al paciente recordando el turno con 24 Hs de antelación
 router.get('/turnos/smsRecordatorioTurno', function (req, res, next) {
 
-    recordatorio.find(function (err, data) {
+    recordatorio.find(function (err, data: any) {
 
         let smsOptions: SmsOptions = {
             telefono: data[0].paciente.telefono,
             mensaje: 'Holaaa'
         }
         sendSms(smsOptions);
-        console.log("Opcionesss: ", smsOptions);
+        console.log('Opcionesss: ', smsOptions);
         res.json(data);
     });
 });
@@ -118,7 +118,7 @@ router.get('/turnos', function (req: any, res, next) {
 
     matchTurno['bloques.turnos.paciente.id'] = mongoose.Types.ObjectId(pacienteId);
 
-    //matchTurno['estado'] = 'publicada';
+    // matchTurno['estado'] = 'publicada';
 
     if (req.query.estado) {
         matchTurno['bloques.turnos.estado'] = req.query.estado;
@@ -200,7 +200,7 @@ router.get('/turnos', function (req: any, res, next) {
                 delete turno.updatedAt;
 
                 /* Busco el turno anterior cuando fue reasignado */
-                let suspendido = turno.estado == 'suspendido' || turno.agenda_estado == 'suspendida';
+                let suspendido = turno.estado === 'suspendido' || turno.agenda_estado === 'suspendida';
                 let reasignado = turno.reasignado && turno.reasignado.siguiente;
 
                 if (turno.reasignado && turno.reasignado.anterior) {
@@ -214,7 +214,7 @@ router.get('/turnos', function (req: any, res, next) {
                             if (bloque) {
                                 let t = bloque.turnos.id(datos.idTurno);
                                 turno.reasignado_anterior = t;
-                                turno.confirmadoAt = turno.reasignado.confirmadoAt;
+                                // turno.confirmadoAt = turno.reasignado.confirmadoAt;
                                 delete turno['reasignado'];
                                 resolve();
                             } else {
@@ -231,7 +231,7 @@ router.get('/turnos', function (req: any, res, next) {
                 }
             });
 
-            if (promisesStack.length == 0) {
+            if (promisesStack.length === 0) {
                 promisesStack.push(Promise.resolve());
             }
 
@@ -260,7 +260,7 @@ router.get('/turnos', function (req: any, res, next) {
 
 /**
  * Cancela un turno de un paciente
- * 
+ *
  * @param turno_id {string} Id del turno
  * @param  agenda_id {string} id de la agenda
  */
@@ -291,7 +291,7 @@ router.post('/turnos/cancelar', function (req: any, res, next) {
                 Auth.audit(agendaObj, req);
                 agendaObj.save(function (error) {
                     Logger.log(req, 'turnos', 'update', {
-                        accion: "liberarTurno",
+                        accion: 'liberarTurno',
                         ruta: req.url,
                         method: req.method,
                         data: agendaObj,
@@ -314,10 +314,11 @@ router.post('/turnos/cancelar', function (req: any, res, next) {
 });
 
 /**
- * Confirma un turno reasginado
- * 
+ * Confirma un turno
+ *
  * @param turno_id {string} Id del turno
- * @param  agenda_id {string} id de la agenda
+ * @param agenda_id {string} id de la agenda
+ * @param bloque_id {string} id del bloque
  */
 
 router.post('/turnos/confirmar', function (req: any, res, next) {
@@ -340,36 +341,36 @@ router.post('/turnos/confirmar', function (req: any, res, next) {
         if (turno) {
             if (String(turno.paciente.id) === pacienteId) {
 
-                if (turno.reasignado && turno.reasignado.anterior) {
-                    if (!turno.reasignado.confirmadoAt) {
+                // if (turno.reasignado && turno.reasignado.anterior) {
+                if (!turno.confirmedAt) {
 
-                        turno.reasignado.confirmadoAt = new Date();
+                    turno.confirmedAt = new Date();
 
-                        Auth.audit(agendaObj, req);
-                        agendaObj.save(function (error) {
-                            Logger.log(req, 'turnos', 'update', {
-                                accion: "confirmar",
-                                ruta: req.url,
-                                method: req.method,
-                                data: agendaObj,
-                                err: error || false
-                            });
-
-
-                            LoggerPaciente.logTurno(req, 'turnos:confirmarReasignacion', turno.paciente, turno, bloqueId, agendaId);
-
-                            if (error) {
-                                return next(error);
-                            } else {
-                                return res.json({ message: 'OK' });
-                            }
+                    Auth.audit(agendaObj, req);
+                    agendaObj.save(function (error) {
+                        Logger.log(req, 'turnos', 'update', {
+                            accion: 'confirmar',
+                            ruta: req.url,
+                            method: req.method,
+                            data: agendaObj,
+                            err: error || false
                         });
-                    } else {
-                        return res.status(422).send({ message: 'turno_corfirmado' });
-                    }
+
+
+                        LoggerPaciente.logTurno(req, 'turnos:confirmar', turno.paciente, turno, bloqueId, agendaId);
+
+                        if (error) {
+                            return next(error);
+                        } else {
+                            return res.json({ message: 'OK' });
+                        }
+                    });
                 } else {
-                    return res.status(422).send({ message: 'turno_not_reasignado' });
+                    return res.status(422).send({ message: 'turno_ya_corfirmado' });
                 }
+                // } else {
+                //     return res.status(422).send({ message: 'turno_not_reasignado' });
+                // }
             } else {
                 return res.status(422).send({ message: 'unauthorized' });
             }
