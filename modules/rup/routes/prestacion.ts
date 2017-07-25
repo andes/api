@@ -44,6 +44,18 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             query.where('solicitud.idTurno').in(req.query.turnos);
         }
 
+        // Solicitudes generadas desde puntoInicio Ventanilla
+        // Solicitudes que no tienen prestacionOrigen ni turno
+        // Si tienen prestacionOrigen son generadas por RUP y no se listan
+        // Si tienen turno, dejan de estar pendientes de turno y no se listan
+        if (req.query.tienePrestacionOrigen === 'no') {
+            query.where('solicitud.prestacionOrigen').equals(null);
+        }
+        if (req.query.tieneTurno === 'no') {
+            query.where('solicitud.turno').equals(null);
+        }
+
+
         // Ordenar por fecha de solicitud
         if (req.query.ordenFecha) {
             query.sort({ 'solicitud.fecha': -1 });
@@ -109,6 +121,11 @@ router.patch('/prestaciones/:id', function (req, res, next) {
             case 'registros':
                 if (req.body.registros) {
                     data.ejecucion.registros = req.body.registros;
+                }
+                break;
+            case 'asignarTurno':
+                if (req.body.idTurno) {
+                    data.solicitud.turno = req.body.idTurno;
                 }
                 break;
             default:

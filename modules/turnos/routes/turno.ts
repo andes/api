@@ -137,7 +137,6 @@ router.get('/turno/:id*?', function (req, res, next) {
 });
 
 router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, res, next) {
-    // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
 
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
     let continues = ValidateDarTurno.checkTurno(req.body);
