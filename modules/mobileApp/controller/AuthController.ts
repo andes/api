@@ -35,11 +35,15 @@ export function enviarCodigoVerificacion(user) {
 
     let smsOptions: SmsOptions = {
         telefono: user.telefono,
-        codigoVerificacion: user.codigoVerificacion
+        mensaje: user.codigoVerificacion
     }
 
-    sendMail(mailOptions);
-    sendSms(smsOptions);
+    sendMail(mailOptions);    
+    sendSms(smsOptions, function (res) {
+        if (res === '0') {
+            console.log("El SMS se envío correctamente");
+        }
+    });
 }
 
 export function envioCodigoCount(user: any) {
