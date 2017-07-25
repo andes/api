@@ -24,6 +24,7 @@ export function liberarTurno(req, data, turno) {
     turno.paciente = null;
     turno.tipoPrestacion = null;
     turno.nota = null;
+    turno.confirmedAt = null;
 
     let turnoDoble = getTurnoSiguiente(req, data, turno._id);
     if (turnoDoble) {
