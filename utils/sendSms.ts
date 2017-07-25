@@ -12,7 +12,7 @@ export interface SmsOptions {
     mensaje: string;
 }
 
-export function sendSms(smsOptions: SmsOptions) {
+export function sendSms(smsOptions: SmsOptions, callback) {
     console.log("Enviando SMS...");
 
     let argsOperador = {
@@ -70,7 +70,7 @@ export function sendSms(smsOptions: SmsOptions) {
                                     if (err2) {
                                         return console.log(err2);
                                     } else {
-                                        return console.log(status);
+                                        return callback(status);
                                     }
                                 });
                             });
