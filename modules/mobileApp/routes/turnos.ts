@@ -107,22 +107,8 @@ router.get('/turnos/recordatorioTurno', function (req, res, next) {
                 turnos.push(turno);
             });
 
-            async.forEach(turnos, function (turno, callback) {
-                console.log('Turnoo ', turno);
-                let recordatorioTurno = new recordatorio({
-                    fechaTurno: turno.horaInicio,
-                    paciente: turno.paciente,
-                    tipoRecordatorio: turno.tipoRecordatorio,
-                    estadoEnvio: false,
-                });
-
-                recordatorioTurno.save((err) => {
-                    if (err) {
-                        return next(err);
-                    }
-
-                });
-                next(turno);
+            recordatorioController.guardarRecordatorioTurno(turnos, function (res) {
+                console.log("Resultado ", res);
             });
         });
 });
