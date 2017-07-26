@@ -26,7 +26,6 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
 
         if (req.query.edificio) {
             query.where('edificio.descripcion').equals(RegExp('^.*' + req.query.edificio + '.*$', 'i'));
-            console.log(req.query.edificio);
         }
 
         if (req.query.descripcion) {

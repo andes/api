@@ -1,6 +1,7 @@
 import * as mongoose from 'mongoose';
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 import { cie10Schema } from '../../../core/term/schemas/cie10';
+import * as nombreSchema from '../../../core/tm/schemas/nombre';
 // import * as organizacion from '../../../core/tm/schemas/organizacion';
 
 let turnoSchema = new mongoose.Schema({
@@ -41,6 +42,10 @@ let turnoSchema = new mongoose.Schema({
         apellido: String,
         documento: String,
         telefono: String,
+        carpetaEfectores: [{
+            organizacion: nombreSchema,
+            nroCarpeta: String
+        }],
     },
     tipoPrestacion: tipoPrestacionSchema,
     // TODO: Enlace con RUP? cuando alguien defina ALGO
