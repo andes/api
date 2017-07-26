@@ -107,14 +107,10 @@ router.get('/agenda/:id?', function (req, res, next) {
 
         if (req.query.fechaDesde) {
             query.where('horaInicio').gte(moment(req.query.fechaDesde).startOf('day').toDate() as any);
-        } else {
-            query.where('horaInicio').gte(moment.utc().add(1, 'days').startOf('day').toDate() as any);
         }
 
         if (req.query.fechaHasta) {
             query.where('horaFin').lte(moment(req.query.fechaHasta).endOf('day').toDate() as any);
-        } else {
-            query.where('horaFin').lte(moment.utc().add(1, 'days').endOf('day').toDate() as any);
         }
 
         if (req.query.idProfesional) {
