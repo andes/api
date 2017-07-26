@@ -86,7 +86,7 @@ router.get('/localidades/:id*?', function (req, res, next) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
         if (req.query.provincia) {
-            query.where('provincia.id').equals(mongoose.Types.ObjectId(req.query.provincia));
+            query.where('provincia._id').equals(mongoose.Types.ObjectId(req.query.provincia));
         }
         query.exec((err, data) => {
             if (err) {
