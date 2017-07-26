@@ -229,9 +229,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                             }
 
                             if ((countBloques[req.body.tipoTurno] as number) === 0) {
-                                return next({
-                                    err: 'No quedan turnos del tipo ' + req.body.tipoTurno
-                                });
+                                return next('No quedan turnos del tipo ' + req.body.tipoTurno);
                             }
 
                             let usuario = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
