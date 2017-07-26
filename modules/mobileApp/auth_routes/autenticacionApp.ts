@@ -81,7 +81,7 @@ router.post('/registro', function (req, res, next) {
         permisos: [],
         pacientes: []
     }
-
+console.log("Pacienteee ", dataPacienteApp);
     if (!dataPacienteApp.email) {
         return res.status(422).send({ error: 'Se debe ingresar una dirección de e-Mail' });
     }

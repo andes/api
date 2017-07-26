@@ -2,9 +2,12 @@ import * as mongoose from 'mongoose';
 import { pacienteSchema } from '../../../core/mpi/schemas/paciente';
 
 export let recordatorioSchema = new mongoose.Schema({
+    idTurno: {
+        type: mongoose.Schema.Types.ObjectId,
+        unique: true
+    },
     fechaTurno: Date,
     paciente: {
-        id: mongoose.Schema.Types.ObjectId,
         nombre: String,
         apellido: String,
         telefono: String,
