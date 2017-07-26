@@ -1,4 +1,5 @@
 import * as express from 'express';
+import * as mongoose from 'mongoose';
 import { espacioFisico } from '../schemas/espacioFisico';
 
 let router = express.Router();
@@ -15,7 +16,6 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
         // Trae todos
         let query = espacioFisico.find({});
 
-        let nombres: any[] = [];
 
         if (req.query.nombre) {
             // nombres.push({ 'nombre': RegExp('^.*' + req.query.nombre + '.*$', 'i') });
@@ -32,9 +32,14 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
         if (req.query.descripcion) {
             query.where('descripcion').equals(RegExp('^.*' + req.query.descripcion + '.*$', 'i'));
         }
-        // if (req.query.organizacion) {
-        // query.where('organizacion._id').equals(req.query.organizacion);
-        // }
+
+        if (req.query.organizacion) {
+            query.where('organizacion._id').equals(mongoose.Types.ObjectId(req.query.organizacion));
+        } else {
+            if (req.query.sinOrganizacion) {
+                query.where('organizacion').exists(false);
+            }
+        }
         query.sort('nombre');
         query.exec((err, data) => {
             if (err) {
