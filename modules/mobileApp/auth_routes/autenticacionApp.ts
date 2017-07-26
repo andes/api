@@ -58,6 +58,73 @@ router.post('/login', function (req, res, next) {
     });
 });
 
+
+/**
+ * Cambio los datos del paciente para probar revalidar el paciente
+ * Espera todos los datos del paciente más del usuario
+ */
+
+router.patch('/account', function (req, res, next) {
+    let data = {
+        nombre: req.body.nombre,
+        apellido: req.body.apellido,
+        documento: req.body.documento,
+        fechaNacimiento: req.body.fechaNacimiento,
+        genero: req.body.sexo
+    }
+    let email = req.body.email;
+    pacienteApp.findOne({ email: email }, function (err, account: any) {
+
+        if (err) {
+            return next(err);
+        }
+
+        if (!account || account.activacionApp) {
+            return res.status(422).send({ 'email': 'account_not_foun' });
+        }
+        console.log(data);
+        authController.matchPaciente(data).then((pacientes: any) => {
+            let valid = false;
+            console.log(pacientes);
+            if (pacientes.length) {
+                let pacienteTemp = pacientes[0].paciente;
+
+                if (pacienteTemp.estado === 'validado') {
+                    account.nombre = data.nombre;
+                    account.apellido = data.apellido;
+                    account.fechaNacimiento = data.fechaNacimiento;
+                    account.sexo = data.genero;
+                    account.documento = data.documento;
+                    account.codigoVerificacion = authController.generarCodigoVerificacion();
+                    account.expirationTime = new Date(Date.now() + authController.expirationOffset);
+                    account.pacientes = [
+                        {
+                            id: pacienteTemp.id,
+                            relacion: 'principal',
+                            addedAt: new Date()
+                        }
+                    ];
+                    valid = true;
+                    authController.enviarCodigoVerificacion(account);
+                } else {
+                    account.codigoVerificacion = null;
+                }
+                account.save();
+            }
+            res.status(200).json({
+                valid: valid
+            });
+        }).catch(err => {
+            console.log(err);
+            res.status(200).json({
+                valid: false
+            });
+        });
+
+
+    });
+});
+
 /**
  * Registro de un usuario desde la app mobile
  * Espera todos los datos del paciente más del usuario

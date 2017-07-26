@@ -5,4 +5,5 @@ export interface Token {
     organizacion: any; // schemas/organizacion
     permisos: string[];
     account_id: string;
+    type: string;
 };

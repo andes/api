@@ -19,7 +19,7 @@ import { sendSms, SmsOptions } from '../../../utils/sendSms';
 
 let router = express.Router();
 
-//Envía el sms al paciente recordando el turno con 24 Hs de antelación
+// Envía el sms al paciente recordando el turno con 24 Hs de antelación
 router.post('/turnos/smsRecordatorioTurno', function (req, res, next) {
 
     recordatorio.find({ 'estadoEnvio': false }, function (err, data) {
@@ -107,8 +107,27 @@ router.get('/turnos/recordatorioTurno', function (req, res, next) {
                 turnos.push(turno);
             });
 
+<<<<<<< HEAD
             recordatorioController.guardarRecordatorioTurno(turnos, function (res) {
                 console.log("Resultado ", res);
+=======
+            async.forEach(turnos, function (turno, callback) {
+                console.log('Turnoo ', turno);
+                let recordatorioTurno = new recordatorio({
+                    fechaTurno: turno.horaInicio,
+                    paciente: turno.paciente,
+                    tipoRecordatorio: turno.tipoRecordatorio,
+                    estadoEnvio: false,
+                });
+
+                recordatorioTurno.save((err) => {
+                    if (err) {
+                        return next(err);
+                    }
+
+                });
+                next(turno);
+>>>>>>> 92c175e51e865d32b8fc358401ea48bbd8db632e
             });
         });
 });
