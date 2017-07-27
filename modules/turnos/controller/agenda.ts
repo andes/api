@@ -139,8 +139,14 @@ export function actualizarEstado(req, data) {
     if (req.body.estado === 'publicada') {
         data.estado = 'publicada';
         data.bloques.forEach((bloque, index) => {
-            bloque.accesoDirectoProgramado = bloque.accesoDirectoProgramado + bloque.reservadoProfesional;
+            bloque.accesoDirectoProgramado = bloque.accesoDirectoProgramado + bloque.reservadoProfesional + bloque.reservadoGestion;
             bloque.reservadoProfesional = 0;
+            bloque.reservadoGestion = 0;
+            bloque.turnos.forEach(turno => {
+                if (turno.estado === 'asignado') {
+                    bloque.accesoDirectoProgramado--;
+                }
+            });
         });
     }
     // Cuando se reanuda de un estado pausada, se setea el estado guardado en prePausa

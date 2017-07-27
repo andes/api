@@ -236,7 +236,7 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
         let query;
         let act: Boolean = true;
         let filtros = { 'activo': act };
-        console.log('query ', req.query);
+
         if (req.query.nombre) {
             filtros['nombre'] = { '$regex': utils.makePattern(req.query.nombre) };
         }

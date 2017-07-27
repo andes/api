@@ -137,7 +137,6 @@ router.get('/turno/:id*?', function (req, res, next) {
 });
 
 router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, res, next) {
-    // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
 
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
     let continues = ValidateDarTurno.checkTurno(req.body);
@@ -230,9 +229,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                             }
 
                             if ((countBloques[req.body.tipoTurno] as number) === 0) {
-                                return next({
-                                    err: 'No quedan turnos del tipo ' + req.body.tipoTurno
-                                });
+                                return next('No quedan turnos del tipo ' + req.body.tipoTurno);
                             }
 
                             let usuario = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
