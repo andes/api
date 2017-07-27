@@ -10,11 +10,12 @@ import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
 import { INotification, PushClient } from '../controller/PushClient';
 import * as authController from '../controller/AuthController';
+import * as recordatorioController from '../controller/RecordatorioController';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 
 import { sendSms, SmsOptions } from '../../../utils/sendSms';
 
-let async = require('async');
+// let async = require('async');
 
 let router = express.Router();
 
@@ -23,28 +24,24 @@ router.post('/turnos/smsRecordatorioTurno', function (req, res, next) {
 
     recordatorio.find({ 'estadoEnvio': false }, function (err, data) {
 
-        data.forEach((turno, index) => {
+        data.forEach((turno: any, index) => {
+
             let smsOptions: SmsOptions = {
-                telefono: data[index].paciente.telefono,
-                mensaje: 'Sr ' + data[index].paciente.apellido + 'Le recordamos que tiene un turno para el día: ' + moment(data[index].fechaTurno).format('DD/MM/YYYY')
+                telefono: turno.paciente.telefono,
+                mensaje: 'Sr ' + turno.paciente.apellido + 'Le recordamos que tiene un turno para el día: ' + moment(turno.fechaTurno).format('DD/MM/YYYY')
             }
 
             sendSms(smsOptions, function (res) {
                 if (res === '0') {
-                    recordatorio.findById(data[0]._id, function (err, dato) {
-                        data[index].estadoEnvio = true;
+                    recordatorio.findById(turno._id, function (err, dato) {
+                        turno.estadoEnvio = true;
 
-                        data[index].save();
+                        turno.save();
                     });
                     console.log("El SMS se envío correctamente");
                 }
             });
         });
-
-        // data.forEach(function (turno, callback) {
-
-
-        // });
 
         res.json(data);
     });
@@ -104,27 +101,14 @@ router.get('/turnos/recordatorioTurno', function (req, res, next) {
 
             data2.forEach(elem => {
                 turno = elem.bloques.turnos;
+                turno.id = elem.bloques.turnos._id;
                 turno.paciente = elem.bloques.turnos.paciente;
                 turno.tipoRecordatorio = 'turno';
                 turnos.push(turno);
             });
 
-            async.forEach(turnos, function (turno, callback) {
-                console.log('Turnoo ', turno);
-                let recordatorioTurno = new recordatorio({
-                    fechaTurno: turno.horaInicio,
-                    paciente: turno.paciente,
-                    tipoRecordatorio: turno.tipoRecordatorio,
-                    estadoEnvio: false,
-                });
-
-                recordatorioTurno.save((err) => {
-                    if (err) {
-                        return next(err);
-                    }
-
-                });
-                next(turno);
+            recordatorioController.guardarRecordatorioTurno(turnos, function (res) {
+                console.log("Resultado ", res);
             });
         });
 });
@@ -134,6 +118,7 @@ router.get('/turnos', function (req: any, res, next) {
     let turnos = [];
     let turno;
     let matchTurno = {};
+
     let pacienteId = req.user.pacientes[0].id;
 
     matchTurno['bloques.turnos.paciente.id'] = mongoose.Types.ObjectId(pacienteId);
@@ -245,6 +230,7 @@ router.get('/turnos', function (req: any, res, next) {
 
                     promisesStack.push(promise);
                 }
+
                 /* si el turno fue reasignado mostramos el proximo turno y no este */
                 if (!reasignado) {
                     turnos.push(turno);
