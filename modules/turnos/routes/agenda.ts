@@ -39,12 +39,12 @@ router.get('/agenda/candidatas', function (req, res, next) {
         let bloque = resultado.bloques[indiceBloque];
         // turno a reasignar
         let turno = resultado.bloques[indiceBloque].turnos[indiceTurno];
-
+        console.log('turno ', turno);
         let match = {
             'horaInicio': { '$gte': horaAgendaOrig },
             'nominalizada': true,
             '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
-            'tipoPrestaciones._id': mongoose.Types.ObjectId(turno.tipoPrestacion._id), // Que tengan incluída la prestación del turno
+            'tipoPrestaciones._id': turno.tipoPrestacion ? mongoose.Types.ObjectId(turno.tipoPrestacion._id) : '', // Que tengan incluída la prestación del turno
             '_id': { '$ne': mongoose.Types.ObjectId(req.query.idAgenda) }, // Que no sea la agenda original
         };
 
