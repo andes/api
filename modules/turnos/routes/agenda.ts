@@ -1,7 +1,8 @@
-import { Auth } from './../../../auth/auth.class';
 import * as express from 'express';
 import * as agenda from '../schemas/agenda';
 import * as mongoose from 'mongoose';
+import { Auth } from './../../../auth/auth.class';
+import { log } from './../../../core/log/schemas/log';
 import { Logger } from '../../../utils/logService';
 import * as moment from 'moment';
 import * as agendaCtrl from '../controller/agenda';
@@ -331,7 +332,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                     }
                     agendaCtrl.suspenderTurno(req, data, turno);
                     break;
-                case 'guardarNotaTurno': agendaCtrl.guardarNotaTurno(req, data, turnos[y]._id);
+                case 'guardarNotaTurno': agendaCtrl.guardarNotaTurno(req, data, req.body.idTurno);
                     break;
                 case 'darTurnoDoble': agendaCtrl.darTurnoDoble(req, data, turnos[y]._id);
                     break;

@@ -136,6 +136,19 @@ router.get('/turno/:id*?', function (req, res, next) {
 
 });
 
+
+/**
+ * Espera un objeto como este:
+ * // Datos del Turno
+    let datosTurno = {
+        idAgenda: String,
+        idBloque: String,
+        idTurno: String,
+        paciente: paciente,
+        tipoPrestacion: conceptoTurneable,
+        tipoTurno: enum: delDia | programado | gestion | profesional
+    };
+ */
 router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, res, next) {
 
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
