@@ -55,6 +55,9 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             query.where('solicitud.turno').equals(null);
         }
 
+        if (req.query.organizacion) {
+            query.where('solicitud.organizacion.id').equals(req.query.organizacion);
+        }
 
         // Ordenar por fecha de solicitud
         if (req.query.ordenFecha) {
