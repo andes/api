@@ -12,6 +12,11 @@ export let recordatorioSchema = new mongoose.Schema({
         apellido: String,
         telefono: String,
     },
+    dataAgenda: {
+        _id: false,
+        profesionalId: mongoose.Schema.Types.ObjectId,
+        fecha: Date
+    },
     estadoEnvio: Boolean,
     tipoRecordatorio: {
         type: String,

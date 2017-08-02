@@ -42,7 +42,7 @@ export function enviarCodigoVerificacion(user) {
     sendMail(mailOptions);
     sendSms(smsOptions, function (res) {
         if (res === '0') {
-            console.log("El SMS se envío correctamente");
+            console.log('El SMS se envío correctamente');
         }
     });
 }
