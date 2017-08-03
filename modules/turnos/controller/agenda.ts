@@ -139,12 +139,16 @@ export function actualizarEstado(req, data) {
     if (req.body.estado === 'publicada') {
         data.estado = 'publicada';
         data.bloques.forEach((bloque, index) => {
-            bloque.accesoDirectoProgramado = bloque.accesoDirectoProgramado + bloque.reservadoProfesional + bloque.reservadoGestion;
-            bloque.reservadoProfesional = 0;
-            bloque.reservadoGestion = 0;
+            bloque.restantesProgramados = bloque.restantesProgramados + bloque.restantesProfesional + bloque.restantesGestion;
+            bloque.restantesProfesional = 0;
+            bloque.restantesGestion = 0;
+            // bloque.accesoDirectoProgramado = bloque.accesoDirectoProgramado + bloque.reservadoProfesional + bloque.reservadoGestion;
+            // bloque.reservadoProfesional = 0;
+            // bloque.reservadoGestion = 0;
             bloque.turnos.forEach(turno => {
                 if (turno.estado === 'asignado') {
-                    bloque.accesoDirectoProgramado--;
+                    // bloque.accesoDirectoProgramado--;
+                     bloque.restantesProgramados--;
                 }
             });
         });

@@ -22,15 +22,7 @@ let bloqueSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    restantesDelDia: {
-        type: Number,
-        default: 0
-    },
     accesoDirectoProgramado: {
-        type: Number,
-        default: 0
-    },
-    restantesProgramados: {
         type: Number,
         default: 0
     },
@@ -38,11 +30,19 @@ let bloqueSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    restantesGestion: {
+    reservadoProfesional: {
         type: Number,
         default: 0
     },
-    reservadoProfesional: {
+    restantesDelDia: {
+        type: Number,
+        default: 0
+    },
+    restantesProgramados: {
+        type: Number,
+        default: 0
+    },
+    restantesGestion: {
         type: Number,
         default: 0
     },

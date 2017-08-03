@@ -194,10 +194,15 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
 
                                     // Contadores de "delDia" y "programado" varían según si es el día de hoy o no
                                     countBloques = {
-                                        delDia: esHoy ? (((data as any).bloques[x].accesoDirectoDelDia as number) + ((data as any).bloques[x].accesoDirectoProgramado as number)) : (data as any).bloques[x].accesoDirectoDelDia,
-                                        programado: esHoy ? 0 : (data as any).bloques[x].accesoDirectoProgramado,
-                                        gestion: (data as any).bloques[x].reservadoGestion,
-                                        profesional: (data as any).bloques[x].reservadoProfesional
+                                        delDia: esHoy ? (
+                                            ((data as any).bloques[x].restantesDelDia as number) +
+                                            ((data as any).bloques[x].restantesProgramados as number) +
+                                            ((data as any).bloques[x].restantesGestion as number) +
+                                            ((data as any).bloques[x].restantesProfesional as number)
+                                        ) : (data as any).bloques[x].restantesDelDia,
+                                        programado: esHoy ? 0 : (data as any).bloques[x].restantesProgramados,
+                                        gestion: esHoy ? 0 : (data as any).bloques[x].restantesGestion,
+                                        profesional: esHoy ? 0 : (data as any).bloques[x].restantesProfesional
                                     };
 
                                     for (let y = 0; y < (data as any).bloques[posBloque].turnos.length; y++) {
@@ -206,43 +211,62 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                                         }
 
                                         // Restamos los turnos asignados de a cuenta
-                                        if ((data as any).bloques[posBloque].turnos[y].estado === 'asignado') {
-                                            if (esHoy) {
-                                                switch ((data as any).bloques[posBloque].turnos[y].tipoTurno) {
-                                                    case ('delDia'):
-                                                        // countBloques[x].delDia--;
-                                                        countBloques.delDia--;
-                                                        break;
-                                                    case ('programado'):
-                                                        countBloques.delDia--;
-                                                        break;
-                                                    case ('profesional'):
-                                                        countBloques.profesional--;
-                                                        break;
-                                                    case ('gestion'):
-                                                        countBloques.gestion--;
-                                                        break;
-                                                }
-                                            } else {
-                                                switch ((data as any).bloques[posBloque].turnos[y].tipoTurno) {
-                                                    case ('programado'):
-                                                        countBloques.programado--;
-                                                        break;
-                                                    case ('profesional'):
-                                                        countBloques.profesional--;
-                                                        break;
-                                                    case ('gestion'):
-                                                        countBloques.gestion--;
-                                                        break;
-                                                }
-                                            }
-                                        }
+                                        // if ((data as any).bloques[posBloque].turnos[y].estado === 'asignado') {
+                                        //     if (esHoy) {
+                                        //         switch ((data as any).bloques[posBloque].turnos[y].tipoTurno) {
+                                        //             case ('delDia'):
+                                        //                 // countBloques[x].delDia--;
+                                        //                 countBloques.delDia--;
+                                        //                 break;
+                                        //             case ('programado'):
+                                        //                 countBloques.delDia--;
+                                        //                 break;
+                                        //             case ('profesional'):
+                                        //                 countBloques.profesional--;
+                                        //                 break;
+                                        //             case ('gestion'):
+                                        //                 countBloques.gestion--;
+                                        //                 break;
+                                        //         }
+                                        //     } else {
+                                        //         switch ((data as any).bloques[posBloque].turnos[y].tipoTurno) {
+                                        //             case ('programado'):
+                                        //                 countBloques.programado--;
+                                        //                 break;
+                                        //             case ('profesional'):
+                                        //                 countBloques.profesional--;
+                                        //                 break;
+                                        //             case ('gestion'):
+                                        //                 countBloques.gestion--;
+                                        //                 break;
+                                        //         }
+                                        //     }
+                                        // }
                                     }
                                 }
                             }
-
+                            // No quedan turnos del tipo seleccionado
                             if ((countBloques[req.body.tipoTurno] as number) === 0) {
                                 return next('No quedan turnos del tipo ' + req.body.tipoTurno);
+                            }
+                            // Si quedan turnos
+                            let update: any = {};
+                            switch (req.body.tipoTurno) {
+                                case ('delDia'):
+                                    update['bloques.' + posBloque + '.restantesDelDia'] = countBloques.delDia - 1;
+                                    update['bloques.' + posBloque + '.restantesProgramados'] = 0;
+                                    update['bloques.' + posBloque + '.restantesProfesional'] = 0;
+                                    update['bloques.' + posBloque + '.restantesGestion'] = 0;
+                                    break;
+                                case ('programado'):
+                                    update['bloques.' + posBloque + '.restantesProgramados'] = countBloques.programado - 1;
+                                    break;
+                                case ('profesional'):
+                                    update['bloques.' + posBloque + '.restantesProfesional'] = countBloques.profesional - 1;
+                                    break;
+                                case ('gestion'):
+                                    update['bloques.' + posBloque + '.restantesGestion'] = countBloques.gestion - 1;
+                                    break;
                             }
 
                             let usuario = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
@@ -258,11 +282,11 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                             let etiquetaUpdateAt: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedAt';
                             let etiquetaUpdateBy: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedBy';
 
-                            let update: any = {};
                             update[etiquetaEstado] = 'asignado';
                             update[etiquetaPrestacion] = req.body.tipoPrestacion;
                             update[etiquetaPaciente] = req.body.paciente;
                             update[etiquetaTipoTurno] = req.body.tipoTurno;
+
                             if (req.body.reasignado) {
                                 update[etiquetaReasignado] = req.body.reasignado;
 
@@ -276,7 +300,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
 
                             // Agrega un tag al JSON query
                             query[etiquetaEstado] = 'disponible';
-
+                            console.log('update ', update);
                             // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
                             (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true },
                                 function actualizarAgenda(err2, doc2: any, writeOpResult) {

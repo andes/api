@@ -1,3 +1,4 @@
+
 import * as express from 'express';
 import * as agenda from '../schemas/agenda';
 import * as mongoose from 'mongoose';
@@ -238,6 +239,10 @@ router.post('/agenda/clonar', function (req, res, next) {
                         newFinBloque = agendaCtrl.combinarFechas(clon, bloque.horaFin);
                         bloque.horaInicio = newIniBloque;
                         bloque.horaFin = newFinBloque;
+                        bloque.restantesDelDia = bloque.accesoDirectoDelDia;
+                        bloque.restantesProgramados = bloque.accesoDirectoProgramado;
+                        bloque.restantesGestion = bloque.reservadoGestion;
+                        bloque.restantesProfesional = bloque.reservadoProfesional;
                         bloque._id = mongoose.Types.ObjectId();
                         bloque.turnos.forEach((turno, index1) => {
                             newIniTurno = agendaCtrl.combinarFechas(clon, turno.horaInicio);
