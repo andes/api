@@ -5,49 +5,116 @@ import * as moment from 'moment';
 import { profesional } from '../../../core/tm/schemas/profesional';
 import { pacienteApp } from '../schemas/pacienteApp';
 import { NotificationService } from './NotificationService';
+import { sendSms, SmsOptions } from '../../../utils/sendSms';
 
 let async = require('async');
 let agendasRemainderDays = 1;
 
+/**
+ *
+ * Recordatorios de turnos
+ *
+ */
+
+export function buscarTurnosARecordar(dayOffset) {
+    return new Promise((resolve, reject) => {
+
+        let startDay = moment.utc().add(dayOffset, 'days').startOf('day').toDate();
+        let endDay = moment.utc().add(dayOffset, 'days').endOf('day').toDate();
+
+        let matchTurno = {};
+        matchTurno['estado'] = { $in: ['disponible', 'publicada'] };
+        matchTurno['bloques.turnos.horaInicio'] = { $gte: startDay, $lte: endDay };
+        matchTurno['bloques.turnos.estado'] = 'asignado';
+
+        let pipeline = [];
+
+        pipeline = [
+            { '$match': matchTurno },
+            { '$unwind': '$bloques' },
+            { '$unwind': '$bloques.turnos' },
+            { '$match': matchTurno }
+        ];
+
+        return agendaModel.aggregate(pipeline).then((data) => {
+            let turnos = [];
+            data.forEach((elem: any) => {
+                let turno = elem.bloques.turnos;
+                turno.id = elem.bloques.turnos._id;
+                turno.paciente = elem.bloques.turnos.paciente;
+                turno.tipoRecordatorio = 'turno';
+                turnos.push(turno);
+            });
+
+            guardarRecordatorioTurno(turnos, function (ret) {
+                resolve();
+                // console.log('Resultado', ret);
+            });
+        });
+    });
+}
+
 
 export function guardarRecordatorioTurno(turnos: any[], callback) {
 
-    async.forEach(turnos, function (turno, callback) {
+    async.forEach(turnos, function (turno, done) {
+        recordatorio.findOne({ idTurno: turno._id }, function (err, objFound) {
 
-        let recordatorioTurno = new recordatorio({
-            idTurno: turno._id,
-            fechaTurno: turno.horaInicio,
-            paciente: turno.paciente,
-            tipoRecordatorio: turno.tipoRecordatorio,
-            estadoEnvio: false,
-        });
-
-        recordatorio.findOne({ idTurno: recordatorioTurno.idTurno }, function (err, turno) {
-
-            if (turno) {
-                // return res.status(422).send({ 'email': 'El e-mail ingresado está en uso' });
-                console.log('El recordatorio existe');
+            if (objFound) {
+                console.log('__ El recordatorio existe __');
+                return done();
             }
 
-            recordatorioTurno.save(function (err, user: any) {
+            let recordatorioTurno = new recordatorio({
+                idTurno: turno._id,
+                fechaTurno: turno.horaInicio,
+                paciente: turno.paciente,
+                tipoRecordatorio: turno.tipoRecordatorio,
+                estadoEnvio: false,
+            });
 
-                if (err) {
-                    return callback(err);
+            recordatorioTurno.save(function (_err, user: any) {
+
+                if (_err) {
+                    return done(_err);
                 }
 
-                return callback(turno);
+                return done(turno);
             });
 
         });
-    });
+
+    }, callback);
 };
+
+
+export function enviarTurnoRecordatorio() {
+    recordatorio.find({ 'estadoEnvio': false }, function (err, elems) {
+
+        elems.forEach((turno: any, index) => {
+
+            let smsOptions: SmsOptions = {
+                telefono: turno.paciente.telefono,
+                mensaje: 'Sr ' + turno.paciente.apellido + ' le recordamos que tiene un turno para el día: ' + moment(turno.fechaTurno).format('DD/MM/YYYY')
+            }
+
+            sendSms(smsOptions, function (res) {
+                if (res === '0') {
+                    turno.estadoEnvio = true;
+                    turno.save();
+                    console.log('El SMS se envío correctamente');
+                }
+            });
+        });
+
+    });
+}
 
 /**
  *
  * Recordatorios de agendas
  *
  */
-
 
 export function agendaRecordatorioQuery(dayOffset) {
     return new Promise((resolve, reject) => {
@@ -56,7 +123,7 @@ export function agendaRecordatorioQuery(dayOffset) {
         let match = {
             'estado': { $in: ['disponible', 'publicada'] },
             'horaInicio': {
-                $get: startDay,
+                $gte: startDay,
                 $lte: endDay
             }
         };
@@ -88,27 +155,11 @@ export function agendaRecordatorioQuery(dayOffset) {
     });
 };
 
-export function makeRecordatorio(agenda) {
-    agenda.profesionales.forEach(prof => {
-        let recordatorioAgenda = new recordatorio({
-            tipoRecordatorio: 'agenda',
-            estadoEnvio: false,
-            dataAgenda: {
-                agendaId: agenda._id,
-                profesionalId: prof._id
-            }
-        });
-
-        recordatorioAgenda.save((err) => {
-            if (err) {
-                return null;
-            }
-        });
-    });
-}
-
 export function recordarAgenda() {
-    agendaRecordatorioQuery(agendasRemainderDays).then((data: any[]) => {
+    return agendaRecordatorioQuery(agendasRemainderDays).then((data: any[]) => {
+        console.log(data);
+
+        let stack = [];
         data.forEach(item => {
             let profId = item._id.profesional;
             let date = moment(new Date()).add(agendasRemainderDays, 'days').startOf('day').toDate() as any;
@@ -122,13 +173,12 @@ export function recordarAgenda() {
                 }
             });
 
-            recordatorioAgenda.save((err) => {
-                if (err) {
-                    return null;
-                }
-            });
+            stack.push(recordatorioAgenda.save());
 
         });
+
+        return Promise.all(stack);
+
     });
 }
 
@@ -139,11 +189,14 @@ export function enviarAgendaNotificacion() {
                 profesional.findById(item.dataAgenda.profesionalId),
                 pacienteApp.findOne({ profesionalId: mongoose.Types.ObjectId(item.dataAgenda.profesionalId) })
             ]).then(datos => {
+                console.log(datos);
                 if (datos[0] && datos[1]) {
                     let notificacion = {
-                        body: 'Te recordamos que tienes agendas sin confirmar'
+                        body: 'Te recordamos que tienes agendas sin confirmar.'
                     }
-                    NotificationService.sendNotification(datos[2], notificacion);
+                    NotificationService.sendNotification(datos[1], notificacion);
+                } else {
+                    console.log('No tiene app');
                 }
             }).catch(() => {
                 console.log('Error en la cuenta');

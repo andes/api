@@ -16,18 +16,23 @@ export function donwloadData(desde, hasta) {
                     nombre: item.nombre
                 }).save();
 
-                getTurnos(item.id, desde, hasta).then((data: any[]) => {
-                    data.forEach(turno => {
-                        let t = new farmaciasTurnos({
-                            nombre: turno.nombre,
-                            direccion: turno.direccion,
-                            telefono: turno.telefono ? turno.telefono : '',
-                            fecha: moment(turno.fecha, 'YYYY-MM-DD').toDate(),
-                            localidad: item.id
-                        }).save();
+                let desdeD = moment(desde, 'YYYY-MM-DD').toDate();
+                let hastaD = moment(hasta, 'YYYY-MM-DD').toDate();
+                farmaciasTurnos.remove({ fecha: { '$gte': desdeD, '$lte': hastaD } }, function () {
+                    getTurnos(item.id, desde, hasta).then((data: any[]) => {
+                        data.forEach(turno => {
+                            let t = new farmaciasTurnos({
+                                nombre: turno.nombre,
+                                direccion: turno.direccion,
+                                telefono: turno.telefono ? turno.telefono : '',
+                                fecha: moment(turno.fecha, 'YYYY-MM-DD').toDate(),
+                                localidad: item.id
+                            }).save();
 
+                        });
                     });
                 });
+
 
             });
 

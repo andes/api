@@ -45,12 +45,9 @@ export class NotificationService {
         pacienteApp.find({ 'pacientes.id': pacienteId }, function (err, docs: any[]) {
             docs.forEach(user => {
                 let devices = user.devices.map(item => item.device_id);
-
                 new PushClient().send(devices, notification);
-
             });
         });
     }
-
 
 }
