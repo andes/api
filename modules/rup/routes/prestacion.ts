@@ -1,15 +1,17 @@
-import { paciente } from './../../../core/mpi/schemas/paciente';
 import * as express from 'express';
-import * as mongoose from 'mongoose';
-import { Auth } from './../../../auth/auth.class';
-import { model as prestacion } from '../schemas/prestacion';
 import * as moment from 'moment';
+// import * as async from 'async';
+import { Auth } from './../../../auth/auth.class';
+import { model as Prestacion } from '../schemas/prestacion';
+// import { ValidateFormatDate } from './../../../utils/validateFormatDate';
+
 
 let router = express.Router();
+let async = require('async');
 
 router.get('/prestaciones/:id*?', function (req, res, next) {
     if (req.params.id) {
-        let query = prestacion.findById(req.params.id);
+        let query = Prestacion.findById(req.params.id);
         query.exec(function (err, data) {
             if (err) {
                 return next(err);
@@ -20,7 +22,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             res.json(data);
         });
     } else {
-        let query = prestacion.find({});
+        let query = Prestacion.find({});
 
         if (req.query.estado) {
             query.where('this.estados[this.estados.length - 1].tipo').equals(req.query.estado);
@@ -80,7 +82,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
 });
 
 router.post('/prestaciones', function (req, res, next) {
-    let data = new prestacion(req.body);
+    let data = new Prestacion(req.body);
     Auth.audit(data, req);
     data.save((err) => {
         if (err) {
@@ -91,7 +93,7 @@ router.post('/prestaciones', function (req, res, next) {
 });
 
 router.patch('/prestaciones/:id', function (req, res, next) {
-    prestacion.findById(req.params.id, (err, data: any) => {
+    Prestacion.findById(req.params.id, (err, data: any) => {
         if (err) {
             return next(err);
         }
@@ -119,7 +121,7 @@ router.patch('/prestaciones/:id', function (req, res, next) {
                     return next('Solo puede romper la validación el usuario que haya creado.');
                 }
 
-                data['estados'].push(req.body.estado);
+                data.estados.push(req.body.estado);
                 break;
             case 'registros':
                 if (req.body.registros) {
@@ -136,10 +138,47 @@ router.patch('/prestaciones/:id', function (req, res, next) {
         }
 
         Auth.audit(data, req);
-        data.save(function (err, data) {
-            if (err) {
-                return next(err);
+        data.save(function (error, prestacion) {
+            if (error) {
+                return next(error);
             }
+
+            if (req.body.planes) {
+                // creamos una variable falsa para cuando retorne hacer el get
+                // de todas estas prestaciones
+
+                let solicitadas = [];
+
+                async.each(req.body.planes, function(plan, callback) {
+                    let nuevoPlan = new Prestacion(plan);
+
+                    Auth.audit(nuevoPlan, req);
+                    nuevoPlan.save( function (errorPlan, nuevaPrestacion) {
+                        if (errorPlan) { return callback(errorPlan); }
+
+                        solicitadas.push(nuevaPrestacion.id);
+
+                        callback();
+
+                    });
+                }, function(err) {
+                    if (err) return next(err);
+
+                    // como el objeto de mongoose es un inmutable, no puedo agregar directamente una propiedad
+                    // para poder retornar el nuevo objeto con los planes solicitados, primero
+                    // debemos clonarlo con JSON.parse(JSON.stringify());
+                    let convertedJSON = JSON.parse(JSON.stringify(prestacion));
+
+                    convertedJSON.solicitadas = solicitadas;
+
+                    res.json(convertedJSON);
+                });
+
+            } else {
+
+                res.json(prestacion);
+            }
+
             // Auth.audit(data, req);
             /*
             Logger.log(req, 'prestacionPaciente', 'update', {
@@ -150,7 +189,6 @@ router.patch('/prestaciones/:id', function (req, res, next) {
                 err: err || false
             });
             */
-            res.json(data);
         });
     });
 });
