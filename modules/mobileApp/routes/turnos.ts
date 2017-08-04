@@ -22,95 +22,14 @@ let router = express.Router();
 // Envía el sms al paciente recordando el turno con 24 Hs de antelación
 router.post('/turnos/smsRecordatorioTurno', function (req, res, next) {
 
-    recordatorio.find({ 'estadoEnvio': false }, function (err, data) {
-
-        data.forEach((turno: any, index) => {
-
-            let smsOptions: SmsOptions = {
-                telefono: turno.paciente.telefono,
-                mensaje: 'Sr ' + turno.paciente.apellido + 'Le recordamos que tiene un turno para el día: ' + moment(turno.fechaTurno).format('DD/MM/YYYY')
-            }
-
-            sendSms(smsOptions, function (res) {
-                if (res === '0') {
-                    recordatorio.findById(turno._id, function (err, dato) {
-                        turno.estadoEnvio = true;
-
-                        turno.save();
-                    });
-                    console.log("El SMS se envío correctamente");
-                }
-            });
-        });
-
-        res.json(data);
-    });
+    recordatorioController.enviarTurnoRecordatorio();
+    res.json({});
 });
 
 router.get('/turnos/recordatorioTurno', function (req, res, next) {
 
-    let startDay = moment.utc().add(1, 'days').startOf('day').toDate();
-    let endDay = moment.utc().add(1, 'days').endOf('day').toDate();
-
-    let pipelineTurno = [];
-    let turnos = [];
-    let turno;
-
-    pipelineTurno = [{
-        '$match': {
-        }
-    },
-    // Unwind cada array
-    { '$unwind': '$bloques' },
-    { '$unwind': '$bloques.turnos' },
-    // Filtra los elementos que matchean
-    {
-        '$match': {
-        }
-    },
-    {
-        '$group': {
-            '_id': { 'id': '$_id', 'bloqueId': '$bloques._id' },
-            'turnos': { $push: '$bloques.turnos' }
-        }
-    },
-    {
-        '$group': {
-            '_id': '$_id.id',
-            'bloques': { $push: { '_id': '$_id.bloqueId', 'turnos': '$turnos' } }
-        }
-    }];
-
-    // Se modifica el pipeline en la posición 0 y 3, que son las posiciones
-    // donde se realiza el match
-    let matchTurno = {};
-
-    matchTurno['bloques.turnos.horaInicio'] = { $gte: startDay, $lte: endDay };
-    matchTurno['bloques.turnos.estado'] = 'asignado';
-
-    pipelineTurno[0] = { '$match': matchTurno };
-    pipelineTurno[3] = { '$match': matchTurno };
-    pipelineTurno[6] = { '$unwind': '$bloques' };
-    pipelineTurno[7] = { '$unwind': '$bloques.turnos' };
-
-    agenda.aggregate(pipelineTurno,
-        function (err2, data2) {
-            if (err2) {
-                return next(err2);
-            }
-
-            data2.forEach(elem => {
-                turno = elem.bloques.turnos;
-                turno.id = elem.bloques.turnos._id;
-                turno.paciente = elem.bloques.turnos.paciente;
-                turno.tipoRecordatorio = 'turno';
-                turnos.push(turno);
-            });
-
-            recordatorioController.guardarRecordatorioTurno(turnos, function (res) {
-                console.log("Resultado ", res);
-            });
-        });
+    recordatorioController.buscarTurnosARecordar(1);
+    res.json({});
 });
 
 router.get('/turnos', function (req: any, res, next) {

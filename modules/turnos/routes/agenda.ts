@@ -8,6 +8,7 @@ import * as moment from 'moment';
 import * as agendaCtrl from '../controller/agenda';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 
+
 let router = express.Router();
 
 router.get('/agenda/paciente/:idPaciente', function (req, res, next) {
