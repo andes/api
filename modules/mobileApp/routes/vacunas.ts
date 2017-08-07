@@ -5,9 +5,9 @@ import * as express from 'express';
 let router = express.Router();
 
 router.get('/vacunas', function (req: any, res, next) {
-    let dni = req.params.dni;
-console.log("Entraaa Vacunas");
-    vacunas.findById({ 'dni': dni }, function (err, data) {
+    let dni = req.query.dni;
+
+    vacunas.find({ 'dni': dni }, function (err, data) {
         if (err) {
             next(err);
         };
@@ -16,3 +16,5 @@ console.log("Entraaa Vacunas");
     });
 
 });
+
+module.exports = router;
