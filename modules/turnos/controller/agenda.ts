@@ -1,7 +1,4 @@
 import * as moment from 'moment';
-import { model as prestacion } from '../../rup/schemas/prestacion';
-import { paciente } from './../../../core/mpi/schemas/paciente';
-import { Auth } from './../../../auth/auth.class';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -76,23 +73,43 @@ export function guardarNotaTurno(req, data, tid = null) {
 }
 
 // Turno
-export function darTurnoDoble(req, data, tid = null) {   //NUEVO
-    let position = getPosition(req, data, tid);
+export function darTurnoDoble(req, data, tid = null) {   // NUEVO
+    let position = getPosition(req, data, tid); // Obtiene la posición actual del turno seleccionado
     let agenda = data;
+     let turnoAnterior;
+
     if ((position.indexBloque > -1) && (position.indexTurno > -1)) {
-        let turnoAnterior = agenda.bloques[position.indexBloque].turnos[position.indexTurno];
+        turnoAnterior = agenda.bloques[position.indexBloque].turnos[position.indexTurno - 1]; // Obtiene el turno anterior
 
         // Verifico si existen turnos disponibles del tipo correspondiente
         let countBloques = calcularContadoresTipoTurno(position.indexBloque, position.indexTurno, agenda);
         if ((countBloques[turnoAnterior.tipoTurno] as number) === 0) {
             return ({
-                err: 'No se puede asignar el turno doble ' + req.body.tipoTurno
+                err: 'No se puede asignar el turno doble ' + turnoAnterior.tipoTurno
             });
         } else {
             // se controla la disponibilidad de los tipos de turnos
-            // el turno doble se otorgarpa si existe disponibilidad de la cantidad de tipo del turno asociado
+            // el turno doble se otorgara si existe disponibilidad de la cantidad de tipo del turno asociado
             let turno = getTurno(req, data, tid);
             turno.estado = 'turnoDoble';
+            switch (turnoAnterior.tipoTurno) {
+                case ('delDia'):
+                    data.bloques[position.indexBloque].restantesDelDia = countBloques.delDia - 1;
+                    data.bloques[position.indexBloque].restantesProgramados = 0;
+                    data.bloques[position.indexBloque].restantesProfesional = 0;
+                    data.bloques[position.indexBloque].restantesGestion = 0;
+                    break;
+                case ('programado'):
+                    data.bloques[position.indexBloque].restantesProgramados = countBloques.programado - 1;
+                    break;
+                case ('profesional'):
+                    data.bloques[position.indexBloque].restantesProfesional = countBloques.profesional - 1;
+                    break;
+                case ('gestion'):
+                    data.bloques[position.indexBloque].restantesGestion = countBloques.gestion - 1;
+                    break;
+            }
+
         }
 
     } else {
@@ -148,7 +165,7 @@ export function actualizarEstado(req, data) {
             bloque.turnos.forEach(turno => {
                 if (turno.estado === 'asignado') {
                     // bloque.accesoDirectoProgramado--;
-                     bloque.restantesProgramados--;
+                    bloque.restantesProgramados--;
                 }
             });
         });
@@ -212,7 +229,7 @@ export function agregarAviso(req, agenda) {
     // if (!agenda.avisos) {
     //     agenda.avisos = [];
     // }
-    let index = agenda.avisos.findIndex(item => String(item.profesionalId) == profesionalId);
+    let index = agenda.avisos.findIndex(item => String(item.profesionalId) === profesionalId);
     if (index < 0) {
         agenda.avisos.push({
             estado,
@@ -256,7 +273,7 @@ export function combinarFechas(fecha1, fecha2) {
 }
 
 export function calcularContadoresTipoTurno(posBloque, posTurno, agenda) {
-    // Los siguientes 2 for ubican el indice del bloque y del turno
+
     let countBloques;
     let esHoy = false;
     // Ver si el día de la agenda coincide con el día de hoy
@@ -265,44 +282,56 @@ export function calcularContadoresTipoTurno(posBloque, posTurno, agenda) {
     }
 
     // Contadores de "delDia" y "programado" varían según si es el día de hoy o no
+    // countBloques = {
+    //     delDia: esHoy ? ((agenda.bloques[posBloque].accesoDirectoDelDia as number) + (agenda.bloques[posBloque].accesoDirectoProgramado as number)) : agenda.bloques[posBloque].accesoDirectoDelDia,
+    //     programado: esHoy ? 0 : agenda.bloques[posBloque].accesoDirectoProgramado,
+    //     gestion: agenda.bloques[posBloque].reservadoGestion,
+    //     profesional: agenda.bloques[posBloque].reservadoProfesional
+    // };
+
     countBloques = {
-        delDia: esHoy ? ((agenda.bloques[posBloque].accesoDirectoDelDia as number) + (agenda.bloques[posBloque].accesoDirectoProgramado as number)) : agenda.bloques[posBloque].accesoDirectoDelDia,
-        programado: esHoy ? 0 : agenda.bloques[posBloque].accesoDirectoProgramado,
-        gestion: agenda.bloques[posBloque].reservadoGestion,
-        profesional: agenda.bloques[posBloque].reservadoProfesional
+        delDia: esHoy ? (
+            (agenda.bloques[posBloque].restantesDelDia as number) +
+            (agenda.bloques[posBloque].restantesProgramados as number) +
+            (agenda.bloques[posBloque].restantesGestion as number) +
+            (agenda.bloques[posBloque].restantesProfesional as number)
+        ) : agenda.bloques[posBloque].restantesDelDia,
+        programado: esHoy ? 0 : agenda.bloques[posBloque].restantesProgramados,
+        gestion: esHoy ? 0 : agenda.bloques[posBloque].restantesGestion,
+        profesional: esHoy ? 0 : agenda.bloques[posBloque].restantesProfesional
     };
 
-    // Restamos los turnos asignados de a cuenta
-    if (agenda.bloques[posBloque].turnos[posTurno].estado === 'asignado') {
-        if (esHoy) {
-            switch (agenda.bloques[posBloque].turnos[posTurno].tipoTurno) {
-                case ('delDia'):
-                    countBloques.delDia--;
-                    break;
-                case ('programado'):
-                    countBloques.delDia--;
-                    break;
-                case ('profesional'):
-                    countBloques.profesional--;
-                    break;
-                case ('gestion'):
-                    countBloques.gestion--;
-                    break;
-            }
-        } else {
-            switch (agenda.bloques[posBloque].turnos[posTurno].tipoTurno) {
-                case ('programado'):
-                    countBloques.programado--;
-                    break;
-                case ('profesional'):
-                    countBloques.profesional--;
-                    break;
-                case ('gestion'):
-                    countBloques.gestion--;
-                    break;
-            }
-        }
-    }
+    // // Restamos los turnos asignados de a cuenta
+    // if (agenda.bloques[posBloque].turnos[posTurno].estado === 'asignado') {
+    //     if (esHoy) {
+    //         switch (agenda.bloques[posBloque].turnos[posTurno].tipoTurno) {
+    //             case ('delDia'):
+    //                 countBloques.delDia--;
+    //                 break;
+    //             case ('programado'):
+    //                 countBloques.delDia--;
+    //                 break;
+    //             case ('profesional'):
+    //                 countBloques.profesional--;
+    //                 break;
+    //             case ('gestion'):
+    //                 countBloques.gestion--;
+    //                 break;
+    //         }
+    //     } else {
+    //         switch (agenda.bloques[posBloque].turnos[posTurno].tipoTurno) {
+    //             case ('programado'):
+    //                 countBloques.programado--;
+    //                 break;
+    //             case ('profesional'):
+    //                 countBloques.profesional--;
+    //                 break;
+    //             case ('gestion'):
+    //                 countBloques.gestion--;
+    //                 break;
+    //         }
+    //     }
+    // }
     return countBloques;
 }
 
@@ -348,7 +377,7 @@ export function getBloque(agenda, turno) {
         let bloque = agenda.bloques[i];
         for (let j = 0; j < bloque.turnos.length; j++) {
             let turnoTemp = bloque.turnos[j];
-            if (turnoTemp._id == turno._id) {
+            if (turnoTemp._id === turno._id) {
                 return bloque;
             }
         }

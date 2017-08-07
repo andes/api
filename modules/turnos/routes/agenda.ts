@@ -3,7 +3,6 @@ import * as express from 'express';
 import * as agenda from '../schemas/agenda';
 import * as mongoose from 'mongoose';
 import { Auth } from './../../../auth/auth.class';
-import { log } from './../../../core/log/schemas/log';
 import { Logger } from '../../../utils/logService';
 import * as moment from 'moment';
 import * as agendaCtrl from '../controller/agenda';
@@ -323,7 +322,6 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 case 'sacarAsistencia': agendaCtrl.sacarAsistencia(req, data, turnos[y]._id);
                     break;
                 case 'liberarTurno':
-                    // console.log(turno);
                     turno = agendaCtrl.getTurno(req, data, turnos[y]._id);
                     if (turno.paciente.id) {
                         LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, agendaCtrl.getBloque(data, turno), data._id);
@@ -369,7 +367,6 @@ router.patch('/agenda/:id*?', function (req, res, next) {
             }
 
             Auth.audit(data, req);
-
             data.save(function (error) {
 
                 Logger.log(req, 'turnos', 'update', {
@@ -385,7 +382,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
 
             });
 
-            if (req.body.op == 'suspendida') {
+            if (req.body.op === 'suspendida') {
                 (data as any).bloques.forEach(bloque => {
 
                     bloque.turnos.forEach(turno => {
