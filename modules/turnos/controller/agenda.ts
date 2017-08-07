@@ -16,16 +16,37 @@ export function sacarAsistencia(req, data, tid = null) {
 // Turno
 export function liberarTurno(req, data, turno) {
     // let turno = getTurno(req, data, tid);
+    let position = getPosition(req, data, turno._id);
     turno.estado = 'disponible';
     // delete turno.paciente;
     turno.paciente = null;
     turno.tipoPrestacion = null;
     turno.nota = null;
     turno.confirmedAt = null;
+    let cant = 1;
 
     let turnoDoble = getTurnoSiguiente(req, data, turno._id);
     if (turnoDoble) {
+        cant = cant + 1;
         turnoDoble.estado = 'disponible';
+    }
+
+    switch (turno.tipoTurno) {
+        case ('delDia'):
+            data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia + cant;
+            data.bloques[position.indexBloque].restantesProgramados = 0;
+            data.bloques[position.indexBloque].restantesProfesional = 0;
+            data.bloques[position.indexBloque].restantesGestion = 0;
+            break;
+        case ('programado'):
+            data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
+            break;
+        case ('profesional'):
+            data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional + cant;
+            break;
+        case ('gestion'):
+            data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion + cant;
+            break;
     }
 }
 
@@ -76,7 +97,7 @@ export function guardarNotaTurno(req, data, tid = null) {
 export function darTurnoDoble(req, data, tid = null) {   // NUEVO
     let position = getPosition(req, data, tid); // Obtiene la posición actual del turno seleccionado
     let agenda = data;
-     let turnoAnterior;
+    let turnoAnterior;
 
     if ((position.indexBloque > -1) && (position.indexTurno > -1)) {
         turnoAnterior = agenda.bloques[position.indexBloque].turnos[position.indexTurno - 1]; // Obtiene el turno anterior
@@ -212,7 +233,7 @@ export function getPosition(req, agenda, idTurno = null) {
     for (let x = 0; x < agenda.bloques.length; x++) {
         // Si existe este bloque...
         turnos = agenda.bloques[x].turnos;
-        index = turnos.findIndex((t) => { return t._id.toString() === idTurno; });
+        index = turnos.findIndex((t) => t._id.toString() === idTurno.toString());
         if (index > -1) {
             position.indexBloque = x;
             position.indexTurno = index;
@@ -226,9 +247,6 @@ export function agregarAviso(req, agenda) {
     let estado = req.body.estado;
     let fecha = new Date();
 
-    // if (!agenda.avisos) {
-    //     agenda.avisos = [];
-    // }
     let index = agenda.avisos.findIndex(item => String(item.profesionalId) === profesionalId);
     if (index < 0) {
         agenda.avisos.push({
