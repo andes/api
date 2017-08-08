@@ -1,4 +1,4 @@
-import { log } from './../../../core/log/schemas/log';
+
 import * as express from 'express';
 import * as agenda from '../schemas/agenda';
 import { Logger } from '../../../utils/logService';
@@ -300,7 +300,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
 
                             // Agrega un tag al JSON query
                             query[etiquetaEstado] = 'disponible';
-                            console.log('update ', update);
+
                             // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
                             (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true },
                                 function actualizarAgenda(err2, doc2: any, writeOpResult) {
