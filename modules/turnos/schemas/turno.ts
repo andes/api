@@ -34,7 +34,7 @@ let turnoSchema = new mongoose.Schema({
     nota: String,
     motivoSuspension: {
         type: String,
-        enum: ['edilicia', 'profesional', 'organizacion']
+        enum: ['edilicia', 'profesional', 'organizacion', 'agendaSuspendida']
     },
     paciente: { // pensar que otros datos del paciente conviene tener
         id: mongoose.Schema.Types.ObjectId,
