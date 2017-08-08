@@ -2,6 +2,7 @@ import * as moment from 'moment';
 import { model as prestacion } from '../../rup/schemas/prestacion';
 import { paciente } from './../../../core/mpi/schemas/paciente';
 import { Auth } from './../../../auth/auth.class';
+import { sendSms } from '../../../utils/sendSms';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -131,10 +132,12 @@ export function agregarSobreturno(req, data) {
 
 // Agenda
 export function actualizarEstado(req, data) {
+
     // Si se pasa a estado Pausada, guardamos el estado previo
     if (req.body.estado === 'pausada') {
         data.prePausada = data.estado;
     }
+
     // Si se pasa a publicada
     if (req.body.estado === 'publicada') {
         data.estado = 'publicada';
@@ -148,16 +151,46 @@ export function actualizarEstado(req, data) {
             bloque.turnos.forEach(turno => {
                 if (turno.estado === 'asignado') {
                     // bloque.accesoDirectoProgramado--;
-                     bloque.restantesProgramados--;
+                    bloque.restantesProgramados--;
                 }
             });
         });
     }
+
     // Cuando se reanuda de un estado pausada, se setea el estado guardado en prePausa
     if (req.body.estado === 'prePausada') {
         data.estado = data.prePausada;
     } else {
         data.estado = req.body.estado;
+
+        // Si se suspende una agenda, hay que enviar SMS a todos los pacientes
+        if (req.body.estado === 'suspendida') {
+
+            data.bloques.forEach(bloque => {
+                bloque.turnos.forEach(turno => {
+
+                    turno.estado = 'suspendido';
+                    turno.motivoSuspension = 'agendaSuspendida';
+
+                    if (turno.paciente.id && turno.paciente.telefono) {
+                        let sms: any = {
+                            telefono: turno.paciente.telefono,
+                            mensaje: 'Le avisamos que su turno para el día ' + moment(turno.horaInicio).format('ll').toString() + ' a las ' + moment(turno.horaInicio).format('LT').toString() + 'hs fue suspendido'
+                        };
+
+                        console.log(turno.paciente);
+                        console.log(sms);
+
+                        // sendSms(sms, respuesta => {
+                        //     if (respuesta === '0') {
+
+                        //     }
+                        // });
+                    }
+                });
+            });
+        }
+
     }
 }
 
