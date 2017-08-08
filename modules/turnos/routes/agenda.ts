@@ -8,6 +8,7 @@ import { Logger } from '../../../utils/logService';
 import * as moment from 'moment';
 import * as agendaCtrl from '../controller/agenda';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
+import { sendSms } from "../../../utils/sendSms";
 
 let router = express.Router();
 
@@ -27,6 +28,7 @@ router.get('/agenda/paciente/:idPaciente', function (req, res, next) {
     }
 
 });
+
 
 router.get('/agenda/candidatas', function (req, res, next) {
     agenda.findById(req.query.idAgenda, function (err, data) {
@@ -71,9 +73,9 @@ router.get('/agenda/candidatas', function (req, res, next) {
                         let horaIni = moment(t.horaInicio).format('HH:mm');
                         if (
                             b.tipoPrestaciones.findIndex(x => String(x._id) === String(turno.tipoPrestacion._id)) >= 0 // mismo tipo de prestacion
-                                && (t.estado === 'disponible' || (t.estado === 'asignado' && typeof t.reasignado !== 'undefined' && t.reasignado.anterior && t.reasignado.anterior.idTurno === req.query.idTurno)) // turno disponible o al que se reasigno
-                                && req.query.horario ? horaIni.toString() === moment(turno.horaInicio).format('HH:mm') : true // si filtro por horario verifico que sea el mismo
-                                    && req.query.duracion ? b.duracionTurno === bloque.duracionTurno : true  // si filtro por duracion verifico que sea la mismo
+                            && (t.estado === 'disponible' || (t.estado === 'asignado' && typeof t.reasignado !== 'undefined' && t.reasignado.anterior && t.reasignado.anterior.idTurno === req.query.idTurno)) // turno disponible o al que se reasigno
+                            && (req.query.horario ? horaIni.toString() === moment(turno.horaInicio).format('HH:mm') : true) // si filtro por horario verifico que sea el mismo
+                            && (req.query.duracion ? b.duracionTurno === bloque.duracionTurno : true)  // si filtro por duracion verifico que sea la mismo
                         ) {
 
                             if (out.indexOf(a) < 0) {
@@ -385,17 +387,25 @@ router.patch('/agenda/:id*?', function (req, res, next) {
 
             });
 
-            if (req.body.op == 'suspendida') {
+            if (req.body.op === 'suspendida') {
+
                 (data as any).bloques.forEach(bloque => {
 
                     bloque.turnos.forEach(turno => {
-
                         if (turno.paciente.id) {
+                            if (turno.paciente.telefono) {
+                                let sms: any = {
+                                    telefono: turno.paciente.telefono,
+                                    mensaje: 'Le avisamos que su turno para el día ' + moment(turno.horaInicio).format('dd/MM/yyyy') + ' a las ' + moment(turno.horaInicio).format('HH:mm') + 'hs fue suspendido'
+                                };
+                                // sendSms(sms, respuesta => {
+                                //     if (respuesta === '0') {
 
+                                //     }
+                                // });
+                            }
                             LoggerPaciente.logTurno(req, 'turnos:suspender', turno.paciente, turno, bloque._id, data._id);
-
                         }
-
                     });
 
                 });
