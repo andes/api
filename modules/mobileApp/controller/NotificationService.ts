@@ -16,7 +16,7 @@ export class NotificationService {
 
             this.sendByPaciente(idPaciente, notificacion);
 
-        }).catch(() => { console.log("ERROR"); })
+        }).catch(() => { console.log('ERROR'); })
     }
 
     private static findTurno(datosTurno) {
@@ -36,16 +36,18 @@ export class NotificationService {
         });
     }
 
+    public static sendNotification(account, notification) {
+        let devices = account.devices.map(item => item.device_id);
+        new PushClient().send(devices, notification);
+    }
+
     private static sendByPaciente(pacienteId, notification) {
         pacienteApp.find({ 'pacientes.id': pacienteId }, function (err, docs: any[]) {
             docs.forEach(user => {
                 let devices = user.devices.map(item => item.device_id);
-
                 new PushClient().send(devices, notification);
-
             });
         });
     }
-
 
 }

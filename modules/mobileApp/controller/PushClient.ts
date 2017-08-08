@@ -13,7 +13,7 @@ export interface INotification {
 
 export class PushClient {
     private pushServer = null;
-    private defaultTitle = "ANDES";
+    private defaultTitle = 'ANDES';
 
 
     constructor() {
@@ -22,11 +22,9 @@ export class PushClient {
 
     public send(deviceIds, notification: INotification) {
 
-        return this.pushServer.send(deviceIds, this.notificationToObject(notification));
-        /*.then((results) => console.log(results))
-        .catch((err) => console.log(err));
-        */
-
+        return this.pushServer.send(deviceIds, this.notificationToObject(notification))
+        // .then((results) => console.log(results))
+        // .catch((err) => console.log(JSON.stringify(err)));
     }
 
     private notificationToObject(notification: INotification) {

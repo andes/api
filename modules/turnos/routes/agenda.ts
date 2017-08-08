@@ -9,6 +9,7 @@ import * as agendaCtrl from '../controller/agenda';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { sendSms } from "../../../utils/sendSms";
 
+
 let router = express.Router();
 
 router.get('/agenda/paciente/:idPaciente', function (req, res, next) {

@@ -1,5 +1,6 @@
 import * as mongoose from 'mongoose';
 import { Connections } from './../../../connections';
+import * as configPrivate from './../../../config.private';
 
 export let snomedSchema = new mongoose.Schema({
     conceptId: String,
@@ -11,4 +12,4 @@ export let snomedSchema = new mongoose.Schema({
     definitionStatus: String
 });
 
-export let snomedModel = Connections.snomed.model('snomed', snomedSchema, 'v20160430tx');
+export let snomedModel = Connections.snomed.model(configPrivate.snomed.dbName, snomedSchema, configPrivate.snomed.dbVersion);

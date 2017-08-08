@@ -38,6 +38,7 @@ let schema = new mongoose.Schema({
         default: 'planificacion'
     },
     avisos: [{
+        _id: false,
         profesionalId: mongoose.Schema.Types.ObjectId,
         fecha: Date,
         estado: {

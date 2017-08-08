@@ -37,7 +37,7 @@ export let schema = new mongoose.Schema({
             id: mongoose.Schema.Types.ObjectId,
             nombre: String,
             apellido: String,
-            documento: String            
+            documento: String
         },
         // Organizacion desde la que se solicita la prestacion
         organizacion: {
@@ -96,7 +96,8 @@ schema.pre('save', function(next){
         let err = new Error('Debe seleccionar el profesional que solicita');
         return next(err);
     }
-
+console.log("*****************************************************");
+console.log(prestacion);
     if (prestacion.estados[prestacion.estados.length - 1].tipo === 'ejecucion') {
         if (!prestacion.ejecucion.fecha) {
             let err = new Error('Debe seleccionar la fecha en que se solicita');
