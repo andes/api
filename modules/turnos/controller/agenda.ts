@@ -19,10 +19,8 @@ export function sacarAsistencia(req, data, tid = null) {
 
 // Turno
 export function liberarTurno(req, data, turno) {
-    // let turno = getTurno(req, data, tid);
     let position = getPosition(req, data, turno._id);
     turno.estado = 'disponible';
-    // delete turno.paciente;
     turno.paciente = null;
     turno.tipoPrestacion = null;
     turno.nota = null;
@@ -61,35 +59,34 @@ export function suspenderTurno(req, data, turno) {
     delete turno.paciente;
     delete turno.tipoPrestacion;
     turno.motivoSuspension = req.body.motivoSuspension;
+
+    let cant = 1;
     // Se verifica si tiene un turno doble asociado
     let turnoDoble = getTurnoSiguiente(req, data, turno._id);
     if (turnoDoble) {
+        cant = cant + 1;
         turnoDoble.estado = 'suspendido';
         turnoDoble.motivoSuspension = req.body.motivoSuspension;
     }
-    return data;
+
+    // El tipo de turno del cual se resta será en el orden : delDia, programado, autocitado, gestion
+    let position = getPosition(req, data, turno._id);
+    if (data.bloques[position.indexBloque].restantesDelDia > 0) {
+        data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia - cant;
+    } else {
+        if (data.bloques[position.indexBloque].restantesProgramados > 0) {
+            data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados - cant;
+        } else {
+            if (data.bloques[position.indexBloque].restantesProfesional > 0) {
+                data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional - cant;
+            } else {
+                if (data.bloques[position.indexBloque].restantesGestion > 0) {
+                    data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion - cant;
+                }
+            }
+        }
+    }
 }
-
-// // Turno
-// function bloquearTurno(req, data, tid = null) {
-
-//     let turno = getTurno(req, data, tid);
-
-//     if (turno.estado !== 'suspendido') {
-//         turno.estado = 'suspendido';
-//     } else {
-//         turno.estado = 'disponible';
-//     }
-// }
-
-// // Turno
-// function reasignarTurno(req, data, tid = null) {
-//     let turno = getTurno(req, data, tid);
-//     turno.estado = 'disponible';
-//     delete turno.paciente;
-//     turno.prestacion = null;
-//     turno.motivoSuspension = null;
-// }
 
 // Turno
 export function guardarNotaTurno(req, data, tid = null) {

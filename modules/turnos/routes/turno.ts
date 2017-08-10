@@ -209,39 +209,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                                         if ((data as any).bloques[posBloque].turnos[y]._id.equals(req.params.idTurno)) {
                                             posTurno = y;
                                         }
-
-                                        // Restamos los turnos asignados de a cuenta
-                                        // if ((data as any).bloques[posBloque].turnos[y].estado === 'asignado') {
-                                        //     if (esHoy) {
-                                        //         switch ((data as any).bloques[posBloque].turnos[y].tipoTurno) {
-                                        //             case ('delDia'):
-                                        //                 // countBloques[x].delDia--;
-                                        //                 countBloques.delDia--;
-                                        //                 break;
-                                        //             case ('programado'):
-                                        //                 countBloques.delDia--;
-                                        //                 break;
-                                        //             case ('profesional'):
-                                        //                 countBloques.profesional--;
-                                        //                 break;
-                                        //             case ('gestion'):
-                                        //                 countBloques.gestion--;
-                                        //                 break;
-                                        //         }
-                                        //     } else {
-                                        //         switch ((data as any).bloques[posBloque].turnos[y].tipoTurno) {
-                                        //             case ('programado'):
-                                        //                 countBloques.programado--;
-                                        //                 break;
-                                        //             case ('profesional'):
-                                        //                 countBloques.profesional--;
-                                        //                 break;
-                                        //             case ('gestion'):
-                                        //                 countBloques.gestion--;
-                                        //                 break;
-                                        //         }
-                                        //     }
-                                        // }
                                     }
                                 }
                             }
