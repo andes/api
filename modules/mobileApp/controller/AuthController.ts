@@ -51,10 +51,10 @@ export function envioCodigoCount(user: any) {
     // TODO: Implementar si se decide poner un límite al envío de códigos
 }
 
-export function generarCodigoVerificacion() {
+export function generarCodigoVerificacion(onlyNumber = true) {
     let codigo = '';
     let length = 6;
-    let caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let caracteres = onlyNumber ? '0123456789' : 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     for (let i = 0; i < length; i++) {
         codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
     }
