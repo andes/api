@@ -71,17 +71,19 @@ export function suspenderTurno(req, data, turno) {
 
     // El tipo de turno del cual se resta será en el orden : delDia, programado, autocitado, gestion
     let position = getPosition(req, data, turno._id);
-    if (data.bloques[position.indexBloque].restantesDelDia > 0) {
-        data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia - cant;
-    } else {
-        if (data.bloques[position.indexBloque].restantesProgramados > 0) {
-            data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados - cant;
+    if (!turno.tipoTurno) {
+        if (data.bloques[position.indexBloque].restantesDelDia > 0) {
+            data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia - cant;
         } else {
-            if (data.bloques[position.indexBloque].restantesProfesional > 0) {
-                data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional - cant;
+            if (data.bloques[position.indexBloque].restantesProgramados > 0) {
+                data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados - cant;
             } else {
-                if (data.bloques[position.indexBloque].restantesGestion > 0) {
-                    data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion - cant;
+                if (data.bloques[position.indexBloque].restantesProfesional > 0) {
+                    data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional - cant;
+                } else {
+                    if (data.bloques[position.indexBloque].restantesGestion > 0) {
+                        data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion - cant;
+                    }
                 }
             }
         }
