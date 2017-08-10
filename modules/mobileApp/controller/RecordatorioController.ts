@@ -157,8 +157,6 @@ export function agendaRecordatorioQuery(dayOffset) {
 
 export function recordarAgenda() {
     return agendaRecordatorioQuery(agendasRemainderDays).then((data: any[]) => {
-        console.log(data);
-
         let stack = [];
         data.forEach(item => {
             let profId = item._id.profesional;
