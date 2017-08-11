@@ -320,11 +320,11 @@ router.post('/profesionales', function (req, res, next) {
  *           $ref: '#/definitions/profesional'
  */
 router.put('/profesionales/:id', function (req, res, next) {
-    profesional.findByIdAndUpdate(req.params._id, req.body, { new: true }, function (err, data) {
+    profesional.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
         if (err) {
             return next(err);
         }
-        res.json(data);
+        res.json(req.body);
     });
 });
 
