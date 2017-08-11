@@ -7,7 +7,6 @@ import { Logger } from '../../../utils/logService';
 import * as moment from 'moment';
 import * as agendaCtrl from '../controller/agenda';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
-import { sendSms } from "../../../utils/sendSms";
 
 
 let router = express.Router();
@@ -241,10 +240,17 @@ router.post('/agenda/clonar', function (req, res, next) {
                         newFinBloque = agendaCtrl.combinarFechas(clon, bloque.horaFin);
                         bloque.horaInicio = newIniBloque;
                         bloque.horaFin = newFinBloque;
-                        bloque.restantesDelDia = bloque.accesoDirectoDelDia;
-                        bloque.restantesProgramados = bloque.accesoDirectoProgramado;
-                        bloque.restantesGestion = bloque.reservadoGestion;
-                        bloque.restantesProfesional = bloque.reservadoProfesional;
+                        if (bloque.pacienteSimultaneos) {
+                            bloque.restantesDelDia = bloque.accesoDirectoDelDia * bloque.cantidadSimultaneos;
+                            bloque.restantesProgramados = bloque.accesoDirectoProgramado * bloque.cantidadSimultaneos;
+                            bloque.restantesGestion = bloque.reservadoGestion * bloque.cantidadSimultaneos;
+                            bloque.restantesProfesional = bloque.reservadoProfesional * bloque.cantidadSimultaneos;
+                        } else {
+                            bloque.restantesDelDia = bloque.accesoDirectoDelDia;
+                            bloque.restantesProgramados = bloque.accesoDirectoProgramado;
+                            bloque.restantesGestion = bloque.reservadoGestion;
+                            bloque.restantesProfesional = bloque.reservadoProfesional;
+                        }
                         bloque._id = mongoose.Types.ObjectId();
                         bloque.turnos.forEach((turno, index1) => {
                             newIniTurno = agendaCtrl.combinarFechas(clon, turno.horaInicio);
