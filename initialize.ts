@@ -5,6 +5,7 @@ import { Swagger } from './swagger';
 import { Connections } from './connections';
 import * as HttpStatus from 'http-status-codes';
 import { Express } from 'express';
+// import { Scheduler } from './scheduler';
 
 let requireDir = require('require-dir');
 
@@ -17,6 +18,12 @@ export function initAPI(app: Express) {
 
     // Inicializa Mongoose
     Connections.initialize();
+
+    // Inicializa las tareas diarias
+    // setTimeout(() => {
+    // console.log('Inits scheduler');
+    require('./scheduler').Scheduler.initialize();
+    // }, 5000);
 
     // Configura Express
     app.use(bodyParser.json());

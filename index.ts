@@ -1,7 +1,7 @@
 import * as express from 'express';
 import { initAPI } from './initialize';
 import { Websockets } from './websockets';
-import { Scheduler } from './scheduler';
+
 
 // Inicializa express
 let app = express();
@@ -15,5 +15,4 @@ let server = app.listen(3002, function () {
 // Inicializa Websockets
 Websockets.initialize(server);
 
-// Inicializa las tareas diarias
-Scheduler.initialize();
+
