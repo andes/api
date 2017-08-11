@@ -20,10 +20,8 @@ export function initAPI(app: Express) {
     Connections.initialize();
 
     // Inicializa las tareas diarias
-    // setTimeout(() => {
-    // console.log('Inits scheduler');
+    // Uso el require acá porque genera problemas con los import de schemas antes de setear los defaultsSchema
     require('./scheduler').Scheduler.initialize();
-    // }, 5000);
 
     // Configura Express
     app.use(bodyParser.json());

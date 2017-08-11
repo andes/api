@@ -10,13 +10,6 @@ import * as agenda from '../../turnos/schemas/agenda';
 
 let router = express.Router();
 
-
-router.get('/testing', function (req, res, next) {
-    agenda.find({}, (err, user) => {
-        res.json(user[0]);
-    })
-});
-
 /**
  * Login a la app mobile
  *
