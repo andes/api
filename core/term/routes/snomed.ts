@@ -367,6 +367,55 @@ router.get('/snomed/procedimiento', function (req, res, next) {
     });
 });
 
+
+router.get('/snomed/equipamiento', (req, res, next) => {
+    console.log(req.query.tipo);
+    // creamos un array de palabras a partir de la separacion del espacio
+    let words = req.query.search.split(" ");
+    // let expWord = '';
+    let conditions = {
+        'lang': 'spanish',
+        '$and': [], 'active': true, 'conceptActive': true,
+        '$or': [
+            { semanticTag: 'objeto físico' }
+        ]
+    };
+    words.forEach(function (word) {
+        // normalizamos cada una de las palabras como hace
+        // SNOMED para poder buscar palabra a palabra
+        let expWord = '^' + removeDiacritics(regExpEscape(word).toLowerCase()) + '.*';
+        // agregamos la palabra a la condicion
+        conditions.$and.push({ 'words': { '$regex': expWord } });
+    });
+    // campos a projectar
+    const projection = {
+        conceptId: 1,
+        term: 1,
+        fsn: 1,
+        semanticTag: 1
+    };
+    // preparamos query
+    let query = snomedModel.find(conditions, projection);
+    // limitamos resultados
+    // query.limit(req.query.limit | 10);
+    query.limit(10000);
+    query.exec(function (err, data) {
+        if (err) {
+            next(err);
+        };
+        // ordenamos los resultados:
+        // llevamos hacia arriba los que tengan el largo de cadena
+        // mas corto, (deberia coincididr con lo que busco)
+        data.sort((a: any, b: any) => {
+            if (a.term.length < b.term.length) { return -1; }
+            if (a.term.length > b.term.length) { return 1; }
+            return 0;
+        });
+        data = data.slice(0, 50);
+        res.json(data);
+    });
+});
+
 // SNOMED : cambiamos caraceteres raros
 function removeDiacritics(str) {
     if (!changes) {
