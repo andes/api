@@ -6,8 +6,9 @@ import * as authController from '../controller/AuthController';
 import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
 
-let router = express.Router();
+import * as agenda from '../../turnos/schemas/agenda';
 
+let router = express.Router();
 
 /**
  * Login a la app mobile
@@ -148,7 +149,7 @@ router.post('/registro', function (req, res, next) {
         permisos: [],
         pacientes: []
     }
-console.log("Pacienteee ", dataPacienteApp);
+    console.log("Pacienteee ", dataPacienteApp);
     if (!dataPacienteApp.email) {
         return res.status(422).send({ error: 'Se debe ingresar una dirección de e-Mail' });
     }
