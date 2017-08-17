@@ -164,6 +164,10 @@ router.get('/agenda/:id?', function (req, res, next) {
             query.where('profesionales._id').in(req.query.profesionales);
         }
 
+        if (req.query.tieneTurnosAsignados) {
+            query.where('bloques.turnos.estado').equals('asignado');
+        }
+
         // Si rango es true  se buscan las agendas que se solapen con la actual en algún punto
         if (req.query.rango) {
             let variable: any[] = [];
