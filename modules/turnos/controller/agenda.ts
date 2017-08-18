@@ -1,8 +1,4 @@
 import * as moment from 'moment';
-import { model as prestacion } from '../../rup/schemas/prestacion';
-import { paciente } from './../../../core/mpi/schemas/paciente';
-import { Auth } from './../../../auth/auth.class';
-import { sendSms } from '../../../utils/sendSms';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -49,6 +45,9 @@ export function liberarTurno(req, data, turno) {
         case ('gestion'):
             data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion + cant;
             break;
+    }
+    if (turno.tipoTurno) {
+        turno.tipoTurno = undefined;
     }
 }
 

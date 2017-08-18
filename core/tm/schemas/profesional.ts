@@ -32,6 +32,8 @@ export let profesionalSchema = new mongoose.Schema({
             fin: Date
         },
     }],
+    legajo: String,
+    codigoSisa: String
 });
 
 // Defino Virtuals

@@ -196,9 +196,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                                     countBloques = {
                                         delDia: esHoy ? (
                                             ((data as any).bloques[x].restantesDelDia as number) +
-                                            ((data as any).bloques[x].restantesProgramados as number) +
-                                            ((data as any).bloques[x].restantesGestion as number) +
-                                            ((data as any).bloques[x].restantesProfesional as number)
+                                            ((data as any).bloques[x].restantesProgramados as number)
                                         ) : (data as any).bloques[x].restantesDelDia,
                                         programado: esHoy ? 0 : (data as any).bloques[x].restantesProgramados,
                                         gestion: esHoy ? 0 : (data as any).bloques[x].restantesGestion,
@@ -212,7 +210,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                                     }
                                 }
                             }
-                            // No quedan turnos del tipo seleccionado
                             if ((countBloques[req.body.tipoTurno] as number) === 0) {
                                 return next('No quedan turnos del tipo ' + req.body.tipoTurno);
                             }
@@ -267,12 +264,16 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
 
                             // Agrega un tag al JSON query
                             query[etiquetaEstado] = 'disponible';
-
+                            console.log('query ', query);
                             // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
                             (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true },
                                 function actualizarAgenda(err2, doc2: any, writeOpResult) {
+
                                     if (err2) {
                                         return next(err2);
+                                    }
+                                    if (doc2 == null) {
+                                        return next('El turno no pudo ser asignado');
                                     }
                                     if (writeOpResult && writeOpResult.value === null) {
                                         return next('El turno ya fue asignado');
@@ -285,13 +286,10 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                                         };
                                         Logger.log(req, 'turnos', 'asignarTurno', datosOp);
 
-
-                                        if (!req.body.reasignado) {
+                                        if (req.body.reasignado && req.body.reasignado === false) {
                                             let turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
                                             LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turno, req.params.idBloque, req.params.idAgenda);
                                         }
-
-
                                     }
 
                                     res.json(data);
