@@ -9,10 +9,10 @@ import { Express } from 'express';
 let requireDir = require('require-dir');
 
 export function initAPI(app: Express) {
-    // Inicializa la autenticación con Password/JWT
+    // Inicializa la autenticación con Passport/JWT
     Auth.initialize(app);
 
-    // Inicializa swagger
+    // Inicializa Swagger
     Swagger.initialize(app);
 
     // Inicializa Mongoose
@@ -47,7 +47,6 @@ export function initAPI(app: Express) {
                 } else {
                     app.use('/api' + config.modules[m].route, routes[route]);
                 }
-
             }
         }
     }
