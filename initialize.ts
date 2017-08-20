@@ -1,7 +1,7 @@
 import * as bodyParser from 'body-parser';
 import * as config from './config';
 import { Auth } from './auth/auth.class';
-import { Swagger } from './swagger';
+import { Swagger } from './swagger/swagger.class';
 import { Connections } from './connections';
 import * as HttpStatus from 'http-status-codes';
 import { Express } from 'express';

@@ -1,7 +1,7 @@
 import * as path from 'path';
 import * as swaggerJSDoc from 'swagger-jsdoc';
 import * as express from 'express';
-import * as configPrivate from './config.private';
+import * as configPrivate from '../config.private';
 
 export class Swagger {
     /**
@@ -119,6 +119,6 @@ export class Swagger {
         });
 
         // Incluimos swagger-ui
-        app.use('/api-docs', express.static(__dirname + '/api-docs'));
+        app.use('/docs', express.static(__dirname + '/static'));
     }
 }
