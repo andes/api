@@ -1,5 +1,6 @@
 import * as ws from 'ws';
 import { Server } from 'http';
+import * as debug from 'debug';
 
 export class Websockets {
     /**
@@ -12,19 +13,19 @@ export class Websockets {
      */
     static initialize(server: Server) {
         const wss = new ws.Server({ server });
-        console.log('[Websockets] Open');
+        let log = debug('websockets');
+        log('open');
 
         // When client connects ...
         wss.on('connection', (ws: any, req) => {
-            console.log('[Websockets] Client connected ', (req.headers['x-forwarded-for'] || req.connection.remoteAddress));
-
+            log('connected %s', (req.headers['x-forwarded-for'] || req.connection.remoteAddress));
+          
             // Init keep-alive
             ws.isAlive = true;
             ws.on('pong', () => {
-                console.log('pong');
+                log('pong');
                 ws.isAlive = true;
             });
-
 
             // const location = url.parse(req.url, true);
             // You might use location.query.access_token to authenticate or share sessions
