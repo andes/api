@@ -12,9 +12,6 @@ export function initAPI(app: Express) {
     // Inicializa la autenticación con Passport/JWT
     Auth.initialize(app);
 
-    // Inicializa Swagger
-    Swagger.initialize(app);
-
     // Inicializa Mongoose
     Connections.initialize();
 
@@ -24,6 +21,7 @@ export function initAPI(app: Express) {
         extended: true
     }));
     app.all('*', function (req, res, next) {
+        console.log('********************* ACA');
         res.header('Access-Control-Allow-Origin', '*');
         res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
         res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
@@ -35,6 +33,9 @@ export function initAPI(app: Express) {
             next();
         }
     });
+
+    // Inicializa Swagger
+    Swagger.initialize(app);
 
     // Carga los módulos y rutas
     for (let m in config.modules) {
