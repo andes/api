@@ -35,6 +35,12 @@ let router = express.Router();
  *         required: false
  *         type: integer
  *         default: 100
+ *       - name: skip
+ *         in: query
+ *         description: Indica la cantidad de registro a saltear
+ *         required: false
+ *         type: integer
+ *         default: 0
  */
 router.get('/snomed', function (req, res, next) {
     if (!req.query.search && !req.query.refsetId) {
@@ -56,7 +62,7 @@ router.get('/snomed', function (req, res, next) {
         if (isNaN(req.query.search)) {
             // Busca por palabras
             conditions['$and'] = [];
-            let words = req.query.search.split(" ");
+            let words = req.query.search.split(' ');
             words.forEach(function (word) {
                 // normalizamos cada una de las palabras como hace SNOMED para poder buscar palabra a palabra
                 word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08');
@@ -104,7 +110,8 @@ router.get('/snomed', function (req, res, next) {
                 return 0;
             });
         }
-        res.json(data.slice(0, req.query.limit | 100));
+        let skip: number = parseInt(req.query.skip || 0, 10);
+        res.json(data.slice(skip, req.query.limit || 100));
     });
 });
 
