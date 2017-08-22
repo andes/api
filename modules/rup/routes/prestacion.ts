@@ -149,11 +149,11 @@ router.patch('/prestaciones/:id', function (req, res, next) {
 
                 let solicitadas = [];
 
-                async.each(req.body.planes, function(plan, callback) {
+                async.each(req.body.planes, function (plan, callback) {
                     let nuevoPlan = new Prestacion(plan);
 
                     Auth.audit(nuevoPlan, req);
-                    nuevoPlan.save( function (errorPlan, nuevaPrestacion) {
+                    nuevoPlan.save(function (errorPlan, nuevaPrestacion) {
                         if (errorPlan) { return callback(errorPlan); }
 
                         solicitadas.push(nuevaPrestacion.id);
@@ -161,9 +161,10 @@ router.patch('/prestaciones/:id', function (req, res, next) {
                         callback();
 
                     });
-                }, function(err) {
-                    if (err) return next(err);
-
+                }, function (err: any) {
+                    if (err) {
+                        return next(err);
+                    }
                     // como el objeto de mongoose es un inmutable, no puedo agregar directamente una propiedad
                     // para poder retornar el nuevo objeto con los planes solicitados, primero
                     // debemos clonarlo con JSON.parse(JSON.stringify());
