@@ -161,9 +161,9 @@ router.patch('/prestaciones/:id', function (req, res, next) {
                         callback();
 
                     });
-                }, function (err: any) {
-                    if (err) {
-                        return next(err);
+                }, function (err1: any) {
+                    if (err1) {
+                        return next(err1);
                     }
                     // como el objeto de mongoose es un inmutable, no puedo agregar directamente una propiedad
                     // para poder retornar el nuevo objeto con los planes solicitados, primero
