@@ -2,6 +2,7 @@ import * as express from 'express';
 import { initAPI } from './initialize';
 import { Websockets } from './websockets';
 
+
 // Inicializa express
 let app = express();
 initAPI(app);
@@ -13,3 +14,5 @@ let server = app.listen(3002, function () {
 
 // Inicializa Websockets
 Websockets.initialize(server);
+
+

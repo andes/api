@@ -24,6 +24,14 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
 
+        if (req.query.sector) {
+            query.where('sector.nombre').equals(RegExp('^.*' + req.query.sector + '.*$', 'i'));
+        }
+
+        if (req.query.servicio) {
+            query.where('servicio.nombre').equals(RegExp('^.*' + req.query.servicio + '.*$', 'i'));
+        }
+
         if (req.query.edificio) {
             query.where('edificio.descripcion').equals(RegExp('^.*' + req.query.edificio + '.*$', 'i'));
         }
@@ -38,6 +46,10 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
             if (req.query.sinOrganizacion) {
                 query.where('organizacion').exists(false);
             }
+        }
+
+        if (req.query.limit) {
+            query.limit(Number(req.query.limit));
         }
         query.sort('nombre');
         query.exec((err, data) => {
