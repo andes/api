@@ -153,7 +153,7 @@ router.patch('/prestaciones/:id', function (req, res, next) {
                     let nuevoPlan = new Prestacion(plan);
 
                     Auth.audit(nuevoPlan, req);
-                    nuevoPlan.save(function (errorPlan, nuevaPrestacion) {
+                    nuevoPlan.save(function (errorPlan, nuevaPrestacion: any) {
                         if (errorPlan) { return callback(errorPlan); }
 
                         solicitadas.push(nuevaPrestacion.id);
@@ -181,15 +181,6 @@ router.patch('/prestaciones/:id', function (req, res, next) {
             }
 
             // Auth.audit(data, req);
-            /*
-            Logger.log(req, 'prestacionPaciente', 'update', {
-                accion: req.body.op,
-                ruta: req.url,
-                method: req.method,
-                data: data,
-                err: err || false
-            });
-            */
         });
     });
 });
