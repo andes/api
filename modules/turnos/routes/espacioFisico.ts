@@ -15,17 +15,24 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
     } else {
         // Trae todos
         let query = espacioFisico.find({});
-
+        let nombres = [];
 
         if (req.query.nombre) {
-            // nombres.push({ 'nombre': RegExp('^.*' + req.query.nombre + '.*$', 'i') });
-            // nombres.push({ 'sector.nombre': RegExp('^.*' + req.query.nombre + '.*$', 'i') });
-            // nombres.push({ 'servicio.nombre': RegExp('^.*' + req.query.nombre + '.*$', 'i') });
-            query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
+            nombres.push({ 'nombre': RegExp('^.*' + req.query.nombre + '.*$', 'i') });
+            nombres.push({ 'sector.nombre': RegExp('^.*' + req.query.nombre + '.*$', 'i') });
+            nombres.push({ 'servicio.nombre': RegExp('^.*' + req.query.nombre + '.*$', 'i') });
+            nombres.push({ 'edificio.descripcion': RegExp('^.*' + req.query.nombre + '.*$', 'i') });
+            // query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
+            query.or(nombres);
+            query.limit(20);
         }
 
         if (req.query.descripcion) {
             query.where('descripcion').equals(RegExp('^.*' + req.query.descripcion + '.*$', 'i'));
+        }
+
+        if (req.query.sector) {
+            query.where('sector.nombre').equals(RegExp('^.*' + req.query.sector + '.*$', 'i'));
         }
 
         if (req.query.edificio) {
@@ -34,10 +41,6 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
 
         if (req.query.servicio) {
             query.where('servicio.nombre').equals(RegExp('^.*' + req.query.servicio + '.*$', 'i'));
-        }
-
-        if (req.query.sector) {
-            query.where('sector.nombre').equals(RegExp('^.*' + req.query.sector + '.*$', 'i'));
         }
 
         if (req.query.organizacion) {
@@ -50,6 +53,10 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
 
         if (req.query.equipamiento) {
             query.where('equipamiento.term').in([RegExp('^.*' + req.query.equipamiento + '.*$', 'i')]);
+        }
+
+        if (req.query.limit) {
+            query.limit(Number(req.query.limit));
         }
 
         query.sort('nombre');
