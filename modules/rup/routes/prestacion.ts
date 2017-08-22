@@ -161,24 +161,24 @@ router.patch('/prestaciones/:id', function (req, res, next) {
                         callback();
 
                     });
-                }, function (err1: any)
+                }, function (err1: any) {
                     if (err1) {
-                    return next(err1);
-                }
-                // como el objeto de mongoose es un inmutable, no puedo agregar directamente una propiedad
-                // para poder retornar el nuevo objeto con los planes solicitados, primero
-                // debemos clonarlo con JSON.parse(JSON.stringify());
-                let convertedJSON = JSON.parse(JSON.stringify(prestacion));
+                        return next(err1);
+                    }
+                    // como el objeto de mongoose es un inmutable, no puedo agregar directamente una propiedad
+                    // para poder retornar el nuevo objeto con los planes solicitados, primero
+                    // debemos clonarlo con JSON.parse(JSON.stringify());
+                    let convertedJSON = JSON.parse(JSON.stringify(prestacion));
 
-                convertedJSON.solicitadas = solicitadas;
+                    convertedJSON.solicitadas = solicitadas;
 
-                res.json(convertedJSON);
-            });
+                    res.json(convertedJSON);
+                });
 
-    } else {
+            } else {
 
-            res.json(prestacion);
-        }
+                res.json(prestacion);
+            }
 
             // Auth.audit(data, req);
             // AGREGAMOS UN COMENTARIO!!!!!!!!!!!!
