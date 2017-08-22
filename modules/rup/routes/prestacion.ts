@@ -177,7 +177,7 @@ router.patch('/prestaciones/:id', function (req, res, next) {
 
             } else {
 
-                res.json(prestacion);
+                res.json(prestacionnnnn);
             }
 
             // Auth.audit(data, req);
