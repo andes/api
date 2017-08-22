@@ -181,6 +181,7 @@ router.patch('/prestaciones/:id', function (req, res, next) {
             }
 
             // Auth.audit(data, req);
+            // AGREGAMOS UN COMENTARIO!!!!!!!!!!!!
         });
     });
 });
