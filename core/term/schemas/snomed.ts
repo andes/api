@@ -2,14 +2,16 @@ import * as mongoose from 'mongoose';
 import { Connections } from './../../../connections';
 import * as configPrivate from './../../../config.private';
 
-export let snomedSchema = new mongoose.Schema({
+export let schema = new mongoose.Schema({
     conceptId: String,
     term: String,
-    active: Boolean,
-    conceptActive: Boolean,
     fsn: String,
-    module: String,
-    definitionStatus: String
+    semanticTag: String
 });
 
-export let snomedModel = Connections.snomed.model(configPrivate.snomed.dbName, snomedSchema, configPrivate.snomed.dbVersion);
+// Se asegura que los índices estén creados
+schema.index({ words: 1, semanticTag: 1, language: 1, conceptActive: 1, active: 1 });
+schema.index({ conceptId: 1, semanticTag: 1, language: 1, conceptActive: 1, active: 1 });
+schema.index({ refsetIds: 1, semanticTag: 1, language: 1, conceptActive: 1, active: 1 });
+
+export let model = Connections.snomed.model(configPrivate.snomed.dbName, schema, configPrivate.snomed.dbVersion);

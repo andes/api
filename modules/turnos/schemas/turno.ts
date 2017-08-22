@@ -1,6 +1,7 @@
+import { schema } from './../../rup/schemas/prestacion';
 import * as mongoose from 'mongoose';
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
-import { cie10Schema } from '../../../core/term/schemas/cie10';
+import * as cie10 from '../../../core/term/schemas/cie10';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 // import * as organizacion from '../../../core/tm/schemas/organizacion';
 
@@ -54,12 +55,12 @@ let turnoSchema = new mongoose.Schema({
         ref: 'prestacionPaciente'
     },
     diagnosticoPrincipal: {
-        codificacion: cie10Schema,
+        codificacion: cie10.schema,
         primeraVez: Boolean,
         ilegible: Boolean,
     },
     diagnosticoSecundario: [{
-        codificacion: cie10Schema,
+        codificacion: cie10.schema,
         ilegible: Boolean,
     }],
     confirmedAt: Date, /* Confirmación del turno por el  paciente */

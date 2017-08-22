@@ -7,7 +7,7 @@ const constantes = {
     },
     ESTADOCIVIL: {
         type: String,
-        enum: ['casado', 'separado', 'divorciado', 'viudo', 'soltero', 'concubino', 'otro', null]
+        enum: ['casado', 'separado', 'divorciado', 'viudo', 'soltero', 'concubino', 'otro']
     },
     PARENTESCO: {
         type: String,
