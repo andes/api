@@ -161,7 +161,7 @@ router.patch('/prestaciones/:id', function (req, res, next) {
                         callback();
 
                     });
-                }, function (err1: any) 
+                }, function (err1: any)
                     if (err1) {
                     return next(err1);
                 }
