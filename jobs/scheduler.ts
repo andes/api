@@ -2,6 +2,7 @@ let schedule = require('node-schedule');
 import * as moment from 'moment';
 import * as farmacias from './../modules/mobileApp/controller/FarmaciasTurnosDownloader';
 import * as recordatorioCtrl from './../modules/mobileApp/controller/RecordatorioController';
+import * as agendaCtrl from './../modules/turnos/controller/agenda';
 import { Connections } from './../connections';
 class Scheduler {
 
@@ -40,11 +41,10 @@ class Scheduler {
             });
         });
 
-        // schedule.scheduleJob('* * * * *', function () {
-        //     console.log('Cada minuto!');
-        // });
-
-
+        schedule.scheduleJob('0 23 * * *', function () {
+            console.log('Running Update Agenda');
+            agendaCtrl.actualizarAgendas();
+        });
 
     }
 

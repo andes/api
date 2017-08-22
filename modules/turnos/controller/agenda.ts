@@ -1,4 +1,5 @@
 import * as moment from 'moment';
+import * as agendaModel from '../../turnos/schemas/agenda';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -422,3 +423,41 @@ export function getBloque(agenda, turno) {
     }
     return null;
 }
+
+export function actualizarAgendas() {
+    let query;
+    let hsActualizar = 48;
+    let cantDias = hsActualizar / 24;
+    let fechaActualizar = moment(new Date()).add(cantDias, 'days');
+    let cantAccesoDirecto = 0;
+
+    query = agendaModel.find({});
+    query.where('estado').equals('publicada');
+    // if (data.horaInicio >= moment(new Date()).startOf('day').toDate() && data.horaInicio <= moment(new Date()).endOf('day').toDate()) {
+    query.where('horaInicio').gte(moment(fechaActualizar).startOf('day').toDate() as any);
+    query.where('horaInicio').lte(moment(fechaActualizar).endOf('day').toDate() as any);
+    query.exec((err, data) => {
+        if (err) {
+            return 'No se pudo actualizar las agendas';
+        } else {
+            if (data) {
+                data.forEach(agenda => {
+                    cantAccesoDirecto = agenda.accesoDirectoDelDia + agenda.accesoDirectoProgramado;
+                    if (cantAccesoDirecto > 0) {
+                        agenda.restanteProgramado = agenda.restanteProgramado + agenda.restantesGestion + agenda.restantesProfesional;
+                    } else {
+                        if (agenda.reservadoProfesional > 0) {
+                            agenda.restantesGestion = agenda.restantesGestion + agenda.restantesProfesional;
+                        }
+                    }
+                    agenda.save((error) => {
+                        console.log('Error al actualizar agenda' + agenda.id, error);
+                    });
+
+                });
+            }
+        }
+    });
+
+}
+
