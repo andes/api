@@ -24,12 +24,20 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
 
+        if (req.query.descripcion) {
+            query.where('descripcion').equals(RegExp('^.*' + req.query.descripcion + '.*$', 'i'));
+        }
+
         if (req.query.edificio) {
             query.where('edificio.descripcion').equals(RegExp('^.*' + req.query.edificio + '.*$', 'i'));
         }
 
-        if (req.query.descripcion) {
-            query.where('descripcion').equals(RegExp('^.*' + req.query.descripcion + '.*$', 'i'));
+        if (req.query.servicio) {
+            query.where('servicio.nombre').equals(RegExp('^.*' + req.query.servicio + '.*$', 'i'));
+        }
+
+        if (req.query.sector) {
+            query.where('sector.nombre').equals(RegExp('^.*' + req.query.sector + '.*$', 'i'));
         }
 
         if (req.query.organizacion) {
@@ -39,6 +47,11 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
                 query.where('organizacion').exists(false);
             }
         }
+
+        if (req.query.equipamiento) {
+            query.where('equipamiento.term').in([RegExp('^.*' + req.query.equipamiento + '.*$', 'i')]);
+        }
+
         query.sort('nombre');
         query.exec((err, data) => {
             if (err) {
