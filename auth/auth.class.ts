@@ -85,7 +85,6 @@ export class Auth {
      */
     static deniedPatients() {
         return function (req, res, next) {
-            console.log(req.user.type);
             if (req.user.type !== 'paciente-token') {
                 next();
             } else {

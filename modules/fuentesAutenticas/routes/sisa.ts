@@ -21,7 +21,6 @@ router.get('/sisa', async function (req, res, next) {
             Logger.log(req, 'fa_sisa', 'error', {
                 error: err
             });
-            console.log('Error catch matchSisa:', err);
             return next(err);
         };
     } else {

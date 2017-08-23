@@ -14,7 +14,7 @@ router.get('/tipoPrestacion/:id*?', function (req, res, next) {
     if (req.params.id) {
         llaveTipoPrestacion.findById(req.params.id, function (err, data) {
             if (err) {
-                next(err);
+                return next(err);
             };
             res.json(data);
         });

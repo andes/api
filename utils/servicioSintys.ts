@@ -1,4 +1,4 @@
-import { matching } from '@andes/match';
+import { Matching } from '@andes/match';
 import * as configPrivate from '../config.private';
 import * as config from '../config';
 import * as https from 'https';
@@ -110,7 +110,7 @@ export function matchSintys(paciente) {
     let matchPorcentaje = 0;
     let pacienteSintys = {};
     let weights = config.mpi.weightsDefault;
-    let match = new matching();
+    let match = new Matching();
 
     paciente['matchSintys'] = 0;
     // Se buscan los datos en sintys y se obtiene el paciente
@@ -127,11 +127,8 @@ export function matchSintys(paciente) {
                         if (resultado) {
                             // Verifico el resultado devuelto por el rest de Sintys
                             if (resultado[0] === 200 && JSON.parse(resultado[1])[0]) {
-                                console.log('entro por 200');
-
                                 pacienteSintys = formatearDatosSintys(JSON.parse(resultado[1])[0]);
                                 matchPorcentaje = match.matchPersonas(paciente, pacienteSintys, weights, 'Levenshtein') * 100;
-                                console.log('el % de matcheo es:', matchPorcentaje);
                                 paciente['matchSintys'] = matchPorcentaje;
                                 resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sintys', 'matcheo': matchPorcentaje, 'datosPaciente': pacienteSintys } });
                             }
@@ -139,7 +136,6 @@ export function matchSintys(paciente) {
                         resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sintys', 'matcheo': 0, 'datosPaciente': pacienteSintys } });
                     })
                     .catch((err) => {
-                        console.error('Error consulta rest Sintys:' + err);
                         reject(err);
                     });
 

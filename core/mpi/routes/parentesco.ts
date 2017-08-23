@@ -65,7 +65,7 @@ router.get('/parentescos/:id*?', function (req, res, next) {
     if (req.params.id) {
         parentesco.modelParentesco.findById(req.params.id, function (err, data) {
             if (err) {
-                next(err);
+                return next(err);
             };
 
             res.json(data);

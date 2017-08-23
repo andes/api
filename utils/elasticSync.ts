@@ -27,21 +27,17 @@ export class ElasticSync {
                     this.update(id, data).then(() => {
                         resolve(true);
                     }).catch((error) => {
-                        console.log('Error update Elastic', error);
                         reject();
                     });
                 } else {
                     this.create(id, data).then(() => {
                         resolve(false);
                     }).catch((error) => {
-                        console.log('Error create Elastic', error);
                         reject();
                     });
                 }
             }).catch((error) => {
-                console.log('Error search Elastic', error);
-                reject();
-
+                 reject();
             });
         });
     }
@@ -93,8 +89,4 @@ export class ElasticSync {
             });
         });
     }
-
-
-
-
 }

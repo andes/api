@@ -23,7 +23,7 @@ let router = express.Router();
  *         type: array
  *         items:
  *          type: object
- *          properties: 
+ *          properties:
  *               tipo:
  *                  type: string
  *                  enum: [
@@ -33,9 +33,9 @@ let router = express.Router();
  *                  ]
  *               valor:
  *                  type: string
- *               ranking: 
+ *               ranking:
  *                  type: number
- *               ultimaActualizacion: 
+ *               ultimaActualizacion:
  *                  type: string
  *                  format: date
  *               activo:
@@ -45,14 +45,14 @@ let router = express.Router();
  *         enum: [
  *              femenino,
  *              masculino,
- *              otro 
+ *              otro
  *         ]
  *       genero:
  *         type: string
  *         enum: [
  *           femenino,
  *           masculino,
- *           otro 
+ *           otro
  *         ]
  *       fechaNacimiento:
  *         type: string
@@ -87,7 +87,7 @@ let router = express.Router();
  *                type: string
  *       matriculas:
  *          type: array
- *          items: 
+ *          items:
  *              type: object
  *              properties:
  *                  numero:
@@ -189,7 +189,7 @@ router.get('/profesionales/:id*?', function (req, res, next) {
     if (req.params.id) {
         profesional.findById(req.params._id, function (err, data) {
             if (err) {
-                next(err);
+                return next(err);
             };
             res.json(data);
         });
@@ -283,7 +283,7 @@ router.post('/profesionales', function (req, res, next) {
     let newProfesional = new profesional(req.body);
     newProfesional.save((err) => {
         if (err) {
-            next(err);
+            return next(err);
         }
         res.json(newProfesional);
     });

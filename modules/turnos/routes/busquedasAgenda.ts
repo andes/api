@@ -7,7 +7,7 @@ router.get('/busquedasAgenda/:_id*?', function (req, res, next) {
     if (req.params._id) {
         busquedasAgenda.findById(req.params._id, function (err, data) {
             if (err) {
-                next(err);
+                return next(err);
             };
 
             res.json(data);
@@ -32,7 +32,6 @@ router.post('/busquedasAgenda', function (req, res, next) {
             return next(err);
         }
         res.json(newBusquedasAgenda);
-        console.log(newBusquedasAgenda);
     });
 });
 

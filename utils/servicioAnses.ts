@@ -1,6 +1,6 @@
 import * as config from '../config';
 import * as configPrivate from '../config.private';
-import { matching } from '@andes/match';
+import { Matching } from '@andes/match';
 let soap = require('soap');
 let url = configPrivate.anses.url;
 let serv = configPrivate.anses.serv;
@@ -9,7 +9,7 @@ let serv2 = configPrivate.anses.serv2;
 let login = configPrivate.anses;
 
 export function getServicioAnses(paciente) {
-    let match = new matching();
+    let match = new Matching();
     let weights = config.mpi.weightsDefault;
     let matchPorcentaje = 0;
     let resultado: any;
@@ -19,12 +19,10 @@ export function getServicioAnses(paciente) {
         if (paciente && paciente.documento && band) {
             soap.createClient(url, function (err, client) {
                 if (err) {
-                    console.log('Error en creacion cliente soap anses', err);
                     reject(err);
                 }
                 client.LoginPecas(login, async function (err2, result) {
                     if (err2) {
-                        console.log('Error LoginPecas servicioAnses : ', err2);
                         reject(err2);
                     }
                     let tipoConsulta = 'Documento';
@@ -40,7 +38,6 @@ export function getServicioAnses(paciente) {
                     try {
                         resultado = await consultaAnses(result, tipoConsulta, filtro);
                     } catch (error) {
-                        console.error('Error matchPersonas servicioAnses:' + error);
                         reject(error);
                     }
                     if (resultado.codigo === 0 && resultado.array) {
@@ -63,10 +60,8 @@ export function getServicioAnses(paciente) {
                         try {
                             matchPorcentaje = await match.matchPersonas(paciente, pacienteAnses, weights, 'Levenshtein') * 100;
                         } catch (error) {
-                            console.error('Error matchPersonas servicioAnses:' + error);
                             reject(error);
                         }
-                        console.log('el % de matcheo es:', matchPorcentaje);
                         resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Anses', 'matcheo': matchPorcentaje, 'datosPaciente': pacienteAnses } });
                     } else {
                         resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Anses', 'matcheo': 0, 'datosPaciente': {} } });
@@ -91,28 +86,23 @@ function consultaAnses(sesion, tipo, filtro) {
 
             client.FijarBaseDeSesion(args, async function (err2, result) {
                 if (err2) {
-                    console.log('Error en fijarBaseSesion servicioAnses : ', err2);
                     reject(err2);
                 }
                 try {
                     resultado = await solicitarServicio(sesion, tipo, filtro);
                 } catch (error) {
-                    console.error('Error consulta soap anses:' + error);
                     reject(error);
                 }
                 if (tipo === 'Documento' && resultado.codigo === 0) {
                     try {
                         resultadoCuil = await solicitarServicio(sesion, 'Cuil', resultado.array[1]);
                     } catch (error) {
-                        console.error('Error consulta soap anses:' + error);
                         reject(error);
                     }
                     resolve(resultadoCuil);
                 } else {
-                    console.log('resultado: ', JSON.stringify(resultado));
                     resolve(resultado);
                 }
-
             });
         });
     });
@@ -122,7 +112,6 @@ function solicitarServicio(sesion, tipo, filtro) {
     return new Promise((resolve, reject) => {
         soap.createClient(serv, function (err3, client2) {
             if (err3) {
-                console.log('Error creando cliente2 servicioAnses : ', err3);
                 reject(err3);
             }
             let args2 = {
@@ -139,7 +128,6 @@ function solicitarServicio(sesion, tipo, filtro) {
             if (client2) {
                 client2.Solicitar_Servicio(args2, function (err4, result2) {
                     if (err4) {
-                        console.log('Error solicitar_servicio servicioAnses : ', err4);
                         reject(err4);
                     }
                     let codigoResultado = result2.return.CodResultado['$value'];

@@ -15,7 +15,7 @@ router.get('/prestacionPaciente/:id*?', function (req, res, next) {
     if (req.params.id) {
         auditoria.findById(req.params.id, function (err, data) {
             if (err) {
-                next(err);
+                return next(err);
             };
             res.json(data);
         });

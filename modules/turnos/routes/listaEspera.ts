@@ -17,7 +17,7 @@ router.get('/listaEspera/:id*?', function (req, res, next) {
     if (req.params.id) {
         listaEspera.findById(req.params._id, function (err, data) {
             if (err) {
-                next(err);
+                return next(err);
             };
 
             res.json(data);
@@ -81,7 +81,8 @@ router.post('/listaEspera/IdAgenda/:_id', function (req, res, next) {
         let listaEsperaPaciente: any[] = [];
 
         switch (req.body.op) {
-            case 'listaEsperaSuspensionAgenda': listaEsperaPaciente = listaEsperaSuspensionAgenda(req, data, next);
+            case 'listaEsperaSuspensionAgenda':
+                listaEsperaPaciente = listaEsperaSuspensionAgenda(req, data, next);
                 break;
         }
 
@@ -89,16 +90,12 @@ router.post('/listaEspera/IdAgenda/:_id', function (req, res, next) {
             let newItem = new listaEspera(listaEsperaData);
 
             newItem.save(function (err1, item) {
-                if (err1) {
-                    console.log(err1);
-                }
-
                 callback();
             });
 
-        }, function (err) {
-            if (err) {
-                return next(err)
+        }, function (err2) {
+            if (err2) {
+                return next(err2)
             };
             return res.json(data);
         });
@@ -114,33 +111,30 @@ router.delete('/listaEspera/:_id', function (req, res, next) {
 });
 
 function listaEsperaSuspensionAgenda(req, data, next) {
-
-    let listaEspera = [];
+    let listaEsperaArray = [];
 
     if (req.body.pacientes.length > 0) {
         for (let i = 0; i < req.body.pacientes.length; i++) {
             let newListaEspera = {};
-            newListaEspera['fecha'] = moment().format(),
-                newListaEspera['estado'] = 'Agenda Suspendida',
-                newListaEspera['tipoPrestacion'] = req.body.pacientes[i].tipoPrestacion,
-                newListaEspera['profesional'] = data.profesionales[0],
-                newListaEspera['paciente'] = req.body.pacientes[i].paciente;
+            newListaEspera['fecha'] = moment().format();
+            newListaEspera['estado'] = 'Agenda Suspendida';
+            newListaEspera['tipoPrestacion'] = req.body.pacientes[i].tipoPrestacion;
+            newListaEspera['profesional'] = data.profesionales[0];
+            newListaEspera['paciente'] = req.body.pacientes[i].paciente;
 
-            listaEspera.push(newListaEspera);
+            listaEsperaArray.push(newListaEspera);
         }
     } else {
         let newListaEspera = {};
-
-        newListaEspera['fecha'] = moment().format(),
-            newListaEspera['estado'] = 'Turno Canceladdo',
-            newListaEspera['tipoPrestacion'] = req.body.pacientes.tipoPrestacion,
-            newListaEspera['profesional'] = data.profesionales[0],
-            newListaEspera['paciente'] = req.body.pacientes.paciente;
-        // console.log("Entraaa ", newListaEspera);
-        listaEspera.push(newListaEspera);
+        newListaEspera['fecha'] = moment().format();
+        newListaEspera['estado'] = 'Turno Cancelado';
+        newListaEspera['tipoPrestacion'] = req.body.pacientes.tipoPrestacion;
+        newListaEspera['profesional'] = data.profesionales[0];
+        newListaEspera['paciente'] = req.body.pacientes.paciente;
+        listaEsperaArray.push(newListaEspera);
     }
 
-    return listaEspera;
+    return listaEsperaArray;
 }
 
 export = router;

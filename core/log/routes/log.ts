@@ -1,7 +1,7 @@
 import * as express from 'express';
 import { Logger } from '../../../utils/logService';
 import { log } from '../schemas/log';
-import { Auth } from "../../../auth/auth.class";
+import { Auth } from '../../../auth/auth.class';
 
 let router = express.Router();
 
@@ -21,7 +21,6 @@ router.get('/operaciones/:module?', function (req, res, next) {
     if (!Auth.check(req, 'log:get')) {
         return next(403);
     }
-    console.log('LOG');
     let query;
 
     query = log.find({});

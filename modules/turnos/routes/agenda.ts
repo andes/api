@@ -32,8 +32,9 @@ router.get('/agenda/paciente/:idPaciente', function (req, res, next) {
 router.get('/agenda/candidatas', function (req, res, next) {
     agenda.findById(req.query.idAgenda, function (err, data) {
         if (err) {
-            next(err);
+            return next(err);
         };
+
         let resultado = data as any;
         let horaAgendaOrig = new Date();
         horaAgendaOrig.setHours(0, 0, 0, 0);
@@ -42,7 +43,6 @@ router.get('/agenda/candidatas', function (req, res, next) {
         let bloque = resultado.bloques[indiceBloque];
         // turno a reasignar
         let turno = resultado.bloques[indiceBloque].turnos[indiceTurno];
-        console.log('turno ', turno);
         let match = {
             'horaInicio': { '$gte': horaAgendaOrig },
             'nominalizada': true,
@@ -100,7 +100,7 @@ router.get('/agenda/:id?', function (req, res, next) {
 
         agenda.findById(req.params.id, function (err, data) {
             if (err) {
-                next(err);
+                return next(err);
             };
             res.json(data);
         });
@@ -375,8 +375,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 // case 'bloquearTurno': bloquearTurno(req, data, turnos[y]._id);
                 //     break;
                 default:
-                    next('Error: No se seleccionó ninguna opción.');
-                    break;
+                    return next('Error: No se seleccionó ninguna opción.');
             }
 
             Auth.audit(data, req);
@@ -398,12 +397,12 @@ router.patch('/agenda/:id*?', function (req, res, next) {
             if (req.body.op === 'suspendida') {
                 (data as any).bloques.forEach(bloque => {
 
-                    bloque.turnos.forEach(turno => {
-                        if (turno.paciente.id) {
-                            if (turno.paciente.telefono) {
+                    bloque.turnos.forEach(t => {
+                        if (t.paciente.id) {
+                            if (t.paciente.telefono) {
                                 let sms: any = {
-                                    telefono: turno.paciente.telefono,
-                                    mensaje: 'Le avisamos que su turno para el día ' + moment(turno.horaInicio).format('dd/MM/yyyy') + ' a las ' + moment(turno.horaInicio).format('HH:mm') + 'hs fue suspendido'
+                                    telefono: t.paciente.telefono,
+                                    mensaje: 'Le avisamos que su turno para el día ' + moment(t.horaInicio).format('dd/MM/yyyy') + ' a las ' + moment(t.horaInicio).format('HH:mm') + 'hs fue suspendido'
                                 };
                                 // sendSms(sms, respuesta => {
                                 //     if (respuesta === '0') {
@@ -411,7 +410,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                                 //     }
                                 // });
                             }
-                            LoggerPaciente.logTurno(req, 'turnos:suspender', turno.paciente, turno, bloque._id, data._id);
+                            LoggerPaciente.logTurno(req, 'turnos:suspender', t.paciente, t, bloque._id, data._id);
                         }
                     });
 

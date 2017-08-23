@@ -70,7 +70,7 @@ router.get('/barrios/:id*?', function (req, res, next) {
     if (req.params.id) {
         barrio.findById(req.params.id, function (err, data) {
             if (err) {
-                next(err);
+                return next(err);
             };
             res.json(data);
         });
@@ -78,7 +78,7 @@ router.get('/barrios/:id*?', function (req, res, next) {
         let query;
         query = barrio.find({});
         if (req.query.nombre) {
-            query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
+            query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
         if (req.query.localidad) {
             query.where('localidad._id').equals(req.query.localidad);

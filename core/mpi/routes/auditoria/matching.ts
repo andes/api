@@ -12,9 +12,8 @@ router.get('/matching/:id*?', function (req, res, next) {
     if (req.params.id) {
         paciente.findById(req.params.id, function (err, data) {
             if (err) {
-                next(err);
+                return next(err);
             };
-
             res.json(data);
         });
     } else {

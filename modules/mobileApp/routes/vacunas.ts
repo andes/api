@@ -9,7 +9,7 @@ router.get('/vacunas', function (req: any, res, next) {
 
     vacunas.find({ 'dni': dni }, function (err, data) {
         if (err) {
-            next(err);
+            return next(err);
         };
 
         res.json(data);

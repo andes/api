@@ -37,7 +37,7 @@ router.post('/devices/register', function (req: any, res, next) {
         user.devices.push(device);
         return user.save((errSave, u) => {
             if (errSave) {
-                next(errSave);
+                return next(errSave);
             }
             res.json(device);
         });
@@ -72,7 +72,7 @@ router.post('/devices/update', function (req: any, res, next) {
         }
         return user.save((errSave, u) => {
             if (errSave) {
-                next(errSave);
+                return next(errSave);
             }
             res.json(device);
         });
@@ -96,7 +96,7 @@ router.post('/devices/delete', function (req: any, res, next) {
         user.devices.pull({ '_id': new mongoose.Types.ObjectId(req.body.id) });
         return user.save((errSave, u) => {
             if (errSave) {
-                next(errSave);
+                return next(errSave);
             }
 
             res.json({ message: 'OK' });

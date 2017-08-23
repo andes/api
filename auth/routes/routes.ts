@@ -24,17 +24,12 @@ router.get('/organizaciones', function (req, res, next) {
             usuario: req.query.usuario
         }, { organizacion: 1, _id: 0 }).then((data) => {
             let ids = data.map((item: any) => mongoose.Types.ObjectId(item.organizacion));
-            organizacion.model.find(
-                {
-                    _id: { $in: ids }
-                }, {
-                    nombre: true
-                },
-                function (err, data) {
+            organizacion.model.find({ _id: { $in: ids } }, { nombre: true },
+                function (err, data2) {
                     if (err) {
                         return next(err);
                     } else {
-                        res.json(data);
+                        res.json(data2);
                     }
                 });
         });
@@ -59,11 +54,10 @@ let checkMobile = function (profesionalId) {
             if (!account) {
                 profesional.findById(profesionalId).then(prof => {
                     if (!prof) {
-                        console.log("not found");
                         return reject();
                     }
-                    authMobile.createUserFromProfesional(prof).then((account) => {
-                        resolve(account);
+                    authMobile.createUserFromProfesional(prof).then((account2) => {
+                        resolve(account2);
                     }).catch(reject);
                 });
                 return;
@@ -146,14 +140,14 @@ router.post('/login', function (req, res, next) {
 
             let nombre = data[1].nombre;
             let apellido = data[1].apellido;
-            let profesional = data[2];
+            let profesional2 = data[2];
 
             // Crea el token con los datos de sesión
             if (req.body.mobile) {
-                checkMobile(profesional._id).then((account: any) => {
+                checkMobile(profesional2._id).then((account: any) => {
                     // Crea el token con los datos de sesión
                     res.json({
-                        token: Auth.generateUserToken(nombre, apellido, data[0], data[1], profesional, account._id),
+                        token: Auth.generateUserToken(nombre, apellido, data[0], data[1], profesional2, account._id),
                         user: account
                     });
 
@@ -163,7 +157,6 @@ router.post('/login', function (req, res, next) {
                 res.json({
                     token: Auth.generateUserToken(nombre, apellido, data[0], data[1], profesional)
                 });
-
             }
         });
     };

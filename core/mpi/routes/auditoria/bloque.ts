@@ -1,7 +1,3 @@
-// import * as  ServicioSisa from '../../../../utils/servicioSisa';
-// import * as  validarSisa from '../../../../utils/validarPacienteSisa';
-// import * as config from '../../../../config';
-// import { matchSintys } from '../../../../utils/servicioSintys';
 import * as express from 'express';
 import { pacienteMpi } from '../../schemas/paciente';
 import { paciente } from '../../schemas/paciente';

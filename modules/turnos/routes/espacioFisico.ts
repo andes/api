@@ -8,7 +8,7 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
     if (req.params._id) {
         espacioFisico.findById(req.params._id, function (err, data) {
             if (err) {
-                next(err);
+                return next(err);
             };
             res.json(data);
         });
@@ -53,7 +53,7 @@ router.get('/espacioFisico/:idOrganizacion', function (req, res, next) {
 
     espacioFisico.find(req.params.idOrganizacion, function (err, data) {
         if (err) {
-            next(err);
+            return next(err);
         };
         res.json(data);
     });

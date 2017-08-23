@@ -202,15 +202,6 @@ export function actualizarEstado(req, data) {
                             telefono: turno.paciente.telefono,
                             mensaje: 'Le avisamos que su turno para el día ' + moment(turno.horaInicio).format('ll').toString() + ' a las ' + moment(turno.horaInicio).format('LT').toString() + 'hs fue suspendido'
                         };
-
-                        console.log(turno.paciente);
-                        console.log(sms);
-
-                        // sendSms(sms, respuesta => {
-                        //     if (respuesta === '0') {
-
-                        //     }
-                        // });
                     }
                 });
             });

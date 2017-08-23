@@ -59,7 +59,7 @@ router.get('/financiadores/:id*?', function(req, res, next) {
    if (req.params.id) {
        financiador.findById(req.params.id, function (err, data) {
        if (err) {
-           next(err);
+           return next(err);
        };
 
        res.json(data);
