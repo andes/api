@@ -51,7 +51,13 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
         }
 
         if (req.query.equipamiento) {
-            query.where('equipamiento.term').in(req.query.equipamiento);
+            let items;
+            if (Array.isArray(req.query.equipamiento)) {
+                items = req.query.equipamiento.map((item) => RegExp('^.*' + item + '.*$', 'i'));
+            } else {
+                items = RegExp('^.*' + req.query.equipamiento + '.*$', 'i');
+            }
+            query.where('equipamiento.term').in(items);
         }
 
         if (req.query.limit) {
