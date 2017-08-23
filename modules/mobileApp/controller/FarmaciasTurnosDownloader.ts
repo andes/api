@@ -1,4 +1,4 @@
-import { farmaciasURLS } from '../../../config.private';
+import { farmaciasEndpoints } from '../../../config.private';
 
 let request = require('request');
 let cheerio = require('cheerio');
@@ -46,7 +46,7 @@ export function donwloadData(desde, hasta) {
 export function getLocalidades() {
 
     return new Promise((resolve, reject) => {
-        request(farmaciasURLS.localidades, function (error, response, html) {
+        request(farmaciasEndpoints.localidades, function (error, response, html) {
             if (!error) {
                 let localidades = [];
                 let $ = cheerio.load(html);
@@ -80,7 +80,7 @@ export function getTurnos(localidad, desde, hasta) {
         let hm = hasta.get('month') + 1;
         let hy = hasta.get('year');
 
-        let url = farmaciasURLS.turnos + '?idLocalidad=' + localidad + '&dd=' + dd + '&dm=' + dm + '&da=' + dy + '&hd=' + hd + '&hm=' + hm + '&ha=' + hy;
+        let url = farmaciasEndpoints.turnos + '?idLocalidad=' + localidad + '&dd=' + dd + '&dm=' + dm + '&da=' + dy + '&hd=' + hd + '&hm=' + hm + '&ha=' + hy;
 
         request(url, function (error, response, html) {
             if (!error) {
