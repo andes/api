@@ -279,9 +279,8 @@ export function matchPaciente(data) {
                         fechaNacimiento: pacienteElastic.fechaNacimiento ? moment(pacienteElastic.fechaNacimiento).format('YYYY-MM-DD') : '',
                         sexo: pacienteElastic.sexo ? pacienteElastic.sexo : ''
                     };
-                    console.log(pacElastic);
                     let match = new matching();
-                    let valorMatching = match.matchPersonas(pacElastic, pacDto, weights);
+                    let valorMatching = match.matchPersonas(pacElastic, pacDto, weights, 'Levenshtein');
                     pacienteElastic['id'] = hit._id;
                     if (valorMatching >= porcentajeMatchMax) {
                         listaPacientesMax.push({

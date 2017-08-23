@@ -2,9 +2,9 @@ import * as config from '../config';
 import * as configPrivate from '../config.private';
 import { matching } from '@andes/match';
 let soap = require('soap');
-let url = 'http://192.168.20.63:8080/scripts/Autenticacion.exe/wsdl/IAutenticacion';
-let serv = 'http://192.168.20.64:8080/scripts/autorizacion.exe/wsdl/IAutorizacion';
-let serv2 = 'http://192.168.20.63:8080/scripts/Autenticacion.exe/wsdl/IAutenticacion';
+let url = configPrivate.anses.url;
+let serv = configPrivate.anses.serv;
+let serv2 = configPrivate.anses.serv2;
 
 let login = configPrivate.anses;
 
@@ -61,7 +61,7 @@ export function getServicioAnses(paciente) {
                             sexo: sex
                         };
                         try {
-                            matchPorcentaje = await match.matchPersonas(paciente, pacienteAnses, weights) * 100;
+                            matchPorcentaje = await match.matchPersonas(paciente, pacienteAnses, weights, 'Levenshtein') * 100;
                         } catch (error) {
                             console.error('Error matchPersonas servicioAnses:' + error);
                             reject(error);

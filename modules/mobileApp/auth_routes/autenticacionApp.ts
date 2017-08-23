@@ -6,8 +6,9 @@ import * as authController from '../controller/AuthController';
 import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
 
-let router = express.Router();
+import * as agenda from '../../turnos/schemas/agenda';
 
+let router = express.Router();
 
 /**
  * Login a la app mobile
@@ -28,7 +29,7 @@ router.post('/login', function (req, res, next) {
         return res.status(422).send({ error: 'Debe ingresar una clave' });
     }
 
-    pacienteApp.findOne({ email }, (err, user: any) => {
+    return pacienteApp.findOne({ email }, (err, user: any) => {
 
         if (!user) {
             return res.status(422).send({ error: 'Cuenta inexistente' });
@@ -39,7 +40,7 @@ router.post('/login', function (req, res, next) {
             return;
         }
 
-        user.comparePassword(password, (errPassword, isMatch) => {
+        return user.comparePassword(password, (errPassword, isMatch) => {
             if (errPassword) {
                 return next(errPassword);
             }
@@ -155,7 +156,7 @@ router.post('/registro', function (req, res, next) {
         return res.status(422).send({ error: 'Debe ingresar una clave' });
     }
 
-    pacienteApp.findOne({ email: dataPacienteApp.email }, function (err, existingUser) {
+    return pacienteApp.findOne({ email: dataPacienteApp.email }, function (err, existingUser) {
 
         if (err) {
             return next(err);
@@ -245,6 +246,7 @@ router.post('/reenviar-codigo', function (req, res, next) {
                 res.status(422).send({ message: 'account_not_verified' });
             }
         }
+        return null;
 
     });
 });

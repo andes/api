@@ -1,8 +1,4 @@
 import * as moment from 'moment';
-import { model as prestacion } from '../../rup/schemas/prestacion';
-import { paciente } from './../../../core/mpi/schemas/paciente';
-import { Auth } from './../../../auth/auth.class';
-import { sendSms } from '../../../utils/sendSms';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -19,10 +15,8 @@ export function sacarAsistencia(req, data, tid = null) {
 
 // Turno
 export function liberarTurno(req, data, turno) {
-    // let turno = getTurno(req, data, tid);
     let position = getPosition(req, data, turno._id);
     turno.estado = 'disponible';
-    // delete turno.paciente;
     turno.paciente = null;
     turno.tipoPrestacion = null;
     turno.nota = null;
@@ -52,6 +46,9 @@ export function liberarTurno(req, data, turno) {
             data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion + cant;
             break;
     }
+    if (turno.tipoTurno) {
+        turno.tipoTurno = undefined;
+    }
 }
 
 
@@ -61,35 +58,36 @@ export function suspenderTurno(req, data, turno) {
     delete turno.paciente;
     delete turno.tipoPrestacion;
     turno.motivoSuspension = req.body.motivoSuspension;
+
+    let cant = 1;
     // Se verifica si tiene un turno doble asociado
     let turnoDoble = getTurnoSiguiente(req, data, turno._id);
     if (turnoDoble) {
+        cant = cant + 1;
         turnoDoble.estado = 'suspendido';
         turnoDoble.motivoSuspension = req.body.motivoSuspension;
     }
-    return data;
+
+    // El tipo de turno del cual se resta será en el orden : delDia, programado, autocitado, gestion
+    let position = getPosition(req, data, turno._id);
+    if (!turno.tipoTurno) {
+        if (data.bloques[position.indexBloque].restantesDelDia > 0) {
+            data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia - cant;
+        } else {
+            if (data.bloques[position.indexBloque].restantesProgramados > 0) {
+                data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados - cant;
+            } else {
+                if (data.bloques[position.indexBloque].restantesProfesional > 0) {
+                    data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional - cant;
+                } else {
+                    if (data.bloques[position.indexBloque].restantesGestion > 0) {
+                        data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion - cant;
+                    }
+                }
+            }
+        }
+    }
 }
-
-// // Turno
-// function bloquearTurno(req, data, tid = null) {
-
-//     let turno = getTurno(req, data, tid);
-
-//     if (turno.estado !== 'suspendido') {
-//         turno.estado = 'suspendido';
-//     } else {
-//         turno.estado = 'disponible';
-//     }
-// }
-
-// // Turno
-// function reasignarTurno(req, data, tid = null) {
-//     let turno = getTurno(req, data, tid);
-//     turno.estado = 'disponible';
-//     delete turno.paciente;
-//     turno.prestacion = null;
-//     turno.motivoSuspension = null;
-// }
 
 // Turno
 export function guardarNotaTurno(req, data, tid = null) {
@@ -182,20 +180,6 @@ export function actualizarEstado(req, data) {
     // Si se pasa a publicada
     if (req.body.estado === 'publicada') {
         data.estado = 'publicada';
-        data.bloques.forEach((bloque, index) => {
-            bloque.restantesProgramados = bloque.restantesProgramados + bloque.restantesProfesional + bloque.restantesGestion;
-            bloque.restantesProfesional = 0;
-            bloque.restantesGestion = 0;
-            // bloque.accesoDirectoProgramado = bloque.accesoDirectoProgramado + bloque.reservadoProfesional + bloque.reservadoGestion;
-            // bloque.reservadoProfesional = 0;
-            // bloque.reservadoGestion = 0;
-            bloque.turnos.forEach(turno => {
-                if (turno.estado === 'asignado') {
-                    // bloque.accesoDirectoProgramado--;
-                    bloque.restantesProgramados--;
-                }
-            });
-        });
     }
 
     // Cuando se reanuda de un estado pausada, se setea el estado guardado en prePausa
