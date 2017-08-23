@@ -19,7 +19,7 @@ export class NotificationService {
 
             this.sendByPaciente(idPaciente, notificacion);
 
-        }).catch(() => { log('ERROR'); })
+        }).catch(() => { log('ERROR'); });
     }
 
     private static findTurno(datosTurno) {

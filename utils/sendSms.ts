@@ -64,7 +64,7 @@ export function sendSms(smsOptions: SmsOptions, callback) {
 
                                     let xmlEnvio = resultEnvio.return;
                                     let xmlEnvioDoc = libxmljs.parseXml(xmlEnvio);
-                                    let xmlEnvioDato = xmlDoc.get('//status');
+                                    let xmlEnvioDato = xmlEnvioDoc.get('//status');
                                     let status = xmlEnvioDato.text();
 
                                     if (errEnvio) {
