@@ -166,18 +166,6 @@ router.get('/turnos', function (req: any, res, next) {
                 res.status(422).json({ message: err });
             });
 
-            /*
-            pacienteApp.find({ 'pacientes.id': pacienteId }, function (err, docs: any[]) {
-                docs.forEach(user => {
-                    let devices = user.devices.map(item => item.device_id);
- 
-                    //let date = moment(turno.horaInicio).format('DD [de] MMMM');
-                    let body = 'Su turno del  fue reasignado. Haz click para más información.';
-                    new PushClient().send(devices, { body, extraData: { action: 'reasignar' } });
- 
-                });
-            });
-            */
         }
     );
 

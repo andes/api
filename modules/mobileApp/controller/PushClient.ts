@@ -36,7 +36,6 @@ export class PushClient {
             badge: notification.badge || undefined,
             sound: notification.sound || undefined,
             icon: notification.icon || '',
-
             priority: 'high',
             collapseKey: '',
             delayWhileIdle: true,
@@ -60,7 +59,7 @@ export class PushClient {
             urlArgs: '',
             truncateAtWordEnd: true,
             mutableContent: 0,
-            timeToLive: 28 * 86400, // if both expiry and timeToLive are given, expiry will take precedency 
+            timeToLive: 28 * 86400, // if both expiry and timeToLive are given, expiry will take precedency
         };
     }
 

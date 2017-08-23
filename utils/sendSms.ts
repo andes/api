@@ -28,16 +28,16 @@ export function sendSms(smsOptions: SmsOptions, callback) {
 
     let argsNumero = {};
 
-    soap.createClient(urlOperador, opciones, function (err, client) {
-        if (err) {
-            console.log(err);
+    soap.createClient(urlOperador, opciones, function (errCreate, clientOperador) {
+        if (errCreate) {
+            console.log(errCreate);
             console.log('No ha sido posible enviar el sms');
         } else {
-            if (client) {
-                client.recuperarOperador(argsOperador, function (err, result, raw) {
+            if (clientOperador) {
+                clientOperador.recuperarOperador(argsOperador, function (errOperador, result, raw) {
                     // Server down?
-                    if (client.lastResponse) {
-                        let xmlFault = libxmljs.parseXml(client.lastResponse);
+                    if (clientOperador.lastResponse) {
+                        let xmlFault = libxmljs.parseXml(clientOperador.lastResponse);
                         let xmlFaultString = xmlFault.get('//faultstring');
                         // Escupir el error que viene en la respuesta XML del servidor
                         if (xmlFaultString) {
@@ -60,15 +60,16 @@ export function sendSms(smsOptions: SmsOptions, callback) {
                                 mobilein: '1'
                             };
 
-                            soap.createClient(urlNumero, opciones, function (err, client) {
-                                client.envioSMSOperador(argsNumero, function (err2, result, raw) {
+                            soap.createClient(urlNumero, opciones, function (err, clientEnvio) {
+                                clientEnvio.envioSMSOperador(argsNumero, function (errEnvio, resultEnvio, _raw) {
 
-                                    let xml = result.return;
-                                    let xmlDoc = libxmljs.parseXml(xml);
-                                    let xmlDato = xmlDoc.get('//status');
-                                    let status = xmlDato.text();
-                                    if (err2) {
-                                        return console.log(err2);
+                                    let xmlEnvio = resultEnvio.return;
+                                    let xmlEnvioDoc = libxmljs.parseXml(xmlEnvio);
+                                    let xmlEnvioDato = xmlDoc.get('//status');
+                                    let status = xmlEnvioDato.text();
+
+                                    if (errEnvio) {
+                                        return console.log(errEnvio);
                                     } else {
                                         return callback(status);
                                     }
@@ -85,17 +86,22 @@ export function sendSms(smsOptions: SmsOptions, callback) {
         }
     });
 
-    function operador(operador) {
+    function operador(operadorName) {
         let idOperador = '';
 
-        switch (operador) {
-            case 'MOVISTAR': idOperador = '1';
+        switch (operadorName) {
+            case 'MOVISTAR':
+                idOperador = '1';
                 break;
-            case 'CLARO': idOperador = '3';
+            case 'CLARO':
+                idOperador = '3';
                 break;
-            case 'PERSONAL': idOperador = '4';
+            case 'PERSONAL':
+                idOperador = '4';
                 break;
-            default: idOperador = 'No existe operador';
+            default:
+                idOperador = 'No existe operador';
+                break;
         }
         return idOperador;
     }

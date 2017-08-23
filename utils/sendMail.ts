@@ -26,7 +26,7 @@ export function sendMail(options: MailOptions) {
 
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
-            return console.log("Error al mandar mail: ", error);
+            console.log('Error al mandar mail: ', error);
         }
 
         console.log('Mensaje %s enviado: %s', info.messageId, info.response);

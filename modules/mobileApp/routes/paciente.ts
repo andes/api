@@ -11,7 +11,7 @@ let router = express.Router();
 
 /**
  * Get paciente
- * 
+ *
  * @param id {string} id del paciente
  * Chequea que el paciente este asociado a la cuenta
  */
@@ -23,7 +23,7 @@ router.get('/paciente/:id', function (req: any, res, next) {
     if (index >= 0) {
         authController.buscarPaciente(pacientes[index].id).then((paciente) => {
 
-            // [TODO] Projectar datos que se pueden mostrar el paciente    
+            // [TODO] Projectar datos que se pueden mostrar al paciente
             return res.json(paciente);
 
         }).catch(error => {
@@ -36,9 +36,9 @@ router.get('/paciente/:id', function (req: any, res, next) {
 
 /**
  * Modifica datos de contacto y otros
- * 
+ *
  * @param id {string} id del paciente
- *  
+ *
  */
 
 router.put('/paciente/:id', function (req: any, res, next) {
@@ -68,20 +68,17 @@ router.put('/paciente/:id', function (req: any, res, next) {
                     console.log('Error Save', err2);
                     return next(err2);
                 }
-                res.send({ status: "OK" });
+                res.send({ status: 'OK' });
                 (new ElasticSync()).sync(paciente).then((updated) => {
                     if (updated) {
-                        console.log("BIEN");
                         Logger.log(req, 'mpi', 'elasticUpdate', {
                             original: pacienteOriginal,
                             nuevo: paciente
                         });
                     } else {
-                        console.log("BIEN I");
                         Logger.log(req, 'mpi', 'elasticInsert', paciente);
                     }
                 }).catch((error) => {
-                    console.log("MAL");
                     Logger.log(req, 'pacientes', 'elasticError', error);
                 });
             });
