@@ -13,7 +13,7 @@ let router = express.Router();
 
 /**
  * register new device for pacienteApp
- * 
+ *
  * @param device_id {String}
  * @param device_type {String}
  * @param app_version {String}
@@ -22,8 +22,8 @@ let router = express.Router();
 router.post('/devices/register', function (req: any, res, next) {
     let token: string = req.headers.authorization.substring(4);
     let user_id = req.user.account_id;
-    pacienteApp.findById(user_id, function (err, user: any) {
-        if (err) {
+    pacienteApp.findById(user_id, function (errFind, user: any) {
+        if (errFind) {
             return res.status(422).send({ message: 'user_invalid' });
         }
 
@@ -35,9 +35,9 @@ router.post('/devices/register', function (req: any, res, next) {
         };
         let device = new deviceModel(device_data);
         user.devices.push(device);
-        user.save((err, u) => {
-            if (err) {
-                next(err);
+        return user.save((errSave, u) => {
+            if (errSave) {
+                next(errSave);
             }
             res.json(device);
         });
@@ -57,8 +57,8 @@ router.post('/devices/register', function (req: any, res, next) {
 router.post('/devices/update', function (req: any, res, next) {
     let token: string = req.headers.authorization.substring(4);
     let user_id = req.user.account_id;
-    pacienteApp.findById(user_id, function (err, user: any) {
-        if (err) {
+    pacienteApp.findById(user_id, function (errFind, user: any) {
+        if (errFind) {
             return res.status(422).send({ message: 'user_invalid' });
         }
 
@@ -70,9 +70,9 @@ router.post('/devices/update', function (req: any, res, next) {
             device.device_type = device_data.device_type;
             device.session_id = token;
         }
-        user.save((err, u) => {
-            if (err) {
-                next(err);
+        return user.save((errSave, u) => {
+            if (errSave) {
+                next(errSave);
             }
             res.json(device);
         });
@@ -80,7 +80,7 @@ router.post('/devices/update', function (req: any, res, next) {
 });
 
 /**
- * Remove device from user 
+ * Remove device from user
  * @param id {ObjectId}
  */
 
@@ -88,15 +88,15 @@ router.post('/devices/delete', function (req: any, res, next) {
     let token: string = req.headers.authorization.substring(4);
     let user_id = req.user.account_id;
 
-    pacienteApp.findById(user_id, function (err, user: any) {
-        if (err) {
+    pacienteApp.findById(user_id, function (errFind, user: any) {
+        if (errFind) {
             return res.status(422).send({ message: 'user_invalid' });
         }
 
         user.devices.pull({ '_id': new mongoose.Types.ObjectId(req.body.id) });
-        user.save((err, u) => {
-            if (err) {
-                next(err);
+        return user.save((errSave, u) => {
+            if (errSave) {
+                next(errSave);
             }
 
             res.json({ message: 'OK' });

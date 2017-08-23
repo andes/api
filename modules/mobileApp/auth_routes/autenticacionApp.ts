@@ -29,7 +29,7 @@ router.post('/login', function (req, res, next) {
         return res.status(422).send({ error: 'Debe ingresar una clave' });
     }
 
-    pacienteApp.findOne({ email }, (err, user: any) => {
+    return pacienteApp.findOne({ email }, (err, user: any) => {
 
         if (!user) {
             return res.status(422).send({ error: 'Cuenta inexistente' });
@@ -40,9 +40,9 @@ router.post('/login', function (req, res, next) {
             return;
         }
 
-        user.comparePassword(password, (err, isMatch) => {
-            if (err) {
-                return next(err);
+        return user.comparePassword(password, (errPassword, isMatch) => {
+            if (errPassword) {
+                return next(errPassword);
             }
             if (isMatch) {
                 // var userInfo = authController.setUserInfo(existingUser);
@@ -83,10 +83,9 @@ router.patch('/account', function (req, res, next) {
         if (!account || account.activacionApp) {
             return res.status(422).send({ 'email': 'account_not_foun' });
         }
-        console.log(data);
+
         authController.matchPaciente(data).then((pacientes: any) => {
             let valid = false;
-            console.log(pacientes);
             if (pacientes.length) {
                 let pacienteTemp = pacientes[0].paciente;
 
@@ -115,8 +114,7 @@ router.patch('/account', function (req, res, next) {
             res.status(200).json({
                 valid: valid
             });
-        }).catch(err => {
-            console.log(err);
+        }).catch(errMatch => {
             res.status(200).json({
                 valid: false
             });
@@ -149,7 +147,6 @@ router.post('/registro', function (req, res, next) {
         permisos: [],
         pacientes: []
     }
-    console.log("Pacienteee ", dataPacienteApp);
     if (!dataPacienteApp.email) {
         return res.status(422).send({ error: 'Se debe ingresar una dirección de e-Mail' });
     }
@@ -158,7 +155,7 @@ router.post('/registro', function (req, res, next) {
         return res.status(422).send({ error: 'Debe ingresar una clave' });
     }
 
-    pacienteApp.findOne({ email: dataPacienteApp.email }, function (err, existingUser) {
+    return pacienteApp.findOne({ email: dataPacienteApp.email }, function (err, existingUser) {
 
         if (err) {
             return next(err);
@@ -168,24 +165,24 @@ router.post('/registro', function (req, res, next) {
             return res.status(422).send({ 'email': 'El e-mail ingresado está en uso' });
         }
 
-        let user = new pacienteApp(dataPacienteApp);
+        let userModel = new pacienteApp(dataPacienteApp);
 
         // enviarCodigoVerificacion(user);
-        user.save(function (err, user: any) {
+        userModel.save(function (errSave, user: any) {
 
-            if (err) {
-                return next(err);
+            if (errSave) {
+                return next(errSave);
             }
 
             authController.matchPaciente(user).then(pacientes => {
-                let paciente = pacientes[0].paciente;
+                let pacienteObj = pacientes[0].paciente;
 
                 let valid = false;
-                if (paciente.estado === 'validado') {
+                if (pacienteObj.estado === 'validado') {
                     authController.enviarCodigoVerificacion(user);
                     user.pacientes = [
                         {
-                            id: paciente.id,
+                            id: pacienteObj.id,
                             relacion: 'principal',
                             addedAt: new Date()
                         }
@@ -199,7 +196,7 @@ router.post('/registro', function (req, res, next) {
                 res.status(200).json({
                     valid: valid
                 });
-            }).catch(err => {
+            }).catch(Match => {
                 res.status(200).json({
                     valid: false
                 });
@@ -219,7 +216,7 @@ router.post('/registro', function (req, res, next) {
 
 router.post('/reenviar-codigo', function (req, res, next) {
     let email = req.body.email;
-    pacienteApp.findOne({ email: email }, function (err, user: any) {
+    pacienteApp.findOne({ email: email }, function (Match, user: any) {
         if (!user) {
             return res.status(422).json({
                 message: 'acount_not_exists'
@@ -229,12 +226,12 @@ router.post('/reenviar-codigo', function (req, res, next) {
 
             user.codigoVerificacion = authController.generarCodigoVerificacion();
             user.expirationTime = new Date(Date.now() + authController.expirationOffset);
-            user.save(function (err, user) {
-                if (err) {
-                    return next(err);
+            user.save(function (errSave, userSaved) {
+                if (errSave) {
+                    return next(errSave);
                 }
 
-                authController.enviarCodigoVerificacion(user);
+                authController.enviarCodigoVerificacion(userSaved);
                 res.status(200).json({
                     valid: true
                 });
@@ -248,6 +245,7 @@ router.post('/reenviar-codigo', function (req, res, next) {
                 res.status(422).send({ message: 'account_not_verified' });
             }
         }
+        return null;
 
     });
 });
@@ -273,9 +271,9 @@ router.post('/verificar-codigo', function (req, res, next) {
                 datosUsuario.codigoVerificacion = null;
                 datosUsuario.expirationTime = null;
 
-                datosUsuario.save(function (err, user) {
-                    if (err) {
-                        return next(err);
+                datosUsuario.save(function (errSave, user) {
+                    if (errSave) {
+                        return next(errSave);
                     }
 
                     let token = Auth.generatePacienteToken(String(user.id), user.nombre + ' ' + user.apellido, user.email, user.pacientes, user.permisos);

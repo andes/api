@@ -83,23 +83,23 @@ export let pacienteAppSchema = new mongoose.Schema({
 
 pacienteAppSchema.pre('save', function (next) {
 
-    var user = this;
-    var SALT_FACTOR = 5;
+    let user = this;
+    let SALT_FACTOR = 5;
 
     if (!user.isModified('password')) {
         return next();
     }
 
-    bcrypt.genSalt(SALT_FACTOR, function (err, salt) {
+    bcrypt.genSalt(SALT_FACTOR, function (errGen, salt) {
 
-        if (err) {
-            return next(err);
+        if (errGen) {
+            return next(errGen);
         }
 
-        bcrypt.hash(user.password, salt, null, function (err, hash) {
+        bcrypt.hash(user.password, salt, null, function (errCrypt, hash) {
 
-            if (err) {
-                return next(err);
+            if (errCrypt) {
+                return next(errCrypt);
             }
 
             user.password = hash;

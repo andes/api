@@ -166,18 +166,6 @@ router.get('/turnos', function (req: any, res, next) {
                 res.status(422).json({ message: err });
             });
 
-            /*
-            pacienteApp.find({ 'pacientes.id': pacienteId }, function (err, docs: any[]) {
-                docs.forEach(user => {
-                    let devices = user.devices.map(item => item.device_id);
- 
-                    //let date = moment(turno.horaInicio).format('DD [de] MMMM');
-                    let body = 'Su turno del  fue reasignado. Haz click para más información.';
-                    new PushClient().send(devices, { body, extraData: { action: 'reasignar' } });
- 
-                });
-            });
-            */
         }
     );
 
@@ -214,7 +202,7 @@ router.post('/turnos/cancelar', function (req: any, res, next) {
                 agendaCtrl.liberarTurno(req, agendaObj, turno);
 
                 Auth.audit(agendaObj, req);
-                agendaObj.save(function (error) {
+                return agendaObj.save(function (error) {
                     Logger.log(req, 'turnos', 'update', {
                         accion: 'liberarTurno',
                         ruta: req.url,
@@ -272,7 +260,7 @@ router.post('/turnos/confirmar', function (req: any, res, next) {
                     turno.confirmedAt = new Date();
 
                     Auth.audit(agendaObj, req);
-                    agendaObj.save(function (error) {
+                    return agendaObj.save(function (error) {
                         Logger.log(req, 'turnos', 'update', {
                             accion: 'confirmar',
                             ruta: req.url,
@@ -293,9 +281,6 @@ router.post('/turnos/confirmar', function (req: any, res, next) {
                 } else {
                     return res.status(422).send({ message: 'turno_ya_corfirmado' });
                 }
-                // } else {
-                //     return res.status(422).send({ message: 'turno_not_reasignado' });
-                // }
             } else {
                 return res.status(422).send({ message: 'unauthorized' });
             }
@@ -318,7 +303,7 @@ router.post('/create/:id', function (req: any, res, next) {
     if (!mongoose.Types.ObjectId.isValid(pacienteId)) {
         return res.status(422).send({ error: 'ObjectID Inválido' });
     }
-    authController.buscarPaciente(pacienteId).then((pacienteObj) => {
+    return authController.buscarPaciente(pacienteId).then((pacienteObj) => {
         authController.createUserFromPaciente(pacienteObj).then(() => {
             return res.send({ message: 'OK' });
         }).catch((error) => {
@@ -343,7 +328,7 @@ router.get('/check/:id', function (req: any, res, next) {
     if (!mongoose.Types.ObjectId.isValid(pacienteId)) {
         return res.status(422).send({ error: 'ObjectID Inválido' });
     }
-    authController.buscarPaciente(pacienteId).then((pacienteObj) => {
+    return authController.buscarPaciente(pacienteId).then((pacienteObj) => {
 
         authController.checkAppAccounts(pacienteObj).then(() => {
             return res.send({ message: 'OK' });

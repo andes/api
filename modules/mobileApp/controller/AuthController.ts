@@ -12,6 +12,9 @@ import * as configPrivate from '../../../config.private';
 import * as moment from 'moment';
 import * as constantes from '../../../core/tm/schemas/constantes';
 import * as mongoose from 'mongoose';
+import * as debug from 'debug';
+
+let log = debug('AuthController');
 
 export const expirationOffset = 1000 * 60 * 60 * 24;
 
@@ -24,10 +27,10 @@ export function verificarCodigo(codigoIngresado, codigo) {
 }
 
 export function enviarCodigoVerificacion(user) {
-    console.log('Enviando mail...');
+    log('Enviando mail...');
 
     let mailOptions: MailOptions = {
-        from: configPrivate.enviarMail.options.from,
+        from: configPrivate.enviarMail.from,
         to: user.email,
         subject: 'Hola ' + user.email,
         text: 'El código de verificación es: ' + user.codigoVerificacion,
@@ -42,7 +45,7 @@ export function enviarCodigoVerificacion(user) {
     sendMail(mailOptions);
     sendSms(smsOptions, function (res) {
         if (res === '0') {
-            console.log('El SMS se envío correctamente');
+            log('El SMS se envío correctamente');
         }
     });
 }
@@ -51,10 +54,10 @@ export function envioCodigoCount(user: any) {
     // TODO: Implementar si se decide poner un límite al envío de códigos
 }
 
-export function generarCodigoVerificacion() {
+export function generarCodigoVerificacion(onlyNumber = true) {
     let codigo = '';
     let length = 6;
-    let caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let caracteres = onlyNumber ? '0123456789' : 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     for (let i = 0; i < length; i++) {
         codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
     }
@@ -83,26 +86,26 @@ export function buscarPaciente(id) {
     });
 }
 
-function searchContacto(paciente, key) {
-    for (let i = 0; i < paciente.contacto.length; i++) {
-        if (paciente.contacto[i].tipo === key) {
-            return paciente.contacto[i].valor;
+function searchContacto(pacienteData, key) {
+    for (let i = 0; i < pacienteData.contacto.length; i++) {
+        if (pacienteData.contacto[i].tipo === key) {
+            return pacienteData.contacto[i].valor;
         }
     }
     return null;
 }
 
-export function checkAppAccounts(paciente) {
+export function checkAppAccounts(pacienteData) {
     return new Promise((resolve, reject) => {
-        pacienteApp.find({ 'pacientes.id': paciente.id }, function (err, docs: any[]) {
+        pacienteApp.find({ 'pacientes.id': pacienteData.id }, function (err, docs: any[]) {
             if (docs.length > 0) {
                 return reject({ error: 'account_assigned', account: docs[0] });
             } else {
 
-                let email = searchContacto(paciente, 'email');
+                let email = searchContacto(pacienteData, 'email');
                 if (email) {
 
-                    pacienteApp.findOne({ email }, function (err, existingUser) {
+                    pacienteApp.findOne({ email }, function (errFind, existingUser) {
                         if (existingUser) {
                             return reject({ error: 'email_exists' });
                         } else {
@@ -158,27 +161,27 @@ export function createUserFromProfesional(profesional) {
 
 /**
  * Crea un usuario de la app mobile a partir de un paciente
- * @param paciente {pacienteSchema}
+ * @param pacienteData {pacienteSchema}
  */
-export function createUserFromPaciente(paciente) {
+export function createUserFromPaciente(pacienteData) {
     return new Promise((resolve, reject) => {
         let dataPacienteApp: any = {
-            nombre: paciente.nombre,
-            apellido: paciente.apellido,
-            email: searchContacto(paciente, 'email'),
+            nombre: pacienteData.nombre,
+            apellido: pacienteData.apellido,
+            email: searchContacto(pacienteData, 'email'),
             password: generarCodigoVerificacion(),
-            telefono: searchContacto(paciente, 'celular'),
+            telefono: searchContacto(pacienteData, 'celular'),
             envioCodigoCount: 0,
             nacionalidad: 'Argentina',
-            documento: paciente.documento,
-            fechaNacimiento: paciente.fechaNacimiento,
-            sexo: paciente.genero,
-            genero: paciente.genero,
+            documento: pacienteData.documento,
+            fechaNacimiento: pacienteData.fechaNacimiento,
+            sexo: pacienteData.genero,
+            genero: pacienteData.genero,
             codigoVerificacion: generarCodigoVerificacion(),
             expirationTime: new Date(Date.now() + expirationOffset),
             permisos: [],
             pacientes: [{
-                id: paciente._id,
+                id: pacienteData._id,
                 relacion: 'principal',
                 addedAt: new Date()
             }]
@@ -201,14 +204,14 @@ export function createUserFromPaciente(paciente) {
 
             let user = new pacienteApp(dataPacienteApp);
 
-            user.save(function (err, user: any) {
+            user.save(function (errSave, userSaved: any) {
 
-                if (err) {
+                if (errSave) {
                     return reject({ error: 'unknow_error' });
                 }
                 resolve(true);
 
-                enviarCodigoVerificacion(user);
+                enviarCodigoVerificacion(userSaved);
 
             });
 
@@ -264,7 +267,7 @@ export function matchPaciente(data) {
 
             let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
                 .filter(function (hit) {
-                    let paciente = hit._source;
+                    let pacienteElastic = hit._source;
                     let pacDto = {
                         documento: data.documento ? data.documento.toString() : '',
                         nombre: data.nombre ? data.nombre : '',
@@ -273,42 +276,36 @@ export function matchPaciente(data) {
                         sexo: data.genero ? data.genero.toLowerCase() : ''
                     };
                     let pacElastic = {
-                        documento: paciente.documento ? paciente.documento.toString() : '',
-                        nombre: paciente.nombre ? paciente.nombre : '',
-                        apellido: paciente.apellido ? paciente.apellido : '',
-                        fechaNacimiento: paciente.fechaNacimiento ? moment(paciente.fechaNacimiento).format('YYYY-MM-DD') : '',
-                        sexo: paciente.sexo ? paciente.sexo : ''
+                        documento: pacienteElastic.documento ? pacienteElastic.documento.toString() : '',
+                        nombre: pacienteElastic.nombre ? pacienteElastic.nombre : '',
+                        apellido: pacienteElastic.apellido ? pacienteElastic.apellido : '',
+                        fechaNacimiento: pacienteElastic.fechaNacimiento ? moment(pacienteElastic.fechaNacimiento).format('YYYY-MM-DD') : '',
+                        sexo: pacienteElastic.sexo ? pacienteElastic.sexo : ''
                     };
-                    console.log(pacElastic);
                     let match = new matching();
                     let valorMatching = match.matchPersonas(pacElastic, pacDto, weights, 'Levenshtein');
-                    paciente['id'] = hit._id;
+                    pacienteElastic['id'] = hit._id;
                     if (valorMatching >= porcentajeMatchMax) {
                         listaPacientesMax.push({
                             id: hit._id,
-                            paciente: paciente,
+                            paciente: pacienteElastic,
                             match: valorMatching
                         });
                     } else {
                         if (valorMatching >= porcentajeMatchMin && valorMatching < porcentajeMatchMax) {
                             listaPacientesMin.push({
                                 id: hit._id,
-                                paciente: paciente,
+                                paciente: pacienteElastic,
                                 match: valorMatching
                             });
                         }
                     }
-                    // console.log("SEARCHRESULT-------------",paciente.documento,paciente.apellido,valorMatching);
                 });
 
-            // if (devolverPorcentaje) {
             let sortMatching = function (a, b) {
                 return b.match - a.match;
             };
 
-            // cambiamos la condición para lograr que nos devuelva más de una sugerencia
-            // ya que la 1ra sugerencia es el mismo paciente.
-            // if (listaPacientesMax.length > 0) {
             if (listaPacientesMax.length > 0) {
                 listaPacientesMax.sort(sortMatching);
                 resolve(listaPacientesMax);
@@ -316,14 +313,7 @@ export function matchPaciente(data) {
                 listaPacientesMin.sort(sortMatching);
                 resolve(listaPacientesMin);
             }
-            // } else {
-            //     results = results.map((hit) => {
-            //         let elem = hit._source;
-            //         elem['id'] = hit._id;
-            //         return elem;
-            //     });
-            //     res.send(results);
-            // }
+
         }).catch((error) => {
             reject(error);
         });
@@ -342,16 +332,16 @@ export function updateAccount(account, data) {
         let promise_password: any = Promise.resolve();
 
         if (data.password) {
-            promise_password = new Promise((resolve, reject) => {
+            promise_password = new Promise((resolvePassword, rejectPassword) => {
                 account.comparePassword(data.old_password, (err, isMatch) => {
                     if (err) {
-                        return reject({ password: 'wrong_password' });
+                        return rejectPassword({ password: 'wrong_password' });
                     }
                     if (isMatch) {
                         account.password = data.password;
-                        return resolve();
+                        return resolvePassword();
                     } else {
-                        return reject({ password: 'wrong_password' });
+                        return rejectPassword({ password: 'wrong_password' });
                     }
                 });
             });
@@ -363,12 +353,12 @@ export function updateAccount(account, data) {
 
         if (data.email) {
             account.email = data.email;
-            promise = new Promise((resolve, reject) => {
+            promise = new Promise((resolveEmail, rejectEmail) => {
                 pacienteApp.findOne({ email: data.email }, function (err, acts) {
                     if (!acts) {
-                        resolve();
+                        resolveEmail();
                     } else {
-                        reject({ email: 'account_exists' });
+                        rejectEmail({ email: 'account_exists' });
                     }
                 })
             });
