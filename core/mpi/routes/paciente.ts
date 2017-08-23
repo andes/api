@@ -527,7 +527,7 @@ router.get('/pacientes', function (req, res, next) {
                             sexo: paciente.sexo ? paciente.sexo : ''
                         };
                         let match = new matching();
-                        let valorMatching = match.matchPersonas(pacElastic, pacDto, weights);
+                        let valorMatching = match.matchPersonas(pacElastic, pacDto, weights, 'Levenshtein');
                         paciente['id'] = hit._id;
 
                         if (valorMatching >= porcentajeMatchMax) {
@@ -635,7 +635,7 @@ router.post('/pacientes/mpi', function (req, res, next) {
     // Se genera la clave de blocking
     let claves = match.crearClavesBlocking(newPatientMpi);
     newPatientMpi['claveBlocking'] = claves;
-    
+
     Auth.audit(newPatientMpi, req);
 
     newPatientMpi.save((err) => {
@@ -1197,7 +1197,7 @@ router.delete('/pacientes/:id', function (req, res, next) {
             if (error) {
                 console.log('Error en elastic Search delete: ', error);
             }
-            
+
             // Logger.log(req, 'pacientes', 'delete', patientFound);
             res.json(patientFound);
         });
@@ -1266,10 +1266,10 @@ function buscarPaciente(id) {
 function updateContactos(req, data) {
     data.markModified('contacto');
     Logger.log(req, 'mpi', 'update', {
-            accion: 'updateContacto',
-            ruta: req.url,
-            method: req.method,
-            data: data.contacto,
+        accion: 'updateContacto',
+        ruta: req.url,
+        method: req.method,
+        data: data.contacto,
     });
     data.contacto = req.body.contacto;
     // Logger de la consulta a ejecutar

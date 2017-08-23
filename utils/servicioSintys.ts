@@ -62,43 +62,8 @@ export function formatearDatosSintys(datosSintys) {
     // console.log('DATOSSINTYS----------->', datosSintys);
 
     ciudadano.documento = datosSintys.Documento ? datosSintys.Documento.toString() : '';
-
-    // VER con las chicas ya que sintys no trae separado nbe y apellido.
+    // Sintys trae nombre y apellido juntos en 1 solo campo
     ciudadano.apellido = datosSintys.NombreCompleto ? datosSintys.NombreCompleto : '';
-    // ciudadano.apellido ?
-
-    // TEMA DE DIRECCIÓN VERS SI VALE LA PENA
-    // No lo trae en este webService hay que invocar a otro con el idDelPaciente seleccionado, además no está funcionando ya hice el reclamo en sintys
-    /*
-    ciudadano.direccion = [];
-    var domicilio;
-    domicilio = new Object();
-    if (datosSintys.domicilio) {
-        if (datosSintys.pisoDpto && datosSintys.pisoDpto != "0 0") {
-            domicilio.valor = datosSintys.domicilio + " " + datosSintys.pisoDpto;
-        }
-        domicilio.valor = datosSintys.domicilio;
-    }
-
-    if (datosSintys.codigoPostal) {
-        domicilio.codigoPostal = datosSintys.codigoPostal;
-    }
-    var ubicacion;
-    ubicacion = new Object();
-    if (datosSintys.localidad) {
-        ubicacion.localidad = datosSintys.localidad;
-    }
-
-    if (datosSintys.provincia) {
-        ubicacion.provincia = datosSintys.provincia;
-    }
-
-    //Ver el pais de la ubicación
-    domicilio.ranking = 1;
-    domicilio.activo = true;
-    domicilio.ubicacion = ubicacion;
-    ciudadano.direccion.push(domicilio);
-    */
 
     if (datosSintys.Sexo) {
         if (datosSintys.Sexo === 'FEMENINO') {
@@ -117,26 +82,6 @@ export function formatearDatosSintys(datosSintys) {
         let fechaNac = new Date(fecha[2].substr(0, 4), fecha[1] - 1, fecha[0]);
         ciudadano.fechaNacimiento = fechaNac;
     }
-
-    /*
-    if (datosSintys.estadoCivil) {
-        // estadoCivil: {
-        //     type: String,
-        //     enum: ["casado", "separado", "divorciado", "viudo", "soltero", "otro", ""]
-        // }
-
-    }
-    */
-    /*
-    if (datosSintys.fallecido != "NO") {
-        if (datosSintys.fechaFallecimiento) {
-            fecha = datosSintys.fechaFallecimiento.split("-");
-            var fechaFac = new Date(fecha[2].substr(0, 4), fecha[1], fecha[0]);
-            ciudadano.fechaFallecimiento = fechaFac.toJSON();
-
-        }
-    }
-    */
 
     return ciudadano;
 
@@ -184,7 +129,7 @@ export function matchSintys(paciente) {
                                 console.log('entro por 200');
 
                                 pacienteSintys = formatearDatosSintys(JSON.parse(resultado[1])[0]);
-                                matchPorcentaje = match.matchPersonas(paciente, pacienteSintys, weights) * 100;
+                                matchPorcentaje = match.matchPersonas(paciente, pacienteSintys, weights ,'Levenshtein') * 100;
                                 console.log('el % de matcheo es:', matchPorcentaje);
                                 paciente['matchSintys'] = matchPorcentaje;
                                 resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sintys', 'matcheo': matchPorcentaje, 'datosPaciente': pacienteSintys } });
@@ -196,8 +141,6 @@ export function matchSintys(paciente) {
                         console.error('Error consulta rest Sintys:' + err);
                         reject(err);
                     });
-
-                // setInterval(consultaSintys,100);
 
             } else {
                 resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sintys', 'matcheo': 0, 'datosPaciente': pacienteSintys } });

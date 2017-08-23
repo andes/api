@@ -281,7 +281,7 @@ export function matchPaciente(data) {
                     };
                     console.log(pacElastic);
                     let match = new matching();
-                    let valorMatching = match.matchPersonas(pacElastic, pacDto, weights);
+                    let valorMatching = match.matchPersonas(pacElastic, pacDto, weights, 'Levenshtein');
                     paciente['id'] = hit._id;
                     if (valorMatching >= porcentajeMatchMax) {
                         listaPacientesMax.push({
