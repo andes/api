@@ -1,3 +1,5 @@
+import { farmaciasURLS } from '../../../config.private';
+
 let request = require('request');
 let cheerio = require('cheerio');
 let moment = require('moment');
@@ -44,7 +46,7 @@ export function donwloadData(desde, hasta) {
 export function getLocalidades() {
 
     return new Promise((resolve, reject) => {
-        request('http://181.231.9.13/cf/consultarturnos.aspx', function (error, response, html) {
+        request(farmaciasURLS.localidades, function (error, response, html) {
             if (!error) {
                 let localidades = [];
                 let $ = cheerio.load(html);
@@ -78,7 +80,7 @@ export function getTurnos(localidad, desde, hasta) {
         let hm = hasta.get('month') + 1;
         let hy = hasta.get('year');
 
-        let url = 'http://181.231.9.13/lawen/turnos.aspx?idLocalidad=' + localidad + '&dd=' + dd + '&dm=' + dm + '&da=' + dy + '&hd=' + hd + '&hm=' + hm + '&ha=' + hy;
+        let url = farmaciasURLS.turnos + '?idLocalidad=' + localidad + '&dd=' + dd + '&dm=' + dm + '&da=' + dy + '&hd=' + hd + '&hm=' + hm + '&ha=' + hy;
 
         request(url, function (error, response, html) {
             if (!error) {
