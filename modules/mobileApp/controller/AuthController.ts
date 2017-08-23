@@ -30,7 +30,7 @@ export function enviarCodigoVerificacion(user) {
     log('Enviando mail...');
 
     let mailOptions: MailOptions = {
-        from: configPrivate.enviarMail.options.from,
+        from: configPrivate.enviarMail.from,
         to: user.email,
         subject: 'Hola ' + user.email,
         text: 'El código de verificación es: ' + user.codigoVerificacion,

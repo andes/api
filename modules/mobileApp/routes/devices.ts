@@ -35,7 +35,7 @@ router.post('/devices/register', function (req: any, res, next) {
         };
         let device = new deviceModel(device_data);
         user.devices.push(device);
-        user.save((errSave, u) => {
+        return user.save((errSave, u) => {
             if (errSave) {
                 next(errSave);
             }
@@ -70,7 +70,7 @@ router.post('/devices/update', function (req: any, res, next) {
             device.device_type = device_data.device_type;
             device.session_id = token;
         }
-        user.save((errSave, u) => {
+        return user.save((errSave, u) => {
             if (errSave) {
                 next(errSave);
             }
@@ -94,7 +94,7 @@ router.post('/devices/delete', function (req: any, res, next) {
         }
 
         user.devices.pull({ '_id': new mongoose.Types.ObjectId(req.body.id) });
-        user.save((errSave, u) => {
+        return user.save((errSave, u) => {
             if (errSave) {
                 next(errSave);
             }

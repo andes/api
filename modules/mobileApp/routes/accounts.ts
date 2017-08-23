@@ -21,7 +21,7 @@ router.put('/account', function (req: any, res, next) {
             return res.status(422).send({ error: '' });
         }
 
-        authController.updateAccount(account, req.body).then((acc) => {
+        return authController.updateAccount(account, req.body).then((acc) => {
             return res.json({ message: 'OK', account: acc });
         }).catch((errUpdate) => {
             return res.status(422).send(errUpdate);
