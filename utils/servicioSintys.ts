@@ -1,4 +1,5 @@
 import { matching } from '@andes/match';
+import * as configPrivate from '../config.private';
 import * as config from '../config';
 import * as https from 'https';
 
@@ -6,15 +7,15 @@ let to_json = require('xmljson').to_json;
 
 export function getPersonaSintys(nroDocumento: string) {
     let xml = '';
-    let pathSintys = '/WCFSINTyS/wsPersona.asmx/GetPersona?dni=' + nroDocumento;
+    let pathSintys = configPrivate.sintys.path + 'dni=' + nroDocumento;
 
     let optionsgetmsg = {
         /*Este servicio debe ser llamado directamente desde los WS
         que están publicados en el servidor 10.1.232.8 ya que por cuestiones
         de seguridad de Sintys, sólo nos dejan consumir datos desde este servidor.
         */
-        host: 'www.saludnqn.gov.ar',
-        port: 443,
+        host: configPrivate.sintys.host,
+        port: configPrivate.sintys.port,
         path: pathSintys,
         method: 'GET',
         rejectUnauthorized: false
@@ -129,7 +130,7 @@ export function matchSintys(paciente) {
                                 console.log('entro por 200');
 
                                 pacienteSintys = formatearDatosSintys(JSON.parse(resultado[1])[0]);
-                                matchPorcentaje = match.matchPersonas(paciente, pacienteSintys, weights ,'Levenshtein') * 100;
+                                matchPorcentaje = match.matchPersonas(paciente, pacienteSintys, weights, 'Levenshtein') * 100;
                                 console.log('el % de matcheo es:', matchPorcentaje);
                                 paciente['matchSintys'] = matchPorcentaje;
                                 resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sintys', 'matcheo': matchPorcentaje, 'datosPaciente': pacienteSintys } });
