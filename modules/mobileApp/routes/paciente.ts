@@ -6,6 +6,9 @@ import * as mongoose from 'mongoose';
 import { Auth } from './../../../auth/auth.class';
 import { ElasticSync } from '../../../utils/elasticSync';
 import { Logger } from '../../../utils/logService';
+import * as debug from 'debug';
+
+let log = debug('mobileApp:paciente');
 
 let router = express.Router();
 
@@ -30,7 +33,7 @@ router.get('/paciente/:id', function (req: any, res, next) {
             return res.status(422).send({ message: 'invalid_id' });
         });
     } else {
-        return res.status(422).send({ message: 'unauthorized' });
+        res.status(422).send({ message: 'unauthorized' });
     }
 });
 
@@ -65,7 +68,7 @@ router.put('/paciente/:id', function (req: any, res, next) {
 
             paciente.save(function (err2) {
                 if (err2) {
-                    console.log('Error Save', err2);
+                    log('Error al grabar una cuenta de paciente', err2);
                     return next(err2);
                 }
                 res.send({ status: 'OK' });
@@ -87,7 +90,7 @@ router.put('/paciente/:id', function (req: any, res, next) {
             return res.status(422).send({ message: 'invalid_id' });
         });
     } else {
-        return res.status(422).send({ message: 'unauthorized' });
+        res.status(422).send({ message: 'unauthorized' });
     }
 });
 

@@ -83,10 +83,9 @@ router.patch('/account', function (req, res, next) {
         if (!account || account.activacionApp) {
             return res.status(422).send({ 'email': 'account_not_foun' });
         }
-        console.log(data);
+
         authController.matchPaciente(data).then((pacientes: any) => {
             let valid = false;
-            console.log(pacientes);
             if (pacientes.length) {
                 let pacienteTemp = pacientes[0].paciente;
 

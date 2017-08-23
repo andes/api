@@ -6,6 +6,9 @@ import { profesional } from '../../../core/tm/schemas/profesional';
 import { pacienteApp } from '../schemas/pacienteApp';
 import { NotificationService } from './NotificationService';
 import { sendSms, SmsOptions } from '../../../utils/sendSms';
+import * as debug from 'debug';
+
+let log = debug('RecordatorioController');
 
 let async = require('async');
 let agendasRemainderDays = 1;
@@ -48,7 +51,6 @@ export function buscarTurnosARecordar(dayOffset) {
 
             guardarRecordatorioTurno(turnos, function (ret) {
                 resolve();
-                // console.log('Resultado', ret);
             });
         });
     });
@@ -61,7 +63,7 @@ export function guardarRecordatorioTurno(turnos: any[], callback) {
         recordatorio.findOne({ idTurno: turno._id }, function (err, objFound) {
 
             if (objFound) {
-                console.log('__ El recordatorio existe __');
+                log('__ El recordatorio existe __');
                 return done();
             }
 
@@ -102,7 +104,7 @@ export function enviarTurnoRecordatorio() {
                 if (res === '0') {
                     turno.estadoEnvio = true;
                     turno.save();
-                    console.log('El SMS se envío correctamente');
+                    log('El SMS se envío correctamente');
                 }
             });
         });
@@ -187,17 +189,16 @@ export function enviarAgendaNotificacion() {
                 profesional.findById(item.dataAgenda.profesionalId),
                 pacienteApp.findOne({ profesionalId: mongoose.Types.ObjectId(item.dataAgenda.profesionalId) })
             ]).then(datos => {
-                console.log(datos);
                 if (datos[0] && datos[1]) {
                     let notificacion = {
                         body: 'Te recordamos que tienes agendas sin confirmar.'
                     }
                     NotificationService.sendNotification(datos[1], notificacion);
                 } else {
-                    console.log('No tiene app');
+                    log('No tiene app');
                 }
             }).catch(() => {
-                console.log('Error en la cuenta');
+                log('Error en la cuenta');
             });
             item.estadoEnvio = true;
             item.save();

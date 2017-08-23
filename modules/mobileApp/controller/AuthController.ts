@@ -12,6 +12,9 @@ import * as configPrivate from '../../../config.private';
 import * as moment from 'moment';
 import * as constantes from '../../../core/tm/schemas/constantes';
 import * as mongoose from 'mongoose';
+import * as debug from 'debug';
+
+let log = debug('AuthController');
 
 export const expirationOffset = 1000 * 60 * 60 * 24;
 
@@ -24,7 +27,7 @@ export function verificarCodigo(codigoIngresado, codigo) {
 }
 
 export function enviarCodigoVerificacion(user) {
-    console.log('Enviando mail...');
+    log('Enviando mail...');
 
     let mailOptions: MailOptions = {
         from: configPrivate.enviarMail.options.from,
@@ -42,7 +45,7 @@ export function enviarCodigoVerificacion(user) {
     sendMail(mailOptions);
     sendSms(smsOptions, function (res) {
         if (res === '0') {
-            console.log('El SMS se envío correctamente');
+            log('El SMS se envío correctamente');
         }
     });
 }
