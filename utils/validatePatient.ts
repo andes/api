@@ -11,26 +11,26 @@ export class ValidatePatient {
 
         if (!patient.apellido) {
             valid = false;
-            errors.push('Paciente no posee apellido')
+            errors.push('Paciente no posee apellido');
         }
 
         if (!patient.nombre) {
             valid = false;
-            errors.push('Paciente no posee nombre')
+            errors.push('Paciente no posee nombre');
         }
 
         if (!patient.fechaNacimiento) {
             valid = false;
-            errors.push('Paciente no posee fecha de nacimiento')
+            errors.push('Paciente no posee fecha de nacimiento');
         }
 
         if (!patient.sexo) {
             valid = false;
-            errors.push('Paciente no tiene especificado el sexo')
+            errors.push('Paciente no tiene especificado el sexo');
         } else {
             if (sexo.indexOf(patient.sexo) < 0) {
                 valid = false;
-                errors.push('El sexo del paciente no pertenece al conjunto enumerado')
+                errors.push('El sexo del paciente no pertenece al conjunto enumerado');
             }
         }
 
@@ -38,7 +38,7 @@ export class ValidatePatient {
 
             if (estado.indexOf(patient.estado) < 0) {
                 valid = false;
-                errors.push('El estado del paciente no pertenece al conjunto enumerado')
+                errors.push('El estado del paciente no pertenece al conjunto enumerado');
             }
         }
 
@@ -46,7 +46,7 @@ export class ValidatePatient {
 
             if (estadoCivil.indexOf(patient.estadoCivil) < 0) {
                 valid = false;
-                errors.push('El estado civil del paciente no pertenece al conjunto enumerado')
+                errors.push('El estado civil del paciente no pertenece al conjunto enumerado');
             }
 
         }
@@ -55,7 +55,7 @@ export class ValidatePatient {
 
             if (sexo.indexOf(patient.genero) < 0) {
                 valid = false;
-                errors.push('El genero del paciente no pertenece al conjunto enumerado')
+                errors.push('El genero del paciente no pertenece al conjunto enumerado');
             }
 
         }
@@ -90,7 +90,7 @@ export class ValidatePatient {
         return {
             valid: valid,
             errors: errors
-        }
+        };
     }
 
 }

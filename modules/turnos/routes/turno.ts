@@ -72,32 +72,32 @@ router.get('/turno/:id*?', function (req, res, next) {
         let matchTurno = {};
         if (req.query.estado) {
             matchTurno['bloques.turnos.estado'] = req.query.estado;
-        };
+        }
 
         if (req.query.usuario) {
             matchTurno['updatedBy.username'] = req.query.userName;
             matchTurno['updatedBy.documento'] = req.query.userDoc;
-        };
+        }
 
         if (req.query.asistencia) {
             matchTurno['bloques.turnos.asistencia'] = { '$exists': req.query.asistencia };
-        };
+        }
 
         if (req.query.codificado) {
             matchTurno['bloques.turnos.diagnosticoPrincipal'] = { '$exists': true };
-        };
+        }
 
         if (req.query.horaInicio) {
             matchTurno['bloques.turnos.horaInicio'] = { '$gte': req.query.horaInicio };
-        };
+        }
 
         if (req.query.tiposTurno) {
             matchTurno['bloques.turnos.tipoTurno'] = { '$in': req.query.tiposTurno };
-        };
+        }
 
         if (req.query.pacienteId) {
             matchTurno['bloques.turnos.paciente.id'] = mongoose.Types.ObjectId(req.query.pacienteId);
-        };
+        }
 
         pipelineTurno[0] = { '$match': matchTurno };
         pipelineTurno[3] = { '$match': matchTurno };

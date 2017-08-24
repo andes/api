@@ -190,7 +190,7 @@ router.get('/profesionales/:id*?', function (req, res, next) {
         profesional.findById(req.params._id, function (err, data) {
             if (err) {
                 return next(err);
-            };
+            }
             res.json(data);
         });
     } else {

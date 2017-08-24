@@ -8,7 +8,7 @@ router.get('/configPrestacion/:id*?', function (req, res, next) {
         configPrestacion.findById(req.params.id, function (err, data) {
             if (err) {
                 return next(err);
-            };
+            }
 
             res.json(data);
         });
@@ -20,7 +20,7 @@ router.get('/configPrestacion/:id*?', function (req, res, next) {
             query.where('prestacion.nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
         query.exec((err, data) => {
-            if (err) { return next(err); };
+            if (err) { return next(err); }
             res.json(data);
         });
     }

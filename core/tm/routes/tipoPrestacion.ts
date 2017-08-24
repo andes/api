@@ -28,7 +28,7 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
     query.sort({ 'term': 1 }).exec(function (err, data) {
         if (err) {
             return next(err);
-        };
+        }
         res.json(data);
     });
 });

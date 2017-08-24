@@ -54,7 +54,7 @@ router.get('/snomed', function (req, res, next) {
 
     // Filtramos por semanticTag
     if (req.query.semanticTag) {
-        conditions['$or'] = [...[], req.query.semanticTag].map((i) => { return { semanticTag: i } })
+        conditions['$or'] = [...[], req.query.semanticTag].map((i) => { return { semanticTag: i }; });
     }
 
     // creamos un array de palabras a partir de la separacion del espacio
@@ -95,7 +95,7 @@ router.get('/snomed', function (req, res, next) {
     query.exec(function (err, data) {
         if (err) {
             return next(err);
-        };
+        }
 
         // Eliminamos aquellos cuyo term sea igual al fsn (i.e. contiene el semanticTag)
         data = data.filter((i: any) => i.term !== i.fsn);

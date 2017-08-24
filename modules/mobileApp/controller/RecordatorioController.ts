@@ -87,7 +87,7 @@ export function guardarRecordatorioTurno(turnos: any[], callback) {
         });
 
     }, callback);
-};
+}
 
 
 export function enviarTurnoRecordatorio() {
@@ -98,7 +98,7 @@ export function enviarTurnoRecordatorio() {
             let smsOptions: SmsOptions = {
                 telefono: turno.paciente.telefono,
                 mensaje: 'Sr ' + turno.paciente.apellido + ' le recordamos que tiene un turno para el día: ' + moment(turno.fechaTurno).format('DD/MM/YYYY')
-            }
+            };
 
             sendSms(smsOptions, function (res) {
                 if (res === '0') {
@@ -155,7 +155,7 @@ export function agendaRecordatorioQuery(dayOffset) {
             resolve(data);
         });
     });
-};
+}
 
 export function recordarAgenda() {
     return agendaRecordatorioQuery(agendasRemainderDays).then((data: any[]) => {
@@ -192,7 +192,7 @@ export function enviarAgendaNotificacion() {
                 if (datos[0] && datos[1]) {
                     let notificacion = {
                         body: 'Te recordamos que tienes agendas sin confirmar.'
-                    }
+                    };
                     NotificationService.sendNotification(datos[1], notificacion);
                 } else {
                     log('No tiene app');

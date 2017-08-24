@@ -22,7 +22,7 @@ router.get('/sisa', async function (req, res, next) {
                 error: err
             });
             return next(err);
-        };
+        }
     } else {
         return next(500);
     }

@@ -13,7 +13,7 @@ router.get('/matching/:id*?', function (req, res, next) {
         paciente.findById(req.params.id, function (err, data) {
             if (err) {
                 return next(err);
-            };
+            }
             res.json(data);
         });
     } else {

@@ -11,7 +11,7 @@ router.get('/paciente', function (req, res, next) {
             query = logPaciente.findById(req.params.id, function (err, data) {
                 if (err) {
                     return next(err);
-                };
+                }
                 res.json(data);
             });
         }
@@ -35,7 +35,7 @@ router.get('/paciente', function (req, res, next) {
             if (err) {
                 res.status(404).json({ message: 'Error en Log de Paciente' });
                 return next(404);
-            };
+            }
             res.json(data);
         });
     }

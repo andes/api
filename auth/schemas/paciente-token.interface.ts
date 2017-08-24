@@ -6,4 +6,4 @@ export interface PacienteToken extends Token {
         email: string,
     };
     pacientes: any[];
-};
+}

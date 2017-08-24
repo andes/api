@@ -121,7 +121,6 @@ pacienteAppSchema.methods.comparePassword = function (passwordAttempt, cb) {
             cb(null, isMatch);
         }
     });
-
-}
+};
 
 export let pacienteApp = mongoose.model('pacienteApp', pacienteAppSchema, 'pacienteApp');

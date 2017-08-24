@@ -71,7 +71,7 @@ router.get('/barrios/:id*?', function (req, res, next) {
         barrio.findById(req.params.id, function (err, data) {
             if (err) {
                 return next(err);
-            };
+            }
             res.json(data);
         });
     } else {
@@ -86,7 +86,7 @@ router.get('/barrios/:id*?', function (req, res, next) {
         query.exec((err, data) => {
             if (err) {
                 return next(err);
-            };
+            }
             res.json(data);
         });
     }

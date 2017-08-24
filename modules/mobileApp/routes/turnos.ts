@@ -46,27 +46,27 @@ router.get('/turnos', function (req: any, res, next) {
 
     if (req.query.estado) {
         matchTurno['bloques.turnos.estado'] = req.query.estado;
-    };
+    }
 
     if (req.query.asistencia) {
         matchTurno['bloques.turnos.asistencia'] = { '$exists': req.query.asistencia };
-    };
+    }
 
     if (req.query.codificado) {
         matchTurno['bloques.turnos.diagnosticoPrincipal'] = { '$exists': true };
-    };
+    }
 
     if (req.query.horaInicio) {
         matchTurno['bloques.turnos.horaInicio'] = { '$gte': new Date(req.query.horaInicio) };
-    };
+    }
 
     if (req.query.horaFinal) {
         matchTurno['bloques.turnos.horaInicio'] = { '$lt': new Date(req.query.horaFinal) };
-    };
+    }
 
     if (req.query.tiposTurno) {
         matchTurno['bloques.turnos.tipoTurno'] = { '$in': req.query.tiposTurno };
-    };
+    }
 
     pipelineTurno.push({ '$match': matchTurno });
     pipelineTurno.push({ '$unwind': '$bloques' });

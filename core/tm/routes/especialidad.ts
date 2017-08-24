@@ -94,7 +94,7 @@ router.get('/especialidades/:id*?', function (req, res, next) {
         especialidad.findById(req.params.id, function (err, data) {
             if (err) {
                 return next(err);
-            };
+            }
 
             res.json(data);
         });
@@ -219,6 +219,6 @@ router.delete('/especialidades/:id', function (req, res, next) {
         }
         res.json(data);
     });
-})
+});
 
 export = router;

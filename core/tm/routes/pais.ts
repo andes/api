@@ -61,7 +61,7 @@ router.get('/paises/:id*?', function (req, res, next) {
         pais.findById(req.params.id, function (err, data) {
             if (err) {
                 return next(err);
-            };
+            }
 
             res.json(data);
         });
@@ -73,7 +73,7 @@ router.get('/paises/:id*?', function (req, res, next) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
         query.sort({ 'nombre': 1 }).exec((err, data) => {
-            if (err) {return next(err); };
+            if (err) {return next(err); }
             res.json(data);
         });
     }

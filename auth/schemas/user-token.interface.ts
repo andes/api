@@ -10,4 +10,4 @@ export interface UserToken extends Token {
     };
     roles: string[];
     profesional: any;
-};
+}

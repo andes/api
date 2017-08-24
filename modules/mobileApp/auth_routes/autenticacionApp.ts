@@ -72,7 +72,7 @@ router.patch('/account', function (req, res, next) {
         documento: req.body.documento,
         fechaNacimiento: req.body.fechaNacimiento,
         genero: req.body.sexo
-    }
+    };
     let email = req.body.email;
     pacienteApp.findOne({ email: email }, function (err, account: any) {
 
@@ -146,7 +146,7 @@ router.post('/registro', function (req, res, next) {
         expirationTime: new Date(Date.now() + authController.expirationOffset),
         permisos: [],
         pacientes: []
-    }
+    };
     if (!dataPacienteApp.email) {
         return res.status(422).send({ error: 'Se debe ingresar una dirección de e-Mail' });
     }

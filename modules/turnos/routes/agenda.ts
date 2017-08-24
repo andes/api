@@ -33,7 +33,7 @@ router.get('/agenda/candidatas', function (req, res, next) {
     agenda.findById(req.query.idAgenda, function (err, data) {
         if (err) {
             return next(err);
-        };
+        }
 
         let resultado = data as any;
         let horaAgendaOrig = new Date();
@@ -101,7 +101,7 @@ router.get('/agenda/:id?', function (req, res, next) {
         agenda.findById(req.params.id, function (err, data) {
             if (err) {
                 return next(err);
-            };
+            }
             res.json(data);
         });
     } else {
@@ -221,7 +221,7 @@ router.post('/agenda/clonar', function (req, res, next) {
         agenda.findById(idagenda, function (err, data) {
             if (err) {
                 return next(err);
-            };
+            }
             clones.forEach(clon => {
                 clon = new Date(clon);
                 if (clon) {
@@ -289,7 +289,7 @@ router.post('/agenda/clonar', function (req, res, next) {
                         cloncitos.push(nueva);
                         if (cloncitos.length === clones.length) {
                             res.json(cloncitos);
-                        };
+                        }
                     });
                 }
             });

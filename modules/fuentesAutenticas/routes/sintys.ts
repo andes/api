@@ -22,7 +22,7 @@ router.get('/sintys', async function (req, res, next) {
                 error: err
             });
             return next(err);
-        };
+        }
     }
 });
 

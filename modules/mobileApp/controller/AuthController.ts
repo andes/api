@@ -40,7 +40,7 @@ export function enviarCodigoVerificacion(user) {
     let smsOptions: SmsOptions = {
         telefono: user.telefono,
         mensaje: user.codigoVerificacion
-    }
+    };
 
     sendMail(mailOptions);
     sendSms(smsOptions, function (res) {
@@ -360,7 +360,7 @@ export function updateAccount(account, data) {
                     } else {
                         rejectEmail({ email: 'account_exists' });
                     }
-                })
+                });
             });
         }
 

@@ -75,7 +75,7 @@ router.get('/provincias/:id*?', function (req, res, next) {
         provincia.findById(req.params.id, function (err, data) {
             if (err) {
                 return next(err);
-            };
+            }
 
             res.json(data);
         });

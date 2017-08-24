@@ -8,14 +8,14 @@ router.get('/tiposEstablecimiento/:id*?', function (req, res, next) {
         tipoEstablecimiento.findById(req.params.id, function (err, data) {
             if (err) {
                 return next(err);
-            };
+            }
             res.json(data);
         });
     } else {
         tipoEstablecimiento.find({}, (err, data) => {
             if (err) {
                 return next(err);
-            };
+            }
             res.json(data);
         });
     }

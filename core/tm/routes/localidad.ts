@@ -75,7 +75,7 @@ router.get('/localidades/:id*?', function (req, res, next) {
         localidad.findById(req.params.id, function (err, data) {
             if (err) {
                 return next(err);
-            };
+            }
             res.json(data);
         });
     } else {

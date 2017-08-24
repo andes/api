@@ -46,7 +46,7 @@ router.get('/operaciones/:module?', function (req, res, next) {
     query.exec((err, data) => {
         if (err) {
             return next(err);
-        };
+        }
         res.json(data);
     });
 });

@@ -68,7 +68,7 @@ let checkMobile = function (profesionalId) {
 
         });
     });
-}
+};
 
 router.post('/login', function (req, res, next) {
     // Función interna que genera token

@@ -44,7 +44,7 @@ export class ValidateDarTurno {
         return {
             valid: valid,
             errors: errors
-        }
+        };
     }
 
 }

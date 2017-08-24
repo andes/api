@@ -475,7 +475,7 @@ router.get('/pacientes', function (req, res, next) {
                 };
             }
             break;
-    };
+    }
     // Configuramos la cantidad de resultados que quiero que se devuelva y la query correspondiente
     let body = {
         size: 100,

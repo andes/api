@@ -50,7 +50,7 @@ export function makePattern(search_string: string): RegExp {
     // replace characters by their compositors
     var accent_replacer = function (chr) {
         return accented[chr.toUpperCase()] || chr;
-    }
+    };
     for (var i = 0; i < words.length; i++) {
         words[i] = words[i].replace(/\S/g, accent_replacer);
     }
@@ -145,4 +145,4 @@ export function removeDiacritics(str: string): string {
         str = str.replace(defaultDiacriticsRemovalMap[i].letters, defaultDiacriticsRemovalMap[i].base);
     }
     return str;
-};
+}

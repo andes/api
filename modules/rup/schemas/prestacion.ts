@@ -103,7 +103,7 @@ schema.pre('save', function (next) {
         }
 
         if (!prestacion.ejecucion.organizacion.id) {
-            let err = new Error('Debe seleccionar la organizacion desde la cual se solicita')
+            let err = new Error('Debe seleccionar la organizacion desde la cual se solicita');
             return next(err);
         }
     }

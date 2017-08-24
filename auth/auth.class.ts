@@ -90,7 +90,7 @@ export class Auth {
             } else {
                 next(403);
             }
-        }
+        };
     }
 
     /**

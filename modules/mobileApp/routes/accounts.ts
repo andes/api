@@ -25,8 +25,7 @@ router.put('/account', function (req: any, res, next) {
             return res.json({ message: 'OK', account: acc });
         }).catch((errUpdate) => {
             return res.status(422).send(errUpdate);
-        })
-
+        });
     });
 });
 
