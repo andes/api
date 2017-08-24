@@ -132,7 +132,7 @@ export function darTurnoDoble(req, data, tid = null) {   // NUEVO
                     data.bloques[position.indexBloque].restantesGestion = countBloques.gestion - 1;
                     break;
             }
-
+            return null; // jfgabriel | Revisar esta línea! La agregué porque el compilador tiraba un error TS7030: Not all code paths return a value.
         }
 
     } else {

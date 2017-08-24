@@ -4,7 +4,7 @@ import { authApp } from '../../../config.private';
 import { Client } from 'elasticsearch';
 import { sendMail, MailOptions } from '../../../utils/sendMail';
 import { sendSms, SmsOptions } from '../../../utils/sendSms';
-import { matching } from '@andes/match';
+import { Matching } from '@andes/match';
 import { paciente, pacienteMpi } from '../../../core/mpi/schemas/paciente';
 import * as express from 'express';
 import * as config from '../../../config';
@@ -282,7 +282,7 @@ export function matchPaciente(data) {
                         fechaNacimiento: pacienteElastic.fechaNacimiento ? moment(pacienteElastic.fechaNacimiento).format('YYYY-MM-DD') : '',
                         sexo: pacienteElastic.sexo ? pacienteElastic.sexo : ''
                     };
-                    let match = new matching();
+                    let match = new Matching();
                     let valorMatching = match.matchPersonas(pacElastic, pacDto, weights, 'Levenshtein');
                     pacienteElastic['id'] = hit._id;
                     if (valorMatching >= porcentajeMatchMax) {
