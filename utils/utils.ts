@@ -1,9 +1,9 @@
 /**
  * Creates a RegExp that matches the words in the search string.
- * 
+ *
  * @export
  * @param {string} search_string Search string
- * @returns {RegExp} 
+ * @returns {RegExp}
  */
 export function makePattern(search_string: string): RegExp {
     var accented = {
@@ -36,7 +36,7 @@ export function makePattern(search_string: string): RegExp {
     };
 
     // escape meta characters
-    search_string = search_string.replace(/([|()[{.+*?^$\\])/g, "\\$1");
+    search_string = search_string.replace(/([|()[{.+*?^$\\])/g, '\\$1');
 
     // split into words
     var words = search_string.split(/\s+/);
@@ -50,22 +50,22 @@ export function makePattern(search_string: string): RegExp {
     // replace characters by their compositors
     var accent_replacer = function (chr) {
         return accented[chr.toUpperCase()] || chr;
-    }
+    };
     for (var i = 0; i < words.length; i++) {
         words[i] = words[i].replace(/\S/g, accent_replacer);
     }
 
     // join as alternatives
-    var regexp = words.join("|");
+    var regexp = words.join('|');
     return new RegExp(regexp, 'g');
 }
 
 /**
  * Remove diacritics from string
- * 
+ *
  * @export
  * @param {string} str String to remove diacritics from
- * @returns {string} 
+ * @returns {string}
  */
 export function removeDiacritics(str: string): string {
     let defaultDiacriticsRemovalMap = [
@@ -145,4 +145,4 @@ export function removeDiacritics(str: string): string {
         str = str.replace(defaultDiacriticsRemovalMap[i].letters, defaultDiacriticsRemovalMap[i].base);
     }
     return str;
-};
+}

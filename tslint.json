@@ -1,4 +1,7 @@
 {
+    "extends": [
+        "tslint-eslint-rules"
+    ],
     "rules": {
         "class-name": true,
         "comment-format": [
@@ -21,12 +24,7 @@
         "no-arg": true,
         "no-bitwise": true,
         "no-console": [
-            true,
-            "debug",
-            "info",
-            "time",
-            "timeEnd",
-            "trace"
+            true
         ],
         "no-construct": true,
         "no-debugger": true,
@@ -38,10 +36,6 @@
         "no-string-literal": false,
         "no-switch-case-fall-through": true,
         "no-trailing-whitespace": true,
-        "no-unused-expression": true,
-        "no-unused-variable": true,
-        "no-use-before-declare": true,
-        "no-var-keyword": true,
         "object-literal-sort-keys": false,
         "one-line": [
             true,
@@ -56,6 +50,7 @@
         ],
         "radix": true,
         "semicolon": [
+            true,
             "always"
         ],
         "triple-equals": [

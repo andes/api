@@ -1,4 +1,3 @@
-import { ValidateFormatDate } from './validateFormatDate';
 import * as express from 'express';
 import { paciente } from '../core/mpi/schemas/paciente';
 
@@ -45,7 +44,7 @@ export class ValidateDarTurno {
         return {
             valid: valid,
             errors: errors
-        }
+        };
     }
 
 }

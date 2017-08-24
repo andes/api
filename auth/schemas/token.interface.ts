@@ -6,4 +6,4 @@ export interface Token {
     permisos: string[];
     account_id: string;
     type: string;
-};
+}

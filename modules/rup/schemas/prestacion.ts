@@ -79,7 +79,7 @@ export let schema = new mongoose.Schema({
     estados: [estado.schema]
 });
 
-schema.pre('save', function(next){
+schema.pre('save', function (next) {
     let prestacion = this;
 
     if (!prestacion.paciente.id) {
@@ -96,8 +96,6 @@ schema.pre('save', function(next){
         let err = new Error('Debe seleccionar el profesional que solicita');
         return next(err);
     }
-console.log("*****************************************************");
-console.log(prestacion);
     if (prestacion.estados[prestacion.estados.length - 1].tipo === 'ejecucion') {
         if (!prestacion.ejecucion.fecha) {
             let err = new Error('Debe seleccionar la fecha en que se solicita');
@@ -105,17 +103,16 @@ console.log(prestacion);
         }
 
         if (!prestacion.ejecucion.organizacion.id) {
-            let err = new Error('Debe seleccionar la organizacion desde la cual se solicita')
+            let err = new Error('Debe seleccionar la organizacion desde la cual se solicita');
             return next(err);
         }
-    
     }
 
     if (prestacion.ejecucion.registros.length) {
 
-        prestacion.ejecucion.registros.forEach(r => {           
+        prestacion.ejecucion.registros.forEach(r => {
             iterate(r.valor, convertirId);
-        }); 
+        });
     }
 
     next();
@@ -132,7 +129,7 @@ function iterate(obj, func) {
         if (obj.hasOwnProperty(property)) {
             if (Array.isArray(obj[property])) {
                 iterate(obj[property], func);
-            }else  if (typeof obj[property] == "object") {
+            } else if (typeof obj[property] === 'object') {
                 iterate(obj[property], func);
             } else {
                 func(obj, property);
@@ -147,7 +144,7 @@ function convertirId(obj, property) {
         // verificamos si es un ObjectId valido y, ademas,
         // si al castear a ObjectId los strings son iguales
         // StackOverflow: https://stackoverflow.com/a/29231016
-        if (ObjectId.isValid(obj[property]) && new ObjectId(obj[property]) == obj[property]) {
+        if (ObjectId.isValid(obj[property]) && new ObjectId(obj[property]) === obj[property]) {
             obj[property] = mongoose.Types.ObjectId(obj[property]);
         }
     }

@@ -65,7 +65,7 @@ export function getLocalidades() {
             }
         });
     });
-};
+}
 
 
 export function getTurnos(localidad, desde, hasta) {
@@ -113,4 +113,4 @@ export function getTurnos(localidad, desde, hasta) {
             }
         });
     });
-};
+}

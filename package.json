@@ -4,7 +4,7 @@
     "description": "API para ANDES",
     "main": "index.js",
     "dependencies": {
-        "@andes/match": "^0.1.9",
+        "@andes/match": "^1.1.6",
         "@types/async": "^2.0.40",
         "@types/bcrypt-nodejs": "0.0.30",
         "@types/core-js": "^0.9.36",
@@ -51,8 +51,8 @@
     },
     "scripts": {
         "startNode": "tsc && gulp && concurrently \"npm run node\" ",
-        "start": "concurrently \"npm run tsc:w\" \"npm run node\" ",
-        "node": "nodemon ./index.js",
+        "start": "concurrently -r \"npm run tsc:w\" \"npm run node\" ",
+        "node": "nodemon -q ./index.js",
         "tsc": "tsc",
         "tsc:w": "tsc -w"
     },
@@ -65,5 +65,8 @@
     "bugs": {
         "url": "https://github.com/andes/api/issues"
     },
-    "homepage": "https://github.com/andes/api#readme"
+    "homepage": "https://github.com/andes/api#readme",
+    "devDependencies": {
+        "tslint-eslint-rules": "^4.1.1"
+    }
 }

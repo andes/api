@@ -1,4 +1,4 @@
-import { matching } from '@andes/match';
+import { Matching } from '@andes/match';
 import * as https from 'https';
 import * as config from '../config';
 import * as configPrivate from '../config.private';
@@ -15,7 +15,6 @@ export function getSisaCiudadano(nroDocumento, usuario, clave, sexo?: string) {
      * Información de Campos https://sisa.msal.gov.ar/sisa/sisadoc/index.jsp?id=cmdb_ws_042
      */
     // options for GET
-    // Agregar a la consulta el sexo para evitar el problema de dni repetidos
     let xml = '';
     let pathSisa = configPrivate.sisa.url + 'nrodoc=' + nroDocumento + '&usuario=' + usuario + '&clave=' + clave;
 
@@ -29,7 +28,6 @@ export function getSisaCiudadano(nroDocumento, usuario, clave, sexo?: string) {
         path: pathSisa,
         method: 'GET', // do GET,
         rejectUnauthorized: false,
-
     };
 
     // Realizar GET request
@@ -170,7 +168,7 @@ export function matchSisa(paciente) {
     let matchPorcentaje = 0;
     let pacienteSisa = {};
     let weights = config.mpi.weightsDefault;
-    let match = new matching();
+    let match = new Matching();
     paciente['matchSisa'] = 0;
     // Se buscan los datos en sisa y se obtiene el paciente
     return new Promise((resolve, reject) => {
@@ -185,7 +183,6 @@ export function matchSisa(paciente) {
                 getSisaCiudadano(paciente.documento, configPrivate.sisa.username, configPrivate.sisa.password, sexo)
                     .then((resultado) => {
                         if (resultado) {
-                            console.log(resultado);
                             // Verifico el resultado devuelto por el rest de Sisa
                             if (resultado[0] === 200) {
                                 switch (resultado[1].Ciudadano.resultado) {
@@ -217,7 +214,6 @@ export function matchSisa(paciente) {
 
                     })
                     .catch((err) => {
-                        console.error('Error consulta rest Sisa:' + err);
                         reject(err);
                     });
 
@@ -228,5 +224,4 @@ export function matchSisa(paciente) {
             resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sisa', 'matcheo': 0, 'datosPaciente': null } });
         }
     });
-
 }

@@ -7,20 +7,20 @@ router.get('/configPrestacion/:id*?', function (req, res, next) {
     if (req.params.id) {
         configPrestacion.findById(req.params.id, function (err, data) {
             if (err) {
-                next(err);
-            };
+                return next(err);
+            }
 
             res.json(data);
         });
     } else {
         let query;
-        query = configPrestacion.find({}); // Trae todos 
+        query = configPrestacion.find({}); // Trae todos
 
         if (req.query.prestacion) {
-            query.where('prestacion.nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
+            query.where('prestacion.nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
         query.exec((err, data) => {
-            if (err) { return next(err); };
+            if (err) { return next(err); }
             res.json(data);
         });
     }
@@ -39,7 +39,7 @@ router.post('/configPrestacion', function (req, res, next) {
 });
 
 router.put('/configPrestacion/:id', function (req, res, next) {
-    configPrestacion.findByIdAndUpdate(req.params.id, req.body, {new:true}, function (err, data) {
+    configPrestacion.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
         if (err) {
             return next(err);
         }

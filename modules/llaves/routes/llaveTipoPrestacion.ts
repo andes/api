@@ -14,8 +14,8 @@ router.get('/tipoPrestacion/:id*?', function (req, res, next) {
     if (req.params.id) {
         llaveTipoPrestacion.findById(req.params.id, function (err, data) {
             if (err) {
-                next(err);
-            };
+                return next(err);
+            }
             res.json(data);
         });
     } else {
@@ -82,7 +82,7 @@ router.get('/tipoPrestacion/:id*?', function (req, res, next) {
 });
 
 router.post('/tipoPrestacion', function (req, res, next) {
-    let insertLlaveTipoPrestacion = new llaveTipoPrestacion(req.body)
+    let insertLlaveTipoPrestacion = new llaveTipoPrestacion(req.body);
 
     // Debe ir antes del save, y ser una instancia del modelo
     Auth.audit(insertLlaveTipoPrestacion, req);

@@ -21,5 +21,4 @@ export class Logger {
         newLog.save(callback);
         return newLog;
     }
-
 }
