@@ -68,7 +68,6 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             query.limit(parseInt(req.query.limit, 10));
         }
         query.exec(function (err, data) {
-            console.log("Prueba de log generando error");
             if (err) {
                 return next(err);
             }
