@@ -2,10 +2,11 @@ import * as mongoose from 'mongoose';
 import { SnomedConcept } from './snomed-concept';
 
 export let schema = new mongoose.Schema({
-    // Valor por el cual vamos a leer/guardar en nuestra BD
-    key: String,
     // Indica si este elemento está activo
-    activo: Boolean,
+    activo: {
+        type: Boolean,
+        required: true
+    },
     // Vinculación al componente de la aplicación Angular
     componente: {
         ruta: String,
@@ -29,7 +30,10 @@ export let schema = new mongoose.Schema({
     }],
     // Elementos RUP más frecuentes para la ejecución.
     // Por ejemplo, en "Consulta de medicina general" se puede sugerir ejecutar "Signos vitales"
-    frecuentes: [SnomedConcept],
+    frecuentes: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'elementoRUP'
+    }],
 });
 
 export let elementoRUP = mongoose.model('elementoRUP', schema, 'elementosRUP');
