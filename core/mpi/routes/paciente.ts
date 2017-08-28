@@ -28,7 +28,7 @@ import {
     log
 } from '../../log/schemas/log';
 
-import { buscarPaciente } from '../controller/paciente'
+import * as controller from '../controller/paciente'
 
 
 /**
@@ -360,7 +360,7 @@ router.get('/pacientes/:id', function (req, res, next) {
     if (!Auth.check(req, 'mpi:paciente:getbyId')) {
         return next(403);
     }
-    buscarPaciente(req.params.id).then((resultado: any) => {
+    controller.buscarPaciente(req.params.id).then((resultado: any) => {
         if (resultado) {
             Logger.log(req, 'mpi', 'query', {
                 mongoDB: resultado.paciente
@@ -1209,116 +1209,41 @@ router.delete('/pacientes/:id', function (req, res, next) {
  *           $ref: '#/definitions/paciente'
  */
 
-/* Funciones de operaciones PATCH */
-function updateContactos(req, data) {
-    data.markModified('contacto');
-    Logger.log(req, 'mpi', 'update', {
-        accion: 'updateContacto',
-        ruta: req.url,
-        method: req.method,
-        data: data.contacto,
-    });
-    data.contacto = req.body.contacto;
-}
 
-function updateRelaciones(req, data) {
-    data.markModified('relaciones');
-    data.relaciones = req.body.relaciones;
-}
-
-function updateDireccion(req, data) {
-    data.markModified('direccion');
-    data.direccion = req.body.direccion;
-}
-
-function updateCarpetaEfectores(req, data) {
-    data.markModified('carpetaEfectores');
-    data.carpetaEfectores = req.body.carpetaEfectores;
-}
-
-function linkIdentificadores(req, data) {
-    data.markModified('identificadores');
-    if (data.identificadores) {
-        data.identificadores.push(req.body.dto);
-    } else {
-        data.identificadores = [req.body.dto]; // Primer elemento del array
-    }
-}
-
-function unlinkIdentificadores(req, data) {
-    data.markModified('identificadores');
-    if (data.identificadores) {
-        data.identificadores = data.identificadores.filter(x => x.valor !== req.body.dto);
-    }
-}
-
-function updateActivo(req, data) {
-    data.markModified('activo');
-    data.activo = req.body.dto;
-}
-
-function updateRelacion(req, data) {
-    if (data && data.relaciones) {
-        let objRel = data.relaciones.find(elem => {
-            if (elem && req.body.dto && elem.referencia && req.body.dto.referencia) {
-                if (elem.referencia.toString() === req.body.dto.referencia.toString()) {
-                    return elem;
-                }
-            }
-        });
-
-        if (!objRel) {
-            data.markModified('relaciones');
-            data.relaciones.push(req.body.dto);
-        }
-    }
-}
-
-function deleteRelacion(req, data) {
-    if (data && data.relaciones) {
-        data.relaciones.find(function (value, index, array) {
-            if (value && value.referencia && req.body.dto && req.body.dto.referencia) {
-                if (value.referencia.toString() === req.body.dto.referencia.toString()) {
-                    array.splice(index, 1);
-                }
-            }
-        });
-    }
-}
 
 router.patch('/pacientes/:id', function (req, res, next) {
     if (!Auth.check(req, 'mpi:paciente:patchAndes')) {
         return next(403);
     }
-    buscarPaciente(req.params.id).then((resultado: any) => {
+    controller.buscarPaciente(req.params.id).then((resultado: any) => {
         if (resultado) {
             switch (req.body.op) {
                 case 'updateContactos':
-                    updateContactos(req, resultado.paciente);
+                    controller.updateContactos(req, resultado.paciente);
                     break;
                 case 'updateRelaciones':
-                    updateRelaciones(req, resultado.paciente);
+                    controller.updateRelaciones(req, resultado.paciente);
                     break;
                 case 'updateDireccion':
-                    updateDireccion(req, resultado.paciente);
+                    controller.updateDireccion(req, resultado.paciente);
                     break;
                 case 'updateCarpetaEfectores':
-                    updateCarpetaEfectores(req, resultado.paciente);
+                    controller.updateCarpetaEfectores(req, resultado.paciente);
                     break;
                 case 'linkIdentificadores':
-                    linkIdentificadores(req, resultado.paciente);
+                    controller.linkIdentificadores(req, resultado.paciente);
                     break;
                 case 'unlinkIdentificadores':
-                    unlinkIdentificadores(req, resultado.paciente);
+                    controller.unlinkIdentificadores(req, resultado.paciente);
                     break;
                 case 'updateActivo':
-                    updateActivo(req, resultado.paciente);
+                    controller.updateActivo(req, resultado.paciente);
                     break;
                 case 'updateRelacion':
-                    updateRelacion(req, resultado.paciente);
+                    controller.updateRelacion(req, resultado.paciente);
                     break;
                 case 'deleteRelacion':
-                    deleteRelacion(req, resultado.paciente);
+                    controller.deleteRelacion(req, resultado.paciente);
                     break;
             }
             Auth.audit(resultado.paciente, req);
