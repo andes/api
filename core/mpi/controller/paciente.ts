@@ -1,5 +1,10 @@
 /* Realiza la búsqueda del paciente en la bd LOCAL y en MPI remoto */
 import { paciente, pacienteMpi } from "../schemas/paciente";
+import { ElasticSync } from "../../../utils/elasticSync";
+import { Logger } from "../../../utils/logService";
+import * as config from '../../../config';
+import * as moment from 'moment';
+import { Matching } from "@andes/match";
 
 export function buscarPaciente(id) {
     return new Promise((resolve, reject) => {
@@ -105,4 +110,149 @@ export function deleteRelacion(req, data) {
             }
         });
     }
+}
+
+export function matching(data) {
+
+    let connElastic = new ElasticSync();
+
+    let query;
+    switch (data.type) {
+        case 'simplequery':
+            {
+                query = {
+                    simple_query_string: {
+                        query: '\"' + data.documento + '\" + \"' + data.apellido + '\" + \"' + data.nombre + '\" +' + data.sexo,
+                        fields: ['documento', 'apellido', 'nombre', 'sexo'],
+                        default_operator: 'and'
+                    }
+                };
+            }
+            break;
+        case 'multimatch':
+            {
+                query = {
+                    multi_match: {
+                        query: data.cadenaInput,
+                        type: 'cross_fields',
+                        fields: ['documento^5', 'nombre', 'apellido^3'],
+                    }
+                };
+            }
+            break;
+        case 'suggest':
+            {
+                // Sugiere pacientes que tengan la misma clave de blocking
+                let campo = data.claveBlocking;
+                let condicionMatch = {};
+                condicionMatch[campo] = {
+                    query: data.documento,
+                    minimum_should_match: 3,
+                    fuzziness: 2
+                };
+                query = {
+                    match: condicionMatch
+                };
+            }
+            break;
+    }
+
+    // Configuramos la cantidad de resultados que quiero que se devuelva y la query correspondiente
+    let body = {
+        size: 100,
+        from: 0,
+        query: query
+    };
+
+    return new Promise((resolve, reject) => {
+        if (data.type === 'suggest') {
+
+            connElastic.search(body)
+                .then((searchResult) => {
+
+                    // Asigno los valores para el suggest
+                    let weights = config.mpi.weightsDefault;
+
+                    if (data.escaneado) {
+                        weights = config.mpi.weightsScan;
+                    }
+
+                    let porcentajeMatchMax = config.mpi.cotaMatchMax;
+                    let porcentajeMatchMin = config.mpi.cotaMatchMin;
+                    let listaPacientesMax = [];
+                    let listaPacientesMin = [];
+
+                    ((searchResult.hits || {}).hits || [])
+                        .filter(function (hit) {
+                            let paciente2 = hit._source;
+                            let pacDto = {
+                                documento: data.documento ? data.documento.toString() : '',
+                                nombre: data.nombre ? data.nombre : '',
+                                apellido: data.apellido ? data.apellido : '',
+                                fechaNacimiento: data.fechaNacimiento ? moment(new Date(data.fechaNacimiento)).format('YYYY-MM-DD') : '',
+                                sexo: data.sexo ? data.sexo : ''
+                            };
+                            let pacElastic = {
+                                documento: paciente2.documento ? paciente2.documento.toString() : '',
+                                nombre: paciente2.nombre ? paciente2.nombre : '',
+                                apellido: paciente2.apellido ? paciente2.apellido : '',
+                                fechaNacimiento: paciente2.fechaNacimiento ? moment(paciente2.fechaNacimiento).format('YYYY-MM-DD') : '',
+                                sexo: paciente2.sexo ? paciente2.sexo : ''
+                            };
+                            let match = new Matching();
+                            let valorMatching = match.matchPersonas(pacElastic, pacDto, weights, config.algoritmo);
+                            paciente2['id'] = hit._id;
+
+                            if (valorMatching >= porcentajeMatchMax) {
+                                listaPacientesMax.push({
+                                    id: hit._id,
+                                    paciente: paciente2,
+                                    match: valorMatching
+                                });
+                            } else {
+                                if (valorMatching >= porcentajeMatchMin && valorMatching < porcentajeMatchMax) {
+                                    listaPacientesMin.push({
+                                        id: hit._id,
+                                        paciente: paciente2,
+                                        match: valorMatching
+                                    });
+                                }
+                            }
+                        });
+
+                    // if (devolverPorcentaje) {
+                    let sortMatching = function (a, b) {
+                        return b.match - a.match;
+                    };
+
+                    // cambiamos la condición para lograr que nos devuelva más de una sugerencia
+                    // ya que la 1ra sugerencia es el mismo paciente.
+                    if (listaPacientesMax.length > 0) {
+                        listaPacientesMax.sort(sortMatching);
+                        resolve(listaPacientesMax);
+                    } else {
+                        listaPacientesMin.sort(sortMatching);
+                        resolve(listaPacientesMin);
+                    }
+                })
+                .catch((error) => {
+                    reject(error);
+                });
+        } else {
+            // Es para los casos de multimatch y singlequery
+            connElastic.search(body)
+                .then((searchResult) => {
+                    let results: Array<any> = ((searchResult.hits || {}).hits || [])
+                        .map((hit) => {
+                            let elem = hit._source;
+                            elem['id'] = hit._id;
+                            return elem;
+                        });
+                    resolve(results);
+                })
+                .catch((error) => {
+                    reject(error);
+                });
+        }
+    });
 }
