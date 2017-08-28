@@ -13,7 +13,6 @@ export class Scheduler {
         schedule.scheduleJob('0 3 10,20 * *', function () {
             let start = moment(new Date()).add(1, 'months').startOf('month').format('YYYY-MM-DD');
             let end = moment(new Date()).add(1, 'months').endOf('month').format('YYYY-MM-DD');
-            console.log('Running farmacias de turnos Jobs ' + start + ' ' + end);
             farmacias.donwloadData(start, end);
         });
 
@@ -22,7 +21,6 @@ export class Scheduler {
          */
 
         schedule.scheduleJob('0 18 * * *', function () {
-            console.log('Running recordatorio turnos pacientes Jobs ');
             recordatorioCtrl.buscarTurnosARecordar(1).then(() => {
                 recordatorioCtrl.enviarTurnoRecordatorio();
             });
@@ -33,12 +31,11 @@ export class Scheduler {
          */
 
         schedule.scheduleJob('30 18 * * *', function () {
-            console.log('Running recordatorio agendas Jobs ');
             recordatorioCtrl.recordarAgenda().then(() => {
                 recordatorioCtrl.enviarAgendaNotificacion();
-            })
+            });
         });
 
     }
 
-};
+}
