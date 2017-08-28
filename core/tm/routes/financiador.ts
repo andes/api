@@ -1,5 +1,5 @@
-import * as express from 'express'
-import * as financiador from '../schemas/financiador'
+import * as express from 'express';
+import * as financiador from '../schemas/financiador';
 
 let router = express.Router();
 /**
@@ -59,8 +59,8 @@ router.get('/financiadores/:id*?', function(req, res, next) {
    if (req.params.id) {
        financiador.findById(req.params.id, function (err, data) {
        if (err) {
-           next(err);
-       };
+           return next(err);
+       }
 
        res.json(data);
    });
@@ -71,7 +71,7 @@ router.get('/financiadores/:id*?', function(req, res, next) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
         query.exec((err, data) => {
-           if (err) {return next(err); };
+           if (err) {return next(err); }
            res.json(data);
         });
    }

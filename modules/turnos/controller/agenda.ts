@@ -132,7 +132,7 @@ export function darTurnoDoble(req, data, tid = null) {   // NUEVO
                     data.bloques[position.indexBloque].restantesGestion = countBloques.gestion - 1;
                     break;
             }
-
+            return null; // jfgabriel | Revisar esta línea! La agregué porque el compilador tiraba un error TS7030: Not all code paths return a value.
         }
 
     } else {
@@ -202,15 +202,6 @@ export function actualizarEstado(req, data) {
                             telefono: turno.paciente.telefono,
                             mensaje: 'Le avisamos que su turno para el día ' + moment(turno.horaInicio).format('ll').toString() + ' a las ' + moment(turno.horaInicio).format('LT').toString() + 'hs fue suspendido'
                         };
-
-                        console.log(turno.paciente);
-                        console.log(sms);
-
-                        // sendSms(sms, respuesta => {
-                        //     if (respuesta === '0') {
-
-                        //     }
-                        // });
                     }
                 });
             });

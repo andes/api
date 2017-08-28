@@ -1,8 +1,7 @@
-
+import { ValidateDarTurno } from './../../../utils/validateDarTurno';
 import * as express from 'express';
 import * as agenda from '../schemas/agenda';
 import { Logger } from '../../../utils/logService';
-import { ValidateDarTurno } from '../../../utils/validateDarTurno';
 import { paciente } from '../../../core/mpi/schemas/paciente';
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 import * as mongoose from 'mongoose';
@@ -73,32 +72,32 @@ router.get('/turno/:id*?', function (req, res, next) {
         let matchTurno = {};
         if (req.query.estado) {
             matchTurno['bloques.turnos.estado'] = req.query.estado;
-        };
+        }
 
         if (req.query.usuario) {
             matchTurno['updatedBy.username'] = req.query.userName;
             matchTurno['updatedBy.documento'] = req.query.userDoc;
-        };
+        }
 
         if (req.query.asistencia) {
             matchTurno['bloques.turnos.asistencia'] = { '$exists': req.query.asistencia };
-        };
+        }
 
         if (req.query.codificado) {
             matchTurno['bloques.turnos.diagnosticoPrincipal'] = { '$exists': true };
-        };
+        }
 
         if (req.query.horaInicio) {
             matchTurno['bloques.turnos.horaInicio'] = { '$gte': req.query.horaInicio };
-        };
+        }
 
         if (req.query.tiposTurno) {
             matchTurno['bloques.turnos.tipoTurno'] = { '$in': req.query.tiposTurno };
-        };
+        }
 
         if (req.query.pacienteId) {
             matchTurno['bloques.turnos.paciente.id'] = mongoose.Types.ObjectId(req.query.pacienteId);
-        };
+        }
 
         pipelineTurno[0] = { '$match': matchTurno };
         pipelineTurno[3] = { '$match': matchTurno };
@@ -159,21 +158,19 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
         // Se verifica la existencia del paciente
         paciente.findById(req.body.paciente.id, function verificarPaciente(err, cant) {
             if (err) {
-                console.log('PACIENTE INEXISTENTE', err);
                 return next(err);
             } else {
 
                 // Se verifica la existencia del tipoPrestacion
-                tipoPrestacion.findById(req.body.tipoPrestacion._id, function verificarTipoPrestacion(err, data) {
-                    if (err) {
-                        console.log('TIPO PRESTACION INEXISTENTE', err);
-                        return next(err);
+                tipoPrestacion.findById(req.body.tipoPrestacion._id, function verificarTipoPrestacion(err2, data2) {
+                    if (err2) {
+                        return next(err2);
                     } else {
 
                         // Se obtiene la agenda que se va a modificar
-                        agenda.findById(req.params.idAgenda, function getAgenda(err, data) {
-                            if (err) {
-                                return next(err);
+                        agenda.findById(req.params.idAgenda, function getAgenda(err3, data) {
+                            if (err3) {
+                                return next(err3);
                             }
                             let posBloque: number;
                             let posTurno: number;
@@ -264,13 +261,11 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
 
                             // Agrega un tag al JSON query
                             query[etiquetaEstado] = 'disponible';
-                            console.log('query ', query);
                             // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
                             (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true },
-                                function actualizarAgenda(err2, doc2: any, writeOpResult) {
-
-                                    if (err2) {
-                                        return next(err2);
+                                function actualizarAgenda(err4, doc2: any, writeOpResult) {
+                                    if (err4) {
+                                        return next(err4);
                                     }
                                     if (doc2 == null) {
                                         return next('El turno no pudo ser asignado');
@@ -301,7 +296,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
             }
         });
     } else {
-        console.log('NO VALIDO');
         return next('Los datos del paciente son inválidos');
     }
 });
@@ -347,7 +341,6 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, 
             (agenda as any).findOneAndUpdate(query, update, { new: true },
                 function actualizarAgenda(err2, doc2, writeOpResult) {
                     if (err2) {
-                        console.log('ERR2: ' + err2);
                         return next(err2);
                     }
                     if (writeOpResult && writeOpResult.value === null) {
@@ -370,7 +363,6 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, 
                 });
         });
     } else {
-        console.log('NO VALIDO');
         return next('Los datos del paciente son inválidos');
     }
 });

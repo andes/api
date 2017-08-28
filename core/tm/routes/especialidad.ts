@@ -24,10 +24,10 @@ let router = express.Router();
  *                  type: string
  *       habilitado:
  *          type: Boolean
- *       fechaAlta: 
+ *       fechaAlta:
  *          type: string
  *          format: date
- *       fechaBaja: 
+ *       fechaBaja:
  *          type: string
  *          format: date
  */
@@ -93,8 +93,8 @@ router.get('/especialidades/:id*?', function (req, res, next) {
 
         especialidad.findById(req.params.id, function (err, data) {
             if (err) {
-                next(err);
-            };
+                return next(err);
+            }
 
             res.json(data);
         });
@@ -103,11 +103,11 @@ router.get('/especialidades/:id*?', function (req, res, next) {
         let skip: number = parseInt(req.query.skip || 0, radix);
         let limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
         let query;
-        query = especialidad.find({}).skip(skip).limit(limit); // Trae todos 
-        if (req.query.codigoSisa) {query.where('codigo.sisa').equals(RegExp('^.*' + req.query.codigoSisa + '.*$', 'i')); }
+        query = especialidad.find({}).skip(skip).limit(limit); // Trae todos
+        if (req.query.codigoSisa) { query.where('codigo.sisa').equals(RegExp('^.*' + req.query.codigoSisa + '.*$', 'i')); }
         if (req.query.nombre) { query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i')); }
         query.exec((err, data) => {
-            if (err) {return next(err); }
+            if (err) { return next(err); }
             res.json(data);
         });
     }
@@ -205,7 +205,7 @@ router.put('/especialidades/:id', function (req, res, next) {
  *         description: Id de una especialidad
  *         required: true
  *         type: string
- * 
+ *
  *     responses:
  *       200:
  *         description: Un objeto especialidades
@@ -219,6 +219,6 @@ router.delete('/especialidades/:id', function (req, res, next) {
         }
         res.json(data);
     });
-})
+});
 
 export = router;

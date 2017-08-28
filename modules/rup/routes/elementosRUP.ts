@@ -42,7 +42,7 @@ router.get('/elementosRUP/:id*?', function (req, res, next) {
     query.populate('requeridos').sort({ 'nombre': 1 }).exec(function (err, data) {
         if (err) {
             return next(err);
-        };
+        }
         res.json(data);
     });
 });

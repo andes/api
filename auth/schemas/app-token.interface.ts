@@ -4,4 +4,4 @@ export interface AppToken extends Token {
     app: {
         nombre: string
     };
-};
+}

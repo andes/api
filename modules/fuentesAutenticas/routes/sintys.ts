@@ -21,9 +21,8 @@ router.get('/sintys', async function (req, res, next) {
             Logger.log(req, 'fa_sintys', 'error', {
                 error: err
             });
-            console.log('Error catch matchSisa:', err);
             return next(err);
-        };
+        }
     }
 });
 

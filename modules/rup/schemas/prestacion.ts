@@ -3,8 +3,7 @@ import { SnomedConcept } from './snomed-concept';
 import * as registro from './prestacion.registro';
 import * as estado from './prestacion.estado';
 import { auditoriaPrestacionPacienteSchema } from '../../auditorias/schemas/auditoriaPrestacionPaciente';
-
-var ObjectId = require('mongoose').Types.ObjectId;
+import { iterate, convertToObjectId } from '../controllers/rup';
 
 export let schema = new mongoose.Schema({
     // Datos principales del paciente
@@ -79,7 +78,7 @@ export let schema = new mongoose.Schema({
     estados: [estado.schema]
 });
 
-schema.pre('save', function(next){
+schema.pre('save', function (next) {
     let prestacion = this;
 
     if (!prestacion.paciente.id) {
@@ -96,8 +95,6 @@ schema.pre('save', function(next){
         let err = new Error('Debe seleccionar el profesional que solicita');
         return next(err);
     }
-console.log("*****************************************************");
-console.log(prestacion);
     if (prestacion.estados[prestacion.estados.length - 1].tipo === 'ejecucion') {
         if (!prestacion.ejecucion.fecha) {
             let err = new Error('Debe seleccionar la fecha en que se solicita');
@@ -105,53 +102,22 @@ console.log(prestacion);
         }
 
         if (!prestacion.ejecucion.organizacion.id) {
-            let err = new Error('Debe seleccionar la organizacion desde la cual se solicita')
+            let err = new Error('Debe seleccionar la organizacion desde la cual se solicita');
             return next(err);
         }
-    
     }
 
     if (prestacion.ejecucion.registros.length) {
-
-        prestacion.ejecucion.registros.forEach(r => {           
-            iterate(r.valor, convertirId);
-        }); 
+        // Itera todos las todas las propiedades de todos los registros para convertir
+        // las propiedades id y _id a ObjectId
+        prestacion.ejecucion.registros.forEach(r => {
+            iterate(r.valor, convertToObjectId);
+        });
     }
 
     next();
 });
 
-/**
- * Función recursiva que permite recorrer un objeto y todas sus propiedes
- * y al llegar a un nodo hoja ejecutar una funcion
- * @param {any} obj Objeto a recorrer
- * @param {any} func Nombre de la función callback a ejecutar cuando llega a un nodo hoja
- */
-function iterate(obj, func) {
-    for (var property in obj) {
-        if (obj.hasOwnProperty(property)) {
-            if (Array.isArray(obj[property])) {
-                iterate(obj[property], func);
-            }else  if (typeof obj[property] == "object") {
-                iterate(obj[property], func);
-            } else {
-                func(obj, property);
-            }
-        }
-    }
-}
-
-
-function convertirId(obj, property) {
-    if (property === 'id' || property === 'id') {
-        // verificamos si es un ObjectId valido y, ademas,
-        // si al castear a ObjectId los strings son iguales
-        // StackOverflow: https://stackoverflow.com/a/29231016
-        if (ObjectId.isValid(obj[property]) && new ObjectId(obj[property]) == obj[property]) {
-            obj[property] = mongoose.Types.ObjectId(obj[property]);
-        }
-    }
-}
 
 // Habilitar plugin de auditoría
 schema.plugin(require('../../../mongoose/audit'));

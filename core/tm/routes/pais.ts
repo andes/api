@@ -60,8 +60,8 @@ router.get('/paises/:id*?', function (req, res, next) {
     if (req.params.id) {
         pais.findById(req.params.id, function (err, data) {
             if (err) {
-                next(err);
-            };
+                return next(err);
+            }
 
             res.json(data);
         });
@@ -70,10 +70,10 @@ router.get('/paises/:id*?', function (req, res, next) {
 
         query = pais.find({});
         if (req.query.nombre) {
-            query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
+            query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
         query.sort({ 'nombre': 1 }).exec((err, data) => {
-            if (err) {return next(err); };
+            if (err) {return next(err); }
             res.json(data);
         });
     }

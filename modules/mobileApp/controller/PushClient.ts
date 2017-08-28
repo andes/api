@@ -2,13 +2,13 @@ import { pushNotificationsSettings } from '../../../config.private';
 const PushNotifications = require('node-pushnotifications');
 
 export interface INotification {
-    title?: String,
-    body: String,
-    extraData?: Object,
-    sound?: String,
-    badge?: Number,
-    icon?: String,
-    contentAvailable?: Boolean
+    title?: String;
+    body: String;
+    extraData?: Object;
+    sound?: String;
+    badge?: Number;
+    icon?: String;
+    contentAvailable?: Boolean;
 }
 
 export class PushClient {
@@ -22,7 +22,7 @@ export class PushClient {
 
     public send(deviceIds, notification: INotification) {
 
-        return this.pushServer.send(deviceIds, this.notificationToObject(notification))
+        return this.pushServer.send(deviceIds, this.notificationToObject(notification));
         // .then((results) => console.log(results))
         // .catch((err) => console.log(JSON.stringify(err)));
     }
@@ -36,7 +36,6 @@ export class PushClient {
             badge: notification.badge || undefined,
             sound: notification.sound || undefined,
             icon: notification.icon || '',
-
             priority: 'high',
             collapseKey: '',
             delayWhileIdle: true,
@@ -60,7 +59,7 @@ export class PushClient {
             urlArgs: '',
             truncateAtWordEnd: true,
             mutableContent: 0,
-            timeToLive: 28 * 86400, // if both expiry and timeToLive are given, expiry will take precedency 
+            timeToLive: 28 * 86400, // if both expiry and timeToLive are given, expiry will take precedency
         };
     }
 

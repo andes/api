@@ -10,16 +10,13 @@ let router = express.Router();
 
 router.get('/organizaciones/georef/:id?', function (req, res, next) {
     if (req.params.id) {
-        organizacion.model.findById(req.params.id, function (err, data) {
+        organizacion.model.findById(req.params.id, function (err, data: any) {
             if (err) {
-                console.log('ERROR GET GEOREF:  ', err);
                 return next(err);
             }
-            let organizacion;
-            organizacion = data;
-            let dir = organizacion.direccion.valor;
-            let localidad = organizacion.direccion.ubicacion.localidad.nombre;
-            let provincia = organizacion.direccion.ubicacion.provincia.nombre;
+            let dir = data.direccion.valor;
+            let localidad = data.direccion.ubicacion.localidad.nombre;
+            let provincia = data.direccion.ubicacion.provincia.nombre;
             // let pais = organizacion.direccion.ubicacion.pais;
             let pathGoogleApi = '';
             let jsonGoogle = '';
@@ -34,8 +31,6 @@ router.get('/organizaciones/georef/:id?', function (req, res, next) {
             pathGoogleApi = pathGoogleApi.replace(/ü/gi, 'u');
             pathGoogleApi = pathGoogleApi.replace(/ñ/gi, 'n');
 
-            console.log('PATH CONSULTA GOOGLE API:   ', pathGoogleApi);
-
             let optionsgetmsg = {
                 host: 'maps.googleapis.com',
                 port: 443,
@@ -48,7 +43,6 @@ router.get('/organizaciones/georef/:id?', function (req, res, next) {
                 let reqGet = https.request(optionsgetmsg, function (res2) {
                     res2.on('data', function (d, error) {
                         jsonGoogle = jsonGoogle + d.toString();
-                        console.log('RESPONSE: ', jsonGoogle);
                     });
 
                     res2.on('end', function () {
@@ -61,7 +55,6 @@ router.get('/organizaciones/georef/:id?', function (req, res, next) {
                     });
                 });
                 req.on('error', (e) => {
-                    console.error(e);
                     return next(e);
                 });
                 reqGet.end();
@@ -87,10 +80,8 @@ router.get('/organizaciones/georef/:id?', function (req, res, next) {
             }]);
         query.exec(function (err, data) {
             if (err) {
-                console.log('ERROR GET GEOREF:  ', err);
                 return next(err);
             }
-            console.log('DATA:  ', data);
             let geoJsonData = GeoJSON.parse(data, { Point: ['lat', 'lng'], include: ['nombre'] });
             res.json(geoJsonData);
         });
@@ -332,7 +323,6 @@ router.post('/organizaciones', function (req, res, next) {
  *           $ref: '#/definitions/organizacion'
  */
 router.put('/organizaciones/:id', function (req, res, next) {
-    console.log('TODO: Reemplazar/validar uso de findByIdAndUpdate');
     organizacion.model.findByIdAndUpdate(req.params.id, req.body, function (err, data) {
         if (err) {
             return next(err);

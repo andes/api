@@ -1,4 +1,5 @@
-import { matching } from '@andes/match';
+import { Matching } from '@andes/match';
+import * as configPrivate from '../config.private';
 import * as config from '../config';
 import * as https from 'https';
 
@@ -6,15 +7,15 @@ let to_json = require('xmljson').to_json;
 
 export function getPersonaSintys(nroDocumento: string) {
     let xml = '';
-    let pathSintys = '/WCFSINTyS/wsPersona.asmx/GetPersona?dni=' + nroDocumento;
+    let pathSintys = configPrivate.sintys.path + 'dni=' + nroDocumento;
 
     let optionsgetmsg = {
         /*Este servicio debe ser llamado directamente desde los WS
         que están publicados en el servidor 10.1.232.8 ya que por cuestiones
         de seguridad de Sintys, sólo nos dejan consumir datos desde este servidor.
         */
-        host: 'www.saludnqn.gov.ar',
-        port: 443,
+        host: configPrivate.sintys.host,
+        port: configPrivate.sintys.port,
         path: pathSintys,
         method: 'GET',
         rejectUnauthorized: false
@@ -62,43 +63,8 @@ export function formatearDatosSintys(datosSintys) {
     // console.log('DATOSSINTYS----------->', datosSintys);
 
     ciudadano.documento = datosSintys.Documento ? datosSintys.Documento.toString() : '';
-
-    // VER con las chicas ya que sintys no trae separado nbe y apellido.
+    // Sintys trae nombre y apellido juntos en 1 solo campo
     ciudadano.apellido = datosSintys.NombreCompleto ? datosSintys.NombreCompleto : '';
-    // ciudadano.apellido ?
-
-    // TEMA DE DIRECCIÓN VERS SI VALE LA PENA
-    // No lo trae en este webService hay que invocar a otro con el idDelPaciente seleccionado, además no está funcionando ya hice el reclamo en sintys
-    /*
-    ciudadano.direccion = [];
-    var domicilio;
-    domicilio = new Object();
-    if (datosSintys.domicilio) {
-        if (datosSintys.pisoDpto && datosSintys.pisoDpto != "0 0") {
-            domicilio.valor = datosSintys.domicilio + " " + datosSintys.pisoDpto;
-        }
-        domicilio.valor = datosSintys.domicilio;
-    }
-
-    if (datosSintys.codigoPostal) {
-        domicilio.codigoPostal = datosSintys.codigoPostal;
-    }
-    var ubicacion;
-    ubicacion = new Object();
-    if (datosSintys.localidad) {
-        ubicacion.localidad = datosSintys.localidad;
-    }
-
-    if (datosSintys.provincia) {
-        ubicacion.provincia = datosSintys.provincia;
-    }
-
-    //Ver el pais de la ubicación
-    domicilio.ranking = 1;
-    domicilio.activo = true;
-    domicilio.ubicacion = ubicacion;
-    ciudadano.direccion.push(domicilio);
-    */
 
     if (datosSintys.Sexo) {
         if (datosSintys.Sexo === 'FEMENINO') {
@@ -117,26 +83,6 @@ export function formatearDatosSintys(datosSintys) {
         let fechaNac = new Date(fecha[2].substr(0, 4), fecha[1] - 1, fecha[0]);
         ciudadano.fechaNacimiento = fechaNac;
     }
-
-    /*
-    if (datosSintys.estadoCivil) {
-        // estadoCivil: {
-        //     type: String,
-        //     enum: ["casado", "separado", "divorciado", "viudo", "soltero", "otro", ""]
-        // }
-
-    }
-    */
-    /*
-    if (datosSintys.fallecido != "NO") {
-        if (datosSintys.fechaFallecimiento) {
-            fecha = datosSintys.fechaFallecimiento.split("-");
-            var fechaFac = new Date(fecha[2].substr(0, 4), fecha[1], fecha[0]);
-            ciudadano.fechaFallecimiento = fechaFac.toJSON();
-
-        }
-    }
-    */
 
     return ciudadano;
 
@@ -164,7 +110,7 @@ export function matchSintys(paciente) {
     let matchPorcentaje = 0;
     let pacienteSintys = {};
     let weights = config.mpi.weightsDefault;
-    let match = new matching();
+    let match = new Matching();
 
     paciente['matchSintys'] = 0;
     // Se buscan los datos en sintys y se obtiene el paciente
@@ -181,11 +127,8 @@ export function matchSintys(paciente) {
                         if (resultado) {
                             // Verifico el resultado devuelto por el rest de Sintys
                             if (resultado[0] === 200 && JSON.parse(resultado[1])[0]) {
-                                console.log('entro por 200');
-
                                 pacienteSintys = formatearDatosSintys(JSON.parse(resultado[1])[0]);
-                                matchPorcentaje = match.matchPersonas(paciente, pacienteSintys, weights) * 100;
-                                console.log('el % de matcheo es:', matchPorcentaje);
+                                matchPorcentaje = match.matchPersonas(paciente, pacienteSintys, weights, 'Levenshtein') * 100;
                                 paciente['matchSintys'] = matchPorcentaje;
                                 resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sintys', 'matcheo': matchPorcentaje, 'datosPaciente': pacienteSintys } });
                             }
@@ -193,11 +136,8 @@ export function matchSintys(paciente) {
                         resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sintys', 'matcheo': 0, 'datosPaciente': pacienteSintys } });
                     })
                     .catch((err) => {
-                        console.error('Error consulta rest Sintys:' + err);
                         reject(err);
                     });
-
-                // setInterval(consultaSintys,100);
 
             } else {
                 resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sintys', 'matcheo': 0, 'datosPaciente': pacienteSintys } });

@@ -7,10 +7,11 @@ let router = express.Router();
 
 /**
  * Edita los datos basico de la cuenta
- * 
+ *
  * @param email {string} Nuevo email de la cuenta
  * @param telefono {string} Nuevo telefono de la cuenta
  * @param password {string} Nuevo password
+ *
  */
 
 router.put('/account', function (req: any, res, next) {
@@ -20,12 +21,11 @@ router.put('/account', function (req: any, res, next) {
             return res.status(422).send({ error: '' });
         }
 
-        authController.updateAccount(account, req.body).then((acc) => {
+        return authController.updateAccount(account, req.body).then((acc) => {
             return res.json({ message: 'OK', account: acc });
-        }).catch((err) => {
-            return res.status(422).send(err);
-        })
-
+        }).catch((errUpdate) => {
+            return res.status(422).send(errUpdate);
+        });
     });
 });
 

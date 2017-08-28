@@ -1,5 +1,6 @@
 import * as ws from 'ws';
 import { Server } from 'http';
+import * as debug from 'debug';
 
 export class Websockets {
     /**
@@ -12,37 +13,37 @@ export class Websockets {
      */
     static initialize(server: Server) {
         const wss = new ws.Server({ server });
-        console.log('[Websockets] Open');
+        let log = debug('websockets');
+        log('open');
 
         // When client connects ...
-        wss.on('connection', (ws: any, req) => {
-            console.log('[Websockets] Client connected ', (req.headers['x-forwarded-for'] || req.connection.remoteAddress));
+        wss.on('connection', (socket: any, req) => {
+            log('connected %s', (req.headers['x-forwarded-for'] || req.connection.remoteAddress));
 
             // Init keep-alive
-            ws.isAlive = true;
-            ws.on('pong', () => {
-                console.log('pong');
-                ws.isAlive = true;
+            socket.isAlive = true;
+            socket.on('pong', () => {
+                log('pong');
+                socket.isAlive = true;
             });
-
 
             // const location = url.parse(req.url, true);
             // You might use location.query.access_token to authenticate or share sessions
             // or req.headers.cookie (see http://stackoverflow.com/a/16395220/151312)
             // Init message handler
-            ws.on('message', (message) => {
-                ws.send(JSON.stringify({ echo: message }));
+            socket.on('message', (message) => {
+                socket.send(JSON.stringify({ echo: message }));
             });
         });
 
         // Keep-alive connections
         setInterval(function ping() {
-            wss.clients.forEach((ws: any) => {
-                if (ws.isAlive === false) {
-                    return ws.terminate();
+            wss.clients.forEach((socket: any) => {
+                if (socket.isAlive === false) {
+                    return socket.terminate();
                 }
-                ws.isAlive = false;
-                ws.ping('', false, true);
+                socket.isAlive = false;
+                socket.ping('', false, true);
             });
         }, 5000);
     }

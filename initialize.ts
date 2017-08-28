@@ -1,7 +1,7 @@
 import * as bodyParser from 'body-parser';
 import * as config from './config';
 import { Auth } from './auth/auth.class';
-import { Swagger } from './swagger';
+import { Swagger } from './swagger/swagger.class';
 import { Connections } from './connections';
 import * as HttpStatus from 'http-status-codes';
 import { Express } from 'express';
@@ -10,11 +10,8 @@ import { Express } from 'express';
 let requireDir = require('require-dir');
 
 export function initAPI(app: Express) {
-    // Inicializa la autenticación con Password/JWT
+    // Inicializa la autenticación con Passport/JWT
     Auth.initialize(app);
-
-    // Inicializa swagger
-    Swagger.initialize(app);
 
     // Inicializa Mongoose
     Connections.initialize();
@@ -41,6 +38,9 @@ export function initAPI(app: Express) {
         }
     });
 
+    // Inicializa Swagger
+    Swagger.initialize(app);
+
     // Carga los módulos y rutas
     for (let m in config.modules) {
         if (config.modules[m].active) {
@@ -52,7 +52,6 @@ export function initAPI(app: Express) {
                 } else {
                     app.use('/api' + config.modules[m].route, routes[route]);
                 }
-
             }
         }
     }

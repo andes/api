@@ -3,6 +3,9 @@ import { pacienteApp } from '../schemas/pacienteApp';
 import * as agenda from '../../turnos/schemas/agenda';
 import * as moment from 'moment';
 import * as mongoose from 'mongoose';
+import * as debug from 'debug';
+
+let log = debug('NotificationService');
 
 export class NotificationService {
 
@@ -16,7 +19,7 @@ export class NotificationService {
 
             this.sendByPaciente(idPaciente, notificacion);
 
-        }).catch(() => { console.log('ERROR'); })
+        }).catch(() => { log('ERROR'); });
     }
 
     private static findTurno(datosTurno) {

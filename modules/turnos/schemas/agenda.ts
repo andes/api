@@ -84,7 +84,7 @@ schema.virtual('estadosAgendas').get(function () {
 schema.pre('save', function (next) {
     // Intercalar
     if (!/true|false/i.test(this.intercalar)) {
-        next(new Error('invalido'));
+        return next(new Error('invalido'));
         // TODO: loopear bloques y definir si horaInicio/Fin son required
         // TODO: si pacientesSimultaneos, tiene que haber cantidadSimultaneos (> 0)
         // TODO: si citarPorBloque, tiene que haber cantidadBloque (> 0)

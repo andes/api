@@ -10,8 +10,8 @@ router.get('/paciente', function (req, res, next) {
         if (mongoose.Types.ObjectId.isValid(req.params.id)) {
             query = logPaciente.findById(req.params.id, function (err, data) {
                 if (err) {
-                    next(err);
-                };
+                    return next(err);
+                }
                 res.json(data);
             });
         }
@@ -34,8 +34,8 @@ router.get('/paciente', function (req, res, next) {
         query.exec(function (err, data) {
             if (err) {
                 res.status(404).json({ message: 'Error en Log de Paciente' });
-                next(404);
-            };
+                return next(404);
+            }
             res.json(data);
         });
     }

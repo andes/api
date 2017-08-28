@@ -1,6 +1,7 @@
 import * as mongoose from 'mongoose';
 import { schemaDefaults } from './mongoose/defaults';
 import * as configPrivate from './config.private';
+import * as debug from 'debug';
 
 export class Connections {
     static main: mongoose.Connection;
@@ -18,12 +19,14 @@ export class Connections {
         // Configura Mongoose
         (mongoose as any).Promise = global.Promise;
         mongoose.plugin(schemaDefaults);
-        if (configPrivate.mongooseDebugMode) {
-            mongoose.set('debug', true);
+
+        // Configura logger de consultas
+        let queryLogger = debug('mongoose');
+        if (queryLogger.enabled) {
+            mongoose.set('debug', (collection, method, query, arg1, arg2, arg3) => queryLogger('%s.%s(%o) %s %s', collection, method, query, (arg2 || ''), (arg3 || '')));
         }
 
         // Conecta y configura conexiones
-
         // 1. PRINCIPAL
         mongoose.connect(`${configPrivate.hosts.mongoDB_main.host}`, { auth: configPrivate.hosts.mongoDB_mpi.auth, server: configPrivate.hosts.mongoDB_mpi.server });
         this.main = mongoose.connection;
@@ -35,34 +38,17 @@ export class Connections {
         this.snomed = mongoose.createConnection(`${configPrivate.hosts.mongoDB_snomed.host}`, { auth: configPrivate.hosts.mongoDB_snomed.auth, server: configPrivate.hosts.mongoDB_snomed.server });
 
         // Configura eventos
-        this.configEvents('MongoDB', this.main);
-        this.configEvents('MPI', this.mpi);
-        this.configEvents('SNOMED', this.snomed);
+        this.configEvents('main', this.main);
+        this.configEvents('mpi', this.mpi);
+        this.configEvents('snomed', this.snomed);
     }
 
     private static configEvents(name: string, connection: mongoose.Connection) {
-        connection.on('connecting', function () {
-            console.log(`[${name}] Connecting ...`);
-        });
-
-        connection.on('error', function (error) {
-            console.log(`[${name}] Error: ${error}`);
-            // try {
-            //     mongoose.disconnect();
-            // } catch (e) {
-            // }
-        });
-        connection.on('connected', function () {
-            console.log(`[${name}] Connected`);
-        });
-        connection.once('open', function () {
-            console.log(`[${name}] Open`);
-        });
-        connection.on('reconnected', function () {
-            console.log(`[${name}] Reconnected`);
-        });
-        connection.on('disconnected', function () {
-            console.log(`[${name}] Disconnected`);
-        });
+        let connectionLog = debug('mongoose:' + name);
+        connection.on('connecting', () => connectionLog('connecting ...'));
+        connection.on('error', (error) => connectionLog(`error: ${error}`));
+        connection.on('connected', () => connectionLog('connected'));
+        connection.on('reconnected', () => connectionLog('reconnected'));
+        connection.on('disconnected', () => connectionLog('disconnected'));
     }
 }
