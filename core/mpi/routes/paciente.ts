@@ -28,6 +28,7 @@ import {
     log
 } from '../../log/schemas/log';
 
+import { buscarPaciente } from '../controller/paciente'
 
 
 /**
@@ -211,30 +212,30 @@ router.get('/pacientes/dashboard/', function (req, res, next) {
     };
 
     paciente.aggregate([{
-            $group: {
-                '_id': {
-                    'estado': '$estado'
-                },
-                'count': {
-                    '$sum': 1
-                }
+        $group: {
+            '_id': {
+                'estado': '$estado'
+            },
+            'count': {
+                '$sum': 1
             }
-        }],
+        }
+    }],
         function (err, data) {
             if (err) {
                 return next(err);
             }
             result.paciente = data;
             pacienteMpi.aggregate([{
-                    $group: {
-                        '_id': {
-                            'estado': '$estado'
-                        },
-                        'count': {
-                            '$sum': 1
-                        }
+                $group: {
+                    '_id': {
+                        'estado': '$estado'
+                    },
+                    'count': {
+                        '$sum': 1
                     }
-                }],
+                }
+            }],
                 function (err1, data1) {
                     if (err1) {
                         return next(err1);
@@ -242,22 +243,22 @@ router.get('/pacientes/dashboard/', function (req, res, next) {
 
                     result.pacienteMpi = data1;
                     log.aggregate([{
-                                $group: {
-                                    '_id': {
-                                        'operacion': '$operacion',
-                                        'modulo': '$modulo'
-                                    },
-                                    'count': {
-                                        '$sum': 1
-                                    }
-                                }
+                        $group: {
+                            '_id': {
+                                'operacion': '$operacion',
+                                'modulo': '$modulo'
                             },
-                            {
-                                $match: {
-                                    '_id.modulo': 'mpi'
-                                }
+                            'count': {
+                                '$sum': 1
                             }
-                        ],
+                        }
+                    },
+                    {
+                        $match: {
+                            '_id.modulo': 'mpi'
+                        }
+                    }
+                    ],
                         function (err2, data2) {
                             if (err2) {
                                 return next(err2);
@@ -501,9 +502,9 @@ router.get('/pacientes', function (req, res, next) {
     if (req.query.type === 'suggest') {
 
         connElastic.search({
-                index: 'andes',
-                body: body
-            })
+            index: 'andes',
+            body: body
+        })
             .then((searchResult) => {
 
                 // Asigno los valores para el suggest
@@ -519,42 +520,42 @@ router.get('/pacientes', function (req, res, next) {
                 let listaPacientesMin = [];
 
                 ((searchResult.hits || {}).hits || [])
-                .filter(function (hit) {
-                    let paciente2 = hit._source;
-                    let pacDto = {
-                        documento: req.query.documento ? req.query.documento.toString() : '',
-                        nombre: req.query.nombre ? req.query.nombre : '',
-                        apellido: req.query.apellido ? req.query.apellido : '',
-                        fechaNacimiento: req.query.fechaNacimiento ? moment(new Date(req.query.fechaNacimiento)).format('YYYY-MM-DD') : '',
-                        sexo: req.query.sexo ? req.query.sexo : ''
-                    };
-                    let pacElastic = {
-                        documento: paciente2.documento ? paciente2.documento.toString() : '',
-                        nombre: paciente2.nombre ? paciente2.nombre : '',
-                        apellido: paciente2.apellido ? paciente2.apellido : '',
-                        fechaNacimiento: paciente2.fechaNacimiento ? moment(paciente2.fechaNacimiento).format('YYYY-MM-DD') : '',
-                        sexo: paciente2.sexo ? paciente2.sexo : ''
-                    };
-                    let match = new Matching();
-                    let valorMatching = match.matchPersonas(pacElastic, pacDto, weights, config.algoritmo);
-                    paciente2['id'] = hit._id;
+                    .filter(function (hit) {
+                        let paciente2 = hit._source;
+                        let pacDto = {
+                            documento: req.query.documento ? req.query.documento.toString() : '',
+                            nombre: req.query.nombre ? req.query.nombre : '',
+                            apellido: req.query.apellido ? req.query.apellido : '',
+                            fechaNacimiento: req.query.fechaNacimiento ? moment(new Date(req.query.fechaNacimiento)).format('YYYY-MM-DD') : '',
+                            sexo: req.query.sexo ? req.query.sexo : ''
+                        };
+                        let pacElastic = {
+                            documento: paciente2.documento ? paciente2.documento.toString() : '',
+                            nombre: paciente2.nombre ? paciente2.nombre : '',
+                            apellido: paciente2.apellido ? paciente2.apellido : '',
+                            fechaNacimiento: paciente2.fechaNacimiento ? moment(paciente2.fechaNacimiento).format('YYYY-MM-DD') : '',
+                            sexo: paciente2.sexo ? paciente2.sexo : ''
+                        };
+                        let match = new Matching();
+                        let valorMatching = match.matchPersonas(pacElastic, pacDto, weights, config.algoritmo);
+                        paciente2['id'] = hit._id;
 
-                    if (valorMatching >= porcentajeMatchMax) {
-                        listaPacientesMax.push({
-                            id: hit._id,
-                            paciente: paciente2,
-                            match: valorMatching
-                        });
-                    } else {
-                        if (valorMatching >= porcentajeMatchMin && valorMatching < porcentajeMatchMax) {
-                            listaPacientesMin.push({
+                        if (valorMatching >= porcentajeMatchMax) {
+                            listaPacientesMax.push({
                                 id: hit._id,
                                 paciente: paciente2,
                                 match: valorMatching
                             });
+                        } else {
+                            if (valorMatching >= porcentajeMatchMin && valorMatching < porcentajeMatchMax) {
+                                listaPacientesMin.push({
+                                    id: hit._id,
+                                    paciente: paciente2,
+                                    match: valorMatching
+                                });
+                            }
                         }
-                    }
-                });
+                    });
 
                 // if (devolverPorcentaje) {
                 let sortMatching = function (a, b) {
@@ -577,11 +578,11 @@ router.get('/pacientes', function (req, res, next) {
     } else {
         // Es para los casos de multimatch y singlequery
         connElastic.search({
-                index: 'andes',
-                body: body
-            })
+            index: 'andes',
+            body: body
+        })
             .then((searchResult) => {
-                let results: Array < any > = ((searchResult.hits || {}).hits || [])
+                let results: Array<any> = ((searchResult.hits || {}).hits || [])
                     .map((hit) => {
                         let elem = hit._source;
                         elem['id'] = hit._id;
@@ -1180,35 +1181,7 @@ router.delete('/pacientes/:id', function (req, res, next) {
     });
 });
 
-/* Realiza la búsqueda del paciente en la bd LOCAL y en MPI remoto */
-function buscarPaciente(id) {
-    return new Promise((resolve, reject) => {
-        paciente.findById(id, function (err, data) {
-            if (err) {
-                reject(err);
-            } else {
-                if (data) {
-                    let resultado = {
-                        db: 'andes',
-                        paciente: data
-                    };
-                    resolve(resultado);
-                } else {
-                    pacienteMpi.findById(id, function (err2, dataMpi) {
-                        if (err2) {
-                            reject(err2);
-                        }
-                        let resultado = {
-                            db: 'mpi',
-                            paciente: dataMpi
-                        };
-                        resolve(resultado);
-                    });
-                }
-            }
-        });
-    });
-}
+
 
 /**
  * @swagger
