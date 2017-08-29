@@ -31,53 +31,55 @@ router.get('/match', function (req, res, next) {
         host: configPrivate.hosts.elastic_main,
     });
 
-    let consulta = req.query;
+    let query;
+    let consulta;
 
-    if (req.query.identifier) {
-        consulta['documento'] = req.query.identifier;
-    }
-    if (req.query.family) {
-        consulta['apellido'] = {
-            '$regex': utils.makePattern(req.query.family)
+    req.query.identifier ? consulta = req.query.identifier : '';
+    req.query.family ? consulta ? consulta = consulta + ' ' + req.query.family : consulta = req.query.family : '';
+    req.query.given ?  consulta ? consulta = consulta + ' ' + req.query.given : consulta = req.query.given : '';
+
+    // Traigo todos los pacientes
+    if (!consulta) {
+        query = {
+            match_all: {}
+        };
+    } else {
+        query = {
+            multi_match: {
+                query: consulta,
+                type: 'cross_fields',
+                fields: ['documento^5', 'nombre', 'apellido^3'],
+            }
         };
     }
-    if (req.query.given) {
-        consulta['nombre'] = {
-            '$regex': utils.makePattern(req.query.given)
-        };
-    }
 
-    let esQuery = {
-        multi_match: {
-            query: consulta,
-            type: 'cross_fields',
-            fields: ['documento^5', 'nombre', 'apellido^3'],
-        }
-    };
+
+
+    console.log('valor de query: ', query);
 
     // Configuramos la cantidad de resultados que quiero que se devuelva y la query correspondiente
     let body = {
         size: 100,
         from: 0,
-        query: esQuery
+        query: query
     };
 
     connElastic.search({
-                index: 'andes',
-                body: body
-            })
-            .then((searchResult) => {
-                let results: Array < any > = ((searchResult.hits || {}).hits || [])
-                    .map((hit) => {
-                        let elem = hit._source;
-                        elem['id'] = hit._id;
-                        return elem;
-                    });
-                res.send(results);
-            })
-            .catch((error) => {
-                next(error);
-            });
+            index: 'andes',
+            body: body
+        })
+        .then((searchResult) => {
+            let results: Array < any > = ((searchResult.hits || {}).hits || [])
+                .map((hit) => {
+                    let elem = hit._source;
+                    elem['id'] = hit._id;
+                    return elem;
+                });
+            res.send(results);
+        })
+        .catch((error) => {
+            next(error);
+        });
 });
 
 export = router;
