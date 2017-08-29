@@ -4,12 +4,12 @@ import { Auth } from '../../../auth/auth.class';
 import * as config from '../../../config';
 import * as configPrivate from '../../../config.private';
 import { Matching } from '@andes/match';
-import * as controller from './paciente'
+import * as controller from './paciente';
 import * as mongoose from 'mongoose';
 
 /*Verfica que el paciente que si desea insertar en MPI no exista previamente*/
 export function existeEnMpi(pacienteBuscado: any) {
-    let url = configPrivate.hosts.mongoDB_mpi
+    let url = configPrivate.hosts.mongoDB_mpi;
     let cursorPacienteMpi: any = [];
     let match = new Matching();
     let porcentajeMatcheo;
@@ -86,7 +86,6 @@ export function updatingMpi() {
             let cursorPacientes = paciente.find(condicion).cursor();
             /*Finaliza el recorrido del cursor con los datos de pacientes validados */
             cursorPacientes.on('end', function () {
-                console.log('El proceso de actualización ha finalizado, total de pacientes insertados en MPI: ', pacientesInsertados.length);
                 resolve(pacientesInsertados);
             });
             cursorPacientes.eachAsync(data => {
@@ -105,7 +104,7 @@ export function updatingMpi() {
                                             pacientesInsertados.push(resultado);
                                             controller.postPacienteMpi(resultado)
                                                 .then((rta4: any) => {
-                                                    console.log('Paciente Guardado es:', resultado);
+                                                    // console.log('Paciente Guardado es:', resultado);
                                                 });
                                         }
                                     } else {
@@ -115,18 +114,18 @@ export function updatingMpi() {
                                         let pacienteMpi = resultado;
                                         controller.updatePaciente(pacienteMpi, pacienteAndes)
                                             .then((rta5: any) => {
-                                                console.log('El paciente ha sido actualizado: ', pacienteMpi);
+                                                // console.log('El paciente ha sido actualizado: ', pacienteMpi);
                                             });
                                     }
                                 });
-                            console.log('Cantidad de pacientes procesados', counter++);
+                            // console.log('Cantidad de pacientes procesados', counter++);
                             cursorPacientes.resume();
                         });
-                };
+                }
             });
 
         } catch (err) {
             reject(err);
-        };
+        }
     });
 }
