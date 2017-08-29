@@ -71,7 +71,7 @@ export function existeEnMpi(pacienteBuscado: any) {
     });
 }
 
-export function updatingMpi(token: any) {
+export function updatingMpi() {
     /*Definicion de variables y operaciones*/
     let pacientesInsertados: any = [];
     let counter = 0;
