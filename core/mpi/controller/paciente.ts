@@ -11,6 +11,29 @@ import * as mongoose from 'mongoose';
 import { Auth } from './../../../auth/auth.class';
 
 
+export function createPaciente(data, req) {
+    return new Promise((resolve, reject) => { 
+        let newPatient = new paciente(data);
+                
+        Auth.audit(newPatient, req);
+        newPatient.save((err) => {
+            if (err) {
+                return reject(err);
+            }
+            let nuevoPac = JSON.parse(JSON.stringify(newPatient));
+            delete nuevoPac._id;
+            delete nuevoPac.relaciones;
+            let connElastic = new ElasticSync();
+            connElastic.create(newPatient._id.toString(), nuevoPac).then(() => {
+                Logger.log(req, 'mpi', 'insert', newPatient);
+                return resolve(newPatient);
+            }).catch(error => {
+                return reject(error);
+            });
+        });
+    }); 
+}
+
 export function updatePaciente(pacienteObj, data, req = null) {
     return new Promise((resolve, reject) => {
         let pacienteOriginal = pacienteObj.toObject();
