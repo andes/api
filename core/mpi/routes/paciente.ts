@@ -13,8 +13,9 @@ import { Logger } from '../../../utils/logService';
 import { pacienteMpi } from '../schemas/paciente';
 import { paciente } from '../schemas/paciente';
 import { log } from '../../log/schemas/log';
+import * as debuger from 'debug';
 
-import * as controller from '../controller/paciente'
+import * as controller from '../controller/paciente';
 import { ElasticSync } from '../../../utils/elasticSync';
 
 
@@ -438,7 +439,7 @@ router.get('/pacientes', function (req, res, next) {
     controller.matching(req.query).then(result => {
         res.send(result);
     }).catch(error => {
-        return next(error)
+        return next(error);
     });
 });
 
@@ -476,13 +477,13 @@ router.post('/pacientes/mpi', function (req, res, next) {
 
     let match = new Matching();
     let newPatientMpi = new pacienteMpi(req.body);
-    
+
     // Se genera la clave de blocking
     let claves = match.crearClavesBlocking(newPatientMpi);
     newPatientMpi['claveBlocking'] = claves;
-    
+
     Auth.audit(newPatientMpi, req);
-    
+
     newPatientMpi.save((err) => {
         if (err) {
             return next(err);
@@ -500,9 +501,11 @@ router.post('/pacientes/mpi', function (req, res, next) {
             return next(error);
 
         });
-            
+
     });
 });
+
+
 
 router.put('/pacientes/mpi/:id', function (req, res, next) {
     if (!Auth.check(req, 'mpi:paciente:putMpi')) {
@@ -513,7 +516,7 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
     let query = {
         _id: objectId
     };
-    
+
     let match = new Matching();
 
     pacienteMpi.findById(query, function (err, patientFound: any) {
@@ -524,53 +527,13 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
         let connElastic = new ElasticSync();
         let pacienteOriginal = null;
         if (patientFound) {
-            // Guarda los valores originales para el logger
-            pacienteOriginal = patientFound.toObject();
 
-            /*Update de paciente de todos los campos salvo que esté validado*/
-            patientFound.documento = req.body.documento;
-            patientFound.estado = req.body.estado;
-            patientFound.activo = req.body.activo;
-            patientFound.nombre = req.body.nombre.toUpperCase();
-            patientFound.apellido = req.body.apellido.toUpperCase();
-            patientFound.sexo = req.body.sexo;
-            patientFound.fechaNacimiento = req.body.fechaNacimiento;
-            let claves = match.crearClavesBlocking(patientFound);
-            patientFound.claveBlocking = claves;
-            patientFound.genero = req.body.genero;
-            patientFound.alias = req.body.alias;
-            patientFound.estadoCivil = req.body.estadoCivil;
-            patientFound.entidadesValidadoras = req.body.entidadesValidadoras;
-            patientFound.financiador = req.body.financiador;
-            patientFound.relaciones = req.body.relaciones;
-            patientFound.direccion = req.body.direccion;
-            patientFound.contacto = req.body.contacto;
-            patientFound.identificadores = req.body.identificadores;
-            patientFound.scan = req.body.scan;
-            patientFound.reportarError = req.body.reportarError;
-            Auth.audit(patientFound, req);
-            patientFound.save(function (err2) {
-                if (err2) {
-                    return next(err2);
-                }
+            let data = req.body;
 
-                let pacAct = JSON.parse(JSON.stringify(patientFound));
+            controller.updatePaciente(patientFound, data, req).then((p) => {
+                res.json(p);
+            }).catch(next);
 
-                
-                connElastic.sync(patientFound).then((updated) => {
-                    if (updated) {
-                        Logger.log(req, 'mpi', 'elasticUpdate', {
-                            original: pacienteOriginal,
-                            nuevo: patientFound
-                        });
-                    } else {
-                        Logger.log(req, 'mpi', 'elasticInsert', patientFound);
-                    }
-                    res.json(patientFound);
-                }).catch(error => {
-                    return next(error);
-                });
-            });
         } else {
             let newPatient = new pacienteMpi(req.body);
             let claves = match.crearClavesBlocking(newPatient);
@@ -592,7 +555,7 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
                 }).catch(error => {
                     return next(error);
                 });
-                    
+
             });
         }
 
@@ -739,17 +702,16 @@ router.post('/pacientes', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/paciente'
  */
+
 router.put('/pacientes/:id', function (req, res, next) {
     if (!Auth.check(req, 'mpi:paciente:putAndes')) {
         return next(403);
     }
-    let ObjectId = mongoose.Types.ObjectId;
-    let objectId = new ObjectId(req.params.id);
+
+    let objectId = new mongoose.Types.ObjectId(req.params.id);
     let query = {
         _id: objectId
     };
-    let connElastic = new ElasticSync();
-    let match = new Matching();
 
     paciente.findById(query, function (err, patientFound: any) {
         if (err) {
@@ -758,72 +720,26 @@ router.put('/pacientes/:id', function (req, res, next) {
         let pacienteOriginal = null;
         if (patientFound) {
 
-            // Guarda los valores originales para el logger
-            pacienteOriginal = patientFound.toObject();
-
-            /*Update de paciente de todos los campos salvo que esté validado o halla sido escaneado*/
-            if (patientFound.estado !== 'validado' || patientFound.isScan) {
-                patientFound.documento = req.body.documento;
-                patientFound.estado = req.body.estado;
-                patientFound.nombre = req.body.nombre;
-                patientFound.apellido = req.body.apellido;
-                patientFound.sexo = req.body.sexo;
-
-                patientFound.fechaNacimiento = req.body.fechaNacimiento;
-                /*Si es distinto de validado debo generar una nueva clave de blocking */
-                let claves = match.crearClavesBlocking(patientFound);
-                patientFound.claveBlocking = claves;
-            } else {
-                patientFound.nombre = req.body.nombre.toUpperCase();
-                patientFound.apellido = req.body.apellido.toUpperCase();
+            let data = req.body;
+            if (patientFound.estado === 'validado' && !patientFound.isScan) {
+                delete data.documento;
+                delete data.estado;
+                delete data.sexo;
+                delete data.fechaFallecimiento;
             }
+            controller.updatePaciente(patientFound, data, req).then((p) => {
+                res.json(p);
+            }).catch(next);
 
-            patientFound.genero = req.body.genero;
-            patientFound.alias = req.body.alias;
-            patientFound.activo = req.body.activo;
-            patientFound.estadoCivil = req.body.estadoCivil;
-            patientFound.entidadesValidadoras = req.body.entidadesValidadoras;
-            patientFound.financiador = req.body.financiador;
-            patientFound.relaciones = req.body.relaciones;
-            patientFound.direccion = req.body.direccion;
-            patientFound.contacto = req.body.contacto;
-            patientFound.identificadores = req.body.identificadores;
-            patientFound.scan = req.body.scan;
-            patientFound.reportarError = req.body.reportarError;
-            patientFound.notas = req.body.notas;
-            // Habilita auditoria y guarda
-            Auth.audit(patientFound, req);
-            patientFound.save(function (err2) {
-                if (err2) {
-                    return next(err2);
-                }
-
-                let pacAct = JSON.parse(JSON.stringify(patientFound));
-                delete pacAct._id;
-                delete pacAct.relaciones;
-
-                connElastic.sync(patientFound).then(updated => {
-                    if (updated) {
-                        Logger.log(req, 'mpi', 'update', {
-                            original: pacienteOriginal,
-                            nuevo: patientFound
-                        });
-                    } else {
-                        Logger.log(req, 'mpi', 'insert', patientFound);
-                    }
-                    res.json(patientFound);
-                }).catch(error => {
-                    return next(error);
-                });
-            });
         } else {
             req.body._id = req.body.id;
             let newPatient = new paciente(req.body);
 
-            let claves = match.crearClavesBlocking(newPatient);
-            newPatient['claveBlocking'] = claves;
-            newPatient['apellido'] = newPatient['apellido'].toUpperCase();
-            newPatient['nombre'] = newPatient['nombre'].toUpperCase();
+            // let claves = match.crearClavesBlocking(newPatient);
+            // newPatient['claveBlocking'] = claves;
+            // newPatient['apellido'] = newPatient['apellido'].toUpperCase();
+            // newPatient['nombre'] = newPatient['nombre'].toUpperCase();
+
             /*Antes del save se podría realizar una búsqueda y matching para evitar cargar repetidos, actualmente este proceso sólo se realiza del lado de la app*/
             Auth.audit(newPatient, req);
             newPatient.save((err2) => {
@@ -834,7 +750,7 @@ router.put('/pacientes/:id', function (req, res, next) {
                 let nuevoPac = JSON.parse(JSON.stringify(newPatient));
                 delete nuevoPac._id;
                 delete nuevoPac.relaciones;
-
+                let connElastic = new ElasticSync();
                 connElastic.sync(newPatient).then(updated => {
                     if (updated) {
                         Logger.log(req, 'mpi', 'update', {

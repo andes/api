@@ -1,20 +1,77 @@
 /* Realiza la búsqueda del paciente en la bd LOCAL y en MPI remoto */
-import { paciente, pacienteMpi } from "../schemas/paciente";
-import { ElasticSync } from "../../../utils/elasticSync";
-import { Logger } from "../../../utils/logService";
+import { paciente, pacienteMpi } from '../schemas/paciente';
+import { ElasticSync } from '../../../utils/elasticSync';
+import { Logger } from '../../../utils/logService';
 import * as config from '../../../config';
 import * as moment from 'moment';
-import { Matching } from "@andes/match";
+import { Matching } from '@andes/match';
+import { Auth } from './../../../auth/auth.class';
 
 
+export function updatePaciente(pacienteObj, data, req = null) {
+    return new Promise((resolve, reject) => {
+        let pacienteOriginal = pacienteObj.toObject();
+        pacienteObj.nombre = data.nombre ? data.nombre : pacienteObj.nombre;
+        pacienteObj.apellido = data.apellido ? data.apellido : pacienteObj.apellido;
+
+        /*Update de paciente de todos los campos salvo que esté validado o halla sido escaneado*/
+
+        // if (pacienteObj.estado !== 'validado' || pacienteObj.isScan) {
+        pacienteObj.documento = data.documento ? data.documento : pacienteObj.documento;
+        pacienteObj.estado = data.estado ? data.estado : pacienteObj.estado;
+        pacienteObj.sexo = data.sexo ? data.sexo : pacienteObj.sexo ;
+        pacienteObj.fechaNacimiento = data.fechaNacimiento ? data.fechaNacimiento : pacienteObj.fechaNacimiento ;
+        // }
+
+        pacienteObj.genero = data.genero ? data.genero : pacienteObj.genero;
+        pacienteObj.alias = data.alias ? data.alias : pacienteObj.alias;
+        pacienteObj.activo = data.activo ? data.activo : pacienteObj.activo;
+        pacienteObj.estadoCivil = data.estadoCivil ? data.estadoCivil : pacienteObj.estadoCivil;
+        pacienteObj.entidadesValidadoras = data.entidadesValidadoras || pacienteObj.entidadesValidadoras;
+        pacienteObj.financiador = data.financiador || pacienteObj.financiador;
+        pacienteObj.relaciones = data.relaciones || pacienteObj.relaciones;
+        pacienteObj.direccion = data.direccion || pacienteObj.direccion;
+        pacienteObj.contacto = data.contacto || pacienteObj.contacto;
+        pacienteObj.identificadores = data.identificadores || pacienteObj.identificadores;
+        pacienteObj.scan = data.scan || pacienteObj.scan;
+        pacienteObj.reportarError = data.reportarError || pacienteObj.reportarError;
+        pacienteObj.notas = data.notas || pacienteObj.notas;
+        // Habilita auditoria y guarda
+        if (req) {
+            Auth.audit(pacienteObj, req);
+        }
+        pacienteObj.save(function (err2) {
+            if (err2) {
+                return reject(err2);
+            }
+            let pacAct = JSON.parse(JSON.stringify(pacienteObj));
+            delete pacAct._id;
+            delete pacAct.relaciones;
+            let connElastic = new ElasticSync();
+            connElastic.sync(pacienteObj).then(updated => {
+                if (updated) {
+                    Logger.log(req, 'mpi', 'update', {
+                        original: pacienteOriginal,
+                        nuevo: pacienteObj
+                    });
+                } else {
+                    Logger.log(req, 'mpi', 'insert', pacienteObj);
+                }
+                resolve(pacienteObj);
+            }).catch(error => {
+                return reject(error);
+            });
+        });
+    });
+}
 
 /**
  * Busca un paciente en ambas DBs
  * devuelve los datos del paciente e indica en que base lo encontró
- * 
+ *
  * @export
- * @param {any} id 
- * @returns 
+ * @param {any} id
+ * @returns
  */
 export function buscarPaciente(id) {
     return new Promise((resolve, reject) => {
