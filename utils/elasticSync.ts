@@ -22,10 +22,8 @@ export class ElasticSync {
     private _sync(id, data) {
         return new Promise((resolve, reject) => {
             this.search({ q: '_id:' + id }).then((body) => {
-
                 let hits = body.hits.hits;
                 if (hits.length > 0) {
-                    console.log(body);
                     this.update(id, data).then(() => {
                         resolve(true);
                     }).catch((error) => {
@@ -39,7 +37,6 @@ export class ElasticSync {
                     });
                 }
             }).catch((error) => {
-                 console.log('mal la busqueda');
                  reject();
             });
         });
