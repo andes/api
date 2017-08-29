@@ -6,6 +6,16 @@ import * as config from '../../../config';
 import * as moment from 'moment';
 import { Matching } from "@andes/match";
 
+
+
+/**
+ * Busca un paciente en ambas DBs
+ * devuelve los datos del paciente e indica en que base lo encontró
+ * 
+ * @export
+ * @param {any} id 
+ * @returns 
+ */
 export function buscarPaciente(id) {
     return new Promise((resolve, reject) => {
         paciente.findById(id, function (err, data) {
