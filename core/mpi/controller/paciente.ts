@@ -46,6 +46,7 @@ export function buscarPaciente(id) {
 }
 
 /* Funciones de operaciones PATCH */
+
 export function updateContactos(req, data) {
     data.markModified('contacto');
     Logger.log(req, 'mpi', 'update', {
@@ -121,6 +122,9 @@ export function deleteRelacion(req, data) {
         });
     }
 }
+
+/* Hasta acá funciones del PATCH */
+
 
 export function matching(data) {
 
