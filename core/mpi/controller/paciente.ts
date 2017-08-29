@@ -1,10 +1,13 @@
 /* Realiza la búsqueda del paciente en la bd LOCAL y en MPI remoto */
+
 import { paciente, pacienteMpi } from '../schemas/paciente';
 import { ElasticSync } from '../../../utils/elasticSync';
 import { Logger } from '../../../utils/logService';
-import * as config from '../../../config';
 import * as moment from 'moment';
 import { Matching } from '@andes/match';
+import * as config from '../../../config';
+import * as configPrivate from '../../../config.private';
+import * as mongoose from 'mongoose';
 import { Auth } from './../../../auth/auth.class';
 
 
@@ -325,5 +328,28 @@ export function matching(data) {
                     reject(error);
                 });
         }
+    });
+}
+
+
+export function deletePacienteAndes(objectId) {
+    return new Promise((resolve, reject) => {
+        let connElastic = new ElasticSync();
+        let query = {
+            _id: objectId
+        };
+
+        paciente.findById(query, function (err, patientFound) {
+            if (err) {
+                reject(err);
+            }
+
+            patientFound.remove();
+            connElastic.delete(patientFound._id.toString()).then(() => {
+                resolve(patientFound);
+            }).catch(error => {
+                reject(error);
+            });
+        });
     });
 }
