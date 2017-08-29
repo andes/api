@@ -14,7 +14,7 @@ export let schema = new mongoose.Schema({
         required: true
     },
     // Indica los semantic tags para los cuales este elemento es el registro por default
-    defaultFor: ['SemanticTag'],
+    defaultFor: [String],
     // Tipo de elemento
     tipo: {
         type: String,

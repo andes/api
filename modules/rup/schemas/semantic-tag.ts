@@ -20,5 +20,6 @@ export let SemanticTag = {
         'evento',
         'organismo',
         'situación',
+        'trastorno',
     ]
 };
