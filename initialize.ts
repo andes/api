@@ -41,7 +41,6 @@ export function initAPI(app: Express) {
         if (config.modules[m].active) {
             let routes = requireDir(config.modules[m].path);
             for (let route in routes) {
-
                 if (config.modules[m].middleware) {
                     app.use('/api' + config.modules[m].route, config.modules[m].middleware, routes[route]);
                 } else {
