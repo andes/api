@@ -443,70 +443,6 @@ router.get('/pacientes', function (req, res, next) {
     });
 });
 
-/**
- * @swagger
- * /pacientes/mpi:
- *   post:
- *     tags:
- *       - Paciente
- *     summary: Carga de pacientes al core de MPI
- *     description: Carga de pacientes al core de MPI
- *     consumes:
- *       - application/json
- *     produces:
- *       - application/json
- *     parameters:
- *       - name: organizacion
- *         description: objeto paciente
- *         in: body
- *         required: true
- *         schema:
- *           $ref: '#/definitions/paciente'
- *     responses:
- *       200:
- *         description: Un objeto paciente
- *         schema:
- *           $ref: '#/definitions/paciente'
- *       409:
- *         description: Un código de error con un array de mensajes de error
- */
-router.post('/pacientes/mpi', function (req, res, next) {
-    if (!Auth.check(req, 'mpi:paciente:postMpi')) {
-        return next(403);
-    }
-
-    let match = new Matching();
-    let newPatientMpi = new pacienteMpi(req.body);
-
-    // Se genera la clave de blocking
-    let claves = match.crearClavesBlocking(newPatientMpi);
-    newPatientMpi['claveBlocking'] = claves;
-
-    Auth.audit(newPatientMpi, req);
-
-    newPatientMpi.save((err) => {
-        if (err) {
-            return next(err);
-        }
-        let nuevoPac = JSON.parse(JSON.stringify(newPatientMpi));
-        delete nuevoPac._id;
-
-        let connElastic = new ElasticSync();
-        connElastic.create(newPatientMpi._id.toString(), nuevoPac).then(() => {
-            Logger.log(req, 'mpi', 'elasticInsert', {
-                nuevo: nuevoPac,
-            });
-            res.json(newPatientMpi);
-        }).catch((error) => {
-            return next(error);
-
-        });
-
-    });
-});
-
-
-
 router.put('/pacientes/mpi/:id', function (req, res, next) {
     if (!Auth.check(req, 'mpi:paciente:putMpi')) {
         return next(403);
@@ -643,33 +579,41 @@ router.post('/pacientes', function (req, res, next) {
     if (!Auth.check(req, 'mpi:paciente:postAndes')) {
         return next(403);
     }
-    let match = new Matching();
-    let newPatient = new paciente(req.body);
-    let connElastic = new ElasticSync();
 
-    // Se genera la clave de blocking
-    let claves = match.crearClavesBlocking(newPatient);
-    newPatient['claveBlocking'] = claves;
-    newPatient['apellido'] = newPatient['apellido'].toUpperCase();
-    newPatient['nombre'] = newPatient['nombre'].toUpperCase();
-    // Habilitamos el paciente como activo cuando es nuevo
-    newPatient['activo'] = true;
+    req.body.activo = true;
+    controller.createPaciente(req.body, req).then(pacienteObj => {
+        return res.json(pacienteObj);
+    }).catch((error) => {
+        return next(error);
+    })
 
-    Auth.audit(newPatient, req);
-    newPatient.save((err) => {
-        if (err) {
-            return next(err);
-        }
-        let nuevoPac = JSON.parse(JSON.stringify(newPatient));
-        delete nuevoPac._id;
-        delete nuevoPac.relaciones;
-        connElastic.create(newPatient._id.toString(), nuevoPac).then(() => {
-            Logger.log(req, 'mpi', 'insert', newPatient);
-            res.json(newPatient);
-        }).catch(error => {
-            return next(error);
-        });
-    });
+    // let match = new Matching();
+    // let newPatient = new paciente(req.body);
+    // let connElastic = new ElasticSync();
+
+    // // Se genera la clave de blocking
+    // let claves = match.crearClavesBlocking(newPatient);
+    // newPatient['claveBlocking'] = claves;
+    // newPatient['apellido'] = newPatient['apellido'].toUpperCase();
+    // newPatient['nombre'] = newPatient['nombre'].toUpperCase();
+    // // Habilitamos el paciente como activo cuando es nuevo
+    // newPatient['activo'] = true;
+
+    // Auth.audit(newPatient, req);
+    // newPatient.save((err) => {
+    //     if (err) {
+    //         return next(err);
+    //     }
+    //     let nuevoPac = JSON.parse(JSON.stringify(newPatient));
+    //     delete nuevoPac._id;
+    //     delete nuevoPac.relaciones;
+    //     connElastic.create(newPatient._id.toString(), nuevoPac).then(() => {
+    //         Logger.log(req, 'mpi', 'insert', newPatient);
+    //         res.json(newPatient);
+    //     }).catch(error => {
+    //         return next(error);
+    //     });
+    // });
 });
 
 /**
