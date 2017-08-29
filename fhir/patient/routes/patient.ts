@@ -13,6 +13,7 @@ import {
 import {
     Auth
 } from './../../../auth/auth.class';
+import * as parser from '../controller/parser';
 
 let router = express.Router();
 
@@ -53,10 +54,6 @@ router.get('/match', function (req, res, next) {
         };
     }
 
-
-
-    console.log('valor de query: ', query);
-
     // Configuramos la cantidad de resultados que quiero que se devuelva y la query correspondiente
     let body = {
         size: 100,
@@ -75,7 +72,13 @@ router.get('/match', function (req, res, next) {
                     elem['id'] = hit._id;
                     return elem;
                 });
-            res.send(results);
+
+            let pacienteFhir = parser.pacienteAFHIR(results[0].id).then( data => {
+                console.log('paciente Fhir: ', pacienteFhir);
+                res.send(pacienteFhir);
+            });
+            //return pacienteFhir;
+
         })
         .catch((error) => {
             next(error);
