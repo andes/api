@@ -23,6 +23,12 @@ schema.add({
         required: true,
         default: false
     },
+    // Indica si este registro es una solicitud
+    esSolicitud: {
+        type: Boolean,
+        required: true,
+        default: false
+    },
     // Almacena el valor del átomo, molécula o fórmula.
     // Para el caso de las moléculas, el valor puede ser nulo.
     valor: mongoose.Schema.Types.Mixed,

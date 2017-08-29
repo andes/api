@@ -1,3 +1,4 @@
+import { SemanticTag } from './semantic-tag';
 import * as mongoose from 'mongoose';
 import { SnomedConcept } from './snomed-concept';
 
@@ -9,13 +10,43 @@ export let schema = new mongoose.Schema({
     },
     // Vinculación al componente de la aplicación Angular
     componente: {
-        ruta: String,
-        nombre: String
+        type: String,
+        required: true
     },
+    // Indica los semantic tags para los cuales este elemento es el registro por default
+    defaultFor: ['SemanticTag'],
     // Tipo de elemento
     tipo: {
         type: String,
         enum: ['atomo', 'molecula', 'formula']
+    },
+    // Indica si este elementoRUP aplica a una solicitud
+    esSolicitud: {
+        type: Boolean,
+        required: true,
+        default: false
+    },
+    // Indica los parámetros para instanciar el componente en formato {key: value}
+    params: {
+        type: mongoose.Schema.Types.Mixed,
+        validate: {
+            validator(value) {
+                if (value === null) {
+                    return true;
+                } else {
+                    return Object.isObject(value);
+                }
+            },
+            message: '{VALUE} is not a valid object'
+        }
+    },
+    // Indica el estilo para aplicar al componente
+    style: {
+        columns: {
+            type: Number,
+            default: 12
+        },
+        cssClass: String
     },
     // Conceptos SNOMED relacionados que se muestran e implementan de la misma manera.
     // Por ejemplo: "Toma de temperatura del paciente (SCTID: 56342008)" y
@@ -24,16 +55,10 @@ export let schema = new mongoose.Schema({
     conceptos: [SnomedConcept],
     // Elementos RUP requeridos para la ejecución.
     // Por ejemplo, en "Control de Niño sano" es obligatorio ejecutar "Toma de peso"
-    requeridos: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'elementoRUP'
-    }],
+    requeridos: [SnomedConcept],
     // Elementos RUP más frecuentes para la ejecución.
     // Por ejemplo, en "Consulta de medicina general" se puede sugerir ejecutar "Signos vitales"
-    frecuentes: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'elementoRUP'
-    }],
+    frecuentes: [SnomedConcept],
 });
 
 export let elementoRUP = mongoose.model('elementoRUP', schema, 'elementosRUP');
