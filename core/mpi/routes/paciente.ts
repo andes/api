@@ -476,13 +476,13 @@ router.post('/pacientes/mpi', function (req, res, next) {
 
     let match = new Matching();
     let newPatientMpi = new pacienteMpi(req.body);
-    
+
     // Se genera la clave de blocking
     let claves = match.crearClavesBlocking(newPatientMpi);
     newPatientMpi['claveBlocking'] = claves;
-    
+
     Auth.audit(newPatientMpi, req);
-    
+
     newPatientMpi.save((err) => {
         if (err) {
             return next(err);
@@ -500,7 +500,7 @@ router.post('/pacientes/mpi', function (req, res, next) {
             return next(error);
 
         });
-            
+
     });
 });
 
@@ -513,7 +513,7 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
     let query = {
         _id: objectId
     };
-    
+
     let match = new Matching();
 
     pacienteMpi.findById(query, function (err, patientFound: any) {
@@ -556,7 +556,7 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
 
                 let pacAct = JSON.parse(JSON.stringify(patientFound));
 
-                
+
                 connElastic.sync(patientFound).then((updated) => {
                     if (updated) {
                         Logger.log(req, 'mpi', 'elasticUpdate', {
@@ -592,7 +592,7 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
                 }).catch(error => {
                     return next(error);
                 });
-                    
+
             });
         }
 
@@ -882,25 +882,13 @@ router.delete('/pacientes/:id', function (req, res, next) {
     if (!Auth.check(req, 'mpi:paciente:deleteAndes')) {
         return next(403);
     }
-
-    let ObjectId = mongoose.Types.ObjectId;
     let connElastic = new ElasticSync();
-
+    let ObjectId = mongoose.Types.ObjectId;
     let objectId = new ObjectId(req.params.id);
-    let query = {
-        _id: objectId
-    };
-    paciente.findById(query, function (err, patientFound) {
-        if (err) {
-            return next(err);
-        }
+    controller.deletePacienteAndes(objectId).then((patientFound: any) => {
         Auth.audit(patientFound, req);
-        patientFound.remove();
-        connElastic.delete(patientFound._id.toString()).then(() => {
-            res.json(patientFound);
-        }).catch(error => {
-            return next(error);
-        });
+    }).catch((error) => {
+        return next(error);
     });
 });
 
