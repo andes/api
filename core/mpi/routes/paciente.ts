@@ -476,35 +476,31 @@ router.post('/pacientes/mpi', function (req, res, next) {
 
     let match = new Matching();
     let newPatientMpi = new pacienteMpi(req.body);
-    let connElastic = new Client({
-        host: configPrivate.hosts.elastic_main,
-    });
+    
     // Se genera la clave de blocking
     let claves = match.crearClavesBlocking(newPatientMpi);
     newPatientMpi['claveBlocking'] = claves;
-
+    
     Auth.audit(newPatientMpi, req);
-
+    
     newPatientMpi.save((err) => {
         if (err) {
             return next(err);
         }
         let nuevoPac = JSON.parse(JSON.stringify(newPatientMpi));
         delete nuevoPac._id;
-        connElastic.create({
-            index: 'andes',
-            type: 'paciente',
-            id: newPatientMpi._id.toString(),
-            body: nuevoPac
-        }, function (error, response) {
-            if (error) {
-                return next(error);
-            }
+
+        let connElastic = new ElasticSync();
+        connElastic.create(newPatientMpi._id.toString(), nuevoPac).then(() => {
             Logger.log(req, 'mpi', 'elasticInsert', {
                 nuevo: nuevoPac,
             });
             res.json(newPatientMpi);
+        }).catch((error) => {
+            return next(error);
+
         });
+            
     });
 });
 
@@ -517,9 +513,7 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
     let query = {
         _id: objectId
     };
-    let connElastic = new Client({
-        host: configPrivate.hosts.elastic_main,
-    });
+    
     let match = new Matching();
 
     pacienteMpi.findById(query, function (err, patientFound: any) {
@@ -527,6 +521,7 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
             return next(404);
         }
 
+        let connElastic = new ElasticSync();
         let pacienteOriginal = null;
         if (patientFound) {
             // Guarda los valores originales para el logger
@@ -560,45 +555,19 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
                 }
 
                 let pacAct = JSON.parse(JSON.stringify(patientFound));
-                delete pacAct._id;
 
-                connElastic.search({
-                    q: patientFound._id.toString()
-                }).then(function (body) {
-                    let hits = body.hits.hits;
-                    if (hits.length > 0) {
-                        connElastic.update({
-                            index: 'andes',
-                            type: 'paciente',
-                            id: patientFound._id.toString(),
-                            body: {
-                                doc: pacAct
-                            }
-                        }, function (error, response) {
-                            if (error) {
-                                return next(error);
-                            }
-                            Logger.log(req, 'mpi', 'elasticUpdate', {
-                                original: pacienteOriginal,
-                                nuevo: patientFound
-                            });
-                            res.json(patientFound);
+                
+                connElastic.sync(patientFound).then((updated) => {
+                    if (updated) {
+                        Logger.log(req, 'mpi', 'elasticUpdate', {
+                            original: pacienteOriginal,
+                            nuevo: patientFound
                         });
                     } else {
-                        connElastic.create({
-                            index: 'andes',
-                            type: 'paciente',
-                            id: patientFound._id.toString(),
-                            body: pacAct
-                        }, function (error, response) {
-                            if (error) {
-                                return next(error);
-                            }
-                            Logger.log(req, 'mpi', 'elasticInsert', patientFound);
-                            res.json(patientFound);
-                        });
+                        Logger.log(req, 'mpi', 'elasticInsert', patientFound);
                     }
-                }, function (error) {
+                    res.json(patientFound);
+                }).catch(error => {
                     return next(error);
                 });
             });
@@ -617,18 +586,13 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
                 let nuevoPac = JSON.parse(JSON.stringify(newPatient));
                 delete nuevoPac._id;
 
-                connElastic.create({
-                    index: 'andes',
-                    type: 'paciente',
-                    id: newPatient._id.toString(),
-                    body: nuevoPac
-                }, function (error, response) {
-                    if (error) {
-                        return next(error);
-                    }
+                connElastic.create(newPatient._id.toString(), nuevoPac).then(() => {
                     Logger.log(req, 'mpi', 'elasticInsertInPut', newPatient);
                     res.json(newPatient);
+                }).catch(error => {
+                    return next(error);
                 });
+                    
             });
         }
 
@@ -666,30 +630,21 @@ router.delete('/pacientes/mpi/:id', function (req, res, next) {
         return next(403);
     }
 
-    let connElastic = new Client({
-        host: configPrivate.hosts.elastic_main,
-    });
-
-    let ObjectId = (require('mongoose').Types.ObjectId);
-    let objectId = new ObjectId(req.params.id);
     let query = {
-        _id: objectId
+        _id: new mongoose.Types.ObjectId(req.params.id)
     };
+
     pacienteMpi.findById(query, function (err, patientFound) {
         if (err) {
             return next(err);
         }
         patientFound.remove();
-        connElastic.delete({
-            index: 'andes',
-            type: 'paciente',
-            id: patientFound._id.toString(),
-        }, function (error, response) {
-            if (error) {
-                return next(error);
-            }
-            // Logger.log(req, 'pacientes', 'elasticDelete', patientFound);
+
+        let connElastic = new ElasticSync();
+        connElastic.delete(patientFound._id.toString()).then(() => {
             res.json(patientFound);
+        }).catch(error => {
+            return next(error);
         });
     });
 });
@@ -727,9 +682,7 @@ router.post('/pacientes', function (req, res, next) {
     }
     let match = new Matching();
     let newPatient = new paciente(req.body);
-    let connElastic = new Client({
-        host: configPrivate.hosts.elastic_main,
-    });
+    let connElastic = new ElasticSync();
 
     // Se genera la clave de blocking
     let claves = match.crearClavesBlocking(newPatient);
@@ -747,17 +700,11 @@ router.post('/pacientes', function (req, res, next) {
         let nuevoPac = JSON.parse(JSON.stringify(newPatient));
         delete nuevoPac._id;
         delete nuevoPac.relaciones;
-        connElastic.create({
-            index: 'andes',
-            type: 'paciente',
-            id: newPatient._id.toString(),
-            body: nuevoPac
-        }, function (error, response) {
-            if (error) {
-                return next(error);
-            }
+        connElastic.create(newPatient._id.toString(), nuevoPac).then(() => {
             Logger.log(req, 'mpi', 'insert', newPatient);
             res.json(newPatient);
+        }).catch(error => {
+            return next(error);
         });
     });
 });
@@ -801,9 +748,7 @@ router.put('/pacientes/:id', function (req, res, next) {
     let query = {
         _id: objectId
     };
-    let connElastic = new Client({
-        host: configPrivate.hosts.elastic_main,
-    });
+    let connElastic = new ElasticSync();
     let match = new Matching();
 
     paciente.findById(query, function (err, patientFound: any) {
@@ -856,48 +801,19 @@ router.put('/pacientes/:id', function (req, res, next) {
                 let pacAct = JSON.parse(JSON.stringify(patientFound));
                 delete pacAct._id;
                 delete pacAct.relaciones;
-                connElastic.search({
-                    q: '_id:' + patientFound.id.toString()
-                }).then(function (body) {
 
-                    let hits = body.hits.hits;
-                    if (hits.length > 0) {
-                        connElastic.update({
-                            index: 'andes',
-                            type: 'paciente',
-                            id: patientFound._id.toString(),
-                            body: {
-                                doc: pacAct
-                            }
-                        }, function (error, response) {
-                            if (error) {
-                                return next(error);
-                            }
-                            Logger.log(req, 'mpi', 'update', {
-                                original: pacienteOriginal,
-                                nuevo: patientFound
-                            });
-                            res.json(patientFound);
+                connElastic.sync(patientFound).then(updated => {
+                    if (updated) {
+                        Logger.log(req, 'mpi', 'update', {
+                            original: pacienteOriginal,
+                            nuevo: patientFound
                         });
                     } else {
-                        connElastic.create({
-                            index: 'andes',
-                            type: 'paciente',
-                            id: patientFound._id.toString(),
-                            body: {
-                                doc: pacAct
-                            }
-                        }, function (error, response) {
-                            if (error) {
-                                return next(error);
-                            }
-                            Logger.log(req, 'mpi', 'update', {
-                                original: pacienteOriginal,
-                                nuevo: patientFound
-                            });
-                            res.json(patientFound);
-                        });
+                        Logger.log(req, 'mpi', 'insert', patientFound);
                     }
+                    res.json(patientFound);
+                }).catch(error => {
+                    return next(error);
                 });
             });
         } else {
@@ -919,52 +835,21 @@ router.put('/pacientes/:id', function (req, res, next) {
                 delete nuevoPac._id;
                 delete nuevoPac.relaciones;
 
-                connElastic.search({
-                    q: '_id:' + newPatient._id.toString()
-                }).then(function (body) {
-                    let hits = body.hits.hits;
-                    if (hits.length > 0) {
-                        connElastic.update({
-                            index: 'andes',
-                            type: 'paciente',
-                            id: newPatient._id.toString(),
-                            body: {
-                                doc: nuevoPac
-                            }
-                        }, function (error, response) {
-                            if (error) {
-                                return next(error);
-                            }
-                            Logger.log(req, 'mpi', 'update', {
-                                original: pacienteOriginal,
-                                nuevo: newPatient
-                            });
-                            res.json(newPatient);
+                connElastic.sync(newPatient).then(updated => {
+                    if (updated) {
+                        Logger.log(req, 'mpi', 'update', {
+                            original: nuevoPac,
+                            nuevo: newPatient
                         });
                     } else {
-                        connElastic.create({
-                            index: 'andes',
-                            type: 'paciente',
-                            id: newPatient._id.toString(),
-                            body: nuevoPac
-                        }, function (error, response) {
-                            if (error) {
-                                Logger.log(req, 'mpi', 'insert', {
-                                    error: error,
-                                    data: newPatient
-                                });
-                            }
-                            Logger.log(req, 'mpi', 'insert', newPatient);
-                            res.json(newPatient);
-                        });
+                        Logger.log(req, 'mpi', 'insert', newPatient);
                     }
-                }, function (error) {
+                    res.json(patientFound);
+                }).catch(error => {
                     return next(error);
                 });
             });
         }
-
-
     });
 });
 
@@ -999,9 +884,8 @@ router.delete('/pacientes/:id', function (req, res, next) {
     }
 
     let ObjectId = mongoose.Types.ObjectId;
-    let connElastic = new Client({
-        host: configPrivate.hosts.elastic_main,
-    });
+    let connElastic = new ElasticSync();
+
     let objectId = new ObjectId(req.params.id);
     let query = {
         _id: objectId
@@ -1012,17 +896,10 @@ router.delete('/pacientes/:id', function (req, res, next) {
         }
         Auth.audit(patientFound, req);
         patientFound.remove();
-        connElastic.delete({
-            index: 'andes',
-            type: 'paciente',
-            refresh: true,
-            id: patientFound._id.toString(),
-        }, function (error, response) {
-            if (error) {
-                return next(error);
-            }
-            // Logger.log(req, 'pacientes', 'delete', patientFound);
+        connElastic.delete(patientFound._id.toString()).then(() => {
             res.json(patientFound);
+        }).catch(error => {
+            return next(error);
         });
     });
 });
