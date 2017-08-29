@@ -22,8 +22,8 @@ export function updatePaciente(pacienteObj, data, req = null) {
         // if (pacienteObj.estado !== 'validado' || pacienteObj.isScan) {
         pacienteObj.documento = data.documento ? data.documento : pacienteObj.documento;
         pacienteObj.estado = data.estado ? data.estado : pacienteObj.estado;
-        pacienteObj.sexo = data.sexo ? data.sexo : pacienteObj.sexo ;
-        pacienteObj.fechaNacimiento = data.fechaNacimiento ? data.fechaNacimiento : pacienteObj.fechaNacimiento ;
+        pacienteObj.sexo = data.sexo ? data.sexo : pacienteObj.sexo;
+        pacienteObj.fechaNacimiento = data.fechaNacimiento ? data.fechaNacimiento : pacienteObj.fechaNacimiento;
         // }
 
         pacienteObj.genero = data.genero ? data.genero : pacienteObj.genero;
@@ -63,6 +63,37 @@ export function updatePaciente(pacienteObj, data, req = null) {
                 resolve(pacienteObj);
             }).catch(error => {
                 return reject(error);
+            });
+        });
+    });
+}
+
+export function postPacienteMpi(paciente, req = null) {
+    return new Promise((resolve, reject) => {
+        let match = new Matching();
+        let newPatientMpi = new pacienteMpi(paciente);
+
+        // Se genera la clave de blocking
+        let claves = match.crearClavesBlocking(newPatientMpi);
+        newPatientMpi['claveBlocking'] = claves;
+
+        Auth.audit(newPatientMpi, req);
+
+        newPatientMpi.save((err) => {
+            if (err) {
+                reject(err);
+            }
+            let nuevoPac = JSON.parse(JSON.stringify(newPatientMpi));
+            delete nuevoPac._id;
+
+            let connElastic = new ElasticSync();
+            connElastic.create(newPatientMpi._id.toString(), nuevoPac).then(() => {
+                Logger.log(req, 'mpi', 'elasticInsert', {
+                    nuevo: nuevoPac,
+                });
+                resolve(newPatientMpi);
+            }).catch((error) => {
+                reject(error);
             });
         });
     });
