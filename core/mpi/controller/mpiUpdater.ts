@@ -7,9 +7,24 @@ import { Matching } from '@andes/match';
 import * as controller from './paciente';
 import * as mongoose from 'mongoose';
 
+const fakeReq = {
+    user: {
+        usuario: {
+            nombre: 'Mpi',
+            apellido: 'Updater'
+        },
+        organizacion: {
+            "nombre": "HPN"
+        }
+    },
+    ip: '0.0.0.0',
+    connection: {
+        localAddress: '0.0.0.0'
+    }
+}
+
 /*Verfica que el paciente que si desea insertar en MPI no exista previamente*/
 export function existeEnMpi(pacienteBuscado: any) {
-    let url = configPrivate.hosts.mongoDB_mpi;
     let cursorPacienteMpi: any = [];
     let match = new Matching();
     let porcentajeMatcheo;
@@ -24,15 +39,18 @@ export function existeEnMpi(pacienteBuscado: any) {
     };
 
     return new Promise((resolve: any, reject: any) => {
-
+        let flag = false;
         /*Busco todos los pacientes en MPI que caen en ese bloque */
         cursorPacienteMpi = pacienteMpi.find(condicion).cursor();
-
-        cursorPacienteMpi.on('end', function () { // Si no lo encontró, devuelvo el paciente
-            resolve(['new', pacienteBuscado]);
+        cursorPacienteMpi.on('close', function () { // Si no lo encontró, devuelvo el paciente
+            if (!flag) {
+                resolve(['new', pacienteBuscado]);
+                console.log("fin sin resultado");
+            }
         });
-        cursorPacienteMpi.eachAsync(data => {
+        cursorPacienteMpi.on('data', function (data) {
             if (data != null) {
+                flag = true;
                 let pacienteDeMpi = data;
                 porcentajeMatcheo = match.matchPersonas(pacienteBuscado, pacienteDeMpi, weights, config.algoritmo); // Por cada paciente lo comparo con el paciente Buscado
                 if (porcentajeMatcheo < 1) {
@@ -73,59 +91,54 @@ export function existeEnMpi(pacienteBuscado: any) {
 
 export function updatingMpi() {
     /*Definicion de variables y operaciones*/
-    let pacientesInsertados: any = [];
     let counter = 0;
     return new Promise((resolve: any, reject: any) => {
-
         try {
-            let url = configPrivate.hosts.mongoDB_main.host;
             /*La condición de búsqueda es que sea un paciente validado por fuente auténtica*/
             let condicion = {
                 'estado': 'validado',
             };
             let cursorPacientes = paciente.find(condicion).cursor();
-            /*Finaliza el recorrido del cursor con los datos de pacientes validados */
-            cursorPacientes.on('end', function () {
-                resolve(pacientesInsertados);
-            });
             cursorPacientes.eachAsync(data => {
                 if (data !== null) {
-                    /*Hacemos una pausa para que de tiempo a la inserción y luego al borrado del paciente*/
-                    cursorPacientes.pause();
-                    existeEnMpi(data)
-                        .then((resultado: any) => {
-                            let ObjectId = mongoose.Types.ObjectId;
-                            let objectId = new ObjectId(resultado._id);
-                            controller.deletePacienteAndes(objectId)
-                                .then((rta3: any) => {
-                                    /*Si NO hubo matching al 100% lo tengo que insertar en MPI */
-                                    if (resultado[0] !== 'merge') {
-                                        if (resultado[0] === 'new') {
-                                            pacientesInsertados.push(resultado);
-                                            controller.postPacienteMpi(resultado)
-                                                .then((rta4: any) => {
-                                                    // console.log('Paciente Guardado es:', resultado);
-                                                });
-                                        }
-                                    } else {
-                                        /*Se fusionan los pacientes, pacFusionar es un paciente de ANDES y tengo q agregar
-                                        los campos de este paciente al paciente de mpi*/
-                                        let pacienteAndes = data;
-                                        let pacienteMpi = resultado;
-                                        controller.updatePaciente(pacienteMpi, pacienteAndes)
-                                            .then((rta5: any) => {
-                                                // console.log('El paciente ha sido actualizado: ', pacienteMpi);
-                                            });
-                                    }
+                    existeEnMpi(data).then((resultado: any) => {
+                        let objectId = new mongoose.Types.ObjectId(resultado[1]._id);
+                        /*Si NO hubo matching al 100% lo tengo que insertar en MPI */
+                        if (resultado[0] !== 'merge') {
+                            if (resultado[0] === 'new') {
+                                let paciente = resultado[1].toObject();
+                                controller.postPacienteMpi(paciente, fakeReq)
+                                    .then((rta4: any) => {
+                                        controller.deletePacienteAndes(objectId).catch(error => {
+                                            console.log('Delete 1 error', error)
+                                        });
+                                    }).catch(error => {
+                                        console.log('post Paciente error', error)
+                                    });
+                            } else if (resultado[0] === 'notMerge') {
+                                controller.deletePacienteAndes(objectId).catch(error => {
+                                    console.log('Delete 2 error', error)
                                 });
-                            // console.log('Cantidad de pacientes procesados', counter++);
-                            cursorPacientes.resume();
-                        });
+                            }
+                        } else {
+                            /*Se fusionan los pacientes, pacFusionar es un paciente de ANDES y tengo q agregar
+                            los campos de este paciente al paciente de mpi*/
+                            let pacienteAndes = data;
+                            let pacienteMpi = resultado[1];
+                            controller.updatePaciente(pacienteMpi, pacienteAndes, fakeReq).then((rta5: any) => {
+                                controller.deletePacienteAndes(objectId).catch(error => {
+                                    console.log('Delete 3 error', error)
+                                });
+                            }).catch(error => {
+                                console.log('Update paciente', error)
+                            });
+                        }
+                    }).catch(error => {
+                        console.log('exite en mpi error', error)
+                    });
                 }
             });
-
         } catch (err) {
-            reject(err);
         }
     });
 }
