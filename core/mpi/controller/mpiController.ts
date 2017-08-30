@@ -12,6 +12,7 @@ import * as controllerPaciente from './paciente';
 export function mpiCorrector(req) {
     return new Promise((resolve, reject) => {
         let condicion = {
+            'documento' : '93240495',
             'entidadesValidadoras': {
                 $nin: ['Sisa']
             }
@@ -24,7 +25,6 @@ export function mpiCorrector(req) {
                 if (resultado) {
                     let match = resultado['matcheos'].matcheo; // Valor del matcheo de sisa
                     let pacienteSisa = resultado['matcheos'].datosPaciente; // paciente con los datos de Sisa originales
-                    log(resultado);
                     let data;
                     if (match >= 95) {
                         // Si el matcheo es mayor a 95% tengo que actualizar los datos en MPI
@@ -35,16 +35,25 @@ export function mpiCorrector(req) {
                             apellido: pacienteSisa.apellido,
                         };
                     } else {
-                        // TODO: POST/PUT en una collection sisaRejected
+                        // POST/PUT en una collection sisaRejected
+                        let pacienteSisaRejected = new sisaRejected();
+                        pacienteSisaRejected = pacienteAndes;
+                        sisaRejected.findById(pacienteAndes._id).then(pac => {
+                            if (!pac) {
+                                pacienteSisaRejected.save((err) => {
+                                    if (err) {
+                                        return reject(err);
+                                    }
+                                });
+                            }
 
-
+                        });
                     }
+                    // Agrega a sisa como entidad validadora
                     pacienteAndes.entidadesValidadoras.push('Sisa');
                     data['entidadesValidadoras'] = pacienteAndes.entidadesValidadoras;
+                    // PUT de paciente en MPI
                     controllerPaciente.updatePaciente(pacienteAndes, data, req);
-                    // agrega a sisa como entidad validadora
-                    // pacienteAndes.entidadesValidadoras.push('Sisa');
-                    // TODO: PUT de paciente en MPI
                 }
 
             });

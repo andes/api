@@ -1,23 +1,14 @@
 import * as express from 'express';
 import * as mongoose from 'mongoose';
-import * as config from '../../../config';
-import * as configPrivate from '../../../config.private';
-import * as moment from 'moment';
 import { Matching } from '@andes/match';
-import { Client } from 'elasticsearch';
-import { Auth } from './../../../auth/auth.class';
-let router = express.Router();
-// Services
-import { Logger } from '../../../utils/logService';
-// Schemas
-import { pacienteMpi } from '../schemas/paciente';
-import { paciente } from '../schemas/paciente';
+import { pacienteMpi , paciente } from '../schemas/paciente';
 import { log } from '../../log/schemas/log';
-import * as debuger from 'debug';
-
 import * as controller from '../controller/paciente';
+import { Auth } from './../../../auth/auth.class';
+import { Logger } from '../../../utils/logService';
 import { ElasticSync } from '../../../utils/elasticSync';
 
+let router = express.Router();
 
 /**
  * @swagger
@@ -585,7 +576,7 @@ router.post('/pacientes', function (req, res, next) {
         return res.json(pacienteObj);
     }).catch((error) => {
         return next(error);
-    })
+    });
 
     // let match = new Matching();
     // let newPatient = new paciente(req.body);
