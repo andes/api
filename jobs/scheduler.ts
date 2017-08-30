@@ -9,6 +9,11 @@ class Scheduler {
     static initialize() {
 
         Connections.initialize();
+
+        schedule.scheduleJob('59 23 * * *', function () {
+            let updater = require('./../core/mpi/controller/mpiUpdater');
+            updater.updatingMpi();
+        });
         /**
          * Descargar Farmacias de Turnos
          */
