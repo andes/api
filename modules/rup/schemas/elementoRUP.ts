@@ -26,28 +26,6 @@ export let schema = new mongoose.Schema({
         required: true,
         default: false
     },
-    // Indica los parámetros para instanciar el componente en formato {key: value}
-    params: {
-        type: mongoose.Schema.Types.Mixed,
-        validate: {
-            validator(value) {
-                if (value === null) {
-                    return true;
-                } else {
-                    return Object.isObject(value);
-                }
-            },
-            message: '{VALUE} is not a valid object'
-        }
-    },
-    // Indica el estilo para aplicar al componente
-    style: {
-        columns: {
-            type: Number,
-            default: 12
-        },
-        cssClass: String
-    },
     // Conceptos SNOMED relacionados que se muestran e implementan de la misma manera.
     // Por ejemplo: "Toma de temperatura del paciente (SCTID: 56342008)" y
     //              "Toma de temperatura rectal del paciente (SCTID: 18649001")
@@ -55,7 +33,37 @@ export let schema = new mongoose.Schema({
     conceptos: [SnomedConcept],
     // Elementos RUP requeridos para la ejecución.
     // Por ejemplo, en "Control de Niño sano" es obligatorio ejecutar "Toma de peso"
-    requeridos: [SnomedConcept],
+    requeridos: [
+        {
+            elementoRUP: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'elementoRUP'
+            },
+            concepto: SnomedConcept,
+            // Indica estilos para la instancia del elementoRUP
+            style: {
+                columns: {
+                    type: Number,
+                    default: 12
+                },
+                cssClass: String
+            },
+            // Indica parámetros para la instancia del elementoRUP en formato {key: value}
+            params: {
+                type: mongoose.Schema.Types.Mixed,
+                validate: {
+                    validator(value) {
+                        if (value === null) {
+                            return true;
+                        } else {
+                            return Object.isObject(value);
+                        }
+                    },
+                    message: '{VALUE} is not a valid object'
+                }
+            },
+        }
+    ],
     // Elementos RUP más frecuentes para la ejecución.
     // Por ejemplo, en "Consulta de medicina general" se puede sugerir ejecutar "Signos vitales"
     frecuentes: [SnomedConcept],
