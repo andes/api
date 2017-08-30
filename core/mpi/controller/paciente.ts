@@ -10,7 +10,12 @@ import * as configPrivate from '../../../config.private';
 import * as mongoose from 'mongoose';
 import { Auth } from './../../../auth/auth.class';
 
-
+/**
+ * Crea un paciente y lo sincroniza con elastic
+ *
+ * @param data Datos del paciente
+ * @param req  request de express para poder auditar
+ */
 export function createPaciente(data, req) {
     return new Promise((resolve, reject) => {
         let newPatient = new paciente(data);
@@ -34,20 +39,27 @@ export function createPaciente(data, req) {
     });
 }
 
+<<<<<<< HEAD
 export function updatePaciente(pacienteObj, data, req) {
+=======
+/**
+ * Update del paciente con sincroniacion con elastic
+ *
+ * @param pacienteObj Document a actualizar
+ * @param data Datos a actualizar
+ * @param req request de express para poder auditar
+ */
+export function updatePaciente(pacienteObj, data, req = null) {
+>>>>>>> 13e49c61774cfc1f3bf5262837d0b3749ea87b87
     return new Promise((resolve, reject) => {
         let pacienteOriginal = pacienteObj.toObject();
         pacienteObj.nombre = data.nombre ? data.nombre : pacienteObj.nombre;
         pacienteObj.apellido = data.apellido ? data.apellido : pacienteObj.apellido;
 
-        /*Update de paciente de todos los campos salvo que esté validado o halla sido escaneado*/
-
-        // if (pacienteObj.estado !== 'validado' || pacienteObj.isScan) {
         pacienteObj.documento = data.documento ? data.documento : pacienteObj.documento;
         pacienteObj.estado = data.estado ? data.estado : pacienteObj.estado;
         pacienteObj.sexo = data.sexo ? data.sexo : pacienteObj.sexo;
         pacienteObj.fechaNacimiento = data.fechaNacimiento ? data.fechaNacimiento : pacienteObj.fechaNacimiento;
-        // }
 
         pacienteObj.genero = data.genero ? data.genero : pacienteObj.genero;
         pacienteObj.alias = data.alias ? data.alias : pacienteObj.alias;
@@ -127,7 +139,7 @@ export function postPacienteMpi(pacienteData, req) {
  * @param {any} id
  * @returns
  */
-export function buscarPaciente(id) {
+export function buscarPaciente(id): Promise<{ db: String, paciente: any }> {
     return new Promise((resolve, reject) => {
         paciente.findById(id, function (err, data) {
             if (err) {
@@ -236,7 +248,11 @@ export function deleteRelacion(req, data) {
 
 /* Hasta acá funciones del PATCH */
 
-
+/**
+ * Matching de paciente
+ *
+ * @param data
+ */
 export function matching(data) {
 
     let connElastic = new ElasticSync();
@@ -382,6 +398,11 @@ export function matching(data) {
     });
 }
 
+/**
+ * Delete de paciente con sincronizacion con elastic
+ *
+ * @param objectId
+ */
 
 export function deletePacienteAndes(objectId) {
     return new Promise((resolve, reject) => {

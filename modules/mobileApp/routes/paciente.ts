@@ -7,6 +7,7 @@ import { Auth } from './../../../auth/auth.class';
 import { ElasticSync } from '../../../utils/elasticSync';
 import { Logger } from '../../../utils/logService';
 import * as debug from 'debug';
+import * as controllerPaciente from '../../../core/mpi/controller/paciente';
 
 let log = debug('mobileApp:paciente');
 
@@ -24,10 +25,9 @@ router.get('/paciente/:id', function (req: any, res, next) {
     let pacientes = req.user.pacientes;
     let index = pacientes.findIndex(item => item.id === idPaciente);
     if (index >= 0) {
-        authController.buscarPaciente(pacientes[index].id).then((paciente) => {
-
+        controllerPaciente.buscarPaciente(pacientes[index].id).then((resultado) => {
             // [TODO] Projectar datos que se pueden mostrar al paciente
-            return res.json(paciente);
+            return res.json(resultado.paciente);
 
         }).catch(error => {
             return res.status(422).send({ message: 'invalid_id' });
@@ -49,48 +49,34 @@ router.put('/paciente/:id', function (req: any, res, next) {
     let pacientes = req.user.pacientes;
     let index = pacientes.findIndex(item => item.id === idPaciente);
     if (index >= 0) {
-        authController.buscarPaciente(pacientes[index].id).then((paciente: any) => {
-            let pacienteOriginal = paciente.toObject();
+        controllerPaciente.buscarPaciente(pacientes[index].id).then((resultado) => {
+            let paciente = resultado.paciente;
+            let data: any = {};
 
             if (req.body.reportarError) {
-                paciente.reportarError = req.body.reportarError;
-                paciente.notaError = req.body.notas;
+                data.reportarError = req.body.reportarError;
+                data.notaError = req.body.notas;
             }
 
             if (req.body.direccion) {
-                paciente.direccion = req.body.direccion;
+                data.direccion = req.body.direccion;
             }
             if (req.body.contacto) {
-                paciente.contacto = req.body.contacto;
+                data.contacto = req.body.contacto;
             }
 
-            Auth.audit(paciente, req);
 
-            paciente.save(function (err2) {
-                if (err2) {
-                    log('Error al grabar una cuenta de paciente', err2);
-                    return next(err2);
-                }
-                res.send({ status: 'OK' });
-                (new ElasticSync()).sync(paciente).then((updated) => {
-                    if (updated) {
-                        Logger.log(req, 'mpi', 'elasticUpdate', {
-                            original: pacienteOriginal,
-                            nuevo: paciente
-                        });
-                    } else {
-                        Logger.log(req, 'mpi', 'elasticInsert', paciente);
-                    }
-                }).catch((error) => {
-                    Logger.log(req, 'pacientes', 'elasticError', error);
-                });
+            return controllerPaciente.updatePaciente(paciente, data).then(p => {
+                return res.send({ status: 'OK' });
+            }).catch(error => {
+                return next(error);
             });
 
         }).catch(error => {
-            return res.status(422).send({ message: 'invalid_id' });
+            return next({ message: 'invalid_id' });
         });
     } else {
-        res.status(422).send({ message: 'unauthorized' });
+        return next({ message: 'unauthorized' });
     }
 });
 
