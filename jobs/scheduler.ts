@@ -12,6 +12,7 @@ class Scheduler {
          * cuando se da el tiempo indicado
          *
          */
+
         jobs.forEach(job => {
             let action = require('../' + job.action);
             schedule.scheduleJob(job.when, function () {
