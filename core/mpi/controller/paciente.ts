@@ -12,7 +12,7 @@ import { Auth } from './../../../auth/auth.class';
 
 /**
  * Crea un paciente y lo sincroniza con elastic
- * 
+ *
  * @param data Datos del paciente
  * @param req  request de express para poder auditar
  */
@@ -41,10 +41,10 @@ export function createPaciente(data, req) {
 
 /**
  * Update del paciente con sincroniacion con elastic
- * 
+ *
  * @param pacienteObj Document a actualizar
  * @param data Datos a actualizar
- * @param req request de express para poder auditar 
+ * @param req request de express para poder auditar
  */
 export function updatePaciente(pacienteObj, data, req = null) {
     return new Promise((resolve, reject) => {
@@ -101,9 +101,9 @@ export function updatePaciente(pacienteObj, data, req = null) {
 
 /**
  * Crea un paciente en MPI
- * 
- * @param paciente 
- * @param req 
+ *
+ * @param paciente
+ * @param req
  */
 
 export function postPacienteMpi(pacienteData, req = null) {
@@ -145,7 +145,7 @@ export function postPacienteMpi(pacienteData, req = null) {
  * @param {any} id
  * @returns
  */
-export function buscarPaciente(id) {
+export function buscarPaciente(id): Promise<{ db: String, paciente: any }> {
     return new Promise((resolve, reject) => {
         paciente.findById(id, function (err, data) {
             if (err) {
@@ -256,8 +256,8 @@ export function deleteRelacion(req, data) {
 
 /**
  * Matching de paciente
- * 
- * @param data 
+ *
+ * @param data
  */
 export function matching(data) {
 
@@ -406,8 +406,8 @@ export function matching(data) {
 
 /**
  * Delete de paciente con sincronizacion con elastic
- * 
- * @param objectId 
+ *
+ * @param objectId
  */
 
 export function deletePacienteAndes(objectId) {

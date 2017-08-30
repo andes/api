@@ -12,7 +12,7 @@ import { INotification, PushClient } from '../controller/PushClient';
 import * as authController from '../controller/AuthController';
 import * as recordatorioController from '../controller/RecordatorioController';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
-
+import * as controllerPaciente from '../../../core/mpi/controller/paciente';
 import { sendSms, SmsOptions } from '../../../utils/sendSms';
 
 // let async = require('async');
@@ -303,7 +303,8 @@ router.post('/create/:id', function (req: any, res, next) {
     if (!mongoose.Types.ObjectId.isValid(pacienteId)) {
         return res.status(422).send({ error: 'ObjectID Inválido' });
     }
-    return authController.buscarPaciente(pacienteId).then((pacienteObj) => {
+    return controllerPaciente.buscarPaciente(pacienteId).then((resultado) => {
+        let pacienteObj = resultado.paciente;
         authController.createUserFromPaciente(pacienteObj).then(() => {
             return res.send({ message: 'OK' });
         }).catch((error) => {
@@ -328,8 +329,8 @@ router.get('/check/:id', function (req: any, res, next) {
     if (!mongoose.Types.ObjectId.isValid(pacienteId)) {
         return res.status(422).send({ error: 'ObjectID Inválido' });
     }
-    return authController.buscarPaciente(pacienteId).then((pacienteObj) => {
-
+    return controllerPaciente.buscarPaciente(pacienteId).then((resultado) => {
+        let pacienteObj = resultado.paciente;
         authController.checkAppAccounts(pacienteObj).then(() => {
             return res.send({ message: 'OK' });
         }).catch((error) => {
