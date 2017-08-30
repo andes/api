@@ -1,3 +1,4 @@
+import { paciente } from './../../../core/mpi/schemas/paciente';
 import {
     log
 } from './../../../core/log/schemas/log';
@@ -6,14 +7,20 @@ import {
     pacienteMpi
 } from '../../../core/mpi/schemas/paciente';
 
-export function pacienteAFHIR(id: any) {
+export function pacientesAFHIR(ids: any[]) {
+    console.log('ids ', ids);
+
     return new Promise((resolve: any, reject: any) => {
+        let pacientesFHIR = [];
+        ids.forEach(id => {
             pacienteMpi.findById(id, function (err, data, next) {
                 if (err) {
                     reject(err);
                 }
-
+                // console.log('data ', data);
                 // Parsea identificadores
+
+
                 let identificadores = data.identificadores ? data.identificadores.map(elemento => {
                     let identifier = {
                         assigner: elemento.entidad,
@@ -107,7 +114,11 @@ export function pacienteAFHIR(id: any) {
                     'contact': relaciones
                 }
                 console.log('pacienteFHIR ', pacienteFHIR);
-                resolve(pacienteFHIR);
+            }).then(data => {
+                pacientesFHIR.push(data);
             });
         });
-    };
+        console.log('pacientesFHIR ', pacientesFHIR);
+        resolve(pacientesFHIR);
+    });
+};

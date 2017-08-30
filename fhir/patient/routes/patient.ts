@@ -4,6 +4,7 @@ import * as config from '../../../config';
 import * as configPrivate from '../../../config.private';
 import * as moment from 'moment';
 import * as utils from '../../../utils/utils';
+import * as parser from '../controller/parser';
 import {
     Matching
 } from '@andes/match';
@@ -13,7 +14,6 @@ import {
 import {
     Auth
 } from './../../../auth/auth.class';
-import * as parser from '../controller/parser';
 
 let router = express.Router();
 
@@ -22,8 +22,8 @@ import {
     pacienteMpi
 } from '../../../core/mpi/schemas/paciente';
 
-
-router.get('/match', function (req, res, next) {
+router.get('/([\$])match', function(req, res, next){
+    
     // Verificación de permisos
     // if (!Auth.check(req, 'fhir:pacient:match')) {
     //     return next(403);
@@ -70,12 +70,12 @@ router.get('/match', function (req, res, next) {
                 .map((hit) => {
                     let elem = hit._source;
                     elem['id'] = hit._id;
-                    return elem;
+                    return elem.id;
                 });
 
-            let pacienteFhir = parser.pacienteAFHIR(results[0].id).then( data => {
-                console.log('paciente Fhir: ', pacienteFhir);
-                res.send(pacienteFhir);
+            let pacienteFhir = parser.pacientesAFHIR(results).then( data => {
+                console.log('pacientes Fhir: ', data);
+                res.send(data);
             });
             //return pacienteFhir;
 
