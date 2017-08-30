@@ -34,7 +34,7 @@ export function createPaciente(data, req) {
     });
 }
 
-export function updatePaciente(pacienteObj, data, req = null) {
+export function updatePaciente(pacienteObj, data, req) {
     return new Promise((resolve, reject) => {
         let pacienteOriginal = pacienteObj.toObject();
         pacienteObj.nombre = data.nombre ? data.nombre : pacienteObj.nombre;
@@ -91,7 +91,7 @@ export function updatePaciente(pacienteObj, data, req = null) {
     });
 }
 
-export function postPacienteMpi(pacienteData, req = null) {
+export function postPacienteMpi(pacienteData, req) {
     return new Promise((resolve, reject) => {
         let match = new Matching();
         let newPatientMpi = new pacienteMpi(pacienteData);
@@ -106,13 +106,10 @@ export function postPacienteMpi(pacienteData, req = null) {
             if (err) {
                 reject(err);
             }
-            let nuevoPac = JSON.parse(JSON.stringify(newPatientMpi));
-            delete nuevoPac._id;
-
             let connElastic = new ElasticSync();
-            connElastic.create(newPatientMpi._id.toString(), nuevoPac).then(() => {
+            connElastic.sync(newPatientMpi).then(() => {
                 Logger.log(req, 'mpi', 'elasticInsert', {
-                    nuevo: nuevoPac,
+                    nuevo: newPatientMpi,
                 });
                 resolve(newPatientMpi);
             }).catch((error) => {
@@ -402,7 +399,7 @@ export function deletePacienteAndes(objectId) {
             connElastic.delete(patientFound._id.toString()).then(() => {
                 resolve(patientFound);
             }).catch(error => {
-                reject(error);
+                resolve(patientFound);
             });
         });
     });
