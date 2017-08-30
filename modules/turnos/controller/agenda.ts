@@ -442,11 +442,12 @@ export function actualizarAgendas() {
                         }
                     }
                     agenda.save((error) => {
-                        console.log('Error al actualizar agenda' + agenda.id, error);
+                        return (error);
                     });
 
                 });
             }
+            return 'Agendas actualizadas';
         }
     });
 

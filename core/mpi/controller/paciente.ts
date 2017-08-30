@@ -1,13 +1,11 @@
-/* Realiza la búsqueda del paciente en la bd LOCAL y en MPI remoto */
-
+import * as config from '../../../config';
+import * as configPrivate from '../../../config.private';
+import * as moment from 'moment';
+import * as mongoose from 'mongoose';
 import { paciente, pacienteMpi } from '../schemas/paciente';
 import { ElasticSync } from '../../../utils/elasticSync';
 import { Logger } from '../../../utils/logService';
-import * as moment from 'moment';
 import { Matching } from '@andes/match';
-import * as config from '../../../config';
-import * as configPrivate from '../../../config.private';
-import * as mongoose from 'mongoose';
 import { Auth } from './../../../auth/auth.class';
 
 /**
@@ -73,9 +71,6 @@ export function updatePaciente(pacienteObj, data, req) {
             if (err2) {
                 return reject(err2);
             }
-            let pacAct = JSON.parse(JSON.stringify(pacienteObj));
-            delete pacAct._id;
-            delete pacAct.relaciones;
             let connElastic = new ElasticSync();
             connElastic.sync(pacienteObj).then(updated => {
                 if (updated) {
@@ -94,14 +89,19 @@ export function updatePaciente(pacienteObj, data, req) {
     });
 }
 
+/**
+ * Inserta un paciente en DB MPI
+ * no accesible desde una route de la api
+ *
+ * @export
+ * @param {any} pacienteData
+ * @param {any} req
+ * @returns
+ */
 export function postPacienteMpi(pacienteData, req) {
     return new Promise((resolve, reject) => {
         let match = new Matching();
         let newPatientMpi = new pacienteMpi(pacienteData);
-
-        // Se genera la clave de blocking
-        // let claves = match.crearClavesBlocking(newPatientMpi);
-        // newPatientMpi['claveBlocking'] = claves;
 
         Auth.audit(newPatientMpi, req);
 
@@ -158,86 +158,6 @@ export function buscarPaciente(id): Promise<{ db: String, paciente: any }> {
         });
     });
 }
-
-/* Funciones de operaciones PATCH */
-
-export function updateContactos(req, data) {
-    data.markModified('contacto');
-    Logger.log(req, 'mpi', 'update', {
-        accion: 'updateContacto',
-        ruta: req.url,
-        method: req.method,
-        data: data.contacto,
-    });
-    data.contacto = req.body.contacto;
-}
-
-export function updateRelaciones(req, data) {
-    data.markModified('relaciones');
-    data.relaciones = req.body.relaciones;
-}
-
-export function updateDireccion(req, data) {
-    data.markModified('direccion');
-    data.direccion = req.body.direccion;
-}
-
-export function updateCarpetaEfectores(req, data) {
-    data.markModified('carpetaEfectores');
-    data.carpetaEfectores = req.body.carpetaEfectores;
-}
-
-export function linkIdentificadores(req, data) {
-    data.markModified('identificadores');
-    if (data.identificadores) {
-        data.identificadores.push(req.body.dto);
-    } else {
-        data.identificadores = [req.body.dto]; // Primer elemento del array
-    }
-}
-
-export function unlinkIdentificadores(req, data) {
-    data.markModified('identificadores');
-    if (data.identificadores) {
-        data.identificadores = data.identificadores.filter(x => x.valor !== req.body.dto);
-    }
-}
-
-export function updateActivo(req, data) {
-    data.markModified('activo');
-    data.activo = req.body.dto;
-}
-
-export function updateRelacion(req, data) {
-    if (data && data.relaciones) {
-        let objRel = data.relaciones.find(elem => {
-            if (elem && req.body.dto && elem.referencia && req.body.dto.referencia) {
-                if (elem.referencia.toString() === req.body.dto.referencia.toString()) {
-                    return elem;
-                }
-            }
-        });
-
-        if (!objRel) {
-            data.markModified('relaciones');
-            data.relaciones.push(req.body.dto);
-        }
-    }
-}
-
-export function deleteRelacion(req, data) {
-    if (data && data.relaciones) {
-        data.relaciones.find(function (value, index, array) {
-            if (value && value.referencia && req.body.dto && req.body.dto.referencia) {
-                if (value.referencia.toString() === req.body.dto.referencia.toString()) {
-                    array.splice(index, 1);
-                }
-            }
-        });
-    }
-}
-
-/* Hasta acá funciones del PATCH */
 
 /**
  * Matching de paciente
@@ -390,9 +310,9 @@ export function matching(data) {
 }
 
 /**
- * Delete de paciente con sincronizacion con elastic
+ * Delete de paciente con sincronizacion a elastic
  *
- * @param objectId
+ * @param objectId ---> Id del paciente a eliminar
  */
 
 export function deletePacienteAndes(objectId) {
@@ -416,3 +336,83 @@ export function deletePacienteAndes(objectId) {
         });
     });
 }
+
+/* Funciones de operaciones PATCH */
+
+export function updateContactos(req, data) {
+    data.markModified('contacto');
+    Logger.log(req, 'mpi', 'update', {
+        accion: 'updateContacto',
+        ruta: req.url,
+        method: req.method,
+        data: data.contacto,
+    });
+    data.contacto = req.body.contacto;
+}
+
+export function updateRelaciones(req, data) {
+    data.markModified('relaciones');
+    data.relaciones = req.body.relaciones;
+}
+
+export function updateDireccion(req, data) {
+    data.markModified('direccion');
+    data.direccion = req.body.direccion;
+}
+
+export function updateCarpetaEfectores(req, data) {
+    data.markModified('carpetaEfectores');
+    data.carpetaEfectores = req.body.carpetaEfectores;
+}
+
+export function linkIdentificadores(req, data) {
+    data.markModified('identificadores');
+    if (data.identificadores) {
+        data.identificadores.push(req.body.dto);
+    } else {
+        data.identificadores = [req.body.dto]; // Primer elemento del array
+    }
+}
+
+export function unlinkIdentificadores(req, data) {
+    data.markModified('identificadores');
+    if (data.identificadores) {
+        data.identificadores = data.identificadores.filter(x => x.valor !== req.body.dto);
+    }
+}
+
+export function updateActivo(req, data) {
+    data.markModified('activo');
+    data.activo = req.body.dto;
+}
+
+export function updateRelacion(req, data) {
+    if (data && data.relaciones) {
+        let objRel = data.relaciones.find(elem => {
+            if (elem && req.body.dto && elem.referencia && req.body.dto.referencia) {
+                if (elem.referencia.toString() === req.body.dto.referencia.toString()) {
+                    return elem;
+                }
+            }
+        });
+
+        if (!objRel) {
+            data.markModified('relaciones');
+            data.relaciones.push(req.body.dto);
+        }
+    }
+}
+
+export function deleteRelacion(req, data) {
+    if (data && data.relaciones) {
+        data.relaciones.find(function (value, index, array) {
+            if (value && value.referencia && req.body.dto && req.body.dto.referencia) {
+                if (value.referencia.toString() === req.body.dto.referencia.toString()) {
+                    array.splice(index, 1);
+                }
+            }
+        });
+    }
+}
+
+/* Hasta acá funciones del PATCH */
