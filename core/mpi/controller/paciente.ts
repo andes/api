@@ -17,9 +17,9 @@ import { Auth } from './../../../auth/auth.class';
  * @param req  request de express para poder auditar
  */
 export function createPaciente(data, req) {
-    return new Promise((resolve, reject) => { 
+    return new Promise((resolve, reject) => {
         let newPatient = new paciente(data);
-                
+
         Auth.audit(newPatient, req);
         newPatient.save((err) => {
             if (err) {
@@ -36,7 +36,7 @@ export function createPaciente(data, req) {
                 return reject(error);
             });
         });
-    }); 
+    });
 }
 
 /**
@@ -106,14 +106,14 @@ export function updatePaciente(pacienteObj, data, req = null) {
  * @param req 
  */
 
-export function postPacienteMpi(paciente, req = null) {
+export function postPacienteMpi(pacienteData, req = null) {
     return new Promise((resolve, reject) => {
         let match = new Matching();
-        let newPatientMpi = new pacienteMpi(paciente);
+        let newPatientMpi = new pacienteMpi(pacienteData);
 
         // Se genera la clave de blocking
-        let claves = match.crearClavesBlocking(newPatientMpi);
-        newPatientMpi['claveBlocking'] = claves;
+        // let claves = match.crearClavesBlocking(newPatientMpi);
+        // newPatientMpi['claveBlocking'] = claves;
 
         Auth.audit(newPatientMpi, req);
 
