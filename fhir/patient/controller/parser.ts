@@ -30,7 +30,7 @@ export function pacientesAFHIR(ids: any[]) {
                                 value: unContacto.valor,
                                 rank: unContacto.ranking,
                                 // period ??
-                            }
+                            };
                             return cont;
                         }) : [];
 
@@ -43,7 +43,7 @@ export function pacientesAFHIR(ids: any[]) {
                                 city: unaDireccion.ubicacion.localidad,
                                 state: unaDireccion.ubicacion.provincia,
                                 country: unaDireccion.ubicacion.pais,
-                            }
+                            };
                             return direc;
                         }) : [];
 
@@ -58,7 +58,7 @@ export function pacientesAFHIR(ids: any[]) {
                                     'family': unaRelacion.apellido, // Family name (often called 'Surname')
                                     'given': [unaRelacion.nombre], // Given names (not always 'first'). Includes middle names
                                 }
-                            }
+                            };
                             return relacion;
                         }) : [];
 
