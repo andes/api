@@ -1,11 +1,11 @@
-import { paciente, pacienteMpi } from '../schemas/paciente';
-import { matchSisa } from '../../../utils/servicioSisa';
-import { Auth } from '../../../auth/auth.class';
 import * as config from '../../../config';
 import * as configPrivate from '../../../config.private';
-import { Matching } from '@andes/match';
-import * as controller from './paciente';
 import * as mongoose from 'mongoose';
+import * as controller from './paciente';
+import { paciente, pacienteMpi } from '../schemas/paciente';
+import { matchSisa } from '../../../utils/servicioSisa';
+import { Matching } from '@andes/match';
+import { Auth } from '../../../auth/auth.class';
 
 const fakeReq = {
     user: {
@@ -23,8 +23,14 @@ const fakeReq = {
     }
 }
 
-/*Verfica que el paciente que si desea insertar en MPI no exista previamente*/
-export function existeEnMpi(pacienteBuscado: any) {
+/**
+ * Verfica que el paciente a insertar en MPI no exista previamente
+ * 
+ * @export
+ * @param {*} pacienteBuscado 
+ * @returns 
+ */
+function existeEnMpi(pacienteBuscado: any) {
     let cursorPacienteMpi: any = [];
     let match = new Matching();
     let porcentajeMatcheo;
@@ -45,7 +51,6 @@ export function existeEnMpi(pacienteBuscado: any) {
         cursorPacienteMpi.on('close', function () { // Si no lo encontró, devuelvo el paciente
             if (!flag) {
                 resolve(['new', pacienteBuscado]);
-                console.log("fin sin resultado");
             }
         });
         cursorPacienteMpi.on('data', function (data) {
@@ -89,6 +94,12 @@ export function existeEnMpi(pacienteBuscado: any) {
     });
 }
 
+/**
+ * Inserta pacientes validados en MPI y los borra de ANDES
+ * Ejecutada en un job del scheduler
+ * @export
+ * @returns 
+ */
 export function updatingMpi() {
     /*Definicion de variables y operaciones*/
     let counter = 0;
@@ -110,14 +121,11 @@ export function updatingMpi() {
                                 controller.postPacienteMpi(paciente, fakeReq)
                                     .then((rta4: any) => {
                                         controller.deletePacienteAndes(objectId).catch(error => {
-                                            console.log('Delete 1 error', error)
                                         });
                                     }).catch(error => {
-                                        console.log('post Paciente error', error)
                                     });
                             } else if (resultado[0] === 'notMerge') {
                                 controller.deletePacienteAndes(objectId).catch(error => {
-                                    console.log('Delete 2 error', error)
                                 });
                             }
                         } else {
@@ -127,14 +135,11 @@ export function updatingMpi() {
                             let pacienteMpi = resultado[1];
                             controller.updatePaciente(pacienteMpi, pacienteAndes, fakeReq).then((rta5: any) => {
                                 controller.deletePacienteAndes(objectId).catch(error => {
-                                    console.log('Delete 3 error', error)
                                 });
                             }).catch(error => {
-                                console.log('Update paciente', error)
                             });
                         }
                     }).catch(error => {
-                        console.log('exite en mpi error', error)
                     });
                 }
             });
