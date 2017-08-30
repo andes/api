@@ -53,7 +53,7 @@ class Scheduler {
 
     }
 
-};
+}
 
 
 Scheduler.initialize();

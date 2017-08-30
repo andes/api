@@ -94,9 +94,9 @@ export function updatePaciente(pacienteObj, data, req) {
  * no accesible desde una route de la api
  *
  * @export
- * @param {any} pacienteData 
- * @param {any} req 
- * @returns 
+ * @param {any} pacienteData
+ * @param {any} req
+ * @returns
  */
 export function postPacienteMpi(pacienteData, req) {
     return new Promise((resolve, reject) => {

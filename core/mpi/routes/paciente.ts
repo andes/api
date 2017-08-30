@@ -585,7 +585,7 @@ router.post('/pacientes', function (req, res, next) {
         return res.json(pacienteObj);
     }).catch((error) => {
         return next(error);
-    })
+    });
 
     // let match = new Matching();
     // let newPatient = new paciente(req.body);

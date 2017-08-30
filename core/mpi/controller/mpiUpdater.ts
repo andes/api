@@ -14,21 +14,21 @@ const fakeReq = {
             apellido: 'Updater'
         },
         organizacion: {
-            "nombre": "HPN"
+            'nombre': 'HPN'
         }
     },
     ip: '0.0.0.0',
     connection: {
         localAddress: '0.0.0.0'
     }
-}
+};
 
 /**
  * Verfica que el paciente a insertar en MPI no exista previamente
- * 
+ *
  * @export
- * @param {*} pacienteBuscado 
- * @returns 
+ * @param {*} pacienteBuscado
+ * @returns
  */
 function existeEnMpi(pacienteBuscado: any) {
     let cursorPacienteMpi: any = [];
@@ -98,7 +98,7 @@ function existeEnMpi(pacienteBuscado: any) {
  * Inserta pacientes validados en MPI y los borra de ANDES
  * Ejecutada en un job del scheduler
  * @export
- * @returns 
+ * @returns
  */
 export function updatingMpi() {
     /*Definicion de variables y operaciones*/
