@@ -117,8 +117,8 @@ export function updatingMpi() {
                         /*Si NO hubo matching al 100% lo tengo que insertar en MPI */
                         if (resultado[0] !== 'merge') {
                             if (resultado[0] === 'new') {
-                                let paciente = resultado[1].toObject();
-                                controller.postPacienteMpi(paciente, fakeReq)
+                                let pac = resultado[1].toObject();
+                                controller.postPacienteMpi(pac, fakeReq)
                                     .then((rta4: any) => {
                                         controller.deletePacienteAndes(objectId).catch(error => {
                                         });
@@ -132,8 +132,8 @@ export function updatingMpi() {
                             /*Se fusionan los pacientes, pacFusionar es un paciente de ANDES y tengo q agregar
                             los campos de este paciente al paciente de mpi*/
                             let pacienteAndes = data;
-                            let pacienteMpi = resultado[1];
-                            controller.updatePaciente(pacienteMpi, pacienteAndes, fakeReq).then((rta5: any) => {
+                            let pacMpi = resultado[1];
+                            controller.updatePaciente(pacMpi, pacienteAndes, fakeReq).then((rta5: any) => {
                                 controller.deletePacienteAndes(objectId).catch(error => {
                                 });
                             }).catch(error => {
