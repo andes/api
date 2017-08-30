@@ -56,7 +56,7 @@ router.get('/([\$])match', function(req, res, next){
 
     // Configuramos la cantidad de resultados que quiero que se devuelva y la query correspondiente
     let body = {
-        size: 100,
+        size: 3000,
         from: 0,
         query: query
     };
@@ -66,19 +66,16 @@ router.get('/([\$])match', function(req, res, next){
             body: body
         })
         .then((searchResult) => {
-            let results: Array < any > = ((searchResult.hits || {}).hits || [])
+            let idPacientes: Array < any > = ((searchResult.hits || {}).hits || [])
                 .map((hit) => {
                     let elem = hit._source;
                     elem['id'] = hit._id;
                     return elem.id;
                 });
 
-            let pacienteFhir = parser.pacientesAFHIR(results).then( data => {
-                console.log('pacientes Fhir: ', data);
-                res.send(data);
+            let pacienteFhir = parser.pacientesAFHIR(idPacientes).then( datosFhir => {
+                res.send(datosFhir);
             });
-            //return pacienteFhir;
-
         })
         .catch((error) => {
             next(error);
