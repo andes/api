@@ -26,11 +26,28 @@ export function pacientesAFHIR(ids: any[]) {
                         let contactos = data.contacto ? data.contacto.map(unContacto => {
                             let cont = {
                                 resourceType: 'ContactPoint',
-                                system: unContacto.tipo,
                                 value: unContacto.valor,
                                 rank: unContacto.ranking,
                                 // period ??
                             }
+                            switch (unContacto.tipo) {
+                                case 'fijo':
+                                    {
+                                        cont['system'] = 'phone';
+                                    }
+                                    break;
+                                case 'celular':
+                                    {
+                                        cont['system'] = 'phone';
+                                    }
+                                    break;
+                                case 'email':
+                                    {
+                                        cont['system'] = 'email';
+                                    }
+                                    break;
+                            }
+    
                             return cont;
                         }) : [];
 
