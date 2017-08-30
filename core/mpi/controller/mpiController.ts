@@ -12,7 +12,6 @@ import * as controllerPaciente from './paciente';
 export function mpiCorrector(req) {
     return new Promise((resolve, reject) => {
         let condicion = {
-            'documento' : '93240495',
             'entidadesValidadoras': {
                 $nin: ['Sisa']
             }
