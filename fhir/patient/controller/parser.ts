@@ -19,17 +19,14 @@ export function pacientesAFHIR(ids: any[]) {
                 pacienteMpi.findById(id)
                 .then((data: any) => {
                     if (data) {
-                        /* Armar el recurso FHIR */
-                        let identificadores = data.documento ? [{assigner:'DU', value: data.documento}] : [];
-
+                        let identificadores = data.documento ? [{assigner: 'DU', value: data.documento}] : [];
                         // Parsea contactos
                         let contactos = data.contacto ? data.contacto.map(unContacto => {
                             let cont = {
                                 resourceType: 'ContactPoint',
                                 value: unContacto.valor,
                                 rank: unContacto.ranking,
-                                // period ??
-                            }
+                            };
                             switch (unContacto.tipo) {
                                 case 'fijo':
                                     {
@@ -47,10 +44,8 @@ export function pacientesAFHIR(ids: any[]) {
                                     }
                                     break;
                             }
-    
                             return cont;
                         }) : [];
-
                         // Parsea direcciones
                         let direcciones = data.direcciones ? data.direcciones.map(unaDireccion => {
                             let direc = {
@@ -60,10 +55,9 @@ export function pacientesAFHIR(ids: any[]) {
                                 city: unaDireccion.ubicacion.localidad,
                                 state: unaDireccion.ubicacion.provincia,
                                 country: unaDireccion.ubicacion.pais,
-                            }
+                            };
                             return direc;
                         }) : [];
-
                         // Parsea relaciones
                         let relaciones = data.relaciones ? data.relaciones.map(unaRelacion => {
                             let relacion = {
@@ -75,10 +69,9 @@ export function pacientesAFHIR(ids: any[]) {
                                     'family': unaRelacion.apellido, // Family name (often called 'Surname')
                                     'given': [unaRelacion.nombre], // Given names (not always 'first'). Includes middle names
                                 }
-                            }
+                            };
                             return relacion;
                         }) : [];
-
                         // enum: ['femenino', 'masculino', 'otro']
                         let genero;
                         switch (data.genero) {
@@ -98,7 +91,6 @@ export function pacientesAFHIR(ids: any[]) {
                                 }
                                 break;
                         }
-
                         let pacienteFHIR = {
                             'resourceType': 'Patient',
                             'identifier': identificadores,
@@ -255,17 +247,14 @@ export function FHIRapacientes(ids: any[]) {
                         };
                         pacientesMPI.push(pacienteFHIR);
                     }
-
                 })
                 .catch((error) => {
                     reject(error);
                 })
             );
         });
-
         Promise.all(promises).then(() => {
             resolve(pacientesMPI);
         });
-
     });
 }

@@ -23,7 +23,6 @@ import {
 } from '../../../core/mpi/schemas/paciente';
 
 router.get('/([\$])match', function(req, res, next){
-    
     // Verificación de permisos
     // if (!Auth.check(req, 'fhir:pacient:match')) {
     //     return next(403);
