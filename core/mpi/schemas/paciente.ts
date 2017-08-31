@@ -165,4 +165,3 @@ pacienteSchema.plugin(require('../../../mongoose/audit'));
 
 export let paciente = mongoose.model('paciente', pacienteSchema, 'paciente');
 export let pacienteMpi = Connections.mpi.model('paciente', pacienteSchema, 'paciente');
-export let sisaRejected = Connections.mpi.model('sisaRejected', pacienteSchema, 'sisaRejected');

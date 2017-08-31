@@ -1,11 +1,8 @@
 import * as config from '../../../config';
-import * as configPrivate from '../../../config.private';
 import * as mongoose from 'mongoose';
 import * as controller from './paciente';
 import { paciente, pacienteMpi } from '../schemas/paciente';
-import { matchSisa } from '../../../utils/servicioSisa';
 import { Matching } from '@andes/match';
-import { Auth } from '../../../auth/auth.class';
 
 const fakeReq = {
     user: {
