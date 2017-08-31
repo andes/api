@@ -107,40 +107,29 @@ export function updatingMpi() {
                 'estado': 'validado',
             };
             let cursorPacientes = paciente.find(condicion).cursor();
-            cursorPacientes.eachAsync(data => {
+            cursorPacientes.eachAsync(async data => {
                 if (data !== null) {
-                    existeEnMpi(data).then((resultado: any) => {
-                        let objectId = new mongoose.Types.ObjectId(resultado[1]._id);
-                        /*Si NO hubo matching al 100% lo tengo que insertar en MPI */
-                        if (resultado[0] !== 'merge') {
-                            if (resultado[0] === 'new') {
-                                let pac = resultado[1].toObject();
-                                controller.postPacienteMpi(pac, fakeReq)
-                                    .then((rta4: any) => {
-                                        controller.deletePacienteAndes(objectId).catch(error => {
-                                        });
-                                    }).catch(error => {
-                                    });
-                            } else if (resultado[0] === 'notMerge') {
-                                controller.deletePacienteAndes(objectId).catch(error => {
-                                });
-                            }
-                        } else {
-                            /*Se fusionan los pacientes, pacFusionar es un paciente de ANDES y tengo q agregar
-                            los campos de este paciente al paciente de mpi*/
-                            let pacienteAndes = data;
-                            let pacMpi = resultado[1];
-                            controller.updatePaciente(pacMpi, pacienteAndes, fakeReq).then((rta5: any) => {
-                                controller.deletePacienteAndes(objectId).catch(error => {
-                                });
-                            }).catch(error => {
-                            });
+                    let resultado = await existeEnMpi(data);
+                    let objectId = new mongoose.Types.ObjectId(resultado[1]._id);
+                    /*Si NO hubo matching al 100% lo tengo que insertar en MPI */
+                    if (resultado[0] !== 'merge') {
+                        if (resultado[0] === 'new') {
+                            let pac = resultado[1].toObject();
+                            await controller.postPacienteMpi(pac, fakeReq);
+                            await controller.deletePacienteAndes(objectId);
+                        } else if (resultado[0] === 'notMerge') {
+                            await controller.deletePacienteAndes(objectId);
                         }
-                    }).catch(error => {
-                    });
+                    } else {
+                        /*Se fusionan los pacientes, pacFusionar es un paciente de ANDES y tengo q agregar
+                        los campos de este paciente al paciente de mpi*/
+                        let pacienteAndes = data;
+                        let pacMpi = resultado[1];
+                        await controller.updatePaciente(pacMpi, pacienteAndes, fakeReq);
+                        await controller.deletePacienteAndes(objectId);
+                    }
                 }
             });
-        } catch (err) {
-        }
+        } catch (err) { }
     });
 }
