@@ -59,7 +59,7 @@
         "node": "nodemon -q ./index.js",
         "tsc": "tsc",
         "tsc:w": "tsc -w",
-        "jobs": "node jobs/scheduler.js"
+        "jobs": "tsc && node jobs/scheduler.js"
     },
     "repository": {
         "type": "git",

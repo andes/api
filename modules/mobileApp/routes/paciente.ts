@@ -66,7 +66,7 @@ router.put('/paciente/:id', function (req: any, res, next) {
             }
 
 
-            return controllerPaciente.updatePaciente(paciente, data).then(p => {
+            return controllerPaciente.updatePaciente(paciente, data, req).then(p => {
                 return res.send({ status: 'OK' });
             }).catch(error => {
                 return next(error);
