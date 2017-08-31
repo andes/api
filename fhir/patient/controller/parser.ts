@@ -50,14 +50,14 @@ export function pacientesAFHIR(ids: any[]) {
                                 return cont;
                             }) : [];
                             // Parsea direcciones
-                            let direcciones = data.direcciones ? data.direcciones.map(unaDireccion => {
+                            let direcciones = data.direccion ? data.direccion.map(unaDireccion => {
                                 let direc = {
                                     resourceType: 'Address',
                                     postalCode: unaDireccion.codigoPostal,
                                     line: [unaDireccion.valor],
-                                    city: unaDireccion.ubicacion.localidad,
-                                    state: unaDireccion.ubicacion.provincia,
-                                    country: unaDireccion.ubicacion.pais,
+                                    city: unaDireccion.ubicacion.localidad.nombre,
+                                    state: unaDireccion.ubicacion.provincia.nombre,
+                                    country: unaDireccion.ubicacion.pais.nombre,
                                 };
                                 return direc;
                             }) : [];
@@ -159,20 +159,18 @@ export function FHIRAPaciente(paciente: PacienteFHIR) {
         }
         return cont;
     }) : [];
-    // let direcciones = paciente.direcciones ? data.direcciones.map(unaDireccion => {
-    //     let direc = {
-    //         resourceType: 'Address',
-    //         postalCode: unaDireccion.codigoPostal,
-    //         line: [unaDireccion.valor],
-    //         city: unaDireccion.ubicacion.localidad,
-    //         state: unaDireccion.ubicacion.provincia,
-    //         country: unaDireccion.ubicacion.pais,
-    //     };
-    //     return direc;
-    // }) : [];
+    let direcciones = paciente.address ? paciente.address.map(unaAddress => {
+        let direc = {
+            codigoPostal: unaAddress.postalCode,
+            valor: unaAddress.line[0],
+            // city: unaDireccion.ubicacion.localidad,
+            // state: unaDireccion.ubicacion.provincia,
+            // country: unaDireccion.ubicacion.pais,
+        };
+        return direc;
+    }) : [];
     let pacienteMPI = {
         documento: paciente.identifier[0].value,
-        activo: paciente.active,
         nombre: paciente.name[0].given.join().replace(',', ' '),
         apellido: paciente.name[0].family,
         fechaNacimiento: paciente.birthDate
@@ -182,6 +180,9 @@ export function FHIRAPaciente(paciente: PacienteFHIR) {
     }
     if (contactos.length > 0) {
         pacienteMPI['contacto'] = contactos;
+    }
+    if (direcciones.length > 0) {
+        pacienteMPI['direccion'] = direcciones;
     }
     return pacienteMPI;
 }
