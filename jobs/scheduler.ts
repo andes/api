@@ -13,8 +13,6 @@ class Scheduler {
          *
          */
 
-        console.log('ejecutando scheduler');
-
         jobs.forEach(job => {
             let action = require('../' + job.action);
             schedule.scheduleJob(job.when, function () {
