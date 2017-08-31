@@ -33,7 +33,7 @@ router.get('/([\$])match', function(req, res, next){
 
     let query;
     let consulta;
-
+    
     req.query.identifier ? consulta = req.query.identifier : '';
     req.query.family ? consulta ? consulta = consulta + ' ' + req.query.family : consulta = req.query.family : '';
     req.query.given ?  consulta ? consulta = consulta + ' ' + req.query.given : consulta = req.query.given : '';
@@ -79,6 +79,27 @@ router.get('/([\$])match', function(req, res, next){
         .catch((error) => {
             next(error);
         });
+});
+
+router.post('/', function (req, res, next) {
+    let l = parser.FHIRAPacientes(req.body);
+    console.log('ll ', l);
+
+    //     let data = new agenda(req.body);
+    //     Auth.audit(data, req);
+    //     data.save((err) => {
+    //         Logger.log(req, 'turnos', 'insert', {
+    //             accion: 'Crear Agenda',
+    //             ruta: req.url,
+    //             method: req.method,
+    //             data: data,
+    //             err: err || false
+    //         });
+    //         if (err) {
+    //             return next(err);
+    //         }
+    //         res.json(data);
+    //     });
 });
 
 export = router;
