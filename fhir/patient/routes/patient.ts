@@ -82,7 +82,7 @@ router.get('/([\$])match', function(req, res, next){
 });
 
 router.post('/', function (req, res, next) {
-    let l = parser.FHIRAPacientes(req.body);
+    let l = parser.FHIRAPaciente(req.body);
     console.log('ll ', l);
 
     //     let data = new agenda(req.body);

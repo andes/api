@@ -10,7 +10,7 @@ import {
 } from '../../../core/mpi/schemas/paciente';
 import {
     PacienteFHIR
-} from "../../interfaces/pacienteFHIR";
+} from "../../interfaces/IPacienteFHIR";
 
 export function pacientesAFHIR(ids: any[]) {
     return new Promise((resolve: any, reject: any) => {
@@ -139,7 +139,7 @@ export function pacientesAFHIR(ids: any[]) {
 }
 
 
-export function FHIRAPacientes(paciente: PacienteFHIR) {
+export function FHIRAPaciente(paciente: PacienteFHIR) {
     let contactos = paciente.telecom ? paciente.telecom.map(unContacto => {
         let cont = {
             valor: unContacto.value,
