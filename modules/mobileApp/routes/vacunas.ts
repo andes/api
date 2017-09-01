@@ -23,7 +23,7 @@ router.get('/vacunas', function (req: any, res, next) {
     // primero buscar paciente
     controller.buscarPaciente(pacienteId).then(data => {
         const pacienteMPI = data.paciente;
-        
+
         // Filtramos por documento
         if (req.query.documento) {
             conditions['documento'] = req.query.documento;
@@ -42,7 +42,7 @@ router.get('/vacunas', function (req: any, res, next) {
                     documento: vacuna.documento,
                     sexo: vacuna.sexo,
                     fechaNacimiento: vacuna.fechaNacimiento
-                }
+                };
 
                 let match = new matching();
                 let resultadoMatching = match.matchPersonas(pacienteMPI, pacienteVacuna, weights, 'Levenshtein');
@@ -51,7 +51,7 @@ router.get('/vacunas', function (req: any, res, next) {
                 if (resultadoMatching < 0.90) {
                     resultados.splice(index, 1);
                 }
-            }); 
+            });
 
             if (err) {
                 return next(err);
