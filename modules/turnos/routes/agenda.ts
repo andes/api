@@ -274,7 +274,7 @@ router.post('/agenda/clonar', function (req, res, next) {
                         }
                         bloque._id = mongoose.Types.ObjectId();
                         bloque.turnos.forEach((turno, index1) => {
-                            turno.horaInicio = agendaCtrl.combinarFechas(clon, turno.horaInicio); 
+                            turno.horaInicio = agendaCtrl.combinarFechas(clon, turno.horaInicio);
                             turno.estado = 'disponible';
                             turno.asistencia = undefined;
                             turno.paciente = null;
