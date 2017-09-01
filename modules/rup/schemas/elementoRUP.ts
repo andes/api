@@ -69,5 +69,11 @@ export let schema = new mongoose.Schema({
     frecuentes: [SnomedConcept],
 });
 
+// Autopopula todos los hijos
+schema.pre('find', function (next) {
+    this.populate('requeridos.elementoRUP');
+    next();
+});
+
 export let elementoRUP = mongoose.model('elementoRUP', schema, 'elementosRUP');
 
