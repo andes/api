@@ -1,9 +1,9 @@
 export interface PacienteFHIR {
-    resourceType: String, //Patient
+    resourceType: String, // Patient
     identifier: [{assigner: String, value: String}],
     active: boolean, // Whether this patient's record is in active use
     name: [{
-        resourceType: String, //HumanName
+        resourceType: String, // HumanName
         family: String, // Family name (often called 'Surname')
         given: String[], // Given names (not always 'first'). Includes middle names
     }],
@@ -13,13 +13,13 @@ export interface PacienteFHIR {
     maritalStatus: String,
     photo: [{data: String}],
     telecom: [{
-        resourceType: String, //ContactPoint
+        resourceType: String, // ContactPoint
         value: String,
         rank: Number,
         system: String
     }],
     address: [{
-        resourceType: String, //Address
+        resourceType: String, // Address
         postalCode: String,
         line: [String],
         city: String,
@@ -31,7 +31,7 @@ export interface PacienteFHIR {
             text: String
         }], // The kind of relationship
         name: {
-            resourceType: String, //HumanName
+            resourceType: String, // HumanName
             family: String, // Family name (often called 'Surname')
             given: String[], // Given names (not always 'first'). Includes middle names
         }

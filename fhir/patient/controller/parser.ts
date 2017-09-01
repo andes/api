@@ -12,6 +12,9 @@ import {
     PacienteFHIR
 } from "../../interfaces/IPacienteFHIR";
 
+import * as localidad from '../../../core/tm/schemas/localidad';
+
+
 export function pacientesAFHIR(ids: any[]) {
     return new Promise((resolve: any, reject: any) => {
         let pacientesFHIR = [];
@@ -32,19 +35,13 @@ export function pacientesAFHIR(ids: any[]) {
                                 };
                                 switch (unContacto.tipo) {
                                     case 'fijo':
-                                        {
-                                            cont['system'] = 'phone';
-                                        }
+                                        cont['system'] = 'phone';
                                         break;
                                     case 'celular':
-                                        {
-                                            cont['system'] = 'phone';
-                                        }
+                                        cont['system'] = 'phone';
                                         break;
                                     case 'email':
-                                        {
-                                            cont['system'] = 'email';
-                                        }
+                                        cont['system'] = 'email';
                                         break;
                                 }
                                 return cont;
@@ -78,19 +75,13 @@ export function pacientesAFHIR(ids: any[]) {
                             let genero;
                             switch (data.genero) {
                                 case 'femenino':
-                                    {
-                                        genero = 'female';
-                                    }
+                                    genero = 'female';
                                     break;
                                 case 'masculino':
-                                    {
-                                        genero = 'male';
-                                    }
+                                    genero = 'male';
                                     break;
                                 case 'otro':
-                                    {
-                                        genero = 'other';
-                                    }
+                                    genero = 'other';
                                     break;
                             }
                             let pacienteFHIR = {
@@ -138,51 +129,78 @@ export function pacientesAFHIR(ids: any[]) {
     });
 }
 
+function buscarLocalidad(localidadStr) {
+    return new Promise((resolve, reject) => {
+
+        let query = localidad.find({});
+        query.where('nombre').equals(localidadStr);
+
+        query.exec((err, data) => {
+            if (err) {
+                reject(err);
+            }
+            resolve(data);
+        });
+    })
+}
 
 export function FHIRAPaciente(paciente: PacienteFHIR) {
-    let contactos = paciente.telecom ? paciente.telecom.map(unContacto => {
-        let cont = {
-            valor: unContacto.value,
-            ranking: unContacto.rank
-        };
-        switch (unContacto.system) {
-            case 'phone':
-                {
+    return new Promise((resolve, reject) => {
+        let contactos = paciente.telecom ? paciente.telecom.map(unContacto => {
+            let cont = {
+                valor: unContacto.value,
+                ranking: unContacto.rank
+            };
+            switch (unContacto.system) {
+                case 'phone':
                     cont['tipo'] = 'celular';
-                }
-                break;
-            case 'email':
-                {
+                    break;
+                case 'email':
                     cont['tipo'] = 'email';
-                }
-                break;
+                    break;
+            }
+            return cont;
+        }) : [];
+        let direcciones = [];
+        if (paciente.address){
+            paciente.address.forEach(async function (unaAddress) {
+                let direc = {
+                    codigoPostal: unaAddress.postalCode,
+                    valor: unaAddress.line[0],
+                    // city: unaDireccion.ubicacion.localidad,
+                    // state: unaDireccion.ubicacion.provincia,
+                    // country: unaDireccion.ubicacion.pais,
+                };
+                if (unaAddress.city) {
+                    let localidad = await buscarLocalidad(unaAddress.city);
+                    direc['ubicacion'] = {
+                        localidad: {
+                            _id: localidad[0]._id,
+                            nombre: localidad[0].nombre
+                        },
+                        provincia: localidad[0].provincia
+                    }
+                    
+                } 
+                direcciones.push(direc);
+                console.log('direcciones ', direcciones);
+            })
         }
-        return cont;
-    }) : [];
-    let direcciones = paciente.address ? paciente.address.map(unaAddress => {
-        let direc = {
-            codigoPostal: unaAddress.postalCode,
-            valor: unaAddress.line[0],
-            // city: unaDireccion.ubicacion.localidad,
-            // state: unaDireccion.ubicacion.provincia,
-            // country: unaDireccion.ubicacion.pais,
-        };
-        return direc;
-    }) : [];
-    let pacienteMPI = {
-        documento: paciente.identifier[0].value,
-        nombre: paciente.name[0].given.join().replace(',', ' '),
-        apellido: paciente.name[0].family,
-        fechaNacimiento: paciente.birthDate
-    }
-    if (paciente.active) {
-        pacienteMPI['activo'] = paciente.active;
-    }
-    if (contactos.length > 0) {
-        pacienteMPI['contacto'] = contactos;
-    }
-    if (direcciones.length > 0) {
-        pacienteMPI['direccion'] = direcciones;
-    }
-    return pacienteMPI;
+        let pacienteMPI = {
+            documento: paciente.identifier[0].value,
+            nombre: paciente.name[0].given.join().replace(',', ' '),
+            apellido: paciente.name[0].family,
+            fechaNacimiento: paciente.birthDate,
+        }
+        if (paciente.active) {
+            pacienteMPI['activo'] = paciente.active;
+        }
+        if (contactos.length > 0) {
+            pacienteMPI['contacto'] = contactos;
+        }
+        if (direcciones.length > 0) {
+            pacienteMPI['direccion'] = direcciones;
+        }
+        resolve(pacienteMPI);
+    });
 }
