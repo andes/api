@@ -66,7 +66,7 @@ router.get('/vacunas', function (req: any, res, next) {
 
 router.get('/vacunas/count', function (req: any, res, next) {
     let dni = req.query.dni;
-      
+
     // buscar vacunas
     vacunas.find({ 'documento': dni }).count().exec( (err, count)  => {
         if (err) {
@@ -74,9 +74,9 @@ router.get('/vacunas/count', function (req: any, res, next) {
         }
 
         res.json(count);
-        
+
     });
-    
+
 });
 
 module.exports = router;
