@@ -10,7 +10,7 @@ import {
 } from '../../../core/mpi/schemas/paciente';
 import {
     PacienteFHIR
-} from "../../interfaces/IPacienteFHIR";
+} from '../../interfaces/IPacienteFHIR';
 
 export function pacientesAFHIR(ids: any[]) {
     return new Promise((resolve: any, reject: any) => {
@@ -140,6 +140,8 @@ export function pacientesAFHIR(ids: any[]) {
 
 
 export function FHIRAPaciente(paciente: PacienteFHIR) {
+    return new Promise((resolve: any, reject: any) => {
+        let arrayPrmesas = [];
     let contactos = paciente.telecom ? paciente.telecom.map(unContacto => {
         let cont = {
             valor: unContacto.value,
@@ -160,6 +162,7 @@ export function FHIRAPaciente(paciente: PacienteFHIR) {
         return cont;
     }) : [];
     // let direcciones = paciente.direcciones ? data.direcciones.map(unaDireccion => {
+
     //     let direc = {
     //         resourceType: 'Address',
     //         postalCode: unaDireccion.codigoPostal,
@@ -183,5 +186,6 @@ export function FHIRAPaciente(paciente: PacienteFHIR) {
     if (contactos.length > 0) {
         pacienteMPI['contacto'] = contactos;
     }
-    return pacienteMPI;
+    resolve(pacienteMPI);
+});
 }
