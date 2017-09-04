@@ -10,7 +10,7 @@ import {
 } from '../../../core/mpi/schemas/paciente';
 import {
     PacienteFHIR
-} from "../../interfaces/IPacienteFHIR";
+} from '../../interfaces/IPacienteFHIR';
 
 import * as localidad from '../../../core/tm/schemas/localidad';
 

@@ -5,6 +5,8 @@ import * as configPrivate from '../../../config.private';
 import * as moment from 'moment';
 import * as utils from '../../../utils/utils';
 import * as parser from '../controller/parser';
+import * as validator from '../controller/validator';
+import * as checkPatientExist from '../../../utils/checkPatientExist';
 import {
     Matching
 } from '@andes/match';
@@ -14,15 +16,13 @@ import {
 import {
     Auth
 } from './../../../auth/auth.class';
-
 let router = express.Router();
-
 // Schemas
 import {
-    pacienteMpi
+    paciente
 } from '../../../core/mpi/schemas/paciente';
 
-router.get('/([\$])match', function(req, res, next){
+router.get('/([\$])match', function (req, res, next) {
     // Verificación de permisos
     // if (!Auth.check(req, 'fhir:pacient:match')) {
     //     return next(403);
@@ -30,13 +30,11 @@ router.get('/([\$])match', function(req, res, next){
     let connElastic = new Client({
         host: configPrivate.hosts.elastic_main,
     });
-
     let query;
     let consulta;
-    
     req.query.identifier ? consulta = req.query.identifier : '';
     req.query.family ? consulta ? consulta = consulta + ' ' + req.query.family : consulta = req.query.family : '';
-    req.query.given ?  consulta ? consulta = consulta + ' ' + req.query.given : consulta = req.query.given : '';
+    req.query.given ? consulta ? consulta = consulta + ' ' + req.query.given : consulta = req.query.given : '';
 
     // Traigo todos los pacientes
     if (!consulta) {
@@ -72,7 +70,7 @@ router.get('/([\$])match', function(req, res, next){
                     return elem.id;
                 });
 
-            let pacienteFhir = parser.pacientesAFHIR(idPacientes).then( datosFhir => {
+            let pacienteFhir = parser.pacientesAFHIR(idPacientes).then(datosFhir => {
                 res.send(datosFhir);
             });
         })
@@ -81,25 +79,58 @@ router.get('/([\$])match', function(req, res, next){
         });
 });
 
-router.post('/', async function (req, res, next) {
-    let l = await parser.FHIRAPaciente(req.body);
-    console.log('ll ', l);
+router.post('/patients', async function (req, res, next) {
+    // Recibimos un paciente en formato FHIR y llamamos a la función de validación de formato FHIR
+    try {
+        let pacienteFhir = req.body;
+        let fhirValid = validator.validate(pacienteFhir); // TODO x Caro ---> en Controller/validator.ts
 
-    //     let data = new agenda(req.body);
-    //     Auth.audit(data, req);
-    //     data.save((err) => {
-    //         Logger.log(req, 'turnos', 'insert', {
-    //             accion: 'Crear Agenda',
-    //             ruta: req.url,
-    //             method: req.method,
-    //             data: data,
-    //             err: err || false
-    //         });
-    //         if (err) {
-    //             return next(err);
-    //         }
-    //         res.json(data);
-    //     });
+        let connElastic = new Client({
+            host: configPrivate.hosts.elastic_main,
+        });
+
+        if (fhirValid) {
+            // Convierte un paciente FHIR en el esquema de pacientes
+            let pac = await parser.FHIRAPaciente(pacienteFhir);
+            // Genero clave de Blocking para el paciente
+            let match = new Matching();
+            pac['claveBlocking'] = match.crearClavesBlocking(pac);
+            // Verificamos si el paciente existe en elastic search
+            let existe = await checkPatientExist.exists(pac);
+            if (existe === 0) {
+                // Insertamos el paciente en la BASE ANDES LOCAL
+                let newPatient = new paciente(pac);
+                newPatient.save((err) => {
+                    if (err) {
+                        console.log('Dio error el save posiblemente problema con el schema');
+                        return next(err);
+                    }
+                    // Quitamos el _id del objeto paciente para guardarlo en elasticSearch
+                    let nuevoPac = JSON.parse(JSON.stringify(newPatient));
+                    delete nuevoPac._id;
+                    connElastic.create({
+                        index: 'andes',
+                        type: 'paciente',
+                        id: newPatient._id.toString(),
+                        body: nuevoPac
+                    }, function (error, response) {
+                        if (error) {
+                            return next(error);
+                        }
+                    });
+                });
+
+            } else {
+                console.log('Ya existe el paciente')
+                // TODO UPDATE: Analizar los campos a actualizar. ¿Cómo sabemos que información es más nueva que nuestro REPO?
+                // MEGA MATETIME
+            }
+            // response
+            res.json(pac);
+        }
+    } catch (err) {
+        return next(err);
+    }
 });
 
 export = router;
