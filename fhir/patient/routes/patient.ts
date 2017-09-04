@@ -1,3 +1,4 @@
+import { PacienteFHIR } from './../../interfaces/IPacienteFHIR';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import * as config from '../../../config';
@@ -79,12 +80,16 @@ router.get('/([\$])match', function (req, res, next) {
         });
 });
 
-router.post('/patients', async function (req, res, next) {
+router.post('/', async function (req, res, next) {
     // Recibimos un paciente en formato FHIR y llamamos a la función de validación de formato FHIR
     try {
         let pacienteFhir = req.body;
+
+        
         let fhirValid = validator.validate(pacienteFhir); // TODO x Caro ---> en Controller/validator.ts
 
+        console.log('fhirValid ', fhirValid);
+        
         let connElastic = new Client({
             host: configPrivate.hosts.elastic_main,
         });
