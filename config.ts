@@ -110,6 +110,8 @@ export const defaultLimit = 50;
 export const maxLimit = 1000;
 
 // Configuracion MPI
+export const algoritmo = 'Levenshtein';
+
 export const mpi = {
     cotaMatchMin: 0.80,
     cotaMatchMax: 0.94,

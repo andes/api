@@ -211,11 +211,32 @@ router.post('/agenda', function (req, res, next) {
     });
 });
 
+function saveAgenda(nuevaAgenda, req) {
+    return new Promise((resolve, reject) => {
+        nuevaAgenda.save((err, dataAgenda) => {
+            Logger.log(req, 'turnos', 'insert', {
+                accion: 'Clonar Agenda',
+                ruta: req.url,
+                method: req.method,
+                data: nuevaAgenda,
+                err: err || false
+            });
+            if (err) {
+                reject(err);
+            }
+            if (dataAgenda) {
+                resolve(dataAgenda);
+            }
+        });
+    });
+}
+
 // Este post recibe el id de la agenda a clonar y un array con las fechas en las cuales se va a clonar
 router.post('/agenda/clonar', function (req, res, next) {
     let idagenda = req.body.idAgenda;
     let clones = req.body.clones;
     let cloncitos = [];
+    let listaSaveAgenda = [];
 
     if (idagenda) {
         agenda.findById(idagenda, function (err, data) {
@@ -227,23 +248,19 @@ router.post('/agenda/clonar', function (req, res, next) {
                 if (clon) {
                     data._id = mongoose.Types.ObjectId();
                     data.isNew = true;
-                    let nueva = new agenda(data);
-                    let newHoraInicio = agendaCtrl.combinarFechas(clon, new Date(data['horaInicio']));
-                    let newHoraFin = agendaCtrl.combinarFechas(clon, new Date(data['horaFin']));
-                    nueva['horaInicio'] = newHoraInicio;
-                    nueva['horaFin'] = newHoraFin;
+                    let nueva = new agenda(data.toObject());
+                    nueva['horaInicio'] = agendaCtrl.combinarFechas(clon, new Date(data['horaInicio']));
+                    nueva['horaFin'] = agendaCtrl.combinarFechas(clon, new Date(data['horaFin']));
                     nueva['updatedBy'] = undefined;
                     nueva['updatedAt'] = undefined;
                     nueva['nota'] = null;
                     let newIniBloque: any;
                     let newFinBloque: any;
                     let newIniTurno: any;
-                    nueva['bloques'] = data['bloques'];
+                    // nueva['bloques'] = data['bloques'];
                     nueva['bloques'].forEach((bloque, index) => {
-                        newIniBloque = agendaCtrl.combinarFechas(clon, bloque.horaInicio);
-                        newFinBloque = agendaCtrl.combinarFechas(clon, bloque.horaFin);
-                        bloque.horaInicio = newIniBloque;
-                        bloque.horaFin = newFinBloque;
+                        bloque.horaInicio = agendaCtrl.combinarFechas(clon, bloque.horaInicio);
+                        bloque.horaFin = agendaCtrl.combinarFechas(clon, bloque.horaFin);
                         if (bloque.pacienteSimultaneos) {
                             bloque.restantesDelDia = bloque.accesoDirectoDelDia * bloque.cantidadSimultaneos;
                             bloque.restantesProgramados = bloque.accesoDirectoProgramado * bloque.cantidadSimultaneos;
@@ -257,8 +274,7 @@ router.post('/agenda/clonar', function (req, res, next) {
                         }
                         bloque._id = mongoose.Types.ObjectId();
                         bloque.turnos.forEach((turno, index1) => {
-                            newIniTurno = agendaCtrl.combinarFechas(clon, turno.horaInicio);
-                            turno.horaInicio = newIniTurno;
+                            turno.horaInicio = agendaCtrl.combinarFechas(clon, turno.horaInicio);
                             turno.estado = 'disponible';
                             turno.asistencia = undefined;
                             turno.paciente = null;
@@ -274,24 +290,11 @@ router.post('/agenda/clonar', function (req, res, next) {
                     nueva['estado'] = 'planificacion';
                     nueva['sobreturnos'] = [];
                     Auth.audit(nueva, req);
-                    nueva.save((err2) => {
-                        Logger.log(req, 'turnos', 'insert', {
-                            accion: 'Clonar Agenda',
-                            ruta: req.url,
-                            method: req.method,
-                            data: nueva,
-                            err: err2 || false
-                        });
-
-                        if (err2) {
-                            return next(err2);
-                        }
-                        cloncitos.push(nueva);
-                        if (cloncitos.length === clones.length) {
-                            res.json(cloncitos);
-                        }
-                    });
+                    listaSaveAgenda.push(saveAgenda(nueva, req));
                 }
+            });
+            Promise.all(listaSaveAgenda).then(resultado => {
+                res.json(resultado);
             });
         });
     }
