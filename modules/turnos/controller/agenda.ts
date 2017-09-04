@@ -413,3 +413,38 @@ export function getBloque(agenda, turno) {
     }
     return null;
 }
+
+
+export function esPrimerPaciente(agenda: any, idPaciente: string, opciones: any[]) {
+    return new Promise<any>((resolve, reject) => {
+        let prestacionActual = 'Exámen médico del adulto';
+        let profesionalesActuales = ['58f9eae202e4a0f31fcbd846'];
+
+        let primerPrestacion = false;
+        let primerProfesional = false;
+
+        agenda.find({}, (err, agendas) => {
+            if (err) {
+                return err;
+            }
+            agendas.forEach((ag, iAg) => {
+                ag.bloques.forEach((bl, iBl) => {
+                    bl.turnos.forEach((tu, iTu) => {
+                        if (tu.paciente && tu.paciente.id && tu.paciente.id.toString() === '59834a503ff831451edc5739'.toString()) {
+                            primerPrestacion = bl.tipoPrestaciones.map(x => {
+                                return x.term === prestacionActual ? true : false;
+                            });
+                            primerProfesional = ag.profesionales.map(pr => {
+                                return profesionalesActuales.find((f, index) => {
+                                    return pr._id.toString() === f.toString();
+                                });
+                            }).length === 0;
+                        }
+                    });
+                });
+            });
+        });
+        resolve({ profesional: primerProfesional, tipoPrestacion: primerPrestacion });
+    });
+
+}

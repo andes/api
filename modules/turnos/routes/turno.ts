@@ -1,19 +1,22 @@
+import { log } from './../../../core/log/schemas/log';
 import { ValidateDarTurno } from './../../../utils/validateDarTurno';
 import * as express from 'express';
 import * as agenda from '../schemas/agenda';
 import { Logger } from '../../../utils/logService';
 import { paciente } from '../../../core/mpi/schemas/paciente';
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
-import * as mongoose from 'mongoose';
-import * as moment from 'moment';
+import * as turnos from '../../../modules/turnos/schemas/turno';
 import { NotificationService } from '../../mobileApp/controller/NotificationService';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
+import { esPrimerPaciente } from '../controller/agenda';
+import * as mongoose from 'mongoose';
+import * as moment from 'moment';
+
 let router = express.Router();
 
 router.get('/turno/:id*?', function (req, res, next) {
 
     let pipelineTurno = [];
-    let turnos = [];
     let turno;
 
     pipelineTurno = [{
@@ -168,7 +171,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                     } else {
 
                         // Se obtiene la agenda que se va a modificar
-                        agenda.findById(req.params.idAgenda, function getAgenda(err3, data) {
+                        agenda.findById(req.params.idAgenda, async function getAgenda(err3, data) {
                             if (err3) {
                                 return next(err3);
                             }
@@ -242,6 +245,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                             let etiquetaReasignado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.reasignado';
                             let etiquetaUpdateAt: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedAt';
                             let etiquetaUpdateBy: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedBy';
+                            let etiquetaPrimeraVez: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.primeraVez';
 
                             update[etiquetaEstado] = 'asignado';
                             update[etiquetaPrestacion] = req.body.tipoPrestacion;
@@ -255,12 +259,18 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                             update[etiquetaUpdateAt] = new Date();
                             update[etiquetaUpdateBy] = usuario;
 
+                            // TODO: buscar si es primera vez del paciente => TP y paciente => Profesional
+
+                            update[etiquetaPrimeraVez] = await esPrimerPaciente(agenda, req.body.paciente.id, ['primerPrestacion', 'primerProfesional']);
+
                             let query = {
                                 _id: req.params.idAgenda,
                             };
 
                             // Agrega un tag al JSON query
                             query[etiquetaEstado] = 'disponible';
+
+
                             // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
                             (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true },
                                 function actualizarAgenda(err4, doc2: any, writeOpResult) {
