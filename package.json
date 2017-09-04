@@ -4,7 +4,7 @@
     "description": "API para ANDES",
     "main": "index.js",
     "dependencies": {
-        "@andes/match": "^1.1.6",
+        "@andes/match": "^1.1.9",
         "@types/async": "^2.0.40",
         "@types/bcrypt-nodejs": "0.0.30",
         "@types/core-js": "^0.9.36",
