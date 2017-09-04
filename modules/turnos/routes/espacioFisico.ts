@@ -64,7 +64,12 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
             query.limit(Number(req.query.limit));
         }
 
+        if (req.query.activo) {
+            query.where('activo').equals(req.query.activo);
+        }
+
         query.sort('nombre');
+
         query.exec((err, data) => {
             if (err) {
                 return next(err);
