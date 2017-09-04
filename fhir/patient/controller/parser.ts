@@ -143,6 +143,41 @@ function buscarLocalidad(localidadStr) {
         });
     })
 }
+// async function armarDirecciones(direcciones) {
+//     let v;
+//     try {
+//       v = await descargarDatos(url); 
+//     } catch(e) {
+//       v = await obtenerDatosReservas(url);
+//     }
+//     return procesarDatosEnWorker(v);
+//   }
+function armarDirecciones(direcciones){
+    let resu = [];
+    direcciones.forEach(async function (unaAddress) {
+        let direc = {
+            codigoPostal: unaAddress.postalCode,
+            valor: unaAddress.line[0],
+            // city: unaDireccion.ubicacion.localidad,
+            // state: unaDireccion.ubicacion.provincia,
+            // country: unaDireccion.ubicacion.pais,
+        };
+       
+        if (unaAddress.city) {
+            let localidad = await buscarLocalidad(unaAddress.city);
+            direc['ubicacion'] = {
+                localidad: {
+                    _id: localidad[0]._id,
+                    nombre: localidad[0].nombre
+                },
+                provincia: localidad[0].provincia
+            }
+            
+        } 
+        resu.push(resu);
+    })
+    return resu;
+}
 
 export function FHIRAPaciente(paciente: PacienteFHIR) {
     return new Promise((resolve, reject) => {
@@ -163,7 +198,7 @@ export function FHIRAPaciente(paciente: PacienteFHIR) {
         }) : [];
         let direcciones = [];
         if (paciente.address){
-            paciente.address.forEach(async function (unaAddress) {
+            paciente.address.forEach(function (unaAddress) {
                 let direc = {
                     codigoPostal: unaAddress.postalCode,
                     valor: unaAddress.line[0],
@@ -171,26 +206,41 @@ export function FHIRAPaciente(paciente: PacienteFHIR) {
                     // state: unaDireccion.ubicacion.provincia,
                     // country: unaDireccion.ubicacion.pais,
                 };
-                if (unaAddress.city) {
-                    let localidad = await buscarLocalidad(unaAddress.city);
-                    direc['ubicacion'] = {
-                        localidad: {
-                            _id: localidad[0]._id,
-                            nombre: localidad[0].nombre
-                        },
-                        provincia: localidad[0].provincia
-                    }
+                if (unaAddress.city){
+
+                }
+                // if (unaAddress.city) {
+                //     let localidad = await buscarLocalidad(unaAddress.city);
+                //     direc['ubicacion'] = {
+                //         localidad: {
+                //             _id: localidad[0]._id,
+                //             nombre: localidad[0].nombre
+                //         },
+                //         provincia: localidad[0].provincia
+                //     }
                     
-                } 
+                // } 
                 direcciones.push(direc);
-                console.log('direcciones ', direcciones);
             })
+        }
+        let genero;
+        switch (paciente.gender) {
+            case 'female':
+                genero = 'femenino';
+                break;
+            case 'male':
+                genero = 'masculino';
+                break;
+            case 'other':
+                genero = 'otro';
+                break;
         }
         let pacienteMPI = {
             documento: paciente.identifier[0].value,
             nombre: paciente.name[0].given.join().replace(',', ' '),
             apellido: paciente.name[0].family,
             fechaNacimiento: paciente.birthDate,
+            genero: genero
         }
         if (paciente.active) {
             pacienteMPI['activo'] = paciente.active;
