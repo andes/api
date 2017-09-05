@@ -56,16 +56,14 @@ export function validate(paciente: PacienteFHIR): boolean {
             && ('assigner' in anIdentifier) && ('value' in anIdentifier)
             && (typeof anIdentifier.assigner == 'string') && (typeof anIdentifier.value == 'string');
     });
-    console.log('identifier ', respuesta);
+
     paciente.name.forEach(aName => {
         respuesta = respuesta && validName(aName);
     })
-    console.log('name ', respuesta);
     
     if (paciente.active) {
         respuesta = respuesta && (typeof paciente.active == 'boolean');
     }
-    console.log('active ', respuesta);
     
     if (paciente.telecom) {
         paciente.telecom.forEach(aTelecom => {
@@ -85,22 +83,18 @@ export function validate(paciente: PacienteFHIR): boolean {
             }
         })
     }
-    console.log('telecom ', respuesta);
     
     if (paciente.gender) {
         respuesta = respuesta && paciente.gender.match("male|female|other|unknown") != null;
     }
-    console.log('gender ', respuesta);
     
     if (paciente.birthDate) {
         respuesta = respuesta && typeof paciente.birthDate == 'string'; // TODO: Algun control de que tenga formato Date
     }
-    console.log('birthDate ', respuesta);
     
     if (paciente.deceasedDateTime) {
         respuesta = respuesta && typeof paciente.deceasedDateTime == 'string'; // TODO: Algun control de que tenga formato DateTime
     }
-    console.log('deceasedDateTime ', respuesta);
     
     if (paciente.address) {
         paciente.address.forEach(anAddress => {
@@ -122,14 +116,12 @@ export function validate(paciente: PacienteFHIR): boolean {
             }
         })
     }
-    console.log('address ', respuesta);
     
     if (paciente.maritalStatus && paciente.maritalStatus.text) {
         respuesta = respuesta && Object.keys(paciente.maritalStatus).every(codingFields)
             && typeof paciente.maritalStatus.text == 'string'
             && paciente.maritalStatus.text.match("Married|Divorced|Widowed|unmarried|unknown") != null;
     }
-    console.log('maritalStatus ', respuesta);
     
     if (paciente.photo) {
         paciente.photo.forEach(aPhoto => {
@@ -139,7 +131,6 @@ export function validate(paciente: PacienteFHIR): boolean {
             }
         })
     }
-    console.log('photo ', respuesta);
     
     if (paciente.contact) {
         paciente.contact.forEach(aContact => {
@@ -151,11 +142,8 @@ export function validate(paciente: PacienteFHIR): boolean {
             if (aContact.name) {
                 respuesta = respuesta && validName(aContact.name);
             }
-
         })
     }
-    console.log('contact ', respuesta);
-    
 
     return respuesta;
 }
