@@ -1,25 +1,9 @@
+import { userScheduler } from '../../../config.private';
 import { pacienteMpi } from '../schemas/paciente';
 import { pacienteRejected } from '../schemas/pacienteRejected';
 import { matchSisa } from '../../../utils/servicioSisa';
 import { Auth } from '../../../auth/auth.class';
 import * as controllerPaciente from './paciente';
-
-const fakeReq = {
-    user: {
-        usuario: {
-            nombre: 'Mpi',
-            apellido: 'Updater'
-        },
-        organizacion: {
-            'nombre': 'HPN'
-        }
-    },
-    ip: '0.0.0.0',
-    connection: {
-        localAddress: '0.0.0.0'
-    }
-};
-
 
 /**
  * Corrije nombre y apellido de los pacientes que ingresaron al repositorio
@@ -79,7 +63,7 @@ export function mpiCorrector() {
                     pacienteAndes.entidadesValidadoras.push('Sisa');
                     data['entidadesValidadoras'] = pacienteAndes.entidadesValidadoras;
                     // PUT de paciente en MPI
-                    controllerPaciente.updatePaciente(pacienteAndes, data, fakeReq);
+                    controllerPaciente.updatePaciente(pacienteAndes, data, userScheduler);
                 }
 
             });

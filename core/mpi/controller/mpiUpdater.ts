@@ -1,24 +1,10 @@
 import * as config from '../../../config';
+import { userScheduler } from '../../../config.private';
 import * as mongoose from 'mongoose';
 import * as controller from './paciente';
 import { paciente, pacienteMpi } from '../schemas/paciente';
 import { Matching } from '@andes/match';
 
-const fakeReq = {
-    user: {
-        usuario: {
-            nombre: 'Mpi',
-            apellido: 'Updater'
-        },
-        organizacion: {
-            'nombre': 'HPN'
-        }
-    },
-    ip: '0.0.0.0',
-    connection: {
-        localAddress: '0.0.0.0'
-    }
-};
 
 /**
  * Verfica que el paciente a insertar en MPI no exista previamente
@@ -34,12 +20,8 @@ function existeEnMpi(pacienteBuscado: any) {
     let condicion = {
         'claveBlocking.0': pacienteBuscado.claveBlocking[0]
     };
-    let weights = {
-        identity: 0.3,
-        name: 0.3,
-        gender: 0.1,
-        birthDate: 0.3
-    };
+    let  weights = config.mpi.weightsUpdater;
+
 
     return new Promise((resolve: any, reject: any) => {
         let flag = false;
@@ -115,7 +97,7 @@ export function updatingMpi() {
                     if (resultado[0] !== 'merge') {
                         if (resultado[0] === 'new') {
                             let pac = resultado[1].toObject();
-                            await controller.postPacienteMpi(pac, fakeReq);
+                            await controller.postPacienteMpi(pac, userScheduler);
                             await controller.deletePacienteAndes(objectId);
                         } else if (resultado[0] === 'notMerge') {
                             await controller.deletePacienteAndes(objectId);
@@ -125,7 +107,7 @@ export function updatingMpi() {
                         los campos de este paciente al paciente de mpi*/
                         let pacienteAndes = data;
                         let pacMpi = resultado[1];
-                        await controller.updatePaciente(pacMpi, pacienteAndes, fakeReq);
+                        await controller.updatePaciente(pacMpi, pacienteAndes, userScheduler);
                         await controller.deletePacienteAndes(objectId);
                     }
                 }
