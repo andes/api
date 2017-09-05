@@ -90,8 +90,6 @@ router.post('/', async function (req, res, next) {
         let connElastic = new Client({
             host: configPrivate.hosts.elastic_main,
         });
-        
-        console.log('fhirValid ', fhirValid);
 
         if (fhirValid) {
             // Convierte un paciente FHIR en el esquema de pacientes
@@ -125,7 +123,7 @@ router.post('/', async function (req, res, next) {
                 });
 
             } else {
-                console.log('Ya existe el paciente')
+                console.log('Ya existe el paciente');
                 // TODO UPDATE: Analizar los campos a actualizar. ¿Cómo sabemos que información es más nueva que nuestro REPO?
                 // MEGA MATETIME
             }

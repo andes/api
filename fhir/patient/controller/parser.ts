@@ -98,7 +98,7 @@ export function pacientesAFHIR(ids: any[]) {
                                 deceasedDateTime: data.fechaFallecimiento
                             };
                             if (data.estadoCivil) {
-                                let estadoCivil
+                                let estadoCivil;
                                 switch (data.estadoCivil) {
                                     case 'casado':
                                         estadoCivil = 'Married';
@@ -121,7 +121,7 @@ export function pacientesAFHIR(ids: any[]) {
                             if (data.foto) { // Image of the patient
                                 pacienteFHIR['photo'] = [{ data: data.foto }];
                             }
-                            if (contactos.length > 0) { // A contact detail for the individual 
+                            if (contactos.length > 0) { // A contact detail for the individual
                                 pacienteFHIR['telecom'] = contactos;
                             }
                             if (direcciones.length > 0) { // Addresses for the individual
@@ -159,7 +159,7 @@ function buscarLocalidad(localidadStr) {
             }
             resolve(data);
         });
-    })
+    });
 }
 
 function castearDirecciones(direcciones) {
@@ -181,12 +181,12 @@ function castearDirecciones(direcciones) {
                         _id: localidad[0].provincia._id,
                         nombre: localidad[0].provincia.nombre
                     }
-                }
+                };
             }
             resultado.push(direc);
         });
         resolve(resultado);
-    })
+    });
 }
 
 
@@ -210,7 +210,7 @@ export function FHIRAPaciente(paciente: PacienteFHIR) {
             apellido: paciente.name[0].family,
             fechaNacimiento: paciente.birthDate,
             genero: genero
-        }
+        };
         let contactos = paciente.telecom ? paciente.telecom.map(unContacto => {
             let cont = {
                 valor: unContacto.value,
@@ -233,8 +233,7 @@ export function FHIRAPaciente(paciente: PacienteFHIR) {
                 relacion : { nombre: aContact.relationship[0].text},
                 nombre: aContact.name.given.join().replace(',', ' '),
                 apellido: aContact.name.family
-            }
-            
+            };
             return relacion;
         }) : [];
 
@@ -273,7 +272,7 @@ export function FHIRAPaciente(paciente: PacienteFHIR) {
             pacienteMPI['foto'] = paciente.photo[0].data;
         }
 
-        if (paciente.contact){
+        if (paciente.contact) {
             pacienteMPI['relaciones'] = relaciones;
         }
         resolve(pacienteMPI);
