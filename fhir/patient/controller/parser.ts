@@ -98,7 +98,25 @@ export function pacientesAFHIR(ids: any[]) {
                                 deceasedDateTime: data.fechaFallecimiento
                             };
                             if (data.estadoCivil) {
-                                pacienteFHIR['maritalStatus'] = { text: data.estadoCivil };
+                                let estadoCivil
+                                switch (data.estadoCivil) {
+                                    case 'casado':
+                                        estadoCivil = 'Married';
+                                        break;
+                                    case 'divorciado':
+                                        estadoCivil = 'Divorced';
+                                        break;
+                                    case 'viudo':
+                                        estadoCivil = 'Widowed';
+                                        break;
+                                    case 'soltero':
+                                        estadoCivil = 'unmarried';
+                                        break;
+                                    default:
+                                        estadoCivil = 'unknown';
+                                        break;
+                                }
+                                pacienteFHIR['maritalStatus'] = { text: estadoCivil };
                             }
                             if (data.foto) { // Image of the patient
                                 pacienteFHIR['photo'] = [{ data: data.foto }];
@@ -209,12 +227,41 @@ export function FHIRAPaciente(paciente: PacienteFHIR) {
             return cont;
         }) : [];
 
+
+        let relaciones = paciente.contact ? paciente.contact.map(aContact => {
+            let relacion = {
+                relacion : { nombre: aContact.relationship[0].text},
+                nombre: aContact.name.given.join().replace(',', ' '),
+                apellido: aContact.name.family
+            }
+            
+            return relacion;
+        }) : [];
+
         castearDirecciones(paciente.address).then((direcciones) => {
             pacienteMPI['direccion'] = direcciones;
         });
 
         if (paciente.maritalStatus) {
-            pacienteMPI['estadoCivil'] = paciente.maritalStatus['text'];
+            let estadoCivil;
+            switch (paciente.maritalStatus['text']) {
+                case 'Married':
+                    estadoCivil = 'casado';
+                    break;
+                case 'Divorced':
+                    estadoCivil = 'divorciado';
+                    break;
+                case 'Widowed':
+                    estadoCivil = 'viudo';
+                    break;
+                case 'unmarried':
+                    estadoCivil = 'soltero';
+                    break;
+                default:
+                    estadoCivil = 'otro';
+                    break;
+            }
+            pacienteMPI['estadoCivil'] = estadoCivil;
         }
         if (paciente.active) {
             pacienteMPI['activo'] = paciente.active;
@@ -226,6 +273,9 @@ export function FHIRAPaciente(paciente: PacienteFHIR) {
             pacienteMPI['foto'] = paciente.photo[0].data;
         }
 
+        if (paciente.contact){
+            pacienteMPI['relaciones'] = relaciones;
+        }
         resolve(pacienteMPI);
     });
 }

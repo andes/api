@@ -85,14 +85,13 @@ router.post('/', async function (req, res, next) {
     try {
         let pacienteFhir = req.body;
 
-        
         let fhirValid = validator.validate(pacienteFhir); // TODO x Caro ---> en Controller/validator.ts
 
-        console.log('fhirValid ', fhirValid);
-        
         let connElastic = new Client({
             host: configPrivate.hosts.elastic_main,
         });
+        
+        console.log('fhirValid ', fhirValid);
 
         if (fhirValid) {
             // Convierte un paciente FHIR en el esquema de pacientes
@@ -132,6 +131,8 @@ router.post('/', async function (req, res, next) {
             }
             // response
             res.json(pac);
+        } else {
+            return next('El formato del paciente no es válido');
         }
     } catch (err) {
         return next(err);
