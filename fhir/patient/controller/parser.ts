@@ -193,15 +193,19 @@ function castearDirecciones(direcciones) {
 export function FHIRAPaciente(paciente: PacienteFHIR) {
     return new Promise((resolve, reject) => {
         let genero;
+        let sexo; // TODO: revisar, en fhir esta solo gender
         switch (paciente.gender) {
             case 'female':
                 genero = 'femenino';
+                sexo = 'femenino';
                 break;
             case 'male':
                 genero = 'masculino';
+                sexo = 'masculino';
                 break;
             case 'other':
                 genero = 'otro';
+                sexo = 'otro';
                 break;
         }
         let pacienteMPI = {
@@ -209,7 +213,9 @@ export function FHIRAPaciente(paciente: PacienteFHIR) {
             nombre: paciente.name[0].given.join().replace(',', ' '),
             apellido: paciente.name[0].family,
             fechaNacimiento: paciente.birthDate,
-            genero: genero
+            genero: genero,
+            sexo: sexo,
+            estado: 'temporal'
         };
         let contactos = paciente.telecom ? paciente.telecom.map(unContacto => {
             let cont = {

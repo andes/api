@@ -1,3 +1,4 @@
+import { log } from './../../../core/log/schemas/log';
 import { PacienteFHIR } from './../../interfaces/IPacienteFHIR';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
@@ -60,11 +61,11 @@ router.get('/([\$])match', function (req, res, next) {
     };
 
     connElastic.search({
-            index: 'andes',
-            body: body
-        })
+        index: 'andes',
+        body: body
+    })
         .then((searchResult) => {
-            let idPacientes: Array < any > = ((searchResult.hits || {}).hits || [])
+            let idPacientes: Array<any> = ((searchResult.hits || {}).hits || [])
                 .map((hit) => {
                     let elem = hit._source;
                     elem['id'] = hit._id;
@@ -83,9 +84,12 @@ router.get('/([\$])match', function (req, res, next) {
 router.post('/', async function (req, res, next) {
     // Recibimos un paciente en formato FHIR y llamamos a la función de validación de formato FHIR
     try {
-        let pacienteFhir = req.body;
+        if (!Auth.check(req, 'mpi:paciente:postAndes')) {
+            return next(403);
+        }
 
-        let fhirValid = validator.validate(pacienteFhir); // TODO x Caro ---> en Controller/validator.ts
+        let pacienteFhir = req.body;
+        let fhirValid = validator.validate(pacienteFhir);
 
         let connElastic = new Client({
             host: configPrivate.hosts.elastic_main,
@@ -102,6 +106,8 @@ router.post('/', async function (req, res, next) {
             if (existe === 0) {
                 // Insertamos el paciente en la BASE ANDES LOCAL
                 let newPatient = new paciente(pac);
+
+                Auth.audit(newPatient, req);
                 newPatient.save((err) => {
                     if (err) {
                         console.log('Dio error el save posiblemente problema con el schema');
