@@ -7,7 +7,7 @@ import * as financiadorSchema from './financiador';
 import * as constantes from './constantes';
 import * as moment from 'moment';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
-
+import { Matching } from '@andes/match';
 
 export let pacienteSchema = new mongoose.Schema({
     identificadores: [{
@@ -75,6 +75,23 @@ export let pacienteSchema = new mongoose.Schema({
         destacada: Boolean
     }]
 });
+
+pacienteSchema.pre('save', function (next) {
+
+    if (this.isModified('nombre')) {
+        this.nombre = this.nombre.toUpperCase();
+    }
+    if (this.isModified('apellido')) {
+        this.apellido = this.apellido.toUpperCase();
+    }
+    if (this.isModified('nombre') || this.isModified('apellido') || this.isModified('documento')) {
+        let match = new Matching();
+        this.claveBlocking = match.crearClavesBlocking(this);
+    }
+    next();
+
+});
+
 
 /* Se definen los campos virtuals */
 pacienteSchema.virtual('nombreCompleto').get(function () {

@@ -116,6 +116,8 @@ export const defaultLimit = 50;
 export const maxLimit = 1000;
 
 // Configuracion MPI
+export const algoritmo = 'Levenshtein';
+
 export const mpi = {
     cotaMatchMin: 0.80,
     cotaMatchMax: 0.94,
@@ -136,5 +138,11 @@ export const mpi = {
         name: 0.10,
         gender: 0.3,
         birthDate: 0.05
+    },
+    weightsUpdater: {
+        identity: 0.3,
+        name: 0.3,
+        gender: 0.1,
+        birthDate: 0.3
     }
 };
