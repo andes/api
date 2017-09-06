@@ -102,6 +102,12 @@ export const modules = {
         path: './modules/usuarios/routes',
         route: '/modules/usuarios',
         middleware: appMiddleware
+    },
+    fhir: {
+        active: true,
+        path: './fhir/patient/routes',
+        route: '/fhir/patient',
+        middleware: appMiddleware,
     }
 };
 
