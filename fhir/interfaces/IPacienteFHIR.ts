@@ -11,7 +11,7 @@ export interface PacienteFHIR {
         resourceType: String; // ContactPoint
         value: String;
         rank: Number;
-        system: String
+        system: String // phone | email
     }];
     gender: String; // male | female | other | unknown
     birthDate: Date;

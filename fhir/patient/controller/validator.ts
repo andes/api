@@ -45,7 +45,7 @@ function areStrings(elem: string) {
 }
 
 export function validate(paciente: PacienteFHIR): boolean {
-    // TODO Caro: Esta función valida un objeto paciente FHIR y devuelve si es sintácticamente correcto o no.
+    // Esta función valida un objeto paciente FHIR y devuelve si es sintácticamente correcto o no.
     let respuesta = true;
     Object.keys(paciente).every(pacienteFHIRFields);
     // Se verifica que el paciente tenga los campos requeridos: resourceType, identifier, name
