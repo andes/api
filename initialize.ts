@@ -21,7 +21,7 @@ export function initAPI(app: Express) {
     require('./scheduler').Scheduler.initialize();
 
     // Configura Express
-    app.use(bodyParser.json());
+    app.use(bodyParser.json({limit: '150mb'}));
     app.use(bodyParser.urlencoded({
         extended: true
     }));
