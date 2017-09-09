@@ -65,27 +65,6 @@ export function generarCodigoVerificacion(onlyNumber = true) {
     return codigo;
 }
 
-export function buscarPaciente(id) {
-    return new Promise((resolve, reject) => {
-        paciente.findById(id, function (err, data) {
-            if (err) {
-                reject(err);
-            } else {
-                if (data) {
-                    resolve(data);
-                } else {
-                    pacienteMpi.findById(id, function (err2, dataMpi) {
-                        if (err2) {
-                            reject(err2);
-                        }
-                        resolve(dataMpi);
-                    });
-                }
-            }
-        });
-    });
-}
-
 function searchContacto(pacienteData, key) {
     for (let i = 0; i < pacienteData.contacto.length; i++) {
         if (pacienteData.contacto[i].tipo === key) {

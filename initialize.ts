@@ -5,6 +5,7 @@ import { Swagger } from './swagger/swagger.class';
 import { Connections } from './connections';
 import * as HttpStatus from 'http-status-codes';
 import { Express } from 'express';
+// import { Scheduler } from './scheduler';
 
 let requireDir = require('require-dir');
 
@@ -14,6 +15,10 @@ export function initAPI(app: Express) {
 
     // Inicializa Mongoose
     Connections.initialize();
+
+    // Inicializa las tareas diarias
+    // Uso el require acá porque genera problemas con los import de schemas antes de setear los defaultsSchema
+    require('./scheduler').Scheduler.initialize();
 
     // Configura Express
     app.use(bodyParser.json({limit: '150mb'}));
@@ -41,7 +46,6 @@ export function initAPI(app: Express) {
         if (config.modules[m].active) {
             let routes = requireDir(config.modules[m].path);
             for (let route in routes) {
-
                 if (config.modules[m].middleware) {
                     app.use('/api' + config.modules[m].route, config.modules[m].middleware, routes[route]);
                 } else {
