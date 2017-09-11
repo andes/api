@@ -33,8 +33,7 @@ router.get('/paciente', function (req, res, next) {
 
         query.exec(function (err, data) {
             if (err) {
-                res.status(404).json({ message: 'Error en Log de Paciente' });
-                return next(404);
+                return next(err);
             }
             res.json(data);
         });

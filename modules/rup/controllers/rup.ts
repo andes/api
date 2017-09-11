@@ -28,7 +28,7 @@ export function iterate(obj, func) {
  * @param {string} property Propiedad
  */
 export function convertToObjectId(obj, property: string) {
-    if (property === 'id' || property === 'id') {
+    if (property === 'id' || property === '_id') {
         // verificamos si es un ObjectId valido y, ademas,
         // si al castear a ObjectId los strings son iguales
         // StackOverflow: https://stackoverflow.com/a/29231016
