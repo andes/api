@@ -19,33 +19,69 @@ router.get('/sesion', Auth.authenticate(), function (req, res) {
     res.json((req as any).user);
 });
 
-router.get('/organizaciones', function (req, res, next) {
-    if (req.query.usuario) {
-        permisos.model.find({
-            usuario: req.query.usuario
-        }, { organizacion: 1, _id: 0 }).then((data) => {
-            let ids = data.map((item: any) => mongoose.Types.ObjectId(item.organizacion));
-            organizacion.model.find({ _id: { $in: ids } }, { nombre: true },
-                function (err, data2) {
-                    if (err) {
-                        return next(err);
-                    } else {
-                        res.json(data2);
-                    }
-                });
-        });
-    } else {
-        organizacion.model.find({}, {
-            nombre: true
-        }, function (err, data) {
-            if (err) {
-                return next(err);
-            } else {
-                res.json(data);
+router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
+    let username = (req as any).user.usuario.username;
+    permisos.model.find({ usuario: username }, (err, user: any) => {
+        if (err) {
+            return next(err);
+        }
+        let organizaciones = user.organizaciones.map((item) => mongoose.Types.ObjectId(item._id));
+        organizacion.model.find({ _id: { $in: organizaciones } }, (errOrgs, orgs: any[]) => {
+            if (errOrgs) {
+                return next(errOrgs);
             }
+            res.json(orgs);
         });
-    }
+    });
 });
+
+router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
+    let username = (req as any).user.usuario.username;
+    let orgId = mongoose.Types.ObjectId(req.body.organizacion);
+    Promise.all([
+        permisos.model.find({
+            'usuario': username,
+            'organizaciones._id': orgId
+        }),
+        organizacion.model.find({ _id: orgId })
+    ]).then((data: any[]) => {
+        let user = data[0];
+        let org = data[1];
+        let nuevosPermisos = user.organizaciones.find(item => item._id === org._id);
+        let oldToken: string = req.headers.authorization.substring(4);
+        let refreshToken = Auth.refreshToken(oldToken, user, nuevosPermisos, org);
+        res.send(refreshToken);
+
+    });
+});
+
+// router.get('/organizaciones', function (req, res, next) {
+//     if (req.query.usuario) {
+//         permisos.model.find({
+//             usuario: req.query.usuario
+//         }, { organizacion: 1, _id: 0 }).then((data) => {
+//             let ids = data.map((item: any) => mongoose.Types.ObjectId(item.organizacion));
+//             organizacion.model.find({ _id: { $in: ids } }, { nombre: true },
+//                 function (err, data2) {
+//                     if (err) {
+//                         return next(err);
+//                     } else {
+//                         res.json(data2);
+//                     }
+//                 });
+//         });
+//     } else {
+//         organizacion.model.find({}, {
+//             nombre: true
+//         }, function (err, data) {
+//             if (err) {
+//                 return next(err);
+//             } else {
+//                 res.json(data);
+//             }
+//         });
+//     }
+// });
 
 
 // Función interna que chequea si la cuenta mobile existe
@@ -98,7 +134,7 @@ router.post('/login', function (req, res, next) {
                 return next(403);
             }
 
-             if (req.body.mobile) {
+            if (req.body.mobile) {
                 checkMobile(data[2]._id).then((account: any) => {
                     // Crea el token con los datos de sesión
                     res.json({
