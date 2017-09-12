@@ -175,7 +175,7 @@ router.post('/login', function (req, res, next) {
     };
 
     // Valida datos
-    if (!req.body.usuario || !req.body.password || !req.body.organizacion) {
+    if (!req.body.usuario || !req.body.password) {
         return next(403);
     }
 
