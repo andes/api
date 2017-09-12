@@ -64,8 +64,9 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
             query.limit(Number(req.query.limit));
         }
 
+        // Trae sólo los espacios físicos activos
         if (req.query.activo) {
-            query.where('activo').equals(req.query.activo);
+            query.where('activo').equals(true);
         }
 
         query.sort('nombre');
