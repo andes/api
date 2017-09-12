@@ -20,7 +20,7 @@ router.get('/sesion', Auth.authenticate(), function (req, res) {
 
 router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
     let username = (req as any).user.usuario.username;
-    authUsers.find({ usuario: username }, (err, user: any) => {
+    authUsers.findOne({ usuario: username }, (err, user: any) => {
         if (err) {
             return next(err);
         }
