@@ -6,7 +6,7 @@ let router = express.Router();
 // Services
 import { Logger } from '../../../utils/logService';
 // Schemas
-import * as permisos from '../../../auth/schemas/permisos';
+import { authUsers } from '../../../auth/schemas/permisos';
 // imports
 import { Auth } from '../../../auth/auth.class';
 // Constantes
@@ -16,7 +16,7 @@ router.post('/alta', function (req, res, next) {
     if (!Auth.check(req, 'usuarios:post')) {
         return next(403);
     }
-    let data = new permisos.model(req.body);
+    let data = new authUsers(req.body);
     data.save((err) => {
         if (err) {
             return next(err);
@@ -36,7 +36,7 @@ router.put('/:id', function (req, res, next) {
     if (!Auth.check(req, 'usuarios:put')) {
         return next(403);
     }
-    permisos.model.findById(req.params.id).then((resultado: any) => {
+    authUsers.findById(req.params.id).then((resultado: any) => {
         if (resultado) {
             resultado.usuario = req.body.usuario;
             resultado.nombre = req.body.nombre;
@@ -66,7 +66,7 @@ router.get('/:id', function (req, res, next) {
     if (!Auth.check(req, 'usuarios:get:byId')) {
         return next(403);
     }
-    permisos.model.findById(req.params.id).then((resultado: any) => {
+    authUsers.findById(req.params.id).then((resultado: any) => {
         if (resultado) {
             res.json(resultado);
         }
@@ -83,7 +83,7 @@ router.get('/local/:organizacion/:usuario', function (req, res, next) {
         usuario: req.params.usuario,
         organizacion: req.params.organizacion
     };
-    permisos.model.find(filtro).then((resultado: any) => {
+    authUsers.find(filtro).then((resultado: any) => {
         if (resultado) {
             res.json(resultado);
         }
@@ -135,7 +135,7 @@ router.get('', function (req, res, next) {
     if (!Auth.check(req, 'usuarios:get')) {
         return next(403);
     }
-    permisos.model.find({}).then((resultado: any) => {
+    authUsers.find({}).then((resultado: any) => {
         if (resultado) {
             res.json(resultado);
         }

@@ -23,4 +23,4 @@ let schema = new mongoose.Schema({
     }]
 });
 
-export let model = mongoose.model('permisos', schema, 'authUsers');
+export let authUsers = mongoose.model('authUsers', schema, 'authUsers');

@@ -28,7 +28,7 @@ export class Connections {
 
         // Conecta y configura conexiones
         // 1. PRINCIPAL
-        mongoose.connect(`${configPrivate.hosts.mongoDB_main.host}`, { auth: configPrivate.hosts.mongoDB_mpi.auth, server: configPrivate.hosts.mongoDB_mpi.server });
+        mongoose.connect(`${configPrivate.hosts.mongoDB_main.host}`, { auth: configPrivate.hosts.mongoDB_main.auth, server: configPrivate.hosts.mongoDB_main.server });
         this.main = mongoose.connection;
 
         // 2. MPI
