@@ -75,12 +75,12 @@ router.post('/login', function (req, res, next) {
     // Función interna que genera token
     let login = function (nombre: string, apellido: string) {
         Promise.all([
-            organizacion.model.findById(req.body.organizacion, {
-                nombre: true
-            }),
+            // organizacion.model.findById(req.body.organizacion, {
+            //     nombre: true
+            // }),
             permisos.model.findOne({
-                usuario: req.body.usuario,
-                organizacion: req.body.organizacion
+                usuario: req.body.usuario
+                // organizacion: req.body.organizacion
             }),
             profesional.findOne({
                 documento: req.body.usuario
@@ -93,16 +93,16 @@ router.post('/login', function (req, res, next) {
                 { password: sha1Hash(req.body.password), nombre: nombre, apellido: apellido },
             )
         ]).then((data: any[]) => {
-            // Verifica que la organización sea válida y que tenga permisos asignados
-            if (!data[0] || !data[1] || data[1].length === 0) {
+            // Verifica que el usuario sea valido y que tenga permisos asignados
+            if (!data[0] || data[0].length === 0) {
                 return next(403);
             }
 
-             if (req.body.mobile) {
-                checkMobile(data[2]._id).then((account: any) => {
+            if (req.body.mobile) {
+                checkMobile(data[1]._id).then((account: any) => {
                     // Crea el token con los datos de sesión
                     res.json({
-                        token: Auth.generateUserToken(nombre, apellido, data[0], data[1], data[2], account._id),
+                        token: Auth.generateUserToken(nombre, apellido, null, data[0], data[1], account._id),
                         user: account
                     });
 
@@ -111,7 +111,7 @@ router.post('/login', function (req, res, next) {
                 // Crea el token con los datos de sesión
 
                 res.json({
-                    token: Auth.generateUserToken(nombre, apellido, data[0], data[1], data[2])
+                    token: Auth.generateUserToken(nombre, apellido, null, data[0], data[1])
                 });
 
             }
@@ -120,13 +120,13 @@ router.post('/login', function (req, res, next) {
 
     let loginCache = function (password: string) {
         Promise.all([
-            organizacion.model.findById(req.body.organizacion, {
-                nombre: true
-            }),
+            // organizacion.model.findById(req.body.organizacion, {
+            //     nombre: true
+            // }),
             permisos.model.findOne({
                 usuario: req.body.usuario,
-                password: password,
-                organizacion: req.body.organizacion
+                password: password
+                // organizacion: req.body.organizacion
             }),
             profesional.findOne({
                 documento: req.body.usuario
@@ -136,20 +136,20 @@ router.post('/login', function (req, res, next) {
                 }),
         ]).then((data: any[]) => {
             // Verifica que la organización sea válida y que tenga permisos asignados
-            if (!data[0] || !data[1] || data[1].length === 0) {
+            if (!data[0] || data[0].length === 0) {
                 return next(403);
             }
 
-            let nombre = data[1].nombre;
-            let apellido = data[1].apellido;
-            let profesional2 = data[2];
+            let nombre = data[0].nombre;
+            let apellido = data[0].apellido;
+            let profesional2 = data[1];
 
             // Crea el token con los datos de sesión
             if (req.body.mobile) {
                 checkMobile(profesional2._id).then((account: any) => {
                     // Crea el token con los datos de sesión
                     res.json({
-                        token: Auth.generateUserToken(nombre, apellido, data[0], data[1], profesional2, account._id),
+                        token: Auth.generateUserToken(nombre, apellido, null, data[0], profesional2, account._id),
                         user: account
                     });
 
@@ -157,7 +157,7 @@ router.post('/login', function (req, res, next) {
             } else {
                 // Crea el token con los datos de sesión
                 res.json({
-                    token: Auth.generateUserToken(nombre, apellido, data[0], data[1], profesional2)
+                    token: Auth.generateUserToken(nombre, apellido, null, data[0], profesional2)
                 });
             }
         });
