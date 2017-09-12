@@ -21,9 +21,6 @@ let schema = new mongoose.Schema({
         },
         permisos: [String]
     }]
-
-
-
 });
 
 export let model = mongoose.model('permisos', schema, 'authUsers');
