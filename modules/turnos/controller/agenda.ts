@@ -466,21 +466,31 @@ export function getAgendaSips() {
             console.log('Error conectando a mongoClient', err);
             dbMongo.close();
         }
-        
+
         dbMongo.collection(coleccion).find().toArray(function (err3, items) {
-            items.forEach((listado: any) => {
-                console.log('Cursos ', listado);
-                saveAgendaSips(listado);
+            async.forEach(items, function (result, done) {
+
+                let offset = 0;
+                setTimeout(function () {
+                    console.log('Efector: ', result);
+                    saveAgendaSips(result);
+                    // getOrganizacionSisa(establecimiento.codigo, configPrivate.sisa.username, configPrivate.sisa.password);
+                }, 5000 + offset);
+                offset += 5000;
             });
+            // items.forEach((listado: any) => {
+            //     console.log('Cursos ', listado);
+            //     saveAgendaSips(listado);
+            // });
         });
     });
 
 }
 
-export function saveAgendaSips() {
-     let query = "INSERT INTO Cursos (nombreCurso, costoCurso, fechaInicio, fechaFin) VALUES  ('NodeJs', 8000, '20170901', '20171201')";
+export function saveAgendaSips(curso: any) {
+    let query = "INSERT INTO Cursos (nombreCurso, costoCurso, fechaInicio, fechaFin) VALUES  ('NodeJs', 8000, '20170901', '20171201')";
     // let query = "INSERT INTO Cursos (nombreCurso, costoCurso, fechaInicio, fechaFin) VALUES  ('NodeJs', 200, '20170901', '20171201')";
-    
+
     var connection = {
         user: configPrivate.conSql.auth.user,
         password: configPrivate.conSql.auth.password,
