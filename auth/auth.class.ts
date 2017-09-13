@@ -268,7 +268,7 @@ export class Auth {
      */
     static refreshToken(token: string, user: any, permisos: any[], organizacion: any) {
         try {
-            let tokenData = jwt.valid(token, configPrivate.auth.jwtKey);
+            let tokenData = jwt.verify(token, configPrivate.auth.jwtKey);
             return this.generateUserToken(user, organizacion, permisos, tokenData.profesional, tokenData.account_id);
         } catch (e) {
             return null;

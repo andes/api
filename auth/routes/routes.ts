@@ -20,7 +20,7 @@ router.get('/sesion', Auth.authenticate(), function (req, res) {
 
 router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
     let username = (req as any).user.usuario.username;
-    authUsers.find({ usuario: username }, (err, user: any) => {
+    authUsers.findOne({ usuario: username }, (err, user: any) => {
         if (err) {
             return next(err);
         }
@@ -38,18 +38,18 @@ router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
     let username = (req as any).user.usuario.username;
     let orgId = mongoose.Types.ObjectId(req.body.organizacion);
     Promise.all([
-        authUsers.find({
+        authUsers.findOne({
             'usuario': username,
             'organizaciones._id': orgId
         }),
-        authOrganizaciones.find({ _id: orgId })
+        authOrganizaciones.findOne({ _id: orgId })
     ]).then((data: any[]) => {
         if (data[0] && data[1]) {
             let user = data[0];
             let org = data[1];
             let oldToken: string = req.headers.authorization.substring(4);
-            let nuevosPermisos = user.organizaciones.find(item => item._id === org._id);
-            let refreshToken = Auth.refreshToken(oldToken, user, nuevosPermisos, org);
+            let nuevosPermisos = user.organizaciones.find(item => String(item._id) === String(org._id));
+            let refreshToken = Auth.refreshToken(oldToken, user, nuevosPermisos.permisos, org);
             res.send({
                 token: refreshToken
             });
@@ -131,13 +131,9 @@ router.post('/login', function (req, res, next) {
 
     let loginCache = function (password: string) {
         Promise.all([
-            // organizacion.model.findById(req.body.organizacion, {
-            //     nombre: true
-            // }),
             authUsers.findOne({
                 usuario: req.body.usuario,
                 password: password
-                // organizacion: req.body.organizacion
             }),
             profesional.findOne({
                 documento: req.body.usuario
@@ -146,7 +142,7 @@ router.post('/login', function (req, res, next) {
                     especialidad: true
                 }),
         ]).then((data: any[]) => {
-            // Verifica que la organización sea válida y que tenga permisos asignados
+            // Verifica que el usuario sea valido y que tenga permisos asignados
             if (!data[0] || data[0].length === 0) {
                 return next(403);
             }
