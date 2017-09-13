@@ -4,6 +4,7 @@ import * as configPrivate from '../../../config.private';
 import * as sql from 'mssql';
 const MongoClient = require('mongodb').MongoClient;
 
+let async = require('async');
 // Turno
 export function darAsistencia(req, data, tid = null) {
     let turno = getTurno(req, data, tid);
@@ -467,76 +468,125 @@ export function getAgendaSips() {
             dbMongo.close();
         }
 
-        dbMongo.collection(coleccion).find().toArray(function (err3, items) {
+        var capo = dbMongo.collection(coleccion).find().toArray(function (err3, items) {
+            // saveAgendaSips(items);
             async.forEach(items, function (result, done) {
 
                 let offset = 0;
                 setTimeout(function () {
-                    console.log('Efector: ', result);
-                    saveAgendaSips(result);
-                    // getOrganizacionSisa(establecimiento.codigo, configPrivate.sisa.username, configPrivate.sisa.password);
+                    console.log('Cursooo: ', result);
+                    grabaSips(result);
                 }, 5000 + offset);
-                offset += 5000;
+                offset += 10000;
             });
-            // items.forEach((listado: any) => {
-            //     console.log('Cursos ', listado);
-            //     saveAgendaSips(listado);
-            // });
-        });
-    });
 
+        });
+
+        dbMongo.close();
+    });
 }
 
-export function saveAgendaSips(curso: any) {
-    let query = "INSERT INTO Cursos (nombreCurso, costoCurso, fechaInicio, fechaFin) VALUES  ('NodeJs', 8000, '20170901', '20171201')";
-    // let query = "INSERT INTO Cursos (nombreCurso, costoCurso, fechaInicio, fechaFin) VALUES  ('NodeJs', 200, '20170901', '20171201')";
 
+export function grabaSips(result: any) {
+    // let query = "INSERT INTO Cursos (nombreCurso, costoCurso, fechaInicio, fechaFin) VALUES  ('NodeJs', 8000, '20170901', '20171201')";
+     let query = "INSERT INTO Cursos (nombreCurso, costoCurso, fechaInicio, fechaFin) VALUES  ('" + result.nombreCurso + "'," + result.costoCurso + ",'" + result.fechaInicio + "', '"+ result.fechaFin+ "')";
+     console.log('Cursooo: ', query);
     var connection = {
         user: configPrivate.conSql.auth.user,
         password: configPrivate.conSql.auth.password,
         server: configPrivate.conSql.serverSql.server,
         database: configPrivate.conSql.serverSql.database,
-        requestTimeout: 190000,
-        stream: true
+        options: {
+            encrypt: true // Use this if you're on Windows Azure 
+        }
     };
 
-    var listaRegistros: any[] = [];
+    (async function () {
+        try {
+            let pool = await sql.connect(connection);
 
-    return new Promise((resolve: any, reject: any) => {
+            const transaction = new sql.Transaction(pool);
+            transaction.begin(err => {
+                // ... error checks 
 
-        sql.connect(connection, function (err: any) {
-            if (err) {
-                console.log('Error de Conexión sql', err);
-                reject(err);
-            }
+                const request = new sql.Request(transaction)
+                request.query(query, (err, result) => {
+                    // ... error checks 
 
-            var request = new sql.Request();
-            request.stream = true;
-            request.query(query);
-            // Puede ser una consulta a una vista que tenga toda la información
+                    transaction.commit(err => {
+                        // ... error checks 
 
-            // request.on('row', function (row: any) {
-            //     // Emitted for each row in a recordset
-            //     console.log('Registrosss ', row);
-            //     listaRegistros.push(row);
-            // });
+                        console.log("Transaction committed.")
+                    })
+                })
+            })
 
-            request.on('error', function (err: any) {
-                // May be emitted multiple times
-            });
 
-            request.on('done', function (affected: any) {
-                // Always emitted as the last one
-                console.log('Cant de registros ', listaRegistros.length);
-                sql.close();
-                resolve(listaRegistros);
-            });
+        } catch (err) {
+            // ... error checks 
+        }
+    })();
 
-        });
-        sql.on('error', function (err: any) {
-            console.log('Error de conexión', err);
-            reject(err);
-        });
+    sql.on('error', err => {
+        // ... error handler 
     });
 }
+
+// export function saveAgendaSips() {
+//     let offset = 0;
+
+//     let query = "INSERT INTO Cursos (nombreCurso, costoCurso, fechaInicio, fechaFin) VALUES  ('NodeJs', 8000, '20170901', '20171201')";
+//     // let query = "INSERT INTO Cursos (nombreCurso, costoCurso, fechaInicio, fechaFin) VALUES  ('NodeJs', 200, '20170901', '20171201')";
+//     console.log('Queryyy ', query);
+
+//     var connection = {
+//         user: configPrivate.conSql.auth.user,
+//         password: configPrivate.conSql.auth.password,
+//         server: configPrivate.conSql.serverSql.server,
+//         database: configPrivate.conSql.serverSql.database,
+//         requestTimeout: 190000,
+//         stream: true
+//     };
+
+//     var listaRegistros: any[] = [];
+
+//     return new Promise((resolve: any, reject: any) => {
+
+//         sql.connect(connection, function (err: any) {
+//             if (err) {
+//                 console.log('Error de Conexión sql', err);
+//                 reject(err);
+//             }
+
+//             var request = new sql.Request();
+//             request.stream = true;
+//             request.query(query);
+//             // Puede ser una consulta a una vista que tenga toda la información
+
+//             // request.on('row', function (row: any) {
+//             //     // Emitted for each row in a recordset
+//             //     console.log('Registrosss ', row);
+//             //     listaRegistros.push(row);
+//             // });
+
+//             request.on('error', function (err: any) {
+//                 // May be emitted multiple times
+//             });
+
+//             request.on('done', function (affected: any) {
+//                 // Always emitted as the last one
+//                 console.log('Cant de registros ', affected);
+//                 sql.close();
+//                 resolve(listaRegistros);
+//             });
+
+//         });
+
+
+//         sql.on('error', function (err: any) {
+//             console.log('Error de conexión', err);
+//             reject(err);
+//         });
+//     });
+// }
 
