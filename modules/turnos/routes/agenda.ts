@@ -425,4 +425,9 @@ router.patch('/agenda/:id*?', function (req, res, next) {
 
 });
 
+router.get('/pepe', function (req, res, next) {
+    agendaCtrl.saveAgendaSips().then(function () {
+        console.log("Capooo");
+    });
+});
 export = router;

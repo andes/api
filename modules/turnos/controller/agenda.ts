@@ -1,5 +1,8 @@
 import * as moment from 'moment';
 import * as agendaModel from '../../turnos/schemas/agenda';
+import * as configPrivate from '../../../config.private';
+import * as sql from 'mssql';
+const MongoClient = require('mongodb').MongoClient;
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -451,5 +454,79 @@ export function actualizarAgendas() {
         }
     });
 
+}
+
+export function getAgendaSips() {
+    const url = configPrivate.hosts.mongoDB_main.host;
+    const coleccion = 'cursos';
+
+    MongoClient.connect(url, function (err: any, dbMongo: any) {
+
+        if (err) {
+            console.log('Error conectando a mongoClient', err);
+            dbMongo.close();
+        }
+        
+        dbMongo.collection(coleccion).find().toArray(function (err3, items) {
+            items.forEach((listado: any) => {
+                console.log('Cursos ', listado);
+                saveAgendaSips(listado);
+            });
+        });
+    });
+
+}
+
+export function saveAgendaSips() {
+     let query = "INSERT INTO Cursos (nombreCurso, costoCurso, fechaInicio, fechaFin) VALUES  ('NodeJs', 8000, '20170901', '20171201')";
+    // let query = "INSERT INTO Cursos (nombreCurso, costoCurso, fechaInicio, fechaFin) VALUES  ('NodeJs', 200, '20170901', '20171201')";
+    
+    var connection = {
+        user: configPrivate.conSql.auth.user,
+        password: configPrivate.conSql.auth.password,
+        server: configPrivate.conSql.serverSql.server,
+        database: configPrivate.conSql.serverSql.database,
+        requestTimeout: 190000,
+        stream: true
+    };
+
+    var listaRegistros: any[] = [];
+
+    return new Promise((resolve: any, reject: any) => {
+
+        sql.connect(connection, function (err: any) {
+            if (err) {
+                console.log('Error de Conexión sql', err);
+                reject(err);
+            }
+
+            var request = new sql.Request();
+            request.stream = true;
+            request.query(query);
+            // Puede ser una consulta a una vista que tenga toda la información
+
+            // request.on('row', function (row: any) {
+            //     // Emitted for each row in a recordset
+            //     console.log('Registrosss ', row);
+            //     listaRegistros.push(row);
+            // });
+
+            request.on('error', function (err: any) {
+                // May be emitted multiple times
+            });
+
+            request.on('done', function (affected: any) {
+                // Always emitted as the last one
+                console.log('Cant de registros ', listaRegistros.length);
+                sql.close();
+                resolve(listaRegistros);
+            });
+
+        });
+        sql.on('error', function (err: any) {
+            console.log('Error de conexión', err);
+            reject(err);
+        });
+    });
 }
 
