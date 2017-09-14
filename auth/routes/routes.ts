@@ -155,7 +155,7 @@ router.post('/login', function (req, res, next) {
             } else {
                 // Crea el token con los datos de sesión
                 res.json({
-                    token: Auth.generateUserToken(nombre, apellido, data[0], data[1], profesional)
+                    token: Auth.generateUserToken(nombre, apellido, data[0], data[1], profesional2)
                 });
             }
         });
