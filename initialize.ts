@@ -21,7 +21,7 @@ export function initAPI(app: Express) {
     require('./scheduler').Scheduler.initialize();
 
     // Configura Express
-    app.use(bodyParser.json());
+    app.use(bodyParser.json({limit: '150mb'}));
     app.use(bodyParser.urlencoded({
         extended: true
     }));
@@ -46,7 +46,6 @@ export function initAPI(app: Express) {
         if (config.modules[m].active) {
             let routes = requireDir(config.modules[m].path);
             for (let route in routes) {
-
                 if (config.modules[m].middleware) {
                     app.use('/api' + config.modules[m].route, config.modules[m].middleware, routes[route]);
                 } else {

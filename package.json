@@ -58,7 +58,8 @@
         "start": "concurrently -r \"npm run tsc:w\" \"npm run node\" ",
         "node": "nodemon -q ./index.js",
         "tsc": "tsc",
-        "tsc:w": "tsc -w"
+        "tsc:w": "tsc -w",
+        "jobs": "tsc && node jobs/scheduler.js"
     },
     "repository": {
         "type": "git",

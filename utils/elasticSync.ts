@@ -74,13 +74,29 @@ export class ElasticSync {
 
     public update(id, data) {
         return new Promise((resolve, reject) => {
-            this.connElastic.create({
+            this.connElastic.update({
                 index: this.INDEX,
                 type: this.TYPE,
                 id,
                 body: {
                     doc: data
                 }
+            }, function (error, response) {
+                if (error) {
+                    reject(error);
+                }
+                resolve(true);
+            });
+        });
+    }
+
+    public delete(id) {
+        return new Promise((resolve, reject) => {
+            this.connElastic.delete({
+                index: this.INDEX,
+                type: this.TYPE,
+                refresh: true,
+                id
             }, function (error, response) {
                 if (error) {
                     reject(error);
