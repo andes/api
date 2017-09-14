@@ -1,3 +1,4 @@
+import * as mongoose from 'mongoose';
 import * as express from 'express';
 import * as configPrivate from '../../../config.private';
 import * as ldapjs from 'ldapjs';
@@ -11,6 +12,11 @@ import { authUsers } from '../../../auth/schemas/permisos';
 import { Auth } from '../../../auth/auth.class';
 // Constantes
 const isReachable = require('is-reachable');
+
+/**
+ * Alta de usuarios
+ * @method POST
+ */
 
 router.post('/alta', function (req, res, next) {
     if (!Auth.check(req, 'usuarios:post')) {
@@ -32,6 +38,12 @@ router.post('/alta', function (req, res, next) {
     });
 });
 
+/**
+ * Modificacion de un usuario
+ *
+ * @method PUT
+ */
+
 router.put('/:id', function (req, res, next) {
     if (!Auth.check(req, 'usuarios:put')) {
         return next(403);
@@ -41,8 +53,8 @@ router.put('/:id', function (req, res, next) {
             resultado.usuario = req.body.usuario;
             resultado.nombre = req.body.nombre;
             resultado.apellido = req.body.apellido;
-            resultado.organizacion = req.body.organizacion;
-            resultado.permisos = req.body.permisos;
+            // [TODO] verificar permisos de organizacion
+            resultado.organizaciones = req.body.organizaciones;
             resultado.save((err) => {
                 if (err) {
                     return next(err);
@@ -56,17 +68,26 @@ router.put('/:id', function (req, res, next) {
                 });
                 res.json(resultado);
             });
+        } else {
+            return next('not_user');
         }
     }).catch((err) => {
         return next(err);
     });
 });
 
-router.get('/:id', function (req, res, next) {
+/**
+ * Muestra un usuario
+ *
+ * @method GET
+ * @param {number} dni Numero de documento
+ */
+
+router.get('/:dni', function (req, res, next) {
     if (!Auth.check(req, 'usuarios:get:byId')) {
         return next(403);
     }
-    authUsers.findById(req.params.id).then((resultado: any) => {
+    authUsers.findOne({ usuario: req.params.dni }).then((resultado: any) => {
         if (resultado) {
             res.json(resultado);
         }
@@ -75,22 +96,29 @@ router.get('/:id', function (req, res, next) {
     });
 });
 
-router.get('/local/:organizacion/:usuario', function (req, res, next) {
-    if (!Auth.check(req, 'usuarios:get:byId:byOrganizacion')) {
-        return next(403);
-    }
-    let filtro = {
-        usuario: req.params.usuario,
-        organizacion: req.params.organizacion
-    };
-    authUsers.find(filtro).then((resultado: any) => {
-        if (resultado) {
-            res.json(resultado);
-        }
-    }).catch((err) => {
-        return next(err);
-    });
-});
+
+// router.get('/local/:organizacion/:usuario', function (req, res, next) {
+//     if (!Auth.check(req, 'usuarios:get:byId:byOrganizacion')) {
+//         return next(403);
+//     }
+//     let filtro = {
+//         usuario: req.params.usuario,
+//         organizacion: req.params.organizacion
+//     };
+//     authUsers.find(filtro).then((resultado: any) => {
+//         if (resultado) {
+//             res.json(resultado);
+//         }
+//     }).catch((err) => {
+//         return next(err);
+//     });
+// });
+
+/**
+ * Chequea un documento en LDAP
+ *
+ * @method GET
+ */
 
 router.get('/ldap/:id', function (req, res, next) {
     if (!Auth.check(req, 'usuarios:get:ldap')) {
@@ -131,13 +159,34 @@ router.get('/ldap/:id', function (req, res, next) {
     });
 });
 
+/**
+ * Listado de usuarios
+ * @method GET
+ *
+ */
+
 router.get('', function (req, res, next) {
-    if (!Auth.check(req, 'usuarios:get')) {
+    let organizaciones = Auth.getPermissions(req, 'usuarios:get:organizacion:?');
+    if (!organizaciones.length) {
         return next(403);
     }
-    authUsers.find({}).then((resultado: any) => {
+    let query;
+    if (organizaciones.indexOf('*') >= 0) {
+        query = {
+        };
+    } else {
+        query = {
+            'organizaciones._id': {
+                $in: organizaciones.map(item => mongoose.Types.ObjectId(item))
+            }
+        };
+    }
+
+    authUsers.find(query).then((resultado: any) => {
         if (resultado) {
             res.json(resultado);
+        } else {
+            res.send([]);
         }
     }).catch((err) => {
         return next(err);

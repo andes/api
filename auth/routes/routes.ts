@@ -14,9 +14,19 @@ let sha1Hash = require('sha1');
 
 let router = express.Router();
 
+/**
+ * Obtiene el user de la session
+ * @get /api/auth/sesion
+ */
+
 router.get('/sesion', Auth.authenticate(), function (req, res) {
     res.json((req as any).user);
 });
+
+/**
+ * Listado de organizaciones a las que el user tiene permiso
+ * @get /api/auth/organizaciones
+ */
 
 router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
     let username = (req as any).user.usuario.username;
@@ -33,6 +43,12 @@ router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
         });
     });
 });
+
+/**
+ * Refresca el token y los permisos dado una organizacion}
+ * @param {ObjectId} organizacion ID de la organizacion
+ * @post /api/auth/organizaciones
+ */
 
 router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
     let username = (req as any).user.usuario.username;
@@ -77,10 +93,17 @@ let checkMobile = function (profesionalId) {
 
             resolve(account);
         }).catch(() => {
-
+            reject();
         });
     });
 };
+
+/**
+ * Refresca el token y los permisos dado una organizacion}
+ * @param {string} username nombre de usuario (DNI)
+ * @param {string} password Password de la cuenta
+ * @post /api/auth/login
+ */
 
 router.post('/login', function (req, res, next) {
     // Función interna que genera token
