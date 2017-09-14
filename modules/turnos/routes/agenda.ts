@@ -31,6 +31,7 @@ router.get('/agenda/paciente/:idPaciente', function (req, res, next) {
 
 router.get('/agenda/candidatas', function (req, res, next) {
     agenda.findById(req.query.idAgenda, function (err, data) {
+
         if (err) {
             return next(err);
         }
@@ -38,16 +39,19 @@ router.get('/agenda/candidatas', function (req, res, next) {
         let resultado = data as any;
         let horaAgendaOrig = new Date();
         horaAgendaOrig.setHours(0, 0, 0, 0);
+
         let indiceBloque = resultado.bloques.findIndex(y => Object.is(req.query.idBloque, String(y._id)));
         let indiceTurno = resultado.bloques[indiceBloque].turnos.findIndex(y => Object.is(req.query.idTurno, String(y._id)));
         let bloque = resultado.bloques[indiceBloque];
+
         // turno a reasignar
         let turno = resultado.bloques[indiceBloque].turnos[indiceTurno];
+
         let match = {
             'horaInicio': { '$gte': horaAgendaOrig },
             'nominalizada': true,
             '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
-            'tipoPrestaciones._id': turno.tipoPrestacion ? mongoose.Types.ObjectId(turno.tipoPrestacion._id) : '', // Que tengan incluída la prestación del turno
+            'tipoPrestaciones._id': turno.tipoPrestacion ? mongoose.Types.ObjectId(turno.tipoPrestacion.id) : '', // Que tengan incluída la prestación del turno
             '_id': { '$ne': mongoose.Types.ObjectId(req.query.idAgenda) }, // Que no sea la agenda original
         };
 
@@ -61,22 +65,29 @@ router.get('/agenda/candidatas', function (req, res, next) {
             }
 
         ], function (err1, data1) {
+
             if (err) {
                 return next(err);
             }
+
             let out = [];
+
             // Verifico que existe un turno disponible o ya reasignado para el mismo tipo de prestación del turno
             data1.forEach(function (a, indiceA) {
                 a.bloques.forEach(function (b, indiceB) {
                     b.turnos.forEach(function (t, indiceT) {
                         let horaIni = moment(t.horaInicio).format('HH:mm');
                         if (
-                            b.tipoPrestaciones.findIndex(x => String(x._id) === String(turno.tipoPrestacion._id)) >= 0 // mismo tipo de prestacion
-                            && (t.estado === 'disponible' || (t.estado === 'asignado' && typeof t.reasignado !== 'undefined' && t.reasignado.anterior && t.reasignado.anterior.idTurno === req.query.idTurno)) // turno disponible o al que se reasigno
-                            && (req.query.horario ? horaIni.toString() === moment(turno.horaInicio).format('HH:mm') : true) // si filtro por horario verifico que sea el mismo
-                            && (req.query.duracion ? b.duracionTurno === bloque.duracionTurno : true)  // si filtro por duracion verifico que sea la mismo
+                            b.tipoPrestaciones.findIndex(x => String(x._id) === String(turno.tipoPrestacion.id)) >= 0
+                            &&  // mismo tipo de prestacion
+                            (t.estado === 'disponible' || (t.estado === 'asignado' && typeof t.reasignado !== 'undefined' && t.reasignado.anterior && t.reasignado.anterior.idTurno === req.query.idTurno))
+                            &&  // turno disponible o al que se reasigno
+                            (typeof req.query.horario !== 'undefined' ? horaIni.toString() === moment(turno.horaInicio).format('HH:mm') : true)
+                            && // si filtro por horario verifico que sea el mismo
+                            (req.query.duracion ? b.duracionTurno === bloque.duracionTurno : true)
+                            &&  // si filtro por duracion verifico que sea la mismo
+                            (bloque.accesoDirectoDelDia > 0 && b.restantesDelDia > 0) || (bloque.accesoDirectoProgramado > 0 && b.restantesProgramados > 0) // verifico que queden turnos disponibles
                         ) {
-
                             if (out.indexOf(a) < 0) {
                                 out.push(a);
                             }
@@ -84,9 +95,11 @@ router.get('/agenda/candidatas', function (req, res, next) {
                     });
                 });
             });
+
             let sortCandidatas = function (a, b) {
                 return a.horaInicio - b.horaInicio;
             };
+
             out.sort(sortCandidatas);
             res.json(out);
 

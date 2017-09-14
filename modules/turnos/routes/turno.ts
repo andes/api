@@ -5,7 +5,6 @@ import * as agenda from '../schemas/agenda';
 import { Logger } from '../../../utils/logService';
 import { paciente } from '../../../core/mpi/schemas/paciente';
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
-import * as turnos from '../../../modules/turnos/schemas/turno';
 import { NotificationService } from '../../mobileApp/controller/NotificationService';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { esPrimerPaciente } from '../controller/agenda';
@@ -17,6 +16,7 @@ let router = express.Router();
 router.get('/turno/:id*?', function (req, res, next) {
 
     let pipelineTurno = [];
+    let turnos = [];
     let turno;
 
     pipelineTurno = [{
@@ -205,17 +205,43 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
 
                                     for (let y = 0; y < (data as any).bloques[posBloque].turnos.length; y++) {
                                         if ((data as any).bloques[posBloque].turnos[y]._id.equals(req.params.idTurno)) {
-                                            posTurno = y;
+                                            let turnoSeleccionado = (data as any).bloques[posBloque].turnos[y];
+                                            if (turnoSeleccionado.estado === 'disponible') {
+                                                posTurno = y;
+                                            } else {
+                                                return next('noDisponible');
+                                            }
                                         }
                                     }
                                 }
                             }
-                            if ((countBloques[req.body.tipoTurno] as number) === 0) {
-                                return next('No quedan turnos del tipo ' + req.body.tipoTurno);
+
+                            let tipoTurno = req.body.tipoTurno;
+
+                            // En una reasignación de turno se descarta el tipo de turno original y se reasigna a "del día" o "programado"
+                            if (req.query.reasignacion) {
+                                // Es el día de la agenda y no quedan turnos "del día" disponibles?
+                                if (esHoy && (countBloques['restantesDelDia'] as number) === 0 && (countBloques['restantesProgramados'] as number) === 0) {
+                                    return next('No quedan turnos del día disponibles');
+                                }
+                                // Es una agenda futura y no quedan turnos "programados" disponibles?
+                                if (!esHoy && (countBloques['restantesProgramados'] as number) === 0) {
+                                    return next('No quedan turnos programados disponibles');
+                                }
+                                tipoTurno = esHoy ? 'delDia' : 'programado';
+                                // Dar turno normal
+                            } else {
+                                // Quedan turnos del tipo específico pedido?
+                                if ((countBloques[tipoTurno] as number) === 0) {
+                                    return next('No quedan turnos del tipo ' + tipoTurno);
+                                }
                             }
+
+                            // Verifica si el turno se encuentra todavia disponible
+
                             // Si quedan turnos
                             let update: any = {};
-                            switch (req.body.tipoTurno) {
+                            switch (tipoTurno) {
                                 case ('delDia'):
                                     update['bloques.' + posBloque + '.restantesDelDia'] = countBloques.delDia - 1;
                                     update['bloques.' + posBloque + '.restantesProgramados'] = 0;
@@ -278,10 +304,10 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                                         return next(err4);
                                     }
                                     if (doc2 == null) {
-                                        return next('El turno no pudo ser asignado');
+                                        return next('noDisponible');
                                     }
                                     if (writeOpResult && writeOpResult.value === null) {
-                                        return next('El turno ya fue asignado');
+                                        return next('noDisponible');
                                     } else {
                                         let datosOp = {
                                             estado: update[etiquetaEstado],
