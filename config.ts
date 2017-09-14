@@ -108,6 +108,12 @@ export const modules = {
         path: './fhir/patient/routes',
         route: '/fhir/patient',
         middleware: appMiddleware,
+    },
+    legacy: {
+        active: true,
+        path: './modules/legacy/routes',
+        route: '/modules/legacy',
+        middleware: appMiddleware,
     }
 };
 
