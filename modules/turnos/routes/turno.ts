@@ -149,7 +149,6 @@ router.get('/turno/:id*?', function (req, res, next) {
     };
  */
 router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, res, next) {
-
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
     let continues = ValidateDarTurno.checkTurno(req.body);
 
@@ -160,13 +159,11 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
             if (err) {
                 return next(err);
             } else {
-
                 // Se verifica la existencia del tipoPrestacion
                 tipoPrestacion.findById(req.body.tipoPrestacion._id, function verificarTipoPrestacion(err2, data2) {
                     if (err2) {
                         return next(err2);
                     } else {
-
                         // Se obtiene la agenda que se va a modificar
                         agenda.findById(req.params.idAgenda, function getAgenda(err3, data) {
                             if (err3) {
@@ -217,7 +214,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                             }
 
                             // Verifica si el turno se encuentra todavia disponible
-
                             // Si quedan turnos
                             let update: any = {};
                             switch (req.body.tipoTurno) {
@@ -237,7 +233,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                                     update['bloques.' + posBloque + '.restantesGestion'] = countBloques.gestion - 1;
                                     break;
                             }
-
                             let usuario = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
                             // Copia la organización desde el token
                             usuario.organizacion = (req as any).user.organizacion;
@@ -294,7 +289,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                                             LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turno, req.params.idBloque, req.params.idAgenda);
                                         }
                                     }
-
                                     res.json(data);
                                 });
                         });
