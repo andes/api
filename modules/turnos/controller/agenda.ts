@@ -468,7 +468,7 @@ export function getAgendaSips() {
             dbMongo.close();
         }
 
-        var capo = dbMongo.collection(coleccion).find().toArray(function (err3, items) {
+        dbMongo.collection(coleccion).find().toArray(function (err3, items) {
             // saveAgendaSips(items);
             async.forEach(items, function (agenda, done) {
 
@@ -488,10 +488,11 @@ export function getAgendaSips() {
 
 
 export function grabaSips(agendaSips: any) {
-console.log("Agendddddaaaa " + agendaSips.agenda.estado);
+    console.log("Agendddddaaaa " + agendaSips.agenda.estado);
     if (agendaSips.agenda.estado === 'disponible' || agendaSips.agenda.estado === 'publicada') {
         agendaSips.agenda.estado = 1;
     }
+
     agendaSips.agenda.organizacion.codigo.sisa = 1;
     agendaSips.agenda.idServicio = 148;
     agendaSips.agenda.profesionales.idProfesional = 2348;
@@ -512,8 +513,8 @@ console.log("Agendddddaaaa " + agendaSips.agenda.estado);
     agendaSips.agenda.multiprofesional = 0;
     //  let query = "INSERT INTO Cursos (nombreCurso, costoCurso, fechaInicio, fechaFin) " +
     //  " VALUES  ('Angular 2', 8000, '20170901', '20171201')";
-    let query = "insert into Con_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, idMotivoInactivacion, multiprofesional) values (" + agendaSips.agenda.estado + ", " + agendaSips.agenda.organizacion.codigo.sisa + ", " + agendaSips.agenda.idServicio + ", " + agendaSips.agenda.profesionales.idProfesional + ", " + agendaSips.agenda.idTipoPrestacion + ", " + agendaSips.agenda.tipoPrestaciones.idEspecialidad + ", " + agendaSips.agenda.idConsultorio + ", " + agendaSips.agenda.fecha + ", " + agendaSips.agenda.duracion + ", '" +  agendaSips.agenda.horaInicio + "', '" + agendaSips.agenda.horaFin + "', " + agendaSips.agenda.maximoSobreTurnos + ", " + agendaSips.agenda.porcentajeTurnosDia + ", " + agendaSips.agenda.porcentajeTurnosAnticipados + ", " + agendaSips.agenda.citarPorBloques +" , " + agendaSips.agenda.cantidadInterconsulta + ", " + agendaSips.agenda.turnosDisponibles + ", " + agendaSips.agenda.idMotivoInactivacion + ", " + agendaSips.agenda.multiprofesional + ")";
-    
+    let query = "insert into Con_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, idMotivoInactivacion, multiprofesional) values (" + agendaSips.agenda.estado + ", " + agendaSips.agenda.organizacion.codigo.sisa + ", " + agendaSips.agenda.idServicio + ", " + agendaSips.agenda.profesionales.idProfesional + ", " + agendaSips.agenda.idTipoPrestacion + ", " + agendaSips.agenda.tipoPrestaciones.idEspecialidad + ", " + agendaSips.agenda.idConsultorio + ", " + agendaSips.agenda.fecha + ", " + agendaSips.agenda.duracion + ", '" + agendaSips.agenda.horaInicio + "', '" + agendaSips.agenda.horaFin + "', " + agendaSips.agenda.maximoSobreTurnos + ", " + agendaSips.agenda.porcentajeTurnosDia + ", " + agendaSips.agenda.porcentajeTurnosAnticipados + ", " + agendaSips.agenda.citarPorBloques + " , " + agendaSips.agenda.cantidadInterconsulta + ", " + agendaSips.agenda.turnosDisponibles + ", " + agendaSips.agenda.idMotivoInactivacion + ", " + agendaSips.agenda.multiprofesional + ")";
+
     // let query = "INSERT INTO CON_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, multiprofesional ) VALUES  (" + agendaSips.agenda.estado + "," + agendaSips.turno.organizacion.codigo.sisa + "," + agendaSips.agenda.tipoPrestaciones.conceptId + ", " + agendaSips.agenda.profesionales.idProfesional + "," + agendaSips.agenda.idTipoPrestacion + "," + agendaSips.agenda.tipoPrestaciones.idEspecialidad + "," + agendaSips.agenda.idConsultorio + ", " + agendaSips.agenda.fecha + ", " + agendaSips.agenda.horaInicio + ", " + agendaSips.agenda.horaFin + ", " + agendaSips.agenda.maximoSobreTurnos + ", " + agendaSips.agenda.porcentajeTurnosDia + ", " + agendaSips.agenda.porcentajeTurnosAnticipados + ", " + agendaSips.agenda.citarPorBloques + ", " + agendaSips.agenda.cantidadInterconsulta + ", " + agendaSips.agenda.turnosDisponibles + ", " + agendaSips.agenda.idMotivoInactivacion + ", " + agendaSips.agenda.multiprofesional +  ")";
     console.log('Cursooo: ', query);
     var connection = {
@@ -533,12 +534,17 @@ console.log("Agendddddaaaa " + agendaSips.agenda.estado);
 
                 const request = new sql.Request(transaction)
                 request.query(query, (err, result) => {
-                    // ... error checks 
+                    // ... error checks
+                    if (err)
+                        return console.log("Errooo.", err.message);;
 
-                    transaction.commit(err => {
+
+                    transaction.commit(err1 => {
                         // ... error checks 
+                        if (err1)
+                            return console.log("Transaction uncommitted.", err1);
 
-                        console.log("Transaction committed.")
+                        console.log("Transaction Committed.");
                     })
                 })
             })
