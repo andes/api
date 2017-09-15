@@ -459,7 +459,7 @@ export function actualizarAgendas() {
 
 export function getAgendaSips() {
     const url = configPrivate.hosts.mongoDB_main.host;
-    const coleccion = 'cursos';
+    const coleccion = 'agendaSipsCache';
 
     MongoClient.connect(url, function (err: any, dbMongo: any) {
 
@@ -470,12 +470,12 @@ export function getAgendaSips() {
 
         var capo = dbMongo.collection(coleccion).find().toArray(function (err3, items) {
             // saveAgendaSips(items);
-            async.forEach(items, function (result, done) {
+            async.forEach(items, function (agenda, done) {
 
                 let offset = 0;
                 setTimeout(function () {
-                    console.log('Cursooo: ', result);
-                    grabaSips(result);
+                    console.log('Cursooo: ', agenda);
+                    grabaSips(agenda);
                 }, 5000 + offset);
                 offset += 10000;
             });
@@ -487,18 +487,40 @@ export function getAgendaSips() {
 }
 
 
-export function grabaSips(result: any) {
-    // let query = "INSERT INTO Cursos (nombreCurso, costoCurso, fechaInicio, fechaFin) VALUES  ('NodeJs', 8000, '20170901', '20171201')";
-     let query = "INSERT INTO Cursos (nombreCurso, costoCurso, fechaInicio, fechaFin) VALUES  ('" + result.nombreCurso + "'," + result.costoCurso + ",'" + result.fechaInicio + "', '"+ result.fechaFin+ "')";
-     console.log('Cursooo: ', query);
+export function grabaSips(agendaSips: any) {
+console.log("Agendddddaaaa " + agendaSips.agenda.estado);
+    if (agendaSips.agenda.estado === 'disponible' || agendaSips.agenda.estado === 'publicada') {
+        agendaSips.agenda.estado = 1;
+    }
+    agendaSips.agenda.organizacion.codigo.sisa = 1;
+    agendaSips.agenda.idServicio = 148;
+    agendaSips.agenda.profesionales.idProfesional = 2348;
+    agendaSips.agenda.idTipoPrestacion = 0;
+    agendaSips.agenda.tipoPrestaciones.idEspecialidad = 51;
+    agendaSips.agenda.idConsultorio = 273;
+    agendaSips.agenda.fecha = '2017-09-15';
+    agendaSips.agenda.duracion = '30';
+    agendaSips.agenda.horaInicio = moment(agendaSips.agenda.horaInicio).format('HH:mm');
+    agendaSips.agenda.horaFin = moment(agendaSips.agenda.horaFin).format('HH:mm');
+    agendaSips.agenda.maximoSobreTurnos = 0;
+    agendaSips.agenda.porcentajeTurnosDia = 0;
+    agendaSips.agenda.porcentajeTurnosAnticipados = 0;
+    agendaSips.agenda.citarPorBloques = 0;
+    agendaSips.agenda.cantidadInterconsulta = 0;
+    agendaSips.agenda.turnosDisponibles = 1;
+    agendaSips.agenda.idMotivoInactivacion = 0;
+    agendaSips.agenda.multiprofesional = 0;
+    //  let query = "INSERT INTO Cursos (nombreCurso, costoCurso, fechaInicio, fechaFin) " +
+    //  " VALUES  ('Angular 2', 8000, '20170901', '20171201')";
+    let query = "insert into Con_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, idMotivoInactivacion, multiprofesional) values (" + agendaSips.agenda.estado + ", " + agendaSips.agenda.organizacion.codigo.sisa + ", " + agendaSips.agenda.idServicio + ", " + agendaSips.agenda.profesionales.idProfesional + ", " + agendaSips.agenda.idTipoPrestacion + ", " + agendaSips.agenda.tipoPrestaciones.idEspecialidad + ", " + agendaSips.agenda.idConsultorio + ", " + agendaSips.agenda.fecha + ", " + agendaSips.agenda.duracion + ", '" +  agendaSips.agenda.horaInicio + "', '" + agendaSips.agenda.horaFin + "', " + agendaSips.agenda.maximoSobreTurnos + ", " + agendaSips.agenda.porcentajeTurnosDia + ", " + agendaSips.agenda.porcentajeTurnosAnticipados + ", " + agendaSips.agenda.citarPorBloques +" , " + agendaSips.agenda.cantidadInterconsulta + ", " + agendaSips.agenda.turnosDisponibles + ", " + agendaSips.agenda.idMotivoInactivacion + ", " + agendaSips.agenda.multiprofesional + ")";
+    
+    // let query = "INSERT INTO CON_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, multiprofesional ) VALUES  (" + agendaSips.agenda.estado + "," + agendaSips.turno.organizacion.codigo.sisa + "," + agendaSips.agenda.tipoPrestaciones.conceptId + ", " + agendaSips.agenda.profesionales.idProfesional + "," + agendaSips.agenda.idTipoPrestacion + "," + agendaSips.agenda.tipoPrestaciones.idEspecialidad + "," + agendaSips.agenda.idConsultorio + ", " + agendaSips.agenda.fecha + ", " + agendaSips.agenda.horaInicio + ", " + agendaSips.agenda.horaFin + ", " + agendaSips.agenda.maximoSobreTurnos + ", " + agendaSips.agenda.porcentajeTurnosDia + ", " + agendaSips.agenda.porcentajeTurnosAnticipados + ", " + agendaSips.agenda.citarPorBloques + ", " + agendaSips.agenda.cantidadInterconsulta + ", " + agendaSips.agenda.turnosDisponibles + ", " + agendaSips.agenda.idMotivoInactivacion + ", " + agendaSips.agenda.multiprofesional +  ")";
+    console.log('Cursooo: ', query);
     var connection = {
         user: configPrivate.conSql.auth.user,
         password: configPrivate.conSql.auth.password,
         server: configPrivate.conSql.serverSql.server,
-        database: configPrivate.conSql.serverSql.database,
-        options: {
-            encrypt: true // Use this if you're on Windows Azure 
-        }
+        database: configPrivate.conSql.serverSql.database
     };
 
     (async function () {
