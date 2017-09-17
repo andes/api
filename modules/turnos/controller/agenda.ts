@@ -469,7 +469,7 @@ export function getAgendaSips() {
         }
 
         dbMongo.collection(coleccion).find().toArray(function (err3, items) {
-            // saveAgendaSips(items);
+
             async.forEach(items, function (agenda, done) {
 
                 let offset = 0;
@@ -493,7 +493,14 @@ export function grabaSips(agendaSips: any) {
         agendaSips.agenda.estado = 1;
     }
 
-    agendaSips.agenda.organizacion.codigo.sisa = 1;
+    let idEfector;
+
+    getEfectorSips(agendaSips.agenda.organizacion.codigo.sisa).then(function (data) {
+        idEfector = data[0].idEfector;
+        console.log("Dataaaaaa ", idEfector);
+    });
+
+    // agendaSips.agenda.organizacion.codigo.sisa = pepe;
     agendaSips.agenda.idServicio = 148;
     agendaSips.agenda.profesionales.idProfesional = 2348;
     agendaSips.agenda.idTipoPrestacion = 0;
@@ -513,7 +520,7 @@ export function grabaSips(agendaSips: any) {
     agendaSips.agenda.multiprofesional = 0;
     //  let query = "INSERT INTO Cursos (nombreCurso, costoCurso, fechaInicio, fechaFin) " +
     //  " VALUES  ('Angular 2', 8000, '20170901', '20171201')";
-    let query = "insert into Con_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, idMotivoInactivacion, multiprofesional) values (" + agendaSips.agenda.estado + ", " + agendaSips.agenda.organizacion.codigo.sisa + ", " + agendaSips.agenda.idServicio + ", " + agendaSips.agenda.profesionales.idProfesional + ", " + agendaSips.agenda.idTipoPrestacion + ", " + agendaSips.agenda.tipoPrestaciones.idEspecialidad + ", " + agendaSips.agenda.idConsultorio + ", " + agendaSips.agenda.fecha + ", " + agendaSips.agenda.duracion + ", '" + agendaSips.agenda.horaInicio + "', '" + agendaSips.agenda.horaFin + "', " + agendaSips.agenda.maximoSobreTurnos + ", " + agendaSips.agenda.porcentajeTurnosDia + ", " + agendaSips.agenda.porcentajeTurnosAnticipados + ", " + agendaSips.agenda.citarPorBloques + " , " + agendaSips.agenda.cantidadInterconsulta + ", " + agendaSips.agenda.turnosDisponibles + ", " + agendaSips.agenda.idMotivoInactivacion + ", " + agendaSips.agenda.multiprofesional + ")";
+    let query = "insert into Con_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, idMotivoInactivacion, multiprofesional) values (" + agendaSips.agenda.estado + ", " + idEfector + ", " + agendaSips.agenda.idServicio + ", " + agendaSips.agenda.profesionales.idProfesional + ", " + agendaSips.agenda.idTipoPrestacion + ", " + agendaSips.agenda.tipoPrestaciones.idEspecialidad + ", " + agendaSips.agenda.idConsultorio + ", " + agendaSips.agenda.fecha + ", " + agendaSips.agenda.duracion + ", '" + agendaSips.agenda.horaInicio + "', '" + agendaSips.agenda.horaFin + "', " + agendaSips.agenda.maximoSobreTurnos + ", " + agendaSips.agenda.porcentajeTurnosDia + ", " + agendaSips.agenda.porcentajeTurnosAnticipados + ", " + agendaSips.agenda.citarPorBloques + " , " + agendaSips.agenda.cantidadInterconsulta + ", " + agendaSips.agenda.turnosDisponibles + ", " + agendaSips.agenda.idMotivoInactivacion + ", " + agendaSips.agenda.multiprofesional + ")";
 
     // let query = "INSERT INTO CON_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, multiprofesional ) VALUES  (" + agendaSips.agenda.estado + "," + agendaSips.turno.organizacion.codigo.sisa + "," + agendaSips.agenda.tipoPrestaciones.conceptId + ", " + agendaSips.agenda.profesionales.idProfesional + "," + agendaSips.agenda.idTipoPrestacion + "," + agendaSips.agenda.tipoPrestaciones.idEspecialidad + "," + agendaSips.agenda.idConsultorio + ", " + agendaSips.agenda.fecha + ", " + agendaSips.agenda.horaInicio + ", " + agendaSips.agenda.horaFin + ", " + agendaSips.agenda.maximoSobreTurnos + ", " + agendaSips.agenda.porcentajeTurnosDia + ", " + agendaSips.agenda.porcentajeTurnosAnticipados + ", " + agendaSips.agenda.citarPorBloques + ", " + agendaSips.agenda.cantidadInterconsulta + ", " + agendaSips.agenda.turnosDisponibles + ", " + agendaSips.agenda.idMotivoInactivacion + ", " + agendaSips.agenda.multiprofesional +  ")";
     console.log('Cursooo: ', query);
@@ -560,61 +567,83 @@ export function grabaSips(agendaSips: any) {
     });
 }
 
-// export function saveAgendaSips() {
-//     let offset = 0;
+function getEfectorSips(codigoSisa) {
+    var connection = {
+        user: configPrivate.conSql.auth.user,
+        password: configPrivate.conSql.auth.password,
+        server: configPrivate.conSql.serverSql.server,
+        database: configPrivate.conSql.serverSql.database
+    };
 
-//     let query = "INSERT INTO Cursos (nombreCurso, costoCurso, fechaInicio, fechaFin) VALUES  ('NodeJs', 8000, '20170901', '20171201')";
-//     // let query = "INSERT INTO Cursos (nombreCurso, costoCurso, fechaInicio, fechaFin) VALUES  ('NodeJs', 200, '20170901', '20171201')";
-//     console.log('Queryyy ', query);
+    let idEfector: any;
 
-//     var connection = {
-//         user: configPrivate.conSql.auth.user,
-//         password: configPrivate.conSql.auth.password,
-//         server: configPrivate.conSql.serverSql.server,
-//         database: configPrivate.conSql.serverSql.database,
-//         requestTimeout: 190000,
-//         stream: true
-//     };
-
-//     var listaRegistros: any[] = [];
-
-//     return new Promise((resolve: any, reject: any) => {
-
-//         sql.connect(connection, function (err: any) {
-//             if (err) {
-//                 console.log('Error de Conexión sql', err);
-//                 reject(err);
-//             }
-
-//             var request = new sql.Request();
-//             request.stream = true;
-//             request.query(query);
-//             // Puede ser una consulta a una vista que tenga toda la información
-
-//             // request.on('row', function (row: any) {
-//             //     // Emitted for each row in a recordset
-//             //     console.log('Registrosss ', row);
-//             //     listaRegistros.push(row);
-//             // });
-
-//             request.on('error', function (err: any) {
-//                 // May be emitted multiple times
-//             });
-
-//             request.on('done', function (affected: any) {
-//                 // Always emitted as the last one
-//                 console.log('Cant de registros ', affected);
-//                 sql.close();
-//                 resolve(listaRegistros);
-//             });
-
-//         });
+    return new Promise((resolve: any, reject: any) => {
+        (async function () {
+            try {
+                let pool = await sql.connect(connection)
+                let result1 = await pool.request()
+                    // .input('input_parameter', sql.Int, codigoSisa)
+                    .query('select idEfector from dbo.Sys_Efector WHERE codigoSisa = ' + codigoSisa);
+                resolve(result1);
+                console.dir(result1);
 
 
-//         sql.on('error', function (err: any) {
-//             console.log('Error de conexión', err);
-//             reject(err);
-//         });
-//     });
-// }
+
+            } catch (err) {
+                // ... error checks 
+                console.log(err);
+            }
+        })();
+
+    });
+    // return idEfector;
+    //     let query = 'SELECT idEfector FROM dbo.Sys_Efector ';//WHERE codigoSisa = ' + codigoSisa;
+
+    //     var connection = {
+    //         user: configPrivate.conSql.auth.user,
+    //         password: configPrivate.conSql.auth.password,
+    //         server: configPrivate.conSql.serverSql.server,
+    //         database: configPrivate.conSql.serverSql.database
+    //     };
+    // console.log("Coneeeee ", connection);
+    //     var listaRegistros: any[] = [];
+
+    //     return new Promise((resolve: any, reject: any) => {
+    //         sql.connect(connection, function (err: any) {
+    //             if (err) {
+    //                 console.log("Error de Conexión sql", err);
+    //                 reject(err);
+    //             }
+
+    //             var request = new sql.Request();
+    //             request.stream = true;
+    //             request.query(query);
+    //             // Puede ser una consulta a una vista que tenga toda la información
+
+    //             request.on('row', function (row: any) {
+    //                 // Emitted for each row in a recordset
+    //                 console.log("Registrosss ", row);
+    //                 listaRegistros.push(row);
+    //             });
+
+    //             request.on('error', function (err: any) {
+    //                 // May be emitted multiple times
+    //             });
+
+    //             request.on('done', function (affected: any) {
+    //                 // Always emitted as the last one
+    //                 console.log("Cant de registros ", listaRegistros.length);
+    //                 sql.close();
+    //                 resolve(listaRegistros);
+    //             });
+
+    //         });
+    //         sql.on('error', function (err: any) {
+    //             console.log("Error de conexión", err);
+    //             reject(err);
+    //         });
+    //     });
+
+
+}
 
