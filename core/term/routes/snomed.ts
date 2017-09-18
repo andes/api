@@ -1,6 +1,7 @@
 import * as express from 'express';
 import { model } from '../schemas/snomed';
 import * as utils from '../../../utils/utils';
+import { SnomedCIE10Mapping } from './../controller/mapping';
 
 let router = express.Router();
 
@@ -114,5 +115,35 @@ router.get('/snomed', function (req, res, next) {
         res.json(data.slice(skip, req.query.limit || 100));
     });
 });
+
+/**
+ * Mapea un concepto de snomed
+ *
+ * 248152002 -> Mujer
+ * 248153007 -> Hombre
+ * 445518008 -> Edad
+ *
+ * https://www.nlm.nih.gov/research/umls/mapping_projects/IMAGICImplementationGuide.pdf
+ * https://github.com/andes/snomed-cie10
+ *
+ */
+router.get('/snomed/map', function (req, res, next) {
+    if (!req.query.conceptId) {
+        return next('Debe ingresar un concepto principal');
+    }
+
+    let conceptId = req.query.conceptId;
+    let paciente = req.query.paciente;
+    let contexto = req.query.secondaryConcepts;
+
+    let map = new SnomedCIE10Mapping(paciente, contexto);
+    map.transform(conceptId).then(target => {
+        res.send({ cie10: target });
+    }).catch(error => {
+        next(error);
+    });
+});
+
+
 
 export = router;
