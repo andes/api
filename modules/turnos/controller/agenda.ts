@@ -493,26 +493,16 @@ export function grabaSips(agendaSips: any) {
         agendaSips.agenda.estado = 1;
     }
 
-    var idEfector = getEfectorSips(agendaSips.agenda.organizacion.codigo.sisa, 2383);
-    // let idEfector[] = getEfectorSips(agendaSips.agenda.organizacion.codigo.sisa);
-
-
-    let query;
-
-    Promise.all([idEfector]).then(values => {
-        
-        query = "insert into Con_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, idMotivoInactivacion, multiprofesional) values (" + agendaSips.agenda.estado + ", " + values[0] + ", " + agendaSips.agenda.idServicio + ", " + agendaSips.agenda.profesionales.idProfesional + ", " + agendaSips.agenda.idTipoPrestacion + ", " + agendaSips.agenda.tipoPrestaciones.idEspecialidad + ", " + agendaSips.agenda.idConsultorio + ", " + agendaSips.agenda.fecha + ", " + agendaSips.agenda.duracion + ", '" + agendaSips.agenda.horaInicio + "', '" + agendaSips.agenda.horaFin + "', " + agendaSips.agenda.maximoSobreTurnos + ", " + agendaSips.agenda.porcentajeTurnosDia + ", " + agendaSips.agenda.porcentajeTurnosAnticipados + ", " + agendaSips.agenda.citarPorBloques + " , " + agendaSips.agenda.cantidadInterconsulta + ", " + agendaSips.agenda.turnosDisponibles + ", " + agendaSips.agenda.idMotivoInactivacion + ", " + agendaSips.agenda.multiprofesional + ")";
-        console.log("Registroosss ", values[0][0][0].idEfector, values[0][1][0].idProfesional);
-    }, reason => {
-        console.log(reason)
-    });
+    let codigoSisa = agendaSips.agenda.organizacion.codigo.sisa;
+    let dniProfesional = agendaSips.agenda.profesionales[0].documento;
 
     agendaSips.agenda.idServicio = 148;
-    agendaSips.agenda.profesionales.idProfesional = 2348;
-    agendaSips.agenda.idTipoPrestacion = 0;
+    // agendaSips.agenda.idTipoPrestacion = 0;
     agendaSips.agenda.tipoPrestaciones.idEspecialidad = 51;
     agendaSips.agenda.idConsultorio = 273;
-    agendaSips.agenda.fecha = '2017-09-15';
+    // agendaSips.agenda.fecha = '2017-09-15';
+    let fecha = moment(agendaSips.agenda.horaInicio).locale('es').format('YYYYMMDD');
+    console.log("Fechaaaaa Agendaaaaa", fecha);
     agendaSips.agenda.duracion = '30';
     agendaSips.agenda.horaInicio = moment(agendaSips.agenda.horaInicio).format('HH:mm');
     agendaSips.agenda.horaFin = moment(agendaSips.agenda.horaFin).format('HH:mm');
@@ -524,56 +514,72 @@ export function grabaSips(agendaSips: any) {
     agendaSips.agenda.turnosDisponibles = 1;
     agendaSips.agenda.idMotivoInactivacion = 0;
     agendaSips.agenda.multiprofesional = 0;
-    //  let query = "INSERT INTO Cursos (nombreCurso, costoCurso, fechaInicio, fechaFin) " +
-    //  " VALUES  ('Angular 2', 8000, '20170901', '20171201')";
-    // let query = "insert into Con_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, idMotivoInactivacion, multiprofesional) values (" + agendaSips.agenda.estado + ", " + idEfector + ", " + agendaSips.agenda.idServicio + ", " + agendaSips.agenda.profesionales.idProfesional + ", " + agendaSips.agenda.idTipoPrestacion + ", " + agendaSips.agenda.tipoPrestaciones.idEspecialidad + ", " + agendaSips.agenda.idConsultorio + ", " + agendaSips.agenda.fecha + ", " + agendaSips.agenda.duracion + ", '" + agendaSips.agenda.horaInicio + "', '" + agendaSips.agenda.horaFin + "', " + agendaSips.agenda.maximoSobreTurnos + ", " + agendaSips.agenda.porcentajeTurnosDia + ", " + agendaSips.agenda.porcentajeTurnosAnticipados + ", " + agendaSips.agenda.citarPorBloques + " , " + agendaSips.agenda.cantidadInterconsulta + ", " + agendaSips.agenda.turnosDisponibles + ", " + agendaSips.agenda.idMotivoInactivacion + ", " + agendaSips.agenda.multiprofesional + ")";
 
-    // let query = "INSERT INTO CON_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, multiprofesional ) VALUES  (" + agendaSips.agenda.estado + "," + agendaSips.turno.organizacion.codigo.sisa + "," + agendaSips.agenda.tipoPrestaciones.conceptId + ", " + agendaSips.agenda.profesionales.idProfesional + "," + agendaSips.agenda.idTipoPrestacion + "," + agendaSips.agenda.tipoPrestaciones.idEspecialidad + "," + agendaSips.agenda.idConsultorio + ", " + agendaSips.agenda.fecha + ", " + agendaSips.agenda.horaInicio + ", " + agendaSips.agenda.horaFin + ", " + agendaSips.agenda.maximoSobreTurnos + ", " + agendaSips.agenda.porcentajeTurnosDia + ", " + agendaSips.agenda.porcentajeTurnosAnticipados + ", " + agendaSips.agenda.citarPorBloques + ", " + agendaSips.agenda.cantidadInterconsulta + ", " + agendaSips.agenda.turnosDisponibles + ", " + agendaSips.agenda.idMotivoInactivacion + ", " + agendaSips.agenda.multiprofesional +  ")";
-    // console.log('Cursooo: ', query);
-    var connection = {
-        user: configPrivate.conSql.auth.user,
-        password: configPrivate.conSql.auth.password,
-        server: configPrivate.conSql.serverSql.server,
-        database: configPrivate.conSql.serverSql.database
-    };
+    let datosSips = getDatosSips(codigoSisa, dniProfesional);
 
-    (async function () {
-        try {
-            let pool = await sql.connect(connection);
+    let query;
 
-            const transaction = new sql.Transaction(pool);
-            transaction.begin(err => {
+    Promise.all([datosSips]).then(values => {
+        let idEfector = values[0][0][0].idEfector;
+        let idProfesional = values[0][1][0].idProfesional;
+        let idTipoPrestacion = 0;
+
+        query = "insert into Con_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, idMotivoInactivacion, multiprofesional) values (" + agendaSips.agenda.estado + ", " + idEfector + ", " + agendaSips.agenda.idServicio + ", " + idProfesional + ", " + idTipoPrestacion + ", " + agendaSips.agenda.tipoPrestaciones.idEspecialidad + ", " + agendaSips.agenda.idConsultorio + ", '" + fecha + "', " + agendaSips.agenda.duracion + ", '" + agendaSips.agenda.horaInicio + "', '" + agendaSips.agenda.horaFin + "', " + agendaSips.agenda.maximoSobreTurnos + ", " + agendaSips.agenda.porcentajeTurnosDia + ", " + agendaSips.agenda.porcentajeTurnosAnticipados + ", " + agendaSips.agenda.citarPorBloques + " , " + agendaSips.agenda.cantidadInterconsulta + ", " + agendaSips.agenda.turnosDisponibles + ", " + agendaSips.agenda.idMotivoInactivacion + ", " + agendaSips.agenda.multiprofesional + ")";
+        console.log("Queryyyy ", query);
+
+
+        let connection = {
+            user: configPrivate.conSql.auth.user,
+            password: configPrivate.conSql.auth.password,
+            server: configPrivate.conSql.serverSql.server,
+            database: configPrivate.conSql.serverSql.database
+        };
+
+        (async function () {
+            try {
+                let pool = await sql.connect(connection);
+
+                const transaction = new sql.Transaction(pool);
+                transaction.begin(err => {
+                    // ... error checks 
+
+                    const request = new sql.Request(transaction)
+                    request.query(query, (err, result) => {
+                        // ... error checks
+                        if (err)
+                            return console.log("Errooo.", err.message);;
+
+
+                        transaction.commit(err1 => {
+                            // ... error checks 
+                            if (err1)
+                                return console.log('Transaction uncommitted.', err1);
+
+                            console.log('Transaction Committed.');
+                        });
+                    });
+                });
+
+
+            } catch (err) {
                 // ... error checks 
+            }
+        })();
 
-                const request = new sql.Request(transaction)
-                request.query(query, (err, result) => {
-                    // ... error checks
-                    if (err)
-                        return console.log("Errooo.", err.message);;
-
-
-                    transaction.commit(err1 => {
-                        // ... error checks 
-                        if (err1)
-                            return console.log("Transaction uncommitted.", err1);
-
-                        console.log("Transaction Committed.");
-                    })
-                })
-            })
-
-
-        } catch (err) {
-            // ... error checks 
-        }
-    })();
-
-    sql.on('error', err => {
-        // ... error handler 
+        sql.on('error', err => {
+            // ... error handler 
+        });
+    }, reason => {
+        console.log(reason)
     });
+
+    //query = "insert into Con_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, idMotivoInactivacion, multiprofesional) values (" + agendaSips.agenda.estado + ", " + idEfector + ", " + agendaSips.agenda.idServicio + ", " + agendaSips.agenda.profesionales.idProfesional + ", " + agendaSips.agenda.idTipoPrestacion + ", " + agendaSips.agenda.tipoPrestaciones.idEspecialidad + ", " + agendaSips.agenda.idConsultorio + ", " + agendaSips.agenda.fecha + ", " + agendaSips.agenda.duracion + ", '" + agendaSips.agenda.horaInicio + "', '" + agendaSips.agenda.horaFin + "', " + agendaSips.agenda.maximoSobreTurnos + ", " + agendaSips.agenda.porcentajeTurnosDia + ", " + agendaSips.agenda.porcentajeTurnosAnticipados + ", " + agendaSips.agenda.citarPorBloques + " , " + agendaSips.agenda.cantidadInterconsulta + ", " + agendaSips.agenda.turnosDisponibles + ", " + agendaSips.agenda.idMotivoInactivacion + ", " + agendaSips.agenda.multiprofesional + ")";
+
+    // query = "INSERT INTO CON_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, multiprofesional ) VALUES  (" + agendaSips.agenda.estado + "," + agendaSips.turno.organizacion.codigo.sisa + "," + agendaSips.agenda.tipoPrestaciones.conceptId + ", " + agendaSips.agenda.profesionales.idProfesional + "," + agendaSips.agenda.idTipoPrestacion + "," + agendaSips.agenda.tipoPrestaciones.idEspecialidad + "," + agendaSips.agenda.idConsultorio + ", " + agendaSips.agenda.fecha + ", " + agendaSips.agenda.horaInicio + ", " + agendaSips.agenda.horaFin + ", " + agendaSips.agenda.maximoSobreTurnos + ", " + agendaSips.agenda.porcentajeTurnosDia + ", " + agendaSips.agenda.porcentajeTurnosAnticipados + ", " + agendaSips.agenda.citarPorBloques + ", " + agendaSips.agenda.cantidadInterconsulta + ", " + agendaSips.agenda.turnosDisponibles + ", " + agendaSips.agenda.idMotivoInactivacion + ", " + agendaSips.agenda.multiprofesional +  ")";
+
 }
 
-function getEfectorSips(codigoSisa, idProfesional) {
+function getDatosSips(codigoSisa, dniProfesional) {
     var connection = {
         user: configPrivate.conSql.auth.user,
         password: configPrivate.conSql.auth.password,
@@ -589,14 +595,14 @@ function getEfectorSips(codigoSisa, idProfesional) {
                 let pool = await sql.connect(connection)
                 let result: any[] = [];
                 result[0] = await pool.request()
-                    // .input('input_parameter', sql.Int, codigoSisa)
-                    .query('select idEfector from dbo.Sys_Efector WHERE codigoSisa = ' + codigoSisa);
+                    .input('codigoSisa', sql.BigInt, codigoSisa)
+                    .query('select idEfector from dbo.Sys_Efector WHERE codigoSisa = @codigoSisa');
 
                 // console.dir(result1);
 
                 result[1] = await pool.request()
-                    // .input('input_parameter', sql.Int, codigoSisa)
-                    .query('SELECT idProfesional FROM dbo.Sys_Profesional WHERE idProfesional = ' + idProfesional);
+                    .input('dniProfesional', sql.Int, dniProfesional)
+                    .query('SELECT idProfesional FROM dbo.Sys_Profesional WHERE numeroDocumento = @dniProfesional and activo = 1');
                 resolve(result);
                 // console.dir(result2);
 

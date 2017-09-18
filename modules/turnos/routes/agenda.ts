@@ -425,7 +425,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
 
 });
 
-router.get('/pepe', function (req, res, next) {
+router.get('/agendaSips', function (req, res, next) {
     agendaCtrl.getAgendaSips();
 });
 export = router;
