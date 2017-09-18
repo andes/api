@@ -45,6 +45,7 @@ export let pacienteSchema = new mongoose.Schema({
     fechaFallecimiento: Date,
     estadoCivil: constantes.ESTADOCIVIL,
     foto: String,
+    fotoMobile: String,
     nacionalidad: String,
     relaciones: [{
         relacion: parentezcoSchema,

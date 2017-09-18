@@ -64,8 +64,6 @@ router.put('/paciente/:id', function (req: any, res, next) {
             if (req.body.contacto) {
                 data.contacto = req.body.contacto;
             }
-
-
             return controllerPaciente.updatePaciente(paciente, data, req).then(p => {
                 return res.send({ status: 'OK' });
             }).catch(error => {
@@ -77,6 +75,35 @@ router.put('/paciente/:id', function (req: any, res, next) {
         });
     } else {
         return next({ message: 'unauthorized' });
+    }
+});
+
+router.patch('/pacientes/:id', function (req, res, next) {
+    let idPaciente = req.params.id;
+    let pacientes = req.user.pacientes;
+    let index = pacientes.findIndex(item => item.id === idPaciente);
+
+    if (index >= 0) {
+        controllerPaciente.buscarPaciente(req.params.id).then((resultado: any) => {
+            if (resultado) {
+                switch (req.body.op) {
+                    case 'updateFotoMobile':
+                    controllerPaciente.updateFotoMobile(req, resultado.paciente);
+                        break;
+                }
+
+                Auth.audit(resultado.paciente, req);
+
+                resultado.paciente.save(function (errPatch) {
+                    if (errPatch) {
+                        return next(errPatch);
+                    }
+                    return res.json(resultado.paciente);
+                });
+            }
+        }).catch((err) => {
+            return next(err);
+        });
     }
 });
 
