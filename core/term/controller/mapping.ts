@@ -43,7 +43,6 @@ export class SnomedCIE10Mapping {
 
     public transform(conceptId) {
         return new Promise((resolve, reject) => {
-
             SnomedMapping.find({ conceptId: conceptId }).sort('mapGroup mapPriority').then((mapping) => {
                 for (let i = 0; i < mapping.length; i++) {
                     let rules = mapping[i] as any;
