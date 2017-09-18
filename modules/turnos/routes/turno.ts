@@ -202,7 +202,12 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
 
                                     for (let y = 0; y < (data as any).bloques[posBloque].turnos.length; y++) {
                                         if ((data as any).bloques[posBloque].turnos[y]._id.equals(req.params.idTurno)) {
-                                            posTurno = y;
+                                            let turnoSeleccionado = (data as any).bloques[posBloque].turnos[y];
+                                            if (turnoSeleccionado.estado === 'disponible') {
+                                                posTurno = y;
+                                            } else {
+                                                return next('noDisponible');
+                                            }
                                         }
                                     }
                                 }
@@ -210,6 +215,9 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                             if ((countBloques[req.body.tipoTurno] as number) === 0) {
                                 return next('No quedan turnos del tipo ' + req.body.tipoTurno);
                             }
+
+                            // Verifica si el turno se encuentra todavia disponible
+
                             // Si quedan turnos
                             let update: any = {};
                             switch (req.body.tipoTurno) {
@@ -268,10 +276,10 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                                         return next(err4);
                                     }
                                     if (doc2 == null) {
-                                        return next('El turno no pudo ser asignado');
+                                        return next('noDisponible');
                                     }
                                     if (writeOpResult && writeOpResult.value === null) {
-                                        return next('El turno ya fue asignado');
+                                        return next('noDisponible');
                                     } else {
                                         let datosOp = {
                                             estado: update[etiquetaEstado],

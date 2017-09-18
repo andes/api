@@ -1,3 +1,4 @@
+import { auth } from './../../config.private';
 import * as express from 'express';
 import * as ldapjs from 'ldapjs';
 import * as configPrivate from '../../config.private';
@@ -97,7 +98,7 @@ router.post('/login', function (req, res, next) {
                 return next(403);
             }
 
-            if (req.body.mobile) {
+             if (req.body.mobile) {
                 checkMobile(data[2]._id).then((account: any) => {
                     // Crea el token con los datos de sesión
                     res.json({
@@ -108,6 +109,7 @@ router.post('/login', function (req, res, next) {
                 });
             } else {
                 // Crea el token con los datos de sesión
+
                 res.json({
                     token: Auth.generateUserToken(nombre, apellido, data[0], data[1], data[2])
                 });
@@ -155,7 +157,7 @@ router.post('/login', function (req, res, next) {
             } else {
                 // Crea el token con los datos de sesión
                 res.json({
-                    token: Auth.generateUserToken(nombre, apellido, data[0], data[1], profesional)
+                    token: Auth.generateUserToken(nombre, apellido, data[0], data[1], profesional2)
                 });
             }
         });

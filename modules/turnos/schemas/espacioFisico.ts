@@ -7,11 +7,16 @@ export let espacioFisicoSchema = new mongoose.Schema({
     nombre: String,
     detalle: String,
     descripcion: String,
+    organizacion: nombreSchema,
     edificio: edificioSchema,
     sector: nombreSchema,
     servicio: nombreSchema,
     equipamiento: [SnomedConcept],
-    activo: Boolean
+    activo: Boolean,
+    estado: {
+        type: String,
+        enum: ['disponible', 'mantenimiento', 'clausurado', 'baja permanente']
+    }
 });
 
 export let espacioFisico = mongoose.model('espacioFisico', espacioFisicoSchema, 'espacioFisico');

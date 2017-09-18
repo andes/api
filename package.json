@@ -4,7 +4,7 @@
     "description": "API para ANDES",
     "main": "index.js",
     "dependencies": {
-        "@andes/match": "^1.1.6",
+        "@andes/match": "^1.1.9",
         "@types/async": "^2.0.40",
         "@types/bcrypt-nodejs": "0.0.30",
         "@types/core-js": "^0.9.36",
@@ -28,15 +28,18 @@
         "geojson": "^0.4.1",
         "http": "0.0.0",
         "http-status-codes": "^1.1.6",
+        "ipaddr.js": "^1.4.0",
         "is-reachable": "^2.3.2",
         "jsonwebtoken": "^7.3.0",
         "ldapjs": "^1.0.1",
         "libxmljs": "^0.18.4",
+        "mime-db": "^1.29.0",
         "moment": "^2.18.1",
         "mongoosastic": "^4.2.4",
         "mongoose": "4.10.8",
         "mssql": "^3.3.0",
         "node-pushnotifications": "^1.0.18",
+        "node-schedule": "^1.2.4",
         "nodemailer": "^4.0.1",
         "passport": "^0.3.2",
         "passport-jwt": "^2.2.1",
@@ -55,7 +58,8 @@
         "start": "concurrently -r \"npm run tsc:w\" \"npm run node\" ",
         "node": "nodemon -q ./index.js",
         "tsc": "tsc",
-        "tsc:w": "tsc -w"
+        "tsc:w": "tsc -w",
+        "jobs": "tsc && node jobs/scheduler.js"
     },
     "repository": {
         "type": "git",
