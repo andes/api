@@ -5,6 +5,8 @@ import {
 
 let router = express.Router();
 
+/* Por el momento sin uso */
+
 router.post('/sips', function (req: any, res, next) {
 
     let newData = new agendaSipsCache(req.body.params);
