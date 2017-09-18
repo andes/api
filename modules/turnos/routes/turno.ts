@@ -8,6 +8,8 @@ import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import { NotificationService } from '../../mobileApp/controller/NotificationService';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
+import * as operations from './../../legacy/controller/operations';
+
 let router = express.Router();
 
 router.get('/turno/:id*?', function (req, res, next) {
@@ -289,6 +291,9 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                                             LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turno, req.params.idBloque, req.params.idAgenda);
                                         }
                                     }
+                                    // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
+                                        operations.cacheTurnosSips(data);
+                                    // Fin de insert cache
                                     res.json(data);
                                 });
                         });
@@ -353,6 +358,9 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, 
                         };
                         Logger.log(req, 'turnos', 'update', datosOp);
                     }
+                    // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
+                        operations.cacheTurnosSips(data);
+                    // Fin de insert cache
                     res.json(data);
 
                     if (req.body.turno.reasignado && req.body.turno.reasignado.siguiente) {

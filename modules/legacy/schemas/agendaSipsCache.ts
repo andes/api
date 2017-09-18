@@ -5,29 +5,15 @@ import {
 import * as constantes from './constantes';
 
 export let agendaSipsCacheSchema = new mongoose.Schema({
-    agenda: {
-        organizacion: Object,
-        profesionales: Object,
-        tipoPrestaciones: Object,
-        espacioFisico: Object,
-        estado: String,
-        horaInicio: Date,
-        horaFin: Date
-    },
-    turno: {
-        idAgenda: mongoose.Schema.Types.ObjectId,
-        estado: String,
-        horaInicio: Date,
-        tipoTurno: Object,
-        paciente: {
-            id: mongoose.Schema.Types.ObjectId,
-            documento: String,
-            nombre: String,
-            apellido: String,
-            sexo: constantes.SEXO,
-            fechaNacimiento: Date
-        }
-    },
+    id: Object,
+    organizacion: Object,
+    profesionales: Object,
+    tipoPrestaciones: Object,
+    espacioFisico: Object,
+    bloques: Object,
+    estado: String,
+    horaInicio: Date,
+    horaFin: Date,
     createdAt: Date,
     updatedAt: Date,
     updatedBy: mongoose.Schema.Types.Mixed
