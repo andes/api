@@ -489,9 +489,10 @@ export function getAgendaSips() {
 
 export function grabaSips(agendaSips: any) {
 
+    let objectId = agendaSips._id;
+    console.log("Objectttt " , objectId);
     let estado = getEstadoAgendaSips(agendaSips.estado);
-    console.log("Estado    ", estado);
-    let codigoSisa = agendaSips.organizacion.sisa;
+    let codigoSisa = agendaSips.organizacion.codigo.sisa;
     let dniProfesional = agendaSips.profesionales[0].documento;
     let fecha = moment(agendaSips.horaInicio).format('YYYYMMDD');
     let horaInicio = moment(agendaSips.horaInicio).utc().format('HH:mm');
@@ -509,8 +510,6 @@ export function grabaSips(agendaSips: any) {
     let idMotivoInactivacion = 0;
     let multiprofesional = 0;
 
-    // agendaSips.idServicio = 148;
-    // agendaSips.tipoPrestaciones.idEspecialidad = 51;
     agendaSips.idConsultorio = 273;
 
     let datosSips = getDatosSips(codigoSisa, dniProfesional, tipoPrestacion);
@@ -525,10 +524,11 @@ export function grabaSips(agendaSips: any) {
         let idServicio = values[0][2][0].idServicio;
         let idTipoPrestacion = 0;
 
-        query = "insert into Con_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, idMotivoInactivacion, multiprofesional) values (" + estado + ", " + idEfector + ", " + idServicio + ", " + idProfesional + ", " + idTipoPrestacion + ", " + 
-        idEspecialidad + ", " + agendaSips.idConsultorio + ", '" + fecha + "', " + duracionTurno + ", '" + horaInicio + "', '" + horaFin + "', " + maximoSobreTurnos + ", " + porcentajeTurnosDia + ", " + porcentajeTurnosAnticipados + ", " + citarPorBloques + " , " + cantidadInterconsulta + ", " + turnosDisponibles + ", " + idMotivoInactivacion + ", " + multiprofesional + ")";
+        query = "insert into Con_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, idMotivoInactivacion, multiprofesional, objectId) values (" + estado + ", " + idEfector + ", " + idServicio + ", " + idProfesional + ", " + idTipoPrestacion + ", " + idEspecialidad + ", " + agendaSips.idConsultorio + ", '" + fecha + "', " + duracionTurno + ", '" + horaInicio + "', '" + horaFin + "', " + maximoSobreTurnos + ", " + porcentajeTurnosDia + ", " + porcentajeTurnosAnticipados + ", " + citarPorBloques + " , " + cantidadInterconsulta + ", " + turnosDisponibles + ", " + idMotivoInactivacion + ", " + multiprofesional + ", '" + objectId + "')";
         console.log("Queryyyy ", query);
 
+        let query1 = "INSERT INTO dbo.CON_Turno ( idAgenda,  idTurnoEstado, idUsuario , idPaciente , fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante) VALUES  ( 75822 , 1 , 9739 ,  410551 , GETDATE() , '05:00' , 0 ,0 , 1 ,0 )";
+        
         let connection = {
             user: configPrivate.conSql.auth.user,
             password: configPrivate.conSql.auth.password,
@@ -559,6 +559,22 @@ export function grabaSips(agendaSips: any) {
                             console.log('Transaction Committed.');
                         });
                     });
+
+                    // request.query(query1, (err, result) => {
+                    //     // ... error checks
+                    //     if (err)
+                    //         return console.log("Errooo.", err.message);;
+
+
+                    //     transaction.commit(err1 => {
+                    //         // ... error checks 
+                    //         if (err1)
+                    //             return console.log('Transaction uncommitted.', err1);
+
+                    //         console.log('Transaction Committed.');
+                    //     });
+                    // });
+
                 });
 
 
