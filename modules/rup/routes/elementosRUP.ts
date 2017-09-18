@@ -38,8 +38,9 @@ router.get('/elementosRUP/:id*?', function (req, res, next) {
         }
         query.where('activo').equals(true);
     }
-    // query.populate('frecuentes');
-    query.populate('requeridos').sort({ 'nombre': 1 }).exec(function (err, data) {
+
+    // query.populate('requeridos.elementoRUP');
+    query.sort({ 'nombre': 1 }).exec(function (err, data) {
         if (err) {
             return next(err);
         }
