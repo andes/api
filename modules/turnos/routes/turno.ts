@@ -319,7 +319,7 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, 
             if (err) {
                 return next(err);
             }
-            let etiquetaTurno : string;
+            let etiquetaTurno: string;
             let posTurno: number;
             let posBloque: number;
             if (req.params.idBloque !== '-1') {
@@ -330,7 +330,6 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, 
                 posTurno = (data as any).sobreturnos.findIndex(sobreturno => Object.is(req.params.idTurno, String(sobreturno._id)));
                 etiquetaTurno = 'sobreturnos.' + posTurno;
             }
-            
             let usuario = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
             // Copia la organización desde el token
             usuario.organizacion = (req as any).user.organizacion;
@@ -340,9 +339,7 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, 
             let query = {
                 _id: req.params.idAgenda,
             };
-            
             update[etiquetaTurno] = req.body.turno;
-            
             // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
             (agenda as any).findOneAndUpdate(query, update, { new: true },
                 function actualizarAgenda(err2, doc2, writeOpResult) {
