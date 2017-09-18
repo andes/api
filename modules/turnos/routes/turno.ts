@@ -319,32 +319,30 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, 
             if (err) {
                 return next(err);
             }
-            let posBloque: number;
+            let etiquetaTurno : string;
             let posTurno: number;
-            // Los siguientes 2 for ubican el indice del bloque y del turno
-            for (let x = 0; x < (data as any).bloques.length; x++) {
-                if ((data as any).bloques[x]._id.equals(req.params.idBloque)) {
-                    posBloque = x;
-                    for (let y = 0; y < (data as any).bloques[posBloque].turnos.length; y++) {
-                        if ((data as any).bloques[posBloque].turnos[y]._id.equals(req.params.idTurno)) {
-                            posTurno = y;
-                        }
-                    }
-                }
+            let posBloque: number;
+            if (req.params.idBloque !== '-1') {
+                posBloque = (data as any).bloques.findIndex(bloque => Object.is(req.params.idBloque, String(bloque._id)));
+                posTurno = (data as any).bloques[posBloque].turnos.findIndex(turno => Object.is(req.params.idTurno, String(turno._id)));
+                etiquetaTurno = 'bloques.' + posBloque + '.turnos.' + posTurno;
+            } else {
+                posTurno = (data as any).sobreturnos.findIndex(sobreturno => Object.is(req.params.idTurno, String(sobreturno._id)));
+                etiquetaTurno = 'sobreturnos.' + posTurno;
             }
+            
             let usuario = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
             // Copia la organización desde el token
             usuario.organizacion = (req as any).user.organizacion;
 
-            let etiquetaTurno: string = 'bloques.' + posBloque + '.turnos.' + posTurno;
             let update: any = {};
 
             let query = {
                 _id: req.params.idAgenda,
             };
-
+            
             update[etiquetaTurno] = req.body.turno;
-
+            
             // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
             (agenda as any).findOneAndUpdate(query, update, { new: true },
                 function actualizarAgenda(err2, doc2, writeOpResult) {
