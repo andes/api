@@ -489,13 +489,17 @@ export function getAgendaSips() {
 
 export function grabaSips(agendaSips: any) {
 
-    let estado = getEstadoAgendaSips(agendaSips.agenda.estado);
+    let estado = getEstadoAgendaSips(agendaSips.estado);
     console.log("Estado    ", estado);
-    let codigoSisa = agendaSips.agenda.organizacion.codigo.sisa;
-    let dniProfesional = agendaSips.agenda.profesionales[0].documento;
-    let fecha = moment(agendaSips.agenda.horaInicio).format('YYYYMMDD');
-    let horaInicio = moment(agendaSips.agenda.horaInicio).utc().format('HH:mm');
-    let horaFin = moment(agendaSips.agenda.horaFin).utc().format('HH:mm');
+    let codigoSisa = agendaSips.organizacion.sisa;
+    let dniProfesional = agendaSips.profesionales[0].documento;
+    let fecha = moment(agendaSips.horaInicio).format('YYYYMMDD');
+    let horaInicio = moment(agendaSips.horaInicio).utc().format('HH:mm');
+    let horaFin = moment(agendaSips.horaFin).utc().format('HH:mm');
+    let duracionTurno = agendaSips.bloques[0].duracionTurno;
+
+    let tipoPrestacion = agendaSips.tipoPrestaciones[0].conceptId;
+
     let maximoSobreTurnos = 0;
     let porcentajeTurnosDia = 0;
     let porcentajeTurnosAnticipados = 0;
@@ -505,21 +509,24 @@ export function grabaSips(agendaSips: any) {
     let idMotivoInactivacion = 0;
     let multiprofesional = 0;
 
-    agendaSips.agenda.idServicio = 148;
-    agendaSips.agenda.tipoPrestaciones.idEspecialidad = 51;
-    agendaSips.agenda.idConsultorio = 273;
-    agendaSips.agenda.duracion = '30';
+    // agendaSips.idServicio = 148;
+    // agendaSips.tipoPrestaciones.idEspecialidad = 51;
+    agendaSips.idConsultorio = 273;
 
-    let datosSips = getDatosSips(codigoSisa, dniProfesional);
+    let datosSips = getDatosSips(codigoSisa, dniProfesional, tipoPrestacion);
 
     let query;
 
     Promise.all([datosSips]).then(values => {
+
         let idEfector = values[0][0][0].idEfector;
         let idProfesional = values[0][1][0].idProfesional;
+        let idEspecialidad = values[0][2][0].idEspecialidad;
+        let idServicio = values[0][2][0].idServicio;
         let idTipoPrestacion = 0;
 
-        query = "insert into Con_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, idMotivoInactivacion, multiprofesional) values (" + estado + ", " + idEfector + ", " + agendaSips.agenda.idServicio + ", " + idProfesional + ", " + idTipoPrestacion + ", " + agendaSips.agenda.tipoPrestaciones.idEspecialidad + ", " + agendaSips.agenda.idConsultorio + ", '" + fecha + "', " + agendaSips.agenda.duracion + ", '" + horaInicio + "', '" + horaFin + "', " + maximoSobreTurnos + ", " + porcentajeTurnosDia + ", " + porcentajeTurnosAnticipados + ", " + citarPorBloques + " , " + cantidadInterconsulta + ", " + turnosDisponibles + ", " + idMotivoInactivacion + ", " + multiprofesional + ")";
+        query = "insert into Con_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, idMotivoInactivacion, multiprofesional) values (" + estado + ", " + idEfector + ", " + idServicio + ", " + idProfesional + ", " + idTipoPrestacion + ", " + 
+        idEspecialidad + ", " + agendaSips.idConsultorio + ", '" + fecha + "', " + duracionTurno + ", '" + horaInicio + "', '" + horaFin + "', " + maximoSobreTurnos + ", " + porcentajeTurnosDia + ", " + porcentajeTurnosAnticipados + ", " + citarPorBloques + " , " + cantidadInterconsulta + ", " + turnosDisponibles + ", " + idMotivoInactivacion + ", " + multiprofesional + ")";
         console.log("Queryyyy ", query);
 
         let connection = {
@@ -573,15 +580,14 @@ export function grabaSips(agendaSips: any) {
 
 }
 
-function getDatosSips(codigoSisa, dniProfesional) {
+function getDatosSips(codigoSisa, dniProfesional, conceptId) {
+
     var connection = {
         user: configPrivate.conSql.auth.user,
         password: configPrivate.conSql.auth.password,
         server: configPrivate.conSql.serverSql.server,
         database: configPrivate.conSql.serverSql.database
     };
-
-    let idEfector: any;
 
     return new Promise((resolve: any, reject: any) => {
         (async function () {
@@ -598,10 +604,16 @@ function getDatosSips(codigoSisa, dniProfesional) {
                 result[1] = await pool.request()
                     .input('dniProfesional', sql.Int, dniProfesional)
                     .query('SELECT idProfesional FROM dbo.Sys_Profesional WHERE numeroDocumento = @dniProfesional and activo = 1');
-                resolve(result);
+
                 // console.dir(result2);
 
+                result[2] = await pool.request()
+                    .input('conceptId', sql.BigInt, conceptId)
+                    .query('SELECT E.idEspecialidad, S.idServicio FROM dbo.Sys_Especialidad E INNER JOIN dbo.Sys_Servicio S ON s.unidadOperativa = e.unidadOperativa WHERE E.conceptId_snomed = 268565007 AND s.activo = 1 ');
 
+                console.log("Especialidaddd ", result[2]);
+
+                resolve(result);
             } catch (err) {
                 // ... error checks 
                 console.log(err);
