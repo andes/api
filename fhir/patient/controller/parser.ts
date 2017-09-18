@@ -171,15 +171,15 @@ function castearDirecciones(direcciones) {
                 valor: unaAddress.line[0]
             };
             if (unaAddress.city) {
-                let localidad = await buscarLocalidad(unaAddress.city);
+                let localidadEncontrada = await buscarLocalidad(unaAddress.city);
                 direc['ubicacion'] = {
                     localidad: {
-                        _id: localidad[0]._id,
-                        nombre: localidad[0].nombre
+                        _id: localidadEncontrada[0]._id,
+                        nombre: localidadEncontrada[0].nombre
                     },
                     provincia: {
-                        _id: localidad[0].provincia._id,
-                        nombre: localidad[0].provincia.nombre
+                        _id: localidadEncontrada[0].provincia._id,
+                        nombre: localidadEncontrada[0].provincia.nombre
                     }
                 };
             }
@@ -190,11 +190,11 @@ function castearDirecciones(direcciones) {
 }
 
 
-export function FHIRAPaciente(paciente: PacienteFHIR) {
+export function FHIRAPaciente(pacienteFhir: PacienteFHIR) {
     return new Promise((resolve, reject) => {
         let genero;
         let sexo; // TODO: revisar, en fhir esta solo gender
-        switch (paciente.gender) {
+        switch (pacienteFhir.gender) {
             case 'female':
                 genero = 'femenino';
                 sexo = 'femenino';
@@ -209,15 +209,15 @@ export function FHIRAPaciente(paciente: PacienteFHIR) {
                 break;
         }
         let pacienteMPI = {
-            documento: paciente.identifier[0].value,
-            nombre: paciente.name[0].given.join().replace(',', ' '),
-            apellido: paciente.name[0].family,
-            fechaNacimiento: paciente.birthDate,
+            documento: pacienteFhir.identifier[0].value,
+            nombre: pacienteFhir.name[0].given.join().replace(',', ' '),
+            apellido: pacienteFhir.name[0].family,
+            fechaNacimiento: pacienteFhir.birthDate,
             genero: genero,
             sexo: sexo,
             estado: 'temporal'
         };
-        let contactos = paciente.telecom ? paciente.telecom.map(unContacto => {
+        let contactos = pacienteFhir.telecom ? pacienteFhir.telecom.map(unContacto => {
             let cont = {
                 valor: unContacto.value,
                 ranking: unContacto.rank
@@ -234,7 +234,7 @@ export function FHIRAPaciente(paciente: PacienteFHIR) {
         }) : [];
 
 
-        let relaciones = paciente.contact ? paciente.contact.map(aContact => {
+        let relaciones = pacienteFhir.contact ? pacienteFhir.contact.map(aContact => {
             let relacion = {
                 relacion : { nombre: aContact.relationship[0].text},
                 nombre: aContact.name.given.join().replace(',', ' '),
@@ -243,13 +243,13 @@ export function FHIRAPaciente(paciente: PacienteFHIR) {
             return relacion;
         }) : [];
 
-        castearDirecciones(paciente.address).then((direcciones) => {
+        castearDirecciones(pacienteFhir.address).then((direcciones) => {
             pacienteMPI['direccion'] = direcciones;
         });
 
-        if (paciente.maritalStatus) {
+        if (pacienteFhir.maritalStatus) {
             let estadoCivil;
-            switch (paciente.maritalStatus['text']) {
+            switch (pacienteFhir.maritalStatus['text']) {
                 case 'Married':
                     estadoCivil = 'casado';
                     break;
@@ -268,17 +268,17 @@ export function FHIRAPaciente(paciente: PacienteFHIR) {
             }
             pacienteMPI['estadoCivil'] = estadoCivil;
         }
-        if (paciente.active) {
-            pacienteMPI['activo'] = paciente.active;
+        if (pacienteFhir.active) {
+            pacienteMPI['activo'] = pacienteFhir.active;
         }
         if (contactos.length > 0) {
             pacienteMPI['contacto'] = contactos;
         }
-        if (paciente.photo) { // Image of the patient
-            pacienteMPI['foto'] = paciente.photo[0].data;
+        if (pacienteFhir.photo) { // Image of the patient
+            pacienteMPI['foto'] = pacienteFhir.photo[0].data;
         }
 
-        if (paciente.contact) {
+        if (pacienteFhir.contact) {
             pacienteMPI['relaciones'] = relaciones;
         }
         resolve(pacienteMPI);
