@@ -337,6 +337,8 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                     break;
                 case 'sacarAsistencia': agendaCtrl.sacarAsistencia(req, data, turnos[y]._id);
                     break;
+                case 'quitarTurnoDoble': agendaCtrl.quitarTurnoDoble(req, data, turnos[y]._id);
+                    break;
                 case 'liberarTurno':
                     turno = agendaCtrl.getTurno(req, data, turnos[y]._id);
                     if (turno.paciente.id) {
