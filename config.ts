@@ -102,6 +102,12 @@ export const modules = {
         path: './modules/usuarios/routes',
         route: '/modules/usuarios',
         middleware: appMiddleware
+    },
+    fhir: {
+        active: true,
+        path: './fhir/patient/routes',
+        route: '/fhir/patient',
+        middleware: appMiddleware,
     }
 };
 
@@ -132,5 +138,11 @@ export const mpi = {
         name: 0.10,
         gender: 0.3,
         birthDate: 0.05
+    },
+    weightsUpdater: {
+        identity: 0.3,
+        name: 0.3,
+        gender: 0.1,
+        birthDate: 0.3
     }
 };
