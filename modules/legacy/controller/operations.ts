@@ -1,8 +1,8 @@
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import {
-    agendaSipsCache
-} from '../schemas/agendaSipsCache';
+    agendasCache
+} from '../schemas/agendasCache';
 import {
     profesional
 } from './../../../core/tm/schemas/profesional';
@@ -58,7 +58,7 @@ export async function cacheTurnosSips(unaAgenda) {
 
     if (unaAgenda.estado !== 'planificacion') {
 
-        let agenda = new agendaSipsCache({
+        let agenda = new agendasCache({
             id: unaAgenda.id,
             organizacion: await organizacionCompleto(unaAgenda.organizacion.id),
             profesionales: await profesionalCompleto(unaAgenda.profesionales),

@@ -4,7 +4,7 @@ import {
 } from '../../../core/tm/schemas/tipoPrestacion';
 import * as constantes from './constantes';
 
-export let agendaSipsCacheSchema = new mongoose.Schema({
+export let agendasCacheSchema = new mongoose.Schema({
     id: Object,
     organizacion: Object,
     profesionales: Object,
@@ -19,4 +19,4 @@ export let agendaSipsCacheSchema = new mongoose.Schema({
     updatedBy: mongoose.Schema.Types.Mixed
 });
 
-export let agendaSipsCache = mongoose.model('agendaSipsCache', agendaSipsCacheSchema, 'agendaSipsCache');
+export let agendasCache = mongoose.model('agendasCache', agendasCacheSchema, 'agendasCache');

@@ -15,7 +15,7 @@ let connection = {
 
 export function getAgendaSips() {
     const url = configPrivate.hosts.mongoDB_main.host;
-    const coleccion = 'agendaSipsCache';
+    const coleccion = 'agendasCache';
 
     MongoClient.connect(url, function (err: any, dbMongo: any) {
 
