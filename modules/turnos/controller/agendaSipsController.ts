@@ -35,7 +35,7 @@ export function getAgendaSips() {
 
                     if (data) {
 
-
+                        grabaTurnoSips(agenda);
 
                     } else {
                         let offset = 0;
@@ -55,9 +55,20 @@ export function getAgendaSips() {
     });
 }
 
+function grabaTurnoSips(agendaMongo) {
+    let turnos;
+
+    for (let x = 0; x < agendaMongo.bloques.length; x++) {
+        turnos = agendaMongo.bloques[x].turnos;
+
+        if (turnos[x].estado === 'asignado') {
+            console.log("Turnossss ", turnos[x].estado);
+        }
+    }
+}
+
 // Verifica si la agenda ya existe en SIPS a través del objectId de Mongo
 function isAgendaSips(idMongo: any) {
-    let isAgenda = false;
 
     let query = "SELECT * FROM dbo.CON_Agenda WHERE objectId = '" + idMongo + "'";
 
@@ -74,9 +85,6 @@ function isAgendaSips(idMongo: any) {
                     request.query(query, (err, result) => {
                         // ... error checks
                         if (err)
-                            //  {
-                            //     reject(err.message);
-                            // }
                             return console.log('Error SQL.', err.message);
 
                         transaction.commit(err1 => {
@@ -90,9 +98,9 @@ function isAgendaSips(idMongo: any) {
 
                         if (result.length > 0) {
 
-                            isAgenda = true;
+                            resolve(result);
                         }
-                        resolve(isAgenda);
+
                     });
                 });
 
