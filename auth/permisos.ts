@@ -28,7 +28,8 @@ export default [
                 child: [
                     {
                         key: 'get',
-                        type: 'boolean'
+                        type: 'boolean',
+                        title: 'Obtener porcentajes de matcheo'
                     },
                     {
                         key: 'patch',
@@ -46,39 +47,48 @@ export default [
                 child: [
                     {
                         key: 'dashboard',
-                        title: 'Dashboard'
+                        title: 'Dashboard',
+                        type: 'boolean'
                     },
                     {
                         key: 'getbyId',
-                        title: 'Detalle de un paciente'
+                        title: 'Detalle de un paciente',
+                        type: 'boolean'
                     },
                     {
                         key: 'elasticSearch',
-                        title: 'Busqueda de un paciente'
+                        title: 'Busqueda de un paciente',
+                        type: 'boolean'
                     },
                     {
                         key: 'putMpi',
-                        title: 'Actualización de un paciente MPI'
+                        title: 'Actualización de un paciente MPI',
+                        type: 'boolean'
                     },
                     {
                         key: 'deleteMpi',
-                        title: 'Eliminar un paciente MPI'
+                        title: 'Eliminar un paciente MPI',
+                        type: 'boolean'
                     },
                     {
                         key: 'postAndes',
-                        title: 'Creacion de un paciente'
+                        title: 'Creacion de un paciente',
+                        type: 'boolean'
                     },
                     {
                         key: 'putAndes',
-                        title: 'Actualización de un paciente'
+                        title: 'Actualización de un paciente',
+                        type: 'boolean'
                     },
                     {
                         key: 'deleteAndes',
-                        title: 'Eliminar un paciente'
+                        title: 'Eliminar un paciente',
+                        type: 'boolean'
                     },
                     {
                         key: 'patchAndes',
-                        title: 'Modificar datos de un paciente'
+                        title: 'Modificar datos de un paciente',
+                        type: 'boolean'
                     }
                 ]
 
@@ -119,7 +129,6 @@ export default [
                         type: 'boolean'
                     }
                 ]
-
             }
         ]
     },
@@ -143,16 +152,16 @@ export default [
     },
     {
         key: 'usuarios',
-        title: 'Gesto de usuarios',
+        title: 'Gestor de usuarios',
         child: [
             {
                 key: 'get',
-                title: 'Lectura',
+                title: 'Lectura de permisos',
                 type: 'boolean'
             },
             {
-                key: 'get',
-                title: 'Lectura',
+                key: 'set',
+                title: 'Modificacion de permisos',
                 type: 'boolean'
             }
         ]
