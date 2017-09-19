@@ -6,9 +6,9 @@ import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
 import * as moment from 'moment';
 import * as agendaCtrl from '../controller/agenda';
+import * as agendaSipsCtrl from '../controller/agendasipsController';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import * as operations from './../../legacy/controller/operations';
-
 
 let router = express.Router();
 
@@ -436,7 +436,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
 
 });
 
-router.get('/pepe', function (req, res, next) {
-    agendaCtrl.getAgendaSips();
+router.get('/agendaSips', function (req, res, next) {
+    agendaSipsCtrl.getAgendaSips();
 });
 export = router;
