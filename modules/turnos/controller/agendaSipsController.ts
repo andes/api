@@ -29,20 +29,26 @@ export function getAgendaSips() {
 
         dbMongo.collection(coleccion).find().toArray(function (err3, items) {
 
-            async.forEach(items, function (agenda, done) {
+            async.forEach(items, function (agendaMongo, done) {
 
-                isAgendaSips(agenda._id).then(function (data) {
+                isAgendaSips(agendaMongo._id).then(function (agendaSips: any) {
+                    console.log("Datatattat ", agendaSips.isAgenda);
 
-                    if (data) {
+                    if (agendaSips.isAgenda) {
+                        let offset = 0;
 
-                        grabaTurnoSips(agenda);
+                        setTimeout(function () {
+                            console.log("Entra a falsoooo");
+                            grabaTurnoSips(agendaMongo, agendaSips);
+                        }, 5000 + offset);
+                        offset += 10000;
 
                     } else {
                         let offset = 0;
 
                         setTimeout(function () {
                             // console.log('Cursooo: ', agenda);
-                            grabaSips(agenda);
+                            grabaSips(agendaMongo);
                         }, 5000 + offset);
                         offset += 10000;
                     }
@@ -55,20 +61,52 @@ export function getAgendaSips() {
     });
 }
 
-function grabaTurnoSips(agendaMongo) {
+function grabaTurnoSips(agendaMongo, agendaSips) {
     let turnos;
 
     for (let x = 0; x < agendaMongo.bloques.length; x++) {
         turnos = agendaMongo.bloques[x].turnos;
 
         if (turnos[x].estado === 'asignado') {
-            console.log("Turnossss ", turnos[x].estado);
+
+            let query = "INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente ,  fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante ) VALUES  ( 75822 , 1 , 9739 , 410551 , GETDATE() ,'05:00' , 0 , 0 , 1 ,0)";
+
+            (async function () {
+                try {
+                    let pool = await sql.connect(connection);
+
+                    const transaction = new sql.Transaction(pool);
+                    transaction.begin(err => {
+                        // ... error checks 
+
+                        var request = new sql.Request(transaction);
+                        request.query(query, (err, result) => {
+                            // ... error checks
+                            if (err)
+                                return console.log("Errooo.", err.message);;
+
+
+                            transaction.commit(err1 => {
+                                // ... error checks 
+                                if (err1)
+                                    return console.log('Transaction uncommitted.', err1);
+
+                                return 'Transaction Commited.';
+                            });
+                        });
+                    });
+
+                } catch (err) {
+                    // ... error checks 
+                }
+            })();
         }
     }
 }
 
 // Verifica si la agenda ya existe en SIPS a través del objectId de Mongo
 function isAgendaSips(idMongo: any) {
+    let isAgenda = false;
 
     let query = "SELECT * FROM dbo.CON_Agenda WHERE objectId = '" + idMongo + "'";
 
@@ -98,8 +136,9 @@ function isAgendaSips(idMongo: any) {
 
                         if (result.length > 0) {
 
-                            resolve(result);
+                            result.isAgenda = true;
                         }
+                        resolve(result);
 
                     });
                 });
