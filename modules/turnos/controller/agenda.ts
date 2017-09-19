@@ -15,6 +15,12 @@ export function sacarAsistencia(req, data, tid = null) {
 }
 
 // Turno
+export function quitarTurnoDoble(req, data, tid = null) {
+    let turno = getTurno(req, data, tid);
+    turno.estado = 'disponible';
+}
+
+// Turno
 export function liberarTurno(req, data, turno) {
     let position = getPosition(req, data, turno._id);
     turno.estado = 'disponible';
