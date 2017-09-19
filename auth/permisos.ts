@@ -101,7 +101,10 @@ export default [
         title: 'Modulo RUP',
         comment: 'Nada aun',
         child: [
-
+            {
+                key: 'tipoPrestacion',
+                type: 'prestacion'
+            }
         ]
     },
     {

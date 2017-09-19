@@ -34,7 +34,17 @@ router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
         if (err) {
             return next(err);
         }
-        let organizaciones = user.organizaciones.map((item) => mongoose.Types.ObjectId(item._id));
+        let organizaciones = user.organizaciones.map((item) => {
+            if ((req as any).query.admin) {
+                if (item.permisos.findIndex(item => item === 'usuarios:set') >= 0) {
+                    return mongoose.Types.ObjectId(item._id);
+                } else {
+                    return null;
+                }
+            } else {
+                return mongoose.Types.ObjectId(item._id);
+            }
+        }).filter(item => item !== null);
         authOrganizaciones.find({ _id: { $in: organizaciones } }, (errOrgs, orgs: any[]) => {
             if (errOrgs) {
                 return next(errOrgs);
