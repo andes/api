@@ -1,6 +1,7 @@
 import * as express from 'express';
 import { model } from '../schemas/snomed';
 import * as utils from '../../../utils/utils';
+import * as cie10 from '../schemas/cie10';
 import { SnomedCIE10Mapping } from './../controller/mapping';
 
 let router = express.Router();
@@ -138,7 +139,13 @@ router.get('/snomed/map', function (req, res, next) {
 
     let map = new SnomedCIE10Mapping(paciente, contexto);
     map.transform(conceptId).then(target => {
-        res.send({ cie10: target });
+
+        cie10.model.findOne({ codigo: target }).then(cie => {
+            res.send(cie10);
+        }).catch(err => {
+            next(err);
+        });
+
     }).catch(error => {
         next(error);
     });

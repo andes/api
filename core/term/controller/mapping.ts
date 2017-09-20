@@ -41,7 +41,18 @@ export class SnomedCIE10Mapping {
         }
     }
 
-    public transform(conceptId) {
+    public setContexto(contexto) {
+        this.contexto = contexto;
+    }
+
+    public setPaciente(paciente) {
+        this.paciente = paciente;
+    }
+
+    public transform(conceptId, contexto = null) {
+        if (contexto) {
+            this.setContexto(contexto);
+        }
         return new Promise((resolve, reject) => {
             SnomedMapping.find({ conceptId: conceptId }).sort('mapGroup mapPriority').then((mapping) => {
                 for (let i = 0; i < mapping.length; i++) {
