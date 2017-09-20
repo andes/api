@@ -1,7 +1,6 @@
 import * as moment from 'moment';
 import { SnomedMapping } from '../schemas/mapping';
 
-
 /**
  * Mapea un concepto de snomed a CIE10
  *
@@ -41,20 +40,45 @@ export class SnomedCIE10Mapping {
         }
     }
 
+    /**
+     * Concepto secundarios para refinar el mappeo
+     * (Ver la documentación del Mapping)
+     * @param {any} contexto
+     * @memberof SnomedCIE10Mapping
+     */
+
     public setContexto(contexto) {
         this.contexto = contexto;
     }
+
+    /**
+     * Datos del paciente
+     *
+     * @param {any} paciente
+     * @memberof SnomedCIE10Mapping
+     */
 
     public setPaciente(paciente) {
         this.paciente = paciente;
     }
 
+    /**
+     * Mappea un concepto de SNOMED a CIE10
+     *
+     * @param {any} conceptId
+     * @param {any} [contexto=null]
+     * @return CIE10Model
+     * @memberof SnomedCIE10Mapping
+     */
     public transform(conceptId, contexto = null) {
         if (contexto) {
             this.setContexto(contexto);
         }
         return new Promise((resolve, reject) => {
             SnomedMapping.find({ conceptId: conceptId }).sort('mapGroup mapPriority').then((mapping) => {
+                /**
+                 * Chequeamos regla a regla cual es la primera que se cumple
+                 */
                 for (let i = 0; i < mapping.length; i++) {
                     let rules = mapping[i] as any;
                     let rule = rules.mapRule;
@@ -72,6 +96,12 @@ export class SnomedCIE10Mapping {
         });
     }
 
+    /**
+     * Verifica si se cumple el predicado de una regla.
+     * @private
+     * @param {any} predicado
+     * @memberof SnomedCIE10Mapping
+     */
     private check(predicado) {
         if (predicado.length > 0) {
             if (typeof predicado[0] === 'boolean') {

@@ -127,7 +127,11 @@ router.get('/snomed', function (req, res, next) {
  * https://www.nlm.nih.gov/research/umls/mapping_projects/IMAGICImplementationGuide.pdf
  * https://github.com/andes/snomed-cie10
  *
+ * @param {string} conceptId
+ * @param {Ipaciente} paciente
+ * @param {String[]} secondaryConcepts  Listado de concepto secundario para mejorar el mapeo.
  */
+
 router.get('/snomed/map', function (req, res, next) {
     if (!req.query.conceptId) {
         return next('Debe ingresar un concepto principal');
