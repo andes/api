@@ -216,7 +216,9 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                                 }
                             }
 
-                            let tipoTurno = req.body.tipoTurno;
+                            let tipoTurno = req.body.tipoTurno || undefined;
+
+                            // res.json({ tipoTurno: tipoTurno });
 
                             // En una reasignación de turno se descarta el tipo de turno original y se reasigna a "del día" o "programado"
                             if (req.query.reasignacion) {
@@ -276,7 +278,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                             update[etiquetaEstado] = 'asignado';
                             update[etiquetaPrestacion] = req.body.tipoPrestacion;
                             update[etiquetaPaciente] = req.body.paciente;
-                            update[etiquetaTipoTurno] = req.body.tipoTurno;
+                            update[etiquetaTipoTurno] = tipoTurno;
 
                             if (req.body.reasignado) {
                                 update[etiquetaReasignado] = req.body.reasignado;
@@ -298,33 +300,32 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
 
 
                             // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
-                            (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true },
-                                function actualizarAgenda(err4, doc2: any, writeOpResult) {
-                                    if (err4) {
-                                        return next(err4);
-                                    }
-                                    if (doc2 == null) {
-                                        return next('noDisponible');
-                                    }
-                                    if (writeOpResult && writeOpResult.value === null) {
-                                        return next('noDisponible');
-                                    } else {
-                                        let datosOp = {
-                                            estado: update[etiquetaEstado],
-                                            paciente: update[etiquetaPaciente],
-                                            prestacion: update[etiquetaPrestacion],
-                                            tipoTurno: update[etiquetaTipoTurno]
-                                        };
-                                        Logger.log(req, 'turnos', 'asignarTurno', datosOp);
+                            (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true }, function actualizarAgenda(err4, doc2: any, writeOpResult) {
+                                if (err4) {
+                                    return next(err4);
+                                }
+                                if (doc2 == null) {
+                                    return next('noDisponible');
+                                }
+                                if (writeOpResult && writeOpResult.value === null) {
+                                    return next('noDisponible');
+                                } else {
+                                    let datosOp = {
+                                        estado: update[etiquetaEstado],
+                                        paciente: update[etiquetaPaciente],
+                                        prestacion: update[etiquetaPrestacion],
+                                        tipoTurno: update[etiquetaTipoTurno] !== null ? update[etiquetaTipoTurno] : null,
+                                    };
+                                    Logger.log(req, 'turnos', 'asignarTurno', datosOp);
 
-                                        if (req.body.reasignado && req.body.reasignado === false) {
-                                            let turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
-                                            LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turno, req.params.idBloque, req.params.idAgenda);
-                                        }
+                                    if (req.body.reasignado && req.body.reasignado === false) {
+                                        let turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
+                                        LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turno, req.params.idBloque, req.params.idAgenda);
                                     }
+                                }
 
-                                    res.json(data);
-                                });
+                                res.json(data);
+                            });
                         });
                     }
                 });
