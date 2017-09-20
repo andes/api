@@ -84,7 +84,7 @@ router.put('/:id', function (req, res, next) {
  */
 
 router.get('/:dni', function (req, res, next) {
-    if (!Auth.check(req, 'usuarios:get:byId')) {
+    if (!Auth.check(req, 'usuarios:get')) {
         return next(403);
     }
     authUsers.findOne({ usuario: req.params.dni }).then((resultado: any) => {
@@ -96,24 +96,6 @@ router.get('/:dni', function (req, res, next) {
     });
 });
 
-
-// router.get('/local/:organizacion/:usuario', function (req, res, next) {
-//     if (!Auth.check(req, 'usuarios:get:byId:byOrganizacion')) {
-//         return next(403);
-//     }
-//     let filtro = {
-//         usuario: req.params.usuario,
-//         organizacion: req.params.organizacion
-//     };
-//     authUsers.find(filtro).then((resultado: any) => {
-//         if (resultado) {
-//             res.json(resultado);
-//         }
-//     }).catch((err) => {
-//         return next(err);
-//     });
-// });
-
 /**
  * Chequea un documento en LDAP
  *
@@ -121,7 +103,7 @@ router.get('/:dni', function (req, res, next) {
  */
 
 router.get('/ldap/:id', function (req, res, next) {
-    if (!Auth.check(req, 'usuarios:get:ldap')) {
+    if (!Auth.check(req, 'usuarios:ldap')) {
         return next(403);
     }
     let server = configPrivate.hosts.ldap + configPrivate.ports.ldapPort;
