@@ -317,7 +317,7 @@ export function getTurnoAnterior(req, agenda, idTurno = null) {
     if (position.indexBloque > -1) {
         turnos = agenda.bloques[position.indexBloque].turnos;
     }
-    return turnos[index-1];
+    return turnos[index - 1];
 }
 
 
