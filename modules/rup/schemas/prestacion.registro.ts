@@ -29,6 +29,10 @@ schema.add({
         required: true,
         default: false
     },
+    esDiagnosticoPrincipal: {
+        type: Boolean,
+        default: false
+    },
     // Almacena el valor del átomo, molécula o fórmula.
     // Para el caso de las moléculas, el valor puede ser nulo.
     valor: mongoose.Schema.Types.Mixed,
