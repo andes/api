@@ -18,7 +18,7 @@ export function initAPI(app: Express) {
 
     // Inicializa las tareas diarias
     // Uso el require acá porque genera problemas con los import de schemas antes de setear los defaultsSchema
-    require('./scheduler').Scheduler.initialize();
+    // require('./scheduler').Scheduler.initialize();
 
     // Configura Express
     app.use(bodyParser.json({limit: '150mb'}));
