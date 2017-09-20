@@ -87,6 +87,8 @@ router.get('/agenda/candidatas', function (req, res, next) {
                             (req.query.duracion ? b.duracionTurno === bloque.duracionTurno : true)
                             &&  // si filtro por duracion verifico que sea la mismo
                             (bloque.accesoDirectoDelDia > 0 && b.restantesDelDia > 0) || (bloque.accesoDirectoProgramado > 0 && b.restantesProgramados > 0) // verifico que queden turnos disponibles
+                            // && //
+                            // (bloque.turnos.map(t => t.paciente && t.paciente.id).length)
                         ) {
                             if (out.indexOf(a) < 0) {
                                 out.push(a);
@@ -295,9 +297,7 @@ router.post('/agenda/clonar', function (req, res, next) {
                             turno.idPrestacionPaciente = null;
                             turno.nota = null;
                             turno._id = mongoose.Types.ObjectId();
-                            if (turno.tipoTurno) {
-                                turno.tipoTurno = undefined;
-                            }
+                            turno.tipoTurno = undefined;
                         });
                     });
                     nueva['estado'] = 'planificacion';
@@ -340,6 +340,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
         if (err) {
             return next(err);
         }
+
         // Loopear los turnos, si viene vacío, es porque viene un id solo
         let turnos = req.body.turnos || [''];
 
@@ -381,7 +382,8 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 case 'prePausada':
                 case 'asistenciaCerrada':
                 case 'codificada':
-                case 'suspendida': agendaCtrl.actualizarEstado(req, data);
+                case 'suspendida':
+                    agendaCtrl.actualizarEstado(req, data);
                     break;
                 case 'avisos':
                     agendaCtrl.agregarAviso(req, data);
@@ -395,6 +397,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
             }
 
             Auth.audit(data, req);
+
             data.save(function (error) {
 
                 Logger.log(req, 'turnos', 'update', {
@@ -408,30 +411,20 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                     return next(error);
                 }
 
+                if (req.body.op === 'suspendida') {
+                    (data as any).bloques.forEach(bloque => {
+
+                        // Loggear cada turno
+                        bloque.turnos.forEach(t => {
+                            if (t.paciente && t.paciente.id) {
+                                LoggerPaciente.logTurno(req, 'turnos:suspender', t.paciente, t, bloque._id, data._id);
+                            }
+                        });
+
+                    });
+                }
             });
 
-            if (req.body.op === 'suspendida') {
-                (data as any).bloques.forEach(bloque => {
-
-                    bloque.turnos.forEach(t => {
-                        if (t.paciente.id) {
-                            if (t.paciente.telefono) {
-                                let sms: any = {
-                                    telefono: t.paciente.telefono,
-                                    mensaje: 'Le avisamos que su turno para el día ' + moment(t.horaInicio).format('dd/MM/yyyy') + ' a las ' + moment(t.horaInicio).format('HH:mm') + 'hs fue suspendido'
-                                };
-                                // sendSms(sms, respuesta => {
-                                //     if (respuesta === '0') {
-
-                                //     }
-                                // });
-                            }
-                            LoggerPaciente.logTurno(req, 'turnos:suspender', t.paciente, t, bloque._id, data._id);
-                        }
-                    });
-
-                });
-            }
         }
         return res.json(data);
     });
