@@ -782,7 +782,7 @@ router.patch('/pacientes/:id', function (req, res, next) {
             switch (req.body.op) {
                 case 'updateContactos':
                     // controller.updateContactos(req, resultado.paciente);
-                    resultado.paciente.markModified('contacto', req.body.contacto);
+                    resultado.paciente.markModified('contacto');
                     resultado.paciente.contacto = req.body.contacto;
                     break;
                 case 'updateRelaciones':
@@ -821,7 +821,7 @@ router.patch('/pacientes/:id', function (req, res, next) {
             //     pacienteAndes = resultado.paciente;
             // }
 
-            Auth.audit(pacienteAndes, req);
+            Auth.audit(resultado.paciente, req);
             resultado.paciente.save(function (errPatch) {
                 if (errPatch) {
                     return next(errPatch);

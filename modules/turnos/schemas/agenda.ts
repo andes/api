@@ -94,6 +94,26 @@ schema.virtual('turnosRestantesProgramados').get(function () {
     return restantesProgramados;
 });
 
+schema.virtual('turnosRestantesGestion').get(function () {
+    let restantesGestion = 0;
+    this.bloques.forEach(function (bloque) {
+        if (bloque.restantesGestion > 0) {
+            restantesGestion += bloque.restantesGestion;
+        }
+    });
+    return restantesGestion;
+});
+
+schema.virtual('turnosRestantesProfesional').get(function () {
+    let restantesProfesional = 0;
+    this.bloques.forEach(function (bloque) {
+        if (bloque.restantesProfesional > 0) {
+            restantesProfesional += bloque.restantesProfesional;
+        }
+    });
+    return restantesProfesional;
+});
+
 
 
 schema.virtual('estadosAgendas').get(function () {
