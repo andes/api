@@ -6,7 +6,7 @@ import { Auth } from '../../../../auth/auth.class';
 let router = express.Router();
 
 router.get('/matching/:id*?', function (req, res, next) {
-      if (!Auth.check(req, 'mpi:matching:get')) {
+    if (!Auth.check(req, 'mpi:matching:get')) {
         return next(403);
     }
     if (req.params.id) {
@@ -35,7 +35,7 @@ router.get('/matching/:id*?', function (req, res, next) {
 });
 
 router.patch('/matching/:id', function (req, res, next) {
-     if (!Auth.check(req, 'mpi:matching:patch:id')) {
+    if (!Auth.check(req, 'mpi:matching:patch')) {
         return next(403);
     }
     paciente.findById(req.params.id, function (err, data) {
@@ -68,7 +68,7 @@ router.patch('/matching/:id', function (req, res, next) {
 });
 
 router.put('/matching/:id', function (req, res, next) {
-     if (!Auth.check(req, 'mpi:matching:put:id')) {
+    if (!Auth.check(req, 'mpi:matching:put')) {
         return next(403);
     }
     paciente.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {

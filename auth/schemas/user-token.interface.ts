@@ -8,6 +8,6 @@ export interface UserToken extends Token {
         username: string,
         documento: string
     };
-    roles: string[];
+    // roles: string[];
     profesional: any;
 }

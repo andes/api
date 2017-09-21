@@ -25,7 +25,7 @@ router.get('/paciente/:id', function (req: any, res, next) {
     let pacientes = req.user.pacientes;
     let index = pacientes.findIndex(item => item.id === idPaciente);
     if (index >= 0) {
-        controllerPaciente.buscarPaciente(pacientes[index].id).then((resultado) => {
+        return controllerPaciente.buscarPaciente(pacientes[index].id).then((resultado) => {
             // [TODO] Projectar datos que se pueden mostrar al paciente
             return res.json(resultado.paciente);
 
@@ -33,7 +33,7 @@ router.get('/paciente/:id', function (req: any, res, next) {
             return res.status(422).send({ message: 'invalid_id' });
         });
     } else {
-        res.status(422).send({ message: 'unauthorized' });
+        return res.status(422).send({ message: 'unauthorized' });
     }
 });
 
