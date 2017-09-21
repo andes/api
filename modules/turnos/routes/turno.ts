@@ -238,7 +238,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                                     return next('No quedan turnos del tipo ' + tipoTurno);
                                 }
                             }
-                            console.log(tipoTurno);
 
                             // Verifica si el turno se encuentra todavia disponible
 
