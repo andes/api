@@ -1,3 +1,5 @@
+import * as mongoose from 'mongoose';
+import { agendasCache } from '../../legacy/schemas/agendasCache';
 import * as configPrivate from '../../../config.private';
 import * as sql from 'mssql';
 import * as moment from 'moment';
@@ -16,82 +18,61 @@ let connection = {
 const url = configPrivate.hosts.mongoDB_main.host;
 const coleccion = 'agendasCache';
 
-export function getAgendaSips() {
+
+export async function getAgendaSips() {
 
     let hayAgenda: any;
-    let x = 0;
-    getAgendasDeMongo().then(function (agendaMongo) {
-        console.log("Primer then");
-        for (let x = 0; x < agendaMongo.length; x++) {
-            // existeAgendaSips(agendaMongo[x]).then(function (isAgenda) {
+    let listaAgenda: any;
 
+    let agendasMongo = await getAgendasDeMongo();
 
-            // if (!isAgenda) {
+    for (let x = 0; x < agendasMongo.length; x++) {
+        
+        let existeAgenda = await existeAgendaSips(agendasMongo[x]);
 
-            grabaSips(agendaMongo[x]).then(function (data) {
-                setTimeout(function () {
-                    console.log("Contador", x);
+        if (!existeAgenda) {
 
-                }, 10000);
-                x++;
-            });
+            let agendaGrabada = await grabaSips(agendasMongo[x]);
+        } else {
+            console.log("Existe Agenda en SIPS");
         }
-    }).then(function () {
-        console.log("Segundo then: ");
-    });
+    }
 }
 
-
-function getAgendasDeMongo() {
-    return new Promise(function (resolve, reject) {
-
-        MongoClient.connect(url, function (errorConexion: any, dbMongo: any) {
-            if (errorConexion) {
-                dbMongo.close();
-                reject(errorConexion);
+async function getAgendasDeMongo() {
+    return new Promise<Array<any>>(function (resolve, reject) {
+        agendasCache.find().exec(function (err, data) {
+            if (err) {
+                return (err);
             }
-
-            dbMongo.collection(coleccion).find().toArray(function (errMongo, listasAgendaMongo) {
-                resolve(listasAgendaMongo);
-                dbMongo.close();
-            });
+            resolve(data);
         });
     });
 }
 
 function existeAgendaSips(agendaMongo: any) {
 
-    let isAgenda = false;
-    let idAgenda = agendaMongo;
-    console.log("ObjectId: ", idAgenda);
-
     return new Promise(function (resolve, reject) {
+        let isAgenda;
+        let idAgenda = agendaMongo.id;
 
-        setTimeout(function () {
-            sql.connect(connection).then(pool => {
+        sql.connect(connection).then(pool => {
 
-                return pool.request()
-                    .input('idAgendaMongo', sql.VarChar(50), idAgenda)
-                    .query('SELECT COUNT(1) AS cant FROM dbo.CON_Agenda WHERE objectId = @idAgendaMongo');
-            }).then(result => {
-                if (result[0].cant > 0) {
-                    isAgenda = true;
-                    resolve(idAgenda);
-                } else {
-                    // grabaSips(agendaMongo).then(function (data) {
-                    //     console.log("Grabaaaaaa: ", data);
-                    resolve(false);
-                    // });
-                }
-                console.log("Primer result; ", result);
+            return pool.request()
+                .input('idAgendaMongo', sql.VarChar(50), agendaMongo.id)
+                .query('SELECT COUNT(1) AS cant FROM dbo.CON_Agenda WHERE objectId = @idAgendaMongo');
+        }).then(result => {
 
-            }).then(result => {
-                console.dir("Segundo Result: ", result);
-            }).catch(err => {
-                reject(err);
-            });
-        }, 15000);
-
+            if (result[0].cant > 0) {
+                isAgenda = true;
+                resolve(isAgenda);
+            } else {
+                isAgenda = false;
+                resolve(isAgenda);
+            }
+        }).catch(err => {
+            reject(err);
+        });
     });
 
 }
@@ -123,7 +104,7 @@ function grabaSips(agendaSips: any) {
     let query;
 
     return new Promise((resolve: any, reject: any) => {
-        // Promise.all([datosSips]).then(values => {
+
         getDatosSips(codigoSisa, dniProfesional, tipoPrestacion).then(function (values) {
 
             let idEfector = values[0][0].idEfector;
@@ -132,28 +113,29 @@ function grabaSips(agendaSips: any) {
             let idServicio = values[2][0].idServicio;
             let idTipoPrestacion = 0;
 
-            existeAgendaSips(agendaSips.id).then(function (existeAgenda) {
-                console.log("Existe Agenda: ", existeAgenda);
+            query = "insert into Con_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, idMotivoInactivacion, multiprofesional, objectId) values (" + estado + ", " + idEfector + ", " + idServicio + ", " + idProfesional + ", " + idTipoPrestacion + ", " + idEspecialidad + ", " + agendaSips.idConsultorio + ", '" + fecha + "', " + duracionTurno + ", '" + horaInicio + "', '" + horaFin + "', " + maximoSobreTurnos + ", " + porcentajeTurnosDia + ", " + porcentajeTurnosAnticipados + ", " + citarPorBloques + " , " + cantidadInterconsulta + ", " + turnosDisponibles + ", " + idMotivoInactivacion + ", " + multiprofesional + ", '" + objectId + "')";
 
-                if (!existeAgenda) {
-                    sql.connect(connection).then(pool => {
-                        query = "insert into Con_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, idMotivoInactivacion, multiprofesional, objectId) values (" + estado + ", " + idEfector + ", " + idServicio + ", " + idProfesional + ", " + idTipoPrestacion + ", " + idEspecialidad + ", " + agendaSips.idConsultorio + ", '" + fecha + "', " + duracionTurno + ", '" + horaInicio + "', '" + horaFin + "', " + maximoSobreTurnos + ", " + porcentajeTurnosDia + ", " + porcentajeTurnosAnticipados + ", " + citarPorBloques + " , " + cantidadInterconsulta + ", " + turnosDisponibles + ", " + idMotivoInactivacion + ", " + multiprofesional + ", '" + objectId + "')";
-
-                        return pool.request()
-                            .query(query);
-                    }).then(result => {
-
-                        resolve(result);
-                        // console.Log("Graboo:  ", result);
-
-                    }).catch(err => {
-
-                    });
-                }
+            insertaSips(query).then(function (data) {
+                resolve(data);
+                console.log("Registro Insertado: ", data);
             });
-
         });
 
+    });
+}
+
+function insertaSips(query: any) {
+    return new Promise((resolve: any, reject: any) => {
+        sql.connect(connection).then(pool => {
+
+            return pool.request()
+                .query(query);
+        }).then(result => {
+            resolve(result);
+
+        }).catch(err => {
+            reject(err);
+        });
     });
 }
 
