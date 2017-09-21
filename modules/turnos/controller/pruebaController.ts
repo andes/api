@@ -23,7 +23,7 @@ export async function getAgendaSips() {
     for (let x = 0; x < agendasMongo.length; x++) {
 
         let existeAgenda = await existeAgendaSips(agendasMongo[x]);
-        console.log("Existe: ", existeAgenda);
+
         if (!existeAgenda) {
             let agendaGrabada = await grabaSips(agendasMongo[x]);
         } else {
@@ -71,21 +71,54 @@ function existeAgendaSips(agendaMongo: any) {
     });
 }
 
-function grabaTurnoSips(agendaMongo, idAgendaSips) {
+function existeTurnoSips(turno: any) {
+    return new Promise(function (resolve, reject) {
+        let isTurno;
+        let idTurno = turno._id;
+
+        sql.connect(connection).then(pool => {
+
+            return pool.request()
+                .input('idTurnoMongo', sql.VarChar(50), idTurno)
+                .query('SELECT idTurno FROM dbo.CON_Turno WHERE objectId = @idTurnoMongo GROUP BY idTurno');
+        }).then(result => {
+
+            if (result.length > 0) {
+                idTurno = true;
+                resolve(idTurno);
+            } else {
+                idTurno = false;
+                resolve(idTurno);
+            }
+        }).catch(err => {
+            reject(err);
+        });
+    });
+}
+
+async function grabaTurnoSips(agendaMongo, idAgendaSips) {
     let turnos;
 
     for (let x = 0; x < agendaMongo.bloques.length; x++) {
         turnos = agendaMongo.bloques[x].turnos;
 
-        if (turnos[x].estado === 'asignado') {
-            let fechaTurno = moment(turnos[x].horaInicio).format('YYYYMMDD');
-            let horaTurno = moment(turnos[x].horaInicio).utc().format('HH:mm');
+        for (let i = 0; i < turnos.length; i++) {
 
-            let query = "INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente ,  fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante, objectId ) VALUES  ( " + idAgendaSips + " , 1 , 0000 , 410551 , '" + fechaTurno + "' ,'" + horaTurno + "' , 0 , 0 , 1 ,0, '" + turnos[x]._id + "')";
+            if (turnos[i].estado === 'asignado') {
 
-            insertaSips(query).then(function (data) {
-                console.log("Turno Insertado: ", data);
-            });
+                let fechaTurno = moment(turnos[i].horaInicio).format('YYYYMMDD');
+                let horaTurno = moment(turnos[i].horaInicio).utcOffset('-03:00').format('HH:mm');
+
+                let query = "INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente ,  fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante, objectId ) VALUES  ( " + idAgendaSips + " , 1 , 0000 , 410551 , '" + fechaTurno + "' ,'" + horaTurno + "' , 0 , 0 , 1 ,0, '" + turnos[i]._id + "')";
+
+                let existeTurno = await existeTurnoSips(turnos[i]);
+
+                if (!existeTurno) {
+                    let turnoGrabado = await insertaSips(query);
+                } else {
+                    console.log("El Turno ya Existe!!!!");
+                }
+            }
         }
     }
 }
@@ -97,8 +130,8 @@ function grabaSips(agendaSips: any) {
     let codigoSisa = agendaSips.organizacion.codigo.sisa;
     let dniProfesional = agendaSips.profesionales[0].documento;
     let fecha = moment(agendaSips.horaInicio).format('YYYYMMDD');
-    let horaInicio = moment(agendaSips.horaInicio).utc().format('HH:mm');
-    let horaFin = moment(agendaSips.horaFin).utc().format('HH:mm');
+    let horaInicio = moment(agendaSips.horaInicio).utcOffset('-03:00').format('HH:mm');
+    let horaFin = moment(agendaSips.horaFin).utcOffset('-03:00').format('HH:mm');
     let duracionTurno = agendaSips.bloques[0].duracionTurno;
 
     let tipoPrestacion = agendaSips.tipoPrestaciones[0].conceptId;
@@ -130,7 +163,6 @@ function grabaSips(agendaSips: any) {
 
             insertaSips(query).then(function (data) {
                 resolve(data);
-                console.log("Registro Insertado: ", data);
             });
         });
 
@@ -188,8 +220,7 @@ function getDatosSips(codigoSisa, dniProfesional, conceptId) {
 
                 resolve(result);
             } catch (err) {
-                // ... error checks 
-                console.log(err);
+                reject(err);
             }
         })();
     });
