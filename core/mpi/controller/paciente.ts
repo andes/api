@@ -147,12 +147,15 @@ export function buscarPaciente(id): Promise<{ db: String, paciente: any }> {
                     pacienteMpi.findById(id, function (err2, dataMpi) {
                         if (err2) {
                             reject(err2);
+                        } else if (dataMpi) {
+                            let resultado = {
+                                db: 'mpi',
+                                paciente: dataMpi
+                            };
+                            resolve(resultado);
+                        } else {
+                            reject(null);
                         }
-                        let resultado = {
-                            db: 'mpi',
-                            paciente: dataMpi
-                        };
-                        resolve(resultado);
                     });
                 }
             }

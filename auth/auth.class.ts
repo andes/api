@@ -169,30 +169,30 @@ export class Auth {
      * Genera un token de usuario firmado
      *
      * @static
-     * @param {string} nombre Nombre del usuario
-     * @param {string} apellido Apellido del usuario
+     * @param {authUser} user authUserSchema
      * @param {*} organizacion Organización (corresponde a schemas/organizacion)
      * @param {*} permisos Permisos (corresponde a schemas/permisos)
      * @param {*} profesional Permisos (corresponde a core/schemas/profesional)
+     * @param {*} account_id Id de la cuenta de la app mobile (opcional)
      * @returns {*} JWT
      *
      * @memberOf Auth
      */
-    static generateUserToken(nombre: string, apellido: string, organizacion: any, permisos: any, profesional: any, account_id: string = null): any {
+    static generateUserToken(user: any, organizacion: any, permisos: any[], profesional: any, account_id: string = null): any {
         // Crea el token con los datos de sesión
         let token: UserToken = {
             id: mongoose.Types.ObjectId(),
             usuario: {
-                nombreCompleto: nombre + ' ' + apellido,
-                nombre: nombre,
-                apellido: apellido,
-                username: permisos.usuario,
-                documento: permisos.usuario
+                nombreCompleto: user.nombre + ' ' + user.apellido,
+                nombre: user.nombre,
+                apellido: user.apellido,
+                username: user.usuario,
+                documento: user.usuario
             },
-            roles: [permisos.roles],
+            // roles: [permisos.roles],
             profesional: profesional,
             organizacion: organizacion,
-            permisos: permisos.permisos,
+            permisos: permisos,
             account_id: account_id,
             type: 'user-token'
         };
@@ -254,4 +254,26 @@ export class Auth {
         };
         return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: this.expiresIn });
     }
+
+    /**
+     * Regenera un Access Token para entrar en una nueva organizacion
+     * @param token Token para refrescar
+     * @param user authUserSchema
+     * @param permisos Listado de permisos de la organizacion
+     * @param organizacion Organización a registrarse
+     *
+     * @returns {*} JWT
+     *
+     * @memberOf Auth
+     */
+    static refreshToken(token: string, user: any, permisos: any[], organizacion: any) {
+        try {
+            let tokenData = jwt.verify(token, configPrivate.auth.jwtKey);
+            return this.generateUserToken(user, organizacion, permisos, tokenData.profesional, tokenData.account_id);
+        } catch (e) {
+            return null;
+        }
+
+    }
+
 }
