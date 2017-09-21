@@ -36,7 +36,7 @@ router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
         }
         let organizaciones = user.organizaciones.map((item) => {
             if ((req as any).query.admin) {
-                if (item.permisos.findIndex(item => item === 'usuarios:set') >= 0) {
+                if (item.permisos.findIndex(elem => elem === 'usuarios:set') >= 0) {
                     return mongoose.Types.ObjectId(item._id);
                 } else {
                     return null;
