@@ -22,7 +22,6 @@ function addressFields(elem: string) {
 }
 
 function codingFields(elem: string) {
-    console.log('elem ', elem);
     return elem.match('coding|text') != null;
 }
 
@@ -44,27 +43,27 @@ function areStrings(elem: string) {
     return typeof elem === 'string';
 }
 
-export function validate(paciente: PacienteFHIR): boolean {
+export function validate(pacienteFhir: PacienteFHIR): boolean {
     // Esta función valida un objeto paciente FHIR y devuelve si es sintácticamente correcto o no.
     let respuesta = true;
-    Object.keys(paciente).every(pacienteFHIRFields);
+    Object.keys(pacienteFhir).every(pacienteFHIRFields);
     // Se verifica que el paciente tenga los campos requeridos: resourceType, identifier, name
-    respuesta = ('resourceType' in paciente) && paciente.resourceType === 'Patient';
-    respuesta = respuesta && ('identifier' in paciente) && (paciente.identifier.length > 0);
-    paciente.identifier.forEach(anIdentifier => {
+    respuesta = ('resourceType' in pacienteFhir) && pacienteFhir.resourceType === 'Patient';
+    respuesta = respuesta && ('identifier' in pacienteFhir) && (pacienteFhir.identifier.length > 0);
+    pacienteFhir.identifier.forEach(anIdentifier => {
         respuesta = respuesta && Object.keys(anIdentifier).every(identifierFields)
             && ('assigner' in anIdentifier) && ('value' in anIdentifier)
             && (typeof anIdentifier.assigner === 'string') && (typeof anIdentifier.value === 'string');
     });
 
-    paciente.name.forEach(aName => {
+    pacienteFhir.name.forEach(aName => {
         respuesta = respuesta && validName(aName);
     });
-    if (paciente.active) {
-        respuesta = respuesta && (typeof paciente.active === 'boolean');
+    if (pacienteFhir.active) {
+        respuesta = respuesta && (typeof pacienteFhir.active === 'boolean');
     }
-    if (paciente.telecom) {
-        paciente.telecom.forEach(aTelecom => {
+    if (pacienteFhir.telecom) {
+        pacienteFhir.telecom.forEach(aTelecom => {
             respuesta = respuesta && Object.keys(aTelecom).every(telecomFields);
             if (aTelecom.resourceType) {
                 respuesta = respuesta && aTelecom.resourceType === 'ContactPoint';
@@ -81,17 +80,17 @@ export function validate(paciente: PacienteFHIR): boolean {
             }
         });
     }
-    if (paciente.gender) {
-        respuesta = respuesta && paciente.gender.match('male|female|other|unknown') != null;
+    if (pacienteFhir.gender) {
+        respuesta = respuesta && pacienteFhir.gender.match('male|female|other|unknown') != null;
     }
-    if (paciente.birthDate) {
-        respuesta = respuesta && typeof paciente.birthDate === 'string'; // TODO: Algun control de que tenga formato Date
+    if (pacienteFhir.birthDate) {
+        respuesta = respuesta && typeof pacienteFhir.birthDate === 'string'; // TODO: Algun control de que tenga formato Date
     }
-    if (paciente.deceasedDateTime) {
-        respuesta = respuesta && typeof paciente.deceasedDateTime === 'string'; // TODO: Algun control de que tenga formato DateTime
+    if (pacienteFhir.deceasedDateTime) {
+        respuesta = respuesta && typeof pacienteFhir.deceasedDateTime === 'string'; // TODO: Algun control de que tenga formato DateTime
     }
-    if (paciente.address) {
-        paciente.address.forEach(anAddress => {
+    if (pacienteFhir.address) {
+        pacienteFhir.address.forEach(anAddress => {
             respuesta = respuesta && Object.keys(anAddress).every(addressFields);
             if (anAddress.resourceType) {
                 respuesta = respuesta && anAddress.resourceType === 'Address';
@@ -110,21 +109,21 @@ export function validate(paciente: PacienteFHIR): boolean {
             }
         });
     }
-    if (paciente.maritalStatus && paciente.maritalStatus.text) {
-        respuesta = respuesta && Object.keys(paciente.maritalStatus).every(codingFields)
-            && typeof paciente.maritalStatus.text === 'string'
-            && paciente.maritalStatus.text.match('Married|Divorced|Widowed|unmarried|unknown') != null;
+    if (pacienteFhir.maritalStatus && pacienteFhir.maritalStatus.text) {
+        respuesta = respuesta && Object.keys(pacienteFhir.maritalStatus).every(codingFields)
+            && typeof pacienteFhir.maritalStatus.text === 'string'
+            && pacienteFhir.maritalStatus.text.match('Married|Divorced|Widowed|unmarried|unknown') != null;
     }
-    if (paciente.photo) {
-        paciente.photo.forEach(aPhoto => {
+    if (pacienteFhir.photo) {
+        pacienteFhir.photo.forEach(aPhoto => {
             respuesta = respuesta && Object.keys(aPhoto).every(photoFields);
             if (aPhoto.data) {
                 respuesta = respuesta && typeof aPhoto.data === 'string';
             }
         });
     }
-    if (paciente.contact) {
-        paciente.contact.forEach(aContact => {
+    if (pacienteFhir.contact) {
+        pacienteFhir.contact.forEach(aContact => {
             if (aContact.relationship) {
                 aContact.relationship.forEach(aRelation => {
                     respuesta = respuesta && Object.keys(aRelation).every(codingFields);

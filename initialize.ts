@@ -18,10 +18,10 @@ export function initAPI(app: Express) {
 
     // Inicializa las tareas diarias
     // Uso el require acá porque genera problemas con los import de schemas antes de setear los defaultsSchema
-    require('./scheduler').Scheduler.initialize();
+    // require('./scheduler').Scheduler.initialize();
 
     // Configura Express
-    app.use(bodyParser.json({limit: '150mb'}));
+    app.use(bodyParser.json({ limit: '150mb' }));
     app.use(bodyParser.urlencoded({
         extended: true
     }));
@@ -73,6 +73,9 @@ export function initAPI(app: Express) {
                     err.status = 500;
                 }
             }
+
+            // IMPORTANTE: Express app.get('env') returns 'development' if NODE_ENV is not defined.
+            // O sea, la API está corriendo siempre en modo development
 
             // Send response
             res.status(err.status);

@@ -109,6 +109,9 @@ router.patch('/prestaciones/:id', function (req, res, next) {
                     }
                     data['estados'].push(req.body.estado);
                 }
+                if (req.body.registros) {
+                    data.ejecucion.registros = req.body.registros;
+                }
                 break;
             case 'romperValidacion':
                 if (data.estados[data.estados.length - 1].tipo !== 'validada') {

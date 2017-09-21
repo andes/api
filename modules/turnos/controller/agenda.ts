@@ -15,6 +15,31 @@ export function sacarAsistencia(req, data, tid = null) {
 }
 
 // Turno
+export function quitarTurnoDoble(req, data, tid = null) {
+    let turno = getTurno(req, data, tid);
+    turno.estado = 'disponible';
+    let turnoOriginal = getTurnoAnterior(req, data, turno._id);
+    let position = getPosition(req, data, turnoOriginal._id);
+    switch (turnoOriginal.tipoTurno) {
+        case ('delDia'):
+            data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia + 1;
+            data.bloques[position.indexBloque].restantesProgramados = 0;
+            data.bloques[position.indexBloque].restantesProfesional = 0;
+            data.bloques[position.indexBloque].restantesGestion = 0;
+            break;
+        case ('programado'):
+            data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + 1;
+            break;
+        case ('profesional'):
+            data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional + 1;
+            break;
+        case ('gestion'):
+            data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion + 1;
+            break;
+    }
+}
+
+// Turno
 export function liberarTurno(req, data, turno) {
     let position = getPosition(req, data, turno._id);
     turno.estado = 'disponible';
@@ -197,13 +222,14 @@ export function actualizarEstado(req, data) {
 
                     turno.estado = 'suspendido';
                     turno.motivoSuspension = 'agendaSuspendida';
+                    turno.tipoTurno = undefined;
 
-                    if (turno.paciente.id && turno.paciente.telefono) {
-                        let sms: any = {
-                            telefono: turno.paciente.telefono,
-                            mensaje: 'Le avisamos que su turno para el día ' + moment(turno.horaInicio).format('ll').toString() + ' a las ' + moment(turno.horaInicio).format('LT').toString() + 'hs fue suspendido'
-                        };
-                    }
+                    // if (turno.paciente.id && turno.paciente.telefono) {
+                    //     let sms: any = {
+                    //         telefono: turno.paciente.telefono,
+                    //         mensaje: 'Le avisamos que su turno para el día ' + moment(turno.horaInicio).format('ll').toString() + ' a las ' + moment(turno.horaInicio).format('LT').toString() + 'hs fue suspendido'
+                    //     };
+                    // }
                 });
             });
         }
@@ -283,6 +309,16 @@ export function getTurnoSiguiente(req, agenda, idTurno = null) {
         return turnos[index + 1];
     }
     return null;
+}
+
+export function getTurnoAnterior(req, agenda, idTurno = null) {
+    let position = getPosition(req, agenda, idTurno);
+    let index = position.indexTurno;
+    let turnos = [];
+    if (position.indexBloque > -1) {
+        turnos = agenda.bloques[position.indexBloque].turnos;
+    }
+    return turnos[index - 1];
 }
 
 
@@ -415,6 +451,40 @@ export function getBloque(agenda, turno) {
     return null;
 }
 
+
+export function esPrimerPaciente(agenda: any, idPaciente: string, opciones: any[]) {
+    return new Promise<any>((resolve, reject) => {
+        let prestacionActual = 'Exámen médico del adulto';
+        let profesionalesActuales = ['58f9eae202e4a0f31fcbd846'];
+
+        let primerPrestacion = false;
+        let primerProfesional = false;
+
+        agenda.find({}, (err, agendas) => {
+            if (err) {
+                return err;
+            }
+            agendas.forEach((ag, iAg) => {
+                ag.bloques.forEach((bl, iBl) => {
+                    bl.turnos.forEach((tu, iTu) => {
+                        if (tu.paciente && tu.paciente.id && tu.paciente.id.toString() === '59834a503ff831451edc5739'.toString()) {
+                            primerPrestacion = bl.tipoPrestaciones.map(x => {
+                                return x.term === prestacionActual ? true : false;
+                            });
+                            primerProfesional = ag.profesionales.map(pr => {
+                                return profesionalesActuales.find((f, index) => {
+                                    return pr._id.toString() === f.toString();
+                                });
+                            }).length === 0;
+                        }
+                    });
+                });
+            });
+        });
+        resolve({ profesional: primerProfesional, tipoPrestacion: primerPrestacion });
+    });
+
+}
 export function actualizarAgendas() {
     let query;
     let hsActualizar = 48;
