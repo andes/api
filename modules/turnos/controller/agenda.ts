@@ -15,6 +15,31 @@ export function sacarAsistencia(req, data, tid = null) {
 }
 
 // Turno
+export function quitarTurnoDoble(req, data, tid = null) {
+    let turno = getTurno(req, data, tid);
+    turno.estado = 'disponible';
+    let turnoOriginal = getTurnoAnterior(req, data, turno._id);
+    let position = getPosition(req, data, turnoOriginal._id);
+    switch (turnoOriginal.tipoTurno) {
+        case ('delDia'):
+            data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia + 1;
+            data.bloques[position.indexBloque].restantesProgramados = 0;
+            data.bloques[position.indexBloque].restantesProfesional = 0;
+            data.bloques[position.indexBloque].restantesGestion = 0;
+            break;
+        case ('programado'):
+            data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + 1;
+            break;
+        case ('profesional'):
+            data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional + 1;
+            break;
+        case ('gestion'):
+            data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion + 1;
+            break;
+    }
+}
+
+// Turno
 export function liberarTurno(req, data, turno) {
     let position = getPosition(req, data, turno._id);
     turno.estado = 'disponible';
@@ -284,6 +309,16 @@ export function getTurnoSiguiente(req, agenda, idTurno = null) {
         return turnos[index + 1];
     }
     return null;
+}
+
+export function getTurnoAnterior(req, agenda, idTurno = null) {
+    let position = getPosition(req, agenda, idTurno);
+    let index = position.indexTurno;
+    let turnos = [];
+    if (position.indexBloque > -1) {
+        turnos = agenda.bloques[position.indexBloque].turnos;
+    }
+    return turnos[index - 1];
 }
 
 

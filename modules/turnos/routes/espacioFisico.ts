@@ -44,10 +44,10 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
 
         if (req.query.organizacion) {
             query.where('organizacion._id').equals(mongoose.Types.ObjectId(req.query.organizacion));
-        } else {
-            if (req.query.sinOrganizacion) {
-                query.where('organizacion').exists(false);
-            }
+        }
+
+        if (req.query.sinOrganizacion) {
+            query.where('organizacion').exists(false);
         }
 
         if (req.query.equipamiento) {

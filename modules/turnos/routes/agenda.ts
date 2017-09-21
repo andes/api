@@ -124,11 +124,11 @@ router.get('/agenda/:id?', function (req, res, next) {
         query = agenda.find({});
 
         if (req.query.fechaDesde) {
-            query.where('horaInicio').gte(moment(req.query.fechaDesde).startOf('day').toDate() as any);
+            query.where('horaInicio').gte(req.query.fechaDesde);
         }
 
         if (req.query.fechaHasta) {
-            query.where('horaFin').lte(moment(req.query.fechaHasta).endOf('day').toDate() as any);
+            query.where('horaFin').lte(req.query.fechaHasta);
         }
 
         if (req.query.idProfesional) {
@@ -350,6 +350,8 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 case 'darAsistencia': agendaCtrl.darAsistencia(req, data, turnos[y]._id);
                     break;
                 case 'sacarAsistencia': agendaCtrl.sacarAsistencia(req, data, turnos[y]._id);
+                    break;
+                case 'quitarTurnoDoble': agendaCtrl.quitarTurnoDoble(req, data, turnos[y]._id);
                     break;
                 case 'liberarTurno':
                     turno = agendaCtrl.getTurno(req, data, turnos[y]._id);
