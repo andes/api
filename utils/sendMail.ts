@@ -31,6 +31,6 @@ export function sendMail(options: MailOptions) {
             log('Error al mandar mail: ', error);
         }
 
-        log('Mensaje %s enviado: %s', info.messageId, info.response);
+        // log('Mensaje %s enviado: %s', info.messageId, info.response);
     });
 }

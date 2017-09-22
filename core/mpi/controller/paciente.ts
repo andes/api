@@ -85,6 +85,7 @@ export function updatePaciente(pacienteObj, data, req) {
             }).catch(error => {
                 return reject(error);
             });
+            resolve(pacienteObj);
         });
     });
 }
@@ -146,12 +147,15 @@ export function buscarPaciente(id): Promise<{ db: String, paciente: any }> {
                     pacienteMpi.findById(id, function (err2, dataMpi) {
                         if (err2) {
                             reject(err2);
+                        } else if (dataMpi) {
+                            let resultado = {
+                                db: 'mpi',
+                                paciente: dataMpi
+                            };
+                            resolve(resultado);
+                        } else {
+                            reject(null);
                         }
-                        let resultado = {
-                            db: 'mpi',
-                            paciente: dataMpi
-                        };
-                        resolve(resultado);
                     });
                 }
             }
@@ -415,4 +419,9 @@ export function deleteRelacion(req, data) {
     }
 }
 
+
+export function updateFotoMobile(req, data) {
+    data.markModified('fotoMobile');
+    data.fotoMobile = req.body.fotoMobile;
+}
 /* Hasta acá funciones del PATCH */

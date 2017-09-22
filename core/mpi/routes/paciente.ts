@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import { Matching } from '@andes/match';
-import { pacienteMpi , paciente } from '../schemas/paciente';
+import { pacienteMpi, paciente } from '../schemas/paciente';
 import { log } from '../../log/schemas/log';
 import * as controller from '../controller/paciente';
 import { Auth } from './../../../auth/auth.class';
@@ -781,7 +781,9 @@ router.patch('/pacientes/:id', function (req, res, next) {
         if (resultado) {
             switch (req.body.op) {
                 case 'updateContactos':
-                    controller.updateContactos(req, resultado.paciente);
+                    // controller.updateContactos(req, resultado.paciente);
+                    resultado.paciente.markModified('contacto');
+                    resultado.paciente.contacto = req.body.contacto;
                     break;
                 case 'updateRelaciones':
                     controller.updateRelaciones(req, resultado.paciente);
@@ -790,7 +792,9 @@ router.patch('/pacientes/:id', function (req, res, next) {
                     controller.updateDireccion(req, resultado.paciente);
                     break;
                 case 'updateCarpetaEfectores':
-                    controller.updateCarpetaEfectores(req, resultado.paciente);
+                    // controller.updateCarpetaEfectores(req, resultado.paciente);
+                    resultado.paciente.markModified('carpetaEfectores');
+                    resultado.paciente.carpetaEfectores = req.body.carpetaEfectores;
                     break;
                 case 'linkIdentificadores':
                     controller.linkIdentificadores(req, resultado.paciente);
@@ -808,6 +812,15 @@ router.patch('/pacientes/:id', function (req, res, next) {
                     controller.deleteRelacion(req, resultado.paciente);
                     break;
             }
+
+
+            // let pacienteAndes: any;
+            // if (resultado.db === 'mpi') {
+            //     pacienteAndes = new paciente(resultado.paciente);
+            // } else {
+            //     pacienteAndes = resultado.paciente;
+            // }
+
             Auth.audit(resultado.paciente, req);
             resultado.paciente.save(function (errPatch) {
                 if (errPatch) {

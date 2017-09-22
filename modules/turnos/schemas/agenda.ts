@@ -74,6 +74,47 @@ schema.virtual('turnosDisponibles').get(function () {
     return turnosDisponibles;
 });
 
+schema.virtual('turnosRestantesDelDia').get(function () {
+    let restantesDelDia = 0;
+    this.bloques.forEach(function (bloque) {
+        if (bloque.restantesDelDia > 0) {
+            restantesDelDia += bloque.restantesDelDia;
+        }
+    });
+    return restantesDelDia;
+});
+
+schema.virtual('turnosRestantesProgramados').get(function () {
+    let restantesProgramados = 0;
+    this.bloques.forEach(function (bloque) {
+        if (bloque.restantesProgramados > 0) {
+            restantesProgramados += bloque.restantesProgramados;
+        }
+    });
+    return restantesProgramados;
+});
+
+schema.virtual('turnosRestantesGestion').get(function () {
+    let restantesGestion = 0;
+    this.bloques.forEach(function (bloque) {
+        if (bloque.restantesGestion > 0) {
+            restantesGestion += bloque.restantesGestion;
+        }
+    });
+    return restantesGestion;
+});
+
+schema.virtual('turnosRestantesProfesional').get(function () {
+    let restantesProfesional = 0;
+    this.bloques.forEach(function (bloque) {
+        if (bloque.restantesProfesional > 0) {
+            restantesProfesional += bloque.restantesProfesional;
+        }
+    });
+    return restantesProfesional;
+});
+
+
 
 schema.virtual('estadosAgendas').get(function () {
     return this.schema.path('estado').enumValues;

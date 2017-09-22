@@ -11,6 +11,10 @@ let turnoSchema = new mongoose.Schema({
         type: String,
         enum: ['asistio', 'noAsistio', 'sinDatos']
     },
+    primeraVez: {
+        profesional: Boolean,
+        tipoPrestacion: Boolean
+    },
     estado: {
         type: String,
         enum: ['disponible', 'asignado', 'suspendido', 'turnoDoble'],
