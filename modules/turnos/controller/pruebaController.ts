@@ -168,16 +168,25 @@ function getDatosSips(codigoSisa, dniProfesional, conceptId) {
 
 async function checkEstadoAgenda(agendaMongo: any) {
 
-    let estadoAgendaSips = await getEstadoAgenda(agendaMongo.id);
+    let estadoAgendaSips: any = await getEstadoAgenda(agendaMongo.id);
 
     let estadoAgendaMongo = getEstadoAgendaSips(agendaMongo.estado);
     let idAgendaSips = estadoAgendaSips.idAgenda;
 
     if (estadoAgendaSips.idAgendaEstado !== estadoAgendaMongo) {
-        let query = "UPDATE dbo.CON_Agenda SET idAgendaEstado = " + estadoAgendaMongo + "   WHERE idAgenda = " + idAgendaSips;
-
-        insertaSips(query);
+        switch (agendaMongo.estado) {
+            case 'suspendida': suspenderAgenda(estadoAgendaMongo, idAgendaSips);
+                break;
+        }
     }
+}
+
+function suspenderAgenda(estadoAgendaMongo, idAgendaSips) {
+    let query = "UPDATE dbo.CON_Agenda SET idAgendaEstado = " + estadoAgendaMongo + "   WHERE idAgenda = " + idAgendaSips;
+
+    insertaSips(query);
+
+    suspenderTurnosSips(idAgendaSips);
 }
 
 function getEstadoAgenda(idAgenda: any) {
@@ -199,6 +208,8 @@ function getEstadoAgenda(idAgenda: any) {
         })();
     });
 }
+
+
 
 /*Fin Sección Agendas*/
 
@@ -258,6 +269,13 @@ async function grabaTurnoSips(turno, idAgendaSips) {
 
     let turnoGrabado = await insertaSips(query);
 }
+
+function suspenderTurnosSips(idAgendaSips) {
+    let query = "UPDATE dbo.CON_Turno SET idTurnoEstado = 5 WHERE idAgenda = " + idAgendaSips;
+
+    insertaSips(query);
+}
+
 /*Fin Sección Turnos*/
 
 function insertaSips(query: any) {
