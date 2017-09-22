@@ -23,41 +23,8 @@ export async function getAgendaSips() {
 
         let idAgenda = await checkAgendas(agendasMongo[x]);
         let idTurnoCreado = await checkTurnos(agendasMongo[x], idAgenda);
-    }
-}
 
-async function checkAgendas(agendas: any) {
-    let existeAgenda = await existeAgendaSips(agendas);
-    let idAgenda = existeAgenda;
-
-    if (!existeAgenda) {
-        await grabaSips(agendas);
-    } else {
-        console.log("Existe Agenda en SIPS");
-    }
-
-    return idAgenda;
-}
-
-async function checkTurnos(agendas: any, idAgendaCreada: any) {
-    let turnos;
-
-    for (let x = 0; x < agendas.bloques.length; x++) {
-        turnos = agendas.bloques[x].turnos;
-
-        for (let i = 0; i < turnos.length; i++) {
-
-            if (turnos[i].estado === 'asignado') {
-                let existeTurno = await existeTurnoSips(turnos[i]);
-
-                if (!existeTurno) {
-                    await grabaTurnoSips(turnos[i], idAgendaCreada);
-                } else {
-                    console.log("El turno ya existe!!!");
-                }
-            }
-
-        }
+        let estadoAgenda = await checkEstadoAgenda(agendasMongo[x]);
     }
 }
 
@@ -70,6 +37,20 @@ async function getAgendasDeMongo() {
             resolve(data);
         });
     });
+}
+
+/* Inicio Sección de Agendas*/
+async function checkAgendas(agendas: any) {
+    let existeAgenda = await existeAgendaSips(agendas);
+    let idAgenda = existeAgenda;
+
+    if (!existeAgenda) {
+        await grabaAgendaSips(agendas);
+    } else {
+        console.log("Existe Agenda en SIPS");
+    }
+
+    return idAgenda;
 }
 
 function existeAgendaSips(agendaMongo: any) {
@@ -98,41 +79,7 @@ function existeAgendaSips(agendaMongo: any) {
     });
 }
 
-function existeTurnoSips(turno: any) {
-    return new Promise(function (resolve, reject) {
-        let isTurno;
-        let idTurno = turno._id;
-
-        sql.connect(connection).then(pool => {
-            return pool.request()
-                .input('idTurnoMongo', sql.VarChar(50), idTurno)
-                .query('SELECT idTurno FROM dbo.CON_Turno WHERE objectId = @idTurnoMongo GROUP BY idTurno');
-        }).then(result => {
-
-            if (result.length > 0) {
-                isTurno = true;
-                resolve(isTurno);
-            } else {
-                isTurno = false;
-                resolve(isTurno);
-            }
-        }).catch(err => {
-            reject(err);
-        });
-    });
-}
-
-async function grabaTurnoSips(turno, idAgendaSips) {
-
-    let fechaTurno = moment(turno.horaInicio).format('YYYYMMDD');
-    let horaTurno = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
-
-    let query = "INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente ,  fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante, objectId ) VALUES  ( " + idAgendaSips + " , 1 , 0000 , 410551 , '" + fechaTurno + "' ,'" + horaTurno + "' , 0 , 0 , 1 ,0, '" + turno._id + "')";
-
-    let turnoGrabado = await insertaSips(query);
-}
-
-function grabaSips(agendaSips: any) {
+function grabaAgendaSips(agendaSips: any) {
 
     let objectId = agendaSips.id;
     let estado = getEstadoAgendaSips(agendaSips.estado);
@@ -174,22 +121,6 @@ function grabaSips(agendaSips: any) {
                 resolve(data);
             });
         });
-
-    });
-}
-
-function insertaSips(query: any) {
-    return new Promise((resolve: any, reject: any) => {
-        sql.connect(connection).then(pool => {
-
-            return pool.request()
-                .query(query);
-        }).then(result => {
-            resolve(result);
-
-        }).catch(err => {
-            reject(err);
-        });
     });
 }
 
@@ -199,7 +130,7 @@ function getEstadoAgendaSips(estadoCitas) {
     if (estadoCitas === 'disponible' || estadoCitas === 'publicada') {
         estado = 1;
     } else if (estadoCitas === 'suspendida') {
-        estado = 2;
+        estado = 3;
     } else if (estadoCitas === 'codificada') {
         estado = 4;
     }
@@ -234,4 +165,114 @@ function getDatosSips(codigoSisa, dniProfesional, conceptId) {
         })();
     });
 }
+
+async function checkEstadoAgenda(agendaMongo: any) {
+
+    let estadoAgendaSips = await getEstadoAgenda(agendaMongo.id);
+
+    let estadoAgendaMongo = getEstadoAgendaSips(agendaMongo.estado);
+    let idAgendaSips = estadoAgendaSips.idAgenda;
+
+    if (estadoAgendaSips.idAgendaEstado !== estadoAgendaMongo) {
+        let query = "UPDATE dbo.CON_Agenda SET idAgendaEstado = " + estadoAgendaMongo + "   WHERE idAgenda = " + idAgendaSips;
+
+        insertaSips(query);
+    }
+}
+
+function getEstadoAgenda(idAgenda: any) {
+
+    return new Promise((resolve: any, reject: any) => {
+        (async function () {
+            try {
+                let pool = await sql.connect(connection);
+                let query = 'SELECT idAgenda, idAgendaEstado FROM dbo.CON_Agenda WHERE objectId = @idAgenda';
+
+                let result = await pool.request()
+                    .input('idAgenda', sql.VarChar(50), idAgenda)
+                    .query(query);
+
+                resolve(result[0]);
+            } catch (err) {
+                reject(err);
+            }
+        })();
+    });
+}
+
+/*Fin Sección Agendas*/
+
+/*Inicio Sección Turnos*/
+async function checkTurnos(agendas: any, idAgendaCreada: any) {
+    let turnos;
+
+    for (let x = 0; x < agendas.bloques.length; x++) {
+        turnos = agendas.bloques[x].turnos;
+
+        for (let i = 0; i < turnos.length; i++) {
+
+            if (turnos[i].estado === 'asignado') {
+                let existeTurno = await existeTurnoSips(turnos[i]);
+
+                if (!existeTurno) {
+                    await grabaTurnoSips(turnos[i], idAgendaCreada);
+                } else {
+                    console.log("El turno ya existe!!!");
+                }
+            }
+
+        }
+    }
+}
+
+function existeTurnoSips(turno: any) {
+    return new Promise(function (resolve, reject) {
+        let isTurno;
+        let idTurno = turno._id;
+
+        sql.connect(connection).then(pool => {
+            return pool.request()
+                .input('idTurnoMongo', sql.VarChar(50), idTurno)
+                .query('SELECT idTurno FROM dbo.CON_Turno WHERE objectId = @idTurnoMongo GROUP BY idTurno');
+        }).then(result => {
+
+            if (result.length > 0) {
+                isTurno = true;
+                resolve(isTurno);
+            } else {
+                isTurno = false;
+                resolve(isTurno);
+            }
+        }).catch(err => {
+            reject(err);
+        });
+    });
+}
+
+async function grabaTurnoSips(turno, idAgendaSips) {
+
+    let fechaTurno = moment(turno.horaInicio).format('YYYYMMDD');
+    let horaTurno = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
+
+    let query = "INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente ,  fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante, objectId ) VALUES  ( " + idAgendaSips + " , 1 , 0000 , 410551 , '" + fechaTurno + "' ,'" + horaTurno + "' , 0 , 0 , 1 ,0, '" + turno._id + "')";
+
+    let turnoGrabado = await insertaSips(query);
+}
+/*Fin Sección Turnos*/
+
+function insertaSips(query: any) {
+    return new Promise((resolve: any, reject: any) => {
+        sql.connect(connection).then(pool => {
+
+            return pool.request()
+                .query(query);
+        }).then(result => {
+            resolve(result);
+
+        }).catch(err => {
+            reject(err);
+        });
+    });
+}
+
 
