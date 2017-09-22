@@ -18,18 +18,45 @@ let connection = {
 export async function getAgendaSips() {
 
     let agendasMongo = await getAgendasDeMongo();
-    let idAgendaSips;
 
     for (let x = 0; x < agendasMongo.length; x++) {
 
-        let existeAgenda = await existeAgendaSips(agendasMongo[x]);
+        let idAgenda = await checkAgendas(agendasMongo[x]);
+        let idTurnoCreado = await checkTurnos(agendasMongo[x], idAgenda);
+    }
+}
 
-        if (!existeAgenda) {
-            let agendaGrabada = await grabaSips(agendasMongo[x]);
-        } else {
-            idAgendaSips = existeAgenda[0].idAgenda;
-            let turnoGrabado = await grabaTurnoSips(agendasMongo[x], idAgendaSips);
-            console.log("Existe Agenda en SIPS");
+async function checkAgendas(agendas: any) {
+    let existeAgenda = await existeAgendaSips(agendas);
+    let idAgenda = existeAgenda;
+
+    if (!existeAgenda) {
+        await grabaSips(agendas);
+    } else {
+        console.log("Existe Agenda en SIPS");
+    }
+
+    return idAgenda;
+}
+
+async function checkTurnos(agendas: any, idAgendaCreada: any) {
+    let turnos;
+
+    for (let x = 0; x < agendas.bloques.length; x++) {
+        turnos = agendas.bloques[x].turnos;
+
+        for (let i = 0; i < turnos.length; i++) {
+
+            if (turnos[i].estado === 'asignado') {
+                let existeTurno = await existeTurnoSips(turnos[i]);
+
+                if (!existeTurno) {
+                    await grabaTurnoSips(turnos[i], idAgendaCreada);
+                } else {
+                    console.log("El turno ya existe!!!");
+                }
+            }
+
         }
     }
 }
@@ -60,7 +87,7 @@ function existeAgendaSips(agendaMongo: any) {
 
             if (result.length > 0) {
                 isAgenda = true;
-                resolve(result);
+                resolve(result[0].idAgenda);
             } else {
                 isAgenda = false;
                 resolve(isAgenda);
@@ -77,18 +104,17 @@ function existeTurnoSips(turno: any) {
         let idTurno = turno._id;
 
         sql.connect(connection).then(pool => {
-
             return pool.request()
                 .input('idTurnoMongo', sql.VarChar(50), idTurno)
                 .query('SELECT idTurno FROM dbo.CON_Turno WHERE objectId = @idTurnoMongo GROUP BY idTurno');
         }).then(result => {
 
             if (result.length > 0) {
-                idTurno = true;
-                resolve(idTurno);
+                isTurno = true;
+                resolve(isTurno);
             } else {
-                idTurno = false;
-                resolve(idTurno);
+                isTurno = false;
+                resolve(isTurno);
             }
         }).catch(err => {
             reject(err);
@@ -96,31 +122,14 @@ function existeTurnoSips(turno: any) {
     });
 }
 
-async function grabaTurnoSips(agendaMongo, idAgendaSips) {
-    let turnos;
+async function grabaTurnoSips(turno, idAgendaSips) {
 
-    for (let x = 0; x < agendaMongo.bloques.length; x++) {
-        turnos = agendaMongo.bloques[x].turnos;
+    let fechaTurno = moment(turno.horaInicio).format('YYYYMMDD');
+    let horaTurno = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
 
-        for (let i = 0; i < turnos.length; i++) {
+    let query = "INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente ,  fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante, objectId ) VALUES  ( " + idAgendaSips + " , 1 , 0000 , 410551 , '" + fechaTurno + "' ,'" + horaTurno + "' , 0 , 0 , 1 ,0, '" + turno._id + "')";
 
-            if (turnos[i].estado === 'asignado') {
-
-                let fechaTurno = moment(turnos[i].horaInicio).format('YYYYMMDD');
-                let horaTurno = moment(turnos[i].horaInicio).utcOffset('-03:00').format('HH:mm');
-
-                let query = "INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente ,  fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante, objectId ) VALUES  ( " + idAgendaSips + " , 1 , 0000 , 410551 , '" + fechaTurno + "' ,'" + horaTurno + "' , 0 , 0 , 1 ,0, '" + turnos[i]._id + "')";
-
-                let existeTurno = await existeTurnoSips(turnos[i]);
-
-                if (!existeTurno) {
-                    let turnoGrabado = await insertaSips(query);
-                } else {
-                    console.log("El Turno ya Existe!!!!");
-                }
-            }
-        }
-    }
+    let turnoGrabado = await insertaSips(query);
 }
 
 function grabaSips(agendaSips: any) {
