@@ -63,6 +63,8 @@ export default [
         title: 'Modulo MPI',
         comment: '',
         child: [
+            { key: 'nuevoPaciente', title: 'Crear paciente', type: 'boolean' },
+            { key: 'editarPaciente', title: 'Editar paciente', type: 'boolean' },
             {
                 key: 'bloque',
                 title: 'Bloques de pacientes similares',
