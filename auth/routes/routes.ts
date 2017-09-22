@@ -11,6 +11,7 @@ import * as authMobile from '../../modules/mobileApp/controller/AuthController';
 const isReachable = require('is-reachable');
 let sha1Hash = require('sha1');
 
+let shiroTrie = require('shiro-trie');
 
 let router = express.Router();
 
@@ -36,7 +37,9 @@ router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
         }
         let organizaciones = user.organizaciones.map((item) => {
             if ((req as any).query.admin) {
-                if (item.permisos.findIndex(elem => elem === 'usuarios:set') >= 0) {
+                let shiro = shiroTrie.new();
+                shiro.add(item.permisos);
+                if (shiro.check('usuarios:set')) {
                     return mongoose.Types.ObjectId(item._id);
                 } else {
                     return null;
