@@ -216,7 +216,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                                 }
                             }
 
-                            let tipoTurno = req.body.tipoTurno || undefined;
+                            let tipoTurno = req.body.tipoTurno ? req.body.tipoTurno : (esHoy && req.query.reasignacion ? 'delDia' : 'programado');
 
                             // res.json({ tipoTurno: tipoTurno });
 
