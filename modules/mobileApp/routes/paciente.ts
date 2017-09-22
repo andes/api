@@ -88,8 +88,11 @@ router.patch('/pacientes/:id', function (req, res, next) {
             if (resultado) {
                 switch (req.body.op) {
                     case 'updateFotoMobile':
-                    controllerPaciente.updateFotoMobile(req, resultado.paciente);
-                        break;
+                        controllerPaciente.updateFotoMobile(req, resultado.paciente);
+                    break;
+                    case 'updateDireccion':
+                        controllerPaciente.updateDireccion(req, resultado.paciente);
+                    break;
                 }
 
                 Auth.audit(resultado.paciente, req);
