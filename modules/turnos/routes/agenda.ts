@@ -8,7 +8,7 @@ import * as moment from 'moment';
 import * as agendaCtrl from '../controller/agenda';
 // import * as agendaSipsCtrl from '../controller/agendaSipsController';
 
-import * as agendaSipsCtrl from '../controller/pruebaController';
+import * as agendaCacheCtrl from '../controller/agendasCacheController';
 
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import * as operations from './../../legacy/controller/operations';
@@ -440,6 +440,6 @@ router.patch('/agenda/:id*?', function (req, res, next) {
 });
 
 router.get('/agendaSips', function (req, res, next) {
-    agendaSipsCtrl.getAgendaSips();
+    agendaCacheCtrl.getAgendaSips();
 });
 export = router;
