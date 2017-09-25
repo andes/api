@@ -3,7 +3,7 @@ import * as mongoose from 'mongoose';
 import * as config from '../../../config';
 import * as configPrivate from '../../../config.private';
 import * as moment from 'moment';
-import { matching } from '@andes/match';
+import { Matching } from '@andes/match';
 import { Client } from 'elasticsearch';
 import { Auth } from './../../../auth/auth.class';
 let router = express.Router();
@@ -526,8 +526,8 @@ router.get('/pacientes', function (req, res, next) {
                             fechaNacimiento: paciente.fechaNacimiento ? moment(paciente.fechaNacimiento).format('YYYY-MM-DD') : '',
                             sexo: paciente.sexo ? paciente.sexo : ''
                         };
-                        let match = new matching();
-                        let valorMatching = match.matchPersonas(pacElastic, pacDto, weights);
+                        let match = new Matching();
+                        let valorMatching = match.matchPersonas(pacElastic, pacDto, weights, 'Levenshtein');
                         paciente['id'] = hit._id;
 
                         if (valorMatching >= porcentajeMatchMax) {
@@ -627,7 +627,7 @@ router.post('/pacientes/mpi', function (req, res, next) {
         return next(403);
     }
 
-    let match = new matching();
+    let match = new Matching();
     let newPatientMpi = new pacienteMpi(req.body);
     let connElastic = new Client({
         host: configPrivate.hosts.elastic_main,
@@ -635,7 +635,7 @@ router.post('/pacientes/mpi', function (req, res, next) {
     // Se genera la clave de blocking
     let claves = match.crearClavesBlocking(newPatientMpi);
     newPatientMpi['claveBlocking'] = claves;
-    
+
     Auth.audit(newPatientMpi, req);
 
     newPatientMpi.save((err) => {
@@ -674,7 +674,7 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
     let connElastic = new Client({
         host: configPrivate.hosts.elastic_main,
     });
-    let match = new matching();
+    let match = new Matching();
 
     pacienteMpi.findById(query, function (err, patientFound: any) {
         if (err) {
@@ -891,7 +891,7 @@ router.post('/pacientes', function (req, res, next) {
     if (!Auth.check(req, 'mpi:paciente:postAndes')) {
         return next(403);
     }
-    let match = new matching();
+    let match = new Matching();
     let newPatient = new paciente(req.body);
     let connElastic = new Client({
         host: configPrivate.hosts.elastic_main,
@@ -973,7 +973,7 @@ router.put('/pacientes/:id', function (req, res, next) {
     let connElastic = new Client({
         host: configPrivate.hosts.elastic_main,
     });
-    let match = new matching();
+    let match = new Matching();
 
     paciente.findById(query, function (err, patientFound: any) {
         if (err) {
@@ -1197,7 +1197,7 @@ router.delete('/pacientes/:id', function (req, res, next) {
             if (error) {
                 console.log('Error en elastic Search delete: ', error);
             }
-            
+
             // Logger.log(req, 'pacientes', 'delete', patientFound);
             res.json(patientFound);
         });
@@ -1266,10 +1266,10 @@ function buscarPaciente(id) {
 function updateContactos(req, data) {
     data.markModified('contacto');
     Logger.log(req, 'mpi', 'update', {
-            accion: 'updateContacto',
-            ruta: req.url,
-            method: req.method,
-            data: data.contacto,
+        accion: 'updateContacto',
+        ruta: req.url,
+        method: req.method,
+        data: data.contacto,
     });
     data.contacto = req.body.contacto;
     // Logger de la consulta a ejecutar

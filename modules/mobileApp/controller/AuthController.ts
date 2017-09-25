@@ -4,7 +4,7 @@ import { authApp } from '../../../config.private';
 import { Client } from 'elasticsearch';
 import { sendMail, MailOptions } from '../../../utils/sendMail';
 import { sendSms, SmsOptions } from '../../../utils/sendSms';
-import { matching } from '@andes/match';
+import { Matching } from '@andes/match';
 import { paciente, pacienteMpi } from '../../../core/mpi/schemas/paciente';
 import * as express from 'express';
 import * as config from '../../../config';
@@ -280,8 +280,8 @@ export function matchPaciente(data) {
                         sexo: paciente.sexo ? paciente.sexo : ''
                     };
                     console.log(pacElastic);
-                    let match = new matching();
-                    let valorMatching = match.matchPersonas(pacElastic, pacDto, weights);
+                    let match = new Matching();
+                    let valorMatching = match.matchPersonas(pacElastic, pacDto, weights, 'Levenshtein');
                     paciente['id'] = hit._id;
                     if (valorMatching >= porcentajeMatchMax) {
                         listaPacientesMax.push({
