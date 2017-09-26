@@ -15,6 +15,18 @@ let connection = {
     database: configPrivate.conSql.serverSql.database
 };
 
+enum EstadoAgendaSips {
+    activa = 1,
+    inactiva = 3,
+    cerrada = 4
+}
+
+enum EstadoTurnosSips {
+    activo = 1,
+    liberado = 4,
+    suspendido = 5
+}
+
 export async function getAgendaSips() {
 
     let agendasMongo = await getAgendasDeMongo();
@@ -25,6 +37,7 @@ export async function getAgendaSips() {
         let idTurnoCreado = await checkTurnos(agendasMongo[x], idAgenda);
 
         let estadoAgenda = await checkEstadoAgenda(agendasMongo[x]);
+        let estadoTurno = await checkEstadoTurno(agendasMongo[x]);
     }
 }
 
@@ -128,11 +141,11 @@ function getEstadoAgendaSips(estadoCitas) {
     let estado: any;
 
     if (estadoCitas === 'disponible' || estadoCitas === 'publicada') {
-        estado = 1;
+        estado = EstadoAgendaSips.activa; // 1
     } else if (estadoCitas === 'suspendida') {
-        estado = 3;
+        estado = EstadoAgendaSips.inactiva;
     } else if (estadoCitas === 'codificada') {
-        estado = 4;
+        estado = EstadoAgendaSips.cerrada;
     }
 
     return estado;
@@ -186,7 +199,8 @@ function suspenderAgenda(estadoAgendaMongo, idAgendaSips) {
 
     insertaSips(query);
 
-    suspenderTurnosSips(idAgendaSips);
+    /* Envío un ObjectId vacío ya que se suspenden todos los turnos de una determinada agenda*/
+    suspenderTurnosSips(idAgendaSips, '');
 }
 
 function getEstadoAgenda(idAgenda: any) {
@@ -209,8 +223,6 @@ function getEstadoAgenda(idAgenda: any) {
     });
 }
 
-
-
 /*Fin Sección Agendas*/
 
 /*Inicio Sección Turnos*/
@@ -232,6 +244,31 @@ async function checkTurnos(agendas: any, idAgendaCreada: any) {
                 }
             }
 
+        }
+    }
+}
+
+async function checkEstadoTurno(agenda: any) {
+    let turnos;
+    let idAgendaSips: any;
+
+    for (let x = 0; x < agenda.bloques.length; x++) {
+        turnos = agenda.bloques[x].turnos;
+
+        for (let i = 0; i < turnos.length; i++) {
+            if (turnos[i].estado !== 'disponible') {
+                let estadoTurnoSips: any = await getEstadoTurnoSips(turnos[i]._id);
+                let estadoTurnoMongo = getEstadoTurnosSips(turnos[i].estado, turnos[i].updated);
+
+                console.log("pepepe: ", estadoTurnoSips, ' ---- ', estadoTurnoMongo);
+
+                idAgendaSips = estadoTurnoSips.idAgenda;
+
+                /*TODO: analizar bien el cambio de estados de los turnos*/
+                if (estadoTurnoSips !== estadoTurnoMongo) {
+                    suspenderTurnosSips(idAgendaSips, turnos[i]._id);
+                }
+            }
         }
     }
 }
@@ -270,10 +307,52 @@ async function grabaTurnoSips(turno, idAgendaSips) {
     let turnoGrabado = await insertaSips(query);
 }
 
-function suspenderTurnosSips(idAgendaSips) {
-    let query = "UPDATE dbo.CON_Turno SET idTurnoEstado = 5 WHERE idAgenda = " + idAgendaSips;
+function suspenderTurnosSips(idAgendaSips, objectId) {
+    let objectIdTurno;
+
+    if (objectId) {
+        objectIdTurno = " and objectId = '" + objectId + "'";
+    }
+
+    /*TODO: hacer enum con los estados */
+    let query = "UPDATE dbo.CON_Turno SET idTurnoEstado = " + EstadoTurnosSips.suspendido + " WHERE idAgenda = " + idAgendaSips + objectIdTurno;
 
     insertaSips(query);
+}
+
+/* TODO: ver si hay mas estados de turnos entre CITAS y SIPS*/
+function getEstadoTurnosSips(estadoTurnoCitas, updated) {
+    let estado: any;
+
+    if (estadoTurnoCitas === 'asignado') {
+        estado = EstadoTurnosSips.activo;
+    } else if ((estadoTurnoCitas === 'disponible') && (updated)) {
+        estado = EstadoTurnosSips.liberado;
+    } else if (estadoTurnoCitas === 'suspendido') {
+        estado = EstadoTurnosSips.suspendido;
+    }
+
+    return estado;
+}
+
+/* Devuelve el estado del turno en Con_Turno de SIPS */
+function getEstadoTurnoSips(objectId: any) {
+    return new Promise((resolve: any, reject: any) => {
+        (async function () {
+            try {
+                let pool = await sql.connect(connection);
+                let query = 'SELECT idAgenda, idTurnoEstado FROM dbo.CON_Turno WHERE objectId = @objectId';
+
+                let result = await pool.request()
+                    .input('objectId', sql.VarChar(50), objectId)
+                    .query(query);
+
+                resolve(result[0]);
+            } catch (err) {
+                reject(err);
+            }
+        })();
+    });
 }
 
 /*Fin Sección Turnos*/
