@@ -683,8 +683,8 @@ router.put('/pacientes/:id', function (req, res, next) {
                 }
 
                 let nuevoPac = JSON.parse(JSON.stringify(newPatient));
-                delete nuevoPac._id;
-                delete nuevoPac.relaciones;
+                // delete nuevoPac._id;
+                // delete nuevoPac.relaciones;
                 let connElastic = new ElasticSync();
                 connElastic.sync(newPatient).then(updated => {
                     if (updated) {
@@ -695,7 +695,7 @@ router.put('/pacientes/:id', function (req, res, next) {
                     } else {
                         Logger.log(req, 'mpi', 'insert', newPatient);
                     }
-                    res.json(patientFound);
+                    res.json(nuevoPac);
                 }).catch(error => {
                     return next(error);
                 });
