@@ -291,6 +291,69 @@ router.post('/turnos/confirmar', function (req: any, res, next) {
 });
 
 /**
+ * Confirma asistencia de un turno
+ *
+ * @param turno_id {string} Id del turno
+ * @param agenda_id {string} id de la agenda
+ * @param bloque_id {string} id del bloque
+ */
+router.post('/turnos/asistencia', function (req: any, res, next) {
+    /* Por el momento usamos el primer paciente */
+    let pacienteId = req.user.pacientes[0].id;
+
+    let turnoId = req.body.turno_id;
+    let agendaId = req.body.agenda_id;
+    let bloqueId = req.body.bloque_id;
+
+    if (!mongoose.Types.ObjectId.isValid(agendaId)) {
+        return next('ObjectID Inválido');
+    }
+
+    agenda.findById(agendaId, function (err, agendaObj) {
+        if (err) {
+            return res.status(422).send({ message: 'agenda_id_invalid' });
+        }
+        let turno = agendaCtrl.getTurno(req, agendaObj, turnoId);
+        if (turno) {
+            if (String(turno.paciente.id) === pacienteId) {
+
+                // if (turno.reasignado && turno.reasignado.anterior) {
+                if (!turno.asistencia) {
+
+                    turno.asistencia = 'asistio';
+
+                    Auth.audit(agendaObj, req);
+                    return agendaObj.save(function (error) {
+                        Logger.log(req, 'turnos', 'update', {
+                            accion: 'asistencia',
+                            ruta: req.url,
+                            method: req.method,
+                            data: agendaObj,
+                            err: error || false
+                        });
+
+
+                        LoggerPaciente.logTurno(req, 'turnos:asistencia', turno.paciente, turno, bloqueId, agendaId);
+
+                        if (error) {
+                            return next(error);
+                        } else {
+                            return res.json({ message: 'OK' });
+                        }
+                    });
+                } else {
+                    return res.status(422).send({ message: 'turno_ya_asistido' });
+                }
+            } else {
+                return res.status(422).send({ message: 'unauthorized' });
+            }
+        } else {
+            return res.status(422).send({ message: 'turno_id_invalid' });
+        }
+    });
+});
+
+/**
  * Crea un usuario apartir de un paciente
  * @param id {string} ID del paciente a crear
  */
@@ -321,9 +384,11 @@ router.post('/create/:id', function (req: any, res, next) {
  */
 
 router.get('/check/:id', function (req: any, res, next) {
-    if (!req.user.profesional) {
-        return res.status(401).send('unauthorized');
-    }
+
+    // [2017-09-28] TODO: Revisar qué permisos chequear
+    // if (!req.user.profesional) {
+    //     return res.status(401).send('unauthorized');
+    // }
 
     let pacienteId = req.params.id;
     if (!mongoose.Types.ObjectId.isValid(pacienteId)) {

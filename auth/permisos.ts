@@ -44,6 +44,7 @@ export default [
                     { key: 'puedeClonar', title: 'Clonar agenda', type: 'boolean' },
                     { key: 'puedeDarSobreturno', title: 'Dar Sobreturno agenda', type: 'boolean' },
                     { key: 'puedeImprimir', title: 'Imprimir agenda', type: 'boolean' },
+                    { key: 'puedeReasignar', title: 'Reasignar Turno', type: 'boolean' },
                 ]
             },
             {

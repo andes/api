@@ -683,8 +683,8 @@ router.put('/pacientes/:id', function (req, res, next) {
                 }
 
                 let nuevoPac = JSON.parse(JSON.stringify(newPatient));
-                delete nuevoPac._id;
-                delete nuevoPac.relaciones;
+                // delete nuevoPac._id;
+                // delete nuevoPac.relaciones;
                 let connElastic = new ElasticSync();
                 connElastic.sync(newPatient).then(updated => {
                     if (updated) {
@@ -695,7 +695,7 @@ router.put('/pacientes/:id', function (req, res, next) {
                     } else {
                         Logger.log(req, 'mpi', 'insert', newPatient);
                     }
-                    res.json(patientFound);
+                    res.json(nuevoPac);
                 }).catch(error => {
                     return next(error);
                 });
@@ -796,6 +796,12 @@ router.patch('/pacientes/:id', function (req, res, next) {
                     resultado.paciente.markModified('carpetaEfectores');
                     resultado.paciente.carpetaEfectores = req.body.carpetaEfectores;
                     break;
+                case 'updateContactosCarpeta':
+                    resultado.paciente.markModified('contacto');
+                    resultado.paciente.contacto = req.body.contacto;
+                    resultado.paciente.markModified('carpetaEfectores');
+                    resultado.paciente.carpetaEfectores = req.body.carpetaEfectores;
+                    break;
                 case 'linkIdentificadores':
                     controller.linkIdentificadores(req, resultado.paciente);
                     break;
@@ -813,20 +819,19 @@ router.patch('/pacientes/:id', function (req, res, next) {
                     break;
             }
 
+            let pacienteAndes: any;
+            if (resultado.db === 'mpi') {
+                pacienteAndes = new paciente(resultado.paciente.toObject());
+            } else {
+                pacienteAndes = resultado.paciente;
+            }
 
-            // let pacienteAndes: any;
-            // if (resultado.db === 'mpi') {
-            //     pacienteAndes = new paciente(resultado.paciente);
-            // } else {
-            //     pacienteAndes = resultado.paciente;
-            // }
-
-            Auth.audit(resultado.paciente, req);
-            resultado.paciente.save(function (errPatch) {
+            Auth.audit(pacienteAndes, req);
+            pacienteAndes.save(function (errPatch) {
                 if (errPatch) {
                     return next(errPatch);
                 }
-                return res.json(resultado.paciente);
+                return res.json(pacienteAndes);
             });
         }
     }).catch((err) => {
