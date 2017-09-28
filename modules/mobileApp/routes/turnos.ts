@@ -384,9 +384,11 @@ router.post('/create/:id', function (req: any, res, next) {
  */
 
 router.get('/check/:id', function (req: any, res, next) {
-    if (!req.user.profesional) {
-        return res.status(401).send('unauthorized');
-    }
+
+    // [2017-09-28] TODO: Revisar qué permisos chequear
+    // if (!req.user.profesional) {
+    //     return res.status(401).send('unauthorized');
+    // }
 
     let pacienteId = req.params.id;
     if (!mongoose.Types.ObjectId.isValid(pacienteId)) {
