@@ -30,11 +30,11 @@ export function enviarCodigoVerificacion(user) {
     log('Enviando mail...');
 
     let mailOptions: MailOptions = {
-        from: configPrivate.enviarMail.from,
+        from: configPrivate.enviarMail.host,
         to: user.email,
-        subject: 'Hola ' + user.email,
-        text: 'El código de verificación es: ' + user.codigoVerificacion,
-        html: 'El código de verificación es: ' + user.codigoVerificacion
+        subject: 'Ministerio de Salud :: ANDES :: Código de activación',
+        text: 'Estimado ' + user.email + ', Su código de activación para ANDES Mobile es: ' + user.codigoVerificacion,
+        html: 'Estimado ' + user.email + ', Su código de activación para ANDES Mobile es: ' + user.codigoVerificacion,
     };
 
     let smsOptions: SmsOptions = {
@@ -188,9 +188,8 @@ export function createUserFromPaciente(pacienteData) {
                 if (errSave) {
                     return reject({ error: 'unknow_error' });
                 }
-                resolve(true);
-
                 enviarCodigoVerificacion(userSaved);
+                resolve(true);
 
             });
 
