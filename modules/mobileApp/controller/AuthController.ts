@@ -369,7 +369,7 @@ export function verificarCuenta(userAccount, mpiData) {
         controller.buscarPaciente(pacienteId).then((pac => {
 
             let match = new Matching();
-            let resultadoMatching = match.matchPersonas(mpiData, pac, config.mpi.weightsScan, 'Levenshtein');
+            let resultadoMatching = match.matchPersonas(mpiData, pac.paciente, config.mpi.weightsScan, 'Levenshtein');
 
             // no cumple con el numero del matching
             if (resultadoMatching >= config.mpi.cotaMatchMax) {
@@ -381,6 +381,11 @@ export function verificarCuenta(userAccount, mpiData) {
     });
 }
 
+/**
+ * Hbilita una cuenta mobile. Y setea las password del usuario
+ * @param {pacienteAppSchema} userAccount
+ * @param {string} password
+ */
 export function habilitarCuenta(userAccount, password) {
     return new Promise((resolve, reject) => {
         userAccount.activacionApp = true;

@@ -40,7 +40,46 @@ router.post('/v2/check', function (req, res, next) {
 });
 
 /**
- * Valida una cuenta a traves de un codigo de verificacion
+ * Verifica los datos del user con el paciente
+ *
+ * @param {string} email Email de la cuenta
+ * @param {string} code Código de verificación
+ * @param {object} paciente Datos del scaneo del DNI
+ */
+
+router.post('/v2/verificar', function (req, res, next) {
+    let email = req.body.email;
+    let code = req.body.code;
+    let mpiData = req.body.paciente;
+
+    pacienteApp.findOne({ email }, function (err, datosUsuario: any) {
+        if (err) {
+            return next(err);
+        }
+        if (!datosUsuario) {
+            return next('no existe la cuenta');
+        }
+        if (authController.verificarCodigo(code, datosUsuario.codigoVerificacion)) {
+            if (datosUsuario.expirationTime.getTime() + authController.expirationOffset >= new Date().getTime()) {
+                // Hacemos un matching entre los datos escaneados y el paciente previamente establecido
+                authController.verificarCuenta(datosUsuario, mpiData).then(() => {
+
+                    res.send({ status: 'ok' });
+
+                }).catch(() => {
+                    return next('No hay matching');
+                });
+            } else {
+                return next('codigo vencido');
+            }
+        } else {
+            return next('codigo incorrecto');
+        }
+    });
+});
+
+/**
+ * Valida una cuenta a traves de un código de verificación
  *
  * @param {string} email Email de la cuenta
  * @param {string} code Código de verificación
@@ -48,7 +87,7 @@ router.post('/v2/check', function (req, res, next) {
  * @param {object} paciente Datos del scaneo del DNI
  */
 
-router.post('/v2/verificar', function (req, res, next) {
+router.post('/v2/registrar', function (req, res, next) {
     let email = req.body.email;
     let code = req.body.code;
     let password = req.body.password;
