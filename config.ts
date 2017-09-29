@@ -119,6 +119,7 @@ export const maxLimit = 1000;
 export const algoritmo = 'Levenshtein';
 
 export const mpi = {
+    cotaAppMobile: 1,
     cotaMatchMin: 0.80,
     cotaMatchMax: 0.94,
     weightsDefault: {

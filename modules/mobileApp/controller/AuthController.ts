@@ -238,10 +238,9 @@ export function matchPaciente(data) {
             //     weights = config.mpi.weightsScan;
             // }
 
-            let porcentajeMatchMax = config.mpi.cotaMatchMax;
-            let porcentajeMatchMin = config.mpi.cotaMatchMin;
+
             let listaPacientesMax = [];
-            let listaPacientesMin = [];
+
             // let devolverPorcentaje = data.percentage;
 
             let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
@@ -264,20 +263,12 @@ export function matchPaciente(data) {
                     let match = new Matching();
                     let valorMatching = match.matchPersonas(pacElastic, pacDto, weights, 'Levenshtein');
                     pacienteElastic['id'] = hit._id;
-                    if (valorMatching >= porcentajeMatchMax) {
+                    if (valorMatching >= config.mpi.cotaAppMobile) {
                         listaPacientesMax.push({
                             id: hit._id,
                             paciente: pacienteElastic,
                             match: valorMatching
                         });
-                    } else {
-                        if (valorMatching >= porcentajeMatchMin && valorMatching < porcentajeMatchMax) {
-                            listaPacientesMin.push({
-                                id: hit._id,
-                                paciente: pacienteElastic,
-                                match: valorMatching
-                            });
-                        }
                     }
                 });
 
@@ -289,8 +280,7 @@ export function matchPaciente(data) {
                 listaPacientesMax.sort(sortMatching);
                 resolve(listaPacientesMax);
             } else {
-                listaPacientesMin.sort(sortMatching);
-                resolve(listaPacientesMin);
+                resolve([]);
             }
 
         }).catch((error) => {
