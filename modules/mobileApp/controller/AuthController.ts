@@ -30,11 +30,11 @@ export function enviarCodigoVerificacion(user) {
     log('Enviando mail...');
 
     let mailOptions: MailOptions = {
-        from: configPrivate.enviarMail.from,
+        from: configPrivate.enviarMail.host,
         to: user.email,
-        subject: 'Hola ' + user.email,
-        text: 'El código de verificación es: ' + user.codigoVerificacion,
-        html: 'El código de verificación es: ' + user.codigoVerificacion
+        subject: 'Ministerio de Salud :: ANDES :: Código de activación',
+        text: 'Estimado ' + user.email + ', Su código de activación para ANDES Mobile es: ' + user.codigoVerificacion,
+        html: 'Estimado ' + user.email + ', Su código de activación para ANDES Mobile es: ' + user.codigoVerificacion,
     };
 
     let smsOptions: SmsOptions = {
@@ -188,9 +188,8 @@ export function createUserFromPaciente(pacienteData) {
                 if (errSave) {
                     return reject({ error: 'unknow_error' });
                 }
-                resolve(true);
-
                 enviarCodigoVerificacion(userSaved);
+                resolve(true);
 
             });
 
@@ -238,10 +237,9 @@ export function matchPaciente(data) {
             //     weights = config.mpi.weightsScan;
             // }
 
-            let porcentajeMatchMax = config.mpi.cotaMatchMax;
-            let porcentajeMatchMin = config.mpi.cotaMatchMin;
+
             let listaPacientesMax = [];
-            let listaPacientesMin = [];
+
             // let devolverPorcentaje = data.percentage;
 
             let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
@@ -264,20 +262,12 @@ export function matchPaciente(data) {
                     let match = new Matching();
                     let valorMatching = match.matchPersonas(pacElastic, pacDto, weights, 'Levenshtein');
                     pacienteElastic['id'] = hit._id;
-                    if (valorMatching >= porcentajeMatchMax) {
+                    if (valorMatching >= config.mpi.cotaAppMobile) {
                         listaPacientesMax.push({
                             id: hit._id,
                             paciente: pacienteElastic,
                             match: valorMatching
                         });
-                    } else {
-                        if (valorMatching >= porcentajeMatchMin && valorMatching < porcentajeMatchMax) {
-                            listaPacientesMin.push({
-                                id: hit._id,
-                                paciente: pacienteElastic,
-                                match: valorMatching
-                            });
-                        }
                     }
                 });
 
@@ -289,8 +279,7 @@ export function matchPaciente(data) {
                 listaPacientesMax.sort(sortMatching);
                 resolve(listaPacientesMax);
             } else {
-                listaPacientesMin.sort(sortMatching);
-                resolve(listaPacientesMin);
+                resolve([]);
             }
 
         }).catch((error) => {
