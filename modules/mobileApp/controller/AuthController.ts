@@ -13,6 +13,7 @@ import * as moment from 'moment';
 import * as constantes from '../../../core/tm/schemas/constantes';
 import * as mongoose from 'mongoose';
 import * as debug from 'debug';
+import * as controller from './../../../core/mpi/controller/paciente';
 
 let log = debug('AuthController');
 
@@ -354,5 +355,45 @@ export function updateAccount(account, data) {
 
         }).catch((err) => reject(err));
 
+    });
+}
+
+/**
+ * Realiza un matching de los datos del paciente con el scan
+ * @param {pacienteAppSchema} userAccount
+ * @param {object} mpiData Datos del paciente para matching
+ */
+export function verificarCuenta(userAccount, mpiData) {
+    return new Promise((resolve, reject) => {
+        let pacienteId = userAccount.pacientes[0].id;
+        controller.buscarPaciente(pacienteId).then((pac => {
+
+            let match = new Matching();
+            let resultadoMatching = match.matchPersonas(mpiData, pac, config.mpi.weightsScan, 'Levenshtein');
+
+            // no cumple con el numero del matching
+            if (resultadoMatching >= config.mpi.cotaMatchMax) {
+                return resolve(true);
+            }
+            return reject();
+
+        })).catch(reject);
+    });
+}
+
+export function habilitarCuenta(userAccount, password) {
+    return new Promise((resolve, reject) => {
+        userAccount.activacionApp = true;
+        userAccount.estadoCodigo = true;
+        userAccount.codigoVerificacion = null;
+        userAccount.expirationTime = null;
+        userAccount.password = password;
+
+        userAccount.save(function (errSave, user) {
+            if (errSave) {
+                return reject(errSave);
+            }
+            return resolve(user);
+        });
     });
 }
