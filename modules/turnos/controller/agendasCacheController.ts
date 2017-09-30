@@ -256,9 +256,9 @@ async function checkEstadoTurno(agenda: any) {
         turnos = agenda.bloques[x].turnos;
 
         for (let i = 0; i < turnos.length; i++) {
-            if (turnos[i].estado !== 'disponible') {
+            if ((turnos[i].estado !== 'disponible') || (turnos[i].updatedAt)) {
                 let estadoTurnoSips: any = await getEstadoTurnoSips(turnos[i]._id);
-                let estadoTurnoMongo = getEstadoTurnosSips(turnos[i].estado, turnos[i].updated);
+                let estadoTurnoMongo = getEstadoTurnosCitasSips(turnos[i].estado, turnos[i].updatedAt);
 
                 console.log("pepepe: ", estadoTurnoSips, ' ---- ', estadoTurnoMongo);
 
@@ -266,7 +266,8 @@ async function checkEstadoTurno(agenda: any) {
 
                 /*TODO: analizar bien el cambio de estados de los turnos*/
                 if (estadoTurnoSips !== estadoTurnoMongo) {
-                    suspenderTurnosSips(idAgendaSips, turnos[i]._id);
+                    //     // suspenderTurnosSips(idAgendaSips, turnos[i]._id);
+                    actualizarEstadoTurnosSips(idAgendaSips, turnos[i]._id, estadoTurnoMongo);
                 }
             }
         }
@@ -307,7 +308,8 @@ async function grabaTurnoSips(turno, idAgendaSips) {
     let turnoGrabado = await insertaSips(query);
 }
 
-function suspenderTurnosSips(idAgendaSips, objectId) {
+// function suspenderTurnosSips(idAgendaSips, objectId) {
+function actualizarEstadoTurnosSips(idAgendaSips, objectId, estado) {
     let objectIdTurno;
 
     if (objectId) {
@@ -315,15 +317,15 @@ function suspenderTurnosSips(idAgendaSips, objectId) {
     }
 
     /*TODO: hacer enum con los estados */
-    let query = "UPDATE dbo.CON_Turno SET idTurnoEstado = " + EstadoTurnosSips.suspendido + " WHERE idAgenda = " + idAgendaSips + objectIdTurno;
+    let query = "UPDATE dbo.CON_Turno SET idTurnoEstado = " + estado + " WHERE idAgenda = " + idAgendaSips + objectIdTurno;
 
     insertaSips(query);
 }
 
 /* TODO: ver si hay mas estados de turnos entre CITAS y SIPS*/
-function getEstadoTurnosSips(estadoTurnoCitas, updated) {
+function getEstadoTurnosCitasSips(estadoTurnoCitas, updated) {
     let estado: any;
-
+    console.log("Updated: ", estadoTurnoCitas, ' --- ' + updated);
     if (estadoTurnoCitas === 'asignado') {
         estado = EstadoTurnosSips.activo;
     } else if ((estadoTurnoCitas === 'disponible') && (updated)) {
@@ -331,7 +333,7 @@ function getEstadoTurnosSips(estadoTurnoCitas, updated) {
     } else if (estadoTurnoCitas === 'suspendido') {
         estado = EstadoTurnosSips.suspendido;
     }
-
+    console.log("Estado: ", estado);
     return estado;
 }
 
