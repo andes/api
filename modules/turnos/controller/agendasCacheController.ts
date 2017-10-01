@@ -38,6 +38,7 @@ export async function getAgendaSips() {
 
         let estadoAgenda = await checkEstadoAgenda(agendasMongo[x]);
         let estadoTurno = await checkEstadoTurno(agendasMongo[x]);
+        let asistenciaTurno = await checkAsistenciaTurno(agendasMongo[x]);
     }
 }
 
@@ -160,7 +161,7 @@ function getDatosSips(codigoSisa, dniProfesional, conceptId) {
                 let result: any[] = [];
 
                 result[0] = await pool.request()
-                    .input('codigoSisa', sql.BigInt, codigoSisa)
+                    .input('codigoSisa', sql.VarChar(50), codigoSisa)
                     .query('select idEfector from dbo.Sys_Efector WHERE codigoSisa = @codigoSisa');
 
                 result[1] = await pool.request()
@@ -168,7 +169,7 @@ function getDatosSips(codigoSisa, dniProfesional, conceptId) {
                     .query('SELECT idProfesional FROM dbo.Sys_Profesional WHERE numeroDocumento = @dniProfesional and activo = 1');
 
                 result[2] = await pool.request()
-                    .input('conceptId', sql.BigInt, conceptId)
+                    .input('conceptId', sql.VarChar(50), conceptId)
                     .query('SELECT E.idEspecialidad, S.idServicio FROM dbo.Sys_Especialidad E INNER JOIN dbo.Sys_Servicio S ON s.unidadOperativa = e.unidadOperativa WHERE E.conceptId_snomed = 268565007 AND s.activo = 1 ');
 
                 resolve(result);
@@ -236,7 +237,7 @@ async function checkTurnos(agendas: any, idAgendaCreada: any) {
 
             if (turnos[i].estado === 'asignado') {
                 let existeTurno = await existeTurnoSips(turnos[i]);
-
+console.log()
                 if (!existeTurno) {
                     await grabaTurnoSips(turnos[i], idAgendaCreada);
                 } else {
@@ -251,6 +252,7 @@ async function checkTurnos(agendas: any, idAgendaCreada: any) {
 async function checkEstadoTurno(agenda: any) {
     let turnos;
     let idAgendaSips: any;
+    let idTurnoSips: any;
 
     for (let x = 0; x < agenda.bloques.length; x++) {
         turnos = agenda.bloques[x].turnos;
@@ -263,12 +265,33 @@ async function checkEstadoTurno(agenda: any) {
                 console.log("pepepe: ", estadoTurnoSips, ' ---- ', estadoTurnoMongo);
 
                 idAgendaSips = estadoTurnoSips.idAgenda;
+                idTurnoSips = estadoTurnoSips.idTurno;
 
                 /*TODO: analizar bien el cambio de estados de los turnos*/
                 if (estadoTurnoSips !== estadoTurnoMongo) {
-                    //     // suspenderTurnosSips(idAgendaSips, turnos[i]._id);
                     actualizarEstadoTurnosSips(idAgendaSips, turnos[i]._id, estadoTurnoMongo);
                 }
+            }
+        }
+    }
+}
+
+async function checkAsistenciaTurno(agenda: any) {
+    let turnos;
+
+    for (let x = 0; x < agenda.bloques.length; x++) {
+        turnos = agenda.bloques[x].turnos;
+
+        for (let i = 0; i < turnos.length; i++) {
+            if (turnos[i].asistencia === 'asistio') {
+
+                // let idTurno  = await existeTurnoSips(turnos[i]);
+                let idTurno: any = await getEstadoTurnoSips(turnos[i]._id);
+                let fechaAsistencia = moment(turnos[i].updatedAt).format('YYYYMMDD');
+                let query = "INSERT INTO dbo.CON_TurnoAsistencia ( idTurno , idUsuario , fechaAsistencia ) VALUES  ( " + idTurno.idTurno + " , 9739 , '" + fechaAsistencia + "' )";
+                console.log("IDTurno: ", query);
+
+                insertaSips(query);
             }
         }
     }
@@ -343,7 +366,7 @@ function getEstadoTurnoSips(objectId: any) {
         (async function () {
             try {
                 let pool = await sql.connect(connection);
-                let query = 'SELECT idAgenda, idTurnoEstado FROM dbo.CON_Turno WHERE objectId = @objectId';
+                let query = 'SELECT idAgenda, idTurno, idTurnoEstado FROM dbo.CON_Turno WHERE objectId = @objectId';
 
                 let result = await pool.request()
                     .input('objectId', sql.VarChar(50), objectId)
