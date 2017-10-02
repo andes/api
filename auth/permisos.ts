@@ -83,8 +83,8 @@ export default [
                 title: 'Matching de pacientes',
                 child: [
                     { key: 'get', title: 'Obtener porcentajes de matcheo (GET)', type: 'boolean' },
-                    { key: 'patch', title: 'Modificar paciente (PUT)', type: 'boolean' },
-                    { key: 'put', title: 'Modificar paciente (PATCH)', type: 'boolean' }
+                    { key: 'patch', title: 'Modificar paciente (PATCH)', type: 'boolean' },
+                    { key: 'put', title: 'Modificar paciente (PUT)', type: 'boolean' }
                 ]
             },
             {
