@@ -45,6 +45,7 @@ export default [
                     { key: 'puedeDarSobreturno', title: 'Dar Sobreturno agenda', type: 'boolean' },
                     { key: 'puedeImprimir', title: 'Imprimir agenda', type: 'boolean' },
                     { key: 'puedeReasignar', title: 'Reasignar Turno', type: 'boolean' },
+                    { key: 'puedeEditarCarpeta', title: 'Editar número de carpeta', type: 'boolean' },
                 ]
             },
             {
@@ -81,9 +82,9 @@ export default [
                 key: 'matching',
                 title: 'Matching de pacientes',
                 child: [
-                    { key: 'get', title: 'Obtener porcentajes de matcheo', type: 'boolean' },
-                    { key: 'patch', title: 'Modificar paciente', type: 'boolean' },
-                    { key: 'put', title: 'Modificar paciente', type: 'boolean' }
+                    { key: 'get', title: 'Obtener porcentajes de matcheo (GET)', type: 'boolean' },
+                    { key: 'patch', title: 'Modificar paciente (PUT)', type: 'boolean' },
+                    { key: 'put', title: 'Modificar paciente (PATCH)', type: 'boolean' }
                 ]
             },
             {
@@ -98,7 +99,8 @@ export default [
                     { key: 'postAndes', title: 'Creacion de un paciente', type: 'boolean' },
                     { key: 'putAndes', title: 'Actualización de un paciente', type: 'boolean' },
                     { key: 'deleteAndes', title: 'Eliminar un paciente', type: 'boolean' },
-                    { key: 'patchAndes', title: 'Modificar datos de un paciente', type: 'boolean' }
+                    { key: 'patchAndes', title: 'Modificar datos de un paciente', type: 'boolean' }, // patchAdams
+                    { key: 'parentesco', title: 'Obtener parentesco', type: 'boolean' }
                 ]
 
             },
