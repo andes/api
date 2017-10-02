@@ -76,8 +76,12 @@ export let pacienteAppSchema = new mongoose.Schema({
         default: false
     },
     permisos: [String],
+    restablecerPassword: {
+        codigo: String,
+        fechaExpiracion: Date
+    },
     devices: [deviceSchema]
-}, {
+    }, {
         timestamps: true
     });
 

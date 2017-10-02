@@ -15,9 +15,14 @@ import * as mongoose from 'mongoose';
 import * as debug from 'debug';
 import * as controller from './../../../core/mpi/controller/paciente';
 
+let handlebars = require('handlebars');
+import * as fs from 'fs';
+
 let log = debug('AuthController');
 
 export const expirationOffset = 1000 * 60 * 60 * 24;
+
+const TEMPLATE_PATH = './templates/emails/';
 
 export function verificarCodigo(codigoIngresado, codigo) {
     if (codigoIngresado === codigo) {
@@ -25,6 +30,52 @@ export function verificarCodigo(codigoIngresado, codigo) {
     } else {
         return false;
     }
+}
+
+export function enviarCodigoCambioPassword(user) {
+    log('Enviando mail...');
+
+    fs.readFile(TEMPLATE_PATH + 'reset-password.html', {encoding: 'utf-8'}, (err, html) => {
+        /*
+        if (err) {
+        }
+        */
+
+        // compilamos el html
+        let template = handlebars.compile(html);
+
+        // seteamos las variables a modificar con handlebars
+        let replacements = {
+            username: user.apellido + ', ' + user.nombre,
+            codigo: user.codigoVerificacion
+        };
+
+        // modificamos las variables
+        let htmlToSend = template(replacements);
+
+        // preparamos options para nodemailer
+        let mailOptions: MailOptions = {
+            from: configPrivate.enviarMail.from,
+            to: user.email,
+            subject: 'ANDES - Restablecer contraseña',
+            text: 'El código de verificación es: ' + user.codigoVerificacion,
+            html: htmlToSend
+        };
+
+        // enviamos email
+        sendMail(mailOptions);
+    });
+
+    let smsOptions: SmsOptions = {
+        telefono: user.telefono,
+        mensaje: user.codigoVerificacion
+    };
+
+    sendSms(smsOptions, function (res) {
+        if (res === '0') {
+            log('El SMS se envío correctamente');
+        }
+    });
 }
 
 export function enviarCodigoVerificacion(user) {
