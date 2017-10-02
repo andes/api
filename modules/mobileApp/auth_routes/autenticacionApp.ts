@@ -290,5 +290,108 @@ router.post('/verificar-codigo', function (req, res, next) {
     });
 });
 
+/**
+ * Genera el código para poder cambiar el password y luego enviar por mail o SMS
+ * @param email {string} email del usuario
+ */
+router.post('/olvide-password', function (req, res, next) {
+    if (!req.body.email) {
+        return res.status(422).send({ error: 'Se debe ingresar una dirección de e-Mail' });
+    }
+
+    pacienteApp.findOne({ email: req.body.email }, function (err, datosUsuario: any) {
+        if (err) {
+            return next(err);
+        }
+
+        if (!datosUsuario) {
+            return res.status(422).send({ 'error': 'El e-mail ingresado no existe' });
+        }
+
+        const offset = 3600000 * 24 * 2; // 2 dias 3600000 (hora) * 24 hs * 2 dias
+
+        datosUsuario.restablecerPassword.codigo = authController.generarCodigoVerificacion();
+        datosUsuario.restablecerPassword.fechaExpiracion = new Date(Date.now() + offset);
+
+        datosUsuario.save(function (errSave, user) {
+            if (errSave) {
+                return next(errSave);
+            }
+
+            // enviamos email de reestablecimiento de password
+            authController.enviarCodigoCambioPassword(user);
+
+            res.status(200).json({
+                valid: true
+            });
+        });
+    });
+});
+
+router.post('/reestablecer-password', function (req, res, next) {
+    if (!req.body.email) {
+        return res.status(422).send({ error: 'Se debe ingresar una dirección de e-Mail' });
+    }
+
+    if (!req.body.codigo) {
+        return res.status(422).send({ error: 'Debe ingresar el código de seguridad.' });
+    }
+
+    if (!req.body.password) {
+        return res.status(422).send({ error: 'Debe ingresar el nuevo password.' });
+    }
+
+    if (!req.body.password2) {
+        return res.status(422).send({ error: 'Debe re ingresar el nuevo password.' });
+    }
+
+    pacienteApp.findOne({ email: req.body.email }, function (err, datosUsuario: any) {
+        if (err) {
+            return next(err);
+        }
+
+        if (!datosUsuario) {
+            return res.status(422).send({ 'error': 'El e-mail ingresado no existe' });
+        }
+
+        const codigo = req.body.codigo;
+        const password = req.body.password;
+        const password2 = req.body.password2;
+
+        if (datosUsuario.restablecerPassword) {
+            if (datosUsuario.restablecerPassword.codigo !== codigo) {
+                return res.status(422).send({ 'error': 'El codigo ingresado no existe.' });
+            }
+
+            const hoy = new Date();
+            const codigoExpiracion = new Date(datosUsuario.restablecerPassword.fechaExpiracion);
+            console.log(hoy);
+            console.log(codigoExpiracion);
+            if (codigoExpiracion < hoy) {
+                return res.status(422).send({ 'error': 'El código de seguridad generado ha vencido. Por favor genere uno nuevo.' });
+            }
+
+        }
+
+        // marcamos como modificado asi se ejecuta el middleware del schema pacienteApp
+        datosUsuario.password = password;
+        datosUsuario.markModified('password');
+
+        datosUsuario.restablecerPassword = {};
+
+        datosUsuario.save(function (errSave, user) {
+            if (errSave) {
+                return next(errSave);
+            }
+
+            // enviamos email de reestablecimiento de password
+            // authController.enviarCodigoCambioPassword(user);
+
+            res.status(200).json({
+                valid: true
+            });
+        });
+    });
+});
 
 export = router;
