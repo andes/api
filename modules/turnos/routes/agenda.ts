@@ -48,6 +48,7 @@ router.get('/agenda/candidatas', function (req, res, next) {
         let turno = resultado.bloques[indiceBloque].turnos[indiceTurno];
 
         let match = {
+            'organizacion._id': { '$eq': mongoose.Types.ObjectId(req.query.idOrganizacion) }, // Que sean agendas de la misma organizacion
             'horaInicio': { '$gte': horaAgendaOrig },
             'nominalizada': true,
             '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
