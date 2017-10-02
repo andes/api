@@ -40,8 +40,8 @@ export let pacienteAppSchema = new mongoose.Schema({
         type: String
     },
     password: {
-        type: String,
-        required: true
+        type: String
+        // required: true
     },
     codigoVerificacion: {
         type: String,

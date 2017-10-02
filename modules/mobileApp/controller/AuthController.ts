@@ -82,11 +82,11 @@ export function enviarCodigoVerificacion(user) {
     log('Enviando mail...');
 
     let mailOptions: MailOptions = {
-        from: configPrivate.enviarMail.from,
+        from: configPrivate.enviarMail.host,
         to: user.email,
-        subject: 'Hola ' + user.email,
-        text: 'El código de verificación es: ' + user.codigoVerificacion,
-        html: 'El código de verificación es: ' + user.codigoVerificacion
+        subject: 'Ministerio de Salud :: ANDES :: Código de activación',
+        text: 'Estimado ' + user.email + ', Su código de activación para ANDES Mobile es: ' + user.codigoVerificacion,
+        html: 'Estimado ' + user.email + ', Su código de activación para ANDES Mobile es: ' + user.codigoVerificacion,
     };
 
     let smsOptions: SmsOptions = {
@@ -106,6 +106,23 @@ export function envioCodigoCount(user: any) {
     // TODO: Implementar si se decide poner un límite al envío de códigos
 }
 
+
+
+/**
+ * Devuelve un listao de los códigos en uso
+ */
+
+export function listadoCodigos() {
+    return pacienteApp.find({ codigoVerificacion: { $ne: null } }, {codigoVerificacion: 1, _id: 0}).then(listado => {
+        let numeros = listado.map((item: any) => item.codigoVerificacion);
+        return Promise.resolve(numeros);
+    }).catch(() => Promise.reject([]));
+}
+
+/**
+ * Genera un código de verificación.
+ * @param onlyNumber
+ */
 export function generarCodigoVerificacion(onlyNumber = true) {
     let codigo = '';
     let length = 6;
@@ -117,6 +134,29 @@ export function generarCodigoVerificacion(onlyNumber = true) {
     return codigo;
 }
 
+/**
+ * Genera un codigo unico chequeando con la db de pacientes.
+ */
+
+export function createUniqueCode() {
+    return listadoCodigos().then((listado) => {
+        let codigo = generarCodigoVerificacion();
+        while (listado.indexOf(codigo) >= 0) {
+            codigo = generarCodigoVerificacion();
+        }
+
+        return Promise.resolve(codigo);
+
+    });
+}
+
+
+/**
+ * Busca un contacto segun la key prevista.
+ * @param pacienteData
+ * @param key
+ */
+
 function searchContacto(pacienteData, key) {
     for (let i = 0; i < pacienteData.contacto.length; i++) {
         if (pacienteData.contacto[i].tipo === key) {
@@ -125,6 +165,12 @@ function searchContacto(pacienteData, key) {
     }
     return null;
 }
+
+
+/**
+ * Chequea que una cuenta no exista, antes de crearla
+ * @param pacienteData
+ */
 
 export function checkAppAccounts(pacienteData) {
     return new Promise((resolve, reject) => {
@@ -195,12 +241,12 @@ export function createUserFromProfesional(profesional) {
  * @param pacienteData {pacienteSchema}
  */
 export function createUserFromPaciente(pacienteData) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async(resolve, reject) => {
         let dataPacienteApp: any = {
             nombre: pacienteData.nombre,
             apellido: pacienteData.apellido,
             email: searchContacto(pacienteData, 'email'),
-            password: generarCodigoVerificacion(),
+            password: null, /* generarCodigoVerificacion() */
             telefono: searchContacto(pacienteData, 'celular'),
             envioCodigoCount: 0,
             nacionalidad: 'Argentina',
@@ -208,7 +254,7 @@ export function createUserFromPaciente(pacienteData) {
             fechaNacimiento: pacienteData.fechaNacimiento,
             sexo: pacienteData.genero,
             genero: pacienteData.genero,
-            codigoVerificacion: generarCodigoVerificacion(),
+            codigoVerificacion: await createUniqueCode(),
             expirationTime: new Date(Date.now() + expirationOffset),
             permisos: [],
             pacientes: [{
@@ -238,11 +284,10 @@ export function createUserFromPaciente(pacienteData) {
             user.save(function (errSave, userSaved: any) {
 
                 if (errSave) {
-                    return reject({ error: 'unknow_error' });
+                    return reject(errSave);
                 }
-                resolve(true);
-
                 enviarCodigoVerificacion(userSaved);
+                resolve(true);
 
             });
 
@@ -290,10 +335,9 @@ export function matchPaciente(data) {
             //     weights = config.mpi.weightsScan;
             // }
 
-            let porcentajeMatchMax = config.mpi.cotaMatchMax;
-            let porcentajeMatchMin = config.mpi.cotaMatchMin;
+
             let listaPacientesMax = [];
-            let listaPacientesMin = [];
+
             // let devolverPorcentaje = data.percentage;
 
             let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
@@ -316,20 +360,12 @@ export function matchPaciente(data) {
                     let match = new Matching();
                     let valorMatching = match.matchPersonas(pacElastic, pacDto, weights, 'Levenshtein');
                     pacienteElastic['id'] = hit._id;
-                    if (valorMatching >= porcentajeMatchMax) {
+                    if (valorMatching >= config.mpi.cotaAppMobile) {
                         listaPacientesMax.push({
                             id: hit._id,
                             paciente: pacienteElastic,
                             match: valorMatching
                         });
-                    } else {
-                        if (valorMatching >= porcentajeMatchMin && valorMatching < porcentajeMatchMax) {
-                            listaPacientesMin.push({
-                                id: hit._id,
-                                paciente: pacienteElastic,
-                                match: valorMatching
-                            });
-                        }
                     }
                 });
 
@@ -341,8 +377,7 @@ export function matchPaciente(data) {
                 listaPacientesMax.sort(sortMatching);
                 resolve(listaPacientesMax);
             } else {
-                listaPacientesMin.sort(sortMatching);
-                resolve(listaPacientesMin);
+                resolve([]);
             }
 
         }).catch((error) => {
@@ -420,7 +455,7 @@ export function verificarCuenta(userAccount, mpiData) {
         controller.buscarPaciente(pacienteId).then((pac => {
 
             let match = new Matching();
-            let resultadoMatching = match.matchPersonas(mpiData, pac, config.mpi.weightsScan, 'Levenshtein');
+            let resultadoMatching = match.matchPersonas(mpiData, pac.paciente, config.mpi.weightsScan, 'Levenshtein');
 
             // no cumple con el numero del matching
             if (resultadoMatching >= config.mpi.cotaMatchMax) {
@@ -432,6 +467,11 @@ export function verificarCuenta(userAccount, mpiData) {
     });
 }
 
+/**
+ * Hbilita una cuenta mobile. Y setea las password del usuario
+ * @param {pacienteAppSchema} userAccount
+ * @param {string} password
+ */
 export function habilitarCuenta(userAccount, password) {
     return new Promise((resolve, reject) => {
         userAccount.activacionApp = true;

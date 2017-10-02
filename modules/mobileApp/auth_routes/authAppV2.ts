@@ -10,6 +10,34 @@ import * as agenda from '../../turnos/schemas/agenda';
 let router = express.Router();
 
 /**
+ * Obtenemos una cuenta desde un codigo y un email (opcional)
+ * @param code
+ * @param email
+ */
+
+function getAccount(code, email) {
+    return pacienteApp.findOne({ codigoVerificacion: code }).then((datosUsuario: any) => {
+        if (!datosUsuario) {
+            return Promise.reject('no existe la cuenta');
+        }
+        console.log(datosUsuario);
+        if (datosUsuario.expirationTime.getTime() >= new Date().getTime()) {
+
+            if (datosUsuario.email && datosUsuario.email !== email) {
+                return Promise.reject('no existe la cuenta');
+            }
+
+            datosUsuario.email = email;
+            return Promise.resolve(datosUsuario);
+
+        } else {
+            return Promise.reject('codigo vencido');
+        }
+
+    });
+}
+
+/**
  * Chequeo del código de verificacion sea correcto
  *
  * @param {string} email E-mail de la cuenta con la que se registro el paciente.
@@ -20,27 +48,39 @@ router.post('/v2/check', function (req, res, next) {
     let email = req.body.email;
     let code = req.body.code;
 
-    pacienteApp.findOne({ email }, function (err, datosUsuario: any) {
-        if (err) {
-            return next(err);
-        }
-        if (!datosUsuario) {
-            return next('no existe la cuenta');
-        }
-        if (authController.verificarCodigo(code, datosUsuario.codigoVerificacion)) {
-            if (datosUsuario.expirationTime.getTime() + authController.expirationOffset >= new Date().getTime()) {
-                res.send({ status: 'ok' });
-            } else {
-                return next('codigo vencido');
-            }
-        } else {
-            return next('codigo incorrecto');
-        }
+    getAccount(code, email).then(() => {
+        res.send({ status: 'ok' });
+    }).catch((err) => {
+        return next(err);
     });
 });
 
 /**
- * Valida una cuenta a traves de un codigo de verificacion
+ * Crea un matching del paciente con el scan del DNI para tener un doble control
+ *
+ * @param {string} email Email de la cuenta
+ * @param {string} code Código de verificación
+ * @param {object} paciente Datos del scaneo del DNI
+ */
+
+router.post('/v2/verificar', function (req, res, next) {
+    let email = req.body.email;
+    let code = req.body.code;
+    let mpiData = req.body.paciente;
+
+    getAccount(code, email).then((datosUsuario) => {
+        authController.verificarCuenta(datosUsuario, mpiData).then(() => {
+            res.send({ status: 'ok' });
+        }).catch(() => {
+            return next('No hay matching');
+        });
+    }).catch((err) => {
+        return next(err);
+    });
+});
+
+/**
+ * Habilita una cuenta a traves de un código de verificación
  *
  * @param {string} email Email de la cuenta
  * @param {string} code Código de verificación
@@ -48,46 +88,35 @@ router.post('/v2/check', function (req, res, next) {
  * @param {object} paciente Datos del scaneo del DNI
  */
 
-router.post('/v2/verificar', function (req, res, next) {
+router.post('/v2/registrar', function (req, res, next) {
     let email = req.body.email;
     let code = req.body.code;
     let password = req.body.password;
-    let mpiData = req.body.paciente;
 
+    // let mpiData = req.body.paciente;
 
-    pacienteApp.findOne({ email }, function (err, datosUsuario: any) {
-        if (err) {
-            return next(err);
-        }
-        if (!datosUsuario) {
-            return next('no existe la cuenta');
-        }
-        if (authController.verificarCodigo(code, datosUsuario.codigoVerificacion)) {
-            if (datosUsuario.expirationTime.getTime() + authController.expirationOffset >= new Date().getTime()) {
-                // Hacemos un matching entre los datos escaneados y el paciente previamente establecido
-                authController.verificarCuenta(datosUsuario, mpiData).then(() => {
-
-                    authController.habilitarCuenta(datosUsuario, password).then((user: any) => {
-
-                        let token = Auth.generatePacienteToken(String(user._id), user.nombre + ' ' + user.apellido, user.email, user.pacientes, user.permisos);
-                        res.status(200).json({
-                            token: token,
-                            user: user
-                        });
-
-                    }).catch((er) => {
-                        return next(er);
-                    });
-                }).catch(() => {
-                    return next('No hay matching');
+    getAccount(code, email).then((datosUsuario) => {
+        // [TODO] 02/10 se decide sacar el matching por un cierto tiempo
+        // authController.verificarCuenta(datosUsuario, mpiData).then(() => {
+            authController.habilitarCuenta(datosUsuario, password).then((user: any) => {
+                let token = Auth.generatePacienteToken(String(user._id), user.nombre + ' ' + user.apellido, user.email, user.pacientes, user.permisos);
+                res.status(200).json({
+                    token: token,
+                    user: user
                 });
-            } else {
-                return next('codigo vencido');
-            }
-        } else {
-            return next('codigo incorrecto');
-        }
+
+            }).catch((er) => {
+                return next(er);
+            });
+        /*
+        }).catch(() => {
+            return next('No hay matching');
+        });
+        */
+    }).catch((err) => {
+        return next(err);
     });
+
 });
 
 
