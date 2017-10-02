@@ -423,9 +423,6 @@ router.put('/update/:id', function (req: any, res, next) {
     return controllerPaciente.buscarPaciente(pacienteId).then((resultado) => {
         let pacienteObj = resultado.paciente;
         authController.checkAppAccounts(pacienteObj).then(() => {
-
-
-
             return res.send({ message: 'OK' });
         }).catch((error) => {
             return res.send(error);

@@ -55,6 +55,23 @@ export function envioCodigoCount(user: any) {
     // TODO: Implementar si se decide poner un límite al envío de códigos
 }
 
+
+
+/**
+ * Devuelve un listao de los códigos en uso
+ */
+
+export function listadoCodigos() {
+    return pacienteApp.find({ codigoVerificacion: { $ne: null } }, {codigoVerificacion: 1, _id: 0}).then(listado => {
+        let numeros = listado.map((item: any) => item.codigoVerificacion);
+        return Promise.resolve(numeros);
+    }).catch(() => Promise.reject([]));
+}
+
+/**
+ * Genera un código de verificación.
+ * @param onlyNumber
+ */
 export function generarCodigoVerificacion(onlyNumber = true) {
     let codigo = '';
     let length = 6;
@@ -66,6 +83,29 @@ export function generarCodigoVerificacion(onlyNumber = true) {
     return codigo;
 }
 
+/**
+ * Genera un codigo unico chequeando con la db de pacientes.
+ */
+
+export function createUniqueCode() {
+    return listadoCodigos().then((listado) => {
+        let codigo = generarCodigoVerificacion();
+        while (listado.indexOf(codigo) >= 0) {
+            codigo = generarCodigoVerificacion();
+        }
+
+        return Promise.resolve(codigo);
+
+    });
+}
+
+
+/**
+ * Busca un contacto segun la key prevista.
+ * @param pacienteData
+ * @param key
+ */
+
 function searchContacto(pacienteData, key) {
     for (let i = 0; i < pacienteData.contacto.length; i++) {
         if (pacienteData.contacto[i].tipo === key) {
@@ -74,6 +114,12 @@ function searchContacto(pacienteData, key) {
     }
     return null;
 }
+
+
+/**
+ * Chequea que una cuenta no exista, antes de crearla
+ * @param pacienteData
+ */
 
 export function checkAppAccounts(pacienteData) {
     return new Promise((resolve, reject) => {
@@ -144,12 +190,12 @@ export function createUserFromProfesional(profesional) {
  * @param pacienteData {pacienteSchema}
  */
 export function createUserFromPaciente(pacienteData) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async(resolve, reject) => {
         let dataPacienteApp: any = {
             nombre: pacienteData.nombre,
             apellido: pacienteData.apellido,
             email: searchContacto(pacienteData, 'email'),
-            password: generarCodigoVerificacion(),
+            password: null, /* generarCodigoVerificacion() */
             telefono: searchContacto(pacienteData, 'celular'),
             envioCodigoCount: 0,
             nacionalidad: 'Argentina',
@@ -157,7 +203,7 @@ export function createUserFromPaciente(pacienteData) {
             fechaNacimiento: pacienteData.fechaNacimiento,
             sexo: pacienteData.genero,
             genero: pacienteData.genero,
-            codigoVerificacion: generarCodigoVerificacion(),
+            codigoVerificacion: await createUniqueCode(),
             expirationTime: new Date(Date.now() + expirationOffset),
             permisos: [],
             pacientes: [{
@@ -187,7 +233,7 @@ export function createUserFromPaciente(pacienteData) {
             user.save(function (errSave, userSaved: any) {
 
                 if (errSave) {
-                    return reject({ error: 'unknow_error' });
+                    return reject(errSave);
                 }
                 enviarCodigoVerificacion(userSaved);
                 resolve(true);
