@@ -40,6 +40,7 @@ export function enviarCodigoCambioPassword(user) {
         if (err) {
         }
         */
+
         // compilamos el html
         let template = handlebars.compile(html);
 
