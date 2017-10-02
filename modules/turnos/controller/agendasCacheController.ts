@@ -40,6 +40,8 @@ export async function getAgendaSips() {
         let estadoTurno = await checkEstadoTurno(agendasMongo[x]);
         let asistenciaTurno = await checkAsistenciaTurno(agendasMongo[x]);
     }
+
+    let borrarAgendasCache = await borrarAgendasCacheMongo();
 }
 
 async function getAgendasDeMongo() {
@@ -397,4 +399,9 @@ function insertaSips(query: any) {
     });
 }
 
-
+async function borrarAgendasCacheMongo() {
+    return new Promise<Array<any>>(function (resolve, reject) {
+        agendasCache.remove({}).exec();
+        console.log('Borrando AgendasCache en Mongo');
+    });
+}

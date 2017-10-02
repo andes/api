@@ -60,7 +60,7 @@ export const modules = {
         active: true,
         path: './modules/turnos/routes',
         route: '/modules/turnos',
-        middleware: appMiddleware
+        //middleware: appMiddleware
     },
     llaves: {
         active: true,
