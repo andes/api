@@ -66,11 +66,13 @@ router.get('/carpetasPacientes/:id*?', function (req, res, next) {
             res.json(data);
         });
     } else {
-        let query;
-        query = carpetaPaciente.find({});
         if (req.query.documento && req.query.organizacion) {
 
-            query.where('documento').equals(req.query.documento);
+            let query;
+            query = carpetaPaciente.find({
+                documento: req.query.documento
+            });
+
             query.where('carpetaEfectores.organizacion._id').equals(req.query.organizacion);
 
             query.exec((err, data) => {
