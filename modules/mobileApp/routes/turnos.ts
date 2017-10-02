@@ -359,9 +359,11 @@ router.post('/turnos/asistencia', function (req: any, res, next) {
  */
 
 router.post('/create/:id', function (req: any, res, next) {
-    if (!req.user.profesional) {
-        return res.status(401).send('unauthorized');
-    }
+
+    // [2017-09-28] TODO: Revisar qué permisos chequear
+    // if (!req.user.profesional) {
+    //     return res.status(401).send('unauthorized');
+    // }
     let pacienteId = req.params.id;
     if (!mongoose.Types.ObjectId.isValid(pacienteId)) {
         return res.status(422).send({ error: 'ObjectID Inválido' });
@@ -397,6 +399,33 @@ router.get('/check/:id', function (req: any, res, next) {
     return controllerPaciente.buscarPaciente(pacienteId).then((resultado) => {
         let pacienteObj = resultado.paciente;
         authController.checkAppAccounts(pacienteObj).then(() => {
+            return res.send({ message: 'OK' });
+        }).catch((error) => {
+            return res.send(error);
+        });
+    }).catch(() => {
+        return res.send({ error: 'paciente_error' });
+    });
+});
+
+
+/**
+ * Check estado de la cuenta
+ * @param id {string} ID del paciente a chequear
+ */
+
+router.put('/update/:id', function (req: any, res, next) {
+
+    let pacienteId = req.params.id;
+    if (!mongoose.Types.ObjectId.isValid(pacienteId)) {
+        return res.status(422).send({ error: 'ObjectID Inválido' });
+    }
+    return controllerPaciente.buscarPaciente(pacienteId).then((resultado) => {
+        let pacienteObj = resultado.paciente;
+        authController.checkAppAccounts(pacienteObj).then(() => {
+
+
+
             return res.send({ message: 'OK' });
         }).catch((error) => {
             return res.send(error);
