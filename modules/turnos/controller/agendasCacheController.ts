@@ -32,10 +32,9 @@ export async function getAgendaSips() {
     let agendasMongo = await getAgendasDeMongo();
 
     for (let x = 0; x < agendasMongo.length; x++) {
-
+        
         let idAgenda = await checkAgendas(agendasMongo[x]);
         let idTurnoCreado = await checkTurnos(agendasMongo[x], idAgenda);
-
         let estadoAgenda = await checkEstadoAgenda(agendasMongo[x]);
         let estadoTurno = await checkEstadoTurno(agendasMongo[x]);
         let asistenciaTurno = await checkAsistenciaTurno(agendasMongo[x]);
@@ -100,7 +99,11 @@ function grabaAgendaSips(agendaSips: any) {
     let objectId = agendaSips.id;
     let estado = getEstadoAgendaSips(agendaSips.estado);
     let codigoSisa = agendaSips.organizacion.codigo.sisa;
-    let dniProfesional = agendaSips.profesionales[0].documento;
+
+    //CON_Agenda de SIPS soporta solo un profesional NOT NULL.
+    //En caso de ser nulo el paciente en agenda de ANDES, por defector
+    //graba dni '0', correspondiente a 'Sin especifiar', efector SSS.
+    let dniProfesional = agendaSips.profesionales[0] ? agendaSips.profesionales[0].documento : '0';
     let fecha = moment(agendaSips.horaInicio).format('YYYYMMDD');
     let horaInicio = moment(agendaSips.horaInicio).utcOffset('-03:00').format('HH:mm');
     let horaFin = moment(agendaSips.horaFin).utcOffset('-03:00').format('HH:mm');
@@ -120,7 +123,6 @@ function grabaAgendaSips(agendaSips: any) {
     agendaSips.idConsultorio = 273;
 
     let query;
-
     return new Promise((resolve: any, reject: any) => {
 
         getDatosSips(codigoSisa, dniProfesional, tipoPrestacion).then(function (values) {
@@ -203,7 +205,9 @@ function suspenderAgenda(estadoAgendaMongo, idAgendaSips) {
     insertaSips(query);
 
     /* Envío un ObjectId vacío ya que se suspenden todos los turnos de una determinada agenda*/
-    suspenderTurnosSips(idAgendaSips, '');
+
+    //TODO: Incluir tercer parametro
+    actualizarEstadoTurnosSips(idAgendaSips, '', null);
 }
 
 function getEstadoAgenda(idAgenda: any) {
@@ -239,7 +243,7 @@ async function checkTurnos(agendas: any, idAgendaCreada: any) {
 
             if (turnos[i].estado === 'asignado') {
                 let existeTurno = await existeTurnoSips(turnos[i]);
-console.log()
+
                 if (!existeTurno) {
                     await grabaTurnoSips(turnos[i], idAgendaCreada);
                 } else {
@@ -328,12 +332,12 @@ async function grabaTurnoSips(turno, idAgendaSips) {
     let fechaTurno = moment(turno.horaInicio).format('YYYYMMDD');
     let horaTurno = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
 
-    let query = "INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente ,  fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante, objectId ) VALUES  ( " + idAgendaSips + " , 1 , 0000 , 410551 , '" + fechaTurno + "' ,'" + horaTurno + "' , 0 , 0 , 1 ,0, '" + turno._id + "')";
+    let query = "INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente ,  fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante, objectId ) VALUES  ( " +
+         idAgendaSips + " , 1 , 0000 , 410551 , '" + fechaTurno + "' ,'" + horaTurno + "' , 0 , 0 , 1 ,0, '" + turno._id + "')";
 
     let turnoGrabado = await insertaSips(query);
 }
 
-// function suspenderTurnosSips(idAgendaSips, objectId) {
 function actualizarEstadoTurnosSips(idAgendaSips, objectId, estado) {
     let objectIdTurno;
 
@@ -350,7 +354,7 @@ function actualizarEstadoTurnosSips(idAgendaSips, objectId, estado) {
 /* TODO: ver si hay mas estados de turnos entre CITAS y SIPS*/
 function getEstadoTurnosCitasSips(estadoTurnoCitas, updated) {
     let estado: any;
-    console.log("Updated: ", estadoTurnoCitas, ' --- ' + updated);
+    
     if (estadoTurnoCitas === 'asignado') {
         estado = EstadoTurnosSips.activo;
     } else if ((estadoTurnoCitas === 'disponible') && (updated)) {
@@ -358,7 +362,7 @@ function getEstadoTurnosCitasSips(estadoTurnoCitas, updated) {
     } else if (estadoTurnoCitas === 'suspendido') {
         estado = EstadoTurnosSips.suspendido;
     }
-    console.log("Estado: ", estado);
+    
     return estado;
 }
 
@@ -385,6 +389,7 @@ function getEstadoTurnoSips(objectId: any) {
 /*Fin Sección Turnos*/
 
 function insertaSips(query: any) {
+    console.log('insertaSips query', query);
     return new Promise((resolve: any, reject: any) => {
         sql.connect(connection).then(pool => {
 
