@@ -47,7 +47,7 @@ export function enviarCodigoCambioPassword(user) {
         // seteamos las variables a modificar con handlebars
         let replacements = {
             username: user.apellido + ', ' + user.nombre,
-            codigo: user.codigoVerificacion
+            codigo: user.restablecerPassword.codigo
         };
 
         // modificamos las variables
@@ -58,7 +58,7 @@ export function enviarCodigoCambioPassword(user) {
             from: configPrivate.enviarMail.from,
             to: user.email,
             subject: 'ANDES - Restablecer contraseña',
-            text: 'El código de verificación es: ' + user.codigoVerificacion,
+            text: 'El código de verificación es: ' + user.restablecerPassword.codigo,
             html: htmlToSend
         };
 
@@ -66,6 +66,7 @@ export function enviarCodigoCambioPassword(user) {
         sendMail(mailOptions);
     });
 
+    /*
     let smsOptions: SmsOptions = {
         telefono: user.telefono,
         mensaje: user.codigoVerificacion
@@ -76,6 +77,7 @@ export function enviarCodigoCambioPassword(user) {
             log('El SMS se envío correctamente');
         }
     });
+    */
 }
 
 export function enviarCodigoVerificacion(user) {
