@@ -408,4 +408,31 @@ router.get('/check/:id', function (req: any, res, next) {
     });
 });
 
+
+/**
+ * Check estado de la cuenta
+ * @param id {string} ID del paciente a chequear
+ */
+
+router.put('/update/:id', function (req: any, res, next) {
+
+    let pacienteId = req.params.id;
+    if (!mongoose.Types.ObjectId.isValid(pacienteId)) {
+        return res.status(422).send({ error: 'ObjectID Inválido' });
+    }
+    return controllerPaciente.buscarPaciente(pacienteId).then((resultado) => {
+        let pacienteObj = resultado.paciente;
+        authController.checkAppAccounts(pacienteObj).then(() => {
+
+
+
+            return res.send({ message: 'OK' });
+        }).catch((error) => {
+            return res.send(error);
+        });
+    }).catch(() => {
+        return res.send({ error: 'paciente_error' });
+    });
+});
+
 export = router;
