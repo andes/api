@@ -59,7 +59,7 @@ let router = express.Router();
  *           $ref: '#/definitions/parentesco'
  */
 router.get('/parentescos/:id*?', function (req, res, next) {
- if (!Auth.check(req, 'mpi:parentesco:get')) {
+    if (!Auth.check(req, 'mpi:paciente:parentesco')) {
         return next(403);
     }
     if (req.params.id) {
