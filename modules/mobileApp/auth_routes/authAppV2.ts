@@ -8,6 +8,7 @@ import { Auth } from '../../../auth/auth.class';
 import * as agenda from '../../turnos/schemas/agenda';
 
 let router = express.Router();
+let emailRegex = /^[a-z0-9]+(\.[_a-z0-9]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,15})$/;
 
 /**
  * Obtenemos una cuenta desde un codigo y un email (opcional)
@@ -16,18 +17,30 @@ let router = express.Router();
  */
 
 function getAccount(code, email) {
+    if (!emailRegex.test(email)) {
+        return Promise.reject('email invalido');
+    }
     return pacienteApp.findOne({ codigoVerificacion: code }).then((datosUsuario: any) => {
         if (!datosUsuario) {
             return Promise.reject('no existe la cuenta');
         }
-        console.log(datosUsuario);
         if (datosUsuario.expirationTime.getTime() >= new Date().getTime()) {
 
             if (datosUsuario.email && datosUsuario.email !== email) {
                 return Promise.reject('no existe la cuenta');
+            } else if (!datosUsuario.email) {
+                // el usuario puede elegir el email. Cuando se envia el codigo de forma automatia
+                // chequemos que el emial que eligio el usuario no exista
+                return pacienteApp.findOne({email: email}).then(existsEmail => {
+                    if (!existsEmail) {
+                        datosUsuario.email = email;
+                        return Promise.resolve(datosUsuario);
+                    } else {
+                        return Promise.reject('email existente');
+                    }
+                });
             }
 
-            datosUsuario.email = email;
             return Promise.resolve(datosUsuario);
 
         } else {
@@ -36,6 +49,8 @@ function getAccount(code, email) {
 
     });
 }
+
+
 
 /**
  * Chequeo del código de verificacion sea correcto
