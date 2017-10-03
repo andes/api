@@ -389,6 +389,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 case 'asistenciaCerrada':
                 case 'codificada':
                 case 'suspendida':
+                case 'borrada':
                     agendaCtrl.actualizarEstado(req, data);
                     break;
                 case 'avisos':
@@ -398,9 +399,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 //     break;
                 // case 'bloquearTurno': bloquearTurno(req, data, turnos[y]._id);
                 //     break;
-                case 'borrada':
-                    agendaCtrl.actualizarEstado(req, data);
-                    break;
+
                 default:
                     return next('Error: No se seleccionó ninguna opción.');
             }
