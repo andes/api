@@ -7,9 +7,10 @@ export let espacioFisicoSchema = new mongoose.Schema({
     nombre: String,
     detalle: String,
     descripcion: String,
-    edificio: edificioSchema,
-    sector: nombreSchema,
-    servicio: nombreSchema,
+    organizacion: {type: nombreSchema},
+    edificio: {type: edificioSchema},
+    sector: {type: nombreSchema},
+    servicio: {type: nombreSchema},
     equipamiento: [SnomedConcept],
     activo: Boolean,
     estado: {

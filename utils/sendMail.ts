@@ -15,7 +15,9 @@ export interface MailOptions {
 export function sendMail(options: MailOptions) {
     let transporter = nodemailer.createTransport({
         host: enviarMail.host,
-        port: enviarMail.port
+        port: enviarMail.port,
+        secure: enviarMail.secure,
+        auth: enviarMail.auth,
     });
 
     let mailOptions = {
@@ -31,6 +33,6 @@ export function sendMail(options: MailOptions) {
             log('Error al mandar mail: ', error);
         }
 
-        log('Mensaje %s enviado: %s', info.messageId, info.response);
+        // log('Mensaje %s enviado: %s', info.messageId, info.response);
     });
 }

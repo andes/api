@@ -13,10 +13,16 @@ import * as moment from 'moment';
 import * as constantes from '../../../core/tm/schemas/constantes';
 import * as mongoose from 'mongoose';
 import * as debug from 'debug';
+import * as controller from './../../../core/mpi/controller/paciente';
+
+let handlebars = require('handlebars');
+import * as fs from 'fs';
 
 let log = debug('AuthController');
 
 export const expirationOffset = 1000 * 60 * 60 * 24;
+
+const TEMPLATE_PATH = './templates/emails/';
 
 export function verificarCodigo(codigoIngresado, codigo) {
     if (codigoIngresado === codigo) {
@@ -26,15 +32,63 @@ export function verificarCodigo(codigoIngresado, codigo) {
     }
 }
 
+export function enviarCodigoCambioPassword(user) {
+    log('Enviando mail...');
+
+    fs.readFile(TEMPLATE_PATH + 'reset-password.html', {encoding: 'utf-8'}, (err, html) => {
+        /*
+        if (err) {
+        }
+        */
+
+        // compilamos el html
+        let template = handlebars.compile(html);
+
+        // seteamos las variables a modificar con handlebars
+        let replacements = {
+            username: user.apellido + ', ' + user.nombre,
+            codigo: user.restablecerPassword.codigo
+        };
+
+        // modificamos las variables
+        let htmlToSend = template(replacements);
+
+        // preparamos options para nodemailer
+        let mailOptions: MailOptions = {
+            from: configPrivate.enviarMail.host,
+            to: user.email,
+            subject: 'ANDES - Restablecer contraseña',
+            text: 'El código de verificación es: ' + user.restablecerPassword.codigo,
+            html: htmlToSend
+        };
+
+        // enviamos email
+        sendMail(mailOptions);
+    });
+
+    /*
+    let smsOptions: SmsOptions = {
+        telefono: user.telefono,
+        mensaje: user.codigoVerificacion
+    };
+
+    sendSms(smsOptions, function (res) {
+        if (res === '0') {
+            log('El SMS se envío correctamente');
+        }
+    });
+    */
+}
+
 export function enviarCodigoVerificacion(user) {
     log('Enviando mail...');
 
     let mailOptions: MailOptions = {
-        from: configPrivate.enviarMail.from,
+        from: configPrivate.enviarMail.host,
         to: user.email,
-        subject: 'Hola ' + user.email,
-        text: 'El código de verificación es: ' + user.codigoVerificacion,
-        html: 'El código de verificación es: ' + user.codigoVerificacion
+        subject: 'Ministerio de Salud :: ANDES :: Código de activación',
+        text: 'Estimado ' + user.email + ', Su código de activación para ANDES Mobile es: ' + user.codigoVerificacion,
+        html: 'Estimado ' + user.email + ', Su código de activación para ANDES Mobile es: ' + user.codigoVerificacion,
     };
 
     let smsOptions: SmsOptions = {
@@ -54,6 +108,23 @@ export function envioCodigoCount(user: any) {
     // TODO: Implementar si se decide poner un límite al envío de códigos
 }
 
+
+
+/**
+ * Devuelve un listao de los códigos en uso
+ */
+
+export function listadoCodigos() {
+    return pacienteApp.find({ codigoVerificacion: { $ne: null } }, {codigoVerificacion: 1, _id: 0}).then(listado => {
+        let numeros = listado.map((item: any) => item.codigoVerificacion);
+        return Promise.resolve(numeros);
+    }).catch(() => Promise.reject([]));
+}
+
+/**
+ * Genera un código de verificación.
+ * @param onlyNumber
+ */
 export function generarCodigoVerificacion(onlyNumber = true) {
     let codigo = '';
     let length = 6;
@@ -65,6 +136,29 @@ export function generarCodigoVerificacion(onlyNumber = true) {
     return codigo;
 }
 
+/**
+ * Genera un codigo unico chequeando con la db de pacientes.
+ */
+
+export function createUniqueCode() {
+    return listadoCodigos().then((listado) => {
+        let codigo = generarCodigoVerificacion();
+        while (listado.indexOf(codigo) >= 0) {
+            codigo = generarCodigoVerificacion();
+        }
+
+        return Promise.resolve(codigo);
+
+    });
+}
+
+
+/**
+ * Busca un contacto segun la key prevista.
+ * @param pacienteData
+ * @param key
+ */
+
 function searchContacto(pacienteData, key) {
     for (let i = 0; i < pacienteData.contacto.length; i++) {
         if (pacienteData.contacto[i].tipo === key) {
@@ -74,27 +168,33 @@ function searchContacto(pacienteData, key) {
     return null;
 }
 
+
+/**
+ * Chequea que una cuenta no exista, antes de crearla
+ * @param pacienteData
+ */
+
 export function checkAppAccounts(pacienteData) {
     return new Promise((resolve, reject) => {
         pacienteApp.find({ 'pacientes.id': pacienteData.id }, function (err, docs: any[]) {
             if (docs.length > 0) {
-                return reject({ error: 'account_assigned', account: docs[0] });
+                return resolve({ message: 'account_assigned', account: docs[0] });
             } else {
+                return resolve({message: 'account_doesntExists', account: null});
+                // let email = searchContacto(pacienteData, 'email');
+                // if (email) {
 
-                let email = searchContacto(pacienteData, 'email');
-                if (email) {
+                //     pacienteApp.findOne({ email }, function (errFind, existingUser) {
+                //         if (existingUser) {
+                //             return reject({ error: 'email_exists' });
+                //         } else {
+                //             return resolve(true);
+                //         }
+                //     });
 
-                    pacienteApp.findOne({ email }, function (errFind, existingUser) {
-                        if (existingUser) {
-                            return reject({ error: 'email_exists' });
-                        } else {
-                            return resolve(true);
-                        }
-                    });
-
-                } else {
-                    reject({ error: 'email_not_found' });
-                }
+                // } else {
+                //    return reject({ error: 'email_not_found' });
+                // }
             }
         });
     });
@@ -142,21 +242,21 @@ export function createUserFromProfesional(profesional) {
  * Crea un usuario de la app mobile a partir de un paciente
  * @param pacienteData {pacienteSchema}
  */
-export function createUserFromPaciente(pacienteData) {
-    return new Promise((resolve, reject) => {
+export function createUserFromPaciente(pacienteData, contacto) {
+    return new Promise(async(resolve, reject) => {
         let dataPacienteApp: any = {
             nombre: pacienteData.nombre,
             apellido: pacienteData.apellido,
-            email: searchContacto(pacienteData, 'email'),
-            password: generarCodigoVerificacion(),
-            telefono: searchContacto(pacienteData, 'celular'),
+            email: contacto.email,
+            password: null, /* generarCodigoVerificacion() */
+            telefono: contacto.telefono,
             envioCodigoCount: 0,
             nacionalidad: 'Argentina',
             documento: pacienteData.documento,
             fechaNacimiento: pacienteData.fechaNacimiento,
             sexo: pacienteData.genero,
             genero: pacienteData.genero,
-            codigoVerificacion: generarCodigoVerificacion(),
+            codigoVerificacion: await createUniqueCode(),
             expirationTime: new Date(Date.now() + expirationOffset),
             permisos: [],
             pacientes: [{
@@ -167,8 +267,7 @@ export function createUserFromPaciente(pacienteData) {
         };
 
         if (!dataPacienteApp.email) {
-            reject({ error: 'email_not_found' });
-            return;
+            return reject({ error: 'email_not_found' });
         }
 
         pacienteApp.findOne({ email: dataPacienteApp.email }, function (err, existingUser) {
@@ -186,11 +285,10 @@ export function createUserFromPaciente(pacienteData) {
             user.save(function (errSave, userSaved: any) {
 
                 if (errSave) {
-                    return reject({ error: 'unknow_error' });
+                    return reject(errSave);
                 }
-                resolve(true);
-
                 enviarCodigoVerificacion(userSaved);
+                resolve(true);
 
             });
 
@@ -238,10 +336,9 @@ export function matchPaciente(data) {
             //     weights = config.mpi.weightsScan;
             // }
 
-            let porcentajeMatchMax = config.mpi.cotaMatchMax;
-            let porcentajeMatchMin = config.mpi.cotaMatchMin;
+
             let listaPacientesMax = [];
-            let listaPacientesMin = [];
+
             // let devolverPorcentaje = data.percentage;
 
             let results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
@@ -264,20 +361,12 @@ export function matchPaciente(data) {
                     let match = new Matching();
                     let valorMatching = match.matchPersonas(pacElastic, pacDto, weights, 'Levenshtein');
                     pacienteElastic['id'] = hit._id;
-                    if (valorMatching >= porcentajeMatchMax) {
+                    if (valorMatching >= config.mpi.cotaAppMobile) {
                         listaPacientesMax.push({
                             id: hit._id,
                             paciente: pacienteElastic,
                             match: valorMatching
                         });
-                    } else {
-                        if (valorMatching >= porcentajeMatchMin && valorMatching < porcentajeMatchMax) {
-                            listaPacientesMin.push({
-                                id: hit._id,
-                                paciente: pacienteElastic,
-                                match: valorMatching
-                            });
-                        }
                     }
                 });
 
@@ -289,8 +378,7 @@ export function matchPaciente(data) {
                 listaPacientesMax.sort(sortMatching);
                 resolve(listaPacientesMax);
             } else {
-                listaPacientesMin.sort(sortMatching);
-                resolve(listaPacientesMin);
+                resolve([]);
             }
 
         }).catch((error) => {
@@ -354,5 +442,50 @@ export function updateAccount(account, data) {
 
         }).catch((err) => reject(err));
 
+    });
+}
+
+/**
+ * Realiza un matching de los datos del paciente con el scan
+ * @param {pacienteAppSchema} userAccount
+ * @param {object} mpiData Datos del paciente para matching
+ */
+export function verificarCuenta(userAccount, mpiData) {
+    return new Promise((resolve, reject) => {
+        let pacienteId = userAccount.pacientes[0].id;
+        controller.buscarPaciente(pacienteId).then((pac => {
+
+            let match = new Matching();
+            let resultadoMatching = match.matchPersonas(mpiData, pac.paciente, config.mpi.weightsScan, 'Levenshtein');
+
+            // no cumple con el numero del matching
+            if (resultadoMatching >= config.mpi.cotaMatchMax) {
+                return resolve(true);
+            }
+            return reject();
+
+        })).catch(reject);
+    });
+}
+
+/**
+ * Hbilita una cuenta mobile. Y setea las password del usuario
+ * @param {pacienteAppSchema} userAccount
+ * @param {string} password
+ */
+export function habilitarCuenta(userAccount, password) {
+    return new Promise((resolve, reject) => {
+        userAccount.activacionApp = true;
+        userAccount.estadoCodigo = true;
+        userAccount.codigoVerificacion = null;
+        userAccount.expirationTime = null;
+        userAccount.password = password;
+
+        userAccount.save(function (errSave, user) {
+            if (errSave) {
+                return reject(errSave);
+            }
+            return resolve(user);
+        });
     });
 }

@@ -56,42 +56,43 @@ let router = express.Router();
  *           $ref: '#/definitions/carpetaPaciente'
  */
 
-router.get('/carpetasPacientes/:id*?', function(req, res, next) {
+router.get('/carpetasPacientes/:id*?', function (req, res, next) {
 
     if (req.params.id) {
-        carpetaPaciente.findById(req.params.id, function(err, data) {
+        carpetaPaciente.findById(req.params.id, function (err, data) {
             if (err) {
                 return next(err);
             }
             res.json(data);
         });
     } else {
-        let query;
-        query = carpetaPaciente.find({});
-        if (req.query.documento) {
-            query.where('documento').equals(req.query.documento);
-        }
-        if (req.query.organizacion) {
-            query.where('carpetaEfectores.organizacion._id').equals(req.query.organizacion);
-        }
+        if (req.query.documento && req.query.organizacion) {
 
-        query.exec((err, data) => {
-            if (err) {
-                return next(err);
-            }
-            if (data && data.length > 0) {
-                let carpetaEfector = data[0].carpetaEfectores.find((carpeta) => {
-                    return (carpeta.organizacion.id === req.query.organizacion);
-                });
-                if (carpetaEfector) {
-                    res.json(carpetaEfector);
+            let query;
+            query = carpetaPaciente.find({
+                documento: req.query.documento
+            });
+
+            query.where('carpetaEfectores.organizacion._id').equals(req.query.organizacion);
+
+            query.exec((err, data) => {
+                if (err) {
+                    return next(err);
+                }
+                if (data && data.length > 0) {
+                    let carpetaEfector = data[0].carpetaEfectores.find((carpeta) => {
+                        return (carpeta.organizacion.id === req.query.organizacion);
+                    });
+                    if (carpetaEfector) {
+                        res.json(carpetaEfector);
+                    }
+
+                } else {
+                    res.json({});
                 }
 
-            } else {
-                res.json({});
-            }
-
-        });
+            });
+        }
     }
 
 

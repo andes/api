@@ -1,10 +1,9 @@
-import { auth } from './../../config.private';
 import * as express from 'express';
 import * as ldapjs from 'ldapjs';
 import * as configPrivate from '../../config.private';
 import { Auth } from './../auth.class';
-import * as organizacion from '../schemas/organizacion';
-import * as permisos from '../schemas/permisos';
+import { authOrganizaciones } from '../schemas/organizacion';
+import { authUsers } from '../schemas/permisos';
 import { profesional } from './../../core/tm/schemas/profesional';
 import * as mongoose from 'mongoose';
 import * as authMobile from '../../modules/mobileApp/controller/AuthController';
@@ -12,41 +11,82 @@ import * as authMobile from '../../modules/mobileApp/controller/AuthController';
 const isReachable = require('is-reachable');
 let sha1Hash = require('sha1');
 
+let shiroTrie = require('shiro-trie');
 
 let router = express.Router();
+
+/**
+ * Obtiene el user de la session
+ * @get /api/auth/sesion
+ */
 
 router.get('/sesion', Auth.authenticate(), function (req, res) {
     res.json((req as any).user);
 });
 
-router.get('/organizaciones', function (req, res, next) {
-    if (req.query.usuario) {
-        permisos.model.find({
-            usuario: req.query.usuario
-        }, { organizacion: 1, _id: 0 }).then((data) => {
-            let ids = data.map((item: any) => mongoose.Types.ObjectId(item.organizacion));
-            organizacion.model.find({ _id: { $in: ids } }, { nombre: true },
-                function (err, data2) {
-                    if (err) {
-                        return next(err);
-                    } else {
-                        res.json(data2);
-                    }
-                });
-        });
-    } else {
-        organizacion.model.find({}, {
-            nombre: true
-        }, function (err, data) {
-            if (err) {
-                return next(err);
+/**
+ * Listado de organizaciones a las que el user tiene permiso
+ * @get /api/auth/organizaciones
+ */
+
+router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
+    let username = (req as any).user.usuario.username;
+    authUsers.findOne({ usuario: username }, (err, user: any) => {
+        if (err) {
+            return next(err);
+        }
+        let organizaciones = user.organizaciones.map((item) => {
+            if ((req as any).query.admin) {
+                let shiro = shiroTrie.new();
+                shiro.add(item.permisos);
+                if (shiro.check('usuarios:set')) {
+                    return mongoose.Types.ObjectId(item._id);
+                } else {
+                    return null;
+                }
             } else {
-                res.json(data);
+                return mongoose.Types.ObjectId(item._id);
             }
+        }).filter(item => item !== null);
+        authOrganizaciones.find({ _id: { $in: organizaciones } }, (errOrgs, orgs: any[]) => {
+            if (errOrgs) {
+                return next(errOrgs);
+            }
+            res.json(orgs);
         });
-    }
+    });
 });
 
+/**
+ * Refresca el token y los permisos dado una organizacion}
+ * @param {ObjectId} organizacion ID de la organizacion
+ * @post /api/auth/organizaciones
+ */
+
+router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
+    let username = (req as any).user.usuario.username;
+    let orgId = mongoose.Types.ObjectId(req.body.organizacion);
+    Promise.all([
+        authUsers.findOne({
+            'usuario': username,
+            'organizaciones._id': orgId
+        }),
+        authOrganizaciones.findOne({ _id: orgId })
+    ]).then((data: any[]) => {
+        if (data[0] && data[1]) {
+            let user = data[0];
+            let org = data[1];
+            let oldToken: string = req.headers.authorization.substring(4);
+            let nuevosPermisos = user.organizaciones.find(item => String(item._id) === String(org._id));
+            let refreshToken = Auth.refreshToken(oldToken, user, nuevosPermisos.permisos, org);
+            res.send({
+                token: refreshToken
+            });
+        } else {
+            next('invalid organizacion');
+        }
+    });
+});
 
 // Función interna que chequea si la cuenta mobile existe
 let checkMobile = function (profesionalId) {
@@ -66,21 +106,28 @@ let checkMobile = function (profesionalId) {
 
             resolve(account);
         }).catch(() => {
-
+            reject();
         });
     });
 };
+
+/**
+ * Refresca el token y los permisos dado una organizacion}
+ * @param {string} username nombre de usuario (DNI)
+ * @param {string} password Password de la cuenta
+ * @post /api/auth/login
+ */
 
 router.post('/login', function (req, res, next) {
     // Función interna que genera token
     let login = function (nombre: string, apellido: string) {
         Promise.all([
-            organizacion.model.findById(req.body.organizacion, {
-                nombre: true
-            }),
-            permisos.model.findOne({
-                usuario: req.body.usuario,
-                organizacion: req.body.organizacion
+            // organizacion.model.findById(req.body.organizacion, {
+            //     nombre: true
+            // }),
+            authUsers.findOne({
+                usuario: req.body.usuario
+                // organizacion: req.body.organizacion
             }),
             profesional.findOne({
                 documento: req.body.usuario
@@ -88,21 +135,21 @@ router.post('/login', function (req, res, next) {
                     matriculas: true,
                     especialidad: true
                 }),
-            permisos.model.findOneAndUpdate(
+            authUsers.findOneAndUpdate(
                 { usuario: req.body.usuario },
                 { password: sha1Hash(req.body.password), nombre: nombre, apellido: apellido },
             )
         ]).then((data: any[]) => {
-            // Verifica que la organización sea válida y que tenga permisos asignados
-            if (!data[0] || !data[1] || data[1].length === 0) {
+            // Verifica que el usuario sea valido y que tenga permisos asignados
+            if (!data[0] || data[0].length === 0) {
                 return next(403);
             }
 
-             if (req.body.mobile) {
-                checkMobile(data[2]._id).then((account: any) => {
+            if (req.body.mobile) {
+                checkMobile(data[1]._id).then((account: any) => {
                     // Crea el token con los datos de sesión
                     res.json({
-                        token: Auth.generateUserToken(nombre, apellido, data[0], data[1], data[2], account._id),
+                        token: Auth.generateUserToken(data[0], null, [], data[1], account._id),
                         user: account
                     });
 
@@ -111,7 +158,7 @@ router.post('/login', function (req, res, next) {
                 // Crea el token con los datos de sesión
 
                 res.json({
-                    token: Auth.generateUserToken(nombre, apellido, data[0], data[1], data[2])
+                    token: Auth.generateUserToken(data[0], null, [], data[1])
                 });
 
             }
@@ -120,13 +167,9 @@ router.post('/login', function (req, res, next) {
 
     let loginCache = function (password: string) {
         Promise.all([
-            organizacion.model.findById(req.body.organizacion, {
-                nombre: true
-            }),
-            permisos.model.findOne({
+            authUsers.findOne({
                 usuario: req.body.usuario,
-                password: password,
-                organizacion: req.body.organizacion
+                password: password
             }),
             profesional.findOne({
                 documento: req.body.usuario
@@ -135,21 +178,21 @@ router.post('/login', function (req, res, next) {
                     especialidad: true
                 }),
         ]).then((data: any[]) => {
-            // Verifica que la organización sea válida y que tenga permisos asignados
-            if (!data[0] || !data[1] || data[1].length === 0) {
+            // Verifica que el usuario sea valido y que tenga permisos asignados
+            if (!data[0] || data[0].length === 0) {
                 return next(403);
             }
 
-            let nombre = data[1].nombre;
-            let apellido = data[1].apellido;
-            let profesional2 = data[2];
+            let nombre = data[0].nombre;
+            let apellido = data[0].apellido;
+            let profesional2 = data[1];
 
             // Crea el token con los datos de sesión
             if (req.body.mobile) {
                 checkMobile(profesional2._id).then((account: any) => {
                     // Crea el token con los datos de sesión
                     res.json({
-                        token: Auth.generateUserToken(nombre, apellido, data[0], data[1], profesional2, account._id),
+                        token: Auth.generateUserToken(data[0], null, [], profesional2, account._id),
                         user: account
                     });
 
@@ -157,14 +200,14 @@ router.post('/login', function (req, res, next) {
             } else {
                 // Crea el token con los datos de sesión
                 res.json({
-                    token: Auth.generateUserToken(nombre, apellido, data[0], data[1], profesional2)
+                    token: Auth.generateUserToken(data[0], null, [], profesional2)
                 });
             }
         });
     };
 
     // Valida datos
-    if (!req.body.usuario || !req.body.password || !req.body.organizacion) {
+    if (!req.body.usuario || !req.body.password) {
         return next(403);
     }
 

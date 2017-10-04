@@ -44,10 +44,10 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
 
         if (req.query.organizacion) {
             query.where('organizacion._id').equals(mongoose.Types.ObjectId(req.query.organizacion));
-        } else {
-            if (req.query.sinOrganizacion) {
-                query.where('organizacion').exists(false);
-            }
+        }
+
+        if (req.query.sinOrganizacion) {
+            query.where('organizacion').exists(false);
         }
 
         if (req.query.equipamiento) {
@@ -64,7 +64,13 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
             query.limit(Number(req.query.limit));
         }
 
+        // Trae sólo los espacios físicos activos
+        if (req.query.activo) {
+            query.where('activo').equals(true);
+        }
+
         query.sort('nombre');
+
         query.exec((err, data) => {
             if (err) {
                 return next(err);

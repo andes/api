@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import { Matching } from '@andes/match';
-import { pacienteMpi , paciente } from '../schemas/paciente';
+import { pacienteMpi, paciente } from '../schemas/paciente';
 import { log } from '../../log/schemas/log';
 import * as controller from '../controller/paciente';
 import { Auth } from './../../../auth/auth.class';
@@ -683,8 +683,8 @@ router.put('/pacientes/:id', function (req, res, next) {
                 }
 
                 let nuevoPac = JSON.parse(JSON.stringify(newPatient));
-                delete nuevoPac._id;
-                delete nuevoPac.relaciones;
+                // delete nuevoPac._id;
+                // delete nuevoPac.relaciones;
                 let connElastic = new ElasticSync();
                 connElastic.sync(newPatient).then(updated => {
                     if (updated) {
@@ -695,7 +695,7 @@ router.put('/pacientes/:id', function (req, res, next) {
                     } else {
                         Logger.log(req, 'mpi', 'insert', newPatient);
                     }
-                    res.json(patientFound);
+                    res.json(nuevoPac);
                 }).catch(error => {
                     return next(error);
                 });
@@ -781,7 +781,9 @@ router.patch('/pacientes/:id', function (req, res, next) {
         if (resultado) {
             switch (req.body.op) {
                 case 'updateContactos':
-                    controller.updateContactos(req, resultado.paciente);
+                    // controller.updateContactos(req, resultado.paciente);
+                    resultado.paciente.markModified('contacto');
+                    resultado.paciente.contacto = req.body.contacto;
                     break;
                 case 'updateRelaciones':
                     controller.updateRelaciones(req, resultado.paciente);
@@ -790,7 +792,15 @@ router.patch('/pacientes/:id', function (req, res, next) {
                     controller.updateDireccion(req, resultado.paciente);
                     break;
                 case 'updateCarpetaEfectores':
-                    controller.updateCarpetaEfectores(req, resultado.paciente);
+                    // controller.updateCarpetaEfectores(req, resultado.paciente);
+                    resultado.paciente.markModified('carpetaEfectores');
+                    resultado.paciente.carpetaEfectores = req.body.carpetaEfectores;
+                    break;
+                case 'updateContactosCarpeta':
+                    resultado.paciente.markModified('contacto');
+                    resultado.paciente.contacto = req.body.contacto;
+                    resultado.paciente.markModified('carpetaEfectores');
+                    resultado.paciente.carpetaEfectores = req.body.carpetaEfectores;
                     break;
                 case 'linkIdentificadores':
                     controller.linkIdentificadores(req, resultado.paciente);
@@ -808,12 +818,20 @@ router.patch('/pacientes/:id', function (req, res, next) {
                     controller.deleteRelacion(req, resultado.paciente);
                     break;
             }
-            Auth.audit(resultado.paciente, req);
-            resultado.paciente.save(function (errPatch) {
+
+            let pacienteAndes: any;
+            if (resultado.db === 'mpi') {
+                pacienteAndes = new paciente(resultado.paciente.toObject());
+            } else {
+                pacienteAndes = resultado.paciente;
+            }
+
+            Auth.audit(pacienteAndes, req);
+            pacienteAndes.save(function (errPatch) {
                 if (errPatch) {
                     return next(errPatch);
                 }
-                return res.json(resultado.paciente);
+                return res.json(pacienteAndes);
             });
         }
     }).catch((err) => {

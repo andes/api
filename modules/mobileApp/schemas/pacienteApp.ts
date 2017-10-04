@@ -40,8 +40,8 @@ export let pacienteAppSchema = new mongoose.Schema({
         type: String
     },
     password: {
-        type: String,
-        required: true
+        type: String
+        // required: true
     },
     codigoVerificacion: {
         type: String,
@@ -76,8 +76,12 @@ export let pacienteAppSchema = new mongoose.Schema({
         default: false
     },
     permisos: [String],
+    restablecerPassword: {
+        codigo: String,
+        fechaExpiracion: Date
+    },
     devices: [deviceSchema]
-}, {
+    }, {
         timestamps: true
     });
 

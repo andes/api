@@ -110,7 +110,6 @@ router.post('/', async function (req, res, next) {
                 Auth.audit(newPatient, req);
                 newPatient.save((err) => {
                     if (err) {
-                        console.log('Dio error el save posiblemente problema con el schema');
                         return next(err);
                     }
                     // Quitamos el _id del objeto paciente para guardarlo en elasticSearch
@@ -129,7 +128,7 @@ router.post('/', async function (req, res, next) {
                 });
 
             } else {
-                console.log('Ya existe el paciente');
+                // console.log('Ya existe el paciente');
                 // TODO UPDATE: Analizar los campos a actualizar. ¿Cómo sabemos que información es más nueva que nuestro REPO?
                 // MEGA MATETIME
             }

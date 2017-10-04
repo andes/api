@@ -36,11 +36,6 @@ export class ValidateDarTurno {
             errors.push('Paciente no posee ID');
         }
 
-        if (!data.paciente.documento) {
-            valid = false;
-            errors.push('Paciente no tiene especificado el documento');
-        }
-
         return {
             valid: valid,
             errors: errors

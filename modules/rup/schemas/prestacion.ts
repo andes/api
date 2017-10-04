@@ -49,8 +49,6 @@ export let schema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'prestacion'
         },
-        // problemas/hallazgos/trastornos por los cuales se solicita la prestación
-        relacionadoCon: [SnomedConcept],
         // Registros de la solicitud ... para los planes o prestaciones futuras
         registros: [registro.schema],
         // Datos de auditoría sobre el estado de la solicitud (aprobada, desaprobada, ...)
@@ -78,6 +76,7 @@ export let schema = new mongoose.Schema({
     estados: [estado.schema]
 });
 
+// Valida el esquema
 schema.pre('save', function (next) {
     let prestacion = this;
 
@@ -122,4 +121,4 @@ schema.pre('save', function (next) {
 // Habilitar plugin de auditoría
 schema.plugin(require('../../../mongoose/audit'));
 
-export let model = mongoose.model('prestacion', schema, 'prestacion');
+export let model = mongoose.model('prestacion', schema, 'prestaciones');
