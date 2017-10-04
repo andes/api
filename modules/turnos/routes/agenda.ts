@@ -124,6 +124,8 @@ router.get('/agenda/:id?', function (req, res, next) {
         let query;
         query = agenda.find({});
 
+        query.where('estado').ne('borrada'); // No devuelve agendas borradas
+
         if (req.query.fechaDesde) {
             query.where('horaInicio').gte(req.query.fechaDesde);
         }
@@ -197,6 +199,7 @@ router.get('/agenda/:id?', function (req, res, next) {
             res.status(400).send('Debe ingresar al menos un parámetro');
             return next(400);
         }
+
 
         query.sort({ 'horaInicio': 1 });
 
@@ -386,6 +389,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 case 'asistenciaCerrada':
                 case 'codificada':
                 case 'suspendida':
+                case 'borrada':
                     agendaCtrl.actualizarEstado(req, data);
                     break;
                 case 'avisos':
@@ -395,6 +399,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 //     break;
                 // case 'bloquearTurno': bloquearTurno(req, data, turnos[y]._id);
                 //     break;
+
                 default:
                     return next('Error: No se seleccionó ninguna opción.');
             }
