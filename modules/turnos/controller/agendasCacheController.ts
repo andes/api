@@ -56,11 +56,10 @@ async function getAgendasDeMongo() {
 
 /* Inicio Sección de Agendas*/
 async function checkAgendas(agendas: any) {
-    let existeAgenda = await existeAgendaSips(agendas);
-    let idAgenda = existeAgenda;
-
-    if (!existeAgenda) {
-        await grabaAgendaSips(agendas);
+    let idAgenda = await existeAgendaSips(agendas);
+    
+    if (!idAgenda) {
+        idAgenda = await grabaAgendaSips(agendas);
     } else {
         console.log("Existe Agenda en SIPS");
     }
@@ -99,16 +98,10 @@ function grabaAgendaSips(agendaSips: any) {
     let objectId = agendaSips.id;
     let estado = getEstadoAgendaSips(agendaSips.estado);
     let codigoSisa = agendaSips.organizacion.codigo.sisa;
-
-    //CON_Agenda de SIPS soporta solo un profesional NOT NULL.
-    //En caso de ser nulo el paciente en agenda de ANDES, por defector
-    //graba dni '0', correspondiente a 'Sin especifiar', efector SSS.
-    let dniProfesional = agendaSips.profesionales[0] ? agendaSips.profesionales[0].documento : '0';
     let fecha = moment(agendaSips.horaInicio).format('YYYYMMDD');
     let horaInicio = moment(agendaSips.horaInicio).utcOffset('-03:00').format('HH:mm');
     let horaFin = moment(agendaSips.horaFin).utcOffset('-03:00').format('HH:mm');
     let duracionTurno = agendaSips.bloques[0].duracionTurno;
-
     let tipoPrestacion = agendaSips.tipoPrestaciones[0].conceptId;
 
     let maximoSobreTurnos = 0;
@@ -120,6 +113,12 @@ function grabaAgendaSips(agendaSips: any) {
     let idMotivoInactivacion = 0;
     let multiprofesional = 0;
 
+    //CON_Agenda de SIPS soporta solo un profesional NOT NULL.
+    //En caso de ser nulo el paciente en agenda de ANDES, por defector
+    //graba dni '0', correspondiente a 'Sin especifiar', efector SSS.
+    let dniProfesional = agendaSips.profesionales[0] ? agendaSips.profesionales[0].documento : '0';
+    
+    //TODO: Parametro Hardcodeado
     agendaSips.idConsultorio = 273;
 
     let query;
@@ -133,8 +132,8 @@ function grabaAgendaSips(agendaSips: any) {
             let idServicio = values[2][0].idServicio;
             let idTipoPrestacion = 0;
 
-            query = "insert into Con_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, idMotivoInactivacion, multiprofesional, objectId) values (" + estado + ", " + idEfector + ", " + idServicio + ", " + idProfesional + ", " + idTipoPrestacion + ", " + idEspecialidad + ", " + agendaSips.idConsultorio + ", '" + fecha + "', " + duracionTurno + ", '" + horaInicio + "', '" + horaFin + "', " + maximoSobreTurnos + ", " + porcentajeTurnosDia + ", " + porcentajeTurnosAnticipados + ", " + citarPorBloques + " , " + cantidadInterconsulta + ", " + turnosDisponibles + ", " + idMotivoInactivacion + ", " + multiprofesional + ", '" + objectId + "')";
-
+            query = "insert into Con_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, idMotivoInactivacion, multiprofesional, objectId) " +
+                "values (" + estado + ", " + idEfector + ", " + idServicio + ", " + idProfesional + ", " + idTipoPrestacion + ", " + idEspecialidad + ", " + agendaSips.idConsultorio + ", '" + fecha + "', " + duracionTurno + ", '" + horaInicio + "', '" + horaFin + "', " + maximoSobreTurnos + ", " + porcentajeTurnosDia + ", " + porcentajeTurnosAnticipados + ", " + citarPorBloques + " , " + cantidadInterconsulta + ", " + turnosDisponibles + ", " + idMotivoInactivacion + ", " + multiprofesional + ", '" + objectId + "')";
             insertaSips(query).then(function (data) {
                 resolve(data);
             });
@@ -250,7 +249,6 @@ async function checkTurnos(agendas: any, idAgendaCreada: any) {
                     console.log("El turno ya existe!!!");
                 }
             }
-
         }
     }
 }
@@ -389,6 +387,7 @@ function getEstadoTurnoSips(objectId: any) {
 /*Fin Sección Turnos*/
 
 function insertaSips(query: any) {
+    query += " select SCOPE_IDENTITY() as id";
     console.log('insertaSips query', query);
     return new Promise((resolve: any, reject: any) => {
         sql.connect(connection).then(pool => {
@@ -396,7 +395,8 @@ function insertaSips(query: any) {
             return pool.request()
                 .query(query);
         }).then(result => {
-            resolve(result);
+            console.log(result);
+            resolve(result[0].id);
 
         }).catch(err => {
             reject(err);
