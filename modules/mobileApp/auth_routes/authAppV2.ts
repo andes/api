@@ -62,7 +62,9 @@ function getAccount(code, email) {
 router.post('/v2/check', function (req, res, next) {
     let email = req.body.email;
     let code = req.body.code;
-
+    if (!email || !code) {
+        return next('faltan datos');
+    }
     getAccount(code, email).then(() => {
         res.send({ status: 'ok' });
     }).catch((err) => {
@@ -82,6 +84,9 @@ router.post('/v2/verificar', function (req, res, next) {
     let email = req.body.email;
     let code = req.body.code;
     let mpiData = req.body.paciente;
+    if (!email || !code) {
+        return next('faltan datos');
+    }
 
     getAccount(code, email).then((datosUsuario) => {
         authController.verificarCuenta(datosUsuario, mpiData).then(() => {
@@ -107,8 +112,11 @@ router.post('/v2/registrar', function (req, res, next) {
     let email = req.body.email;
     let code = req.body.code;
     let password = req.body.password;
-
     // let mpiData = req.body.paciente;
+
+    if (!email || !code || !password) {
+        return next('faltan datos');
+    }
 
     getAccount(code, email).then((datosUsuario) => {
         // [TODO] 02/10 se decide sacar el matching por un cierto tiempo
