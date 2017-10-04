@@ -55,7 +55,7 @@ export function enviarCodigoCambioPassword(user) {
 
         // preparamos options para nodemailer
         let mailOptions: MailOptions = {
-            from: configPrivate.enviarMail.from,
+            from: configPrivate.enviarMail.host,
             to: user.email,
             subject: 'ANDES - Restablecer contraseña',
             text: 'El código de verificación es: ' + user.restablecerPassword.codigo,
@@ -178,23 +178,23 @@ export function checkAppAccounts(pacienteData) {
     return new Promise((resolve, reject) => {
         pacienteApp.find({ 'pacientes.id': pacienteData.id }, function (err, docs: any[]) {
             if (docs.length > 0) {
-                return reject({ error: 'account_assigned', account: docs[0] });
+                return resolve({ message: 'account_assigned', account: docs[0] });
             } else {
+                return resolve({message: 'account_doesntExists', account: null});
+                // let email = searchContacto(pacienteData, 'email');
+                // if (email) {
 
-                let email = searchContacto(pacienteData, 'email');
-                if (email) {
+                //     pacienteApp.findOne({ email }, function (errFind, existingUser) {
+                //         if (existingUser) {
+                //             return reject({ error: 'email_exists' });
+                //         } else {
+                //             return resolve(true);
+                //         }
+                //     });
 
-                    pacienteApp.findOne({ email }, function (errFind, existingUser) {
-                        if (existingUser) {
-                            return reject({ error: 'email_exists' });
-                        } else {
-                            return resolve(true);
-                        }
-                    });
-
-                } else {
-                    reject({ error: 'email_not_found' });
-                }
+                // } else {
+                //    return reject({ error: 'email_not_found' });
+                // }
             }
         });
     });
@@ -242,14 +242,14 @@ export function createUserFromProfesional(profesional) {
  * Crea un usuario de la app mobile a partir de un paciente
  * @param pacienteData {pacienteSchema}
  */
-export function createUserFromPaciente(pacienteData) {
+export function createUserFromPaciente(pacienteData, contacto) {
     return new Promise(async(resolve, reject) => {
         let dataPacienteApp: any = {
             nombre: pacienteData.nombre,
             apellido: pacienteData.apellido,
-            email: searchContacto(pacienteData, 'email'),
+            email: contacto.email,
             password: null, /* generarCodigoVerificacion() */
-            telefono: searchContacto(pacienteData, 'celular'),
+            telefono: contacto.telefono,
             envioCodigoCount: 0,
             nacionalidad: 'Argentina',
             documento: pacienteData.documento,
@@ -267,8 +267,7 @@ export function createUserFromPaciente(pacienteData) {
         };
 
         if (!dataPacienteApp.email) {
-            reject({ error: 'email_not_found' });
-            return;
+            return reject({ error: 'email_not_found' });
         }
 
         pacienteApp.findOne({ email: dataPacienteApp.email }, function (err, existingUser) {
