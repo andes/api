@@ -299,7 +299,7 @@ router.post('/olvide-password', function (req, res, next) {
         return res.status(422).send({ error: 'Se debe ingresar una dirección de e-Mail' });
     }
 
-    pacienteApp.findOne({ email: req.body.email }, function (err, datosUsuario: any) {
+    return pacienteApp.findOne({ email: req.body.email }, function (err, datosUsuario: any) {
         if (err) {
             return next(err);
         }
@@ -345,7 +345,7 @@ router.post('/reestablecer-password', function (req, res, next) {
         return res.status(422).send({ error: 'Debe re ingresar el nuevo password.' });
     }
 
-    pacienteApp.findOne({ email: req.body.email }, function (err, datosUsuario: any) {
+    return pacienteApp.findOne({ email: req.body.email }, function (err, datosUsuario: any) {
         if (err) {
             return next(err);
         }
@@ -365,8 +365,6 @@ router.post('/reestablecer-password', function (req, res, next) {
 
             const hoy = new Date();
             const codigoExpiracion = new Date(datosUsuario.restablecerPassword.fechaExpiracion);
-            console.log(hoy);
-            console.log(codigoExpiracion);
             if (codigoExpiracion < hoy) {
                 return res.status(422).send({ 'error': 'El código de seguridad generado ha vencido. Por favor genere uno nuevo.' });
             }
