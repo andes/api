@@ -33,7 +33,7 @@ let schema = new mongoose.Schema({
     },
     estado: {
         type: String,
-        enum: ['planificacion', 'disponible', 'publicada', 'suspendida', 'pausada', 'asistenciaCerrada', 'codificada'],
+        enum: ['planificacion', 'disponible', 'publicada', 'suspendida', 'pausada', 'asistenciaCerrada', 'codificada', 'borrada'],
         required: true,
         default: 'planificacion'
     },
