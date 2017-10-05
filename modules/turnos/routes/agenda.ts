@@ -35,7 +35,6 @@ router.get('/agenda/paciente/:idPaciente', function (req, res, next) {
 
 router.get('/agenda/candidatas', function (req, res, next) {
     agenda.findById(req.query.idAgenda, function (err, data) {
-
         if (err) {
             return next(err);
         }
@@ -52,7 +51,7 @@ router.get('/agenda/candidatas', function (req, res, next) {
         let turno = resultado.bloques[indiceBloque].turnos[indiceTurno];
 
         let match = {
-            'organizacion._id': { '$eq': mongoose.Types.ObjectId(req.query.idOrganizacion) }, // Que sean agendas de la misma organizacion
+            'organizacion._id': { '$eq': mongoose.Types.ObjectId(Auth.getOrganization(req)) }, // Que sean agendas de la misma organizacion
             'horaInicio': { '$gte': horaAgendaOrig },
             'nominalizada': true,
             '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
