@@ -421,7 +421,6 @@ export function deleteRelacion(req, data) {
 
 
 export function updateFotoMobile(req, data) {
-    data.markModified('fotoMobile');
     data.fotoMobile = req.body.fotoMobile;
 }
 /* Hasta acá funciones del PATCH */
