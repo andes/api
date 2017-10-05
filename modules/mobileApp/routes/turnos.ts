@@ -365,12 +365,13 @@ router.post('/create/:id', function (req: any, res, next) {
     //     return res.status(401).send('unauthorized');
     // }
     let pacienteId = req.params.id;
+    let contacto = req.body;
     if (!mongoose.Types.ObjectId.isValid(pacienteId)) {
         return res.status(422).send({ error: 'ObjectID Inválido' });
     }
     return controllerPaciente.buscarPaciente(pacienteId).then((resultado) => {
         let pacienteObj = resultado.paciente;
-        authController.createUserFromPaciente(pacienteObj).then(() => {
+        authController.createUserFromPaciente(pacienteObj, contacto).then(() => {
             return res.send({ message: 'OK' });
         }).catch((error) => {
             return res.send(error);
@@ -398,8 +399,8 @@ router.get('/check/:id', function (req: any, res, next) {
     }
     return controllerPaciente.buscarPaciente(pacienteId).then((resultado) => {
         let pacienteObj = resultado.paciente;
-        authController.checkAppAccounts(pacienteObj).then(() => {
-            return res.send({ message: 'OK' });
+        authController.checkAppAccounts(pacienteObj).then((resultado2) => {
+            return res.send(resultado2);
         }).catch((error) => {
             return res.send(error);
         });
@@ -423,9 +424,6 @@ router.put('/update/:id', function (req: any, res, next) {
     return controllerPaciente.buscarPaciente(pacienteId).then((resultado) => {
         let pacienteObj = resultado.paciente;
         authController.checkAppAccounts(pacienteObj).then(() => {
-
-
-
             return res.send({ message: 'OK' });
         }).catch((error) => {
             return res.send(error);

@@ -228,6 +228,11 @@ export function actualizarEstado(req, data) {
         data.estado = 'publicada';
     }
 
+    // Si se pasa a borrada
+    if (req.body.estado === 'borrada') {
+        data.estado = 'borrada';
+    }
+
     // Cuando se reanuda de un estado pausada, se setea el estado guardado en prePausa
     if (req.body.estado === 'prePausada') {
         data.estado = data.prePausada;

@@ -46,6 +46,7 @@ export default [
                     { key: 'puedeImprimir', title: 'Imprimir agenda', type: 'boolean' },
                     { key: 'puedeReasignar', title: 'Reasignar Turno', type: 'boolean' },
                     { key: 'puedeEditarCarpeta', title: 'Editar número de carpeta', type: 'boolean' },
+                    { key: 'puedeBorrar', title: 'Borrar agenda', type: 'boolean' },
                 ]
             },
             {
