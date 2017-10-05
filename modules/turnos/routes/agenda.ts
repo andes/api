@@ -131,7 +131,7 @@ router.get('/agenda/:id?', function (req, res, next) {
         }
 
         if (req.query.fechaHasta) {
-            query.where('horaFin').lte(req.query.fechaHasta);
+            query.where('horaFin').lte(moment(req.query.fechaHasta).endOf('day'));
         }
 
         if (req.query.idProfesional) {
