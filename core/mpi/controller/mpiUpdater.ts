@@ -1,9 +1,16 @@
 import * as config from '../../../config';
-import { userScheduler } from '../../../config.private';
+import {
+    userScheduler
+} from '../../../config.private';
 import * as mongoose from 'mongoose';
 import * as controller from './paciente';
-import { paciente, pacienteMpi } from '../schemas/paciente';
-import { Matching } from '@andes/match';
+import {
+    paciente,
+    pacienteMpi
+} from '../schemas/paciente';
+import {
+    Matching
+} from '@andes/match';
 
 
 /**
@@ -18,9 +25,9 @@ function existeEnMpi(pacienteBuscado: any) {
     let match = new Matching();
     let porcentajeMatcheo;
     let condicion = {
-        'claveBlocking.0': pacienteBuscado.claveBlocking[0]
+        'documento': pacienteBuscado.documento
     };
-    let  weights = config.mpi.weightsUpdater;
+    let weights = config.mpi.weightsUpdater;
 
 
     return new Promise((resolve: any, reject: any) => {
@@ -83,14 +90,15 @@ export function updatingMpi() {
     /*Definicion de variables y operaciones*/
     let counter = 0;
     return new Promise((resolve: any, reject: any) => {
-        try {
-            /*La condición de búsqueda es que sea un paciente validado por fuente auténtica*/
-            let condicion = {
-                'estado': 'validado',
-            };
-            let cursorPacientes = paciente.find(condicion).cursor();
-            cursorPacientes.eachAsync(async data => {
-                if (data !== null) {
+
+        /*La condición de búsqueda es que sea un paciente validado por fuente auténtica*/
+        let condicion = {
+            'estado': 'validado',
+        };
+        let cursorPacientes = paciente.find(condicion).cursor();
+        cursorPacientes.eachAsync(async data => {
+            if (data !== null) {
+                try {
                     let resultado = await existeEnMpi(data);
                     let objectId = new mongoose.Types.ObjectId(resultado[1]._id);
                     /*Si NO hubo matching al 100% lo tengo que insertar en MPI */
@@ -110,8 +118,10 @@ export function updatingMpi() {
                         await controller.updatePaciente(pacMpi, pacienteAndes, userScheduler);
                         await controller.deletePacienteAndes(objectId);
                     }
+                } catch (ex) {
+                    reject(ex);
                 }
-            });
-        } catch (err) { }
+            }
+        });
     });
 }
