@@ -5,7 +5,6 @@ import * as express from 'express';
 import * as authController from '../controller/AuthController';
 import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
-
 import * as agenda from '../../turnos/schemas/agenda';
 
 let router = express.Router();
@@ -129,85 +128,85 @@ router.patch('/account', function (req, res, next) {
  * Espera todos los datos del paciente más del usuario
  */
 
-router.post('/registro', function (req, res, next) {
-    let dataPacienteApp = {
-        nombre: req.body.nombre,
-        apellido: req.body.apellido,
-        email: req.body.email,
-        password: req.body.password,
-        telefono: req.body.telefono,
-        envioCodigoCount: 0,
-        nacionalidad: req.body.nacionalidad,
-        documento: req.body.documento,
-        fechaNacimiento: req.body.fechaNacimiento,
-        sexo: req.body.sexo,
-        genero: req.body.genero,
-        codigoVerificacion: authController.generarCodigoVerificacion(),
-        expirationTime: new Date(Date.now() + authController.expirationOffset),
-        permisos: [],
-        pacientes: []
-    };
-    if (!dataPacienteApp.email) {
-        return res.status(422).send({ error: 'Se debe ingresar una dirección de e-Mail' });
-    }
+// router.post('/registro', function (req, res, next) {
+//     let dataPacienteApp = {
+//         nombre: req.body.nombre,
+//         apellido: req.body.apellido,
+//         email: req.body.email,
+//         password: req.body.password,
+//         telefono: req.body.telefono,
+//         envioCodigoCount: 0,
+//         nacionalidad: req.body.nacionalidad,
+//         documento: req.body.documento,
+//         fechaNacimiento: req.body.fechaNacimiento,
+//         sexo: req.body.sexo,
+//         genero: req.body.genero,
+//         codigoVerificacion: authController.generarCodigoVerificacion(),
+//         expirationTime: new Date(Date.now() + authController.expirationOffset),
+//         permisos: [],
+//         pacientes: []
+//     };
+//     if (!dataPacienteApp.email) {
+//         return res.status(422).send({ error: 'Se debe ingresar una dirección de e-Mail' });
+//     }
 
-    if (!dataPacienteApp.password) {
-        return res.status(422).send({ error: 'Debe ingresar una clave' });
-    }
+//     if (!dataPacienteApp.password) {
+//         return res.status(422).send({ error: 'Debe ingresar una clave' });
+//     }
 
-    return pacienteApp.findOne({ email: dataPacienteApp.email }, function (err, existingUser) {
+//     return pacienteApp.findOne({ email: dataPacienteApp.email }, function (err, existingUser) {
 
-        if (err) {
-            return next(err);
-        }
+//         if (err) {
+//             return next(err);
+//         }
 
-        if (existingUser) {
-            return res.status(422).send({ 'email': 'El e-mail ingresado está en uso' });
-        }
+//         if (existingUser) {
+//             return res.status(422).send({ 'email': 'El e-mail ingresado está en uso' });
+//         }
 
-        let userModel = new pacienteApp(dataPacienteApp);
+//         let userModel = new pacienteApp(dataPacienteApp);
 
-        // enviarCodigoVerificacion(user);
-        userModel.save(function (errSave, user: any) {
+//         // enviarCodigoVerificacion(user);
+//         userModel.save(function (errSave, user: any) {
 
-            if (errSave) {
-                return next(errSave);
-            }
+//             if (errSave) {
+//                 return next(errSave);
+//             }
 
-            authController.matchPaciente(user).then(pacientes => {
-                let pacienteObj = pacientes[0].paciente;
+//             authController.matchPaciente(user).then(pacientes => {
+//                 let pacienteObj = pacientes[0].paciente;
 
-                let valid = false;
-                if (pacienteObj.estado === 'validado') {
-                    authController.enviarCodigoVerificacion(user);
-                    user.pacientes = [
-                        {
-                            id: pacienteObj.id,
-                            relacion: 'principal',
-                            addedAt: new Date()
-                        }
-                    ];
-                    valid = true;
-                } else {
-                    user.codigoVerificacion = null;
-                }
-                user.save();
+//                 let valid = false;
+//                 if (pacienteObj.estado === 'validado') {
+//                     authController.enviarCodigoVerificacion(user);
+//                     user.pacientes = [
+//                         {
+//                             id: pacienteObj.id,
+//                             relacion: 'principal',
+//                             addedAt: new Date()
+//                         }
+//                     ];
+//                     valid = true;
+//                 } else {
+//                     user.codigoVerificacion = null;
+//                 }
+//                 user.save();
 
-                res.status(200).json({
-                    valid: valid
-                });
-            }).catch(Match => {
-                res.status(200).json({
-                    valid: false
-                });
-            });
+//                 res.status(200).json({
+//                     valid: valid
+//                 });
+//             }).catch(Match => {
+//                 res.status(200).json({
+//                     valid: false
+//                 });
+//             });
 
 
-        });
+//         });
 
-    });
+//     });
 
-});
+// });
 
 /**
  * Reenvío del código de verificacion
@@ -291,5 +290,106 @@ router.post('/verificar-codigo', function (req, res, next) {
     });
 });
 
+/**
+ * Genera el código para poder cambiar el password y luego enviar por mail o SMS
+ * @param email {string} email del usuario
+ */
+router.post('/olvide-password', function (req, res, next) {
+    if (!req.body.email) {
+        return res.status(422).send({ error: 'Se debe ingresar una dirección de e-Mail' });
+    }
+
+    return pacienteApp.findOne({ email: req.body.email }, function (err, datosUsuario: any) {
+        if (err) {
+            return next(err);
+        }
+
+        if (!datosUsuario) {
+            return res.status(422).send({ 'error': 'El e-mail ingresado no existe' });
+        }
+
+        const offset = 3600000 * 24 * 2; // 2 dias 3600000 (hora) * 24 hs * 2 dias
+
+        datosUsuario.restablecerPassword.codigo = authController.generarCodigoVerificacion();
+        datosUsuario.restablecerPassword.fechaExpiracion = new Date(Date.now() + offset);
+
+        datosUsuario.save(function (errSave, user) {
+            if (errSave) {
+                return next(errSave);
+            }
+
+            // enviamos email de reestablecimiento de password
+            authController.enviarCodigoCambioPassword(user);
+
+            res.status(200).json({
+                valid: true
+            });
+        });
+    });
+});
+
+router.post('/reestablecer-password', function (req, res, next) {
+    if (!req.body.email) {
+        return res.status(422).send({ error: 'Se debe ingresar una dirección de e-Mail' });
+    }
+
+    if (!req.body.codigo) {
+        return res.status(422).send({ error: 'Debe ingresar el código de seguridad.' });
+    }
+
+    if (!req.body.password) {
+        return res.status(422).send({ error: 'Debe ingresar el nuevo password.' });
+    }
+
+    if (!req.body.password2) {
+        return res.status(422).send({ error: 'Debe re ingresar el nuevo password.' });
+    }
+
+    return pacienteApp.findOne({ email: req.body.email }, function (err, datosUsuario: any) {
+        if (err) {
+            return next(err);
+        }
+
+        if (!datosUsuario) {
+            return res.status(422).send({ 'error': 'El e-mail ingresado no existe' });
+        }
+
+        const codigo = req.body.codigo;
+        const password = req.body.password;
+        const password2 = req.body.password2;
+
+        if (datosUsuario.restablecerPassword) {
+            if (datosUsuario.restablecerPassword.codigo !== codigo) {
+                return res.status(422).send({ 'error': 'El codigo ingresado no existe.' });
+            }
+
+            const hoy = new Date();
+            const codigoExpiracion = new Date(datosUsuario.restablecerPassword.fechaExpiracion);
+            if (codigoExpiracion < hoy) {
+                return res.status(422).send({ 'error': 'El código de seguridad generado ha vencido. Por favor genere uno nuevo.' });
+            }
+
+        }
+
+        // marcamos como modificado asi se ejecuta el middleware del schema pacienteApp
+        datosUsuario.password = password;
+        datosUsuario.markModified('password');
+
+        datosUsuario.restablecerPassword = {};
+
+        datosUsuario.save(function (errSave, user) {
+            if (errSave) {
+                return next(errSave);
+            }
+
+            // enviamos email de reestablecimiento de password
+            // authController.enviarCodigoCambioPassword(user);
+
+            res.status(200).json({
+                valid: true
+            });
+        });
+    });
+});
 
 export = router;

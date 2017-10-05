@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
 import * as express from 'express';
 
-import { matching } from '@andes/match';
+import { Matching } from '@andes/match';
 import * as controller from './../../../core/mpi/controller/paciente';
 import { vacunas } from '../schemas/vacunas';
 
@@ -44,7 +44,7 @@ router.get('/vacunas', function (req: any, res, next) {
                     fechaNacimiento: vacuna.fechaNacimiento
                 };
 
-                let match = new matching();
+                let match = new Matching();
                 let resultadoMatching = match.matchPersonas(pacienteMPI, pacienteVacuna, weights, 'Levenshtein');
 
                 // no cumple con el numero del matching
