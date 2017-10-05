@@ -6,7 +6,7 @@ import { Auth } from './../../../auth/auth.class';
 let router = express.Router();
 
 router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
-    if (!Auth.check(req, 'mpi:paciente:patchAndes')) {
+    if (!Auth.check(req, 'rup:tipoPrestacion:get')) {
         return next(403);
     }
     let query;
