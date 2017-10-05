@@ -25,6 +25,7 @@ function existeEnMpi(pacienteBuscado: any) {
     let match = new Matching();
     let porcentajeMatcheo;
     let condicion = {
+        // Usamos el documento ya que son pacientes validados
         'documento': pacienteBuscado.documento
     };
     let weights = config.mpi.weightsUpdater;
