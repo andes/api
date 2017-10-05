@@ -5,6 +5,8 @@ import * as agendaModel from '../../turnos/schemas/agenda';
 export function darAsistencia(req, data, tid = null) {
     let turno = getTurno(req, data, tid);
     turno.asistencia = 'asistio';
+    turno.updatedAt = new Date();
+    turno.updatedBy = req.user.usuario || req.user;
     // crearPrestacionVacia(turno, req);
 }
 
@@ -12,12 +14,16 @@ export function darAsistencia(req, data, tid = null) {
 export function sacarAsistencia(req, data, tid = null) {
     let turno = getTurno(req, data, tid);
     turno.asistencia = undefined;
+    turno.updatedAt = new Date();
+    turno.updatedBy = req.user.usuario || req.user;
 }
 
 // Turno
 export function quitarTurnoDoble(req, data, tid = null) {
     let turno = getTurno(req, data, tid);
     turno.estado = 'disponible';
+    turno.updatedAt = new Date();
+    turno.updatedBy = req.user.usuario || req.user;
     let turnoOriginal = getTurnoAnterior(req, data, turno._id);
     let position = getPosition(req, data, turnoOriginal._id);
     switch (turnoOriginal.tipoTurno) {
@@ -47,12 +53,17 @@ export function liberarTurno(req, data, turno) {
     turno.tipoPrestacion = null;
     turno.nota = null;
     turno.confirmedAt = null;
+    turno.updatedAt = new Date();
+    turno.updatedBy = req.user.usuario || req.user;
+
     let cant = 1;
 
     let turnoDoble = getTurnoSiguiente(req, data, turno._id);
     if (turnoDoble) {
         cant = cant + 1;
         turnoDoble.estado = 'disponible';
+        turnoDoble.updatedAt = new Date();
+        turnoDoble.updatedBy = req.user.usuario || req.user;
     }
 
     switch (turno.tipoTurno) {
@@ -84,6 +95,9 @@ export function suspenderTurno(req, data, turno) {
     delete turno.paciente;
     delete turno.tipoPrestacion;
     turno.motivoSuspension = req.body.motivoSuspension;
+    turno.updatedAt = new Date();
+    turno.updatedBy = req.user.usuario || req.user;
+
 
     let cant = 1;
     // Se verifica si tiene un turno doble asociado
@@ -92,7 +106,11 @@ export function suspenderTurno(req, data, turno) {
         cant = cant + 1;
         turnoDoble.estado = 'suspendido';
         turnoDoble.motivoSuspension = req.body.motivoSuspension;
+        turnoDoble.updatedAt = new Date();
+        turnoDoble.updatedBy = req.user.usuario || req.user;
     }
+
+
 
     // El tipo de turno del cual se resta será en el orden : delDia, programado, autocitado, gestion
     let position = getPosition(req, data, turno._id);
@@ -119,6 +137,8 @@ export function suspenderTurno(req, data, turno) {
 export function guardarNotaTurno(req, data, tid = null) {
     let turno = getTurno(req, data, tid);
     turno.nota = req.body.textoNota;
+    turno.updatedAt = new Date();
+    turno.updatedBy = req.user.usuario || req.user;
 }
 
 // Turno
