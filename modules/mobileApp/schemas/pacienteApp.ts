@@ -40,8 +40,8 @@ export let pacienteAppSchema = new mongoose.Schema({
         type: String
     },
     password: {
-        type: String,
-        required: true
+        type: String
+        // required: true
     },
     codigoVerificacion: {
         type: String,
@@ -76,8 +76,12 @@ export let pacienteAppSchema = new mongoose.Schema({
         default: false
     },
     permisos: [String],
+    restablecerPassword: {
+        codigo: String,
+        fechaExpiracion: Date
+    },
     devices: [deviceSchema]
-}, {
+    }, {
         timestamps: true
     });
 
@@ -85,6 +89,10 @@ pacienteAppSchema.pre('save', function (next) {
 
     let user = this;
     let SALT_FACTOR = 5;
+
+    if (user.isModified()) {
+        user.updatedAt = new Date();
+    }
 
     if (!user.isModified('password')) {
         return next();
