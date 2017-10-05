@@ -1,10 +1,14 @@
 import * as utils from '../../../utils/utils';
 import * as express from 'express';
 import { tipoPrestacion } from '../schemas/tipoPrestacion';
+import { Auth } from './../../../auth/auth.class';
 
 let router = express.Router();
 
 router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
+    if (!Auth.check(req, 'mpi:paciente:patchAndes')) {
+        return next(403);
+    }
     let query;
     // Búsqueda por un sólo ID
     if (req.params.id) {
