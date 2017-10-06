@@ -4,6 +4,8 @@ import * as configPrivate from '../../../config.private';
 import * as sql from 'mssql';
 import * as moment from 'moment';
 
+let pool
+
 const MongoClient = require('mongodb').MongoClient;
 
 let async = require('async');
@@ -28,7 +30,7 @@ enum EstadoTurnosSips {
 }
 
 export async function getAgendaSips() {
-
+    pool = await sql.connect(connection);
     let agendasMongo = await getAgendasDeMongo();
 
     for (let x = 0; x < agendasMongo.length; x++) {
@@ -36,11 +38,11 @@ export async function getAgendaSips() {
         let idAgenda = await checkAgendas(agendasMongo[x]);
         let idTurnoCreado = await checkTurnos(agendasMongo[x], idAgenda);
         let estadoAgenda = await checkEstadoAgenda(agendasMongo[x]);
-        let estadoTurno = await checkEstadoTurno(agendasMongo[x]);
+        let estadoTurno = await checkEstadoTurno(agendasMongo[x], idAgenda);
         let asistenciaTurno = await checkAsistenciaTurno(agendasMongo[x]);
     }
-
-    let borrarAgendasCache = await borrarAgendasCacheMongo();
+//    pool.close();
+    //let borrarAgendasCache = await borrarAgendasCacheMongo();
 }
 
 async function getAgendasDeMongo() {
@@ -73,23 +75,20 @@ function existeAgendaSips(agendaMongo: any) {
         let isAgenda;
         let idAgenda = agendaMongo.id;
 
-        sql.connect(connection).then(pool => {
-
-            return pool.request()
+        return pool.request()
                 .input('idAgendaMongo', sql.VarChar(50), agendaMongo.id)
-                .query('SELECT idAgenda FROM dbo.CON_Agenda WHERE objectId = @idAgendaMongo GROUP BY idAgenda');
-        }).then(result => {
-
-            if (result.length > 0) {
-                isAgenda = true;
-                resolve(result[0].idAgenda);
-            } else {
-                isAgenda = false;
-                resolve(isAgenda);
-            }
-        }).catch(err => {
-            reject(err);
-        });
+                .query('SELECT idAgenda FROM dbo.CON_Agenda WHERE objectId = @idAgendaMongo GROUP BY idAgenda')
+            .then(result => {
+                if (result.length > 0) {
+                    isAgenda = true;
+                    resolve(result[0].idAgenda);
+                } else {
+                    isAgenda = false;
+                    resolve(isAgenda);
+                }
+            }).catch(err => {
+                reject(err);
+            });
     });
 }
 
@@ -160,7 +159,6 @@ function getDatosSips(codigoSisa, dniProfesional, conceptId) {
     return new Promise((resolve: any, reject: any) => {
         (async function () {
             try {
-                let pool = await sql.connect(connection);
                 let result: any[] = [];
 
                 result[0] = await pool.request()
@@ -206,7 +204,7 @@ function suspenderAgenda(estadoAgendaMongo, idAgendaSips) {
     /* Envío un ObjectId vacío ya que se suspenden todos los turnos de una determinada agenda*/
 
     //TODO: Incluir tercer parametro
-    actualizarEstadoTurnosSips(idAgendaSips, '', null);
+    actualizarEstadoTurnosSips(idAgendaSips, null);
 }
 
 function getEstadoAgenda(idAgenda: any) {
@@ -214,7 +212,6 @@ function getEstadoAgenda(idAgenda: any) {
     return new Promise((resolve: any, reject: any) => {
         (async function () {
             try {
-                let pool = await sql.connect(connection);
                 let query = 'SELECT idAgenda, idAgendaEstado FROM dbo.CON_Agenda WHERE objectId = @idAgenda';
 
                 let result = await pool.request()
@@ -253,28 +250,17 @@ async function checkTurnos(agendas: any, idAgendaCreada: any) {
     }
 }
 
-async function checkEstadoTurno(agenda: any) {
+async function checkEstadoTurno(agenda: any, idAgendaSips) {
     let turnos;
-    let idAgendaSips: any;
-    let idTurnoSips: any;
-
+    
     for (let x = 0; x < agenda.bloques.length; x++) {
         turnos = agenda.bloques[x].turnos;
 
         for (let i = 0; i < turnos.length; i++) {
             if ((turnos[i].estado !== 'disponible') || (turnos[i].updatedAt)) {
-                let estadoTurnoSips: any = await getEstadoTurnoSips(turnos[i]._id);
-                let estadoTurnoMongo = getEstadoTurnosCitasSips(turnos[i].estado, turnos[i].updatedAt);
-
-                console.log("pepepe: ", estadoTurnoSips, ' ---- ', estadoTurnoMongo);
-
-                idAgendaSips = estadoTurnoSips.idAgenda;
-                idTurnoSips = estadoTurnoSips.idTurno;
-
                 /*TODO: analizar bien el cambio de estados de los turnos*/
-                if (estadoTurnoSips !== estadoTurnoMongo) {
-                    actualizarEstadoTurnosSips(idAgendaSips, turnos[i]._id, estadoTurnoMongo);
-                }
+                    //actualizarEstadoTurnosSips(idAgendaSips, turnos[i]._id, estadoTurnoMongo);
+                    actualizarEstadoTurnosSips(idAgendaSips, turnos[i]);
             }
         }
     }
@@ -306,22 +292,20 @@ function existeTurnoSips(turno: any) {
         let isTurno;
         let idTurno = turno._id;
 
-        sql.connect(connection).then(pool => {
-            return pool.request()
+        return pool.request()
                 .input('idTurnoMongo', sql.VarChar(50), idTurno)
-                .query('SELECT idTurno FROM dbo.CON_Turno WHERE objectId = @idTurnoMongo GROUP BY idTurno');
-        }).then(result => {
-
-            if (result.length > 0) {
-                isTurno = true;
-                resolve(isTurno);
-            } else {
-                isTurno = false;
-                resolve(isTurno);
-            }
-        }).catch(err => {
-            reject(err);
-        });
+                .query('SELECT idTurno FROM dbo.CON_Turno WHERE objectId = @idTurnoMongo GROUP BY idTurno')
+            .then(result => {
+                if (result.length > 0) {
+                    isTurno = true;
+                    resolve(isTurno);
+                } else {
+                    isTurno = false;
+                    resolve(isTurno);
+                }
+            }).catch(err => {
+                reject(err);
+            });
     });
 }
 
@@ -336,17 +320,53 @@ async function grabaTurnoSips(turno, idAgendaSips) {
     let turnoGrabado = await insertaSips(query);
 }
 
-function actualizarEstadoTurnosSips(idAgendaSips, objectId, estado) {
-    let objectIdTurno;
+//function actualizarEstadoTurnosSips(idAgendaSips, objectId, estado, bloqueo) {
+async function actualizarEstadoTurnosSips(idAgendaSips, turno) {
+    let estadoTurnoSips: any = await getEstadoTurnoSips(turno._id);
+    let estadoTurnoMongo = getEstadoTurnosCitasSips(turno.estado, turno.updatedAt);
 
-    if (objectId) {
-        objectIdTurno = " and objectId = '" + objectId + "'";
+    console.log('actualizarEstadoTurnosSips idAgendaSips', idAgendaSips);
+    console.log("pepepe: ", estadoTurnoSips, ' ---- ', estadoTurnoMongo);
+
+    idAgendaSips = estadoTurnoSips.idAgenda;
+
+    
+    if (!turno || (estadoTurnoSips !== estadoTurnoMongo)) {
+        let objectIdTurno;
+
+        if (turno._id) {
+            objectIdTurno = " and objectId = '" + turno._id + "'";
+        }
+
+        let query = "UPDATE dbo.CON_Turno SET idTurnoEstado = " + estadoTurnoMongo + " WHERE idAgenda = " + idAgendaSips + objectIdTurno;
+        /*TODO: hacer enum con los estados */
+        if (estadoTurnoMongo === EstadoTurnosSips.suspendido) {
+
+            const motivoBloqueo = (turno.motivoSuspension == 'profesional') ? 2 : 3;
+
+            var fechaBloqueo = moment(turno.horaInicio).format('YYYYMMDD');
+            var horaBloqueo = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
+
+            let queryTurnoBloqueo = "dbo.INSERT CON_TurnoBloqueo (idAgenda "
+                + ", fechaTurno "
+                + ", horaTurno "
+                + ", idUsuarioBloqueo "
+                + ", fechaBloqueo "
+                + ", idMotivoBloqueo) ";
+            queryTurnoBloqueo += "VALUES ("
+                + idAgendaSips + ", "
+                + fechaBloqueo + ", "
+                + horaBloqueo + ", "
+                + turno.updatedBy.documento + ", "
+                + moment(turno.updatedAt).format('YYYYMMDD') + ", "
+                + motivoBloqueo + ")";
+        
+            console.log("XAXAXA", queryTurnoBloqueo);
+            insertaSips(queryTurnoBloqueo);
+        }
+
+        insertaSips(query);
     }
-
-    /*TODO: hacer enum con los estados */
-    let query = "UPDATE dbo.CON_Turno SET idTurnoEstado = " + estado + " WHERE idAgenda = " + idAgendaSips + objectIdTurno;
-
-    insertaSips(query);
 }
 
 /* TODO: ver si hay mas estados de turnos entre CITAS y SIPS*/
@@ -390,14 +410,11 @@ function insertaSips(query: any) {
     query += " select SCOPE_IDENTITY() as id";
     console.log('insertaSips query', query);
     return new Promise((resolve: any, reject: any) => {
-        sql.connect(connection).then(pool => {
-
-            return pool.request()
-                .query(query);
-        }).then(result => {
+        return pool.request()
+            .query(query)
+        .then(result => {
             console.log(result);
             resolve(result[0].id);
-
         }).catch(err => {
             reject(err);
         });
