@@ -113,7 +113,18 @@ export default [
         title: 'Modulo RUP',
         comment: '',
         child: [
-            { key: 'tipoPrestacion', title: 'Tipo de prestación', type: 'prestacion' }
+            {
+                key: 'tipoPrestacion',
+                title: 'Tipos de Prestaciones',
+                type: 'prestacion',
+                child: [
+                    {
+                        key: 'get',
+                        title: 'Obtener lista (GET)',
+                        type: 'boolean'
+                    }
+                ]
+            }
         ]
     },
     {
