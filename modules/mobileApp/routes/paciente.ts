@@ -94,7 +94,6 @@ router.patch('/pacientes/:id', function (req, res, next) {
             if (resultado) {
                 switch (req.body.op) {
                     case 'updateFotoMobile':
-                        console.log('etr');
                         controllerPaciente.updateFotoMobile(req, resultado.paciente);
                         break;
                     case 'updateDireccion':

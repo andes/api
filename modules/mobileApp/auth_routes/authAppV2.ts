@@ -10,6 +10,14 @@ import * as agenda from '../../turnos/schemas/agenda';
 let router = express.Router();
 let emailRegex = /^[a-z0-9]+(\.[_a-z0-9]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,15})$/;
 
+function codeTostring(code) {
+    let c = String(code);
+    while (c.length < 6) {
+        c = '0' + c;
+    }
+    return c;
+}
+
 /**
  * Obtenemos una cuenta desde un codigo y un email (opcional)
  * @param code
@@ -65,7 +73,7 @@ router.post('/v2/check', function (req, res, next) {
     if (!email || !code) {
         return next('faltan datos');
     }
-    getAccount(code, email).then(() => {
+    getAccount(codeTostring(code), email).then(() => {
         res.send({ status: 'ok' });
     }).catch((err) => {
         return next(err);
@@ -88,7 +96,7 @@ router.post('/v2/verificar', function (req, res, next) {
         return next('faltan datos');
     }
 
-    getAccount(code, email).then((datosUsuario) => {
+    getAccount(codeTostring(code), email).then((datosUsuario) => {
         authController.verificarCuenta(datosUsuario, mpiData).then(() => {
             res.send({ status: 'ok' });
         }).catch(() => {
@@ -118,7 +126,7 @@ router.post('/v2/registrar', function (req, res, next) {
         return next('faltan datos');
     }
 
-    getAccount(code, email).then((datosUsuario) => {
+    getAccount(codeTostring(code), email).then((datosUsuario) => {
         // [TODO] 02/10 se decide sacar el matching por un cierto tiempo
         // authController.verificarCuenta(datosUsuario, mpiData).then(() => {
             authController.habilitarCuenta(datosUsuario, password).then((user: any) => {
