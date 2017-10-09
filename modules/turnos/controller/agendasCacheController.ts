@@ -29,6 +29,8 @@ enum EstadoTurnosSips {
     suspendido = 5
 }
 
+const idUsuario = '1486739';
+
 export async function getAgendaSips() {
     pool = await sql.connect(connection);
     let agendasMongo = await getAgendasDeMongo();
@@ -278,8 +280,8 @@ async function checkAsistenciaTurno(agenda: any) {
                 // let idTurno  = await existeTurnoSips(turnos[i]);
                 let idTurno: any = await getEstadoTurnoSips(turnos[i]._id);
                 let fechaAsistencia = moment(turnos[i].updatedAt).format('YYYYMMDD');
-                let query = "INSERT INTO dbo.CON_TurnoAsistencia ( idTurno , idUsuario , fechaAsistencia ) VALUES  ( " + idTurno.idTurno + " , 9739 , '" + fechaAsistencia + "' )";
-                console.log("IDTurno: ", query);
+                let query = "INSERT INTO dbo.CON_TurnoAsistencia ( idTurno , idUsuario , fechaAsistencia ) VALUES  ( " +
+                    idTurno.idTurno + " , " + idUsuario +" , '" + fechaAsistencia + "' )";
 
                 insertaSips(query);
             }
@@ -314,8 +316,9 @@ async function grabaTurnoSips(turno, idAgendaSips) {
     let fechaTurno = moment(turno.horaInicio).format('YYYYMMDD');
     let horaTurno = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
 
+    //TODO enviar id de paciente correcto
     let query = "INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente ,  fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante, objectId ) VALUES  ( " +
-         idAgendaSips + " , 1 , 0000 , 410551 , '" + fechaTurno + "' ,'" + horaTurno + "' , 0 , 0 , 1 ,0, '" + turno._id + "')";
+         idAgendaSips + " , 1 , " + idUsuario + " , 410551 , '" + fechaTurno + "' ,'" + horaTurno + "' , 0 , 0 , 1 ,0, '" + turno._id + "')";
 
     let turnoGrabado = await insertaSips(query);
 }
@@ -325,12 +328,6 @@ async function actualizarEstadoTurnosSips(idAgendaSips, turno) {
     let estadoTurnoSips: any = await getEstadoTurnoSips(turno._id);
     let estadoTurnoMongo = getEstadoTurnosCitasSips(turno.estado, turno.updatedAt);
 
-    console.log('actualizarEstadoTurnosSips idAgendaSips', idAgendaSips);
-    console.log("pepepe: ", estadoTurnoSips, ' ---- ', estadoTurnoMongo);
-
-    idAgendaSips = estadoTurnoSips.idAgenda;
-
-    
     if (!turno || (estadoTurnoSips !== estadoTurnoMongo)) {
         let objectIdTurno;
 
@@ -340,33 +337,55 @@ async function actualizarEstadoTurnosSips(idAgendaSips, turno) {
 
         let query = "UPDATE dbo.CON_Turno SET idTurnoEstado = " + estadoTurnoMongo + " WHERE idAgenda = " + idAgendaSips + objectIdTurno;
         /*TODO: hacer enum con los estados */
-        if (estadoTurnoMongo === EstadoTurnosSips.suspendido) {
-
-            const motivoBloqueo = (turno.motivoSuspension == 'profesional') ? 2 : 3;
-
-            var fechaBloqueo = moment(turno.horaInicio).format('YYYYMMDD');
-            var horaBloqueo = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
-
-            let queryTurnoBloqueo = "dbo.INSERT CON_TurnoBloqueo (idAgenda "
-                + ", fechaTurno "
-                + ", horaTurno "
-                + ", idUsuarioBloqueo "
-                + ", fechaBloqueo "
-                + ", idMotivoBloqueo) ";
-            queryTurnoBloqueo += "VALUES ("
-                + idAgendaSips + ", "
-                + fechaBloqueo + ", "
-                + horaBloqueo + ", "
-                + turno.updatedBy.documento + ", "
-                + moment(turno.updatedAt).format('YYYYMMDD') + ", "
-                + motivoBloqueo + ")";
-        
-            console.log("XAXAXA", queryTurnoBloqueo);
-            insertaSips(queryTurnoBloqueo);
+        var horaInicio = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm')
+        if (estadoTurnoMongo === EstadoTurnosSips.suspendido && !existeTurnoBloqueoSips(idAgendaSips, horaInicio)) {
+            grabarTurnoBloqueo(idAgendaSips, turno);
         }
 
-        insertaSips(query);
+        await insertaSips(query);
     }
+}
+
+async function existeTurnoBloqueoSips(idAgendaSips, horaInicio) {
+    let query = "SELECT * FROM CON_TurnoBloqueo b " +
+        "JOIN CON_TURNO t on t.idAgenda = b.idAgenda " +
+        "WHERE b.idAgenda = @idAgendaSips" +
+        "AND b.horaTurno = @horaInicio ";
+
+    let idTurnoBloque = null;
+    try {
+        let idTurnoBloque = await pool.request()
+            .input('idAgendaSips', sql.int, idAgendaSips)
+            .input('horaInicio', sql.VarChar(5), horaInicio)
+            .query(query);
+    } catch (err) {
+        return idTurnoBloque;
+    }
+
+    return idTurnoBloque;
+}
+
+async function grabarTurnoBloqueo(idAgendaSips, turno) {
+    const motivoBloqueo = (turno.motivoSuspension == 'profesional') ? 2 : 3;
+    
+    var fechaBloqueo = moment(turno.horaInicio).format('YYYYMMDD');
+    var horaBloqueo = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
+
+    let queryTurnoBloqueo = "INSERT dbo.CON_TurnoBloqueo (idAgenda "
+        + ", fechaTurno "
+        + ", horaTurno "
+        + ", idUsuarioBloqueo "
+        + ", fechaBloqueo "
+        + ", idMotivoBloqueo) ";
+    queryTurnoBloqueo += "VALUES ("
+        + idAgendaSips + ", "
+        + "'" + fechaBloqueo + "', " 
+        + "'" + horaBloqueo + "', "
+        + turno.updatedBy.documento + ", "
+        + "'" + moment(turno.updatedAt).format('YYYYMMDD') + "', "
+        + motivoBloqueo + ")";
+
+    await insertaSips(queryTurnoBloqueo);
 }
 
 /* TODO: ver si hay mas estados de turnos entre CITAS y SIPS*/
@@ -389,9 +408,7 @@ function getEstadoTurnoSips(objectId: any) {
     return new Promise((resolve: any, reject: any) => {
         (async function () {
             try {
-                let pool = await sql.connect(connection);
                 let query = 'SELECT idAgenda, idTurno, idTurnoEstado FROM dbo.CON_Turno WHERE objectId = @objectId';
-
                 let result = await pool.request()
                     .input('objectId', sql.VarChar(50), objectId)
                     .query(query);
@@ -408,12 +425,11 @@ function getEstadoTurnoSips(objectId: any) {
 
 function insertaSips(query: any) {
     query += " select SCOPE_IDENTITY() as id";
-    console.log('insertaSips query', query);
+
     return new Promise((resolve: any, reject: any) => {
         return pool.request()
             .query(query)
         .then(result => {
-            console.log(result);
             resolve(result[0].id);
         }).catch(err => {
             reject(err);
