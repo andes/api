@@ -1,5 +1,7 @@
 import * as moment from 'moment';
 import * as agendaModel from '../../turnos/schemas/agenda';
+import { Auth } from '../../../auth/auth.class';
+import { userScheduler } from '../../../config.private';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -510,41 +512,55 @@ export function esPrimerPaciente(agenda: any, idPaciente: string, opciones: any[
     });
 
 }
+
+
+/**
+ * Actualiza las cantidades de turnos restantes de la agenda antes de su fecha de inicio,
+ * se ejecuta una vez al día por el scheduler.
+ *
+ * @export actualizarAgendas()
+ * @returns resultado
+ */
 export function actualizarAgendas() {
-    let query;
     let hsActualizar = 48;
     let cantDias = hsActualizar / 24;
     let fechaActualizar = moment(new Date()).add(cantDias, 'days');
-    let cantAccesoDirecto = 0;
 
-    query = agendaModel.find({});
-    query.where('estado').equals('publicada');
-    // if (data.horaInicio >= moment(new Date()).startOf('day').toDate() && data.horaInicio <= moment(new Date()).endOf('day').toDate()) {
-    query.where('horaInicio').gte(moment(fechaActualizar).startOf('day').toDate() as any);
-    query.where('horaInicio').lte(moment(fechaActualizar).endOf('day').toDate() as any);
-    query.exec((err, data) => {
-        if (err) {
-            return 'No se pudo actualizar las agendas';
-        } else {
-            if (data) {
-                data.forEach(agenda => {
-                    cantAccesoDirecto = agenda.accesoDirectoDelDia + agenda.accesoDirectoProgramado;
-                    if (cantAccesoDirecto > 0) {
-                        agenda.restanteProgramado = agenda.restanteProgramado + agenda.restantesGestion + agenda.restantesProfesional;
-                    } else {
-                        if (agenda.reservadoProfesional > 0) {
-                            agenda.restantesGestion = agenda.restantesGestion + agenda.restantesProfesional;
-                        }
-                    }
-                    agenda.save((error) => {
-                        return (error);
-                    });
-
-                });
-            }
-            return 'Agendas actualizadas';
+    // actualiza los turnos restantes de las agendas 2 dias antes de su horaInicio.
+    let condicion = {
+        'estado': 'publicada',
+        'horaInicio': {
+            $gte: (moment(fechaActualizar).startOf('day').toDate() as any),
+            $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
         }
+    };
+    let cursor = agendaModel.find(condicion).cursor();
+
+    cursor.eachAsync(doc => {
+        let agenda: any = doc;
+        for (let j = 0; j < agenda.bloques.length; j++) {
+            let cantAccesoDirecto = agenda.bloques[j].accesoDirectoDelDia + agenda.bloques[j].accesoDirectoProgramado;
+
+            if (cantAccesoDirecto > 0) {
+                agenda.bloques[j].restantesProgramados = agenda.bloques[j].restantesProgramados + agenda.bloques[j].restantesGestion + agenda.bloques[j].restantesProfesional;
+                agenda.bloques[j].restantesGestion = 0;
+                agenda.bloques[j].restantesProfesional = 0;
+            } else {
+                if (agenda.bloques[j].reservadoProfesional > 0) {
+                    agenda.bloques[j].restantesGestion = agenda.bloques[j].restantesGestion + agenda.bloques[j].restantesProfesional;
+                    agenda.bloques[j].restantesProfesional = 0;
+                }
+            }
+        }
+
+        Auth.audit(agenda, (userScheduler as any));
+
+        agenda.save((error, result) => {
+            if (error) {
+                return (error);
+            }
+        });
+
     });
-
+    return 'Agendas actualizadas';
 }
-
