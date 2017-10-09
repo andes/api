@@ -90,6 +90,10 @@ pacienteAppSchema.pre('save', function (next) {
     let user = this;
     let SALT_FACTOR = 5;
 
+    if (user.isModified()) {
+        user.updatedAt = new Date();
+    }
+
     if (!user.isModified('password')) {
         return next();
     }

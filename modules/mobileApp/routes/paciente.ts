@@ -27,7 +27,13 @@ router.get('/paciente/:id', function (req: any, res, next) {
     if (index >= 0) {
         return controllerPaciente.buscarPaciente(pacientes[index].id).then((resultado) => {
             // [TODO] Projectar datos que se pueden mostrar al paciente
-            return res.json(resultado.paciente);
+            let pac = resultado.paciente;
+            delete pac.claveBloking;
+            delete pac.entidadesValidadoras;
+            delete pac.carpetaEfectores;
+            delete pac.createdBy;
+
+            return res.json(pac);
 
         }).catch(error => {
             return res.status(422).send({ message: 'invalid_id' });
@@ -80,7 +86,7 @@ router.put('/paciente/:id', function (req: any, res, next) {
 
 router.patch('/pacientes/:id', function (req, res, next) {
     let idPaciente = req.params.id;
-    let pacientes = req.user.pacientes;
+    let pacientes = (req as any).user.pacientes;
     let index = pacientes.findIndex(item => item.id === idPaciente);
 
     if (index >= 0) {
@@ -89,10 +95,10 @@ router.patch('/pacientes/:id', function (req, res, next) {
                 switch (req.body.op) {
                     case 'updateFotoMobile':
                         controllerPaciente.updateFotoMobile(req, resultado.paciente);
-                    break;
+                        break;
                     case 'updateDireccion':
                         controllerPaciente.updateDireccion(req, resultado.paciente);
-                    break;
+                        break;
                 }
 
                 Auth.audit(resultado.paciente, req);
