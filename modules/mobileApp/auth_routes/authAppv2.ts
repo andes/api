@@ -8,7 +8,8 @@ import { Auth } from '../../../auth/auth.class';
 import * as agenda from '../../turnos/schemas/agenda';
 
 let router = express.Router();
-let emailRegex = /^[a-z0-9]+(\.[_a-z0-9]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,15})$/;
+// let emailRegex = /^[a-z0-9]+(\.[_a-z0-9]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,15})$/;
+let emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,15}$/;
 
 function codeTostring(code) {
     let c = String(code);
@@ -28,6 +29,7 @@ function getAccount(code, email) {
     if (!emailRegex.test(email)) {
         return Promise.reject('email invalido');
     }
+
     return pacienteApp.findOne({ codigoVerificacion: code }).then((datosUsuario: any) => {
         if (!datosUsuario) {
             return Promise.reject('no existe la cuenta');
