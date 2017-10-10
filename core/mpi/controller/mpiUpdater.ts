@@ -30,7 +30,6 @@ function existeEnMpi(pacienteBuscado: any) {
     };
     let weights = config.mpi.weightsUpdater;
 
-
     return new Promise((resolve: any, reject: any) => {
         let flag = false;
         /*Busco todos los pacientes en MPI que caen en ese bloque */
@@ -53,7 +52,6 @@ function existeEnMpi(pacienteBuscado: any) {
                     /*Para subir la última actualización se debe verificar los timeStamp existentes en caso que en mpi esté más actualizado
                     se asigna notMerge para controlar que no se haga nada y el registro local sea eliminado de Andes por tener información vieja*/
                     let mergeFlag = 'merge'; /*Default value*/
-
                     // Primero verifico por UPDATE
                     if (pacienteDeMpi.updatedAt && pacienteBuscado.updatedAt) {
                         if (pacienteDeMpi.updatedAt > pacienteBuscado.updatedAt) {
@@ -73,7 +71,7 @@ function existeEnMpi(pacienteBuscado: any) {
                             }
                         }
                     }
-                    resolve([mergeFlag, pacienteBuscado]);
+                    resolve([mergeFlag, pacienteDeMpi]);
                 }
             }
         });
@@ -97,27 +95,27 @@ export function updatingMpi() {
             'estado': 'validado',
         };
         let cursorPacientes = paciente.find(condicion).cursor();
-        cursorPacientes.eachAsync(async data => {
-            if (data !== null) {
+        cursorPacientes.eachAsync(async pacAndes => {
+            if (pacAndes !== null) {
                 try {
-                    let resultado = await existeEnMpi(data);
+                    let resultado = await existeEnMpi(pacAndes);
                     let objectId = new mongoose.Types.ObjectId(resultado[1]._id);
                     /*Si NO hubo matching al 100% lo tengo que insertar en MPI */
                     if (resultado[0] !== 'merge') {
                         if (resultado[0] === 'new') {
                             let pac = resultado[1].toObject();
-                            await controller.postPacienteMpi(pac, userScheduler);
                             await controller.deletePacienteAndes(objectId);
+                            await controller.postPacienteMpi(pac, userScheduler);
                         } else if (resultado[0] === 'notMerge') {
                             await controller.deletePacienteAndes(objectId);
                         }
                     } else {
                         /*Se fusionan los pacientes, pacFusionar es un paciente de ANDES y tengo q agregar
                         los campos de este paciente al paciente de mpi*/
-                        let pacienteAndes = data;
+                        let pacienteAndes = pacAndes;
                         let pacMpi = resultado[1];
-                        await controller.updatePaciente(pacMpi, pacienteAndes, userScheduler);
                         await controller.deletePacienteAndes(objectId);
+                        await controller.updatePaciente(pacMpi, pacienteAndes, userScheduler);
                     }
                 } catch (ex) {
                     reject(ex);
