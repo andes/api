@@ -27,7 +27,7 @@ export let logSchema = new mongoose.Schema({
     organizacion: { type: organizacion },
     modulo: {
         type: String,
-        enum: ['mpi', 'turnos', 'rup', 'configTipoPrestacion', 'fa_sintys', 'fa_sisa', 'fa_anses', 'usuarios']
+        enum: ['mpi', 'citas', 'rup', 'configTipoPrestacion', 'fa_sintys', 'fa_sisa', 'fa_anses', 'usuarios']
     },
     operacion: {
         type: String,
@@ -39,8 +39,8 @@ export let logSchema = new mongoose.Schema({
             'macheoAlto', 'posibleDuplicado', 'reportarError', 'validadoScan', 'scan', 'scanFail',
             // OperacionesElastic
             'elasticInsert', 'elasticInsertInPut', 'elasticUpdate', 'elasticDelete', 'elasticError',
-            // ... Turnos
-            'asignarTurno', 'cancelarTurno', 'listaEspera',
+            // ... Citas
+            'asignarTurno', 'cancelarTurno', 'listaEspera', 'actualizarAgendas',
             // ... RUP
             'pacientes',
             // ...Fuentes Autenticas
