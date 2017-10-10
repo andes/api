@@ -2,6 +2,7 @@ import * as moment from 'moment';
 import * as agendaModel from '../../turnos/schemas/agenda';
 import { Auth } from '../../../auth/auth.class';
 import { userScheduler } from '../../../config.private';
+import { Logger } from '../../../utils/logService';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -554,11 +555,18 @@ export function actualizarAgendas() {
         }
 
         Auth.audit(agenda, (userScheduler as any));
-
         agenda.save((error, result) => {
             if (error) {
                 return (error);
             }
+            Logger.log(userScheduler, 'citas', 'actualizarAgendas', {
+                idAgenda: agenda._id,
+                organizacion: agenda.organizacion,
+                horaInicio: agenda.horaInicio,
+                updatedAt: agenda.updatedAt,
+                updatedBy: agenda.updatedBy
+
+            });
         });
 
     });
