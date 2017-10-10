@@ -323,7 +323,6 @@ async function grabaTurnoSips(turno, idAgendaSips) {
     let turnoGrabado = await insertaSips(query);
 }
 
-//function actualizarEstadoTurnosSips(idAgendaSips, objectId, estado, bloqueo) {
 async function actualizarEstadoTurnosSips(idAgendaSips, turno) {
     let estadoTurnoSips: any = await getEstadoTurnoSips(turno._id);
     let estadoTurnoMongo = getEstadoTurnosCitasSips(turno.estado, turno.updatedAt);
@@ -335,34 +334,31 @@ async function actualizarEstadoTurnosSips(idAgendaSips, turno) {
             objectIdTurno = " and objectId = '" + turno._id + "'";
         }
 
-        let query = "UPDATE dbo.CON_Turno SET idTurnoEstado = " + estadoTurnoMongo + " WHERE idAgenda = " + idAgendaSips + objectIdTurno;
         /*TODO: hacer enum con los estados */
         var horaInicio = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm')
-        if (estadoTurnoMongo === EstadoTurnosSips.suspendido && !existeTurnoBloqueoSips(idAgendaSips, horaInicio)) {
-            grabarTurnoBloqueo(idAgendaSips, turno);
+        
+        if (estadoTurnoMongo === EstadoTurnosSips.suspendido && !await existeTurnoBloqueoSips(idAgendaSips, horaInicio)) {
+            await grabarTurnoBloqueo(idAgendaSips, turno);
         }
 
+        let query = "UPDATE dbo.CON_Turno SET idTurnoEstado = " + estadoTurnoMongo + " WHERE idAgenda = " + idAgendaSips + objectIdTurno;
         await insertaSips(query);
     }
 }
 
 async function existeTurnoBloqueoSips(idAgendaSips, horaInicio) {
-    let query = "SELECT * FROM CON_TurnoBloqueo b " +
+    let query = "SELECT COUNT(b.idTurnoBloqueo) as count FROM CON_TurnoBloqueo b " +
         "JOIN CON_TURNO t on t.idAgenda = b.idAgenda " +
-        "WHERE b.idAgenda = @idAgendaSips" +
-        "AND b.horaTurno = @horaInicio ";
+        "WHERE b.idAgenda = " + idAgendaSips + 
+        " AND b.horaTurno = '" + horaInicio + "'";
 
-    let idTurnoBloque = null;
     try {
-        let idTurnoBloque = await pool.request()
-            .input('idAgendaSips', sql.int, idAgendaSips)
-            .input('horaInicio', sql.VarChar(5), horaInicio)
-            .query(query);
+        let result = await pool.request().query(query);
+        return result[0].count > 0;
     } catch (err) {
-        return idTurnoBloque;
+        console.log(err);
+        return false;
     }
-
-    return idTurnoBloque;
 }
 
 async function grabarTurnoBloqueo(idAgendaSips, turno) {
