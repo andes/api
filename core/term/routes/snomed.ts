@@ -88,7 +88,8 @@ router.get('/snomed', function (req, res, next) {
         conceptId: 1,
         term: 1,
         fsn: 1,
-        semanticTag: 1
+        semanticTag: 1,
+        refsetIds: 1
     });
 
     // limitamos resultados
