@@ -73,6 +73,8 @@
   },
   "homepage": "https://github.com/andes/api#readme",
   "devDependencies": {
+    "before": "0.0.1",
+    "chai": "^4.1.2",
     "tslint-eslint-rules": "^4.1.1"
   }
 }
