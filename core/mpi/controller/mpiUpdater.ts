@@ -48,7 +48,7 @@ function existeEnMpi(pacienteBuscado: any) {
                     // Inserta como paciente nuevo ya que no matchea al 100%
                     resolve(['new', pacienteBuscado]);
                 } else {
-                    /*Encontre el paciente al 100% */   
+                    /*Encontre el paciente al 100% */
                     /*Para subir la última actualización se debe verificar los timeStamp existentes en caso que en mpi esté más actualizado
                     se asigna notMerge para controlar que no se haga nada y el registro local sea eliminado de Andes por tener información vieja*/
                     let mergeFlag = 'merge'; /*Default value*/
