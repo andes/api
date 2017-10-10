@@ -29,11 +29,5 @@ export class Logger {
             }
         });
         newLog.save(callback);
-        data.save(function (error) {
-            if (error) {
-                return error;
-            }
-            return newLog;
-        });
     }
 }

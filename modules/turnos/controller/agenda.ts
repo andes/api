@@ -555,10 +555,7 @@ export function actualizarAgendas() {
         }
 
         Auth.audit(agenda, (userScheduler as any));
-        agenda.save((error, result) => {
-            if (error) {
-                return (error);
-            }
+        this.saveAgenda(agenda).then((nuevaAgenda) => {
             Logger.log(userScheduler, 'citas', 'actualizarAgendas', {
                 idAgenda: agenda._id,
                 organizacion: agenda.organizacion,
@@ -567,8 +564,34 @@ export function actualizarAgendas() {
                 updatedBy: agenda.updatedBy
 
             });
+        }).catch(error => {
+            return (error);
         });
 
     });
     return 'Agendas actualizadas';
+
 }
+
+
+/**
+ * Realiza el save de una agenda.
+ * El log del cambio debe guardarse luego de ejecutarse esta promise
+ *
+ * @export
+ * @param {any} nuevaAgenda
+ * @returns
+ */
+export function saveAgenda(nuevaAgenda) {
+    return new Promise((resolve, reject) => {
+        nuevaAgenda.save((err, dataAgenda) => {
+            if (err) {
+                reject(err);
+            }
+            if (dataAgenda) {
+                resolve(dataAgenda);
+            }
+        });
+    });
+}
+
