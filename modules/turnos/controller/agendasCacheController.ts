@@ -37,14 +37,16 @@ export async function getAgendaSips() {
 
     for (let x = 0; x < agendasMongo.length; x++) {
         
-        let idAgenda = await checkAgendas(agendasMongo[x]);
-        let idTurnoCreado = await checkTurnos(agendasMongo[x], idAgenda);
+        let idAgenda = await processAgenda(agendasMongo[x]);
+        console.log('processAgenda idAgenda', idAgenda);
+        let idTurnoCreado = await processTurnos(agendasMongo[x], idAgenda);
+        console.log('processTurnos idTurnoCreado', idTurnoCreado);
         let estadoAgenda = await checkEstadoAgenda(agendasMongo[x]);
         let estadoTurno = await checkEstadoTurno(agendasMongo[x], idAgenda);
         let asistenciaTurno = await checkAsistenciaTurno(agendasMongo[x]);
     }
-//    pool.close();
-    //let borrarAgendasCache = await borrarAgendasCacheMongo();
+    //pool.close();
+    let borrarAgendasCache = await borrarAgendasCacheMongo();
 }
 
 async function getAgendasDeMongo() {
@@ -59,7 +61,7 @@ async function getAgendasDeMongo() {
 }
 
 /* Inicio Sección de Agendas*/
-async function checkAgendas(agendas: any) {
+async function processAgenda(agendas: any) {
     let idAgenda = await existeAgendaSips(agendas);
     
     if (!idAgenda) {
@@ -135,7 +137,7 @@ function grabaAgendaSips(agendaSips: any) {
 
             query = "insert into Con_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, idMotivoInactivacion, multiprofesional, objectId) " +
                 "values (" + estado + ", " + idEfector + ", " + idServicio + ", " + idProfesional + ", " + idTipoPrestacion + ", " + idEspecialidad + ", " + agendaSips.idConsultorio + ", '" + fecha + "', " + duracionTurno + ", '" + horaInicio + "', '" + horaFin + "', " + maximoSobreTurnos + ", " + porcentajeTurnosDia + ", " + porcentajeTurnosAnticipados + ", " + citarPorBloques + " , " + cantidadInterconsulta + ", " + turnosDisponibles + ", " + idMotivoInactivacion + ", " + multiprofesional + ", '" + objectId + "')";
-            insertaSips(query).then(function (data) {
+            executeQuery(query).then(function (data) {
                 resolve(data);
             });
         });
@@ -190,23 +192,10 @@ async function checkEstadoAgenda(agendaMongo: any) {
     let estadoAgendaMongo = getEstadoAgendaSips(agendaMongo.estado);
     let idAgendaSips = estadoAgendaSips.idAgenda;
 
-    if (estadoAgendaSips.idAgendaEstado !== estadoAgendaMongo) {
-        switch (agendaMongo.estado) {
-            case 'suspendida': suspenderAgenda(estadoAgendaMongo, idAgendaSips);
-                break;
-        }
+    if ((estadoAgendaSips.idAgendaEstado !== estadoAgendaMongo) && (agendaMongo.estado === 'suspendida')) {
+        let query = "UPDATE dbo.CON_Agenda SET idAgendaEstado = " + estadoAgendaMongo + "   WHERE idAgenda = " + idAgendaSips;
+        executeQuery(query);
     }
-}
-
-function suspenderAgenda(estadoAgendaMongo, idAgendaSips) {
-    let query = "UPDATE dbo.CON_Agenda SET idAgendaEstado = " + estadoAgendaMongo + "   WHERE idAgenda = " + idAgendaSips;
-
-    insertaSips(query);
-
-    /* Envío un ObjectId vacío ya que se suspenden todos los turnos de una determinada agenda*/
-
-    //TODO: Incluir tercer parametro
-    actualizarEstadoTurnosSips(idAgendaSips, null);
 }
 
 function getEstadoAgenda(idAgenda: any) {
@@ -231,7 +220,7 @@ function getEstadoAgenda(idAgenda: any) {
 /*Fin Sección Agendas*/
 
 /*Inicio Sección Turnos*/
-async function checkTurnos(agendas: any, idAgendaCreada: any) {
+async function processTurnos(agendas: any, idAgendaCreada: any) {
     let turnos;
 
     for (let x = 0; x < agendas.bloques.length; x++) {
@@ -260,9 +249,7 @@ async function checkEstadoTurno(agenda: any, idAgendaSips) {
 
         for (let i = 0; i < turnos.length; i++) {
             if ((turnos[i].estado !== 'disponible') || (turnos[i].updatedAt)) {
-                /*TODO: analizar bien el cambio de estados de los turnos*/
-                    //actualizarEstadoTurnosSips(idAgendaSips, turnos[i]._id, estadoTurnoMongo);
-                    actualizarEstadoTurnosSips(idAgendaSips, turnos[i]);
+                actualizarEstadoTurnoSips(idAgendaSips, turnos[i]);
             }
         }
     }
@@ -283,7 +270,7 @@ async function checkAsistenciaTurno(agenda: any) {
                 let query = "INSERT INTO dbo.CON_TurnoAsistencia ( idTurno , idUsuario , fechaAsistencia ) VALUES  ( " +
                     idTurno.idTurno + " , " + idUsuario +" , '" + fechaAsistencia + "' )";
 
-                insertaSips(query);
+                executeQuery(query);
             }
         }
     }
@@ -312,6 +299,7 @@ function existeTurnoSips(turno: any) {
 }
 
 async function grabaTurnoSips(turno, idAgendaSips) {
+    console.log('grabaTurnoSips');
 
     let fechaTurno = moment(turno.horaInicio).format('YYYYMMDD');
     let horaTurno = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
@@ -320,10 +308,10 @@ async function grabaTurnoSips(turno, idAgendaSips) {
     let query = "INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente ,  fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante, objectId ) VALUES  ( " +
          idAgendaSips + " , 1 , " + idUsuario + " , 410551 , '" + fechaTurno + "' ,'" + horaTurno + "' , 0 , 0 , 1 ,0, '" + turno._id + "')";
 
-    let turnoGrabado = await insertaSips(query);
+    let turnoGrabado = await executeQuery(query);
 }
 
-async function actualizarEstadoTurnosSips(idAgendaSips, turno) {
+async function actualizarEstadoTurnoSips(idAgendaSips, turno) {
     let estadoTurnoSips: any = await getEstadoTurnoSips(turno._id);
     let estadoTurnoMongo = getEstadoTurnosCitasSips(turno.estado, turno.updatedAt);
 
@@ -342,7 +330,7 @@ async function actualizarEstadoTurnosSips(idAgendaSips, turno) {
         }
 
         let query = "UPDATE dbo.CON_Turno SET idTurnoEstado = " + estadoTurnoMongo + " WHERE idAgenda = " + idAgendaSips + objectIdTurno;
-        await insertaSips(query);
+        await executeQuery(query);
     }
 }
 
@@ -381,7 +369,7 @@ async function grabarTurnoBloqueo(idAgendaSips, turno) {
         + "'" + moment(turno.updatedAt).format('YYYYMMDD') + "', "
         + motivoBloqueo + ")";
 
-    await insertaSips(queryTurnoBloqueo);
+    await executeQuery(queryTurnoBloqueo);
 }
 
 /* TODO: ver si hay mas estados de turnos entre CITAS y SIPS*/
@@ -419,7 +407,7 @@ function getEstadoTurnoSips(objectId: any) {
 
 /*Fin Sección Turnos*/
 
-function insertaSips(query: any) {
+function executeQuery(query: any) {
     query += " select SCOPE_IDENTITY() as id";
 
     return new Promise((resolve: any, reject: any) => {
@@ -428,6 +416,7 @@ function insertaSips(query: any) {
         .then(result => {
             resolve(result[0].id);
         }).catch(err => {
+            console.error(err);
             reject(err);
         });
     });
