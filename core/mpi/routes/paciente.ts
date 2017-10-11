@@ -654,13 +654,12 @@ router.put('/pacientes/:id', function (req, res, next) {
         }
         let pacienteOriginal = null;
         if (patientFound) {
-
             let data = req.body;
             if (patientFound.estado === 'validado' && !patientFound.isScan) {
                 delete data.documento;
                 delete data.estado;
                 delete data.sexo;
-                delete data.fechaFallecimiento;
+                delete data.fechaNacimiento;
             }
             controller.updatePaciente(patientFound, data, req).then((p) => {
                 res.json(p);
@@ -781,7 +780,7 @@ router.patch('/pacientes/:id', function (req, res, next) {
         if (resultado) {
             switch (req.body.op) {
                 case 'updateContactos':
-                    // controller.updateContactos(req, resultado.paciente);
+                    controller.updateContactos(req, resultado.paciente);
                     resultado.paciente.markModified('contacto');
                     resultado.paciente.contacto = req.body.contacto;
                     break;

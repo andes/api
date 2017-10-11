@@ -104,17 +104,17 @@ export function updatingMpi() {
                     if (resultado[0] !== 'merge') {
                         if (resultado[0] === 'new') {
                             let pac = resultado[1].toObject();
-                            await controller.deletePacienteAndes(objectId);
-                            await controller.postPacienteMpi(pac, userScheduler);
+                            await controller.deletePacienteAndes(objectId); // Borra paciente mongodb Local
+                            await controller.postPacienteMpi(pac, userScheduler); // Actualiza elastico
                         } else if (resultado[0] === 'notMerge') {
-                            await controller.deletePacienteAndes(objectId);
+                            await controller.deletePacienteAndes(objectId); // no hace nada en elastic
                         }
                     } else {
                         /*Se fusionan los pacientes, pacFusionar es un paciente de ANDES y tengo q agregar
                         los campos de este paciente al paciente de mpi*/
                         let pacienteAndes = pacAndes;
                         let pacMpi = resultado[1];
-                        await controller.deletePacienteAndes(objectId);
+                        await controller.deletePacienteAndes(objectId); // Borro el paciente de mongodb Local
                         await controller.updatePaciente(pacMpi, pacienteAndes, userScheduler);
                     }
                 } catch (ex) {
