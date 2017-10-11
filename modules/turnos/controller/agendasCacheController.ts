@@ -3,8 +3,10 @@ import { agendasCache } from '../../legacy/schemas/agendasCache';
 import * as configPrivate from '../../../config.private';
 import * as sql from 'mssql';
 import * as moment from 'moment';
+import * as paciente from './../../../core/mpi/controller/paciente';
+import { model as organizacion } from './../../../core/tm/schemas/organizacion';
 
-let pool
+let pool;
 
 const MongoClient = require('mongodb').MongoClient;
 
@@ -36,7 +38,7 @@ export async function getAgendaSips() {
     let agendasMongo = await getAgendasDeMongo();
 
     for (let x = 0; x < agendasMongo.length; x++) {
-        
+
         let idAgenda = await processAgenda(agendasMongo[x]);
         console.log('processAgenda idAgenda', idAgenda);
         let idTurnoCreado = await processTurnos(agendasMongo[x], idAgenda);
@@ -63,7 +65,7 @@ async function getAgendasDeMongo() {
 /* Inicio Sección de Agendas*/
 async function processAgenda(agendas: any) {
     let idAgenda = await existeAgendaSips(agendas);
-    
+
     if (!idAgenda) {
         idAgenda = await grabaAgendaSips(agendas);
     } else {
@@ -80,8 +82,8 @@ function existeAgendaSips(agendaMongo: any) {
         let idAgenda = agendaMongo.id;
 
         return pool.request()
-                .input('idAgendaMongo', sql.VarChar(50), agendaMongo.id)
-                .query('SELECT idAgenda FROM dbo.CON_Agenda WHERE objectId = @idAgendaMongo GROUP BY idAgenda')
+            .input('idAgendaMongo', sql.VarChar(50), agendaMongo.id)
+            .query('SELECT idAgenda FROM dbo.CON_Agenda WHERE objectId = @idAgendaMongo GROUP BY idAgenda')
             .then(result => {
                 if (result.length > 0) {
                     isAgenda = true;
@@ -120,7 +122,7 @@ function grabaAgendaSips(agendaSips: any) {
     //En caso de ser nulo el paciente en agenda de ANDES, por defector
     //graba dni '0', correspondiente a 'Sin especifiar', efector SSS.
     let dniProfesional = agendaSips.profesionales[0] ? agendaSips.profesionales[0].documento : '0';
-    
+
     //TODO: Parametro Hardcodeado
     agendaSips.idConsultorio = 273;
 
@@ -158,7 +160,7 @@ function getEstadoAgendaSips(estadoCitas) {
     return estado;
 }
 
-function getDatosSips(codigoSisa, dniProfesional, conceptId) {
+function getDatosSips(codigoSisa?, dniProfesional?, conceptId?) {
 
     return new Promise((resolve: any, reject: any) => {
         (async function () {
@@ -166,6 +168,7 @@ function getDatosSips(codigoSisa, dniProfesional, conceptId) {
                 let result: any[] = [];
 
                 result[0] = await pool.request()
+                    // .input('codigoSisa', sql.VarChar(50), codigoSisa)
                     .input('codigoSisa', sql.VarChar(50), codigoSisa)
                     .query('select idEfector from dbo.Sys_Efector WHERE codigoSisa = @codigoSisa');
 
@@ -243,7 +246,7 @@ async function processTurnos(agendas: any, idAgendaCreada: any) {
 
 async function checkEstadoTurno(agenda: any, idAgendaSips) {
     let turnos;
-    
+
     for (let x = 0; x < agenda.bloques.length; x++) {
         turnos = agenda.bloques[x].turnos;
 
@@ -268,7 +271,7 @@ async function checkAsistenciaTurno(agenda: any) {
                 let idTurno: any = await getEstadoTurnoSips(turnos[i]._id);
                 let fechaAsistencia = moment(turnos[i].updatedAt).format('YYYYMMDD');
                 let query = "INSERT INTO dbo.CON_TurnoAsistencia ( idTurno , idUsuario , fechaAsistencia ) VALUES  ( " +
-                    idTurno.idTurno + " , " + idUsuario +" , '" + fechaAsistencia + "' )";
+                    idTurno.idTurno + " , " + idUsuario + " , '" + fechaAsistencia + "' )";
 
                 executeQuery(query);
             }
@@ -282,8 +285,8 @@ function existeTurnoSips(turno: any) {
         let idTurno = turno._id;
 
         return pool.request()
-                .input('idTurnoMongo', sql.VarChar(50), idTurno)
-                .query('SELECT idTurno FROM dbo.CON_Turno WHERE objectId = @idTurnoMongo GROUP BY idTurno')
+            .input('idTurnoMongo', sql.VarChar(50), idTurno)
+            .query('SELECT idTurno FROM dbo.CON_Turno WHERE objectId = @idTurnoMongo GROUP BY idTurno')
             .then(result => {
                 if (result.length > 0) {
                     isTurno = true;
@@ -299,14 +302,15 @@ function existeTurnoSips(turno: any) {
 }
 
 async function grabaTurnoSips(turno, idAgendaSips) {
-    console.log('grabaTurnoSips');
+    console.log('grabaTurnoSips: ', turno);
+
+    let pacienteId = await getPacienteMPI(turno.paciente.id);
 
     let fechaTurno = moment(turno.horaInicio).format('YYYYMMDD');
     let horaTurno = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
 
-    //TODO enviar id de paciente correcto
     let query = "INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente ,  fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante, objectId ) VALUES  ( " +
-         idAgendaSips + " , 1 , " + idUsuario + " , 410551 , '" + fechaTurno + "' ,'" + horaTurno + "' , 0 , 0 , 1 ,0, '" + turno._id + "')";
+        idAgendaSips + " , 1 , " + idUsuario + " ," + pacienteId + ", '" + fechaTurno + "' ,'" + horaTurno + "' , 0 , 0 , 1 ,0, '" + turno._id + "')";
 
     let turnoGrabado = await executeQuery(query);
 }
@@ -324,7 +328,7 @@ async function actualizarEstadoTurnoSips(idAgendaSips, turno) {
 
         /*TODO: hacer enum con los estados */
         var horaInicio = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm')
-        
+
         if (estadoTurnoMongo === EstadoTurnosSips.suspendido && !await existeTurnoBloqueoSips(idAgendaSips, horaInicio)) {
             await grabarTurnoBloqueo(idAgendaSips, turno);
         }
@@ -337,7 +341,7 @@ async function actualizarEstadoTurnoSips(idAgendaSips, turno) {
 async function existeTurnoBloqueoSips(idAgendaSips, horaInicio) {
     let query = "SELECT COUNT(b.idTurnoBloqueo) as count FROM CON_TurnoBloqueo b " +
         "JOIN CON_TURNO t on t.idAgenda = b.idAgenda " +
-        "WHERE b.idAgenda = " + idAgendaSips + 
+        "WHERE b.idAgenda = " + idAgendaSips +
         " AND b.horaTurno = '" + horaInicio + "'";
 
     try {
@@ -351,7 +355,7 @@ async function existeTurnoBloqueoSips(idAgendaSips, horaInicio) {
 
 async function grabarTurnoBloqueo(idAgendaSips, turno) {
     const motivoBloqueo = (turno.motivoSuspension == 'profesional') ? 2 : 3;
-    
+
     var fechaBloqueo = moment(turno.horaInicio).format('YYYYMMDD');
     var horaBloqueo = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
 
@@ -363,7 +367,7 @@ async function grabarTurnoBloqueo(idAgendaSips, turno) {
         + ", idMotivoBloqueo) ";
     queryTurnoBloqueo += "VALUES ("
         + idAgendaSips + ", "
-        + "'" + fechaBloqueo + "', " 
+        + "'" + fechaBloqueo + "', "
         + "'" + horaBloqueo + "', "
         + turno.updatedBy.documento + ", "
         + "'" + moment(turno.updatedAt).format('YYYYMMDD') + "', "
@@ -375,7 +379,7 @@ async function grabarTurnoBloqueo(idAgendaSips, turno) {
 /* TODO: ver si hay mas estados de turnos entre CITAS y SIPS*/
 function getEstadoTurnosCitasSips(estadoTurnoCitas, updated) {
     let estado: any;
-    
+
     if (estadoTurnoCitas === 'asignado') {
         estado = EstadoTurnosSips.activo;
     } else if ((estadoTurnoCitas === 'disponible') && (updated)) {
@@ -383,7 +387,7 @@ function getEstadoTurnosCitasSips(estadoTurnoCitas, updated) {
     } else if (estadoTurnoCitas === 'suspendido') {
         estado = EstadoTurnosSips.suspendido;
     }
-    
+
     return estado;
 }
 
@@ -408,23 +412,222 @@ function getEstadoTurnoSips(objectId: any) {
 /*Fin Sección Turnos*/
 
 function executeQuery(query: any) {
-    query += " select SCOPE_IDENTITY() as id";
+    query += ' select SCOPE_IDENTITY() as id';
 
     return new Promise((resolve: any, reject: any) => {
         return pool.request()
             .query(query)
-        .then(result => {
-            resolve(result[0].id);
-        }).catch(err => {
-            console.error(err);
-            reject(err);
-        });
+            .then(result => {
+                resolve(result[0].id);
+            }).catch(err => {
+                console.error(err);
+                reject(err);
+            });
     });
 }
 
 async function borrarAgendasCacheMongo() {
     return new Promise<Array<any>>(function (resolve, reject) {
-        agendasCache.remove({}).exec();
-        console.log('Borrando AgendasCache en Mongo');
+        // // agendasCache.remove({}).exec();
+        // console.log('Borrando AgendasCache en Mongo');
     });
 }
+
+/** Dado un id de Organización devuelve el objeto completo */
+function getOrganizacion(idOrganizacion): any {
+    return new Promise((resolve, reject) => {
+        organizacion.findById(mongoose.Types.ObjectId(idOrganizacion), function (err, unaOrganizacion) {
+            if (err) {
+                return reject(err);
+            }
+            return resolve(unaOrganizacion);
+        });
+    });
+}
+
+
+//#region Inserta Paciente en SIPS
+async function insertaPacienteSips(pacienteSips: any) {
+    let query = 'INSERT INTO dbo.Sys_Paciente '
+        + ' ( idEfector ,'
+        + ' apellido , '
+        + ' nombre, '
+        + ' numeroDocumento, '
+        + ' idSexo, '
+        + ' fechaNacimiento, '
+        + ' idEstado, '
+        + ' idMotivoNI, '
+        + ' idPais, '
+        + ' idProvincia, '
+        + ' idNivelInstruccion, '
+        + ' idSituacionLaboral, '
+        + ' idProfesion, '
+        + ' idOcupacion, '
+        + ' calle, '
+        + ' numero, '
+        + ' piso, '
+        + ' departamento, '
+        + ' manzana, '
+        + ' idBarrio, '
+        + ' idLocalidad, '
+        + ' idDepartamento, '
+        + ' idProvinciaDomicilio, '
+        + ' referencia, '
+        + ' informacionContacto, '
+        + ' cronico, '
+        + ' idObraSocial, '
+        + ' idUsuario, '
+        + ' fechaAlta, '
+        + ' fechaDefuncion, '
+        + ' fechaUltimaActualizacion, '
+        + ' idEstadoCivil, '
+        + ' idEtnia, '
+        + ' idPoblacion, '
+        + ' idIdioma, '
+        + ' otroBarrio, '
+        + ' camino, '
+        + ' campo, '
+        + ' esUrbano, '
+        + ' lote, '
+        + ' parcela, '
+        + ' edificio, '
+        + ' activo, '
+        + ' fechaAltaObraSocial, '
+        + ' numeroAfiliado, '
+        + ' numeroExtranjero, '
+        + ' telefonoFijo, '
+        + ' telefonoCelular, '
+        + ' email, '
+        + ' latitud, '
+        + ' longitud, '
+        + ' objectId ) '
+        + ' VALUES( '
+        + pacienteSips.idEfector + ', '
+        + "'" + pacienteSips.apellido + "',"
+        + "'" + pacienteSips.nombre + "', "
+        + pacienteSips.numeroDocumento + ', '
+        + pacienteSips.idSexo + ', '
+        + "'" + pacienteSips.fechaNacimiento + "',"
+        + pacienteSips.idEstado + ', '
+        + pacienteSips.idMotivoNI + ', '
+        + pacienteSips.idPais + ', '
+        + pacienteSips.idProvincia + ', '
+        + pacienteSips.idNivelInstruccion + ', '
+        + pacienteSips.idSituacionLaboral + ', '
+        + pacienteSips.idProfesion + ', '
+        + pacienteSips.idOcupacion + ', '
+        + "'" + pacienteSips.calle + "', "
+        + pacienteSips.numero + ', '
+        + "'" + pacienteSips.piso + "', "
+        + "'" + pacienteSips.departamento + "', "
+        + "'" + pacienteSips.manzana + "', "
+        + pacienteSips.idBarrio + ', '
+        + pacienteSips.idLocalidad + ', '
+        + pacienteSips.idDepartamento + ', '
+        + pacienteSips.idProvinciaDomicilio + ', '
+        + "'" + pacienteSips.referencia + "', "
+        + "'" + pacienteSips.informacionContacto + "', "
+        + pacienteSips.cronico + ', '
+        + pacienteSips.idObraSocial + ', '
+        + pacienteSips.idUsuario + ', '
+        + "'" + pacienteSips.fechaAlta + "', "
+        + "'" + pacienteSips.fechaDefuncion + "', "
+        + "'" + pacienteSips.fechaUltimaActualizacion + "', "
+        + pacienteSips.idEstadoCivil + ', '
+        + pacienteSips.idEtnia + ', '
+        + pacienteSips.idPoblacion + ', '
+        + pacienteSips.idIdioma + ', '
+        + "'" + pacienteSips.otroBarrio + "', "
+        + "'" + pacienteSips.camino + "', "
+        + "'" + pacienteSips.campo + "', "
+        + pacienteSips.esUrbano + ', '
+        + "'" + pacienteSips.lote + "', "
+        + "'" + pacienteSips.parcela + "', "
+        + "'" + pacienteSips.edificio + "', "
+        + pacienteSips.activo + ', '
+        + "'" + pacienteSips.fechaAltaObraSocial + "', "
+        + "'" + pacienteSips.numeroAfiliado + "', "
+        + "'" + pacienteSips.numeroExtranjero + "', "
+        + "'" + pacienteSips.telefonoFijo + "', "
+        + "'" + pacienteSips.telefonoCelular + "', "
+        + "'" + pacienteSips.email + "', "
+        + "'" + pacienteSips.latitud + "', "
+        + "'" + pacienteSips.longitud + "', "
+        + "'" + pacienteSips.objectId + "' "
+        + ') ';
+
+    let idPacienteGrabadoSips = await executeQuery(query);
+
+    return idPacienteGrabadoSips;
+}
+//#endregion
+
+// #region GetPacienteMPI
+/** Este método se llama desde grabaTurnoSips */
+async function getPacienteMPI(pacienteId: any) {
+
+    let pacienteEncontrado = await paciente.buscarPaciente(pacienteId);
+
+    let pacienteSips = {
+        idEfector: '205',
+        nombre: pacienteEncontrado.paciente.nombre,
+        apellido: pacienteEncontrado.paciente.apellido,
+        numeroDocumento: pacienteEncontrado.paciente.documento,
+        idSexo: (pacienteEncontrado.paciente.sexo === 'masculino' ? 3 : pacienteEncontrado.paciente.sexo === 'femenino' ? 2 : 1),
+        fechaNacimiento: moment(pacienteEncontrado.paciente.fechaNacimiento).format('YYYYMMDD'),
+        idEstado: 3, /* Estado Validado en SIPS*/
+        idMotivoNI: 0,
+        idPais: 54,
+        idProvincia: 139,
+        idNivelInstruccion: 0,
+        idSituacionLaboral: 0,
+        idProfesion: 0,
+        idOcupacion: 0,
+        calle: '',
+        numero: 0,
+        piso: '',
+        departamento: '',
+        manzana: '',
+        idBarrio: -1,
+        idLocalidad: 52,
+        idDepartamento: 557,
+        idProvinciaDomicilio: 139,
+        referencia: '',
+        informacionContacto: '',
+        cronico: 0,
+        idObraSocial: 499,
+        idUsuario: idUsuario,
+        fechaAlta: moment().format('YYYYMMDD HH:mm:ss'),
+        fechaDefuncion: '19000101',
+        fechaUltimaActualizacion: moment().format('YYYYMMDD HH:mm:ss'),
+        idEstadoCivil: 0,
+        idEtnia: 0,
+        idPoblacion: 0,
+        idIdioma: 0,
+        otroBarrio: '',
+        camino: '',
+        campo: '',
+        esUrbano: 1,
+        lote: '',
+        parcela: '',
+        edificio: '',
+        activo: 1,
+        fechaAltaObraSocial: '19000101',
+        numeroAfiliado: null,
+        numeroExtranjero: '',
+        telefonoFijo: 0,
+        telefonoCelular: 0,
+        email: '',
+        latitud: 0,
+        longitud: 0,
+        objectId: pacienteEncontrado.paciente._id
+
+
+    };
+
+    let idPacienteGrabadoSips = await insertaPacienteSips(pacienteSips);
+
+    return idPacienteGrabadoSips;
+}
+
+//#endregion
