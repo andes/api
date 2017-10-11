@@ -302,9 +302,8 @@ function existeTurnoSips(turno: any) {
 }
 
 async function grabaTurnoSips(turno, idAgendaSips) {
-    console.log('grabaTurnoSips: ', turno);
 
-    let pacienteId = await getPacienteMPI(turno.paciente.id);
+    let pacienteId = await getPacienteMPI(turno.paciente, idAgendaSips);
 
     let fechaTurno = moment(turno.horaInicio).format('YYYYMMDD');
     let horaTurno = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
@@ -434,14 +433,16 @@ async function borrarAgendasCacheMongo() {
 }
 
 /** Dado un id de Organización devuelve el objeto completo */
-function getOrganizacion(idOrganizacion): any {
-    return new Promise((resolve, reject) => {
-        organizacion.findById(mongoose.Types.ObjectId(idOrganizacion), function (err, unaOrganizacion) {
-            if (err) {
-                return reject(err);
-            }
-            return resolve(unaOrganizacion);
-        });
+function getEfector(idAgendaSIps): any {
+    return new Promise(function (resolve, reject) {
+        return pool.request()
+            .input('idAgenda', sql.Int, idAgendaSIps)
+            .query('SELECT idEfector FROM dbo.CON_Agenda WHERE idAgenda = @idAgenda')
+            .then(result => {
+                resolve(result[0].idEfector);
+            }).catch(err => {
+                reject(err);
+            });
     });
 }
 
@@ -564,12 +565,13 @@ async function insertaPacienteSips(pacienteSips: any) {
 
 // #region GetPacienteMPI
 /** Este método se llama desde grabaTurnoSips */
-async function getPacienteMPI(pacienteId: any) {
+async function getPacienteMPI(pacienteTurno: any, idAgendaSips: any) {
 
-    let pacienteEncontrado = await paciente.buscarPaciente(pacienteId);
+    let pacienteEncontrado = await paciente.buscarPaciente(pacienteTurno.id);
+    let idEfectorSips = await getEfector(idAgendaSips);
 
     let pacienteSips = {
-        idEfector: '205',
+        idEfector: idEfectorSips,
         nombre: pacienteEncontrado.paciente.nombre,
         apellido: pacienteEncontrado.paciente.apellido,
         numeroDocumento: pacienteEncontrado.paciente.documento,
@@ -621,8 +623,6 @@ async function getPacienteMPI(pacienteId: any) {
         latitud: 0,
         longitud: 0,
         objectId: pacienteEncontrado.paciente._id
-
-
     };
 
     let idPacienteGrabadoSips = await insertaPacienteSips(pacienteSips);
