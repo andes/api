@@ -2,7 +2,7 @@ import { enviarMail } from '../../config.private';
 import * as debug from 'debug';
 import * as fs from 'fs';
 let handlebars = require('handlebars');
-
+const path = require('path');
 const nodemailer = require('nodemailer');
 let log = debug('sendMail');
 
@@ -40,11 +40,12 @@ export function sendMail(options: MailOptions) {
 }
 
 
-export function renderHTML(templateName: string, extras: any) : Promise<string> {
+export function renderHTML(templateName: string, extras: any): Promise<string> {
     return new Promise((resolve, reject) => {
         // [TODO] Analizar el path relativo o absoluto
-        const TEMPLATE_PATH = './templates/emails/';
-        fs.readFile(TEMPLATE_PATH + templateName, { encoding: 'utf-8' }, (err, html) => {
+        const TEMPLATE_PATH = './templates/';
+        const url = path.join(TEMPLATE_PATH, templateName);
+        fs.readFile(url, { encoding: 'utf-8' }, (err, html) => {
             if (err) {
                 return reject(err);
             }

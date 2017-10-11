@@ -9,7 +9,7 @@ export let roboSchema = new mongoose.Schema({
     subject: String,
     email: String,
 
-    // Template name an extra data to render HTML emails
+    // Template name and extra data to render HTML emails (view handlebars)
     template: String,
     extras: mongoose.Schema.Types.Mixed,
 

@@ -1,11 +1,13 @@
 import * as configPrivate from '../../config.private';
-
 import * as mailTools from './sendEmail';
 import * as smsTools from './sendSms';
 import { roboModel } from './roboSchema';
 
+import * as debug from 'debug';
+let log = debug('roboSender');
 
 export function roboSender() {
+    log('Running roboSender');
     return new Promise((resolve, reject) => {
 
         let condition = {
@@ -16,12 +18,16 @@ export function roboSender() {
         let counter = 0;
 
         roboModel.find(condition).then((enviosPendientes: any[]) => {
-
+            log('Encuentro ', enviosPendientes.length, 'mensajes para enviar');
             if (enviosPendientes.length > 0) {
                 enviosPendientes.forEach(async env => {
                     try {
                         if (env.email) {
                             let html = '';
+
+                            /**
+                             * Renderizamo con handlebars el template elegido
+                             */
                             if (env.template && env.template.length) {
                                 html = await mailTools.renderHTML(env.template, env.extras);
                             } else {
@@ -35,6 +41,7 @@ export function roboSender() {
                                 text: env.message,
                                 html: html
                             };
+                            log('Enviando email a', env.email);
                             await mailTools.sendMail(mailOptions);
                         }
 
@@ -43,12 +50,14 @@ export function roboSender() {
                                 telefono: env.phone,
                                 mensaje: env.message
                             };
+                            log('Enviando SMS a', env.phone);
                             await smsTools.sendSms(smsOptions);
                         }
 
                         await changeState(env, 'success');
 
                     } catch (errorSending) {
+                        log('Error enviando mensaje');
                         if (env.tries > 5) {
                             await changeState(env, 'error');
                         } else {
@@ -57,11 +66,13 @@ export function roboSender() {
                     }
                     counter++;
                     if (counter === enviosPendientes.length) {
-                        resolve();
+                        log('Termina la ejecución');
+                        return resolve();
                     }
                 });
             } else {
-                resolve();
+                log('Termina la ejecución');
+                return resolve();
                 // db.close();
                 // console.log('Proceso finalizado, nada para enviar: ', Date.now());
             }

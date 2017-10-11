@@ -24,17 +24,17 @@ export function sendSms(smsOptions: SmsOptions) {
                     try {
                         let xmlFaultString = getXMLOption(clientOperador.lastResponse, '//faultstring');
                         if (xmlFaultString) {
-                            return reject(xmlFaultString.text());
+                            return reject(xmlFaultString);
                         }
                     } catch (e) {
-                        return reject(e);
+                        // return reject(e);
                     }
                 }
                 if (result && result.return) {
                     let carrier;
                     try {
                         let xmlDato = getXMLOption(result.return, '//dato');
-                        carrier = operador(xmlDato.text());
+                        carrier = operador(xmlDato);
                     } catch (ee) {
                         return reject(ee);
                     }
@@ -51,10 +51,10 @@ export function sendSms(smsOptions: SmsOptions) {
                         createClient(SMSendpoints.urlNumero).then((clientEnvio: any) => {
                             clientEnvio.envioSMSOperador(argsNumero, function (errEnvio, resultEnvio, _raw) {
                                 try {
-                                    let status = getXMLOption(resultEnvio.return, '//status');
                                     if (errEnvio) {
                                         return reject(errEnvio);
                                     } else {
+                                        let status = getXMLOption(resultEnvio.return, '//status');
                                         return status === '0' ? resolve(status) : reject(status);
                                     }
                                 } catch (eee) {
@@ -108,12 +108,12 @@ function createClient(url) {
             }
         };
 
-        soap.createClient(SMSendpoints.urlOperador, opciones, function (errCreate, clientOperador) {
+        soap.createClient(url, opciones, function (errCreate, client) {
             if (errCreate) {
                 reject(errCreate);
             } else {
-                if (clientOperador) {
-                    resolve(clientOperador);
+                if (client) {
+                    resolve(client);
                 } else {
                     reject('no se pudo create el cliente SOAP');
                 }
