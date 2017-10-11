@@ -7,7 +7,7 @@ export let schema = new mongoose.Schema({
     term: String,
     fsn: String,
     semanticTag: String,
-    refsetIds: Array
+    refsetIds: [String]
 });
 
 // Se asegura que los índices estén creados
