@@ -62,39 +62,12 @@ export function updatePaciente(pacienteObj, data, req) {
         pacienteObj.reportarError = data.reportarError;
         pacienteObj.notas = data.notas;
 
-
-        console.log('datos del paciente actualizado antes del save---------->: ', pacienteObj);
-
-        // pacienteObj.nombre = data.nombre ? data.nombre : pacienteObj.nombre;
-        // pacienteObj.apellido = data.apellido ? data.apellido : pacienteObj.apellido;
-
-        // pacienteObj.documento = data.documento ? data.documento : pacienteObj.documento;
-        // pacienteObj.estado = data.estado ? data.estado : pacienteObj.estado;
-        // pacienteObj.sexo = data.sexo ? data.sexo : pacienteObj.sexo;
-        // pacienteObj.fechaNacimiento = data.fechaNacimiento ? data.fechaNacimiento : pacienteObj.fechaNacimiento;
-
-        // pacienteObj.genero = data.genero ? data.genero : pacienteObj.genero;
-        // pacienteObj.alias = data.alias ? data.alias : pacienteObj.alias;
-        // pacienteObj.activo = data.activo ? data.activo : pacienteObj.activo;
-        // pacienteObj.estadoCivil = data.estadoCivil ? data.estadoCivil : pacienteObj.estadoCivil;
-        // pacienteObj.entidadesValidadoras = data.entidadesValidadoras || pacienteObj.entidadesValidadoras;
-        // pacienteObj.financiador = data.financiador || pacienteObj.financiador;
-        // pacienteObj.relaciones = data.relaciones || pacienteObj.relaciones;
-        // pacienteObj.direccion = data.direccion || pacienteObj.direccion;
-        // pacienteObj.contacto = data.contacto || pacienteObj.contacto;
-        // pacienteObj.identificadores = data.identificadores || pacienteObj.identificadores;
-        // pacienteObj.scan = data.scan || pacienteObj.scan;
-        // pacienteObj.reportarError = data.reportarError || pacienteObj.reportarError;
-        // pacienteObj.notas = data.notas || pacienteObj.notas;
         // Habilita auditoria y guarda
         if (req) {
             Auth.audit(pacienteObj, req);
         }
-        
         pacienteObj.save(function (err2) {
             if (err2) {
-
-                console.log('error grave en el save del updatePaciente: ', err2, pacienteObj);
                 return reject(err2);
             }
             let connElastic = new ElasticSync();

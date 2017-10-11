@@ -27,31 +27,26 @@ export class ElasticSync {
                 q: '_id:' + id
             }).then((body) => {
                 let hits = body.hits.hits;
-                console.log('El valor de hits: ', hits);
                 if (hits.length > 0) {
                     this.update(id, data).then(() => {
-                        console.log('update elastic Sync', data);
                         resolve(true);
                     }).catch((error) => {
                         reject(error);
                     });
                 } else {
                     this.create(id, data).then(() => {
-                        console.log('create elastic Sync', data);
                         resolve(false);
                     }).catch((error) => {
                         reject(error);
                     });
                 }
             }).catch((error) => {
-                console.log('palo: ', error);
                 reject(error);
             });
         });
     }
 
     public search(query) {
-        console.log(query);
         let searchObj = {};
         if (query.q) {
             searchObj = query;
@@ -74,10 +69,8 @@ export class ElasticSync {
                 body: data
             }, function (error, response) {
                 if (error) {
-                    console.log('error gros en create elastico', error);
                     reject(error);
                 }
-                console.log('paso por el create------------->', data);
                 resolve(true);
             });
         });
@@ -96,6 +89,7 @@ export class ElasticSync {
         });
     }
 
+    // Cambiamos este método ya que teníamos problemas con el metadata de Elastic para pacientes viejos creados con mongoconnector
     // public update(id, data) {
     //     return new Promise((resolve, reject) => {
     //         this.connElastic.update({
@@ -124,10 +118,8 @@ export class ElasticSync {
                 id
             }, function (error, response) {
                 if (error) {
-                    console.log('error gros en delete elastico', error);
                     reject(error);
                 }
-                console.log('Lo hago poronga de elastic');
                 resolve(true);
             });
         });
