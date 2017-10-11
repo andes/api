@@ -10,9 +10,9 @@ router.get('/cie10', function (req, res, next) {
     let query;
     query = cie10.model.find({});
     let busqueda = [
-        {'codigo': RegExp('^.*' + req.query.nombre + '.*$', 'i') },
-        {'sinonimo': RegExp('^.*' + req.query.nombre + '.*$', 'i') },
-        {'nombre': RegExp('^.*' + req.query.nombre + '.*$', 'i') },
+        { 'codigo': RegExp('^.*' + req.query.nombre + '.*$', 'i') },
+        { 'sinonimo': RegExp('^.*' + req.query.nombre + '.*$', 'i') },
+        { 'nombre': RegExp('^.*' + req.query.nombre + '.*$', 'i') },
     ];
     query.or(busqueda);
     let skip = parseInt(req.query.skip || 0, 10);
