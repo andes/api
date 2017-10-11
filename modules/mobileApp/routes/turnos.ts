@@ -13,7 +13,6 @@ import * as authController from '../controller/AuthController';
 import * as recordatorioController from '../controller/RecordatorioController';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import * as controllerPaciente from '../../../core/mpi/controller/paciente';
-import { sendSms, SmsOptions } from '../../../utils/sendSms';
 
 // let async = require('async');
 
