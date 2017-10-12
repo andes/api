@@ -424,3 +424,55 @@ export function updateFotoMobile(req, data) {
     data.fotoMobile = req.body.fotoMobile;
 }
 /* Hasta acá funciones del PATCH */
+
+
+
+/**
+ * Busca paciente similares en MPI o ANDES. Vía mongo.
+ *
+ * @param {pacienteSchema} objective Paciente  buscar
+ * @param {string} where Enum 'andes' | 'mpi'
+ * @param {object} conditions Condiciones de busqueda
+ * @param {objcet} _weights Pesos del matching
+ */
+
+export function searchSimilar(objective, where: string, conditions, _weights = null): Promise<{value: Number, paciente: any}[]> {
+    let db;
+    if (where === 'andes') {
+        db = paciente;
+    } else {
+        db = pacienteMpi;
+    }
+    let weights = _weights || config.mpi.weightsUpdater;
+    let match = new Matching();
+    return new Promise((resolve, reject) => {
+
+        db.find(conditions).then((pacientes) => {
+            let matchings: {value: Number, paciente: any}[] = [];
+            if (pacientes && pacientes.length) {
+                for (let i = 0; i < pacientes.length; i++) {
+
+                    let pac = pacientes[i];
+                    let valueMatch = match.matchPersonas(objective, pac, weights, config.algoritmo);
+
+                    matchings.push({
+                        paciente: pac,
+                        value: valueMatch
+                    });
+                }
+
+                let sortMatching = function (a, b) {
+                    return b.value - a.value;
+                };
+
+                matchings.sort(sortMatching);
+                return resolve(matchings);
+
+            } else {
+                return resolve(matchings);
+            }
+        });
+
+    });
+
+}
