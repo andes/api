@@ -1,4 +1,6 @@
-import { Client } from 'elasticsearch';
+import {
+    Client
+} from 'elasticsearch';
 import * as configPrivate from '../config.private';
 
 export class ElasticSync {
@@ -21,23 +23,25 @@ export class ElasticSync {
 
     private _sync(id, data) {
         return new Promise((resolve, reject) => {
-            this.search({ q: '_id:' + id }).then((body) => {
+            this.search({
+                q: '_id:' + id
+            }).then((body) => {
                 let hits = body.hits.hits;
                 if (hits.length > 0) {
                     this.update(id, data).then(() => {
                         resolve(true);
                     }).catch((error) => {
-                        reject();
+                        reject(error);
                     });
                 } else {
                     this.create(id, data).then(() => {
                         resolve(false);
                     }).catch((error) => {
-                        reject();
+                        reject(error);
                     });
                 }
             }).catch((error) => {
-                 reject();
+                reject(error);
             });
         });
     }
@@ -72,23 +76,38 @@ export class ElasticSync {
         });
     }
 
+
     public update(id, data) {
-        return new Promise((resolve, reject) => {
-            this.connElastic.update({
-                index: this.INDEX,
-                type: this.TYPE,
-                id,
-                body: {
-                    doc: data
-                }
-            }, function (error, response) {
-                if (error) {
-                    reject(error);
-                }
-                resolve(true);
-            });
+        return new Promise(async (resolve, reject) => {
+            try {
+                await this.delete(id);
+                await this.create(id, data);
+                resolve();
+            } catch (error) {
+                reject(error);
+            }
         });
     }
+
+    // Cambiamos este método ya que teníamos problemas con el metadata de Elastic para pacientes viejos creados con mongoconnector
+    // public update(id, data) {
+    //     return new Promise((resolve, reject) => {
+    //         this.connElastic.update({
+    //             index: this.INDEX,
+    //             type: this.TYPE,
+    //             id,
+    //             body: {
+    //                 doc: data
+    //             }
+    //         }, function (error, response) {
+    //             if (error) {
+    //                 console.log('error gros en update elastico', error, data);
+    //                 reject(error);
+    //             }
+    //             resolve(true);
+    //         });
+    //     });
+    // }
 
     public delete(id) {
         return new Promise((resolve, reject) => {
