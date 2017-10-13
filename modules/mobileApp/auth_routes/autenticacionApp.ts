@@ -327,7 +327,7 @@ router.post('/olvide-password', function (req, res, next) {
             }
 
             // enviamos email de reestablecimiento de password
-            authController.enviarCodigoCambioPassword(user);
+            authController.enviarCodigoCambioPassword(datosUsuario);
 
             res.status(200).json({
                 valid: true
