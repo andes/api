@@ -84,6 +84,11 @@ router.put('/paciente/:id', function (req: any, res, next) {
     }
 });
 
+/**
+ * Actualización de la dirección y la fotoMobile
+ * [No esta en uso]
+ */
+
 router.patch('/pacientes/:id', function (req, res, next) {
     let idPaciente = req.params.id;
     let pacientes = (req as any).user.pacientes;

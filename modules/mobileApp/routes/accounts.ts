@@ -30,6 +30,7 @@ router.put('/account', function (req: any, res, next) {
     });
 });
 
+
 /**
  * Crea un usuario apartir de un paciente
  * @param id {string} ID del paciente a crear
@@ -37,10 +38,6 @@ router.put('/account', function (req: any, res, next) {
 
 router.post('/create/:id', function (req: any, res, next) {
 
-    // [2017-09-28] TODO: Revisar qué permisos chequear
-    // if (!req.user.profesional) {
-    //     return res.status(401).send('unauthorized');
-    // }
     let pacienteId = req.params.id;
     let contacto = req.body;
     if (!mongoose.Types.ObjectId.isValid(pacienteId)) {
@@ -56,7 +53,9 @@ router.post('/create/:id', function (req: any, res, next) {
     }).catch(() => {
         return res.send({ error: 'paciente_error' });
     });
+
 });
+
 
 /**
  * Check estado de la cuenta
@@ -64,12 +63,6 @@ router.post('/create/:id', function (req: any, res, next) {
  */
 
 router.get('/check/:id', function (req: any, res, next) {
-
-    // [2017-09-28] TODO: Revisar qué permisos chequear
-    // if (!req.user.profesional) {
-    //     return res.status(401).send('unauthorized');
-    // }
-
     let pacienteId = req.params.id;
     if (!mongoose.Types.ObjectId.isValid(pacienteId)) {
         return res.status(422).send({ error: 'ObjectID Inválido' });
@@ -88,27 +81,10 @@ router.get('/check/:id', function (req: any, res, next) {
 
 
 /**
- * Check estado de la cuenta
- * @param id {string} ID del paciente a chequear
+ * Reenviar código de activación a un paciente
+ *
+ * @param {ObjectId} id ID del paciente
  */
-
-router.put('/update/:id', function (req: any, res, next) {
-
-    let pacienteId = req.params.id;
-    if (!mongoose.Types.ObjectId.isValid(pacienteId)) {
-        return res.status(422).send({ error: 'ObjectID Inválido' });
-    }
-    return controllerPaciente.buscarPaciente(pacienteId).then((resultado) => {
-        let pacienteObj = resultado.paciente;
-        authController.checkAppAccounts(pacienteObj).then(() => {
-            return res.send({ message: 'OK' });
-        }).catch((error) => {
-            return res.send(error);
-        });
-    }).catch(() => {
-        return res.send({ error: 'paciente_error' });
-    });
-});
 
 router.post('/v2/reenviar-codigo', (req, res, next) => {
     let pacienteId = req.body.id;
@@ -118,49 +94,22 @@ router.post('/v2/reenviar-codigo', (req, res, next) => {
 
     return controllerPaciente.buscarPaciente(pacienteId).then((resultado) => {
         let pacienteObj = resultado.paciente;
-        authController.checkAppAccounts(pacienteObj).then((resultado2) => {
-            return res.send(resultado2);
+        authController.checkAppAccounts(pacienteObj).then((resultado2: any) => {
+            if (resultado2.account) {
+                let account = resultado2.account;
+
+                authController.enviarCodigoVerificacion(account);
+
+                return res.json({ status: 'OK' });
+
+            }
+            return res.send({ error: 'paciente_error' });
         }).catch((error) => {
             return res.send(error);
         });
     }).catch(() => {
         return res.send({ error: 'paciente_error' });
     });
-
-
-
-    // pacienteApp.findOne({ email: email }, function (Match, user: any) {
-    //     if (!user) {
-    //         return res.status(422).json({
-    //             message: 'acount_not_exists'
-    //         });
-    //     }
-    //     if (!user.activacionApp && user.pacientes.length > 0) {
-
-    //         user.codigoVerificacion = authController.generarCodigoVerificacion();
-    //         user.expirationTime = new Date(Date.now() + authController.expirationOffset);
-    //         user.save(function (errSave, userSaved) {
-    //             if (errSave) {
-    //                 return next(errSave);
-    //             }
-
-    //             authController.enviarCodigoVerificacion(userSaved);
-    //             res.status(200).json({
-    //                 valid: true
-    //             });
-
-    //         });
-
-    //     } else {
-    //         if (!(user.pacientes.length > 0)) {
-    //             res.status(422).send({ message: 'account_active' });
-    //         } else {
-    //             res.status(422).send({ message: 'account_not_verified' });
-    //         }
-    //     }
-    //     return null;
-
-    // });
 });
 
 

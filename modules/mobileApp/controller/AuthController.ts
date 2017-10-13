@@ -163,20 +163,6 @@ export function checkAppAccounts(pacienteData) {
                 return resolve({ message: 'account_assigned', account: docs[0] });
             } else {
                 return resolve({message: 'account_doesntExists', account: null});
-                // let email = searchContacto(pacienteData, 'email');
-                // if (email) {
-
-                //     pacienteApp.findOne({ email }, function (errFind, existingUser) {
-                //         if (existingUser) {
-                //             return reject({ error: 'email_exists' });
-                //         } else {
-                //             return resolve(true);
-                //         }
-                //     });
-
-                // } else {
-                //    return reject({ error: 'email_not_found' });
-                // }
             }
         });
     });

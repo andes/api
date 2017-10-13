@@ -15,6 +15,10 @@ const weights = {
     birthDate: 0.2
 };
 
+/**
+ * Obtenemos las vacunas del Paciente App
+ */
+
 router.get('/vacunas', function (req: any, res, next) {
     let conditions = {};
 
@@ -63,6 +67,11 @@ router.get('/vacunas', function (req: any, res, next) {
         return next(error);
     });
 });
+
+
+/**
+ * Cantidad de vacunas de un paciente
+ */
 
 router.get('/vacunas/count', function (req: any, res, next) {
     let dni = req.query.dni;

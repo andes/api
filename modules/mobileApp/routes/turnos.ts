@@ -31,6 +31,10 @@ router.get('/turnos/recordatorioTurno', function (req, res, next) {
     res.json({});
 });
 
+/**
+ * Get turnos del Paciente App
+ */
+
 router.get('/turnos', function (req: any, res, next) {
     let pipelineTurno = [];
     let turnos = [];
