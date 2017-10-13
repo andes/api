@@ -123,13 +123,10 @@ function grabaAgendaSips(agendaSips: any) {
     //graba dni '0', correspondiente a 'Sin especifiar', efector SSS.
     let dniProfesional = agendaSips.profesionales[0] ? agendaSips.profesionales[0].documento : '0';
 
-    //TODO: Parametro Hardcodeado
-    agendaSips.idConsultorio = 273;
-
     let query;
     return new Promise((resolve: any, reject: any) => {
 
-        getDatosSips(codigoSisa, dniProfesional, tipoPrestacion).then(function (values) {
+        getDatosSips(codigoSisa, dniProfesional, tipoPrestacion).then(async function (values) {
 
             let idEfector = values[0][0].idEfector;
             let idProfesional = values[1][0].idProfesional;
@@ -137,11 +134,47 @@ function grabaAgendaSips(agendaSips: any) {
             let idServicio = values[2][0].idServicio;
             let idTipoPrestacion = 0;
 
+            let idConsultorio = await creaConsultorioSips(agendaSips, idEfector);
+            console.log("Id Consultorioo: ", idConsultorio);
+
             query = "insert into Con_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, idMotivoInactivacion, multiprofesional, objectId) " +
-                "values (" + estado + ", " + idEfector + ", " + idServicio + ", " + idProfesional + ", " + idTipoPrestacion + ", " + idEspecialidad + ", " + agendaSips.idConsultorio + ", '" + fecha + "', " + duracionTurno + ", '" + horaInicio + "', '" + horaFin + "', " + maximoSobreTurnos + ", " + porcentajeTurnosDia + ", " + porcentajeTurnosAnticipados + ", " + citarPorBloques + " , " + cantidadInterconsulta + ", " + turnosDisponibles + ", " + idMotivoInactivacion + ", " + multiprofesional + ", '" + objectId + "')";
+                "values (" + estado + ", " + idEfector + ", " + idServicio + ", " + idProfesional + ", " + idTipoPrestacion + ", " + idEspecialidad + ", " + idConsultorio + ", '" + fecha + "', " + duracionTurno + ", '" + horaInicio + "', '" + horaFin + "', " + maximoSobreTurnos + ", " + porcentajeTurnosDia + ", " + porcentajeTurnosAnticipados + ", " + citarPorBloques + " , " + cantidadInterconsulta + ", " + turnosDisponibles + ", " + idMotivoInactivacion + ", " + multiprofesional + ", '" + objectId + "')";
+
+            console.log("Queryyy: ", query);
             executeQuery(query).then(function (data) {
                 resolve(data);
             });
+        });
+    });
+}
+
+async function creaConsultorioSips(agenda: any, idEfector: any) {
+
+    return new Promise(async (resolve: any, reject: any) => {
+        let idConsultorioTipo = await crearConsultorioTipoSips(agenda, idEfector);
+
+        let query = ' INSERT INTO dbo.CON_Consultorio '
+            + ' ( idEfector , idTipoConsultorio ,  nombre , Activo ) VALUES ( '
+            + idEfector + ','
+            + idConsultorioTipo + ','
+            + "'" + agenda.espacioFisico + "', "
+            + ' 1 )';
+
+        executeQuery(query).then(function (data) {
+            return resolve(data);
+        });
+    });
+}
+
+function crearConsultorioTipoSips(agenda, idEfector) {
+    return new Promise((resolve: any, reject: any) => {
+        let query = 'INSERT INTO dbo.CON_ConsultorioTipo '
+            + ' ( idEfector, nombre ) VALUES  ( '
+            + idEfector + ','
+            + "'" + agenda.espacioFisico + "' )";
+
+        executeQuery(query).then(function (data) {
+            return resolve(data);
         });
     });
 }
