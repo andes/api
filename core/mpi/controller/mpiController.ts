@@ -14,6 +14,7 @@ import {
     Auth
 } from '../../../auth/auth.class';
 import * as controllerPaciente from './paciente';
+import * as debug from 'debug';
 
 /**
  * Corrije nombre y apellido de los pacientes que ingresaron al repositorio
@@ -24,7 +25,7 @@ import * as controllerPaciente from './paciente';
  */
 export function mpiCorrector() {
     return new Promise( async (resolve, reject) => {
-        let counter = 0;
+        let logger = debug('mpiCorrector');
         let condicion = {
                $or:
                  [{entidadesValidadoras: {$nin: ['Sisa']}}, {reportarError: true}]
@@ -78,12 +79,12 @@ export function mpiCorrector() {
                         }
                     });
                 } catch (err) {
-                    console.log('Error: ', err);
+                    logger('Error', err);
                 }
             }
             return Promise.resolve();
         });
-        console.log('Proceso finalizado');
+        logger('Proceso finalizado');
         resolve();
     });
 }
