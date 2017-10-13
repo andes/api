@@ -5,7 +5,8 @@ import * as moment from 'moment';
 import { profesional } from '../../../core/tm/schemas/profesional';
 import { pacienteApp } from '../schemas/pacienteApp';
 import { NotificationService } from './NotificationService';
-import { sendSms, SmsOptions } from '../../../utils/sendSms';
+import { sendSms, ISms } from '../../../utils/roboSender';
+
 import * as debug from 'debug';
 
 let log = debug('RecordatorioController');
@@ -95,22 +96,20 @@ export function enviarTurnoRecordatorio() {
 
         elems.forEach((turno: any, index) => {
 
-            let smsOptions: SmsOptions = {
-                telefono: turno.paciente.telefono,
-                mensaje: 'Sr ' + turno.paciente.apellido + ' le recordamos que tiene un turno para el día: ' + moment(turno.fechaTurno).format('DD/MM/YYYY')
+            let smsOptions: ISms = {
+                phone: turno.paciente.telefono,
+                message: 'Sr ' + turno.paciente.apellido + ' le recordamos que tiene un turno para el día: ' + moment(turno.fechaTurno).format('DD/MM/YYYY')
             };
 
-            sendSms(smsOptions, function (res) {
-                if (res === '0') {
-                    turno.estadoEnvio = true;
-                    turno.save();
-                    log('El SMS se envío correctamente');
-                }
-            });
-        });
+            sendSms(smsOptions);
+            turno.estadoEnvio = true;
+            turno.save();
+            log('El SMS se envío correctamente');
 
+        });
     });
 }
+
 
 /**
  *
