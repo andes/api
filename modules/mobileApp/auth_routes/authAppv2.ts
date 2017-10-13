@@ -6,6 +6,7 @@ import * as authController from '../controller/AuthController';
 import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
 import * as agenda from '../../turnos/schemas/agenda';
+import * as moment from 'moment';
 
 let router = express.Router();
 let emailRegex = /^[a-z0-9]+(\.[_a-z0-9]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,15})$/;
@@ -150,9 +151,24 @@ router.post('/v2/registrar', function (req, res, next) {
 
 });
 
+/**
+ * Avisa a la app si hay una nueva versión y si es obligatorio actualizar
+ *
+ * Implementar la logica a medida que evoluciona la app
+ */
 
-// [TODO] Reenviar código de activacion
+router.post('/check-update', function(req, res, next) {
+    let app_version = req.body.app_version;
+    // Por el momento devolvemos que todo esta bien
+    return res.json({status: 'ok'});
 
-// [TODO] Reset ṕassword
+    // new-version advierte al usuario que hay una nueva versión
+    // return res.json({status: 'new-version'});
+
+    // Después de determinada fecha no la puede usar más.
+    // let days =  Math.ceil(moment().add(1, 'days').diff(moment(), 'days', true));
+    // return res.json({status: 'update-require' }); // calcular en base a días
+
+});
 
 export = router;
