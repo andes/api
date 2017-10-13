@@ -42,26 +42,9 @@ export function updatePaciente(pacienteObj, data, req) {
 
     return new Promise((resolve, reject) => {
         let pacienteOriginal = pacienteObj.toObject();
-        pacienteObj.nombre = data.nombre;
-        pacienteObj.apellido = data.apellido;
-        pacienteObj.documento = data.documento ? data.documento : pacienteObj.documento; // caso especial
-        pacienteObj.estado = data.estado ? data.estado : pacienteObj.estado; // Caso especial a revisar
-        pacienteObj.sexo =  data.sexo ? data.sexo : pacienteObj.sexo; // caso especial a revisar
-        pacienteObj.fechaNacimiento = data.fechaNacimiento ? data.fechaNacimiento : pacienteObj.fechaNacimiento; // caso especial
-        pacienteObj.genero = data.genero ? data.genero : pacienteObj.genero;
-        pacienteObj.alias = data.alias;
-        pacienteObj.activo = data.activo;
-        pacienteObj.estadoCivil = data.estadoCivil;
-        pacienteObj.entidadesValidadoras = data.entidadesValidadoras;
-        pacienteObj.financiador = data.financiador;
-        pacienteObj.relaciones = data.relaciones;
-        pacienteObj.direccion = data.direccion;
-        pacienteObj.contacto = data.contacto;
-        pacienteObj.identificadores = data.identificadores;
-        pacienteObj.scan = data.scan;
-        pacienteObj.reportarError = data.reportarError;
-        pacienteObj.notas = data.notas;
-
+        for (let key in data) {
+            pacienteObj[key] = data[key];
+        }
         // Habilita auditoria y guarda
         if (req) {
             Auth.audit(pacienteObj, req);
