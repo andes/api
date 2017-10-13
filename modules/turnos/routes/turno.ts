@@ -313,7 +313,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                                         prestacion: update[etiquetaPrestacion],
                                         tipoTurno: update[etiquetaTipoTurno] !== null ? update[etiquetaTipoTurno] : null,
                                     };
-                                    Logger.log(req, 'turnos', 'asignarTurno', datosOp);
+                                    Logger.log(req, 'citas', 'asignarTurno', datosOp);
 
                                     if (req.body.reasignado && req.body.reasignado === false) {
                                         let turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
@@ -378,7 +378,7 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, 
                         let datosOp = {
                             turno: update[etiquetaTurno]
                         };
-                        Logger.log(req, 'turnos', 'update', datosOp);
+                        Logger.log(req, 'citas', 'update', datosOp);
                     }
                     res.json(data);
 

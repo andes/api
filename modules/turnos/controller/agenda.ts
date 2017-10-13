@@ -2,6 +2,7 @@ import * as moment from 'moment';
 import * as agendaModel from '../../turnos/schemas/agenda';
 import { Auth } from '../../../auth/auth.class';
 import { userScheduler } from '../../../config.private';
+import { Logger } from '../../../utils/logService';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -554,13 +555,43 @@ export function actualizarAgendas() {
         }
 
         Auth.audit(agenda, (userScheduler as any));
+        this.saveAgenda(agenda).then((nuevaAgenda) => {
+            Logger.log(userScheduler, 'citas', 'actualizarAgendas', {
+                idAgenda: agenda._id,
+                organizacion: agenda.organizacion,
+                horaInicio: agenda.horaInicio,
+                updatedAt: agenda.updatedAt,
+                updatedBy: agenda.updatedBy
 
-        agenda.save((error, result) => {
-            if (error) {
-                return (error);
-            }
+            });
+        }).catch(error => {
+            return (error);
         });
 
     });
     return 'Agendas actualizadas';
+
 }
+
+
+/**
+ * Realiza el save de una agenda.
+ * El log del cambio debe guardarse luego de ejecutarse esta promise
+ *
+ * @export
+ * @param {any} nuevaAgenda
+ * @returns
+ */
+export function saveAgenda(nuevaAgenda) {
+    return new Promise((resolve, reject) => {
+        nuevaAgenda.save((err, dataAgenda) => {
+            if (err) {
+                reject(err);
+            }
+            if (dataAgenda) {
+                resolve(dataAgenda);
+            }
+        });
+    });
+}
+

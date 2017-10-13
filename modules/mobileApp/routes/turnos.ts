@@ -206,7 +206,7 @@ router.post('/turnos/cancelar', function (req: any, res, next) {
 
                 Auth.audit(agendaObj, req);
                 return agendaObj.save(function (error) {
-                    Logger.log(req, 'turnos', 'update', {
+                    Logger.log(req, 'citas', 'update', {
                         accion: 'liberarTurno',
                         ruta: req.url,
                         method: req.method,
@@ -264,7 +264,7 @@ router.post('/turnos/confirmar', function (req: any, res, next) {
 
                     Auth.audit(agendaObj, req);
                     return agendaObj.save(function (error) {
-                        Logger.log(req, 'turnos', 'update', {
+                        Logger.log(req, 'citas', 'update', {
                             accion: 'confirmar',
                             ruta: req.url,
                             method: req.method,
@@ -327,7 +327,7 @@ router.post('/turnos/asistencia', function (req: any, res, next) {
 
                     Auth.audit(agendaObj, req);
                     return agendaObj.save(function (error) {
-                        Logger.log(req, 'turnos', 'update', {
+                        Logger.log(req, 'citas', 'update', {
                             accion: 'asistencia',
                             ruta: req.url,
                             method: req.method,
