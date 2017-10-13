@@ -89,8 +89,9 @@ router.get('/:dni', function (req, res, next) {
     }
     authUsers.findOne({ usuario: req.params.dni }).then((resultado: any) => {
         if (resultado) {
-            res.json(resultado);
+            return res.json([resultado]);
         }
+        return res.json([]);
     }).catch((err) => {
         return next(err);
     });

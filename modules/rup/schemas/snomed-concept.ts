@@ -4,5 +4,5 @@ export let SnomedConcept = {
     term: String,
     fsn: String,
     semanticTag: SemanticTag,
-    refsets: [String]
+    refsetIds: [String]
 };

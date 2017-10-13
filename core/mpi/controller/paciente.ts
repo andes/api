@@ -42,27 +42,9 @@ export function updatePaciente(pacienteObj, data, req) {
 
     return new Promise((resolve, reject) => {
         let pacienteOriginal = pacienteObj.toObject();
-        pacienteObj.nombre = data.nombre ? data.nombre : pacienteObj.nombre;
-        pacienteObj.apellido = data.apellido ? data.apellido : pacienteObj.apellido;
-
-        pacienteObj.documento = data.documento ? data.documento : pacienteObj.documento;
-        pacienteObj.estado = data.estado ? data.estado : pacienteObj.estado;
-        pacienteObj.sexo = data.sexo ? data.sexo : pacienteObj.sexo;
-        pacienteObj.fechaNacimiento = data.fechaNacimiento ? data.fechaNacimiento : pacienteObj.fechaNacimiento;
-
-        pacienteObj.genero = data.genero ? data.genero : pacienteObj.genero;
-        pacienteObj.alias = data.alias ? data.alias : pacienteObj.alias;
-        pacienteObj.activo = data.activo ? data.activo : pacienteObj.activo;
-        pacienteObj.estadoCivil = data.estadoCivil ? data.estadoCivil : pacienteObj.estadoCivil;
-        pacienteObj.entidadesValidadoras = data.entidadesValidadoras || pacienteObj.entidadesValidadoras;
-        pacienteObj.financiador = data.financiador || pacienteObj.financiador;
-        pacienteObj.relaciones = data.relaciones || pacienteObj.relaciones;
-        pacienteObj.direccion = data.direccion || pacienteObj.direccion;
-        pacienteObj.contacto = data.contacto || pacienteObj.contacto;
-        pacienteObj.identificadores = data.identificadores || pacienteObj.identificadores;
-        pacienteObj.scan = data.scan || pacienteObj.scan;
-        pacienteObj.reportarError = data.reportarError || pacienteObj.reportarError;
-        pacienteObj.notas = data.notas || pacienteObj.notas;
+        for (let key in data) {
+            pacienteObj[key] = data[key];
+        }
         // Habilita auditoria y guarda
         if (req) {
             Auth.audit(pacienteObj, req);
@@ -332,11 +314,12 @@ export function deletePacienteAndes(objectId) {
             }
 
             patientFound.remove();
-            connElastic.delete(patientFound._id.toString()).then(() => {
-                resolve(patientFound);
-            }).catch(error => {
-                resolve(patientFound);
-            });
+            resolve(patientFound);
+            // connElastic.delete(patientFound._id.toString()).then(() => {
+            //     resolve(patientFound);
+            // }).catch(error => {
+            //     resolve(patientFound);
+            // });
         });
     });
 }
@@ -424,3 +407,55 @@ export function updateFotoMobile(req, data) {
     data.fotoMobile = req.body.fotoMobile;
 }
 /* Hasta acá funciones del PATCH */
+
+
+
+/**
+ * Busca paciente similares en MPI o ANDES. Vía mongo.
+ *
+ * @param {pacienteSchema} objective Paciente  buscar
+ * @param {string} where Enum 'andes' | 'mpi'
+ * @param {object} conditions Condiciones de busqueda
+ * @param {objcet} _weights Pesos del matching
+ */
+
+export function searchSimilar(objective, where: string, conditions, _weights = null): Promise<{value: Number, paciente: any}[]> {
+    let db;
+    if (where === 'andes') {
+        db = paciente;
+    } else {
+        db = pacienteMpi;
+    }
+    let weights = _weights || config.mpi.weightsUpdater;
+    let match = new Matching();
+    return new Promise((resolve, reject) => {
+
+        db.find(conditions).then((pacientes) => {
+            let matchings: {value: Number, paciente: any}[] = [];
+            if (pacientes && pacientes.length) {
+                for (let i = 0; i < pacientes.length; i++) {
+
+                    let pac = pacientes[i];
+                    let valueMatch = match.matchPersonas(objective, pac, weights, config.algoritmo);
+
+                    matchings.push({
+                        paciente: pac,
+                        value: valueMatch
+                    });
+                }
+
+                let sortMatching = function (a, b) {
+                    return b.value - a.value;
+                };
+
+                matchings.sort(sortMatching);
+                return resolve(matchings);
+
+            } else {
+                return resolve(matchings);
+            }
+        });
+
+    });
+
+}
