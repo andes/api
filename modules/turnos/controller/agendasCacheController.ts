@@ -59,7 +59,6 @@ export async function getAgendaSips() {
                 let codigoSisa = agendasMongo[x].organizacion.codigo.sisa;
                 let tipoPrestacion = agendasMongo[x].tipoPrestaciones[0].conceptId;
 
-
                 let datosSips = {
                     idEfector: '',
                     idProfesional: '',
@@ -117,28 +116,29 @@ export async function getAgendaSips() {
         return idAgenda;
     }
 
-    function existeAgendaSips(agendaMongo: any) {
 
-        return new Promise(function (resolve, reject) {
-            let isAgenda;
-            let idAgenda = agendaMongo.id;
+function existeAgendaSips(agendaMongo: any) {
 
-            return new sql.Request(transaction)
-                .input('idAgendaMongo', sql.VarChar(50), agendaMongo.id)
-                .query('SELECT idAgenda FROM dbo.CON_Agenda WHERE objectId = @idAgendaMongo GROUP BY idAgenda')
-                .then(result => {
-                    if (result.length > 0) {
-                        isAgenda = true;
-                        resolve(result[0].idAgenda);
-                    } else {
-                        isAgenda = false;
-                        resolve(isAgenda);
-                    }
-                }).catch(err => {
-                    reject(err);
-                });
-        });
-    }
+    return new Promise(function (resolve, reject) {
+        let isAgenda;
+        let idAgenda = agendaMongo.id;
+
+        return new sql.Request(transaction)
+            .input('idAgendaMongo', sql.VarChar(50), agendaMongo.id)
+            .query('SELECT idAgenda FROM dbo.CON_Agenda WHERE objectId = @idAgendaMongo GROUP BY idAgenda')
+            .then(result => {
+                if (result.length > 0) {
+                    isAgenda = true;
+                    resolve(result[0].idAgenda);
+                } else {
+                    isAgenda = false;
+                    resolve(isAgenda);
+                }
+            }).catch(err => {
+                reject(err);
+            });
+    });
+}
 
     function grabaAgendaSips(agendaSips: any, datosSips: any) {
 
