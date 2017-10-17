@@ -27,8 +27,9 @@ export function mpiCorrector() {
     return new Promise( async (resolve, reject) => {
         let logger = debug('mpiCorrector');
         let condicion = {
-               $or:
-                 [{entidadesValidadoras: {$nin: ['Sisa']}}, {reportarError: true}]
+            reportarError: true
+            //    $or:
+            //      [{entidadesValidadoras: {$nin: ['Sisa']}}, {reportarError: true}]
         };
         let cursor = pacienteMpi.find(condicion).cursor();
         await cursor.eachAsync(async(doc: any) => {
