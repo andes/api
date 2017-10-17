@@ -16,7 +16,8 @@ export let agendasCacheSchema = new mongoose.Schema({
     horaFin: Date,
     createdAt: Date,
     updatedAt: Date,
-    updatedBy: mongoose.Schema.Types.Mixed
+    updatedBy: mongoose.Schema.Types.Mixed,
+    estadoIntegracion: String
 });
 
 export let agendasCache = mongoose.model('agendasCache', agendasCacheSchema, 'agendasCache');

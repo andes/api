@@ -1,5 +1,6 @@
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
+import * as constantes from '../schemas/constantes';
 import {
     agendasCache
 } from '../schemas/agendasCache';
@@ -55,7 +56,6 @@ function organizacionCompleto(idOrganizacion): any {
 
 export async function cacheTurnosSips(unaAgenda) {
     // Armo el DTO para guardar en la cache de agendas
-
     if (unaAgenda.estado !== 'planificacion') {
 
         let agenda = new agendasCache({
@@ -67,7 +67,8 @@ export async function cacheTurnosSips(unaAgenda) {
             bloques: unaAgenda.bloques,
             estado: unaAgenda.estado,
             horaInicio: unaAgenda.horaInicio,
-            horaFin: unaAgenda.horaFin
+            horaFin: unaAgenda.horaFin,
+            estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente
         });
 
         agenda.save(function (err, agendaGuardada: any) {

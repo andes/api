@@ -309,12 +309,8 @@ router.post('/agenda/clonar', function (req, res, next) {
                             turno.nota = null;
                             turno._id = mongoose.Types.ObjectId();
                             turno.tipoTurno = undefined;
-                            console.log(' before turno.updatedAt', turno.updatedAt);
                             turno.updatedAt = undefined;
-                            console.log(' after turno.updatedAt', turno.updatedAt);
-                            console.log(' before turno.updatedBy', turno.updatedBy);
                             turno.updatedBy = undefined;
-                            console.log(' after turno.updatedBy', turno.updatedBy);
                         });
                     });
                     nueva['estado'] = 'planificacion';
