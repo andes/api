@@ -154,9 +154,14 @@ router.post('/v2/registrar', function (req, res, next) {
 });
 
 /**
- * Avisa a la app si hay una nueva versión y si es obligatorio actualizar
+ * Avisa a la appMobile si hay una nueva versión y si es obligatorio actualizar
  *
- * Implementar la logica a medida que evoluciona la app
+ * Implementar la logica a medida que evoluciona la appMobile
+ *
+ * ok: Indica que todo esta bien.
+ * new-version:  Advierte de una nueva versión para descargar.
+ * update-require: Pone un plazo máximo de días para actualizar.
+ *
  */
 
 router.post('/check-update', function(req, res, next) {
