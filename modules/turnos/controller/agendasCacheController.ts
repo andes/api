@@ -4,7 +4,9 @@ import * as configPrivate from '../../../config.private';
 import * as sql from 'mssql';
 import * as moment from 'moment';
 import * as paciente from './../../../core/mpi/controller/paciente';
+import * as constantes from '../../legacy/schemas/constantes';
 import { model as organizacion } from './../../../core/tm/schemas/organizacion';
+
 
 
 const MongoClient = require('mongodb').MongoClient;
@@ -19,20 +21,6 @@ let connection = {
     server: configPrivate.conSql.serverSql.server,
     database: configPrivate.conSql.serverSql.database
 };
-
-enum EstadoAgendaSips {
-    activa = 1,
-    inactiva = 3,
-    cerrada = 4
-}
-
-enum EstadoTurnosSips {
-    activo = 1,
-    liberado = 4,
-    suspendido = 5
-}
-
-const idUsuario = '1486739';
 
 export async function getAgendaSips() {
     pool = await sql.connect(connection);
@@ -81,7 +69,7 @@ export async function getAgendaSips() {
                 await checkAsistenciaTurno(agendasMongo[x]);
 
                 transaction.commit(async err => {
-                    //await borrarAgendaCacheMongo(agendasMongo[x]._id);
+                    await markAgendaAsProcessed(agendasMongo[x]._id);
                 });
 
             } catch (ee) {
@@ -94,7 +82,7 @@ export async function getAgendaSips() {
 
     async function getAgendasDeMongo() {
         return new Promise<Array<any>>(function (resolve, reject) {
-            agendasCache.find().exec(function (err, data) {
+            agendasCache.find({estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente}).exec(function (err, data) {
                 if (err) {
                     return (err);
                 }
@@ -211,11 +199,11 @@ function existeAgendaSips(agendaMongo: any) {
         let estado: any;
 
         if (estadoCitas === 'disponible' || estadoCitas === 'publicada') {
-            estado = EstadoAgendaSips.activa; // 1
+            estado = constantes.EstadoAgendaSips.activa; // 1
         } else if (estadoCitas === 'suspendida') {
-            estado = EstadoAgendaSips.inactiva;
+            estado = constantes.EstadoAgendaSips.inactiva;
         } else if (estadoCitas === 'codificada') {
-            estado = EstadoAgendaSips.cerrada;
+            estado = constantes.EstadoAgendaSips.cerrada;
         }
 
         return estado;
@@ -328,7 +316,7 @@ function existeAgendaSips(agendaMongo: any) {
                     let idTurno: any = await getEstadoTurnoSips(turnos[i]._id);
                     let fechaAsistencia = moment(turnos[i].updatedAt).format('YYYYMMDD');
                     let query = "INSERT INTO dbo.CON_TurnoAsistencia ( idTurno , idUsuario , fechaAsistencia ) VALUES  ( " +
-                        idTurno.idTurno + " , " + idUsuario + " , '" + fechaAsistencia + "' )";
+                        idTurno.idTurno + " , " + constantes.idUsuarioSips + " , '" + fechaAsistencia + "' )";
 
                     await executeQuery(query);
                 }
@@ -366,7 +354,7 @@ function existeAgendaSips(agendaMongo: any) {
         let horaTurno = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
 
         let query = "INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente ,  fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante, objectId ) VALUES  ( " +
-            idAgendaSips + " , 1 , " + idUsuario + " ," + pacienteId + ", '" + fechaTurno + "' ,'" + horaTurno + "' , 0 , 0 , 1 ,0, '" + turno._id + "')";
+            idAgendaSips + " , 1 , " + constantes.idUsuarioSips + " ," + pacienteId + ", '" + fechaTurno + "' ,'" + horaTurno + "' , 0 , 0 , 1 ,0, '" + turno._id + "')";
 
         let turnoGrabado = await executeQuery(query);
     }
@@ -385,7 +373,7 @@ function existeAgendaSips(agendaMongo: any) {
             /*TODO: hacer enum con los estados */
             var horaInicio = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm')
 
-            if (estadoTurnoMongo === EstadoTurnosSips.suspendido && !await existeTurnoBloqueoSips(idAgendaSips, horaInicio)) {
+            if (estadoTurnoMongo === constantes.EstadoTurnosSips.suspendido && !await existeTurnoBloqueoSips(idAgendaSips, horaInicio)) {
                 await grabarTurnoBloqueo(idAgendaSips, turno);
             }
 
@@ -410,7 +398,7 @@ function existeAgendaSips(agendaMongo: any) {
     }
 
     async function grabarTurnoBloqueo(idAgendaSips, turno) {
-        const motivoBloqueo = (turno.motivoSuspension == 'profesional') ? 2 : 3;
+        const motivoBloqueo = getMotivoTurnoBloqueoSips(turno.motivoSuspension);
         var fechaBloqueo = moment(turno.horaInicio).format('YYYYMMDD');
         var horaBloqueo = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
 
@@ -431,16 +419,21 @@ function existeAgendaSips(agendaMongo: any) {
         await executeQuery(queryTurnoBloqueo);
     }
 
+    function getMotivoTurnoBloqueoSips(motivoBloqueo) {
+        return (motivoBloqueo === 'profesional') ? 2 : 3;
+    }
+    
+
     /* TODO: ver si hay mas estados de turnos entre CITAS y SIPS*/
     function getEstadoTurnosCitasSips(estadoTurnoCitas, updated) {
         let estado: any;
 
         if (estadoTurnoCitas === 'asignado') {
-            estado = EstadoTurnosSips.activo;
+            estado = constantes.EstadoTurnosSips.activo;
         } else if ((estadoTurnoCitas === 'disponible') && (updated)) {
-            estado = EstadoTurnosSips.liberado;
+            estado = constantes.EstadoTurnosSips.liberado;
         } else if (estadoTurnoCitas === 'suspendido') {
-            estado = EstadoTurnosSips.suspendido;
+            estado = constantes.EstadoTurnosSips.suspendido;
         }
 
         return estado;
@@ -480,9 +473,14 @@ function existeAgendaSips(agendaMongo: any) {
         });
     }
 
-    async function borrarAgendaCacheMongo(idAgenda) {
+    async function markAgendaAsProcessed(idAgenda) {
         return new Promise<Array<any>>(function (resolve, reject) {
-            agendasCache.remove({ _id: idAgenda }).exec();
+            agendasCache.update({ _id: idAgenda },{
+                $set:{
+                        estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS
+                    }
+                }
+            ).exec();
         });
     }
 
@@ -636,7 +634,7 @@ function existeAgendaSips(agendaMongo: any) {
             informacionContacto: '',
             cronico: 0,
             idObraSocial: 499,
-            idUsuario: idUsuario,
+            idUsuario: constantes.idUsuarioSips,
             fechaAlta: moment().format('YYYYMMDD HH:mm:ss'),
             fechaDefuncion: '19000101',
             fechaUltimaActualizacion: moment().format('YYYYMMDD HH:mm:ss'),
