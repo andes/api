@@ -157,7 +157,7 @@ router.patch('/prestaciones/:id', function (req, res, next) {
                     nuevoPlan.save(function (errorPlan, nuevaPrestacion) {
                         if (errorPlan) { return callback(errorPlan); }
 
-                        solicitadas.push(nuevaPrestacion.id);
+                        solicitadas.push(nuevaPrestacion);
 
                         callback();
 
