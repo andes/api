@@ -3,8 +3,9 @@ import { agendasCache } from '../../legacy/schemas/agendasCache';
 import * as configPrivate from '../../../config.private';
 import * as sql from 'mssql';
 import * as moment from 'moment';
-import * as paciente from './../../../core/mpi/controller/paciente';
+import * as profesionalSchema from './../../../core/tm/schemas/profesional';
 import { model as organizacion } from './../../../core/tm/schemas/organizacion';
+import * as paciente from './../../../core/mpi/controller/paciente';
 
 let pool;
 
@@ -36,7 +37,7 @@ const idUsuario = '1486739';
 export async function getAgendaSips() {
     pool = await sql.connect(connection);
     let agendasMongo = await getAgendasDeMongo();
-
+    
     for (let x = 0; x < agendasMongo.length; x++) {
 
         let idAgenda = await processAgenda(agendasMongo[x]);
@@ -98,7 +99,7 @@ function existeAgendaSips(agendaMongo: any) {
     });
 }
 
-function grabaAgendaSips(agendaSips: any) {
+async function grabaAgendaSips(agendaSips: any) {
 
     let objectId = agendaSips.id;
     let estado = getEstadoAgendaSips(agendaSips.estado);
@@ -116,12 +117,19 @@ function grabaAgendaSips(agendaSips: any) {
     let cantidadInterconsulta = 0;
     let turnosDisponibles = 1;
     let idMotivoInactivacion = 0;
-    let multiprofesional = 0;
 
-    //CON_Agenda de SIPS soporta solo un profesional NOT NULL.
-    //En caso de ser nulo el paciente en agenda de ANDES, por defector
-    //graba dni '0', correspondiente a 'Sin especifiar', efector SSS.
-    let dniProfesional = agendaSips.profesionales[0] ? agendaSips.profesionales[0].documento : '0';
+    /* TODO: Fijarse si la Agenda es Multiprofesional */
+    let multiprofesional;
+    let dniProfesional = agendaSips.profesionales[0].documento;
+
+    let listaIdProfesionales = [];
+
+    if (agendaSips.profesionales.length > 1) {
+        listaIdProfesionales = await getProfesional(agendaSips.profesionales);
+        multiprofesional = 1;
+    } else {
+        multiprofesional = 0;
+    }
 
     let query;
     return new Promise((resolve: any, reject: any) => {
@@ -135,19 +143,67 @@ function grabaAgendaSips(agendaSips: any) {
             let idTipoPrestacion = 0;
 
             let idConsultorio = await creaConsultorioSips(agendaSips, idEfector);
-            console.log("Id Consultorioo: ", idConsultorio);
 
             query = "insert into Con_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, idMotivoInactivacion, multiprofesional, objectId) " +
                 "values (" + estado + ", " + idEfector + ", " + idServicio + ", " + idProfesional + ", " + idTipoPrestacion + ", " + idEspecialidad + ", " + idConsultorio + ", '" + fecha + "', " + duracionTurno + ", '" + horaInicio + "', '" + horaFin + "', " + maximoSobreTurnos + ", " + porcentajeTurnosDia + ", " + porcentajeTurnosAnticipados + ", " + citarPorBloques + " , " + cantidadInterconsulta + ", " + turnosDisponibles + ", " + idMotivoInactivacion + ", " + multiprofesional + ", '" + objectId + "')";
 
-            console.log("Queryyy: ", query);
-            executeQuery(query).then(function (data) {
-                resolve(data);
+            executeQuery(query).then(function (idAgendaCreada) {
+                let query2;
+
+                if (listaIdProfesionales.length > 1) {
+                    listaIdProfesionales.forEach(async function (listaIdProf) {
+
+                        query2 = 'INSERT INTO dbo.CON_AgendaProfesional ( idAgenda, idProfesional, baja, CreatedBy , '
+                            + ' CreatedOn, ModifiedBy, ModifiedOn, idEspecialidad ) VALUES  ( '
+                            + idAgendaCreada + ','
+                            + listaIdProf[0].idProfesional + ','
+                            + 0 + ','
+                            + idUsuario + ','
+                            + "'" + moment().format('YYYYMMDD HH:mm:ss') + "', "
+                            + "'" + moment().format('YYYYMMDD HH:mm:ss') + "', "
+                            + "'" + moment().format('YYYYMMDD HH:mm:ss') + "', "
+                            + idEspecialidad + ' ) ';
+
+                        await executeQuery(query2);
+                    });
+                }
+
+                resolve(idAgendaCreada);
             });
         });
     });
 }
 
+function getProfesional(profesionalMongo) {
+    profesionalMongo = profesionalMongo.map(profMongo => arrayIdProfesionales(profMongo));
+
+    return Promise
+        .all(profesionalMongo)
+        .then(arrayIdProf => {
+            return arrayIdProf;
+        });
+}
+
+function arrayIdProfesionales(profMongo) {
+    return new Promise((resolve, reject) => {
+        const array = [];
+        (async function () {
+            try {
+                let query = 'SELECT idProfesional FROM dbo.Sys_Profesional WHERE numeroDocumento = @dniProfesional AND activo = 1';
+
+                let result = await pool.request()
+                    .input('dniProfesional', sql.Int, profMongo.documento)
+                    .query(query);
+
+                array.push(result[0]);
+                return resolve(array);
+            } catch (err) {
+                reject(err);
+            }
+        })();
+    });
+
+}
 async function creaConsultorioSips(agenda: any, idEfector: any) {
 
     return new Promise(async (resolve: any, reject: any) => {
@@ -386,7 +442,7 @@ async function existeTurnoBloqueoSips(idAgendaSips, horaInicio) {
 }
 
 async function grabarTurnoBloqueo(idAgendaSips, turno) {
-    const motivoBloqueo = (turno.motivoSuspension == 'profesional') ? 2 : 3;
+    const motivoBloqueo = (turno.motivoSuspension === 'profesional') ? 2 : 3;
 
     var fechaBloqueo = moment(turno.horaInicio).format('YYYYMMDD');
     var horaBloqueo = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
