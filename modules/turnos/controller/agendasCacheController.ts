@@ -411,7 +411,7 @@ export async function getAgendaSips() {
     async function grabaTurnoSips(turno, idAgendaSips, idEfector) {
 
         let pacienteId = await getPacienteMPI(turno.paciente, idAgendaSips, idEfector);
-        let idObraSocial = await getIdObraSocialSips(turno.paciente._id);
+        //let idObraSocial = await getIdObraSocialSips(turno.paciente._id);
         let fechaTurno = moment(turno.horaInicio).format('YYYYMMDD');
         let horaTurno = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
 
