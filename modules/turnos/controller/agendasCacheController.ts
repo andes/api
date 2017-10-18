@@ -235,7 +235,7 @@ export async function getAgendaSips() {
                 + ' ( idEfector , idTipoConsultorio ,  nombre , Activo ) VALUES ( '
                 + idEfector + ','
                 + idConsultorioTipo + ','
-                + "'" + agenda.espacioFisico + "', "
+                + "'" + agenda.espacioFisico.nombre + "', "
                 + ' 1 )';
 
             executeQuery(query).then(function (data) {
@@ -249,7 +249,7 @@ export async function getAgendaSips() {
             let query = 'INSERT INTO dbo.CON_ConsultorioTipo '
                 + ' ( idEfector, nombre ) VALUES  ( '
                 + idEfector + ','
-                + "'" + agenda.espacioFisico + "' )";
+                + "'" + agenda.espacioFisico.nombre + "' )";
 
             executeQuery(query).then(function (data) {
                 return resolve(data);
