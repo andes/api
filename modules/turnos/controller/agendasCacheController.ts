@@ -61,7 +61,7 @@ export async function getAgendaSips() {
                 datosSips.idServicio = datosArr[2][0].idServicio;
 
                 let idAgenda = await processAgenda(agendasMongo[x], datosSips);
-                
+
                 await processTurnos(agendasMongo[x], idAgenda, datosSips.idEfector);
                 await checkEstadoAgenda(agendasMongo[x], idAgenda);
                 await checkEstadoTurno(agendasMongo[x], idAgenda);
@@ -150,14 +150,13 @@ export async function getAgendaSips() {
         let dniProfesional = agendaSips.profesionales[0].documento;
 
         let listaIdProfesionales = [];
+        listaIdProfesionales = await getProfesional(agendaSips.profesionales);
 
-        if (agendaSips.profesionales.length > 1) {
-            listaIdProfesionales = await getProfesional(agendaSips.profesionales);
+        if (agendaSips.profesionales.length > 1) {        
             multiprofesional = 1;
         } else {
             multiprofesional = 0;
         }
-
 
         return new Promise(async (resolve: any, reject: any) => {
             let idEfector = datosSips.idEfector;
@@ -172,10 +171,10 @@ export async function getAgendaSips() {
 
             executeQuery(query).then(function (idAgendaCreada) {
                 let query2;
-
-                if (listaIdProfesionales.length > 1) {
+                
+                if (listaIdProfesionales.length > 0) {
                     listaIdProfesionales.forEach(async function (listaIdProf) {
-
+                
                         query2 = 'INSERT INTO dbo.CON_AgendaProfesional ( idAgenda, idProfesional, baja, CreatedBy , '
                             + ' CreatedOn, ModifiedBy, ModifiedOn, idEspecialidad ) VALUES  ( '
                             + idAgendaCreada + ','
