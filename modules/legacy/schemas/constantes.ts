@@ -11,6 +11,7 @@ const constantes = {
     
     EstadoTurnosSips: {
         activo: 1,
+        disponible: 1,
         liberado: 4,
         suspendido: 5
     },

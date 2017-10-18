@@ -412,14 +412,23 @@ export async function getAgendaSips() {
     async function grabaTurnoSips(turno, idAgendaSips, idEfector) {
 
         let pacienteId = await getPacienteMPI(turno.paciente, idAgendaSips, idEfector);
-
+        let idObraSocial = await getIdObraSocialSips(turno.paciente._id);
         let fechaTurno = moment(turno.horaInicio).format('YYYYMMDD');
         let horaTurno = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
 
         let query = "INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente ,  fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante, objectId ) VALUES  ( " +
-            idAgendaSips + " , 1 , " + constantes.idUsuarioSips + " ," + pacienteId + ", '" + fechaTurno + "' ,'" + horaTurno + "' , 0 , 0 , 1 ,0, '" + turno._id + "')";
+            idAgendaSips + " , 1 , " + constantes.idUsuarioSips + " ," + pacienteId + ", '" + fechaTurno + "' ,'" + horaTurno + "' , 0 , 0 ," + idObraSocial + " , 0, '" + turno._id + "')";
 
         let turnoGrabado = await executeQuery(query);
+    }
+
+    async function getIdObraSocialSips(idPaciente) {
+        let idsObrasSocialesMongo = await getTdsObrasSocialesMongo(idPaciente);
+        //let idObraSocialSips
+    }
+
+    async function getTdsObrasSocialesMongo(idPaciente) {
+        //paciente.re
     }
 
     async function actualizarEstadoTurnoSips(idAgendaSips, turno) {
@@ -667,7 +676,12 @@ export async function getAgendaSips() {
     /** Este método se llama desde grabaTurnoSips */
     async function getPacienteMPI(pacienteTurno: any, idAgendaSips: any, idEfectorSips: any) {
 
+        //TODO: El paciente pudiera no estar validado, en ese caso no se encontrara en la
+        // colección de paciente de MPI, en ese caso buscar en la coleccion de pacientes de Andes 
         let pacienteEncontrado = await paciente.buscarPaciente(pacienteTurno.id);
+        //if(!pacienteEncontrado) {
+        //  pacienteEncontrado = buscar en andes.......
+        //} 
 
         let pacienteSips = {
             idEfector: idEfectorSips,
