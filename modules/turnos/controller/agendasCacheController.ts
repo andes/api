@@ -26,12 +26,11 @@ export async function getAgendaSips() {
     pool = await sql.connect(connection);
 
     let datosSips;
-    let transaction = new sql.Transaction(pool);
     let agendasMongo = await getAgendasDeMongo();
 
     for (let x = 0; x < agendasMongo.length; x++) {
-
-        transaction.begin(async err => {
+        let transaction = await new sql.Transaction(pool);
+        await transaction.begin(async err => {
 
             let rolledBack = false;
             transaction.on('rollback', aborted => {
@@ -62,14 +61,14 @@ export async function getAgendaSips() {
                 datosSips.idServicio = datosArr[2][0].idServicio;
 
                 let idAgenda = await processAgenda(agendasMongo[x], datosSips);
-
+                
                 await processTurnos(agendasMongo[x], idAgenda, datosSips.idEfector);
                 await checkEstadoAgenda(agendasMongo[x], idAgenda);
                 await checkEstadoTurno(agendasMongo[x], idAgenda);
                 await checkAsistenciaTurno(agendasMongo[x]);
 
                 transaction.commit(async err => {
-                    await markAgendaAsProcessed(agendasMongo[x]._id);
+                    //await markAgendaAsProcessed(agendasMongo[x]._id);
                 });
 
             } catch (ee) {
