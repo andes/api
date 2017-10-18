@@ -29,14 +29,21 @@ router.get('/vacunas', function (req: any, res, next) {
         const pacienteMPI = data.paciente;
 
         // Filtramos por documento
-        if (req.query.documento) {
-            conditions['documento'] = req.query.documento;
+        if (req.query.dni) {
+            conditions['documento'] = req.query.dni;
         }
 
-        const sort = {FechaAplicacion: -1};
+        const sort = { fechaAplicacion: -1 };
 
         // buscar vacunas
         vacunas.find(conditions).sort(sort).exec( (err, resultados)  => {
+            if (!resultados) {
+                return next(err);
+            }
+
+            if (err) {
+                return next(err);
+            }
 
             resultados.forEach( (vacuna: any, index) => {
 
@@ -57,9 +64,6 @@ router.get('/vacunas', function (req: any, res, next) {
                 }
             });
 
-            if (err) {
-                return next(err);
-            }
 
             res.json(resultados);
         });
