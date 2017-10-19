@@ -4,7 +4,7 @@ import * as configPrivate from '../../../config.private';
 import * as sql from 'mssql';
 import * as moment from 'moment';
 import * as profesionalSchema from './../../../core/tm/schemas/profesional';
-import * as paciente from './../../../core/mpi/controller/paciente';
+import * as pacientes from './../../../core/mpi/controller/paciente';
 import * as constantes from '../../legacy/schemas/constantes';
 import { model as organizacion } from './../../../core/tm/schemas/organizacion';
 
@@ -27,8 +27,11 @@ export async function getAgendaSips() {
 
     let datosSips;
     let agendasMongo = await getAgendasDeMongo();
+    await guardarCacheASips(agendasMongo, 0);
+    //pool.close();
 
-    for (let x = 0; x < agendasMongo.length; x++) {
+    async function guardarCacheASips(agendasMongo, index) {
+        let agenda = agendasMongo[index];
         let transaction = await new sql.Transaction(pool);
         await transaction.begin(async err => {
 
@@ -42,9 +45,9 @@ export async function getAgendaSips() {
                 //CON_Agenda de SIPS soporta solo un profesional NOT NULL.
                 //En caso de ser nulo el paciente en agenda de ANDES, por defector
                 //graba dni '0', correspondiente a 'Sin especifiar', efector SSS.
-                let dniProfesional = agendasMongo[x].profesionales[0] ? agendasMongo[x].profesionales[0].documento : '0';
-                let codigoSisa = agendasMongo[x].organizacion.codigo.sisa;
-                let tipoPrestacion = agendasMongo[x].tipoPrestaciones[0].conceptId;
+                let dniProfesional = agenda.profesionales[0] ? agenda.profesionales[0].documento : '0';
+                let codigoSisa = agenda.organizacion.codigo.sisa;
+                let tipoPrestacion = agenda.tipoPrestaciones[0].conceptId;
 
                 let datosSips = {
                     idEfector: '',
@@ -60,24 +63,33 @@ export async function getAgendaSips() {
                 datosSips.idEspecialidad = datosArr[2][0].idEspecialidad;
                 datosSips.idServicio = datosArr[2][0].idServicio;
 
-                let idAgenda = await processAgenda(agendasMongo[x], datosSips);
+                let idAgenda = await processAgenda(agenda, datosSips);
 
-                await processTurnos(agendasMongo[x], idAgenda, datosSips.idEfector);
-                await checkEstadoAgenda(agendasMongo[x], idAgenda);
-                await checkEstadoTurno(agendasMongo[x], idAgenda);
-                await checkAsistenciaTurno(agendasMongo[x]);
+                await processTurnos(agenda, idAgenda, datosSips.idEfector);
+                await checkEstadoAgenda(agenda, idAgenda);
+                await checkEstadoTurno(agenda, idAgenda);
+                await checkAsistenciaTurno(agenda);
 
                 transaction.commit(async err => {
-                    //await markAgendaAsProcessed(agendasMongo[x]._id);
+                    console.log('commited!');
+                    //await markAgendaAsProcessed(agenda._id);
+                    next();
                 });
 
             } catch (ee) {
                 console.log('error! ', ee);
                 transaction.rollback();
+                next();
             }
         });
+
+        function next() {
+            ++index;
+            if (index < agendasMongo.length) {
+                guardarCacheASips(agendasMongo, index);
+            }
+        }
     }
-    //pool.close();
 
     async function getAgendasDeMongo() {
         return new Promise<Array<any>>(function (resolve, reject) {
@@ -93,7 +105,7 @@ export async function getAgendaSips() {
     /* Inicio Sección de Agendas*/
     async function processAgenda(agenda: any, datosSips) {
         let idAgenda = await existeAgendaSips(agenda);
-
+        console.log('processAgenda idAgenda', idAgenda);
         if (!idAgenda) {
             idAgenda = await grabaAgendaSips(agenda, datosSips);
         } else {
@@ -103,23 +115,17 @@ export async function getAgendaSips() {
         return idAgenda;
     }
 
-
     function existeAgendaSips(agendaMongo: any) {
 
         return new Promise(function (resolve, reject) {
-            let isAgenda;
-            let idAgenda = agendaMongo.id;
-
             return new sql.Request(transaction)
                 .input('idAgendaMongo', sql.VarChar(50), agendaMongo.id)
                 .query('SELECT idAgenda FROM dbo.CON_Agenda WHERE objectId = @idAgendaMongo GROUP BY idAgenda')
                 .then(result => {
                     if (result.length > 0) {
-                        isAgenda = true;
                         resolve(result[0].idAgenda);
                     } else {
-                        isAgenda = false;
-                        resolve(isAgenda);
+                        resolve(false);
                     }
                 }).catch(err => {
                     reject(err);
@@ -195,7 +201,6 @@ export async function getAgendaSips() {
         });
     }
 
-
     function getProfesional(profesionalMongo) {
         profesionalMongo = profesionalMongo.map(profMongo => arrayIdProfesionales(profMongo));
 
@@ -226,6 +231,7 @@ export async function getAgendaSips() {
         });
 
     }
+
     async function creaConsultorioSips(agenda: any, idEfector: any) {
 
         return new Promise(async (resolve: any, reject: any) => {
@@ -409,9 +415,22 @@ export async function getAgendaSips() {
     }
 
     async function grabaTurnoSips(turno, idAgendaSips, idEfector) {
+        //TODO: El paciente pudiera no estar validado, en ese caso no se encontrara en la
+        // colección de paciente de MPI, en ese caso buscar en la coleccion de pacientes de Andes 
+        let pacienteEncontrado = await pacientes.buscarPaciente(turno.paciente.id);
+        let paciente = pacienteEncontrado.paciente;
+        //if(!pacienteEncontrado) {
+        //  pacienteEncontrado = buscar en andes.......
+        //} 
 
+<<<<<<< HEAD
         let pacienteId = await getPacienteMPI(turno.paciente, idAgendaSips, idEfector);
         let idObraSocial = 0;//await getIdObraSocialSips(turno.paciente._id);
+=======
+        let idObraSocial = await getIdObraSocialSips(paciente.documento);
+        let pacienteId = await getPacienteMPI(paciente, idEfector);
+        
+>>>>>>> 3a3aa3c4f75347f867bb4e5a3d1e5099849f828c
         let fechaTurno = moment(turno.horaInicio).format('YYYYMMDD');
         let horaTurno = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
 
@@ -421,13 +440,38 @@ export async function getAgendaSips() {
         let turnoGrabado = await executeQuery(query);
     }
 
-    async function getIdObraSocialSips(idPaciente) {
-        let idsObrasSocialesMongo = await getTdsObrasSocialesMongo(idPaciente);
-        //let idObraSocialSips
-    }
+    // getIdObraSocialSips obtiene ID de O.Social buscando coincidencias 'DNI/Cod O.S' en la tabla de PUCO
+    // pudiendo devolver 0..n códigos de obra social. Según los códigos obtenidos, se retornará un único id
+    // según siguiente criterio:
+    // --> Si se obtiene +2 resultados, se optará por el de máxima prioridad, siendo que:
+    //      - ISSN: Mínima prioridad
+    //      - PAMI: Prioridad media
+    //      - Cualquier otro financiador: Prioridad máxima
+    // --> Si obtiene 1 resultado, es el elegido
+    // --> Si se obtiene 0 resultados, se retorna el id de PLAN SUMAR por defecto, cuyo valor está en constante.
+    async function getIdObraSocialSips(documentoPaciente) {
+        const idSumar = 499;
+        let query = "SELECT TOP(1) sips_os.idObraSocial as idOS "
+            + "FROM [Padron].[dbo].[Pd_PUCO] puco "
+            + "JOIN [SIPS].[dbo].[Sys_ObraSocial] sips_os ON puco.CodigoOS = sips_os.cod_PUCO "
+            + "WHERE puco.DNI =  "  + documentoPaciente
+            + "ORDER BY  ( "
+                + "SELECT p =  "
+                    + "CASE prio.prioridad  "
+                        + "WHEN NULL THEN 1 "
+                        + "ELSE prio.prioridad "
+                    + "END "
+                + "FROM [SIPS].[dbo].[Sys_ObraSocial_Prioridad] as prio "
+                + "WHERE prio.idObraSocial = sips_os.idObraSocial "
+            + ") ASC";
 
-    async function getTdsObrasSocialesMongo(idPaciente) {
-        //paciente.re
+        try {
+            let result = await new sql.Request(transaction).query(query);
+            return (result.length > 0 ? result[0].idOS : idSumar);
+        } catch (err) {
+            console.log(err);
+            return false;
+        }
     }
 
     async function actualizarEstadoTurnoSips(idAgendaSips, turno) {
@@ -703,22 +747,15 @@ export async function getAgendaSips() {
 
     // #region GetPacienteMPI
     /** Este método se llama desde grabaTurnoSips */
-    async function getPacienteMPI(pacienteTurno: any, idAgendaSips: any, idEfectorSips: any) {
-
-        //TODO: El paciente pudiera no estar validado, en ese caso no se encontrara en la
-        // colección de paciente de MPI, en ese caso buscar en la coleccion de pacientes de Andes 
-        let pacienteEncontrado = await paciente.buscarPaciente(pacienteTurno.id);
-        //if(!pacienteEncontrado) {
-        //  pacienteEncontrado = buscar en andes.......
-        //} 
+    async function getPacienteMPI(paciente: any, idEfectorSips: any) {
 
         let pacienteSips = {
             idEfector: idEfectorSips,
-            nombre: pacienteEncontrado.paciente.nombre,
-            apellido: pacienteEncontrado.paciente.apellido,
-            numeroDocumento: pacienteEncontrado.paciente.documento,
-            idSexo: (pacienteEncontrado.paciente.sexo === 'masculino' ? 3 : pacienteEncontrado.paciente.sexo === 'femenino' ? 2 : 1),
-            fechaNacimiento: moment(pacienteEncontrado.paciente.fechaNacimiento).format('YYYYMMDD'),
+            nombre: paciente.nombre,
+            apellido: paciente.apellido,
+            numeroDocumento: paciente.documento,
+            idSexo: (paciente.sexo === 'masculino' ? 3 : paciente.sexo === 'femenino' ? 2 : 1),
+            fechaNacimiento: moment(paciente.fechaNacimiento).format('YYYYMMDD'),
             idEstado: 3, /* Estado Validado en SIPS*/
             idMotivoNI: 0,
             idPais: 54,
@@ -764,7 +801,7 @@ export async function getAgendaSips() {
             email: '',
             latitud: 0,
             longitud: 0,
-            objectId: pacienteEncontrado.paciente._id
+            objectId: paciente._id
         };
 
         let idPacienteGrabadoSips = await insertaPacienteSips(pacienteSips);
