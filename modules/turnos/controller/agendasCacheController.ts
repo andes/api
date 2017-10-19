@@ -27,8 +27,11 @@ export async function getAgendaSips() {
 
     let datosSips;
     let agendasMongo = await getAgendasDeMongo();
+    await guardarCacheASips(agendasMongo, 0);
+    //pool.close();
 
-    for (let x = 0; x < agendasMongo.length; x++) {
+    async function guardarCacheASips(agendasMongo, index) {
+        let agenda = agendasMongo[index];
         let transaction = await new sql.Transaction(pool);
         await transaction.begin(async err => {
 
@@ -42,9 +45,9 @@ export async function getAgendaSips() {
                 //CON_Agenda de SIPS soporta solo un profesional NOT NULL.
                 //En caso de ser nulo el paciente en agenda de ANDES, por defector
                 //graba dni '0', correspondiente a 'Sin especifiar', efector SSS.
-                let dniProfesional = agendasMongo[x].profesionales[0] ? agendasMongo[x].profesionales[0].documento : '0';
-                let codigoSisa = agendasMongo[x].organizacion.codigo.sisa;
-                let tipoPrestacion = agendasMongo[x].tipoPrestaciones[0].conceptId;
+                let dniProfesional = agenda.profesionales[0] ? agenda.profesionales[0].documento : '0';
+                let codigoSisa = agenda.organizacion.codigo.sisa;
+                let tipoPrestacion = agenda.tipoPrestaciones[0].conceptId;
 
                 let datosSips = {
                     idEfector: '',
@@ -60,24 +63,33 @@ export async function getAgendaSips() {
                 datosSips.idEspecialidad = datosArr[2][0].idEspecialidad;
                 datosSips.idServicio = datosArr[2][0].idServicio;
 
-                let idAgenda = await processAgenda(agendasMongo[x], datosSips);
+                let idAgenda = await processAgenda(agenda, datosSips);
 
-                await processTurnos(agendasMongo[x], idAgenda, datosSips.idEfector);
-                await checkEstadoAgenda(agendasMongo[x], idAgenda);
-                await checkEstadoTurno(agendasMongo[x], idAgenda);
-                await checkAsistenciaTurno(agendasMongo[x]);
+                await processTurnos(agenda, idAgenda, datosSips.idEfector);
+                await checkEstadoAgenda(agenda, idAgenda);
+                await checkEstadoTurno(agenda, idAgenda);
+                await checkAsistenciaTurno(agenda);
 
                 transaction.commit(async err => {
-                    //await markAgendaAsProcessed(agendasMongo[x]._id);
+                    console.log('commited!');
+                    //await markAgendaAsProcessed(agenda._id);
+                    next();
                 });
 
             } catch (ee) {
                 console.log('error! ', ee);
                 transaction.rollback();
+                next();
             }
         });
+
+        function next() {
+            ++index;
+            if (index < agendasMongo.length) {
+                guardarCacheASips(agendasMongo, index);
+            }
+        }
     }
-    //pool.close();
 
     async function getAgendasDeMongo() {
         return new Promise<Array<any>>(function (resolve, reject) {
@@ -93,7 +105,7 @@ export async function getAgendaSips() {
     /* Inicio Sección de Agendas*/
     async function processAgenda(agenda: any, datosSips) {
         let idAgenda = await existeAgendaSips(agenda);
-
+        console.log('processAgenda idAgenda', idAgenda);
         if (!idAgenda) {
             idAgenda = await grabaAgendaSips(agenda, datosSips);
         } else {
@@ -106,19 +118,14 @@ export async function getAgendaSips() {
     function existeAgendaSips(agendaMongo: any) {
 
         return new Promise(function (resolve, reject) {
-            let isAgenda;
-            let idAgenda = agendaMongo.id;
-
             return new sql.Request(transaction)
                 .input('idAgendaMongo', sql.VarChar(50), agendaMongo.id)
                 .query('SELECT idAgenda FROM dbo.CON_Agenda WHERE objectId = @idAgendaMongo GROUP BY idAgenda')
                 .then(result => {
                     if (result.length > 0) {
-                        isAgenda = true;
                         resolve(result[0].idAgenda);
                     } else {
-                        isAgenda = false;
-                        resolve(isAgenda);
+                        resolve(false);
                     }
                 }).catch(err => {
                     reject(err);
