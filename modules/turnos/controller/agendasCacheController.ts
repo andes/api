@@ -424,14 +424,9 @@ export async function getAgendaSips() {
         //  pacienteEncontrado = buscar en andes.......
         //} 
 
-<<<<<<< HEAD
-        let pacienteId = await getPacienteMPI(turno.paciente, idAgendaSips, idEfector);
-        let idObraSocial = 0;//await getIdObraSocialSips(turno.paciente._id);
-=======
         let idObraSocial = await getIdObraSocialSips(paciente.documento);
         let pacienteId = await getPacienteMPI(paciente, idEfector);
         
->>>>>>> 3a3aa3c4f75347f867bb4e5a3d1e5099849f828c
         let fechaTurno = moment(turno.horaInicio).format('YYYYMMDD');
         let horaTurno = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
 
