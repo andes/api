@@ -411,13 +411,13 @@ export async function getAgendaSips() {
     async function grabaTurnoSips(turno, idAgendaSips, idEfector) {
 
         let pacienteId = await getPacienteMPI(turno.paciente, idAgendaSips, idEfector);
-        let idObraSocial = await getIdObraSocialSips(turno.paciente._id);
+        let idObraSocial = 0;//await getIdObraSocialSips(turno.paciente._id);
         let fechaTurno = moment(turno.horaInicio).format('YYYYMMDD');
         let horaTurno = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
 
         let query = "INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente ,  fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante, objectId ) VALUES  ( " +
             idAgendaSips + " , 1 , " + constantes.idUsuarioSips + " ," + pacienteId + ", '" + fechaTurno + "' ,'" + horaTurno + "' , 0 , 0 ," + idObraSocial + " , 0, '" + turno._id + "')";
-
+        
         let turnoGrabado = await executeQuery(query);
     }
 
@@ -431,9 +431,10 @@ export async function getAgendaSips() {
     }
 
     async function actualizarEstadoTurnoSips(idAgendaSips, turno) {
+
         let estadoTurnoSips: any = await getEstadoTurnoSips(turno._id);
         let estadoTurnoMongo = getEstadoTurnosCitasSips(turno.estado, turno.updatedAt);
-
+        
         if (estadoTurnoSips.idTurnoEstado !== estadoTurnoMongo) {
             let objectIdTurno;
 
@@ -444,7 +445,7 @@ export async function getAgendaSips() {
             /*TODO: hacer enum con los estados */
             var horaInicio = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm')
 
-            if (estadoTurnoMongo === constantes.EstadoTurnosSips.suspendido && !await existeTurnoBloqueoSips(idAgendaSips, horaInicio)) {
+            if ((estadoTurnoMongo === constantes.EstadoTurnosSips.suspendido || turno.estado === 'turnoDoble') && !await existeTurnoBloqueoSips(idAgendaSips, horaInicio)) {
                 await grabarTurnoBloqueo(idAgendaSips, turno);
             }
 
@@ -454,11 +455,12 @@ export async function getAgendaSips() {
     }
 
     async function existeTurnoBloqueoSips(idAgendaSips, horaInicio) {
+        
         let query = "SELECT COUNT(b.idTurnoBloqueo) as count FROM CON_TurnoBloqueo b " +
             "JOIN CON_TURNO t on t.idAgenda = b.idAgenda " +
             "WHERE b.idAgenda = " + idAgendaSips +
             " AND b.horaTurno = '" + horaInicio + "'";
-
+            
         try {
             let result = await new sql.Request(transaction).query(query);
             return result[0].count > 0;
@@ -469,7 +471,7 @@ export async function getAgendaSips() {
     }
 
     async function grabarTurnoBloqueo(idAgendaSips, turno) {
-        const motivoBloqueo = getMotivoTurnoBloqueoSips(turno.motivoSuspension);
+        const motivoBloqueo = getMotivoTurnoBloqueoSips(turno);
         var fechaBloqueo = moment(turno.horaInicio).format('YYYYMMDD');
         var horaBloqueo = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
 
@@ -483,17 +485,39 @@ export async function getAgendaSips() {
             + idAgendaSips + ", "
             + "'" + fechaBloqueo + "', "
             + "'" + horaBloqueo + "', "
-            + turno.updatedBy.documento + ", "
+            + constantes.idUsuarioSips + ", "
             + "'" + moment(turno.updatedAt).format('YYYYMMDD') + "', "
             + motivoBloqueo + ")";
 
         await executeQuery(queryTurnoBloqueo);
     }
 
-    function getMotivoTurnoBloqueoSips(motivoBloqueo) {
-        return (motivoBloqueo === 'profesional') ? 2 : 3;
+    function getMotivoTurnoBloqueoSips(turno) {
+        let motivoBloqueo;
+
+        if (turno.estado === 'suspendido') {
+            motivoBloqueo = getMotivoTurnoSuspendido(turno.motivoSuspension); //constantes.MotivoTurnoBloqueo
+        } else if (turno.estado === 'turnoDoble') {
+            motivoBloqueo = constantes.MotivoTurnoBloqueo.turnoDoble;
+        }
+
+        return motivoBloqueo;
     }
 
+    function getMotivoTurnoSuspendido(motivoSuspension) {
+        let devuelveMotivoSuspension;
+
+        switch (motivoSuspension) {
+            case 'profesional': devuelveMotivoSuspension = constantes.MotivoTurnoBloqueo.retiroDelProfesional;
+                break;
+            case 'edilicia': devuelveMotivoSuspension = constantes.MotivoTurnoBloqueo.otros;
+                break;
+            case 'organizacion': devuelveMotivoSuspension = constantes.MotivoTurnoBloqueo.reserva;
+                break;
+        }
+
+        return devuelveMotivoSuspension;
+    }
 
     /* TODO: ver si hay mas estados de turnos entre CITAS y SIPS*/
     function getEstadoTurnosCitasSips(estadoTurnoCitas, updated) {
@@ -519,8 +543,14 @@ export async function getAgendaSips() {
                     let result = await new sql.Request(transaction)
                         .input('objectId', sql.VarChar(50), objectId)
                         .query(query);
+                    
+                    if (typeof result[0] !== 'undefined') {
+                        resolve(result[0]);
+                    } else {
+                        let idTurnoEstado = 0;
+                        resolve(idTurnoEstado);
+                    }
 
-                    resolve(result[0]);
                 } catch (err) {
                     reject(err);
                 }
