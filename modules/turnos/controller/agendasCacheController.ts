@@ -7,7 +7,7 @@ import * as profesionalSchema from './../../../core/tm/schemas/profesional';
 import * as pacientes from './../../../core/mpi/controller/paciente';
 import * as constantes from '../../legacy/schemas/constantes';
 import { model as organizacion } from './../../../core/tm/schemas/organizacion';
-
+import * as logger from './../../../utils/loggerAgendaCache';
 
 const MongoClient = require('mongodb').MongoClient;
 
@@ -78,6 +78,7 @@ export async function getAgendaSips() {
 
             } catch (ee) {
                 console.log('error! ', ee);
+                logger.LoggerAgendaCache.logAgenda(agenda._id, ee);
                 transaction.rollback();
                 next();
             }
