@@ -1,5 +1,6 @@
 import * as express from 'express';
 import * as localidad from '../schemas/localidad';
+import * as mongoose from 'mongoose';
 
 let router = express.Router();
 
@@ -14,12 +15,12 @@ let router = express.Router();
  *          type: string
  *      provincia:
  *          type: object
- *          properties: 
- *              id: 
+ *          properties:
+ *              id:
  *                  type: string
  *              nombre:
  *                  type: string
- * 
+
  */
 
 /**
@@ -73,20 +74,18 @@ router.get('/localidades/:id*?', function (req, res, next) {
     if (req.params.id) {
         localidad.findById(req.params.id, function (err, data) {
             if (err) {
-                next(err);
-            };
-
+                return next(err);
+            }
             res.json(data);
         });
     } else {
         let query;
         query = localidad.find({}).sort({ nombre: 1 });
         if (req.query.nombre) {
-            query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
+            query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
         if (req.query.provincia) {
-            console.log('la provincia por parametro: ', req.query.provincia);
-            query.where('provincia._id').equals(req.query.provincia);
+            query.where('provincia._id').equals(mongoose.Types.ObjectId(req.query.provincia));
         }
         query.exec((err, data) => {
             if (err) {

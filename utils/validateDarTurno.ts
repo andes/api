@@ -1,4 +1,3 @@
-import { ValidateFormatDate } from './validateFormatDate';
 import * as express from 'express';
 import { paciente } from '../core/mpi/schemas/paciente';
 
@@ -37,15 +36,10 @@ export class ValidateDarTurno {
             errors.push('Paciente no posee ID');
         }
 
-        if (!data.paciente.documento) {
-            valid = false;
-            errors.push('Paciente no tiene especificado el documento');
-        }
-
         return {
             valid: valid,
             errors: errors
-        }
+        };
     }
 
 }

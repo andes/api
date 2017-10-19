@@ -1,24 +1,23 @@
-import * as express from 'express'
-import {
-    paciente
-} from '../../schemas/paciente'
-import {
-    servicioSisa
-} from '../../../../utils/servicioSisa'
+import * as express from 'express';
+import { paciente } from '../../schemas/paciente';
+import * as servicioSisa from '../../../../utils/servicioSisa';
+import { Auth } from '../../../../auth/auth.class';
 
-var router = express.Router();
+let router = express.Router();
 
 router.get('/matching/:id*?', function (req, res, next) {
+    if (!Auth.check(req, 'mpi:matching:get')) {
+        return next(403);
+    }
     if (req.params.id) {
         paciente.findById(req.params.id, function (err, data) {
             if (err) {
-                next(err);
-            };
-
+                return next(err);
+            }
             res.json(data);
         });
     } else {
-        var query;
+        let query;
         query = paciente.find({
             matchSisa: {
                 $gt: 0.7,
@@ -27,86 +26,57 @@ router.get('/matching/:id*?', function (req, res, next) {
             estado: 'temporal'
         });
         query.exec((err, data) => {
-            if (err) return next(err);
+            if (err) {
+                return next(err);
+            }
             res.json(data);
         });
     }
 });
 
 router.patch('/matching/:id', function (req, res, next) {
-   
+    if (!Auth.check(req, 'mpi:matching:patch')) {
+        return next(403);
+    }
     paciente.findById(req.params.id, function (err, data) {
         if (req.body.op === 'validarSisa') {
-            let servSisa = new servicioSisa();
-            let weights = {
-                identity: 0.3,
-                name: 0.3,
-                gender: 0.1,
-                birthDate: 0.3
-            };
             let pacienteOriginal;
             let pacienteAux;
             pacienteOriginal = data;
             pacienteAux = data;
             let pacientesRes = [];
-            servSisa.matchSisa(pacienteAux)
+            servicioSisa.matchSisa(pacienteAux)
                 .then(resultado => {
                     pacientesRes.push(resultado);
-                    var arrPacValidados;
+                    let arrPacValidados;
                     arrPacValidados = pacientesRes;
-                    var arrPacientesSisa = [];
+                    let arrPacientesSisa = [];
                     arrPacValidados.forEach(function (pacVal) {
-                        var datoPac;
+                        let datoPac;
                         datoPac = pacVal.matcheos.datosPaciente;
-                        if(datoPac)
+                        if (datoPac) {
                             arrPacientesSisa.push(datoPac);
+                        }
                     });
-                        res.send(arrPacientesSisa);
+                    res.send(arrPacientesSisa);
                 })
                 .catch(error => {
-                    console.log('Error:', error);
-                    next(error)
-                })
+                    next(error);
+                });
         }
     });
 });
 
 router.put('/matching/:id', function (req, res, next) {
-    paciente.findByIdAndUpdate(req.params.id, req.body, {new:true}, function (err, data) {
+    if (!Auth.check(req, 'mpi:matching:put')) {
+        return next(403);
+    }
+    paciente.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
         if (err) {
             return next(err);
         }
         res.json(data);
     });
 });
-
-
-// router.post('/matching', function (req, res, next) {
-//     var newMatching = new paciente(req.body)
-//     newMatching.save((err) => {
-//         if (err) {
-//             return next(err);
-//         }
-//         res.json(newMatching);
-//     })
-// });
-
-// router.put('/matching/:id', function (req, res, next) {
-//     matching.findByIdAndUpdate(req.params.id, req.body, {new:true}, function (err, data) {
-//         if (err) {
-//             return next(err);
-//         }
-//         res.json(data);
-//     });
-// });
-
-// router.delete('/matching/:_id', function (req, res, next) {
-//     matching.findByIdAndRemove(req.params._id, function (err, data) {
-//         if (err)
-//             return next(err);
-
-//         res.json(data);
-//     });
-// })
 
 export = router;

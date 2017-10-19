@@ -1,4 +1,4 @@
-import { configMpi } from './../../../config';
+// import { mpi } from './../../../config';
 import * as mongoose from 'mongoose';
 import * as organizacion from '../../../core/tm/schemas/organizacion';
 
@@ -10,7 +10,7 @@ import * as organizacion from '../../../core/tm/schemas/organizacion';
  * macheoAlto == Macheo con un % superior a 90
  * posibleDuplicado == Nuevo paciente, pero matchea con un porcentaje entre 80 y 90 con otro.
  * validadoScan == 'Paciente encontrado por el string del scan'
- * 
+ *
  */
 
 export let logSchema = new mongoose.Schema({
@@ -27,7 +27,7 @@ export let logSchema = new mongoose.Schema({
     organizacion: { type: organizacion },
     modulo: {
         type: String,
-        enum: ['mpi', 'turnos', 'rup']
+        enum: ['mpi', 'citas', 'rup', 'configTipoPrestacion', 'fa_sintys', 'fa_sisa', 'fa_anses', 'usuarios']
     },
     operacion: {
         type: String,
@@ -37,9 +37,14 @@ export let logSchema = new mongoose.Schema({
             // Operaciones de módulos
             // ... Mpi
             'macheoAlto', 'posibleDuplicado', 'reportarError', 'validadoScan', 'scan', 'scanFail',
-            // ... Turnos
-            'asignarTurno', 'cancelarTurno', 'listaEspera'
+            // OperacionesElastic
+            'elasticInsert', 'elasticInsertInPut', 'elasticUpdate', 'elasticDelete', 'elasticError',
+            // ... Citas
+            'asignarTurno', 'cancelarTurno', 'listaEspera', 'actualizarAgendas',
             // ... RUP
+            'pacientes',
+            // ...Fuentes Autenticas
+            'validar', 'error'
         ]
     },
     datosOperacion: mongoose.Schema.Types.Mixed,

@@ -2,9 +2,25 @@ import * as mongoose from 'mongoose';
 
 let schema = new mongoose.Schema({
     usuario: Number,
-    organizacion: mongoose.Schema.Types.ObjectId,
-    roles: [String],
-    permisos: [String]
+    activo: Boolean,
+    nombre: String,
+    apellido: String,
+    password: String,
+    foto: String,
+    // organizacion: {
+    //     type: mongoose.Schema.Types.ObjectId,
+    //     ref: 'organizacion'
+    // },
+    // roles: [String],
+    // permisos: [String],
+
+    organizaciones: [{
+        _id: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'organizacion'
+        },
+        permisos: [String]
+    }]
 });
 
-export let model = mongoose.model('permisos', schema, 'authPermisos');
+export let authUsers = mongoose.model('authUsers', schema, 'authUsers');
