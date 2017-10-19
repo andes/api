@@ -56,7 +56,8 @@ function organizacionCompleto(idOrganizacion): any {
 
 export async function cacheTurnosSips(unaAgenda) {
     // Armo el DTO para guardar en la cache de agendas
-    if (unaAgenda.estado !== 'planificacion') {
+    
+    if ((unaAgenda.estado !== 'planificacion') && (unaAgenda.nominalizada)) {
 
         let agenda = new agendasCache({
             id: unaAgenda.id,
