@@ -152,7 +152,7 @@ export async function getAgendaSips() {
         let listaIdProfesionales = [];
         listaIdProfesionales = await getProfesional(agendaSips.profesionales);
 
-        if (agendaSips.profesionales.length > 1) {        
+        if (agendaSips.profesionales.length > 1) {
             multiprofesional = 1;
         } else {
             multiprofesional = 0;
@@ -171,10 +171,10 @@ export async function getAgendaSips() {
 
             executeQuery(query).then(function (idAgendaCreada) {
                 let query2;
-                
+
                 if (listaIdProfesionales.length > 0) {
                     listaIdProfesionales.forEach(async function (listaIdProf) {
-                
+
                         query2 = 'INSERT INTO dbo.CON_AgendaProfesional ( idAgenda, idProfesional, baja, CreatedBy , '
                             + ' CreatedOn, ModifiedBy, ModifiedOn, idEspecialidad ) VALUES  ( '
                             + idAgendaCreada + ','
@@ -411,7 +411,7 @@ export async function getAgendaSips() {
     async function grabaTurnoSips(turno, idAgendaSips, idEfector) {
 
         let pacienteId = await getPacienteMPI(turno.paciente, idAgendaSips, idEfector);
-        //let idObraSocial = await getIdObraSocialSips(turno.paciente._id);
+        let idObraSocial = await getIdObraSocialSips(turno.paciente._id);
         let fechaTurno = moment(turno.horaInicio).format('YYYYMMDD');
         let horaTurno = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
 
