@@ -171,7 +171,9 @@ export async function getAgendaSips() {
             let idEspecialidad = datosSips.idEspecialidad;
             let idServicio = datosSips.idServicio;
             let idTipoPrestacion = 0;
-            let idConsultorio = await creaConsultorioSips(agendaSips, idEfector);
+            let idConsultorio = await existeConsultorio(agendaSips, idEfector); //creaConsultorioSips(agendaSips, idEfector);
+
+            console.log("IdConsultorio: ", idConsultorio);
 
             let query = "insert into Con_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, idMotivoInactivacion, multiprofesional, objectId) " +
                 "values (" + estado + ", " + idEfector + ", " + idServicio + ", " + idProfesional + ", " + idTipoPrestacion + ", " + idEspecialidad + ", " + idConsultorio + ", '" + fecha + "', " + duracionTurno + ", '" + horaInicio + "', '" + horaFin + "', " + maximoSobreTurnos + ", " + porcentajeTurnosDia + ", " + porcentajeTurnosAnticipados + ", " + citarPorBloques + " , " + cantidadInterconsulta + ", " + turnosDisponibles + ", " + idMotivoInactivacion + ", " + multiprofesional + ", '" + objectId + "')";
@@ -239,11 +241,12 @@ export async function getAgendaSips() {
             let idConsultorioTipo = await crearConsultorioTipoSips(agenda, idEfector);
 
             let query = ' INSERT INTO dbo.CON_Consultorio '
-                + ' ( idEfector , idTipoConsultorio ,  nombre , Activo ) VALUES ( '
+                + ' ( idEfector , idTipoConsultorio ,  nombre , Activo, objectId ) VALUES ( '
                 + idEfector + ','
                 + idConsultorioTipo + ','
                 + "'" + agenda.espacioFisico.nombre + "', "
-                + ' 1 )';
+                + ' 1 ,'
+                + "'" + agenda.espacioFisico._id + "' )";
 
             executeQuery(query).then(function (data) {
                 return resolve(data);
@@ -252,15 +255,42 @@ export async function getAgendaSips() {
     }
 
     function crearConsultorioTipoSips(agenda, idEfector) {
-        return new Promise((resolve: any, reject: any) => {
+        return new Promise(async (resolve: any, reject: any) => {
             let query = 'INSERT INTO dbo.CON_ConsultorioTipo '
-                + ' ( idEfector, nombre ) VALUES  ( '
+                + ' ( idEfector, nombre, objectId ) VALUES  ( '
                 + idEfector + ','
-                + "'" + agenda.espacioFisico.nombre + "' )";
+                + "'" + agenda.espacioFisico.nombre + "',"
+                + "'" + agenda.espacioFisico._id + "' )";
 
             executeQuery(query).then(function (data) {
                 return resolve(data);
             });
+        });
+    }
+
+    function existeConsultorio(agenda, idEfector) {
+        let idConsultorio;
+
+        return new Promise((resolve: any, reject: any) => {
+            (async function () {
+                try {
+                    let query = 'SELECT top 1 idConsultorio FROM dbo.CON_Consultorio WHERE objectId = @objectId';
+                    let result = await new sql.Request(transaction)
+                        .input('objectId', sql.VarChar(50), agenda.espacioFisico._id)
+                        .query(query);
+
+                    if (typeof result[0] !== 'undefined') {
+                        idConsultorio = result[0].idConsultorio;
+                        resolve(idConsultorio);
+                    } else {
+                        idConsultorio = await creaConsultorioSips(agenda, idEfector)
+                        resolve(idConsultorio);
+                    }
+
+                } catch (err) {
+                    reject(err);
+                }
+            })();
         });
     }
 
