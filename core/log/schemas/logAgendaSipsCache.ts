@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-export let logAgendaCacheSchema = new mongoose.Schema({
+export let logAgendaSipsCacheSchema = new mongoose.Schema({
     agenda: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'agendaCache'
@@ -11,4 +11,4 @@ export let logAgendaCacheSchema = new mongoose.Schema({
 
 });
 
-export let logAgendaCache = mongoose.model('logAgendaCache', logAgendaCacheSchema, 'logAgendaCache');
+export let logAgendaCache = mongoose.model('logErrorAgendaSipsCache', logAgendaSipsCacheSchema, 'logErrorAgendaSipsCache');
