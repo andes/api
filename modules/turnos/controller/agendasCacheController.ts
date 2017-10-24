@@ -3,11 +3,11 @@ import { agendasCache } from '../../legacy/schemas/agendasCache';
 import * as configPrivate from '../../../config.private';
 import * as sql from 'mssql';
 import * as moment from 'moment';
-import * as profesionalSchema from './../../../core/tm/schemas/profesional';
 import * as pacientes from './../../../core/mpi/controller/paciente';
 import * as constantes from '../../legacy/schemas/constantes';
-import { model as organizacion } from './../../../core/tm/schemas/organizacion';
 import * as logger from './../../../utils/loggerAgendaCache';
+import * as agenda from '../schemas/agenda';
+import * as turnoCtrl from './turnoCacheController';
 
 const MongoClient = require('mongodb').MongoClient;
 
@@ -70,6 +70,8 @@ export async function getAgendaSips() {
                 await checkEstadoTurno(agenda, idAgenda);
                 await checkAsistenciaTurno(agenda);
 
+                await checkCodificacion(agenda);
+
                 transaction.commit(async err => {
                     console.log('commited!');
                     //await markAgendaAsProcessed(agenda._id);
@@ -102,6 +104,102 @@ export async function getAgendaSips() {
             });
         });
     }
+
+    //#region Codificación Agenda en SIPS  /* 
+
+    async function checkCodificacion(agenda) {
+        let turno;
+        let codificacionOdonto: any = {};
+        let idNomenclador: any = [];
+        let datosTurno = {};
+
+        for (let x = 0; x < agenda.bloques.length; x++) {
+            turno = agenda.bloques[x].turnos;
+
+            for (let z = 0; z < turno.length; z++) {
+
+                let idTurno = await existeTurnoSips(turno[z]);
+
+                if (idTurno) {
+                    console.log("Capooo: ", idTurno)
+                    let idConsulta = await existeConsultaTurno(idTurno);
+                    console.log("Id Consulta: ", idConsulta)
+                    if (idConsulta) {
+                        idNomenclador = await getConsultaOdontologia(idConsulta);
+                        console.log("Id Nomenclador: ", idNomenclador)
+                        for (let i = 0; i < idNomenclador.length; i++) {
+
+                            codificacionOdonto = await getCodificacionOdonto(idNomenclador[i].idNomenclador);
+
+                            turno[z].asistencia = 'asistio';
+                            turno[z].diagnosticoSecundario = [{
+                                ilegible: false,
+                                codificacion: {
+                                    codigo: codificacionOdonto[i].codigo,
+                                    nombre: codificacionOdonto[i].descripcion,
+                                    sinonimo: codificacionOdonto[i].descripcion,
+                                }
+                            }]
+
+                            datosTurno = {
+                                idAgenda: agenda.id,
+                                idTurno: turno[z]._id,
+                                idBloque: agenda.bloques[x]._id,
+                                idUsuario: constantes.idUsuarioSips,
+                                turno: turno[z]
+                            };
+                            console.log("Turnossss: ", datosTurno)
+                            turnoCtrl.updateTurno(datosTurno);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    function existeConsultaTurno(idTurno) {
+        return new Promise(function (resolve, reject) {
+            return new sql.Request(transaction)
+                .input('idTurno', sql.Int, idTurno)
+                .query('SELECT idConsulta FROM dbo.CON_Consulta WHERE idTurno = @idTurno')
+                .then(result => {
+                    if (result.length > 0) {
+                        resolve(result[0].idConsulta);
+                    } else {
+                        resolve(false);
+                    }
+                }).catch(err => {
+                    reject(err);
+                });
+        });
+    }
+
+    function getConsultaOdontologia(idConsulta) {
+        return new Promise(function (resolve, reject) {
+            return new sql.Request(transaction)
+                .input('idConsulta', sql.Int, idConsulta)
+                .query('SELECT idNomenclador FROM dbo.CON_ConsultaOdontologia WHERE idConsulta = @idConsulta')
+                .then(result => {
+                    resolve(result)
+                }).catch(err => {
+                    reject(err);
+                });
+        });
+    }
+
+    function getCodificacionOdonto(idNomenclador) {
+        return new Promise(function (resolve, reject) {
+            return new sql.Request(transaction)
+                .input('idNomenclador', sql.Int, idNomenclador)
+                .query('SELECT codigo, descripcion FROM dbo.ODO_Nomenclador WHERE idNomenclador = @idNomenclador')
+                .then(result => {
+                    resolve(result)
+                }).catch(err => {
+                    reject(err);
+                });
+        });
+    }
+    //#endregion Codificación Agenda en SIPS
 
     /* Inicio Sección de Agendas*/
     async function processAgenda(agenda: any, datosSips) {
@@ -377,9 +475,9 @@ export async function getAgendaSips() {
             for (let i = 0; i < turnos.length; i++) {
 
                 if (turnos[i].estado === 'asignado') {
-                    let existeTurno = await existeTurnoSips(turnos[i]);
+                    let idTurno = await existeTurnoSips(turnos[i]);
 
-                    if (!existeTurno) {
+                    if (!idTurno) {
                         await grabaTurnoSips(turnos[i], idAgendaCreada, idEfector);
                     } else {
                         console.log("El turno ya existe!!!");
@@ -416,7 +514,7 @@ export async function getAgendaSips() {
                     let fechaAsistencia = moment(turnos[i].updatedAt).format('YYYYMMDD');
                     let query = "INSERT INTO dbo.CON_TurnoAsistencia ( idTurno , idUsuario , fechaAsistencia ) VALUES  ( " +
                         idTurno.idTurno + " , " + constantes.idUsuarioSips + " , '" + fechaAsistencia + "' )";
-
+                    console.log("Query ", query);
                     await executeQuery(query);
                 }
             }
@@ -425,19 +523,15 @@ export async function getAgendaSips() {
 
     function existeTurnoSips(turno: any) {
         return new Promise(function (resolve, reject) {
-            let isTurno;
-            let idTurno = turno._id;
 
             return new sql.Request(transaction)
-                .input('idTurnoMongo', sql.VarChar(50), idTurno)
+                .input('idTurnoMongo', sql.VarChar(50), turno._id)
                 .query('SELECT idTurno FROM dbo.CON_Turno WHERE objectId = @idTurnoMongo GROUP BY idTurno')
                 .then(result => {
                     if (result.length > 0) {
-                        isTurno = true;
-                        resolve(isTurno);
+                        resolve(result[0].idTurno);
                     } else {
-                        isTurno = false;
-                        resolve(isTurno);
+                        resolve(false);
                     }
                 }).catch(err => {
                     reject(err);

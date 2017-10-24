@@ -352,6 +352,7 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, 
             let posBloque: number;
             if (req.params.idBloque !== '-1') {
                 posBloque = (data as any).bloques.findIndex(bloque => Object.is(req.params.idBloque, String(bloque._id)));
+                console.log("Pos Bloque APpp =>  ", posBloque )
                 posTurno = (data as any).bloques[posBloque].turnos.findIndex(turno => Object.is(req.params.idTurno, String(turno._id)));
                 etiquetaTurno = 'bloques.' + posBloque + '.turnos.' + posTurno;
             } else {
