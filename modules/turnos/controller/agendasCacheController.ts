@@ -5,7 +5,7 @@ import * as sql from 'mssql';
 import * as moment from 'moment';
 import * as pacientes from './../../../core/mpi/controller/paciente';
 import * as constantes from '../../legacy/schemas/constantes';
-import * as logger from './../../../utils/loggerAgendaCache';
+import * as logger from './../../../utils/loggerAgendaSipsCache';
 import * as agenda from '../schemas/agenda';
 import * as turnoCtrl from './turnoCacheController';
 
