@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "target": "es5",
+        "target": "es2015",
         "module": "commonjs",
         "moduleResolution": "node",
         "sourceMap": true,
@@ -8,6 +8,8 @@
         "experimentalDecorators": true,
         "removeComments": false,
         "noImplicitAny": false,
+        "noImplicitReturns": true,
+        "allowUnusedLabels": false,
         "typeRoots": [
             "node_modules/@types"
         ]

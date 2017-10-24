@@ -1,82 +1,31 @@
+import * as utils from '../../../utils/utils';
 import * as express from 'express';
-import { defaultLimit, maxLimit } from './../../../config';
 import { tipoPrestacion } from '../schemas/tipoPrestacion';
 
-var router = express.Router();
+let router = express.Router();
 
 router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
-
     let query;
-
+    // Búsqueda por un sólo ID
     if (req.params.id) {
-
         query = tipoPrestacion.findById(req.params.id);
-
     } else {
-
-        query = tipoPrestacion.find({}); // Trae todos
-
-        // ver skip limit
-        if (req.query.skip && req.query.limit) {
-            let skip: number = parseInt(req.query.skip || 0);
-            let limit: number = Math.min(parseInt(req.query.limit || defaultLimit), maxLimit);
-
-            query = query.skip(skip).limit(limit);
+        // Búsqueda por tem
+        if (req.query.term) {
+            query = tipoPrestacion.find({ term: { '$regex': utils.makePattern(req.query.term) } });
+        } else {
+            // Si no, devuelve todos
+            query = tipoPrestacion.find({});
         }
 
-        if (req.query.nombre) {
-            query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
+        // Búsqueda por múltiples IDs
+        if (req.query.id) {
+            query.where('_id').in(req.query.id);
         }
-
-        if (req.query.key) {
-            query.where('key').equals(RegExp('^.*' + req.query.key + '.*$', 'i'));
-        }
-
-        if (req.query.excluir) {
-            let ids = req.query.excluir.split(',');
-            query.where('_id').nin(ids);
-        }
-
-        if (req.query.turneable) {
-            query.where('turneable').equals(req.query.turneable);
-        }
-
-        if (req.query.granularidad) {
-            query.where('granularidad').equals(req.query.granularidad);
-        }
-
-        query.populate({
-            path: 'tipoProblemas',
-            model: 'tipoProblema'
-        });
-
-
     }
 
-    query.populate('ejecucion').sort({ 'nombre': 1 }).exec(function (err, data) {
-        if (err) {
-            console.log(err);
-            next(err);
-        };
-        res.json(data);
-    });
-
-
-});
-
-router.post('/tiposPrestaciones', function (req, res, next) {
-    let tp = new tipoPrestacion(req.body);
-    tp.save((err) => {
-        if (err) {
-            return next(err);
-        }
-
-        res.json(tp);
-    });
-});
-
-router.put('/tiposPrestaciones/:id', function (req, res, next) {
-    tipoPrestacion.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
+    // Consultar
+    query.sort({ 'term': 1 }).exec(function (err, data) {
         if (err) {
             return next(err);
         }
@@ -84,14 +33,34 @@ router.put('/tiposPrestaciones/:id', function (req, res, next) {
     });
 });
 
-router.delete('/tiposPrestaciones/:id', function (req, res, next) {
-    tipoPrestacion.findByIdAndRemove(req.params.id, function (err, data) {
-        if (err) {
-            return next(err);
-        }
+// router.post('/tiposPrestaciones', function (req, res, next) {
+//     let tp = new tipoPrestacion(req.body);
+//     tp.save((err) => {
+//         if (err) {
+//             return next(err);
+//         }
 
-        res.json(data);
-    });
-});
+//         res.json(tp);
+//     });
+// });
+
+// router.put('/tiposPrestaciones/:id', function (req, res, next) {
+//     tipoPrestacion.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
+//         if (err) {
+//             return next(err);
+//         }
+//         res.json(data);
+//     });
+// });
+
+// router.delete('/tiposPrestaciones/:id', function (req, res, next) {
+//     tipoPrestacion.findByIdAndRemove(req.params.id, function (err, data) {
+//         if (err) {
+//             return next(err);
+//         }
+
+//         res.json(data);
+//     });
+// });
 
 export = router;

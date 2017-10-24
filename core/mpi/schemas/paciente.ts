@@ -1,12 +1,13 @@
+import { parentezcoSchema } from './parentesco';
 import * as mongoose from 'mongoose';
-import * as mongoosastic from 'mongoosastic';
+import { Connections } from './../../../connections';
 import * as direccionSchema from '../../tm/schemas/direccion';
 import * as contactoSchema from '../../tm/schemas/contacto';
 import * as financiadorSchema from './financiador';
 import * as constantes from './constantes';
-import * as config from '../../../config';
-import { connectMpi } from '../../../connectMpi';
 import * as moment from 'moment';
+import * as nombreSchema from '../../../core/tm/schemas/nombre';
+import { Matching } from '@andes/match';
 
 export let pacienteSchema = new mongoose.Schema({
     identificadores: [{
@@ -15,6 +16,10 @@ export let pacienteSchema = new mongoose.Schema({
         valor: String
     }],
     documento: {
+        type: String,
+        es_indexed: true
+    },
+    cuil: {
         type: String,
         es_indexed: true
     },
@@ -40,9 +45,10 @@ export let pacienteSchema = new mongoose.Schema({
     fechaFallecimiento: Date,
     estadoCivil: constantes.ESTADOCIVIL,
     foto: String,
+    fotoMobile: String,
     nacionalidad: String,
     relaciones: [{
-        relacion: constantes.PARENTEZCO,
+        relacion: parentezcoSchema,
         referencia: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'paciente'
@@ -59,8 +65,34 @@ export let pacienteSchema = new mongoose.Schema({
         es_indexed: true
     },
     reportarError: Boolean,
-    notaError:String
+    notaError: String,
+    carpetaEfectores: [{
+        organizacion: nombreSchema,
+        nroCarpeta: String
+    }],
+    notas: [{
+        fecha: Date,
+        nota: String,
+        destacada: Boolean
+    }]
 });
+
+pacienteSchema.pre('save', function (next) {
+
+    if (this.isModified('nombre')) {
+        this.nombre = this.nombre.toUpperCase();
+    }
+    if (this.isModified('apellido')) {
+        this.apellido = this.apellido.toUpperCase();
+    }
+    if (this.isModified('nombre') || this.isModified('apellido') || this.isModified('documento')) {
+        let match = new Matching();
+        this.claveBlocking = match.crearClavesBlocking(this);
+    }
+    next();
+
+});
+
 
 /* Se definen los campos virtuals */
 pacienteSchema.virtual('nombreCompleto').get(function () {
@@ -81,8 +113,7 @@ pacienteSchema.virtual('edad').get(function () {
     return edad;
 });
 pacienteSchema.virtual('edadReal').get(function () {
-
-    //Calcula Edad de una persona (Redondea -- 30.5 años = 30 años)
+    // Calcula Edad de una persona (Redondea -- 30.5 años = 30 años)
     let edad: Object;
     let fechaNac: any;
     let fechaActual: Date = new Date();
@@ -91,7 +122,6 @@ pacienteSchema.virtual('edadReal').get(function () {
     let difDias: any;
     let difMeses: any;
     let difHs: any;
-    let difD: any;
 
     fechaNac = moment(this.fechaNacimiento, 'YYYY-MM-DD HH:mm:ss');
     fechaAct = moment(fechaActual, 'YYYY-MM-DD HH:mm:ss');
@@ -101,31 +131,38 @@ pacienteSchema.virtual('edadReal').get(function () {
     difHs = fechaAct.diff(fechaNac, 'h'); // Diferencia en horas
 
 
-    if (difAnios !== 0) { edad = { valor: difAnios, unidad: 'Años' } }
-    else
-        if (difMeses !== 0) { edad = { valor: difMeses, unidad: 'Meses' } }
-        else
-            if (difDias !== 0) { edad = { valor: difDias, unidad: 'Dias' } }
-            else
-                if (difHs !== 0) { edad = { valor: difHs, unidad: 'Horas' } }
-    return edad
+    if (difAnios !== 0) {
+        edad = {
+            valor: difAnios,
+            unidad: 'Años'
+        };
+    } else if (difMeses !== 0) {
+        edad = {
+            valor: difMeses,
+            unidad: 'Meses'
+        };
+    } else if (difDias !== 0) {
+        edad = {
+            valor: difDias,
+            unidad: 'Días'
+        };
+    } else if (difHs !== 0) {
+        edad = {
+            valor: difHs,
+            unidad: 'Horas'
+        };
+    }
 
+    return edad;
 });
+
 /* Creo un indice para fulltext Search */
 pacienteSchema.index({
     '$**': 'text'
 });
-/*conectamos con elasticSearch*/
-// pacienteSchema.plugin(mongoosastic, {
-//     hosts: [config.connectionStrings.elastic_main],
-//     index: 'andes',
-//     type: 'paciente'
-// });
 
 // Habilitar plugin de auditoría
 pacienteSchema.plugin(require('../../../mongoose/audit'));
 
-
 export let paciente = mongoose.model('paciente', pacienteSchema, 'paciente');
-export let pacienteMpi = connectMpi.model('paciente', pacienteSchema, 'paciente');
-
+export let pacienteMpi = Connections.mpi.model('paciente', pacienteSchema, 'paciente');

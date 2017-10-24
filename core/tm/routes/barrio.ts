@@ -1,7 +1,7 @@
-import * as express from 'express'
-import * as barrio from '../schemas/barrio'
+import * as express from 'express';
+import * as barrio from '../schemas/barrio';
 
-var router = express.Router();
+let router = express.Router();
 /**
  * @swagger
  * definition:
@@ -13,14 +13,12 @@ var router = express.Router();
  *          type: string
  *      localidad:
  *          type: object
- *          properties: 
- *              id: 
+ *          properties:
+ *              id:
  *                  type: string
  *              nombre:
  *                  type: string
- * 
  */
-
 /**
  * @swagger
  * /barrio:
@@ -67,20 +65,20 @@ var router = express.Router();
  *         schema:
  *           $ref: '#/definitions/barrio'
  */
-router.get('/barrios/:id*?', function(req, res, next) {
+router.get('/barrios/:id*?', function (req, res, next) {
 
-   if (req.params.id) {
-       barrio.findById(req.params.id, function (err, data) {
-       if (err) {
-           next(err);
-       };
-       res.json(data);
-   });
-   } else {
-       let query;
+    if (req.params.id) {
+        barrio.findById(req.params.id, function (err, data) {
+            if (err) {
+                return next(err);
+            }
+            res.json(data);
+        });
+    } else {
+        let query;
         query = barrio.find({});
         if (req.query.nombre) {
-            query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', "i"));
+            query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
         if (req.query.localidad) {
             query.where('localidad._id').equals(req.query.localidad);
@@ -88,10 +86,10 @@ router.get('/barrios/:id*?', function(req, res, next) {
         query.exec((err, data) => {
             if (err) {
                 return next(err);
-            };
-           res.json(data);
+            }
+            res.json(data);
         });
-   }
+    }
 });
 
 export = router;

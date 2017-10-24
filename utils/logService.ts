@@ -2,6 +2,16 @@ import * as log from '../core/log/schemas/log';
 
 export class Logger {
 
+    /**
+     *
+     * @param {any} req http req
+     * @param {any} mod modulo - enumerado en log schema
+     * @param {any} op operación - enumerado en log schema
+     * @param {any} [data] datos de la operación para incluir en el log
+     * @param {any} [callback]
+     * @returns {*} new log
+     * @memberof Logger
+     */
     public static log(req, mod, op, data?, callback?): any {
         let newLog = new log.log({
             fecha: new Date(),
@@ -10,8 +20,8 @@ export class Logger {
             modulo: mod,
             operacion: op,
             datosOperacion: data,
-            cliente: { 
-                ip: req.ip, 
+            cliente: {
+                ip: req.ip,
                 app: 'desktop'
             },
             servidor: {
@@ -19,7 +29,5 @@ export class Logger {
             }
         });
         newLog.save(callback);
-        return newLog;
     }
-
 }

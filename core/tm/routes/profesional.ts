@@ -1,10 +1,10 @@
 import { defaultLimit, maxLimit } from './../../../config';
-import * as express from 'express'
-import { profesional } from '../schemas/profesional'
-import * as utils from '../../../utils/utils'
-import * as config from '../../../config';
+import * as express from 'express';
+import { profesional } from '../schemas/profesional';
+import * as utils from '../../../utils/utils';
+// import * as config from '../../../config';
 
-var router = express.Router();
+let router = express.Router();
 
 /**
  * @swagger
@@ -23,7 +23,7 @@ var router = express.Router();
  *         type: array
  *         items:
  *          type: object
- *          properties: 
+ *          properties:
  *               tipo:
  *                  type: string
  *                  enum: [
@@ -33,9 +33,9 @@ var router = express.Router();
  *                  ]
  *               valor:
  *                  type: string
- *               ranking: 
+ *               ranking:
  *                  type: number
- *               ultimaActualizacion: 
+ *               ultimaActualizacion:
  *                  type: string
  *                  format: date
  *               activo:
@@ -45,14 +45,14 @@ var router = express.Router();
  *         enum: [
  *              femenino,
  *              masculino,
- *              otro 
+ *              otro
  *         ]
  *       genero:
  *         type: string
  *         enum: [
  *           femenino,
  *           masculino,
- *           otro 
+ *           otro
  *         ]
  *       fechaNacimiento:
  *         type: string
@@ -87,7 +87,7 @@ var router = express.Router();
  *                type: string
  *       matriculas:
  *          type: array
- *          items: 
+ *          items:
  *              type: object
  *              properties:
  *                  numero:
@@ -183,17 +183,17 @@ var router = express.Router();
  *           $ref: '#/definitions/profesional'
  */
 router.get('/profesionales/:id*?', function (req, res, next) {
+    let opciones = {};
+    let query;
+
     if (req.params.id) {
         profesional.findById(req.params._id, function (err, data) {
             if (err) {
-                next(err);
-            };
+                return next(err);
+            }
             res.json(data);
         });
     } else {
-        var query;
-        var opciones = {};
-
         if (req.query.nombre) {
             opciones['nombre'] = {
                 '$regex': utils.makePattern(req.query.nombre)
@@ -234,8 +234,9 @@ router.get('/profesionales/:id*?', function (req, res, next) {
         }
     }
 
-    let skip: number = parseInt(req.query.skip || 0);
-    let limit: number = Math.min(parseInt(req.query.limit || defaultLimit), maxLimit);
+    let radix = 10;
+    let skip: number = parseInt(req.query.skip || 0, radix);
+    let limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
 
     if (req.query.nombreCompleto) {
         query = profesional.find({ apellido: { '$regex': utils.makePattern(req.query.nombreCompleto) } }).
@@ -282,7 +283,7 @@ router.post('/profesionales', function (req, res, next) {
     let newProfesional = new profesional(req.body);
     newProfesional.save((err) => {
         if (err) {
-            next(err);
+            return next(err);
         }
         res.json(newProfesional);
     });
@@ -319,11 +320,11 @@ router.post('/profesionales', function (req, res, next) {
  *           $ref: '#/definitions/profesional'
  */
 router.put('/profesionales/:id', function (req, res, next) {
-    profesional.findByIdAndUpdate(req.params._id, req.body, { new: true }, function (err, data) {
+    profesional.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
         if (err) {
             return next(err);
         }
-        res.json(data);
+        res.json(req.body);
     });
 });
 

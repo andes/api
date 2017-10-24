@@ -1,35 +1,27 @@
 import * as bodyParser from 'body-parser';
-import * as mongoose from 'mongoose';
 import * as config from './config';
 import { Auth } from './auth/auth.class';
-import { Swagger } from './swagger';
+import { Swagger } from './swagger/swagger.class';
+import { Connections } from './connections';
 import * as HttpStatus from 'http-status-codes';
-import { schemaDefaults } from './mongoose/defaults';
 import { Express } from 'express';
+// import { Scheduler } from './scheduler';
+
 let requireDir = require('require-dir');
 
 export function initAPI(app: Express) {
-    // Configuración de Mongoose
-    if (config.mongooseDebugMode) {
-        mongoose.set('debug', true);
-    }
-    mongoose.connect(config.connectionStrings.mongoDB_main);
-    mongoose.plugin(schemaDefaults);
-    mongoose.connection.on('connected', function () {
-        console.log('[Mongoose] Conexión OK');
-    });
-    mongoose.connection.on('error', function (err) {
-        console.log('[Mongoose] No se pudo conectar al servidor');
-    });
-
-    // Inicializa la autenticación con Password/JWT
+    // Inicializa la autenticación con Passport/JWT
     Auth.initialize(app);
 
-    // Inicializa swagger
-    Swagger.initialize(app);
+    // Inicializa Mongoose
+    Connections.initialize();
+
+    // Inicializa las tareas diarias
+    // Uso el require acá porque genera problemas con los import de schemas antes de setear los defaultsSchema
+    // require('./scheduler').Scheduler.initialize();
 
     // Configura Express
-    app.use(bodyParser.json());
+    app.use(bodyParser.json({ limit: '150mb' }));
     app.use(bodyParser.urlencoded({
         extended: true
     }));
@@ -40,19 +32,22 @@ export function initAPI(app: Express) {
 
         // Permitir que el método OPTIONS funcione sin autenticación
         if ('OPTIONS' === req.method) {
-            res.send(200);
+            res.sendStatus(200);
         } else {
             next();
         }
     });
+
+    // Inicializa Swagger
+    Swagger.initialize(app);
 
     // Carga los módulos y rutas
     for (let m in config.modules) {
         if (config.modules[m].active) {
             let routes = requireDir(config.modules[m].path);
             for (let route in routes) {
-                if (config.modules[m].auth) {
-                    app.use('/api' + config.modules[m].route, Auth.authenticate(), routes[route]);
+                if (config.modules[m].middleware) {
+                    app.use('/api' + config.modules[m].route, config.modules[m].middleware, routes[route]);
                 } else {
                     app.use('/api' + config.modules[m].route, routes[route]);
                 }
@@ -78,6 +73,9 @@ export function initAPI(app: Express) {
                     err.status = 500;
                 }
             }
+
+            // IMPORTANTE: Express app.get('env') returns 'development' if NODE_ENV is not defined.
+            // O sea, la API está corriendo siempre en modo development
 
             // Send response
             res.status(err.status);

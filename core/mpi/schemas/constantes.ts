@@ -9,15 +9,15 @@ const constantes = {
         type: String,
         enum: ['casado', 'separado', 'divorciado', 'viudo', 'soltero', 'concubino', 'otro', null]
     },
-     PARENTEZCO : {
+    PARENTESCO: {
         type: String,
-        enum: ['padre', 'madre', 'hijo', 'hermano', 'tutor']
-     },
-     ESTADO : {
+        enum: ['progenitor/a', 'hijo', 'hermano', 'tutor']
+    },
+    ESTADO: {
         type: String,
         required: true,
         es_indexed: true,
         enum: ['temporal', 'validado', 'recienNacido', 'extranjero']
-     }
+    }
 };
 export = constantes;

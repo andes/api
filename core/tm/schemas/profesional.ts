@@ -32,6 +32,8 @@ export let profesionalSchema = new mongoose.Schema({
             fin: Date
         },
     }],
+    legajo: String,
+    codigoSisa: String
 });
 
 // Defino Virtuals
@@ -39,6 +41,5 @@ profesionalSchema.virtual('nombreCompleto').get(function () {
     // Prefiere el error de undefined cuando se hace una consulta de proyección y no se incluyen algunos campos
     return ((this.nombre || '') + ' ' + (this.apellido || '')).trim();
 });
-
 
 export let profesional = mongoose.model('profesional', profesionalSchema, 'profesional');
