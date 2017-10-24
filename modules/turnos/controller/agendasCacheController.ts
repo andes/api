@@ -123,31 +123,30 @@ export async function getAgendaSips() {
                         idNomenclador = await getConsultaOdontologia(idConsulta);
 
                         for (let i = 0; i < idNomenclador.length; i++) {
-                            
+
                             codificacionOdonto = await getCodificacionOdonto(idNomenclador[i].idNomenclador);
-                            
+
                             turno[z].asistencia = 'asistio';
-                            turno[z].diagnosticoSecundario = [{
+                            turno[z].diagnosticoSecundario[i] = {
                                 ilegible: false,
                                 codificacion: {
-                                    codigo: codificacionOdonto[i].codigo,
-                                    nombre: codificacionOdonto[i].descripcion,
-                                    sinonimo: codificacionOdonto[i].descripcion,
+                                    codigo: codificacionOdonto.codigo,
+                                    nombre: codificacionOdonto.descripcion,
+                                    sinonimo: codificacionOdonto.descripcion,
                                 }
-                            }]
-                            console.log("Turno Zeta ", turno[z].diagnosticoSecundario, ' - Id: ', i);
-                            datosTurno = {
-                                idAgenda: agenda.id,
-                                idTurno: turno[z]._id,
-                                idBloque: agenda.bloques[x]._id,
-                                idUsuario: constantes.idUsuarioSips,
-                                turno: turno[z]
                             };
-
-                           turnoCtrl.updateTurno(datosTurno);
                         }
+
+                        datosTurno = {
+                            idAgenda: agenda.id,
+                            idTurno: turno[z]._id,
+                            idBloque: agenda.bloques[x]._id,
+                            idUsuario: constantes.idUsuarioSips,
+                            turno: turno[z]
+                        };
                     }
                 }
+                turnoCtrl.updateTurno(datosTurno);
             }
         }
     }
@@ -188,7 +187,7 @@ export async function getAgendaSips() {
                 .input('idNomenclador', sql.Int, idNomenclador)
                 .query('SELECT codigo, descripcion FROM dbo.ODO_Nomenclador WHERE idNomenclador = @idNomenclador')
                 .then(result => {
-                    resolve(result)
+                    resolve(result[0])
                 }).catch(err => {
                     reject(err);
                 });
