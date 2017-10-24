@@ -47,21 +47,16 @@ export async function getAgendaSips() {
                 //graba dni '0', correspondiente a 'Sin especifiar', efector SSS.
                 let dniProfesional = agenda.profesionales[0] ? agenda.profesionales[0].documento : '0';
                 let codigoSisa = agenda.organizacion.codigo.sisa;
-                let tipoPrestacion = agenda.tipoPrestaciones[0].conceptId;
 
                 let datosSips = {
                     idEfector: '',
-                    idProfesional: '',
-                    idEspecialidad: '',
-                    idServicio: ''
+                    idProfesional: ''
                 }
 
-                let datosArr = await getDatosSips(codigoSisa, dniProfesional, tipoPrestacion);
+                let datosArr = await getDatosSips(codigoSisa, dniProfesional);
 
                 datosSips.idEfector = datosArr[0][0].idEfector;
                 datosSips.idProfesional = datosArr[1][0].idProfesional;
-                datosSips.idEspecialidad = datosArr[2][0].idEspecialidad;
-                datosSips.idServicio = datosArr[2][0].idServicio;
 
                 let idAgenda = await processAgenda(agenda, datosSips);
 
@@ -121,16 +116,16 @@ export async function getAgendaSips() {
                 let idTurno = await existeTurnoSips(turno[z]);
 
                 if (idTurno) {
-                    
+
                     let idConsulta = await existeConsultaTurno(idTurno);
-                    
+
                     if (idConsulta) {
                         idNomenclador = await getConsultaOdontologia(idConsulta);
-                        
+
                         for (let i = 0; i < idNomenclador.length; i++) {
-
+                            
                             codificacionOdonto = await getCodificacionOdonto(idNomenclador[i].idNomenclador);
-
+                            
                             turno[z].asistencia = 'asistio';
                             turno[z].diagnosticoSecundario = [{
                                 ilegible: false,
@@ -140,7 +135,7 @@ export async function getAgendaSips() {
                                     sinonimo: codificacionOdonto[i].descripcion,
                                 }
                             }]
-
+                            console.log("Turno Zeta ", turno[z].diagnosticoSecundario, ' - Id: ', i);
                             datosTurno = {
                                 idAgenda: agenda.id,
                                 idTurno: turno[z]._id,
@@ -148,8 +143,8 @@ export async function getAgendaSips() {
                                 idUsuario: constantes.idUsuarioSips,
                                 turno: turno[z]
                             };
-                            
-                            turnoCtrl.updateTurno(datosTurno);
+
+                           turnoCtrl.updateTurno(datosTurno);
                         }
                     }
                 }
@@ -266,8 +261,8 @@ export async function getAgendaSips() {
         return new Promise(async (resolve: any, reject: any) => {
             let idEfector = datosSips.idEfector;
             let idProfesional = datosSips.idProfesional;
-            let idEspecialidad = datosSips.idEspecialidad;
-            let idServicio = datosSips.idServicio;
+            let idEspecialidad = await getEspecialidadSips(agendaSips.tipoPrestaciones[0].term);
+            let idServicio = 177;
             let idTipoPrestacion = 0;
             let idConsultorio = await existeConsultorio(agendaSips, idEfector); //creaConsultorioSips(agendaSips, idEfector);
 
@@ -312,6 +307,18 @@ export async function getAgendaSips() {
             });
     }
 
+    function getEspecialidadSips(tipoPrestacion) {
+        let idEspecialidad = 0;
+
+        return new Promise((resolve, reject) => {
+            if (tipoPrestacion.includes("odonto")) {
+                /*IdEspecialidad 34 = odontologia en SIPS*/
+                idEspecialidad = 34;
+                resolve(idEspecialidad);
+            }
+        });
+    }
+
     function arrayIdProfesionales(profMongo) {
         return new Promise((resolve, reject) => {
             const array = [];
@@ -334,6 +341,8 @@ export async function getAgendaSips() {
     }
 
     async function creaConsultorioSips(agenda: any, idEfector: any) {
+        let nombre = { nombre: 'Sin Espacio Físico', _id: 'andesCitas2017' }
+        agenda.espacioFisico = nombre;
 
         return new Promise(async (resolve: any, reject: any) => {
             let idConsultorioTipo = await crearConsultorioTipoSips(agenda, idEfector);
@@ -353,6 +362,9 @@ export async function getAgendaSips() {
     }
 
     function crearConsultorioTipoSips(agenda, idEfector) {
+        let nombre = { nombre: 'Sin Espacio Físico', _id: 'andesCitas2017' }
+        agenda.espacioFisico = nombre;
+
         return new Promise(async (resolve: any, reject: any) => {
             let query = 'INSERT INTO dbo.CON_ConsultorioTipo '
                 + ' ( idEfector, nombre, objectId ) VALUES  ( '
@@ -368,13 +380,22 @@ export async function getAgendaSips() {
 
     function existeConsultorio(agenda, idEfector) {
         let idConsultorio;
+        let espacioFisicoObjectId = null;
+
+        if (agenda.espacioFisico) {
+            espacioFisicoObjectId = agenda.espacioFisico._id
+        } else {
+            /*La agenda viene sin espacio físico, así que se lo agrego para poder verlo en SIPS*/
+            espacioFisicoObjectId = 'andesCitas2017';
+        }
 
         return new Promise((resolve: any, reject: any) => {
             (async function () {
                 try {
+
                     let query = 'SELECT top 1 idConsultorio FROM dbo.CON_Consultorio WHERE objectId = @objectId';
                     let result = await new sql.Request(transaction)
-                        .input('objectId', sql.VarChar(50), agenda.espacioFisico._id)
+                        .input('objectId', sql.VarChar(50), espacioFisicoObjectId)
                         .query(query);
 
                     if (typeof result[0] !== 'undefined') {
@@ -421,9 +442,9 @@ export async function getAgendaSips() {
                         .input('dniProfesional', sql.Int, dniProfesional)
                         .query('SELECT idProfesional FROM dbo.Sys_Profesional WHERE numeroDocumento = @dniProfesional and activo = 1');
 
-                    result[2] = await new sql.Request(transaction)
-                        .input('conceptId', sql.VarChar(50), conceptId)
-                        .query('SELECT E.idEspecialidad, S.idServicio FROM dbo.Sys_Especialidad E INNER JOIN dbo.Sys_Servicio S ON s.unidadOperativa = e.unidadOperativa WHERE E.conceptId_snomed = 268565007 AND s.activo = 1 ');
+                    // result[2] = await new sql.Request(transaction)
+                    //     .input('conceptId', sql.VarChar(50), conceptId)
+                    //     .query('SELECT E.idEspecialidad, S.idServicio FROM dbo.Sys_Especialidad E INNER JOIN dbo.Sys_Servicio S ON s.unidadOperativa = e.unidadOperativa WHERE E.conceptId_snomed = 268565007 AND s.activo = 1 ');
 
                     resolve(result);
                 } catch (err) {
@@ -514,7 +535,7 @@ export async function getAgendaSips() {
                     let fechaAsistencia = moment(turnos[i].updatedAt).format('YYYYMMDD');
                     let query = "INSERT INTO dbo.CON_TurnoAsistencia ( idTurno , idUsuario , fechaAsistencia ) VALUES  ( " +
                         idTurno.idTurno + " , " + constantes.idUsuarioSips + " , '" + fechaAsistencia + "' )";
-                    
+
                     await executeQuery(query);
                 }
             }
