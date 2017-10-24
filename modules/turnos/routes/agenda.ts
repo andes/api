@@ -84,11 +84,7 @@ router.get('/agenda/candidatas', function (req, res, next) {
                             &&  // turno disponible o al que se reasigno
                             (typeof req.query.horario !== 'undefined' ? horaIni.toString() === moment(turno.horaInicio).format('HH:mm') : true)
                             && // si filtro por horario verifico que sea el mismo
-                            (req.query.duracion ? b.duracionTurno === bloque.duracionTurno : true)
-                            &&  // si filtro por duracion verifico que sea la mismo
-                            (bloque.accesoDirectoDelDia > 0 && b.restantesDelDia > 0) || (bloque.accesoDirectoProgramado > 0 && b.restantesProgramados > 0) // verifico que queden turnos disponibles
-                            // && //
-                            // (bloque.turnos.map(t => t.paciente && t.paciente.id).length)
+                            (req.query.duracion ? b.duracionTurno === bloque.duracionTurno : true) // si filtro por duracion verifico que sea la mismo
                         ) {
                             if (out.indexOf(a) < 0) {
                                 out.push(a);
