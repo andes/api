@@ -121,12 +121,12 @@ export async function getAgendaSips() {
                 let idTurno = await existeTurnoSips(turno[z]);
 
                 if (idTurno) {
-                    console.log("Capooo: ", idTurno)
+                    
                     let idConsulta = await existeConsultaTurno(idTurno);
-                    console.log("Id Consulta: ", idConsulta)
+                    
                     if (idConsulta) {
                         idNomenclador = await getConsultaOdontologia(idConsulta);
-                        console.log("Id Nomenclador: ", idNomenclador)
+                        
                         for (let i = 0; i < idNomenclador.length; i++) {
 
                             codificacionOdonto = await getCodificacionOdonto(idNomenclador[i].idNomenclador);
@@ -148,7 +148,7 @@ export async function getAgendaSips() {
                                 idUsuario: constantes.idUsuarioSips,
                                 turno: turno[z]
                             };
-                            console.log("Turnossss: ", datosTurno)
+                            
                             turnoCtrl.updateTurno(datosTurno);
                         }
                     }
@@ -514,7 +514,7 @@ export async function getAgendaSips() {
                     let fechaAsistencia = moment(turnos[i].updatedAt).format('YYYYMMDD');
                     let query = "INSERT INTO dbo.CON_TurnoAsistencia ( idTurno , idUsuario , fechaAsistencia ) VALUES  ( " +
                         idTurno.idTurno + " , " + constantes.idUsuarioSips + " , '" + fechaAsistencia + "' )";
-                    console.log("Query ", query);
+                    
                     await executeQuery(query);
                 }
             }
