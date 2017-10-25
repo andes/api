@@ -18,7 +18,9 @@
     "aggregate-error": "^1.0.0",
     "async": "^2.4.0",
     "bcrypt-nodejs": "0.0.3",
+    "before": "0.0.1",
     "body-parser": "^1.15.2",
+    "chai": "^4.1.2",
     "cheerio": "^1.0.0-rc.2",
     "concurrently": "^3.1.0",
     "debug": "^3.0.0",
@@ -42,6 +44,7 @@
     "node-pushnotifications": "^1.0.18",
     "node-schedule": "^1.2.4",
     "nodemailer": "^4.0.1",
+    "nodemon": "^1.12.1",
     "passport": "^0.3.2",
     "passport-jwt": "^2.2.1",
     "request": "^2.81.0",
@@ -51,7 +54,7 @@
     "soap": "^0.18.0",
     "supports-color": "^4.2.1",
     "swagger-jsdoc": "^1.7.0",
-    "ws": "^3.0.0",
+    "ws": "^3.2.0",
     "xmljson": "^0.2.0"
   },
   "scripts": {
@@ -73,6 +76,8 @@
   },
   "homepage": "https://github.com/andes/api#readme",
   "devDependencies": {
+    "before": "0.0.1",
+    "chai": "^4.1.2",
     "tslint-eslint-rules": "^4.1.1"
   }
 }

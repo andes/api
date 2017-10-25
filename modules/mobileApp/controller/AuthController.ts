@@ -2,8 +2,6 @@ import * as jwt from 'jsonwebtoken';
 import { pacienteApp } from '../schemas/pacienteApp';
 import { authApp } from '../../../config.private';
 import { Client } from 'elasticsearch';
-import { sendMail, MailOptions } from '../../../utils/sendMail';
-import { sendSms, SmsOptions } from '../../../utils/sendSms';
 import { Matching } from '@andes/match';
 import { paciente, pacienteMpi } from '../../../core/mpi/schemas/paciente';
 import * as express from 'express';
@@ -14,6 +12,8 @@ import * as constantes from '../../../core/tm/schemas/constantes';
 import * as mongoose from 'mongoose';
 import * as debug from 'debug';
 import * as controller from './../../../core/mpi/controller/paciente';
+
+import { sendEmail, IEmail, ISms, sendSms } from '../../../utils/roboSender';
 
 let handlebars = require('handlebars');
 import * as fs from 'fs';
@@ -34,74 +34,56 @@ export function verificarCodigo(codigoIngresado, codigo) {
 
 export function enviarCodigoCambioPassword(user) {
     log('Enviando mail...');
-
-    fs.readFile(TEMPLATE_PATH + 'reset-password.html', {encoding: 'utf-8'}, (err, html) => {
-        /*
-        if (err) {
-        }
-        */
-
-        // compilamos el html
-        let template = handlebars.compile(html);
-
-        // seteamos las variables a modificar con handlebars
-        let replacements = {
-            username: user.apellido + ', ' + user.nombre,
-            codigo: user.restablecerPassword.codigo
-        };
-
-        // modificamos las variables
-        let htmlToSend = template(replacements);
-
-        // preparamos options para nodemailer
-        let mailOptions: MailOptions = {
-            from: configPrivate.enviarMail.host,
-            to: user.email,
-            subject: 'ANDES - Restablecer contraseña',
-            text: 'El código de verificación es: ' + user.restablecerPassword.codigo,
-            html: htmlToSend
-        };
-
-        // enviamos email
-        sendMail(mailOptions);
-    });
-
-    /*
-    let smsOptions: SmsOptions = {
-        telefono: user.telefono,
-        mensaje: user.codigoVerificacion
+    let replacements = {
+        username: user.apellido + ', ' + user.nombre,
+        codigo: user.restablecerPassword.codigo
     };
 
-    sendSms(smsOptions, function (res) {
-        if (res === '0') {
-            log('El SMS se envío correctamente');
-        }
-    });
-    */
+    let mailOptions: IEmail = {
+        email: user.email,
+        subject: 'ANDES - Restablecer contraseña',
+        template: 'emails/reset-password.html',
+        extras: replacements,
+        plainText: 'Su código de verificación para restaurar su password es: ' + user.restablecerPassword.codigo,
+    };
+
+    // enviamos email
+    sendEmail(mailOptions);
+
+    let sms: ISms = {
+        message: 'Su código de verificación para restaurar su password es: ' + user.restablecerPassword.codigo,
+        phone: user.telefono
+    };
+
+    sendSms(sms);
+
 }
 
 export function enviarCodigoVerificacion(user) {
     log('Enviando mail...');
 
-    let mailOptions: MailOptions = {
-        from: configPrivate.enviarMail.host,
-        to: user.email,
-        subject: 'Ministerio de Salud :: ANDES :: Código de activación',
-        text: 'Estimado ' + user.email + ', Su código de activación para ANDES Mobile es: ' + user.codigoVerificacion,
-        html: 'Estimado ' + user.email + ', Su código de activación para ANDES Mobile es: ' + user.codigoVerificacion,
+    let replacements = {
+        username: user.apellido + ', ' + user.nombre,
+        codigo: user.codigoVerificacion
     };
 
-    let smsOptions: SmsOptions = {
-        telefono: user.telefono,
-        mensaje: user.codigoVerificacion
+    let mailOptions: IEmail = {
+        email: user.email,
+        subject: 'ANDES :: Código de activación',
+        template: 'emails/active-app-code.html',
+        extras: replacements,
+        plainText: 'Estimado ' + replacements.username + ', Su código de activación para ANDES Mobile es: ' + user.codigoVerificacion,
     };
 
-    sendMail(mailOptions);
-    sendSms(smsOptions, function (res) {
-        if (res === '0') {
-            log('El SMS se envío correctamente');
-        }
-    });
+    // enviamos email
+    sendEmail(mailOptions);
+
+    let sms: ISms = {
+        message: 'ANDES :: Su código de activación para ANDES Mobile es: ' + user.codigoVerificacion,
+        phone: user.telefono
+    };
+
+    sendSms(sms);
 }
 
 export function envioCodigoCount(user: any) {
@@ -181,20 +163,6 @@ export function checkAppAccounts(pacienteData) {
                 return resolve({ message: 'account_assigned', account: docs[0] });
             } else {
                 return resolve({message: 'account_doesntExists', account: null});
-                // let email = searchContacto(pacienteData, 'email');
-                // if (email) {
-
-                //     pacienteApp.findOne({ email }, function (errFind, existingUser) {
-                //         if (existingUser) {
-                //             return reject({ error: 'email_exists' });
-                //         } else {
-                //             return resolve(true);
-                //         }
-                //     });
-
-                // } else {
-                //    return reject({ error: 'email_not_found' });
-                // }
             }
         });
     });

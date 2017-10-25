@@ -7,6 +7,10 @@ import * as farmaciaController from '../controller/FarmaciasTurnosDownloader';
 
 let router = express.Router();
 
+/**
+ * Obtiene las localidade disponible para la farmacia
+ */
+
 router.get('/farmacias/localidades', function (req: any, res, next) {
 
     farmaciasLocalidades.find({}).then(data => {
@@ -15,6 +19,13 @@ router.get('/farmacias/localidades', function (req: any, res, next) {
         next(err);
     });
 });
+
+
+/**
+ * Devuelte la farmacias de turno dado una localidad
+ *
+ * @param {number} localidad Id de la localidad
+ */
 
 router.get('/farmacias/turnos', function (req, res, next) {
     let localidad = req.query.localidad;

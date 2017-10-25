@@ -88,11 +88,7 @@ router.get('/agenda/candidatas', function (req, res, next) {
                             &&  // turno disponible o al que se reasigno
                             (typeof req.query.horario !== 'undefined' ? horaIni.toString() === moment(turno.horaInicio).format('HH:mm') : true)
                             && // si filtro por horario verifico que sea el mismo
-                            (req.query.duracion ? b.duracionTurno === bloque.duracionTurno : true)
-                            &&  // si filtro por duracion verifico que sea la mismo
-                            (bloque.accesoDirectoDelDia > 0 && b.restantesDelDia > 0) || (bloque.accesoDirectoProgramado > 0 && b.restantesProgramados > 0) // verifico que queden turnos disponibles
-                            // && //
-                            // (bloque.turnos.map(t => t.paciente && t.paciente.id).length)
+                            (req.query.duracion ? b.duracionTurno === bloque.duracionTurno : true) // si filtro por duracion verifico que sea la mismo
                         ) {
                             if (out.indexOf(a) < 0) {
                                 out.push(a);
@@ -219,7 +215,7 @@ router.post('/agenda', function (req, res, next) {
     let data = new agenda(req.body);
     Auth.audit(data, req);
     data.save((err) => {
-        Logger.log(req, 'turnos', 'insert', {
+        Logger.log(req, 'citas', 'insert', {
             accion: 'Crear Agenda',
             ruta: req.url,
             method: req.method,
@@ -237,25 +233,6 @@ router.post('/agenda', function (req, res, next) {
     });
 });
 
-function saveAgenda(nuevaAgenda, req) {
-    return new Promise((resolve, reject) => {
-        nuevaAgenda.save((err, dataAgenda) => {
-            Logger.log(req, 'turnos', 'insert', {
-                accion: 'Clonar Agenda',
-                ruta: req.url,
-                method: req.method,
-                data: nuevaAgenda,
-                err: err || false
-            });
-            if (err) {
-                reject(err);
-            }
-            if (dataAgenda) {
-                resolve(dataAgenda);
-            }
-        });
-    });
-}
 
 // Este post recibe el id de la agenda a clonar y un array con las fechas en las cuales se va a clonar
 router.post('/agenda/clonar', function (req, res, next) {
@@ -316,7 +293,19 @@ router.post('/agenda/clonar', function (req, res, next) {
                     nueva['estado'] = 'planificacion';
                     nueva['sobreturnos'] = [];
                     Auth.audit(nueva, req);
-                    listaSaveAgenda.push(saveAgenda(nueva, req));
+                    listaSaveAgenda.push(
+                        agendaCtrl.saveAgenda(nueva).then((nuevaAgenda) => {
+                            Logger.log(req, 'citas', 'insert', {
+                                accion: 'Clonar Agenda',
+                                ruta: req.url,
+                                method: req.method,
+                                data: nuevaAgenda,
+                                err: err || false
+                            });
+                        }).catch(error => {
+                            return (error);
+                        })
+                    );
                 }
             });
             Promise.all(listaSaveAgenda).then(resultado => {
@@ -328,7 +317,7 @@ router.post('/agenda/clonar', function (req, res, next) {
 
 router.put('/agenda/:id', function (req, res, next) {
     agenda.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
-        Logger.log(req, 'turnos', 'update', {
+        Logger.log(req, 'citas', 'update', {
             accion: 'Editar Agenda en estado Planificación',
             ruta: req.url,
             method: req.method,
@@ -418,7 +407,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
 
             data.save(function (error) {
 
-                Logger.log(req, 'turnos', 'update', {
+                Logger.log(req, 'citas', 'update', {
                     accion: req.body.op,
                     ruta: req.url,
                     method: req.method,
