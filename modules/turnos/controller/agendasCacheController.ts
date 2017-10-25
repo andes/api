@@ -24,37 +24,33 @@ let connection = {
 
 export async function getAgendaSips() {
     pool = await sql.connect(connection);
-    
-    let datosSips;
     let agendasMongoExportadas = await getAgendasDeMongoExportadas();
-
-    agendasMongoExportadas.forEach(async (agenda) => {        
-        await checkCodificacion(agenda);
+    agendasMongoExportadas.forEach(async (ag) => {
+        await checkCodificacion(ag);
     });
 
     let agendasMongoPendientes = await getAgendasDeMongoPendientes();
 
-    if (agendasMongoPendientes.length > 0)
+    if (agendasMongoPendientes.length > 0) {
         await guardarCacheASips(agendasMongoPendientes, 0);
+    }
 
     async function guardarCacheASips(agendasMongo, index) {
-        let agenda = agendasMongo[index];
-        console.log("Entra a Pendientes: ", agenda._id)
-        let transaction = await new sql.Transaction(pool);
+        let agendaMon = agendasMongo[index];
+        transaction = await new sql.Transaction(pool);
         await transaction.begin(async err => {
 
             let rolledBack = false;
             transaction.on('rollback', aborted => {
-                // emited with aborted === true
-                rolledBack = true
+                rolledBack = true;
             });
 
             try {
-                //CON_Agenda de SIPS soporta solo un profesional NOT NULL.
-                //En caso de ser nulo el paciente en agenda de ANDES, por defector
-                //graba dni '0', correspondiente a 'Sin especifiar', efector SSS.
-                let dniProfesional = agenda.profesionales[0] ? agenda.profesionales[0].documento : '0';
-                let codigoSisa = agenda.organizacion.codigo.sisa;
+                // CON_Agenda de SIPS soporta solo un profesional NOT NULL.
+                // En caso de ser nulo el paciente en agenda de ANDES, por defector
+                // graba dni '0', correspondiente a 'Sin especifiar', efector SSS.
+                let dniProfesional = agendaMon.profesionales[0] ? agendaMon.profesionales[0].documento : '0';
+                let codigoSisa = agendaMon.organizacion.codigo.sisa;
 
                 let datosSips = {
                     idEfector: '',
@@ -75,15 +71,13 @@ export async function getAgendaSips() {
 
                 // await checkCodificacion(agenda);
 
-                transaction.commit(async err => {
-                    console.log('commited!');
+                transaction.commit(async err2 => {
                     await markAgendaAsProcessed(agenda);
                     next();
                 });
 
             } catch (ee) {
-                console.log('error! ', ee);
-                logger.LoggerAgendaCache.logAgenda(agenda._id, ee);
+                logger.LoggerAgendaCache.logAgenda(agendaMon._id, ee);
                 transaction.rollback();
                 next();
             }
@@ -111,12 +105,12 @@ export async function getAgendaSips() {
     }
 
     /* Traemos las agendas de CITAS/Mongo que ya fueron exportadas a SIPS*/
-    async function getAgendasDeMongoExportadas() {        
+    async function getAgendasDeMongoExportadas() {
         return new Promise<Array<any>>(function (resolve, reject) {
             agendasCache.find({ estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS }).exec(function (err, data) {
                 if (err) {
                     return (err);
-                }                
+                }
                 resolve(data);
             });
         });
@@ -132,11 +126,9 @@ export async function getAgendaSips() {
 
         for (let x = 0; x < agenda.bloques.length; x++) {
             turno = agenda.bloques[x].turnos;
-            
             for (let z = 0; z < turno.length; z++) {
 
                 let idTurno = await existeTurnoSips(turno[z]);
-                
                 if (idTurno) {
 
                     let idConsulta = await existeConsultaTurno(idTurno);
@@ -167,9 +159,9 @@ export async function getAgendaSips() {
                             turno: turno[z]
                         };
                     }
-                    await turnoCtrl.updateTurno(datosTurno);                
+                    await turnoCtrl.updateTurno(datosTurno);
                     await markAgendaAsProcessed(agenda);
-                }               
+                }
             }
         }
     }
@@ -216,16 +208,16 @@ export async function getAgendaSips() {
                 });
         });
     }
-    //#endregion Codificación Agenda en SIPS
+    // #endregion Codificación Agenda en SIPS
 
     /* Inicio Sección de Agendas*/
-    async function processAgenda(agenda: any, datosSips) {
-        let idAgenda = await existeAgendaSips(agenda);
+    async function processAgenda(ag: any, datosSips) {
+        let idAgenda = await existeAgendaSips(ag);
 
         if (!idAgenda) {
-            idAgenda = await grabaAgendaSips(agenda, datosSips);
+            idAgenda = await grabaAgendaSips(ag, datosSips);
         } else {
-            console.log("Existe Agenda en SIPS");
+            log('Existe Agenda en Sips');
         }
 
         return idAgenda;
@@ -249,7 +241,7 @@ export async function getAgendaSips() {
         });
     }
 
-    async function grabaAgendaSips(agendaSips: any, datosSips: any) {        
+    async function grabaAgendaSips(agendaSips: any, datosSips: any) {
         let objectId = agendaSips.id;
 
         let estado = getEstadoAgendaSips(agendaSips.estado);
@@ -281,14 +273,14 @@ export async function getAgendaSips() {
 
         return new Promise(async (resolve: any, reject: any) => {
             let idEfector = datosSips.idEfector;
-            let idProfesional = datosSips.idProfesional;            
+            let idProfesional = datosSips.idProfesional;
             let idEspecialidad = await getEspecialidadSips(agendaSips.tipoPrestaciones[0].term);
             let idServicio = 177;
             let idTipoPrestacion = 0;
-            let idConsultorio = await existeConsultorio(agendaSips, idEfector); //creaConsultorioSips(agendaSips, idEfector);
+            let idConsultorio = await existeConsultorio(agendaSips, idEfector); // creaConsultorioSips(agendaSips, idEfector);
 
-            let query = "insert into Con_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, idMotivoInactivacion, multiprofesional, objectId) " +
-                "values (" + estado + ", " + idEfector + ", " + idServicio + ", " + idProfesional + ", " + idTipoPrestacion + ", " + idEspecialidad + ", " + idConsultorio + ", '" + fecha + "', " + duracionTurno + ", '" + horaInicio + "', '" + horaFin + "', " + maximoSobreTurnos + ", " + porcentajeTurnosDia + ", " + porcentajeTurnosAnticipados + ", " + citarPorBloques + " , " + cantidadInterconsulta + ", " + turnosDisponibles + ", " + idMotivoInactivacion + ", " + multiprofesional + ", '" + objectId + "')";
+            let query = 'insert into Con_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, idMotivoInactivacion, multiprofesional, objectId) ' +
+                'values (' + estado + ', ' + idEfector + ', ' + idServicio + ', ' + idProfesional + ', ' + idTipoPrestacion + ", " + idEspecialidad + ", " + idConsultorio + ", '" + fecha + "', " + duracionTurno + ", '" + horaInicio + "', '" + horaFin + "', " + maximoSobreTurnos + ", " + porcentajeTurnosDia + ", " + porcentajeTurnosAnticipados + ", " + citarPorBloques + " , " + cantidadInterconsulta + ", " + turnosDisponibles + ", " + idMotivoInactivacion + ", " + multiprofesional + ", '" + objectId + "')";
 
             executeQuery(query).then(function (idAgendaCreada) {
                 let query2;
@@ -326,12 +318,11 @@ export async function getAgendaSips() {
             });
     }
 
-    function getEspecialidadSips(tipoPrestacion) {        
+    function getEspecialidadSips(tipoPrestacion) {
         let idEspecialidad = 0;
 
         return new Promise((resolve, reject) => {
-            if (tipoPrestacion.includes("odonto")) {
-                /*IdEspecialidad 34 = odontologia en SIPS*/
+            if (tipoPrestacion.includes('odonto')) {
                 idEspecialidad = 34;
                 resolve(idEspecialidad);
             }
@@ -397,12 +388,12 @@ export async function getAgendaSips() {
         });
     }
 
-    function existeConsultorio(agenda, idEfector) {
+    function existeConsultorio(ag, idEfector) {
         let idConsultorio;
         let espacioFisicoObjectId = null;
 
-        if (agenda.espacioFisico) {
-            espacioFisicoObjectId = agenda.espacioFisico._id
+        if (ag.espacioFisico) {
+            espacioFisicoObjectId = ag.espacioFisico._id;
         } else {
             /*La agenda viene sin espacio físico, así que se lo agrego para poder verlo en SIPS*/
             espacioFisicoObjectId = 'andesCitas2017';
@@ -421,7 +412,7 @@ export async function getAgendaSips() {
                         idConsultorio = result[0].idConsultorio;
                         resolve(idConsultorio);
                     } else {
-                        idConsultorio = await creaConsultorioSips(agenda, idEfector)
+                        idConsultorio = await creaConsultorioSips(agenda, idEfector);
                         resolve(idConsultorio);
                     }
 
@@ -479,7 +470,7 @@ export async function getAgendaSips() {
         let estadoAgendaMongo = getEstadoAgendaSips(agendaMongo.estado);
 
         if ((estadoAgendaSips !== estadoAgendaMongo) && (agendaMongo.estado === 'suspendida')) {
-            let query = "UPDATE dbo.CON_Agenda SET idAgendaEstado = " + estadoAgendaMongo + "   WHERE idAgenda = " + idAgendaSips;
+            let query = 'UPDATE dbo.CON_Agenda SET idAgendaEstado = ' + estadoAgendaMongo + '   WHERE idAgenda = ' + idAgendaSips;
             await executeQuery(query);
         }
     }
@@ -520,18 +511,18 @@ export async function getAgendaSips() {
                     if (!idTurno) {
                         await grabaTurnoSips(turnos[i], idAgendaCreada, idEfector);
                     } else {
-                        console.log("El turno ya existe!!!");
+                        log('El turno ya existe');
                     }
                 }
             }
         }
     }
 
-    async function checkEstadoTurno(agenda: any, idAgendaSips) {
+    async function checkEstadoTurno(ag: any, idAgendaSips) {
         let turnos;
 
-        for (let x = 0; x < agenda.bloques.length; x++) {
-            turnos = agenda.bloques[x].turnos;
+        for (let x = 0; x < ag.bloques.length; x++) {
+            turnos = ag.bloques[x].turnos;
 
             for (let i = 0; i < turnos.length; i++) {
                 if ((turnos[i].estado !== 'disponible') || (turnos[i].updatedAt)) {
@@ -541,19 +532,19 @@ export async function getAgendaSips() {
         }
     }
 
-    async function checkAsistenciaTurno(agenda: any) {
+    async function checkAsistenciaTurno(ag: any) {
         let turnos;
 
-        for (let x = 0; x < agenda.bloques.length; x++) {
-            turnos = agenda.bloques[x].turnos;
+        for (let x = 0; x < ag.bloques.length; x++) {
+            turnos = ag.bloques[x].turnos;
 
             for (let i = 0; i < turnos.length; i++) {
                 if (turnos[i].asistencia === 'asistio') {
 
                     let idTurno: any = await getEstadoTurnoSips(turnos[i]._id);
                     let fechaAsistencia = moment(turnos[i].updatedAt).format('YYYYMMDD');
-                    let query = "INSERT INTO dbo.CON_TurnoAsistencia ( idTurno , idUsuario , fechaAsistencia ) VALUES  ( " +
-                        idTurno.idTurno + " , " + constantes.idUsuarioSips + " , '" + fechaAsistencia + "' )";
+                    let query = 'INSERT INTO dbo.CON_TurnoAsistencia ( idTurno , idUsuario , fechaAsistencia ) VALUES  ( ' +
+                        idTurno.idTurno + ' , ' + constantes.idUsuarioSips + " , '" + fechaAsistencia + "' )";
 
                     await executeQuery(query);
                 }
@@ -580,13 +571,13 @@ export async function getAgendaSips() {
     }
 
     async function grabaTurnoSips(turno, idAgendaSips, idEfector) {
-        //TODO: El paciente pudiera no estar validado, en ese caso no se encontrara en la
-        // colección de paciente de MPI, en ese caso buscar en la coleccion de pacientes de Andes 
+        // TODO: El paciente pudiera no estar validado, en ese caso no se encontrara en la
+        // colección de paciente de MPI, en ese caso buscar en la coleccion de pacientes de Andes
         let pacienteEncontrado = await pacientes.buscarPaciente(turno.paciente.id);
         let paciente = pacienteEncontrado.paciente;
-        //if(!pacienteEncontrado) {
+        // if(!pacienteEncontrado) {
         //  pacienteEncontrado = buscar en andes.......
-        //} 
+        //}
 
         let idObraSocial = await getIdObraSocialSips(paciente.documento);
         let pacienteId = await getPacienteMPI(paciente, idEfector);
@@ -594,7 +585,7 @@ export async function getAgendaSips() {
         let fechaTurno = moment(turno.horaInicio).format('YYYYMMDD');
         let horaTurno = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
 
-        let query = "INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente ,  fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante, objectId ) VALUES  ( " +
+        let query = 'INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente ,  fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante, objectId ) VALUES  ( ' +
             idAgendaSips + " , 1 , " + constantes.idUsuarioSips + " ," + pacienteId + ", '" + fechaTurno + "' ,'" + horaTurno + "' , 0 , 0 ," + idObraSocial + " , 0, '" + turno._id + "')";
 
         let turnoGrabado = await executeQuery(query);
@@ -653,16 +644,16 @@ export async function getAgendaSips() {
                 await grabarTurnoBloqueo(idAgendaSips, turno);
             }
 
-            let query = "UPDATE dbo.CON_Turno SET idTurnoEstado = " + estadoTurnoMongo + " WHERE idAgenda = " + idAgendaSips + objectIdTurno;
+            let query = 'UPDATE dbo.CON_Turno SET idTurnoEstado = ' + estadoTurnoMongo + ' WHERE idAgenda = ' + idAgendaSips + objectIdTurno;
             await executeQuery(query);
         }
     }
 
     async function existeTurnoBloqueoSips(idAgendaSips, horaInicio) {
 
-        let query = "SELECT COUNT(b.idTurnoBloqueo) as count FROM CON_TurnoBloqueo b " +
-            "JOIN CON_TURNO t on t.idAgenda = b.idAgenda " +
-            "WHERE b.idAgenda = " + idAgendaSips +
+        let query = 'SELECT COUNT(b.idTurnoBloqueo) as count FROM CON_TurnoBloqueo b ' +
+            'JOIN CON_TURNO t on t.idAgenda = b.idAgenda ' +
+            'WHERE b.idAgenda = ' + idAgendaSips +
             " AND b.horaTurno = '" + horaInicio + "'";
 
         try {
@@ -700,7 +691,7 @@ export async function getAgendaSips() {
         let motivoBloqueo;
 
         if (turno.estado === 'suspendido') {
-            motivoBloqueo = getMotivoTurnoSuspendido(turno.motivoSuspension); //constantes.MotivoTurnoBloqueo
+            motivoBloqueo = getMotivoTurnoSuspendido(turno.motivoSuspension); // constantes.MotivoTurnoBloqueo
         } else if (turno.estado === 'turnoDoble') {
             motivoBloqueo = constantes.MotivoTurnoBloqueo.turnoDoble;
         }
@@ -778,17 +769,17 @@ export async function getAgendaSips() {
         });
     }
 
-    async function markAgendaAsProcessed(agenda) {
+    async function markAgendaAsProcessed(ag) {
         let estadoIntegracion;
 
-        switch (agenda.estadoIntegracion) {
+        switch (ag.estadoIntegracion) {
             case 'pendiente': estadoIntegracion = constantes.EstadoExportacionAgendaCache.exportadaSIPS;
                 break;
             case 'exportada a Sips': estadoIntegracion = constantes.EstadoExportacionAgendaCache.codificada;
                 break;
         }
 
-        return agendasCache.update({ _id: agenda._id }, {
+        return agendasCache.update({ _id: ag._id }, {
             $set: {
                 // estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS
                 estadoIntegracion: estadoIntegracion
@@ -823,7 +814,7 @@ export async function getAgendaSips() {
         });
     }
 
-    //#region Inserta Paciente en SIPS
+    // #region Inserta Paciente en SIPS
     async function insertaPacienteSips(pacienteSips: any) {
         let idPacienteGrabadoSips;
         let idPaciente = await existePacienteSips(pacienteSips);
@@ -1010,5 +1001,5 @@ export async function getAgendaSips() {
 
         return idPacienteGrabadoSips;
     }
-    //#endregion
+    // #endregion
 }
