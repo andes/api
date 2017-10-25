@@ -24,11 +24,11 @@ let connection = {
 
 export async function getAgendaSips() {
     pool = await sql.connect(connection);
-
+    
     let datosSips;
     let agendasMongoExportadas = await getAgendasDeMongoExportadas();
 
-    agendasMongoExportadas.forEach(async (agenda) => {
+    agendasMongoExportadas.forEach(async (agenda) => {        
         await checkCodificacion(agenda);
     });
 
@@ -36,9 +36,10 @@ export async function getAgendaSips() {
 
     if (agendasMongoPendientes.length > 0)
         await guardarCacheASips(agendasMongoPendientes, 0);
-    
+
     async function guardarCacheASips(agendasMongo, index) {
         let agenda = agendasMongo[index];
+        console.log("Entra a Pendientes: ", agenda._id)
         let transaction = await new sql.Transaction(pool);
         await transaction.begin(async err => {
 
@@ -76,7 +77,7 @@ export async function getAgendaSips() {
 
                 transaction.commit(async err => {
                     console.log('commited!');
-                    await markAgendaAsProcessed(agenda._id);
+                    await markAgendaAsProcessed(agenda);
                     next();
                 });
 
@@ -110,12 +111,12 @@ export async function getAgendaSips() {
     }
 
     /* Traemos las agendas de CITAS/Mongo que ya fueron exportadas a SIPS*/
-    async function getAgendasDeMongoExportadas() {
+    async function getAgendasDeMongoExportadas() {        
         return new Promise<Array<any>>(function (resolve, reject) {
             agendasCache.find({ estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS }).exec(function (err, data) {
                 if (err) {
                     return (err);
-                }
+                }                
                 resolve(data);
             });
         });
@@ -131,11 +132,11 @@ export async function getAgendaSips() {
 
         for (let x = 0; x < agenda.bloques.length; x++) {
             turno = agenda.bloques[x].turnos;
-
+            
             for (let z = 0; z < turno.length; z++) {
 
                 let idTurno = await existeTurnoSips(turno[z]);
-
+                
                 if (idTurno) {
 
                     let idConsulta = await existeConsultaTurno(idTurno);
@@ -166,8 +167,9 @@ export async function getAgendaSips() {
                             turno: turno[z]
                         };
                     }
-                }
-                turnoCtrl.updateTurno(datosTurno);
+                    await turnoCtrl.updateTurno(datosTurno);                
+                    await markAgendaAsProcessed(agenda);
+                }               
             }
         }
     }
@@ -247,8 +249,7 @@ export async function getAgendaSips() {
         });
     }
 
-    async function grabaAgendaSips(agendaSips: any, datosSips: any) {
-
+    async function grabaAgendaSips(agendaSips: any, datosSips: any) {        
         let objectId = agendaSips.id;
 
         let estado = getEstadoAgendaSips(agendaSips.estado);
@@ -280,7 +281,7 @@ export async function getAgendaSips() {
 
         return new Promise(async (resolve: any, reject: any) => {
             let idEfector = datosSips.idEfector;
-            let idProfesional = datosSips.idProfesional;
+            let idProfesional = datosSips.idProfesional;            
             let idEspecialidad = await getEspecialidadSips(agendaSips.tipoPrestaciones[0].term);
             let idServicio = 177;
             let idTipoPrestacion = 0;
@@ -325,8 +326,9 @@ export async function getAgendaSips() {
             });
     }
 
-    function getEspecialidadSips(tipoPrestacion) {
+    function getEspecialidadSips(tipoPrestacion) {        
         let idEspecialidad = 0;
+
         return new Promise((resolve, reject) => {
             if (tipoPrestacion.includes("odonto")) {
                 /*IdEspecialidad 34 = odontologia en SIPS*/
@@ -776,14 +778,23 @@ export async function getAgendaSips() {
         });
     }
 
-    async function markAgendaAsProcessed(idAgenda) {
-        return agendasCache.update({ _id: idAgenda }, {
+    async function markAgendaAsProcessed(agenda) {
+        let estadoIntegracion;
+
+        switch (agenda.estadoIntegracion) {
+            case 'pendiente': estadoIntegracion = constantes.EstadoExportacionAgendaCache.exportadaSIPS;
+                break;
+            case 'exportada a Sips': estadoIntegracion = constantes.EstadoExportacionAgendaCache.codificada;
+                break;
+        }
+
+        return agendasCache.update({ _id: agenda._id }, {
             $set: {
-                estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS
+                // estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS
+                estadoIntegracion: estadoIntegracion
             }
         }
         ).exec();
-
     }
 
     function existePacienteSips(pacienteSips) {

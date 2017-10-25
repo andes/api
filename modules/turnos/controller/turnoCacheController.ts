@@ -46,7 +46,7 @@ export function updateTurno(datosTurno: any) {
                     _id: datosTurno.idAgenda,
                 };
                 update[etiquetaTurno] = datosTurno.turno;
-
+                
                 // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
                 (agenda as any).findOneAndUpdate(query, update, { new: true },
 
@@ -62,7 +62,7 @@ export function updateTurno(datosTurno: any) {
                                 turno: update[etiquetaTurno]
                             };
                             
-                            resolve(data);
+                            resolve(doc2._id);
                             return ('Se actualizó el turno');
                             //  Logger.log(req, 'turnos', 'update', datosOp);
                         }

@@ -25,7 +25,8 @@ const constantes = {
 
     EstadoExportacionAgendaCache: {
         pendiente: 'pendiente',
-        exportadaSIPS: 'exportada a Sips'
+        exportadaSIPS: 'exportada a Sips',
+        codificada: 'codificada'
     },
 
     idUsuarioSips: '1486739'
