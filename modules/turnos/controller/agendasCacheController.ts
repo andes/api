@@ -34,9 +34,9 @@ export async function getAgendaSips() {
 
     let agendasMongoPendientes = await getAgendasDeMongoPendientes();
 
-    await guardarCacheASips(agendasMongoPendientes, 0);
-    //pool.close();
-
+    if (agendasMongoPendientes.length > 0)
+        await guardarCacheASips(agendasMongoPendientes, 0);
+    
     async function guardarCacheASips(agendasMongo, index) {
         let agenda = agendasMongo[index];
         let transaction = await new sql.Transaction(pool);
@@ -72,7 +72,7 @@ export async function getAgendaSips() {
                 await checkEstadoTurno(agenda, idAgenda);
                 await checkAsistenciaTurno(agenda);
 
-                await checkCodificacion(agenda);
+                // await checkCodificacion(agenda);
 
                 transaction.commit(async err => {
                     console.log('commited!');
@@ -286,8 +286,6 @@ export async function getAgendaSips() {
             let idTipoPrestacion = 0;
             let idConsultorio = await existeConsultorio(agendaSips, idEfector); //creaConsultorioSips(agendaSips, idEfector);
 
-            console.log("IdConsultorio: ", idConsultorio);
-
             let query = "insert into Con_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, idMotivoInactivacion, multiprofesional, objectId) " +
                 "values (" + estado + ", " + idEfector + ", " + idServicio + ", " + idProfesional + ", " + idTipoPrestacion + ", " + idEspecialidad + ", " + idConsultorio + ", '" + fecha + "', " + duracionTurno + ", '" + horaInicio + "', '" + horaFin + "', " + maximoSobreTurnos + ", " + porcentajeTurnosDia + ", " + porcentajeTurnosAnticipados + ", " + citarPorBloques + " , " + cantidadInterconsulta + ", " + turnosDisponibles + ", " + idMotivoInactivacion + ", " + multiprofesional + ", '" + objectId + "')";
 
@@ -329,7 +327,6 @@ export async function getAgendaSips() {
 
     function getEspecialidadSips(tipoPrestacion) {
         let idEspecialidad = 0;
-        console.log("Tipo Prestacionnn:  ", tipoPrestacion);
         return new Promise((resolve, reject) => {
             if (tipoPrestacion.includes("odonto")) {
                 /*IdEspecialidad 34 = odontologia en SIPS*/
@@ -779,7 +776,7 @@ export async function getAgendaSips() {
         });
     }
 
-    async function markAgendaAsProcessed(idAgenda) {        
+    async function markAgendaAsProcessed(idAgenda) {
         return agendasCache.update({ _id: idAgenda }, {
             $set: {
                 estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS
