@@ -36,7 +36,7 @@ function profesionalCompleto(lstProfesionales): any {
             // Esto es una mersada pero no me doy cuenta como hacerlo mejor
             if (counter === lstProfesionales.length) {
                 return resolve(listaProf);
-            }
+            } 
         });
     });
 }

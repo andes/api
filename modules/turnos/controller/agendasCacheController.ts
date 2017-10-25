@@ -26,8 +26,15 @@ export async function getAgendaSips() {
     pool = await sql.connect(connection);
 
     let datosSips;
-    let agendasMongo = await getAgendasDeMongo();
-    await guardarCacheASips(agendasMongo, 0);
+    let agendasMongoExportadas = await getAgendasDeMongoExportadas();
+
+    agendasMongoExportadas.forEach(async (agenda) => {
+        await checkCodificacion(agenda);
+    });
+
+    let agendasMongoPendientes = await getAgendasDeMongoPendientes();
+
+    await guardarCacheASips(agendasMongoPendientes, 0);
     //pool.close();
 
     async function guardarCacheASips(agendasMongo, index) {
@@ -69,7 +76,7 @@ export async function getAgendaSips() {
 
                 transaction.commit(async err => {
                     console.log('commited!');
-                    //await markAgendaAsProcessed(agenda._id);
+                    await markAgendaAsProcessed(agenda._id);
                     next();
                 });
 
@@ -89,9 +96,23 @@ export async function getAgendaSips() {
         }
     }
 
-    async function getAgendasDeMongo() {
+    /* Traemos las agendas de CITAS/Mongo que están pendientes de exportar a SIPS*/
+    async function getAgendasDeMongoPendientes() {
         return new Promise<Array<any>>(function (resolve, reject) {
-            agendasCache.find({ estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente }).exec(function (err, data) {
+            agendasCache.find({ estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente }).exec(async function (err, data: any) {
+                if (err) {
+                    return (err);
+                }
+
+                resolve(data);
+            });
+        });
+    }
+
+    /* Traemos las agendas de CITAS/Mongo que ya fueron exportadas a SIPS*/
+    async function getAgendasDeMongoExportadas() {
+        return new Promise<Array<any>>(function (resolve, reject) {
+            agendasCache.find({ estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS }).exec(function (err, data) {
                 if (err) {
                     return (err);
                 }
@@ -308,7 +329,7 @@ export async function getAgendaSips() {
 
     function getEspecialidadSips(tipoPrestacion) {
         let idEspecialidad = 0;
-
+        console.log("Tipo Prestacionnn:  ", tipoPrestacion);
         return new Promise((resolve, reject) => {
             if (tipoPrestacion.includes("odonto")) {
                 /*IdEspecialidad 34 = odontologia en SIPS*/
@@ -758,15 +779,14 @@ export async function getAgendaSips() {
         });
     }
 
-    async function markAgendaAsProcessed(idAgenda) {
-        return new Promise<Array<any>>(function (resolve, reject) {
-            agendasCache.update({ _id: idAgenda }, {
-                $set: {
-                    estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS
-                }
+    async function markAgendaAsProcessed(idAgenda) {        
+        return agendasCache.update({ _id: idAgenda }, {
+            $set: {
+                estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS
             }
-            ).exec();
-        });
+        }
+        ).exec();
+
     }
 
     function existePacienteSips(pacienteSips) {
