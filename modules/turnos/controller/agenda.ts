@@ -1,5 +1,5 @@
-import * as moment from 'moment';
 import * as agendaModel from '../../turnos/schemas/agenda';
+import * as moment from 'moment';
 import { Auth } from '../../../auth/auth.class';
 import { userScheduler } from '../../../config.private';
 import { Logger } from '../../../utils/logService';
@@ -594,4 +594,3 @@ export function saveAgenda(nuevaAgenda) {
         });
     });
 }
-

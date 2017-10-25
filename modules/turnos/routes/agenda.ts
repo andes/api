@@ -6,8 +6,12 @@ import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
 import * as moment from 'moment';
 import * as agendaCtrl from '../controller/agenda';
-import { LoggerPaciente } from '../../../utils/loggerPaciente';
+// import * as agendaSipsCtrl from '../controller/agendaSipsController';
 
+import * as agendaCacheCtrl from '../controller/agendasCacheController';
+
+import { LoggerPaciente } from '../../../utils/loggerPaciente';
+import * as operations from './../../legacy/controller/operations';
 
 let router = express.Router();
 
@@ -218,9 +222,13 @@ router.post('/agenda', function (req, res, next) {
             data: data,
             err: err || false
         });
+        // Fin de operaciones de cache
         if (err) {
             return next(err);
         }
+        // Al crear una nueva agenda la cacheo para Sips
+        operations.cacheTurnosSips(data);
+        // Fin de insert cache
         res.json(data);
     });
 });
@@ -278,6 +286,8 @@ router.post('/agenda/clonar', function (req, res, next) {
                             turno.nota = null;
                             turno._id = mongoose.Types.ObjectId();
                             turno.tipoTurno = undefined;
+                            turno.updatedAt = undefined;
+                            turno.updatedBy = undefined;
                         });
                     });
                     nueva['estado'] = 'planificacion';
@@ -317,6 +327,9 @@ router.put('/agenda/:id', function (req, res, next) {
         if (err) {
             return next(err);
         }
+        // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
+        operations.cacheTurnosSips(data);
+        // Fin de insert cache
         res.json(data);
     });
 });
@@ -420,9 +433,15 @@ router.patch('/agenda/:id*?', function (req, res, next) {
             });
 
         }
+        // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
+        operations.cacheTurnosSips(data);
+        // Fin de insert cache
         return res.json(data);
     });
 
 });
 
+router.get('/agendaSips', function (req, res, next) {
+    agendaCacheCtrl.getAgendaSips();
+});
 export = router;

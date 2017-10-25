@@ -7,6 +7,7 @@ import { paciente } from '../../../core/mpi/schemas/paciente';
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 import { NotificationService } from '../../mobileApp/controller/NotificationService';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
+import * as operations from './../../legacy/controller/operations';
 import { esPrimerPaciente } from '../controller/agenda';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
@@ -152,7 +153,6 @@ router.get('/turno/:id*?', function (req, res, next) {
     };
  */
 router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, res, next) {
-
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
     let continues = ValidateDarTurno.checkTurno(req.body);
 
@@ -163,13 +163,11 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
             if (err) {
                 return next(err);
             } else {
-
                 // Se verifica la existencia del tipoPrestacion
                 tipoPrestacion.findById(req.body.tipoPrestacion._id, function verificarTipoPrestacion(err2, data2) {
                     if (err2) {
                         return next(err2);
                     } else {
-
                         // Se obtiene la agenda que se va a modificar
                         agenda.findById(req.params.idAgenda, async function getAgenda(err3, data) {
                             if (err3) {
@@ -237,7 +235,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                             }
 
                             // Verifica si el turno se encuentra todavia disponible
-
                             // Si quedan turnos
                             let update: any = {};
                             switch (tipoTurno) {
@@ -257,7 +254,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                                     update['bloques.' + posBloque + '.restantesGestion'] = countBloques.gestion - 1;
                                     break;
                             }
-
                             let usuario = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
                             // Copia la organización desde el token
                             usuario.organizacion = (req as any).user.organizacion;
@@ -319,9 +315,12 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                                         let turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
                                         LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turno, req.params.idBloque, req.params.idAgenda);
                                     }
+                                    // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
+                                    // Donde doc2 es el documeto Agenda actualizado
+                                    operations.cacheTurnosSips(doc2);
+                                    // Fin de insert cache
+                                    res.json(data);
                                 }
-
-                                res.json(data);
                             });
                         });
                     }
@@ -350,6 +349,7 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, 
             let posBloque: number;
             if (req.params.idBloque !== '-1') {
                 posBloque = (data as any).bloques.findIndex(bloque => Object.is(req.params.idBloque, String(bloque._id)));
+                console.log("Pos Bloque APpp =>  ", posBloque )
                 posTurno = (data as any).bloques[posBloque].turnos.findIndex(turno => Object.is(req.params.idTurno, String(turno._id)));
                 etiquetaTurno = 'bloques.' + posBloque + '.turnos.' + posTurno;
             } else {
@@ -380,6 +380,10 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, 
                         };
                         Logger.log(req, 'citas', 'update', datosOp);
                     }
+                    // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
+                    // Donde doc2 es el documeto de la Agenda actualizado
+                        operations.cacheTurnosSips(doc2);
+                    // Fin de insert cache
                     res.json(data);
 
                     if (req.body.turno.reasignado && req.body.turno.reasignado.siguiente) {
