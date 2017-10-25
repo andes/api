@@ -64,64 +64,64 @@ router.post('/login', function (req, res, next) {
  * Espera todos los datos del paciente más del usuario
  */
 
-router.patch('/account', function (req, res, next) {
-    let data = {
-        nombre: req.body.nombre,
-        apellido: req.body.apellido,
-        documento: req.body.documento,
-        fechaNacimiento: req.body.fechaNacimiento,
-        genero: req.body.sexo
-    };
-    let email = req.body.email;
-    pacienteApp.findOne({ email: email }, function (err, account: any) {
+// router.patch('/account', function (req, res, next) {
+//     let data = {
+//         nombre: req.body.nombre,
+//         apellido: req.body.apellido,
+//         documento: req.body.documento,
+//         fechaNacimiento: req.body.fechaNacimiento,
+//         genero: req.body.sexo
+//     };
+//     let email = req.body.email;
+//     pacienteApp.findOne({ email: email }, function (err, account: any) {
 
-        if (err) {
-            return next(err);
-        }
+//         if (err) {
+//             return next(err);
+//         }
 
-        if (!account || account.activacionApp) {
-            return res.status(422).send({ 'email': 'account_not_foun' });
-        }
+//         if (!account || account.activacionApp) {
+//             return res.status(422).send({ 'email': 'account_not_foun' });
+//         }
 
-        authController.matchPaciente(data).then((pacientes: any) => {
-            let valid = false;
-            if (pacientes.length) {
-                let pacienteTemp = pacientes[0].paciente;
+//         authController.matchPaciente(data).then((pacientes: any) => {
+//             let valid = false;
+//             if (pacientes.length) {
+//                 let pacienteTemp = pacientes[0].paciente;
 
-                if (pacienteTemp.estado === 'validado') {
-                    account.nombre = data.nombre;
-                    account.apellido = data.apellido;
-                    account.fechaNacimiento = data.fechaNacimiento;
-                    account.sexo = data.genero;
-                    account.documento = data.documento;
-                    account.codigoVerificacion = authController.generarCodigoVerificacion();
-                    account.expirationTime = new Date(Date.now() + authController.expirationOffset);
-                    account.pacientes = [
-                        {
-                            id: pacienteTemp.id,
-                            relacion: 'principal',
-                            addedAt: new Date()
-                        }
-                    ];
-                    valid = true;
-                    authController.enviarCodigoVerificacion(account);
-                } else {
-                    account.codigoVerificacion = null;
-                }
-                account.save();
-            }
-            res.status(200).json({
-                valid: valid
-            });
-        }).catch(errMatch => {
-            res.status(200).json({
-                valid: false
-            });
-        });
+//                 if (pacienteTemp.estado === 'validado') {
+//                     account.nombre = data.nombre;
+//                     account.apellido = data.apellido;
+//                     account.fechaNacimiento = data.fechaNacimiento;
+//                     account.sexo = data.genero;
+//                     account.documento = data.documento;
+//                     account.codigoVerificacion = authController.generarCodigoVerificacion();
+//                     account.expirationTime = new Date(Date.now() + authController.expirationOffset);
+//                     account.pacientes = [
+//                         {
+//                             id: pacienteTemp.id,
+//                             relacion: 'principal',
+//                             addedAt: new Date()
+//                         }
+//                     ];
+//                     valid = true;
+//                     authController.enviarCodigoVerificacion(account);
+//                 } else {
+//                     account.codigoVerificacion = null;
+//                 }
+//                 account.save();
+//             }
+//             res.status(200).json({
+//                 valid: valid
+//             });
+//         }).catch(errMatch => {
+//             res.status(200).json({
+//                 valid: false
+//             });
+//         });
 
 
-    });
-});
+//     });
+// });
 
 /**
  * Registro de un usuario desde la app mobile
@@ -254,41 +254,47 @@ router.post('/reenviar-codigo', function (req, res, next) {
  * @param email {string} email del usuario
  * @param codigo {string} codigo de verificacion
  */
-router.post('/verificar-codigo', function (req, res, next) {
-    let email = req.body.email;
-    let codigoIngresado = req.body.codigo;
+// router.post('/verificar-codigo', function (req, res, next) {
+//     let email = req.body.email;
+//     let codigoIngresado = req.body.codigo;
 
-    pacienteApp.findOne({ email: email }, function (err, datosUsuario: any) {
-        if (err) {
-            return next(err);
-        }
+//     pacienteApp.findOne({ email: email }, function (err, datosUsuario: any) {
+//         if (err) {
+//             return next(err);
+//         }
 
-        if (authController.verificarCodigo(codigoIngresado, datosUsuario.codigoVerificacion)) {
-            if (datosUsuario.expirationTime.getTime() + authController.expirationOffset >= new Date().getTime()) {
-                datosUsuario.activacionApp = true;
-                datosUsuario.estadoCodigo = true;
-                datosUsuario.codigoVerificacion = null;
-                datosUsuario.expirationTime = null;
+//         if (authController.verificarCodigo(codigoIngresado, datosUsuario.codigoVerificacion)) {
+//             if (datosUsuario.expirationTime.getTime() + authController.expirationOffset >= new Date().getTime()) {
+//                 datosUsuario.activacionApp = true;
+//                 datosUsuario.estadoCodigo = true;
+//                 datosUsuario.codigoVerificacion = null;
+//                 datosUsuario.expirationTime = null;
 
-                datosUsuario.save(function (errSave, user) {
-                    if (errSave) {
-                        return next(errSave);
-                    }
+//                 datosUsuario.save(function (errSave, user) {
+//                     if (errSave) {
+//                         return next(errSave);
+//                     }
 
-                    let token = Auth.generatePacienteToken(String(user.id), user.nombre + ' ' + user.apellido, user.email, user.pacientes, user.permisos);
-                    res.status(200).json({
-                        token: token,
-                        user: user
-                    });
-                });
-            } else {
-                res.status(422).send({ message: 'code_expired' });
-            }
-        } else {
-            res.status(422).send({ message: 'code_mismatch' });
-        }
-    });
-});
+//                     let token = Auth.generatePacienteToken(String(user.id), user.nombre + ' ' + user.apellido, user.email, user.pacientes, user.permisos);
+//                     res.status(200).json({
+//                         token: token,
+//                         user: user
+//                     });
+//                 });
+//             } else {
+//                 res.status(422).send({ message: 'code_expired' });
+//             }
+//         } else {
+//             res.status(422).send({ message: 'code_mismatch' });
+//         }
+//     });
+// });
+
+
+/**
+ * Reset Password functions
+ */
+
 
 /**
  * Genera el código para poder cambiar el password y luego enviar por mail o SMS
@@ -308,10 +314,12 @@ router.post('/olvide-password', function (req, res, next) {
             return res.status(422).send({ 'error': 'El e-mail ingresado no existe' });
         }
 
-        const offset = 3600000 * 24 * 2; // 2 dias 3600000 (hora) * 24 hs * 2 dias
+        if (!datosUsuario.activacionApp) {
+            return res.status(422).send({ 'error': 'El e-mail ingresado no existe' });
+        }
 
         datosUsuario.restablecerPassword.codigo = authController.generarCodigoVerificacion();
-        datosUsuario.restablecerPassword.fechaExpiracion = new Date(Date.now() + offset);
+        datosUsuario.restablecerPassword.fechaExpiracion = new Date(Date.now() + authController.expirationOffset);
 
         datosUsuario.save(function (errSave, user) {
             if (errSave) {
@@ -327,6 +335,14 @@ router.post('/olvide-password', function (req, res, next) {
         });
     });
 });
+
+/**
+ * Valida el código de reset-password  y cambia la contraseña
+ * @param {string} email  email del usuario
+ * @param {string} codigo Codigo de verificacion
+ * @param {string} password Nueva clave andes
+ * @param {string} password2 Nueva clave andes
+ */
 
 router.post('/reestablecer-password', function (req, res, next) {
     if (!req.body.email) {
@@ -373,7 +389,7 @@ router.post('/reestablecer-password', function (req, res, next) {
 
         // marcamos como modificado asi se ejecuta el middleware del schema pacienteApp
         datosUsuario.password = password;
-        datosUsuario.markModified('password');
+        // datosUsuario.markModified('password');
 
         datosUsuario.restablecerPassword = {};
 
@@ -381,9 +397,6 @@ router.post('/reestablecer-password', function (req, res, next) {
             if (errSave) {
                 return next(errSave);
             }
-
-            // enviamos email de reestablecimiento de password
-            // authController.enviarCodigoCambioPassword(user);
 
             res.status(200).json({
                 valid: true

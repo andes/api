@@ -176,7 +176,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                             let posBloque: number;
                             let posTurno: number;
 
-                            // let countBloques = [];
                             let countBloques;
                             let esHoy = false;
 
@@ -215,8 +214,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                             }
 
                             let tipoTurno = req.body.tipoTurno ? req.body.tipoTurno : (esHoy && req.query.reasignacion ? 'delDia' : 'programado');
-
-                            // res.json({ tipoTurno: tipoTurno });
 
                             // En una reasignación de turno se descarta el tipo de turno original y se reasigna a "del día" o "programado"
                             if (req.query.reasignacion) {

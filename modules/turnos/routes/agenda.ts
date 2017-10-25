@@ -134,7 +134,7 @@ router.get('/agenda/:id?', function (req, res, next) {
         }
 
         if (req.query.fechaHasta) {
-            query.where('horaFin').lte(req.query.fechaHasta);
+            query.where('horaFin').lte(moment(req.query.fechaHasta).endOf('day'));
         }
 
         if (req.query.idProfesional) {
@@ -372,15 +372,13 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 case 'liberarTurno':
                     turno = agendaCtrl.getTurno(req, data, turnos[y]._id);
                     if (turno.paciente.id) {
-                        LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, agendaCtrl.getBloque(data, turno), data._id);
+                        LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, agendaCtrl.getBloque(data, turno)._id, data._id);
                     }
                     agendaCtrl.liberarTurno(req, data, turno);
                     break;
                 case 'suspenderTurno':
                     turno = agendaCtrl.getTurno(req, data, turnos[y]._id);
-                    if (turno.paciente.id) {
-                        LoggerPaciente.logTurno(req, 'turnos:suspender', turno.paciente, turno, agendaCtrl.getBloque(data, turno), data._id);
-                    }
+                    LoggerPaciente.logTurno(req, 'turnos:suspender', (turno.paciente ? turno.paciente : null), turno, agendaCtrl.getBloque(data, turno)._id, data._id);
                     agendaCtrl.suspenderTurno(req, data, turno);
                     break;
                 case 'guardarNotaTurno': agendaCtrl.guardarNotaTurno(req, data, req.body.idTurno);
