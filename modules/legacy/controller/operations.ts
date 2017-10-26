@@ -36,7 +36,7 @@ function profesionalCompleto(lstProfesionales): any {
             // Esto es una mersada pero no me doy cuenta como hacerlo mejor
             if (counter === lstProfesionales.length) {
                 return resolve(listaProf);
-            } 
+            }
         });
     });
 }
@@ -56,7 +56,7 @@ function organizacionCompleto(idOrganizacion): any {
 
 export async function cacheTurnosSips(unaAgenda) {
     // Armo el DTO para guardar en la cache de agendas
-    
+
     if ((unaAgenda.estado !== 'planificacion') && (unaAgenda.nominalizada)) {
 
         let agenda = new agendasCache({
