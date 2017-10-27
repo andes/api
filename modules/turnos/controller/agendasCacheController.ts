@@ -24,8 +24,7 @@ let connection = {
 
 export async function getAgendaSips() {
     pool = await sql.connect(connection);
-
-    // let datosSips;
+    
     let agendasMongoExportadas = await getAgendasDeMongoExportadas();
 
     agendasMongoExportadas.forEach(async (agenda) => {
@@ -44,8 +43,7 @@ export async function getAgendaSips() {
         await transaccion.begin(async err => {
 
             let rolledBack = false;
-            transaccion.on('rollback', aborted => {
-                // emited with aborted === true
+            transaccion.on('rollback', aborted => {                
                 rolledBack = true;
             });
 
@@ -71,9 +69,7 @@ export async function getAgendaSips() {
                 await processTurnos(agenda, idAgenda, datosSips.idEfector);
                 await checkEstadoAgenda(agenda, idAgenda);
                 await checkEstadoTurno(agenda, idAgenda);
-                await checkAsistenciaTurno(agenda);
-
-                // await checkCodificacion(agenda);
+                await checkAsistenciaTurno(agenda);               
 
                 transaccion.commit(async err2 => {
                     await markAgendaAsProcessed(agenda);
@@ -134,8 +130,7 @@ export async function getAgendaSips() {
 
             for (let z = 0; z < turno.length; z++) {
 
-                let idTurno = await existeTurnoSips(turno[z]);
-                // let turnoPaciente: any = {};
+                let idTurno = await existeTurnoSips(turno[z]);                
                 let cloneTurno: any = [];
 
                 if (idTurno) {
@@ -309,7 +304,7 @@ export async function getAgendaSips() {
             let idEspecialidad = await getEspecialidadSips(agendaSips.tipoPrestaciones[0].term);
             let idServicio = 177;
             let idTipoPrestacion = 0;
-            let idConsultorio = await existeConsultorio(agendaSips, idEfector); // creaConsultorioSips(agendaSips, idEfector);
+            let idConsultorio = await existeConsultorio(agendaSips, idEfector);
 
             let query = 'insert into Con_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, idMotivoInactivacion, multiprofesional, objectId) ' +
                 'values (' + estado + ', ' + idEfector + ', ' + idServicio + ', ' + idProfesional + ', ' + idTipoPrestacion + ', ' + idEspecialidad + ', ' + idConsultorio + ', \'' + fecha + '\', ' + duracionTurno + ', \'' + horaInicio + '\', \'' + horaFin + '\', ' + maximoSobreTurnos + ', ' + porcentajeTurnosDia + ', ' + porcentajeTurnosAnticipados + ', ' + citarPorBloques + ' , ' + cantidadInterconsulta + ', ' + turnosDisponibles + ', ' + idMotivoInactivacion + ', ' + multiprofesional + ', \'' + objectId + '\')';
@@ -470,7 +465,7 @@ export async function getAgendaSips() {
         return estado;
     }
 
-    function getDatosSips(codigoSisa?, dniProfesional?, conceptId?) {
+    function getDatosSips(codigoSisa?, dniProfesional?) {
 
         return new Promise((resolve: any, reject: any) => {
             (async function () {
@@ -483,11 +478,7 @@ export async function getAgendaSips() {
 
                     result[1] = await new sql.Request(transaction)
                         .input('dniProfesional', sql.Int, dniProfesional)
-                        .query('SELECT idProfesional FROM dbo.Sys_Profesional WHERE numeroDocumento = @dniProfesional and activo = 1');
-
-                    // result[2] = await new sql.Request(transaction)
-                    //     .input('conceptId', sql.VarChar(50), conceptId)
-                    //     .query('SELECT E.idEspecialidad, S.idServicio FROM dbo.Sys_Especialidad E INNER JOIN dbo.Sys_Servicio S ON s.unidadOperativa = e.unidadOperativa WHERE E.conceptId_snomed = 268565007 AND s.activo = 1 ');
+                        .query('SELECT idProfesional FROM dbo.Sys_Profesional WHERE numeroDocumento = @dniProfesional and activo = 1');                    
 
                     resolve(result);
                 } catch (err) {
@@ -720,7 +711,7 @@ export async function getAgendaSips() {
         let motivoBloqueo;
 
         if (turno.estado === 'suspendido') {
-            motivoBloqueo = getMotivoTurnoSuspendido(turno.motivoSuspension); // constantes.MotivoTurnoBloqueo
+            motivoBloqueo = getMotivoTurnoSuspendido(turno.motivoSuspension);
         } else if (turno.estado === 'turnoDoble') {
             motivoBloqueo = constantes.MotivoTurnoBloqueo.turnoDoble;
         }
