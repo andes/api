@@ -25,7 +25,7 @@ let connection = {
 export async function getAgendaSips() {
     pool = await sql.connect(connection);
 
-    let datosSips;
+    // let datosSips;
     let agendasMongoExportadas = await getAgendasDeMongoExportadas();
 
     agendasMongoExportadas.forEach(async (agenda) => {
@@ -34,32 +34,32 @@ export async function getAgendaSips() {
 
     let agendasMongoPendientes = await getAgendasDeMongoPendientes();
 
-    if (agendasMongoPendientes.length > 0)
+    if (agendasMongoPendientes.length > 0) {
         await guardarCacheASips(agendasMongoPendientes, 0);
+    }
 
     async function guardarCacheASips(agendasMongo, index) {
         let agenda = agendasMongo[index];
-        console.log("Entra a Pendientes: ", agenda._id)
-        let transaction = await new sql.Transaction(pool);
-        await transaction.begin(async err => {
+        let transaccion = await new sql.Transaction(pool);
+        await transaccion.begin(async err => {
 
             let rolledBack = false;
-            transaction.on('rollback', aborted => {
+            transaccion.on('rollback', aborted => {
                 // emited with aborted === true
-                rolledBack = true
+                rolledBack = true;
             });
 
             try {
-                //CON_Agenda de SIPS soporta solo un profesional NOT NULL.
-                //En caso de ser nulo el paciente en agenda de ANDES, por defector
-                //graba dni '0', correspondiente a 'Sin especifiar', efector SSS.
+                // CON_Agenda de SIPS soporta solo un profesional NOT NULL.
+                // En caso de ser nulo el paciente en agenda de ANDES, por defector
+                // graba dni '0', correspondiente a 'Sin especifiar', efector SSS.
                 let dniProfesional = agenda.profesionales[0] ? agenda.profesionales[0].documento : '0';
                 let codigoSisa = agenda.organizacion.codigo.sisa;
 
                 let datosSips = {
                     idEfector: '',
                     idProfesional: ''
-                }
+                };
 
                 let datosArr = await getDatosSips(codigoSisa, dniProfesional);
 
@@ -75,16 +75,14 @@ export async function getAgendaSips() {
 
                 // await checkCodificacion(agenda);
 
-                transaction.commit(async err => {
-                    console.log('commited!');
+                transaccion.commit(async err2 => {
                     await markAgendaAsProcessed(agenda);
                     next();
                 });
 
             } catch (ee) {
-                console.log('error! ', ee);
                 logger.LoggerAgendaCache.logAgenda(agenda._id, ee);
-                transaction.rollback();
+                transaccion.rollback();
                 next();
             }
         });
@@ -113,7 +111,7 @@ export async function getAgendaSips() {
     /* Traemos las agendas de CITAS/Mongo que ya fueron exportadas a SIPS*/
     async function getAgendasDeMongoExportadas() {
         return new Promise<Array<any>>(function (resolve, reject) {
-            agendasCache.find({ $or:[ {estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS}, { estadoIntegracion: constantes.EstadoExportacionAgendaCache.codificada}]}).exec(function (err, data) {
+            agendasCache.find({ $or: [{ estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS }, { estadoIntegracion: constantes.EstadoExportacionAgendaCache.codificada }] }).exec(function (err, data) {
                 if (err) {
                     return (err);
                 }
@@ -122,7 +120,7 @@ export async function getAgendaSips() {
         });
     }
 
-    //#region Codificación Agenda en SIPS  /* 
+    //#region Codificación Agenda en SIPS  /*
 
     async function checkCodificacion(agenda) {
         let turno;
@@ -137,7 +135,7 @@ export async function getAgendaSips() {
             for (let z = 0; z < turno.length; z++) {
 
                 let idTurno = await existeTurnoSips(turno[z]);
-                let turnoPaciente: any = {};
+                // let turnoPaciente: any = {};
                 let cloneTurno: any = [];
 
                 if (idTurno) {
@@ -225,7 +223,7 @@ export async function getAgendaSips() {
                 .input('idConsulta', sql.Int, idConsulta)
                 .query('SELECT idNomenclador FROM dbo.CON_ConsultaOdontologia WHERE idConsulta = @idConsulta')
                 .then(result => {
-                    resolve(result)
+                    resolve(result);
                 }).catch(err => {
                     reject(err);
                 });
@@ -238,7 +236,7 @@ export async function getAgendaSips() {
                 .input('idNomenclador', sql.Int, idNomenclador)
                 .query('SELECT codigo, descripcion FROM dbo.ODO_Nomenclador WHERE idNomenclador = @idNomenclador')
                 .then(result => {
-                    resolve(result[0])
+                    resolve(result[0]);
                 }).catch(err => {
                     reject(err);
                 });
@@ -252,8 +250,6 @@ export async function getAgendaSips() {
 
         if (!idAgenda) {
             idAgenda = await grabaAgendaSips(agenda, datosSips);
-        } else {
-            console.log("Existe Agenda en SIPS");
         }
 
         return idAgenda;
@@ -313,10 +309,10 @@ export async function getAgendaSips() {
             let idEspecialidad = await getEspecialidadSips(agendaSips.tipoPrestaciones[0].term);
             let idServicio = 177;
             let idTipoPrestacion = 0;
-            let idConsultorio = await existeConsultorio(agendaSips, idEfector); //creaConsultorioSips(agendaSips, idEfector);
+            let idConsultorio = await existeConsultorio(agendaSips, idEfector); // creaConsultorioSips(agendaSips, idEfector);
 
-            let query = "insert into Con_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, idMotivoInactivacion, multiprofesional, objectId) " +
-                "values (" + estado + ", " + idEfector + ", " + idServicio + ", " + idProfesional + ", " + idTipoPrestacion + ", " + idEspecialidad + ", " + idConsultorio + ", '" + fecha + "', " + duracionTurno + ", '" + horaInicio + "', '" + horaFin + "', " + maximoSobreTurnos + ", " + porcentajeTurnosDia + ", " + porcentajeTurnosAnticipados + ", " + citarPorBloques + " , " + cantidadInterconsulta + ", " + turnosDisponibles + ", " + idMotivoInactivacion + ", " + multiprofesional + ", '" + objectId + "')";
+            let query = 'insert into Con_Agenda (idAgendaEstado, idEfector, idServicio, idProfesional, idTipoPrestacion, idEspecialidad, idConsultorio, fecha, duracion, horaInicio, horaFin, maximoSobreTurnos, porcentajeTurnosDia, porcentajeTurnosAnticipados, citarPorBloques, cantidadInterconsulta, turnosDisponibles, idMotivoInactivacion, multiprofesional, objectId) ' +
+                'values (' + estado + ', ' + idEfector + ', ' + idServicio + ', ' + idProfesional + ', ' + idTipoPrestacion + ', ' + idEspecialidad + ', ' + idConsultorio + ', \'' + fecha + '\', ' + duracionTurno + ', \'' + horaInicio + '\', \'' + horaFin + '\', ' + maximoSobreTurnos + ', ' + porcentajeTurnosDia + ', ' + porcentajeTurnosAnticipados + ', ' + citarPorBloques + ' , ' + cantidadInterconsulta + ', ' + turnosDisponibles + ', ' + idMotivoInactivacion + ', ' + multiprofesional + ', \'' + objectId + '\')';
 
             executeQuery(query).then(function (idAgendaCreada) {
                 let query2;
@@ -330,9 +326,9 @@ export async function getAgendaSips() {
                             + listaIdProf[0].idProfesional + ','
                             + 0 + ','
                             + constantes.idUsuarioSips + ','
-                            + "'" + moment().format('YYYYMMDD HH:mm:ss') + "', "
-                            + "'" + moment().format('YYYYMMDD HH:mm:ss') + "', "
-                            + "'" + moment().format('YYYYMMDD HH:mm:ss') + "', "
+                            + '\'' + moment().format('YYYYMMDD HH:mm:ss') + '\', '
+                            + '\'' + moment().format('YYYYMMDD HH:mm:ss') + '\', '
+                            + '\'' + moment().format('YYYYMMDD HH:mm:ss') + '\', '
                             + idEspecialidad + ' ) ';
 
                         await executeQuery(query2);
@@ -358,7 +354,7 @@ export async function getAgendaSips() {
         let idEspecialidad = 0;
 
         return new Promise((resolve, reject) => {
-            if (tipoPrestacion.includes("odonto")) {
+            if (tipoPrestacion.includes('odonto')) {
                 /*IdEspecialidad 34 = odontologia en SIPS*/
                 idEspecialidad = 34;
                 resolve(idEspecialidad);
@@ -388,7 +384,7 @@ export async function getAgendaSips() {
     }
 
     async function creaConsultorioSips(agenda: any, idEfector: any) {
-        let nombre = { nombre: 'Sin Espacio Físico', _id: 'andesCitas2017' }
+        let nombre = { nombre: 'Sin Espacio Físico', _id: 'andesCitas2017' };
         agenda.espacioFisico = nombre;
 
         return new Promise(async (resolve: any, reject: any) => {
@@ -398,9 +394,9 @@ export async function getAgendaSips() {
                 + ' ( idEfector , idTipoConsultorio ,  nombre , Activo, objectId ) VALUES ( '
                 + idEfector + ','
                 + idConsultorioTipo + ','
-                + "'" + agenda.espacioFisico.nombre + "', "
+                + '\'' + agenda.espacioFisico.nombre + '\', '
                 + ' 1 ,'
-                + "'" + agenda.espacioFisico._id + "' )";
+                + '\'' + agenda.espacioFisico._id + '\' )';
 
             executeQuery(query).then(function (data) {
                 return resolve(data);
@@ -409,15 +405,15 @@ export async function getAgendaSips() {
     }
 
     function crearConsultorioTipoSips(agenda, idEfector) {
-        let nombre = { nombre: 'Sin Espacio Físico', _id: 'andesCitas2017' }
+        let nombre = { nombre: 'Sin Espacio Físico', _id: 'andesCitas2017' };
         agenda.espacioFisico = nombre;
 
         return new Promise(async (resolve: any, reject: any) => {
             let query = 'INSERT INTO dbo.CON_ConsultorioTipo '
                 + ' ( idEfector, nombre, objectId ) VALUES  ( '
                 + idEfector + ','
-                + "'" + agenda.espacioFisico.nombre + "',"
-                + "'" + agenda.espacioFisico._id + "' )";
+                + '\'' + agenda.espacioFisico.nombre + '\','
+                + '\'' + agenda.espacioFisico._id + '\' )';
 
             executeQuery(query).then(function (data) {
                 return resolve(data);
@@ -430,7 +426,7 @@ export async function getAgendaSips() {
         let espacioFisicoObjectId = null;
 
         if (agenda.espacioFisico) {
-            espacioFisicoObjectId = agenda.espacioFisico._id
+            espacioFisicoObjectId = agenda.espacioFisico._id;
         } else {
             /*La agenda viene sin espacio físico, así que se lo agrego para poder verlo en SIPS*/
             espacioFisicoObjectId = 'andesCitas2017';
@@ -449,7 +445,7 @@ export async function getAgendaSips() {
                         idConsultorio = result[0].idConsultorio;
                         resolve(idConsultorio);
                     } else {
-                        idConsultorio = await creaConsultorioSips(agenda, idEfector)
+                        idConsultorio = await creaConsultorioSips(agenda, idEfector);
                         resolve(idConsultorio);
                     }
 
@@ -507,7 +503,7 @@ export async function getAgendaSips() {
         let estadoAgendaMongo = getEstadoAgendaSips(agendaMongo.estado);
 
         if ((estadoAgendaSips !== estadoAgendaMongo) && (agendaMongo.estado === 'suspendida')) {
-            let query = "UPDATE dbo.CON_Agenda SET idAgendaEstado = " + estadoAgendaMongo + "   WHERE idAgenda = " + idAgendaSips;
+            let query = 'UPDATE dbo.CON_Agenda SET idAgendaEstado = ' + estadoAgendaMongo + '   WHERE idAgenda = ' + idAgendaSips;
             await executeQuery(query);
         }
     }
@@ -547,8 +543,6 @@ export async function getAgendaSips() {
 
                     if (!idTurno) {
                         await grabaTurnoSips(turnos[i], idAgendaCreada, idEfector);
-                    } else {
-                        console.log("El turno ya existe!!!");
                     }
                 }
             }
@@ -580,8 +574,8 @@ export async function getAgendaSips() {
 
                     let idTurno: any = await getEstadoTurnoSips(turnos[i]._id);
                     let fechaAsistencia = moment(turnos[i].updatedAt).format('YYYYMMDD');
-                    let query = "INSERT INTO dbo.CON_TurnoAsistencia ( idTurno , idUsuario , fechaAsistencia ) VALUES  ( " +
-                        idTurno.idTurno + " , " + constantes.idUsuarioSips + " , '" + fechaAsistencia + "' )";
+                    let query = 'INSERT INTO dbo.CON_TurnoAsistencia ( idTurno , idUsuario , fechaAsistencia ) VALUES  ( ' +
+                        idTurno.idTurno + ' , ' + constantes.idUsuarioSips + ' , \'' + fechaAsistencia + '\' )';
 
                     await executeQuery(query);
                 }
@@ -608,13 +602,13 @@ export async function getAgendaSips() {
     }
 
     async function grabaTurnoSips(turno, idAgendaSips, idEfector) {
-        //TODO: El paciente pudiera no estar validado, en ese caso no se encontrara en la
-        // colección de paciente de MPI, en ese caso buscar en la coleccion de pacientes de Andes 
+        // TODO: El paciente pudiera no estar validado, en ese caso no se encontrara en la
+        // colección de paciente de MPI, en ese caso buscar en la coleccion de pacientes de Andes
         let pacienteEncontrado = await pacientes.buscarPaciente(turno.paciente.id);
         let paciente = pacienteEncontrado.paciente;
-        //if(!pacienteEncontrado) {
+        // if(!pacienteEncontrado) {
         //  pacienteEncontrado = buscar en andes.......
-        //} 
+        // }
 
         let idObraSocial = await getIdObraSocialSips(paciente.documento);
         let pacienteId = await getPacienteMPI(paciente, idEfector);
@@ -622,8 +616,8 @@ export async function getAgendaSips() {
         let fechaTurno = moment(turno.horaInicio).format('YYYYMMDD');
         let horaTurno = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
 
-        let query = "INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente ,  fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante, objectId ) VALUES  ( " +
-            idAgendaSips + " , 1 , " + constantes.idUsuarioSips + " ," + pacienteId + ", '" + fechaTurno + "' ,'" + horaTurno + "' , 0 , 0 ," + idObraSocial + " , 0, '" + turno._id + "')";
+        let query = 'INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente ,  fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante, objectId ) VALUES  ( ' +
+            idAgendaSips + ' , 1 , ' + constantes.idUsuarioSips + ' ,' + pacienteId + ', \'' + fechaTurno + '\' ,\'' + horaTurno + '\' , 0 , 0 ,' + idObraSocial + ' , 0, \'' + turno._id + '\')';
 
         let turnoGrabado = await executeQuery(query);
     }
@@ -639,25 +633,24 @@ export async function getAgendaSips() {
     // --> Si se obtiene 0 resultados, se retorna el id de PLAN SUMAR por defecto, cuyo valor está en constante.
     async function getIdObraSocialSips(documentoPaciente) {
         const idSumar = 499;
-        let query = "SELECT TOP(1) sips_os.idObraSocial as idOS "
-            + "FROM [Padron].[dbo].[Pd_PUCO] puco "
-            + "JOIN [SIPS].[dbo].[Sys_ObraSocial] sips_os ON puco.CodigoOS = sips_os.cod_PUCO "
-            + "WHERE puco.DNI =  " + documentoPaciente
-            + "ORDER BY  ( "
-            + "SELECT p =  "
-            + "CASE prio.prioridad  "
-            + "WHEN NULL THEN 1 "
-            + "ELSE prio.prioridad "
-            + "END "
-            + "FROM [SIPS].[dbo].[Sys_ObraSocial_Prioridad] as prio "
-            + "WHERE prio.idObraSocial = sips_os.idObraSocial "
-            + ") ASC";
+        let query = 'SELECT TOP(1) sips_os.idObraSocial as idOS '
+            + 'FROM [Padron].[dbo].[Pd_PUCO] puco '
+            + 'JOIN [SIPS].[dbo].[Sys_ObraSocial] sips_os ON puco.CodigoOS = sips_os.cod_PUCO '
+            + 'WHERE puco.DNI =  ' + documentoPaciente
+            + 'ORDER BY  ( '
+            + 'SELECT p =  '
+            + 'CASE prio.prioridad  '
+            + 'WHEN NULL THEN 1 '
+            + 'ELSE prio.prioridad '
+            + 'END '
+            + 'FROM [SIPS].[dbo].[Sys_ObraSocial_Prioridad] as prio '
+            + 'WHERE prio.idObraSocial = sips_os.idObraSocial '
+            + ') ASC';
 
         try {
             let result = await new sql.Request(transaction).query(query);
             return (result.length > 0 ? result[0].idOS : idSumar);
         } catch (err) {
-            console.log(err);
             return false;
         }
     }
@@ -671,33 +664,32 @@ export async function getAgendaSips() {
             let objectIdTurno;
 
             if (turno._id) {
-                objectIdTurno = " and objectId = '" + turno._id + "'";
+                objectIdTurno = ' and objectId = \'' + turno._id + '\'';
             }
 
             /*TODO: hacer enum con los estados */
-            var horaInicio = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm')
+            var horaInicio = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
 
             if ((estadoTurnoMongo === constantes.EstadoTurnosSips.suspendido || turno.estado === 'turnoDoble') && !await existeTurnoBloqueoSips(idAgendaSips, horaInicio)) {
                 await grabarTurnoBloqueo(idAgendaSips, turno);
             }
 
-            let query = "UPDATE dbo.CON_Turno SET idTurnoEstado = " + estadoTurnoMongo + " WHERE idAgenda = " + idAgendaSips + objectIdTurno;
+            let query = 'UPDATE dbo.CON_Turno SET idTurnoEstado = ' + estadoTurnoMongo + ' WHERE idAgenda = ' + idAgendaSips + objectIdTurno;
             await executeQuery(query);
         }
     }
 
     async function existeTurnoBloqueoSips(idAgendaSips, horaInicio) {
 
-        let query = "SELECT COUNT(b.idTurnoBloqueo) as count FROM CON_TurnoBloqueo b " +
-            "JOIN CON_TURNO t on t.idAgenda = b.idAgenda " +
-            "WHERE b.idAgenda = " + idAgendaSips +
-            " AND b.horaTurno = '" + horaInicio + "'";
+        let query = 'SELECT COUNT(b.idTurnoBloqueo) as count FROM CON_TurnoBloqueo b ' +
+            'JOIN CON_TURNO t on t.idAgenda = b.idAgenda ' +
+            'WHERE b.idAgenda = ' + idAgendaSips +
+            ' AND b.horaTurno = \'' + horaInicio + '\'';
 
         try {
             let result = await new sql.Request(transaction).query(query);
             return result[0].count > 0;
         } catch (err) {
-            console.log(err);
             return false;
         }
     }
@@ -707,19 +699,19 @@ export async function getAgendaSips() {
         var fechaBloqueo = moment(turno.horaInicio).format('YYYYMMDD');
         var horaBloqueo = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
 
-        let queryTurnoBloqueo = "INSERT dbo.CON_TurnoBloqueo (idAgenda "
-            + ", fechaTurno "
-            + ", horaTurno "
-            + ", idUsuarioBloqueo "
-            + ", fechaBloqueo "
-            + ", idMotivoBloqueo) ";
-        queryTurnoBloqueo += "VALUES ("
-            + idAgendaSips + ", "
-            + "'" + fechaBloqueo + "', "
-            + "'" + horaBloqueo + "', "
-            + constantes.idUsuarioSips + ", "
-            + "'" + moment(turno.updatedAt).format('YYYYMMDD') + "', "
-            + motivoBloqueo + ")";
+        let queryTurnoBloqueo = 'INSERT dbo.CON_TurnoBloqueo (idAgenda '
+            + ', fechaTurno '
+            + ', horaTurno '
+            + ', idUsuarioBloqueo '
+            + ', fechaBloqueo '
+            + ', idMotivoBloqueo) ';
+        queryTurnoBloqueo += 'VALUES ('
+            + idAgendaSips + ', '
+            + '\'' + fechaBloqueo + '\', '
+            + '\'' + horaBloqueo + '\', '
+            + constantes.idUsuarioSips + ', '
+            + '\'' + moment(turno.updatedAt).format('YYYYMMDD') + '\', '
+            + motivoBloqueo + ')';
 
         await executeQuery(queryTurnoBloqueo);
     }
@@ -728,7 +720,7 @@ export async function getAgendaSips() {
         let motivoBloqueo;
 
         if (turno.estado === 'suspendido') {
-            motivoBloqueo = getMotivoTurnoSuspendido(turno.motivoSuspension); //constantes.MotivoTurnoBloqueo
+            motivoBloqueo = getMotivoTurnoSuspendido(turno.motivoSuspension); // constantes.MotivoTurnoBloqueo
         } else if (turno.estado === 'turnoDoble') {
             motivoBloqueo = constantes.MotivoTurnoBloqueo.turnoDoble;
         }
@@ -912,11 +904,11 @@ export async function getAgendaSips() {
                 + ' objectId ) '
                 + ' VALUES( '
                 + pacienteSips.idEfector + ', '
-                + "'" + pacienteSips.apellido + "',"
-                + "'" + pacienteSips.nombre + "', "
+                + '\'' + pacienteSips.apellido + '\','
+                + '\'' + pacienteSips.nombre + '\', '
                 + pacienteSips.numeroDocumento + ', '
                 + pacienteSips.idSexo + ', '
-                + "'" + pacienteSips.fechaNacimiento + "',"
+                + '\'' + pacienteSips.fechaNacimiento + '\','
                 + pacienteSips.idEstado + ', '
                 + pacienteSips.idMotivoNI + ', '
                 + pacienteSips.idPais + ', '
@@ -925,44 +917,44 @@ export async function getAgendaSips() {
                 + pacienteSips.idSituacionLaboral + ', '
                 + pacienteSips.idProfesion + ', '
                 + pacienteSips.idOcupacion + ', '
-                + "'" + pacienteSips.calle + "', "
+                + '\'' + pacienteSips.calle + '\', '
                 + pacienteSips.numero + ', '
-                + "'" + pacienteSips.piso + "', "
-                + "'" + pacienteSips.departamento + "', "
-                + "'" + pacienteSips.manzana + "', "
+                + '\'' + pacienteSips.piso + '\', '
+                + '\'' + pacienteSips.departamento + '\', '
+                + '\'' + pacienteSips.manzana + '\', '
                 + pacienteSips.idBarrio + ', '
                 + pacienteSips.idLocalidad + ', '
                 + pacienteSips.idDepartamento + ', '
                 + pacienteSips.idProvinciaDomicilio + ', '
-                + "'" + pacienteSips.referencia + "', "
-                + "'" + pacienteSips.informacionContacto + "', "
+                + '\'' + pacienteSips.referencia + '\', '
+                + '\'' + pacienteSips.informacionContacto + '\', '
                 + pacienteSips.cronico + ', '
                 + pacienteSips.idObraSocial + ', '
                 + pacienteSips.idUsuario + ', '
-                + "'" + pacienteSips.fechaAlta + "', "
-                + "'" + pacienteSips.fechaDefuncion + "', "
-                + "'" + pacienteSips.fechaUltimaActualizacion + "', "
+                + '\'' + pacienteSips.fechaAlta + '\', '
+                + '\'' + pacienteSips.fechaDefuncion + '\', '
+                + '\'' + pacienteSips.fechaUltimaActualizacion + '\', '
                 + pacienteSips.idEstadoCivil + ', '
                 + pacienteSips.idEtnia + ', '
                 + pacienteSips.idPoblacion + ', '
                 + pacienteSips.idIdioma + ', '
-                + "'" + pacienteSips.otroBarrio + "', "
-                + "'" + pacienteSips.camino + "', "
-                + "'" + pacienteSips.campo + "', "
+                + '\'' + pacienteSips.otroBarrio + '\', '
+                + '\'' + pacienteSips.camino + '\', '
+                + '\'' + pacienteSips.campo + '\', '
                 + pacienteSips.esUrbano + ', '
-                + "'" + pacienteSips.lote + "', "
-                + "'" + pacienteSips.parcela + "', "
-                + "'" + pacienteSips.edificio + "', "
+                + '\'' + pacienteSips.lote + '\', '
+                + '\'' + pacienteSips.parcela + '\', '
+                + '\'' + pacienteSips.edificio + '\', '
                 + pacienteSips.activo + ', '
-                + "'" + pacienteSips.fechaAltaObraSocial + "', "
-                + "'" + pacienteSips.numeroAfiliado + "', "
-                + "'" + pacienteSips.numeroExtranjero + "', "
-                + "'" + pacienteSips.telefonoFijo + "', "
-                + "'" + pacienteSips.telefonoCelular + "', "
-                + "'" + pacienteSips.email + "', "
-                + "'" + pacienteSips.latitud + "', "
-                + "'" + pacienteSips.longitud + "', "
-                + "'" + pacienteSips.objectId + "' "
+                + '\'' + pacienteSips.fechaAltaObraSocial + '\', '
+                + '\'' + pacienteSips.numeroAfiliado + '\', '
+                + '\'' + pacienteSips.numeroExtranjero + '\', '
+                + '\'' + pacienteSips.telefonoFijo + '\', '
+                + '\'' + pacienteSips.telefonoCelular + '\', '
+                + '\'' + pacienteSips.email + '\', '
+                + '\'' + pacienteSips.latitud + '\', '
+                + '\'' + pacienteSips.longitud + '\', '
+                + '\'' + pacienteSips.objectId + '\' '
                 + ') ';
 
             idPacienteGrabadoSips = await executeQuery(query);
