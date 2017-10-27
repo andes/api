@@ -113,7 +113,7 @@ export async function getAgendaSips() {
     /* Traemos las agendas de CITAS/Mongo que ya fueron exportadas a SIPS*/
     async function getAgendasDeMongoExportadas() {
         return new Promise<Array<any>>(function (resolve, reject) {
-            agendasCache.find({ estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS }).exec(function (err, data) {
+            agendasCache.find({ $or:[ {estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS}, { estadoIntegracion: constantes.EstadoExportacionAgendaCache.codificada}]}).exec(function (err, data) {
                 if (err) {
                     return (err);
                 }
