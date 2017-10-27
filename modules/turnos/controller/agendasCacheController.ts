@@ -6,7 +6,7 @@ import * as moment from 'moment';
 import * as pacientes from './../../../core/mpi/controller/paciente';
 import * as constantes from '../../legacy/schemas/constantes';
 import * as logger from './../../../utils/loggerAgendaSipsCache';
-import * as agenda from '../schemas/agenda';
+import * as agendaSchema from '../schemas/agenda';
 import * as turnoCtrl from './turnoCacheController';
 
 const MongoClient = require('mongodb').MongoClient;
@@ -24,11 +24,11 @@ let connection = {
 
 export async function getAgendaSips() {
     pool = await sql.connect(connection);
-    
+
     let datosSips;
     let agendasMongoExportadas = await getAgendasDeMongoExportadas();
 
-    agendasMongoExportadas.forEach(async (agenda) => {        
+    agendasMongoExportadas.forEach(async (agenda) => {
         await checkCodificacion(agenda);
     });
 
@@ -111,12 +111,12 @@ export async function getAgendaSips() {
     }
 
     /* Traemos las agendas de CITAS/Mongo que ya fueron exportadas a SIPS*/
-    async function getAgendasDeMongoExportadas() {        
+    async function getAgendasDeMongoExportadas() {
         return new Promise<Array<any>>(function (resolve, reject) {
-            agendasCache.find({ estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS }).exec(function (err, data) {
+            agendasCache.find({ $or:[ {estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS}, { estadoIntegracion: constantes.EstadoExportacionAgendaCache.codificada}]}).exec(function (err, data) {
                 if (err) {
                     return (err);
-                }                
+                }
                 resolve(data);
             });
         });
@@ -132,19 +132,24 @@ export async function getAgendaSips() {
 
         for (let x = 0; x < agenda.bloques.length; x++) {
             turno = agenda.bloques[x].turnos;
-            
+            turno.diagnosticoSecundario = [];
+
             for (let z = 0; z < turno.length; z++) {
 
                 let idTurno = await existeTurnoSips(turno[z]);
-                
+                let turnoPaciente: any = {};
+                let cloneTurno: any = [];
+
                 if (idTurno) {
 
                     let idConsulta = await existeConsultaTurno(idTurno);
+                    let turnoPaciente: any = await getPacienteAgenda(agenda, turno[z]._id);
 
                     if (idConsulta) {
                         idNomenclador = await getConsultaOdontologia(idConsulta);
 
                         for (let i = 0; i < idNomenclador.length; i++) {
+                            turno[z] = turnoPaciente;
 
                             codificacionOdonto = await getCodificacionOdonto(idNomenclador[i].idNomenclador);
 
@@ -167,11 +172,34 @@ export async function getAgendaSips() {
                             turno: turno[z]
                         };
                     }
-                    await turnoCtrl.updateTurno(datosTurno);                
+
+                    await turnoCtrl.updateTurno(datosTurno);
                     await markAgendaAsProcessed(agenda);
-                }               
+                }
             }
         }
+    }
+
+    /* Busca el paciente de un turno y agenda determinada*/
+    function getPacienteAgenda(agenda, idTurno) {
+        let turno;
+        return new Promise(function (resolve, reject) {
+            agendaSchema.findById(agenda.id, function getAgenda(err, data) {
+                for (let x = 0; x < (data as any).bloques.length; x++) {
+                    // Si existe este bloque...
+                    if ((data as any).bloques[x] != null) {
+                        // Buscamos y asignamos el turno con id que coincida (si no coincide "asigna" null)
+
+                        turno = (data as any).bloques[x].turnos.id(idTurno);
+
+                        // Si encontró el turno dentro de alguno de los bloques, lo devuelve
+                        if (turno !== null) {
+                            resolve(turno);
+                        }
+                    }
+                }
+            });
+        });
     }
 
     function existeConsultaTurno(idTurno) {
@@ -249,7 +277,7 @@ export async function getAgendaSips() {
         });
     }
 
-    async function grabaAgendaSips(agendaSips: any, datosSips: any) {        
+    async function grabaAgendaSips(agendaSips: any, datosSips: any) {
         let objectId = agendaSips.id;
 
         let estado = getEstadoAgendaSips(agendaSips.estado);
@@ -281,7 +309,7 @@ export async function getAgendaSips() {
 
         return new Promise(async (resolve: any, reject: any) => {
             let idEfector = datosSips.idEfector;
-            let idProfesional = datosSips.idProfesional;            
+            let idProfesional = datosSips.idProfesional;
             let idEspecialidad = await getEspecialidadSips(agendaSips.tipoPrestaciones[0].term);
             let idServicio = 177;
             let idTipoPrestacion = 0;
@@ -326,7 +354,7 @@ export async function getAgendaSips() {
             });
     }
 
-    function getEspecialidadSips(tipoPrestacion) {        
+    function getEspecialidadSips(tipoPrestacion) {
         let idEspecialidad = 0;
 
         return new Promise((resolve, reject) => {
@@ -790,7 +818,6 @@ export async function getAgendaSips() {
 
         return agendasCache.update({ _id: agenda._id }, {
             $set: {
-                // estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS
                 estadoIntegracion: estadoIntegracion
             }
         }
