@@ -24,7 +24,7 @@ let connection = {
 
 export async function getAgendaSips() {
     pool = await sql.connect(connection);
-    
+
     let agendasMongoExportadas = await getAgendasDeMongoExportadas();
 
     agendasMongoExportadas.forEach(async (agenda) => {
@@ -43,7 +43,7 @@ export async function getAgendaSips() {
         await transaccion.begin(async err => {
 
             let rolledBack = false;
-            transaccion.on('rollback', aborted => {                
+            transaccion.on('rollback', aborted => {
                 rolledBack = true;
             });
 
@@ -69,7 +69,7 @@ export async function getAgendaSips() {
                 await processTurnos(agenda, idAgenda, datosSips.idEfector);
                 await checkEstadoAgenda(agenda, idAgenda);
                 await checkEstadoTurno(agenda, idAgenda);
-                await checkAsistenciaTurno(agenda);               
+                await checkAsistenciaTurno(agenda);
 
                 transaccion.commit(async err2 => {
                     await markAgendaAsProcessed(agenda);
@@ -126,11 +126,13 @@ export async function getAgendaSips() {
 
         for (let x = 0; x < agenda.bloques.length; x++) {
             turno = agenda.bloques[x].turnos;
+
+            turno.diagnosticoPrimario = [];
             turno.diagnosticoSecundario = [];
 
             for (let z = 0; z < turno.length; z++) {
 
-                let idTurno = await existeTurnoSips(turno[z]);                
+                let idTurno = await existeTurnoSips(turno[z]);
                 let cloneTurno: any = [];
 
                 if (idTurno) {
@@ -140,7 +142,7 @@ export async function getAgendaSips() {
 
                     if (idConsulta) {
                         idNomenclador = await getConsultaOdontologia(idConsulta);
-
+                        console.log("Turnosss: ", idNomenclador)
                         for (let i = 0; i < idNomenclador.length; i++) {
                             turno[z] = turnoPaciente;
 
@@ -155,6 +157,7 @@ export async function getAgendaSips() {
                                     sinonimo: codificacionOdonto.descripcion,
                                 }
                             };
+
                         }
 
                         datosTurno = {
@@ -478,7 +481,7 @@ export async function getAgendaSips() {
 
                     result[1] = await new sql.Request(transaction)
                         .input('dniProfesional', sql.Int, dniProfesional)
-                        .query('SELECT idProfesional FROM dbo.Sys_Profesional WHERE numeroDocumento = @dniProfesional and activo = 1');                    
+                        .query('SELECT idProfesional FROM dbo.Sys_Profesional WHERE numeroDocumento = @dniProfesional and activo = 1');
 
                     resolve(result);
                 } catch (err) {
@@ -795,8 +798,8 @@ export async function getAgendaSips() {
         switch (agenda.estadoIntegracion) {
             case 'pendiente': estadoIntegracion = constantes.EstadoExportacionAgendaCache.exportadaSIPS;
                 break;
-            case 'exportada a Sips': estadoIntegracion = constantes.EstadoExportacionAgendaCache.codificada;
-                break;
+            case 'exportada a Sips':
+            default: estadoIntegracion = constantes.EstadoExportacionAgendaCache.codificada;
         }
 
         return agendasCache.update({ _id: agenda._id }, {
