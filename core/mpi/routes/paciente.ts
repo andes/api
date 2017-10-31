@@ -572,25 +572,34 @@ router.post('/pacientes', function (req, res, next) {
     if (!Auth.check(req, 'mpi:paciente:postAndes')) {
         return next(403);
     }
-    let condicion = {
-        'documento': req.body.documento
-    };
+    if (req.body.documento) {
+        let condicion = {
+            'documento': req.body.documento
+        };
+        controller.searchSimilar(req.body, 'andes', condicion).then((data) => {
+            logD('Encontrados', data.map(item => item.value));
+            if (data && data.length && data[0].value > 0.90) {
+                logD('hay uno parecido');
+                return next('existen similares');
+            } else {
+                req.body.activo = true;
+                return controller.createPaciente(req.body, req).then(pacienteObj => {
+                    return res.json(pacienteObj);
+                }).catch((error) => {
+                    return next(error);
+                });
+            }
+        });
+    } else {
+        req.body.activo = true;
+        return controller.createPaciente(req.body, req).then(pacienteObjSinDocumento => {
+            return res.json(pacienteObjSinDocumento);
+        }).catch((error2 => {
+            return next(error2);
+        }));
+    }
 
-    controller.searchSimilar(req.body, 'andes', condicion).then((data) => {
-        logD('Encontrados', data.map(item => item.value));
-        if (data && data.length && data[0].value > 0.90) {
-            logD('hay uno parecido');
-            return next('existen similares');
-        } else {
-            req.body.activo = true;
-            return controller.createPaciente(req.body, req).then(pacienteObj => {
-                return res.json(pacienteObj);
-            }).catch((error) => {
-                return next(error);
-            });
-        }
 
-    });
 
 });
 
