@@ -84,7 +84,7 @@ export const modules = {
         active: true,
         path: './modules/mobileApp/auth_routes',
         route: '/modules/mobileApp',
-        middleware: mobileMiddleware
+        middleware: null
     },
     turnos_mobile: {
         active: true,
