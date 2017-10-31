@@ -84,7 +84,7 @@ export const modules = {
         active: true,
         path: './modules/mobileApp/auth_routes',
         route: '/modules/mobileApp',
-        middleware: mobileMiddleware
+        middleware: null
     },
     turnos_mobile: {
         active: true,
@@ -110,12 +110,12 @@ export const modules = {
         route: '/fhir/patient',
         middleware: appMiddleware
     },
-    legacy: {
-        active: true,
-        path: './modules/legacy/routes',
-        route: '/modules/legacy',
-        middleware: appMiddleware
-    }
+    // legacy: {
+    //     active: true,
+    //     path: './modules/legacy/routes',
+    //     route: '/modules/legacy',
+    //     middleware: appMiddleware
+    // }
 };
 
 // Cotas de consumo de APIs
