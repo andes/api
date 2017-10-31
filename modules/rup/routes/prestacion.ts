@@ -1,8 +1,14 @@
+import * as mongoose from 'mongoose';
 import * as express from 'express';
 import * as moment from 'moment';
 // import * as async from 'async';
 import { Auth } from './../../../auth/auth.class';
 import { model as Prestacion } from '../schemas/prestacion';
+import { model as PrestacionAdjunto } from '../schemas/prestacion-adjuntos';
+
+import { buscarPaciente } from '../../../core/mpi/controller/paciente';
+
+import { NotificationService } from '../../mobileApp/controller/NotificationService';
 
 let router = express.Router();
 let async = require('async');
@@ -192,6 +198,76 @@ router.patch('/prestaciones/:id', function (req, res, next) {
             */
         });
     });
+});
+
+
+/**
+ * Solicita adjuntar una imagen desde la mobile app
+ *
+ * @param {string} paciente ID del paciente
+ * @param {string} prestacion ID de la prestación
+ * @param {RegistroSchema} resgistro ID de la prestación
+ */
+
+router.post('/prestaciones-adjuntar', (req: any, res, next) => {
+    let registro = req.body.registro;
+    let pacienteId = req.body.paciente;
+    let prestacionId = req.body.prestacion;
+    let profesionalId = req.user.profesional.id;
+
+    let adjunto = (new PrestacionAdjunto() as any);
+    adjunto.paciente = pacienteId;
+    adjunto.prestacion =  prestacionId;
+    adjunto.registro = registro;
+    adjunto.profesional = profesionalId;
+    adjunto.estado = 'pending';
+    Auth.audit(adjunto, req);
+    adjunto.save().then(() => {
+        // [TODO] Send notifications to devices
+
+        if (req.user.profesional) {
+            NotificationService.solicitudAdjuntos((profesionalId), adjunto._id);
+        }
+
+        res.json(adjunto);
+    }).catch((err) => {
+        return next(err);
+    });
+});
+
+/**
+ * Listado de solicitudes de archivos a adjuntar
+ */
+
+router.get('/prestaciones-adjuntar', async (req: any, res, next) => {
+    let find;
+    if (req.query.id) {
+        let _id = new mongoose.Types.ObjectId(req.query.id);
+        find = PrestacionAdjunto.find({
+            _id: _id,
+            estado: 'pending'
+        });
+    } else if (req.user.profesional) {
+        let _profesional = new mongoose.Types.ObjectId(req.user.profesional.id);
+        find = PrestacionAdjunto.find({
+            profesional: _profesional,
+            estado: 'pending'
+        });
+    }
+    find.then( async (docs) => {
+        let pendientes = [];
+        for (const doc of docs) {
+            let obj = doc.toObject();
+            let prestacion: any = await Prestacion.findById(doc.prestacion);
+            obj.paciente = prestacion.paciente;
+            obj.prestacion_nombre = prestacion.solicitud.tipoPrestacion.term;
+            pendientes.push(obj);
+        }
+        return res.json(pendientes);
+    }).catch((err) => {
+        return next(err);
+    });
+
 });
 
 export = router;
