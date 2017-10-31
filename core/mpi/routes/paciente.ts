@@ -572,8 +572,6 @@ router.post('/pacientes', function (req, res, next) {
     if (!Auth.check(req, 'mpi:paciente:postAndes')) {
         return next(403);
     }
-    
-    
     if (req.body.documento) {
         let condicion = {
             'documento': req.body.documento
@@ -591,7 +589,6 @@ router.post('/pacientes', function (req, res, next) {
                     return next(error);
                 });
             }
-    
         });
     } else {
         req.body.activo = true;
@@ -599,7 +596,7 @@ router.post('/pacientes', function (req, res, next) {
             return res.json(pacienteObjSinDocumento);
         }).catch((error2 => {
             return next(error2);
-        }))
+        }));
     }
 
 
