@@ -241,18 +241,19 @@ router.post('/prestaciones-adjuntar', (req: any, res, next) => {
 
 router.get('/prestaciones-adjuntar', async (req: any, res, next) => {
     let find;
+    let estado = req.query.estado || 'pending';
     if (req.query.id) {
         let _id = new mongoose.Types.ObjectId(req.query.id);
         find = PrestacionAdjunto.find({
             _id: _id,
-            estado: 'pending'
-        });
+            estado
+        }, {prestacion: 1, paciente: 1, registro: 1});
     } else if (req.user.profesional) {
         let _profesional = new mongoose.Types.ObjectId(req.user.profesional.id);
         find = PrestacionAdjunto.find({
             profesional: _profesional,
-            estado: 'pending'
-        });
+            estado
+        }, {prestacion: 1, paciente: 1, registro: 1});
     }
     find.then( async (docs) => {
         let pendientes = [];
@@ -261,6 +262,7 @@ router.get('/prestaciones-adjuntar', async (req: any, res, next) => {
             let prestacion: any = await Prestacion.findById(doc.prestacion);
             obj.paciente = prestacion.paciente;
             obj.prestacion_nombre = prestacion.solicitud.tipoPrestacion.term;
+            obj.fecha = prestacion.solicitud.fecha;
             pendientes.push(obj);
         }
         return res.json(pendientes);
@@ -268,6 +270,26 @@ router.get('/prestaciones-adjuntar', async (req: any, res, next) => {
         return next(err);
     });
 
+});
+
+/**
+ * Carga las fotos adjuntas en la solicitud
+ */
+
+router.patch('/prestaciones-adjuntar/:id', (req: any, res, next) => {
+    let id = req.params.id;
+    let value = req.body.valor;
+    let estado = req.body.estado;
+
+    PrestacionAdjunto.findById(id).then((doc: any) => {
+        doc.registro.valor = value;
+        doc.estado = estado;
+        Auth.audit(doc, req);
+        doc.save();
+        return res.json({status: 'ok'});
+    }).catch((err) => {
+        return next(err);
+    });
 });
 
 export = router;

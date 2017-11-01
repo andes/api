@@ -12,7 +12,7 @@ export let schema = new mongoose.Schema({
     registro: registro.schema,
     estado: {
         type: String,
-        enum: ['pending', 'done']
+        enum: ['pending', 'upload', 'sync']
     }
 });
 
