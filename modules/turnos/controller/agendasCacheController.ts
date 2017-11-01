@@ -126,38 +126,49 @@ export async function getAgendaSips() {
 
         for (let x = 0; x < agenda.bloques.length; x++) {
             turno = agenda.bloques[x].turnos;
-
-            turno.diagnosticoPrimario = [];
-            turno.diagnosticoSecundario = [];
-
-            for (let z = 0; z < turno.length; z++) {
+            
+            for (let z = 0; z < turno.length; z++) {                
 
                 let idTurno = await existeTurnoSips(turno[z]);
                 let cloneTurno: any = [];
 
-                if (idTurno) {
-
+                if (idTurno) {                    
                     let idConsulta = await existeConsultaTurno(idTurno);
                     let turnoPaciente: any = await getPacienteAgenda(agenda, turno[z]._id);
 
+                    turno[z] = turnoPaciente;                    
+
                     if (idConsulta) {
+                        
                         idNomenclador = await getConsultaOdontologia(idConsulta);
-                        console.log("Turnosss: ", idNomenclador)
+                        let m = 0;
+
                         for (let i = 0; i < idNomenclador.length; i++) {
-                            turno[z] = turnoPaciente;
 
                             codificacionOdonto = await getCodificacionOdonto(idNomenclador[i].idNomenclador);
 
-                            turno[z].asistencia = 'asistio';
-                            turno[z].diagnosticoSecundario[i] = {
-                                ilegible: false,
-                                codificacion: {
-                                    codigo: codificacionOdonto.codigo,
-                                    nombre: codificacionOdonto.descripcion,
-                                    sinonimo: codificacionOdonto.descripcion,
-                                }
-                            };
-
+                            if (i === 0) {
+                                turno[z].asistencia = 'asistio';
+                                turno[z].diagnosticoPrincipal = {
+                                    ilegible: false,
+                                    codificacion: {
+                                        codigo: codificacionOdonto.codigo,
+                                        nombre: codificacionOdonto.descripcion,
+                                        sinonimo: codificacionOdonto.descripcion,
+                                    }
+                                };
+                            } else {
+                                turno[z].asistencia = 'asistio';
+                                turno[z].diagnosticoSecundario[m] = {
+                                    ilegible: false,
+                                    codificacion: {
+                                        codigo: codificacionOdonto.codigo,
+                                        nombre: codificacionOdonto.descripcion,
+                                        sinonimo: codificacionOdonto.descripcion,
+                                    }
+                                };
+                                m++;
+                            }
                         }
 
                         datosTurno = {
@@ -167,6 +178,7 @@ export async function getAgendaSips() {
                             idUsuario: constantes.idUsuarioSips,
                             turno: turno[z]
                         };
+
                     }
 
                     await turnoCtrl.updateTurno(datosTurno);
@@ -174,6 +186,10 @@ export async function getAgendaSips() {
                 }
             }
         }
+    }
+
+    function isEmpty(obj) {
+        return Object.keys(obj).length === 0;
     }
 
     /* Busca el paciente de un turno y agenda determinada*/
