@@ -107,7 +107,7 @@ export function suspenderTurno(req, data, turno) {
     let turnoDoble = getTurnoSiguiente(req, data, turno._id);
     if (turnoDoble) {
         cant = cant + 1;
-        //Se deja el estado turnoDoble para detectar este caso en la reasignacion
+        // Se deja el estado turnoDoble para detectar este caso en la reasignacion
         // turnoDoble.estado = 'suspendido';
         turnoDoble.motivoSuspension = req.body.motivoSuspension;
         turnoDoble.updatedAt = new Date();
