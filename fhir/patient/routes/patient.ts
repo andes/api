@@ -27,7 +27,6 @@ import {
 router.get('/([\$])match', function (req, res, next) {
     // Verificación de permisos
     if (!Auth.check(req, 'fhir:pacient:match')) {
-        console.log('No tenes sopermi para haer esto');
         return next(403);
     }
     let connElastic = new Client({
