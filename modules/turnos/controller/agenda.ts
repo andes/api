@@ -248,8 +248,9 @@ export function actualizarEstado(req, data) {
 
             data.bloques.forEach(bloque => {
                 bloque.turnos.forEach(turno => {
-
-                    turno.estado = 'suspendido';
+                    if (turno.estado !== 'turnoDoble') {
+                        turno.estado = 'suspendido';
+                    }
                     turno.motivoSuspension = 'agendaSuspendida';
                     turno.tipoTurno = undefined;
 
