@@ -11,7 +11,6 @@ import {
 import {
     PacienteFHIR
 } from '../../interfaces/IPacienteFHIR';
-
 import * as localidad from '../../../core/tm/schemas/localidad';
 
 
