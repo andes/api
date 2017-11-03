@@ -50,11 +50,11 @@ export function pacientesAFHIR(ids: any[]) {
                             let direcciones = data.direccion ? data.direccion.map(unaDireccion => {
                                 let direc = {
                                     resourceType: 'Address',
-                                    postalCode: unaDireccion.codigoPostal,
+                                    postalCode: unaDireccion.codigoPostal ? unaDireccion.codigoPostal : '',
                                     line: [unaDireccion.valor],
-                                    city: unaDireccion.ubicacion.localidad.nombre,
-                                    state: unaDireccion.ubicacion.provincia.nombre,
-                                    country: unaDireccion.ubicacion.pais.nombre,
+                                    city: unaDireccion.ubicacion.localidad ? unaDireccion.ubicacion.localidad.nombre : '',
+                                    state: unaDireccion.ubicacion.provincia ? unaDireccion.ubicacion.provincia.nombre : '',
+                                    country: unaDireccion.ubicacion.pais ? unaDireccion.ubicacion.pais.nombre : '',
                                 };
                                 return direc;
                             }) : [];
