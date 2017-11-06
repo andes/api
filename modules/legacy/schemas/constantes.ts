@@ -29,6 +29,11 @@ const constantes = {
         codificada: 'codificada'
     },
 
+    Especialidades: {
+        odontologia: 34,
+        medicinaGral: 14
+    },
+
     idUsuarioSips: '1486739'
 };
 export = constantes;
