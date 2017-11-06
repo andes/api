@@ -14,8 +14,6 @@ export function updateTurno(datosTurno: any) {
         let continues = ValidateDarTurno.checkTurno(datosTurno.turno);
 
         if (continues.valid) {
-
-            // if (true) {
             // Se obtiene la agenda que se va a modificar
             agenda.findById(datosTurno.idAgenda, function getAgenda(err, data) {
 
@@ -35,16 +33,14 @@ export function updateTurno(datosTurno: any) {
                     posTurno = (data as any).sobreturnos.findIndex(sobreturno => Object.is(datosTurno.idTurno, String(sobreturno._id)));
                     etiquetaTurno = 'sobreturnos.' + posTurno;
                 }
-                //  let usuario = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
-                let usuario = datosTurno.idUsuarioSips;
-                // Copia la organización desde el token
-                //  usuario.organizacion = (req as any).user.organizacion;
 
+                let usuario = datosTurno.idUsuarioSips;
                 let update: any = {};
 
                 let query = {
                     _id: datosTurno.idAgenda,
                 };
+
                 update[etiquetaTurno] = datosTurno.turno;
 
                 // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
@@ -64,19 +60,7 @@ export function updateTurno(datosTurno: any) {
 
                             resolve(doc2._id);
                             return ('Se actualizó el turno');
-                            //  Logger.log(req, 'turnos', 'update', datosOp);
                         }
-
-                        //  res.json(data);
-
-
-                        //  if (req.body.turno.reasignado && req.body.turno.reasignado.siguiente) {
-                        //      let turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
-                        //      LoggerPaciente.logTurno(req, 'turnos:reasignar', req.body.turno.paciente, turno, req.params.idBloque, req.params.idAgenda);
-
-                        //      NotificationService.notificarReasignar(req.params);
-                        //  }
-
                     });
                 return null;
             });

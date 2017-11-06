@@ -1,7 +1,7 @@
-import { getAgendaSips } from '../modules/turnos/controller/agendasCacheController';
+import * as agendaCtrl from './../modules/turnos/controller/agendasCacheController';
 
 function run() {
-    getAgendaSips();
+    agendaCtrl.getAgendaSips();
 }
 
 export = run;
