@@ -25,7 +25,6 @@ import {
 } from '../../../core/mpi/schemas/paciente';
 
 router.get('/([\$])match', function (req, res, next) {
-    // Verificación de permisos
     if (!Auth.check(req, 'fhir:pacient:match')) {
         return next(403);
     }
@@ -105,7 +104,6 @@ router.post('/', async function (req, res, next) {
             if (existe === 0) {
                 // Insertamos el paciente en la BASE ANDES LOCAL
                 let newPatient = new paciente(pac);
-
                 Auth.audit(newPatient, req);
                 newPatient.save((err) => {
                     if (err) {
