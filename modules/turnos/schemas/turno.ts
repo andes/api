@@ -52,7 +52,9 @@ let turnoSchema = new mongoose.Schema({
             nroCarpeta: String
         }],
     },
-    tipoPrestacion: tipoPrestacionSchema,
+    tipoPrestacion: {
+        type: tipoPrestacionSchema,
+    },
     // TODO: Enlace con RUP? cuando alguien defina ALGO
     idPrestacionPaciente: {
         type: mongoose.Schema.Types.ObjectId,

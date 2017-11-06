@@ -107,7 +107,8 @@ export function suspenderTurno(req, data, turno) {
     let turnoDoble = getTurnoSiguiente(req, data, turno._id);
     if (turnoDoble) {
         cant = cant + 1;
-        turnoDoble.estado = 'suspendido';
+        // Se deja el estado turnoDoble para detectar este caso en la reasignacion
+        // turnoDoble.estado = 'suspendido';
         turnoDoble.motivoSuspension = req.body.motivoSuspension;
         turnoDoble.updatedAt = new Date();
         turnoDoble.updatedBy = req.user.usuario || req.user;
@@ -375,14 +376,6 @@ export function calcularContadoresTipoTurno(posBloque, posTurno, agenda) {
         esHoy = true;
     }
 
-    // Contadores de "delDia" y "programado" varían según si es el día de hoy o no
-    // countBloques = {
-    //     delDia: esHoy ? ((agenda.bloques[posBloque].accesoDirectoDelDia as number) + (agenda.bloques[posBloque].accesoDirectoProgramado as number)) : agenda.bloques[posBloque].accesoDirectoDelDia,
-    //     programado: esHoy ? 0 : agenda.bloques[posBloque].accesoDirectoProgramado,
-    //     gestion: agenda.bloques[posBloque].reservadoGestion,
-    //     profesional: agenda.bloques[posBloque].reservadoProfesional
-    // };
-
     countBloques = {
         delDia: esHoy ? (
             (agenda.bloques[posBloque].restantesDelDia as number) +
@@ -395,37 +388,6 @@ export function calcularContadoresTipoTurno(posBloque, posTurno, agenda) {
         profesional: esHoy ? 0 : agenda.bloques[posBloque].restantesProfesional
     };
 
-    // // Restamos los turnos asignados de a cuenta
-    // if (agenda.bloques[posBloque].turnos[posTurno].estado === 'asignado') {
-    //     if (esHoy) {
-    //         switch (agenda.bloques[posBloque].turnos[posTurno].tipoTurno) {
-    //             case ('delDia'):
-    //                 countBloques.delDia--;
-    //                 break;
-    //             case ('programado'):
-    //                 countBloques.delDia--;
-    //                 break;
-    //             case ('profesional'):
-    //                 countBloques.profesional--;
-    //                 break;
-    //             case ('gestion'):
-    //                 countBloques.gestion--;
-    //                 break;
-    //         }
-    //     } else {
-    //         switch (agenda.bloques[posBloque].turnos[posTurno].tipoTurno) {
-    //             case ('programado'):
-    //                 countBloques.programado--;
-    //                 break;
-    //             case ('profesional'):
-    //                 countBloques.profesional--;
-    //                 break;
-    //             case ('gestion'):
-    //                 countBloques.gestion--;
-    //                 break;
-    //         }
-    //     }
-    // }
     return countBloques;
 }
 
