@@ -1,3 +1,4 @@
+import { log } from './../../../core/log/schemas/log';
 import * as agendaModel from '../../turnos/schemas/agenda';
 import * as moment from 'moment';
 import { Auth } from '../../../auth/auth.class';
@@ -481,10 +482,10 @@ export function esPrimerPaciente(agenda: any, idPaciente: string, opciones: any[
  * Actualiza las cantidades de turnos restantes de la agenda antes de su fecha de inicio,
  * se ejecuta una vez al día por el scheduler.
  *
- * @export actualizarAgendas()
+ * @export actualizarTiposDeTurno()
  * @returns resultado
  */
-export function actualizarAgendas() {
+export function actualizarTiposDeTurno() {
     let hsActualizar = 48;
     let cantDias = hsActualizar / 24;
     let fechaActualizar = moment(new Date()).add(cantDias, 'days');
@@ -518,7 +519,66 @@ export function actualizarAgendas() {
 
         Auth.audit(agenda, (userScheduler as any));
         this.saveAgenda(agenda).then((nuevaAgenda) => {
-            Logger.log(userScheduler, 'citas', 'actualizarAgendas', {
+            Logger.log(userScheduler, 'citas', 'actualizarTiposDeTurno', {
+                idAgenda: agenda._id,
+                organizacion: agenda.organizacion,
+                horaInicio: agenda.horaInicio,
+                updatedAt: agenda.updatedAt,
+                updatedBy: agenda.updatedBy
+
+            });
+        }).catch(error => {
+            return (error);
+        });
+
+    });
+    return 'Agendas actualizadas';
+
+}
+
+/**
+ * Actualiza los estados de las agendas que se ejecutaron el día anterior a Pendiente Asistencia o 
+ * Pendiente Auditoría según corresponda
+ * se ejecuta una vez al día por el scheduler.
+ *
+ * @export actualizarTiposDeTurno()
+ * @returns resultado
+ */
+export function actualizarEstadoAgendas() {
+    let fechaActualizar = moment(new Date()).subtract(1, 'days');
+    // actualiza los agendas en estado disponible o publicada que se hayan ejecutado el día anterior
+    let condicion = {
+        '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
+        // 'horaInicio': {
+        //     // $gte: (moment(fechaActualizar).startOf('day').toDate() as any),
+        //     $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
+        // }
+    };
+    let cursor = agendaModel.find(condicion).cursor();
+
+    cursor.eachAsync(doc => {
+        let agenda: any = doc;
+        let todosAsistencia = true;
+        for (let j = 0; j < agenda.bloques.length; j++) {
+            let turnos = agenda.bloques[j].turnos;
+            
+            // Verifico si al hay al menos un turno asignado sin asistencia
+            if (turnos.filter((turno) => {
+                return (turno.estado === 'asignado' && !(turno.asistencia));
+            }).length > 0) {
+                todosAsistencia = false;
+            }
+        }
+
+        if (todosAsistencia) {
+            agenda.estado = 'pendienteAuditoria';
+        } else {
+            agenda.estado = 'pendienteAsistencia';
+        }
+
+        Auth.audit(agenda, (userScheduler as any));
+        this.saveAgenda(agenda).then((nuevaAgenda) => {
+            Logger.log(userScheduler, 'citas', 'actualizarEstadoAgendas', {
                 idAgenda: agenda._id,
                 organizacion: agenda.organizacion,
                 horaInicio: agenda.horaInicio,
