@@ -135,7 +135,7 @@ export async function getAgendaSips() {
                     let idConsulta = await existeConsultaTurno(idTurno);
                     let turnoPaciente: any = await getPacienteAgenda(agenda, turno[z]._id);
 
-                    idEspecialidad = await getEspecialidadSips(agenda.tipoPrestaciones[0].term)
+                    idEspecialidad = await getEspecialidadSips(agenda.tipoPrestaciones[0].term);
                     turno[z] = turnoPaciente;
 
                     if (idConsulta) {
@@ -202,7 +202,7 @@ export async function getAgendaSips() {
                     m++;
                 }
             }
-            resolve(turno)
+            resolve(turno);
         });
     }
 
