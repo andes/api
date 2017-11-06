@@ -1,3 +1,4 @@
+import { SemanticTag } from './semantic-tag';
 import * as mongoose from 'mongoose';
 import { SnomedConcept } from './snomed-concept';
 import * as registro from './prestacion.registro';
@@ -21,7 +22,14 @@ export let schema = new mongoose.Schema({
     // Datos de la solicitud
     solicitud: {
         // Tipo de prestación de ejecutarse
-        tipoPrestacion: SnomedConcept,
+        tipoPrestacion: {
+            id: mongoose.Schema.Types.ObjectId,
+            conceptId: String,
+            term: String,
+            fsn: String,
+            semanticTag: SemanticTag,
+            refsetIds: [String]
+        },
         // Fecha de solicitud
         // Nota: Este dato podría obtener del array de estados, pero está aquí para facilidar de consulta
         fecha: {
