@@ -385,8 +385,8 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                     break;
                 case 'pausada':
                 case 'prePausada':
-                case 'asistenciaCerrada':
-                case 'codificada':
+                case 'pendienteAuditoria':
+                case 'auditada':
                 case 'suspendida':
                 case 'borrada':
                     agendaCtrl.actualizarEstado(req, data);
