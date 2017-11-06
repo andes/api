@@ -285,11 +285,28 @@ router.patch('/prestaciones-adjuntar/:id', (req: any, res, next) => {
         doc.registro.valor = value;
         doc.estado = estado;
         Auth.audit(doc, req);
-        doc.save();
-        return res.json({status: 'ok'});
+        doc.save().then(() => {
+            return res.json({status: 'ok'});
+        }).catch(next);
     }).catch((err) => {
         return next(err);
     });
 });
+
+/**
+ * Borra la solicitud de adjuntar imagen cuando ya esta todo listo
+ */
+router.delete('/prestaciones-adjuntar/:id', (req: any, res, next) => {
+    let id = req.params.id;
+
+    PrestacionAdjunto.findById(id).then((doc: any) => {
+        doc.remove().then(() => {
+            return res.json({status: 'ok'});
+        }).catch(next);
+    }).catch((err) => {
+        return next(err);
+    });
+});
+
 
 export = router;
