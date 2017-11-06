@@ -120,9 +120,8 @@ export async function getAgendaSips() {
 
     async function checkCodificacion(agenda) {
         let turno;
-        let codificacionOdonto: any = {};
-        let idNomenclador: any = [];
         let datosTurno = {};
+        let idEspecialidad: any;
 
         for (let x = 0; x < agenda.bloques.length; x++) {
             turno = agenda.bloques[x].turnos;
@@ -136,60 +135,114 @@ export async function getAgendaSips() {
                     let idConsulta = await existeConsultaTurno(idTurno);
                     let turnoPaciente: any = await getPacienteAgenda(agenda, turno[z]._id);
 
+                    idEspecialidad = await getEspecialidadSips(agenda.tipoPrestaciones[0].term)
                     turno[z] = turnoPaciente;
 
-                    if (agenda.idEspecialidad === constantes.Especialidades.odontologia) {
-
-                    }
-
                     if (idConsulta) {
-
-                        idNomenclador = await getConsultaOdontologia(idConsulta);
-                        let m = 0;
-
-                        for (let i = 0; i < idNomenclador.length; i++) {
-
-                            codificacionOdonto = await getCodificacionOdonto(idNomenclador[i].idNomenclador);
-
-                            if (i === 0) {
-                                turno[z].asistencia = 'asistio';
-                                turno[z].diagnosticoPrincipal = {
-                                    ilegible: false,
-                                    codificacion: {
-                                        codigo: codificacionOdonto.codigo,
-                                        nombre: codificacionOdonto.descripcion,
-                                        sinonimo: codificacionOdonto.descripcion,
-                                    }
-                                };
-                            } else {
-                                turno[z].asistencia = 'asistio';
-                                turno[z].diagnosticoSecundario[m] = {
-                                    ilegible: false,
-                                    codificacion: {
-                                        codigo: codificacionOdonto.codigo,
-                                        nombre: codificacionOdonto.descripcion,
-                                        sinonimo: codificacionOdonto.descripcion,
-                                    }
-                                };
-                                m++;
-                            }
+                        if (idEspecialidad === constantes.Especialidades.odontologia) {
+                            turno[z] = await codificaOdontologia(idConsulta, turno[z]);
+                        } else {
+                            turno[z] = await codificacionCie10(idConsulta, turno[z]);
                         }
-
-                        datosTurno = {
-                            idAgenda: agenda.id,
-                            idTurno: turno[z]._id,
-                            idBloque: agenda.bloques[x]._id,
-                            idUsuario: constantes.idUsuarioSips,
-                            turno: turno[z]
-                        };
-
                     }
+
+                    datosTurno = {
+                        idAgenda: agenda.id,
+                        idTurno: turno[z]._id,
+                        idBloque: agenda.bloques[x]._id,
+                        idUsuario: constantes.idUsuarioSips,
+                        turno: turno[z]
+                    };
 
                     await turnoCtrl.updateTurno(datosTurno);
                     await markAgendaAsProcessed(agenda);
                 }
             }
         }
+    }
+
+    async function codificacionCie10(idConsulta: any, turno: any) {
+        let codCie10: any = [];
+        let codificacionCie10: any = {};
+
+        return new Promise(async function (resolve, reject) {
+            codCie10 = await getConsultaDiagnostico(idConsulta);
+            let m = 0;
+
+            for (let i = 0; i < codCie10.length; i++) {
+
+                codificacionCie10 = await getCodificacionCie10(codCie10[i].CODCIE10);
+
+                if (i === 0) {
+                    turno.asistencia = 'asistio';
+                    turno.diagnosticoPrincipal = {
+                        ilegible: false,
+                        codificacion: {
+                            causa: codificacionCie10.CAUSA,
+                            subcausa: codificacionCie10.SUBCAUSA,
+                            codigo: codificacionCie10.CODIGO,
+                            nombre: codificacionCie10.Nombre,
+                            sinonimo: codificacionCie10.Sinonimo,
+                            c2: codificacionCie10.C2
+                        }
+                    };
+                } else {
+                    turno.asistencia = 'asistio';
+                    turno.diagnosticoSecundario[m] = {
+                        ilegible: false,
+                        codificacion: {
+                            causa: codificacionCie10.CAUSA,
+                            subcausa: codificacionCie10.SUBCAUSA,
+                            codigo: codificacionCie10.CODIGO,
+                            nombre: codificacionCie10.Nombre,
+                            sinonimo: codificacionCie10.Sinonimo,
+                            c2: codificacionCie10.C2
+                        }
+                    };
+                    m++;
+                }
+            }
+            resolve(turno)
+        });
+    }
+
+    async function codificaOdontologia(idConsulta: any, turno: any) {
+        let idNomenclador: any = [];
+        let codificacionOdonto: any = {};
+
+        return new Promise(async function (resolve, reject) {
+            idNomenclador = await getConsultaOdontologia(idConsulta);
+            let m = 0;
+
+            for (let i = 0; i < idNomenclador.length; i++) {
+
+                codificacionOdonto = await getCodificacionOdonto(idNomenclador[i].idNomenclador);
+
+                if (i === 0) {
+                    turno.asistencia = 'asistio';
+                    turno.diagnosticoPrincipal = {
+                        ilegible: false,
+                        codificacion: {
+                            codigo: codificacionOdonto.codigo,
+                            nombre: codificacionOdonto.descripcion,
+                            sinonimo: codificacionOdonto.descripcion,
+                        }
+                    };
+                } else {
+                    turno.asistencia = 'asistio';
+                    turno.diagnosticoSecundario[m] = {
+                        ilegible: false,
+                        codificacion: {
+                            codigo: codificacionOdonto.codigo,
+                            nombre: codificacionOdonto.descripcion,
+                            sinonimo: codificacionOdonto.descripcion,
+                        }
+                    };
+                    m++;
+                }
+            }
+            resolve(turno);
+        });
     }
 
     /* Busca el paciente de un turno y agenda determinada*/
@@ -238,6 +291,32 @@ export async function getAgendaSips() {
                 .query('SELECT idNomenclador FROM dbo.CON_ConsultaOdontologia WHERE idConsulta = @idConsulta')
                 .then(result => {
                     resolve(result);
+                }).catch(err => {
+                    reject(err);
+                });
+        });
+    }
+
+    function getConsultaDiagnostico(idConsulta) {
+        return new Promise(function (resolve, reject) {
+            return new sql.Request(transaction)
+                .input('idConsulta', sql.Int, idConsulta)
+                .query('SELECT CODCIE10 FROM dbo.CON_ConsultaDiagnostico WHERE idConsulta = @idConsulta')
+                .then(result => {
+                    resolve(result);
+                }).catch(err => {
+                    reject(err);
+                });
+        });
+    }
+
+    function getCodificacionCie10(codcie10) {
+        return new Promise(function (resolve, reject) {
+            return new sql.Request(transaction)
+                .input('codcie10', sql.Int, codcie10)
+                .query('SELECT * FROM dbo.Sys_CIE10 WHERE id = @codcie10')
+                .then(result => {
+                    resolve(result[0]);
                 }).catch(err => {
                     reject(err);
                 });
