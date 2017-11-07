@@ -84,11 +84,11 @@ router.get('/prestaciones-adjuntar', Auth.optionalAuth(), async (req: any, res, 
             createdAt: { $gt: moment().subtract(30, 'minutes').toDate() }
         }, { prestacion: 1, paciente: 1, valor: 1 });
     } else if (req.user && req.user.profesional) {
-        let _profesional = new mongoose.Types.ObjectId(req.user.profesional.id);
+        let _profesional = new mongoose.Types.ObjectId(req.user.profesional._id);
         find = PrestacionAdjunto.find({
             profesional: _profesional,
             estado,
-            created_at: { $gt: moment().subtract(30, 'minutes').toDate() }
+            createdAt: { $gt: moment().subtract(30, 'minutes').toDate() }
         }, { prestacion: 1, paciente: 1, valor: 1 });
     } else {
         return next(403);
