@@ -9,13 +9,13 @@ export let schema = new mongoose.Schema({
     paciente: mongoose.Schema.Types.ObjectId,
     prestacion: mongoose.Schema.Types.ObjectId,
     profesional: mongoose.Schema.Types.ObjectId,
-    registro: registro.schema,
+    registro: mongoose.Schema.Types.ObjectId,
+    valor: mongoose.Schema.Types.Mixed,
     estado: {
         type: String,
         enum: ['pending', 'upload', 'sync']
-    }
+    },
+    createdAt:  mongoose.Schema.Types.Date
 });
-
-schema.plugin(require('../../../mongoose/audit'));
-
+ 
 export let model = mongoose.model('prestacion-adjuntos', schema, 'prestaciones-adjuntos');
