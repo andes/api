@@ -17,7 +17,7 @@ function traeProfesionalPorId(id) {
     return new Promise((resolve, reject) => {
         profesional.findById(mongoose.Types.ObjectId(id), function (err, unProfesional) {
             if (err) {
-                return reject('error');
+                return reject(err);
             }
             return resolve(unProfesional);
         });
