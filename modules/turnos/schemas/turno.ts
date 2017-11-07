@@ -60,16 +60,18 @@ let turnoSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'prestacionPaciente'
     },
-    // Unificamos los diagnósticos en un solo arreglo, el DIAGNOSTICO PRINCIPAL será el que este en la posición 0.
+    // Unificamos los diagnósticos(codificaciones) en un solo arreglo, el DIAGNOSTICO PRINCIPAL será el que este en la posición 0.
     // Si ambas codificaciones coinciden, la auditoría aprobó la cod.
     // Si las codificaciones difieren, auditoría realizo un reparo
     // Si cod.Profesional no está cargado y codAuditoria si, se cargó por planilla y se considera el turno auditado
-    diagnosticos: [{
-        codificacionProfesional: cie10.schema, // solamente obtenida de RUP o SIPS y definida por el profesional
-        codificacionAuditoria: cie10.schema,  // corresponde a la codificación establecida la instancia de revisión de agendas
-        primeraVez: Boolean,
+    diagnostico: {
         ilegible: Boolean,
-    }],
+        codificaciones: [{
+            codificacionProfesional: cie10.schema, // solamente obtenida de RUP o SIPS y definida por el profesional
+            codificacionAuditoria: cie10.schema,  // corresponde a la codificación establecida la instancia de revisión de agendas
+            primeraVez: Boolean,
+        }]
+    },
     confirmedAt: Date, /* Confirmación del turno por el  paciente */
     updatedAt: Date,
     updatedBy: mongoose.Schema.Types.Mixed
