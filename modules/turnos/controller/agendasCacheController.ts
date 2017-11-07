@@ -32,6 +32,4 @@ export async function integracionSips() {
     } catch (ex) {
         pool.close();
     }
-
-
 }
