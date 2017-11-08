@@ -71,11 +71,11 @@ router.put('/frecuentesProfesional/:id*?', function (req, res, next) {
         }
 
         if (data._id) {
-            profesionalMeta.findByIdAndUpdate(data._id, req.body, { new: true }, function (err, data) {
-                if (err) {
+            profesionalMeta.findByIdAndUpdate(data._id, req.body, { new: true }, function (err2, data2) {
+                if (err2) {
                     return next(err);
                 }
-                res.json(data);
+                res.json(data2);
             });
         } else {
 
