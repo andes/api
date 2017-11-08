@@ -45,7 +45,7 @@ router.get('/([\$])match', function (req, res, next) {
             multi_match: {
                 query: consulta,
                 type: 'cross_fields',
-                fields: ['documento^5', 'nombre', 'apellido^3'],
+                fields: ['documento^5', 'apellido^3'],
             }
         };
     }
