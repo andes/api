@@ -2,7 +2,8 @@ const codes = {
     status: {
         sucess: '200',
         badRequest: '400',
-        denied: '403',
+        unauthorized: '401',
+        forbidden: '403',
         notFound: '404',
         error: '500'
     },

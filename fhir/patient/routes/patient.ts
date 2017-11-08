@@ -27,7 +27,7 @@ import {
 
 router.get('/([\$])match', function (req, res, next) {
     if (!Auth.check(req, 'fhir:pacient:match')) {
-        return next(403);
+        return next(codes.status.unauthorized);
     }
     let connElastic = new Client({
         host: configPrivate.hosts.elastic_main,
@@ -87,7 +87,7 @@ router.post('/', async function (req, res, next) {
     // Recibimos un paciente en formato FHIR y llamamos a la función de validación de formato FHIR
     try {
         if (!Auth.check(req, 'fhir:patient:post')) {
-            return next(codes.status.denied);
+            return next(codes.status.unauthorized);
         }
 
         let pacienteFhir = req.body;
