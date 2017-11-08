@@ -1,9 +1,9 @@
 /**
  * Colección para datos complementarios de cada profesional
- * 
+ *
  * 1. frecuentesProfesional.ts => Prestaciones más frecuentes del profesional
  * 2. ...
- * 
+ *
  */
 
 import * as mongoose from 'mongoose';
