@@ -45,7 +45,7 @@ let router = express.Router();
  *         default: 0
  */
 router.get('/snomed', function (req, res, next) {
-    if (!req.query.search && !req.query.refsetId) {
+    if (!req.query.search && !req.query.refsetId && req.query.search !== '') {
         return next('Debe ingresar un parámetro de búsqueda');
     }
     let conditions = {
