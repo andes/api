@@ -163,7 +163,7 @@ export async function getAgendaSips() {
 
     async function codificacionCie10(idConsulta: any, turno: any) {
         let codCie10: any = [];
-        let codificacionCie10: any = {};
+        let _codificacionCie10: any = {};
 
         return new Promise(async function (resolve, reject) {
             codCie10 = await getConsultaDiagnostico(idConsulta);
@@ -171,32 +171,34 @@ export async function getAgendaSips() {
 
             for (let i = 0; i < codCie10.length; i++) {
 
-                codificacionCie10 = await getCodificacionCie10(codCie10[i].CODCIE10);
+                _codificacionCie10 = await getCodificacionCie10(codCie10[i].CODCIE10);
 
                 if (i === 0) {
                     turno.asistencia = 'asistio';
                     turno.diagnosticoPrincipal = {
                         ilegible: false,
                         codificacion: {
-                            causa: codificacionCie10.CAUSA,
-                            subcausa: codificacionCie10.SUBCAUSA,
-                            codigo: codificacionCie10.CODIGO,
-                            nombre: codificacionCie10.Nombre,
-                            sinonimo: codificacionCie10.Sinonimo,
-                            c2: codificacionCie10.C2
+                            causa: _codificacionCie10.CAUSA,
+                            subcausa: _codificacionCie10.SUBCAUSA,
+                            codigo: _codificacionCie10.CODIGO,
+                            nombre: _codificacionCie10.Nombre,
+                            sinonimo: _codificacionCie10.Sinonimo,
+                            c2: _codificacionCie10.C2
                         }
                     };
                 } else {
                     turno.asistencia = 'asistio';
                     turno.diagnosticoSecundario[m] = {
-                        ilegible: false,
+                        ilegible: false,     subcausa: _codificacionCie10.SUBCAUSA,
+                            codigo: _codificacionCie10.CODIGO,
+                            nombre: _codificacionCie10.Nombre,
                         codificacion: {
-                            causa: codificacionCie10.CAUSA,
-                            subcausa: codificacionCie10.SUBCAUSA,
-                            codigo: codificacionCie10.CODIGO,
-                            nombre: codificacionCie10.Nombre,
-                            sinonimo: codificacionCie10.Sinonimo,
-                            c2: codificacionCie10.C2
+                            causa: _codificacionCie10.CAUSA,
+                            subcausa: _codificacionCie10.SUBCAUSA,
+                            codigo: _codificacionCie10.CODIGO,
+                            nombre: _codificacionCie10.Nombre,
+                            sinonimo: _codificacionCie10.Sinonimo,
+                            c2: _codificacionCie10.C2
                         }
                     };
                     m++;
