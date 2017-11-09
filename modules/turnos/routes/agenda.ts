@@ -290,6 +290,7 @@ router.post('/agenda/clonar', function (req, res, next) {
                             turno.updatedBy = undefined;
                             turno.diagnosticoPrincipal = null;
                             turno.diagnosticoSecundario = [];
+                            turno.reasignado = undefined;
                         });
                     });
                     nueva['estado'] = 'planificacion';
