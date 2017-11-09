@@ -538,7 +538,7 @@ export function actualizarTiposDeTurno() {
 }
 
 /**
- * Actualiza los estados de las agendas que se ejecutaron el día anterior a Pendiente Asistencia o 
+ * Actualiza los estados de las agendas que se ejecutaron el día anterior a Pendiente Asistencia o
  * Pendiente Auditoría según corresponda
  * se ejecuta una vez al día por el scheduler.
  *
@@ -562,7 +562,6 @@ export function actualizarEstadoAgendas() {
         let todosAsistencia = true;
         for (let j = 0; j < agenda.bloques.length; j++) {
             let turnos = agenda.bloques[j].turnos;
-            
             // Verifico si al hay al menos un turno asignado sin asistencia
             if (turnos.filter((turno) => {
                 return (turno.estado === 'asignado' && !(turno.asistencia));
