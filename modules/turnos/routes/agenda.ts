@@ -288,8 +288,7 @@ router.post('/agenda/clonar', function (req, res, next) {
                             turno.tipoTurno = undefined;
                             turno.updatedAt = undefined;
                             turno.updatedBy = undefined;
-                            turno.diagnosticoPrincipal = null;
-                            turno.diagnosticoSecundario = [];
+                            turno.diagnostico = { codificaciones : []};
                             turno.reasignado = undefined;
                         });
                     });
