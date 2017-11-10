@@ -25,10 +25,9 @@ import {
 } from '../../../core/mpi/schemas/paciente';
 
 router.get('/([\$])match', function (req, res, next) {
-    // Verificación de permisos
-    // if (!Auth.check(req, 'fhir:pacient:match')) {
-    //     return next(403);
-    // }
+    if (!Auth.check(req, 'fhir:pacient:match')) {
+        return next(403);
+    }
     let connElastic = new Client({
         host: configPrivate.hosts.elastic_main,
     });
@@ -71,7 +70,6 @@ router.get('/([\$])match', function (req, res, next) {
                     elem['id'] = hit._id;
                     return elem.id;
                 });
-
             let pacienteFhir = parser.pacientesAFHIR(idPacientes).then(datosFhir => {
                 res.send(datosFhir);
             });
@@ -84,7 +82,7 @@ router.get('/([\$])match', function (req, res, next) {
 router.post('/', async function (req, res, next) {
     // Recibimos un paciente en formato FHIR y llamamos a la función de validación de formato FHIR
     try {
-        if (!Auth.check(req, 'mpi:paciente:postAndes')) {
+        if (!Auth.check(req, 'fhir:patient:post')) {
             return next(403);
         }
 
@@ -106,7 +104,6 @@ router.post('/', async function (req, res, next) {
             if (existe === 0) {
                 // Insertamos el paciente en la BASE ANDES LOCAL
                 let newPatient = new paciente(pac);
-
                 Auth.audit(newPatient, req);
                 newPatient.save((err) => {
                     if (err) {
@@ -128,9 +125,8 @@ router.post('/', async function (req, res, next) {
                 });
 
             } else {
-                // console.log('Ya existe el paciente');
-                // TODO UPDATE: Analizar los campos a actualizar. ¿Cómo sabemos que información es más nueva que nuestro REPO?
-                // MEGA MATETIME
+                // El paciente ya existe, devuelvo 200
+                return next(200);
             }
             // response
             res.json(pac);
