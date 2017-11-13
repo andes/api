@@ -136,6 +136,7 @@ async function codificacionCie10(idConsulta: any, turno: any) {
         let codificaCie10: any = {};
         codCie10 = await getConsultaDiagnostico(idConsulta);
         let diagnosticos = [];
+        turno.diagnostico.codificaciones = [];
         for (let i = 0; i < codCie10.length; i++) {
             codificaCie10 = await getCodificacionCie10(codCie10[i].CODCIE10);
             turno.asistencia = 'asistio';
