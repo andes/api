@@ -95,7 +95,9 @@ export function liberarTurno(req, data, turno) {
 
 // Turno
 export function suspenderTurno(req, data, turno) {
-    turno.estado = 'suspendido';
+    if (turno.estado !== 'turnoDoble') {
+        turno.estado = 'suspendido';
+    }
     delete turno.paciente;
     delete turno.tipoPrestacion;
     turno.motivoSuspension = req.body.motivoSuspension;

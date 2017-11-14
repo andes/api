@@ -378,6 +378,7 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, 
                         let datosOp = {
                             turno: update[etiquetaTurno]
                         };
+                        // TODO: loggear estas operaciones sobre turnos de forma mas clara.
                         Logger.log(req, 'citas', 'update', datosOp);
                     }
                     // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
