@@ -72,7 +72,7 @@ router.put('/frecuentesProfesional/:id*?', function (req, res, next) {
             if (resultado && resultado[0] && resultado[0].frecuentes) {
                 resultado[0].frecuentes.forEach(fr => {
                     if (req.body.frecuentes.filter(x => x.concepto.conceptId === fr.concepto.conceptId).length > 1) {
-                        req.body.splice(req.body.frecuentes.findIndex(y => y.concepto.conceptId === fr.concepto.conceptId), 1);
+                        req.body.frecuentes.splice(req.body.frecuentes.findIndex(y => y.concepto.conceptId === fr.concepto.conceptId), 1);
                     } else {
                         fr.frecuencia++;
                         req.body.frecuentes.push(fr);
