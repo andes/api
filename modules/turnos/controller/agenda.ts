@@ -548,14 +548,15 @@ export function actualizarTiposDeTurno() {
  * @returns resultado
  */
 export function actualizarEstadoAgendas() {
-    let fechaActualizar = moment(new Date()).subtract(1, 'days');
+    // let fechaActualizar = moment(new Date()).subtract(1, 'days');
+    let fechaActualizar = moment(new Date());
     // actualiza los agendas en estado disponible o publicada que se hayan ejecutado el día anterior
     let condicion = {
         '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
-        // 'horaInicio': {
-        //     // $gte: (moment(fechaActualizar).startOf('day').toDate() as any),
-        //     $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
-        // }
+        'horaInicio': {
+            // $gte: (moment(fechaActualizar).startOf('day').toDate() as any),
+            $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
+        }
     };
     let cursor = agendaModel.find(condicion).cursor();
 
