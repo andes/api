@@ -398,52 +398,58 @@ router.post('/profesionales/foto/:profId',  (req:any, resp) => {
     
     });
 
-// router.post('/profesionales/grid',  (req:any, resp,errHandler) => {
-//     var mongo = require('mongodb');
-//     var Grid = require('gridfs-stream');
-//     console.log("hola")
-//     // create or use an existing mongodb-native db instance.
-//     // for this example we'll just create one:
-//     var db = new mongo.Db('grid', new mongo.Server("127.0.0.1", 27017));
+router.post('/profesionales/grid',  (req:any, resp,errHandler) => {
+    var mongo = require('mongodb');
+    var Grid = require('gridfs-stream');
+    console.log("hola")
+    // create or use an existing mongodb-native db instance.
+    // for this example we'll just create one:
+    var db = new mongo.Db('grid', new mongo.Server("127.0.0.1", 27017));
     
-//     // make sure the db instance is open before passing into `Grid`
-//     db.open(function (err) {
-//       if (err) return errHandler(err);
-//       var gfs = Grid(db, mongo);
-//       console.log("hola2")
+    // make sure the db instance is open before passing into `Grid`
+    db.open(function (err) {
+      if (err) return errHandler(err);
+      var gfs = Grid(db, mongo);
+      console.log("hola2")
 
-//       var writestream = gfs.createWriteStream({filename: 'user.png'});
-//       fs.createReadStream(__dirname + '/user.png').pipe(writestream);
-//       // all set!
+      var writestream = gfs.createWriteStream({filename: 'user.png'});
+      fs.createReadStream(__dirname + '/user.png').pipe(writestream);
+      // all set!
 
-//       writestream.on('close', function (file) {
-//         // do something with `file`
-//         console.log(file.filename);
-//       });
-//     })
+      writestream.on('close', function (file) {
+        // do something with `file`
+        console.log(file.filename);
+      });
+    })
 
     
-// });
+});
 
 
-// router.get('/profesionales/grid',  (req:any, resp,errHandler) => {
-//     var mongo = require('mongodb');
-//     var Grid = require('gridfs-stream');
-//     console.log("hola")
-//     // create or use an existing mongodb-native db instance.
-//     // for this example we'll just create one:
-//     var db = new mongo.Db('grid', new mongo.Server("127.0.0.1", 27017));
+router.get('/profesionales/grid',  (req:any, resp,errHandler) => {
+    var mongo = require('mongodb');
+    var Grid = require('gridfs-stream');
+    console.log("hola")
+    // create or use an existing mongodb-native db instance.
+    // for this example we'll just create one:
+    var db = new mongo.Db('grid', new mongo.Server("127.0.0.1", 27017));
     
 
-//     // make sure the db instance is open before passing into `Grid`
-//     db.open(function (err) {
-//       if (err) return errHandler(err);
-//       var gfs = Grid(db, mongo);
-//       console.log("hola2")
-// //write content to file system
+    // make sure the db instance is open before passing into `Grid`
+    db.open(function (err) {
+      if (err) return errHandler(err);
+      var gfs = Grid(db, mongo);
+      console.log("hola2")
+//write content to file system
 // var fs_write_stream = fs.createWriteStream('user.png');
 
-// //read from mongodb
+var readstream = gfs.createReadStream('user.png'); 
+readstream.on("error", function(err){
+    resp.send("No image found with that title"); 
+});
+readstream.pipe(resp);
+
+//read from mongodb
 // var readstream = gfs.createReadStream({
 //     filename: 'user.png'
 // });
@@ -452,10 +458,10 @@ router.post('/profesionales/foto/:profId',  (req:any, resp) => {
 //     console.log('file has been written fully!');
 // });
 
-//     })
+    })
 
     
-// });
+});
 
 
 /**

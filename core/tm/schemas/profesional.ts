@@ -9,7 +9,7 @@ import * as profesionSchema from './profesion';
 import { ObjSIISASchema } from './siisa';
 
 let matriculacionSchema = new mongoose.Schema({
-    matriculaNumero: { type: Number, required: true },
+    matriculaNumero: { type: Number, required: false },
     libro: { type: String, required: false },
     folio: { type: String, required: false },
     inicio: Date,
@@ -21,16 +21,16 @@ let matriculacionSchema = new mongoose.Schema({
 export let profesionalSchema = new mongoose.Schema({
 	// Persona
     habilitado: { type: Boolean, default: true },
-    nombre: { type: String, required: false },
-    apellido: { type: String, required: false },
-    documentoNumero: { type: String, required: false },
-    documentoVencimiento: { type: Date, required: false },
-    cuit: { type: String, required: false },
-    fechaNacimiento: { type: Date, required: false },
-    lugarNacimiento: { type: String, required: false },
+    nombre: { type: String, required: true },
+    apellido: { type: String, required: true },
+    documentoNumero: { type: String, required: true },
+    documentoVencimiento: { type: Date, required: true },
+    cuit: { type: String, required: true },
+    fechaNacimiento: { type: Date, required: true },
+    lugarNacimiento: { type: String, required: true },
     fechaFallecimiento: { type: Date, required: false },
-    nacionalidad: { type: ObjSIISASchema, required: false },
-    sexo: { type: ObjSIISASchema, required: false },
+    nacionalidad: { type: ObjSIISASchema, required: true },
+    sexo: { type: String, required: true },
     estadoCivil: constantes.ESTADOCIVIL,
     contactos: [contactoSchema],
     domicilios: [direccionSchema],
@@ -99,10 +99,10 @@ profesionalSchema.virtual('fallecido').get(function() {
     return this.fechaFallecimiento;
 });
 
-profesionalSchema.virtual('ultimaFirma').get(function() {
-    return this.firmas.sort((a, b) => {
-        return new Date(a.fecha).getTime() - new Date(b.fecha).getTime();
-    })[0];
-});
+// profesionalSchema.virtual('ultimaFirma').get(function() {
+//     return this.firmas.sort((a, b) => {
+//         return new Date(a.fecha).getTime() - new Date(b.fecha).getTime();
+//     })[0];
+// });
 
 export let profesional = mongoose.model('profesionalM', profesionalSchema, 'profesionalM');
