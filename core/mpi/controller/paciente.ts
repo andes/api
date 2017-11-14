@@ -39,7 +39,6 @@ export function createPaciente(data, req) {
 
 
 export function updatePaciente(pacienteObj, data, req) {
-
     return new Promise((resolve, reject) => {
         let pacienteOriginal = pacienteObj.toObject();
         for (let key in data) {
@@ -56,18 +55,49 @@ export function updatePaciente(pacienteObj, data, req) {
             let connElastic = new ElasticSync();
             connElastic.sync(pacienteObj).then(updated => {
                 if (updated) {
-                    Logger.log(req, 'mpi', 'update', {
+                    Logger.log(req, 'andes', 'update', {
                         original: pacienteOriginal,
                         nuevo: pacienteObj
                     });
                 } else {
-                    Logger.log(req, 'mpi', 'insert', pacienteObj);
+                    Logger.log(req, 'andes', 'insert', pacienteObj);
                 }
                 resolve(pacienteObj);
             }).catch(error => {
                 return reject(error);
             });
             resolve(pacienteObj);
+        });
+    });
+}
+
+export function updatePacienteMpi(pacMpi, pacAndes, req) {
+    return new Promise((resolve, reject) => {
+        let pacOriginalMpi = pacMpi.toObject();
+        // Asigno el objeto completo ya que está validado que proviene de MongoDb
+        pacMpi = new pacienteMpi(pacAndes);
+        if (req) {
+            Auth.audit(pacMpi, req);
+        }
+        pacMpi.save(function (err2) {
+            if (err2) {
+                return reject(err2);
+            }
+            let connElastic = new ElasticSync();
+            connElastic.sync(pacMpi).then(updated => {
+                if (updated) {
+                    Logger.log(req, 'mpi', 'update', {
+                        original: pacOriginalMpi,
+                        nuevo: pacMpi
+                    });
+                } else {
+                    Logger.log(req, 'mpi', 'insert', pacMpi);
+                }
+                resolve(pacMpi);
+            }).catch(error => {
+                return reject(error);
+            });
+            resolve(pacMpi);
         });
     });
 }
@@ -81,13 +111,10 @@ export function updatePaciente(pacienteObj, data, req) {
  * @param {any} req
  * @returns
  */
-export function postPacienteMpi(pacienteData, req) {
+export function postPacienteMpi(newPatientMpi, req) {
     return new Promise((resolve, reject) => {
         let match = new Matching();
-        let newPatientMpi = new pacienteMpi(pacienteData);
-
         Auth.audit(newPatientMpi, req);
-
         newPatientMpi.save((err) => {
             if (err) {
                 reject(err);

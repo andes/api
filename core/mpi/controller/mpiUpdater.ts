@@ -159,7 +159,7 @@ export function updatingMpi() {
                     /*Si NO hubo matching al 100% lo tengo que insertar en MPI */
                     if (resultado[0] !== 'merge') {
                         if (resultado[0] === 'new') {
-                            let pac = resultado[1].toObject();
+                            let pac = new pacienteMpi(resultado[1].toObject());
                             await controller.deletePacienteAndes(pacAndes._id); // Borra paciente mongodb Local
                             await controller.postPacienteMpi(pac, userScheduler); // Actualiza elastico
                         } else if (resultado[0] === 'notMerge') {
@@ -169,9 +169,9 @@ export function updatingMpi() {
                         /*Se fusionan los pacientes, pacFusionar es un paciente de ANDES y tengo q agregar
                         los campos de este paciente al paciente de mpi*/
                         let pacienteAndes = pacAndes;
-                        let pacMpi = resultado[1];
+                        let pacMpi = new pacienteMpi(resultado[1]);
                         await controller.deletePacienteAndes(pacAndes._id); // Borro el paciente de mongodb Local
-                        await controller.updatePaciente(pacMpi, pacienteAndes, userScheduler);
+                        await controller.updatePacienteMpi(pacMpi, pacienteAndes, userScheduler);
                     }
                     log('Termino con el paciente');
                 } catch (ex) {
