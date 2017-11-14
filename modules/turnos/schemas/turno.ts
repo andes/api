@@ -53,22 +53,25 @@ let turnoSchema = new mongoose.Schema({
         }],
     },
     tipoPrestacion: {
-        type: tipoPrestacionSchema,
+        type: tipoPrestacionSchema
     },
     // TODO: Enlace con RUP? cuando alguien defina ALGO
     idPrestacionPaciente: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'prestacionPaciente'
     },
-    diagnosticoPrincipal: {
-        codificacion: cie10.schema,
-        primeraVez: Boolean,
+    // Unificamos los diagnósticos(codificaciones) en un solo arreglo, el DIAGNOSTICO PRINCIPAL será el que este en la posición 0.
+    // Si ambas codificaciones coinciden, la auditoría aprobó la cod.
+    // Si las codificaciones difieren, auditoría realizo un reparo
+    // Si cod.Profesional no está cargado y codAuditoria si, se cargó por planilla y se considera el turno auditado
+    diagnostico: {
         ilegible: Boolean,
+        codificaciones: [{
+            codificacionProfesional: cie10.schema, // solamente obtenida de RUP o SIPS y definida por el profesional
+            codificacionAuditoria: cie10.schema,  // corresponde a la codificación establecida la instancia de revisión de agendas
+            primeraVez: Boolean,
+        }]
     },
-    diagnosticoSecundario: [{
-        codificacion: cie10.schema,
-        ilegible: Boolean,
-    }],
     confirmedAt: Date, /* Confirmación del turno por el  paciente */
     updatedAt: Date,
     updatedBy: mongoose.Schema.Types.Mixed

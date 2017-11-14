@@ -20,7 +20,7 @@ import * as turnoCtrl from './turnoCacheController';
  * @returns
  */
 export function getAgendasDeMongoExportadas() {
-    return new Promise < Array < any >> (function (resolve, reject) {
+    return new Promise<Array<any>>(function (resolve, reject) {
         agendasCache.find({
             $or: [{
                 estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS
@@ -42,7 +42,7 @@ export function getAgendasDeMongoExportadas() {
  * @returns
  */
 export async function getAgendasDeMongoPendientes() {
-    return new Promise < Array < any >> (function (resolve, reject) {
+    return new Promise<Array<any>>(function (resolve, reject) {
         agendasCache.find({
             estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente
         }).exec(async function (err, data: any) {
@@ -135,27 +135,27 @@ async function codificacionCie10(idConsulta: any, turno: any) {
         let codCie10: any = [];
         let codificaCie10: any = {};
         codCie10 = await getConsultaDiagnostico(idConsulta);
-        let m = 0;
+        let diagnosticos = [];
+        turno.diagnostico.codificaciones = [];
         for (let i = 0; i < codCie10.length; i++) {
             codificaCie10 = await getCodificacionCie10(codCie10[i].CODCIE10);
-            if (i === 0) {
-                turno.asistencia = 'asistio';
-                turno.diagnosticoPrincipal = {
-                    ilegible: false,
-                    codificacion: {
+            turno.asistencia = 'asistio';
+            turno.diagnostico.ilegible = false;
+            if (codCie10[i].PRINCIPAL === true) {
+                turno.diagnostico.codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del arrays
+                    codificacionProfesional: {
                         causa: codificaCie10.CAUSA,
                         subcausa: codificaCie10.SUBCAUSA,
                         codigo: codificaCie10.CODIGO,
                         nombre: codificaCie10.Nombre,
                         sinonimo: codificaCie10.Sinonimo,
                         c2: codificaCie10.C2
+                        // TODO: campo primeraVez -> verificar en SIPS
                     }
-                };
+                });
             } else {
-                turno.asistencia = 'asistio';
-                turno.diagnosticoSecundario[m] = {
-                    ilegible: false,
-                    codificacion: {
+                turno.diagnostico.codificaciones.push({
+                    codificacionProfesional: {
                         causa: codificaCie10.CAUSA,
                         subcausa: codificaCie10.SUBCAUSA,
                         codigo: codificaCie10.CODIGO,
@@ -163,8 +163,7 @@ async function codificacionCie10(idConsulta: any, turno: any) {
                         sinonimo: codificaCie10.Sinonimo,
                         c2: codificaCie10.C2
                     }
-                };
-                m++;
+                });
             }
         }
         resolve(turno);
@@ -221,7 +220,7 @@ function crearConsultorioTipoSips(agenda, idEfector) {
     };
     agenda.espacioFisico = nombre;
 
-    return new Promise(async(resolve: any, reject: any) => {
+    return new Promise(async (resolve: any, reject: any) => {
         let query = 'INSERT INTO dbo.CON_ConsultorioTipo ' +
             ' ( idEfector, nombre, objectId ) VALUES  ( ' +
             idEfector + ',' +
@@ -275,7 +274,7 @@ async function creaConsultorioSips(agenda: any, idEfector: any) {
     };
     agenda.espacioFisico = nombre;
 
-    return new Promise(async(resolve: any, reject: any) => {
+    return new Promise(async (resolve: any, reject: any) => {
         let idConsultorioTipo = await crearConsultorioTipoSips(agenda, idEfector);
 
         let query = ' INSERT INTO dbo.CON_Consultorio ' +
@@ -318,10 +317,10 @@ async function markAgendaAsProcessed(agenda) {
     return agendasCache.update({
         _id: agenda._id
     }, {
-        $set: {
-            estadoIntegracion: estadoIntegracion
-        }
-    }).exec();
+            $set: {
+                estadoIntegracion: estadoIntegracion
+            }
+        }).exec();
 }
 
 function getConsultaDiagnostico(idConsulta) {
@@ -329,7 +328,7 @@ function getConsultaDiagnostico(idConsulta) {
         let transaction;
         return new sql.Request(transaction)
             .input('idConsulta', sql.Int, idConsulta)
-            .query('SELECT CODCIE10 FROM dbo.CON_ConsultaDiagnostico WHERE idConsulta = @idConsulta')
+            .query('SELECT CODCIE10, PRINCIPAL FROM dbo.CON_ConsultaDiagnostico WHERE idConsulta = @idConsulta')
             .then(result => {
                 resolve(result);
             }).catch(err => {
@@ -558,7 +557,7 @@ function existeConsultaTurno(idTurno) {
 
 // Set de funciones locales no publicas
 
-function getDatosSips(codigoSisa ? , dniProfesional ? ) {
+function getDatosSips(codigoSisa?, dniProfesional?) {
     return new Promise((resolve: any, reject: any) => {
         let transaction;
         (async function () {
@@ -646,7 +645,7 @@ async function grabaAgendaSips(agendaSips: any, datosSips: any, pool) {
         multiprofesional = 0;
     }
 
-    return new Promise(async(resolve: any, reject: any) => {
+    return new Promise(async (resolve: any, reject: any) => {
         let idEfector = datosSips.idEfector;
         let idProfesional = datosSips.idProfesional;
         let idEspecialidad = await getEspecialidadSips(agendaSips.tipoPrestaciones[0].term);
