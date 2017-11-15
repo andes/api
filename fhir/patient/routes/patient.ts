@@ -92,7 +92,6 @@ router.post('/', async function (req, res, next) {
 
         let pacienteFhir = req.body;
         let fhirValid = validator.validate(pacienteFhir);
-
         let connElastic = new Client({
             host: configPrivate.hosts.elastic_main,
         });
@@ -105,6 +104,7 @@ router.post('/', async function (req, res, next) {
             pac['claveBlocking'] = match.crearClavesBlocking(pac);
             // Verificamos si el paciente existe en elastic search
             let existe = await checkPatientExist.exists(pac);
+            console.log('llega a aca?');
             if (existe === 0) {
                 // Insertamos el paciente en la BASE ANDES LOCAL
                 let newPatient = new paciente(pac);
@@ -138,6 +138,7 @@ router.post('/', async function (req, res, next) {
             return next(codes.status.badRequest);
         }
     } catch (err) {
+        console.log('El palenque: ', err);
         return next(codes.status.error);
     }
 });

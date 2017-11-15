@@ -6,7 +6,7 @@ function pacienteFHIRFields(elem: string) {
 }
 
 function identifierFields(elem: string) {
-    return elem.match('assigner|value') != null;
+    return elem.match('use|type|system|value|period|assigner') != null;
 }
 
 function nameFields(elem: string) {
@@ -35,7 +35,7 @@ function contactFields(elem: string) {
 
 function validName(aName) {
     return Object.keys(aName).every(nameFields) && ('resourceType' in aName) && aName.resourceType === 'HumanName'
-        && ('family' in aName) && (typeof aName.family === 'string')
+        && ('family' in aName) && Array.isArray(aName.family) && aName.family.every(areStrings)
         && ('given' in aName) && Array.isArray(aName.given) && aName.given.every(areStrings);
 }
 
@@ -50,12 +50,19 @@ export function validate(pacienteFhir: PacienteFHIR): boolean {
     // Verificamos que las key esten contenidas en los conjuntos mínimos pacienteFHIRField
     if (fieldVerified) {
         respuesta = ('resourceType' in pacienteFhir) && pacienteFhir.resourceType === 'Patient';
-        respuesta = respuesta && ('identifier' in pacienteFhir) && (pacienteFhir.identifier.length > 0);
-        pacienteFhir.identifier.forEach(anIdentifier => {
-            respuesta = respuesta && Object.keys(anIdentifier).every(identifierFields)
-                && ('assigner' in anIdentifier) && ('value' in anIdentifier)
-                && (typeof anIdentifier.assigner === 'string') && (typeof anIdentifier.value === 'string');
-        });
+        respuesta = respuesta && ('identifier' in pacienteFhir);
+        if (pacienteFhir.identifier.length > 0) {
+            pacienteFhir.identifier.forEach(anIdentifier => {
+                respuesta = respuesta && Object.keys(anIdentifier).every(identifierFields)
+                    if (anIdentifier.assigner) {
+                        respuesta = respuesta && typeof anIdentifier.assigner === 'string';
+                    }
+                    if (anIdentifier.value) {
+                        respuesta = respuesta && typeof anIdentifier.value === 'string';
+                    }
+            });
+
+        }
         pacienteFhir.name.forEach(aName => {
             respuesta = respuesta && validName(aName);
         });
@@ -65,9 +72,7 @@ export function validate(pacienteFhir: PacienteFHIR): boolean {
         if (pacienteFhir.telecom) {
             pacienteFhir.telecom.forEach(aTelecom => {
                 respuesta = respuesta && Object.keys(aTelecom).every(telecomFields);
-                if (aTelecom.resourceType) {
-                    respuesta = respuesta && aTelecom.resourceType === 'ContactPoint';
-                }
+                respuesta = respuesta && ('resourceType' in aTelecom) && aTelecom.resourceType === 'ContactPoint';
                 if (aTelecom.value) {
                     respuesta = respuesta && typeof aTelecom.value === 'string';
                 }
@@ -77,6 +82,9 @@ export function validate(pacienteFhir: PacienteFHIR): boolean {
                 if (aTelecom.system) {
                     respuesta = respuesta && typeof aTelecom.system === 'string' &&
                         aTelecom.system.match('phone|fax|email|pager|url|sms|other') != null;
+                }
+                if (aTelecom.use) {
+                    respuesta = respuesta && typeof aTelecom.use === 'string';
                 }
             });
         }
@@ -137,6 +145,5 @@ export function validate(pacienteFhir: PacienteFHIR): boolean {
     } else {
         respuesta = fieldVerified; // No cumple con los campos estandar de FHIR
     }
-
     return respuesta;
 }
