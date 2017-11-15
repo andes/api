@@ -41,7 +41,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             query.where('solicitud.prestacionOrigen').equals(req.query.idPrestacionOrigen);
         }
         if (req.query.turnos) {
-            query.where('solicitud.idTurno').in(req.query.turnos);
+            query.where('solicitud.turno').in(req.query.turnos);
         }
 
         // Solicitudes generadas desde puntoInicio Ventanilla
