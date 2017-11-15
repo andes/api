@@ -114,7 +114,7 @@ router.get('/snomed', function (req, res, next) {
             });
         }
         let skip: number = parseInt(req.query.skip || 0, 10);
-        res.json(data.slice(skip, req.query.limit || 100));
+        res.json(data.slice(skip, req.query.limit || 500));
     });
 });
 
