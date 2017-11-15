@@ -16,16 +16,18 @@ export class CDABuilder extends BaseBuilder {
                          .att('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
                          .att('xmlns:voc', 'urn:hl7-org:v3/voc');
 
-
         this.createNode(xml, 'typeId', cda.getTypeId());
         this.createNode(xml, 'id', cda.getId());
         this.createNode(xml, 'code', cda.getCode());
         this.createNode(xml, 'title', null, cda.getTitle());
-        this.createNode(xml, 'effectiveTime', {value: cda.getEffectiveTime().getTime() });
+        this.createNode(xml, 'effectiveTime', {value: this.fromDate(cda.getEffectiveTime()) });
         this.createNode(xml, 'confidentialityCode', cda.getConfidentialityCode());
         this.createNode(xml, 'languageCode', cda.getLanguageCode());
-        this.createNode(xml, 'setId', cda.getSetId());
         this.createNode(xml, 'versionNumber', cda.getVersionNumber());
+
+        if (cda.getSetId()) {
+            this.createNode(xml, 'setId', cda.getSetId());
+        }
 
         if (cda.teplatesId().length > 0) {
             cda.teplatesId().forEach(item => {
@@ -51,16 +53,15 @@ export class CDABuilder extends BaseBuilder {
             xml.importDocument(template);
         }
 
-        if (cda.body()) {
+        let body: Body = cda.body() as Body;
+        if (body) {
             let mainComponent = xml.ele('component').ele('structuredBody');
-
-            (cda.body() as Body).component().forEach(item => {
+            body.component().forEach(item => {
                 let builderComponent = item.builderFactory();
                 let template = builderComponent.build(item);
                 mainComponent.importDocument(template);
             });
         }
-
 
         return xml.end({ pretty: true});
     }

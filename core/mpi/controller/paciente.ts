@@ -147,28 +147,38 @@ export function buscarPaciente(id): Promise<{ db: String, paciente: any }> {
 
 /**
  * Busca un paciente en MPI y luego en andes con cierta condición.
- * @param condition 
+ * @param condition
  */
 
 export function buscarPacienteWithcondition (condition): Promise<{ db: String, paciente: any }> {
-    return new Promise( async (resolve, reject) => {
-        try {
-
-            let obj = await pacienteMpi.findOne(condition);
-            if (obj) {
-                return resolve({ db: 'mpi', paciente: obj });
+    return new Promise((resolve, reject) => {
+        pacienteMpi.findOne(condition, function (err, data) {
+            if (err) {
+                reject(err);
+            } else {
+                if (data) {
+                    let resultado = {
+                        db: 'mpi',
+                        paciente: data
+                    };
+                    resolve(resultado);
+                } else {
+                    paciente.findOne(condition, function (err2, dataMpi) {
+                        if (err2) {
+                            reject(err2);
+                        } else if (dataMpi) {
+                            let resultado = {
+                                db: 'andes',
+                                paciente: dataMpi
+                            };
+                            resolve(resultado);
+                        } else {
+                            reject(null);
+                        }
+                    });
+                }
             }
-
-            obj = await paciente.findOne(condition);
-            if (obj) {
-                return resolve({ db: 'andes', paciente: obj });
-            }
-
-            return reject();
-
-        } catch (e) {
-            reject(e);
-        }
+        });
     });
 }
 

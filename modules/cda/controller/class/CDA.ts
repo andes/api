@@ -32,11 +32,15 @@ export class CDA {
             code: 'N',
             codeSystem: '2.16.840.1.113883.5.25'
         };
+
+        this.languageCode = {
+            code: 'es-AR'
+        };
     }
 
 
-    body(body = null) {
-        return body != null ?  (this.body = body, this) : this._body;
+    body (body = null) {
+        return body != null ?  (this._body = body, this) : this._body;
     }
 
     /**

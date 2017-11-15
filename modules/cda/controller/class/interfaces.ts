@@ -17,7 +17,7 @@ export interface IConfidentialityCode {
 
 export interface ILanguageCode {
     code: String;
-    codeSystem: String;
+    // codeSystem: String;
 }
 
 export interface ISetId {

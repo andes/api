@@ -8,7 +8,7 @@ export class AuthorBuilder extends BaseBuilder {
 
     public build(doctor: Doctor) {
         let author = builder.create('author');
-        this.createNode(author, 'time', { value: Date.now() } );
+        this.createNode(author, 'time', { value: this.fromDate(new Date()) } );
 
         let assignedAuthor = author.ele('assignedAuthor');
         if (doctor.getId()) {

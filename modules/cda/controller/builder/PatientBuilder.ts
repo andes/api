@@ -17,7 +17,7 @@ export class PatientBuilder extends BaseBuilder {
         this.createNode(nameNode, 'family', null, patient.getLastname());
 
         if (patient.getBirthtime()) {
-            this.createNode(patientNode, 'birthTime', { value: patient.getBirthtime().getTime() } );
+            this.createNode(patientNode, 'birthTime', { value: this.fromDate(patient.getBirthtime()) } );
         }
 
         let gender = patient.getGender();

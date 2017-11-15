@@ -1,7 +1,7 @@
 import { IID, ICode, ITemplateId } from './interfaces';
 import { ImageComponentBuilder, ComponentBuilder } from '../builder/ComponentBuilder';
 export class Body {
-    public components: Component[];
+    public components: Component[] = [];
 
     addComponent (comp) {
         this.components.push(comp);
@@ -16,7 +16,7 @@ export class Body {
 export class Component {
     private _id: IID;
     private _code: ICode;
-    private templateId: ITemplateId[];
+    private templateId: ITemplateId[] = [];
     private _text: String;
 
     builderFactory() {
@@ -36,7 +36,7 @@ export class Component {
     }
 
     code(code = null) {
-        if (code) { this.code = code; return this; } else { return this._code; }
+        if (code) { this._code = code; return this; } else { return this._code; }
     }
 
     text (text = null) {
