@@ -540,22 +540,20 @@ export function actualizarTiposDeTurno() {
 }
 
 /**
- * Actualiza los estados de las agendas que se ejecutaron el día anterior a Pendiente Asistencia o
- * Pendiente Auditoría según corresponda
+ * Actualiza los estados de las agendas que se ejecutaron el día anterior o previo a PendienteAsistencia o
+ * PendienteAuditoría según corresponda
  * se ejecuta una vez al día por el scheduler.
  *
  * @export actualizarTiposDeTurno()
  * @returns resultado
  */
 export function actualizarEstadoAgendas() {
-    // let fechaActualizar = moment(new Date()).subtract(1, 'days');
-    let fechaActualizar = moment(new Date());
-    // actualiza los agendas en estado disponible o publicada que se hayan ejecutado el día anterior
+    let fechaActualizar = moment(new Date()).subtract(1, 'days').endOf('day').toDate();
+    
     let condicion = {
         '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
         'horaInicio': {
-            // $gte: (moment(fechaActualizar).startOf('day').toDate() as any),
-            $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
+            $lte: fechaActualizar
         }
     };
     let cursor = agendaModel.find(condicion).cursor();
@@ -595,7 +593,6 @@ export function actualizarEstadoAgendas() {
 
     });
     return 'Agendas actualizadas';
-
 }
 
 
