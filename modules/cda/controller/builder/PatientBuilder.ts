@@ -2,8 +2,8 @@ import { IID, ICode, IConfidentialityCode, ILanguageCode, ISetId } from '../clas
 import { CDA } from '../class/CDA';
 import * as builder from 'xmlbuilder';
 import { Patient } from '../class/Patient';
-
-export class PatientBuilder {
+import { BaseBuilder } from './BaseBuilder';
+export class PatientBuilder extends BaseBuilder {
 
     public build(patient: Patient) {
         let recordTarget = builder.create('recordTarget').ele('patientRole');
@@ -29,14 +29,5 @@ export class PatientBuilder {
             });
         }
         return recordTarget;
-    }
-
-
-    public createNode(root, tag, attrs, text = null) {
-        if (attrs) {
-            root.ele(tag, attrs);
-        } else if (text) {
-            root.ele(tag, {}, text);
-        }
     }
 }

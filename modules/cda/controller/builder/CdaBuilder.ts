@@ -1,11 +1,13 @@
 import { IID, ICode, IConfidentialityCode, ILanguageCode, ISetId } from '../class/interfaces';
 import { CDA } from '../class/CDA';
+import { Body } from '../class/Body';
 import * as builder from 'xmlbuilder';
 import { PatientBuilder } from './PatientBuilder';
 import { AuthorBuilder } from './AuthorBuilder';
 import { OrganizationBuilder } from './OrganizationBuilder';
+import { BaseBuilder } from './BaseBuilder';
 
-export class CDABuilder {
+export class CDABuilder extends BaseBuilder {
 
     public build(cda: CDA) {
 
@@ -49,15 +51,18 @@ export class CDABuilder {
             xml.importDocument(template);
         }
 
+        if (cda.body()) {
+            let mainComponent = xml.ele('component').ele('structuredBody');
+
+            (cda.body() as Body).component().forEach(item => {
+                let builderComponent = item.builderFactory();
+                let template = builderComponent.build(item);
+                mainComponent.importDocument(template);
+            });
+        }
+
+
         return xml.end({ pretty: true});
     }
 
-
-    public createNode(root, tag, attrs, text = null) {
-        if (attrs) {
-            root.ele(tag, attrs);
-        } else if (text) {
-            root.ele(tag, {}, text);
-        }
-    }
 }

@@ -3,8 +3,8 @@ import { CDA } from '../class/CDA';
 import * as builder from 'xmlbuilder';
 import { Patient } from '../class/Patient';
 import { Doctor } from '../class/Doctor';
-
-export class AuthorBuilder {
+import { BaseBuilder } from './BaseBuilder';
+export class AuthorBuilder extends BaseBuilder {
 
     public build(doctor: Doctor) {
         let author = builder.create('author');
@@ -28,14 +28,5 @@ export class AuthorBuilder {
         }
 
         return author;
-    }
-
-
-    public createNode(root, tag, attrs, text = null) {
-        if (attrs) {
-            root.ele(tag, attrs);
-        } else if (text) {
-            root.ele(tag, {}, text);
-        }
     }
 }

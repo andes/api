@@ -2,6 +2,7 @@ import { IID, ICode, IConfidentialityCode, ILanguageCode, ISetId, ITemplateId } 
 import { Patient } from './Patient';
 import { Doctor } from './Doctor';
 import { Organization } from './Organization';
+import { Body } from './Body';
 
 export class CDA {
     private typeId;
@@ -19,6 +20,7 @@ export class CDA {
     private patient: Patient;
     private author: Doctor;
     private custodian: Organization;
+    private _body: Body;
 
     constructor () {
         this.templateId = [];
@@ -30,6 +32,11 @@ export class CDA {
             code: 'N',
             codeSystem: '2.16.840.1.113883.5.25'
         };
+    }
+
+
+    body(body = null) {
+        return body != null ?  (this.body = body, this) : this._body;
     }
 
     /**
