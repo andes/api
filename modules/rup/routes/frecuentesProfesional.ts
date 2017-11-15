@@ -71,15 +71,21 @@ router.put('/frecuentesProfesional/:id*?', function (req, res, next) {
 
             if (resultado && resultado[0] && resultado[0].frecuentes) {
                 resultado[0].frecuentes.forEach(fr => {
-                    if (req.body.frecuentes.filter(x => x.concepto.conceptId === fr.concepto.conceptId).length > 1) {
-                        req.body.frecuentes.splice(req.body.frecuentes.findIndex(y => y.concepto.conceptId === fr.concepto.conceptId), 1);
+                    if (req.body.frecuentes.find(x => x.concepto.conceptId === fr.concepto.conceptId)) {
+                        req.body.frecuentes.forEach(bodyFr => {
+                            if (bodyFr.concepto.conceptId === fr.concepto.conceptId) {
+                                bodyFr.frecuencia++;
+                            }
+                        });
+
+                        if (req.body.frecuentes.filter(x => x.concepto.conceptId === fr.concepto.conceptId).length > 1) {
+                            req.body.frecuentes.splice(req.body.frecuentes.findIndex(y => y.concepto.conceptId === fr.concepto.conceptId), 1);
+                        }
                     } else {
-                        fr.frecuencia++;
                         req.body.frecuentes.push(fr);
                     }
                 });
             }
-
 
             profesionalMeta.findByIdAndUpdate(resultado[0]._id, req.body, function (err2, data2) {
                 if (err2) {
