@@ -24,7 +24,6 @@ export function pacientesAFHIR(ids: any[]) {
                 pacienteMpi.findById(id)
                     .then((data: any) => {
                         if (data) {
-                            console.log('info de la data: ', data.documento);
                             let identificadores = data.documento ? [{ assigner: 'DU', value: data.documento }] : [];
                             // Parsea contactos
                             let contactos = data.contacto ? data.contacto.map(unContacto => {
@@ -46,7 +45,6 @@ export function pacientesAFHIR(ids: any[]) {
                                 }
                                 return cont;
                             }) : [];
-                            console.log('revento aca?');
                             // Parsea direcciones
                             let direcciones = data.direccion ? data.direccion.map(unaDireccion => {
                                 let direc = {
