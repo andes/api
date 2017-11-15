@@ -20,7 +20,7 @@ export class CDABuilder extends BaseBuilder {
         this.createNode(xml, 'id', cda.getId());
         this.createNode(xml, 'code', cda.getCode());
         this.createNode(xml, 'title', null, cda.getTitle());
-        this.createNode(xml, 'effectiveTime', {value: this.fromDate(cda.getEffectiveTime()) });
+        this.createNode(xml, 'effectiveTime', { value: this.fromDate(cda.getEffectiveTime()) });
         this.createNode(xml, 'confidentialityCode', cda.getConfidentialityCode());
         this.createNode(xml, 'languageCode', cda.getLanguageCode());
         this.createNode(xml, 'versionNumber', cda.getVersionNumber());

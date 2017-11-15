@@ -134,7 +134,7 @@ function buildID (id) {
  * Almacena un XML en Mongo
  * @param objectID ID del CDA
  * @param cdaXml  XML en texto plano
- * @param metadata Datos extras para almacenar con el archivo. 
+ * @param metadata Datos extras para almacenar con el archivo.
  */
 export function storeCDA (objectID, cdaXml, metadata) {
     return new Promise((resolve, reject) => {
@@ -167,21 +167,25 @@ export function storeCDA (objectID, cdaXml, metadata) {
  * @param {object} organization Datos de la organización [id, nombre]
  * @param {conceptId} snomed concept id asociado. Sirve para tabular el tipo de CDA
  * @param {CIE10Schema} cie10 Código cie10
- * @param {string} text Texto descriptivo 
+ * @param {string} text Texto descriptivo
  * @param {string} base64  Archivo para adjutar al CDA en base64
  */
 export function generateCDA(uniqueId, patient, date, author, organization, snomed, cie10, text, base64) {
     let cda = new CDA();
-    // let uniqueId = String(new mongoose.Types.ObjectId());
+
 
     cda.setId(buildID(uniqueId));
 
     let code = matchCode(snomed);
     cda.setCode(code);
-    cda.setVersionNumber(1);
+
+    // [TODO] Desde donde inferir el titulo
     cda.setTitle(code.displayName);
+
+    cda.setVersionNumber(1);
     cda.setEffectiveTime(date);
 
+    // [TODO] Falta definir el tema del DNI
     let patientCDA = new Patient();
     patientCDA.setFirstname(patient.nombre).setLastname(patient.apellido);
     patientCDA.setBirthtime(patient.fechaNacimiento);

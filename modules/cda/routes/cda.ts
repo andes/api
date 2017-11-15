@@ -57,13 +57,11 @@ router.post('/', Auth.authenticate(),  async (req: any, res, next) => {
         let uniqueId = String(new mongoose.Types.ObjectId());
 
         let cda = cdaCtr.generateCDA(uniqueId, paciente, fecha, dataProfesional, organizacion, snomed, cie10, texto, file);
-
+        // console.log(cda);
         let metadata = {
             paciente: paciente._id
         };
         let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
-
-        console.log(cda);
 
         res.json({ cda: uniqueId, paciente: paciente._id });
 

@@ -4,6 +4,7 @@ import * as builder from 'xmlbuilder';
 import { PatientBuilder } from './PatientBuilder';
 import { AuthorBuilder } from './AuthorBuilder';
 import { OrganizationBuilder } from './OrganizationBuilder';
+import * as moment from 'moment';
 
 export class BaseBuilder {
 
@@ -16,7 +17,8 @@ export class BaseBuilder {
     }
 
     public fromDate(date: Date) {
-        return '' + date.getFullYear() + date.getMonth() + date.getDay() + date.getHours() + date.getMinutes() + date.getSeconds();
+        let str = moment(date).format('YYYYMMDDhhmmss'); 
+        return str;
     }
 
 }
