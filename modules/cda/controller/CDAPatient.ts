@@ -86,9 +86,13 @@ export async function findOrCreate(req, dataPaciente, organizacion) {
     }
 }
 
-// Decidir este rootOID
+// Root id principal de ANDES o del hospital
 let rootOID = '2.16.840.1.113883.2.10.17.99999';
 
+/**
+ * Match desde snomed a un código LOINC para indentificar el CDA
+ * @param snomed ConceptId
+ */
 
 function matchCode(snomed) {
     switch (snomed) {
@@ -102,6 +106,10 @@ function matchCode(snomed) {
     }
 }
 
+/**
+ * Creamos la estructura ICode en base a un CIE10
+ * @param cie10
+ */
 function icd10Code (cie10) {
     return {
         codeSystem: '2.16.840.1.113883.6.90',
@@ -111,6 +119,10 @@ function icd10Code (cie10) {
     };
 }
 
+/**
+ * Crea la estructura IID a partir de un ID
+ * @param id
+ */
 function buildID (id) {
     return {
         root: rootOID,
@@ -118,7 +130,12 @@ function buildID (id) {
     };
 }
 
-
+/**
+ * Almacena un XML en Mongo
+ * @param objectID ID del CDA
+ * @param cdaXml  XML en texto plano
+ * @param metadata Datos extras para almacenar con el archivo. 
+ */
 export function storeCDA (objectID, cdaXml, metadata) {
     return new Promise((resolve, reject) => {
 
@@ -141,6 +158,18 @@ export function storeCDA (objectID, cdaXml, metadata) {
     });
 }
 
+/**
+ * Genera el CDA
+ * @param {string} uniqueId ID del CDA
+ * @param {object} patient Datos del paciente. 5 datos básicos
+ * @param {Date} date Fecha de la prestación
+ * @param {object} author Dato del profesional. [nombre, apellido, (id)]
+ * @param {object} organization Datos de la organización [id, nombre]
+ * @param {conceptId} snomed concept id asociado. Sirve para tabular el tipo de CDA
+ * @param {CIE10Schema} cie10 Código cie10
+ * @param {string} text Texto descriptivo 
+ * @param {string} base64  Archivo para adjutar al CDA en base64
+ */
 export function generateCDA(uniqueId, patient, date, author, organization, snomed, cie10, text, base64) {
     let cda = new CDA();
     // let uniqueId = String(new mongoose.Types.ObjectId());

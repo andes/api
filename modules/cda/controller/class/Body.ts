@@ -44,11 +44,18 @@ export class Component {
     }
 }
 
+
+// <text>
+//     <renderMultiMedia referencedObject='FIRMA'/>
+// </text>
+
 export class ImageComponent extends Component {
     private mimeType: String;
     private file64: String;
+    public identifier: String = 'Adjunto';
 
     file (value = null) {
+        // this.text('<renderMultiMedia referencedObject=\'' + this.identifier + '\'/>');
         if (value) {
             this.file64 = value;
             return this;

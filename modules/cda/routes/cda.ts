@@ -63,6 +63,8 @@ router.post('/', Auth.authenticate(),  async (req: any, res, next) => {
         };
         let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
 
+        console.log(cda);
+
         res.json({ cda: uniqueId, paciente: paciente._id });
 
     } catch (e) {

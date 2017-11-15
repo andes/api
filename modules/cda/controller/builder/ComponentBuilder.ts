@@ -24,7 +24,9 @@ export class ComponentBuilder extends BaseBuilder {
             });
         }
 
-        this.createNode(section, 'text', null, component.text());
+        if (component.text()) {
+            this.createNode(section, 'text', null, component.text());
+        }
 
         return section;
     }
@@ -50,7 +52,8 @@ export class ImageComponentBuilder extends ComponentBuilder {
 
         let obsAttr = {
             classCode: 'OBS',
-            moodCode: 'ENV'
+            moodCode: 'ENV',
+            ID: component.identifier
         };
 
         let obsTag = entry.ele('observationMedia', obsAttr);
@@ -59,6 +62,7 @@ export class ImageComponentBuilder extends ComponentBuilder {
             mediaType: component.type()
         };
 
+        obsTag.ele('text').ele('renderMultiMedia', { referencedObject: component.identifier });
         obsTag.ele('value', valueAttr, component.file());
 
         return section;
