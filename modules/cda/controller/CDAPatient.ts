@@ -105,9 +105,9 @@ function matchCode(snomed) {
 function icd10Code (cie10) {
     return {
         codeSystem: '2.16.840.1.113883.6.90',
-        code: cie10,
+        code: cie10.codigo,
         codeSystemName: 'ICD-10',
-        displayName: 'Falta buscar el nombre del codigo cie10'
+        displayName: cie10.nombre
     };
 }
 
@@ -132,7 +132,7 @@ export function storeCDA (objectID, cdaXml, metadata) {
                 metadata
             },
             input,
-            function(error, createdFile){
+            (error, createdFile) => {
                 resolve(createdFile);
             }
         );

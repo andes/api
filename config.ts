@@ -113,7 +113,7 @@ export const modules = {
     cda: {
         active: true,
         path: './modules/cda/routes',
-        route: '/cda',
+        route: '/modules/cda',
         middleware: null
     }
 };
