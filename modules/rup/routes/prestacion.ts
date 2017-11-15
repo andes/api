@@ -37,7 +37,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         if (req.query.idPaciente) {
             query.where('paciente.id').equals(req.query.idPaciente);
         }
-        if (req.query.idPrestacionOrigen) { 
+        if (req.query.idPrestacionOrigen) {
             query.where('solicitud.prestacionOrigen').equals(req.query.idPrestacionOrigen);
         }
         if (req.query.turnos) {
