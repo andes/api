@@ -90,9 +90,11 @@ async function updateTurnosPaciente(pacienteModified) {
     };
     try {
         let turnos: any = await turnosController.getTurno(req);
-        turnos.forEach(element => {
-            agendaController.updatePaciente(pacienteModified, element);
-        });
+        if (turnos.length > 0) {
+            turnos.forEach(element => {
+                agendaController.updatePaciente(pacienteModified, element);
+            });
+        }
     } catch (error) {
         return error;
     }
