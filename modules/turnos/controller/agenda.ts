@@ -649,6 +649,8 @@ export function updatePaciente(pacienteModified, turno) {
             }
             if (!band) {
                 bloques[i].turnos[indiceTurno].paciente.telefono = pacienteModified.contacto[0].valor;
+                bloques[i].turnos[indiceTurno].paciente.carpetaEfectores = pacienteModified.carpetaEfectores;
+                bloques[i].turnos[indiceTurno].paciente.fechaNacimiento = pacienteModified.fechaNacimiento;
             }
             i++;
         }
