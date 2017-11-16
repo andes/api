@@ -619,3 +619,41 @@ export function saveAgenda(nuevaAgenda) {
         });
     });
 }
+
+/**
+ * Actualiza el paciente embebido en el turno.
+ *
+ * @export
+ * @param {any} pacienteModified
+ * @param {any} turno
+ */
+export function updatePaciente(pacienteModified, turno) {
+
+    agendaModel.findById(turno.agenda_id, function (err, data, next) {
+        if (err) {
+            return next(err);
+        }
+        let bloques: any = data.bloques;
+        let indiceTurno = 0;
+        let i = 0;
+        let j = 0;
+        let band = true;
+        while (i < bloques.length && band) {
+            j = 0;
+            while (j < bloques[i].turnos.length && band) {
+                if (bloques[i].turnos[j]._id.toString() === turno._id.toString()) {
+                    indiceTurno = j;
+                    band = false;
+                }
+                j++;
+            }
+            if (!band) {
+                bloques[i].turnos[indiceTurno].paciente.telefono = pacienteModified.contacto[0].valor;
+            }
+            i++;
+        }
+
+        Auth.audit(data, (userScheduler as any));
+        saveAgenda(data);
+    });
+}
