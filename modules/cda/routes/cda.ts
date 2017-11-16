@@ -1,10 +1,10 @@
 import * as express from 'express';
-import { authOrganizaciones } from '../../../auth/schemas/organizacion';
+import { model as Organizaciones } from '../../../core/tm/schemas/organizacion';
 import { model as Cie10 } from '../../../core/term/schemas/cie10';
+import { makeFs } from '../schemas/CDAFiles';
+
 import * as pacienteCtr from '../../../core/mpi/controller/paciente';
 import * as cdaCtr from '../controller/CDAPatient';
-
-import { makeFs } from '../schemas/CDAFiles';
 
 import * as stream from 'stream';
 import * as base64 from 'base64-stream';
@@ -50,7 +50,7 @@ router.post('/', Auth.authenticate(),  async (req: any, res, next) => {
         let texto = req.body.texto;
 
         // Terminar de decidir esto
-        let organizacion = await authOrganizaciones.findById(orgId);
+        let organizacion = await Organizaciones.findById(orgId);
         let cie10 = await Cie10.findOne({codigo: cie10Code});
 
         let paciente = await cdaCtr.findOrCreate(req, dataPaciente, organizacion._id);
