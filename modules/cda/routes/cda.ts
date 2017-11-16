@@ -60,7 +60,8 @@ router.post('/', Auth.authenticate(),  async (req: any, res, next) => {
 
         let metadata = {
             paciente: paciente._id,
-            prestacion: snomed
+            prestacion: snomed,
+            fecha: fecha
         };
         let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
 
@@ -103,5 +104,18 @@ router.get('/:id', async (req: any, res, next) => {
     });
 });
 
+router.get('/paciente/:id', async (req: any, res, next) => {
+    let CDAFiles = makeFs();
+    let pacienteID = req.params.id;
+
+    let list = await CDAFiles.find({ 'metadata.paciente':  mongoose.Types.ObjectId(pacienteID)});
+    list = list.map(item => {
+        let data = item.metadata;
+        data.cda = item._id;
+
+        return item.metadata;
+    });
+    res.json(list);
+});
 
 export = router;
