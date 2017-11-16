@@ -87,8 +87,9 @@ router.get('/turno/:id*?', function (req, res, next) {
             matchTurno['bloques.turnos.asistencia'] = { '$exists': req.query.asistencia };
         }
 
+        // TODO: probar la siguiente condición
         if (req.query.codificado) {
-            matchTurno['bloques.turnos.diagnosticoPrincipal'] = { '$exists': true };
+            matchTurno['bloques.turnos.diagnosticos.0'] = { '$exists': true };
         }
 
         if (req.query.horaInicio) {
@@ -377,11 +378,12 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, 
                         let datosOp = {
                             turno: update[etiquetaTurno]
                         };
+                        // TODO: loggear estas operaciones sobre turnos de forma mas clara.
                         Logger.log(req, 'citas', 'update', datosOp);
                     }
                     // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
                     // Donde doc2 es el documeto de la Agenda actualizado
-                        operations.cacheTurnosSips(doc2);
+                    operations.cacheTurnosSips(doc2);
                     // Fin de insert cache
                     res.json(data);
 

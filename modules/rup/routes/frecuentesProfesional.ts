@@ -58,20 +58,36 @@ router.post('/frecuentesProfesional', function (req, res, next) {
 
 router.put('/frecuentesProfesional/:id*?', function (req, res, next) {
 
-    // console.log(req.body);
-
-    let query;
-    query = profesionalMeta.find({});
+    let query = profesionalMeta.find({});
 
     query.where('profesional.id', req.params.id);
 
-    query.exec((err, data: any) => {
+    query.exec((err, resultado: any) => {
         if (err) {
             return next(err);
         }
 
-        if (data._id) {
-            profesionalMeta.findByIdAndUpdate(data._id, req.body, { new: true }, function (err2, data2) {
+        if (resultado[0] && resultado[0]._id) {
+
+            if (resultado && resultado[0] && resultado[0].frecuentes) {
+                resultado[0].frecuentes.forEach(fr => {
+                    if (req.body.frecuentes.find(x => x.concepto.conceptId === fr.concepto.conceptId)) {
+                        req.body.frecuentes.forEach(bodyFr => {
+                            if (bodyFr.concepto.conceptId === fr.concepto.conceptId) {
+                                bodyFr.frecuencia = fr.frecuencia + 1;
+                            }
+                        });
+
+                        if (req.body.frecuentes.filter(x => x.concepto.conceptId === fr.concepto.conceptId).length > 1) {
+                            req.body.frecuentes.splice(req.body.frecuentes.findIndex(y => y.concepto.conceptId === fr.concepto.conceptId), 1);
+                        }
+                    } else {
+                        req.body.frecuentes.push(fr);
+                    }
+                });
+            }
+
+            profesionalMeta.findByIdAndUpdate(resultado[0]._id, req.body, function (err2, data2) {
                 if (err2) {
                     return next(err);
                 }
@@ -85,7 +101,7 @@ router.put('/frecuentesProfesional/:id*?', function (req, res, next) {
                 if (err2) {
                     res.json(err2);
                 } else {
-                    res.json(data);
+                    res.json(resultado);
                 }
 
             });
