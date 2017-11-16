@@ -33,7 +33,7 @@ let router = express.Router();
 // 		"nombre": "Huds",
 // 		"apellido": "Doct1or"
 // 	},
-// 	"file": "data:image/jpeg;base64,ASDASDASDASDASDASDASD"
+// 	"file": "data:image/jpeg;base64,AEFCSADE2D2D2
 // }
 
 router.post('/', Auth.authenticate(),  async (req: any, res, next) => {
@@ -59,7 +59,8 @@ router.post('/', Auth.authenticate(),  async (req: any, res, next) => {
         let cda = cdaCtr.generateCDA(uniqueId, paciente, fecha, dataProfesional, organizacion, snomed, cie10, texto, file);
 
         let metadata = {
-            paciente: paciente._id
+            paciente: paciente._id,
+            prestacion: snomed
         };
         let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
 

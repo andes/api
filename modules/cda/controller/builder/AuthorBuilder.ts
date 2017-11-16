@@ -24,8 +24,8 @@ export class AuthorBuilder extends BaseBuilder {
         let org = doctor.organization() as Organization;
         if (org) {
             let representedOrganization = assignedAuthor.ele('representedOrganization');
-            this.createNode(representedOrganization, 'id', org.getId());
-            this.createNode(representedOrganization, 'name', null, org.getName());
+            this.createNode(representedOrganization, 'id', org.id());
+            this.createNode(representedOrganization, 'name', null, org.name());
         }
 
         return author;
