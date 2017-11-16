@@ -1,164 +1,211 @@
 import { IID, ICode, IConfidentialityCode, ILanguageCode, ISetId, ITemplateId } from './interfaces';
 import { Patient } from './Patient';
-import { Doctor } from './Doctor';
+import { Author } from './Author';
 import { Organization } from './Organization';
 import { Body } from './Body';
 
+export * from './interfaces';
+
 export class CDA {
-    private typeId;
-    private id: IID;
-    private code: ICode;
-    private title: String;
-    private effectiveTime: Date;
-    private confidentialityCode: IConfidentialityCode;
-    private languageCode: ILanguageCode;
+    private _typeId;
+    private _id: IID;
+    private _code: ICode;
+    private _title: String;
+    private _effectiveTime: Date;
+    private _confidentialityCode: IConfidentialityCode;
+    private _languageCode: ILanguageCode;
     private _setId: ISetId;
-    private versionNumber: Number;
-    private templateId: ITemplateId[];
+    private _versionNumber: Number;
+    private _templateId: ITemplateId[];
 
     // Entities
-    private patient: Patient;
-    private author: Doctor;
-    private custodian: Organization;
+    private _patient: Patient;
+    private _author: Author;
+    private _custodian: Organization;
     private _body: Body;
 
     constructor () {
-        this.templateId = [];
-        this.typeId = {
+        this._templateId = [];
+        this._typeId = {
             root: '2.16.840.1.113883.1.3',
             extension: 'POCD_HD000040'
         };
-        this.confidentialityCode = {
+        this._confidentialityCode = {
             code: 'N',
             codeSystem: '2.16.840.1.113883.5.25'
         };
 
-        this.languageCode = {
+        this._languageCode = {
             code: 'es-AR'
         };
     }
 
+    typeId (typeId: IID = null) {
+        return typeId != null ?  (this._typeId = typeId, this) : this._typeId;
+    }
 
-    body (body = null) {
+    id (id: IID = null) {
+        return id != null ?  (this._id = id, this) : this._id;
+    }
+
+    code (code: ICode = null) {
+        return code != null ?  (this._code = code, this) : this._code;
+    }
+
+    title (title: String = null) {
+        return title != null ?  (this._title = title, this) : this._title;
+    }
+
+    effectiveTime (effectiveTime: Date = null) {
+        return effectiveTime != null ?  (this._effectiveTime = effectiveTime, this) : this._effectiveTime;
+    }
+
+    confidentialityCode (confidentialityCode: IConfidentialityCode = null) {
+        return confidentialityCode != null ?  (this._confidentialityCode = confidentialityCode, this) : this._confidentialityCode;
+    }
+
+    languageCode (languageCode: ILanguageCode = null) {
+        return languageCode != null ?  (this._languageCode = languageCode, this) : this._languageCode;
+    }
+
+    setId (setId: ISetId = null) {
+        return setId != null ?  (this._setId = setId, this) : this._setId;
+    }
+
+    versionNumber (versionNumber: Number = null) {
+        return versionNumber != null ?  (this._versionNumber = versionNumber, this) : this._versionNumber;
+    }
+
+
+
+    body (body: Body = null) {
         return body != null ?  (this._body = body, this) : this._body;
+    }
+
+    patient (patient: Patient = null) {
+        return patient != null ?  (this._patient = patient, this) : this._patient;
+    }
+
+    author (author: Author = null) {
+        return author != null ?  (this._author = author, this) : this._author;
+    }
+
+    custodian (custodian: Organization = null) {
+        return custodian != null ?  (this._custodian = custodian, this) : this._custodian;
+    }
+
+    teplatesId() {
+        return this._templateId;
+    }
+
+    addTemplateId (root: String) {
+        this._templateId.push({ root });
     }
 
     /**
      * Getters
      */
 
-    getTypeId() {
-        return this.typeId;
-    }
+    // getTypeId() {
+    //     return this._typeId;
+    // }
 
-    getId() {
-        return this.id;
-    }
+    // getId() {
+    //     return this._id;
+    // }
 
-    getSetId() {
-        return this._setId;
-    }
+    // getSetId() {
+    //     return this._setId;
+    // }
 
-    getVersionNumber() {
-        return this.versionNumber;
-    }
+    // getVersionNumber() {
+    //     return this._versionNumber;
+    // }
 
-    getCode() {
-        return this.code;
-    }
+    // getCode() {
+    //     return this._code;
+    // }
 
-    getTitle() {
-        return this.title;
-    }
+    // getTitle() {
+    //     return this._title;
+    // }
 
-    getEffectiveTime() {
-        return this.effectiveTime;
-    }
+    // getEffectiveTime() {
+    //     return this._effectiveTime;
+    // }
 
-    getConfidentialityCode() {
-        return this.confidentialityCode;
-    }
+    // getConfidentialityCode() {
+    //     return this._confidentialityCode;
+    // }
 
-    getLanguageCode() {
-        return this.languageCode;
-    }
+    // getLanguageCode() {
+    //     return this._languageCode;
+    // }
 
-    getPatient() {
-        return this.patient;
-    }
+    // getPatient() {
+    //     return this._patient;
+    // }
 
-    getAuthor() {
-        return this.author;
-    }
+    // getAuthor() {
+    //     return this._author;
+    // }
 
-    getCustodian() {
-        return this.custodian;
-    }
+    // getCustodian() {
+    //     return this._custodian;
+    // }
 
-    teplatesId() {
-        return this.templateId;
-    }
+    // __setId(_id: IID) {
+    //     this._id = _id;
+    //     return this;
+    // }
 
-    /**
-     * Setters
-     */
+    // setSetId(code: ISetId) {
+    //     this._setId = code;
+    //     return this;
+    // }
 
-    addTemplateId (root) {
-        this.templateId.push({ root });
-    }
+    // setVersionNumber(version: Number) {
+    //     this._versionNumber = version;
+    //     return this;
+    // }
 
-    setId(_id: IID) {
-        this.id = _id;
-        return this;
-    }
+    // setCode(_code: ICode) {
+    //     this._code = _code;
+    //     return this;
+    // }
 
-    setSetId(code: ISetId) {
-        this._setId = code;
-        return this;
-    }
+    // setTitle(title: String) {
+    //     this._title = title;
+    //     return this;
+    // }
 
-    setVersionNumber(version: Number) {
-        this.versionNumber = version;
-        return this;
-    }
+    // setEffectiveTime(date: Date) {
+    //     this._effectiveTime = date;
+    //     return this;
+    // }
 
-    setCode(_code: ICode) {
-        this.code = _code;
-        return this;
-    }
+    // setConfidentialityCode(code: IConfidentialityCode) {
+    //     this._confidentialityCode = code;
+    //     return this;
+    // }
 
-    setTitle(title: String) {
-        this.title = title;
-        return this;
-    }
+    // setLanguageCode(code: ILanguageCode) {
+    //     this._languageCode = code;
+    //     return this;
+    // }
 
-    setEffectiveTime(date: Date) {
-        this.effectiveTime = date;
-        return this;
-    }
+    // setPatient(value: Patient) {
+    //     this._patient = value;
+    //     return this;
+    // }
 
-    setConfidentialityCode(code: IConfidentialityCode) {
-        this.confidentialityCode = code;
-        return this;
-    }
+    // setAuthor(value: Doctor) {
+    //     this._author = value;
+    //     return this;
+    // }
 
-    setLanguageCode(code: ILanguageCode) {
-        this.languageCode = code;
-        return this;
-    }
-
-    setPatient(value: Patient) {
-        this.patient = value;
-        return this;
-    }
-
-    setAuthor(value: Doctor) {
-        this.author = value;
-        return this;
-    }
-
-    setCustodian(value: Organization) {
-        this.custodian = value;
-        return this;
-    }
+    // setCustodian(value: Organization) {
+    //     this._custodian = value;
+    //     return this;
+    // }
 }

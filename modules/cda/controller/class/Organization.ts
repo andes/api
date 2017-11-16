@@ -1,33 +1,14 @@
 import { IID } from './interfaces';
 
 export class Organization {
-    private id: IID;
-    private name: String;
+    private _id: IID;
+    private _name: String;
 
-    /**
-     * Getters
-     */
-
-    getId() {
-        return this.id;
+    id (id: IID = null) {
+        return id != null ?  (this._id = id, this) : this._id;
     }
 
-    getName() {
-        return this.name;
-    }
-
-    /**
-     * Setters
-     */
-
-
-    setId(id: IID) {
-        this.id = id;
-        return this;
-    }
-
-    setName(name: String) {
-        this.name = name;
-        return this;
+    name (name: String = null) {
+        return name != null ?  (this._name = name, this) : this._name;
     }
 }

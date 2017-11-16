@@ -16,8 +16,8 @@ export class BaseBuilder {
         }
     }
 
-    public fromDate(date: Date) {
-        let str = moment(date).format('YYYYMMDDhhmmss'); 
+    public fromDate(date) {
+        let str = moment(date).format('YYYYMMDDhhmmss');
         return str;
     }
 

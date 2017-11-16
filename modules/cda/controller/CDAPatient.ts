@@ -3,7 +3,7 @@ import * as mongoose from 'mongoose';
 import { CDA } from './class/CDA';
 import { Patient } from './class/Patient';
 import { Organization } from './class/Organization';
-import { Doctor } from './class/Doctor';
+import { Author } from './class/Author';
 import { Body, Component, ImageComponent } from './class/Body';
 import { CDABuilder } from './builder/CdaBuilder';
 
@@ -174,16 +174,16 @@ export function generateCDA(uniqueId, patient, date, author, organization, snome
     let cda = new CDA();
 
 
-    cda.setId(buildID(uniqueId));
+    cda.id(buildID(uniqueId));
 
     let code = matchCode(snomed);
-    cda.setCode(code);
+    cda.code(code);
 
     // [TODO] Desde donde inferir el titulo
-    cda.setTitle(code.displayName);
+    cda.title(code.displayName);
 
-    cda.setVersionNumber(1);
-    cda.setEffectiveTime(date);
+    cda.versionNumber(1);
+    cda.effectiveTime(date);
 
     // [TODO] Falta definir el tema del DNI
     let patientCDA = new Patient();
@@ -193,21 +193,23 @@ export function generateCDA(uniqueId, patient, date, author, organization, snome
     if (patient._id) {
         patientCDA.setId(buildID(patient._id));
     }
-    cda.setPatient(patientCDA);
+    cda.patient(patientCDA);
 
 
     let orgCDA = new Organization();
-    orgCDA.setId(buildID(organization._id)).setName(organization.nombre);
+    orgCDA.id(buildID(organization._id));
+    orgCDA.name(organization.nombre);
 
-    cda.setCustodian(orgCDA);
+    cda.custodian(orgCDA);
 
-    let authorCDA = new Doctor();
-    authorCDA.setFirstname(author.nombre).setLastname(author.apellido);
-    authorCDA.setOrganization(orgCDA);
+    let authorCDA = new Author();
+    authorCDA.firstname(author.nombre);
+    authorCDA.lastname(author.apellido);
+    authorCDA.organization(orgCDA);
     if (author._id) {
-        authorCDA.setId(buildID(author._id));
+        authorCDA.id(buildID(author._id));
     }
-    cda.setAuthor(authorCDA);
+    cda.author(authorCDA);
 
     let body = new Body();
 
@@ -220,6 +222,7 @@ export function generateCDA(uniqueId, patient, date, author, organization, snome
         body.addComponent(textComponent);
     }
 
+    // [TODO] Archivo en base64 o aparte
     if (base64) {
         var match = base64.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,(.*)/);
         var mime = match[1];

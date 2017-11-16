@@ -2,25 +2,26 @@ import { IID, ICode, IConfidentialityCode, ILanguageCode, ISetId } from '../clas
 import { CDA } from '../class/CDA';
 import * as builder from 'xmlbuilder';
 import { Patient } from '../class/Patient';
-import { Doctor } from '../class/Doctor';
+import { Author } from '../class/Author';
 import { BaseBuilder } from './BaseBuilder';
+import { Organization } from '../class/Organization';
 export class AuthorBuilder extends BaseBuilder {
 
-    public build(doctor: Doctor) {
+    public build(doctor: Author) {
         let author = builder.create('author');
         this.createNode(author, 'time', { value: this.fromDate(new Date()) } );
 
         let assignedAuthor = author.ele('assignedAuthor');
-        if (doctor.getId()) {
-            this.createNode(assignedAuthor, 'id', doctor.getId());
+        if (doctor.id()) {
+            this.createNode(assignedAuthor, 'id', doctor.id());
         }
 
         let assignedPerson = assignedAuthor.ele('assignedPerson');
         let nameNode = assignedPerson.ele('name');
-        this.createNode(nameNode, 'given', null, doctor.getFirstname());
-        this.createNode(nameNode, 'family', null, doctor.getLastname());
+        this.createNode(nameNode, 'given', null, doctor.firstname());
+        this.createNode(nameNode, 'family', null, doctor.lastname());
 
-        let org = doctor.getOrganization();
+        let org = doctor.organization() as Organization;
         if (org) {
             let representedOrganization = assignedAuthor.ele('representedOrganization');
             this.createNode(representedOrganization, 'id', org.getId());
