@@ -7,6 +7,9 @@ import { ElasticSync } from '../../../utils/elasticSync';
 import { Logger } from '../../../utils/logService';
 import { Matching } from '@andes/match';
 import { Auth } from './../../../auth/auth.class';
+import * as agenda from '../../../modules/turnos/schemas/agenda';
+import * as agendaController from '../../../modules/turnos/controller/agenda';
+import * as turnosController from '../../../modules/turnos/controller/turnosController';
 
 /**
  * Crea un paciente y lo sincroniza con elastic
@@ -39,7 +42,6 @@ export function createPaciente(data, req) {
 
 
 export function updatePaciente(pacienteObj, data, req) {
-
     return new Promise((resolve, reject) => {
         let pacienteOriginal = pacienteObj.toObject();
         for (let key in data) {
@@ -53,6 +55,7 @@ export function updatePaciente(pacienteObj, data, req) {
             if (err2) {
                 return reject(err2);
             }
+            updateTurnosPaciente(pacienteObj);
             let connElastic = new ElasticSync();
             connElastic.sync(pacienteObj).then(updated => {
                 if (updated) {
@@ -70,6 +73,29 @@ export function updatePaciente(pacienteObj, data, req) {
             resolve(pacienteObj);
         });
     });
+}
+/**
+ * Busca los turnos futuros asignados al paciente y actualiza los datos.
+ *
+ * @param {any} pacienteModified paciente modificado
+ * @returns
+ */
+async function updateTurnosPaciente(pacienteModified) {
+    let req = {
+        query: {
+            estado: 'asignado',
+            pacienteId: pacienteModified.id,
+            horaInicio: moment(new Date()).startOf('day').toDate() as any
+        }
+    };
+    try {
+        let turnos: any = await turnosController.getTurno(req);
+        turnos.forEach(element => {
+            agendaController.updatePaciente(pacienteModified, element);
+        });
+    } catch (error) {
+        return error;
+    }
 }
 
 /**
@@ -419,7 +445,7 @@ export function updateFotoMobile(req, data) {
  * @param {objcet} _weights Pesos del matching
  */
 
-export function searchSimilar(objective, where: string, conditions, _weights = null): Promise<{value: Number, paciente: any}[]> {
+export function searchSimilar(objective, where: string, conditions, _weights = null): Promise<{ value: Number, paciente: any }[]> {
     let db;
     if (where === 'andes') {
         db = paciente;
@@ -431,7 +457,7 @@ export function searchSimilar(objective, where: string, conditions, _weights = n
     return new Promise((resolve, reject) => {
 
         db.find(conditions).then((pacientes) => {
-            let matchings: {value: Number, paciente: any}[] = [];
+            let matchings: { value: Number, paciente: any }[] = [];
             if (pacientes && pacientes.length) {
                 for (let i = 0; i < pacientes.length; i++) {
 
