@@ -7,13 +7,6 @@ let schema = new mongoose.Schema({
     apellido: String,
     password: String,
     foto: String,
-    // organizacion: {
-    //     type: mongoose.Schema.Types.ObjectId,
-    //     ref: 'organizacion'
-    // },
-    // roles: [String],
-    // permisos: [String],
-
     organizaciones: [{
         _id: {
             type: mongoose.Schema.Types.ObjectId,
