@@ -372,96 +372,139 @@ import * as utils from '../../../utils/utils'
 import * as config from '../../../config';
 import * as multer from 'multer';
 import * as fs from 'fs';
+import { makeFs } from '../schemas/imagenes';
+import { makeFsFirma } from '../schemas/firmaProf';
+
+import * as stream from 'stream';
+import * as base64 from 'base64-stream';
 
 let router = express.Router();
 
 
+// ------------ FOTO --------------
+router.post('/profesionales/foto', async (req: any, res, next) => {
+    let _base64 = req.body.foto.img;
+    let decoder = base64.decode();
+    let input = new stream.PassThrough();
+    let fotoProf = makeFs();
+
+    //remove la foto vieja antes de insertar la nueva
+    fotoProf.find({ "metadata.idProfesional" : req.body.foto.idProfesional}, function (err, file) {
+        file.forEach(recorre => {
+           
+            fotoProf.unlinkById(recorre._id, function(error, unlinkedAttachment){
+            });
+        });
+    });
+    //inserta en la bd en files y chucks
+    fotoProf.write({
+            filename:  'foto.png' ,
+            contentType: 'image/jpeg',
+            metadata:{
+                idProfesional : req.body.foto.idProfesional,
+            }
+        },
+        input.pipe(decoder),
+        function(error, createdFile){
+          res.json(createdFile);
+    });
+    
+    input.end(_base64);
+});
+
+let img = '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';
+router.get('/profesionales/foto/:id*?', async (req: any, res, next) => {
+
+    let decoder = base64.decode();
+    let input = new stream.PassThrough();
+
+    let id = req.params.id;
+    let fotoProf = makeFs();
+    fotoProf.find({ "metadata.idProfesional" : id},{}, { sort: { '_id' : -1 } }, function (err, file) {
+        console.log(file)
+    if(file[0] == null){
+        res.setHeader('Content-Type', 'image/jpeg');
+        input.pipe(decoder).pipe(res)
+        input.end(img);
+    } else{
+        var stream1  = fotoProf.readById(file[0].id, function (err, buffer) {
+            res.setHeader('Content-Type', file[0].contentType);
+            res.setHeader('Content-Length', file[0].length);
+            res.end(buffer);
+        });      
+    }
+    });
+    
+    });
+ // ------------ FIN FOTOS --------------   
 
 /**
- * Upload Firmas
+ * FIRMA
  */
-router.post('/profesionales/firma/:profId',  (req:any, resp, errHandler) => {
+router.post('/profesionales/firma',  (req:any, res, errHandler) => {
 
-    let filename = req.filename;
-    let timestamp = parseInt(filename.split('-')[2].substr(0, filename.split('-')[2].indexOf('.')), 0);
+    // let filename = req.filename;
+    // let timestamp = parseInt(filename.split('-')[2].substr(0, filename.split('-')[2].indexOf('.')), 0);
 
-    resp.json(filename);
+    // resp.json(filename);
+    let _base64 = req.body.firma.firmaP;
+    let decoder = base64.decode();
+    let input = new stream.PassThrough();
+    let CDAFiles = makeFsFirma();
+
+    //remove la firma vieja antes de insertar la nueva
+    CDAFiles.find({ "metadata.idProfesional" : req.body.firma.idProfesional}, function (err, file) {
+        file.forEach(recorre => {
+            console.log(recorre._id)
+            CDAFiles.unlinkById(recorre._id, function(error, unlinkedAttachment){
+            });
+        });
+    });
+    //inserta en la bd en files y chucks
+    CDAFiles.write({
+            filename:  'firma.png' ,
+            contentType: 'image/jpeg',
+            metadata:{
+                idProfesional : req.body.firma.idProfesional,
+            }
+        },
+        input.pipe(decoder),
+        function(error, createdFile){
+          res.json(createdFile);
+    });
+    input.end(_base64);
 
 });
+
+
+router.get('/profesionales/firma/:id*?', async (req: any, res, next) => {
+    let id = req.params.id;
+    let fotoProf = makeFsFirma();
+    fotoProf.find({ "metadata.idProfesional" : id},{}, { sort: { '_id' : -1 } }, function (err, file) {
+    if(file[0] == null){
+       res.send(null)
+    } else{
+        var stream1  = fotoProf.readById(file[0].id, function (err, buffer) {
+            res.setHeader('Content-Type', file[0].contentType);
+            res.setHeader('Content-Length', file[0].length);
+            res.end(buffer);
+        });      
+    }
+    });
+    
+    });
+// ------------ FIN FIRMA --------------
+
+
 
 /**
  * Upload Fotos
- */
-router.post('/profesionales/foto/:profId',  (req:any, resp) => {
+//  */
+// router.post('/profesionales/foto/:profId',  (req:any, resp) => {
     
-        resp.json({ fileName: req.filename});
+//         resp.json({ fileName: req.filename});
     
-    });
-
-router.post('/profesionales/grid',  (req:any, resp,errHandler) => {
-    var mongo = require('mongodb');
-    var Grid = require('gridfs-stream');
-    console.log("hola")
-    // create or use an existing mongodb-native db instance.
-    // for this example we'll just create one:
-    var db = new mongo.Db('grid', new mongo.Server("127.0.0.1", 27017));
-    
-    // make sure the db instance is open before passing into `Grid`
-    db.open(function (err) {
-      if (err) return errHandler(err);
-      var gfs = Grid(db, mongo);
-      console.log("hola2")
-
-      var writestream = gfs.createWriteStream({filename: 'user.png'});
-      fs.createReadStream(__dirname + '/user.png').pipe(writestream);
-      // all set!
-
-      writestream.on('close', function (file) {
-        // do something with `file`
-        console.log(file.filename);
-      });
-    })
-
-    
-});
-
-
-router.get('/profesionales/grid',  (req:any, resp,errHandler) => {
-    var mongo = require('mongodb');
-    var Grid = require('gridfs-stream');
-    console.log("hola")
-    // create or use an existing mongodb-native db instance.
-    // for this example we'll just create one:
-    var db = new mongo.Db('grid', new mongo.Server("127.0.0.1", 27017));
-    
-
-    // make sure the db instance is open before passing into `Grid`
-    db.open(function (err) {
-      if (err) return errHandler(err);
-      var gfs = Grid(db, mongo);
-      console.log("hola2")
-//write content to file system
-// var fs_write_stream = fs.createWriteStream('user.png');
-
-var readstream = gfs.createReadStream('user.png'); 
-readstream.on("error", function(err){
-    resp.send("No image found with that title"); 
-});
-readstream.pipe(resp);
-
-//read from mongodb
-// var readstream = gfs.createReadStream({
-//     filename: 'user.png'
-// });
-// readstream.pipe(fs_write_stream);
-// fs_write_stream.on('close', function () {
-//     console.log('file has been written fully!');
-// });
-
-    })
-
-    
-});
+//     });
 
 
 /**
