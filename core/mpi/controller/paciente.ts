@@ -80,7 +80,7 @@ export function updatePaciente(pacienteObj, data, req) {
  * @param {any} pacienteModified paciente modificado
  * @returns
  */
-async function updateTurnosPaciente(pacienteModified) {
+export async function updateTurnosPaciente(pacienteModified) {
     let req = {
         query: {
             estado: 'asignado',
