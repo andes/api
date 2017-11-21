@@ -8,134 +8,19 @@ import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 import { NotificationService } from '../../mobileApp/controller/NotificationService';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import * as operations from './../../legacy/controller/operations';
+import * as turnosController from '../controller/turnosController';
 import { esPrimerPaciente } from '../controller/agenda';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 
 let router = express.Router();
 
-router.get('/turno/:id*?', function (req, res, next) {
-
-    let pipelineTurno = [];
-    let turnos = [];
-    let turno;
-
-    pipelineTurno = [{
-        '$match': {
-        }
-    },
-    // Unwind cada array
-    { '$unwind': '$bloques' },
-    { '$unwind': '$bloques.turnos' },
-    // Filtra los elementos que matchean
-    {
-        '$match': {
-        }
-    },
-    {
-        '$group': {
-            '_id': { 'id': '$_id', 'bloqueId': '$bloques._id' },
-            'agenda_id': { $first: '$_id' },
-            'organizacion': { $first: '$organizacion' },
-            'profesionales': { $first: '$profesionales' },
-            'turnos': { $push: '$bloques.turnos' }
-        }
-    },
-    {
-        '$group': {
-            '_id': '$_id.id',
-            'agenda_id': { $first: '$agenda_id' },
-            'organizacion': { $first: '$organizacion' },
-            'profesionales': { $first: '$profesionales' },
-            'bloques': { $push: { '_id': '$_id.bloqueId', 'turnos': '$turnos' } }
-        }
-    }];
-    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
-        let matchId = {
-            '$match': {
-                'bloques.turnos._id': mongoose.Types.ObjectId(req.params.id),
-            }
-        };
-        pipelineTurno[0] = matchId;
-        pipelineTurno[3] = matchId;
-
-        agenda.aggregate(pipelineTurno,
-            function (err, data) {
-                if (err) {
-                    return next(err);
-                }
-                if (data && data.bloques && data.bloques.turnos && data.bloques.turnos >= 0) {
-                    res.json(data.bloques.turnos[0]);
-                } else {
-                    res.json(data);
-                }
-            });
-    } else {
-        // Se modifica el pipeline en la posición 0 y 3, que son las posiciones
-        // donde se realiza el match
-        let matchTurno = {};
-        if (req.query.estado) {
-            matchTurno['bloques.turnos.estado'] = req.query.estado;
-        }
-
-        if (req.query.usuario) {
-            matchTurno['updatedBy.username'] = req.query.userName;
-            matchTurno['updatedBy.documento'] = req.query.userDoc;
-        }
-
-        if (req.query.asistencia) {
-            matchTurno['bloques.turnos.asistencia'] = { '$exists': req.query.asistencia };
-        }
-
-        // TODO: probar la siguiente condición
-        if (req.query.codificado) {
-            matchTurno['bloques.turnos.diagnosticos.0'] = { '$exists': true };
-        }
-
-        if (req.query.horaInicio) {
-            matchTurno['bloques.turnos.horaInicio'] = { '$gte': req.query.horaInicio };
-        }
-
-        if (req.query.tiposTurno) {
-            matchTurno['bloques.turnos.tipoTurno'] = { '$in': req.query.tiposTurno };
-        }
-
-        if (req.query.pacienteId) {
-            matchTurno['bloques.turnos.paciente.id'] = mongoose.Types.ObjectId(req.query.pacienteId);
-        }
-
-        pipelineTurno[0] = { '$match': matchTurno };
-        pipelineTurno[3] = { '$match': matchTurno };
-        pipelineTurno[6] = { '$unwind': '$bloques' };
-        pipelineTurno[7] = { '$unwind': '$bloques.turnos' };
-        if (!req.query.pacienteId) {
-            pipelineTurno[8] = {
-                '$lookup': {
-                    'from': 'paciente',
-                    'localField': 'bloques.turnos.paciente.id',
-                    'foreignField': '_id',
-                    'as': 'pacientes_docs'
-                }
-            };
-            pipelineTurno[9] = {
-                '$match': { 'pacientes_docs': { $ne: [] } }
-            };
-        }
-        agenda.aggregate(pipelineTurno,
-            function (err2, data2) {
-                if (err2) {
-                    return next(err2);
-                }
-                data2.forEach(elem => {
-                    turno = elem.bloques.turnos;
-                    turno.agenda_id = elem.agenda_id;
-                    turno.organizacion = elem.organizacion;
-                    turno.profesionales = elem.profesionales;
-                    turno.paciente = (elem.pacientes_docs && elem.pacientes_docs.length > 0) ? elem.pacientes_docs[0] : elem.bloques.turnos.paciente;
-                    turnos.push(turno);
-                });
-                res.json(turnos);
-            });
+router.get('/turno/:id*?', async function (req, res, next) {
+    try {
+        let resultado = await turnosController.getTurno(req);
+        res.json(resultado);
+    } catch (err) {
+        return next(err);
     }
 
 });
