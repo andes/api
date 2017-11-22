@@ -459,7 +459,7 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
 
             let data = req.body;
 
-            controller.updatePaciente(patientFound, data, req).then((p) => {
+            controller.updatePacienteMpi(patientFound, data, req).then((p) => {
                 res.json(p);
             }).catch(next);
 
@@ -638,7 +638,6 @@ router.put('/pacientes/:id', function (req, res, next) {
     if (!Auth.check(req, 'mpi:paciente:putAndes')) {
         return next(403);
     }
-
     let objectId = new mongoose.Types.ObjectId(req.params.id);
     let query = {
         _id: objectId
@@ -648,7 +647,7 @@ router.put('/pacientes/:id', function (req, res, next) {
         if (err) {
             return next(404);
         }
-        let pacienteOriginal = null;
+       // let pacienteOriginal = null;
         if (patientFound) {
             let data = req.body;
             if (patientFound.estado === 'validado' && !patientFound.isScan) {
@@ -662,39 +661,45 @@ router.put('/pacientes/:id', function (req, res, next) {
             }).catch(next);
 
         } else {
+            try {
             req.body._id = req.body.id;
             let newPatient = new paciente(req.body);
-
-            // let claves = match.crearClavesBlocking(newPatient);
-            // newPatient['claveBlocking'] = claves;
-            // newPatient['apellido'] = newPatient['apellido'].toUpperCase();
-            // newPatient['nombre'] = newPatient['nombre'].toUpperCase();
-
-            /*Antes del save se podría realizar una búsqueda y matching para evitar cargar repetidos, actualmente este proceso sólo se realiza del lado de la app*/
-            Auth.audit(newPatient, req);
-            newPatient.save((err2) => {
-                if (err2) {
-                    return next(err2);
+            // verifico si el paciente ya está en MPI
+            pacienteMpi.findById(query, function (err3, patientFountMpi: any) {
+                if (err3) {
+                    return next(404);
                 }
-
-                let nuevoPac = JSON.parse(JSON.stringify(newPatient));
-                // delete nuevoPac._id;
-                // delete nuevoPac.relaciones;
-                let connElastic = new ElasticSync();
-                connElastic.sync(newPatient).then(updated => {
-                    if (updated) {
-                        Logger.log(req, 'mpi', 'update', {
-                            original: nuevoPac,
-                            nuevo: newPatient
-                        });
-                    } else {
-                        Logger.log(req, 'mpi', 'insert', newPatient);
+                if (patientFountMpi) {
+                    // Lo marco como que ya existe así me genera el campo updatedAt y By
+                    // newPatient.markModified;
+                    Auth.audit(newPatient, req);
+                }
+                newPatient.save((err2) => {
+                    if (err2) {
+                        return next(err2);
                     }
-                    res.json(nuevoPac);
-                }).catch(error => {
-                    return next(error);
+                    let nuevoPac = JSON.parse(JSON.stringify(newPatient));
+                    // delete nuevoPac._id;
+                    // delete nuevoPac.relaciones;
+                    let connElastic = new ElasticSync();
+                    connElastic.sync(newPatient).then(updated => {
+                        if (updated) {
+                            Logger.log(req, 'mpi', 'update', {
+                                original: nuevoPac,
+                                nuevo: newPatient
+                            });
+                        } else {
+                            Logger.log(req, 'mpi', 'insert', newPatient);
+                        }
+                        res.json(nuevoPac);
+                    }).catch(error => {
+                        return next(error);
+                    });
                 });
             });
+        } catch (ex) {
+            return next(ex);
+        }
         }
     });
 });

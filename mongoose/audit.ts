@@ -25,16 +25,25 @@ module.exports = function (schema, options) {
         if (!user) {
             return next(new Error('AUDIT PLUGIN ERROR: Inicialice el plugin utilizando el método audit(). Ejemplo: myModel.audit(req.user)'));
         }
-
         // Todo ok...
-        if (this.isNew) {
-            this.createdAt = new Date();
-            this.createdBy = user;
-        } else {
-            if (this.isModified()) {
-                this.updatedAt = new Date();
-                this.updatedBy = user;
+        if (!this.esPacienteMpi) {
+            if (this.isNew) {
+                // Condición especial para que los pacientes que suben a MPI no se les modifique los datos de creación (usuario y fecha)
+                if (!this.createdAt) {
+                    this.createdAt = new Date();
+                    this.createdBy = user;
+                } else {
+                    this.updatedAt = new Date();
+                    this.updatedBy = user;
+                }
+            } else {
+                if (this.isModified()) {
+                    this.updatedAt = new Date();
+                    this.updatedBy = user;
+                }
             }
+        } else {
+            delete this.esPacienteMpi;
         }
         next();
     });
