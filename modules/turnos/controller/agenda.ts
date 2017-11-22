@@ -521,7 +521,7 @@ export function actualizarTiposDeTurno() {
         }
 
         Auth.audit(agenda, (userScheduler as any));
-        this.saveAgenda(agenda).then((nuevaAgenda) => {
+        saveAgenda(agenda).then((nuevaAgenda) => {
             Logger.log(userScheduler, 'citas', 'actualizarTiposDeTurno', {
                 idAgenda: agenda._id,
                 organizacion: agenda.organizacion,
@@ -580,7 +580,7 @@ export function actualizarEstadoAgendas() {
         }
 
         Auth.audit(agenda, (userScheduler as any));
-        this.saveAgenda(agenda).then((nuevaAgenda) => {
+        saveAgenda(agenda).then((nuevaAgenda) => {
             Logger.log(userScheduler, 'citas', 'actualizarEstadoAgendas', {
                 idAgenda: agenda._id,
                 organizacion: agenda.organizacion,
@@ -657,8 +657,13 @@ export function updatePaciente(pacienteModified, turno) {
             }
             i++;
         }
-
-        Auth.audit(data, (userScheduler as any));
-        saveAgenda(data);
+        if (!band) {
+            Auth.audit(data, (userScheduler as any));
+            try {
+                saveAgenda(data);
+            } catch (error) {
+                return error;
+            }
+        }
     });
 }
