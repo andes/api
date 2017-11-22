@@ -670,8 +670,6 @@ router.put('/pacientes/:id', function (req, res, next) {
                     return next(404);
                 }
                 if (patientFountMpi) {
-                    // Lo marco como que ya existe así me genera el campo updatedAt y By
-                    // newPatient.markModified;
                     Auth.audit(newPatient, req);
                 }
                 newPatient.save((err2) => {
