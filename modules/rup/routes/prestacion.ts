@@ -24,7 +24,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         if (req.query.estado) {
             query = Prestacion.find({
                 $where: 'this.estados[this.estados.length - 1].tipo ==  \"' + req.query.estado + '\"'
-            })
+            });
         } else {
             query = Prestacion.find({}); //Trae todos
         }
