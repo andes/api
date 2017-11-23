@@ -76,7 +76,6 @@ export function checkCodificacion(agenda, pool) {
                     let turnoPaciente: any = await getPacienteAgenda(agenda, turno[z]._id);
                     idEspecialidad = await getEspecialidadSips(agenda.tipoPrestaciones[0].term);
                     turno[z] = turnoPaciente;
-                    console.log("Tiene Consulta: ", idConsulta)
 
                     if (idConsulta) {
                         if (idEspecialidad === constantes.Especialidades.odontologia) {
@@ -396,7 +395,6 @@ function getCodificacionOdonto(idNomenclador) {
  * @param pool
  */
 export async function guardarCacheASips(agendasMongo, index, pool) {
-    console.log("Entra a Guardar Cache Sips ")
     return new Promise(async function (resolve, reject) {
         let agenda = agendasMongo[index];
         let transaccion = await new sql.Transaction(pool);
@@ -448,7 +446,6 @@ export async function guardarCacheASips(agendasMongo, index, pool) {
             } else {
                 pool.close();
                 resolve();
-                console.log("Cerrando Conexion: ", pool)
             }
         });
     }
@@ -465,7 +462,7 @@ async function checkEstadoAgenda(agendaMongo: any, idAgendaSips: any) {
                 await executeQuery(query);
                 resolve();
             } else {
-                resolve()
+                resolve();
             }
         } catch (ex) {
             reject(ex);
@@ -562,7 +559,7 @@ function processTurnos(agendas: any, idAgendaCreada: any, idEfector: any) {
                             await grabaTurnoSips(turnos[i], idAgendaCreada, idEfector);
                             // resolve();
                         } else {
-                            // resolve(); 
+                            // resolve();
                         }
                         // resolve();
                     } else {
@@ -1041,7 +1038,6 @@ function getEstadoTurnoSips(objectId: any) {
 
 function executeQuery(query: any) {
     query += ' select SCOPE_IDENTITY() as id';
-    console.log("Query: ", query)
     return new Promise((resolve: any, reject: any) => {
         let transaction;
         return new sql.Request(transaction)

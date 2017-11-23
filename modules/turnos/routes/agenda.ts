@@ -447,8 +447,6 @@ router.get('/integracionSips', function (req, res, next) {
     return new Promise<Array<any>>(async function (resolve, reject) {
         try {
             await agendaCacheCtrl.integracionSips();
-            console.log("Terminooo");
-            
             resolve();
         } catch (ex) {
             reject(ex);
