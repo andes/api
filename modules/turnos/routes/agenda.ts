@@ -444,6 +444,15 @@ router.patch('/agenda/:id*?', function (req, res, next) {
 });
 
 router.get('/integracionSips', function (req, res, next) {
-    agendaCacheCtrl.integracionSips();
+    return new Promise<Array<any>>(async function (resolve, reject) {
+        try {
+            await agendaCacheCtrl.integracionSips();
+            console.log("Terminooo");
+            
+            resolve();
+        } catch (ex) {
+            reject(ex);
+        }
+    });
 });
 export = router;

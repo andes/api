@@ -109,9 +109,9 @@ export function checkCodificacion(agenda, pool) {
             }
         }
         resolve();
-        
-        pool.close();
-        console.log("Cierro Conexion CheckCodificacion: ", pool)
+
+        // pool.close();
+        // console.log("Cierro Conexion CheckCodificacion: ", pool)
     });
 }
 async function codificaOdontologia(idConsulta: any, turno: any) {
@@ -440,13 +440,17 @@ export async function guardarCacheASips(agendasMongo, index, pool) {
     });
 
     function next(unPool) {
-        ++index;
-        if (index < agendasMongo.length) {
-            guardarCacheASips(agendasMongo, index, unPool);
-        } else {
-            pool.close();
-            console.log("Cerrando Conexion: ", pool)
-        }
+        return new Promise(async function (resolve, reject) {
+            ++index;
+            if (index < agendasMongo.length) {
+                guardarCacheASips(agendasMongo, index, unPool);
+                resolve();
+            } else {
+                pool.close();
+                resolve();
+                console.log("Cerrando Conexion: ", pool)
+            }
+        });
     }
 }
 
@@ -505,13 +509,13 @@ function checkAsistenciaTurno(agenda: any) {
 
                         await executeQuery(query);
 
-                        resolve();
+                        // resolve();
                     } else {
-                        resolve();
+                        // resolve();
                     }
                 }
             }
-
+            resolve();
         } catch (ex) {
             reject(ex);
         }
@@ -528,12 +532,13 @@ function checkEstadoTurno(agenda: any, idAgendaSips) {
                 for (let i = 0; i < turnos.length; i++) {
                     if ((turnos[i].estado !== 'disponible') || (turnos[i].updatedAt)) {
                         await actualizarEstadoTurnoSips(idAgendaSips, turnos[i]);
-                        resolve();
+                        // resolve();
                     } else {
-                        resolve();
+                        // resolve();
                     }
                 }
             }
+            resolve();
 
         } catch (ex) {
             reject(ex);
