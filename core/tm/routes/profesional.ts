@@ -526,6 +526,7 @@ router.get('/profesionales/traePDni/:dni*?', (req: any, res, next) => {
     profesional.find({
         'documentoNumero': dni
     }, function (err, data) {
+
         if (err) {
             return next(err);
         }
@@ -848,20 +849,6 @@ router.get('/profesionales/', function (req, res, next) {
  *           $ref: '#/definitions/profesional'
  */
 router.post('/profesionales', function (req, res, next) {
-
-    if (req.body.id) {
-        profesional.findByIdAndUpdate(req.body.id, req.body, {
-            new: true
-        }, function (err, data) {
-            if (err) {
-                return next(err);
-            }
-            res.json(data);
-
-
-        });
-
-    } else {
         profesional.findOne({
             'documentoNumero': req.body.documentoNumero
         }, function (err, person) {
@@ -881,7 +868,6 @@ router.post('/profesionales', function (req, res, next) {
 
         });
 
-    }
 
 
 
@@ -927,6 +913,21 @@ router.put('/profesionales/:id', function (req, res, next) {
 
         res.json(data);
     });
+});
+
+
+// temporal
+router.post('/profesionales/actualizar', function (req, res, next) {
+        profesional.findByIdAndUpdate(req.body.id, req.body, {
+            new: true
+        }, function (err, data) {
+            if (err) {
+                return next(err);
+            }
+            res.json(data);
+
+
+        });
 });
 
 /**
