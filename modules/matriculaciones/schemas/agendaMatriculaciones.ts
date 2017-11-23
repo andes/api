@@ -8,7 +8,7 @@ var agendaMatriculacionesSchema = new mongoose.Schema({
     duracionTurno: { type: Number, required: true }
 });
 
-//Virtuals
+// Virtuals
 
 
 var agendaMatriculaciones = mongoose.model('agendaMatriculaciones', agendaMatriculacionesSchema, 'agendaMatriculaciones');

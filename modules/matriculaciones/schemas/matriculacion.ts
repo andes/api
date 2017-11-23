@@ -6,7 +6,7 @@ var matriculacionSchena = new mongoose.Schema({
     supervisor: { type: String, required: false }
 });
 
-//Virtuals
+// Virtuals
 
 
 var matriculacion = mongoose.model('matriculacion', matriculacionSchena, 'matriculacion');

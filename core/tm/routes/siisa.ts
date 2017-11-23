@@ -8,7 +8,7 @@ let router = express.Router();
  */
 router.post('/siisa/entidadesformadoras', function(req, resp, errorHandler) {
     let total = req.body.length;
-    let saved = []
+    let saved = [];
 
     req.body.forEach(element => {
         let siisa = new SIISA.EntidadFormadora(element);
@@ -49,12 +49,12 @@ router.get('/siisa/profesion', function(req, resp, errorHandler) {
         }
 
         return resp.status(201).jsonp(datos);
-    })
+    });
 });
 
-router.post('/siisa/profesion', function(req, resp, errorHandler){
+router.post('/siisa/profesion', function(req, resp, errorHandler) {
     let total = req.body.length;
-    let saved = []
+    let saved = [];
 
     req.body.forEach(element => {
         let siisa_p = new SIISA.Profesion(element);
@@ -81,7 +81,7 @@ router.post('/siisa/profesion', function(req, resp, errorHandler){
 
 router.post('/siisa/paises', function(req, resp, errorHandler) {
     let total = req.body.length;
-    let saved = []
+    let saved = [];
 
     req.body.forEach(element => {
         let siisa_pais = new SIISA.Pais(element);

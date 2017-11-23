@@ -1,7 +1,7 @@
 import { defaultLimit, maxLimit } from './../../../config';
 import * as mongoose from 'mongoose';
-import * as express from 'express'
-import * as utils from '../../../utils/utils'
+import * as express from 'express';
+import * as utils from '../../../utils/utils';
 import * as config from '../../../config';
 import * as fs from 'fs';
 import { makeFs } from '../schemas/imagenes';
@@ -14,7 +14,6 @@ let router = express.Router();
 
 
 router.post('/profesionales/file', async (req: any, res, next) => {
-    console.log("aca");
     let _base64 = req.body.base64;
     let decoder = base64.decode();
     let input = new stream.PassThrough();
@@ -24,7 +23,7 @@ router.post('/profesionales/file', async (req: any, res, next) => {
             contentType: 'image/jpeg',
         },
         input.pipe(decoder),
-        function(error, createdFile){
+        function(error, createdFile) {
           res.json(createdFile);
     });
     input.end(_base64);

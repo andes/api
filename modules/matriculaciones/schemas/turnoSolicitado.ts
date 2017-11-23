@@ -1,12 +1,12 @@
 import * as mongoose from 'mongoose';
-import * as ubicacionSchema from './ubicacion';
-import * as constantes from './constantes';
-import * as direccionSchema from './direccion';
-import * as contactoSchema from './contacto';
-import * as especialidadSchema from './especialidad';
-import * as paisSchema from './pais';
-import * as profesionSchema from './profesion';
-import { ObjSIISASchema } from './siisa';
+import * as ubicacionSchema from '../../../core/tm/schemas/ubicacion';
+import * as constantes from '../../../core/tm/schemas/constantes';
+import * as direccionSchema from '../../../core/tm/schemas/direccion';
+import * as contactoSchema from '../../../core/tm/schemas/contacto';
+import * as especialidadSchema from '../../../core/tm/schemas/especialidad';
+import * as paisSchema from '../../../core/tm/schemas/pais';
+import * as profesionSchema from '../../../core/tm/schemas/profesion';
+import { ObjSIISASchema } from '../../../core/tm/schemas/siisa';
 
 let matriculacionSchema = new mongoose.Schema({
     matriculaNumero: { type: Number, required: false },
@@ -18,7 +18,7 @@ let matriculacionSchema = new mongoose.Schema({
 });
 
 
-export let profesionalSchema = new mongoose.Schema({
+export let turnoSolicitadoSchema = new mongoose.Schema({
 // Persona
     habilitado: { type: Boolean, default: true },
     nombre: { type: String, required: false },
@@ -84,18 +84,18 @@ export let profesionalSchema = new mongoose.Schema({
 
 
 // Virtuals
-profesionalSchema.virtual('nombreCompleto').get(function() {
+turnoSolicitadoSchema.virtual('nombreCompleto').get(function() {
     return this.apellido + ', ' + this.nombre;
 
 });
 
-profesionalSchema.virtual('edad').get(function() {
+turnoSolicitadoSchema.virtual('edad').get(function() {
     let ageDifMs = Date.now() - this.fechaNacimiento.getTime();
     let ageDate = new Date(ageDifMs);
     return Math.abs(ageDate.getUTCFullYear() - 1970);
 });
 
-profesionalSchema.virtual('fallecido').get(function() {
+turnoSolicitadoSchema.virtual('fallecido').get(function() {
     return this.fechaFallecimiento;
 });
 
@@ -105,4 +105,4 @@ profesionalSchema.virtual('fallecido').get(function() {
 //     })[0];
 // });
 
-export let profesional = mongoose.model('profesionalM', profesionalSchema, 'profesionalM');
+export let turnoSolicitado = mongoose.model('turnoSolicitado', turnoSolicitadoSchema, 'turnoSolicitado');

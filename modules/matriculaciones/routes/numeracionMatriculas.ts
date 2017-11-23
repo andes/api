@@ -1,22 +1,22 @@
 import * as express from 'express';
 import * as NumeracionMatriculas from './../schemas/numeracionMatriculas';
-import * as SIISA from './../../../core/tm/schemas/siisa';;
+import * as SIISA from './../../../core/tm/schemas/siisa';
 
 
 var router = express.Router();
 
 // router.get('/numeraciones/codigo', (request, response, errorHandler) => {
 //     console.log(request.params.codigo)
-//     NumeracionMatriculas.find({        
+//     NumeracionMatriculas.find({
 //         'profesion.id': request.params.codigo
 //     }).exec((error, numeraciones) => {
 
 //         if (error) {
 //             return errorHandler(error);
 //         }
-        
+
 //         response.json(numeraciones[0]);
-       
+
 
 //     });
 // })
@@ -26,13 +26,13 @@ router.get('/numeraciones/:id*?', function (req, res, next) {
     NumeracionMatriculas.find({'profesion._id': req.params.id}, function (err, data) {
             if (err) {
                 next(err);
-            };
+            }
             res.json(data);
         });
     });
 
 /**
- * 
+ *
  */
 router.get('/numeraciones/?', function(request, response, errorHandler) {
 
@@ -45,7 +45,6 @@ router.get('/numeraciones/?', function(request, response, errorHandler) {
     };
 
     var busquedaNumeracion = {};
-    console.log(request.query.codigo);
     if (request.query.codigo) {
         busquedaNumeracion['profesion._id'] = request.query.codigo;
     }
@@ -68,7 +67,7 @@ router.get('/numeraciones/?', function(request, response, errorHandler) {
                         return errorHandler(error);
                     }
 
-                    responseData.totalPages = Math.ceil(count / chunkSize) != 0 ? Math.ceil(count / chunkSize) : 1;
+                    responseData.totalPages = Math.ceil(count / chunkSize) !== 0 ? Math.ceil(count / chunkSize) : 1;
                     response.status(201)
                         .json(responseData);
             });
@@ -96,7 +95,7 @@ router.get('/numeracionesRestart', (req, resp, errorHandler) => {
 
                 numeracion.save((err, res) => {
 
-                    if (i === profs.length -1) {
+                    if (i === profs.length - 1) {
                         resp.json('Reset');
                     }
                 });
@@ -107,20 +106,17 @@ router.get('/numeracionesRestart', (req, resp, errorHandler) => {
 
 
 /**
- * 
+ *
  */
 router.post('/numeraciones', function(request, response, errorHandler) {
-    
-    console.log(request.body)
     if (request.body._id) {
-        console.log("update numeracion")
         NumeracionMatriculas.findByIdAndUpdate(request.body.id, request.body, (error, numeracion) => {
-            
+
             if (error) {
                 return errorHandler(error);
             }
 
-            response.json(numeracion);    
+            response.json(numeracion);
         });
 
 
@@ -128,10 +124,9 @@ router.post('/numeraciones', function(request, response, errorHandler) {
 
 
 
-        
+
 
     } else {
-        console.log("insert")
         const newNum = new NumeracionMatriculas(request.body);
 
         newNum.save((error, numeracion) => {

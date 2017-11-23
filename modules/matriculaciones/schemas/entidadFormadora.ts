@@ -5,7 +5,7 @@ var entidadFormadoraSchema = new mongoose.Schema({
     codigoSISA: Number
 });
 
-//Virtuals
+// Virtuals
 
 
 var entidadFormadora = mongoose.model('entidadFormadora', entidadFormadoraSchema, 'entidadFormadora');

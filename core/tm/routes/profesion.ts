@@ -1,5 +1,5 @@
-import * as express from 'express'
-import * as profesion from '../schemas/profesion_model'
+import * as express from 'express';
+import * as profesion from '../schemas/profesion_model';
 
 var router = express.Router();
 
@@ -9,16 +9,17 @@ router.get('/profesiones/:id*?', function(req, res, next) {
         profesion.findById(req.params.id, function (err, data) {
             if (err) {
                 return next(err);
-            };
+            }
 
             res.json(data);
         });
 
-    } else{
-       
+    } else {
+
         profesion.find({}).sort({codigoSISA: 1}).exec((error, data) => {
-            if (error)
+            if (error) {
                 return next(error);
+            }
 
             res.json(data);
         });

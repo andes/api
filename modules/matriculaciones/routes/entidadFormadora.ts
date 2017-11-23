@@ -1,5 +1,5 @@
-import * as express from 'express'
-import * as entidadFormadora from '../schemas/entidadFormadora'
+import * as express from 'express';
+import * as entidadFormadora from '../schemas/entidadFormadora';
 
 var router = express.Router();
 
@@ -9,21 +9,22 @@ router.get('/entidadesFormadoras/:id*?', function (req, res, next) {
         entidadFormadora.findById(req.params.id, function (err, data) {
             if (err) {
                 return next(err);
-            };
+            }
 
             res.json(data);
         });
 
-    } else{
-       
+    } else {
+
         entidadFormadora.find({}).sort({codigoSISA: 1}).exec((error, data) => {
-            if (error)
+            if (error) {
                 return next(error);
+            }
 
             res.json(data);
         });
    }
-    
+
 });
 
 
