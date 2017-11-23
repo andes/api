@@ -19,15 +19,17 @@ export async function integracionSips() {
     try {
         pool = await sql.connect(connection);
         let agendasMongoExportadas = await operationsCache.getAgendasDeMongoExportadas();
-        agendasMongoExportadas.forEach(async(agenda) => {
-            await operationsCache.checkCodificacion(agenda);
+        console.log("Agendas Exportadas: ", agendasMongoExportadas.length)
+        agendasMongoExportadas.forEach(async (agenda) => {
+            await operationsCache.checkCodificacion(agenda, pool);
         });
-        let agendasMongoPendientes = await operationsCache.getAgendasDeMongoPendientes();
 
+        let agendasMongoPendientes = await operationsCache.getAgendasDeMongoPendientes();
         if (agendasMongoPendientes.length > 0) {
+            console.log("Entra a Agendas Mongo Pendientes")
             await operationsCache.guardarCacheASips(agendasMongoPendientes, 0, pool);
         } else {
-            pool.close();
+            // pool.close();
         }
     } catch (ex) {
         pool.close();
