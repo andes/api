@@ -75,7 +75,7 @@ export let pacienteSchema = new mongoose.Schema({
         nota: String,
         destacada: Boolean
     }]
-});
+}, { versionKey: false });
 
 pacienteSchema.pre('save', function (next) {
 
@@ -92,7 +92,6 @@ pacienteSchema.pre('save', function (next) {
     next();
 
 });
-
 
 /* Se definen los campos virtuals */
 pacienteSchema.virtual('nombreCompleto').get(function () {
