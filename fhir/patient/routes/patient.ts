@@ -36,8 +36,8 @@ router.get('/([\$])match', function (req, res, next) {
     let consulta;
     req.query.identifier ? consulta = req.query.identifier : null;
     req.query.family ? consulta ? consulta = consulta + ' ' + req.query.family : consulta = req.query.family : null;
+    req.query.given ? consulta ? consulta = consulta + ' ' + req.query.given : consulta = req.query.given : null;
 
-    // Traigo todos los pacientes
     if (!consulta) {
         query = null;
     } else {
@@ -45,8 +45,9 @@ router.get('/([\$])match', function (req, res, next) {
             multi_match: {
                 query: consulta,
                 type: 'cross_fields',
-                fields: ['documento^5', 'apellido^3'],
-            }
+                fields: ['documento^5', 'apellido^5', 'nombre^3'],
+                'minimum_should_match': '100%',
+            },
         };
     }
 
