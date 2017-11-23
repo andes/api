@@ -30,10 +30,9 @@ router.post('/turnoSolicitados', function (req, res, next) {
                             res.json(null);
                         } else {
                             let newProfesional = new turnoSolicitado(req.body);
-                            newProfesional.save((err) => {
-
-                                if (err) {
-                                    next(err);
+                            newProfesional.save((err2) => {
+                                if (err2) {
+                                    next(err2);
                                 }
                                 res.json(newProfesional);
                             });
@@ -50,11 +49,11 @@ router.post('/turnoSolicitados', function (req, res, next) {
 
 router.get('/turnoSolicitados/traePDni/:dni*?', (req: any, res, next) => {
     let dni = req.params.dni;
-    console.log(dni)
     turnoSolicitado.find({ 'documentoNumero' : dni}, function (err, data) {
-        console.log(data)
+        if (err) {
+            return next(err);
+        }
         res.json(data[0]);
-    
     });
 
 });

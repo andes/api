@@ -1,7 +1,6 @@
 import * as express from 'express';
 import * as turno from '../schemas/turno';
-
-//import{ profesional } from '../../../core/tm/schemas/profesional';
+// import{ profesional } from '../../../core/tm/schemas/profesional';
 import { turnoSolicitado } from '../schemas/turnoSolicitado';
 
 let router = express.Router();

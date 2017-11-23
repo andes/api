@@ -36,8 +36,8 @@ router.get('/numeraciones/:id*?', function (req, res, next) {
  */
 router.get('/numeraciones/?', function(request, response, errorHandler) {
 
-    let offset = request.query.offset ? parseInt(request.query.offset) : 0;
-    let chunkSize = parseInt(request.query.size);
+    let offset = request.query.offset ? parseInt(request.query.offset, 10) : 0;
+    let chunkSize = parseInt(request.query.size, 10);
 
     let responseData = {
         totalPages: null,
@@ -61,10 +61,10 @@ router.get('/numeraciones/?', function(request, response, errorHandler) {
             responseData.data = data;
 
             NumeracionMatriculas.count(busquedaNumeracion)
-                .exec((error, count) => {
+                .exec((error2, count) => {
 
-                    if (error) {
-                        return errorHandler(error);
+                    if (error2) {
+                        return errorHandler(error2);
                     }
 
                     responseData.totalPages = Math.ceil(count / chunkSize) !== 0 ? Math.ceil(count / chunkSize) : 1;
@@ -83,18 +83,16 @@ router.get('/numeracionesRestart', (req, resp, errorHandler) => {
             if (err) {
                 return errorHandler(err);
             }
-
- /*           console.log(profs)
-            resp.json(profs)*/
-
             profs.forEach((prof, i) => {
                 var numeracion = new NumeracionMatriculas({
                     profesion: prof,
                     proximoNumero: 1
                 });
 
-                numeracion.save((err, res) => {
-
+                numeracion.save((err2, res) => {
+                    if (err2) {
+                        return errorHandler(err2);
+                    }
                     if (i === profs.length - 1) {
                         resp.json('Reset');
                     }
