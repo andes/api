@@ -16,14 +16,11 @@ let matriculacionSchema = new mongoose.Schema({
     fin: Date,
     revalidacionNumero: Number
 });
-
-
 export let profesionalSchema = new mongoose.Schema({
-// Persona
     habilitado: { type: Boolean, default: true },
     nombre: { type: String, required: false },
     apellido: { type: String, required: false },
-    documentoNumero: { type: String, required: false },
+    documento: { type: String, required: false },
     documentoVencimiento: { type: Date, required: false },
     cuit: { type: String, required: false },
     fechaNacimiento: { type: Date, required: false },
@@ -39,9 +36,7 @@ export let profesionalSchema = new mongoose.Schema({
         imgArchivo: { type: String, required: false },
         fecha: { type: String, required: false },
     }],
-// ??
     incluidoSuperintendencia: { type: Boolean, default: false },
-// Formacion
     formacionGrado: [{
         profesion: { type: ObjSIISASchema, required: false },
         entidadFormadora: { type: ObjSIISASchema, required: false },
@@ -64,10 +59,6 @@ export let profesionalSchema = new mongoose.Schema({
          },
          matriculacion: [matriculacionSchema]
      }],
-    // origen: {
-    //     type: String,
-    //     enum: ['matriculación', 'rrhh', 'colegio de psicólogos']
-    // },
     sanciones: [{
          numero: {type: Number, required: false},
          sancion: {
@@ -89,20 +80,14 @@ profesionalSchema.virtual('nombreCompleto').get(function() {
 
 });
 
-profesionalSchema.virtual('edad').get(function() {
-    let ageDifMs = Date.now() - this.fechaNacimiento.getTime();
-    let ageDate = new Date(ageDifMs);
-    return Math.abs(ageDate.getUTCFullYear() - 1970);
-});
+// Lo dejamos comentado porque problemas en los datos (una vez solucionado volver a habilitar)
+// profesionalSchema.virtual('edad').get(function() {
+//     let ageDifMs = Date.now() - this.fechaNacimiento.getTime();
+//     let ageDate = new Date(ageDifMs);
+//     return Math.abs(ageDate.getUTCFullYear() - 1970);
+// });
 
 profesionalSchema.virtual('fallecido').get(function() {
     return this.fechaFallecimiento;
 });
-
-// profesionalSchema.virtual('ultimaFirma').get(function() {
-//     return this.firmas.sort((a, b) => {
-//         return new Date(a.fecha).getTime() - new Date(b.fecha).getTime();
-//     })[0];
-// });
-
-export let profesional = mongoose.model('profesionalM', profesionalSchema, 'profesionalM');
+export let profesional = mongoose.model('profesional', profesionalSchema, 'profesional');
