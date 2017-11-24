@@ -444,6 +444,6 @@ router.patch('/agenda/:id*?', function (req, res, next) {
 });
 
 router.get('/agendaSips', function (req, res, next) {
-    agendaCacheCtrl.getAgendaSips();
+    agendaCacheCtrl.integracionSips();
 });
 export = router;
