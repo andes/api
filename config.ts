@@ -104,6 +104,12 @@ export const modules = {
         route: '/modules/usuarios',
         middleware: appMiddleware
     },
+    matriculaciones: {
+        active: true,
+        path: './modules/matriculaciones/routes',
+        route: '/modules/matriculaciones',
+        middleware: null
+    },
     fhir: {
         active: true,
         path: './fhir/patient/routes',
