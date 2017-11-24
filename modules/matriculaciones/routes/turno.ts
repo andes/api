@@ -72,7 +72,7 @@ router.get('/turnos/proximos/?', function(request, response, errorHandler) {
 
     };
 
-    if (request.query.nombre || request.query.apellido || request.query.documentoNumero ) {
+    if (request.query.nombre || request.query.apellido || request.query.documento ) {
 
         let busquedaProfesional = {};
 
@@ -84,8 +84,8 @@ router.get('/turnos/proximos/?', function(request, response, errorHandler) {
             busquedaProfesional['apellido'] = new RegExp(request.query.apellido, 'i');
         }
 
-        if (request.query.documentoNumero) {
-            busquedaProfesional['documentoNumero'] = new RegExp(request.query.documentoNumero, 'i');
+        if (request.query.documento) {
+            busquedaProfesional['documento'] = new RegExp(request.query.documento, 'i');
         }
 
 

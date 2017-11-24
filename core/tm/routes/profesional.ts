@@ -524,8 +524,10 @@ router.get('/profesionales/firma/:id*?', async(req: any, res, next) => {
 router.get('/profesionales/traePDni/:dni*?', (req: any, res, next) => {
     let dni = req.params.dni;
     profesional.find({
-        'documentoNumero': dni
+        'documento': dni
     }, function (err, data) {
+        if (data[0] === undefined) {
+        }
         if (err) {
             return next(err);
         }
@@ -792,7 +794,7 @@ router.get('/profesionales/:id*?', function (req, res, next) {
         let query = profesional.find({});
 
         if (req.query.busquedaDoc) {
-            query.where('documentoNumero').equals(RegExp('^.*' + req.query.busquedaDoc + '.*$', 'i'));
+            query.where('documento').equals(RegExp('^.*' + req.query.busquedaDoc + '.*$', 'i'));
         }
         if (req.query.busquedaApellido) {
             query.where('apellido').equals(RegExp('^.*' + req.query.busquedaApellido + '.*$', 'i'));
@@ -849,23 +851,10 @@ router.get('/profesionales/', function (req, res, next) {
  */
 router.post('/profesionales', function (req, res, next) {
 
-    if (req.body.id) {
-        profesional.findByIdAndUpdate(req.body.id, req.body, {
-            new: true
-        }, function (err, data) {
-            if (err) {
-                return next(err);
-            }
-            res.json(data);
-
-
-        });
-
-    } else {
         profesional.findOne({
-            'documentoNumero': req.body.documentoNumero
+            'documento': req.body.documento
         }, function (err, person) {
-            if (person !== null) {
+            if (person) {
                 res.json(null);
             } else {
                 let newProfesional = new profesional(req.body);
@@ -881,7 +870,6 @@ router.post('/profesionales', function (req, res, next) {
 
         });
 
-    }
 
 
 
@@ -928,6 +916,22 @@ router.put('/profesionales/:id', function (req, res, next) {
         res.json(data);
     });
 });
+
+
+// temporal
+router.post('/profesionales/actualizar', function (req, res, next) {
+            profesional.findByIdAndUpdate(req.body.id, req.body, {
+                new: true
+            }, function (err, data) {
+                if (err) {
+                    return next(err);
+                }
+                res.json(data);
+
+
+            });
+    });
+
 
 /**
  * @swagger
