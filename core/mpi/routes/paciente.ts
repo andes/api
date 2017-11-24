@@ -790,12 +790,16 @@ router.patch('/pacientes/:id', function (req, res, next) {
                     resultado.paciente.markModified('carpetaEfectores');
                     resultado.paciente.carpetaEfectores = req.body.carpetaEfectores;
                     // necesitamos llamar a la funcion que actualiza los turnos directamente, por no pasar por el controller.
-                    controller.updateTurnosPaciente(resultado.paciente);
+                    try {
+                        controller.updateTurnosPaciente(resultado.paciente);
+                    } catch (error) { return next(error); }
                     break;
                 case 'updateContactos': // Update de carpeta y de contactos
                     resultado.paciente.markModified('contacto');
                     resultado.paciente.contacto = req.body.contacto;
-                    controller.updateTurnosPaciente(resultado.paciente);
+                    try {
+                        controller.updateTurnosPaciente(resultado.paciente);
+                    } catch (error) { return next(error); }
                     break;
                 case 'linkIdentificadores':
                     controller.linkIdentificadores(req, resultado.paciente);

@@ -628,7 +628,6 @@ export function saveAgenda(nuevaAgenda) {
  * @param {any} turno
  */
 export function updatePaciente(pacienteModified, turno) {
-
     agendaModel.findById(turno.agenda_id, function (err, data, next) {
         if (err) {
             return next(err);
@@ -660,8 +659,8 @@ export function updatePaciente(pacienteModified, turno) {
             i++;
         }
         if (!band) {
-            Auth.audit(data, (userScheduler as any));
             try {
+                Auth.audit(data, (userScheduler as any));
                 saveAgenda(data);
             } catch (error) {
                 return error;

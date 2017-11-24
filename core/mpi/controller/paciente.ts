@@ -55,7 +55,9 @@ export function updatePaciente(pacienteObj, data, req) {
             if (err2) {
                 return reject(err2);
             }
-            updateTurnosPaciente(pacienteObj);
+            try {
+                updateTurnosPaciente(pacienteObj);
+            } catch (error) { return error; }
             let connElastic = new ElasticSync();
             connElastic.sync(pacienteObj).then(updated => {
                 if (updated) {
@@ -88,15 +90,15 @@ export async function updateTurnosPaciente(pacienteModified) {
             horaInicio: moment(new Date()).startOf('day').toDate() as any
         }
     };
-    try {
-        let turnos: any = await turnosController.getTurno(req);
-        if (turnos.length > 0) {
-            turnos.forEach(element => {
+    let turnos: any = await turnosController.getTurno(req);
+    if (turnos.length > 0) {
+        turnos.forEach(element => {
+            try {
                 agendaController.updatePaciente(pacienteModified, element);
-            });
-        }
-    } catch (error) {
-        return error;
+            } catch (error) {
+                return error;
+            }
+        });
     }
 }
 
