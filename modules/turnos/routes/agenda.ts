@@ -288,8 +288,8 @@ router.post('/agenda/clonar', function (req, res, next) {
                             turno.tipoTurno = undefined;
                             turno.updatedAt = undefined;
                             turno.updatedBy = undefined;
-                            turno.diagnosticoPrincipal = null;
-                            turno.diagnosticoSecundario = [];
+                            turno.diagnostico = { codificaciones : []};
+                            turno.reasignado = undefined;
                         });
                     });
                     nueva['estado'] = 'planificacion';
@@ -387,8 +387,8 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                     break;
                 case 'pausada':
                 case 'prePausada':
-                case 'asistenciaCerrada':
-                case 'codificada':
+                case 'pendienteAuditoria':
+                case 'auditada':
                 case 'suspendida':
                 case 'borrada':
                     agendaCtrl.actualizarEstado(req, data);

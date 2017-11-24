@@ -153,27 +153,27 @@ async function codificacionCie10(idConsulta: any, turno: any) {
         let codCie10: any = [];
         let codificaCie10: any = {};
         codCie10 = await getConsultaDiagnostico(idConsulta);
-        let m = 0;
+        let diagnosticos = [];
+        turno.diagnostico.codificaciones = [];
         for (let i = 0; i < codCie10.length; i++) {
             codificaCie10 = await getCodificacionCie10(codCie10[i].CODCIE10);
-            if (i === 0) {
-                turno.asistencia = 'asistio';
-                turno.diagnosticoPrincipal = {
-                    ilegible: false,
-                    codificacion: {
+            turno.asistencia = 'asistio';
+            turno.diagnostico.ilegible = false;
+            if (codCie10[i].PRINCIPAL === true) {
+                turno.diagnostico.codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del arrays
+                    codificacionProfesional: {
                         causa: codificaCie10.CAUSA,
                         subcausa: codificaCie10.SUBCAUSA,
                         codigo: codificaCie10.CODIGO,
                         nombre: codificaCie10.Nombre,
                         sinonimo: codificaCie10.Sinonimo,
                         c2: codificaCie10.C2
+                        // TODO: campo primeraVez -> verificar en SIPS
                     }
-                };
+                });
             } else {
-                turno.asistencia = 'asistio';
-                turno.diagnosticoSecundario[m] = {
-                    ilegible: false,
-                    codificacion: {
+                turno.diagnostico.codificaciones.push({
+                    codificacionProfesional: {
                         causa: codificaCie10.CAUSA,
                         subcausa: codificaCie10.SUBCAUSA,
                         codigo: codificaCie10.CODIGO,
@@ -181,8 +181,7 @@ async function codificacionCie10(idConsulta: any, turno: any) {
                         sinonimo: codificaCie10.Sinonimo,
                         c2: codificaCie10.C2
                     }
-                };
-                m++;
+                });
             }
         }
         resolve(turno);
@@ -352,7 +351,7 @@ function getConsultaDiagnostico(idConsulta) {
         let transaction;
         return new sql.Request(transaction)
             .input('idConsulta', sql.Int, idConsulta)
-            .query('SELECT CODCIE10 FROM dbo.CON_ConsultaDiagnostico WHERE idConsulta = @idConsulta')
+            .query('SELECT CODCIE10, PRINCIPAL FROM dbo.CON_ConsultaDiagnostico WHERE idConsulta = @idConsulta')
             .then(result => {
                 resolve(result);
             }).catch(err => {
