@@ -789,16 +789,20 @@ router.patch('/pacientes/:id', function (req, res, next) {
                 case 'updateDireccion':
                     controller.updateDireccion(req, resultado.paciente);
                     break;
-                case 'updateCarpetaEfectores':
-                    // controller.updateCarpetaEfectores(req, resultado.paciente);
+                case 'updateCarpetaEfectores': // Update solo carpetas
                     resultado.paciente.markModified('carpetaEfectores');
                     resultado.paciente.carpetaEfectores = req.body.carpetaEfectores;
+                    // necesitamos llamar a la funcion que actualiza los turnos directamente, por no pasar por el controller.
+                    try {
+                        controller.updateTurnosPaciente(resultado.paciente);
+                    } catch (error) { return next(error); }
                     break;
-                case 'updateContactosCarpeta':
+                case 'updateContactos': // Update de carpeta y de contactos
                     resultado.paciente.markModified('contacto');
                     resultado.paciente.contacto = req.body.contacto;
-                    resultado.paciente.markModified('carpetaEfectores');
-                    resultado.paciente.carpetaEfectores = req.body.carpetaEfectores;
+                    try {
+                        controller.updateTurnosPaciente(resultado.paciente);
+                    } catch (error) { return next(error); }
                     break;
                 case 'linkIdentificadores':
                     controller.linkIdentificadores(req, resultado.paciente);
