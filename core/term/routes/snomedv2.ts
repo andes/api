@@ -4,6 +4,8 @@ import * as utils from '../../../utils/utils';
 import * as snomedCtr from '../controller/snomedCtr';
 import * as configPrivate from './../../../config.private';
 import { lookup } from 'mime';
+import * as debug from 'debug';
+let log = debug('SNOMED');
 
 let router = express.Router();
 
@@ -91,9 +93,10 @@ router.get('/snomed/search', async function (req, res, next) {
     }
 
     let lookUp = null;
-    let secondMatch = null;
+    let secondMatch = { $match: {} };
     let attributes = req.query.attributes;
-    if (attributes) {
+    let leaf = req.query.leaf;
+    if (attributes || leaf) {
         lookUp = {
             '$lookup': {
                 from: configPrivate.snomed.dbVersion,
@@ -102,31 +105,38 @@ router.get('/snomed/search', async function (req, res, next) {
                 as: 'concept'
             }
         };
+    }
+    if (attributes) {
         let conds = [];
         attributes.forEach(elem => {
+            let filters = {
+                active: true
+            };
+            if (elem.sctid) {
+                filters['destination.conceptId'] = elem.sctid;
+            }
+            if (elem.typeid) {
+                filters['type.conceptId'] = elem.typeid;
+            }
             let cond = {
                 'concept.relationships' :  {
-                    $elemMatch: {
-                        'destination.conceptId': elem.sctid,
-                        'type.conceptId': elem.typeid,
-                        active: true
-                    }
+                    $elemMatch: filters
                 }
             };
             conds.push(cond);
         });
-        secondMatch = {
-            '$match': {
-                $and:  conds
-            }
-        };
+        secondMatch['$match']['$and'] = conds;
+    }
+    if (leaf) {
+        secondMatch['$match']['concept.isLeafInferred'] = true;
+        secondMatch['$match']['concept.isLeafStated'] = true;
     }
 
     let pipeline = [
         {$match: conditions},
 
-        // ...(lookup ? [lookUp, secondMatch] : []),
-        ...(secondMatch ? [lookUp, secondMatch] : []),
+        ...(lookUp ? [lookUp, secondMatch] : []),
+        // ...(secondMatch ? [lookUp, secondMatch] : []),
 
         {$sort: { term: 1 }},
         {$skip: parseInt(req.query.skip, 0) || 0 },
