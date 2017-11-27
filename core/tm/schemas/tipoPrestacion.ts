@@ -6,7 +6,7 @@ export let tipoPrestacionSchema = new mongoose.Schema({
     fsn: String,
     semanticTag: {
         type: String,
-        enum: ['procedimiento', 'solicitud', 'hallazgo', 'trastorno', 'antecedenteFamiliar']
+        enum: ['procedimiento', 'solicitud', 'hallazgo', 'trastorno', 'antecedenteFamiliar', 'régimen/tratamiento']
     }
 });
 
