@@ -1,5 +1,5 @@
 import * as express from 'express';
-import { model } from '../schemas/snomed';
+import { textIndexModel } from '../schemas/snomed';
 import * as utils from '../../../utils/utils';
 import * as cie10 from '../schemas/cie10';
 import { SnomedCIE10Mapping } from './../controller/mapping';
@@ -84,7 +84,7 @@ router.get('/snomed', function (req, res, next) {
     }
 
     // preparamos query
-    let query = model.find(conditions, {
+    let query = textIndexModel.find(conditions, {
         conceptId: 1,
         term: 1,
         fsn: 1,
