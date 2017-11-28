@@ -83,13 +83,13 @@ router.get('/profesionales/firma/:id*?', (req: any, res, next) => {
     });
 
 });
-router.get('/profesionales/matricula/:profId', (req, resp, errHandler) => {
+router.get('/profesionales/matricula/:id', (req, resp, errHandler) => {
     let oCredencial = {
         foto: null,
         firmaProfesional: null,
         firmaSupervisor: null
     };
-    profesional.findById(req.params.profId).exec((err, prof: any) => {
+    profesional.findById(req.params.id).exec((err, prof: any) => {
         if (err) {
             return errHandler(err);
         }
@@ -201,7 +201,7 @@ router.get('/profesionales/:id*?', function (req, res, next) {
     });
 });
 
-// redefinir y tener un único post (crear un controller)
+// corregir post y put
 router.post('/profesionales/foto', async(req: any, res, next) => {
     let _base64 = req.body.foto.img;
     let decoder = base64.decode();
@@ -333,6 +333,8 @@ router.put('/profesionales/:id', function (req, res, next) {
         res.json(data);
     });
 });
+
+// El delete está correcto, tomar como modelo para la documentación
 /**
  * @swagger
  * /profesional/{id}:
