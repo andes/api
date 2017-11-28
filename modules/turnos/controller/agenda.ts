@@ -489,7 +489,8 @@ export function esPrimerPaciente(agenda: any, idPaciente: string, opciones: any[
  * @returns resultado
  */
 export function actualizarTiposDeTurno() {
-    let hsActualizar = 48;
+    // let hsActualizar = 48;
+    let hsActualizar = 24;
     let cantDias = hsActualizar / 24;
     let fechaActualizar = moment(new Date()).add(cantDias, 'days');
 
