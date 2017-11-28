@@ -19,6 +19,8 @@ export class CDABuilder extends BaseBuilder {
                          .att('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
                          .att('xmlns:voc', 'urn:hl7-org:v3/voc');
 
+        xml.instructionBefore('xml-stylesheet', 'type="text/xsl" href="style/cda.xsl"');
+
         this.createNode(xml, 'typeId', cda.typeId());
         this.createNode(xml, 'id', cda.id());
         this.createNode(xml, 'code', cda.code());
