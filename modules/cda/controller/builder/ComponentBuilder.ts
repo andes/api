@@ -2,7 +2,7 @@ import { IID, ICode, IConfidentialityCode, ILanguageCode, ISetId } from '../clas
 import { CDA } from '../class/CDA';
 import * as builder from 'xmlbuilder';
 import { Patient } from '../class/Patient';
-import { Component, ImageComponent } from '../class/Body';
+import { Component, Base64Component } from '../class/Body';
 import { BaseBuilder } from './BaseBuilder';
 
 export class ComponentBuilder extends BaseBuilder {
@@ -45,7 +45,7 @@ export class ComponentBuilder extends BaseBuilder {
  *      </observationMedia>
  *   </entry>
  */
-export class ImageComponentBuilder extends ComponentBuilder {
+export class Base64ComponentBuilder extends ComponentBuilder {
     public build(component: ImageComponent) {
         let section = super.build(component);
         let entry = section.ele('entry');
@@ -55,6 +55,7 @@ export class ImageComponentBuilder extends ComponentBuilder {
             moodCode: 'ENV',
             ID: component.identifier
         };
+        section.ele('text').ele('renderMultiMedia', { referencedObject: component.identifier });
 
         let obsTag = entry.ele('observationMedia', obsAttr);
         let valueAttr = {
@@ -62,7 +63,6 @@ export class ImageComponentBuilder extends ComponentBuilder {
             mediaType: component.type()
         };
 
-        obsTag.ele('text').ele('renderMultiMedia', { referencedObject: component.identifier });
         obsTag.ele('value', valueAttr, component.file());
 
         return section;
