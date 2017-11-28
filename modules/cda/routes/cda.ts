@@ -92,6 +92,9 @@ router.post('/', Auth.authenticate(),  async (req: any, res, next) => {
 
 //     input.end(_base64);
 // });
+router.get('/style/cda.xsl', (req, res, next) => {
+    res.sendFile(__dirname + '/cda.xsl');
+});
 
 router.get('/:id', async (req: any, res, next) => {
     let _base64 = req.params.id;
@@ -103,6 +106,7 @@ router.get('/:id', async (req: any, res, next) => {
         res.end(buffer);
     });
 });
+
 
 router.get('/paciente/:id', async (req: any, res, next) => {
     let CDAFiles = makeFs();
