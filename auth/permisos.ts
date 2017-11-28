@@ -152,5 +152,16 @@ export default [
             { key: 'post', title: 'Crear usuario', type: 'boolean' },
             { key: 'put', title: 'Modificar usuario', type: 'boolean' }
         ]
+    },
+    {
+        key: 'profesionales',
+        title: 'Gestor de usuarios',
+        child: [
+            { key: 'getProfesional', title: 'Ver profesional', type: 'boolean' },
+            { key: 'getProfesionalFoto', title: 'Ver foto profesional', type: 'boolean' },
+            { key: 'postProfesional', title: 'crea profesional', type: 'boolean' },
+            { key: 'putProfesional', title: 'actualiza profesional', type: 'boolean' }
+
+        ]
     }
 ];
