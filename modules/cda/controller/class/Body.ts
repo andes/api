@@ -1,5 +1,5 @@
 import { IID, ICode, ITemplateId } from './interfaces';
-import { ImageComponentBuilder, ComponentBuilder } from '../builder/ComponentBuilder';
+import { Base64ComponentBuilder, ComponentBuilder } from '../builder/ComponentBuilder';
 export class Body {
     public components: Component[] = [];
 
@@ -49,13 +49,12 @@ export class Component {
 //     <renderMultiMedia referencedObject='FIRMA'/>
 // </text>
 
-export class ImageComponent extends Component {
+export class Base64Component extends Component {
     private mimeType: String;
     private file64: String;
     public identifier: String = 'Adjunto';
 
     file (value = null) {
-        // this.text('<renderMultiMedia referencedObject=\'' + this.identifier + '\'/>');
         if (value) {
             this.file64 = value;
             return this;
@@ -74,7 +73,7 @@ export class ImageComponent extends Component {
     }
 
     builderFactory() {
-        return new ImageComponentBuilder();
+        return new Base64ComponentBuilder();
     }
 }
 
