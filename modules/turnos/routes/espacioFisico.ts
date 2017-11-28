@@ -1,6 +1,7 @@
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import { espacioFisico } from '../schemas/espacioFisico';
+import { defaultLimit, maxLimit } from './../../../config';
 
 let router = express.Router();
 
@@ -14,7 +15,10 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
         });
     } else {
         // Trae todos
-        let query = espacioFisico.find({});
+        let radix = 10;
+        let skip: number = parseInt(req.query.skip || 0, radix);
+        let limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
+        let query = espacioFisico.find({}).skip(skip).limit(limit);;
         let nombres = [];
 
         if (req.query.nombre) {
