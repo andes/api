@@ -7,8 +7,10 @@ import { Author } from './class/Author';
 import { Body, Component, ImageComponent } from './class/Body';
 import { CDABuilder } from './builder/CdaBuilder';
 
+import * as base64_stream from 'base64-stream';
 import { makeFs } from '../schemas/CDAFiles';
 import * as stream from 'stream';
+import { create } from 'domain';
 /**
  * Crea un objeto paciente desde los datos
  */
@@ -130,6 +132,37 @@ function buildID (id) {
     };
 }
 
+
+export function storeFile (base64) {
+    var match = base64.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,(.*)/);
+    var mime = match[1];
+    var data = match[2];
+    return new Promise((resolve, reject) => {
+        let uniqueId = String(new mongoose.Types.ObjectId());
+        let input = new stream.PassThrough();
+        let decoder = base64_stream.decode();
+        let CDAFiles = makeFs();
+
+        CDAFiles.write({
+                _id: uniqueId,
+                filename:  uniqueId + '.' + mime.split('/')[1],
+                contentType: mime
+            },
+            input.pipe(decoder),
+            (error, createdFile) => {
+                resolve({
+                    id: createdFile._id,
+                    data: 'files/' + createdFile.filename,
+                    mime: mime,
+                    is64: false
+                });
+            }
+        );
+
+        input.end(data);
+    });
+}
+
 /**
  * Almacena un XML en Mongo
  * @param objectID ID del CDA
@@ -170,7 +203,7 @@ export function storeCDA (objectID, cdaXml, metadata) {
  * @param {string} text Texto descriptivo
  * @param {string} base64  Archivo para adjutar al CDA en base64
  */
-export function generateCDA(uniqueId, patient, date, author, organization, snomed, cie10, text, base64) {
+export function generateCDA(uniqueId, patient, date, author, organization, snomed, cie10, text, file) {
     let cda = new CDA();
 
 
@@ -223,14 +256,16 @@ export function generateCDA(uniqueId, patient, date, author, organization, snome
     }
 
     // [TODO] Archivo en base64 o aparte
-    if (base64) {
-        var match = base64.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,(.*)/);
-        var mime = match[1];
-        var data = match[2];
+    if (file) {
+
+        // var match = base64.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,(.*)/);
+        // var mime = match[1];
+        // var data = match[2];
 
         let imagecomponent = new ImageComponent();
-        imagecomponent.file(data);
-        imagecomponent.type(mime);
+        imagecomponent.file(file.data);
+        imagecomponent.type(file.mime);
+        imagecomponent.isB64(file.is64 || false);
 
         body.addComponent(imagecomponent);
     }

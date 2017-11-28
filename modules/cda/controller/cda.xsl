@@ -1502,15 +1502,34 @@
         <xsl:variable name="imageRef" select="@referencedObject"/>
         <xsl:choose>
             <xsl:when test="//n1:observationMedia[@ID=$imageRef]">
-                <xsl:variable name="mime-type" select="//n1:observationMedia[@ID=$imageRef]/n1:value/@mediaType"/>
-                <xsl:variable name="base64" select="//n1:observationMedia[@ID=$imageRef]/n1:value"/>
- 
+                <xsl:choose>
+                <xsl:when test="//n1:observationMedia[@ID=$imageRef]/n1:value/@representation"> 
+                    <xsl:variable name="mime-type" select="//n1:observationMedia[@ID=$imageRef]/n1:value/@mediaType"/>
+                    <xsl:variable name="base64" select="//n1:observationMedia[@ID=$imageRef]/n1:value"/>
+    
+                    <xsl:element name="img">
+                        <xsl:attribute name="src"> 
+                        <xsl:value-of select="concat('data:', $mime-type, ';base64,', $base64 )"/> 
+                        </xsl:attribute>
+                    </xsl:element>
 
-                <xsl:element name="img">
-                    <xsl:attribute name="src"> 
-                      <xsl:value-of select="concat('data:', $mime-type, ';base64,', $base64 )"/> 
-                    </xsl:attribute>
-                </xsl:element>
+                </xsl:when>
+                <xsl:when test="//n1:observationMedia[@ID=$imageRef]/n1:value[@mediaType='image/gif' or @mediaType='image/jpeg']">
+                    <br clear="all"/>
+                    <xsl:element name="img">
+                        <xsl:attribute name="src"><xsl:value-of select="//n1:observationMedia[@ID=$imageRef]/n1:value/n1:reference/@value"/></xsl:attribute>
+                        
+                    </xsl:element>
+                </xsl:when>
+                <xsl:otherwise>
+                    <br clear="all"/>
+                    <xsl:element name="a">
+                        <xsl:attribute name="href"><xsl:value-of select="//n1:observationMedia[@ID=$imageRef]/n1:value/n1:reference/@value"/></xsl:attribute>
+                        <xsl:attribute name="target">_blank</xsl:attribute>
+                        <xsl:text>Link to file</xsl:text>
+                    </xsl:element>
+                </xsl:otherwise>
+                </xsl:choose>
 
                 <!-- Here is where the Region of Interest image referencing goes -->
                 <!-- <xsl:if test="//n1:regionOfInterest[@ID=$imageRef]//n1:observationMedia/n1:value[@mediaType='image/gif' or

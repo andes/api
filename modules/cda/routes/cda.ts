@@ -13,7 +13,12 @@ import * as moment from 'moment';
 
 import { Auth } from '../../../auth/auth.class';
 
+let path = require('path');
 let router = express.Router();
+
+/**
+ * Genera un CDA con los datos provisto
+ */
 
 // {
 // 	"snomed": "1234556",
@@ -56,12 +61,18 @@ router.post('/', Auth.authenticate(),  async (req: any, res, next) => {
         let paciente = await cdaCtr.findOrCreate(req, dataPaciente, organizacion._id);
         let uniqueId = String(new mongoose.Types.ObjectId());
 
-        let cda = cdaCtr.generateCDA(uniqueId, paciente, fecha, dataProfesional, organizacion, snomed, cie10, texto, file);
+        let fileData;
+        if (file) {
+            fileData = await cdaCtr.storeFile(file);
+        }
+
+        let cda = cdaCtr.generateCDA(uniqueId, paciente, fecha, dataProfesional, organizacion, snomed, cie10, texto, fileData);
 
         let metadata = {
             paciente: paciente._id,
             prestacion: snomed,
-            fecha: fecha
+            fecha: fecha,
+            archivo: fileData.filename
         };
         let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
 
@@ -92,9 +103,34 @@ router.post('/', Auth.authenticate(),  async (req: any, res, next) => {
 
 //     input.end(_base64);
 // });
+
 router.get('/style/cda.xsl', (req, res, next) => {
-    res.sendFile(__dirname + '/cda.xsl');
+    let name = path.join(__dirname, '../controller/cda.xsl');
+    res.sendFile(name);
 });
+
+
+/**
+ * Devuelve los archivos almacenados por los CDAs
+ * Cuando se renderiza un CDA en el browser busca los archivos adjuntos en esta ruta
+ */
+
+router.get('/files/:name', async (req: any, res, next) => {
+    let name = req.params.name;
+    let CDAFiles = makeFs();
+
+    CDAFiles.findOne({filename: name}).then(file => {
+        var stream1  = CDAFiles.readById(file._id, function (err, buffer) {
+            res.contentType(file.contentType);
+            res.end(buffer);
+        });
+    }).catch(next);
+});
+
+
+/**
+ * Devuelve el XML de un CDA seg´un un ID
+ */
 
 router.get('/:id', async (req: any, res, next) => {
     let _base64 = req.params.id;
@@ -107,7 +143,10 @@ router.get('/:id', async (req: any, res, next) => {
     });
 });
 
-
+/**
+ * Listado de los CDAs de un paciente
+ * API demostrativa, falta analisar como se va a buscar en el repsitorios
+ */
 router.get('/paciente/:id', async (req: any, res, next) => {
     let CDAFiles = makeFs();
     let pacienteID = req.params.id;

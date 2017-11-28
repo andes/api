@@ -2,7 +2,7 @@ import { IID, ICode, IConfidentialityCode, ILanguageCode, ISetId } from '../clas
 import { CDA } from '../class/CDA';
 import * as builder from 'xmlbuilder';
 import { Patient } from '../class/Patient';
-import { Component, Base64Component } from '../class/Body';
+import { Component, ImageComponent } from '../class/Body';
 import { BaseBuilder } from './BaseBuilder';
 
 export class ComponentBuilder extends BaseBuilder {
@@ -45,9 +45,11 @@ export class ComponentBuilder extends BaseBuilder {
  *      </observationMedia>
  *   </entry>
  */
-export class Base64ComponentBuilder extends ComponentBuilder {
+export class ImageComponentBuilder extends ComponentBuilder {
     public build(component: ImageComponent) {
         let section = super.build(component);
+        section.ele('text').ele('renderMultiMedia', { referencedObject: component.identifier });
+
         let entry = section.ele('entry');
 
         let obsAttr = {
@@ -55,15 +57,26 @@ export class Base64ComponentBuilder extends ComponentBuilder {
             moodCode: 'ENV',
             ID: component.identifier
         };
-        section.ele('text').ele('renderMultiMedia', { referencedObject: component.identifier });
 
-        let obsTag = entry.ele('observationMedia', obsAttr);
-        let valueAttr = {
-            representation: 'B64',
-            mediaType: component.type()
-        };
+        // If data is in base64
+        if (component.isB64()) {
+            let obsTag = entry.ele('observationMedia', obsAttr);
+            let valueAttr = {
+                representation: 'B64',
+                mediaType: component.type()
+            };
 
-        obsTag.ele('value', valueAttr, component.file());
+            obsTag.ele('value', valueAttr, component.file());
+        } else {
+            // if data is reference to a file
+            let obsTag = entry.ele('observationMedia', obsAttr);
+            let valueAttr = {
+                'xsi:type': 'ED',
+                mediaType: component.type()
+            };
+            let value = obsTag.ele('value', valueAttr);
+            value.ele('reference', {value: component.file() });
+        }
 
         return section;
     }
