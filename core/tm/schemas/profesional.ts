@@ -7,6 +7,7 @@ import * as especialidadSchema from './especialidad';
 import * as paisSchema from './pais';
 import * as profesionSchema from './profesion';
 import { ObjSIISASchema } from './siisa';
+import * as moment from 'moment';
 
 let matriculacionSchema = new mongoose.Schema({
     matriculaNumero: { type: Number, required: false },
@@ -79,14 +80,6 @@ profesionalSchema.virtual('nombreCompleto').get(function() {
     return this.apellido + ', ' + this.nombre;
 
 });
-
-// Lo dejamos comentado porque problemas en los datos (una vez solucionado volver a habilitar)
-// profesionalSchema.virtual('edad').get(function() {
-//     let ageDifMs = Date.now() - this.fechaNacimiento.getTime();
-//     let ageDate = new Date(ageDifMs);
-//     return Math.abs(ageDate.getUTCFullYear() - 1970);
-// });
-
 profesionalSchema.virtual('fallecido').get(function() {
     return this.fechaFallecimiento;
 });
