@@ -125,9 +125,12 @@ router.get('/profesionales/matricula/:profId', (req, resp, errHandler) => {
     });
 });
 router.get('/profesionales/:id*?', function (req, res, next) {
+    console.log("aca")
     let opciones = {};
     let query;
+    console.log(req.query)
     if (req.params.id) {
+        console.log("tiene id")
         profesional.findById(req.params.id, function (err, data) {
             if (err) {
                 return next(err);
@@ -157,6 +160,7 @@ router.get('/profesionales/:id*?', function (req, res, next) {
         }
 
         if (req.query.documento) {
+            console.log("doc")
             opciones['documento'] = utils.makePattern(req.query.documento);
         }
 
@@ -197,6 +201,7 @@ router.get('/profesionales/:id*?', function (req, res, next) {
         if (err) {
             return next(err);
         }
+        console.log(data)
         res.json(data);
     });
 });
