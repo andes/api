@@ -48,6 +48,10 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             query.where('solicitud.turno').in(req.query.turnos);
         }
 
+        if (req.query.conceptsIdEjecucion) {
+            query.where('ejecucion.registros.concepto.conceptId').in(req.query.conceptsIdEjecucion);
+        }
+
         // Solicitudes generadas desde puntoInicio Ventanilla
         // Solicitudes que no tienen prestacionOrigen ni turno
         // Si tienen prestacionOrigen son generadas por RUP y no se listan
@@ -66,6 +70,8 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         // Ordenar por fecha de solicitud
         if (req.query.ordenFecha) {
             query.sort({ 'solicitud.fecha': -1 });
+        } else if (req.query.ordenFechaEjecucion) {
+            query.sort({ 'ejecucion.fecha': -1 });
         }
 
         if (req.query.limit) {
