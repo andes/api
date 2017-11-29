@@ -154,14 +154,20 @@ export default [
         ]
     },
     {
-        key: 'profesionales',
-        title: 'Gestor de usuarios',
+        key: 'matriculaciones',
+        title: 'matriculaciones',
+        comment: '',
         child: [
-            { key: 'getProfesional', title: 'Ver profesional', type: 'boolean' },
-            { key: 'getProfesionalFoto', title: 'Ver foto profesional', type: 'boolean' },
-            { key: 'postProfesional', title: 'crea profesional', type: 'boolean' },
-            { key: 'putProfesional', title: 'actualiza profesional', type: 'boolean' }
-
+            {
+                key: 'profesionales',
+                title: 'Gestor de profesionales',
+                child: [
+                    { key: 'getProfesional', title: 'Ver profesional', type: 'boolean' },
+                    { key: 'getProfesionalFoto', title: 'Ver foto profesional', type: 'boolean' },
+                    { key: 'postProfesional', title: 'crea profesional', type: 'boolean' },
+                    { key: 'putProfesional', title: 'actualiza profesional', type: 'boolean' }
+                ]
+            }
         ]
-    }
+    },
 ];

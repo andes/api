@@ -131,6 +131,8 @@ router.get('/profesionales/matricula/:id', (req, resp, errHandler) => {
     });
 });
 router.get('/profesionales/:id*?', function (req, res, next) {
+
+    // console.log(Auth.check(req, 'matriculaciones:profesionales:getProfesional'))
     // if (!Auth.check(req, 'matriculaciones:profesionales:getProfesional')) {
     //     return next(403);
     // }

@@ -64,7 +64,11 @@ router.get('/turnos/proximos/?', function(request, response, errorHandler) {
         fechaConsulta.setMilliseconds(0);
 
     } else {
-        fechaConsulta = new Date();
+        console.log("aca");
+        let hoy = new Date();
+       let fechaActualMargen = hoy.setMinutes(hoy.getMinutes() - 30);
+        fechaConsulta = fechaActualMargen;
+        console.log(fechaActualMargen)
     }
 
     let busquedaTurno = {
