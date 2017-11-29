@@ -443,7 +443,14 @@ router.patch('/agenda/:id*?', function (req, res, next) {
 
 });
 
-router.get('/agendaSips', function (req, res, next) {
-    agendaCacheCtrl.getAgendaSips();
+router.get('/integracionSips', function (req, res, next) {
+    return new Promise<Array<any>>(async function (resolve, reject) {
+        try {
+            await agendaCacheCtrl.integracionSips();
+            resolve();
+        } catch (ex) {
+            reject(ex);
+        }
+    });
 });
 export = router;

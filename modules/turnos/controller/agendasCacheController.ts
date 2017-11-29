@@ -1,4 +1,3 @@
-// Se definen las operaciones de agendas y SIPS
 import * as operationsCache from './operationsCacheController';
 import * as configPrivate from '../../../config.private';
 import * as sql from 'mssql';
@@ -16,20 +15,33 @@ let connection = {
 };
 
 export async function integracionSips() {
-    try {
-        pool = await sql.connect(connection);
-        let agendasMongoExportadas = await operationsCache.getAgendasDeMongoExportadas();
-        agendasMongoExportadas.forEach(async(agenda) => {
-            await operationsCache.checkCodificacion(agenda);
-        });
-        let agendasMongoPendientes = await operationsCache.getAgendasDeMongoPendientes();
+    return new Promise<Array<any>>(async function (resolve, reject) {
+        try {
+            let promisesArray: any = [];
+            pool = await sql.connect(connection);
+            let agendasMongoPendientes = await operationsCache.getAgendasDeMongoPendientes();
+            if (agendasMongoPendientes.length > 0) {
+                await operationsCache.guardarCacheASips(agendasMongoPendientes, 0, pool);
+                resolve();
+            } else {
+                resolve();
+            }
+            let agendasMongoExportadas = await operationsCache.getAgendasDeMongoExportadas();
+            agendasMongoExportadas.forEach(async (agenda) => {
+                promisesArray.push(await operationsCache.checkCodificacion(agenda, pool));
+            });
 
-        if (agendasMongoPendientes.length > 0) {
-            await operationsCache.guardarCacheASips(agendasMongoPendientes, 0, pool);
-        } else {
+            if (promisesArray.length > agendasMongoExportadas) {
+                Promise.all(promisesArray).then(values => {
+                    pool.close();
+                    resolve();
+                });
+            } else {
+                resolve();
+            }
+        } catch (ex) {
             pool.close();
+            reject(ex);
         }
-    } catch (ex) {
-        pool.close();
-    }
+    });
 }
