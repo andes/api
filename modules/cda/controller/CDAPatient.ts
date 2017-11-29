@@ -100,10 +100,10 @@ function matchCode(snomed) {
     switch (snomed) {
         default:
             return {
-                code: '47039-3',
+                code: '34133-9',
                 codeSystem: '2.16.840.1.113883.6.1',
                 codeSystemName: 'LOINC',
-                displayName: 'Admission history and physical note'
+                displayName: 'Summarization of episode note'
             };
     }
 }
@@ -204,9 +204,8 @@ export function storeCDA (objectID, cdaXml, metadata) {
  * @param {string} base64  Archivo para adjutar al CDA en base64
  */
 export function generateCDA(uniqueId, patient, date, author, organization, snomed, cie10, text, file) {
+
     let cda = new CDA();
-
-
     cda.id(buildID(uniqueId));
 
     let code = matchCode(snomed);

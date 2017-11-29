@@ -72,7 +72,7 @@ router.post('/', Auth.authenticate(),  async (req: any, res, next) => {
             paciente: paciente._id,
             prestacion: snomed,
             fecha: fecha,
-            archivo: fileData.filename
+            adjuntos: [ fileData.filename ]
         };
         let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
 
