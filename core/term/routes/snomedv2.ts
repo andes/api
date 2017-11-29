@@ -9,6 +9,11 @@ let log = debug('SNOMED');
 
 let router = express.Router();
 
+
+/**
+ * Devuelve un concepto Entero
+ */
+
 router.get('/snomed/concepts/:sctid', async function (req, res, next) {
     let sctid = req.params.sctid;
     try {
@@ -18,6 +23,10 @@ router.get('/snomed/concepts/:sctid', async function (req, res, next) {
         return next(e);
     }
 });
+
+/**
+ * Devuelve las descripciones de un concepto
+ */
 
 router.get('/snomed/concepts/:sctid/descriptions', async function (req, res, next) {
     let sctid = req.params.sctid;
@@ -29,12 +38,16 @@ router.get('/snomed/concepts/:sctid/descriptions', async function (req, res, nex
     }
 });
 
+/**
+ * Devuelve los padres de un concepto
+ */
+
 router.get('/snomed/concepts/:sctid/parents', async function (req, res, next) {
     let sctid = req.params.sctid;
     try {
         let result = [];
         let concept: any = await snomedCtr.getConcept(sctid);
-        let relationships = snomedCtr.filterRelationships(concept);
+        let relationships = snomedCtr.filterRelationships(concept, { parent: true });
         return res.json(relationships);
 
     } catch (e) {
@@ -42,11 +55,21 @@ router.get('/snomed/concepts/:sctid/parents', async function (req, res, next) {
     }
 });
 
+/**
+ * Devuelve los hijos de un concepto
+ *
+ * @param {String} sctid Concetp ID
+ * @param {Boolean} all True para devolver todo el arbol abajo del concept ID
+ * @param {Boolean} leaf Devulve solo los descencientes hojas
+ */
+
 router.get('/snomed/concepts/:sctid/childs', async function (req, res, next) {
     let sctid = req.params.sctid;
+    let all = req.query.all || false;
+    let leaf = req.query.leaf || false;
     try {
         let result = [];
-        let childs: any = await snomedCtr.getChilds(sctid);
+        let childs: any = await snomedCtr.getChilds(sctid, { all, leaf });
         return res.json(childs);
 
     } catch (e) {
@@ -54,6 +77,11 @@ router.get('/snomed/concepts/:sctid/childs', async function (req, res, next) {
     }
 });
 
+/**
+ * Busqueda de concepto snomed
+ * Filtro por texto, reference set, semanticTag, Atributos, Hojas.
+ * Skip y limit
+ */
 router.get('/snomed/search', async function (req, res, next) {
     if (!req.query.search && !req.query.refsetId && req.query.search !== '') {
         return next('Debe ingresar un parámetro de búsqueda');
@@ -61,6 +89,7 @@ router.get('/snomed/search', async function (req, res, next) {
 
     let search = req.query.search;
 
+    // Filtros básicos
     let conditions = {
         languageCode: 'spanish',
         conceptActive: true,
@@ -72,6 +101,7 @@ router.get('/snomed/search', async function (req, res, next) {
         conditions['$or'] = req.query.semanticTag.map((i) => { return { semanticTag: i }; });
     }
 
+    // Filtro por referen set
     if (req.query.refsetId) {
         conditions['refsetIds'] = req.query.refsetId;
     }
@@ -106,14 +136,22 @@ router.get('/snomed/search', async function (req, res, next) {
             }
         };
     }
+
+    // Filtros por atributos
     if (attributes) {
         let conds = [];
-        attributes.forEach(elem => {
+        for (let elem of attributes) {
             let filters = {
                 active: true
             };
             if (elem.sctid) {
-                filters['destination.conceptId'] = elem.sctid;
+                if (!elem.descendientes) {
+                    filters['destination.conceptId'] = elem.sctid;
+                } else {
+                    filters['destination.conceptId'] = {
+                        $in: await snomedCtr.getChilds(elem.sctid, { all: true, completed: false })
+                    };
+                }
             }
             if (elem.typeid) {
                 filters['type.conceptId'] = elem.typeid;
@@ -124,9 +162,11 @@ router.get('/snomed/search', async function (req, res, next) {
                 }
             };
             conds.push(cond);
-        });
+        }
         secondMatch['$match']['$and'] = conds;
     }
+
+    // Filtrams solo las hojas.
     if (leaf) {
         secondMatch['$match']['concept.isLeafInferred'] = true;
         secondMatch['$match']['concept.isLeafStated'] = true;

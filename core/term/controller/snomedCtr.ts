@@ -27,19 +27,16 @@ export function getConcept(sctid) {
  *
  * @param {conceptMoldel} concept Concepto completo
  */
-export function filterRelationships(concept, filters = {}) {
+export function filterRelationships(concept, { parent = true }) {
     let result = [];
     let relationships = concept.relationships;
     relationships.forEach((rel) => {
-        if (rel.active === true && rel.type.conceptId === IsASct) {
+        if (rel.active === true && (parent && rel.type.conceptId === IsASct) && (!parent && rel.type.conceptId !== IsASct)) {
             result.push({
                 conceptId: rel.destination.conceptId,
                 term: rel.destination.preferredTerm,
                 fsn: rel.destination.fullySpecifiedName,
                 type: rel.characteristicType.conceptId === StatedSct ? 'stated' : 'inferred'
-                // definitionStatus: rel.destination.definitionStatus,
-                // module: rel.destination.module,
-                // statedDescendants: rel.destination.statedDescendants
             });
         }
     });
@@ -60,30 +57,47 @@ function checkType(concept, sctid) {
  * Obtiene los hijos de un concepto
  *
  * @param sctid ConceptId
+ * @param {Boolean} all True para devolver hijos, nietos, bisnietos... de un concepto, false solo hijos directos.
+ *
  */
-export function getChilds(sctid) {
-    var query = {
-        relationships: {
-            $elemMatch: {
-                'destination.conceptId': sctid,
-                'type.conceptId': IsASct,
-                active: true
+export function getChilds(sctid, { all = false, completed = true, leaf = false } ) {
+    let query;
+    if (all) {
+        query = {
+            '$or': [
+                { 'inferredAncestors': sctid },
+                { 'statedAncestors': sctid }
+            ]
+        };
+    } else {
+        query = {
+            relationships: {
+                $elemMatch: {
+                    'destination.conceptId': sctid,
+                    'type.conceptId': IsASct,
+                    active: true
+                }
             }
-        }
-    };
+        };
+    }
+    if (leaf) {
+        query['isLeafInferred'] = true;
+        query['isLeafStated'] = true;
+    }
     return snomedModel.find(query).then((concepts: any[]) => {
         let result = [];
         concepts.forEach((cpt) => {
             if (cpt.active === true) {
-                result.push({
-                    conceptId: cpt.conceptId,
-                    term: cpt.preferredTerm,
-                    fsn: cpt.fullySpecifiedName,
-                    type: checkType(cpt, sctid)
-                    // definitionStatus: rel.destination.definitionStatus,
-                    // module: rel.destination.module,
-                    // statedDescendants: rel.destination.statedDescendants
-                });
+                if (completed) {
+                    result.push({
+                        conceptId: cpt.conceptId,
+                        term: cpt.preferredTerm,
+                        fsn: cpt.fullySpecifiedName,
+                        type: checkType(cpt, sctid)
+                    });
+                } else {
+                    result.push(cpt.conceptId);
+                }
             }
         });
         return result;
@@ -91,3 +105,46 @@ export function getChilds(sctid) {
 }
 
 // "characteristicType.conceptId": "900000000000010007"
+
+export async function contextFilter (options) {
+    let conditions = {};
+    if (options.attributes) {
+        let attributes = options.attributes;
+        let conds = [];
+        for (let elem of attributes) {
+            let filters = {
+                active: true
+            };
+            if (elem.sctid) {
+                if (!elem.descendientes) {
+                    filters['destination.conceptId'] = elem.sctid;
+                } else {
+                    filters['destination.conceptId'] = {
+                        $in: await getChilds(elem.sctid, { all: true, completed: false })
+                    };
+                }
+            }
+            if (elem.typeid) {
+                filters['type.conceptId'] = elem.typeid;
+            }
+            conds.push(filters);
+        }
+        conditions['relationships'] =  {
+                $elemMatch: conds
+        };
+    }
+
+    if (options.leaf) {
+        conditions['isLeafInferred'] = true;
+        conditions['isLeafStated'] = true;
+    }
+
+    if (options.childOf) {
+        conditions['$or'] = [
+            { 'inferredAncestors': options.childOf },
+            { 'statedAncestors': options.childOf }
+        ];
+    }
+
+    return snomedModel.find(conditions);
+}

@@ -54,5 +54,8 @@ export let snomedSchema = new mongoose.Schema({
 snomedSchema.index({'conceptId' : 1});
 snomedSchema.index({'relationships.destination.conceptId' : 1, 'relationships.type.conceptId' : 1});
 snomedSchema.index({'relationships.type.conceptId' : 1, 'relationships.destination.conceptId' : 1});
+snomedSchema.index({'inferredAncestors' : 1});
+snomedSchema.index({'statedAncestors' : 1});
+
 
 export let snomedModel = Connections.snomed.model(configPrivate.snomed.dbName, snomedSchema, configPrivate.snomed.dbVersion);
