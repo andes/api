@@ -11,9 +11,11 @@ import * as base64_stream from 'base64-stream';
 import { makeFs } from '../schemas/CDAFiles';
 import * as stream from 'stream';
 import { create } from 'domain';
+
 /**
  * Crea un objeto paciente desde los datos
  */
+
 function dataToPac (dataPaciente, identificador) {
     return {
         apellido: dataPaciente.apellido,
@@ -215,7 +217,7 @@ export function generateCDA(uniqueId, patient, date, author, organization, snome
     cda.title(code.displayName);
 
     cda.versionNumber(1);
-    cda.effectiveTime(date);
+    cda.date(date);
 
     // [TODO] Falta definir el tema del DNI
     let patientCDA = new Patient();
@@ -247,6 +249,7 @@ export function generateCDA(uniqueId, patient, date, author, organization, snome
 
     if (text) {
         let textComponent = new Component();
+        textComponent.title('Resumen de la consulta');
         textComponent.text(text);
         if (cie10) {
             textComponent.code(icd10Code(cie10));
@@ -262,6 +265,7 @@ export function generateCDA(uniqueId, patient, date, author, organization, snome
         // var data = match[2];
 
         let imagecomponent = new ImageComponent();
+        imagecomponent.title('Archivo adjunto');
         imagecomponent.file(file.data);
         imagecomponent.type(file.mime);
         imagecomponent.isB64(file.is64 || false);

@@ -1526,7 +1526,7 @@
                     <xsl:element name="a">
                         <xsl:attribute name="href"><xsl:value-of select="//n1:observationMedia[@ID=$imageRef]/n1:value/n1:reference/@value"/></xsl:attribute>
                         <xsl:attribute name="target">_blank</xsl:attribute>
-                        <xsl:text>Link to file</xsl:text>
+                        <xsl:text>Abrir archivo adjunto</xsl:text>
                     </xsl:element>
                 </xsl:otherwise>
                 </xsl:choose>

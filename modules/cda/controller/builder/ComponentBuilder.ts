@@ -14,6 +14,10 @@ export class ComponentBuilder extends BaseBuilder {
             this.createNode(section, 'id', component.Id());
         }
 
+        if (component.title()) {
+            this.createNode(section, 'title', null , component.title());
+        }
+
         if (component.code()) {
             this.createNode(section, 'code', component.code());
         }
@@ -24,8 +28,13 @@ export class ComponentBuilder extends BaseBuilder {
             });
         }
 
-        if (component.text()) {
-            this.createNode(section, 'text', null, component.text());
+        let text = component.text();
+        if (text) {
+            if ((text as String).indexOf('<') >= 0) {
+                section.ele('text').raw(text);
+            } else {
+                this.createNode(section, 'text', null, component.text());
+            }
         }
 
         return section;

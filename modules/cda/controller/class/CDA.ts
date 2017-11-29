@@ -11,12 +11,17 @@ export class CDA {
     private _id: IID;
     private _code: ICode;
     private _title: String;
-    private _effectiveTime: Date;
+
     private _confidentialityCode: IConfidentialityCode;
     private _languageCode: ILanguageCode;
     private _setId: ISetId;
     private _versionNumber: Number;
     private _templateId: ITemplateId[];
+
+    // La fecha en la que se crea el CDA
+    private _effectiveTime: Date;
+    // Fecha en la que se realiza la prestación
+    private _date: Date;
 
     // Entities
     private _patient: Patient;
@@ -25,6 +30,7 @@ export class CDA {
     private _body: Body;
 
     constructor () {
+        this._effectiveTime = new Date();
         this._templateId = [];
         this._typeId = {
             root: '2.16.840.1.113883.1.3',
@@ -77,6 +83,9 @@ export class CDA {
     }
 
 
+    date (date: Date = null) {
+        return date != null ?  (this._date = date, this) : this._date;
+    }
 
     body (body: Body = null) {
         return body != null ?  (this._body = body, this) : this._body;

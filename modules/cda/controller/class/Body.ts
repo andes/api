@@ -18,6 +18,7 @@ export class Component {
     private _code: ICode;
     private templateId: ITemplateId[] = [];
     private _text: String;
+    private _title: String;
 
     builderFactory() {
         return new ComponentBuilder();
@@ -29,6 +30,10 @@ export class Component {
 
     addTemplateId (root) {
         this.templateId.push({ root });
+    }
+
+    title(title = null) {
+        if (title) { this._title = title; return this; } else { return this._title; }
     }
 
     Id(id = null) {

@@ -6,6 +6,12 @@ import { Author } from '../class/Author';
 import { BaseBuilder } from './BaseBuilder';
 import { Organization } from '../class/Organization';
 export class AuthorBuilder extends BaseBuilder {
+    private completed = true;
+
+    constructor (completed = true) {
+        super();
+        this.completed = completed;
+    }
 
     public build(doctor: Author) {
         let author = builder.create('author');
@@ -21,12 +27,14 @@ export class AuthorBuilder extends BaseBuilder {
         this.createNode(nameNode, 'given', null, doctor.firstname());
         this.createNode(nameNode, 'family', null, doctor.lastname());
 
-        let org = doctor.organization() as Organization;
-        if (org) {
-            let representedOrganization = assignedAuthor.ele('representedOrganization');
-            this.createNode(representedOrganization, 'id', org.id());
-            this.createNode(representedOrganization, 'name', null, org.name());
-        }
+        if (this.completed) {
+            let org = doctor.organization() as Organization;
+            if (org) {
+                let representedOrganization = assignedAuthor.ele('representedOrganization');
+                this.createNode(representedOrganization, 'id', org.id());
+                this.createNode(representedOrganization, 'name', null, org.name());
+            }
+        }   
 
         return author;
     }
