@@ -6,9 +6,9 @@ import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
 import * as moment from 'moment';
 import * as agendaCtrl from '../controller/agenda';
-// import * as agendaSipsCtrl from '../controller/agendaSipsController';
 
 import * as agendaCacheCtrl from '../controller/agendasCacheController';
+import * as agendaHPNCacheCtrl from '../controller/agendasHPNCacheController';
 
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import * as operations from './../../legacy/controller/operations';
@@ -453,4 +453,16 @@ router.get('/integracionSips', function (req, res, next) {
         }
     });
 });
+
+router.get('/integracionCitasHPN', function (req, res, next) {
+    return new Promise<Array<any>>(async function (resolve, reject) {
+        try {
+            await agendaHPNCacheCtrl.integracion();
+            resolve();
+        } catch (ex) {
+            reject(ex);
+        }
+    });
+});
+
 export = router;

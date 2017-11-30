@@ -44,7 +44,10 @@ export function getAgendasDeMongoExportadas() {
 export async function getAgendasDeMongoPendientes() {
     return new Promise<Array<any>>(function (resolve, reject) {
         agendasCache.find({
-            estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente
+            estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente,
+            organizacion: {
+                _id: { $ne: constantes.idOrganizacionHPN }
+            } 
         }).exec(async function (err, data: any) {
             if (err) {
                 reject(err);

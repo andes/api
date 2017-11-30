@@ -34,6 +34,8 @@ const constantes = {
         medicinaGral: 14
     },
 
-    idUsuarioSips: '1486739'
+    idUsuarioSips: '1486739',
+
+    idOrganizacionHPN: '57e9670e52df311059bc8964'
 };
 export = constantes;
