@@ -32,7 +32,7 @@ export async function saveAgendasToHospital(agenda, pool) {
                 console.log(e);
                 //logger.LoggerAgendaCache.logAgenda(agenda._id, e);
                 transaction.rollback();
-                //reject(e);
+                reject(e);
             }
         });
     });
@@ -89,23 +89,23 @@ export async function saveAgendasToHospital(agenda, pool) {
             suspendida + ',' +
             '\'' + andesId + '\')';
 
-        await executeQuery(query).then(idAgendaCreada => {
+        await executeQuery(query).then(async idAgendaCreada => {
             console.log('Agenda saved', idAgendaCreada)
-            saveBloques(idAgendaCreada, agenda.bloques);
+            await saveBloques(idAgendaCreada, agenda.bloques);
         });
     }
 
-    function saveBloques(idAgendaAndes, bloques: Array<any>) {
+    async function saveBloques(idAgendaAndes, bloques: Array<any>) {
         console.log('saveBloques');
         //bloques.forEach(bloque => {
         for (let bloque of bloques) {
-            saveTurnos(idAgendaAndes, bloque.turnos);
+            await saveTurnos(idAgendaAndes, bloque.turnos);
         };
     }
     
     async function saveTurnos(idAgendaAndes, turnos: Array<any>) {
         console.log('saveTurnos');
-        let promisesArray: any = [];
+        
         for (let turno of turnos) {
             await saveTurno(idAgendaAndes, turno);
         };
@@ -308,7 +308,7 @@ export async function saveAgendasToHospital(agenda, pool) {
         });
     }
 
-    async function executeQuery(query: any) {
+    function executeQuery(query: any) {
         query += ' select SCOPE_IDENTITY() as id';
         return new Promise((resolve: any, reject: any) => {
             return new sql.Request(transaction)
