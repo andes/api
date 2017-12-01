@@ -165,9 +165,53 @@ export default [
                     { key: 'getProfesional', title: 'Ver profesional', type: 'boolean' },
                     { key: 'getProfesionalFoto', title: 'Ver foto profesional', type: 'boolean' },
                     { key: 'postProfesional', title: 'crea profesional', type: 'boolean' },
-                    { key: 'putProfesional', title: 'actualiza profesional', type: 'boolean' }
+                    { key: 'putProfesional', title: 'actualiza profesional', type: 'boolean' },
+                    { key: 'deleteProfesional', title: 'borrar profesional', type: 'boolean' }
+                ]
+            },
+            {
+                key: 'turnos',
+                title: 'Gestor de turnos',
+                child: [
+                    { key: 'postTurno', title: 'insert turno', type: 'boolean' },
+                    { key: 'postTurnoTipo', title: '', type: 'boolean' },
+                    { key: 'getTurnosProximos', title: 'trae proximos turnos', type: 'boolean' },
+                    { key: 'getTurnoTipo', title: '', type: 'boolean' },
+                    { key: 'getTurno', title: 'traeTurno', type: 'boolean' }
+                ]
+            },
+            {
+                key: 'agenda',
+                title: 'Agenda',
+                child: [
+                    { key: 'postAgenda', title: 'insert agenda', type: 'boolean' },
+                    { key: 'putAgenda', title: 'actualizar agenda', type: 'boolean' }
                 ]
             }
         ]
     },
+    {
+        key: 'tm',
+        title: 'tablas maestras',
+        child: [
+            {
+                key: 'especialidad',
+                title: 'especialidad',
+                child: [
+                    { key: 'postEspecialidad', title: 'insertar especialidad', type: 'boolean' },
+                    { key: 'putEspecialidad', title: 'actualizar especialidad', type: 'boolean' },
+                    { key: 'deleteEspecialidad', title: 'borrar especialidad', type: 'boolean' }
+                ]
+            },
+            {
+                key: 'organizacion',
+                title: 'organizacion',
+                child: [
+                    { key: 'postOrganizacion', title: 'insertar organizacion', type: 'boolean' },
+                    { key: 'putOrganizacion', title: 'actualizar organizacion', type: 'boolean' },
+                    { key: 'deleteOrganizacion', title: 'borrar organizacion', type: 'boolean' }
+                ]
+            },
+        ]
+    }
 ];

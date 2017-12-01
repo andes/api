@@ -13,6 +13,11 @@ const mobileMiddleware = [
     Auth.authenticate()
 ];
 
+const publicMiddleware = [
+    Auth.authenticatePublic()
+];
+
+
 // Habilita/deshabilita módulos de la API
 export const modules = {
     auth: {

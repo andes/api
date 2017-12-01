@@ -2,7 +2,7 @@ import * as express from 'express';
 import * as turno from '../schemas/turno';
 // import{ profesional } from '../../../core/tm/schemas/profesional';
 import { turnoSolicitado } from '../schemas/turnoSolicitado';
-
+import { Auth } from '../../../auth/auth.class';
 let router = express.Router();
 
 
@@ -46,8 +46,10 @@ router.post('/turnos/:tipo/:profesionalId/', function(request, response, errorHa
 /**
  * Listado de Turnos
  */
-router.get('/turnos/proximos/?', function(request, response, errorHandler) {
-
+router.get('/turnos/proximos/?', Auth.authenticate() , function(request: any, response, errorHandler) {
+    if (!Auth.check(request, 'matriculaciones:turnos:*')) {
+        return errorHandler(403);
+    }
     let offset = parseInt(request.query.offset, 0);
     let chunkSize = parseInt(request.query.size, 0);
 
@@ -64,11 +66,9 @@ router.get('/turnos/proximos/?', function(request, response, errorHandler) {
         fechaConsulta.setMilliseconds(0);
 
     } else {
-        console.log("aca");
         let hoy = new Date();
        let fechaActualMargen = hoy.setMinutes(hoy.getMinutes() - 30);
         fechaConsulta = fechaActualMargen;
-        console.log(fechaActualMargen)
     }
 
     let busquedaTurno = {
@@ -254,7 +254,11 @@ router.get('/turnos/:tipo/?', function(request, response, errorHandler) {
 /**
  * /turnos/:id
  */
-router.get('/turnos/:id*?', function (req, res, errorHandler) {
+router.get('/turnos/:id*?', Auth.authenticate(), function (req, res, errorHandler) {
+
+    if (!Auth.check(req, 'matriculaciones:turnos:getTurno')) {
+        return errorHandler(403);
+    }
     if (req.params.id) {
         turno.findById(req.params.id, function (err, data) {
             if (err) {
