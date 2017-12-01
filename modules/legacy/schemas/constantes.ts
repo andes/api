@@ -3,6 +3,10 @@ const constantes = {
         type: String,
         enum: ['femenino', 'masculino', 'otro']
     },
+    EstadoAgendaAndes: {
+        publicada: 'publicada',
+        suspendida: 'suspendida'
+    },
     EstadoAgendaSips: {
         activa: 1,
         inactiva: 3,

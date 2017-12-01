@@ -17,12 +17,21 @@ let connection = {
 export async function integracion() {
     return new Promise<Array<any>>(async function (resolve, reject) {
         try {
-            console.log('sql connect');
-            pool = await sql.connect(connection);
-            await operationsHPNCache.saveAgenda(null, null, pool);
-            await operationsHPNCache.saveTurno(null, null, pool);
-            await operationsHPNCache.savePaciente(null, null, pool);
+            let promisesArray: any = [];
+            let agendasMongoPendientes = await operationsHPNCache.getAgendasDeMongoPendientes();
+
+            for (let agenda of agendasMongoPendientes) {
+                pool = await sql.connect(connection);
+                await operationsHPNCache.saveAgendasToHospital(agenda, pool);
+                //pool.close();
+            };
+
             console.log('FINISHED');
+            
+            //await operationsHPNCache.saveAgenda(null, null, pool);
+            //await operationsHPNCache.saveTurno(null, null, pool);
+            //await operationsHPNCache.savePaciente(null, null, pool);
+            
             ///
             
             // let agendasMongoPendientes = await operationsCache.getAgendasDeMongoPendientes();
