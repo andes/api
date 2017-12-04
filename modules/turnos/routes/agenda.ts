@@ -454,15 +454,13 @@ router.get('/integracionSips', function (req, res, next) {
     });
 });
 
-router.get('/integracionCitasHPN', function (req, res, next) {
-    return new Promise<Array<any>>(async function (resolve, reject) {
-        try {
-            await agendaHPNCacheCtrl.integracion();
-            resolve();
-        } catch (ex) {
-            reject(ex);
-        }
-    });
+router.get('/integracionCitasHPN', async function (req, res, next) {
+    try {
+        await agendaHPNCacheCtrl.integracion();
+        res.json('OK')
+    } catch (ex) {
+        next(ex);
+    }
 });
 
 export = router;

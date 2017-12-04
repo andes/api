@@ -15,6 +15,7 @@ let connection = {
 };
 
 export async function integracion() {
+    console.log('INTEGRACION START');
     return new Promise<Array<any>>(async function (resolve, reject) {
         try {
             let promisesArray: any = [];
@@ -22,12 +23,12 @@ export async function integracion() {
 
             for (let agenda of agendasMongoPendientes) {
                 pool = await sql.connect(connection);
-                await operationsHPNCache.saveAgendasToHospital(agenda, pool);
+                await operationsHPNCache.saveAgendaToHospital(agenda, pool);
                 pool.close();
-            };
+            }
 
-            console.log('FINISHED');
-            
+            console.log('FINISHED'); 
+            resolve();           
             //await operationsHPNCache.saveAgenda(null, null, pool);
             //await operationsHPNCache.saveTurno(null, null, pool);
             //await operationsHPNCache.savePaciente(null, null, pool);
