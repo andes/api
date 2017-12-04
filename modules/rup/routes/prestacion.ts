@@ -20,11 +20,15 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             res.json(data);
         });
     } else {
-        let query = Prestacion.find({});
-
+        let query;
         if (req.query.estado) {
-            query.where('this.estados[this.estados.length - 1].tipo').equals(req.query.estado);
+            query = Prestacion.find({
+                $where: 'this.estados[this.estados.length - 1].tipo ==  \"' + req.query.estado + '\"'
+            });
+        } else {
+            query = Prestacion.find({}); //Trae todos
         }
+       
         if (req.query.fechaDesde) {
             query.where('ejecucion.fecha').gte(moment(req.query.fechaDesde).startOf('day').toDate() as any);
         }
@@ -42,6 +46,10 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         }
         if (req.query.turnos) {
             query.where('solicitud.turno').in(req.query.turnos);
+        }
+
+        if (req.query.conceptsIdEjecucion) {
+            query.where('ejecucion.registros.concepto.conceptId').in(req.query.conceptsIdEjecucion);
         }
 
         // Solicitudes generadas desde puntoInicio Ventanilla
@@ -62,6 +70,8 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         // Ordenar por fecha de solicitud
         if (req.query.ordenFecha) {
             query.sort({ 'solicitud.fecha': -1 });
+        } else if (req.query.ordenFechaEjecucion) {
+            query.sort({ 'ejecucion.fecha': -1 });
         }
 
         if (req.query.limit) {
