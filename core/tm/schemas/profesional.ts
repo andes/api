@@ -43,6 +43,7 @@ export let profesionalSchema = new mongoose.Schema({
         entidadFormadora: { type: ObjSIISASchema, required: false },
         titulo: { type: String, required: false },
         fechaTitulo: { type: Date, required: false },
+        fechaEgreso: { type: Date, required: false },
         revalida: { type: Boolean, default: false },
         matriculacion: [matriculacionSchema]
     }],

@@ -23,58 +23,64 @@ var router = express.Router();
 
 router.get('/numeraciones/:id*?', function (req, res, next) {
 
+if( req.params.id){
     NumeracionMatriculas.find({'profesion._id': req.params.id}, function (err, data) {
             if (err) {
                 next(err);
             }
             res.json(data);
         });
+
+    }else{
+    
+        let offset = req.query.offset ? parseInt(req.query.offset, 10) : 0;
+        let chunkSize = parseInt(req.query.size, 10);
+    
+        let responseData = {
+            totalPages: null,
+            data: null
+        };
+    
+        var busquedaNumeracion = {};
+        console.log(req.query.codigo)
+        if (req.query.codigo) {
+            busquedaNumeracion['profesion._id'] = req.query.codigo;
+        }
+    
+        NumeracionMatriculas.find(busquedaNumeracion)
+            .skip(offset)
+            .limit(chunkSize)
+            .exec(function(error, data) {
+    
+                if (error) {
+                    return next(error);
+                }
+    
+                responseData.data = data;
+    
+                NumeracionMatriculas.count(busquedaNumeracion)
+                    .exec((error2, count) => {
+    
+                        if (error2) {
+                            return next(error2);
+                        }
+    
+                        responseData.totalPages = Math.ceil(count / chunkSize) !== 0 ? Math.ceil(count / chunkSize) : 1;
+                        res.status(201)
+                            .json(responseData);
+                });
+    
+        });
+
+
+
+    }
     });
 
 /**
  *
  */
-router.get('/numeraciones/?', function(request, response, errorHandler) {
 
-    let offset = request.query.offset ? parseInt(request.query.offset, 10) : 0;
-    let chunkSize = parseInt(request.query.size, 10);
-
-    let responseData = {
-        totalPages: null,
-        data: null
-    };
-
-    var busquedaNumeracion = {};
-    if (request.query.codigo) {
-        busquedaNumeracion['profesion._id'] = request.query.codigo;
-    }
-
-    NumeracionMatriculas.find(busquedaNumeracion)
-        .skip(offset)
-        .limit(chunkSize)
-        .exec(function(error, data) {
-
-            if (error) {
-                return errorHandler(error);
-            }
-
-            responseData.data = data;
-
-            NumeracionMatriculas.count(busquedaNumeracion)
-                .exec((error2, count) => {
-
-                    if (error2) {
-                        return errorHandler(error2);
-                    }
-
-                    responseData.totalPages = Math.ceil(count / chunkSize) !== 0 ? Math.ceil(count / chunkSize) : 1;
-                    response.status(201)
-                        .json(responseData);
-            });
-
-    });
-
-});
 
 router.get('/numeracionesRestart', (req, resp, errorHandler) => {
 
