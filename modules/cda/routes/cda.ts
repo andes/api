@@ -21,12 +21,12 @@ let router = express.Router();
  */
 
 // {
-// 	"snomed": "1234556",
+// 	"prestacion": "1234556",
 // 	"fecha": "2017-11-11 12:10:00",
 // 	"texto": "esto es una prueba",
 // 	"cie10": "A.1.1",
 // 	"paciente": {
-//      "id": "ID en la org"
+//      "id": "ID en la org",
 // 		"nombre": "Mariano Andres",
 // 		"apellido": "Botta",
 // 		"sexo": "masculino",
@@ -41,13 +41,13 @@ let router = express.Router();
 // 	"file": "data:image/jpeg;base64,AEFCSADE2D2D2
 // }
 
-router.post('/', Auth.authenticate(),  async (req: any, res, next) => {
+router.post('/', cdaCtr.validateMiddleware,  async (req: any, res, next) => {
     try {
         let orgId = req.user.organizacion;
         let dataPaciente = req.body.paciente;
         let dataProfesional = req.body.profesional;
 
-        let snomed = req.body.tipoPrestacion;
+        let snomed = req.body.prestacion;
         let fecha = moment(req.body.fecha).toDate();
 
         let cie10Code = req.body.cie10;
@@ -56,7 +56,10 @@ router.post('/', Auth.authenticate(),  async (req: any, res, next) => {
 
         // Terminar de decidir esto
         let organizacion = await Organizaciones.findById(orgId);
-        let cie10 = await Cie10.findOne({codigo: cie10Code});
+        let cie10 = await Cie10.findOne({ codigo: cie10Code });
+        if (!cie10) {
+            throw new Error('cie10_invalid');
+        }
 
         let paciente = await cdaCtr.findOrCreate(req, dataPaciente, organizacion._id);
         let uniqueId = String(new mongoose.Types.ObjectId());
@@ -82,27 +85,6 @@ router.post('/', Auth.authenticate(),  async (req: any, res, next) => {
         next(e);
     }
 });
-
-
-// router.post('/file', async (req: any, res, next) => {
-//     let _base64 = req.body.base64;
-//     let decoder = base64.decode();
-//     let input = new stream.PassThrough();
-
-//     let CDAFiles = makeFs();
-//     let objectID = new mongoose.Types.ObjectId();
-//     CDAFiles.write({
-//             _id: objectID,
-//             filename:  'hola.png' ,
-//             contentType: 'image/jpeg',
-//         },
-//         input.pipe(decoder),
-//         function(error, createdFile){
-//           res.json(createdFile);
-//     });
-
-//     input.end(_base64);
-// });
 
 router.get('/style/cda.xsl', (req, res, next) => {
     let name = path.join(__dirname, '../controller/cda.xsl');

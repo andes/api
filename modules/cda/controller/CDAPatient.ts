@@ -11,6 +11,7 @@ import * as base64_stream from 'base64-stream';
 import { makeFs } from '../schemas/CDAFiles';
 import * as stream from 'stream';
 import { create } from 'domain';
+import * as moment from 'moment';
 
 /**
  * Crea un objeto paciente desde los datos
@@ -97,9 +98,16 @@ let rootOID = '2.16.840.1.113883.2.10.17.99999';
  * Match desde snomed a un código LOINC para indentificar el CDA
  * @param snomed ConceptId
  */
-
+let snomedCodes = ['4241000179101'];
 function matchCode(snomed) {
     switch (snomed) {
+        case '4241000179101':
+            return {
+                code: '26436-6',
+                codeSystem: '2.16.840.1.113883.6.1',
+                codeSystemName: 'LOINC',
+                displayName: 'Laboratory studies'
+            };
         default:
             return {
                 code: '34133-9',
@@ -134,9 +142,10 @@ function buildID (id) {
     };
 }
 
+let base64RegExp = /data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,(.*)/;
 
 export function storeFile (base64) {
-    var match = base64.match(/data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,(.*)/);
+    var match = base64.match(base64RegExp);
     var mime = match[1];
     var data = match[2];
     return new Promise((resolve, reject) => {
@@ -278,4 +287,65 @@ export function generateCDA(uniqueId, patient, date, author, organization, snome
     let builder = new CDABuilder();
     return builder.build(cda);
 
+}
+
+export function validateMiddleware(req, res, next) {
+    let errors: any = {};
+    let validString = function (value) {
+        return value && value.length > 0;
+    };
+    let dataPaciente = req.body.paciente;
+    let dataProfesional = req.body.profesional;
+    let cie10Code = req.body.cie10;
+    let file = req.body.file;
+    let texto = req.body.texto;
+    let snomed = req.body.prestacion;
+
+    if (snomedCodes.indexOf(snomed) < 0) {
+        errors.prestacion = 'not_valid_value';
+    }
+
+    if (!moment(req.body.fecha).isValid()) {
+        errors.fecha = 'invalid_format';
+    }
+
+    if (file && !base64RegExp.test(file)) {
+        errors.file = 'file_error';
+    }
+
+    if (!validString(dataProfesional.nombre)) {
+        errors.profesional = errors.profesional || {};
+        errors.profesional.nombre = 'required';
+    }
+
+    if (!validString(dataProfesional.apellido)) {
+        errors.profesional = errors.profesional || {};
+        errors.profesional.apellido = 'required';
+    }
+
+    if (!validString(dataPaciente.nombre)) {
+        errors.paciente = errors.paciente || {};
+        errors.paciente.nombre = 'required';
+    }
+
+    if (!validString(dataPaciente.apellido)) {
+        errors.paciente = errors.paciente || {};
+        errors.paciente.apellido = 'required';
+    }
+
+    if (!validString(dataPaciente.documento)) {
+        errors.paciente = errors.paciente || {};
+        errors.paciente.documento = 'required';
+    }
+
+    if (!dataPaciente.fechaNacimiento || !moment(req.body.fecha).isValid()) {
+        errors.paciente = errors.paciente || {};
+        errors.paciente.fechaNacimiento = 'invalid_date';
+    }
+
+
+    if (Object.keys(errors).length > 0) {
+        return next(errors);
+    }
+    return next();
 }

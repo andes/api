@@ -5,7 +5,7 @@ import { Patient } from '../class/Patient';
 import { Author } from '../class/Author';
 import { Organization } from '../class/Organization';
 import { BaseBuilder } from './BaseBuilder';
-export class OrganizationBuilder extends BaseBuilder{
+export class OrganizationBuilder extends BaseBuilder {
 
     public build(org: Organization) {
         let custodian = builder.create('custodian')
@@ -15,5 +15,5 @@ export class OrganizationBuilder extends BaseBuilder{
         this.createNode(custodian, 'name', null, org.name());
 
         return custodian;
-    } 
+    }
 }
