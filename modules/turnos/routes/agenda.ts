@@ -457,7 +457,7 @@ router.get('/integracionSips', function (req, res, next) {
 router.get('/integracionCitasHPN', async function (req, res, next) {
     try {
         await agendaHPNCacheCtrl.integracion();
-        res.json('OK')
+        res.json('OK');
     } catch (ex) {
         next(ex);
     }
