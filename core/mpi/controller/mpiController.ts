@@ -42,10 +42,12 @@ export function mpiCorrector() {
                         if (resultado) {
                             let match = resultado['matcheos'].matcheo; // Valor del matcheo de sisa
                             let pacienteSisa = resultado['matcheos'].datosPaciente; // paciente con los datos de Sisa originales
-
                             if (match >= 95) {
                                 // Solo lo validamos con sisa si entra por aquí
-                                pacienteAndes.entidadesValidadoras.push('Sisa');
+                                if (!pacienteAndes.entidadesValidadoras.includes('Sisa')) {
+                                    // Para que no vuelva a insertar la entidad si ya se registro por ella.
+                                    pacienteAndes.entidadesValidadoras.push('Sisa');
+                                }
                                 data = {
                                     nombre: pacienteSisa.nombre,
                                     apellido: pacienteSisa.apellido,

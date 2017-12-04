@@ -210,7 +210,7 @@ export function FHIRAPaciente(pacienteFhir: PacienteFHIR) {
         let pacienteMPI = {
             documento: pacienteFhir.identifier[0].value,
             nombre: pacienteFhir.name[0].given.join().replace(',', ' '),
-            apellido: pacienteFhir.name[0].family,
+            apellido: pacienteFhir.name[0].family.join().replace(',', ' '),
             fechaNacimiento: pacienteFhir.birthDate,
             genero: genero,
             sexo: sexo,
