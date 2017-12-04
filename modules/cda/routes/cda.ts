@@ -111,7 +111,7 @@ router.get('/files/:name', async (req: any, res, next) => {
 
 
 /**
- * Devuelve el XML de un CDA seg´un un ID
+ * Devuelve el XML de un CDA según un ID
  */
 
 router.get('/:id', async (req: any, res, next) => {
@@ -132,11 +132,16 @@ router.get('/:id', async (req: any, res, next) => {
 router.get('/paciente/:id', async (req: any, res, next) => {
     let CDAFiles = makeFs();
     let pacienteID = req.params.id;
+    let prestacion = req.query.prestacion;
+    let conditions: any = { 'metadata.paciente':  mongoose.Types.ObjectId(pacienteID) };
+    if (prestacion) {
+        conditions.prestacion = prestacion;
+    }
 
-    let list = await CDAFiles.find({ 'metadata.paciente':  mongoose.Types.ObjectId(pacienteID)});
+    let list = await CDAFiles.find(conditions);
     list = list.map(item => {
         let data = item.metadata;
-        data.cda = item._id;
+        data.cda_id = item._id;
 
         return item.metadata;
     });
