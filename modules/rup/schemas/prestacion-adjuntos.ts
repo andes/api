@@ -17,5 +17,5 @@ export let schema = new mongoose.Schema({
     },
     createdAt:  mongoose.Schema.Types.Date
 });
- 
+
 export let model = mongoose.model('prestacion-adjuntos', schema, 'prestaciones-adjuntos');
