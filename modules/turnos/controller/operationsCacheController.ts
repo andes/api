@@ -47,7 +47,7 @@ export async function getAgendasDeMongoPendientes() {
             estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente,
             organizacion: {
                 _id: { $ne: constantes.idOrganizacionHPN }
-            } 
+            }
         }).exec(async function (err, data: any) {
             if (err) {
                 reject(err);
@@ -56,6 +56,7 @@ export async function getAgendasDeMongoPendientes() {
         });
     });
 }
+
 /**
  * @description Verifica la existencia de un turno en SIPS, actualiza la codificación del turno y marca la agenda como procesada.
  * @returns Devuelve una Promesa

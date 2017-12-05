@@ -1,9 +1,10 @@
+import * as sql from 'mssql';
 import * as moment from 'moment';
 
-export async function savePaciente(paciente: any, pool) {
+export async function savePaciente(paciente: any, transaction) {
     console.log('savePaciente', paciente);
     console.log('savePaciente', paciente.direccion);
-    
+
     let fechaCreacion = moment(new Date()).format('YYYY-MM-DD hh:mm:ss');
     let fechaUltimoAcceso = fechaCreacion;
     let fechaActualizacion = fechaCreacion;
@@ -15,16 +16,18 @@ export async function savePaciente(paciente: any, pool) {
     let nombre = '\'' + paciente.nombre + '\'';
     let estadoCivil =  (paciente.estadoCivil ? '\'' + paciente.estadoCivil + '\'' : null);
     let nacionalidad = null; // HARDCODE
-    let fechaNacimiento = (paciente.fechaNacimiento ? paciente.fechaNacimiento : null);
-    let lugarNacimiento = null; // HARDCODE
-    let fechaFallecimiento = (paciente.fechaFallecimiento ? paciente.fechaFallecimiento : null);
+    let fechaNacimiento = (paciente.fechaNacimiento ? moment(paciente.fechaNacimiento).format('YYYY-MM-DD hh:mm:ss') : null);
+    let localidadNacimiento = null; // HARDCODE
+    let provinciaNacimiento = null; // HARDCODE
+    let fechaFallecimiento = (paciente.fechaFallecimiento ? '\'' + paciente.fechaFallecimiento + '\'' : null);
+    let sexo = '\'' + paciente.sexo  + '\'';
 
     let codigoPostal = null;
     let localidad = null;
     let barrio = null;
 
     if (paciente.direccion[0]) {
-        codigoPostal = (paciente.direccion[0] ? '\'' + paciente.direccion[0].codigoPostal  + '\'': null) ;
+        codigoPostal = (paciente.direccion[0] ? '\'' + paciente.direccion[0].codigoPostal  + '\'' : null) ;
         localidad = (paciente.direccion[0].ubicacion.localidad ? '\'' + paciente.direccion[0].ubicacion.localidad.nombre  + '\'' : null);
         barrio = (paciente.direccion[0].ubicacion.barrio ? '\'' + paciente.direccion[0].ubicacion.barrio.nombre  + '\'' : null);
     }
@@ -66,22 +69,22 @@ export async function savePaciente(paciente: any, pool) {
     let oNumero = null;
     let oSResponsable = null;
     let oSCarga = null;
-    let estaenArchivo = null;
+    let estaEnArchivo = 0; // Que valor es?
     let archivoEstante = null;
     let archivoSector = null;
-    let dadodebaja = null;
+    let dadodebaja = 0; // Que valor es?
     let bajaCausa = null;
     let bajaFecha = null;
     let observaciones = null;
     let informacionContacto = null;
     let antecedentesFamiliares = null;
     let antecedentesHabitos = null;
-    let creadoEnPacs = null;
-    let actualizarPacs = null;
-    let actualizarLatLong = null;
+    let creadoEnPacs =  0; // Que valor es?
+    let actualizarPacs = 0; // Que valor es?
+    let actualizarLatLong = 0; // Que valor es?
     let direccionLatitud = null;
     let direccionLongitud = null;
-    
+
     let query = 'INSERT INTO dbo.Historias_Clinicas ' +
         '(HC_Fecha_de_creacion ' +
         ',HC_Fecha_de_ultimo_acceso ' +
@@ -154,23 +157,25 @@ export async function savePaciente(paciente: any, pool) {
         ',HC_Direccion_Latitud ' +
         ',HC_Direccion_Longitud) ' +
     'VALUES (' +
-        '\'' + fechaCreacion + '\','  + 
-        '\'' + fechaUltimoAcceso + '\','  + 
-        '\'' + fechaActualizacion + '\','  + 
-        hcTipo + ',' + 
-        hcNumero + ',' + 
-        tipoDocumento + ',' + 
-        nroDocumento + ',' + 
-        apellido + ',' + 
-        nombre + ',' + 
-        estadoCivil + ',' + 
+        '\'' + fechaCreacion + '\',' +
+        '\'' + fechaUltimoAcceso + '\',' +
+        '\'' + fechaActualizacion + '\',' +
+        hcTipo + ',' +
+        hcNumero + ',' +
+        tipoDocumento + ',' +
+        nroDocumento + ',' +
+        apellido + ',' +
+        nombre + ',' +
+        estadoCivil + ',' +
         nacionalidad + ',' +
-        '\'' + fechaNacimiento + '\','  + 
-        lugarNacimiento + ',' +
-        '\'' + fechaFallecimiento + '\','  + 
-        codigoPostal  + ',' + 
-        localidad + ',' + 
-        barrio + ',' + 
+        sexo + ',' +
+        '\'' + fechaNacimiento + '\',' +
+        localidadNacimiento + ',' +
+        provinciaNacimiento + ',' +
+        fechaFallecimiento + ',' +
+        codigoPostal  + ',' +
+        localidad + ',' +
+        barrio + ',' +
         paraje + ',' +
         calle + ',' +
         numero + ',' +
@@ -207,7 +212,7 @@ export async function savePaciente(paciente: any, pool) {
         oNumero + ',' +
         oSResponsable + ',' +
         oSCarga + ',' +
-        estaenArchivo + ',' +
+        estaEnArchivo + ',' +
         archivoEstante + ',' +
         archivoSector + ',' +
         dadodebaja + ',' +
@@ -222,9 +227,6 @@ export async function savePaciente(paciente: any, pool) {
         actualizarLatLong + ',' +
         direccionLatitud + ',' +
         direccionLongitud + ')';
-    console.log(query);
-    return true;
-    //await executeQuery(query).then(function (idSavedPaciente) {
-    //    console.log('peciente saved!', idSavedPaciente);
-    //});
+
+    return await new sql.Request(transaction).query(query);
 }

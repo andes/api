@@ -27,7 +27,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             });
         } else {
             query = Prestacion.find({}); // Trae todos
-        }       
+        }
         if (req.query.fechaDesde) {
             query.where('ejecucion.fecha').gte(moment(req.query.fechaDesde).startOf('day').toDate() as any);
         }

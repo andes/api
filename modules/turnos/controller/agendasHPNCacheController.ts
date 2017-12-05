@@ -20,14 +20,14 @@ export async function integracion() {
         try {
             let promisesArray: any = [];
             let agendasMongoPendientes = await operationsHPNCache.getAgendasDeMongoPendientes();
-            console.log(agendasMongoPendientes.length)
+
             for (let agenda of agendasMongoPendientes) {
                 pool = await sql.connect(connection);
                 await operationsHPNCache.saveAgendaToHospital(agenda, pool);
                 pool.close();
             }
 
-            console.log('FINISHED'); 
+            console.log('FINISHED');
             resolve();
         } catch (ex) {
             pool.close();
