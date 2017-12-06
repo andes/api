@@ -49,7 +49,7 @@ router.get('/snomed', function (req, res, next) {
         return next('Debe ingresar un parámetro de búsqueda');
     }
     let conditions = {
-        lang: 'spanish',
+        languageCode: 'spanish',
         conceptActive: true,
         active: true
     };
@@ -82,7 +82,6 @@ router.get('/snomed', function (req, res, next) {
             conditions['refsetIds'] = req.query.refsetId;
         }
     }
-
     // preparamos query
     let query = textIndexModel.find(conditions, {
         conceptId: 1,
