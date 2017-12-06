@@ -48,6 +48,7 @@ export let turnoSolicitadoSchema = new mongoose.Schema({
         titulo: { type: String, required: false },
         fechaTitulo: { type: Date, required: false },
         fechaEgreso: { type: Date, required: false },
+        papelesVerificados: { type: Boolean, default: false },
         revalida: { type: Boolean, default: false },
         matriculacion: [matriculacionSchema]
     }],

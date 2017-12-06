@@ -4,7 +4,7 @@ import * as utils from '../../../utils/utils';
 import { Auth } from '../../../auth/auth.class';
 var router = express.Router();
 
-router.get('/agendaMatriculaciones/:id*?', function (req, res, next) {
+router.get('/agendaMatriculaciones/', function (req, res, next) {
 
     agenda.find(function (err, data) {
         if (err) {

@@ -45,6 +45,7 @@ export let profesionalSchema = new mongoose.Schema({
         fechaTitulo: { type: Date, required: false },
         fechaEgreso: { type: Date, required: false },
         revalida: { type: Boolean, default: false },
+        papelesVerificados: { type: Boolean, default: false },
         matriculacion: [matriculacionSchema]
     }],
     formacionPosgrado: [{
