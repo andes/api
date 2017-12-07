@@ -112,8 +112,9 @@ export default [
         key: 'rup',
         title: 'Modulo RUP',
         comment: '',
+        avoidAll: true,
         child: [
-            { key: 'tipoPrestacion', title: 'Tipo de prestación', type: 'prestacion' }
+            { key: 'tipoPrestacion', title: 'Tipo de prestación', type: 'prestacion', avoidAll: true }
         ]
     },
     {
