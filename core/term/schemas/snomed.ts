@@ -11,6 +11,11 @@ export let textIndexSchema = new mongoose.Schema({
 });
 
 // Se asegura que los índices estén creados
+textIndexSchema.index({ descriptionId: 1});
+textIndexSchema.index({ term: 'text'});
+textIndexSchema.index({ term: 1});
+textIndexSchema.index({ words: 1});
+
 textIndexSchema.index({ words: 1, semanticTag: 1, languageCode: 1, conceptActive: 1, active: 1 });
 textIndexSchema.index({ conceptId: 1, semanticTag: 1, languageCode: 1, conceptActive: 1, active: 1 });
 textIndexSchema.index({ refsetIds: 1, semanticTag: 1, languageCode: 1, conceptActive: 1, active: 1 });
