@@ -42,6 +42,10 @@ let router = express.Router();
 // }
 
 router.post('/', cdaCtr.validateMiddleware,  async (req: any, res, next) => {
+    if (!Auth.check(req, 'cda:post')) {
+        return next(403);
+    }
+
     try {
         let orgId = req.user.organizacion;
         let dataPaciente = req.body.paciente;
@@ -98,6 +102,10 @@ router.get('/style/cda.xsl', (req, res, next) => {
  */
 
 router.get('/files/:name', async (req: any, res, next) => {
+    if (!Auth.check(req, 'cda:get')) {
+        return next(403);
+    }
+
     let name = req.params.name;
     let CDAFiles = makeFs();
 
@@ -115,6 +123,10 @@ router.get('/files/:name', async (req: any, res, next) => {
  */
 
 router.get('/:id', async (req: any, res, next) => {
+    if (!Auth.check(req, 'cda:get')) {
+        return next(403);
+    }
+
     let _base64 = req.params.id;
     let CDAFiles = makeFs();
 
@@ -130,6 +142,10 @@ router.get('/:id', async (req: any, res, next) => {
  * API demostrativa, falta analisar como se va a buscar en el repsitorios
  */
 router.get('/paciente/:id', async (req: any, res, next) => {
+    if (!Auth.check(req, 'cda:list')) {
+        return next(403);
+    }
+
     let CDAFiles = makeFs();
     let pacienteID = req.params.id;
     let prestacion = req.query.prestacion;
