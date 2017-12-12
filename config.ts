@@ -114,7 +114,7 @@ export const modules = {
         active: true,
         path: './modules/cda/routes',
         route: '/modules/cda',
-        middleware: null
+        middleware: appMiddleware
     }
 };
 

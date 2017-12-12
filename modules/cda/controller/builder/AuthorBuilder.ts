@@ -34,7 +34,7 @@ export class AuthorBuilder extends BaseBuilder {
                 this.createNode(representedOrganization, 'id', org.id());
                 this.createNode(representedOrganization, 'name', null, org.name());
             }
-        }   
+        }
 
         return author;
     }
