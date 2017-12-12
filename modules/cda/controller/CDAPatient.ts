@@ -236,14 +236,16 @@ export function generateCDA(uniqueId, patient, date, author, organization, snome
 
     cda.custodian(orgCDA);
 
-    let authorCDA = new Author();
-    authorCDA.firstname(author.nombre);
-    authorCDA.lastname(author.apellido);
-    authorCDA.organization(orgCDA);
-    if (author._id) {
-        authorCDA.id(buildID(author._id));
+    if (author) {
+        let authorCDA = new Author();
+        authorCDA.firstname(author.nombre);
+        authorCDA.lastname(author.apellido);
+        authorCDA.organization(orgCDA);
+        if (author._id) {
+            authorCDA.id(buildID(author._id));
+        }
+        cda.author(authorCDA);
     }
-    cda.author(authorCDA);
 
     let body = new Body();
 
