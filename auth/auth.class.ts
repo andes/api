@@ -52,7 +52,10 @@ export class Auth {
         passport.use(new passportJWT.Strategy(
             {
                 secretOrKey: configPrivate.auth.jwtKey,
-                jwtFromRequest: passportJWT.ExtractJwt.fromAuthHeader()
+                jwtFromRequest: passportJWT.ExtractJwt.fromExtractors([
+                    passportJWT.ExtractJwt.fromAuthHeader(),
+                    passportJWT.ExtractJwt.fromUrlQueryParameter('token')
+                ])
             },
             function (jwt_payload, done) {
                 done(null, jwt_payload);
