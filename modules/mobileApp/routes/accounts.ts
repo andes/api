@@ -94,10 +94,13 @@ router.post('/v2/reenviar-codigo', (req, res, next) => {
 
     return controllerPaciente.buscarPaciente(pacienteId).then((resultado) => {
         let pacienteObj = resultado.paciente;
-        authController.checkAppAccounts(pacienteObj).then((resultado2: any) => {
+        authController.checkAppAccounts(pacienteObj).then(async (resultado2: any) => {
             if (resultado2.account) {
                 let account = resultado2.account;
 
+                account.codigoVerificacion = await authController.createUniqueCode(),
+                account.expirationTime = new Date(Date.now() + authController.expirationOffset);
+                account.save();
                 authController.enviarCodigoVerificacion(account);
 
                 return res.json({ status: 'OK' });
