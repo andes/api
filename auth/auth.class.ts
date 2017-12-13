@@ -300,4 +300,21 @@ export class Auth {
 
     }
 
+    /**
+     * Genera un token para visualizar archivos
+     *
+     * @static
+     * @returns {*} JWT
+     *
+     * @memberOf Auth
+     */
+    static generateFileToken(): any {
+        // Crea el token con los datos de sesión
+        let token = {
+            id: mongoose.Types.ObjectId(),
+            type: 'file-token'
+        };
+        return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: 60 * 60 * 2 }); // 2 Horas
+    }
+
 }
