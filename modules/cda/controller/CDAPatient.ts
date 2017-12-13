@@ -13,6 +13,8 @@ import * as Stream from 'stream';
 import { create } from 'domain';
 import * as moment from 'moment';
 
+import { CDA as CDAConfig } from '../../../config.private';
+
 /**
  * Crea un objeto paciente desde los datos
  */
@@ -91,8 +93,8 @@ export async function findOrCreate(req, dataPaciente, organizacion) {
     }
 }
 
-// Root id principal de ANDES o del hospital
-let rootOID = '2.16.840.1.113883.2.10.17.99999';
+// Root id principal de ANDES
+let rootOID = CDAConfig.rootOID;
 
 /**
  * Match desde snomed a un código LOINC para indentificar el CDA
