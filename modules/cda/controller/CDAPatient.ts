@@ -9,7 +9,7 @@ import { CDABuilder } from './builder/CdaBuilder';
 
 import * as base64_stream from 'base64-stream';
 import { makeFs } from '../schemas/CDAFiles';
-import * as stream from 'stream';
+import * as Stream from 'stream';
 import { create } from 'domain';
 import * as moment from 'moment';
 
@@ -144,33 +144,44 @@ function buildID (id) {
 
 let base64RegExp = /data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,(.*)/;
 
-export function storeFile (base64) {
-    var match = base64.match(base64RegExp);
-    var mime = match[1];
-    var data = match[2];
+export function base64toStream (base64) {
+    let match = base64.match(base64RegExp);
+    let mime = match[1];
+    let data = match[2];
+    let extension = mime.split('/')[1];
+
+    let streamInput = new Stream.PassThrough();
+    let decoder = base64_stream.decode();
+
+    streamInput.pipe(decoder);
+    streamInput.end(data);
+    return {
+        mimeType: mime,
+        extension,
+        stream: streamInput
+    };
+}
+
+export function storeFile ({extension, mimeType, stream }) {
     return new Promise((resolve, reject) => {
-        let uniqueId = String(new mongoose.Types.ObjectId());
-        let input = new stream.PassThrough();
-        let decoder = base64_stream.decode();
         let CDAFiles = makeFs();
+        let uniqueId = String(new mongoose.Types.ObjectId());
 
         CDAFiles.write({
                 _id: uniqueId,
-                filename:  uniqueId + '.' + mime.split('/')[1],
-                contentType: mime
+                filename:  uniqueId + '.' + extension,
+                contentType: mimeType
             },
-            input.pipe(decoder),
+            stream,
             (error, createdFile) => {
                 resolve({
                     id: createdFile._id,
                     data: 'files/' + createdFile.filename,
-                    mime: mime,
+                    mime: mimeType,
                     is64: false
                 });
             }
         );
-
-        input.end(data);
     });
 }
 
@@ -183,7 +194,7 @@ export function storeFile (base64) {
 export function storeCDA (objectID, cdaXml, metadata) {
     return new Promise((resolve, reject) => {
 
-        let input = new stream.PassThrough();
+        let input = new Stream.PassThrough();
         let CDAFiles = makeFs();
 
         CDAFiles.write({
