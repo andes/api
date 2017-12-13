@@ -174,6 +174,29 @@ export function storeFile (base64) {
     });
 }
 
+export function storePdfFile (pdf) {
+    return new Promise(( resolve, reject) => {
+        let uniqueId = String(new mongoose.Types.ObjectId());
+        let input = new stream.PassThrough();
+        let mime = 'application/pdf';
+        let CDAFiles = makeFs();
+        CDAFiles.write({
+            _id: uniqueId,
+            filename:  uniqueId + '.pdf',
+            contentType: mime
+        },
+        input.pipe(pdf),
+        (error, createdFile) => {
+            resolve({
+                id: createdFile._id,
+                data: 'files/' + createdFile.filename,
+                mime: mime
+            });
+        }
+    );
+    });
+}
+
 /**
  * Almacena un XML en Mongo
  * @param objectID ID del CDA
