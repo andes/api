@@ -7,9 +7,7 @@ import {
 import {
     profesional
 } from './../../../core/tm/schemas/profesional';
-import {
-    model as organizacion
-} from './../../../core/tm/schemas/organizacion';
+import * as organizacion from './../../../core/tm/schemas/organizacion';
 import * as sql from 'mssql';
 
 
@@ -44,18 +42,7 @@ function profesionalCompleto(lstProfesionales): any {
 /** Dado un id de Organización devuelve el objeto completo */
 function organizacionCompleto(idOrganizacion): any {
     return new Promise((resolve, reject) => {
-        organizacion.findById(mongoose.Types.ObjectId(idOrganizacion), function (err, unaOrganizacion) {
-            if (err) {
-                return reject(err);
-            }
-            return resolve(unaOrganizacion);
-        });
-    });
-}
-
-export function organizacionBySisaCode(code): any {
-    return new Promise((resolve, reject) => {
-        organizacion.findOne({'codigo.sisa': code}, function (err, unaOrganizacion) {
+        this.organizacion.findById(mongoose.Types.ObjectId(idOrganizacion), function (err, unaOrganizacion) {
             if (err) {
                 return reject(err);
             }
@@ -65,6 +52,18 @@ export function organizacionBySisaCode(code): any {
 }
 
 // Funciones públicas
+
+export function organizacionBySisaCode(code): any {
+    return new Promise((resolve, reject) => {
+        let query = {'codigo.sisa': code};
+        this.organizacion.find(query), function (err, unaOrganizacion) {
+            if (err) {
+                reject(err);
+            }
+            resolve(unaOrganizacion);
+        };
+    });
+}
 
 export async function getEncabezados(fechaFiltro: any) {
     return new Promise(async function (resolve, reject) {

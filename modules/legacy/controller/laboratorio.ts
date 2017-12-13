@@ -4,6 +4,7 @@ import * as sql from 'mssql';
 import * as pdfGenerator from '../../../utils/pdfGenerator';
 import * as cdaCtr from '../../cda/controller/CDAPatient';
 import * as mongoose from 'mongoose';
+import { model as Organizaciones } from '../../../core/tm/schemas/organizacion';
 
 const MongoClient = require('mongodb').MongoClient;
 let async = require('async');
@@ -45,9 +46,11 @@ export async function generarCDA(fecha: any) {
                     apellido: ''
                 }
             };
+            console.log('antes de get detalles');
             let details = await operations.getDetalles(protocolo.id);
             let dtoInforme = {
                 paciente: patient,
+                protocolo: protocolo,
                 organizacion: organization,
                 detalles: details
             };
@@ -57,28 +60,37 @@ export async function generarCDA(fecha: any) {
             let snomed = '4241000179101'; // informe de laboratorio (elemento de registro)
             let cie10Laboratorio = 'Z01.7'; // Código CIE-10: Examen de Laboratorio
             let texto = 'Exámen de Laboratorio';
-            // No envío el médico solicitante ya que está todo junto nombre y apellido
-            let org = await operations.organizacionBySisaCode(organization.codigoSisa);
-            let organizacion = {
-                _id: org.id,
-                nombre: org.nombre
-            };
+            let query = {'codigo.sisa': organization.codigoSisa};
+            let queryOrganizaciones = Organizaciones.findOne(query);
+            let promesaOrg = queryOrganizaciones.exec();
+            promesaOrg.then(function (doc) {
+              // use doc
+              console.log('a ver la orgs: ', doc);
+            });
+
+            let organizacion = null;
+            // let organizacion = {
+            //     _id: org.id,
+            //     nombre: org.nombre
+            // }
+            console.log('organizacion: ', organizacion);
             let uniqueId = String(new mongoose.Types.ObjectId());
 
             let fileData;
             if (informePDF) {
                 fileData = await cdaCtr.storeFile(informePDF);
             }
+            console.log('antes de generar el cda: ');
             let cda = cdaCtr.generateCDA(uniqueId, dtoInforme.paciente, protocolo.fecha, protocolo.profesional, organizacion, snomed, cie10Laboratorio, texto, informePDF);
-            
+            console.log('cda generado: ', cda);
             let metadata = {
                 paciente: patient.documento,
                 prestacion: snomed,
                 fecha: protocolo.fecha,
-                adjuntos: [ fileData.filename ]
+                adjuntos: [fileData.filename]
             };
             let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
-    
+
             // });
             resolve();
         } catch (ex) {
