@@ -10,8 +10,10 @@ import {
 import {
     model as organizacion
 } from './../../../core/tm/schemas/organizacion';
+import * as sql from 'mssql';
 
 
+// Funciones privadas
 
 function traeProfesionalPorId(id) {
     return new Promise((resolve, reject) => {
@@ -23,7 +25,6 @@ function traeProfesionalPorId(id) {
         });
     });
 }
-
 /** Dada una lista de profesionales, devuelve una lista de profesionales completa */
 function profesionalCompleto(lstProfesionales): any {
     return new Promise((resolve, reject) => {
@@ -40,7 +41,6 @@ function profesionalCompleto(lstProfesionales): any {
         });
     });
 }
-
 /** Dado un id de Organización devuelve el objeto completo */
 function organizacionCompleto(idOrganizacion): any {
     return new Promise((resolve, reject) => {
@@ -50,6 +50,47 @@ function organizacionCompleto(idOrganizacion): any {
             }
             return resolve(unaOrganizacion);
         });
+    });
+}
+
+export function organizacionBySisaCode(code): any {
+    return new Promise((resolve, reject) => {
+        organizacion.findOne({'codigo.sisa': code}, function (err, unaOrganizacion) {
+            if (err) {
+                return reject(err);
+            }
+            return resolve(unaOrganizacion);
+        });
+    });
+}
+
+// Funciones públicas
+
+export async function getEncabezados(fechaFiltro: any) {
+    return new Promise(async function (resolve, reject) {
+        try {
+            let query = 'select efector.codigoSisa as efectorCodSisa, efector.nombre as efector, encabezado.apellido, encabezado.nombre, encabezado.fechaNacimiento, encabezado.sexo, ' +
+                'encabezado.numeroDocumento, encabezado.fecha, encabezado.idProtocolo, encabezado.solicitante from LAB_ResultadoEncabezado as encabezado ' +
+                'inner join Sys_Efector as efector on encabezado.idEfector = efector.idEfector ' +
+                'where encabezado.fecha = ' + '\'' + fechaFiltro + '\'';
+            let result = await new sql.Request().query(query);
+            resolve(result);
+        } catch (err) {
+            reject(null);
+        }
+    });
+}
+
+export async function getDetalles(idProtocolo) {
+    return new Promise(async function (resolve, reject) {
+        try {
+            let query = 'select grupo, item, resultado, valorReferencia, observaciones ' +
+            ' from LAB_ResultadoDetalle as detalle where detalle.idProtocolo = ' + idProtocolo;
+            let result = await new sql.Request().query(query);
+            resolve(result);
+        } catch (err) {
+            reject(null);
+        }
     });
 }
 

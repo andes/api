@@ -49,14 +49,17 @@
     "nodemon": "^1.12.1",
     "passport": "^0.3.2",
     "passport-jwt": "^2.2.1",
+    "pdfkit": "^0.8.3",
     "request": "^2.81.0",
     "require-dir": "^0.3.0",
     "sha1": "^1.1.1",
     "shiro-trie": "^0.3.12",
     "soap": "^0.18.0",
+    "stream": "0.0.2",
     "supports-color": "^4.2.1",
     "swagger-jsdoc": "^1.7.0",
     "ws": "^3.2.0",
+    "xmlbuilder": "^9.0.4",
     "xmljson": "^0.2.0"
   },
   "scripts": {

@@ -153,5 +153,14 @@ export default [
             { key: 'post', title: 'Crear usuario', type: 'boolean' },
             { key: 'put', title: 'Modificar usuario', type: 'boolean' }
         ]
+    },
+    {
+        key: 'cda',
+        title: 'Modulo CDA',
+        child: [
+            { key: 'get', title: 'Leer CDA', type: 'boolean' },
+            { key: 'list', title: 'Listar CDA por paciente', type: 'boolean' },
+            { key: 'post', title: 'Generar CDA', type: 'boolean' },
+        ]
     }
 ];
