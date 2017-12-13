@@ -1,4 +1,4 @@
-import { readFile, storeFile } from '../controllers/rup-store';
+import { readFile, storeFile } from '../controllers/rupStore';
 
 import * as express from 'express';
 let router = express.Router();

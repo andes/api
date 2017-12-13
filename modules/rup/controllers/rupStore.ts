@@ -1,4 +1,4 @@
-import { makeFs } from '../schemas/rup-store';
+import { makeFs } from '../schemas/rupStore';
 import * as mongoose from 'mongoose';
 import * as base64_stream from 'base64-stream';
 import * as stream from 'stream';

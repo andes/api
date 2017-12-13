@@ -11,7 +11,7 @@ import { buscarPaciente } from '../../../core/mpi/controller/paciente';
 import { NotificationService } from '../../mobileApp/controller/NotificationService';
 import * as passportJWT from 'passport-jwt';
 
-import { storeFile } from '../../rup/controllers/rup-store';
+import { storeFile } from '../../rup/controllers/rupStore';
 
 let router = express.Router();
 
