@@ -76,6 +76,27 @@ export class Auth {
     }
 
     /**
+     * optionalAuth: extract
+     */
+
+    static optionalAuth() {
+        return function (req, res, next) {
+            try {
+                let extractor = passportJWT.ExtractJwt.fromAuthHeader();
+                let token = extractor(req);
+                let tokenData = jwt.verify(token, configPrivate.auth.jwtKey);
+                if (tokenData) {
+                    req.user = tokenData;
+                }
+            next();
+            } catch (e) {
+                next();
+            }
+        };
+    }
+
+
+    /**
      * Middleware Denied patients access
      *
      * @static
