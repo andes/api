@@ -2,7 +2,8 @@ import * as configPrivate from '../../../config.private';
 import * as operations from './operations';
 import * as sql from 'mssql';
 import * as pdfGenerator from '../../../utils/pdfGenerator';
-import * as cdaPatient from '../../cda/controller/CDAPatient';
+import * as cdaCtr from '../../cda/controller/CDAPatient';
+import * as mongoose from 'mongoose';
 
 const MongoClient = require('mongodb').MongoClient;
 let async = require('async');
@@ -22,7 +23,8 @@ export async function generarCDA(fecha: any) {
             let laboratoriosValidados: any = [];
             pool = await sql.connect(connection);
             laboratoriosValidados = await operations.getEncabezados(fecha);
-            laboratoriosValidados.forEach(async reg => {
+            // laboratoriosValidados.forEach(async reg => {
+            let reg = laboratoriosValidados[0];
                 let patient = {
                     apellido: reg.apellido,
                     nombre: reg.nombre,
@@ -37,7 +39,10 @@ export async function generarCDA(fecha: any) {
                 let protocolo = {
                     id: reg.idProtocolo,
                     fecha: reg.fecha,
-                    solicitante: reg.solicitante
+                    profesional : {
+                        nombre: reg.solicitante,
+                        apellido: ''
+                    }
                 };
                 let details = await operations.getDetalles(protocolo.id);
                 let dtoInforme = {
@@ -56,8 +61,10 @@ export async function generarCDA(fecha: any) {
                     _id : org.id,
                     nombre: org.nombre
                 };
-                cdaPatient.generateCDA(null, dtoInforme.paciente, protocolo.fecha, null, organizacion, snomed , cie10Laboratorio, '' , informePDF);
-            });
+                let uniqueId = String(new mongoose.Types.ObjectId());
+                let cda = cdaCtr.generateCDA(uniqueId, dtoInforme.paciente, protocolo.fecha, protocolo.profesional, organizacion, snomed , cie10Laboratorio, texto , informePDF);
+                
+            // });
             resolve();
         } catch (ex) {
             pool.close();
