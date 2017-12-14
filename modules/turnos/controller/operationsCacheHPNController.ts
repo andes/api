@@ -125,7 +125,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
         let query = 'INSERT INTO dbo.Prestaciones_Worklist_Programacion ' +
             '(idUbicacion ' +
             ',idTipoPrestacion ' +
-            ',idConsultorio ' +
+            // ',idConsultorio ' +
             ',fechaHora ' +
             ',fechaHoraFinalizacion ' +
             ',duracionTurnos ' +
@@ -138,7 +138,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
             ',andesId) VALUES  ( ' +
             idUbicacion + ',' +
             idTipoPrestacion + ',' +
-            idConsultorio + ',' +
+            // idConsultorio + ',' +
             '\'' + fechaHora + '\',' +
             '\'' + fechaHoraFinalizacion + '\',' +
             duracionTurnos + ',' +
