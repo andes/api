@@ -19,8 +19,9 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
     console.log('saveAgendasToPrestaciones');
     let transaction = await new sql.Transaction(pool);
 
-    return new Promise(async function (resolve, reject) {
-        if (medicosExistentes.documentos.indexOf(agenda.profesionales[0].documento) >= 0) {
+    return new Promise(async function (resolve2, reject) {
+        // if (medicosExistentes.documentos.indexOf(agenda.profesionales[0].documento) >= 0) {
+        if (true) {
             transaction.begin(async err => {
                 let rolledBack = false;
                 transaction.on('rollback', aborted => {
@@ -31,25 +32,25 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
 
                     if (!idAgendaHPN) {
                         idAgendaHPN = await saveAgenda(agenda);
-                        console.log( await getIdProfesionalPrestaciones(agenda.profesionales[0].documento));
                         await saveAgendaProfesional(idAgendaHPN, await getIdProfesionalPrestaciones(agenda.profesionales[0].documento));
                         // await saveAgendaTipoPrestacion(idAgendaHPN, await getIdTipoPrestacion());
                         await saveAgendaTipoPrestacion(idAgendaHPN, 705);
                     }
 
                     await saveBloques(idAgendaHPN, agenda.bloques);
+                    console.log('transaction commit');
                     transaction.commit(async err2 => {
-                        resolve();
+                        resolve2();
                     });
                 } catch (e) {
-                    console.log(e);
+                    console.log(e, 'fafafa');
                     // logger.LoggerAgendaCache.logAgenda(agenda._id, e);
                     transaction.rollback();
                     reject(e);
                 }
             });
         } else {
-            resolve();
+            resolve2();
         }
     });
 
@@ -58,15 +59,18 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
     }
 
     async function getIdProfesionalPrestaciones(documento) {
-        let query = 'SELECT id FROM dbo.Medicos WHERE documento = @documento';
-         let result = await pool.request()
-             .input('documento', sql.Varchar, documento)
-             .query(query);
+        console.log('getIdProfesionalPrestaciones');
+        // let query = 'SELECT id FROM dbo.Medicos WHERE documento = @documento';
+        // let result = await pool.request()
+        //      .input('documento', sql.Varchar, documento)
+        //      .query(query);
 
-         return result[0].id;
+        // return result[0].id;
+        return 18;
     }
 
     async function saveAgendaProfesional(idProgramacion, idProfesional) {
+        console.log('saveAgendaProfesional');
         let query = 'INSERT INTO dbo.Prestaciones_Worklist_Programacion_Profesionales ' +
             '(idProgramacion, idProfesional) VALUES (@idProgramacion, @idProfesional)';
         return await pool.request()
@@ -76,8 +80,9 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
     }
 
     async function saveAgendaTipoPrestacion(idProgramacion, idTipoPrestacion) {
+        console.log('saveAgendaTipoPrestacion');
         let query = 'INSERT INTO dbo.Prestaciones_Worklist_Programacion_TiposPrestaciones ' +
-            '(idProgramacion, idProfesional) VALUES (@idProgramacion, @idTipoPrestacion)';
+            '(idProgramacion, idTipoPrestacion) VALUES (@idProgramacion, @idTipoPrestacion)';
         return await pool.request()
             .input('idProgramacion', sql.Int, idProgramacion)
             .input('idTipoPrestacion', sql.Int, idTipoPrestacion)
@@ -165,7 +170,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
 
                 let result = await pacientes.buscarPaciente(turno.paciente.id);
                 let paciente = result.paciente;
-                console.log('existsPacienteHospital', paciente.documento, await existsPacienteHospital('DNI', paciente.documento));
+                // console.log('existsPacienteHospital', paciente.documento, await existsPacienteHospital('DNI', paciente.documento));
                 if (! await existsPacienteHospital('DNI', paciente.documento)) {
                     console.log('will save paciente');
                     await pacienteHPN.savePaciente(paciente, transaction);
@@ -177,6 +182,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
     }
 
     async function existsPacienteHospital(tipoDocumento, nroDocumento) {
+        console.log('existsPacienteHospital');
         let query = 'SELECT Codigo FROM dbo.Historias_Clinicas ' +
             'WHERE  HC_Tipo_de_documento = @tipoDocumento AND HC_Documento = @nroDocumento';
         let result = await pool.request()
@@ -203,21 +209,21 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
         let idHistoria = 10; // HARDCODE
         let idPaciente = 1447; // HARDCODE
         let idProgramacion = idAgendaAndes;
-        let idProfesional = 1; // HARDCODE
-        let idConsultorio = 1; // HARDCODE
-        let idOrigen = 1; // HARDCODE
-        let origen_sector = 1; // HARDCODE
-        let idOrigen_profesional = 1; // HARDCODE
-        let origen_profesional_otro = 1; // HARDCODE
-        let idPrestacionRealizada = 1; // HARDCODE
-        let informacionContacto = 1; // HARDCODE
-        let contactoPrefijo = 1; // HARDCODE
-        let contactoNumero = 1; // HARDCODE
-        let contactoCarrier = 1; // HARDCODE
-        let observaciones = 1; // HARDCODE
-        let idAplicacionOrigen = 1; // HARDCODE
-        let idAplicacionOrigen_clave = 1; // HARDCODE
-        let auditUser = 1; // HARDCODE
+        // let idProfesional = sql.NULL; // HARDCODE
+        // let idConsultorio = sql.NULL; // HARDCODE
+        // let idOrigen = sql.NULL; // HARDCODE
+        // let origen_sector = sql.NULL; // HARDCODE
+        // let idOrigen_profesional = sql.NULL; // HARDCODE
+        // let origen_profesional_otro = sql.NULL; // HARDCODE
+        // let idPrestacionRealizada = sql.NULL; // HARDCODE
+        // let informacionContacto = sql.NULL; // HARDCODE
+        // let contactoPrefijo = sql.NULL; // HARDCODE
+        // let contactoNumero = sql.NULL; // HARDCODE
+        // let contactoCarrier = sql.NULL; // HARDCODE
+        // let observaciones = sql.NULL; // HARDCODE
+        // let idAplicacionOrigen = sql.NULL; // HARDCODE
+        // let idAplicacionOrigen_clave = sql.NULL; // HARDCODE
+        // let auditUser = sql.NULL; // HARDCODE
         let auditDatetime = '2017-12-01 01:56:22'; // HARDCODE
         let andesId = turno._id;
 
@@ -232,21 +238,21 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
             ',idHistoria' +
             ',idPaciente' +
             ',idProgramacion' +
-            ',idProfesional' +
-            ',idConsultorio' +
-            ',idOrigen' +
-            ',origen_sector' +
-            ',idOrigen_profesional' +
-            ',origen_profesional_otro' +
-            ',idPrestacionRealizada' +
-            ',informacionContacto' +
-            ',contactoPrefijo' +
-            ',contactoNumero' +
-            ',contactoCarrier' +
-            ',observaciones' +
-            ',idAplicacionOrigen' +
-            ',idAplicacionOrigen_clave' +
-            ',audit_user' +
+            // ',idProfesional' +
+            // ',idConsultorio' +
+            // ',idOrigen' +
+            // ',origen_sector' +
+            // ',idOrigen_profesional' +
+            // ',origen_profesional_otro' +
+            // ',idPrestacionRealizada' +
+            // ',informacionContacto' +
+            // ',contactoPrefijo' +
+            // ',contactoNumero' +
+            // ',contactoCarrier' +
+            // ',observaciones' +
+            // ',idAplicacionOrigen' +
+            // ',idAplicacionOrigen_clave' +
+            // ',audit_user' +
             ',audit_datetime' +
             ',andesId)' +
         'VALUES (' +
@@ -260,21 +266,21 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
             idHistoria + ',' +
             idPaciente + ',' +
             idProgramacion + ',' +
-            idProfesional + ',' +
-            idConsultorio + ',' +
-            idOrigen + ',' +
-            origen_sector + ',' +
-            idOrigen_profesional + ',' +
-            origen_profesional_otro + ',' +
-            idPrestacionRealizada + ',' +
-            informacionContacto + ',' +
-            contactoPrefijo + ',' +
-            contactoNumero + ',' +
-            contactoCarrier + ',' +
-            observaciones + ',' +
-            idAplicacionOrigen + ',' +
-            idAplicacionOrigen_clave + ',' +
-            auditUser + ',' +
+            // idProfesional + ',' +
+            // idConsultorio + ',' +
+            // idOrigen + ',' +
+            // origen_sector + ',' +
+            // idOrigen_profesional + ',' +
+            // origen_profesional_otro + ',' +
+            // idPrestacionRealizada + ',' +
+            // informacionContacto + ',' +
+            // contactoPrefijo + ',' +
+            // contactoNumero + ',' +
+            // contactoCarrier + ',' +
+            // observaciones + ',' +
+            // idAplicacionOrigen + ',' +
+            // idAplicacionOrigen_clave + ',' +
+            //auditUser + ',' +
             '\'' + auditDatetime + '\',' +
             '\'' + andesId + '\')';
 

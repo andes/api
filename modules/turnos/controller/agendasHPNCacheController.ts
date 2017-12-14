@@ -23,7 +23,7 @@ export async function integracion() {
 
             for (let agenda of agendasMongoPendientes) {
                 pool = await sql.connect(connection);
-                await operationsHPNCache.saveAgendaToHospital(agenda, pool);
+                await operationsHPNCache.saveAgendaToPrestaciones(agenda, pool);
                 pool.close();
             }
 
