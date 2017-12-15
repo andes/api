@@ -221,7 +221,7 @@ export function buscarPaciente(id): Promise<{ db: String, paciente: any }> {
  * @param condition
  */
 
-export function buscarPacienteWithcondition (condition): Promise<{ db: String, paciente: any }> {
+export function buscarPacienteWithcondition(condition): Promise<{ db: String, paciente: any }> {
     return new Promise((resolve, reject) => {
         pacienteMpi.findOne(condition, function (err, data) {
             if (err) {
@@ -507,6 +507,11 @@ export function deleteRelacion(req, data) {
 export function updateFotoMobile(req, data) {
     data.fotoMobile = req.body.fotoMobile;
 }
+
+export function updateScan(req, data) {
+    data.markModified('scan');
+    data.scan = req.body.scan;
+}
 /* Hasta acá funciones del PATCH */
 
 
@@ -565,7 +570,7 @@ export function searchSimilar(objective, where: string, conditions, _weights = n
  * @param configs.claves Array de numeros de clave de blocking. Ver crearClaveBlockin para saber el orden de creación
  */
 
-export async function matchPaciente (dataPaciente) {
+export async function matchPaciente(dataPaciente) {
     try {
         let connElastic = new ElasticSync();
         let query = {
