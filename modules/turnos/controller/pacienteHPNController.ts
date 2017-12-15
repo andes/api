@@ -2,8 +2,7 @@ import * as sql from 'mssql';
 import * as moment from 'moment';
 
 export async function savePaciente(paciente: any, transaction) {
-    console.log('savePaciente', paciente);
-    console.log('savePaciente', paciente.direccion);
+    console.log('savePaciente');
 
     let fechaCreacion = moment(new Date()).format('YYYY-MM-DD hh:mm:ss');
     let fechaUltimoAcceso = fechaCreacion;

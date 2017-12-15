@@ -20,7 +20,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
     let transaction = await new sql.Transaction(pool);
 
     return new Promise(async function (resolve2, reject) {
-        // if (medicosExistentes.documentos.indexOf(agenda.profesionales[0].documento) >= 0) {
+        // TODO if (medicosExistentes.documentos.indexOf(agenda.profesionales[0].documento) >= 0) {
         if (true) {
             transaction.begin(async err => {
                 let rolledBack = false;
@@ -28,7 +28,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
                     rolledBack = true;
                 });
                 try {
-                    let idAgendaHPN = await getIdAgendaHPN(agenda._id);
+                    let idAgendaHPN = await getIdAgendaHPN(agenda.id);
 
                     if (!idAgendaHPN) {
                         idAgendaHPN = await saveAgenda(agenda);
@@ -120,7 +120,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
 
         let publicada = (_agenda.estado !== constantes.EstadoAgendaAndes.publicada ? 0 : 1);
         let suspendida = (_agenda.estado !== constantes.EstadoAgendaAndes.suspendida ? 0 : 1);
-        let andesId = _agenda._id;
+        let andesId = _agenda.id;
 
         let query = 'INSERT INTO dbo.Prestaciones_Worklist_Programacion ' +
             '(idUbicacion ' +
@@ -157,11 +157,11 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
         console.log('saveBloques');
 
         for (let bloque of bloques) {
-            await saveTurnos(idAgendaAndes, bloque.turnos);
+            await saveTurnos(idAgendaAndes, bloque.turnos, bloque.duracionTurno);
         }
     }
 
-    async function saveTurnos(idAgendaAndes, turnos: Array<any>) {
+    async function saveTurnos(idAgendaAndes, turnos: Array<any>, duracion) {
         console.log('saveTurnos', turnos.length);
 
         for (let turno of turnos) {
@@ -175,7 +175,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
                     console.log('will save paciente');
                     await pacienteHPN.savePaciente(paciente, transaction);
                 }
-                await saveTurno(idAgendaAndes, turno);
+                await saveTurno(idAgendaAndes, turno, duracion);
             }
         }
         console.log('turnos saved');
@@ -197,11 +197,12 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
         return await getIdHPN(idAndes, 'dbo.Prestaciones_Worklist');
     }
 
-    async function saveTurno(idAgendaAndes, turno: any) {
+    async function saveTurno(idAgendaAndes, turno: any, duracion) {
         console.log('createTurno', turno._id);
+
         let idUbicacion = 14; // await getUbicacion(idServicio, pool);
         let fechaHora = moment(turno.horaInicio).utcOffset('-03:00').format('YYYY-MM-DD hh:mm:ss');
-        let fechaHoraFinalizacion = moment(turno.horaFin).utcOffset('-03:00').format('YYYY-MM-DD hh:mm:ss');
+        let fechaHoraFinalizacion = moment(turno.horaInicio).add(duracion, 'minutes').utcOffset('-03:00').format('YYYY-MM-DD hh:mm:ss');
         let idTipoWorklist = 10; // no
         let idPrioridad =  20; // HARDCODE
         let idTipoPrestacion = 705; // HARDCODE
@@ -280,7 +281,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
             // observaciones + ',' +
             // idAplicacionOrigen + ',' +
             // idAplicacionOrigen_clave + ',' +
-            //auditUser + ',' +
+            // auditUser + ',' +
             '\'' + auditDatetime + '\',' +
             '\'' + andesId + '\')';
 
