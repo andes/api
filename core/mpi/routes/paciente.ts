@@ -821,6 +821,7 @@ router.patch('/pacientes/:id', function (req, res, next) {
                     break;
                 case 'updateScan':
                     controller.updateScan(req, resultado.paciente);
+                    break;
             }
 
             let pacienteAndes: any;
