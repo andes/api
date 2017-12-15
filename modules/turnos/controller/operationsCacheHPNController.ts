@@ -35,15 +35,14 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
                         await saveAgendaProfesional(idAgendaHPN, await getIdProfesionalPrestaciones(agenda.profesionales[0].documento));
                         // await saveAgendaTipoPrestacion(idAgendaHPN, await getIdTipoPrestacion());
                         await saveAgendaTipoPrestacion(idAgendaHPN, 705);
-                    }
+                    }   
 
                     await saveBloques(idAgendaHPN, agenda.bloques);
-                    console.log('transaction commit');
+                    await setEstadoAgendaToIntegrada(agenda._id);
                     transaction.commit(async err2 => {
                         resolve2();
                     });
                 } catch (e) {
-                    console.log(e, 'fafafa');
                     logger.LoggerAgendaCache.logAgenda(agenda._id, e);
                     transaction.rollback();
                     reject(e);
@@ -73,7 +72,9 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
         console.log('saveAgendaProfesional');
         let query = 'INSERT INTO dbo.Prestaciones_Worklist_Programacion_Profesionales ' +
             '(idProgramacion, idProfesional) VALUES (@idProgramacion, @idProfesional)';
-        return await pool.request()
+         
+        // return await sql.Request(transaction)
+        return await new sql.Request(transaction)
             .input('idProgramacion', sql.Int, idProgramacion)
             .input('idProfesional', sql.Int, idProfesional)
             .query(query);
@@ -83,7 +84,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
         console.log('saveAgendaTipoPrestacion');
         let query = 'INSERT INTO dbo.Prestaciones_Worklist_Programacion_TiposPrestaciones ' +
             '(idProgramacion, idTipoPrestacion) VALUES (@idProgramacion, @idTipoPrestacion)';
-        return await sql.Request(pool)
+        return await new sql.Request(transaction)
             .input('idProgramacion', sql.Int, idProgramacion)
             .input('idTipoPrestacion', sql.Int, idTipoPrestacion)
             .query(query);
@@ -154,15 +155,13 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
     }
 
     async function saveBloques(idAgendaAndes, bloques: Array<any>) {
-        console.log('saveBloques');
-
+        
         for (let bloque of bloques) {
             await saveTurnos(idAgendaAndes, bloque.turnos, bloque.duracionTurno);
         }
     }
 
     async function saveTurnos(idAgendaAndes, turnos: Array<any>, duracion) {
-        console.log('saveTurnos', turnos.length);
 
         for (let turno of turnos) {
             if (turno.estado === constantes.EstadoTurnosAndes.asignado
@@ -177,8 +176,6 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
                 await saveTurno(idAgendaAndes, turno, duracion);
             }
         }
-        let error;
-        error.explode();
 
         console.log('turnos saved');
     }
@@ -326,6 +323,7 @@ export async function getAgendasDeMongoPendientes() {
 }
 
 async function setEstadoAgendaToIntegrada(idAgenda) {
+    console.log(idAgenda);
     return await agendasCache.update({
             _id: idAgenda
         }, {
