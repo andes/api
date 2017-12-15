@@ -7,7 +7,7 @@ import * as sql from 'mssql';
 import * as moment from 'moment';
 import * as pacientes from './../../../core/mpi/controller/paciente';
 import * as constantes from '../../legacy/schemas/constantes';
-import * as logger from './../../../utils/loggerAgendaSipsCache';
+import * as logger from './../../../utils/loggerAgendaHPNCache';
 import * as agendaSchema from '../schemas/agenda';
 import * as turnoCtrl from './turnoCacheController';
 import * as pacienteHPN from './pacienteHPNController';
@@ -44,7 +44,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
                     });
                 } catch (e) {
                     console.log(e, 'fafafa');
-                    // logger.LoggerAgendaCache.logAgenda(agenda._id, e);
+                    logger.LoggerAgendaCache.logAgenda(agenda._id, e);
                     transaction.rollback();
                     reject(e);
                 }
@@ -83,7 +83,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
         console.log('saveAgendaTipoPrestacion');
         let query = 'INSERT INTO dbo.Prestaciones_Worklist_Programacion_TiposPrestaciones ' +
             '(idProgramacion, idTipoPrestacion) VALUES (@idProgramacion, @idTipoPrestacion)';
-        return await pool.request()
+        return await sql.Request(pool)
             .input('idProgramacion', sql.Int, idProgramacion)
             .input('idTipoPrestacion', sql.Int, idTipoPrestacion)
             .query(query);
@@ -170,14 +170,16 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
 
                 let result = await pacientes.buscarPaciente(turno.paciente.id);
                 let paciente = result.paciente;
-                // console.log('existsPacienteHospital', paciente.documento, await existsPacienteHospital('DNI', paciente.documento));
+
                 if (! await existsPacienteHospital('DNI', paciente.documento)) {
-                    console.log('will save paciente');
                     await pacienteHPN.savePaciente(paciente, transaction);
                 }
                 await saveTurno(idAgendaAndes, turno, duracion);
             }
         }
+        let error;
+        error.explode();
+
         console.log('turnos saved');
     }
 
