@@ -9,6 +9,8 @@ import {
 } from './../../../core/tm/schemas/profesional';
 import * as organizacion from './../../../core/tm/schemas/organizacion';
 import * as sql from 'mssql';
+import * as cdaCtr from '../../cda/controller/CDAPatient';
+
 
 
 // Funciones privadas
@@ -55,23 +57,29 @@ function organizacionCompleto(idOrganizacion): any {
 
 export function organizacionBySisaCode(code): any {
     return new Promise((resolve, reject) => {
-        let query = {'codigo.sisa': code};
-        this.organizacion.find(query), function (err, unaOrganizacion) {
+        organizacion.model.findOne({
+            'codigo.sisa': code
+        }, function (err, doc: any) {
             if (err) {
-                reject(err);
+                return reject(err);
             }
-            resolve(unaOrganizacion);
-        };
+            let org = {
+                _id: doc.id,
+                nombre: doc.nombre,
+            };
+            return resolve(org);
+        });
     });
 }
 
-export async function getEncabezados(fechaFiltro: any) {
+
+export function getEncabezados(documento): any {
     return new Promise(async function (resolve, reject) {
         try {
             let query = 'select efector.codigoSisa as efectorCodSisa, efector.nombre as efector, encabezado.apellido, encabezado.nombre, encabezado.fechaNacimiento, encabezado.sexo, ' +
                 'encabezado.numeroDocumento, encabezado.fecha, encabezado.idProtocolo, encabezado.solicitante from LAB_ResultadoEncabezado as encabezado ' +
                 'inner join Sys_Efector as efector on encabezado.idEfector = efector.idEfector ' +
-                'where encabezado.fecha = ' + '\'' + fechaFiltro + '\'';
+                'where encabezado.numeroDocumento = ' + documento;
             let result = await new sql.Request().query(query);
             resolve(result);
         } catch (err) {
@@ -80,11 +88,12 @@ export async function getEncabezados(fechaFiltro: any) {
     });
 }
 
+
 export async function getDetalles(idProtocolo) {
     return new Promise(async function (resolve, reject) {
         try {
             let query = 'select grupo, item, resultado, valorReferencia, observaciones ' +
-            ' from LAB_ResultadoDetalle as detalle where detalle.idProtocolo = ' + idProtocolo;
+                ' from LAB_ResultadoDetalle as detalle where detalle.idProtocolo = ' + idProtocolo;
             let result = await new sql.Request().query(query);
             resolve(result);
         } catch (err) {

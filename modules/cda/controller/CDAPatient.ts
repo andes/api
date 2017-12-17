@@ -250,18 +250,15 @@ export function generateCDA(uniqueId, patient, date, author, organization, snome
 
     cda.versionNumber(1);
     cda.date(date);
-
     // [TODO] Falta definir el tema del DNI
     let patientCDA = new Patient();
     patientCDA.setFirstname(patient.nombre).setLastname(patient.apellido);
     patientCDA.setBirthtime(patient.fechaNacimiento);
     patientCDA.setGender(patient.sexo);
-    if (patient._id) {
-        patientCDA.setId(buildID(patient._id));
+    if (patient.id) {
+        patientCDA.setId(buildID(patient.id));
     }
     cda.patient(patientCDA);
-
-
     let orgCDA = new Organization();
     orgCDA.id(buildID(organization._id));
     orgCDA.name(organization.nombre);
