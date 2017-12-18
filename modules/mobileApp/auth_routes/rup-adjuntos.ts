@@ -11,6 +11,8 @@ import { buscarPaciente } from '../../../core/mpi/controller/paciente';
 import { NotificationService } from '../../mobileApp/controller/NotificationService';
 import * as passportJWT from 'passport-jwt';
 
+import { storeFile } from '../../rup/controllers/rupStore';
+
 let router = express.Router();
 
 // Acciones desde la app de escitorio
@@ -114,13 +116,34 @@ router.get('/prestaciones-adjuntar', Auth.optionalAuth(), async (req: any, res, 
  * Carga las fotos adjuntas en la solicitud
  */
 
-router.patch('/prestaciones-adjuntar/:id', Auth.optionalAuth(), (req: any, res, next) => {
+router.patch('/prestaciones-adjuntar/:id', Auth.optionalAuth(), async (req: any, res, next) => {
     let id = req.params.id;
-    let value = req.body.valor;
+    let value = req.body.valor.documentos;
     let estado = req.body.estado;
 
-    PrestacionAdjunto.findById(id).then((doc: any) => {
-        doc.valor = value;
+    PrestacionAdjunto.findById(id).then(async (doc: any) => {
+
+        let files = [];
+        for (let file of value) {
+            if (file.ext && file.plain64) {
+                file.plain64 = file.plain64.replace(/\n/gi, '');
+                if (file.ext === 'pdf') {
+                    file.plain64 = file.plain64.replace('image/*', 'application/pdf');
+                } else {
+                    file.plain64 = file.plain64.replace('image/*', 'image/' + file.ext);
+                }
+                let metadata = {
+                    registro: doc.registro,
+                    prestacion: doc.prestacion
+                };
+                let data: any = await storeFile(file.plain64, metadata);
+                files.push({ id: data._id, ext: file.ext });
+            } else {
+                files.push(file);
+            }
+        }
+
+        doc.valor = { documentos: files };
         doc.estado = estado;
         doc.save().then(() => {
             return res.json({status: 'ok'});
