@@ -45,10 +45,12 @@ router.post('/laboratorios', async(req: any, res, next) => {
     }
     try {
         let unPaciente = req.body.paciente;
-        let list: any = [];
         pool = await sql.connect(connection);
+        let counter = 0;
+        let list = [];
         let laboratoriosValidados: any[];
         laboratoriosValidados = await operations.getEncabezados(unPaciente.documento);
+        console.log('cantidad de labos: ', laboratoriosValidados.length);
         laboratoriosValidados.forEach(async reg => {
             let existe = await operations.existCDA(reg.idProtocolo, unPaciente.documento);
             if (existe) {
@@ -82,12 +84,19 @@ router.post('/laboratorios', async(req: any, res, next) => {
                 let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
                 // Marcamos el protocolo (encabezado) como generado, asignando el uniqueId
                 let update = await operations.setMarkProtocol(reg.idProtocolo, unPaciente.documento, uniqueId);
+                counter = counter + 1;
+                list.push({cda: uniqueId, protocolo: reg.idProtocolo});
+            } else {
+                counter = counter + 1;
+                list.push({cda: 'Ya existe', protocolo: reg.idProtocolo});
+            }
+            if (counter === laboratoriosValidados.length) {
+                res.json({
+                    proceso: 'Finalizado',
+                    lista: list
+                });
             }
         });
-        res.json({
-            proceso: 'Finalizado',
-        });
-
     } catch (e) {
         next(e);
     }
