@@ -68,7 +68,8 @@
     "node": "nodemon -q ./index.js",
     "tsc": "tsc",
     "tsc:w": "tsc -w",
-    "jobs": "tsc && node jobs/scheduler.js"
+    "jobs": "tsc && node jobs/scheduler.js",
+    "lint": "tslint --project ."
   },
   "repository": {
     "type": "git",

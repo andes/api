@@ -1,7 +1,7 @@
 let pdfkit = require('pdfkit');
 let fs = require('fs');
 
-export function informeLaboratorio(data: any): any {
+export function informeLaboratorio(paciente, organizacion, protocolo, detalles): any {
     return new Promise((resolve, reject) => {
         try {
             const doc = new pdfkit();
@@ -9,21 +9,21 @@ export function informeLaboratorio(data: any): any {
             const ancho = 400;
             const limit = 30;
             const columna = 72;
-            let sexo = data.paciente.sexo === 'F' ? 'Femenino' : data.paciente.sexo === 'M' ? 'Masculino' : 'Indefinido';
+            let sexo = paciente.sexo === 'F' ? 'Femenino' : paciente.sexo === 'M' ? 'Masculino' : 'Indefinido';
 
             // doc.pipe(fs.createWriteStream(path + ' Informe ' + data.paciente.apellido + ' ' + data.paciente.nombre + '.pdf'));
             // Header
             doc.fontSize(16)
-            .text('Laboratorio: ' + data.organizacion.nombre);
+            .text('Laboratorio: ' + organizacion.nombre);
             doc.moveDown();
 
             let posFinHeader = doc.y;
             doc.moveDown();
 
             doc.fontSize(10)
-            .text('Paciente: ' + data.paciente.apellido + ', ' + data.paciente.nombre)
+            .text('Paciente: ' + paciente.apellido + ', ' + paciente.nombre)
             .text('Sexo: ' + sexo)
-            .text('Fecha de Nacimiento: ' + data.paciente.fechaNacimiento);
+            .text('Fecha de Nacimiento: ' + paciente.fechaNacimiento);
             doc.moveDown();
 
             // Recuadro datos paciente
@@ -35,8 +35,8 @@ export function informeLaboratorio(data: any): any {
             // Informe de resultados
             doc.fontSize(6)
             .text('Resultados')
-            .text('Fecha: ' + data.protocolo.fecha)
-            .text('Médico Solicitante: ' + data.protocolo.solicitante);
+            .text('Fecha: ' + protocolo.fecha)
+            .text('Médico Solicitante: ' + protocolo.solicitante);
             doc.moveDown();
             let yTitle = doc.y;
             doc.text('GRUPO' + ' '.repeat(25), columna, yTitle);
@@ -46,7 +46,7 @@ export function informeLaboratorio(data: any): any {
             doc.text('OBS' + ' '.repeat(27), columna * 6, yTitle);
 
             doc.moveDown();
-            data.detalles.forEach(element => {
+            detalles.forEach(element => {
                 let grupo = element.grupo ? element.grupo.length >= limit ? element.grupo.substring(0, limit) : element.grupo + ' '.repeat(limit - element.grupo.length) : ' '.repeat(limit);
                 let item = element.item ? element.item.length >= limit ? element.item.substring(0, limit) : element.item + ' '.repeat(limit - element.item.length) : ' '.repeat(limit);
                 let resultado = element.resultado ? element.resultado.length >= limit ? element.resultado.substring(0, limit) : element.resultado + ' '.repeat(limit - element.resultado.length) : ' '.repeat(limit);

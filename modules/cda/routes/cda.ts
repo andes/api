@@ -70,7 +70,7 @@ router.post('/', cdaCtr.validateMiddleware,  async (req: any, res, next) => {
 
         let fileData;
         if (file) {
-            fileData = await cdaCtr.storeFile(file);
+            fileData = await cdaCtr.storeFile(cdaCtr.base64toStream(file));
         }
 
         let cda = cdaCtr.generateCDA(uniqueId, paciente, fecha, dataProfesional, organizacion, snomed, cie10, texto, fileData);
@@ -139,7 +139,7 @@ router.get('/:id', async (req: any, res, next) => {
 
 /**
  * Listado de los CDAs de un paciente
- * API demostrativa, falta analisar como se va a buscar en el repsitorios
+ * API demostrativa, falta analizar como se va a buscar en el repositorio
  */
 router.get('/paciente/:id', async (req: any, res, next) => {
     if (!Auth.check(req, 'cda:list')) {

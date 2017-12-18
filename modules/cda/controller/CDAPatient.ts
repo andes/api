@@ -9,9 +9,11 @@ import { CDABuilder } from './builder/CdaBuilder';
 
 import * as base64_stream from 'base64-stream';
 import { makeFs } from '../schemas/CDAFiles';
-import * as stream from 'stream';
+import * as Stream from 'stream';
 import { create } from 'domain';
 import * as moment from 'moment';
+
+import { CDA as CDAConfig } from '../../../config.private';
 
 /**
  * Crea un objeto paciente desde los datos
@@ -91,8 +93,8 @@ export async function findOrCreate(req, dataPaciente, organizacion) {
     }
 }
 
-// Root id principal de ANDES o del hospital
-let rootOID = '2.16.840.1.113883.2.10.17.99999';
+// Root id principal de ANDES
+let rootOID = CDAConfig.rootOID;
 
 /**
  * Match desde snomed a un código LOINC para indentificar el CDA
@@ -144,33 +146,67 @@ function buildID (id) {
 
 let base64RegExp = /data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,(.*)/;
 
-export function storeFile (base64) {
-    var match = base64.match(base64RegExp);
-    var mime = match[1];
-    var data = match[2];
+export function base64toStream (base64) {
+    let match = base64.match(base64RegExp);
+    let mime = match[1];
+    let data = match[2];
+    let extension = mime.split('/')[1];
+
+    let streamInput = new Stream.PassThrough();
+    let decoder = base64_stream.decode();
+
+    streamInput.pipe(decoder);
+    streamInput.end(data);
+    return {
+        mimeType: mime,
+        extension,
+        stream: streamInput
+    };
+}
+
+export function storeFile ({extension, mimeType, stream }) {
     return new Promise((resolve, reject) => {
-        let uniqueId = String(new mongoose.Types.ObjectId());
-        let input = new stream.PassThrough();
-        let decoder = base64_stream.decode();
         let CDAFiles = makeFs();
+        let uniqueId = String(new mongoose.Types.ObjectId());
 
         CDAFiles.write({
                 _id: uniqueId,
-                filename:  uniqueId + '.' + mime.split('/')[1],
-                contentType: mime
+                filename:  uniqueId + '.' + extension,
+                contentType: mimeType
             },
-            input.pipe(decoder),
+            stream,
             (error, createdFile) => {
                 resolve({
                     id: createdFile._id,
                     data: 'files/' + createdFile.filename,
-                    mime: mime,
+                    mime: mimeType,
                     is64: false
                 });
             }
         );
+    });
+}
 
-        input.end(data);
+export function storePdfFile (pdf) {
+    return new Promise(( resolve, reject) => {
+        let uniqueId = String(new mongoose.Types.ObjectId());
+        let input = new Stream.PassThrough();
+        let mime = 'application/pdf';
+        let CDAFiles = makeFs();
+        CDAFiles.write({
+            _id: uniqueId,
+            filename:  uniqueId + '.pdf',
+            contentType: mime
+        },
+        input.pipe(pdf),
+        (error, createdFile) => {
+            resolve({
+                id: createdFile._id,
+                data: 'files/' + createdFile.filename,
+                mime: mime
+            });
+        }
+    );
     });
 }
 
@@ -183,7 +219,7 @@ export function storeFile (base64) {
 export function storeCDA (objectID, cdaXml, metadata) {
     return new Promise((resolve, reject) => {
 
-        let input = new stream.PassThrough();
+        let input = new Stream.PassThrough();
         let CDAFiles = makeFs();
 
         CDAFiles.write({
@@ -227,18 +263,15 @@ export function generateCDA(uniqueId, patient, date, author, organization, snome
 
     cda.versionNumber(1);
     cda.date(date);
-
     // [TODO] Falta definir el tema del DNI
     let patientCDA = new Patient();
     patientCDA.setFirstname(patient.nombre).setLastname(patient.apellido);
     patientCDA.setBirthtime(patient.fechaNacimiento);
     patientCDA.setGender(patient.sexo);
-    if (patient._id) {
-        patientCDA.setId(buildID(patient._id));
+    if (patient.id) {
+        patientCDA.setId(buildID(patient.id));
     }
     cda.patient(patientCDA);
-
-
     let orgCDA = new Organization();
     orgCDA.id(buildID(organization._id));
     orgCDA.name(organization.nombre);
