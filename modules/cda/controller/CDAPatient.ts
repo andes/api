@@ -187,6 +187,29 @@ export function storeFile ({extension, mimeType, stream }) {
     });
 }
 
+export function storePdfFile (pdf) {
+    return new Promise(( resolve, reject) => {
+        let uniqueId = String(new mongoose.Types.ObjectId());
+        let input = new stream.PassThrough();
+        let mime = 'application/pdf';
+        let CDAFiles = makeFs();
+        CDAFiles.write({
+            _id: uniqueId,
+            filename:  uniqueId + '.pdf',
+            contentType: mime
+        },
+        input.pipe(pdf),
+        (error, createdFile) => {
+            resolve({
+                id: createdFile._id,
+                data: 'files/' + createdFile.filename,
+                mime: mime
+            });
+        }
+    );
+    });
+}
+
 /**
  * Almacena un XML en Mongo
  * @param objectID ID del CDA
@@ -240,32 +263,31 @@ export function generateCDA(uniqueId, patient, date, author, organization, snome
 
     cda.versionNumber(1);
     cda.date(date);
-
     // [TODO] Falta definir el tema del DNI
     let patientCDA = new Patient();
     patientCDA.setFirstname(patient.nombre).setLastname(patient.apellido);
     patientCDA.setBirthtime(patient.fechaNacimiento);
     patientCDA.setGender(patient.sexo);
-    if (patient._id) {
-        patientCDA.setId(buildID(patient._id));
+    if (patient.id) {
+        patientCDA.setId(buildID(patient.id));
     }
     cda.patient(patientCDA);
-
-
     let orgCDA = new Organization();
     orgCDA.id(buildID(organization._id));
     orgCDA.name(organization.nombre);
 
     cda.custodian(orgCDA);
 
-    let authorCDA = new Author();
-    authorCDA.firstname(author.nombre);
-    authorCDA.lastname(author.apellido);
-    authorCDA.organization(orgCDA);
-    if (author._id) {
-        authorCDA.id(buildID(author._id));
+    if (author) {
+        let authorCDA = new Author();
+        authorCDA.firstname(author.nombre);
+        authorCDA.lastname(author.apellido);
+        authorCDA.organization(orgCDA);
+        if (author._id) {
+            authorCDA.id(buildID(author._id));
+        }
+        cda.author(authorCDA);
     }
-    cda.author(authorCDA);
 
     let body = new Body();
 

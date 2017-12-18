@@ -3,7 +3,7 @@ import * as provinciaSchema from './provincia';
 
 let localidadSchema = new mongoose.Schema({
     nombre: String,
-    provincia: provinciaSchema
+    provincia: { type: provinciaSchema}
 });
 let localidad = mongoose.model('localidad', localidadSchema, 'localidad');
 export = localidad;

@@ -30,13 +30,11 @@ export class Connections {
         // 1. PRINCIPAL
         mongoose.connect(`${configPrivate.hosts.mongoDB_main.host}`, { auth: configPrivate.hosts.mongoDB_main.auth, server: configPrivate.hosts.mongoDB_main.server });
         this.main = mongoose.connection;
-
         // 2. MPI
         this.mpi = mongoose.createConnection(`${configPrivate.hosts.mongoDB_mpi.host}`, { auth: configPrivate.hosts.mongoDB_mpi.auth, server: configPrivate.hosts.mongoDB_mpi.server });
 
         // 3. SNOMED
         this.snomed = mongoose.createConnection(`${configPrivate.hosts.mongoDB_snomed.host}`, { auth: configPrivate.hosts.mongoDB_snomed.auth, server: configPrivate.hosts.mongoDB_snomed.server });
-
         // Configura eventos
         this.configEvents('main', this.main);
         this.configEvents('mpi', this.mpi);

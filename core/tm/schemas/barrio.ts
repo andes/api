@@ -3,7 +3,7 @@ import * as nombreSchema from './nombre';
 
 let barrioSchema = new mongoose.Schema({
     nombre: String,
-    localidad: nombreSchema
+    localidad:  { type: nombreSchema }
 });
 
 let barrio = mongoose.model('barrio', barrioSchema, 'barrio');

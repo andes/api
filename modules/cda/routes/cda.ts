@@ -139,7 +139,7 @@ router.get('/:id', async (req: any, res, next) => {
 
 /**
  * Listado de los CDAs de un paciente
- * API demostrativa, falta analisar como se va a buscar en el repsitorios
+ * API demostrativa, falta analizar como se va a buscar en el repositorio
  */
 router.get('/paciente/:id', async (req: any, res, next) => {
     if (!Auth.check(req, 'cda:list')) {
