@@ -23,7 +23,6 @@ import * as pdfGenerator from '../../../utils/pdfGenerator';
 import {
     Auth
 } from '../../../auth/auth.class';
-
 let path = require('path');
 let router = express.Router();
 let pool;
@@ -46,12 +45,14 @@ router.post('/laboratorios', async(req: any, res, next) => {
     }
     try {
         let unPaciente = req.body.paciente;
+        let list: any = [];
         pool = await sql.connect(connection);
-        let laboratoriosValidados: any [];
+        let laboratoriosValidados: any[];
         laboratoriosValidados = await operations.getEncabezados(unPaciente.documento);
-        if (laboratoriosValidados.length > 0) {
-            laboratoriosValidados.forEach(async reg => {
-                let details = await operations.getDetalles(reg.idProtocolo);
+        laboratoriosValidados.forEach(async reg => {
+            let existe = await operations.existCDA(reg.idProtocolo, unPaciente.documento);
+            if (existe) {
+                let details = await operations.getDetalles(reg.idProtocolo, reg.idEfector);
                 let organizacion = await operations.organizacionBySisaCode(reg.efectorCodSisa);
                 let paciente = await cdaCtr.findOrCreate(req, unPaciente, organizacion.id); // Si el paciente viene con ID está en ANDES/MPI en otro caso es un paciente externo.
                 let fecha = reg.fecha;
@@ -79,12 +80,13 @@ router.post('/laboratorios', async(req: any, res, next) => {
                     adjuntos: [fileData.filename]
                 };
                 let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
-                res.json({
-                    cda: uniqueId,
-                    paciente: paciente.id
-                });
-            });
-        }
+                // Marcamos el protocolo (encabezado) como generado, asignando el uniqueId
+                let update = await operations.setMarkProtocol(reg.idProtocolo, unPaciente.documento, uniqueId);
+            }
+        });
+        res.json({
+            proceso: 'Finalizado',
+        });
 
     } catch (e) {
         next(e);
