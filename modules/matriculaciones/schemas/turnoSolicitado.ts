@@ -82,6 +82,8 @@ export let turnoSolicitadoSchema = new mongoose.Schema({
          vencimiento: {type: Date, required: false}
      }],
      notas: { type: String, required: false },
+     rematriculado: { type: Boolean, default: false }
+     
 });
 
 

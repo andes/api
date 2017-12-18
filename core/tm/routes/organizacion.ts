@@ -236,6 +236,7 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
         query = organizacion.model.find({}).skip(skip).limit(limit);
 
         if (req.query.nombre) { query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i')); }
+        if (req.query.codigoSisa) { query.where('codigo.sisa').equals(RegExp('^.*' + req.query.codigoSisa + '.*$', 'i')); }
         if (req.query.activo) { query.where('activo').equals(RegExp(req.query.activo)); }
         query.exec((err, data) => {
             if (err) { return next(err); }
