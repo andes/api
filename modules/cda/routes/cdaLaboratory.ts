@@ -50,7 +50,6 @@ router.post('/laboratorios', async(req: any, res, next) => {
         let list = [];
         let laboratoriosValidados: any[];
         laboratoriosValidados = await operations.getEncabezados(unPaciente.documento);
-        console.log('cantidad de labos: ', laboratoriosValidados.length);
         laboratoriosValidados.forEach(async reg => {
             let existe = await operations.existCDA(reg.idProtocolo, unPaciente.documento);
             if (existe) {
