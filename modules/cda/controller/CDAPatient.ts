@@ -190,7 +190,7 @@ export function storeFile ({extension, mimeType, stream }) {
 export function storePdfFile (pdf) {
     return new Promise(( resolve, reject) => {
         let uniqueId = String(new mongoose.Types.ObjectId());
-        let input = new stream.PassThrough();
+        let input = new Stream.PassThrough();
         let mime = 'application/pdf';
         let CDAFiles = makeFs();
         CDAFiles.write({
