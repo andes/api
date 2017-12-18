@@ -599,8 +599,7 @@ export function actualizarEstadoAgendas() {
 }
 
 /**
- * Llegado el día de ejecucion de la agenda, los turnos restantesProgramados pasan a 
- * restantesDelDia
+ * Llegado el día de ejecucion de la agenda, los turnos restantesProgramados pasan a restantesDelDia
  *
  * @export actualizarTiposDeTurno()
  * @returns resultado
@@ -620,7 +619,7 @@ export function actualizarTurnosDelDia() {
     cursor.eachAsync(doc => {
         let agenda: any = doc;
         for (let j = 0; j < agenda.bloques.length; j++) {
-            if (agenda.bloques[j].restantesProgramados > 0){
+            if (agenda.bloques[j].restantesProgramados > 0) {
                 agenda.bloques[j].restantesDelDia += agenda.bloques[j].restantesProgramados;
                 agenda.bloques[j].restantesProgramados = 0;
             }
