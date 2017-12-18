@@ -32,9 +32,9 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
                 $where: 'this.estados[this.estados.length - 1].tipo ==  \"' + req.query.estado + '\"'
             });
         } else {
-            query = Prestacion.find({}); //Trae todos
+            query = Prestacion.find({}); // Trae todos
         }
-       
+
         if (req.query.fechaDesde) {
             query.where('ejecucion.fecha').gte(moment(req.query.fechaDesde).startOf('day').toDate() as any);
         }
