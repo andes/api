@@ -78,7 +78,6 @@ router.post('/laboratorios', async(req: any, res, next) => {
                     fecha: fecha,
                     adjuntos: [fileData.filename]
                 };
-                console.log('antes del store');
                 let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
                 res.json({
                     cda: uniqueId,
