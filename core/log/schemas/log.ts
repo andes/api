@@ -40,7 +40,7 @@ export let logSchema = new mongoose.Schema({
             // OperacionesElastic
             'elasticInsert', 'elasticInsertInPut', 'elasticUpdate', 'elasticDelete', 'elasticError',
             // ... Citas
-            'asignarTurno', 'cancelarTurno', 'listaEspera', 'actualizarTiposDeTurno', 'actualizarEstadoAgendas',
+            'asignarTurno', 'cancelarTurno', 'listaEspera', 'actualizarTiposDeTurno', 'actualizarEstadoAgendas', 'actualizarTurnosDelDia',
             // ... RUP
             'pacientes',
             // ...Fuentes Autenticas
