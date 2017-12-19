@@ -598,6 +598,52 @@ export function actualizarEstadoAgendas() {
 
 }
 
+/**
+ * Llegado el día de ejecucion de la agenda, los turnos restantesProgramados pasan a restantesDelDia
+ *
+ * @export actualizarTiposDeTurno()
+ * @returns resultado
+ */
+export function actualizarTurnosDelDia() {
+    let fechaActualizar = moment();
+
+    let condicion = {
+        '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
+        'horaInicio': {
+            $gte: (moment(fechaActualizar).startOf('day').toDate() as any),
+            $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
+        }
+    };
+    let cursor = agendaModel.find(condicion).cursor();
+
+    cursor.eachAsync(doc => {
+        let agenda: any = doc;
+        for (let j = 0; j < agenda.bloques.length; j++) {
+            if (agenda.bloques[j].restantesProgramados > 0) {
+                agenda.bloques[j].restantesDelDia += agenda.bloques[j].restantesProgramados;
+                agenda.bloques[j].restantesProgramados = 0;
+            }
+        }
+
+        Auth.audit(agenda, (userScheduler as any));
+        saveAgenda(agenda).then((nuevaAgenda) => {
+            Logger.log(userScheduler, 'citas', 'actualizarTurnosDelDia', {
+                idAgenda: agenda._id,
+                organizacion: agenda.organizacion,
+                horaInicio: agenda.horaInicio,
+                updatedAt: agenda.updatedAt,
+                updatedBy: agenda.updatedBy
+
+            });
+        }).catch(error => {
+            return (error);
+        });
+
+    });
+    return 'Agendas actualizadas';
+
+}
+
 
 /**
  * Realiza el save de una agenda.
