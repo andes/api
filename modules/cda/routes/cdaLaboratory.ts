@@ -23,7 +23,6 @@ import * as pdfGenerator from '../../../utils/pdfGenerator';
 import {
     Auth
 } from '../../../auth/auth.class';
-
 let path = require('path');
 let router = express.Router();
 let pool;
@@ -47,11 +46,14 @@ router.post('/laboratorios', async(req: any, res, next) => {
     try {
         let unPaciente = req.body.paciente;
         pool = await sql.connect(connection);
-        let laboratoriosValidados: any [];
+        let counter = 0;
+        let list = [];
+        let laboratoriosValidados: any[];
         laboratoriosValidados = await operations.getEncabezados(unPaciente.documento);
-        if (laboratoriosValidados.length > 0) {
-            laboratoriosValidados.forEach(async reg => {
-                let details = await operations.getDetalles(reg.idProtocolo);
+        laboratoriosValidados.forEach(async reg => {
+            let noExisteCdaAsociado = await operations.noExistCDA(reg.idProtocolo, unPaciente.documento);
+            if (noExisteCdaAsociado) {
+                let details = await operations.getDetalles(reg.idProtocolo, reg.idEfector);
                 let organizacion = await operations.organizacionBySisaCode(reg.efectorCodSisa);
                 let paciente = await cdaCtr.findOrCreate(req, unPaciente, organizacion.id); // Si el paciente viene con ID está en ANDES/MPI en otro caso es un paciente externo.
                 let fecha = reg.fecha;
@@ -79,13 +81,21 @@ router.post('/laboratorios', async(req: any, res, next) => {
                     adjuntos: [fileData.filename]
                 };
                 let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
+                // Marcamos el protocolo (encabezado) como generado, asignando el uniqueId
+                let update = await operations.setMarkProtocol(reg.idProtocolo, unPaciente.documento, uniqueId);
+                counter = counter + 1;
+                list.push({cda: uniqueId, protocolo: reg.idProtocolo});
+            } else {
+                counter = counter + 1;
+                list.push({cda: 'Ya existe', protocolo: reg.idProtocolo});
+            }
+            if (counter === laboratoriosValidados.length) {
                 res.json({
-                    cda: uniqueId,
-                    paciente: paciente.id
+                    proceso: 'Finalizado',
+                    lista: list
                 });
-            });
-        }
-
+            }
+        });
     } catch (e) {
         next(e);
     }
