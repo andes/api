@@ -247,4 +247,12 @@ router.post('/login', function (req, res, next) {
     }
 });
 
+/**
+ * Genera FileToken para poder acceder a archivos embebidos
+ */
+
+router.post('/file-token', Auth.authenticate(), (req, res, next) => {
+    return res.json({token: Auth.generateFileToken()});
+});
+
 export = router;
