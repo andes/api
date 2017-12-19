@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
-import * as ubicacionSchema from '../../../core/tm/schemas/ubicacion';
+// import * as ubicacionSchema from '../../../core/tm/schemas/ubicacion';
 import * as constantes from '../../../core/tm/schemas/constantes';
-import * as direccionSchema from '../../../core/tm/schemas/direccion';
+// import * as direccionSchema from '../../../core/tm/schemas/direccion';
 import * as contactoSchema from '../../../core/tm/schemas/contacto';
 import * as especialidadSchema from '../../../core/tm/schemas/especialidad';
 import * as paisSchema from '../../../core/tm/schemas/pais';
@@ -15,6 +15,41 @@ let matriculacionSchema = new mongoose.Schema({
     inicio: Date,
     fin: Date,
     revalidacionNumero: Number
+});
+
+let nombreSchema = new mongoose.Schema({
+    nombre: {
+        type: String,
+        required: false
+    }
+});
+
+let ubicacionSchema = new mongoose.Schema({
+    barrio: nombreSchema,
+    localidad: nombreSchema,
+    provincia: nombreSchema,
+    pais: nombreSchema
+});
+
+let direccionSchema = new mongoose.Schema({
+    tipo: {
+        type: String,
+        required: false
+    },
+    valor: String,
+    codigoPostal: String,
+    ubicacion: ubicacionSchema,
+    geoReferencia: {
+        type: [Number],
+        index: '2d'
+    },
+    ranking: Number,
+    activo: {
+        type: Boolean,
+        required: true,
+        default: true
+    },
+    ultimaActualizacion: Date,
 });
 
 
@@ -83,7 +118,7 @@ export let turnoSolicitadoSchema = new mongoose.Schema({
      }],
      notas: { type: String, required: false },
      rematriculado: { type: Boolean, default: false }
-     
+
 });
 
 

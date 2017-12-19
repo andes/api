@@ -26,9 +26,7 @@ router.post('/turnoSolicitados', function (req, res, next) {
                      });
                 } else {
                     turnoSolicitado.findOne({ 'documento': req.body.documento }, function (err, person) {
-                        if (person !== null) {
-                            res.json(null);
-                        } else {
+
                             let newProfesional = new turnoSolicitado(req.body);
                             newProfesional.save((err2) => {
                                 if (err2) {
@@ -37,7 +35,7 @@ router.post('/turnoSolicitados', function (req, res, next) {
                                 res.json(newProfesional);
                             });
 
-                        }
+
 
                      });
 
