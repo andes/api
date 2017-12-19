@@ -55,7 +55,7 @@ function organizacionCompleto(idOrganizacion): any {
 
 // Funciones públicas
 
-export function existCDA(protocol, dniPaciente) {
+export function noExistCDA(protocol, dniPaciente) {
     return new Promise(async function (resolve, reject) {
         try {
             let query = 'select * from LAB_ResultadoEncabezado where idProtocolo = ' + protocol + ' and numeroDocumento =  ' + dniPaciente;
@@ -63,7 +63,7 @@ export function existCDA(protocol, dniPaciente) {
             if (result[0].cda) {
                 return resolve(null); // Si ya tiene el cda no hacer nada
             } else {
-                return resolve(result[0]);
+                return resolve(result[0]); // Si no tiene cda asociado devuelve el objeto
             }
         } catch (ex) {
             return reject(null);

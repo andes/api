@@ -51,8 +51,8 @@ router.post('/laboratorios', async(req: any, res, next) => {
         let laboratoriosValidados: any[];
         laboratoriosValidados = await operations.getEncabezados(unPaciente.documento);
         laboratoriosValidados.forEach(async reg => {
-            let existe = await operations.existCDA(reg.idProtocolo, unPaciente.documento);
-            if (existe) {
+            let noExisteCdaAsociado = await operations.noExistCDA(reg.idProtocolo, unPaciente.documento);
+            if (noExisteCdaAsociado) {
                 let details = await operations.getDetalles(reg.idProtocolo, reg.idEfector);
                 let organizacion = await operations.organizacionBySisaCode(reg.efectorCodSisa);
                 let paciente = await cdaCtr.findOrCreate(req, unPaciente, organizacion.id); // Si el paciente viene con ID está en ANDES/MPI en otro caso es un paciente externo.
