@@ -503,10 +503,15 @@ export function deleteRelacion(req, data) {
     }
 }
 
-
 export function updateFotoMobile(req, data) {
     data.fotoMobile = req.body.fotoMobile;
 }
+
+export function updateScan(req, data) {
+    data.markModified('scan');
+    data.scan = req.body.scan;
+}
+
 /* Hasta acá funciones del PATCH */
 
 

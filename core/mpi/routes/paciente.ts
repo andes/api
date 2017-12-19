@@ -647,7 +647,7 @@ router.put('/pacientes/:id', function (req, res, next) {
         if (err) {
             return next(404);
         }
-       // let pacienteOriginal = null;
+        // let pacienteOriginal = null;
         if (patientFound) {
             let data = req.body;
             if (patientFound.estado === 'validado' && !patientFound.isScan) {
@@ -662,42 +662,42 @@ router.put('/pacientes/:id', function (req, res, next) {
 
         } else {
             try {
-            req.body._id = req.body.id;
-            let newPatient = new paciente(req.body);
-            // verifico si el paciente ya está en MPI
-            pacienteMpi.findById(query, function (err3, patientFountMpi: any) {
-                if (err3) {
-                    return next(404);
-                }
-                if (patientFountMpi) {
-                    Auth.audit(newPatient, req);
-                }
-                newPatient.save((err2) => {
-                    if (err2) {
-                        return next(err2);
+                req.body._id = req.body.id;
+                let newPatient = new paciente(req.body);
+                // verifico si el paciente ya está en MPI
+                pacienteMpi.findById(query, function (err3, patientFountMpi: any) {
+                    if (err3) {
+                        return next(404);
                     }
-                    let nuevoPac = JSON.parse(JSON.stringify(newPatient));
-                    // delete nuevoPac._id;
-                    // delete nuevoPac.relaciones;
-                    let connElastic = new ElasticSync();
-                    connElastic.sync(newPatient).then(updated => {
-                        if (updated) {
-                            Logger.log(req, 'mpi', 'update', {
-                                original: nuevoPac,
-                                nuevo: newPatient
-                            });
-                        } else {
-                            Logger.log(req, 'mpi', 'insert', newPatient);
+                    if (patientFountMpi) {
+                        Auth.audit(newPatient, req);
+                    }
+                    newPatient.save((err2) => {
+                        if (err2) {
+                            return next(err2);
                         }
-                        res.json(nuevoPac);
-                    }).catch(error => {
-                        return next(error);
+                        let nuevoPac = JSON.parse(JSON.stringify(newPatient));
+                        // delete nuevoPac._id;
+                        // delete nuevoPac.relaciones;
+                        let connElastic = new ElasticSync();
+                        connElastic.sync(newPatient).then(updated => {
+                            if (updated) {
+                                Logger.log(req, 'mpi', 'update', {
+                                    original: nuevoPac,
+                                    nuevo: newPatient
+                                });
+                            } else {
+                                Logger.log(req, 'mpi', 'insert', newPatient);
+                            }
+                            res.json(nuevoPac);
+                        }).catch(error => {
+                            return next(error);
+                        });
                     });
                 });
-            });
-        } catch (ex) {
-            return next(ex);
-        }
+            } catch (ex) {
+                return next(ex);
+            }
         }
     });
 });
@@ -819,6 +819,9 @@ router.patch('/pacientes/:id', function (req, res, next) {
                 case 'deleteRelacion':
                     controller.deleteRelacion(req, resultado.paciente);
                     break;
+                case 'updateScan':
+                    controller.updateScan(req, resultado.paciente);
+                    break;
             }
 
             let pacienteAndes: any;
@@ -827,7 +830,6 @@ router.patch('/pacientes/:id', function (req, res, next) {
             } else {
                 pacienteAndes = resultado.paciente;
             }
-
             Auth.audit(pacienteAndes, req);
             pacienteAndes.save(function (errPatch) {
                 if (errPatch) {
