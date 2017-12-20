@@ -396,7 +396,6 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 case 'avisos':
                     agendaCtrl.agregarAviso(req, data);
                     break;
-                
                 default:
                     return next('Error: No se seleccionó ninguna opción.');
             }
