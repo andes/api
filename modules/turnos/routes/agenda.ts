@@ -396,11 +396,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 case 'avisos':
                     agendaCtrl.agregarAviso(req, data);
                     break;
-                // case 'reasignarTurno': reasignarTurno(req, data, turnos[y]._id);
-                //     break;
-                // case 'bloquearTurno': bloquearTurno(req, data, turnos[y]._id);
-                //     break;
-
+                
                 default:
                     return next('Error: No se seleccionó ninguna opción.');
             }
