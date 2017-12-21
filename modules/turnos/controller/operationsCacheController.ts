@@ -712,7 +712,7 @@ function existeAgendaSips(agendaMongo): any {
 async function grabaAgendaSips(agendaSips: any, datosSips: any, pool) {
     let objectId = agendaSips.id;
 
-    let estado = await getEstadoAgendaSips(agendaSips.estado);
+    let estado = getEstadoAgendaSips(agendaSips.estado);
     let fecha = moment(agendaSips.horaInicio).format('YYYYMMDD');
     let horaInicio = moment(agendaSips.horaInicio).utcOffset('-03:00').format('HH:mm');
     let horaFin = moment(agendaSips.horaFin).utcOffset('-03:00').format('HH:mm');
@@ -777,23 +777,15 @@ async function grabaAgendaSips(agendaSips: any, datosSips: any, pool) {
 }
 
 function getEstadoAgendaSips(estadoCitas) {
-    return new Promise(async function (resolve, reject) {
-        try {
-            let estado: any;
-
-            if (estadoCitas === 'disponible' || estadoCitas === 'publicada') {
-                estado = constantes.EstadoAgendaSips.activa; // 1
-            } else if (estadoCitas === 'suspendida') {
-                estado = constantes.EstadoAgendaSips.inactiva;
-            } else if (estadoCitas === 'codificada') {
-                estado = constantes.EstadoAgendaSips.cerrada;
-            }
-
-            resolve(estado);
-        } catch (ex) {
-            reject(ex);
-        }
-    });
+    let estado: any;
+    if (estadoCitas === 'disponible' || estadoCitas === 'publicada') {
+        estado = constantes.EstadoAgendaSips.activa; // 1
+    } else if (estadoCitas === 'suspendida') {
+        estado = constantes.EstadoAgendaSips.inactiva;
+    } else if (estadoCitas === 'codificada') {
+        estado = constantes.EstadoAgendaSips.cerrada;
+    }
+    return (estado);
 }
 
 
