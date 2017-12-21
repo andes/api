@@ -394,48 +394,57 @@ function getCodificacionOdonto(idNomenclador) {
  * @param pool
  */
 export async function guardarCacheASips(agendasMongo, index, pool) {
-    return new Promise(async function (resolve, reject) {
-        let agenda = agendasMongo[index];
-        let transaccion = await new sql.Transaction(pool);
-        await transaccion.begin(async err => {
-            let rolledBack = false;
-            transaccion.on('rollback', aborted => {
-                rolledBack = true;
-            });
-            try {
-                // CON_Agenda de SIPS soporta solo un profesional NOT NULL.
-                // En caso de ser nulo el paciente en agenda de ANDES, por defector
-                // graba dni '0', correspondiente a 'Sin especifiar', efector SSS.
-                let dniProfesional = agenda.profesionales[0] ? agenda.profesionales[0].documento : '0';
-                let codigoSisa = agenda.organizacion.codigo.sisa;
-                let datosSips = {
-                    idEfector: '',
-                    idProfesional: ''
-                };
-                let datosArr = await getDatosSips(codigoSisa, dniProfesional);
-                datosSips.idEfector = datosArr[0][0].idEfector;
-                datosSips.idProfesional = datosArr[1][0].idProfesional;
-                let idAgenda = await processAgenda(agenda, datosSips, pool);
-                await processTurnos(agenda, idAgenda, datosSips.idEfector);
-                await checkEstadoAgenda(agenda, idAgenda);
-                await checkEstadoTurno(agenda, idAgenda);
-                await checkAsistenciaTurno(agenda);
+    // return new Promise(async function (resolve, reject) {
+    let agenda = agendasMongo[index];
+    let transaccion = new sql.Transaction(pool);
+    let rolledBack = false;
+    transaccion.begin(async err => {
+        if (err) {
+            logger.LoggerAgendaCache.logAgenda(agenda._id, err);
+            transaccion.rollback();
+            next(pool);
+            return (err);
+        }
+        transaccion.on('rollback', aborted => {
+            rolledBack = true;
+        });
+        // CON_Agenda de SIPS soporta solo un profesional NOT NULL.
+        // En caso de ser nulo el paciente en agenda de ANDES, por defector
+        // graba dni '0', correspondiente a 'Sin especifiar', efector SSS.
+        let dniProfesional = agenda.profesionales[0] ? agenda.profesionales[0].documento : '0';
+        let codigoSisa = agenda.organizacion.codigo.sisa;
+        let datosSips = {
+            idEfector: '',
+            idProfesional: ''
+        };
+        let datosArr = await Promise.all(getDatosSips(codigoSisa, dniProfesional));
+        datosSips.idEfector = datosArr[0][0].idEfector;
+        datosSips.idProfesional = datosArr[1][0].idProfesional;
+        let idAgenda = await processAgenda(agenda, datosSips, pool);
+        await processTurnos(agenda, idAgenda, datosSips.idEfector);
+        await checkEstadoAgenda(agenda, idAgenda);
+        await checkEstadoTurno(agenda, idAgenda);
+        await checkAsistenciaTurno(agenda);
 
-                transaccion.commit(async err2 => {
-                    await markAgendaAsProcessed(agenda);
-                    next(pool);
-                    resolve();
-                });
-
-            } catch (ee) {
-                logger.LoggerAgendaCache.logAgenda(agenda._id, ee);
+        transaccion.commit(async err2 => {
+            if (err2) {
+                logger.LoggerAgendaCache.logAgenda(agenda._id, err2);
                 transaccion.rollback();
                 next(pool);
-                reject(ee);
+                return (err2);
             }
+            await markAgendaAsProcessed(agenda);
+            next(pool);
+            // return;
         });
     });
-
+    // });
+    /**
+     * Vuelve a ejecutar guardarCacheSips con la siguiente agenda.
+     *
+     * @param {any} unPool conexión sql
+     * @returns
+     */
     function next(unPool) {
         return new Promise(async function (resolve, reject) {
             ++index;
@@ -637,29 +646,26 @@ function existeConsultaTurno(idTurno) {
 }
 
 // Set de funciones locales no publicas
-
+/**
+ * Consulta Sql para obtener idEfector y idProfesional, devuelve un array de 2 promises
+ *
+ * @param {any} [codigoSisa]
+ * @param {any} [dniProfesional]
+ * @returns
+ */
 function getDatosSips(codigoSisa?, dniProfesional?) {
-    return new Promise((resolve: any, reject: any) => {
-        let transaction;
-        (async function () {
-            try {
-                let result: any[] = [];
 
-                result[0] = await new sql.Request(transaction)
-                    .input('codigoSisa', sql.VarChar(50), codigoSisa)
-                    .query('select idEfector from dbo.Sys_Efector WHERE codigoSisa = @codigoSisa');
+    let result1 = new sql.Request()
+        .input('codigoSisa', sql.VarChar(50), codigoSisa)
+        .query('select idEfector from dbo.Sys_Efector WHERE codigoSisa = @codigoSisa');
 
-                result[1] = await new sql.Request(transaction)
-                    .input('dniProfesional', sql.Int, dniProfesional)
-                    .query('SELECT idProfesional FROM dbo.Sys_Profesional WHERE numeroDocumento = @dniProfesional and activo = 1');
+    let result2 = new sql.Request()
+        .input('dniProfesional', sql.Int, dniProfesional)
+        .query('SELECT idProfesional FROM dbo.Sys_Profesional WHERE numeroDocumento = @dniProfesional and activo = 1');
 
-                resolve(result);
-            } catch (err) {
-                reject(err);
-            }
-        })();
-    });
+    return ([result1, result2]); // devuelvo un arreglo de promesas para que se ejecuten en paralelo y las capturo con un promise.all
 }
+
 
 function processAgenda(agenda: any, datosSips, pool) {
     return new Promise(async function (resolve, reject) {
