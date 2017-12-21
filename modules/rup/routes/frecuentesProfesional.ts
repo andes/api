@@ -14,7 +14,7 @@ import { profesionalMeta } from './../schemas/profesionalMeta';
 let router = express.Router();
 let async = require('async');
 
-router.get('/frecuentesProfesional/:id*?', function (req, res, next) {
+router.get('/frecuentesProfesional/:id', function (req, res, next) {
     if (req.params.id) {
         let query = profesionalMeta.find({ 'profesional.id': req.params.id });
         query.exec(function (err, data: any) {
@@ -38,6 +38,35 @@ router.get('/frecuentesProfesional/:id*?', function (req, res, next) {
     }
 });
 
+router.get('/frecuentesProfesional', function (req, res, next) {
+
+    let query = {
+        // profesional
+        ...(req.query.idProfesional) && { 'profesional.id': req.query.idProfesional },
+        // organizacion
+        ...(req.query.idOrganizacion) && { 'organizacion.id': req.query.idOrganizacion },
+        // tipoPrestacion
+        ...(req.query.tipoPrestacion) && { 'tipoPrestacion.conceptId': req.query.tipoPrestacion }
+    }
+
+    profesionalMeta.find(query, (err, data: any) => {
+
+        if (err) {
+            return next(err);
+        }
+
+        if (!data) {
+            return next(404);
+        }
+
+        if (data[0] && data[0].frecuentes) {
+            data[0].frecuentes.sort((a, b) => b.frecuencia - a.frecuencia);
+        }
+
+        res.json(data);
+    });
+});
+
 router.post('/frecuentesProfesional', function (req, res, next) {
 
     if (!req.body) {
@@ -57,59 +86,58 @@ router.post('/frecuentesProfesional', function (req, res, next) {
 });
 
 router.put('/frecuentesProfesional/:id*?', function (req, res, next) {
+    let query = {
+        // profesional
+        ...(req.params.id) && { 'profesional.id': req.params.id },
+        // organizacion
+        ...(req.body.organizacion.id) && { 'organizacion.id': req.body.organizacion.id },
+        // tipoPrestacion
+        ...(req.body.tipoPrestacion.conceptId) && { 'tipoPrestacion.conceptId': req.body.tipoPrestacion.conceptId }
+    }
 
-    let query = profesionalMeta.find({});
-
-    query.where('profesional.id', req.params.id);
-
-    query.exec((err, resultado: any) => {
+    profesionalMeta.findOne(query, (err, resultado: any) => {
         if (err) {
             return next(err);
         }
 
-        if (resultado[0] && resultado[0]._id) {
+         // si no existe agregamos el nuevo frecuente
+         if (typeof resultado === null || !resultado) {
+            let frecuente = new profesionalMeta(req.body);
+        
+            frecuente.save(function (err2) {
+                if (err2) {
+                    // return res.json(err2);
+                    return next(err2);
+                } 
+                
+                res.json(resultado);
+            });
 
-            if (resultado && resultado[0] && resultado[0].frecuentes) {
-                resultado[0].frecuentes.forEach(fr => {
-                    if (req.body.frecuentes.find(x => x.concepto.conceptId === fr.concepto.conceptId)) {
-                        req.body.frecuentes.forEach(bodyFr => {
-                            if (bodyFr.concepto.conceptId === fr.concepto.conceptId) {
-                                bodyFr.frecuencia = fr.frecuencia + 1;
-                            }
-                        });
+        } else { 
 
-                        if (req.body.frecuentes.filter(x => x.concepto.conceptId === fr.concepto.conceptId).length > 1) {
-                            req.body.frecuentes.splice(req.body.frecuentes.findIndex(y => y.concepto.conceptId === fr.concepto.conceptId), 1);
+            if (req.body.frecuentes) {
+                req.body.frecuentes.forEach(frecuente => {
+                    // frecuente.conceptos.forEach(concepto => {
+
+                        let indexConcepto = resultado.frecuentes.findIndex(x => x.concepto.conceptId === frecuente.concepto.conceptId);
+
+                        if (indexConcepto === -1) {
+                            resultado.frecuentes.push(frecuente);
+                        } else {
+                            resultado.frecuentes[indexConcepto].frecuencia = parseInt(resultado.frecuentes[indexConcepto].frecuencia) + 1;
                         }
-                    } else {
-                        req.body.frecuentes.push(fr);
-                    }
+                    // });
                 });
             }
 
-            profesionalMeta.findByIdAndUpdate(resultado[0]._id, req.body, function (err2, data2) {
+            resultado.save( (err2, data2) => {
                 if (err2) {
                     return next(err);
                 }
                 res.json(data2);
             });
-        } else {
-
-            let neu = new profesionalMeta(req.body);
-
-            neu.save(function (err2) {
-                if (err2) {
-                    res.json(err2);
-                } else {
-                    res.json(resultado);
-                }
-
-            });
         }
-
-
     });
-
 });
 
 // router.patch('/frecuentesProfesional/:id', function (req, res, next) {
