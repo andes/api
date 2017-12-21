@@ -402,7 +402,7 @@ export async function guardarCacheASips(agendasMongo, index, pool) {
         if (err) {
             logger.LoggerAgendaCache.logAgenda(agenda._id, err);
             transaccion.rollback();
-            next(pool);
+            siguiente(pool);
             return (err);
         }
         transaccion.on('rollback', aborted => {
@@ -417,26 +417,30 @@ export async function guardarCacheASips(agendasMongo, index, pool) {
             idEfector: '',
             idProfesional: ''
         };
-        let datosArr = await Promise.all(getDatosSips(codigoSisa, dniProfesional));
-        datosSips.idEfector = datosArr[0][0].idEfector;
-        datosSips.idProfesional = datosArr[1][0].idProfesional;
-        let idAgenda = await processAgenda(agenda, datosSips, pool);
-        await processTurnos(agenda, idAgenda, datosSips.idEfector);
-        await checkEstadoAgenda(agenda, idAgenda);
-        await checkEstadoTurno(agenda, idAgenda);
-        await checkAsistenciaTurno(agenda);
+        try {
+            let datosArr = await Promise.all(getDatosSips(codigoSisa, dniProfesional));
+            datosSips.idEfector = datosArr[0][0].idEfector;
+            datosSips.idProfesional = datosArr[1][0].idProfesional;
+            let idAgenda = processAgenda(agenda, datosSips, pool);
+            await processTurnos(agenda, idAgenda, datosSips.idEfector);
+            await checkEstadoAgenda(agenda, idAgenda);
+            await checkEstadoTurno(agenda, idAgenda);
+            await checkAsistenciaTurno(agenda);
 
-        transaccion.commit(async err2 => {
-            if (err2) {
-                logger.LoggerAgendaCache.logAgenda(agenda._id, err2);
-                transaccion.rollback();
-                next(pool);
-                return (err2);
-            }
-            await markAgendaAsProcessed(agenda);
-            next(pool);
-            // return;
-        });
+            transaccion.commit(async err2 => {
+                if (err2) {
+                    logger.LoggerAgendaCache.logAgenda(agenda._id, err2);
+                    transaccion.rollback();
+                    siguiente(pool);
+                    return (err2);
+                }
+                await markAgendaAsProcessed(agenda);
+                siguiente(pool);
+                // return;
+            });
+        } catch (error) {
+            return (error);
+        }
     });
     // });
     /**
@@ -445,7 +449,7 @@ export async function guardarCacheASips(agendasMongo, index, pool) {
      * @param {any} unPool conexión sql
      * @returns
      */
-    function next(unPool) {
+    function siguiente(unPool) {
         return new Promise(async function (resolve, reject) {
             ++index;
             if (index < agendasMongo.length) {
@@ -667,20 +671,20 @@ function getDatosSips(codigoSisa?, dniProfesional?) {
 }
 
 
-function processAgenda(agenda: any, datosSips, pool) {
-    return new Promise(async function (resolve, reject) {
-        try {
-            let idAgenda = await existeAgendaSips(agenda);
+async function processAgenda(agenda: any, datosSips, pool) {
+    // return new Promise(async function (resolve, reject) {
+    try {
+        let idAgenda = existeAgendaSips(agenda);
 
-            if (!idAgenda) {
-                idAgenda = await grabaAgendaSips(agenda, datosSips, pool);
-            }
-
-            resolve(idAgenda);
-        } catch (ex) {
-            reject(ex);
+        if (idAgenda === -1) {
+            idAgenda = await grabaAgendaSips(agenda, datosSips, pool);
         }
-    });
+
+        return (idAgenda);
+    } catch (err) {
+        return err;
+    }
+    // });
 }
 
 
@@ -688,24 +692,21 @@ function processAgenda(agenda: any, datosSips, pool) {
  * Verifica si existe la agenda pasada por parámetro en SIPS
  *
  * @param {*} agendaMongo
- * @returns una promesa con el idAgenda o falso en caso contrario
+ * @returns el id agenda o -1 en caso contrario
  */
-function existeAgendaSips(agendaMongo: any) {
-    return new Promise(function (resolve, reject) {
-        let transaction;
-        return new sql.Request(transaction)
-            .input('idAgendaMongo', sql.VarChar(50), agendaMongo.id)
-            .query('SELECT idAgenda FROM dbo.CON_Agenda WHERE objectId = @idAgendaMongo GROUP BY idAgenda')
-            .then(result => {
-                if (result.length > 0) {
-                    resolve(result[0].idAgenda);
-                } else {
-                    resolve(false);
-                }
-            }).catch(err => {
-                reject(err);
-            });
-    });
+function existeAgendaSips(agendaMongo): any {
+    new sql.Request()
+        .input('idAgendaMongo', sql.VarChar(50), agendaMongo.id)
+        .query('SELECT idAgenda FROM dbo.CON_Agenda WHERE objectId = @idAgendaMongo GROUP BY idAgenda')
+        .then(result => {
+            if (result.length > 0) {
+                return (result[0].idAgenda);
+            } else {
+                return (-1);
+            }
+        }).catch((error) => {
+            return (error);
+        });
 }
 
 async function grabaAgendaSips(agendaSips: any, datosSips: any, pool) {
