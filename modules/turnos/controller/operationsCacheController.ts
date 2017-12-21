@@ -727,7 +727,8 @@ async function grabaAgendaSips(agendaSips: any, datosSips: any, pool) {
     return new Promise(async (resolve: any, reject: any) => {
         let idEfector = datosSips.idEfector;
         let idProfesional = datosSips.idProfesional;
-        let idEspecialidad = await getEspecialidadSips(agendaSips.tipoPrestaciones[0].term);
+        let idEspecialidad = (agendaSips.tipoPrestaciones[0].term.includes('odonto')) ? 34 : 14;  /*IdEspecialidad 34 = odontologia en SIPS*/
+
         let idServicio = 177;
         let idTipoPrestacion = 0;
         let idConsultorio = await existeConsultorio(agendaSips, idEfector);
@@ -790,21 +791,6 @@ function arrayIdProfesionales(profMongo, pool) {
         .input('dniProfesional', sql.Int, profMongo.documento)
         .query('SELECT idProfesional FROM dbo.Sys_Profesional WHERE numeroDocumento = @dniProfesional AND activo = 1');
 }
-
-function getEspecialidadSips(tipoPrestacion) {
-    let idEspecialidad = 0;
-    return new Promise((resolve, reject) => {
-        if (tipoPrestacion.includes('odonto')) {
-            /*IdEspecialidad 34 = odontologia en SIPS*/
-            idEspecialidad = 34;
-            resolve(idEspecialidad);
-        } else {
-            idEspecialidad = 14;
-            resolve(idEspecialidad);
-        }
-    });
-}
-
 /**
  * @param agenda @description Busca el paciente correspondiente a un turno y agenda pasados por parámetro
  * @param idTurno
