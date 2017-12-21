@@ -674,9 +674,11 @@ function getDatosSips(codigoSisa?, dniProfesional?) {
 async function processAgenda(agenda: any, datosSips, pool) {
     // return new Promise(async function (resolve, reject) {
     try {
-        let idAgenda = existeAgendaSips(agenda);
-
-        if (idAgenda === -1) {
+        let result = await existeAgendaSips(agenda);
+        let idAgenda;
+        if (result.length > 0) {
+            idAgenda = result[0].idAgenda;
+        } else {
             idAgenda = await grabaAgendaSips(agenda, datosSips, pool);
         }
 
@@ -687,7 +689,6 @@ async function processAgenda(agenda: any, datosSips, pool) {
     // });
 }
 
-
 /**
  * Verifica si existe la agenda pasada por parámetro en SIPS
  *
@@ -695,18 +696,9 @@ async function processAgenda(agenda: any, datosSips, pool) {
  * @returns el id agenda o -1 en caso contrario
  */
 function existeAgendaSips(agendaMongo): any {
-    new sql.Request()
+    return new sql.Request()
         .input('idAgendaMongo', sql.VarChar(50), agendaMongo.id)
-        .query('SELECT idAgenda FROM dbo.CON_Agenda WHERE objectId = @idAgendaMongo GROUP BY idAgenda')
-        .then(result => {
-            if (result.length > 0) {
-                return (result[0].idAgenda);
-            } else {
-                return (-1);
-            }
-        }).catch((error) => {
-            return (error);
-        });
+        .query('SELECT idAgenda FROM dbo.CON_Agenda WHERE objectId = @idAgendaMongo GROUP BY idAgenda');
 }
 
 async function grabaAgendaSips(agendaSips: any, datosSips: any, pool) {
@@ -729,9 +721,7 @@ async function grabaAgendaSips(agendaSips: any, datosSips: any, pool) {
 
     let multiprofesional = 0;
     let dniProfesional = agendaSips.profesionales[0].documento;
-
-    let listaIdProfesionales = [];
-    listaIdProfesionales = await getProfesional(agendaSips.profesionales, pool);
+    let listaIdProfesionales = getProfesionalesSips(agendaSips.profesionales, pool);
 
     if (agendaSips.profesionales.length > 1) {
         multiprofesional = 1;
@@ -788,39 +778,26 @@ function getEstadoAgendaSips(estadoCitas) {
     return (estado);
 }
 
-
-function getProfesional(profesionalMongo, pool) {
-    profesionalMongo = profesionalMongo.map(profMongo => arrayIdProfesionales(profMongo, pool));
-
-    return Promise
-        .all(profesionalMongo)
-        .then(arrayIdProf => {
-            return arrayIdProf;
-        });
+function getProfesionalesSips(profesionalMongo, pool) {
+    return profesionalMongo = profesionalMongo.map(profMongo => arrayIdProfesionales(profMongo, pool));
 }
 
-function arrayIdProfesionales(profMongo, pool) {
-    return new Promise((resolve, reject) => {
-        const array = [];
-        (async function () {
-            try {
-                let query = 'SELECT idProfesional FROM dbo.Sys_Profesional WHERE numeroDocumento = @dniProfesional AND activo = 1';
-                let result = await pool.request()
-                    .input('dniProfesional', sql.Int, profMongo.documento)
-                    .query(query);
-
-                array.push(result[0]);
-                resolve(array);
-            } catch (err) {
-                reject(err);
-            }
-        })();
-    });
+async function arrayIdProfesionales(profMongo, pool) {
+    const array = [];
+    try {
+        let query = 'SELECT idProfesional FROM dbo.Sys_Profesional WHERE numeroDocumento = @dniProfesional AND activo = 1';
+        let result = await pool.request()
+            .input('dniProfesional', sql.Int, profMongo.documento)
+            .query(query);
+        array.push(result[0]);
+        return (array);
+    } catch (err) {
+        return (err);
+    }
 }
 
 function getEspecialidadSips(tipoPrestacion) {
     let idEspecialidad = 0;
-
     return new Promise((resolve, reject) => {
         if (tipoPrestacion.includes('odonto')) {
             /*IdEspecialidad 34 = odontologia en SIPS*/
