@@ -51,11 +51,10 @@ export function buscarEnHuds(prestaciones, conceptos) {
     let data = [];
     // recorremos prestaciones
     prestaciones.forEach((prestacion: any) => {
-        
         // recorremos los registros de cada prestacion
         prestacion.ejecucion.registros.forEach(registro => {
 
-            // verificamos si el registro de la prestacion tiene alguno de 
+            // verificamos si el registro de la prestacion tiene alguno de
             // los conceptos en su array de registros
             let resultado = matchConcepts(registro, conceptos);
 
