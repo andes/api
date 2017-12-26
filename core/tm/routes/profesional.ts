@@ -16,6 +16,9 @@ import {
 import {
     makeFsFirma
 } from '../schemas/firmaProf';
+import {
+    makeFsFirmaAdmin
+} from '../schemas/firmaAdmin';
 
 import * as stream from 'stream';
 import * as base64 from 'base64-stream';
@@ -68,6 +71,7 @@ router.get('/profesionales/firma/:id*?', Auth.authenticate(), (req: any, res, ne
     if (!Auth.check(req, 'matriculaciones:profesionales:getProfesionalFirma')) {
         return next(403);
     }
+    if (req.query.id) {
     let id = req.query.id;
     let fotoProf = makeFsFirma();
     fotoProf.find({
@@ -91,6 +95,38 @@ router.get('/profesionales/firma/:id*?', Auth.authenticate(), (req: any, res, ne
             });
         }
     });
+
+    }
+    if (req.query.firmaAdmin) {
+
+        let idAdmin = req.query.firmaAdmin;
+        let fotoAdmin = makeFsFirmaAdmin();
+        fotoAdmin.find({
+            'metadata.idProfesional': idAdmin
+        }, {}, {
+            sort: {
+                '_id': -1
+            }
+        }, function (err, file) {
+            if (file[0] == null) {
+                res.send(null);
+            } else {
+                var stream1 = fotoAdmin.readById(file[0].id, function (err2, buffer) {
+                    if (err2) {
+                        return next(err2);
+                    }
+                    res.setHeader('Content-Type', file[0].contentType);
+                    res.setHeader('Content-Length', file[0].length);
+                    let firmaAdmin = {
+                        firma: buffer.toString('base64'),
+                        administracion: file[0].metadata.administracion
+                    };
+                    return res.send(firmaAdmin);
+                });
+            }
+        });
+
+    }
 
 });
 router.get('/profesionales/matricula/:id', (req, resp, errHandler) => {
@@ -255,18 +291,18 @@ router.post('/profesionales', Auth.authenticate(), function (req, res, next) {
             let _base64 = req.body.firma.firmaP;
             let decoder = base64.decode();
             let input = new stream.PassThrough();
-            let CDAFiles = makeFsFirma();
+            let firmaProf = makeFsFirma();
 
             // remove la firma vieja antes de insertar la nueva
-            CDAFiles.find({
+            firmaProf.find({
                 'metadata.idProfesional': req.body.firma.idProfesional
             }, function (err, file) {
                 file.forEach(recorre => {
-                    CDAFiles.unlinkById(recorre._id, function (error, unlinkedAttachment) {});
+                    firmaProf.unlinkById(recorre._id, function (error, unlinkedAttachment) {});
                 });
             });
             // inserta en la bd en files y chucks
-            CDAFiles.write({
+            firmaProf.write({
                     filename: 'firma.png',
                     contentType: 'image/jpeg',
                     metadata: {
@@ -280,6 +316,36 @@ router.post('/profesionales', Auth.authenticate(), function (req, res, next) {
             input.end(_base64);
 
     }
+    if (req.body.firmaAdmin) {
+        let _base64 = req.body.firmaAdmin.firma;
+        let decoder = base64.decode();
+        let input = new stream.PassThrough();
+        let firmaAdmin = makeFsFirmaAdmin();
+
+        // remove la firma vieja antes de insertar la nueva
+        firmaAdmin.find({
+            'metadata.idProfesional': req.body.firmaAdmin.idProfesional
+        }, function (err, file) {
+            file.forEach(recorre => {
+                firmaAdmin.unlinkById(recorre._id, function (error, unlinkedAttachment) {});
+            });
+        });
+        // inserta en la bd en files y chucks
+        firmaAdmin.write({
+                filename: 'firmaAdmin.png',
+                contentType: 'image/jpeg',
+                metadata: {
+                    idProfesional: req.body.firmaAdmin.idProfesional,
+                    administracion: req.body.firmaAdmin.nombreCompleto,
+                }
+            },
+            input.pipe(decoder),
+            function (error, createdFile) {
+                res.json(createdFile);
+            });
+        input.end(_base64);
+
+}
     if (req.body.profesional) {
         profesional.findOne({
             'documento': req.body.documento
