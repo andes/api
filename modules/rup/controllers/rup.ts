@@ -79,16 +79,16 @@ export function buscarEnHuds(prestaciones, conceptos) {
  * Método recursivo que busca los conceptos enviados por parametro
  * dentro del array de registros de una prestación
  * 
- * @param {any} obj 
- * @param {any} conceptos Array con conceptId de SNOMED a buscar dentro de los registros de prestaciones
+ * @param {any} registro Registro actual a consultar por conceptId o ver si tiene un subarray de registros para seguir loopeando
+ * @param {any} conceptos Array con conceptId de SNOMED a buscar dentro de la variable registro
  * @returns {any} Si existe el concepto en el array de registros devuelve el registro, si no FALSE.
  */
-export function matchConcepts(obj, conceptos) {
+export function matchConcepts(registro, conceptos) {
     // almacenamos la variable de matcheo para devolver el resultado
     let match = false;
 
-    if (Array.isArray(obj['registros']) && obj['registros'].length > 0) {
-        obj['registros'].forEach((registro: any) => {
+    if (Array.isArray(registro['registros']) && registro['registros'].length > 0) {
+        registro['registros'].forEach((registro: any) => {
 
             if (matchConcepts(registro, conceptos)) {
                 match = registro;
@@ -96,8 +96,8 @@ export function matchConcepts(obj, conceptos) {
         });
     } else {
         // verificamos que el concepto coincida con alguno de los elementos enviados en los conceptos
-        if (obj.concepto && obj.concepto.conceptId && conceptos.indexOf(obj.concepto.conceptId) !== -1) {
-            match = obj;
+        if (registro.concepto && registro.concepto.conceptId && conceptos.indexOf(registro.concepto.conceptId) !== -1) {
+            match = registro;
         }
     }
 
