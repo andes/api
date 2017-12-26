@@ -29,9 +29,11 @@ export function updateTurno(datosTurno: any) {
                     posTurno = (data as any).bloques[posBloque].turnos.findIndex(turno => Object.is(String(datosTurno.idTurno), String(turno._id)));
 
                     etiquetaTurno = 'bloques.' + posBloque + '.turnos.' + posTurno;
+                    resolve();
                 } else {
                     posTurno = (data as any).sobreturnos.findIndex(sobreturno => Object.is(datosTurno.idTurno, String(sobreturno._id)));
                     etiquetaTurno = 'sobreturnos.' + posTurno;
+                    resolve();
                 }
 
                 let usuario = datosTurno.idUsuarioSips;
@@ -52,22 +54,22 @@ export function updateTurno(datosTurno: any) {
                             reject(err2);
                         }
                         if (writeOpResult && writeOpResult.value === null) {
-                            return ('No se pudo actualizar los datos del turno');
+                            resolve('No se pudo actualizar los datos del turno');
                         } else {
                             let datosOp = {
                                 turno: update[etiquetaTurno]
                             };
 
                             resolve(doc2._id);
-                            return ('Se actualizó el turno');
+
                         }
                     });
-                return null;
+                resolve(null);
             });
 
-            return null;
+            resolve(null);
         } else {
-            return ('Los datos del paciente son inválidos');
+            resolve('Los datos del paciente son inválidos');
         }
     });
 }

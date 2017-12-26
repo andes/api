@@ -7,11 +7,13 @@ import {
 import {
     profesional
 } from './../../../core/tm/schemas/profesional';
-import {
-    model as organizacion
-} from './../../../core/tm/schemas/organizacion';
+import * as organizacion from './../../../core/tm/schemas/organizacion';
+import * as sql from 'mssql';
+import * as cdaCtr from '../../cda/controller/CDAPatient';
 
 
+
+// Funciones privadas
 
 function traeProfesionalPorId(id) {
     return new Promise((resolve, reject) => {
@@ -23,7 +25,6 @@ function traeProfesionalPorId(id) {
         });
     });
 }
-
 /** Dada una lista de profesionales, devuelve una lista de profesionales completa */
 function profesionalCompleto(lstProfesionales): any {
     return new Promise((resolve, reject) => {
@@ -40,16 +41,92 @@ function profesionalCompleto(lstProfesionales): any {
         });
     });
 }
-
 /** Dado un id de Organización devuelve el objeto completo */
 function organizacionCompleto(idOrganizacion): any {
     return new Promise((resolve, reject) => {
-        organizacion.findById(mongoose.Types.ObjectId(idOrganizacion), function (err, unaOrganizacion) {
+        this.organizacion.findById(mongoose.Types.ObjectId(idOrganizacion), function (err, unaOrganizacion) {
             if (err) {
                 return reject(err);
             }
             return resolve(unaOrganizacion);
         });
+    });
+}
+
+// Funciones públicas
+
+export function noExistCDA(protocol, dniPaciente) {
+    return new Promise(async function (resolve, reject) {
+        try {
+            let query = 'select * from LAB_ResultadoEncabezado where idProtocolo = ' + protocol + ' and numeroDocumento =  ' + dniPaciente;
+            let result = await new sql.Request().query(query);
+            if (result[0].cda) {
+                return resolve(null); // Si ya tiene el cda no hacer nada
+            } else {
+                return resolve(result[0]); // Si no tiene cda asociado devuelve el objeto
+            }
+        } catch (ex) {
+            return reject(null);
+        }
+    });
+}
+
+export function setMarkProtocol(protocol, documento, idCda) {
+    return new Promise(async function (resolve, reject) {
+        try {
+            let query = 'UPDATE LAB_ResultadoEncabezado set cda = ' + '\'' + idCda + '\'' + ' where idProtocolo = ' + protocol + ' and numeroDocumento = ' + documento;
+            let result = await new sql.Request().query(query);
+            resolve(result);
+        } catch (ex) {
+            reject(null);
+        }
+    });
+}
+
+export function organizacionBySisaCode(code): any {
+    return new Promise((resolve, reject) => {
+        organizacion.model.findOne({
+            'codigo.sisa': code
+        }, function (err, doc: any) {
+            if (err) {
+                return reject(err);
+            }
+            let org = {
+                _id: doc.id,
+                nombre: doc.nombre,
+            };
+            return resolve(org);
+        });
+    });
+}
+
+
+export function getEncabezados(documento): any {
+    return new Promise(async function (resolve, reject) {
+        try {
+            let query = 'select efector.codigoSisa as efectorCodSisa, efector.nombre as efector, encabezado.idEfector as idEfector, encabezado.apellido, encabezado.nombre, encabezado.fechaNacimiento, encabezado.sexo, ' +
+                'encabezado.numeroDocumento, encabezado.fecha, encabezado.idProtocolo, encabezado.solicitante from LAB_ResultadoEncabezado as encabezado ' +
+                'inner join Sys_Efector as efector on encabezado.idEfector = efector.idEfector ' +
+                'where encabezado.numeroDocumento = ' + documento;
+            let result = await new sql.Request().query(query);
+            resolve(result);
+        } catch (err) {
+            reject(null);
+        }
+    });
+}
+
+
+export async function getDetalles(idProtocolo, idEfector) {
+    return new Promise(async function (resolve, reject) {
+        try {
+            let query = 'select grupo, item, resultado, valorReferencia, observaciones ' +
+                ' from LAB_ResultadoDetalle as detalle where detalle.idProtocolo = ' + idProtocolo + ' and detalle.idEfector = ' + idEfector;
+            let result = await new sql.Request().query(query);
+            resolve(result);
+        } catch (err) {
+            reject(null);
+        }
     });
 }
 

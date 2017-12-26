@@ -217,6 +217,43 @@ export function buscarPaciente(id): Promise<{ db: String, paciente: any }> {
 }
 
 /**
+ * Busca un paciente en MPI y luego en andes con cierta condición.
+ * @param condition
+ */
+
+export function buscarPacienteWithcondition (condition): Promise<{ db: String, paciente: any }> {
+    return new Promise((resolve, reject) => {
+        pacienteMpi.findOne(condition, function (err, data) {
+            if (err) {
+                reject(err);
+            } else {
+                if (data) {
+                    let resultado = {
+                        db: 'mpi',
+                        paciente: data
+                    };
+                    resolve(resultado);
+                } else {
+                    paciente.findOne(condition, function (err2, dataMpi) {
+                        if (err2) {
+                            reject(err2);
+                        } else if (dataMpi) {
+                            let resultado = {
+                                db: 'andes',
+                                paciente: dataMpi
+                            };
+                            resolve(resultado);
+                        } else {
+                            reject(null);
+                        }
+                    });
+                }
+            }
+        });
+    });
+}
+
+/**
  * Matching de paciente
  *
  * @param data
@@ -466,10 +503,15 @@ export function deleteRelacion(req, data) {
     }
 }
 
-
 export function updateFotoMobile(req, data) {
     data.fotoMobile = req.body.fotoMobile;
 }
+
+export function updateScan(req, data) {
+    data.markModified('scan');
+    data.scan = req.body.scan;
+}
+
 /* Hasta acá funciones del PATCH */
 
 
@@ -493,7 +535,6 @@ export function searchSimilar(objective, where: string, conditions, _weights = n
     let weights = _weights || config.mpi.weightsUpdater;
     let match = new Matching();
     return new Promise((resolve, reject) => {
-
         db.find(conditions).then((pacientes) => {
             let matchings: { value: Number, paciente: any }[] = [];
             if (pacientes && pacientes.length) {
@@ -518,8 +559,76 @@ export function searchSimilar(objective, where: string, conditions, _weights = n
             } else {
                 return resolve(matchings);
             }
+        }).catch(reject);
+    });
+}
+
+/**
+ *
+ * @param dataPaciente
+ * @param configs.operador Operador de busqueda de caves 'or' | 'and'
+ * @param configs.claves Array de numeros de clave de blocking. Ver crearClaveBlockin para saber el orden de creación
+ */
+
+export async function matchPaciente (dataPaciente) {
+    try {
+        let connElastic = new ElasticSync();
+        let query = {
+            multi_match: {
+                query: dataPaciente.apellido + ' ' + dataPaciente.nombre + ' ' + dataPaciente.documento,
+                type: 'cross_fields',
+                fields: ['documento^5', 'nombre', 'apellido^3'],
+            }
+        };
+        let body = {
+            size: 100,
+            from: 0,
+            query: query
+        };
+
+        let searchResult = await connElastic.search(body);
+        let pacientes: Array<any> = ((searchResult.hits || {}).hits || []).map((hit) => {
+            let elem = hit._source;
+            elem['id'] = hit._id;
+            return elem;
         });
 
-    });
+        let weights = config.mpi.weightsDefault;
+        let listMatching = [];
+        for (let paciente2 of pacientes) {
+            let pacDto = {
+                documento: dataPaciente.documento ? dataPaciente.documento.toString() : '',
+                nombre: dataPaciente.nombre ? dataPaciente.nombre : '',
+                apellido: dataPaciente.apellido ? dataPaciente.apellido : '',
+                fechaNacimiento: dataPaciente.fechaNacimiento ? moment(new Date(dataPaciente.fechaNacimiento)).format('YYYY-MM-DD') : '',
+                sexo: dataPaciente.sexo ? dataPaciente.sexo : ''
+            };
+            let pacElastic = {
+                documento: paciente2.documento ? paciente2.documento.toString() : '',
+                nombre: paciente2.nombre ? paciente2.nombre : '',
+                apellido: paciente2.apellido ? paciente2.apellido : '',
+                fechaNacimiento: paciente2.fechaNacimiento ? moment(paciente2.fechaNacimiento).format('YYYY-MM-DD') : '',
+                sexo: paciente2.sexo ? paciente2.sexo : ''
+            };
+            let match = new Matching();
+            let valorMatching = match.matchPersonas(pacElastic, pacDto, weights, config.algoritmo);
 
+            listMatching.push({
+                value: valorMatching,
+                paciente: paciente2
+            });
+
+        }
+
+        let sortMatching = function (a, b) {
+            return b.value - a.value;
+        };
+
+        listMatching.sort(sortMatching);
+        return listMatching;
+
+    } catch (e) {
+        return [];
+    }
 }
+
