@@ -87,6 +87,27 @@ export function checkEstadoTurno(agenda: any, idAgendaSips) {
     });
 }
 
+/* TODO: ver si hay mas estados de turnos entre CITAS y SIPS*/
+function getEstadoTurnosCitasSips(estadoTurnoCitas, updated) {
+    return new Promise(async function (resolve, reject) {
+        try {
+            let estado: any;
+
+            if (estadoTurnoCitas === 'asignado') {
+                estado = constantes.EstadoTurnosSips.activo;
+            } else if ((estadoTurnoCitas === 'disponible') && (updated)) {
+                estado = constantes.EstadoTurnosSips.liberado;
+            } else if (estadoTurnoCitas === 'suspendido') {
+                estado = constantes.EstadoTurnosSips.suspendido;
+            }
+
+            resolve(estado);
+        } catch (ex) {
+            reject(ex);
+        }
+    });
+}
+
 async function actualizarEstadoTurnoSips(idAgendaSips, turno) {
     return new Promise(async function (resolve, reject) {
         try {
@@ -125,6 +146,98 @@ async function actualizarEstadoTurnoSips(idAgendaSips, turno) {
     });
 }
 
+async function existeTurnoBloqueoSips(idAgendaSips, horaInicio) {
+    return new Promise(async function (resolve, reject) {
+        let transaction;
+        let query = 'SELECT COUNT(b.idTurnoBloqueo) as count FROM CON_TurnoBloqueo b ' +
+            'JOIN CON_TURNO t on t.idAgenda = b.idAgenda ' +
+            'WHERE b.idAgenda = ' + idAgendaSips +
+            ' AND b.horaTurno = \'' + horaInicio + '\'';
+
+        try {
+            let result = await new sql.Request(transaction).query(query);
+            resolve(result[0].count > 0);
+        } catch (err) {
+            reject(err);
+        }
+    });
+}
+
+
+
+async function grabarTurnoBloqueo(idAgendaSips, turno) {
+    return new Promise(async function (resolve, reject) {
+        try {
+            const motivoBloqueo = getMotivoTurnoBloqueoSips(turno);
+            var fechaBloqueo = moment(turno.horaInicio).format('YYYYMMDD');
+            var horaBloqueo = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
+
+            let queryTurnoBloqueo = 'INSERT dbo.CON_TurnoBloqueo (idAgenda ' +
+                ', fechaTurno ' +
+                ', horaTurno ' +
+                ', idUsuarioBloqueo ' +
+                ', fechaBloqueo ' +
+                ', idMotivoBloqueo) ';
+            queryTurnoBloqueo += 'VALUES (' +
+                idAgendaSips + ', ' +
+                '\'' + fechaBloqueo + '\', ' +
+                '\'' + horaBloqueo + '\', ' +
+                constantes.idUsuarioSips + ', ' +
+                '\'' + moment(turno.updatedAt).format('YYYYMMDD') + '\', ' +
+                motivoBloqueo + ')';
+
+            await executeQuery(queryTurnoBloqueo);
+            resolve();
+        } catch (ex) {
+            reject(ex);
+        }
+    });
+}
+
+function getMotivoTurnoBloqueoSips(turno) {
+    return new Promise(async function (resolve, reject) {
+        try {
+            let motivoBloqueo;
+
+            if (turno.estado === 'suspendido') {
+                motivoBloqueo = getMotivoTurnoSuspendido(turno.motivoSuspension);
+            } else if (turno.estado === 'turnoDoble') {
+                motivoBloqueo = constantes.MotivoTurnoBloqueo.turnoDoble;
+            }
+
+            resolve(motivoBloqueo);
+        } catch (ex) {
+            reject(ex);
+        }
+    });
+}
+
+
+function getMotivoTurnoSuspendido(motivoSuspension) {
+    return new Promise(async function (resolve, reject) {
+        try {
+            let devuelveMotivoSuspension;
+
+            switch (motivoSuspension) {
+                case 'profesional':
+                    devuelveMotivoSuspension = constantes.MotivoTurnoBloqueo.retiroDelProfesional;
+                    break;
+                case 'edilicia':
+                    devuelveMotivoSuspension = constantes.MotivoTurnoBloqueo.otros;
+                    break;
+                case 'organizacion':
+                    devuelveMotivoSuspension = constantes.MotivoTurnoBloqueo.reserva;
+                    break;
+            }
+
+            resolve(devuelveMotivoSuspension);
+        } catch (ex) {
+            reject(ex);
+        }
+    });
+}
+
+
 /* Devuelve el estado del turno en Con_Turno de SIPS */
 function getEstadoTurnoSips(objectId: any) {
     return new Promise((resolve: any, reject: any) => {
@@ -159,7 +272,7 @@ export function checkAsistenciaTurno(agenda: any) {
                 for (let i = 0; i < turnos.length; i++) {
                     if (turnos[i].asistencia === 'asistio') {
 
-                        let idTurno: any = await turnoOps.getEstadoTurnoSips(turnos[i]._id);
+                        let idTurno: any = await getEstadoTurnoSips(turnos[i]._id);
                         let fechaAsistencia = moment(turnos[i].updatedAt).format('YYYYMMDD');
                         let query = 'INSERT INTO dbo.CON_TurnoAsistencia ( idTurno , idUsuario , fechaAsistencia ) VALUES  ( ' +
                             idTurno.idTurno + ' , ' + constantes.idUsuarioSips + ' , \'' + fechaAsistencia + '\' )';
