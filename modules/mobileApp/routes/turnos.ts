@@ -55,8 +55,9 @@ router.get('/turnos', function (req: any, res, next) {
         matchTurno['bloques.turnos.asistencia'] = { '$exists': req.query.asistencia };
     }
 
+    // TODO: probar la siguiente condición
     if (req.query.codificado) {
-        matchTurno['bloques.turnos.diagnosticoPrincipal'] = { '$exists': true };
+        matchTurno['bloques.turnos.diagnosticos.0'] = { '$exists': true };
     }
 
     if (req.query.horaInicio) {

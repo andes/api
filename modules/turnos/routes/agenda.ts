@@ -6,8 +6,12 @@ import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
 import * as moment from 'moment';
 import * as agendaCtrl from '../controller/agenda';
-import { LoggerPaciente } from '../../../utils/loggerPaciente';
+// import * as agendaSipsCtrl from '../controller/agendaSipsController';
 
+import * as agendaCacheCtrl from '../controller/agendasCacheController';
+
+import { LoggerPaciente } from '../../../utils/loggerPaciente';
+import * as operations from './../../legacy/controller/operations';
 
 let router = express.Router();
 
@@ -84,11 +88,7 @@ router.get('/agenda/candidatas', function (req, res, next) {
                             &&  // turno disponible o al que se reasigno
                             (typeof req.query.horario !== 'undefined' ? horaIni.toString() === moment(turno.horaInicio).format('HH:mm') : true)
                             && // si filtro por horario verifico que sea el mismo
-                            (req.query.duracion ? b.duracionTurno === bloque.duracionTurno : true)
-                            &&  // si filtro por duracion verifico que sea la mismo
-                            (bloque.accesoDirectoDelDia > 0 && b.restantesDelDia > 0) || (bloque.accesoDirectoProgramado > 0 && b.restantesProgramados > 0) // verifico que queden turnos disponibles
-                            // && //
-                            // (bloque.turnos.map(t => t.paciente && t.paciente.id).length)
+                            (req.query.duracion ? b.duracionTurno === bloque.duracionTurno : true) // si filtro por duracion verifico que sea la mismo
                         ) {
                             if (out.indexOf(a) < 0) {
                                 out.push(a);
@@ -222,9 +222,13 @@ router.post('/agenda', function (req, res, next) {
             data: data,
             err: err || false
         });
+        // Fin de operaciones de cache
         if (err) {
             return next(err);
         }
+        // Al crear una nueva agenda la cacheo para Sips
+        operations.cacheTurnosSips(data);
+        // Fin de insert cache
         res.json(data);
     });
 });
@@ -282,6 +286,10 @@ router.post('/agenda/clonar', function (req, res, next) {
                             turno.nota = null;
                             turno._id = mongoose.Types.ObjectId();
                             turno.tipoTurno = undefined;
+                            turno.updatedAt = undefined;
+                            turno.updatedBy = undefined;
+                            turno.diagnostico = { codificaciones : []};
+                            turno.reasignado = undefined;
                         });
                     });
                     nueva['estado'] = 'planificacion';
@@ -321,6 +329,9 @@ router.put('/agenda/:id', function (req, res, next) {
         if (err) {
             return next(err);
         }
+        // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
+        operations.cacheTurnosSips(data);
+        // Fin de insert cache
         res.json(data);
     });
 });
@@ -376,8 +387,8 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                     break;
                 case 'pausada':
                 case 'prePausada':
-                case 'asistenciaCerrada':
-                case 'codificada':
+                case 'pendienteAuditoria':
+                case 'auditada':
                 case 'suspendida':
                 case 'borrada':
                     agendaCtrl.actualizarEstado(req, data);
@@ -424,9 +435,22 @@ router.patch('/agenda/:id*?', function (req, res, next) {
             });
 
         }
+        // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
+        operations.cacheTurnosSips(data);
+        // Fin de insert cache
         return res.json(data);
     });
 
 });
 
+router.get('/integracionSips', function (req, res, next) {
+    return new Promise<Array<any>>(async function (resolve, reject) {
+        try {
+            await agendaCacheCtrl.integracionSips();
+            resolve();
+        } catch (ex) {
+            reject(ex);
+        }
+    });
+});
 export = router;

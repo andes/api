@@ -1,5 +1,6 @@
-import * as moment from 'moment';
+import { log } from './../../../core/log/schemas/log';
 import * as agendaModel from '../../turnos/schemas/agenda';
+import * as moment from 'moment';
 import { Auth } from '../../../auth/auth.class';
 import { userScheduler } from '../../../config.private';
 import { Logger } from '../../../utils/logService';
@@ -94,7 +95,9 @@ export function liberarTurno(req, data, turno) {
 
 // Turno
 export function suspenderTurno(req, data, turno) {
-    turno.estado = 'suspendido';
+    if (turno.estado !== 'turnoDoble') {
+        turno.estado = 'suspendido';
+    }
     delete turno.paciente;
     delete turno.tipoPrestacion;
     turno.motivoSuspension = req.body.motivoSuspension;
@@ -107,7 +110,8 @@ export function suspenderTurno(req, data, turno) {
     let turnoDoble = getTurnoSiguiente(req, data, turno._id);
     if (turnoDoble) {
         cant = cant + 1;
-        turnoDoble.estado = 'suspendido';
+        // Se deja el estado turnoDoble para detectar este caso en la reasignacion
+        // turnoDoble.estado = 'suspendido';
         turnoDoble.motivoSuspension = req.body.motivoSuspension;
         turnoDoble.updatedAt = new Date();
         turnoDoble.updatedBy = req.user.usuario || req.user;
@@ -247,8 +251,9 @@ export function actualizarEstado(req, data) {
 
             data.bloques.forEach(bloque => {
                 bloque.turnos.forEach(turno => {
-
-                    turno.estado = 'suspendido';
+                    if (turno.estado !== 'turnoDoble') {
+                        turno.estado = 'suspendido';
+                    }
                     turno.motivoSuspension = 'agendaSuspendida';
                     turno.tipoTurno = undefined;
 
@@ -375,14 +380,6 @@ export function calcularContadoresTipoTurno(posBloque, posTurno, agenda) {
         esHoy = true;
     }
 
-    // Contadores de "delDia" y "programado" varían según si es el día de hoy o no
-    // countBloques = {
-    //     delDia: esHoy ? ((agenda.bloques[posBloque].accesoDirectoDelDia as number) + (agenda.bloques[posBloque].accesoDirectoProgramado as number)) : agenda.bloques[posBloque].accesoDirectoDelDia,
-    //     programado: esHoy ? 0 : agenda.bloques[posBloque].accesoDirectoProgramado,
-    //     gestion: agenda.bloques[posBloque].reservadoGestion,
-    //     profesional: agenda.bloques[posBloque].reservadoProfesional
-    // };
-
     countBloques = {
         delDia: esHoy ? (
             (agenda.bloques[posBloque].restantesDelDia as number) +
@@ -395,37 +392,6 @@ export function calcularContadoresTipoTurno(posBloque, posTurno, agenda) {
         profesional: esHoy ? 0 : agenda.bloques[posBloque].restantesProfesional
     };
 
-    // // Restamos los turnos asignados de a cuenta
-    // if (agenda.bloques[posBloque].turnos[posTurno].estado === 'asignado') {
-    //     if (esHoy) {
-    //         switch (agenda.bloques[posBloque].turnos[posTurno].tipoTurno) {
-    //             case ('delDia'):
-    //                 countBloques.delDia--;
-    //                 break;
-    //             case ('programado'):
-    //                 countBloques.delDia--;
-    //                 break;
-    //             case ('profesional'):
-    //                 countBloques.profesional--;
-    //                 break;
-    //             case ('gestion'):
-    //                 countBloques.gestion--;
-    //                 break;
-    //         }
-    //     } else {
-    //         switch (agenda.bloques[posBloque].turnos[posTurno].tipoTurno) {
-    //             case ('programado'):
-    //                 countBloques.programado--;
-    //                 break;
-    //             case ('profesional'):
-    //                 countBloques.profesional--;
-    //                 break;
-    //             case ('gestion'):
-    //                 countBloques.gestion--;
-    //                 break;
-    //         }
-    //     }
-    // }
     return countBloques;
 }
 
@@ -519,10 +485,10 @@ export function esPrimerPaciente(agenda: any, idPaciente: string, opciones: any[
  * Actualiza las cantidades de turnos restantes de la agenda antes de su fecha de inicio,
  * se ejecuta una vez al día por el scheduler.
  *
- * @export actualizarAgendas()
+ * @export actualizarTiposDeTurno()
  * @returns resultado
  */
-export function actualizarAgendas() {
+export function actualizarTiposDeTurno() {
     let hsActualizar = 48;
     let cantDias = hsActualizar / 24;
     let fechaActualizar = moment(new Date()).add(cantDias, 'days');
@@ -555,8 +521,67 @@ export function actualizarAgendas() {
         }
 
         Auth.audit(agenda, (userScheduler as any));
-        this.saveAgenda(agenda).then((nuevaAgenda) => {
-            Logger.log(userScheduler, 'citas', 'actualizarAgendas', {
+        saveAgenda(agenda).then((nuevaAgenda) => {
+            Logger.log(userScheduler, 'citas', 'actualizarTiposDeTurno', {
+                idAgenda: agenda._id,
+                organizacion: agenda.organizacion,
+                horaInicio: agenda.horaInicio,
+                updatedAt: agenda.updatedAt,
+                updatedBy: agenda.updatedBy
+
+            });
+        }).catch(error => {
+            return (error);
+        });
+
+    });
+    return 'Agendas actualizadas';
+
+}
+
+/**
+ * Actualiza los estados de las agendas que se ejecutaron el día anterior a Pendiente Asistencia o
+ * Pendiente Auditoría según corresponda
+ * se ejecuta una vez al día por el scheduler.
+ *
+ * @export actualizarTiposDeTurno()
+ * @returns resultado
+ */
+export function actualizarEstadoAgendas() {
+    // let fechaActualizar = moment(new Date()).subtract(1, 'days');
+    let fechaActualizar = moment(new Date());
+    // actualiza los agendas en estado disponible o publicada que se hayan ejecutado el día anterior
+    let condicion = {
+        '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
+        'horaInicio': {
+            // $gte: (moment(fechaActualizar).startOf('day').toDate() as any),
+            $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
+        }
+    };
+    let cursor = agendaModel.find(condicion).cursor();
+
+    cursor.eachAsync(doc => {
+        let agenda: any = doc;
+        let todosAsistencia = true;
+        for (let j = 0; j < agenda.bloques.length; j++) {
+            let turnos = agenda.bloques[j].turnos;
+            // Verifico si al hay al menos un turno asignado sin asistencia
+            if (turnos.filter((turno) => {
+                return (turno.estado === 'asignado' && !(turno.asistencia));
+            }).length > 0) {
+                todosAsistencia = false;
+            }
+        }
+
+        if (todosAsistencia) {
+            agenda.estado = 'pendienteAuditoria';
+        } else {
+            agenda.estado = 'pendienteAsistencia';
+        }
+
+        Auth.audit(agenda, (userScheduler as any));
+        saveAgenda(agenda).then((nuevaAgenda) => {
+            Logger.log(userScheduler, 'citas', 'actualizarEstadoAgendas', {
                 idAgenda: agenda._id,
                 organizacion: agenda.organizacion,
                 horaInicio: agenda.horaInicio,
@@ -595,3 +620,51 @@ export function saveAgenda(nuevaAgenda) {
     });
 }
 
+/**
+ * Actualiza el paciente embebido en el turno.
+ *
+ * @export
+ * @param {any} pacienteModified
+ * @param {any} turno
+ */
+export function updatePaciente(pacienteModified, turno) {
+    agendaModel.findById(turno.agenda_id, function (err, data, next) {
+        if (err) {
+            return next(err);
+        }
+        let bloques: any = data.bloques;
+        let indiceTurno = 0;
+        let i = 0;
+        let j = 0;
+        let band = true;
+        while (i < bloques.length && band) {
+            j = 0;
+            while (j < bloques[i].turnos.length && band) {
+                if (bloques[i].turnos[j]._id.toString() === turno._id.toString()) {
+                    indiceTurno = j;
+                    band = false;
+                }
+                j++;
+            }
+            if (!band) {
+                bloques[i].turnos[indiceTurno].paciente.nombre = pacienteModified.nombre;
+                bloques[i].turnos[indiceTurno].paciente.apellido = pacienteModified.apellido;
+                bloques[i].turnos[indiceTurno].paciente.documento = pacienteModified.documento;
+                if (pacienteModified.contacto && pacienteModified.contacto[0]) {
+                    bloques[i].turnos[indiceTurno].paciente.telefono = pacienteModified.contacto[0].valor;
+                }
+                bloques[i].turnos[indiceTurno].paciente.carpetaEfectores = pacienteModified.carpetaEfectores;
+                bloques[i].turnos[indiceTurno].paciente.fechaNacimiento = pacienteModified.fechaNacimiento;
+            }
+            i++;
+        }
+        if (!band) {
+            try {
+                Auth.audit(data, (userScheduler as any));
+                saveAgenda(data);
+            } catch (error) {
+                return error;
+            }
+        }
+    });
+}

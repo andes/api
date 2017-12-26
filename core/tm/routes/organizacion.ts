@@ -242,6 +242,9 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
         if (req.query.activo) {
             filtros['activo'] = req.query.activo;
         }
+        if (req.query.tipoEstablecimiento) {
+            filtros['tipoEstablecimiento.nombre'] = {'$regex': utils.makePattern(req.query.tipoEstablecimiento) };
+        }
 
         let skip: number = parseInt(req.query.skip || 0, 10);
         let limit: number = Math.min(parseInt(req.query.limit || defaultLimit, 10), maxLimit);

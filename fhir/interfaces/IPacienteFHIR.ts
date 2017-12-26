@@ -4,13 +4,14 @@ export interface PacienteFHIR {
     active: boolean; // Whether this patient's record is in active use
     name: [{
         resourceType: String; // HumanName
-        family: String; // Family name (often called 'Surname')
+        family: String[]; // Family name (often called 'Surname')
         given: String[]; // Given names (not always 'first'). Includes middle names
     }];
     telecom: [{
         resourceType: String; // ContactPoint
         value: String;
         rank: Number;
+        use: String;
         system: String // phone | email
     }];
     gender: String; // male | female | other | unknown

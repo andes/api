@@ -13,7 +13,7 @@ export let llaveTipoPrestacionSchema = new mongoose.Schema({
         type: tipoPrestacionSchema,
         required: true
     },
-    llave: llaveSchema,
+    llave: { type: llaveSchema},
     auditable: Boolean,
     activa: {
         type: Boolean,

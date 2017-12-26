@@ -33,7 +33,7 @@ let schema = new mongoose.Schema({
     },
     estado: {
         type: String,
-        enum: ['planificacion', 'disponible', 'publicada', 'suspendida', 'pausada', 'asistenciaCerrada', 'codificada', 'borrada'],
+        enum: ['planificacion', 'disponible', 'publicada', 'suspendida', 'pausada', 'pendienteAsistencia', 'pendienteAuditoria', 'auditada', 'borrada'],
         required: true,
         default: 'planificacion'
     },
@@ -59,7 +59,7 @@ let schema = new mongoose.Schema({
         default: true
     }
 
-});
+}, { versionKey: false });
 
 // Defino Virtuals
 schema.virtual('turnosDisponibles').get(function () {

@@ -45,7 +45,7 @@ let router = express.Router();
  *         default: 0
  */
 router.get('/snomed', function (req, res, next) {
-    if (!req.query.search && !req.query.refsetId) {
+    if (!req.query.search && !req.query.refsetId && req.query.search !== '') {
         return next('Debe ingresar un parámetro de búsqueda');
     }
     let conditions = {
@@ -114,7 +114,7 @@ router.get('/snomed', function (req, res, next) {
             });
         }
         let skip: number = parseInt(req.query.skip || 0, 10);
-        res.json(data.slice(skip, req.query.limit || 100));
+        res.json(data.slice(skip, req.query.limit || 500));
     });
 });
 

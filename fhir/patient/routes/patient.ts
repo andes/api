@@ -9,6 +9,7 @@ import * as utils from '../../../utils/utils';
 import * as parser from '../controller/parser';
 import * as validator from '../controller/validator';
 import * as checkPatientExist from '../../../utils/checkPatientExist';
+import * as codes from '../controller/errorCodes';
 import {
     Matching
 } from '@andes/match';
@@ -25,31 +26,28 @@ import {
 } from '../../../core/mpi/schemas/paciente';
 
 router.get('/([\$])match', function (req, res, next) {
-    // Verificación de permisos
-    // if (!Auth.check(req, 'fhir:pacient:match')) {
-    //     return next(403);
-    // }
+    if (!Auth.check(req, 'fhir:pacient:match')) {
+        return next(codes.status.unauthorized);
+    }
     let connElastic = new Client({
         host: configPrivate.hosts.elastic_main,
     });
     let query;
     let consulta;
-    req.query.identifier ? consulta = req.query.identifier : '';
-    req.query.family ? consulta ? consulta = consulta + ' ' + req.query.family : consulta = req.query.family : '';
-    req.query.given ? consulta ? consulta = consulta + ' ' + req.query.given : consulta = req.query.given : '';
+    req.query.identifier ? consulta = req.query.identifier : null;
+    req.query.family ? consulta ? consulta = consulta + ' ' + req.query.family : consulta = req.query.family : null;
+    req.query.given ? consulta ? consulta = consulta + ' ' + req.query.given : consulta = req.query.given : null;
 
-    // Traigo todos los pacientes
     if (!consulta) {
-        query = {
-            match_all: {}
-        };
+        query = null;
     } else {
         query = {
             multi_match: {
                 query: consulta,
                 type: 'cross_fields',
-                fields: ['documento^5', 'nombre', 'apellido^3'],
-            }
+                fields: ['documento^5', 'apellido^5', 'nombre^3'],
+                'minimum_should_match': '100%',
+            },
         };
     }
 
@@ -60,37 +58,41 @@ router.get('/([\$])match', function (req, res, next) {
         query: query
     };
 
-    connElastic.search({
-        index: 'andes',
-        body: body
-    })
-        .then((searchResult) => {
-            let idPacientes: Array<any> = ((searchResult.hits || {}).hits || [])
-                .map((hit) => {
-                    let elem = hit._source;
-                    elem['id'] = hit._id;
-                    return elem.id;
-                });
-
-            let pacienteFhir = parser.pacientesAFHIR(idPacientes).then(datosFhir => {
-                res.send(datosFhir);
-            });
+    // Verificamos que se esté buscando por algún parametro: Identifier, Given or Family
+    if (query) {
+        connElastic.search({
+            index: 'andes',
+            body: body
         })
-        .catch((error) => {
-            next(error);
-        });
+            .then((searchResult) => {
+                let idPacientes: Array<any> = ((searchResult.hits || {}).hits || [])
+                    .map((hit) => {
+                        let elem = hit._source;
+                        elem['id'] = hit._id;
+                        return elem.id;
+                    });
+                let pacienteFhir = parser.pacientesAFHIR(idPacientes).then(datosFhir => {
+                    res.send(datosFhir);
+                });
+            })
+            .catch((error) => {
+                next(codes.status.error);
+            });
+    } else {
+        return next(codes.status.badRequest);
+    }
+
 });
 
 router.post('/', async function (req, res, next) {
     // Recibimos un paciente en formato FHIR y llamamos a la función de validación de formato FHIR
     try {
-        if (!Auth.check(req, 'mpi:paciente:postAndes')) {
-            return next(403);
+        if (!Auth.check(req, 'fhir:patient:post')) {
+            return next(codes.status.unauthorized);
         }
 
         let pacienteFhir = req.body;
         let fhirValid = validator.validate(pacienteFhir);
-
         let connElastic = new Client({
             host: configPrivate.hosts.elastic_main,
         });
@@ -106,11 +108,10 @@ router.post('/', async function (req, res, next) {
             if (existe === 0) {
                 // Insertamos el paciente en la BASE ANDES LOCAL
                 let newPatient = new paciente(pac);
-
                 Auth.audit(newPatient, req);
                 newPatient.save((err) => {
                     if (err) {
-                        return next(err);
+                        return next(codes.status.error);
                     }
                     // Quitamos el _id del objeto paciente para guardarlo en elasticSearch
                     let nuevoPac = JSON.parse(JSON.stringify(newPatient));
@@ -122,23 +123,22 @@ router.post('/', async function (req, res, next) {
                         body: nuevoPac
                     }, function (error, response) {
                         if (error) {
-                            return next(error);
+                            return next(codes.status.error);
                         }
                     });
                 });
 
             } else {
-                // console.log('Ya existe el paciente');
-                // TODO UPDATE: Analizar los campos a actualizar. ¿Cómo sabemos que información es más nueva que nuestro REPO?
-                // MEGA MATETIME
+                // El paciente ya existe, devuelvo 200
+                return next(codes.status.sucess);
             }
             // response
             res.json(pac);
         } else {
-            return next('El formato del paciente no es válido');
+            return next(codes.status.badRequest);
         }
     } catch (err) {
-        return next(err);
+        return next(codes.status.error);
     }
 });
 

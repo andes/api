@@ -112,8 +112,9 @@ export default [
         key: 'rup',
         title: 'Modulo RUP',
         comment: '',
+        avoidAll: true,
         child: [
-            { key: 'tipoPrestacion', title: 'Tipo de prestación', type: 'prestacion' }
+            { key: 'tipoPrestacion', title: 'Tipo de prestación', type: 'prestacion', avoidAll: true }
         ]
     },
     {
@@ -151,6 +152,15 @@ export default [
             { key: 'ldap', title: 'Consutar usuario en LDAP', type: 'boolean' },
             { key: 'post', title: 'Crear usuario', type: 'boolean' },
             { key: 'put', title: 'Modificar usuario', type: 'boolean' }
+        ]
+    },
+    {
+        key: 'cda',
+        title: 'Modulo CDA',
+        child: [
+            { key: 'get', title: 'Leer CDA', type: 'boolean' },
+            { key: 'list', title: 'Listar CDA por paciente', type: 'boolean' },
+            { key: 'post', title: 'Generar CDA', type: 'boolean' },
         ]
     }
 ];

@@ -3,6 +3,7 @@ import { SnomedCIE10Mapping } from './mapping';
 import * as chai from 'chai';
 import * as moment from 'moment';
 
+declare const before;
 
 function checkMap(paciente, contexto, concept, expect, done) {
     let map = new SnomedCIE10Mapping(paciente, contexto);
