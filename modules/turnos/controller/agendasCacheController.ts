@@ -15,33 +15,26 @@ let connection = {
 };
 
 export async function integracionSips() {
-    return new Promise<Array<any>>(async function (resolve, reject) {
-        try {
-            let promisesArray: any = [];
-            pool = await sql.connect(connection);
-            let agendasMongoPendientes = await operationsCache.getAgendasDeMongoPendientes();
-            if (agendasMongoPendientes.length > 0) {
-                await operationsCache.guardarCacheASips(agendasMongoPendientes, 0, pool);
-                resolve();
-            } else {
-                resolve();
-            }
-            let agendasMongoExportadas = await operationsCache.getAgendasDeMongoExportadas();
-            agendasMongoExportadas.forEach(async (agenda) => {
-                promisesArray.push(await operationsCache.checkCodificacion(agenda, pool));
-            });
-
-            if (promisesArray.length > agendasMongoExportadas) {
-                Promise.all(promisesArray).then(values => {
-                    pool.close();
-                    resolve();
-                });
-            } else {
-                resolve();
-            }
-        } catch (ex) {
-            pool.close();
-            reject(ex);
+    try {
+        let promisesArray: any = [];
+        pool = await sql.connect(connection);
+        let agendasMongoPendientes = await operationsCache.getAgendasDeMongoPendientes();
+        if (agendasMongoPendientes.length > 0) {
+            operationsCache.guardarCacheASips(agendasMongoPendientes, 0, pool);
         }
-    });
+        let agendasMongoExportadas = await operationsCache.getAgendasDeMongoExportadas();
+        agendasMongoExportadas.forEach(async (agenda) => {
+            promisesArray.push(await operationsCache.checkCodificacion(agenda, pool));
+        });
+
+        if (promisesArray.length > agendasMongoExportadas) {
+            Promise.all(promisesArray).then(values => {
+                pool.close();
+            });
+        } else {
+        }
+    } catch (ex) {
+        pool.close();
+        return (ex);
+    }
 }
