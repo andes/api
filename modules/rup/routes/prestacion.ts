@@ -10,8 +10,35 @@ import { buscarPaciente } from '../../../core/mpi/controller/paciente';
 
 import { NotificationService } from '../../mobileApp/controller/NotificationService';
 
+import { iterate, convertToObjectId, buscarEnHuds, matchConcepts } from '../controllers/rup';
+
 let router = express.Router();
 let async = require('async');
+
+router.get('/prestaciones/huds/:idPaciente', function(req, res, next) {
+    
+    // verificamos que sea un ObjectId válido
+    if (!mongoose.Types.ObjectId.isValid(req.params.idPaciente)) {
+        return res.status(404).send('Turno no encontrado');
+    }
+
+    let conceptos = (req.query.conceptIds) ? req.query.conceptIds : null;
+
+    Prestacion.find({'paciente.id': req.params.idPaciente}, (err, prestaciones) => {
+        if (err) {
+            return next(err);
+        }
+
+        if (!prestaciones) {
+            return res.status(404).send('Paciente no encontrado');
+        }
+
+        // ejecutamos busqueda recursiva
+        let data = buscarEnHuds(prestaciones, conceptos);
+
+        res.json(data);
+    });
+});
 
 router.get('/prestaciones/:id*?', function (req, res, next) {
     if (req.params.id) {
