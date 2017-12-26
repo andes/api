@@ -70,11 +70,11 @@ export function checkCodificacion(agenda, pool) {
             turno = agenda.bloques[x].turnos;
 
             for (let z = 0; z < turno.length; z++) {
-                let idTurno = await turnoOps.existeTurnoSips(turno[z]);
+                let resultado = await turnoOps.existeTurnoSips(turno[z]);
                 let cloneTurno: any = [];
 
-                if (idTurno) {
-                    let idConsulta = await existeConsultaTurno(idTurno);
+                if (resultado.length > 0) {
+                    let idConsulta = await existeConsultaTurno(resultado[0].idTurno);
                     let turnoPaciente: any = await getPacienteAgenda(agenda, turno[z]._id);
                     idEspecialidad = (agenda.tipoPrestaciones[0].term.includes('odonto')) ? 34 : 14;
                     turno[z] = turnoPaciente;
@@ -355,11 +355,11 @@ export async function guardarCacheASips(agendasMongo, index, pool) {
             let datosArr = await Promise.all(getDatosSips(codigoSisa, dniProfesional));
             datosSips.idEfector = datosArr[0][0].idEfector;
             datosSips.idProfesional = datosArr[1][0].idProfesional;
-            let idAgenda = processAgenda(agenda, datosSips, pool);
-            await turnoOps.processTurnos(agenda, idAgenda, datosSips.idEfector);
-            await checkEstadoAgenda(agenda, idAgenda);
-            await turnoOps.checkEstadoTurno(agenda, idAgenda);
-            await turnoOps.checkAsistenciaTurno(agenda);
+            let idAgenda = await processAgenda(agenda, datosSips, pool);
+            turnoOps.processTurnos(agenda, idAgenda, datosSips.idEfector);
+            checkEstadoAgenda(agenda, idAgenda);
+            turnoOps.checkEstadoTurno(agenda, idAgenda);
+            turnoOps.checkAsistenciaTurno(agenda);
 
             transaccion.commit(async err2 => {
                 if (err2) {
@@ -393,43 +393,37 @@ export async function guardarCacheASips(agendasMongo, index, pool) {
         }
     }
 }
-
+/**
+ * Sincroniza el estado de la agenda monga con su gemela en SIPS
+ *
+ * @param {*} agendaMongo
+ * @param {*} idAgendaSips
+ * @returns
+ */
 async function checkEstadoAgenda(agendaMongo: any, idAgendaSips: any) {
-    return new Promise(async function (resolve, reject) {
-        try {
-            let estadoAgendaSips: any = await getEstadoAgenda(agendaMongo.id);
-            let estadoAgendaMongo = getEstadoAgendaSips(agendaMongo.estado);
+    try {
+        let estadoAgendaSips: any = await getEstadoAgenda(agendaMongo.id);
+        let estadoAgendaMongo = getEstadoAgendaSips(agendaMongo.estado);
 
-            if ((estadoAgendaSips !== estadoAgendaMongo) && (agendaMongo.estado === 'suspendida')) {
-                let query = 'UPDATE dbo.CON_Agenda SET idAgendaEstado = ' + estadoAgendaMongo + '   WHERE idAgenda = ' + idAgendaSips;
-                await executeQuery(query);
-                resolve();
-            } else {
-                resolve();
-            }
-        } catch (ex) {
-            reject(ex);
+        if ((estadoAgendaSips !== estadoAgendaMongo) && (agendaMongo.estado === 'suspendida')) {
+            let query = 'UPDATE dbo.CON_Agenda SET idAgendaEstado = ' + estadoAgendaMongo + '   WHERE idAgenda = ' + idAgendaSips;
+            executeQuery(query);
         }
-    });
+    } catch (ex) {
+        return (ex);
+    }
 }
 
-function getEstadoAgenda(idAgenda: any) {
-    return new Promise((resolve: any, reject: any) => {
-        let transaction;
-        (async function () {
-            try {
-                let query = 'SELECT idAgendaEstado as idEstado FROM dbo.CON_Agenda WHERE objectId = @idAgenda';
-
-                let result = await new sql.Request(transaction)
-                    .input('idAgenda', sql.VarChar(50), idAgenda)
-                    .query(query);
-
-                resolve(result[0].idEstado);
-            } catch (err) {
-                reject(err);
-            }
-        })();
-    });
+async function getEstadoAgenda(idAgenda: any) {
+    try {
+        let query = 'SELECT idAgendaEstado as idEstado FROM dbo.CON_Agenda WHERE objectId = @idAgenda';
+        let result = await new sql.Request()
+            .input('idAgenda', sql.VarChar(50), idAgenda)
+            .query(query);
+        return (result[0].idEstado);
+    } catch (err) {
+        return (err);
+    }
 }
 
 function existeConsultaTurno(idTurno) {
@@ -474,30 +468,22 @@ function getDatosSips(codigoSisa?, dniProfesional?) {
 
 async function processAgenda(agenda: any, datosSips, pool) {
     try {
-        let result = await existeAgendaSips(agenda);
+        //  Verifica si existe la agenda pasada por parámetro en SIPS
+        let result = await new sql.Request()
+            .input('idAgendaMongo', sql.VarChar(50), agenda.id)
+            .query('SELECT idAgenda FROM dbo.CON_Agenda WHERE objectId = @idAgendaMongo GROUP BY idAgenda');
+
         let idAgenda;
         if (result.length > 0) {
             idAgenda = result[0].idAgenda;
         } else {
-            idAgenda = grabaAgendaSips(agenda, datosSips, pool);
+            idAgenda = await grabaAgendaSips(agenda, datosSips, pool);
         }
         return (idAgenda);
     } catch (err) {
         console.log('-----------------> ERROR en processAgenda ', err);
         return err;
     }
-}
-
-/**
- * Verifica si existe la agenda pasada por parámetro en SIPS
- *
- * @param {*} agendaMongo
- * @returns el id agenda o -1 en caso contrario
- */
-function existeAgendaSips(agendaMongo): any {
-    return new sql.Request()
-        .input('idAgendaMongo', sql.VarChar(50), agendaMongo.id)
-        .query('SELECT idAgenda FROM dbo.CON_Agenda WHERE objectId = @idAgendaMongo GROUP BY idAgenda');
 }
 
 async function grabaAgendaSips(agendaSips: any, datosSips: any, pool) {
@@ -542,7 +528,7 @@ async function grabaAgendaSips(agendaSips: any, datosSips: any, pool) {
         let listaIdProfesionales = await Promise.all(getProfesionales(agendaSips.profesionales, pool));
         if (listaIdProfesionales.length > 0) {
             let promiseArray = [];
-            listaIdProfesionales.forEach(listaIdProf => {
+            listaIdProfesionales.forEach(async listaIdProf => {
                 let query2 = 'select SCOPE_IDENTITY() as id INSERT INTO dbo.CON_AgendaProfesional ( idAgenda, idProfesional, baja, CreatedBy , ' +
                     ' CreatedOn, ModifiedBy, ModifiedOn, idEspecialidad ) VALUES  ( ' + idAgendaCreada + ',' +
                     listaIdProf[0].idProfesional + ',' + 0 + ',' + constantes.idUsuarioSips + ',' +
@@ -550,9 +536,8 @@ async function grabaAgendaSips(agendaSips: any, datosSips: any, pool) {
                     '\'' + moment().format('YYYYMMDD HH:mm:ss') + '\', ' +
                     '\'' + moment().format('YYYYMMDD HH:mm:ss') + '\', ' +
                     idEspecialidad + ' ) ';
-                promiseArray.push(new sql.request().query(query2));
+                await executeQuery(query2);
             });
-            await Promise.all(promiseArray);
         }
         return (idAgendaCreada);
     } catch (err) {
