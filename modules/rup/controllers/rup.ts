@@ -40,9 +40,9 @@ export function convertToObjectId(obj, property: string) {
 }
 
 /**
- * Devuelve prestaciones en las que contengan alguno de los conceptos 
+ * Devuelve prestaciones en las que contengan alguno de los conceptos
  * enviados por parametro dentro de su array de registros
- * 
+ *
  * @param {any} prestaciones Array de prestaciones a recorrer y buscar
  * @param {any} conceptos Array con conceptId de SNOMED a buscar dentro de los registros de prestaciones
  * @returns {any[]} Prestaciones que matcheen con 'conceptos'
@@ -78,7 +78,7 @@ export function buscarEnHuds(prestaciones, conceptos) {
 /**
  * Método recursivo que busca los conceptos enviados por parametro
  * dentro del array de registros de una prestación
- * 
+ *
  * @param {any} registro Registro actual a consultar por conceptId o ver si tiene un subarray de registros para seguir loopeando
  * @param {any} conceptos Array con conceptId de SNOMED a buscar dentro de la variable registro
  * @returns {any} Si existe el concepto en el array de registros devuelve el registro, si no FALSE.
@@ -88,10 +88,10 @@ export function matchConcepts(registro, conceptos) {
     let match = false;
 
     if (Array.isArray(registro['registros']) && registro['registros'].length > 0) {
-        registro['registros'].forEach((registro: any) => {
+        registro['registros'].forEach((reg: any) => {
 
-            if (matchConcepts(registro, conceptos)) {
-                match = registro;
+            if (matchConcepts(reg, conceptos)) {
+                match = reg;
             }
         });
     } else {

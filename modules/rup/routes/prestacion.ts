@@ -16,7 +16,7 @@ let router = express.Router();
 let async = require('async');
 
 router.get('/prestaciones/huds/:idPaciente', function(req, res, next) {
-    
+
     // verificamos que sea un ObjectId válido
     if (!mongoose.Types.ObjectId.isValid(req.params.idPaciente)) {
         return res.status(404).send('Turno no encontrado');
