@@ -16,6 +16,8 @@
     "@types/node": "^6.0.42",
     "@types/ws": "^3.0.2",
     "aggregate-error": "^1.0.0",
+    "apg": "^3.1.1",
+    "apg-lib": "^3.2.0",
     "async": "^2.4.0",
     "base64-stream": "^0.1.3",
     "bcrypt-nodejs": "0.0.3",
@@ -69,7 +71,8 @@
     "tsc": "tsc",
     "tsc:w": "tsc -w",
     "jobs": "tsc && node jobs/scheduler.js",
-    "lint": "tslint --project ."
+    "lint": "tslint --project .",
+    "parse": "apg -i core/term/controller/grammar/Expression-ABNF.txt -o core/term/controller/grammar/grammar.js"
   },
   "repository": {
     "type": "git",

@@ -16,9 +16,9 @@ textIndexSchema.index({ term: 'text'});
 textIndexSchema.index({ term: 1});
 textIndexSchema.index({ words: 1});
 
-textIndexSchema.index({ words: 1, semanticTag: 1, languageCode: 1, conceptActive: 1, active: 1 });
-textIndexSchema.index({ conceptId: 1, semanticTag: 1, languageCode: 1, conceptActive: 1, active: 1 });
-textIndexSchema.index({ refsetIds: 1, semanticTag: 1, languageCode: 1, conceptActive: 1, active: 1 });
+// textIndexSchema.index({ words: 1, semanticTag: 1, languageCode: 1, conceptActive: 1, active: 1 });
+// textIndexSchema.index({ conceptId: 1, semanticTag: 1, languageCode: 1, conceptActive: 1, active: 1 });
+// textIndexSchema.index({ refsetIds: 1, semanticTag: 1, languageCode: 1, conceptActive: 1, active: 1 });
 
 export let textIndexModel = Connections.snomed.model(configPrivate.snomed.dbName + 'tx', textIndexSchema, configPrivate.snomed.dbVersion + 'tx');
 

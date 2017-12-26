@@ -5,8 +5,9 @@ import * as snomedCtr from '../controller/snomedCtr';
 import * as configPrivate from './../../../config.private';
 import { lookup } from 'mime';
 import * as debug from 'debug';
-let log = debug('SNOMED');
+import { makeMongoQuery } from '../controller/grammar/parser';
 
+let log = debug('SNOMED');
 let router = express.Router();
 
 
@@ -197,6 +198,15 @@ router.get('/snomed/search', async function (req, res, next) {
         res.send(docs);
     });
 
+});
+
+router.get('/snomed/expression', async function (req, res, next) {
+    let expression = req.query.expression;
+    let query = makeMongoQuery(expression);
+
+    snomedModel.find(query, {fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1}).then((docs: any[]) => {
+        return res.json(docs);
+    }).catch(next);
 });
 
 export = router;
