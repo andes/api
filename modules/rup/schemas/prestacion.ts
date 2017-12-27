@@ -6,6 +6,7 @@ import * as estado from './prestacion.estado';
 import { auditoriaPrestacionPacienteSchema } from '../../auditorias/schemas/auditoriaPrestacionPaciente';
 import { iterate, convertToObjectId } from '../controllers/rup';
 
+// tslint:disable
 export let schema = new mongoose.Schema({
     // Datos principales del paciente
     paciente: {
