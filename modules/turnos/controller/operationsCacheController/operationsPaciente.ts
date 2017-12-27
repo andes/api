@@ -225,15 +225,13 @@ async function existePacienteSips(pacienteSips) {
 }
 
 
-function executeQuery(query: any) {
-    query += ' select SCOPE_IDENTITY() as id';
-    return new Promise((resolve: any, reject: any) => {
-        return new sql.Request()
-            .query(query)
-            .then(result => {
-                resolve(result[0].id);
-            }).catch(err => {
-                reject(err);
-            });
-    });
+async function executeQuery(query: any) {
+    try {
+        query += ' select SCOPE_IDENTITY() as id';
+        let result = await new sql.Request().query(query);
+        return result[0].id;
+    } catch (err) {
+        return (err);
+    }
 }
+

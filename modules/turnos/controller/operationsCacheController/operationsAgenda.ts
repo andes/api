@@ -95,11 +95,11 @@ export async function checkCodificacion(agenda, pool) {
 
                 turnoCtrl.updateTurno(datosTurno);
                 markAgendaAsProcessed(agenda);
-
             }
         }
     }
 }
+
 async function codificaOdontologia(idConsulta: any, turno: any) {
     let idNomenclador: any = [];
     let codificacionOdonto: any = {};
@@ -294,16 +294,14 @@ function getCodificacionOdonto(idNomenclador) {
  * @param index
  * @param pool
  */
-export async function guardarCacheASips(agendasMongo, index, pool) {
+export async function guardarCacheASips(agenda, pool) {
     // return new Promise(async function (resolve, reject) {
-    let agenda = agendasMongo[index];
     let transaccion = new sql.Transaction(pool);
     let rolledBack = false;
     transaccion.begin(async err => {
         if (err) {
             logger.LoggerAgendaCache.logAgenda(agenda._id, err);
             transaccion.rollback();
-            siguiente(pool);
             return (err);
         }
         transaccion.on('rollback', aborted => {
@@ -323,41 +321,25 @@ export async function guardarCacheASips(agendasMongo, index, pool) {
             datosSips.idEfector = datosArr[0][0].idEfector;
             datosSips.idProfesional = datosArr[1][0].idProfesional;
             let idAgenda = await processAgenda(agenda, datosSips, pool);
-            turnoOps.processTurnos(agenda, idAgenda, datosSips.idEfector);
-            checkEstadoAgenda(agenda, idAgenda);
-            turnoOps.checkEstadoTurno(agenda, idAgenda);
-            turnoOps.checkAsistenciaTurno(agenda);
-
-            transaccion.commit(async err2 => {
+            let promArray = [];
+            promArray.push(turnoOps.processTurnos(agenda, idAgenda, datosSips.idEfector));
+            promArray.push(checkEstadoAgenda(agenda, idAgenda));
+            promArray.push(turnoOps.checkEstadoTurno(agenda, idAgenda));
+            promArray.push(turnoOps.checkAsistenciaTurno(agenda));
+            await Promise.all(promArray);
+            transaccion.commit(err2 => {
                 if (err2) {
                     logger.LoggerAgendaCache.logAgenda(agenda._id, err2);
                     transaccion.rollback();
-                    siguiente(pool);
                     return (err2);
                 }
                 markAgendaAsProcessed(agenda);
-                siguiente(pool);
-                // return;
             });
         } catch (error) {
             console.log('-----------------> ERROR en guardarCacheASips ', error);
             return (error);
         }
     });
-    /**
-     * Vuelve a ejecutar guardarCacheSips con la siguiente agenda.
-     *
-     * @param {any} unPool conexión sql
-     * @returns
-     */
-    function siguiente(unPool) {
-        ++index;
-        if (index < agendasMongo.length) {
-            guardarCacheASips(agendasMongo, index, unPool);
-        } else {
-            pool.close();
-        }
-    }
 }
 /**
  * Sincroniza el estado de la agenda monga con su gemela en SIPS
@@ -376,6 +358,7 @@ async function checkEstadoAgenda(agendaMongo: any, idAgendaSips: any) {
             executeQuery(query);
         }
     } catch (ex) {
+
         return (ex);
     }
 }
@@ -569,24 +552,12 @@ function getPacienteAgenda(agenda, idTurno) {
     });
 }
 
-
-
-
-
-function executeQuery(query: any) {
-    query += ' select SCOPE_IDENTITY() as id';
-    return new Promise((resolve: any, reject: any) => {
-        return new sql.Request()
-            .query(query)
-            .then(result => {
-                resolve(result[0].id);
-            }).catch(err => {
-                reject(err);
-            });
-    });
+async function executeQuery(query: any) {
+    try {
+        query += ' select SCOPE_IDENTITY() as id';
+        let result = await new sql.Request().query(query);
+        return result[0].id;
+    } catch (err) {
+        return (err);
+    }
 }
-
-
-
-
-// #region GetPacienteMPI

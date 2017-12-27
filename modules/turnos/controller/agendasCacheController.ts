@@ -18,21 +18,23 @@ export async function integracionSips() {
     try {
         let promisesArray: any = [];
         pool = await sql.connect(connection);
-        let agendasMongoPendientes = await operationsCache.getAgendasDeMongoPendientes();
-        if (agendasMongoPendientes.length > 0) {
-            operationsCache.guardarCacheASips(agendasMongoPendientes, 0, pool);
-        }
-        let agendasMongoExportadas = await operationsCache.getAgendasDeMongoExportadas();
-        agendasMongoExportadas.forEach(async (agenda) => {
-            promisesArray.push(await operationsCache.checkCodificacion(agenda, pool));
+        let opsPromises = [];
+        opsPromises.push(operationsCache.getAgendasDeMongoPendientes());
+        opsPromises.push(operationsCache.getAgendasDeMongoExportadas());
+        let results = await Promise.all(opsPromises);
+        let agendasMongoPendientes = results[0];
+        let agendasMongoExportadas = results[1];
+
+        let promises = [];
+        agendasMongoPendientes.forEach((agenda) => {
+            promises.push(operationsCache.guardarCacheASips(agenda, pool));
+        });
+        agendasMongoExportadas.forEach((agenda) => {
+            promises.push(operationsCache.checkCodificacion(agenda, pool));
         });
 
-        if (promisesArray.length > agendasMongoExportadas) {
-            Promise.all(promisesArray).then(values => {
-                pool.close();
-            });
-        } else {
-        }
+        await Promise.all(promises);
+        pool.close();
     } catch (ex) {
         pool.close();
         return (ex);

@@ -42,10 +42,16 @@ export async function processTurnos(agendas: any, idAgendaCreada: any, idEfector
     }
 }
 
-export function existeTurnoSips(turno: any) {
-    return new sql.Request()
-        .input('idTurnoMongo', sql.VarChar(50), turno._id)
-        .query('SELECT idTurno FROM dbo.CON_Turno WHERE objectId = @idTurnoMongo GROUP BY idTurno');
+export async function existeTurnoSips(turno: any) {
+    try {
+        let result = await new sql.Request()
+            .input('idTurnoMongo', sql.VarChar(50), turno._id)
+            .query('SELECT idTurno FROM dbo.CON_Turno WHERE objectId = @idTurnoMongo GROUP BY idTurno');
+        return result;
+    } catch (ex) {
+        console.log('...> error en existeTurnoSips', ex);
+        return (ex);
+    }
 }
 
 async function grabaTurnoSips(turno, idAgendaSips, idEfector) {
@@ -64,6 +70,7 @@ async function grabaTurnoSips(turno, idAgendaSips, idEfector) {
 
         executeQuery(query);
     } catch (ex) {
+        console.log('error en grabaTurnoSips---->', ex);
         return (ex);
     }
 }
@@ -225,7 +232,6 @@ export async function checkAsistenciaTurno(agenda: any) {
     try {
         for (let x = 0; x < agenda.bloques.length; x++) {
             turnos = agenda.bloques[x].turnos;
-
             for (let i = 0; i < turnos.length; i++) {
                 if (turnos[i].asistencia === 'asistio') {
 
@@ -234,7 +240,6 @@ export async function checkAsistenciaTurno(agenda: any) {
                     let query = 'INSERT INTO dbo.CON_TurnoAsistencia ( idTurno , idUsuario , fechaAsistencia ) VALUES  ( ' +
                         idTurno.idTurno + ' , ' + constantes.idUsuarioSips + ' , \'' + fechaAsistencia + '\' )';
                     executeQuery(query);
-
                 }
             }
         }
@@ -284,15 +289,12 @@ async function getIdObraSocialSips(documentoPaciente) {
 }
 
 
-function executeQuery(query: any) {
-    query += ' select SCOPE_IDENTITY() as id';
-    return new Promise((resolve: any, reject: any) => {
-        return new sql.Request()
-            .query(query)
-            .then(result => {
-                resolve(result[0].id);
-            }).catch(err => {
-                reject(err);
-            });
-    });
+async function executeQuery(query: any) {
+    try {
+        query += ' select SCOPE_IDENTITY() as id';
+        let result = await new sql.Request().query(query);
+        return result[0].id;
+    } catch (err) {
+        return (err);
+    }
 }
