@@ -82,7 +82,7 @@ export let schema = new mongoose.Schema({
     },
     // Historia de estado de la prestación
     estados: [estado.schema]
-});
+}, { usePushEach: true });
 
 // Valida el esquema
 schema.pre('save', function (next) {

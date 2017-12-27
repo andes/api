@@ -146,3 +146,19 @@ export function removeDiacritics(str: string): string {
     }
     return str;
 }
+
+
+/**
+ * Converts mongo cursor to array
+ */
+
+export let toArray = (stream): Promise<any[]> => {
+    let array = [];
+    return new Promise((resolve, reject) => {
+        stream.on('data', (doc) => {
+            array.push(doc);
+        }).on('end', () => {
+            return resolve(array);
+        }).on('error', reject);
+    });
+};

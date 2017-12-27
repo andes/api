@@ -6,6 +6,7 @@ import * as configPrivate from './../../../config.private';
 import { lookup } from 'mime';
 import * as debug from 'debug';
 import { makeMongoQuery } from '../controller/grammar/parser';
+import { toArray } from '../../../utils/utils';
 
 let log = debug('SNOMED');
 let router = express.Router();
@@ -192,11 +193,9 @@ router.get('/snomed/search', async function (req, res, next) {
         }},
         {$match: { aEq: false }}
     ];
-    // console.log(pipeline);
 
-    textIndexModel.aggregate(pipeline, function (err, docs) {
-        res.send(docs);
-    });
+    let result = await toArray(textIndexModel.aggregate(pipeline).cursor({}).exec());
+    res.send(result);
 
 });
 
