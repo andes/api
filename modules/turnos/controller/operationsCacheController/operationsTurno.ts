@@ -37,7 +37,7 @@ export async function processTurnos(agendas: any, idAgendaCreada: any, idEfector
             }
         }
     } catch (ex) {
-        console.log('...> error en processTurnos', ex);
+        // console.log('...> error en processTurnos', ex);
         return (ex);
     }
 }
@@ -49,7 +49,7 @@ export async function existeTurnoSips(turno: any) {
             .query('SELECT idTurno FROM dbo.CON_Turno WHERE objectId = @idTurnoMongo GROUP BY idTurno');
         return result;
     } catch (ex) {
-        console.log('...> error en existeTurnoSips', ex);
+        // console.log('...> error en existeTurnoSips', ex);
         return (ex);
     }
 }
@@ -70,7 +70,7 @@ async function grabaTurnoSips(turno, idAgendaSips, idEfector) {
 
         executeQuery(query);
     } catch (ex) {
-        console.log('error en grabaTurnoSips---->', ex);
+        // console.log('error en grabaTurnoSips---->', ex);
         return (ex);
     }
 }
