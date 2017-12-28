@@ -64,9 +64,10 @@ let schema = new mongoose.Schema({
 // Defino Virtuals
 schema.virtual('turnosDisponibles').get(function () {
     let turnosDisponibles = 0;
+    let hrFn = this.horaFin;
     this.bloques.forEach(function (bloque) {
         bloque.turnos.forEach(function (turno) {
-            if (turno.estado === 'disponible' && this.horaFin >= new Date()) {
+            if (turno.estado === 'disponible' && hrFn >= new Date()) {
                 turnosDisponibles++;
             }
         });
