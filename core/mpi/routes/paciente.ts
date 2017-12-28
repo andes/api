@@ -254,6 +254,40 @@ router.get('/pacientes/dashboard/', function (req, res, next) {
 
 });
 
+router.get('/pacientes/auditoria/', function (req, res, next) {
+    let filtro;
+    switch (req.query.estado) {
+        case 'validados':
+            filtro = {
+                estado: 'validado'
+            };
+            break;
+        case 'temporales':
+            filtro = {
+                estado: 'temporal'
+            };
+            break;
+        case 'fallecidos':
+            filtro = {
+                fechaFallecimiento: {
+                    $exists: true
+                }
+            };
+            break;
+    }
+    filtro['activo'] = req.query.activo === 'true' ? true : false;
+
+    let query = paciente.find(filtro);
+    query.exec(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        res.json(data);
+        });
+
+});
+
+
 /**
  * @swagger
  * /pacientes:

@@ -290,9 +290,16 @@ export function matching(data) {
             {
                 // Sugiere pacientes que tengan la misma clave de blocking
                 let campo = data.claveBlocking;
+                let filter;
+                if (campo === 'documento') {
+                    filter = data.documento;
+                } else {
+                    campo = 'claveBlocking';
+                    filter = data.claveBlocking; // Enviamos una clave de blocking (q sea la segunda lo estoy probando)
+                }
                 let condicionMatch = {};
                 condicionMatch[campo] = {
-                    query: data.documento,
+                    query: filter,
                     minimum_should_match: 3,
                     fuzziness: 2
                 };
@@ -348,7 +355,6 @@ export function matching(data) {
                             let match = new Matching();
                             let valorMatching = match.matchPersonas(pacElastic, pacDto, weights, config.algoritmo);
                             paciente2['id'] = hit._id;
-
                             if (valorMatching >= porcentajeMatchMax) {
                                 listaPacientesMax.push({
                                     id: hit._id,
