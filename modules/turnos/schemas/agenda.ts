@@ -66,7 +66,7 @@ schema.virtual('turnosDisponibles').get(function () {
     let turnosDisponibles = 0;
     this.bloques.forEach(function (bloque) {
         bloque.turnos.forEach(function (turno) {
-            if (turno.estado === 'disponible' && turno.horaInicio >= new Date()) {
+            if (turno.estado === 'disponible' && this.horaFin >= new Date()) {
                 turnosDisponibles++;
             }
         });
