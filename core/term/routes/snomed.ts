@@ -53,7 +53,7 @@ router.get('/snomed', function (req, res, next) {
         conceptActive: true,
         active: true
     };
-
+    req.query.search = req.query.search.toLowerCase();
     // Filtramos por semanticTag
     if (req.query.semanticTag) {
         conditions['$or'] = [...[], req.query.semanticTag].map((i) => { return { semanticTag: i }; });
