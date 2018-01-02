@@ -4,6 +4,7 @@ import * as moment from 'moment';
 import { Auth } from '../../../auth/auth.class';
 import { userScheduler } from '../../../config.private';
 import { Logger } from '../../../utils/logService';
+import { load } from 'google-maps';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -232,7 +233,16 @@ export function actualizarEstado(req, data) {
 
     // Si se pasa a publicada
     if (req.body.estado === 'publicada') {
+        let hoy = new Date();
         data.estado = 'publicada';
+        if (moment(data.horaInicio).isSame(hoy, 'day')) {
+            data.bloques.forEach(bloque => {
+                if (bloque.restantesProgramados > 0 ) {
+                    bloque.restantesDelDia += bloque.restantesProgramados;
+                    bloque.restantesProgramados = 0;
+                }
+            });
+        }
     }
 
     // Si se pasa a borrada
