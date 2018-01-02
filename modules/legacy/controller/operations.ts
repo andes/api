@@ -44,7 +44,7 @@ function profesionalCompleto(lstProfesionales): any {
 /** Dado un id de Organización devuelve el objeto completo */
 function organizacionCompleto(idOrganizacion): any {
     return new Promise((resolve, reject) => {
-        this.organizacion.findById(mongoose.Types.ObjectId(idOrganizacion), function (err, unaOrganizacion) {
+        organizacion.model.findById(mongoose.Types.ObjectId(idOrganizacion), function (err, unaOrganizacion) {
             if (err) {
                 return reject(err);
             }
@@ -135,13 +135,18 @@ export async function cacheTurnosSips(unaAgenda) {
     // Armo el DTO para guardar en la cache de agendas
 
     if ((unaAgenda.estado !== 'planificacion') && (unaAgenda.nominalizada)) {
+        let organizacionAgenda;
+        if (unaAgenda.organizacion) {
+            organizacionAgenda = await organizacionCompleto(unaAgenda.organizacion.id);
+        }
+        let profesionalesAgenda = await profesionalCompleto(unaAgenda.profesionales);
 
         let agenda = new agendasCache({
             id: unaAgenda.id,
-            organizacion: await organizacionCompleto(unaAgenda.organizacion.id),
-            profesionales: await profesionalCompleto(unaAgenda.profesionales),
             tipoPrestaciones: unaAgenda.tipoPrestaciones,
             espacioFisico: unaAgenda.espacioFisico,
+            organizacion: organizacionAgenda,
+            profesionales: profesionalesAgenda,
             bloques: unaAgenda.bloques,
             estado: unaAgenda.estado,
             horaInicio: unaAgenda.horaInicio,

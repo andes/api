@@ -288,7 +288,7 @@ router.post('/agenda/clonar', function (req, res, next) {
                             turno.tipoTurno = undefined;
                             turno.updatedAt = undefined;
                             turno.updatedBy = undefined;
-                            turno.diagnostico = { codificaciones : []};
+                            turno.diagnostico = { codificaciones: [] };
                             turno.reasignado = undefined;
                         });
                     });
@@ -438,14 +438,16 @@ router.patch('/agenda/:id*?', function (req, res, next) {
 
 });
 
-router.get('/integracionSips', function (req, res, next) {
-    return new Promise<Array<any>>(async function (resolve, reject) {
-        try {
-            await agendaCacheCtrl.integracionSips();
-            resolve();
-        } catch (ex) {
-            reject(ex);
-        }
-    });
-});
+// Código de prueba queda comentado
+
+// router.get('/integracionSips', function (req, res, next) {
+//     return new Promise<Array<any>>(async function (resolve, reject) {
+//         try {
+//             await agendaCacheCtrl.integracionSips();
+//             resolve();
+//         } catch (ex) {
+//             reject(ex);
+//         }
+//     });
+// });
 export = router;
