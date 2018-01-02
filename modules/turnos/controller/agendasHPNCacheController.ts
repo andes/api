@@ -27,6 +27,12 @@ export async function integracion() {
                 pool.close();
             }
 
+            let agendasMongoExportadas = await operationsHPNCache.getAgendasDeMongoExportadas();
+            agendasMongoExportadas.forEach(async (agenda) => {
+                // promisesArray.push(await operationsHPNCache.checkCodificacion(agenda, pool));
+            });
+
+
             console.log('FINISHED');
             resolve();
         } catch (ex) {

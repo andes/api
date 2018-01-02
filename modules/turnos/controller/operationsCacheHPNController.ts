@@ -35,7 +35,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
                         await saveAgendaProfesional(idAgendaHPN, await getIdProfesionalPrestaciones(agenda.profesionales[0].documento));
                         // await saveAgendaTipoPrestacion(idAgendaHPN, await getIdTipoPrestacion());
                         await saveAgendaTipoPrestacion(idAgendaHPN, 705);
-                    }   
+                    }
 
                     await saveBloques(idAgendaHPN, agenda.bloques);
                     await setEstadoAgendaToIntegrada(agenda._id);
@@ -72,8 +72,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
         console.log('saveAgendaProfesional');
         let query = 'INSERT INTO dbo.Prestaciones_Worklist_Programacion_Profesionales ' +
             '(idProgramacion, idProfesional) VALUES (@idProgramacion, @idProfesional)';
-         
-        // return await sql.Request(transaction)
+
         return await new sql.Request(transaction)
             .input('idProgramacion', sql.Int, idProgramacion)
             .input('idProfesional', sql.Int, idProfesional)
@@ -155,7 +154,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
     }
 
     async function saveBloques(idAgendaAndes, bloques: Array<any>) {
-        
+
         for (let bloque of bloques) {
             await saveTurnos(idAgendaAndes, bloque.turnos, bloque.duracionTurno);
         }
@@ -331,4 +330,21 @@ async function setEstadoAgendaToIntegrada(idAgenda) {
                 estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS
             }
         }).exec();
+}
+
+export function getAgendasDeMongoExportadas() {
+    return new Promise<Array<any>>(function (resolve2, reject) {
+        agendasCache.find({
+            $or: [{
+                estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS
+            }, {
+                estadoIntegracion: constantes.EstadoExportacionAgendaCache.codificada
+            }]
+        }).exec(function (err, data) {
+            if (err) {
+                reject(err);
+            }
+            resolve2(data);
+        });
+    });
 }
