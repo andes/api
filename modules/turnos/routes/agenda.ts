@@ -354,27 +354,27 @@ router.patch('/agenda/:id*?', function (req, res, next) {
         for (let y = 0; y < turnos.length; y++) {
             let turno;
             switch (req.body.op) {
-                case 'darAsistencia': agendaCtrl.darAsistencia(req, data, turnos[y]._id);
+                case 'darAsistencia': agendaCtrl.darAsistencia(req, data, turnos[y]);
                     break;
-                case 'sacarAsistencia': agendaCtrl.sacarAsistencia(req, data, turnos[y]._id);
+                case 'sacarAsistencia': agendaCtrl.sacarAsistencia(req, data, turnos[y]);
                     break;
-                case 'quitarTurnoDoble': agendaCtrl.quitarTurnoDoble(req, data, turnos[y]._id);
+                case 'quitarTurnoDoble': agendaCtrl.quitarTurnoDoble(req, data, turnos[y]);
                     break;
                 case 'liberarTurno':
-                    turno = agendaCtrl.getTurno(req, data, turnos[y]._id);
+                    turno = agendaCtrl.getTurno(req, data, turnos[y]);
                     if (turno.paciente.id) {
                         LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, agendaCtrl.getBloque(data, turno)._id, data._id);
                     }
                     agendaCtrl.liberarTurno(req, data, turno);
                     break;
                 case 'suspenderTurno':
-                    turno = agendaCtrl.getTurno(req, data, turnos[y]._id);
+                    turno = agendaCtrl.getTurno(req, data, turnos[y]);
                     LoggerPaciente.logTurno(req, 'turnos:suspender', (turno.paciente ? turno.paciente : null), turno, agendaCtrl.getBloque(data, turno)._id, data._id);
                     agendaCtrl.suspenderTurno(req, data, turno);
                     break;
                 case 'guardarNotaTurno': agendaCtrl.guardarNotaTurno(req, data, req.body.idTurno);
                     break;
-                case 'darTurnoDoble': agendaCtrl.darTurnoDoble(req, data, turnos[y]._id);
+                case 'darTurnoDoble': agendaCtrl.darTurnoDoble(req, data, turnos[y]);
                     break;
                 case 'notaAgenda': agendaCtrl.guardarNotaAgenda(req, data);
                     break;
