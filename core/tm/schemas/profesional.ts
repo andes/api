@@ -77,6 +77,7 @@ export let profesionalSchema = new mongoose.Schema({
      }],
      notas: { type: String, required: false },
      rematriculado: { type: Boolean, default: false },
+     agenteMatriculador: { type: String, required: false },
 });
 
 
