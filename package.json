@@ -60,6 +60,7 @@
     "swagger-jsdoc": "^1.7.0",
     "ws": "^3.2.0",
     "xmlbuilder": "^9.0.4",
+    "xmldom": "^0.1.27",
     "xmljson": "^0.2.0"
   },
   "scripts": {
