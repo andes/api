@@ -20,7 +20,7 @@ export async function mpiCorrector() {
         reportarError: true
     };
     try {
-        let pacientesReportados = await pacienteModel.paciente.find(condicion);
+        let pacientesReportados = await pacienteModel.pacienteMpi.find(condicion);
         let promArray = [];
         pacientesReportados.forEach((doc: any) => {
             if (doc) {
@@ -33,10 +33,10 @@ export async function mpiCorrector() {
     logger('Proceso finalizado');
 }
 
-async function consultarSisa(pacienteAndes: any) {
+async function consultarSisa(pacienteMpi: any) {
     try {
         // realiza la consulta con sisa y devuelve los resultados del matcheo
-        let resultado = await matchSisa(pacienteAndes);
+        let resultado = await matchSisa(pacienteMpi);
 
 
         if (resultado) {
@@ -44,10 +44,10 @@ async function consultarSisa(pacienteAndes: any) {
             let pacienteSisa = resultado['matcheos'].datosPaciente; // paciente con los datos de Sisa originales
             if (match >= 95) {
                 // Solo lo validamos con sisa si entra por aquí
-                actualizarPaciente(pacienteAndes, pacienteSisa);
+                actualizarPaciente(pacienteMpi, pacienteSisa);
             } else {
                 // POST/PUT en una collection pacienteRejected para un control a posteriori
-                nuevoPacienteRejected(pacienteAndes);
+                nuevoPacienteRejected(pacienteMpi);
             }
         }
     } catch (err) {
@@ -91,19 +91,19 @@ function nuevoPacienteRejected(pacienteAndes: any) {
     });
 }
 
-function actualizarPaciente(pacienteAndes: any, pacienteSisa: any) {
-    if (!pacienteAndes.entidadesValidadoras.includes('Sisa')) {
+function actualizarPaciente(pacienteMpi: any, pacienteSisa: any) {
+    if (!pacienteMpi.entidadesValidadoras.includes('Sisa')) {
         // Para que no vuelva a insertar la entidad si ya se registro por ella.
-        pacienteAndes.entidadesValidadoras.push('Sisa');
+        pacienteMpi.entidadesValidadoras.push('Sisa');
     }
     let data = {
         nombre: pacienteSisa.nombre,
         apellido: pacienteSisa.apellido,
         reportarError: 'false',
-        entidadesValidadoras: pacienteAndes.entidadesValidadoras
+        entidadesValidadoras: pacienteMpi.entidadesValidadoras
     };
     // PUT de paciente en MPI
-    controllerPaciente.updatePaciente(pacienteAndes, data, userScheduler).catch(err => {
+    controllerPaciente.updatePaciente(pacienteMpi, data, userScheduler).catch(err => {
         logger('Error', err);
         return err;
     });
