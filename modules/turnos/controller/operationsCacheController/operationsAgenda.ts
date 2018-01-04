@@ -354,9 +354,13 @@ export async function guardarCacheASips(agenda) {
                     transaction.rollback();
                     return (err2);
                 }
+                console.log('Transaction committed.');
                 markAgendaAsProcessed(agenda);
             });
 
+        }).catch((error) => {
+            console.log('Error en transaction---->', error);
+            return error;
         });
     } else {
         console.log('Profesional inexistente en SIPS, agenda no copiada');
@@ -376,7 +380,7 @@ async function checkEstadoAgenda(agendaMongo: any, idAgendaSips: any) {
 
         if ((estadoAgendaSips !== estadoAgendaMongo) && (agendaMongo.estado === 'suspendida')) {
             let query = 'UPDATE dbo.CON_Agenda SET idAgendaEstado = ' + estadoAgendaMongo + '   WHERE idAgenda = ' + idAgendaSips;
-            executeQuery(query, transaction);
+            executeQuery(query);
         }
     } catch (ex) {
 
@@ -505,7 +509,7 @@ async function grabaAgendaSips(agendaSips: any, datosSips: any) {
                     '\'' + moment().format('YYYYMMDD HH:mm:ss') + '\', ' +
                     '\'' + moment().format('YYYYMMDD HH:mm:ss') + '\', ' +
                     idEspecialidad + ' ) ';
-                await executeQuery(query2, transaction);
+                await executeQuery(query2);
             });
         }
         return (idAgendaCreada);
