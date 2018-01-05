@@ -39,7 +39,7 @@ export async function processTurnos(agendas: any, idAgendaCreada: any, idEfector
             }
         }
     } catch (ex) {
-        // console.log('...> error en processTurnos', ex);
+        console.log('...> error en processTurnos', ex);
         return (ex);
     }
 }
@@ -78,8 +78,9 @@ async function grabaTurnoSips(turno, idAgendaSips, idEfector) {
 }
 
 
-export function checkEstadoTurno(agenda: any, idAgendaSips) {
+export function checkEstadoTurno(agenda: any, idAgendaSips, tr) {
     let turnos;
+    transaction = tr;
     try {
         for (let x = 0; x < agenda.bloques.length; x++) {
             turnos = agenda.bloques[x].turnos;
@@ -229,7 +230,8 @@ async function getEstadoTurnoSips(objectId: any) {
     }
 }
 
-export async function checkAsistenciaTurno(agenda: any) {
+export async function checkAsistenciaTurno(agenda: any, tr) {
+    transaction = tr;
     let turnos;
     try {
         for (let x = 0; x < agenda.bloques.length; x++) {

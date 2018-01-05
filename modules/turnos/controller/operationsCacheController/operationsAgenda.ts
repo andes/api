@@ -68,75 +68,85 @@ export function getAgendasDeMongoPendientes() {
  * @param agenda
  */
 export async function checkCodificacion(agenda) {
-    let defaultPool = await sql.connect(config);
-    let turno;
-    let datosTurno = {};
-    let idEspecialidad: any;
+    try {
+        let defaultPool = await sql.connect(config);
+        let turno;
+        let datosTurno = {};
+        let idEspecialidad: any;
 
-    for (let x = 0; x < agenda.bloques.length; x++) {
-        turno = agenda.bloques[x].turnos;
+        for (let x = 0; x < agenda.bloques.length; x++) {
+            turno = agenda.bloques[x].turnos;
 
-        for (let z = 0; z < turno.length; z++) {
-            let resultado = await turnoOps.existeTurnoSips(turno[z]);
-            let cloneTurno: any = [];
+            for (let z = 0; z < turno.length; z++) {
+                let resultado = await turnoOps.existeTurnoSips(turno[z]);
+                let cloneTurno: any = [];
 
-            if (resultado.length > 0) {
-                let idConsulta = await existeConsultaTurno(resultado[0].idTurno);
-                let turnoPaciente: any = await getPacienteAgenda(agenda, turno[z]._id);
-                idEspecialidad = (agenda.tipoPrestaciones[0].term.includes('odonto')) ? 34 : 14;
-                turno[z] = turnoPaciente;
+                if (resultado.length > 0) {
+                    let idConsulta = await existeConsultaTurno(resultado[0].idTurno);
+                    let turnoPaciente: any = await getPacienteAgenda(agenda, turno[z]._id);
+                    idEspecialidad = (agenda.tipoPrestaciones[0].term.includes('odonto')) ? 34 : 14;
+                    turno[z] = turnoPaciente;
 
-                if (idConsulta) {
-                    if (idEspecialidad === constantes.Especialidades.odontologia) {
-                        turno[z] = await codificaOdontologia(idConsulta, turno[z]);
-                    } else {
-                        turno[z] = await codificacionCie10(idConsulta, turno[z]);
+                    if (idConsulta) {
+                        if (idEspecialidad === constantes.Especialidades.odontologia) {
+                            turno[z] = await codificaOdontologia(idConsulta, turno[z]);
+                        } else {
+                            turno[z] = await codificacionCie10(idConsulta, turno[z]);
+                        }
                     }
-                }
-                datosTurno = {
-                    idAgenda: agenda.id,
-                    idTurno: turno[z]._id,
-                    idBloque: agenda.bloques[x]._id,
-                    idUsuario: constantes.idUsuarioSips,
-                    turno: turno[z]
-                };
+                    datosTurno = {
+                        idAgenda: agenda.id,
+                        idTurno: turno[z]._id,
+                        idBloque: agenda.bloques[x]._id,
+                        idUsuario: constantes.idUsuarioSips,
+                        turno: turno[z]
+                    };
 
-                turnoCtrl.updateTurno(datosTurno);
-                markAgendaAsProcessed(agenda);
+                    turnoCtrl.updateTurno(datosTurno);
+                    markAgendaAsProcessed(agenda);
+                }
             }
         }
+    } catch (ex) {
+        console.log('...> error en checkCodificacion', ex);
+        return (ex);
     }
 }
 
 async function codificaOdontologia(idConsulta: any, turno: any) {
     let idNomenclador: any = [];
     let codificacionOdonto: any = {};
-    idNomenclador = await getConsultaOdontologia(idConsulta);
-    let m = 0;
-    for (let i = 0; i < idNomenclador.length; i++) {
-        codificacionOdonto = await getCodificacionOdonto(idNomenclador[i].idNomenclador);
-        if (i === 0) {
-            turno.asistencia = 'asistio';
-            turno.diagnosticoPrincipal = {
-                ilegible: false,
-                codificacion: {
-                    codigo: codificacionOdonto.codigo,
-                    nombre: codificacionOdonto.descripcion,
-                    sinonimo: codificacionOdonto.descripcion,
-                }
-            };
-        } else {
-            turno.asistencia = 'asistio';
-            turno.diagnosticoSecundario[m] = {
-                ilegible: false,
-                codificacion: {
-                    codigo: codificacionOdonto.codigo,
-                    nombre: codificacionOdonto.descripcion,
-                    sinonimo: codificacionOdonto.descripcion,
-                }
-            };
-            m++;
+    try {
+        idNomenclador = await getConsultaOdontologia(idConsulta);
+        let m = 0;
+        for (let i = 0; i < idNomenclador.length; i++) {
+            codificacionOdonto = await getCodificacionOdonto(idNomenclador[i].idNomenclador);
+            if (i === 0) {
+                turno.asistencia = 'asistio';
+                turno.diagnosticoPrincipal = {
+                    ilegible: false,
+                    codificacion: {
+                        codigo: codificacionOdonto.codigo,
+                        nombre: codificacionOdonto.descripcion,
+                        sinonimo: codificacionOdonto.descripcion,
+                    }
+                };
+            } else {
+                turno.asistencia = 'asistio';
+                turno.diagnosticoSecundario[m] = {
+                    ilegible: false,
+                    codificacion: {
+                        codigo: codificacionOdonto.codigo,
+                        nombre: codificacionOdonto.descripcion,
+                        sinonimo: codificacionOdonto.descripcion,
+                    }
+                };
+                m++;
+            }
         }
+    } catch (ex) {
+        console.log('...> error en checkCodificacion', ex);
+        return (ex);
     }
     return (turno);
 }
@@ -144,37 +154,42 @@ async function codificacionCie10(idConsulta: any, turno: any) {
 
     let codCie10: any = [];
     let codificaCie10: any = {};
-    codCie10 = await getConsultaDiagnostico(idConsulta);
-    let diagnosticos = [];
-    turno.diagnostico.codificaciones = [];
-    for (let i = 0; i < codCie10.length; i++) {
-        codificaCie10 = await getCodificacionCie10(codCie10[i].CODCIE10);
-        turno.asistencia = 'asistio';
-        turno.diagnostico.ilegible = false;
-        if (codCie10[i].PRINCIPAL === true) {
-            turno.diagnostico.codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del arrays
-                codificacionProfesional: {
-                    causa: codificaCie10.CAUSA,
-                    subcausa: codificaCie10.SUBCAUSA,
-                    codigo: codificaCie10.CODIGO,
-                    nombre: codificaCie10.Nombre,
-                    sinonimo: codificaCie10.Sinonimo,
-                    c2: codificaCie10.C2
-                    // TODO: campo primeraVez -> verificar en SIPS
-                }
-            });
-        } else {
-            turno.diagnostico.codificaciones.push({
-                codificacionProfesional: {
-                    causa: codificaCie10.CAUSA,
-                    subcausa: codificaCie10.SUBCAUSA,
-                    codigo: codificaCie10.CODIGO,
-                    nombre: codificaCie10.Nombre,
-                    sinonimo: codificaCie10.Sinonimo,
-                    c2: codificaCie10.C2
-                }
-            });
+    try {
+        codCie10 = await getConsultaDiagnostico(idConsulta);
+        let diagnosticos = [];
+        turno.diagnostico.codificaciones = [];
+        for (let i = 0; i < codCie10.length; i++) {
+            codificaCie10 = await getCodificacionCie10(codCie10[i].CODCIE10);
+            turno.asistencia = 'asistio';
+            turno.diagnostico.ilegible = false;
+            if (codCie10[i].PRINCIPAL === true) {
+                turno.diagnostico.codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del arrays
+                    codificacionProfesional: {
+                        causa: codificaCie10.CAUSA,
+                        subcausa: codificaCie10.SUBCAUSA,
+                        codigo: codificaCie10.CODIGO,
+                        nombre: codificaCie10.Nombre,
+                        sinonimo: codificaCie10.Sinonimo,
+                        c2: codificaCie10.C2
+                        // TODO: campo primeraVez -> verificar en SIPS
+                    }
+                });
+            } else {
+                turno.diagnostico.codificaciones.push({
+                    codificacionProfesional: {
+                        causa: codificaCie10.CAUSA,
+                        subcausa: codificaCie10.SUBCAUSA,
+                        codigo: codificaCie10.CODIGO,
+                        nombre: codificaCie10.Nombre,
+                        sinonimo: codificaCie10.Sinonimo,
+                        c2: codificaCie10.C2
+                    }
+                });
+            }
         }
+    } catch (ex) {
+        console.log('...> error en checkCodificacion', ex);
+        return (ex);
     }
     return (turno);
 }
@@ -316,14 +331,17 @@ export async function guardarCacheASips(agenda) {
     if (datosArr[1][0]) {
         datosSips.idProfesional = datosArr[1][0].idProfesional;
 
-
-
         let transactionPool = await sql.connect(config);
         transaction = new sql.Transaction(transactionPool);
 
         transaction.begin(async err => {
             let rolledBack = false;
+            transaction.rollback(err2 => {
+                console.log('transaction rolled back!!');
+                logger.LoggerAgendaCache.logAgenda(agenda._id, err2);
 
+                return err2;
+            });
             if (err) {
                 logger.LoggerAgendaCache.logAgenda(agenda._id, err);
                 transaction.rollback();
@@ -341,26 +359,24 @@ export async function guardarCacheASips(agenda) {
                 let promArray = [];
                 promArray.push(turnoOps.processTurnos(agenda, idAgenda, datosSips.idEfector, transaction));
                 promArray.push(checkEstadoAgenda(agenda, idAgenda));
-                promArray.push(turnoOps.checkEstadoTurno(agenda, idAgenda));
-                promArray.push(turnoOps.checkAsistenciaTurno(agenda));
+                promArray.push(turnoOps.checkEstadoTurno(agenda, idAgenda, transaction));
+                promArray.push(turnoOps.checkAsistenciaTurno(agenda, transaction));
                 await Promise.all(promArray);
+
+                transaction.commit(err2 => {
+                    if (err2) {
+                        logger.LoggerAgendaCache.logAgenda(agenda._id, err2);
+                        transaction.rollback();
+                        return (err2);
+                    }
+                    console.log('Transaction committed.');
+                    markAgendaAsProcessed(agenda);
+                });
             } catch (error) {
                 console.log('-----------------> ERROR en guardarCacheASips ', error);
                 return (error);
             }
-            transaction.commit(err2 => {
-                if (err2) {
-                    logger.LoggerAgendaCache.logAgenda(agenda._id, err2);
-                    transaction.rollback();
-                    return (err2);
-                }
-                console.log('Transaction committed.');
-                markAgendaAsProcessed(agenda);
-            });
 
-        }).catch((error) => {
-            console.log('Error en transaction---->', error);
-            return error;
         });
     } else {
         console.log('Profesional inexistente en SIPS, agenda no copiada');
