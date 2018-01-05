@@ -368,9 +368,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                         });
 
                     });
-                    
                 }
-                
                 // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
                 operations.cacheTurnosSips(data);
                 // Fin de insert cache

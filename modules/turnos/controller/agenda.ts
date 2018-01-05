@@ -197,7 +197,7 @@ export function codificarTurno(req, data, tid) {
                                             c2: (cie as any).c2,
                                             primeraVez: registro.esPrimeraVez,
                                         }
-                                    })
+                                    });
                                 }
                             } else {
                                 // Todo: En el caso en q no mapea, logearlo
