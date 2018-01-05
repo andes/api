@@ -120,6 +120,7 @@ export function getTurno(req) {
                     }
                     data2.forEach(elem => {
                         turno = elem.bloques.turnos;
+                        turno.id = turno._id;
                         turno.agenda_id = elem.agenda_id;
                         turno.organizacion = elem.organizacion;
                         turno.profesionales = elem.profesionales;
