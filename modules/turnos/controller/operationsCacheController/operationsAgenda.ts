@@ -70,7 +70,7 @@ export function getAgendasDeMongoPendientes() {
  */
 export async function checkCodificacion(agenda) {
     try {
-        let defaultPool = await sql.connect(config);
+        defaultPool = await sql.connect(config);
         let turno;
         let datosTurno = {};
         let idEspecialidad: any;
@@ -336,7 +336,7 @@ export async function guardarCacheASips(agenda) {
         let transactionPool = await sql.connect(config);
         transaction = new sql.Transaction(transactionPool);
 
-        transaction.begin(async err => {
+        transaction.begin(async (err) => {
             let rolledBack = false;
             if (err) {
                 logger.LoggerAgendaCache.logAgenda(agenda._id, err);
@@ -350,33 +350,35 @@ export async function guardarCacheASips(agenda) {
             });
 
             try {
-
                 let idAgenda = await processAgenda(agenda, datosSips, transaction);
-                // let promArray = [];
-                // promArray.push(turnoOps.processTurnos(agenda, idAgenda, datosSips.idEfector, transaction));
-                // promArray.push(checkEstadoAgenda(agenda, idAgenda));
-                // promArray.push(turnoOps.checkEstadoTurno(agenda, idAgenda, transaction));
-                // promArray.push(turnoOps.checkAsistenciaTurno(agenda, transaction));
-                // await Promise.all(promArray);
+                let promArray = [];
+                promArray.push(turnoOps.processTurnos(agenda, idAgenda, datosSips.idEfector, transaction));
+                promArray.push(checkEstadoAgenda(agenda, idAgenda));
+                promArray.push(turnoOps.checkEstadoTurno(agenda, idAgenda, transaction));
+                promArray.push(turnoOps.checkAsistenciaTurno(agenda));
+                await Promise.all(promArray);
 
-                await turnoOps.processTurnos(agenda, idAgenda, datosSips.idEfector, transaction);
-                await checkEstadoAgenda(agenda, idAgenda);
-                await turnoOps.checkEstadoTurno(agenda, idAgenda, transaction);
-                await turnoOps.checkAsistenciaTurno(agenda, transaction);
-
-                transaction.commit(err2 => {
-                    if (err2) {
-                        logger.LoggerAgendaCache.logAgenda(agenda._id, err2);
-                        transaction.rollback();
-                        return (err2);
-                    }
-                    console.log('Transaction committed.');
-                    markAgendaAsProcessed(agenda);
-                });
+                // await turnoOps.processTurnos(agenda, idAgenda, datosSips.idEfector, transaction);
+                // await checkEstadoAgenda(agenda, idAgenda);
+                // await turnoOps.checkEstadoTurno(agenda, idAgenda, transaction);
+                // await turnoOps.checkAsistenciaTurno(agenda);
+                defaultPool.close();
             } catch (error) {
                 console.log('-----------------> ERROR en guardarCacheASips ', error);
+                transaction.rollback();
                 return (error);
             }
+            transaction.commit(err2 => {
+                if (err2) {
+                    console.log('-----------------> ERROR en commit ', err2);
+
+                    logger.LoggerAgendaCache.logAgenda(agenda._id, err2);
+                    transaction.rollback();
+                    return (err2);
+                }
+                console.log('Transaction committed.', agenda.id);
+                markAgendaAsProcessed(agenda);
+            });
 
         });
     } else {
@@ -408,13 +410,12 @@ async function checkEstadoAgenda(agendaMongo: any, idAgendaSips: any) {
 async function getEstadoAgenda(idAgenda: any) {
     try {
         let query = 'SELECT idAgendaEstado as idEstado FROM dbo.CON_Agenda WHERE objectId = @idAgenda';
-        let result = await new sql.Request()
+        let result = await new sql.Request(defaultPool)
             .input('idAgenda', sql.VarChar(50), idAgenda)
             .query(query);
         return (result[0].idEstado);
     } catch (err) {
         console.log(' err getEstadoAgenda', err);
-
         return (err);
     }
 }
@@ -460,7 +461,7 @@ async function processAgenda(agenda: any, datosSips, tr) {
     transaction = tr;
     try {
         //  Verifica si existe la agenda pasada por parámetro en SIPS
-        let result = await new sql.Request(transaction)
+        let result = await new sql.Request(defaultPool)
             .input('idAgendaMongo', sql.VarChar(50), agenda.id)
             .query('SELECT idAgenda FROM dbo.CON_Agenda WHERE objectId = @idAgendaMongo GROUP BY idAgenda');
 
@@ -521,7 +522,7 @@ async function grabaAgendaSips(agendaSips: any, datosSips: any) {
         if (listaIdProfesionales[0].length > 0) {
             let promiseArray = [];
             listaIdProfesionales.forEach(async listaIdProf => {
-                let query2 = 'select SCOPE_IDENTITY() as id INSERT INTO dbo.CON_AgendaProfesional ( idAgenda, idProfesional, baja, CreatedBy , ' +
+                let query2 = 'INSERT INTO dbo.CON_AgendaProfesional ( idAgenda, idProfesional, baja, CreatedBy , ' +
                     ' CreatedOn, ModifiedBy, ModifiedOn, idEspecialidad ) VALUES  ( ' + idAgendaCreada + ',' +
                     listaIdProf[0].idProfesional + ',' + 0 + ',' + constantes.idUsuarioSips + ',' +
                     '\'' + moment().format('YYYYMMDD HH:mm:ss') + '\', ' +

@@ -10,9 +10,15 @@ import * as constantes from '../../../legacy/schemas/constantes';
 import * as logger from './../../../../utils/loggerAgendaSipsCache';
 import * as agendaSchema from '../../schemas/agenda';
 import * as turnoCtrl from './../turnoCacheController';
-
+import * as configPrivate from '../../../../config.private';
 import * as pacienteOps from './operationsPaciente';
-
+let defaultPool;
+let config = {
+    user: configPrivate.conSql.auth.user,
+    password: configPrivate.conSql.auth.password,
+    server: configPrivate.conSql.serverSql.server,
+    database: configPrivate.conSql.serverSql.database
+};
 let transaction;
 /**
  * Verifica cada turno asignado de la agenda y graba en SIPS los turnos nuevos.
@@ -33,7 +39,7 @@ export async function processTurnos(agendas: any, idAgendaCreada: any, idEfector
                 if (turnos[i].estado === 'asignado') {
                     let resultado = await existeTurnoSips(turnos[i]);
                     if (resultado.length <= 0) {
-                        grabaTurnoSips(turnos[i], idAgendaCreada, idEfector);
+                        await grabaTurnoSips(turnos[i], idAgendaCreada, idEfector);
                     }
                 }
             }
@@ -45,8 +51,10 @@ export async function processTurnos(agendas: any, idAgendaCreada: any, idEfector
 }
 
 export async function existeTurnoSips(turno: any) {
+    defaultPool = await sql.connect(config);
+
     try {
-        let result = await new sql.Request()
+        let result = await new sql.Request(defaultPool)
             .input('idTurnoMongo', sql.VarChar(50), turno._id)
             .query('SELECT idTurno FROM dbo.CON_Turno WHERE objectId = @idTurnoMongo GROUP BY idTurno');
         return result;
@@ -70,7 +78,7 @@ async function grabaTurnoSips(turno, idAgendaSips, idEfector) {
         let query = 'INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente ,  fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante, objectId ) VALUES  ( ' +
             idAgendaSips + ' , 1 , ' + constantes.idUsuarioSips + ' ,' + pacienteId + ', \'' + fechaTurno + '\' ,\'' + horaTurno + '\' , 0 , 0 ,' + idObraSocial + ' , 0, \'' + turno._id + '\')';
 
-        executeQuery(query);
+        await executeQuery(query);
     } catch (ex) {
         console.log('error en grabaTurnoSips---->', ex);
         return (ex);
@@ -130,10 +138,11 @@ async function actualizarEstadoTurnoSips(idAgendaSips, turno) {
             }
 
             let query = 'UPDATE dbo.CON_Turno SET idTurnoEstado = ' + estadoTurnoMongo + ' WHERE idAgenda = ' + idAgendaSips + objectIdTurno;
-            executeQuery(query);
+            await executeQuery(query);
         } else {
         }
     } catch (ex) {
+        console.log('error en actualizarEstadoTurnoSips', ex);
         return (ex);
     }
 }
@@ -154,7 +163,7 @@ async function existeTurnoBloqueoSips(idAgendaSips, horaInicio) {
 
 
 
-function grabarTurnoBloqueo(idAgendaSips, turno) {
+async function grabarTurnoBloqueo(idAgendaSips, turno) {
     try {
         const motivoBloqueo = getMotivoTurnoBloqueoSips(turno);
         let fechaBloqueo = moment(turno.horaInicio).format('YYYYMMDD');
@@ -174,7 +183,7 @@ function grabarTurnoBloqueo(idAgendaSips, turno) {
             '\'' + moment(turno.updatedAt).format('YYYYMMDD') + '\', ' +
             motivoBloqueo + ')';
 
-        executeQuery(queryTurnoBloqueo);
+        await executeQuery(queryTurnoBloqueo);
     } catch (ex) {
         return (ex);
     }
@@ -214,9 +223,11 @@ function getMotivoTurnoSuspendido(motivoSuspension) {
 
 /* Devuelve el estado del turno en Con_Turno de SIPS */
 async function getEstadoTurnoSips(objectId: any) {
+    defaultPool = await sql.connect(config);
+
     try {
         let query = 'SELECT idAgenda, idTurno, idTurnoEstado FROM dbo.CON_Turno WHERE objectId = @objectId';
-        let result = await new sql.Request(transaction)
+        let result = await new sql.Request(defaultPool)
             .input('objectId', sql.VarChar(50), objectId)
             .query(query);
 
@@ -227,12 +238,13 @@ async function getEstadoTurnoSips(objectId: any) {
             return (idTurnoEstado);
         }
     } catch (err) {
+        console.log('error getEstadoTurnoSips', err);
         return (err);
     }
 }
 
-export async function checkAsistenciaTurno(agenda: any, tr) {
-    transaction = tr;
+export async function checkAsistenciaTurno(agenda: any) {
+    defaultPool = await sql.connect(config);
     let turnos;
     try {
         for (let x = 0; x < agenda.bloques.length; x++) {
@@ -244,7 +256,7 @@ export async function checkAsistenciaTurno(agenda: any, tr) {
                     let fechaAsistencia = moment(turnos[i].updatedAt).format('YYYYMMDD');
                     let query = 'INSERT INTO dbo.CON_TurnoAsistencia ( idTurno , idUsuario , fechaAsistencia ) VALUES  ( ' +
                         idTurno.idTurno + ' , ' + constantes.idUsuarioSips + ' , \'' + fechaAsistencia + '\' )';
-                    executeQuery(query);
+                    await executeQuery(query);
                 }
             }
         }
