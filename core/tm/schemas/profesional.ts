@@ -44,7 +44,7 @@ export let profesionalSchema = new mongoose.Schema({
         titulo: { type: String, required: false },
         fechaTitulo: { type: Date, required: false },
         fechaEgreso: { type: Date, required: false },
-        revalida: { type: Boolean, default: false },
+        renovacion: { type: Boolean, default: false },
         papelesVerificados: { type: Boolean, default: false },
         matriculacion: [matriculacionSchema],
         matriculado: { type: Boolean, default: false },
@@ -78,6 +78,12 @@ export let profesionalSchema = new mongoose.Schema({
      notas: { type: String, required: false },
      rematriculado: { type: Boolean, default: false },
      agenteMatriculador: { type: String, required: false },
+     OtrosDatos:  [{
+        matriculaProvincial: { type: Number, required: false },
+        folio: { type: String, required: false },
+        libro: { type: String, required: false },
+        anio: { type: Number, required: false }
+    }]
 });
 
 
