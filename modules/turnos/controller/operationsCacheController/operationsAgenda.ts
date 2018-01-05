@@ -15,6 +15,7 @@ import * as pacienteOps from './operationsPaciente';
 import * as configPrivate from '../../../../config.private';
 
 let transaction;
+let defaultPool;
 let config = {
     user: configPrivate.conSql.auth.user,
     password: configPrivate.conSql.auth.password,
@@ -326,6 +327,7 @@ export async function guardarCacheASips(agenda) {
         idEfector: '',
         idProfesional: ''
     };
+    defaultPool = await sql.connect(config);
     let datosArr = await Promise.all(getDatosSips(codigoSisa, dniProfesional));
     datosSips.idEfector = datosArr[0][0].idEfector;
     if (datosArr[1][0]) {
@@ -336,12 +338,6 @@ export async function guardarCacheASips(agenda) {
 
         transaction.begin(async err => {
             let rolledBack = false;
-            transaction.rollback(err2 => {
-                console.log('transaction rolled back!!');
-                logger.LoggerAgendaCache.logAgenda(agenda._id, err2);
-
-                return err2;
-            });
             if (err) {
                 logger.LoggerAgendaCache.logAgenda(agenda._id, err);
                 transaction.rollback();
@@ -355,7 +351,7 @@ export async function guardarCacheASips(agenda) {
 
             try {
 
-                let idAgenda = await processAgenda(agenda, datosSips);
+                let idAgenda = await processAgenda(agenda, datosSips, transaction);
                 let promArray = [];
                 promArray.push(turnoOps.processTurnos(agenda, idAgenda, datosSips.idEfector, transaction));
                 promArray.push(checkEstadoAgenda(agenda, idAgenda));
@@ -441,12 +437,11 @@ async function existeConsultaTurno(idTurno) {
  * @returns
  */
 function getDatosSips(codigoSisa, dniProfesional) {
-
-    let result1 = new sql.Request()
+    let result1 = new sql.Request(defaultPool)
         .input('codigoSisa', sql.VarChar(50), codigoSisa)
         .query('select idEfector from dbo.Sys_Efector WHERE codigoSisa = @codigoSisa');
 
-    let result2 = new sql.Request()
+    let result2 = new sql.Request(defaultPool)
         .input('dniProfesional', sql.Int, dniProfesional)
         .query('SELECT idProfesional FROM dbo.Sys_Profesional WHERE numeroDocumento = @dniProfesional and activo = 1');
 
@@ -454,10 +449,11 @@ function getDatosSips(codigoSisa, dniProfesional) {
 }
 
 
-async function processAgenda(agenda: any, datosSips) {
+async function processAgenda(agenda: any, datosSips, tr) {
+    transaction = tr;
     try {
         //  Verifica si existe la agenda pasada por parámetro en SIPS
-        let result = await new sql.Request()
+        let result = await new sql.Request(transaction)
             .input('idAgendaMongo', sql.VarChar(50), agenda.id)
             .query('SELECT idAgenda FROM dbo.CON_Agenda WHERE objectId = @idAgendaMongo GROUP BY idAgenda');
 
