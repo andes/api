@@ -30,6 +30,13 @@ export let snomedSchema = new mongoose.Schema({
     isLeafInferred: Boolean,
     isLeafStated: Boolean,
     active: Boolean,
+    memberships: [{
+        _id: false,
+        refset: {
+            conceptId: String,
+            preferredTerm: String
+        }    
+    }],
     relationships: [{
         _id: false,
         active: Boolean,
@@ -61,6 +68,7 @@ snomedSchema.index({'relationships.destination.conceptId' : 1, 'relationships.ty
 snomedSchema.index({'relationships.type.conceptId' : 1, 'relationships.destination.conceptId' : 1});
 snomedSchema.index({'inferredAncestors' : 1});
 snomedSchema.index({'statedAncestors' : 1});
+snomedSchema.index({'memberships.refset.conceptId': 1});
 
 
 export let snomedModel = Connections.snomed.model(configPrivate.snomed.dbName, snomedSchema, configPrivate.snomed.dbVersion);

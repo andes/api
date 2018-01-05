@@ -202,7 +202,6 @@ router.get('/snomed/search', async function (req, res, next) {
 router.get('/snomed/expression', async function (req, res, next) {
     let expression = req.query.expression;
     let query = makeMongoQuery(expression);
-
     snomedModel.find(query, {fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1}).then((docs: any[]) => {
         return res.json(docs);
     }).catch(next);
