@@ -1,3 +1,5 @@
+import { SnomedCIE10Mapping } from './../../../core/term/controller/mapping';
+import * as cie10 from './../../../core/term/schemas/cie10';
 import { log } from './../../../core/log/schemas/log';
 import * as agendaModel from '../../turnos/schemas/agenda';
 import * as moment from 'moment';
@@ -5,6 +7,7 @@ import { Auth } from '../../../auth/auth.class';
 import { userScheduler } from '../../../config.private';
 import { Logger } from '../../../utils/logService';
 import { load } from 'google-maps';
+import { model as Prestacion } from '../../rup/schemas/prestacion';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -118,8 +121,6 @@ export function suspenderTurno(req, data, turno) {
         turnoDoble.updatedBy = req.user.usuario || req.user;
     }
 
-
-
     // El tipo de turno del cual se resta será en el orden : delDia, programado, autocitado, gestion
     let position = getPosition(req, data, turno._id);
     if (!turno.tipoTurno) {
@@ -139,6 +140,83 @@ export function suspenderTurno(req, data, turno) {
             }
         }
     }
+}
+
+// Turno
+export function codificarTurno(req, data, tid) {
+    return new Promise((resolve, reject) => {
+        let turno = getTurno(req, data[0], tid);
+
+        let query = Prestacion.find({ $where: 'this.estados[this.estados.length - 1].tipo ==  "validada"' });
+        query.where('solicitud.turno').equals(tid);
+        query.exec(function (err, data1) {
+            if (err) {
+                return ({
+                    err: 'No se encontro prestacion para el turno'
+                });
+            }
+            let arrPrestacion = data1 as any;
+            let codificaciones = [];
+            let promises = [];
+            let prestaciones = arrPrestacion[0].ejecucion.registros.filter(f => {
+                return f.concepto.semanticTag === 'hallazgo' || f.concepto.semanticTag === 'trastorno' || f.concepto.semanticTag === 'situacion'
+            });
+            prestaciones.forEach(registro => {
+                // if (registro.concepto.semanticTag === 'hallazgo' || registro.concepto.semanticTag === 'trastorno' || registro.concepto.semanticTag === 'situacion') {
+                let parametros = {
+                    conceptId: registro.concepto.conceptId,
+                    paciente: turno.paciente,
+                    secondaryConcepts: prestaciones.map(r => r.concepto.conceptId)
+                };
+                let map = new SnomedCIE10Mapping(parametros.paciente, parametros.secondaryConcepts);
+                map.transform(parametros.conceptId).then(target => {
+                    cie10.model.findOne({ codigo: target }).then(cie => {
+                        if (registro.esDiagnosticoPrincipal) {
+                            codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del array
+                                codificacionProfesional: {
+                                    causa: (cie as any).causa,
+                                    subcausa: (cie as any).subcausa,
+                                    codigo: (cie as any).codigo,
+                                    nombre: (cie as any).nombre,
+                                    sinonimo: (cie as any).sinonimo,
+                                    c2: (cie as any).c2,
+                                    primeraVez: registro.esPrimeraVez,
+                                }
+                            })
+
+                        } else {
+                            codificaciones.push({
+                                codificacionProfesional: {
+                                    causa: (cie as any).causa,
+                                    subcausa: (cie as any).subcausa,
+                                    codigo: (cie as any).codigo,
+                                    nombre: (cie as any).nombre,
+                                    sinonimo: (cie as any).sinonimo,
+                                    c2: (cie as any).c2,
+                                    primeraVez: registro.esPrimeraVez,
+                                }
+                            })
+                        }
+                        if (prestaciones.length === codificaciones.length) {
+                            console.log('codificaciones ', codificaciones);
+                            turno.diagnostico = {
+                                ilegible: false,
+                                codificaciones: codificaciones
+                            }
+                            resolve(data);
+                            // return true;
+                        }
+
+                    }).catch(err => {
+                        reject(err);
+                    });
+
+                }).catch(error => {
+                    reject(error);
+                });
+            });
+        });
+    });
 }
 
 // Turno
@@ -237,7 +315,7 @@ export function actualizarEstado(req, data) {
         data.estado = 'publicada';
         if (moment(data.horaInicio).isSame(hoy, 'day')) {
             data.bloques.forEach(bloque => {
-                if (bloque.restantesProgramados > 0 ) {
+                if (bloque.restantesProgramados > 0) {
                     bloque.restantesDelDia += bloque.restantesProgramados;
                     bloque.restantesProgramados = 0;
                 }
