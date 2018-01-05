@@ -1,4 +1,4 @@
-import { mpiCorrector } from '../core/mpi/controller/mpiController';
+import { mpiCorrector } from '../core/mpi/controller/mpiCorrector';
 
 function run() {
     mpiCorrector();
