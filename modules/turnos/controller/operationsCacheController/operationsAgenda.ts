@@ -366,6 +366,7 @@ export async function guardarCacheASips(agenda) {
             } catch (error) {
                 console.log('-----------------> ERROR en guardarCacheASips ', error);
                 transaction.rollback();
+                logger.LoggerAgendaCache.logAgenda(agenda._id, error);
                 return (error);
             }
             transaction.commit(err2 => {
@@ -403,6 +404,7 @@ async function checkEstadoAgenda(agendaMongo: any, idAgendaSips: any) {
         }
     } catch (ex) {
         console.log(' err checkEstadoAgenda', ex);
+        logger.LoggerAgendaCache.logAgenda(agendaMongo._id, ex);
         return (ex);
     }
 }
@@ -416,6 +418,7 @@ async function getEstadoAgenda(idAgenda: any) {
         return (result[0].idEstado);
     } catch (err) {
         console.log(' err getEstadoAgenda', err);
+        logger.LoggerAgendaCache.logAgenda(idAgenda, err);
         return (err);
     }
 }
@@ -432,6 +435,7 @@ async function existeConsultaTurno(idTurno) {
             return (false);
         }
     } catch (err) {
+        console.log('error existeConsultaTurno', err);
         return (err);
     }
 }
@@ -473,6 +477,7 @@ async function processAgenda(agenda: any, datosSips, tr) {
         }
         return (idAgenda);
     } catch (err) {
+        logger.LoggerAgendaCache.logAgenda(agenda._id, err);
         console.log('-----------------> ERROR en processAgenda ', err);
         return err;
     }
@@ -535,6 +540,7 @@ async function grabaAgendaSips(agendaSips: any, datosSips: any) {
         return (idAgendaCreada);
     } catch (err) {
         console.log('-----------------> ERROR en existeAgendaSips ', err);
+
         return err;
     }
 }
