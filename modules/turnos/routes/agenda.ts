@@ -367,7 +367,6 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                                 return next(error);
                             }
                         });
-                        console.log('paso save', ((data[0] as any).bloques[0].turnos[0]));
 
                     });
                     
