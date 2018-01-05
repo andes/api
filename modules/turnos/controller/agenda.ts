@@ -160,7 +160,7 @@ export function codificarTurno(req, data, tid) {
             let promises = [];
             if (arrPrestacion.length > 0 && arrPrestacion[0].ejecucion) {
                 let prestaciones = arrPrestacion[0].ejecucion.registros.filter(f => {
-                    return f.concepto.semanticTag === 'hallazgo' || f.concepto.semanticTag === 'trastorno' || f.concepto.semanticTag === 'situacion'
+                    return f.concepto.semanticTag === 'hallazgo' || f.concepto.semanticTag === 'trastorno' || f.concepto.semanticTag === 'situacion';
                 });
                 prestaciones.forEach(registro => {
                     let parametros = {
@@ -184,7 +184,7 @@ export function codificarTurno(req, data, tid) {
                                             c2: (cie as any).c2,
                                             primeraVez: registro.esPrimeraVez,
                                         }
-                                    })
+                                    });
 
                                 } else {
                                     codificaciones.push({
@@ -200,7 +200,7 @@ export function codificarTurno(req, data, tid) {
                                     })
                                 }
                             } else {
-                                //En el caso en q no mapea, logearlo
+                                // Todo: En el caso en q no mapea, logearlo
                                 codificaciones.push({});
                             }
                             if (prestaciones.length === codificaciones.length) {
@@ -208,13 +208,13 @@ export function codificarTurno(req, data, tid) {
                                 turno.diagnostico = {
                                     ilegible: false,
                                     codificaciones: codificaciones.filter(cod => Object.keys(cod).length > 0)
-                                }
-                                turno.asistencia = "asistio";
+                                };
+                                turno.asistencia = 'asistio';
                                 resolve(data);
                             }
 
-                        }).catch(err => {
-                            reject(err);
+                        }).catch(err1 => {
+                            reject(err1);
                         });
 
                     }).catch(error => {
