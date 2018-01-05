@@ -93,6 +93,7 @@ export function checkEstadoTurno(agenda: any, idAgendaSips, tr) {
             }
         }
     } catch (ex) {
+        console.log('err checkestadoturno', ex);
         return (ex);
     }
 }
@@ -248,6 +249,7 @@ export async function checkAsistenciaTurno(agenda: any, tr) {
             }
         }
     } catch (ex) {
+        console.log('err checkAsistenciaTurno', ex);
         return (ex);
     }
 }

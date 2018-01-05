@@ -395,7 +395,7 @@ async function checkEstadoAgenda(agendaMongo: any, idAgendaSips: any) {
             executeQuery(query);
         }
     } catch (ex) {
-
+        console.log(' err checkEstadoAgenda', ex);
         return (ex);
     }
 }
