@@ -51,7 +51,7 @@ export async function existeTurnoSips(turno: any) {
             .query('SELECT idTurno FROM dbo.CON_Turno WHERE objectId = @idTurnoMongo GROUP BY idTurno');
         return result;
     } catch (ex) {
-        // console.log('...> error en existeTurnoSips', ex);
+        console.log('...> error en existeTurnoSips', ex);
         return (ex);
     }
 }

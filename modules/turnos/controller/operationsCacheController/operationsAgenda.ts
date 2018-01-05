@@ -352,12 +352,17 @@ export async function guardarCacheASips(agenda) {
             try {
 
                 let idAgenda = await processAgenda(agenda, datosSips, transaction);
-                let promArray = [];
-                promArray.push(turnoOps.processTurnos(agenda, idAgenda, datosSips.idEfector, transaction));
-                promArray.push(checkEstadoAgenda(agenda, idAgenda));
-                promArray.push(turnoOps.checkEstadoTurno(agenda, idAgenda, transaction));
-                promArray.push(turnoOps.checkAsistenciaTurno(agenda, transaction));
-                await Promise.all(promArray);
+                // let promArray = [];
+                // promArray.push(turnoOps.processTurnos(agenda, idAgenda, datosSips.idEfector, transaction));
+                // promArray.push(checkEstadoAgenda(agenda, idAgenda));
+                // promArray.push(turnoOps.checkEstadoTurno(agenda, idAgenda, transaction));
+                // promArray.push(turnoOps.checkAsistenciaTurno(agenda, transaction));
+                // await Promise.all(promArray);
+
+                await turnoOps.processTurnos(agenda, idAgenda, datosSips.idEfector, transaction);
+                await checkEstadoAgenda(agenda, idAgenda);
+                await turnoOps.checkEstadoTurno(agenda, idAgenda, transaction);
+                await turnoOps.checkAsistenciaTurno(agenda, transaction);
 
                 transaction.commit(err2 => {
                     if (err2) {
@@ -408,6 +413,8 @@ async function getEstadoAgenda(idAgenda: any) {
             .query(query);
         return (result[0].idEstado);
     } catch (err) {
+        console.log(' err getEstadoAgenda', err);
+
         return (err);
     }
 }
@@ -597,6 +604,7 @@ async function executeQuery(query: any) {
         let result = await new sql.Request(transaction).query(query);
         return result[0].id;
     } catch (err) {
+        console.log('error executeQuery', err);
         return (err);
     }
 }
