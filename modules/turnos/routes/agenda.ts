@@ -353,7 +353,6 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 if (req.body.op === 'codificarTurno') {
                     agendaCtrl.codificarTurno(req, data, t[0]).then(() => {
                         Auth.audit(data[0], req);
-                        console.log('paso audit');
                         data[0].save(function (error) {
                             Logger.log(req, 'citas', 'update', {
                                 accion: req.body.op,
@@ -373,7 +372,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 }
                 
                 // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
-                // operations.cacheTurnosSips(data);
+                operations.cacheTurnosSips(data);
                 // Fin de insert cache
                 return res.json(data[0]);
             });

@@ -149,7 +149,7 @@ export function codificarTurno(req, data, tid) {
 
         let query = Prestacion.find({ $where: 'this.estados[this.estados.length - 1].tipo ==  "validada"' });
         query.where('solicitud.turno').equals(tid);
-        query.exec( function (err, data1) {
+        query.exec(function (err, data1) {
             if (err) {
                 return ({
                     err: 'No se encontro prestacion para el turno'
@@ -158,68 +158,72 @@ export function codificarTurno(req, data, tid) {
             let arrPrestacion = data1 as any;
             let codificaciones = [];
             let promises = [];
-            let prestaciones = arrPrestacion[0].ejecucion.registros.filter(f => {
-                return f.concepto.semanticTag === 'hallazgo' || f.concepto.semanticTag === 'trastorno' || f.concepto.semanticTag === 'situacion'
-            });
-            prestaciones.forEach(registro => {
-                let parametros = {
-                    conceptId: registro.concepto.conceptId,
-                    paciente: turno.paciente,
-                    secondaryConcepts: prestaciones.map(r => r.concepto.conceptId)
-                };
-                let map = new SnomedCIE10Mapping(parametros.paciente, parametros.secondaryConcepts);
-                map.transform(parametros.conceptId).then(target => {
-                    // Buscar en cie10 los primeros 5 digitos
-                    cie10.model.findOne({ codigo: (target as String).substring(0,5) }).then(cie => {
-                        if (cie != null) {
-                            if (registro.esDiagnosticoPrincipal) {
-                                codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del array
-                                    codificacionProfesional: {
-                                        causa: (cie as any).causa,
-                                        subcausa: (cie as any).subcausa,
-                                        codigo: (cie as any).codigo,
-                                        nombre: (cie as any).nombre,
-                                        sinonimo: (cie as any).sinonimo,
-                                        c2: (cie as any).c2,
-                                        primeraVez: registro.esPrimeraVez,
-                                    }
-                                })
-    
-                            } else {
-                                codificaciones.push({
-                                    codificacionProfesional: {
-                                        causa: (cie as any).causa,
-                                        subcausa: (cie as any).subcausa,
-                                        codigo: (cie as any).codigo,
-                                        nombre: (cie as any).nombre,
-                                        sinonimo: (cie as any).sinonimo,
-                                        c2: (cie as any).c2,
-                                        primeraVez: registro.esPrimeraVez,
-                                    }
-                                })
-                            }
-                        } else {
-                            //En el caso en q no mapea, logearlo
-                            codificaciones.push({});
-                        }
-                        if (prestaciones.length === codificaciones.length) {
-                            console.log('codificaciones ', codificaciones);
-                            turno.diagnostico = {
-                                ilegible: false,
-                                codificaciones: codificaciones.filter(cod => Object.keys(cod).length > 0)
-                            }
-                            turno.asistencia = "asistio";
-                            resolve(data);
-                        }
-
-                    }).catch(err => {
-                        reject(err);
-                    });
-
-                }).catch(error => {
-                    reject(error);
+            if (arrPrestacion.length > 0 && arrPrestacion[0].ejecucion) {
+                let prestaciones = arrPrestacion[0].ejecucion.registros.filter(f => {
+                    return f.concepto.semanticTag === 'hallazgo' || f.concepto.semanticTag === 'trastorno' || f.concepto.semanticTag === 'situacion'
                 });
-            });
+                prestaciones.forEach(registro => {
+                    let parametros = {
+                        conceptId: registro.concepto.conceptId,
+                        paciente: turno.paciente,
+                        secondaryConcepts: prestaciones.map(r => r.concepto.conceptId)
+                    };
+                    let map = new SnomedCIE10Mapping(parametros.paciente, parametros.secondaryConcepts);
+                    map.transform(parametros.conceptId).then(target => {
+                        // Buscar en cie10 los primeros 5 digitos
+                        cie10.model.findOne({ codigo: (target as String).substring(0, 5) }).then(cie => {
+                            if (cie != null) {
+                                if (registro.esDiagnosticoPrincipal) {
+                                    codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del array
+                                        codificacionProfesional: {
+                                            causa: (cie as any).causa,
+                                            subcausa: (cie as any).subcausa,
+                                            codigo: (cie as any).codigo,
+                                            nombre: (cie as any).nombre,
+                                            sinonimo: (cie as any).sinonimo,
+                                            c2: (cie as any).c2,
+                                            primeraVez: registro.esPrimeraVez,
+                                        }
+                                    })
+
+                                } else {
+                                    codificaciones.push({
+                                        codificacionProfesional: {
+                                            causa: (cie as any).causa,
+                                            subcausa: (cie as any).subcausa,
+                                            codigo: (cie as any).codigo,
+                                            nombre: (cie as any).nombre,
+                                            sinonimo: (cie as any).sinonimo,
+                                            c2: (cie as any).c2,
+                                            primeraVez: registro.esPrimeraVez,
+                                        }
+                                    })
+                                }
+                            } else {
+                                //En el caso en q no mapea, logearlo
+                                codificaciones.push({});
+                            }
+                            if (prestaciones.length === codificaciones.length) {
+                                // console.log('codificaciones ', codificaciones);
+                                turno.diagnostico = {
+                                    ilegible: false,
+                                    codificaciones: codificaciones.filter(cod => Object.keys(cod).length > 0)
+                                }
+                                turno.asistencia = "asistio";
+                                resolve(data);
+                            }
+
+                        }).catch(err => {
+                            reject(err);
+                        });
+
+                    }).catch(error => {
+                        reject(error);
+                    });
+                });
+            } else {
+                resolve(null);
+            }
         });
     });
 }
