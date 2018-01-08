@@ -42,7 +42,9 @@ export let logSchema = new mongoose.Schema({
             // ... Citas
             'asignarTurno', 'cancelarTurno', 'listaEspera', 'actualizarTiposDeTurno', 'actualizarEstadoAgendas', 'actualizarTurnosDelDia',
             // ... RUP
-            'pacientes',
+            // hudsPantalla -> Profesional entra a la pantalla de huds de un paciente
+            // hudsPrestacion -> Profesional abre una pretación para ver en la pantalla de ver huds
+            'pacientes', 'hudsPantalla', 'hudsPrestacion',
             // ...Fuentes Autenticas
             'validar', 'error'
         ]

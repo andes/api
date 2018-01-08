@@ -280,7 +280,7 @@ router.post('/agenda/clonar', function (req, res, next) {
                             turno.tipoTurno = undefined;
                             turno.updatedAt = undefined;
                             turno.updatedBy = undefined;
-                            turno.diagnostico = { codificaciones : []};
+                            turno.diagnostico = { codificaciones: [] };
                             turno.reasignado = undefined;
                         });
                     });
@@ -346,27 +346,27 @@ router.patch('/agenda/:id*?', function (req, res, next) {
         for (let y = 0; y < turnos.length; y++) {
             let turno;
             switch (req.body.op) {
-                case 'darAsistencia': agendaCtrl.darAsistencia(req, data, turnos[y]._id);
+                case 'darAsistencia': agendaCtrl.darAsistencia(req, data, turnos[y]);
                     break;
-                case 'sacarAsistencia': agendaCtrl.sacarAsistencia(req, data, turnos[y]._id);
+                case 'sacarAsistencia': agendaCtrl.sacarAsistencia(req, data, turnos[y]);
                     break;
-                case 'quitarTurnoDoble': agendaCtrl.quitarTurnoDoble(req, data, turnos[y]._id);
+                case 'quitarTurnoDoble': agendaCtrl.quitarTurnoDoble(req, data, turnos[y]);
                     break;
                 case 'liberarTurno':
-                    turno = agendaCtrl.getTurno(req, data, turnos[y]._id);
+                    turno = agendaCtrl.getTurno(req, data, turnos[y]);
                     if (turno.paciente.id) {
                         LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, agendaCtrl.getBloque(data, turno)._id, data._id);
                     }
                     agendaCtrl.liberarTurno(req, data, turno);
                     break;
                 case 'suspenderTurno':
-                    turno = agendaCtrl.getTurno(req, data, turnos[y]._id);
+                    turno = agendaCtrl.getTurno(req, data, turnos[y]);
                     LoggerPaciente.logTurno(req, 'turnos:suspender', (turno.paciente ? turno.paciente : null), turno, agendaCtrl.getBloque(data, turno)._id, data._id);
                     agendaCtrl.suspenderTurno(req, data, turno);
                     break;
                 case 'guardarNotaTurno': agendaCtrl.guardarNotaTurno(req, data, req.body.idTurno);
                     break;
-                case 'darTurnoDoble': agendaCtrl.darTurnoDoble(req, data, turnos[y]._id);
+                case 'darTurnoDoble': agendaCtrl.darTurnoDoble(req, data, turnos[y]);
                     break;
                 case 'notaAgenda': agendaCtrl.guardarNotaAgenda(req, data);
                     break;
@@ -388,11 +388,6 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 case 'avisos':
                     agendaCtrl.agregarAviso(req, data);
                     break;
-                // case 'reasignarTurno': reasignarTurno(req, data, turnos[y]._id);
-                //     break;
-                // case 'bloquearTurno': bloquearTurno(req, data, turnos[y]._id);
-                //     break;
-
                 default:
                     return next('Error: No se seleccionó ninguna opción.');
             }
@@ -435,14 +430,16 @@ router.patch('/agenda/:id*?', function (req, res, next) {
 
 });
 
-router.get('/integracionSips', function (req, res, next) {
-    return new Promise<Array<any>>(async function (resolve, reject) {
-        try {
-            await agendaCacheCtrl.integracionSips();
-            resolve();
-        } catch (ex) {
-            reject(ex);
-        }
-    });
-});
+// Código de prueba queda comentado
+
+// router.get('/integracionSips', function (req, res, next) {
+//     return new Promise<Array<any>>(async function (resolve, reject) {
+//         try {
+//             await agendaCacheCtrl.integracionSips();
+//             resolve();
+//         } catch (ex) {
+//             reject(ex);
+//         }
+//     });
+// });
 export = router;
