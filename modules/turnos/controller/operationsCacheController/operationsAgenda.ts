@@ -425,7 +425,7 @@ async function getEstadoAgenda(idAgenda: any) {
 
 async function existeConsultaTurno(idTurno) {
     try {
-        let result = await new sql.Request()
+        let result = await new sql.Request(defaultPool)
             .input('idTurno', sql.Int, idTurno)
             .query('SELECT idConsulta FROM dbo.CON_Consulta WHERE idTurno = @idTurno');
 
