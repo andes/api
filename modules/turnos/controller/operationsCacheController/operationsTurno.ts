@@ -51,9 +51,8 @@ export async function processTurnos(agendas: any, idAgendaCreada: any, idEfector
 }
 
 export async function existeTurnoSips(turno: any) {
-    defaultPool = await sql.connect(config);
-
     try {
+        defaultPool = await sql.connect(config);
         let result = await new sql.Request(defaultPool)
             .input('idTurnoMongo', sql.VarChar(50), turno._id)
             .query('SELECT idTurno FROM dbo.CON_Turno WHERE objectId = @idTurnoMongo GROUP BY idTurno');
