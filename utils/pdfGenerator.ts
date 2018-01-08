@@ -1,14 +1,23 @@
 let pdfkit = require('pdfkit');
 let fs = require('fs');
+let moment = require('moment');
 
 export function informeLaboratorio(paciente, organizacion, protocolo, detalles): any {
     return new Promise((resolve, reject) => {
         try {
-            const doc = new pdfkit();
+            const doc = new pdfkit({
+                margins: {
+                    top: 72,
+                    bottom: 72,
+                    left: 50,
+                    right: 50
+                }
+            });
             // const path = './utils/pdf/';
             const ancho = 400;
             const limit = 30;
-            const columna = 72;
+            const columna = 50;
+
             let sexo = paciente.sexo === 'F' ? 'Femenino' : paciente.sexo === 'M' ? 'Masculino' : 'Indefinido';
 
             // doc.pipe(fs.createWriteStream(path + ' Informe ' + data.paciente.apellido + ' ' + data.paciente.nombre + '.pdf'));
@@ -18,12 +27,13 @@ export function informeLaboratorio(paciente, organizacion, protocolo, detalles):
             doc.moveDown();
 
             let posFinHeader = doc.y;
-            doc.moveDown();
+            let boxMargin = 30;
 
+            doc.moveDown();
             doc.fontSize(10)
-            .text('Paciente: ' + paciente.apellido + ', ' + paciente.nombre)
-            .text('Sexo: ' + sexo)
-            .text('Fecha de Nacimiento: ' + paciente.fechaNacimiento);
+            .text('       Paciente: ' + paciente.apellido + ', ' + paciente.nombre)
+            .text('       Sexo: ' + sexo)
+            .text('       Fecha de Nacimiento: ' + moment(paciente.fechaNacimiento).format('DD/MM/YYYY'));
             doc.moveDown();
 
             // Recuadro datos paciente
@@ -33,17 +43,18 @@ export function informeLaboratorio(paciente, organizacion, protocolo, detalles):
             doc.moveDown();
 
             // Informe de resultados
-            doc.fontSize(6)
+            doc.fontSize(8)
             .text('Resultados')
             .text('Fecha: ' + protocolo.fecha)
             .text('Médico Solicitante: ' + protocolo.solicitante);
-            doc.moveDown();
+            doc.moveDown().moveDown();
+            doc.fontSize(7);
             let yTitle = doc.y;
             doc.text('GRUPO' + ' '.repeat(25), columna, yTitle);
-            doc.text('ITEM' + ' '.repeat(26), columna * 2.5, yTitle);
-            doc.text('RESULTADO' + ' '.repeat(21), columna * 4, yTitle);
-            doc.text('REFERENCIA' + ' '.repeat(12), columna * 5, yTitle);
-            doc.text('OBS' + ' '.repeat(27), columna * 6, yTitle);
+            doc.text('ITEM' + ' '.repeat(26), columna * 3.6, yTitle);
+            doc.text('RESULTADO' + ' '.repeat(21), columna * 6.8, yTitle);
+            doc.text('REFERENCIA' + ' '.repeat(12), columna * 8, yTitle);
+            doc.text('OBS' + ' '.repeat(27), columna * 9.3, yTitle);
 
             doc.moveDown();
             detalles.forEach(element => {
@@ -54,11 +65,11 @@ export function informeLaboratorio(paciente, organizacion, protocolo, detalles):
                 let observaciones = element.observaciones ? element.observaciones.length >= limit ? element.observaciones.substring(0, limit) : element.observaciones + ' '.repeat(limit - element.observaciones.length) : ' '.repeat(limit);
                 let x = columna;
                 let y = doc.y;
-                doc.text(grupo, x, y);
-                doc.text(item, columna * 2.5, y);
-                doc.text(resultado, columna * 4, y);
-                doc.text(valoresRef, columna * 5, y);
-                doc.text(observaciones, columna * 6, y);
+                doc.text(grupo, x, y).moveUp();
+                doc.text(item, columna * 3.6).moveUp();
+                doc.text(resultado, columna * 6.8).moveUp();
+                doc.text(valoresRef, columna * 8).moveUp();
+                doc.text(observaciones, columna * 9.3);
             });
 
             doc.end();
