@@ -12,8 +12,16 @@ import * as agendaSchema from '../../schemas/agenda';
 import * as turnoCtrl from './../turnoCacheController';
 import * as turnoOps from './operationsTurno';
 import * as pacienteOps from './operationsPaciente';
+import * as configPrivate from '../../../../config.private';
 
-
+let transaction;
+let defaultPool;
+let config = {
+    user: configPrivate.conSql.auth.user,
+    password: configPrivate.conSql.auth.password,
+    server: configPrivate.conSql.serverSql.server,
+    database: configPrivate.conSql.serverSql.database
+};
 // Sección de operaciones sobre MONGODB
 /**
  * Obtiene las agendas con estado exportadaSips o Codificada
@@ -60,75 +68,84 @@ export function getAgendasDeMongoPendientes() {
  * @returns Devuelve una Promesa
  * @param agenda
  */
-export async function checkCodificacion(agenda, pool) {
-    let turno;
-    let datosTurno = {};
-    let idEspecialidad: any;
+export async function checkCodificacion(agenda) {
+    try {
+        defaultPool = await sql.connect(config);
+        let turno;
+        let datosTurno = {};
+        let idEspecialidad: any;
 
-    for (let x = 0; x < agenda.bloques.length; x++) {
-        turno = agenda.bloques[x].turnos;
+        for (let x = 0; x < agenda.bloques.length; x++) {
+            turno = agenda.bloques[x].turnos;
 
-        for (let z = 0; z < turno.length; z++) {
-            let resultado = await turnoOps.existeTurnoSips(turno[z]);
-            let cloneTurno: any = [];
+            for (let z = 0; z < turno.length; z++) {
+                let resultado = await turnoOps.existeTurnoSips(turno[z]);
+                let cloneTurno: any = [];
 
-            if (resultado.length > 0) {
-                let idConsulta = await existeConsultaTurno(resultado[0].idTurno);
-                let turnoPaciente: any = await getPacienteAgenda(agenda, turno[z]._id);
-                idEspecialidad = (agenda.tipoPrestaciones[0].term.includes('odonto')) ? 34 : 14;
-                turno[z] = turnoPaciente;
+                if (resultado.length > 0) {
+                    let idConsulta = await existeConsultaTurno(resultado[0].idTurno);
+                    let turnoPaciente: any = await getPacienteAgenda(agenda, turno[z]._id);
+                    idEspecialidad = (agenda.tipoPrestaciones[0].term.includes('odonto')) ? 34 : 14;
+                    turno[z] = turnoPaciente;
 
-                if (idConsulta) {
-                    if (idEspecialidad === constantes.Especialidades.odontologia) {
-                        turno[z] = await codificaOdontologia(idConsulta, turno[z]);
-                    } else {
-                        turno[z] = await codificacionCie10(idConsulta, turno[z]);
+                    if (idConsulta) {
+                        if (idEspecialidad === constantes.Especialidades.odontologia) {
+                            turno[z] = await codificaOdontologia(idConsulta, turno[z]);
+                        } else {
+                            turno[z] = await codificacionCie10(idConsulta, turno[z]);
+                        }
                     }
-                }
-                datosTurno = {
-                    idAgenda: agenda.id,
-                    idTurno: turno[z]._id,
-                    idBloque: agenda.bloques[x]._id,
-                    idUsuario: constantes.idUsuarioSips,
-                    turno: turno[z]
-                };
+                    datosTurno = {
+                        idAgenda: agenda.id,
+                        idTurno: turno[z]._id,
+                        idBloque: agenda.bloques[x]._id,
+                        idUsuario: constantes.idUsuarioSips,
+                        turno: turno[z]
+                    };
 
-                turnoCtrl.updateTurno(datosTurno);
-                markAgendaAsProcessed(agenda);
+                    turnoCtrl.updateTurno(datosTurno);
+                    markAgendaAsProcessed(agenda);
+                }
             }
         }
+    } catch (ex) {
+        return (ex);
     }
 }
 
 async function codificaOdontologia(idConsulta: any, turno: any) {
     let idNomenclador: any = [];
     let codificacionOdonto: any = {};
-    idNomenclador = await getConsultaOdontologia(idConsulta);
-    let m = 0;
-    for (let i = 0; i < idNomenclador.length; i++) {
-        codificacionOdonto = await getCodificacionOdonto(idNomenclador[i].idNomenclador);
-        if (i === 0) {
-            turno.asistencia = 'asistio';
-            turno.diagnosticoPrincipal = {
-                ilegible: false,
-                codificacion: {
-                    codigo: codificacionOdonto.codigo,
-                    nombre: codificacionOdonto.descripcion,
-                    sinonimo: codificacionOdonto.descripcion,
-                }
-            };
-        } else {
-            turno.asistencia = 'asistio';
-            turno.diagnosticoSecundario[m] = {
-                ilegible: false,
-                codificacion: {
-                    codigo: codificacionOdonto.codigo,
-                    nombre: codificacionOdonto.descripcion,
-                    sinonimo: codificacionOdonto.descripcion,
-                }
-            };
-            m++;
+    try {
+        idNomenclador = await getConsultaOdontologia(idConsulta);
+        let m = 0;
+        for (let i = 0; i < idNomenclador.length; i++) {
+            codificacionOdonto = await getCodificacionOdonto(idNomenclador[i].idNomenclador);
+            if (i === 0) {
+                turno.asistencia = 'asistio';
+                turno.diagnosticoPrincipal = {
+                    ilegible: false,
+                    codificacion: {
+                        codigo: codificacionOdonto.codigo,
+                        nombre: codificacionOdonto.descripcion,
+                        sinonimo: codificacionOdonto.descripcion,
+                    }
+                };
+            } else {
+                turno.asistencia = 'asistio';
+                turno.diagnosticoSecundario[m] = {
+                    ilegible: false,
+                    codificacion: {
+                        codigo: codificacionOdonto.codigo,
+                        nombre: codificacionOdonto.descripcion,
+                        sinonimo: codificacionOdonto.descripcion,
+                    }
+                };
+                m++;
+            }
         }
+    } catch (ex) {
+        return (ex);
     }
     return (turno);
 }
@@ -136,37 +153,41 @@ async function codificacionCie10(idConsulta: any, turno: any) {
 
     let codCie10: any = [];
     let codificaCie10: any = {};
-    codCie10 = await getConsultaDiagnostico(idConsulta);
-    let diagnosticos = [];
-    turno.diagnostico.codificaciones = [];
-    for (let i = 0; i < codCie10.length; i++) {
-        codificaCie10 = await getCodificacionCie10(codCie10[i].CODCIE10);
-        turno.asistencia = 'asistio';
-        turno.diagnostico.ilegible = false;
-        if (codCie10[i].PRINCIPAL === true) {
-            turno.diagnostico.codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del arrays
-                codificacionProfesional: {
-                    causa: codificaCie10.CAUSA,
-                    subcausa: codificaCie10.SUBCAUSA,
-                    codigo: codificaCie10.CODIGO,
-                    nombre: codificaCie10.Nombre,
-                    sinonimo: codificaCie10.Sinonimo,
-                    c2: codificaCie10.C2
-                    // TODO: campo primeraVez -> verificar en SIPS
-                }
-            });
-        } else {
-            turno.diagnostico.codificaciones.push({
-                codificacionProfesional: {
-                    causa: codificaCie10.CAUSA,
-                    subcausa: codificaCie10.SUBCAUSA,
-                    codigo: codificaCie10.CODIGO,
-                    nombre: codificaCie10.Nombre,
-                    sinonimo: codificaCie10.Sinonimo,
-                    c2: codificaCie10.C2
-                }
-            });
+    try {
+        codCie10 = await getConsultaDiagnostico(idConsulta);
+        let diagnosticos = [];
+        turno.diagnostico.codificaciones = [];
+        for (let i = 0; i < codCie10.length; i++) {
+            codificaCie10 = await getCodificacionCie10(codCie10[i].CODCIE10);
+            turno.asistencia = 'asistio';
+            turno.diagnostico.ilegible = false;
+            if (codCie10[i].PRINCIPAL === true) {
+                turno.diagnostico.codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del arrays
+                    codificacionProfesional: {
+                        causa: codificaCie10.CAUSA,
+                        subcausa: codificaCie10.SUBCAUSA,
+                        codigo: codificaCie10.CODIGO,
+                        nombre: codificaCie10.Nombre,
+                        sinonimo: codificaCie10.Sinonimo,
+                        c2: codificaCie10.C2
+                        // TODO: campo primeraVez -> verificar en SIPS
+                    }
+                });
+            } else {
+                turno.diagnostico.codificaciones.push({
+                    codificacionProfesional: {
+                        causa: codificaCie10.CAUSA,
+                        subcausa: codificaCie10.SUBCAUSA,
+                        codigo: codificaCie10.CODIGO,
+                        nombre: codificaCie10.Nombre,
+                        sinonimo: codificaCie10.Sinonimo,
+                        c2: codificaCie10.C2
+                    }
+                });
+            }
         }
+    } catch (ex) {
+        return (ex);
     }
     return (turno);
 }
@@ -194,9 +215,8 @@ async function existeConsultorio(agenda, idEfector) {
         /*La agenda viene sin espacio físico, así que se lo agrego para poder verlo en SIPS*/
         espacioFisicoObjectId = 'andesCitas2017';
     }
-    let transaction;
     try {
-        let result = await new sql.Request(transaction)
+        let result = await new sql.Request()
             .input('objectId', sql.VarChar(50), espacioFisicoObjectId)
             .query('SELECT top 1 idConsultorio FROM dbo.CON_Consultorio WHERE objectId = @objectId');
 
@@ -224,7 +244,6 @@ async function creaConsultorioSips(agenda: any, idEfector: any) {
         idEfector + ',' + idConsultorioTipo + ',' + '\'' + agenda.espacioFisico.nombre + '\', ' + ' 1 ,' + '\'' + agenda.espacioFisico._id + '\' )');
     return result;
 }
-
 
 async function getCodificacionCie10(codcie10) {
     try {
@@ -294,52 +313,70 @@ function getCodificacionOdonto(idNomenclador) {
  * @param index
  * @param pool
  */
-export async function guardarCacheASips(agenda, pool) {
-    // return new Promise(async function (resolve, reject) {
-    let transaccion = new sql.Transaction(pool);
-    let rolledBack = false;
-    transaccion.begin(async err => {
-        if (err) {
-            logger.LoggerAgendaCache.logAgenda(agenda._id, err);
-            transaccion.rollback();
-            return (err);
-        }
-        transaccion.on('rollback', aborted => {
-            rolledBack = true;
-        });
-        // CON_Agenda de SIPS soporta solo un profesional NOT NULL.
-        // En caso de ser nulo el paciente en agenda de ANDES, por defector
-        // graba dni '0', correspondiente a 'Sin especifiar', efector SSS.
-        let dniProfesional = agenda.profesionales[0] ? agenda.profesionales[0].documento : '0';
-        let codigoSisa = agenda.organizacion.codigo.sisa;
-        let datosSips = {
-            idEfector: '',
-            idProfesional: ''
-        };
-        try {
-            let datosArr = await Promise.all(getDatosSips(codigoSisa, dniProfesional));
-            datosSips.idEfector = datosArr[0][0].idEfector;
-            datosSips.idProfesional = datosArr[1][0].idProfesional;
-            let idAgenda = await processAgenda(agenda, datosSips, pool);
-            let promArray = [];
-            promArray.push(turnoOps.processTurnos(agenda, idAgenda, datosSips.idEfector));
-            promArray.push(checkEstadoAgenda(agenda, idAgenda));
-            promArray.push(turnoOps.checkEstadoTurno(agenda, idAgenda));
-            promArray.push(turnoOps.checkAsistenciaTurno(agenda));
-            await Promise.all(promArray);
-            transaccion.commit(err2 => {
-                if (err2) {
-                    logger.LoggerAgendaCache.logAgenda(agenda._id, err2);
-                    transaccion.rollback();
-                    return (err2);
-                }
-                markAgendaAsProcessed(agenda);
+export async function guardarCacheASips(agenda) {
+
+    // CON_Agenda de SIPS soporta solo un profesional NOT NULL.
+    // En caso de ser nulo el paciente en agenda de ANDES, por defector
+    // graba dni '0', correspondiente a 'Sin especifiar', efector SSS.
+    let dniProfesional = agenda.profesionales[0] ? agenda.profesionales[0].documento : '0';
+    let codigoSisa = agenda.organizacion.codigo.sisa;
+    let datosSips = {
+        idEfector: '',
+        idProfesional: ''
+    };
+    defaultPool = await sql.connect(config);
+    let datosArr = await Promise.all(getDatosSips(codigoSisa, dniProfesional));
+    datosSips.idEfector = datosArr[0][0].idEfector;
+    if (datosArr[1][0]) {
+        datosSips.idProfesional = datosArr[1][0].idProfesional;
+
+        let transactionPool = await sql.connect(config);
+        transaction = new sql.Transaction(transactionPool);
+
+        transaction.begin(async (err) => {
+            let rolledBack = false;
+            if (err) {
+                logger.LoggerAgendaCache.logAgenda(agenda._id, err);
+                transaction.rollback();
+                return (err);
+            }
+            transaction.on('rollback', aborted => {
+                rolledBack = true;
             });
-        } catch (error) {
-            console.log('-----------------> ERROR en guardarCacheASips ', error);
-            return (error);
-        }
-    });
+
+            try {
+                let idAgenda = await processAgenda(agenda, datosSips, transaction);
+                let promArray = [];
+                promArray.push(turnoOps.processTurnos(agenda, idAgenda, datosSips.idEfector, transaction));
+                promArray.push(checkEstadoAgenda(agenda, idAgenda));
+                promArray.push(turnoOps.checkEstadoTurno(agenda, idAgenda, transaction));
+                promArray.push(turnoOps.checkAsistenciaTurno(agenda));
+                await Promise.all(promArray);
+
+                // await turnoOps.processTurnos(agenda, idAgenda, datosSips.idEfector, transaction);
+                // await checkEstadoAgenda(agenda, idAgenda);
+                // await turnoOps.checkEstadoTurno(agenda, idAgenda, transaction);
+                // await turnoOps.checkAsistenciaTurno(agenda);
+                defaultPool.close();
+                transaction.commit(err2 => {
+                    if (err2) {
+
+                        logger.LoggerAgendaCache.logAgenda(agenda._id, err2);
+                        transaction.rollback();
+                        return (err2);
+                    }
+                    markAgendaAsProcessed(agenda);
+                });
+            } catch (error) {
+                transaction.rollback();
+                logger.LoggerAgendaCache.logAgenda(agenda._id, error);
+                return (error);
+            }
+
+        });
+    } else {
+        // console.log('Profesional inexistente en SIPS, agenda no copiada');
+    }
 }
 /**
  * Sincroniza el estado de la agenda monga con su gemela en SIPS
@@ -358,7 +395,7 @@ async function checkEstadoAgenda(agendaMongo: any, idAgendaSips: any) {
             executeQuery(query);
         }
     } catch (ex) {
-
+        logger.LoggerAgendaCache.logAgenda(agendaMongo._id, ex);
         return (ex);
     }
 }
@@ -366,18 +403,19 @@ async function checkEstadoAgenda(agendaMongo: any, idAgendaSips: any) {
 async function getEstadoAgenda(idAgenda: any) {
     try {
         let query = 'SELECT idAgendaEstado as idEstado FROM dbo.CON_Agenda WHERE objectId = @idAgenda';
-        let result = await new sql.Request()
+        let result = await new sql.Request(defaultPool)
             .input('idAgenda', sql.VarChar(50), idAgenda)
             .query(query);
         return (result[0].idEstado);
     } catch (err) {
+        logger.LoggerAgendaCache.logAgenda(idAgenda, err);
         return (err);
     }
 }
 
 async function existeConsultaTurno(idTurno) {
     try {
-        let result = await new sql.Request()
+        let result = await new sql.Request(defaultPool)
             .input('idTurno', sql.Int, idTurno)
             .query('SELECT idConsulta FROM dbo.CON_Consulta WHERE idTurno = @idTurno');
 
@@ -399,13 +437,12 @@ async function existeConsultaTurno(idTurno) {
  * @param {any} [dniProfesional]
  * @returns
  */
-function getDatosSips(codigoSisa?, dniProfesional?) {
-
-    let result1 = new sql.Request()
+function getDatosSips(codigoSisa, dniProfesional) {
+    let result1 = new sql.Request(defaultPool)
         .input('codigoSisa', sql.VarChar(50), codigoSisa)
         .query('select idEfector from dbo.Sys_Efector WHERE codigoSisa = @codigoSisa');
 
-    let result2 = new sql.Request()
+    let result2 = new sql.Request(defaultPool)
         .input('dniProfesional', sql.Int, dniProfesional)
         .query('SELECT idProfesional FROM dbo.Sys_Profesional WHERE numeroDocumento = @dniProfesional and activo = 1');
 
@@ -413,10 +450,11 @@ function getDatosSips(codigoSisa?, dniProfesional?) {
 }
 
 
-async function processAgenda(agenda: any, datosSips, pool) {
+async function processAgenda(agenda: any, datosSips, tr) {
+    transaction = tr;
     try {
         //  Verifica si existe la agenda pasada por parámetro en SIPS
-        let result = await new sql.Request()
+        let result = await new sql.Request(defaultPool)
             .input('idAgendaMongo', sql.VarChar(50), agenda.id)
             .query('SELECT idAgenda FROM dbo.CON_Agenda WHERE objectId = @idAgendaMongo GROUP BY idAgenda');
 
@@ -424,16 +462,16 @@ async function processAgenda(agenda: any, datosSips, pool) {
         if (result.length > 0) {
             idAgenda = result[0].idAgenda;
         } else {
-            idAgenda = await grabaAgendaSips(agenda, datosSips, pool);
+            idAgenda = await grabaAgendaSips(agenda, datosSips);
         }
         return (idAgenda);
     } catch (err) {
-        console.log('-----------------> ERROR en processAgenda ', err);
+        logger.LoggerAgendaCache.logAgenda(agenda._id, err);
         return err;
     }
 }
 
-async function grabaAgendaSips(agendaSips: any, datosSips: any, pool) {
+async function grabaAgendaSips(agendaSips: any, datosSips: any) {
     let objectId = agendaSips.id;
     let estado = getEstadoAgendaSips(agendaSips.estado);
     let fecha = moment(agendaSips.horaInicio).format('YYYYMMDD');
@@ -472,11 +510,12 @@ async function grabaAgendaSips(agendaSips: any, datosSips: any, pool) {
         let idAgendaCreada = await executeQuery(query);
 
         // ---> Obtenemos los id's de profesionales(SIPS) para la agenda actual y luego insertamos las "agendasProfesional" correspondientes en SIPS
-        let listaIdProfesionales = await Promise.all(getProfesionales(agendaSips.profesionales, pool));
-        if (listaIdProfesionales.length > 0) {
+        let listaIdProfesionales = await Promise.all(getProfesionales(agendaSips.profesionales));
+
+        if (listaIdProfesionales[0].length > 0) {
             let promiseArray = [];
             listaIdProfesionales.forEach(async listaIdProf => {
-                let query2 = 'select SCOPE_IDENTITY() as id INSERT INTO dbo.CON_AgendaProfesional ( idAgenda, idProfesional, baja, CreatedBy , ' +
+                let query2 = 'INSERT INTO dbo.CON_AgendaProfesional ( idAgenda, idProfesional, baja, CreatedBy , ' +
                     ' CreatedOn, ModifiedBy, ModifiedOn, idEspecialidad ) VALUES  ( ' + idAgendaCreada + ',' +
                     listaIdProf[0].idProfesional + ',' + 0 + ',' + constantes.idUsuarioSips + ',' +
                     '\'' + moment().format('YYYYMMDD HH:mm:ss') + '\', ' +
@@ -488,7 +527,7 @@ async function grabaAgendaSips(agendaSips: any, datosSips: any, pool) {
         }
         return (idAgendaCreada);
     } catch (err) {
-        console.log('-----------------> ERROR en existeAgendaSips ', err);
+
         return err;
     }
 }
@@ -509,16 +548,15 @@ function getEstadoAgendaSips(estadoCitas) {
 * Busca los id's en SIPS de los profesionales de la agenda y devuelve un array de promises.
  *
  * @param {any} profesionalesMongo
- * @param {any} pool
  * @returns
  */
-function getProfesionales(profesionalesMongo, pool) {
+function getProfesionales(profesionalesMongo) {
     let profesionalesSipsPromise = [];
-    profesionalesMongo.map(async profMongo => profesionalesSipsPromise.push(arrayIdProfesionales(profMongo, pool)));
+    profesionalesMongo.map(async profMongo => profesionalesSipsPromise.push(arrayIdProfesionales(profMongo)));
     return profesionalesSipsPromise;
 }
 
-function arrayIdProfesionales(profMongo, pool) {
+function arrayIdProfesionales(profMongo) {
     return new sql.Request()
         .input('dniProfesional', sql.Int, profMongo.documento)
         .query('SELECT idProfesional FROM dbo.Sys_Profesional WHERE numeroDocumento = @dniProfesional AND activo = 1');
@@ -536,14 +574,16 @@ function getPacienteAgenda(agenda, idTurno) {
             if (err) {
                 reject(err);
             }
-            for (let x = 0; x < (data as any).bloques.length; x++) {
-                // Si existe este bloque...
-                if ((data as any).bloques[x] != null) {
-                    // Buscamos y asignamos el turno con id que coincida (si no coincide "asigna" null)
-                    turno = (data as any).bloques[x].turnos.id(idTurno);
-                    // Si encontró el turno dentro de alguno de los bloques, lo devuelve
-                    if (turno !== null) {
-                        resolve(turno);
+            if (data) {
+                for (let x = 0; x < (data as any).bloques.length; x++) {
+                    // Si existe este bloque...
+                    if ((data as any).bloques[x] != null) {
+                        // Buscamos y asignamos el turno con id que coincida (si no coincide "asigna" null)
+                        turno = (data as any).bloques[x].turnos.id(idTurno);
+                        // Si encontró el turno dentro de alguno de los bloques, lo devuelve
+                        if (turno !== null) {
+                            resolve(turno);
+                        }
                     }
                 }
             }
@@ -555,7 +595,7 @@ function getPacienteAgenda(agenda, idTurno) {
 async function executeQuery(query: any) {
     try {
         query += ' select SCOPE_IDENTITY() as id';
-        let result = await new sql.Request().query(query);
+        let result = await new sql.Request(transaction).query(query);
         return result[0].id;
     } catch (err) {
         return (err);
