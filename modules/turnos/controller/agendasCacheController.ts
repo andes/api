@@ -34,7 +34,6 @@ export async function integracionSips() {
 
         await Promise.all(promises);
     } catch (ex) {
-        console.log('Error integracion sips, 'ex);
         return (ex);
     }
 }
