@@ -363,23 +363,23 @@ export async function guardarCacheASips(agenda) {
                 // await turnoOps.checkEstadoTurno(agenda, idAgenda, transaction);
                 // await turnoOps.checkAsistenciaTurno(agenda);
                 defaultPool.close();
+                transaction.commit(err2 => {
+                    if (err2) {
+                        console.log('-----------------> ERROR en commit ', err2);
+
+                        logger.LoggerAgendaCache.logAgenda(agenda._id, err2);
+                        transaction.rollback();
+                        return (err2);
+                    }
+                    console.log('Transaction committed.', agenda.id);
+                    markAgendaAsProcessed(agenda);
+                });
             } catch (error) {
                 console.log('-----------------> ERROR en guardarCacheASips ', error);
                 transaction.rollback();
                 logger.LoggerAgendaCache.logAgenda(agenda._id, error);
                 return (error);
             }
-            transaction.commit(err2 => {
-                if (err2) {
-                    console.log('-----------------> ERROR en commit ', err2);
-
-                    logger.LoggerAgendaCache.logAgenda(agenda._id, err2);
-                    transaction.rollback();
-                    return (err2);
-                }
-                console.log('Transaction committed.', agenda.id);
-                markAgendaAsProcessed(agenda);
-            });
 
         });
     } else {
