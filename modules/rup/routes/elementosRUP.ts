@@ -7,6 +7,42 @@ import { textIndexModel, snomedModel, textIndexSchema } from '../../../core/term
 
 let router = express.Router();
 
+/**
+ * Devueve los grupos sugeridos en la busqueda guiada por prestación.
+ */
+
+router.get('/elementosRUP/:id/guiada', function (req, res, next) {
+    let prestacion = req.params.id;
+    elementoRUP.findOne({
+        'conceptos.conceptId': prestacion
+    }).then(async (elemento: any) => {
+
+        if (elemento && elemento.busqueda_guiada && elemento.busqueda_guiada.length > 0) {
+
+            let flag = false;
+            for (let guia of elemento.busqueda_guiada) {
+                if (!guia.conceptIds.length) {
+                    let q = makeMongoQuery(guia.query);
+                    flag = true;
+                    guia.conceptIds = await snomedModel.find(q, { conceptId: 1 }).then((docs: any[]) => {
+                        return docs.map(item => item.conceptId);
+                    }).catch(next);
+                }
+            }
+
+            res.json(elemento.busqueda_guiada);
+            if (flag) {
+                elemento.save();
+            }
+
+        } else {
+            res.json([]);
+        }
+
+    }).catch(next);
+});
+
+
 router.get('/elementosRUP/:id*?', function (req, res, next) {
     let query: mongoose.DocumentQuery<any, mongoose.Document>;
     if (req.params.id) {
@@ -50,38 +86,5 @@ router.get('/elementosRUP/:id*?', function (req, res, next) {
     });
 });
 
-/**
- * Devueve los grupos sugeridos en la busqueda guiada por prestación.
- */
-router.get('/elementosRUP/:id/guiada', function (req, res, next) {
-    let prestacion = req.params.id;
-    elementoRUP.findOne({
-        'conceptos.conceptId': prestacion
-    }).then(async (elemento:any) => {
-
-        if (elemento && elemento.busqueda_guiada && elemento.busqueda_guiada.length > 0) {
-
-            let flag = false;
-            for (let guia of elemento.busqueda_guiada) { 
-                if (!guia.conceptIds.length) {
-                    let q = makeMongoQuery(guia.query);
-                    flag = true;
-                    guia.conceptIds = await snomedModel.find(q, { conceptId: 1 }).then((docs: any[]) => { 
-                        return docs.map(item => item.conceptId);
-                    }).catch(next);
-                }
-            }
-
-            res.json(elemento.busqueda_guiada);
-            if (flag) { 
-                elemento.save();
-            }
-
-        } else {
-            res.json([]);
-        }
-
-    }).catch(next);
-});
 
 export = router;
