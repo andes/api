@@ -63,12 +63,12 @@ export function updatePaciente(pacienteObj, data, req) {
             let connElastic = new ElasticSync();
             connElastic.sync(pacienteObj).then(updated => {
                 if (updated) {
-                    Logger.log(req, 'andes', 'update', {
+                    Logger.log(req, 'mpi', 'update', {
                         original: pacienteOriginal,
                         nuevo: pacienteObj
                     });
                 } else {
-                    Logger.log(req, 'andes', 'insert', pacienteObj);
+                    Logger.log(req, 'mpi', 'insert', pacienteObj);
                 }
                 resolve(pacienteObj);
             }).catch(error => {
@@ -221,7 +221,7 @@ export function buscarPaciente(id): Promise<{ db: String, paciente: any }> {
  * @param condition
  */
 
-export function buscarPacienteWithcondition (condition): Promise<{ db: String, paciente: any }> {
+export function buscarPacienteWithcondition(condition): Promise<{ db: String, paciente: any }> {
     return new Promise((resolve, reject) => {
         pacienteMpi.findOne(condition, function (err, data) {
             if (err) {
@@ -570,7 +570,7 @@ export function searchSimilar(objective, where: string, conditions, _weights = n
  * @param configs.claves Array de numeros de clave de blocking. Ver crearClaveBlockin para saber el orden de creación
  */
 
-export async function matchPaciente (dataPaciente) {
+export async function matchPaciente(dataPaciente) {
     try {
         let connElastic = new ElasticSync();
         let query = {

@@ -3,11 +3,12 @@ import * as configPrivate from '../../../config.private';
 import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import * as agenda from '../../../modules/turnos/schemas/agenda';
+import { toArray } from '../../../utils/utils';
 
 
 
 export function getTurno(req) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         let pipelineTurno = [];
         let turnos = [];
         let turno;
@@ -51,17 +52,14 @@ export function getTurno(req) {
             pipelineTurno[0] = matchId;
             pipelineTurno[3] = matchId;
 
-            agenda.aggregate(pipelineTurno,
-                function (err, data) {
-                    if (err) {
-                        reject(err);
-                    }
-                    if (data && data.bloques && data.bloques.turnos && data.bloques.turnos >= 0) {
-                        resolve(data.bloques.turnos[0]);
-                    } else {
-                        resolve(data);
-                    }
-                });
+            let data = await toArray(agenda.aggregate(pipelineTurno).cursor({}).exec());
+
+            if (data && data[0].bloques && data[0].bloques.turnos && data[0].bloques.turnos >= 0) {
+                resolve(data[0].bloques.turnos[0]);
+            } else {
+                resolve(data);
+            }
+
         } else {
             // Se modifica el pipeline en la posición 0 y 3, que son las posiciones
             // donde se realiza el match
@@ -113,21 +111,17 @@ export function getTurno(req) {
                     '$match': { 'pacientes_docs': { $ne: [] } }
                 };
             }
-            agenda.aggregate(pipelineTurno,
-                function (err2, data2) {
-                    if (err2) {
-                        reject(err2);
-                    }
-                    data2.forEach(elem => {
-                        turno = elem.bloques.turnos;
-                        turno.agenda_id = elem.agenda_id;
-                        turno.organizacion = elem.organizacion;
-                        turno.profesionales = elem.profesionales;
-                        turno.paciente = (elem.pacientes_docs && elem.pacientes_docs.length > 0) ? elem.pacientes_docs[0] : elem.bloques.turnos.paciente;
-                        turnos.push(turno);
-                    });
-                    resolve(turnos);
-                });
+            let data2 = await toArray(agenda.aggregate(pipelineTurno).cursor({}).exec());
+            data2.forEach(elem => {
+                turno = elem.bloques.turnos;
+                turno.id = turno._id;
+                turno.agenda_id = elem.agenda_id;
+                turno.organizacion = elem.organizacion;
+                turno.profesionales = elem.profesionales;
+                turno.paciente = (elem.pacientes_docs && elem.pacientes_docs.length > 0) ? elem.pacientes_docs[0] : elem.bloques.turnos.paciente;
+                turnos.push(turno);
+            });
+            resolve(turnos);
         }
     });
 

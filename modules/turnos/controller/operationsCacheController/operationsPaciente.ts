@@ -11,6 +11,7 @@ import * as logger from './../../../../utils/loggerAgendaSipsCache';
 import * as agendaSchema from '../../schemas/agenda';
 import * as turnoCtrl from './../turnoCacheController';
 
+let transaction;
 
 export async function verificarPaciente(pacienteSips: any) {
     try {
@@ -136,7 +137,8 @@ export async function verificarPaciente(pacienteSips: any) {
 }
 
 /** Este método se llama desde grabaTurnoSips */
-export async function insertarPacienteEnSips(paciente: any, idEfectorSips: any) {
+export async function insertarPacienteEnSips(paciente: any, idEfectorSips: any, tr) {
+    transaction = tr;
     try {
         let pacienteSips = {
             idEfector: idEfectorSips,
@@ -204,7 +206,6 @@ export async function insertarPacienteEnSips(paciente: any, idEfectorSips: any) 
 
 async function existePacienteSips(pacienteSips) {
     let idPacienteSips;
-    let transaction;
     try {
         let query = 'SELECT idPaciente FROM dbo.Sys_Paciente WHERE objectId = @objectId';
         let result = await new sql.Request(transaction)
@@ -228,7 +229,7 @@ async function existePacienteSips(pacienteSips) {
 async function executeQuery(query: any) {
     try {
         query += ' select SCOPE_IDENTITY() as id';
-        let result = await new sql.Request().query(query);
+        let result = await new sql.Request(transaction).query(query);
         return result[0].id;
     } catch (err) {
         return (err);

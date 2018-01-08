@@ -41,7 +41,7 @@ let router = express.Router();
 // 	"file": "data:image/jpeg;base64,AEFCSADE2D2D2
 // }
 
-router.post('/', cdaCtr.validateMiddleware,  async (req: any, res, next) => {
+router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
     if (!Auth.check(req, 'cda:post')) {
         return next(403);
     }
@@ -79,7 +79,7 @@ router.post('/', cdaCtr.validateMiddleware,  async (req: any, res, next) => {
             paciente: paciente._id,
             prestacion: snomed,
             fecha: fecha,
-            adjuntos: [ fileData.filename ]
+            adjuntos: [fileData.filename]
         };
         let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
 
@@ -109,8 +109,8 @@ router.get('/files/:name', async (req: any, res, next) => {
     let name = req.params.name;
     let CDAFiles = makeFs();
 
-    CDAFiles.findOne({filename: name}).then(file => {
-        var stream1  = CDAFiles.readById(file._id, function (err, buffer) {
+    CDAFiles.findOne({ filename: name }).then(file => {
+        var stream1 = CDAFiles.readById(file._id, function (err, buffer) {
             res.contentType(file.contentType);
             res.end(buffer);
         });
@@ -131,7 +131,7 @@ router.get('/:id', async (req: any, res, next) => {
     let CDAFiles = makeFs();
 
     let contexto = await CDAFiles.findById(_base64);
-    var stream1  = CDAFiles.readById(_base64, function (err, buffer) {
+    var stream1 = CDAFiles.readById(_base64, function (err, buffer) {
         res.contentType(contexto.contentType);
         res.end(buffer);
     });
@@ -149,7 +149,7 @@ router.get('/paciente/:id', async (req: any, res, next) => {
     let CDAFiles = makeFs();
     let pacienteID = req.params.id;
     let prestacion = req.query.prestacion;
-    let conditions: any = { 'metadata.paciente':  mongoose.Types.ObjectId(pacienteID) };
+    let conditions: any = { 'metadata.paciente': mongoose.Types.ObjectId(pacienteID) };
     if (prestacion) {
         conditions.prestacion = prestacion;
     }
