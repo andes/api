@@ -47,7 +47,7 @@ router.get('/frecuentesProfesional', function (req, res, next) {
         ...(req.query.idOrganizacion) && { 'organizacion.id': req.query.idOrganizacion },
         // tipoPrestacion
         ...(req.query.tipoPrestacion) && { 'tipoPrestacion.conceptId': req.query.tipoPrestacion }
-    }
+    };
 
     profesionalMeta.find(query, (err, data: any) => {
 
@@ -93,7 +93,7 @@ router.put('/frecuentesProfesional/:id*?', function (req, res, next) {
         ...(req.body.organizacion.id) && { 'organizacion.id': req.body.organizacion.id },
         // tipoPrestacion
         ...(req.body.tipoPrestacion.conceptId) && { 'tipoPrestacion.conceptId': req.body.tipoPrestacion.conceptId }
-    }
+    };
 
     profesionalMeta.findOne(query, (err, resultado: any) => {
         if (err) {

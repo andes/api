@@ -2,6 +2,8 @@ import * as express from 'express';
 import * as mongoose from 'mongoose';
 import { defaultLimit, maxLimit } from './../../../config';
 import { elementoRUP } from '../schemas/elementoRUP';
+import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
+import { textIndexModel, snomedModel, textIndexSchema } from '../../../core/term/schemas/snomed';
 
 let router = express.Router();
 
@@ -46,6 +48,40 @@ router.get('/elementosRUP/:id*?', function (req, res, next) {
         }
         res.json(data);
     });
+});
+
+/**
+ * Devueve los grupos sugeridos en la busqueda guiada por prestación.
+ */
+router.get('/elementosRUP/:id/guiada', function (req, res, next) {
+    let prestacion = req.params.id;
+    elementoRUP.findOne({
+        'conceptos.conceptId': prestacion
+    }).then(async (elemento:any) => {
+
+        if (elemento && elemento.busqueda_guiada && elemento.busqueda_guiada.length > 0) {
+
+            let flag = false;
+            for (let guia of elemento.busqueda_guiada) { 
+                if (!guia.conceptIds.length) {
+                    let q = makeMongoQuery(guia.query);
+                    flag = true;
+                    guia.conceptIds = await snomedModel.find(q, { conceptId: 1 }).then((docs: any[]) => { 
+                        return docs.map(item => item.conceptId);
+                    }).catch(next);
+                }
+            }
+
+            res.json(elemento.busqueda_guiada);
+            if (flag) { 
+                elemento.save();
+            }
+
+        } else {
+            res.json([]);
+        }
+
+    }).catch(next);
 });
 
 export = router;

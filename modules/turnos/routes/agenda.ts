@@ -12,6 +12,7 @@ import * as agendaCacheCtrl from '../controller/agendasCacheController';
 
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import * as operations from './../../legacy/controller/operations';
+import { toArray } from '../../../utils/utils';
 
 let router = express.Router();
 
@@ -33,8 +34,8 @@ router.get('/agenda/paciente/:idPaciente', function (req, res, next) {
 });
 
 
-router.get('/agenda/candidatas', function (req, res, next) {
-    agenda.findById(req.query.idAgenda, function (err, data) {
+router.get('/agenda/candidatas', async function (req, res, next) {
+    agenda.findById(req.query.idAgenda, async function (err, data) {
         if (err) {
             return next(err);
         }
@@ -63,49 +64,40 @@ router.get('/agenda/candidatas', function (req, res, next) {
             match['bloques.duracionTurno'] = bloque.duracionTurno;
         }
 
-        agenda.aggregate([
-            {
-                $match: match
-            }
+        let data1 = await toArray(agenda.aggregate([{$match: match}]).cursor({}).exec());
 
-        ], function (err1, data1) {
 
-            if (err) {
-                return next(err);
-            }
+        let out = [];
 
-            let out = [];
-
-            // Verifico que existe un turno disponible o ya reasignado para el mismo tipo de prestación del turno
-            data1.forEach(function (a, indiceA) {
-                a.bloques.forEach(function (b, indiceB) {
-                    b.turnos.forEach(function (t, indiceT) {
-                        let horaIni = moment(t.horaInicio).format('HH:mm');
-                        if (
-                            b.tipoPrestaciones.findIndex(x => String(x._id) === String(turno.tipoPrestacion.id)) >= 0
-                            &&  // mismo tipo de prestacion
-                            (t.estado === 'disponible' || (t.estado === 'asignado' && typeof t.reasignado !== 'undefined' && t.reasignado.anterior && t.reasignado.anterior.idTurno === req.query.idTurno))
-                            &&  // turno disponible o al que se reasigno
-                            (typeof req.query.horario !== 'undefined' ? horaIni.toString() === moment(turno.horaInicio).format('HH:mm') : true)
-                            && // si filtro por horario verifico que sea el mismo
-                            (req.query.duracion ? b.duracionTurno === bloque.duracionTurno : true) // si filtro por duracion verifico que sea la mismo
-                        ) {
-                            if (out.indexOf(a) < 0) {
-                                out.push(a);
-                            }
+        // Verifico que existe un turno disponible o ya reasignado para el mismo tipo de prestación del turno
+        data1.forEach(function (a, indiceA) {
+            a.bloques.forEach(function (b, indiceB) {
+                b.turnos.forEach(function (t, indiceT) {
+                    let horaIni = moment(t.horaInicio).format('HH:mm');
+                    if (
+                        b.tipoPrestaciones.findIndex(x => String(x._id) === String(turno.tipoPrestacion.id)) >= 0
+                        &&  // mismo tipo de prestacion
+                        (t.estado === 'disponible' || (t.estado === 'asignado' && typeof t.reasignado !== 'undefined' && t.reasignado.anterior && t.reasignado.anterior.idTurno === req.query.idTurno))
+                        &&  // turno disponible o al que se reasigno
+                        (typeof req.query.horario !== 'undefined' ? horaIni.toString() === moment(turno.horaInicio).format('HH:mm') : true)
+                        && // si filtro por horario verifico que sea el mismo
+                        (req.query.duracion ? b.duracionTurno === bloque.duracionTurno : true) // si filtro por duracion verifico que sea la mismo
+                    ) {
+                        if (out.indexOf(a) < 0) {
+                            out.push(a);
                         }
-                    });
+                    }
                 });
             });
-
-            let sortCandidatas = function (a, b) {
-                return a.horaInicio - b.horaInicio;
-            };
-
-            out.sort(sortCandidatas);
-            res.json(out);
-
         });
+
+        let sortCandidatas = function (a, b) {
+            return a.horaInicio - b.horaInicio;
+        };
+
+        out.sort(sortCandidatas);
+        res.json(out);
+
     });
 });
 
