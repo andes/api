@@ -22,9 +22,16 @@ router.get('/prestaciones/huds/:idPaciente', function(req, res, next) {
         return res.status(404).send('Turno no encontrado');
     }
 
+    // por defecto traemos todas las validadas, si no vemos el estado que viene en la request
+    const estado = (req.query.estado) ? req.query.estado : 'validada';
+    let query = {
+        'paciente.id': req.params.idPaciente,
+        '$where': 'this.estados[this.estados.length - 1].tipo ==  \"' + estado + '\"'
+    }
+
     let conceptos = (req.query.conceptIds) ? req.query.conceptIds : null;
 
-    Prestacion.find({'paciente.id': req.params.idPaciente}, (err, prestaciones) => {
+    Prestacion.find(query, (err, prestaciones) => {
         if (err) {
             return next(err);
         }
