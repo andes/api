@@ -389,6 +389,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 switch (req.body.op) {
                     case 'darAsistencia': agendaCtrl.darAsistencia(req, data, turnos[y]);
                         break;
+                    // Agregar operacion para marcar que noAsistio
                     case 'sacarAsistencia': agendaCtrl.sacarAsistencia(req, data, turnos[y]);
                         break;
                     case 'quitarTurnoDoble': agendaCtrl.quitarTurnoDoble(req, data, turnos[y]);
