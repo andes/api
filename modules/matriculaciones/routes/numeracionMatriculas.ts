@@ -22,15 +22,26 @@ var router = express.Router();
 // })
 
 router.get('/numeraciones/:id*?', function (req, res, next) {
-
-if ( req.params.id) {
-    NumeracionMatriculas.find({'profesion._id': req.params.id}, function (err, data) {
+    var resultado;
+console.log(req.params)
+if ( req.query.especialidad || req.query.profesion  ) {
+    if(req.query.profesion){
+    NumeracionMatriculas.find({'profesion._id': req.query.profesion}, function (err, data) {
+            if (err) {
+                next(err);
+            }
+            res.json(data);
+        });
+    }
+    if(req.query.especialidad){
+        NumeracionMatriculas.find({'especialidad._id': req.query.especialidad}, function (err, data) {
             if (err) {
                 next(err);
             }
             res.json(data);
         });
 
+    }
     } else {
 
         let offset = req.query.offset ? parseInt(req.query.offset, 10) : 0;
@@ -44,6 +55,9 @@ if ( req.params.id) {
         var busquedaNumeracion = {};
         if (req.query.codigo) {
             busquedaNumeracion['profesion._id'] = req.query.codigo;
+        }
+        if (req.query.codigoEspecialidad) {
+            busquedaNumeracion['especialidad._id'] = req.query.codigoEspecialidad;
         }
 
         NumeracionMatriculas.find(busquedaNumeracion)

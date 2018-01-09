@@ -82,6 +82,7 @@ export let turnoSolicitadoSchema = new mongoose.Schema({
         entidadFormadora: { type: ObjSIISASchema, required: false },
         titulo: { type: String, required: false },
         fechaTitulo: { type: Date, required: false },
+        renovacion: { type: Boolean, default: false },
         fechaEgreso: { type: Date, required: false },
         papelesVerificados: { type: Boolean, default: false },
         revalida: { type: Boolean, default: false },
@@ -119,6 +120,12 @@ export let turnoSolicitadoSchema = new mongoose.Schema({
      notas: { type: String, required: false },
      rematriculado: { type: Boolean, default: false },
      agenteMatriculador: { type: String, required: false },
+     OtrosDatos:  [{
+        matriculaProvincial: { type: Number, required: false },
+        folio: { type: String, required: false },
+        libro: { type: String, required: false },
+        anio: { type: Number, required: false }
+    }]
 
 });
 

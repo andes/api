@@ -4,12 +4,14 @@ import { Document, Schema, model } from 'mongoose';
 export const ObjSIISASchema = new Schema({
     nombre: String,
     codigo: String,
+    tipoDeFormacion: String,
     habilitado: Boolean
 });
 
 export interface SIISAObject extends Document {
     nombre: string;
     codigo: string;
+    tipoDeFormacion: String;
     habilitado: boolean;
 }
 
