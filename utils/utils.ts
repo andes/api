@@ -147,9 +147,6 @@ export function removeDiacritics(str: string): string {
     return str;
 }
 
-
- 
-
  /*
  * Converts mongo cursor to array
  */
@@ -208,6 +205,7 @@ export function xmlToJson(xmlString) {
         }
         return obj;
     }
+
 
     let DOMParser = require('xmldom').DOMParser;
     let parser = new DOMParser();
