@@ -8,6 +8,8 @@ import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
 import { ElasticSync } from '../../../utils/elasticSync';
 import * as debug from 'debug';
+import { toArray } from '../../../utils/utils';
+
 
 let logD = debug('paciente-controller');
 let router = express.Router();
@@ -138,6 +140,7 @@ let router = express.Router();
  *              type: string
  */
 
+
 /* Consultas de estado de pacientes para el panel de información */
 router.get('/pacientes/counts/', function (req, res, next) {
     /* Este get es público ya que muestra sólamente la cantidad de pacientes en MPI */
@@ -179,7 +182,7 @@ router.get('/pacientes/counts/', function (req, res, next) {
     });
 });
 
-router.get('/pacientes/dashboard/', function (req, res, next) {
+router.get('/pacientes/dashboard/', async function (req, res, next) {
     /**
      * Se requiere autorización para acceder al dashboard de MPI
      */
@@ -187,12 +190,12 @@ router.get('/pacientes/dashboard/', function (req, res, next) {
         return next(403);
     }
     let result = {
-        paciente: null,
-        pacienteMpi: null,
-        logs: null
+        paciente: [],
+        pacienteMpi: [],
+        logs: []
     };
 
-    paciente.aggregate([{
+    let estadoAggregate = [{
         $group: {
             '_id': {
                 'estado': '$estado'
@@ -201,57 +204,45 @@ router.get('/pacientes/dashboard/', function (req, res, next) {
                 '$sum': 1
             }
         }
-    }],
-        function (err, data) {
-            if (err) {
-                return next(err);
+    }];
+
+    let logAggregate = [
+        {
+            $group: {
+                '_id': {
+                    'operacion': '$operacion',
+                    'modulo': '$modulo'
+                },
+                'count': {
+                    '$sum': 1
+                }
             }
-            result.paciente = data;
-            pacienteMpi.aggregate([{
-                $group: {
-                    '_id': {
-                        'estado': '$estado'
-                    },
-                    'count': {
-                        '$sum': 1
-                    }
-                }
-            }],
-                function (err1, data1) {
-                    if (err1) {
-                        return next(err1);
-                    }
-
-                    result.pacienteMpi = data1;
-                    log.aggregate([{
-                        $group: {
-                            '_id': {
-                                'operacion': '$operacion',
-                                'modulo': '$modulo'
-                            },
-                            'count': {
-                                '$sum': 1
-                            }
-                        }
-                    },
-                    {
-                        $match: {
-                            '_id.modulo': 'mpi'
-                        }
-                    }
-                    ],
-                        function (err2, data2) {
-                            if (err2) {
-                                return next(err2);
-                            }
-                            result.logs = data2;
-                            res.json(result);
-                        });
-                }
-            );
+        },
+        {
+            $match: {
+                '_id.modulo': 'mpi'
+            }
         }
-    );
+    ];
 
+    result.paciente = await toArray(paciente.aggregate(estadoAggregate).cursor({}).exec());
+    result.pacienteMpi = await toArray(pacienteMpi.aggregate(estadoAggregate).cursor({batchSize: 1000}).exec());
+    result.logs = await toArray(log.aggregate(logAggregate).cursor({batchSize: 1000}).exec());
+    res.json(result);
+
+    // paciente.aggregate(estadoAggregate).cursor({batchSize: 1000}).exec().on('data', function(doc) {
+    //     result.paciente.push(doc);
+    // }).on('end', function () {
+    //     pacienteMpi.aggregate(estadoAggregate).cursor({batchSize: 1000}).exec().on('data', function(doc) {
+    //         result.pacienteMpi.push(doc);
+    //     }).on('end', function () {
+    //         log.aggregate(logAggregate).cursor({batchSize: 1000}).exec().on('data', function(doc) {
+    //             result.logs.push(doc);
+    //         }).on('end', function () {
+    //             res.json(result);
+    //         });
+    //     });
+    // });
 });
 
 /**

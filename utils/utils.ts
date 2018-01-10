@@ -148,9 +148,27 @@ export function removeDiacritics(str: string): string {
 }
 
 
+ 
+
+ /*
+ * Converts mongo cursor to array
+ */
+
+export let toArray = (stream): Promise<any[]> => {
+    let array = [];
+    return new Promise((resolve, reject) => {
+        stream.on('data', (doc) => {
+            array.push(doc);
+        }).on('end', () => {
+            return resolve(array);
+        }).on('error', reject);
+    });
+};
+
 /**
  * XML To Json
  */
+
 export function xmlToJson(xmlString) {
 
     function _xmlToJson(xml) {
@@ -191,7 +209,7 @@ export function xmlToJson(xmlString) {
         return obj;
     }
 
-    var DOMParser = require('xmldom').DOMParser;
-    var parser = new DOMParser();
+    let DOMParser = require('xmldom').DOMParser;
+    let parser = new DOMParser();
     return _xmlToJson(parser.parseFromString(xmlString, 'application/xml'));
 }

@@ -41,7 +41,7 @@ let router = express.Router();
 // 	"file": "data:image/jpeg;base64,AEFCSADE2D2D2
 // }
 
-router.post('/', cdaCtr.validateMiddleware,  async (req: any, res, next) => {
+router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
     if (!Auth.check(req, 'cda:post')) {
         return next(403);
     }
@@ -110,7 +110,7 @@ router.get('/files/:name', async (req: any, res, next) => {
     let CDAFiles = makeFs();
 
     CDAFiles.findOne({filename: name}).then(async file => {
-        var stream1  = await CDAFiles.readById(file._id);
+        let stream1  = await CDAFiles.readById(file._id);
         res.contentType(file.contentType);
         stream1.pipe(res);
     }).catch(next);
@@ -130,7 +130,7 @@ router.get('/:id', async (req: any, res, next) => {
     let CDAFiles = makeFs();
 
     let contexto = await CDAFiles.findById(_base64);
-    var stream1  = CDAFiles.readById(_base64, function (err, buffer) {
+    var stream1 = CDAFiles.readById(_base64, function (err, buffer) {
         res.contentType(contexto.contentType);
         res.end(buffer);
     });

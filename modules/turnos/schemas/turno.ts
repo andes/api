@@ -48,6 +48,7 @@ let turnoSchema = new mongoose.Schema({
         documento: String,
         fechaNacimiento: Date,
         telefono: String,
+        sexo: String,
         carpetaEfectores: [{
             organizacion: nombreSchema,
             nroCarpeta: String
