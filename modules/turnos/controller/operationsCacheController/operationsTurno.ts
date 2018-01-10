@@ -217,7 +217,7 @@ function getMotivoTurnoSuspendido(motivoSuspension) {
 
 /* Devuelve el estado del turno en Con_Turno de SIPS */
 async function getEstadoTurnoSips(objectId: any) {
-    defaultPool = await sql.connect(config);
+    // defaultPool = await sql.connect(config);
 
     try {
         let query = 'SELECT idAgenda, idTurno, idTurnoEstado FROM dbo.CON_Turno WHERE objectId = @objectId';
@@ -237,7 +237,7 @@ async function getEstadoTurnoSips(objectId: any) {
 }
 
 export async function checkAsistenciaTurno(agenda: any) {
-    defaultPool = await sql.connect(config);
+    defaultPool = await new sql.ConnectionPool(config).connect();
     let turnos;
     try {
         for (let x = 0; x < agenda.bloques.length; x++) {

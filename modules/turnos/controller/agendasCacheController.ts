@@ -24,15 +24,16 @@ export async function integracionSips() {
         let agendasMongoPendientes = results[0];
         let agendasMongoExportadas = results[1];
 
+        operationsCache.guardarCacheASips(agendasMongoPendientes[0]);
         let promises = [];
-        agendasMongoPendientes.forEach((agenda) => {
-            promises.push(operationsCache.guardarCacheASips(agenda));
-        });
-        agendasMongoExportadas.forEach((agenda) => {
-            promises.push(operationsCache.checkCodificacion(agenda));
-        });
+        // agendasMongoPendientes.forEach((agenda) => {
+        // promises.push(operationsCache.guardarCacheASips(agenda));
+        // });
+        // agendasMongoExportadas.forEach((agenda) => {
+        //     promises.push(operationsCache.checkCodificacion(agenda));
+        // });
 
-        await Promise.all(promises);
+        // await Promise.all(promises);
     } catch (ex) {
         return (ex);
     }
