@@ -4,10 +4,10 @@ import * as agendaModel from '../schemas/agenda';
 import { toArray } from '../../../utils/utils';
 
 function getAge(dateString) {
-    var today = new Date();
-    var birthDate = new Date(dateString);
-    var age = today.getFullYear() - birthDate.getFullYear();
-    var m = today.getMonth() - birthDate.getMonth();
+    let today = new Date();
+    let birthDate = new Date(dateString);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    let m = today.getMonth() - birthDate.getMonth();
     if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
         age--;
     }
@@ -22,9 +22,10 @@ export function getDiagnosticos(params) {
         let pipeline = [];
         pipeline = [{
             $match: {
-                'bloques.turnos.diagnostico.codificaciones.codificacionAuditoria': {
+                'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria': {
                     $exists: true, $ne: {}
                 },
+                'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
                 'horaInicio': { '$gte': new Date(params.horaInicio) },
                 'horaFin': { '$lte': new Date(params.horaFin) },
             }
@@ -53,23 +54,22 @@ export function getDiagnosticos(params) {
         let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
         data.forEach(elem => {
             if (elem._id != null) {
-                var sumaMenor1 = 0;
-                var suma1 = 0;
-                var sumaDosCuatro = 0;
-                var sumaCincoNueve = 0;
-                var suma1014 = 0;
-                var suma1524 = 0;
-                var suma2534 = 0;
-                var suma3544 = 0;
-                var suma4564 = 0;
-                var sumaMayor65 = 0;
-                var sumaMasculino = 0;
-                var sumaFemenino = 0;
-                var sumaOtro = 0;
-                promises.push(new Promise((resolve1, reject1) => {
-
+                let sumaMenor1 = 0;
+                let suma1 = 0;
+                let suma24 = 0;
+                let suma59 = 0;
+                let suma1014 = 0;
+                let suma1524 = 0;
+                let suma2534 = 0;
+                let suma3544 = 0;
+                let suma4564 = 0;
+                let sumaMayor65 = 0;
+                let sumaMasculino = 0;
+                let sumaFemenino = 0;
+                let sumaOtro = 0;
+                promises.push(new Promise((resolve, reject) => {
                     agendaModel.find({
-                        'bloques.turnos.diagnostico.codificaciones.codificacionAuditoria.codigo': {
+                        'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria.codigo': {
                             $eq: elem.codigo
                         }
                     }).exec((err, agenda) => {
@@ -80,12 +80,12 @@ export function getDiagnosticos(params) {
                         agenda.forEach((ag: any, index) => {
                             ag.bloques.forEach(bloque => {
                                 bloque.turnos.forEach(turno => {
-                                    var codigos = turno.diagnostico.codificaciones;
+                                    let codigos = turno.diagnostico.codificaciones;
                                     codigos.forEach(function (codigo) {
                                         if (codigo.codificacionAuditoria) {
                                             if (elem.codigo === codigo.codificacionAuditoria.codigo) {
-                                                var edad = getAge(turno.paciente.fechaNacimiento);
-                                                var sexo = turno.paciente.sexo;
+                                                let edad = getAge(turno.paciente.fechaNacimiento);
+                                                let sexo = turno.paciente.sexo;
                                                 if (edad < 1) {
                                                     sumaMenor1++;
                                                 }
@@ -93,10 +93,10 @@ export function getDiagnosticos(params) {
                                                     suma1++;
                                                 }
                                                 if (edad >= 2 && edad <= 4) {
-                                                    sumaDosCuatro++;
+                                                    suma24++;
                                                 }
                                                 if (edad >= 5 && edad <= 9) {
-                                                    sumaCincoNueve++;
+                                                    suma59++;
                                                 }
                                                 if (edad >= 10 && edad <= 14) {
                                                     suma1014++;
@@ -135,8 +135,8 @@ export function getDiagnosticos(params) {
                         let resultado = elem;
                         resultado['sumaMenor1'] = sumaMenor1;
                         resultado['suma1'] = suma1;
-                        resultado['sumaDosCuatro'] = sumaDosCuatro;
-                        resultado['sumaCincoNueve'] = sumaCincoNueve;
+                        resultado['suma24'] = suma24;
+                        resultado['suma59'] = suma59;
                         resultado['suma1014'] = suma1014;
                         resultado['suma1524'] = suma1524;
                         resultado['suma2534'] = suma2534;
@@ -147,11 +147,6 @@ export function getDiagnosticos(params) {
                         resultado['sumaFemenino'] = sumaFemenino;
                         resultado['sumaOtro'] = sumaOtro;
                         resultados.push(resultado);
-                        // console.log(elem.codigo + " | " + elem._id + " | " + elem.total);
-                        // console.log('<1: ' + sumaMenor1 + ' | 1: ' + suma1 + ' | 2 a 4: ' + sumaDosCuatro + ' | 5 a 9: ' + sumaCincoNueve +
-                        //     ' | 10 a 14: ' + suma1014 + ' | 15 a 24: ' + suma1524 + ' | 25 a 34: ' + suma2534 + ' | 35 a 44: ' + suma3544 +
-                        //     ' | 45 a 64: ' + suma4564 + ' | 45 a 64: ' + suma4564 + ' | 65+: ' + sumaMayor65 +
-                        //     ' | Masculino: ' + sumaMasculino + ' | Femenino: ' + sumaFemenino + ' | Indeterminado: ' + sumaOtro);
                         resolve();
                     });
                 }));
@@ -159,7 +154,6 @@ export function getDiagnosticos(params) {
             }
         });
         Promise.all(promises).then(() => {
-            // console.log('resultadosController ', resultados);
             resolve(resultados);
         });
     });
