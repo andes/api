@@ -182,8 +182,8 @@ export function codificarTurno(req, data, tid) {
                                             nombre: (cie as any).nombre,
                                             sinonimo: (cie as any).sinonimo,
                                             c2: (cie as any).c2,
-                                            primeraVez: registro.esPrimeraVez,
-                                        }
+                                        },
+                                        primeraVez: registro.esPrimeraVez,
                                     });
 
                                 } else {
@@ -195,8 +195,8 @@ export function codificarTurno(req, data, tid) {
                                             nombre: (cie as any).nombre,
                                             sinonimo: (cie as any).sinonimo,
                                             c2: (cie as any).c2,
-                                            primeraVez: registro.esPrimeraVez,
-                                        }
+                                        },
+                                        // primeraVez: registro.esPrimeraVez
                                     });
                                 }
                             } else {
