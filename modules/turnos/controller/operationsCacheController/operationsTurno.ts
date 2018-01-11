@@ -12,7 +12,7 @@ import * as agendaSchema from '../../schemas/agenda';
 import * as turnoCtrl from './../turnoCacheController';
 import * as configPrivate from '../../../../config.private';
 import * as pacienteOps from './operationsPaciente';
-let defaultPool;
+let poolTurnos;
 let config = {
     user: configPrivate.conSql.auth.user,
     password: configPrivate.conSql.auth.password,
@@ -38,21 +38,22 @@ export async function processTurnos(agendas: any, idAgendaCreada: any, idEfector
             for (let i = 0; i < turnos.length; i++) {
                 if (turnos[i].estado === 'asignado') {
                     let resultado = await existeTurnoSips(turnos[i]);
-                    if (resultado.length <= 0) {
-                        await grabaTurnoSips(turnos[i], idAgendaCreada, idEfector);
+                    if (resultado.recordset && resultado.recordset.length <= 0) {
+                        await grabaTurnoSips(turnos[i], idAgendaCreada, idEfector, transaction);
                     }
                 }
             }
         }
     } catch (ex) {
+        console.log('processTurnos', ex);
         return (ex);
     }
 }
 
 export async function existeTurnoSips(turno: any) {
     try {
-        defaultPool = await sql.connect(config);
-        let result = await new sql.Request(defaultPool)
+        poolTurnos = await new sql.ConnectionPool(config).connect();
+        let result = await new sql.Request(poolTurnos)
             .input('idTurnoMongo', sql.VarChar(50), turno._id)
             .query('SELECT idTurno FROM dbo.CON_Turno WHERE objectId = @idTurnoMongo GROUP BY idTurno');
         return result;
@@ -61,7 +62,8 @@ export async function existeTurnoSips(turno: any) {
     }
 }
 
-async function grabaTurnoSips(turno, idAgendaSips, idEfector) {
+async function grabaTurnoSips(turno, idAgendaSips, idEfector, tr) {
+    transaction = tr;
     try {
         let pacienteEncontrado = await pacientes.buscarPaciente(turno.paciente.id);
         let paciente = pacienteEncontrado.paciente;
@@ -77,6 +79,7 @@ async function grabaTurnoSips(turno, idAgendaSips, idEfector) {
 
         await executeQuery(query);
     } catch (ex) {
+        console.log('grabaTurnoSips', ex);
         return (ex);
     }
 }
@@ -221,7 +224,7 @@ async function getEstadoTurnoSips(objectId: any) {
 
     try {
         let query = 'SELECT idAgenda, idTurno, idTurnoEstado FROM dbo.CON_Turno WHERE objectId = @objectId';
-        let result = await new sql.Request(defaultPool)
+        let result = await new sql.Request(poolTurnos)
             .input('objectId', sql.VarChar(50), objectId)
             .query(query);
 
@@ -237,7 +240,7 @@ async function getEstadoTurnoSips(objectId: any) {
 }
 
 export async function checkAsistenciaTurno(agenda: any) {
-    defaultPool = await new sql.ConnectionPool(config).connect();
+    poolTurnos = await new sql.ConnectionPool(config).connect();
     let turnos;
     try {
         for (let x = 0; x < agenda.bloques.length; x++) {
@@ -291,18 +294,20 @@ async function getIdObraSocialSips(documentoPaciente) {
 
     try {
         let result = await new sql.Request(transaction).query(query);
-        return (result.length > 0 ? result[0].idOS : idSumar);
+
+        return ((result.recordset && result.recordset.length > 0) ? result.recordset[0].idOS : idSumar);
     } catch (err) {
         return (err);
     }
 }
 
-
 async function executeQuery(query: any) {
     try {
         query += ' select SCOPE_IDENTITY() as id';
         let result = await new sql.Request(transaction).query(query);
-        return result[0].id;
+        if (result.recordset) {
+            return result.recordset[0].id;
+        }
     } catch (err) {
         return (err);
     }
