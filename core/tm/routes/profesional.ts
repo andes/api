@@ -347,8 +347,9 @@ router.post('/profesionales', Auth.authenticate(), function (req, res, next) {
 
 }
     if (req.body.profesional) {
+        console.log(req.body.profesional)
         profesional.findOne({
-            'documento': req.body.documento
+            'documento': req.body.profesional.documento
         }, function (err, person) {
             if (person) {
                 res.json(null);
