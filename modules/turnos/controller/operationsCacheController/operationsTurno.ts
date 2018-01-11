@@ -39,6 +39,7 @@ export async function processTurnos(agendas: any, idAgendaCreada: any, idEfector
                 if (turnos[i].estado === 'asignado') {
                     let resultado = await existeTurnoSips(turnos[i]);
                     if (resultado.recordset && resultado.recordset.length <= 0) {
+                        console.log('--------------------AGENDA CON TURNOS--------------------------');
                         await grabaTurnoSips(turnos[i], idAgendaCreada, idEfector, transaction);
                     }
                 }
@@ -53,7 +54,7 @@ export async function processTurnos(agendas: any, idAgendaCreada: any, idEfector
 export async function existeTurnoSips(turno: any) {
     try {
         poolTurnos = await new sql.ConnectionPool(config).connect();
-        let result = await new sql.Request(poolTurnos)
+        let result = new sql.Request(transaction)
             .input('idTurnoMongo', sql.VarChar(50), turno._id)
             .query('SELECT idTurno FROM dbo.CON_Turno WHERE objectId = @idTurnoMongo GROUP BY idTurno');
         return result;
@@ -220,7 +221,10 @@ function getMotivoTurnoSuspendido(motivoSuspension) {
 
 /* Devuelve el estado del turno en Con_Turno de SIPS */
 async function getEstadoTurnoSips(objectId: any) {
-    // defaultPool = await sql.connect(config);
+    if (!poolTurnos || !poolTurnos.connected) {
+        poolTurnos = await new sql.ConnectionPool(config).connect();
+        poolTurnos = await poolTurnos.connect();
+    }
 
     try {
         let query = 'SELECT idAgenda, idTurno, idTurnoEstado FROM dbo.CON_Turno WHERE objectId = @objectId';
@@ -228,8 +232,8 @@ async function getEstadoTurnoSips(objectId: any) {
             .input('objectId', sql.VarChar(50), objectId)
             .query(query);
 
-        if (typeof result[0] !== 'undefined') {
-            return (result[0]);
+        if (result.recordset && result.recordset.length > 0) {
+            return (result.recordset[0]);
         } else {
             let idTurnoEstado = 0;
             return (idTurnoEstado);
@@ -240,9 +244,9 @@ async function getEstadoTurnoSips(objectId: any) {
 }
 
 export async function checkAsistenciaTurno(agenda: any) {
-    poolTurnos = await new sql.ConnectionPool(config).connect();
-    let turnos;
     try {
+        poolTurnos = await new sql.ConnectionPool(config).connect();
+        let turnos;
         for (let x = 0; x < agenda.bloques.length; x++) {
             turnos = agenda.bloques[x].turnos;
             for (let i = 0; i < turnos.length; i++) {
@@ -309,6 +313,7 @@ async function executeQuery(query: any) {
             return result.recordset[0].id;
         }
     } catch (err) {
+        console.log('executeQUERY----------____>', err);
         return (err);
     }
 }
