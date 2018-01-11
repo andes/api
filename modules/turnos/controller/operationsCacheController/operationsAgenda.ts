@@ -15,7 +15,7 @@ import * as pacienteOps from './operationsPaciente';
 import * as configPrivate from '../../../../config.private';
 
 let transaction;
-let defaultPool;
+let poolAgendas;
 let config = {
     user: configPrivate.conSql.auth.user,
     password: configPrivate.conSql.auth.password,
@@ -72,7 +72,7 @@ export function getAgendasDeMongoPendientes() {
  */
 export async function checkCodificacion(agenda) {
     try {
-        defaultPool = await sql.connect(config);
+        poolAgendas = await sql.connect(config);
         let turno;
         let datosTurno = {};
         let idEspecialidad: any;
@@ -218,18 +218,19 @@ async function existeConsultorio(agenda, idEfector) {
         espacioFisicoObjectId = 'andesCitas2017';
     }
     try {
-        let result = await new sql.Request(defaultPool)
+        let result = await new sql.Request(poolAgendas)
             .input('objectId', sql.VarChar(50), espacioFisicoObjectId)
             .query('SELECT top 1 idConsultorio FROM dbo.CON_Consultorio WHERE objectId = @objectId');
 
-        if (typeof result[0] !== 'undefined') {
-            return result[0].idConsultorio;
+        if (result.recordset && result.recordset.length > 0) {
+            return result.recordset[0].idConsultorio;
         } else {
             idConsultorio = creaConsultorioSips(agenda, idEfector);
             return (idConsultorio);
         }
 
     } catch (err) {
+        console.log('existe consultorio:', err);
         return (err);
     }
 }
@@ -327,21 +328,23 @@ export async function guardarCacheASips(agenda) {
         idProfesional: ''
     };
     try {
-        defaultPool = await new sql.ConnectionPool(config).connect();
+        poolAgendas = await new sql.ConnectionPool(config).connect();
         sql.on('error', err => {
             // ... error handler
             console.log('ERROr SQL', err);
         });
-        let result: any = await new sql.Request(defaultPool)
+        let result: any = await new sql.Request(poolAgendas)
             .input('codigoSisa', sql.VarChar(50), codigoSisa)
             .query('select idEfector from dbo.Sys_Efector WHERE codigoSisa = @codigoSisa');
-        datosSips.idEfector = result.recordset[0].idEfector;
-        let result2 = await new sql.Request(defaultPool)
+        if (result.recordset[0] && result.recordset[0].idEfector) {
+            datosSips.idEfector = result.recordset[0].idEfector;
+        }
+        let result2 = await new sql.Request(poolAgendas)
             .input('dniProfesional', sql.Int, dniProfesional)
             .query('SELECT idProfesional FROM dbo.Sys_Profesional WHERE numeroDocumento = @dniProfesional and activo = 1');
-        datosSips.idProfesional = result2.recordset[0].idProfesional;
 
-        if (datosSips.idProfesional) {
+        if (result2.recordset[0] && result2.recordset[0].idProfesional) {
+            datosSips.idProfesional = result2.recordset[0].idProfesional;
 
             let transactionPool = await new sql.ConnectionPool(config).connect();
             transaction = new sql.Transaction(transactionPool);
@@ -349,6 +352,7 @@ export async function guardarCacheASips(agenda) {
             transaction.begin(async (err) => {
                 let rolledBack = false;
                 if (err) {
+                    console.log('1', error);
                     logger.LoggerAgendaCache.logAgenda(agenda._id, err);
                     transaction.rollback();
                     return (err);
@@ -359,22 +363,26 @@ export async function guardarCacheASips(agenda) {
 
                 try {
                     let idAgenda = await processAgenda(agenda, datosSips);
+                    if (typeof idAgenda === 'number') { // Controlamos el id de agende porq si la fun processAgenda() da timeout
+                        await turnoOps.processTurnos(agenda, idAgenda, datosSips.idEfector, transaction);
+                        await checkEstadoAgenda(agenda, idAgenda);
+                        await turnoOps.checkEstadoTurno(agenda, idAgenda, transaction);
+                        await turnoOps.checkAsistenciaTurno(agenda);
+                        poolAgendas.close();
+                        transaction.commit(err2 => {
+                            if (err2) {
 
-                    await turnoOps.processTurnos(agenda, idAgenda, datosSips.idEfector, transaction);
-                    await checkEstadoAgenda(agenda, idAgenda);
-                    await turnoOps.checkEstadoTurno(agenda, idAgenda, transaction);
-                    await turnoOps.checkAsistenciaTurno(agenda);
-                    defaultPool.close();
-                    transaction.commit(err2 => {
-                        if (err2) {
-
-                            logger.LoggerAgendaCache.logAgenda(agenda._id, err2);
-                            transaction.rollback();
-                            return (err2);
-                        }
-                        markAgendaAsProcessed(agenda);
-                    });
+                                logger.LoggerAgendaCache.logAgenda(agenda._id, err2);
+                                transaction.rollback();
+                                return (err2);
+                            }
+                            markAgendaAsProcessed(agenda);
+                        });
+                    } else {
+                        console.log('TIMEOUT PROCESS AGENDA', idAgenda);
+                    }
                 } catch (error) {
+                    console.log('2', error);
                     transaction.rollback();
                     logger.LoggerAgendaCache.logAgenda(agenda._id, error);
                     return (error);
@@ -386,6 +394,7 @@ export async function guardarCacheASips(agenda) {
             markAgendaAsProcessed(agenda);
         }
     } catch (error) {
+        console.log('3', error);
         transaction.rollback();
         logger.LoggerAgendaCache.logAgenda(agenda._id, error);
         return (error);
@@ -395,7 +404,7 @@ export async function guardarCacheASips(agenda) {
 async function processAgenda(agenda: any, datosSips) {
     try {
         //  Verifica si existe la agenda pasada por parámetro en SIPS
-        let result = await new sql.Request(defaultPool)
+        let result = await new sql.Request(poolAgendas)
             .input('idAgendaMongo', sql.VarChar(50), agenda.id)
             .query('SELECT idAgenda FROM dbo.CON_Agenda WHERE objectId = @idAgendaMongo GROUP BY idAgenda');
 
@@ -438,7 +447,7 @@ async function checkEstadoAgenda(agendaMongo: any, idAgendaSips: any) {
 async function getEstadoAgenda(idAgenda: any) {
     try {
         let query = 'SELECT idAgendaEstado as idEstado FROM dbo.CON_Agenda WHERE objectId = @idAgenda';
-        let result = await new sql.Request(defaultPool)
+        let result = await new sql.Request(poolAgendas)
             .input('idAgenda', sql.VarChar(50), idAgenda)
             .query(query);
         return (result[0].idEstado);
@@ -450,7 +459,7 @@ async function getEstadoAgenda(idAgenda: any) {
 
 async function existeConsultaTurno(idTurno) {
     try {
-        let result = await new sql.Request(defaultPool)
+        let result = await new sql.Request(poolAgendas)
             .input('idTurno', sql.Int, idTurno)
             .query('SELECT idConsulta FROM dbo.CON_Consulta WHERE idTurno = @idTurno');
 
@@ -473,11 +482,11 @@ async function existeConsultaTurno(idTurno) {
  * @returns
  */
 function getDatosSips(codigoSisa, dniProfesional) {
-    let result1 = new sql.Request(defaultPool)
+    let result1 = new sql.Request(poolAgendas)
         .input('codigoSisa', sql.VarChar(50), codigoSisa)
         .query('select idEfector from dbo.Sys_Efector WHERE codigoSisa = @codigoSisa');
 
-    let result2 = new sql.Request(defaultPool)
+    let result2 = new sql.Request(poolAgendas)
         .input('dniProfesional', sql.Int, dniProfesional)
         .query('SELECT idProfesional FROM dbo.Sys_Profesional WHERE numeroDocumento = @dniProfesional and activo = 1');
 
@@ -528,12 +537,12 @@ async function grabaAgendaSips(agendaSips: any, datosSips: any) {
         // ---> Obtenemos los id's de profesionales(SIPS) para la agenda actual y luego insertamos las "agendasProfesional" correspondientes en SIPS
         let listaIdProfesionales = await Promise.all(getProfesionales(agendaSips.profesionales));
 
-        if (listaIdProfesionales[0].length > 0) {
+        if (listaIdProfesionales[0].recordset && listaIdProfesionales[0].recordset.length > 0) {
             let promiseArray = [];
-            listaIdProfesionales.forEach(async listaIdProf => {
+            listaIdProfesionales.forEach(async elem => {
                 let query2 = 'INSERT INTO dbo.CON_AgendaProfesional ( idAgenda, idProfesional, baja, CreatedBy , ' +
                     ' CreatedOn, ModifiedBy, ModifiedOn, idEspecialidad ) VALUES  ( ' + idAgendaCreada + ',' +
-                    listaIdProf[0].idProfesional + ',' + 0 + ',' + constantes.idUsuarioSips + ',' +
+                    elem.recordset[0].idProfesional + ',' + 0 + ',' + constantes.idUsuarioSips + ',' +
                     '\'' + moment().format('YYYYMMDD HH:mm:ss') + '\', ' +
                     '\'' + moment().format('YYYYMMDD HH:mm:ss') + '\', ' +
                     '\'' + moment().format('YYYYMMDD HH:mm:ss') + '\', ' +
@@ -543,7 +552,7 @@ async function grabaAgendaSips(agendaSips: any, datosSips: any) {
         }
         return (idAgendaCreada);
     } catch (err) {
-
+        console.log('grabaAgendaSips ', err);
         return err;
     }
 }
@@ -573,7 +582,7 @@ function getProfesionales(profesionalesMongo) {
 }
 
 function arrayIdProfesionales(profMongo) {
-    return new sql.Request()
+    return new sql.Request(poolAgendas)
         .input('dniProfesional', sql.Int, profMongo.documento)
         .query('SELECT idProfesional FROM dbo.Sys_Profesional WHERE numeroDocumento = @dniProfesional AND activo = 1');
 }
@@ -612,7 +621,9 @@ async function executeQuery(query: any) {
     try {
         query += ' select SCOPE_IDENTITY() as id';
         let result = await new sql.Request(transaction).query(query);
-        return result[0].id;
+        if (result.recordset) {
+            return result.recordset[0].id;
+        }
     } catch (err) {
         return (err);
     }
