@@ -385,7 +385,7 @@ export async function guardarCacheASips(agenda) {
                             // }
                         });
                     } catch (error) {
-                        console.log('2', error);
+                        console.log('----------------------------> ERROR guardarCacheASips', error);
                         transaction.rollback();
                         logger.LoggerAgendaCache.logAgenda(agenda._id, error);
                         return (error);
@@ -438,7 +438,7 @@ async function processAgenda(agenda: any, datosSips) {
  * @returns
  */
 async function checkEstadoAgenda(agendaMongo: any, idAgendaSips: any) {
-    console.log('5 - inicio')
+    console.log('5 - inicio');
     try {
         let estadoAgendaSips: any = await getEstadoAgenda(agendaMongo.id);
         let estadoAgendaMongo = await getEstadoAgendaSips(agendaMongo.estado);

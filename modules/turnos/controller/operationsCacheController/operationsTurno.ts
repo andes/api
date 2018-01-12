@@ -34,30 +34,20 @@ export async function processTurnos(agenda: any, idAgendaCreada: any, idEfector:
     transaction = tr;
     let turnos;
 
-    try {
-        for (let x = 0; x < agenda.bloques.length; x++) {
-            turnos = agenda.bloques[x].turnos;
-            for (let i = 0; i < turnos.length; i++) {
-                if (turnos[i].estado === 'asignado') {
-                    let resultado = await existeTurnoSips(turnos[i]);
-                    if (resultado.recordset && resultado.recordset.length <= 0) {
-                        console.log('grabando turno seeeeps');
-                        try {
-                            await grabaTurnoSips(turnos[i], idAgendaCreada, idEfector, transaction);
-                        } catch (ex) {
-                            console.log('----------------------------------------_____>ERR dentro del FOR---------------', ex);
-                            return (ex);
-                        }
-                    }
+    for (let x = 0; x < agenda.bloques.length; x++) {
+        turnos = agenda.bloques[x].turnos;
+        for (let i = 0; i < turnos.length; i++) {
+            if (turnos[i].estado === 'asignado') {
+                let resultado = await existeTurnoSips(turnos[i]);
+                if (resultado.recordset && resultado.recordset.length <= 0) {
+                    console.log('grabando turno seeeeps');
+                    await grabaTurnoSips(turnos[i], idAgendaCreada, idEfector, transaction);
                 }
             }
         }
-        console.log(' 4 - turnos grabados');
-
-    } catch (ex) {
-        console.log('----------------------------------------_____>ERR processTurnos---------------', ex);
-        return (ex);
     }
+    console.log(' 4 - turnos grabados');
+
 }
 
 export async function existeTurnoSips(turno: any) {
@@ -74,28 +64,21 @@ export async function existeTurnoSips(turno: any) {
 
 async function grabaTurnoSips(turno, idAgendaSips, idEfector, tr) {
     transaction = tr;
-    try {
-        let pacienteEncontrado = await pacientes.buscarPaciente(turno.paciente.id);
-        let paciente = pacienteEncontrado.paciente;
+    let pacienteEncontrado = await pacientes.buscarPaciente(turno.paciente.id);
+    let paciente = pacienteEncontrado.paciente;
 
-        let idObraSocial = await getIdObraSocialSips(paciente.documento);
-        let pacienteId = await pacienteOps.insertarPacienteEnSips(paciente, idEfector, transaction);
-        let fechaTurno = moment(turno.horaInicio).format('YYYYMMDD');
-        let horaTurno = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
+    let idObraSocial = await getIdObraSocialSips(paciente.documento);
+    let pacienteId = await pacienteOps.insertarPacienteEnSips(paciente, idEfector, transaction);
+    let fechaTurno = moment(turno.horaInicio).format('YYYYMMDD');
+    let horaTurno = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
 
-        let query = 'INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente ,  fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante, objectId ) VALUES  ( ' +
-            idAgendaSips + ' , 1 , ' + constantes.idUsuarioSips + ' ,' + pacienteId + ', \'' + fechaTurno + '\', \'' + horaTurno + '\' , 0 , 0 ,' + idObraSocial + ' , 0, \'' + turno._id + '\')';
+    let query = 'INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente , fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante, objectId ) VALUES  ( ' + idAgendaSips + ' , 1 , ' + constantes.idUsuarioSips + ' ,' + pacienteId + ', \'' + fechaTurno + '\' ,\'' + horaTurno + '\' , 0 , 0 ,' + idObraSocial + ' , 0, \'' + turno._id + '\')';
 
 
-        query += ' select SCOPE_IDENTITY() as id';
-        await new sql.Request(transaction).query(query);
-
-
-        console.log('--------grabado turno sips--------');
-    } catch (ex) {
-        console.log('--------------------------------------__>ERROR grabaTurnoSips', ex);
-        return (ex);
-    }
+    query += ' select SCOPE_IDENTITY() as id';
+    console.log('Q:', query);
+    await new sql.Request(transaction).query(query);
+    console.log('--------grabado turno sips--------');
 }
 
 
