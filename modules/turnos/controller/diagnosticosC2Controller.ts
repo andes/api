@@ -67,14 +67,14 @@ export function getDiagnosticos(params) {
                 let sumaMasculino = 0;
                 let sumaFemenino = 0;
                 let sumaOtro = 0;
-                promises.push(new Promise((resolve, reject) => {
+                promises.push(new Promise((resolve1, reject1) => {
                     agendaModel.find({
                         'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria.codigo': {
                             $eq: elem.codigo
                         }
                     }).exec((err, agenda) => {
                         if (!agenda || err) {
-                            return reject(err);
+                            return reject1(err);
                         }
 
                         agenda.forEach((ag: any, index) => {
@@ -147,7 +147,7 @@ export function getDiagnosticos(params) {
                         resultado['sumaFemenino'] = sumaFemenino;
                         resultado['sumaOtro'] = sumaOtro;
                         resultados.push(resultado);
-                        resolve();
+                        resolve1();
                     });
                 }));
 
