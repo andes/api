@@ -33,12 +33,13 @@ export async function processTurnos(agenda: any, idAgendaCreada: any, idEfector:
     console.log('inicia 4');
     transaction = tr;
     let turnos;
+    poolTurnos = await new sql.ConnectionPool(config).connect();
 
     for (let x = 0; x < agenda.bloques.length; x++) {
         turnos = agenda.bloques[x].turnos;
         for (let i = 0; i < turnos.length; i++) {
             if (turnos[i].estado === 'asignado') {
-                let resultado = await existeTurnoSips(turnos[i]);
+                let resultado = await existeTurnoSips(turnos[i], transaction);
                 if (resultado.recordset && resultado.recordset.length <= 0) {
                     console.log('grabando turno seeeeps');
                     await grabaTurnoSips(turnos[i], idAgendaCreada, idEfector, transaction);
@@ -50,16 +51,11 @@ export async function processTurnos(agenda: any, idAgendaCreada: any, idEfector:
 
 }
 
-export async function existeTurnoSips(turno: any) {
-    try {
-        poolTurnos = await new sql.ConnectionPool(config).connect();
-        let result = new sql.Request(poolTurnos)
-            .input('idTurnoMongo', sql.VarChar(50), turno._id)
-            .query('SELECT idTurno FROM dbo.CON_Turno WHERE objectId = @idTurnoMongo GROUP BY idTurno');
-        return result;
-    } catch (ex) {
-        return (ex);
-    }
+export async function existeTurnoSips(turno: any, pool) {
+    let result = await new sql.Request(pool)
+        .input('idTurnoMongo', sql.VarChar(50), turno._id)
+        .query('SELECT idTurno FROM dbo.CON_Turno WHERE objectId = @idTurnoMongo GROUP BY idTurno');
+    return result;
 }
 
 async function grabaTurnoSips(turno, idAgendaSips, idEfector, tr) {
@@ -77,8 +73,8 @@ async function grabaTurnoSips(turno, idAgendaSips, idEfector, tr) {
 
     query += ' select SCOPE_IDENTITY() as id';
     console.log('Q:', query);
-    await new sql.Request(transaction).query(query);
-    console.log('--------grabado turno sips--------');
+    let res = await new sql.Request(transaction).query(query);
+    console.log('--------grabado turno sips--------Z>>>>>>', res);
 }
 
 
@@ -86,24 +82,19 @@ export async function checkEstadoTurno(agenda: any, idAgendaSips, tr) {
     console.log('6 - inicio');
     let turnos;
     transaction = tr;
-    try {
-        for (let x = 0; x < agenda.bloques.length; x++) {
-            turnos = agenda.bloques[x].turnos;
+    for (let x = 0; x < agenda.bloques.length; x++) {
+        turnos = agenda.bloques[x].turnos;
 
-            for (let i = 0; i < turnos.length; i++) {
-                if ((turnos[i].estado !== 'disponible') || (turnos[i].updatedAt)) {
-                    await actualizarEstadoTurnoSips(idAgendaSips, turnos[i]);
-                    console.log('6 - actualizando turno sips');
+        for (let i = 0; i < turnos.length; i++) {
+            if ((turnos[i].estado !== 'disponible') || (turnos[i].updatedAt)) {
+                await actualizarEstadoTurnoSips(idAgendaSips, turnos[i]);
+                console.log('6 - actualizando turno sips');
 
-                } else {
-                }
             }
         }
-        console.log('6 - FIN');
-
-    } catch (ex) {
-        return (ex);
     }
+    console.log('6 - FIN');
+
 }
 
 /* TODO: ver si hay mas estados de turnos entre CITAS y SIPS*/
@@ -121,28 +112,23 @@ function getEstadoTurnosCitasSips(estadoTurnoCitas, updated) {
 }
 
 async function actualizarEstadoTurnoSips(idAgendaSips, turno) {
-    try {
-        let estadoTurnoSips: any = await getEstadoTurnoSips(turno._id);
-        let estadoTurnoMongo = getEstadoTurnosCitasSips(turno.estado, turno.updatedAt);
+    let estadoTurnoSips: any = await getEstadoTurnoSips(turno._id, transaction);
+    let estadoTurnoMongo = getEstadoTurnosCitasSips(turno.estado, turno.updatedAt);
 
-        if (estadoTurnoSips.idTurnoEstado !== estadoTurnoMongo) {
-            let objectIdTurno;
+    if (estadoTurnoSips.idTurnoEstado !== estadoTurnoMongo) {
+        let objectIdTurno;
 
-            if (turno._id) {
-                objectIdTurno = ' and objectId = \'' + turno._id + '\'';
-            }
-            let horaInicio = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
-
-            if ((estadoTurnoMongo === constantes.EstadoTurnosSips.suspendido || turno.estado === 'turnoDoble') && !await existeTurnoBloqueoSips(idAgendaSips, horaInicio)) {
-                grabarTurnoBloqueo(idAgendaSips, turno);
-            }
-
-            let query = 'UPDATE dbo.CON_Turno SET idTurnoEstado = ' + estadoTurnoMongo + ' WHERE idAgenda = ' + idAgendaSips + objectIdTurno;
-            await executeQuery(query);
-        } else {
+        if (turno._id) {
+            objectIdTurno = ' and objectId = \'' + turno._id + '\'';
         }
-    } catch (ex) {
-        return (ex);
+        let horaInicio = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
+
+        if ((estadoTurnoMongo === constantes.EstadoTurnosSips.suspendido || turno.estado === 'turnoDoble') && !await existeTurnoBloqueoSips(idAgendaSips, horaInicio)) {
+            await grabarTurnoBloqueo(idAgendaSips, turno);
+        }
+
+        let query = 'UPDATE dbo.CON_Turno SET idTurnoEstado = ' + estadoTurnoMongo + ' WHERE idAgenda = ' + idAgendaSips + objectIdTurno;
+        await executeQuery(query);
     }
 }
 
@@ -221,48 +207,34 @@ function getMotivoTurnoSuspendido(motivoSuspension) {
 
 
 /* Devuelve el estado del turno en Con_Turno de SIPS */
-async function getEstadoTurnoSips(objectId: any) {
-    // if (poolTurnos && !poolTurnos.connected) {
-    //     poolTurnos = await new sql.ConnectionPool(config).connect();
-    //     poolTurnos = await poolTurnos.connect();
-    // }
+async function getEstadoTurnoSips(objectId: any, pool) {
+    let query = 'SELECT idAgenda, idTurno, idTurnoEstado FROM dbo.CON_Turno WHERE objectId = @objectId';
+    let result = await new sql.Request(pool)
+        .input('objectId', sql.VarChar(50), objectId)
+        .query(query);
 
-    try {
-        let query = 'SELECT idAgenda, idTurno, idTurnoEstado FROM dbo.CON_Turno WHERE objectId = @objectId';
-        let result = await new sql.Request(poolTurnos)
-            .input('objectId', sql.VarChar(50), objectId)
-            .query(query);
-
-        if (result.recordset && result.recordset.length > 0) {
-            return (result.recordset[0]);
-        } else {
-            let idTurnoEstado = 0;
-            return (idTurnoEstado);
-        }
-    } catch (err) {
-        return (err);
+    if (result.recordset && result.recordset.length > 0) {
+        return (result.recordset[0]);
+    } else {
+        let idTurnoEstado = 0;
+        return (idTurnoEstado);
     }
 }
 
-export async function checkAsistenciaTurno(agenda: any) {
-    try {
-        poolTurnos = await new sql.ConnectionPool(config).connect();
-        let turnos;
-        for (let x = 0; x < agenda.bloques.length; x++) {
-            turnos = agenda.bloques[x].turnos;
-            for (let i = 0; i < turnos.length; i++) {
-                if (turnos[i].asistencia === 'asistio') {
+export async function checkAsistenciaTurno(agenda: any, transactionPool) {
+    let turnos;
+    for (let x = 0; x < agenda.bloques.length; x++) {
+        turnos = agenda.bloques[x].turnos;
+        for (let i = 0; i < turnos.length; i++) {
+            if (turnos[i].asistencia === 'asistio') {
 
-                    let idTurno: any = await getEstadoTurnoSips(turnos[i]._id);
-                    let fechaAsistencia = moment(turnos[i].updatedAt).format('YYYYMMDD');
-                    let query = 'INSERT INTO dbo.CON_TurnoAsistencia ( idTurno , idUsuario , fechaAsistencia ) VALUES  ( ' +
-                        idTurno.idTurno + ' , ' + constantes.idUsuarioSips + ' , \'' + fechaAsistencia + '\' )';
-                    await executeQuery(query);
-                }
+                let idTurno: any = await getEstadoTurnoSips(turnos[i]._id, transactionPool);
+                let fechaAsistencia = moment(turnos[i].updatedAt).format('YYYYMMDD');
+                let query = 'INSERT INTO dbo.CON_TurnoAsistencia ( idTurno , idUsuario , fechaAsistencia ) VALUES  ( ' +
+                    idTurno.idTurno + ' , ' + constantes.idUsuarioSips + ' , \'' + fechaAsistencia + '\' )';
+                await executeQuery(query);
             }
         }
-    } catch (ex) {
-        return (ex);
     }
 }
 
