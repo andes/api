@@ -30,7 +30,7 @@ let transaction;
  * @returns
  */
 export async function processTurnos(agenda: any, idAgendaCreada: any, idEfector: any, tr) {
-    console.log('inicia 4');
+    // console.log('inicia 4');
     transaction = tr;
     let turnos;
     poolTurnos = await new sql.ConnectionPool(config).connect();
@@ -41,13 +41,13 @@ export async function processTurnos(agenda: any, idAgendaCreada: any, idEfector:
             if (turnos[i].estado === 'asignado') {
                 let resultado = await existeTurnoSips(turnos[i], transaction);
                 if (resultado.recordset && resultado.recordset.length <= 0) {
-                    console.log('grabando turno seeeeps');
+                    // console.log('grabando turno seeeeps');
                     await grabaTurnoSips(turnos[i], idAgendaCreada, idEfector, transaction);
                 }
             }
         }
     }
-    console.log(' 4 - turnos grabados');
+    // console.log(' 4 - turnos grabados');
 
 }
 
@@ -72,14 +72,14 @@ async function grabaTurnoSips(turno, idAgendaSips, idEfector, tr) {
 
 
     query += ' select SCOPE_IDENTITY() as id';
-    console.log('Q:', query);
+    // console.log('Q:', query);
     let res = await new sql.Request(transaction).query(query);
-    console.log('--------grabado turno sips--------Z>>>>>>', res);
+    // console.log('--------grabado turno sips--------Z>>>>>>', res);
 }
 
 
 export async function checkEstadoTurno(agenda: any, idAgendaSips, tr) {
-    console.log('6 - inicio');
+    // console.log('6 - inicio');
     let turnos;
     transaction = tr;
     for (let x = 0; x < agenda.bloques.length; x++) {
@@ -88,12 +88,12 @@ export async function checkEstadoTurno(agenda: any, idAgendaSips, tr) {
         for (let i = 0; i < turnos.length; i++) {
             if ((turnos[i].estado !== 'disponible') || (turnos[i].updatedAt)) {
                 await actualizarEstadoTurnoSips(idAgendaSips, turnos[i]);
-                console.log('6 - actualizando turno sips');
+                // console.log('6 - actualizando turno sips');
 
             }
         }
     }
-    console.log('6 - FIN');
+    // console.log('6 - FIN');
 
 }
 
@@ -286,7 +286,7 @@ async function executeQuery(query: any) {
             return result.recordset[0].id;
         }
     } catch (err) {
-        console.log('executeQUERY----------____>', err);
+        // console.log('executeQUERY----------____>', err);
         return (err);
     }
 }

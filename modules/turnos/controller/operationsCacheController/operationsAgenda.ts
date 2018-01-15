@@ -107,8 +107,8 @@ export async function checkCodificacion(agenda) {
                     };
 
                     await turnoCtrl.updateTurno(datosTurno);
-                    markAgendaAsProcessed(agenda);
                 }
+                markAgendaAsProcessed(agenda);
             }
         }
     } catch (ex) {
@@ -231,7 +231,7 @@ async function existeConsultorio(agenda, idEfector) {
         }
 
     } catch (err) {
-        console.log('existe consultorio:', err);
+        // console.log('existe consultorio:', err);
         return (err);
     }
 }
@@ -341,13 +341,13 @@ export async function guardarCacheASips(agenda) {
         if (result.recordset[0] && result.recordset[0].idEfector) {
             datosSips.idEfector = result.recordset[0].idEfector;
         }
-        console.log('1 - result', result);
+        // console.log('1 - result', result);
 
 
         let result2 = await new sql.Request(poolAgendas)
             .input('dniProfesional', sql.Int, dniProfesional)
             .query('SELECT idProfesional FROM dbo.Sys_Profesional WHERE numeroDocumento = @dniProfesional and activo = 1');
-        console.log('2 - result2', result2);
+        // console.log('2 - result2', result2);
         if (result2.recordset[0] && result2.recordset[0].idProfesional) {
             datosSips.idProfesional = result2.recordset[0].idProfesional;
 
@@ -356,7 +356,7 @@ export async function guardarCacheASips(agenda) {
             transaction.begin(async (err) => {
                 let rolledBack = false;
                 if (err) {
-                    console.log('ERR1-------------------->', err);
+                    // console.log('ERR1-------------------->', err);
                     logger.LoggerAgendaCache.logAgenda(agenda._id, err);
                     transaction.rollback();
                     return (err);
@@ -374,33 +374,34 @@ export async function guardarCacheASips(agenda) {
                         await turnoOps.checkAsistenciaTurno(agenda, transaction);
                         transaction.commit(err2 => {
                             if (err2) {
-                                console.log('Error commiteando agenda');
+                                // console.log('Error commiteando agenda');
                                 logger.LoggerAgendaCache.logAgenda(agenda._id, err2);
                                 transaction.rollback();
                                 transactionPool.close();
                                 return (err2);
                             }
-                            console.log('------------------------------------COMMITEANDO AGENDA -----------------------------------__>');
+                            // console.log('------------------------------------COMMITEANDO AGENDA -----------------------------------__>');
                             markAgendaAsProcessed(agenda);
                             transactionPool.close();
                         });
                     } catch (error) {
                         /** Handleamos errores acá para poder rollbackear la transacción si pincha en algún punto**/
-                        console.log('----------------------------> ERROR guardarCacheASips', error);
+                        // console.log('----------------------------> ERROR guardarCacheASips', error);
                         transaction.rollback();
                         logger.LoggerAgendaCache.logAgenda(agenda._id, error);
                         return (error);
                     }
-                } else {
-                    console.log('TIMEOUT PROCESS AGENDA', idAgenda);
                 }
+                // else {
+                // console.log('TIMEOUT PROCESS AGENDA', idAgenda);
+                // }
             });
         } else {
-            console.log('Profesional inexistente en SIPS, agenda no copiada');
+            // console.log('Profesional inexistente en SIPS, agenda no copiada');
             markAgendaAsProcessed(agenda);
         }
     } catch (error) {
-        console.log('Error GuardaCacheSIPS ', error);
+        // console.log('Error GuardaCacheSIPS ', error);
         transaction.rollback();
         logger.LoggerAgendaCache.logAgenda(agenda._id, error);
         return (error);
@@ -421,10 +422,10 @@ async function processAgenda(agenda: any, datosSips) {
         } else {
             idAgenda = await grabaAgendaSips(agenda, datosSips);
         }
-        console.log('3- return idAgenda');
+        // console.log('3- return idAgenda');
         return (idAgenda);
     } catch (err) {
-        console.log('ERROR PROCESSAGENDA', err);
+        // console.log('ERROR PROCESSAGENDA', err);
         logger.LoggerAgendaCache.logAgenda(agenda._id, err);
         return err;
     }
@@ -438,16 +439,16 @@ async function processAgenda(agenda: any, datosSips) {
  * @returns
  */
 async function checkEstadoAgenda(agendaMongo: any, idAgendaSips: any) {
-    console.log('5 - inicio');
+    // console.log('5 - inicio');
     let estadoAgendaSips: any = await getEstadoAgenda(agendaMongo.id);
     let estadoAgendaMongo = getEstadoAgendaSips(agendaMongo.estado);
 
     if ((estadoAgendaSips !== estadoAgendaMongo) && (agendaMongo.estado === 'suspendida')) {
         let query = 'UPDATE dbo.CON_Agenda SET idAgendaEstado = ' + estadoAgendaMongo + '   WHERE idAgenda = ' + idAgendaSips;
         let res = await executeQuery(query);
-        console.log('5 - Update estado agenda', res);
+        // console.log('5 - Update estado agenda', res);
     }
-    console.log('5 - fin');
+    // console.log('5 - fin');
 }
 
 async function getEstadoAgenda(idAgenda: any) {
@@ -474,7 +475,7 @@ async function existeConsultaTurno(idTurno) {
             return (false);
         }
     } catch (err) {
-        console.log('existeCOnsultTurno------------___>', err);
+        // console.log('existeCOnsultTurno------------___>', err);
         return (err);
     }
 }
@@ -559,10 +560,10 @@ async function grabaAgendaSips(agendaSips: any, datosSips: any) {
             });
         }
 
-        console.log(' 2.5 - return graba agenda : ', idAgendaCreada);
+        // console.log(' 2.5 - return graba agenda : ', idAgendaCreada);
         return (idAgendaCreada);
     } catch (err) {
-        console.log('grabaAgendaSips ', err);
+        // console.log('grabaAgendaSips ', err);
         return err;
     }
 }

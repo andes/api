@@ -22,7 +22,7 @@ export async function integracionSips() {
         opsPromises.push(operationsCache.getAgendasDeMongoExportadas());
         let results = await Promise.all(opsPromises);
         let agendasMongoPendientes = results[0];
-        let agendasMongoExportadas = results[1];
+        let agendasMongoExportadas = results[1].slice(15);
 
         agendasMongoPendientes.forEach(async (agenda) => {
             await operationsCache.guardarCacheASips(agenda);
