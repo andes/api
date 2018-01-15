@@ -60,7 +60,7 @@ export function getAgendasDeMongoPendientes() {
     return new Promise<Array<any>>(function (resolve, reject) {
         agendasCache.find({
             estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente
-        }).exec(function (err, data: any) {
+        }).sort({ _id: 1 }).limit(100).exec(function (err, data: any) {
             if (err) {
                 reject(err);
             }
@@ -320,7 +320,8 @@ function getCodificacionOdonto(idNomenclador) {
  * @param index
  * @param pool
  */
-export async function guardarCacheASips(agenda) {
+export async function
+guardarCacheASips(agenda) {
 
     // CON_Agenda de SIPS soporta solo un profesional NOT NULL.
     // En caso de ser nulo el paciente en agenda de ANDES, por defector
@@ -392,12 +393,16 @@ export async function guardarCacheASips(agenda) {
                         debug('----------------------------> ERROR guardarCacheASips', error);
                         transaction.rollback();
                         logger.LoggerAgendaCache.logAgenda(agenda._id, error);
+
+                        if (error === 'Error grabaTurnoSips') {
+                            debug('Procesando agenda con error');
+
+                        }
                         return (error);
                     }
+                } else {
+                    debug('TIMEOUT PROCESS AGENDA', idAgenda);
                 }
-                // else {
-                debug('TIMEOUT PROCESS AGENDA', idAgenda);
-                // }
             });
         } else {
             debug('Profesional inexistente en SIPS, agenda no copiada');

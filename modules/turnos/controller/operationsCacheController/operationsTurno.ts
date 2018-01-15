@@ -42,11 +42,10 @@ export async function processTurnos(agenda: any, idAgendaCreada: any, idEfector:
         turnos = agenda.bloques[x].turnos;
         for (let i = 0; i < turnos.length; i++) {
             if (turnos[i].estado === 'asignado') {
-                let resultado = await existeTurnoSips(turnos[i], transaction);
-                if (resultado.recordset && resultado.recordset.length <= 0) {
-                    debug('grabando turno seeeeps');
-                    await grabaTurnoSips(turnos[i], idAgendaCreada, idEfector, transaction);
-                }
+                // let resultado = await existeTurnoSips(turnos[i], transaction);
+                // if (resultado.recordset && resultado.recordset.length <= 0) {
+                await grabaTurnoSips(turnos[i], idAgendaCreada, idEfector, transaction);
+                // }
             }
         }
     }
@@ -71,13 +70,24 @@ async function grabaTurnoSips(turno, idAgendaSips, idEfector, tr) {
     let fechaTurno = moment(turno.horaInicio).format('YYYYMMDD');
     let horaTurno = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
 
-    let query = 'INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente , fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante, objectId ) VALUES  ( ' + idAgendaSips + ' , 1 , ' + constantes.idUsuarioSips + ' ,' + pacienteId + ', \'' + fechaTurno + '\' ,\'' + horaTurno + '\' , 0 , 0 ,' + idObraSocial + ' , 0, \'' + turno._id + '\')';
+    if (typeof pacienteId === 'number' && typeof idObraSocial === 'number') {
+        let resultado = await existeTurnoSips(turno, transaction);
+        let query;
+        if (resultado.recordset && resultado.recordset.length > 0) {
+            query = 'UPDATE dbo.CON_Turno SET idPaciente = ' + pacienteId + ', idObraSocial = ' + idObraSocial + '  WHERE idAgenda = ' + idAgendaSips + ' and objectId = \'' + turno._id + '\'';
 
+        } else {
+            query = 'INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente , fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante, objectId ) VALUES  ( ' + idAgendaSips + ' , 1 , ' + constantes.idUsuarioSips + ' ,' + pacienteId + ', \'' + fechaTurno + '\' ,\'' + horaTurno + '\' , 0 , 0 ,' + idObraSocial + ' , 0, \'' + turno._id + '\')';
+            query += ' select SCOPE_IDENTITY() as id';
+        }
 
-    query += ' select SCOPE_IDENTITY() as id';
-    debug('Q:', query);
-    let res = await new sql.Request(transaction).query(query);
-    debug('--------grabado turno sips--------Z>>>>>>', res);
+        debug('Q:', query);
+        let res = await new sql.Request(transaction).query(query);
+        debug('--------grabado turno sipzzzs-------->>>>>>', res);
+    } else {
+        // Si tenemos un error en la consulta por obra social o por IdPaciente tenemos que sacar la agenda de la coleccion
+        throw new Error('Error grabaTurnoSips');
+    }
 }
 
 
