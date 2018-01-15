@@ -69,6 +69,9 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             query = Prestacion.find({}); // Trae todos
         }
 
+        if (req.query.sinEstado) {
+            query.where('estados.tipo').ne(req.query.sinEstado);
+        }
         if (req.query.fechaDesde) {
             query.where('ejecucion.fecha').gte(moment(req.query.fechaDesde).startOf('day').toDate() as any);
         }
