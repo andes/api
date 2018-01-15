@@ -107,8 +107,8 @@ export async function checkCodificacion(agenda) {
                     };
 
                     await turnoCtrl.updateTurno(datosTurno);
+                    markAgendaAsProcessed(agenda);
                 }
-                markAgendaAsProcessed(agenda);
             }
         }
     } catch (ex) {
