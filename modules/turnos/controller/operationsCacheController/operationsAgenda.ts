@@ -13,6 +13,9 @@ import * as turnoCtrl from './../turnoCacheController';
 import * as turnoOps from './operationsTurno';
 import * as pacienteOps from './operationsPaciente';
 import * as configPrivate from '../../../../config.private';
+import * as dbg from 'debug';
+
+const debug = dbg('operationsAgenda');
 
 let transaction;
 let poolAgendas;
@@ -231,7 +234,7 @@ async function existeConsultorio(agenda, idEfector) {
         }
 
     } catch (err) {
-        // console.log('existe consultorio:', err);
+        debug('existe consultorio:', err);
         return (err);
     }
 }
@@ -333,7 +336,7 @@ export async function guardarCacheASips(agenda) {
 
         sql.on('error', err => {
             // ... error handler
-            // console.log('error SQL', err);
+            debug('error SQL', err);
         });
         let result: any = await new sql.Request(poolAgendas)
             .input('codigoSisa', sql.VarChar(50), codigoSisa)
@@ -341,13 +344,13 @@ export async function guardarCacheASips(agenda) {
         if (result.recordset[0] && result.recordset[0].idEfector) {
             datosSips.idEfector = result.recordset[0].idEfector;
         }
-        // console.log('1 - result', result);
+        debug('1 - result', result);
 
 
         let result2 = await new sql.Request(poolAgendas)
             .input('dniProfesional', sql.Int, dniProfesional)
             .query('SELECT idProfesional FROM dbo.Sys_Profesional WHERE numeroDocumento = @dniProfesional and activo = 1');
-        // console.log('2 - result2', result2);
+        debug('2 - result2', result2);
         if (result2.recordset[0] && result2.recordset[0].idProfesional) {
             datosSips.idProfesional = result2.recordset[0].idProfesional;
 
@@ -356,7 +359,7 @@ export async function guardarCacheASips(agenda) {
             transaction.begin(async (err) => {
                 let rolledBack = false;
                 if (err) {
-                    // console.log('ERR1-------------------->', err);
+                    debug('ERR1-------------------->', err);
                     logger.LoggerAgendaCache.logAgenda(agenda._id, err);
                     transaction.rollback();
                     return (err);
@@ -374,34 +377,34 @@ export async function guardarCacheASips(agenda) {
                         await turnoOps.checkAsistenciaTurno(agenda, transaction);
                         transaction.commit(err2 => {
                             if (err2) {
-                                // console.log('Error commiteando agenda');
+                                debug('Error commiteando agenda');
                                 logger.LoggerAgendaCache.logAgenda(agenda._id, err2);
                                 transaction.rollback();
                                 transactionPool.close();
                                 return (err2);
                             }
-                            // console.log('------------------------------------COMMITEANDO AGENDA -----------------------------------__>');
+                            debug('------------------------------------COMMITEANDO AGENDA -----------------------------------__>');
                             markAgendaAsProcessed(agenda);
                             transactionPool.close();
                         });
                     } catch (error) {
                         /** Handleamos errores acá para poder rollbackear la transacción si pincha en algún punto**/
-                        // console.log('----------------------------> ERROR guardarCacheASips', error);
+                        debug('----------------------------> ERROR guardarCacheASips', error);
                         transaction.rollback();
                         logger.LoggerAgendaCache.logAgenda(agenda._id, error);
                         return (error);
                     }
                 }
                 // else {
-                // console.log('TIMEOUT PROCESS AGENDA', idAgenda);
+                debug('TIMEOUT PROCESS AGENDA', idAgenda);
                 // }
             });
         } else {
-            // console.log('Profesional inexistente en SIPS, agenda no copiada');
+            debug('Profesional inexistente en SIPS, agenda no copiada');
             markAgendaAsProcessed(agenda);
         }
     } catch (error) {
-        // console.log('Error GuardaCacheSIPS ', error);
+        debug('Error GuardaCacheSIPS ', error);
         transaction.rollback();
         logger.LoggerAgendaCache.logAgenda(agenda._id, error);
         return (error);
@@ -422,10 +425,10 @@ async function processAgenda(agenda: any, datosSips) {
         } else {
             idAgenda = await grabaAgendaSips(agenda, datosSips);
         }
-        // console.log('3- return idAgenda');
+        debug('3- return idAgenda');
         return (idAgenda);
     } catch (err) {
-        // console.log('ERROR PROCESSAGENDA', err);
+        debug('ERROR PROCESSAGENDA', err);
         logger.LoggerAgendaCache.logAgenda(agenda._id, err);
         return err;
     }
@@ -439,16 +442,16 @@ async function processAgenda(agenda: any, datosSips) {
  * @returns
  */
 async function checkEstadoAgenda(agendaMongo: any, idAgendaSips: any) {
-    // console.log('5 - inicio');
+    debug('5 - inicio');
     let estadoAgendaSips: any = await getEstadoAgenda(agendaMongo.id);
     let estadoAgendaMongo = getEstadoAgendaSips(agendaMongo.estado);
 
     if ((estadoAgendaSips !== estadoAgendaMongo) && (agendaMongo.estado === 'suspendida')) {
         let query = 'UPDATE dbo.CON_Agenda SET idAgendaEstado = ' + estadoAgendaMongo + '   WHERE idAgenda = ' + idAgendaSips;
         let res = await executeQuery(query);
-        // console.log('5 - Update estado agenda', res);
+        debug('5 - Update estado agenda', res);
     }
-    // console.log('5 - fin');
+    debug('5 - fin');
 }
 
 async function getEstadoAgenda(idAgenda: any) {
@@ -475,7 +478,7 @@ async function existeConsultaTurno(idTurno) {
             return (false);
         }
     } catch (err) {
-        // console.log('existeCOnsultTurno------------___>', err);
+        debug('existeCOnsultTurno------------___>', err);
         return (err);
     }
 }
@@ -560,10 +563,10 @@ async function grabaAgendaSips(agendaSips: any, datosSips: any) {
             });
         }
 
-        // console.log(' 2.5 - return graba agenda : ', idAgendaCreada);
+        debug(' 2.5 - return graba agenda : ', idAgendaCreada);
         return (idAgendaCreada);
     } catch (err) {
-        // console.log('grabaAgendaSips ', err);
+        debug('grabaAgendaSips ', err);
         return err;
     }
 }
