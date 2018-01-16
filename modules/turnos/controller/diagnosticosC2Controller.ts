@@ -45,6 +45,9 @@ export function getDiagnosticos(params) {
                 codigo: {
                     $first: '$bloques.turnos.diagnostico.codificaciones.codificacionAuditoria.codigo'
                 },
+                reporteC2: {
+                    $first: '$bloques.turnos.diagnostico.codificaciones.codificacionAuditoria.reporteC2'
+                },
                 total: {
                     $sum: 1
                 }
@@ -131,7 +134,8 @@ export function getDiagnosticos(params) {
                                 });
                             });
                         });
-                        elem['descripcion'] = elem['_id'];
+                        elem['nombre'] = elem['_id'];
+                        // console.log('elem ', elem);
                         let resultado = elem;
                         resultado['sumaMenor1'] = sumaMenor1;
                         resultado['suma1'] = suma1;
@@ -153,6 +157,141 @@ export function getDiagnosticos(params) {
 
             }
         });
+
+        let pipeline1 = [];
+        pipeline1 = [{
+            $match: {
+                'sobreturnos.diagnostico.codificaciones.0.codificacionAuditoria': {
+                    $exists: true, $ne: {}
+                },
+                'sobreturnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
+                'horaInicio': { '$gte': new Date(params.horaInicio) },
+                'horaFin': { '$lte': new Date(params.horaFin) },
+            }
+        },
+        {
+            $unwind: '$sobreturnos'
+        },
+        {
+            $unwind: '$sobreturnos.diagnostico.codificaciones'
+        },
+        {
+            $group: {
+                _id: '$sobreturnos.diagnostico.codificaciones.codificacionAuditoria.nombre',
+                codigo: {
+                    $first: '$sobreturnos.diagnostico.codificaciones.codificacionAuditoria.codigo'
+                },
+                reporteC2: {
+                    $first: '$sobreturnos.diagnostico.codificaciones.codificacionAuditoria.reporteC2'
+                },
+                total: {
+                    $sum: 1
+                }
+            }
+        }
+        ];
+        let data1 = await toArray(agendaModel.aggregate(pipeline1).cursor({}).exec());
+        data1.forEach(elem => {
+            if (elem._id != null) {
+                let sumaMenor1 = 0;
+                let suma1 = 0;
+                let suma24 = 0;
+                let suma59 = 0;
+                let suma1014 = 0;
+                let suma1524 = 0;
+                let suma2534 = 0;
+                let suma3544 = 0;
+                let suma4564 = 0;
+                let sumaMayor65 = 0;
+                let sumaMasculino = 0;
+                let sumaFemenino = 0;
+                let sumaOtro = 0;
+                promises.push(new Promise((resolve1, reject1) => {
+                    agendaModel.find({
+                        'sobreturnos.diagnostico.codificaciones.0.codificacionAuditoria.codigo': {
+                            $eq: elem.codigo
+                        }
+                    }).exec((err, agenda) => {
+                        if (!agenda || err) {
+                            return reject1(err);
+                        }
+
+                        agenda.forEach((ag: any, index) => {
+                            ag.sobreturnos.forEach(sobreturno => {
+                                let codigos = sobreturno.diagnostico.codificaciones;
+                                codigos.forEach(function (codigo) {
+                                    if (codigo.codificacionAuditoria) {
+                                        if (elem.codigo === codigo.codificacionAuditoria.codigo) {
+                                            let edad = getAge(sobreturno.paciente.fechaNacimiento);
+                                            let sexo = sobreturno.paciente.sexo;
+                                            if (edad < 1) {
+                                                sumaMenor1++;
+                                            }
+                                            if (edad === 1) {
+                                                suma1++;
+                                            }
+                                            if (edad >= 2 && edad <= 4) {
+                                                suma24++;
+                                            }
+                                            if (edad >= 5 && edad <= 9) {
+                                                suma59++;
+                                            }
+                                            if (edad >= 10 && edad <= 14) {
+                                                suma1014++;
+                                            }
+                                            if (edad >= 15 && edad <= 24) {
+                                                suma1524++;
+                                            }
+                                            if (edad >= 25 && edad <= 34) {
+                                                suma2534++;
+                                            }
+                                            if (edad >= 35 && edad <= 44) {
+                                                suma3544++;
+                                            }
+                                            if (edad >= 45 && edad <= 64) {
+                                                suma4564++;
+                                            }
+                                            if (edad > 65) {
+                                                sumaMayor65++;
+                                            }
+                                            if (sexo === 'masculino') {
+                                                sumaMasculino++;
+                                            }
+                                            if (sexo === 'femenino') {
+                                                sumaFemenino++;
+                                            }
+                                            if (sexo === 'otro') {
+                                                sumaOtro++;
+                                            }
+                                        }
+                                    }
+                                });
+                            });
+                        });
+                        elem['nombre'] = elem['_id'];
+                        // console.log('elem ', elem);
+                        let resultado = elem;
+                        resultado['sumaMenor1'] = sumaMenor1;
+                        resultado['suma1'] = suma1;
+                        resultado['suma24'] = suma24;
+                        resultado['suma59'] = suma59;
+                        resultado['suma1014'] = suma1014;
+                        resultado['suma1524'] = suma1524;
+                        resultado['suma2534'] = suma2534;
+                        resultado['suma3544'] = suma3544;
+                        resultado['suma4564'] = suma4564;
+                        resultado['sumaMayor65'] = sumaMayor65;
+                        resultado['sumaMasculino'] = sumaMasculino;
+                        resultado['sumaFemenino'] = sumaFemenino;
+                        resultado['sumaOtro'] = sumaOtro;
+                        resultados.push(resultado);
+                        resolve1();
+                    });
+                }));
+
+            }
+        });
+
         Promise.all(promises).then(() => {
             resolve(resultados);
         });

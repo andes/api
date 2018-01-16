@@ -6,7 +6,8 @@ export let schema = new mongoose.Schema({
     codigo: String,
     nombre: String,
     sinonimo: String,
-    c2: Boolean
+    c2: Boolean,
+    reporteC2: String
 });
 
 export let model = mongoose.model('cie10', schema, 'cie10');
