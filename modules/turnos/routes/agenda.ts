@@ -129,7 +129,7 @@ router.get('/agenda/:id?', function (req, res, next) {
         }
 
         if (req.query.fechaHasta) {
-            query.where('horaFin').lte(moment(req.query.fechaHasta).endOf('day'));
+            query.where('horaFin').lte(req.query.fechaHasta);
         }
 
         if (req.query.idProfesional) {
@@ -182,6 +182,10 @@ router.get('/agenda/:id?', function (req, res, next) {
 
         if (req.query.tieneTurnosAsignados) {
             query.where('bloques.turnos.estado').equals('asignado');
+        }
+
+        if (req.query.turno) {
+            query.where('bloques.turnos._id').equals(req.query.turno);
         }
 
         // Si rango es true  se buscan las agendas que se solapen con la actual en algún punto
@@ -337,104 +341,136 @@ router.put('/agenda/:id', function (req, res, next) {
 
 router.patch('/agenda/:id*?', function (req, res, next) {
 
+    // Hubo que agregar un control por si no se tiene el idagenda (en los casos en que el patch se haga desde RUP)
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-        return next('ObjectID Inválido');
-    }
-
-    agenda.findById(req.params.id, function (err, data) {
-
-        if (err) {
-            return next(err);
-        }
-
-        // Loopear los turnos, si viene vacío, es porque viene un id solo
-        let turnos = req.body.turnos || [''];
-
-        for (let y = 0; y < turnos.length; y++) {
-            let turno;
-            switch (req.body.op) {
-                case 'darAsistencia': agendaCtrl.darAsistencia(req, data, turnos[y]);
-                    break;
-                case 'sacarAsistencia': agendaCtrl.sacarAsistencia(req, data, turnos[y]);
-                    break;
-                case 'quitarTurnoDoble': agendaCtrl.quitarTurnoDoble(req, data, turnos[y]);
-                    break;
-                case 'liberarTurno':
-                    turno = agendaCtrl.getTurno(req, data, turnos[y]);
-                    if (turno.paciente.id) {
-                        LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, agendaCtrl.getBloque(data, turno)._id, data._id);
-                    }
-                    agendaCtrl.liberarTurno(req, data, turno);
-                    break;
-                case 'suspenderTurno':
-                    turno = agendaCtrl.getTurno(req, data, turnos[y]);
-                    LoggerPaciente.logTurno(req, 'turnos:suspender', (turno.paciente ? turno.paciente : null), turno, agendaCtrl.getBloque(data, turno)._id, data._id);
-                    agendaCtrl.suspenderTurno(req, data, turno);
-                    break;
-                case 'guardarNotaTurno': agendaCtrl.guardarNotaTurno(req, data, req.body.idTurno);
-                    break;
-                case 'darTurnoDoble': agendaCtrl.darTurnoDoble(req, data, turnos[y]);
-                    break;
-                case 'notaAgenda': agendaCtrl.guardarNotaAgenda(req, data);
-                    break;
-                case 'editarAgenda': agendaCtrl.editarAgenda(req, data);
-                    break;
-                case 'agregarSobreturno': agendaCtrl.agregarSobreturno(req, data);
-                    break;
-                case 'disponible':
-                case 'publicada': agendaCtrl.actualizarEstado(req, data);
-                    break;
-                case 'pausada':
-                case 'prePausada':
-                case 'pendienteAuditoria':
-                case 'auditada':
-                case 'suspendida':
-                case 'borrada':
-                    agendaCtrl.actualizarEstado(req, data);
-                    break;
-                case 'avisos':
-                    agendaCtrl.agregarAviso(req, data);
-                    break;
-                default:
-                    return next('Error: No se seleccionó ninguna opción.');
-            }
-
-            Auth.audit(data, req);
-
-            data.save(function (error) {
-
-                Logger.log(req, 'citas', 'update', {
-                    accion: req.body.op,
-                    ruta: req.url,
-                    method: req.method,
-                    data: data,
-                    err: error || false
-                });
-                if (error) {
-                    return next(error);
+        let t = req.body.turnos;
+        if (t.length > 0) {
+            agenda.find({ 'bloques.turnos._id': mongoose.Types.ObjectId(t[0]) }, function (err, data) {
+                if (err) {
+                    return next(err);
                 }
-
-                if (req.body.op === 'suspendida') {
-                    (data as any).bloques.forEach(bloque => {
-
-                        // Loggear cada turno
-                        bloque.turnos.forEach(t => {
-                            if (t.paciente && t.paciente.id) {
-                                LoggerPaciente.logTurno(req, 'turnos:suspender', t.paciente, t, bloque._id, data._id);
+                if (req.body.op === 'codificarTurno') {
+                    agendaCtrl.codificarTurno(req, data, t[0]).then(() => {
+                        Auth.audit(data[0], req);
+                        data[0].save(function (error) {
+                            Logger.log(req, 'citas', 'update', {
+                                accion: req.body.op,
+                                ruta: req.url,
+                                method: req.method,
+                                data: data,
+                                err: error || false
+                            });
+                            if (error) {
+                                console.log('ddddd', error);
+                                return next(error);
                             }
                         });
 
                     });
                 }
+                // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
+                operations.cacheTurnosSips(data);
+                // Fin de insert cache
+                return res.json(data[0]);
             });
-
         }
-        // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
-        operations.cacheTurnosSips(data);
-        // Fin de insert cache
-        return res.json(data);
-    });
+        // return next('ObjectID Inválido');
+    } else {
+        agenda.findById(req.params.id, function (err, data) {
+            if (err) {
+                return next(err);
+            }
+            // Loopear los turnos, si viene vacío, es porque viene un id solo
+            let turnos = req.body.turnos || [''];
 
+            for (let y = 0; y < turnos.length; y++) {
+                let turno;
+                switch (req.body.op) {
+                    case 'darAsistencia': agendaCtrl.darAsistencia(req, data, turnos[y]);
+                        break;
+                    // Agregar operacion para marcar que noAsistio
+                    case 'sacarAsistencia': agendaCtrl.sacarAsistencia(req, data, turnos[y]);
+                        break;
+                    case 'quitarTurnoDoble': agendaCtrl.quitarTurnoDoble(req, data, turnos[y]);
+                        break;
+                    case 'liberarTurno':
+                        turno = agendaCtrl.getTurno(req, data, turnos[y]);
+                        if (turno.paciente.id) {
+                            LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, agendaCtrl.getBloque(data, turno)._id, data._id);
+                        }
+                        agendaCtrl.liberarTurno(req, data, turno);
+                        break;
+                    case 'suspenderTurno':
+                        turno = agendaCtrl.getTurno(req, data, turnos[y]);
+                        LoggerPaciente.logTurno(req, 'turnos:suspender', (turno.paciente ? turno.paciente : null), turno, agendaCtrl.getBloque(data, turno)._id, data._id);
+                        agendaCtrl.suspenderTurno(req, data, turno);
+                        break;
+                    case 'codificarTurno': agendaCtrl.codificarTurno(req, data, turnos[y]);
+                        break;
+                    case 'guardarNotaTurno': agendaCtrl.guardarNotaTurno(req, data, req.body.idTurno);
+                        break;
+                    case 'darTurnoDoble': agendaCtrl.darTurnoDoble(req, data, turnos[y]);
+                        break;
+                    case 'notaAgenda': agendaCtrl.guardarNotaAgenda(req, data);
+                        break;
+                    case 'editarAgenda': agendaCtrl.editarAgenda(req, data);
+                        break;
+                    case 'agregarSobreturno': agendaCtrl.agregarSobreturno(req, data);
+                        break;
+                    case 'disponible':
+                    case 'publicada': agendaCtrl.actualizarEstado(req, data);
+                        break;
+                    case 'pausada':
+                    case 'prePausada':
+                    case 'pendienteAuditoria':
+                    case 'auditada':
+                    case 'suspendida':
+                    case 'borrada':
+                        agendaCtrl.actualizarEstado(req, data);
+                        break;
+                    case 'avisos':
+                        agendaCtrl.agregarAviso(req, data);
+                        break;
+                    default:
+                        return next('Error: No se seleccionó ninguna opción.');
+                }
+
+                Auth.audit(data, req);
+
+                data.save(function (error) {
+
+                    Logger.log(req, 'citas', 'update', {
+                        accion: req.body.op,
+                        ruta: req.url,
+                        method: req.method,
+                        data: data,
+                        err: error || false
+                    });
+                    if (error) {
+                        return next(error);
+                    }
+
+                    if (req.body.op === 'suspendida') {
+                        (data as any).bloques.forEach(bloque => {
+
+                            // Loggear cada turno
+                            bloque.turnos.forEach(t => {
+                                if (t.paciente && t.paciente.id) {
+                                    LoggerPaciente.logTurno(req, 'turnos:suspender', t.paciente, t, bloque._id, data._id);
+                                }
+                            });
+
+                        });
+                    }
+                });
+
+            }
+            // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
+            operations.cacheTurnosSips(data);
+            // Fin de insert cache
+            return res.json(data);
+        });
+    }
 });
 
 // Código de prueba queda comentado

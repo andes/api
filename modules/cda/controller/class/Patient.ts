@@ -3,7 +3,7 @@ import { IID } from './interfaces';
 export class Patient {
     private firstname: String;
     private lastname: String;
-    private birthTime: Date;
+    private birthTime: String;
     private gender: String;
     private id: IID;
 
@@ -50,7 +50,7 @@ export class Patient {
         return this;
     }
 
-    setBirthtime(date: Date) {
+    setBirthtime(date: String) {
         this.birthTime = date;
         return this;
     }
