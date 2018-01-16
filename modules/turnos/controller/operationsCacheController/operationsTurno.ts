@@ -14,7 +14,7 @@ import * as configPrivate from '../../../../config.private';
 import * as pacienteOps from './operationsPaciente';
 import * as dbg from 'debug';
 
-const debug = dbg('operationsAgenda');
+const debug = dbg('integracion');
 let poolTurnos;
 let config = {
     user: configPrivate.conSql.auth.user,

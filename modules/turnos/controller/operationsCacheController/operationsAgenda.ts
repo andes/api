@@ -15,7 +15,7 @@ import * as pacienteOps from './operationsPaciente';
 import * as configPrivate from '../../../../config.private';
 import * as dbg from 'debug';
 
-const debug = dbg('operationsAgenda');
+const debug = dbg('integracion');
 
 let transaction;
 let poolAgendas;
