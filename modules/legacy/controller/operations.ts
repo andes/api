@@ -135,12 +135,15 @@ export async function cacheTurnosSips(unaAgenda) {
     // Armo el DTO para guardar en la cache de agendas
 
     if ((unaAgenda.estado !== 'planificacion') && (unaAgenda.nominalizada)) {
+        // && (unaAgenda.tipoPrestaciones[0].term.includes('odonto'))) {
         let organizacionAgenda;
         if (unaAgenda.organizacion) {
             organizacionAgenda = await organizacionCompleto(unaAgenda.organizacion.id);
         }
-        let profesionalesAgenda = await profesionalCompleto(unaAgenda.profesionales);
-
+        let profesionalesAgenda;
+        if (unaAgenda.profesionales && unaAgenda.profesionales.lenth > 0) {
+            profesionalesAgenda = await profesionalCompleto(unaAgenda.profesionales);
+        }
         let agenda = new agendasCache({
             id: unaAgenda.id,
             tipoPrestaciones: unaAgenda.tipoPrestaciones,
@@ -151,14 +154,41 @@ export async function cacheTurnosSips(unaAgenda) {
             estado: unaAgenda.estado,
             horaInicio: unaAgenda.horaInicio,
             horaFin: unaAgenda.horaFin,
-            estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente
+            estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente,
         });
 
-        agenda.save(function (err, agendaGuardada: any) {
+        let query = {
+            id: unaAgenda.id
+        };
+
+        agendasCache.find({ id: agenda.id }, function getAgenda(err, data) {
             if (err) {
-                return err;
+                return (err);
             }
-            return true;
+            if (data.length > 0) {
+                agendasCache.update({
+                    id: agenda.id
+                }, {
+                        $set: {
+                            tipoPrestaciones: unaAgenda.tipoPrestaciones,
+                            espacioFisico: unaAgenda.espacioFisico,
+                            organizacion: organizacionAgenda,
+                            profesionales: profesionalesAgenda,
+                            bloques: unaAgenda.bloques,
+                            estado: unaAgenda.estado,
+                            horaInicio: unaAgenda.horaInicio,
+                            horaFin: unaAgenda.horaFin,
+                            estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente
+                        }
+                    }).exec();
+            } else {
+                agenda.save(function (err2, agendaGuardada: any) {
+                    if (err2) {
+                        return err2;
+                    }
+                    return true;
+                });
+            }
         });
     }
 }

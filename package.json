@@ -44,7 +44,7 @@
     "mongoosastic": "^4.2.4",
     "mongoose": "4.10.8",
     "mongoose-gridfs": "^0.3.2",
-    "mssql": "^3.3.0",
+    "mssql": "^4.1.0",
     "node-pushnotifications": "^1.0.18",
     "node-schedule": "^1.2.4",
     "nodemailer": "^4.0.1",

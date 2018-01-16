@@ -12,7 +12,10 @@ import * as agendaSchema from '../../schemas/agenda';
 import * as turnoCtrl from './../turnoCacheController';
 import * as configPrivate from '../../../../config.private';
 import * as pacienteOps from './operationsPaciente';
-let defaultPool;
+import * as dbg from 'debug';
+
+const debug = dbg('integracion');
+let poolTurnos;
 let config = {
     user: configPrivate.conSql.auth.user,
     password: configPrivate.conSql.auth.password,
@@ -24,81 +27,87 @@ let transaction;
  * Verifica cada turno asignado de la agenda y graba en SIPS los turnos nuevos.
  *
  * @export
- * @param {*} agendas
+ * @param {*} agenda
  * @param {*} idAgendaCreada
  * @param {*} idEfector
  * @returns
  */
-export async function processTurnos(agendas: any, idAgendaCreada: any, idEfector: any, tr) {
+export async function processTurnos(agenda: any, idAgendaCreada: any, idEfector: any, tr) {
+    debug('inicia 4');
     transaction = tr;
     let turnos;
-    try {
-        for (let x = 0; x < agendas.bloques.length; x++) {
-            turnos = agendas.bloques[x].turnos;
-            for (let i = 0; i < turnos.length; i++) {
-                if (turnos[i].estado === 'asignado') {
-                    let resultado = await existeTurnoSips(turnos[i]);
-                    if (resultado.length <= 0) {
-                        await grabaTurnoSips(turnos[i], idAgendaCreada, idEfector);
-                    }
-                }
+    poolTurnos = await new sql.ConnectionPool(config).connect();
+
+    for (let x = 0; x < agenda.bloques.length; x++) {
+        turnos = agenda.bloques[x].turnos;
+        for (let i = 0; i < turnos.length; i++) {
+            if (turnos[i].estado === 'asignado') {
+                // let resultado = await existeTurnoSips(turnos[i], transaction);
+                // if (resultado.recordset && resultado.recordset.length <= 0) {
+                await grabaTurnoSips(turnos[i], idAgendaCreada, idEfector, transaction);
+                // }
             }
         }
-    } catch (ex) {
-        return (ex);
+    }
+    debug(' 4 - turnos grabados');
+
+}
+
+export async function existeTurnoSips(turno: any, pool) {
+    let result = await new sql.Request(pool)
+        .input('idTurnoMongo', sql.VarChar(50), turno._id)
+        .query('SELECT idTurno FROM dbo.CON_Turno WHERE objectId = @idTurnoMongo GROUP BY idTurno');
+    return result;
+}
+
+async function grabaTurnoSips(turno, idAgendaSips, idEfector, tr) {
+    transaction = tr;
+    let pacienteEncontrado = await pacientes.buscarPaciente(turno.paciente.id);
+    let paciente = pacienteEncontrado.paciente;
+
+    let idObraSocial = await getIdObraSocialSips(paciente.documento);
+    let pacienteId = await pacienteOps.insertarPacienteEnSips(paciente, idEfector, transaction);
+    let fechaTurno = moment(turno.horaInicio).format('YYYYMMDD');
+    let horaTurno = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
+
+    if (typeof pacienteId === 'number' && typeof idObraSocial === 'number') {
+        let resultado = await existeTurnoSips(turno, transaction);
+        let query;
+        if (resultado.recordset && resultado.recordset.length > 0) {
+            query = 'UPDATE dbo.CON_Turno SET idPaciente = ' + pacienteId + ', idObraSocial = ' + idObraSocial + '  WHERE idAgenda = ' + idAgendaSips + ' and objectId = \'' + turno._id + '\'';
+
+        } else {
+            query = 'INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente , fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante, objectId ) VALUES  ( ' + idAgendaSips + ' , 1 , ' + constantes.idUsuarioSips + ' ,' + pacienteId + ', \'' + fechaTurno + '\' ,\'' + horaTurno + '\' , 0 , 0 ,' + idObraSocial + ' , 0, \'' + turno._id + '\')';
+            query += ' select SCOPE_IDENTITY() as id';
+        }
+
+        debug('Q:', query);
+        let res = await new sql.Request(transaction).query(query);
+        debug('--------grabado turno sipzzzs-------->>>>>>', res);
+    } else {
+        // Si tenemos un error en la consulta por obra social o por IdPaciente tenemos que sacar la agenda de la coleccion
+        throw new Error('Error grabaTurnoSips');
     }
 }
 
-export async function existeTurnoSips(turno: any) {
-    try {
-        defaultPool = await sql.connect(config);
-        let result = await new sql.Request(defaultPool)
-            .input('idTurnoMongo', sql.VarChar(50), turno._id)
-            .query('SELECT idTurno FROM dbo.CON_Turno WHERE objectId = @idTurnoMongo GROUP BY idTurno');
-        return result;
-    } catch (ex) {
-        return (ex);
-    }
-}
 
-async function grabaTurnoSips(turno, idAgendaSips, idEfector) {
-    try {
-        let pacienteEncontrado = await pacientes.buscarPaciente(turno.paciente.id);
-        let paciente = pacienteEncontrado.paciente;
-
-        let idObraSocial = await getIdObraSocialSips(paciente.documento);
-        let pacienteId = await pacienteOps.insertarPacienteEnSips(paciente, idEfector, transaction);
-
-        let fechaTurno = moment(turno.horaInicio).format('YYYYMMDD');
-        let horaTurno = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
-
-        let query = 'INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente ,  fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante, objectId ) VALUES  ( ' +
-            idAgendaSips + ' , 1 , ' + constantes.idUsuarioSips + ' ,' + pacienteId + ', \'' + fechaTurno + '\' ,\'' + horaTurno + '\' , 0 , 0 ,' + idObraSocial + ' , 0, \'' + turno._id + '\')';
-
-        await executeQuery(query);
-    } catch (ex) {
-        return (ex);
-    }
-}
-
-
-export function checkEstadoTurno(agenda: any, idAgendaSips, tr) {
+export async function checkEstadoTurno(agenda: any, idAgendaSips, tr) {
+    debug('6 - inicio');
     let turnos;
     transaction = tr;
-    try {
-        for (let x = 0; x < agenda.bloques.length; x++) {
-            turnos = agenda.bloques[x].turnos;
+    for (let x = 0; x < agenda.bloques.length; x++) {
+        turnos = agenda.bloques[x].turnos;
 
-            for (let i = 0; i < turnos.length; i++) {
-                if ((turnos[i].estado !== 'disponible') || (turnos[i].updatedAt)) {
-                    actualizarEstadoTurnoSips(idAgendaSips, turnos[i]);
-                } else {
-                }
+        for (let i = 0; i < turnos.length; i++) {
+            if ((turnos[i].estado !== 'disponible') || (turnos[i].updatedAt)) {
+                await actualizarEstadoTurnoSips(idAgendaSips, turnos[i]);
+                debug('6 - actualizando turno sips');
+
             }
         }
-    } catch (ex) {
-        return (ex);
     }
+    debug('6 - FIN');
+
 }
 
 /* TODO: ver si hay mas estados de turnos entre CITAS y SIPS*/
@@ -116,28 +125,23 @@ function getEstadoTurnosCitasSips(estadoTurnoCitas, updated) {
 }
 
 async function actualizarEstadoTurnoSips(idAgendaSips, turno) {
-    try {
-        let estadoTurnoSips: any = await getEstadoTurnoSips(turno._id);
-        let estadoTurnoMongo = getEstadoTurnosCitasSips(turno.estado, turno.updatedAt);
+    let estadoTurnoSips: any = await getEstadoTurnoSips(turno._id, transaction);
+    let estadoTurnoMongo = getEstadoTurnosCitasSips(turno.estado, turno.updatedAt);
 
-        if (estadoTurnoSips.idTurnoEstado !== estadoTurnoMongo) {
-            let objectIdTurno;
+    if (estadoTurnoSips.idTurnoEstado !== estadoTurnoMongo) {
+        let objectIdTurno;
 
-            if (turno._id) {
-                objectIdTurno = ' and objectId = \'' + turno._id + '\'';
-            }
-            let horaInicio = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
-
-            if ((estadoTurnoMongo === constantes.EstadoTurnosSips.suspendido || turno.estado === 'turnoDoble') && !await existeTurnoBloqueoSips(idAgendaSips, horaInicio)) {
-                grabarTurnoBloqueo(idAgendaSips, turno);
-            }
-
-            let query = 'UPDATE dbo.CON_Turno SET idTurnoEstado = ' + estadoTurnoMongo + ' WHERE idAgenda = ' + idAgendaSips + objectIdTurno;
-            await executeQuery(query);
-        } else {
+        if (turno._id) {
+            objectIdTurno = ' and objectId = \'' + turno._id + '\'';
         }
-    } catch (ex) {
-        return (ex);
+        let horaInicio = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
+
+        if ((estadoTurnoMongo === constantes.EstadoTurnosSips.suspendido || turno.estado === 'turnoDoble') && !await existeTurnoBloqueoSips(idAgendaSips, horaInicio)) {
+            await grabarTurnoBloqueo(idAgendaSips, turno);
+        }
+
+        let query = 'UPDATE dbo.CON_Turno SET idTurnoEstado = ' + estadoTurnoMongo + ' WHERE idAgenda = ' + idAgendaSips + objectIdTurno;
+        await executeQuery(query);
     }
 }
 
@@ -216,45 +220,34 @@ function getMotivoTurnoSuspendido(motivoSuspension) {
 
 
 /* Devuelve el estado del turno en Con_Turno de SIPS */
-async function getEstadoTurnoSips(objectId: any) {
-    defaultPool = await sql.connect(config);
+async function getEstadoTurnoSips(objectId: any, pool) {
+    let query = 'SELECT idAgenda, idTurno, idTurnoEstado FROM dbo.CON_Turno WHERE objectId = @objectId';
+    let result = await new sql.Request(pool)
+        .input('objectId', sql.VarChar(50), objectId)
+        .query(query);
 
-    try {
-        let query = 'SELECT idAgenda, idTurno, idTurnoEstado FROM dbo.CON_Turno WHERE objectId = @objectId';
-        let result = await new sql.Request(defaultPool)
-            .input('objectId', sql.VarChar(50), objectId)
-            .query(query);
-
-        if (typeof result[0] !== 'undefined') {
-            return (result[0]);
-        } else {
-            let idTurnoEstado = 0;
-            return (idTurnoEstado);
-        }
-    } catch (err) {
-        return (err);
+    if (result.recordset && result.recordset.length > 0) {
+        return (result.recordset[0]);
+    } else {
+        let idTurnoEstado = 0;
+        return (idTurnoEstado);
     }
 }
 
-export async function checkAsistenciaTurno(agenda: any) {
-    defaultPool = await sql.connect(config);
+export async function checkAsistenciaTurno(agenda: any, transactionPool) {
     let turnos;
-    try {
-        for (let x = 0; x < agenda.bloques.length; x++) {
-            turnos = agenda.bloques[x].turnos;
-            for (let i = 0; i < turnos.length; i++) {
-                if (turnos[i].asistencia === 'asistio') {
+    for (let x = 0; x < agenda.bloques.length; x++) {
+        turnos = agenda.bloques[x].turnos;
+        for (let i = 0; i < turnos.length; i++) {
+            if (turnos[i].asistencia === 'asistio') {
 
-                    let idTurno: any = await getEstadoTurnoSips(turnos[i]._id);
-                    let fechaAsistencia = moment(turnos[i].updatedAt).format('YYYYMMDD');
-                    let query = 'INSERT INTO dbo.CON_TurnoAsistencia ( idTurno , idUsuario , fechaAsistencia ) VALUES  ( ' +
-                        idTurno.idTurno + ' , ' + constantes.idUsuarioSips + ' , \'' + fechaAsistencia + '\' )';
-                    await executeQuery(query);
-                }
+                let idTurno: any = await getEstadoTurnoSips(turnos[i]._id, transactionPool);
+                let fechaAsistencia = moment(turnos[i].updatedAt).format('YYYYMMDD');
+                let query = 'INSERT INTO dbo.CON_TurnoAsistencia ( idTurno , idUsuario , fechaAsistencia ) VALUES  ( ' +
+                    idTurno.idTurno + ' , ' + constantes.idUsuarioSips + ' , \'' + fechaAsistencia + '\' )';
+                await executeQuery(query);
             }
         }
-    } catch (ex) {
-        return (ex);
     }
 }
 
@@ -291,19 +284,22 @@ async function getIdObraSocialSips(documentoPaciente) {
 
     try {
         let result = await new sql.Request(transaction).query(query);
-        return (result.length > 0 ? result[0].idOS : idSumar);
+
+        return ((result.recordset && result.recordset.length > 0) ? result.recordset[0].idOS : idSumar);
     } catch (err) {
         return (err);
     }
 }
 
-
 async function executeQuery(query: any) {
     try {
         query += ' select SCOPE_IDENTITY() as id';
         let result = await new sql.Request(transaction).query(query);
-        return result[0].id;
+        if (result.recordset) {
+            return result.recordset[0].id;
+        }
     } catch (err) {
+        debug('executeQUERY----------____>', err);
         return (err);
     }
 }

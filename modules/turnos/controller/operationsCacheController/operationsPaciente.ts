@@ -212,8 +212,8 @@ async function existePacienteSips(pacienteSips) {
             .input('objectId', sql.VarChar(50), pacienteSips.objectId)
             .query(query);
 
-        if (typeof result[0] !== 'undefined') {
-            idPacienteSips = result[0].idPaciente;
+        if (result.recordset && result.recordset.length > 0) {
+            idPacienteSips = result.recordset[0].idPaciente;
             return (idPacienteSips);
         } else {
             idPacienteSips = 0;
@@ -225,14 +225,14 @@ async function existePacienteSips(pacienteSips) {
     }
 }
 
-
 async function executeQuery(query: any) {
     try {
         query += ' select SCOPE_IDENTITY() as id';
         let result = await new sql.Request(transaction).query(query);
-        return result[0].id;
+        if (result.recordset) {
+            return result.recordset[0].id;
+        }
     } catch (err) {
         return (err);
     }
 }
-
