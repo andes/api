@@ -125,7 +125,9 @@ export let turnoSolicitadoSchema = new mongoose.Schema({
         folio: { type: String, required: false },
         libro: { type: String, required: false },
         anio: { type: Number, required: false }
-    }]
+    }],
+    idRenovacion: { type: String, required: false },
+    documentoViejo: { type: Number, required: false }
 
 });
 

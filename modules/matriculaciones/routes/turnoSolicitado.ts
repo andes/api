@@ -47,7 +47,7 @@ router.post('/turnoSolicitados', function (req, res, next) {
 
 router.get('/turnoSolicitados/traePDni/:dni*?', (req: any, res, next) => {
     let dni = req.params.dni;
-    turnoSolicitado.find({ 'documento' : dni}, function (err, data) {
+    turnoSolicitado.find({ '_id' : dni}, function (err, data) {
         if (err) {
             return next(err);
         }

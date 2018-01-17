@@ -210,6 +210,14 @@ router.get('/profesionales/:id*?', Auth.authenticate(), function (req, res, next
             opciones['documento'] = utils.makePattern(req.query.documento);
         }
 
+        if (req.query.idRenovacion) {
+            opciones['idRenovacion'] = req.query.idRenovacion;
+        }
+
+        if (req.query.id) {
+            opciones['_id'] = req.query.id;
+        }
+
         if (req.query.fechaNacimiento) {
             opciones['fechaNacimiento'] = req.query.fechaNacimiento;
         }
@@ -347,13 +355,13 @@ router.post('/profesionales', Auth.authenticate(), function (req, res, next) {
 
 }
     if (req.body.profesional) {
-        console.log(req.body.profesional)
-        profesional.findOne({
-            'documento': req.body.profesional.documento
-        }, function (err, person) {
-            if (person) {
-                res.json(null);
-            } else {
+        // console.log(req.body.profesional);
+        // profesional.findOne({
+        //     'documento': req.body.profesional.documento
+        // }, function (err, person) {
+        //     if (person) {
+        //         res.json(null);
+        //     } else {
                 let newProfesional = new profesional(req.body.profesional);
                 newProfesional.save((err2) => {
                     if (err2) {
@@ -361,8 +369,8 @@ router.post('/profesionales', Auth.authenticate(), function (req, res, next) {
                     }
                     res.json(newProfesional);
                 });
-            }
-        });
+        //     // }
+        // });
     }
 
 });
@@ -419,5 +427,97 @@ router.delete('/profesionales/:id', Auth.authenticate(), function (req, res, nex
         res.json(data);
     });
 });
+
+
+
+router.get('/resumen/:id*?', function (req, res, next) {
+
+        let opciones = {};
+        let query;
+        if (req.params.id) {
+            profesional.findById(req.params.id, function (err, data) {
+                if (err) {
+                    return next(err);
+                }
+                res.json(data);
+            });
+        } else {
+            if (req.query.nombre) {
+                opciones['nombre'] = utils.makePattern(req.query.nombre);
+            }
+
+            if (req.query.apellido) {
+                opciones['apellido'] = utils.makePattern(req.query.apellido);
+
+            }
+
+            if (req.query.nombreCompleto) {
+                opciones['nombre'] = {
+                    '$regex': utils.makePattern(req.query.nombreCompleto)
+                };
+                opciones['apellido'] = {
+                    '$regex': utils.makePattern(req.query.nombreCompleto)
+                };
+            }
+
+            if (req.query.documento !== '') {
+                opciones['documento'] = req.query.documento;
+            }
+
+            if (req.query.fechaNacimiento) {
+                opciones['fechaNacimiento'] = req.query.fechaNacimiento;
+            }
+
+            if (req.query.numeroMatricula) {
+                opciones['matriculas.numero'] = req.query.numeroMatricula;
+            }
+
+            if (req.query.especialidad) {
+                opciones['especialidad.nombre'] = {
+                    '$regex': utils.makePattern(req.query.especialidad)
+                };
+            }
+        }
+
+        let radix = 10;
+        let skip: number = parseInt(req.query.skip || 0, radix);
+        let limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
+
+        if (req.query.nombreCompleto) {
+            query = profesional.find({
+                apellido: {
+                    '$regex': utils.makePattern(req.query.nombreCompleto)
+                }
+            }).
+            sort({
+                apellido: 1,
+                nombre: 1
+            });
+        } else {
+            query = profesional.find(opciones).skip(skip).limit(limit);
+        }
+
+let select = [];
+        query.exec(function (err, data) {
+            if (err) {
+                return next(err);
+            }
+            data.forEach(element => {
+               let resultado = {
+                    select :  '' + element.nombreCompleto + ' - ' + element.documento + '',
+                    idRenovacion : element.id,
+                    nombre: element.nombre,
+                    apellido: element.apellido,
+                    fechaNacimiento: element.fechaNacimiento,
+                    documento: element.documento,
+                    nacionalidad: element.nacionalidad
+
+               };
+               select.push(resultado);
+
+            });
+            res.json(select);
+        });
+    });
 
 export = router;

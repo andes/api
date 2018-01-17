@@ -14,6 +14,10 @@ let matriculacionSchema = new mongoose.Schema({
     libro: { type: String, required: false },
     folio: { type: String, required: false },
     inicio: Date,
+    baja : {
+        motivo: { type: String, required: false },
+        fecha: { type: String, required: false }
+    },
     fin: Date,
     revalidacionNumero: Number
 });
@@ -62,7 +66,10 @@ export let profesionalSchema = new mongoose.Schema({
              modalidad: { type: ObjSIISASchema, required: false },
              establecimiento: { type: ObjSIISASchema, required: false },
          },
-         matriculacion: [matriculacionSchema]
+         matriculacion: [matriculacionSchema],
+         matriculado: { type: Boolean, default: false },
+         revalida: { type: Boolean, default: false },
+         papelesVerificados: { type: Boolean, default: false },
      }],
     sanciones: [{
          numero: {type: Number, required: false},
@@ -83,7 +90,9 @@ export let profesionalSchema = new mongoose.Schema({
         folio: { type: String, required: false },
         libro: { type: String, required: false },
         anio: { type: Number, required: false }
-    }]
+    }],
+    idRenovacion: { type: String, required: false },
+    documentoViejo: { type: Number, required: false }
 });
 
 
