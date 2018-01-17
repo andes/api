@@ -15,6 +15,7 @@ function getAge(dateString) {
 };
 
 export function getDiagnosticos(params) {
+    // Agregar sobreturnos en la parte del match y el unwind
     let resultados = [];
     let promises = [];
     return new Promise(async (resolve, reject) => {
@@ -22,9 +23,9 @@ export function getDiagnosticos(params) {
         let pipeline = [];
         pipeline = [{
             $match: {
-                'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria': {
+                $or: [{'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria': {
                     $exists: true, $ne: {}
-                },
+                }},{'sobreturnos.diagnostico.codificaciones.0.codificacionAuditoria' : {$exists: true, $ne: {}}}],
                 'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
                 'horaInicio': { '$gte': new Date(params.horaInicio) },
                 'horaFin': { '$lte': new Date(params.horaFin) },
@@ -48,9 +49,9 @@ export function getDiagnosticos(params) {
                 reporteC2: {
                     $first: '$bloques.turnos.diagnostico.codificaciones.codificacionAuditoria.reporteC2'
                 },
-                total: {
-                    $sum: 1
-                }
+                // total: {
+                //     $sum: 1
+                // }
             }
         }
         ];
@@ -70,11 +71,18 @@ export function getDiagnosticos(params) {
                 let sumaMasculino = 0;
                 let sumaFemenino = 0;
                 let sumaOtro = 0;
+                // let sumaLactante = 0;
                 promises.push(new Promise((resolve1, reject1) => {
                     agendaModel.find({
-                        'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria.codigo': {
-                            $eq: elem.codigo
-                        }
+                        $or: [{
+                            'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria.codigo': {
+                                $eq: elem.codigo
+                            }
+                        }, {
+                            'sobreturnos.diagnostico.codificaciones.0.codificacionAuditoria.codigo': {
+                                $eq: elem.codigo
+                            }
+                        }]
                     }).exec((err, agenda) => {
                         if (!agenda || err) {
                             return reject1(err);
@@ -91,6 +99,9 @@ export function getDiagnosticos(params) {
                                                 let sexo = turno.paciente.sexo;
                                                 if (edad < 1) {
                                                     sumaMenor1++;
+                                                    // if (elem.codigo === 'A05.1'){
+                                                    //     sumaLactante++;
+                                                    // }
                                                 }
                                                 if (edad === 1) {
                                                     suma1++;
@@ -133,90 +144,8 @@ export function getDiagnosticos(params) {
                                     });
                                 });
                             });
-                        });
-                        elem['nombre'] = elem['_id'];
-                        // console.log('elem ', elem);
-                        let resultado = elem;
-                        resultado['sumaMenor1'] = sumaMenor1;
-                        resultado['suma1'] = suma1;
-                        resultado['suma24'] = suma24;
-                        resultado['suma59'] = suma59;
-                        resultado['suma1014'] = suma1014;
-                        resultado['suma1524'] = suma1524;
-                        resultado['suma2534'] = suma2534;
-                        resultado['suma3544'] = suma3544;
-                        resultado['suma4564'] = suma4564;
-                        resultado['sumaMayor65'] = sumaMayor65;
-                        resultado['sumaMasculino'] = sumaMasculino;
-                        resultado['sumaFemenino'] = sumaFemenino;
-                        resultado['sumaOtro'] = sumaOtro;
-                        resultados.push(resultado);
-                        resolve1();
-                    });
-                }));
 
-            }
-        });
-
-        let pipeline1 = [];
-        pipeline1 = [{
-            $match: {
-                'sobreturnos.diagnostico.codificaciones.0.codificacionAuditoria': {
-                    $exists: true, $ne: {}
-                },
-                'sobreturnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
-                'horaInicio': { '$gte': new Date(params.horaInicio) },
-                'horaFin': { '$lte': new Date(params.horaFin) },
-            }
-        },
-        {
-            $unwind: '$sobreturnos'
-        },
-        {
-            $unwind: '$sobreturnos.diagnostico.codificaciones'
-        },
-        {
-            $group: {
-                _id: '$sobreturnos.diagnostico.codificaciones.codificacionAuditoria.nombre',
-                codigo: {
-                    $first: '$sobreturnos.diagnostico.codificaciones.codificacionAuditoria.codigo'
-                },
-                reporteC2: {
-                    $first: '$sobreturnos.diagnostico.codificaciones.codificacionAuditoria.reporteC2'
-                },
-                total: {
-                    $sum: 1
-                }
-            }
-        }
-        ];
-        let data1 = await toArray(agendaModel.aggregate(pipeline1).cursor({}).exec());
-        data1.forEach(elem => {
-            if (elem._id != null) {
-                let sumaMenor1 = 0;
-                let suma1 = 0;
-                let suma24 = 0;
-                let suma59 = 0;
-                let suma1014 = 0;
-                let suma1524 = 0;
-                let suma2534 = 0;
-                let suma3544 = 0;
-                let suma4564 = 0;
-                let sumaMayor65 = 0;
-                let sumaMasculino = 0;
-                let sumaFemenino = 0;
-                let sumaOtro = 0;
-                promises.push(new Promise((resolve1, reject1) => {
-                    agendaModel.find({
-                        'sobreturnos.diagnostico.codificaciones.0.codificacionAuditoria.codigo': {
-                            $eq: elem.codigo
-                        }
-                    }).exec((err, agenda) => {
-                        if (!agenda || err) {
-                            return reject1(err);
-                        }
-
-                        agenda.forEach((ag: any, index) => {
+                            // Aca
                             ag.sobreturnos.forEach(sobreturno => {
                                 let codigos = sobreturno.diagnostico.codificaciones;
                                 codigos.forEach(function (codigo) {
@@ -226,6 +155,9 @@ export function getDiagnosticos(params) {
                                             let sexo = sobreturno.paciente.sexo;
                                             if (edad < 1) {
                                                 sumaMenor1++;
+                                                // if (elem.codigo === 'A05.1'){
+                                                //     sumaLactante++;
+                                                // }
                                             }
                                             if (edad === 1) {
                                                 suma1++;
@@ -281,9 +213,11 @@ export function getDiagnosticos(params) {
                         resultado['suma3544'] = suma3544;
                         resultado['suma4564'] = suma4564;
                         resultado['sumaMayor65'] = sumaMayor65;
+                        resultado['total'] = sumaMenor1+suma1+suma24+suma59+suma1014+suma1524+suma2534+suma3544+suma4564+sumaMayor65;
                         resultado['sumaMasculino'] = sumaMasculino;
                         resultado['sumaFemenino'] = sumaFemenino;
                         resultado['sumaOtro'] = sumaOtro;
+                        // resultado['sumaLactante'] = sumaLactante;
                         resultados.push(resultado);
                         resolve1();
                     });
@@ -293,6 +227,7 @@ export function getDiagnosticos(params) {
         });
 
         Promise.all(promises).then(() => {
+            console.log('resultados ', resultados);
             resolve(resultados);
         });
     });
