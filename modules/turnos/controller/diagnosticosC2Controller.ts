@@ -99,7 +99,7 @@ export function getDiagnosticos(params) {
                             }
                         }]
                     }).exec((err, agenda) => {
-                        function sexoMeningitis(sexo){
+                        function sexoMeningitis(sexo) {
                             switch (sexo) {
                                 case 'masculino':
                                     masculinoMeningitis++;
@@ -142,7 +142,7 @@ export function getDiagnosticos(params) {
                                     if (elem.codigo === 'A17.0') {  // Meningitis Tuberculosa
                                         sumaMeningitis++;
                                         meningitis1++;
-                                        sexoMeningitis(sexo)
+                                        sexoMeningitis(sexo);
                                     } else {
                                         suma1++;
                                     }
@@ -151,7 +151,7 @@ export function getDiagnosticos(params) {
                                     if (elem.codigo === 'A17.0') {  // Meningitis Tuberculosa
                                         sumaMeningitis++;
                                         meningitis24++;
-                                        sexoMeningitis(sexo)
+                                        sexoMeningitis(sexo);
                                     } else {
                                         suma24++;
                                     }
@@ -244,7 +244,7 @@ export function getDiagnosticos(params) {
                             sumaFemenino: sumaFemenino,
                             sumaOtro: sumaOtro,
                             total: sumaTotal,
-                        }
+                        };
                         if (elem['codigo'] === 'A05.1') { // Botulismo
                             let sumaResto = suma1 + suma24 + suma59 + suma1014 + suma1524 + suma2534 + suma3544 + suma4564 + sumaMayor65;
                             if (sumaLactante > 0) {
@@ -266,14 +266,13 @@ export function getDiagnosticos(params) {
                                     sumaFemenino: femeninoLactante,
                                     sumaOtro: otroLactante,
                                     total: sumaLactante,
-                                }
+                                };
                                 resultados.push(r1);
                             }
                             if (sumaResto > 0) {
                                 resultados.push(r2);
                             }
-                        }
-                        else {
+                        } else {
                             if (elem['codigo'] === 'A17.0') { // Meningitis Tuberculosa
                                 let sumaResto = suma59 + suma1014 + suma1524 + suma2534 + suma3544 + suma4564 + sumaMayor65;
                                 if (sumaMeningitis > 0) {
@@ -295,10 +294,11 @@ export function getDiagnosticos(params) {
                                         sumaFemenino: femeninoMeningitis,
                                         sumaOtro: otroMeningitis,
                                         total: sumaMeningitis,
-                                    }
+                                    };
                                     resultados.push(r1);
                                 }
                                 if (sumaResto > 0) {
+                                    r2.reporteC2 = 'Tuberculosis';
                                     resultados.push(r2);
                                 }
                             } else {
