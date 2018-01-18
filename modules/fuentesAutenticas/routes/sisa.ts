@@ -61,15 +61,21 @@ router.get('/puco/:documento', async function (req, res, next) {
     //     return next(403);
     // }
     if (req.params.documento) {
-        let resultado = await postPuco(req.params.documento);
-        if (resultado[0] === 200) {
-            switch (resultado[1].Ciudadano.resultado) {
-                case 'OK':
+        try {
+            let respuesta: any = await postPuco(req.params.documento);
+
+            if (respuesta && respuesta.puco && respuesta.puco.resultado === 'OK') {
+                res.json({ nombre: respuesta.puco.coberturaSocial, codigo: respuesta.puco.rnos });
+                return (res);
+            } else {
+                // TODO: consultar BD mongo
+                // default: sumar
+                return next(500);
             }
-        } else {
+        } catch (e) {
             // TODO: consultar BD mongo
             // default: sumar
-            return next(500);
+            return next(e);
         }
     }
 });
@@ -79,7 +85,7 @@ router.get('/puco/:documento', async function (req, res, next) {
 
 function postPuco(documento) {
     let xml = '';
-    let pathSisa = 'https://sisa.msal.gov.ar/sisa/services/rest/puco/17723765';
+    let pathSisa = 'https://sisa.msal.gov.ar/sisa/services/rest/puco/' + documento;
     let optionsgetmsg = {
         host: configPrivate.sisa.host,
         port: configPrivate.sisa.port,
@@ -98,12 +104,23 @@ function postPuco(documento) {
         reqPost.write(JSON.stringify({ usuario: "hhfernandez", clave: "develop666" }));
         reqPost.end();
         reqPost.on('response', function (response) {
-            console.log('STATUS: ' + response.statusCode);
-            console.log('HEADERS: ' + JSON.stringify(response.headers));
             response.setEncoding('utf8');
             response.on('data', function (chunk) {
-                console.log('BODY: ' + chunk);
-                resolve(chunk);
+                if (chunk.toString()) {
+                    xml = xml + chunk.toString();
+                }
+                if (xml) {
+                    // Se parsea el xml obtenido a JSON
+                    to_json(xml, function (error, data) {
+                        if (error) {
+                            reject();
+                        } else {
+                            resolve(data);
+                        }
+                    });
+                } else {
+                    reject();
+                }
             });
         });
     });
