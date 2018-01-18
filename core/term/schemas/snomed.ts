@@ -25,6 +25,7 @@ export let textIndexModel = Connections.snomed.model(configPrivate.snomed.dbName
 
 export let snomedSchema = new mongoose.Schema({
     conceptId: String,
+    semtag: String,
     preferredTerm: String,
     fullySpecifiedName: String,
     isLeafInferred: Boolean,
