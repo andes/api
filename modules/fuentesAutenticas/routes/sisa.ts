@@ -92,7 +92,7 @@ function postPuco(documento) {
         path: pathSisa,
         method: 'POST',
         headers: {
-            "content-type": "application/json",
+            'content-type': 'application/json',
         }
     };
     // Realizar POST request
@@ -101,7 +101,7 @@ function postPuco(documento) {
         reqPost.on('error', function (e) {
             reject(e);
         });
-        reqPost.write(JSON.stringify({ usuario: "hhfernandez", clave: "develop666" }));
+        reqPost.write(JSON.stringify({ usuario: 'hhfernandez', clave: 'develop666' }));
         reqPost.end();
         reqPost.on('response', function (response) {
             response.setEncoding('utf8');
