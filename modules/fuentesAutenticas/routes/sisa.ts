@@ -66,16 +66,15 @@ router.get('/puco/:documento', async function (req, res, next) {
 
             if (respuesta && respuesta.puco && respuesta.puco.resultado === 'OK') {
                 res.json({ nombre: respuesta.puco.coberturaSocial, codigo: respuesta.puco.rnos });
-                return (res);
             } else {
                 // TODO: consultar BD mongo
                 // default: sumar
-                return next(500);
+                res.json({ nombre: 'Sumar', codigo: '123' });
             }
         } catch (e) {
             // TODO: consultar BD mongo
             // default: sumar
-            return next(e);
+            res.json({ nombre: 'Sumar', codigo: '123' });
         }
     }
 });
