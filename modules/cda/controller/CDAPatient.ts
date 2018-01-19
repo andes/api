@@ -160,7 +160,7 @@ export function base64toStream (base64) {
     return {
         mimeType: mime,
         extension,
-        stream: streamInput
+        stream: decoder
     };
 }
 
@@ -323,6 +323,51 @@ export function generateCDA(uniqueId, patient, date, author, organization, snome
     return builder.build(cda);
 
 }
+
+/**
+ * listado de CDA por paciente y tipo de prestación
+ */
+
+export function searchByPatient (pacienteId, prestacion): Promise<any[]> {
+    return new Promise(async (resolve, reject) => {
+        let CDAFiles = makeFs();
+        let conditions: any = { 'metadata.paciente':  mongoose.Types.ObjectId(pacienteId) };
+        if (prestacion) {
+            conditions['metadata.prestacion'] = prestacion;
+        }
+
+        try {
+            let list = await CDAFiles.find(conditions).sort({'metadata.fecha': -1});
+            list = list.map(item => {
+                let data = item.metadata;
+                data.cda_id = item._id;
+                return item.metadata;
+            });
+
+            return resolve (list);
+        } catch (e) {
+            return reject(e);
+        }
+
+    });
+}
+
+/**
+ * Levante el XML a partir de un ID cd CDA
+ */
+export async function loadCDA (cdaID) {
+    return new Promise(async (resolve, reject) => {
+        let CDAFiles = makeFs();
+        var stream1  = CDAFiles.readById(cdaID, function (err, buffer) {
+            let xml = buffer.toString('utf8');
+            return resolve(xml);
+        });
+    });
+}
+
+/**
+ * Valida la ruta de cración de CDA.
+ */
 
 export function validateMiddleware(req, res, next) {
     let errors: any = {};
