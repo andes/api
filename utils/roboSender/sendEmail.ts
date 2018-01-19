@@ -1,7 +1,6 @@
 import { enviarMail } from '../../config.private';
 import * as debug from 'debug';
 import * as fs from 'fs';
-
 let handlebars = require('handlebars');
 const path = require('path');
 const nodemailer = require('nodemailer');
