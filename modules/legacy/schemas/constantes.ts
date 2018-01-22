@@ -46,6 +46,17 @@ const constantes = {
 
     idUsuarioSips: '1486739',
 
-    idOrganizacionHPN: '57e9670e52df311059bc8964'
+    idOrganizacionHPN: '57e9670e52df311059bc8964',
+
+    tiposPrestacionesHPN: {
+        clinicaMedica: {
+            id: 705,
+            conceptId: '401000013105'
+        },
+        consultaPediatrica: {
+            id: 901,
+            conceptId: '511000013109'
+        }
+    }
 };
 export = constantes;
