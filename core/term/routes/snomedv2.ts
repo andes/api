@@ -203,7 +203,16 @@ router.get('/snomed/expression', async function (req, res, next) {
     let expression = req.query.expression;
     let query = makeMongoQuery(expression);
     snomedModel.find(query, {fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1}).then((docs: any[]) => {
-        return res.json(docs);
+        let response = docs.map((item) => {
+            let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1 );
+            return {
+                fsn: item.fullySpecifiedName,
+                term: term,
+                conceptId: item.conceptId,
+                semanticTag: item.semtag
+            };
+        });
+        return res.json(response);
     }).catch(next);
 });
 
