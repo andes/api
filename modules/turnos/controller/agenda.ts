@@ -25,6 +25,13 @@ export function sacarAsistencia(req, data, tid = null) {
     turno.updatedAt = new Date();
     turno.updatedBy = req.user.usuario || req.user;
 }
+// Turno
+export function marcarNoAsistio(req, data, tid = null) {
+    let turno = getTurno(req, data, tid);
+    turno.asistencia = 'noAsistio';
+    turno.updatedAt = new Date();
+    turno.updatedBy = req.user.usuario || req.user;
+}
 
 // Turno
 export function quitarTurnoDoble(req, data, tid = null) {
