@@ -41,27 +41,27 @@ router.get('/profesionales/foto/:id*?', Auth.authenticate(), (req: any, res, nex
         fotoProf.find({
             'metadata.idProfesional': id
         }, {}, {
-            sort: {
-                '_id': -1
-            }
-        }, function (err, file) {
-            if (file[0] == null) {
-                res.setHeader('Content-Type', 'image/jpeg');
-                // input.pipe(decoder).pipe(res);
-                // input.end(img);
-                res.end(img);
-            } else {
-                fotoProf.readById(file[0].id, function (err2, buffer) {
-                    if (err2) {
-                        return next(err2);
-                    }
-                    res.setHeader('Content-Type', file[0].contentType);
-                    res.setHeader('Content-Length', file[0].length);
-                    let img = buffer.toString('base64');
-                    return res.send(img);
-                });
-            }
-        });
+                sort: {
+                    '_id': -1
+                }
+            }, function (err, file) {
+                if (file[0] == null) {
+                    res.setHeader('Content-Type', 'image/jpeg');
+                    // input.pipe(decoder).pipe(res);
+                    // input.end(img);
+                    res.end(img);
+                } else {
+                    fotoProf.readById(file[0].id, function (err2, buffer) {
+                        if (err2) {
+                            return next(err2);
+                        }
+                        res.setHeader('Content-Type', file[0].contentType);
+                        res.setHeader('Content-Length', file[0].length);
+                        let img = buffer.toString('base64');
+                        return res.send(img);
+                    });
+                }
+            });
     } catch (ex) {
         return next(ex);
     }
@@ -72,29 +72,29 @@ router.get('/profesionales/firma/:id*?', Auth.authenticate(), (req: any, res, ne
         return next(403);
     }
     if (req.query.id) {
-    let id = req.query.id;
-    let fotoProf = makeFsFirma();
-    fotoProf.find({
-        'metadata.idProfesional': id
-    }, {}, {
-        sort: {
-            '_id': -1
-        }
-    }, function (err, file) {
-        if (file[0] == null) {
-            res.send(null);
-        } else {
-            var stream1 = fotoProf.readById(file[0].id, function (err2, buffer) {
-                if (err2) {
-                    return next(err2);
+        let id = req.query.id;
+        let fotoProf = makeFsFirma();
+        fotoProf.find({
+            'metadata.idProfesional': id
+        }, {}, {
+                sort: {
+                    '_id': -1
                 }
-                res.setHeader('Content-Type', file[0].contentType);
-                res.setHeader('Content-Length', file[0].length);
-                let firma = buffer.toString('base64');
-                return res.send(firma);
+            }, function (err, file) {
+                if (file[0] == null) {
+                    res.send(null);
+                } else {
+                    var stream1 = fotoProf.readById(file[0].id, function (err2, buffer) {
+                        if (err2) {
+                            return next(err2);
+                        }
+                        res.setHeader('Content-Type', file[0].contentType);
+                        res.setHeader('Content-Length', file[0].length);
+                        let firma = buffer.toString('base64');
+                        return res.send(firma);
+                    });
+                }
             });
-        }
-    });
 
     }
     if (req.query.firmaAdmin) {
@@ -104,27 +104,27 @@ router.get('/profesionales/firma/:id*?', Auth.authenticate(), (req: any, res, ne
         fotoAdmin.find({
             'metadata.idProfesional': idAdmin
         }, {}, {
-            sort: {
-                '_id': -1
-            }
-        }, function (err, file) {
-            if (file[0] == null) {
-                res.send(null);
-            } else {
-                var stream1 = fotoAdmin.readById(file[0].id, function (err2, buffer) {
-                    if (err2) {
-                        return next(err2);
-                    }
-                    res.setHeader('Content-Type', file[0].contentType);
-                    res.setHeader('Content-Length', file[0].length);
-                    let firmaAdmin = {
-                        firma: buffer.toString('base64'),
-                        administracion: file[0].metadata.administracion
-                    };
-                    return res.send(firmaAdmin);
-                });
-            }
-        });
+                sort: {
+                    '_id': -1
+                }
+            }, function (err, file) {
+                if (file[0] == null) {
+                    res.send(null);
+                } else {
+                    var stream1 = fotoAdmin.readById(file[0].id, function (err2, buffer) {
+                        if (err2) {
+                            return next(err2);
+                        }
+                        res.setHeader('Content-Type', file[0].contentType);
+                        res.setHeader('Content-Length', file[0].length);
+                        let firmaAdmin = {
+                            firma: buffer.toString('base64'),
+                            administracion: file[0].metadata.administracion
+                        };
+                        return res.send(firmaAdmin);
+                    });
+                }
+            });
 
     }
 
@@ -171,7 +171,6 @@ router.get('/profesionales/matricula/:id', (req, resp, errHandler) => {
     });
 });
 router.get('/profesionales/:id*?', Auth.authenticate(), function (req, res, next) {
-
     if (!Auth.check(req, 'matriculaciones:profesionales:getProfesional')) {
         return next(403);
     }
@@ -196,6 +195,25 @@ router.get('/profesionales/:id*?', Auth.authenticate(), function (req, res, next
                 '$regex': utils.makePattern(req.query.apellido)
             };
         }
+        if (req.query.estado) {
+            if (req.query.estado === 'Vigentes') {
+                req.query.estado = true;
+            }
+            if (req.query.estado === 'Suspendidas') {
+                req.query.estado = false;
+            }
+            opciones['formacionGrado.matriculado'] = req.query.estado;
+        }
+
+        if (req.query.estadoE) {
+            if (req.query.estadoE === 'Vigentes') {
+                req.query.estadoE = true;
+            }
+            if (req.query.estadoE === 'Suspendidas') {
+                req.query.estadoE = false;
+            }
+            opciones['formacionPosgrado.matriculado'] = req.query.estadoE;
+        }
 
         if (req.query.nombreCompleto) {
             opciones['nombre'] = {
@@ -210,8 +228,8 @@ router.get('/profesionales/:id*?', Auth.authenticate(), function (req, res, next
             opciones['documento'] = utils.makePattern(req.query.documento);
         }
 
-        if (req.query.idRenovacion) {
-            opciones['idRenovacion'] = req.query.idRenovacion;
+        if (req.query.bajaMatricula) {
+            opciones['formacionGrado.matriculacion.baja.motivo'] = {'$nin': [null] } ;
         }
 
         if (req.query.id) {
@@ -243,10 +261,10 @@ router.get('/profesionales/:id*?', Auth.authenticate(), function (req, res, next
                 '$regex': utils.makePattern(req.query.nombreCompleto)
             }
         }).
-        sort({
-            apellido: 1,
-            nombre: 1
-        });
+            sort({
+                apellido: 1,
+                nombre: 1
+            });
     } else {
         query = profesional.find(opciones).skip(skip).limit(limit);
     }
@@ -276,17 +294,17 @@ router.post('/profesionales', Auth.authenticate(), function (req, res, next) {
             'metadata.idProfesional': req.body.imagen.idProfesional
         }, function (err, file) {
             file.forEach(recorre => {
-                fotoProf.unlinkById(recorre._id, function (error, unlinkedAttachment) {});
+                fotoProf.unlinkById(recorre._id, function (error, unlinkedAttachment) { });
             });
         });
         // inserta en la bd en files y chucks
         fotoProf.write({
-                filename: 'foto.png',
-                contentType: 'image/png',
-                metadata: {
-                    idProfesional: req.body.imagen.idProfesional,
-                }
-            },
+            filename: 'foto.png',
+            contentType: 'image/png',
+            metadata: {
+                idProfesional: req.body.imagen.idProfesional,
+            }
+        },
             input.pipe(decoder),
             function (error, createdFile) {
                 res.json(createdFile);
@@ -296,32 +314,32 @@ router.post('/profesionales', Auth.authenticate(), function (req, res, next) {
 
     }
     if (req.body.firma) {
-            let _base64 = req.body.firma.firmaP;
-            let decoder = base64.decode();
-            let input = new stream.PassThrough();
-            let firmaProf = makeFsFirma();
+        let _base64 = req.body.firma.firmaP;
+        let decoder = base64.decode();
+        let input = new stream.PassThrough();
+        let firmaProf = makeFsFirma();
 
-            // remove la firma vieja antes de insertar la nueva
-            firmaProf.find({
-                'metadata.idProfesional': req.body.firma.idProfesional
-            }, function (err, file) {
-                file.forEach(recorre => {
-                    firmaProf.unlinkById(recorre._id, function (error, unlinkedAttachment) {});
-                });
+        // remove la firma vieja antes de insertar la nueva
+        firmaProf.find({
+            'metadata.idProfesional': req.body.firma.idProfesional
+        }, function (err, file) {
+            file.forEach(recorre => {
+                firmaProf.unlinkById(recorre._id, function (error, unlinkedAttachment) { });
             });
-            // inserta en la bd en files y chucks
-            firmaProf.write({
-                    filename: 'firma.png',
-                    contentType: 'image/jpeg',
-                    metadata: {
-                        idProfesional: req.body.firma.idProfesional,
-                    }
-                },
-                input.pipe(decoder),
-                function (error, createdFile) {
-                    res.json(createdFile);
-                });
-            input.end(_base64);
+        });
+        // inserta en la bd en files y chucks
+        firmaProf.write({
+            filename: 'firma.png',
+            contentType: 'image/jpeg',
+            metadata: {
+                idProfesional: req.body.firma.idProfesional,
+            }
+        },
+            input.pipe(decoder),
+            function (error, createdFile) {
+                res.json(createdFile);
+            });
+        input.end(_base64);
 
     }
     if (req.body.firmaAdmin) {
@@ -335,25 +353,25 @@ router.post('/profesionales', Auth.authenticate(), function (req, res, next) {
             'metadata.idProfesional': req.body.firmaAdmin.idProfesional
         }, function (err, file) {
             file.forEach(recorre => {
-                firmaAdmin.unlinkById(recorre._id, function (error, unlinkedAttachment) {});
+                firmaAdmin.unlinkById(recorre._id, function (error, unlinkedAttachment) { });
             });
         });
         // inserta en la bd en files y chucks
         firmaAdmin.write({
-                filename: 'firmaAdmin.png',
-                contentType: 'image/jpeg',
-                metadata: {
-                    idProfesional: req.body.firmaAdmin.idProfesional,
-                    administracion: req.body.firmaAdmin.nombreCompleto,
-                }
-            },
+            filename: 'firmaAdmin.png',
+            contentType: 'image/jpeg',
+            metadata: {
+                idProfesional: req.body.firmaAdmin.idProfesional,
+                administracion: req.body.firmaAdmin.nombreCompleto,
+            }
+        },
             input.pipe(decoder),
             function (error, createdFile) {
                 res.json(createdFile);
             });
         input.end(_base64);
 
-}
+    }
     if (req.body.profesional) {
         // console.log(req.body.profesional);
         // profesional.findOne({
@@ -362,13 +380,13 @@ router.post('/profesionales', Auth.authenticate(), function (req, res, next) {
         //     if (person) {
         //         res.json(null);
         //     } else {
-                let newProfesional = new profesional(req.body.profesional);
-                newProfesional.save((err2) => {
-                    if (err2) {
-                        next(err2);
-                    }
-                    res.json(newProfesional);
-                });
+        let newProfesional = new profesional(req.body.profesional);
+        newProfesional.save((err2) => {
+            if (err2) {
+                next(err2);
+            }
+            res.json(newProfesional);
+        });
         //     // }
         // });
     }
@@ -432,92 +450,92 @@ router.delete('/profesionales/:id', Auth.authenticate(), function (req, res, nex
 
 router.get('/resumen/:id*?', function (req, res, next) {
 
-        let opciones = {};
-        let query;
-        if (req.params.id) {
-            profesional.findById(req.params.id, function (err, data) {
-                if (err) {
-                    return next(err);
-                }
-                res.json(data);
-            });
-        } else {
-            if (req.query.nombre) {
-                opciones['nombre'] = utils.makePattern(req.query.nombre);
+    let opciones = {};
+    let query;
+    if (req.params.id) {
+        profesional.findById(req.params.id, function (err, data) {
+            if (err) {
+                return next(err);
             }
-
-            if (req.query.apellido) {
-                opciones['apellido'] = utils.makePattern(req.query.apellido);
-
-            }
-
-            if (req.query.nombreCompleto) {
-                opciones['nombre'] = {
-                    '$regex': utils.makePattern(req.query.nombreCompleto)
-                };
-                opciones['apellido'] = {
-                    '$regex': utils.makePattern(req.query.nombreCompleto)
-                };
-            }
-
-            if (req.query.documento !== '') {
-                opciones['documento'] = req.query.documento;
-            }
-
-            if (req.query.fechaNacimiento) {
-                opciones['fechaNacimiento'] = req.query.fechaNacimiento;
-            }
-
-            if (req.query.numeroMatricula) {
-                opciones['matriculas.numero'] = req.query.numeroMatricula;
-            }
-
-            if (req.query.especialidad) {
-                opciones['especialidad.nombre'] = {
-                    '$regex': utils.makePattern(req.query.especialidad)
-                };
-            }
+            res.json(data);
+        });
+    } else {
+        if (req.query.nombre) {
+            opciones['nombre'] = utils.makePattern(req.query.nombre);
         }
 
-        let radix = 10;
-        let skip: number = parseInt(req.query.skip || 0, radix);
-        let limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
+        if (req.query.apellido) {
+            opciones['apellido'] = utils.makePattern(req.query.apellido);
+
+        }
 
         if (req.query.nombreCompleto) {
-            query = profesional.find({
-                apellido: {
-                    '$regex': utils.makePattern(req.query.nombreCompleto)
-                }
-            }).
+            opciones['nombre'] = {
+                '$regex': utils.makePattern(req.query.nombreCompleto)
+            };
+            opciones['apellido'] = {
+                '$regex': utils.makePattern(req.query.nombreCompleto)
+            };
+        }
+
+        if (req.query.documento !== '') {
+            opciones['documento'] = req.query.documento;
+        }
+
+        if (req.query.fechaNacimiento) {
+            opciones['fechaNacimiento'] = req.query.fechaNacimiento;
+        }
+
+        if (req.query.numeroMatricula) {
+            opciones['matriculas.numero'] = req.query.numeroMatricula;
+        }
+
+        if (req.query.especialidad) {
+            opciones['especialidad.nombre'] = {
+                '$regex': utils.makePattern(req.query.especialidad)
+            };
+        }
+    }
+
+    let radix = 10;
+    let skip: number = parseInt(req.query.skip || 0, radix);
+    let limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
+
+    if (req.query.nombreCompleto) {
+        query = profesional.find({
+            apellido: {
+                '$regex': utils.makePattern(req.query.nombreCompleto)
+            }
+        }).
             sort({
                 apellido: 1,
                 nombre: 1
             });
-        } else {
-            query = profesional.find(opciones).skip(skip).limit(limit);
+    } else {
+        query = profesional.find(opciones).skip(skip).limit(limit);
+    }
+
+    let select = [];
+    query.exec(function (err, data) {
+        if (err) {
+            return next(err);
         }
+        data.forEach(element => {
+            let resultado = {
+                select: '' + element.nombreCompleto + ' - ' + element.documento + '',
+                idRenovacion: element.id,
+                nombre: element.nombre,
+                apellido: element.apellido,
+                fechaNacimiento: element.fechaNacimiento,
+                documento: element.documento,
+                nacionalidad: element.nacionalidad
 
-let select = [];
-        query.exec(function (err, data) {
-            if (err) {
-                return next(err);
-            }
-            data.forEach(element => {
-               let resultado = {
-                    select :  '' + element.nombreCompleto + ' - ' + element.documento + '',
-                    idRenovacion : element.id,
-                    nombre: element.nombre,
-                    apellido: element.apellido,
-                    fechaNacimiento: element.fechaNacimiento,
-                    documento: element.documento,
-                    nacionalidad: element.nacionalidad
+            };
+            select.push(resultado);
 
-               };
-               select.push(resultado);
-
-            });
-            res.json(select);
         });
+        res.json(select);
     });
+});
 
 export = router;
