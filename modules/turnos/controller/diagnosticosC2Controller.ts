@@ -51,6 +51,9 @@ export function getDiagnosticos(params) {
                 codigo: {
                     $first: '$bloques.turnos.diagnostico.codificaciones.codificacionAuditoria.codigo'
                 },
+                causa: {
+                    $first: '$bloques.turnos.diagnostico.codificaciones.codificacionAuditoria.causa'
+                },
                 reporteC2: {
                     $first: '$bloques.turnos.diagnostico.codificaciones.codificacionAuditoria.reporteC2'
                 }
@@ -115,7 +118,7 @@ export function getDiagnosticos(params) {
                         function calcularContadores(edad, sexo) {
                             if (edad < 5) {
                                 if (edad < 1) {
-                                    if (elem.codigo === 'A05.1') { // BOTULISMO
+                                    if (elem.codigo === 'A05.1') { // Botulismo
                                         sumaLactante++;
                                         switch (sexo) {
                                             case 'masculino':
@@ -245,65 +248,74 @@ export function getDiagnosticos(params) {
                             sumaOtro: sumaOtro,
                             total: sumaTotal,
                         };
+                        // Se asigna de esta manera para que sea otro objeto y no un puntero al mismo objeto
+                        let r1 = Object.assign({}, r2);
                         if (elem['codigo'] === 'A05.1') { // Botulismo
                             let sumaResto = suma1 + suma24 + suma59 + suma1014 + suma1524 + suma2534 + suma3544 + suma4564 + sumaMayor65;
-                            if (sumaLactante > 0) {
-                                let r1 = {
-                                    codigo: elem['codigo'],
-                                    nombre: elem['_id'],
-                                    reporteC2: 'Botulismo del Lactante',
-                                    sumaMenor1: sumaLactante,
-                                    suma1: 0,
-                                    suma24: 0,
-                                    suma59: 0,
-                                    suma1014: 0,
-                                    suma1524: 0,
-                                    suma2534: 0,
-                                    suma3544: 0,
-                                    suma4564: 0,
-                                    sumaMayor65: 0,
-                                    sumaMasculino: masculinoLactante,
-                                    sumaFemenino: femeninoLactante,
-                                    sumaOtro: otroLactante,
-                                    total: sumaLactante,
-                                };
+                            if (sumaLactante > 0) { // Botulismo en lactantes (<1 año)
+                                r1.reporteC2 = 'Botulismo del Lactante';
+                                r1.sumaMenor1 = sumaLactante;
+                                r1.suma1 = 0;
+                                r1.suma24 = 0;
+                                r1.suma59 = 0;
+                                r1.suma1014 = 0;
+                                r1.suma1524 = 0;
+                                r1.suma2534 = 0;
+                                r1.suma3544 = 0;
+                                r1.suma4564 = 0;
+                                r1.sumaMayor65 = 0;
+                                r1.sumaMasculino = masculinoLactante;
+                                r1.sumaFemenino = femeninoLactante;
+                                r1.sumaOtro = otroLactante;
+                                r1.total = sumaLactante;
                                 resultados.push(r1);
                             }
-                            if (sumaResto > 0) {
+                            if (sumaResto > 0) { // Botulismo en no lactantes (>= 1 año)
                                 resultados.push(r2);
                             }
-                        } else {
+                        } else { // No es Botulismo
                             if (elem['codigo'] === 'A17.0') { // Meningitis Tuberculosa
                                 let sumaResto = suma59 + suma1014 + suma1524 + suma2534 + suma3544 + suma4564 + sumaMayor65;
-                                if (sumaMeningitis > 0) {
-                                    let r1 = {
-                                        codigo: elem['codigo'],
-                                        nombre: elem['_id'],
-                                        reporteC2: 'Meningitis tuberculosa en menores de 5 años',
-                                        sumaMenor1: meningitisMenor1,
-                                        suma1: meningitis1,
-                                        suma24: meningitis24,
-                                        suma59: 0,
-                                        suma1014: 0,
-                                        suma1524: 0,
-                                        suma2534: 0,
-                                        suma3544: 0,
-                                        suma4564: 0,
-                                        sumaMayor65: 0,
-                                        sumaMasculino: masculinoMeningitis,
-                                        sumaFemenino: femeninoMeningitis,
-                                        sumaOtro: otroMeningitis,
-                                        total: sumaMeningitis,
-                                    };
+                                if (sumaMeningitis > 0) { // Meningitis Tuberculosa en menores de 5 años
+                                    r1.reporteC2 = 'Meningitis tuberculosa en menores de 5 años';
+                                    r1.sumaMenor1 = meningitisMenor1;
+                                    r1.suma1 = meningitis1;
+                                    r1.suma24 = meningitis24;
+                                    r1.suma59 = 0;
+                                    r1.suma1014 = 0;
+                                    r1.suma1524 = 0;
+                                    r1.suma2534 = 0;
+                                    r1.suma3544 = 0;
+                                    r1.suma4564 = 0;
+                                    r1.sumaMayor65 = 0;
+                                    r1.sumaMasculino = masculinoMeningitis;
+                                    r1.sumaFemenino = femeninoMeningitis;
+                                    r1.sumaOtro = otroMeningitis;
+                                    r1.total = sumaMeningitis;
                                     resultados.push(r1);
                                 }
                                 if (sumaResto > 0) {
+                                    // Se asigna de esta manera para que sea otro objeto y no un puntero al mismo objeto
+                                    let r3 = Object.assign({}, r2);
                                     r2.reporteC2 = 'Tuberculosis';
                                     resultados.push(r2);
+                                    r3.reporteC2 = 'Meningitis bacteriana sin especificar agente';
+                                    resultados.push(r3);
                                 }
                             } else {
-                                if (sumaTotal > 0) {
-                                    resultados.push(r2);
+                                // console.log('elem ', elem);
+                                if (elem.causa === 'A51') {
+                                    console.log('sifilis');
+                                    console.log('r2 ',r2);
+                                    
+                                    console.log('sumaFemenino ', r2.sumaFemenino);
+                                    console.log('sumaMasculino ', r2.sumaMasculino);
+
+                                } else {
+
+                                    if (sumaTotal > 0) {
+                                        resultados.push(r2);
+                                    }
                                 }
                             }
                         }
