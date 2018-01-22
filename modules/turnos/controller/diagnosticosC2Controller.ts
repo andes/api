@@ -305,12 +305,15 @@ export function getDiagnosticos(params) {
                             } else {
                                 // console.log('elem ', elem);
                                 if (elem.causa === 'A51') {
-                                    console.log('sifilis');
-                                    console.log('r2 ',r2);
-                                    
-                                    console.log('sumaFemenino ', r2.sumaFemenino);
-                                    console.log('sumaMasculino ', r2.sumaMasculino);
 
+                                    if (sumaFemenino > 0) {
+                                        r2.reporteC2 = 'Sífilis temprana en mujeres';
+                                        resultados.push(r2);
+                                    }
+                                    if (sumaMasculino > 0) {
+                                        r1.reporteC2 = 'Sífilis temprana en hombres';
+                                        resultados.push(r1);
+                                    }
                                 } else {
 
                                     if (sumaTotal > 0) {
@@ -328,6 +331,13 @@ export function getDiagnosticos(params) {
 
         Promise.all(promises).then(() => {
             // console.log('resultados ', resultados);
+            let sortResultados = function (a, b) {
+                if (a.codigo < b.codigo) return -1;
+                if (a.codigo > b.codigo) return 1;
+                return 0;
+            };
+            resultados.sort(sortResultados);
+            console.log('resultados ', resultados);
             resolve(resultados);
         });
     });
