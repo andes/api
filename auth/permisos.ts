@@ -173,5 +173,11 @@ export default [
             { key: 'list', title: 'Listar CDA por paciente', type: 'boolean' },
             { key: 'post', title: 'Generar CDA', type: 'boolean' },
         ]
+    },
+    {
+        key: 'reportes',
+        title: 'Modulo Reportes',
+        child: [
+        ]
     }
 ];
