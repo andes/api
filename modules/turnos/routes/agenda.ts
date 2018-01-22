@@ -64,7 +64,7 @@ router.get('/agenda/candidatas', async function (req, res, next) {
             match['bloques.duracionTurno'] = bloque.duracionTurno;
         }
 
-        let data1 = await toArray(agenda.aggregate([{$match: match}]).cursor({}).exec());
+        let data1 = await toArray(agenda.aggregate([{ $match: match }]).cursor({}).exec());
 
 
         let out = [];
@@ -383,6 +383,8 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                         break;
                     // Agregar operacion para marcar que noAsistio
                     case 'sacarAsistencia': agendaCtrl.sacarAsistencia(req, data, turnos[y]);
+                        break;
+                    case 'noAsistio': agendaCtrl.marcarNoAsistio(req, data, turnos[y]);
                         break;
                     case 'quitarTurnoDoble': agendaCtrl.quitarTurnoDoble(req, data, turnos[y]);
                         break;
