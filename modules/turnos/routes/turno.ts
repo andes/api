@@ -220,70 +220,98 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
 });
 
 
-router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, res, next) {
-    // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
-    let continues = ValidateDarTurno.checkTurno(req.body.turno);
-
-    if (continues.valid) {
-        // Se obtiene la agenda que se va a modificar
-        agenda.findById(req.params.idAgenda, function getAgenda(err, data) {
-            if (err) {
-                return next(err);
-            }
-            let etiquetaTurno: string;
-            let posTurno: number;
-            let posBloque: number;
-            if (req.params.idBloque !== '-1') {
-                posBloque = (data as any).bloques.findIndex(bloque => Object.is(req.params.idBloque, String(bloque._id)));
-                posTurno = (data as any).bloques[posBloque].turnos.findIndex(turno => Object.is(req.params.idTurno, String(turno._id)));
-                etiquetaTurno = 'bloques.' + posBloque + '.turnos.' + posTurno;
-            } else {
-                posTurno = (data as any).sobreturnos.findIndex(sobreturno => Object.is(req.params.idTurno, String(sobreturno._id)));
-                etiquetaTurno = 'sobreturnos.' + posTurno;
-            }
-            let usuario = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
-            // Copia la organización desde el token
-            usuario.organizacion = (req as any).user.organizacion;
-
-            let update: any = {};
-
-            let query = {
-                _id: req.params.idAgenda,
-            };
-            update[etiquetaTurno] = req.body.turno;
-            // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
-            (agenda as any).findOneAndUpdate(query, update, { new: true },
-                function actualizarAgenda(err2, doc2, writeOpResult) {
-                    if (err2) {
-                        return next(err2);
-                    }
-                    if (writeOpResult && writeOpResult.value === null) {
-                        return next('No se pudo actualizar los datos del turno');
-                    } else {
-                        let datosOp = {
-                            turno: update[etiquetaTurno]
-                        };
-                        // TODO: loggear estas operaciones sobre turnos de forma mas clara.
-                        Logger.log(req, 'citas', 'update', datosOp);
-                    }
-                    // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
-                    // Donde doc2 es el documeto de la Agenda actualizado
-                    operations.cacheTurnosSips(doc2);
-                    // Fin de insert cache
-                    res.json(data);
-
-                    if (req.body.turno.reasignado && req.body.turno.reasignado.siguiente) {
-                        let turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
-                        LoggerPaciente.logTurno(req, 'turnos:reasignar', req.body.turno.paciente, turno, req.params.idBloque, req.params.idAgenda);
-
-                        NotificationService.notificarReasignar(req.params);
-                    }
-
-                });
+router.patch('/turno/:idTurno/:idBloque/:idAgenda', (req, res, next) => {
+    agenda.findById(req.params.idAgenda, async function getAgenda(err, data) {
+        if (err) {
+            return next(err);
+        }
+        let indexBloque = (data as any).bloques.findIndex(bloq => {
+            return bloq._id.equals(req.params.idBLoque);
         });
-    } else {
-        return next('Los datos del paciente son inválidos');
-    }
-});
+        let indexTurno = (data as any).bloques[indexBloque].turnos.findIndex(t => {
+            return t._id.equals(req.params.idTurno);
+        });
+        let etiquetaAvisoSuspension: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.avisoSuspension';
+        let query = {
+            _id: req.params.idAgenda,
+        };
+        (agenda as any).update(query, { $set: { avisoSuspension: req.query.avisoSuspension } }, { new: true }, function actualizarAgenda(err2, doc: any, writeOpResult) {
+            if (err2) {
+                return next(err2);
+            }
+            if (doc == null) {
+                return next('noDisponible');
+            }
+            if (writeOpResult) {
+                console.log(writeOpResult.value);
+            }
+        });
+    });
 
-export = router;
+    router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, res, next) {
+        // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
+        let continues = ValidateDarTurno.checkTurno(req.body.turno);
+
+        if (continues.valid) {
+            // Se obtiene la agenda que se va a modificar
+            agenda.findById(req.params.idAgenda, function getAgenda(err, data) {
+                if (err) {
+                    return next(err);
+                }
+                let etiquetaTurno: string;
+                let posTurno: number;
+                let posBloque: number;
+                if (req.params.idBloque !== '-1') {
+                    posBloque = (data as any).bloques.findIndex(bloque => Object.is(req.params.idBloque, String(bloque._id)));
+                    posTurno = (data as any).bloques[posBloque].turnos.findIndex(turno => Object.is(req.params.idTurno, String(turno._id)));
+                    etiquetaTurno = 'bloques.' + posBloque + '.turnos.' + posTurno;
+                } else {
+                    posTurno = (data as any).sobreturnos.findIndex(sobreturno => Object.is(req.params.idTurno, String(sobreturno._id)));
+                    etiquetaTurno = 'sobreturnos.' + posTurno;
+                }
+                let usuario = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
+                // Copia la organización desde el token
+                usuario.organizacion = (req as any).user.organizacion;
+
+                let update: any = {};
+
+                let query = {
+                    _id: req.params.idAgenda,
+                };
+                update[etiquetaTurno] = req.body.turno;
+                // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
+                (agenda as any).findOneAndUpdate(query, update, { new: true },
+                    function actualizarAgenda(err2, doc2, writeOpResult) {
+                        if (err2) {
+                            return next(err2);
+                        }
+                        if (writeOpResult && writeOpResult.value === null) {
+                            return next('No se pudo actualizar los datos del turno');
+                        } else {
+                            let datosOp = {
+                                turno: update[etiquetaTurno]
+                            };
+                            // TODO: loggear estas operaciones sobre turnos de forma mas clara.
+                            Logger.log(req, 'citas', 'update', datosOp);
+                        }
+                        // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
+                        // Donde doc2 es el documeto de la Agenda actualizado
+                        operations.cacheTurnosSips(doc2);
+                        // Fin de insert cache
+                        res.json(data);
+
+                        if (req.body.turno.reasignado && req.body.turno.reasignado.siguiente) {
+                            let turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
+                            LoggerPaciente.logTurno(req, 'turnos:reasignar', req.body.turno.paciente, turno, req.params.idBloque, req.params.idAgenda);
+
+                            NotificationService.notificarReasignar(req.params);
+                        }
+
+                    });
+            });
+        } else {
+            return next('Los datos del paciente son inválidos');
+        }
+    });
+
+    export = router;
