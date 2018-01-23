@@ -15,7 +15,6 @@ let connection = {
 };
 
 export async function integracion() {
-    console.log('INTEGRACION START');
     return new Promise<Array<any>>(async function (resolve, reject) {
         try {
             let promisesArray: any = [];
@@ -26,8 +25,6 @@ export async function integracion() {
                 await operationsHPNCache.saveAgendaToPrestaciones(agenda, pool);
                 pool.close();
             }
-
-            console.log('FINISHED');
             resolve();
         } catch (ex) {
             pool.close();

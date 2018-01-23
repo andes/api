@@ -2,7 +2,6 @@ import * as sql from 'mssql';
 import * as moment from 'moment';
 
 export async function savePaciente(paciente: any, transaction) {
-    console.log('savePaciente');
     let fechaCreacion = new Date();
     let fechaUltimoAcceso = fechaCreacion;
     let fechaActualizacion = fechaCreacion;
@@ -41,7 +40,8 @@ export async function savePaciente(paciente: any, transaction) {
         '@nombre,' +
         '@estadoCivil, ' +
         '@sexo, ' +
-        '@fechaNacimiento)';
+        '@fechaNacimiento) ' +
+        'SELECT SCOPE_IDENTITY() AS idHistoria';
 
     return await new sql.Request(transaction)
         .input('fechaCreacion', sql.DateTime, fechaCreacion)
@@ -56,32 +56,19 @@ export async function savePaciente(paciente: any, transaction) {
         .input('estadoCivil', sql.VarChar(10), estadoCivil)
         .input('sexo', sql.VarChar(10), sexo)
         .input('fechaNacimiento', sql.DateTime, fechaNacimiento)
-        .query(query).then(() => {
+        .query(query).then(result => {
             return {
-                idHistoria: idHis
+                idHistoria: hcNumero,
+                idPaciente: result[0].idHistoria
             };
         }).catch(err => {
             throw err;
         });
 }
 
-// export async function existsPacienteHospital(tipoDocumento, nroDocumento, pool) {
-//     console.log('existsPacienteHospital');
-//     let query = 'SELECT Codigo FROM dbo.Historias_Clinicas ' +
-//         'WHERE  HC_Tipo_de_documento = @tipoDocumento AND HC_Documento = @nroDocumento';
-//     let result = await pool.request()
-//         .input('tipoDocumento', sql.VarChar(50), tipoDocumento)
-//         .input('nroDocumento', sql.VarChar(50), nroDocumento)
-//         .query(query).catch(err => {
-//             throw err;
-//         });
-
-//     return (result.length > 0);
-// }
-
 export async function getDatosPaciente(tipoDocumento, documento, pool) {
     // Agregar indice a HC_Documento de Historias_Clinicas
-    let query = 'SELECT h.Codigo as idPaciente, h.HC_Numero as idHistoria ' + 
+    let query = 'SELECT h.Codigo as idPaciente, h.HC_Numero as idHistoria ' +
                 'FROM Historias_Clinicas h ' +
                 'WHERE HC_Tipo_de_documento = @tipoDocumento ' +
                 'AND h.HC_Documento = @documento';

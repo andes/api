@@ -19,11 +19,9 @@ export async function saveTurnos(idAgendaAndes, bloque, idTipoPrestacion, pool, 
                 datosPaciente = await pacienteCtrl.savePaciente(paciente, transaction);
             }
 
-            await saveTurno(idAgendaAndes, turno, bloque.duracionTurnos, idTipoPrestacion, pool, transaction);
+            await saveTurno(idAgendaAndes, turno, datosPaciente, bloque.duracionTurno, idTipoPrestacion, pool, transaction);
         }
     }
-
-    console.log('turnos saved');
 }
 
 async function getIdTurnoHPN(idAndes, pool) {
@@ -35,16 +33,13 @@ async function getIdTurnoHPN(idAndes, pool) {
     return (result.length > 0 ?  result[0].id : null);
 }
 
-async function saveTurno(idAgendaAndes, turno: any, duracion, idTipoPrestacion, pool, transaction) {
-    console.log('createTurno', turno._id);
-
+async function saveTurno(idAgendaAndes, turno: any, datosPaciente, duracion, idTipoPrestacion, pool, transaction) {
     let idUbicacion = await getUbicacion(idTipoPrestacion);
-    let fechaHora = moment(turno.horaInicio).format('YYYY-MM-DD hh:mm:ss');
-    let fechaHoraFinalizacion = moment(turno.horaInicio).add(duracion, 'minutes').format('YYYY-MM-DD hh:mm:ss');
+    let fechaHora = turno.horaInicio;
+    let fechaHoraFinalizacion = moment(turno.horaInicio).add(duracion, 'minutes').toDate();
     let idTipoWorklist = 10; // no
     let idPrioridad =  20; // Prioridad normmal
     let idEstado = 10; // HARDCODE
-    let datosPaciente = await pacienteCtrl.getDatosPaciente(turno.paciente.documento, pool);
     let idHistoria = datosPaciente.idHistoria;
     let idPaciente = datosPaciente.idPaciente;
 
@@ -60,12 +55,11 @@ async function saveTurno(idAgendaAndes, turno: any, duracion, idTipoPrestacion, 
         ',idTipoPrestacion' +
         ',idEstado' +
         ',idHistoria' +
-        ',idPaciente' +
+        // ',idPaciente' +
         ',idProgramacion' +
-        ',audit_datetime' +
         ',andesId)' +
     ' VALUES (' +
-        '@idUbicacio, ' +
+        '@idUbicacion, ' +
         '@fechaHora, ' +
         '@fechaHoraFinalizacion, ' +
         '@idTipoWorklist, ' +
@@ -73,32 +67,29 @@ async function saveTurno(idAgendaAndes, turno: any, duracion, idTipoPrestacion, 
         '@idTipoPrestacion, ' +
         '@idEstado, ' +
         '@idHistoria, ' +
-        '@idPaciente, ' +
+        // '@idPaciente, ' +
         '@idProgramacion, ' +
         '@andesId)';
 
     return await new sql.Request(transaction)
-        .input('idUbicacion', sql.Int, idUbicacion)
+        .input('idUbicacion', sql.VarChar(50), idUbicacion)
         .input('fechaHora', sql.DateTime, fechaHora)
         .input('fechaHoraFinalizacion', sql.DateTime, fechaHoraFinalizacion)
         .input('idTipoWorklist', sql.Int, idTipoWorklist)
         .input('idPrioridad', sql.Int, idPrioridad)
         .input('idTipoPrestacion', sql.Int, idTipoPrestacion)
         .input('idEstado', sql.Int, idEstado)
-        .input('idHistoria', sql.Int, idHistoria)
-        .input('idPaciente', sql.Int, idPaciente)
+        .input('idHistoria', sql.Int, idPaciente)
+        // .input('idPaciente', sql.Int, idPaciente)
         .input('idProgramacion', sql.Int, idProgramacion)
         .input('andesId', sql.VarChar(50), andesId)
         .query(query)
-        .then(() => {
-            return;
-        }).catch(err => {
+        .catch(err => {
             throw err;
         });
 }
 
-function getUbicacion(idTipoPrestacion) {
+export function getUbicacion(idTipoPrestacion) {
     // Se asume que el metodo recibe por parámetro o id de clínica médica o id de consulta pediatrica
-    return idTipoPrestacion === constantes.tiposPrestacionesHPN.clinicaMedica.id ?
-        constantes.tiposPrestacionesHPN.clinicaMedica.conceptId : constantes.tiposPrestacionesHPN.consultaPediatrica.conceptId;
+    return idTipoPrestacion === 705 ? 14 : 135;
 }

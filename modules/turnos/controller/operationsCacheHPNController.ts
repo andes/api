@@ -13,9 +13,7 @@ import * as medicosExistentes from '../../legacy/schemas/medicosExistentesHPN';
 import * as turnoCtrl from './turnoHPNCacheController';
 import { resolve } from 'path';
 
-
 export async function saveAgendaToPrestaciones(agenda, pool) {
-    console.log('saveAgendasToPrestaciones');
     let transaction = await new sql.Transaction(pool);
 
     return new Promise(async function (resolve2, reject) {
@@ -46,7 +44,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
                         });
                     } else {
                         resolve2();
-                    }     
+                    }
                 } catch (e) {
                     logger.LoggerAgendaCache.logAgenda(agenda._id, e);
                     transaction.rollback();
@@ -68,7 +66,6 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
     }
 
     async function getIdProfesionalPrestaciones(documento) {
-        console.log('getIdProfesionalPrestaciones');
         // let query = 'SELECT id FROM dbo.Medicos WHERE documento = @documento';
         // let result = await pool.request()
         //      .input('documento', sql.Varchar, documento)
@@ -79,7 +76,6 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
     }
 
     async function saveAgendaProfesional(idProgramacion, idProfesional) {
-        console.log('saveAgendaProfesional');
         let query = 'INSERT INTO dbo.Prestaciones_Worklist_Programacion_Profesionales ' +
             '(idProgramacion, idProfesional) VALUES (@idProgramacion, @idProfesional)';
 
@@ -94,7 +90,6 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
     }
 
     async function saveAgendaTipoPrestacion(idProgramacion, idTipoPrestacion) {
-        console.log('saveAgendaTipoPrestacion');
         let query = 'INSERT INTO dbo.Prestaciones_Worklist_Programacion_TiposPrestaciones ' +
             '(idProgramacion, idTipoPrestacion) VALUES (@idProgramacion, @idTipoPrestacion)';
 
@@ -110,7 +105,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
 
     async function saveAgenda(_agenda, idTipoPrestacion) {
         let idAgendaHPN;
-        let idUbicacion = idTipoPrestacion === 705 ? 14 : 135; // checkar datos en produccion
+        let idUbicacion = turnoCtrl.getUbicacion(idTipoPrestacion); // checkar datos en produccion
         let fechaHora = _agenda.horaInicio;
         let fechaHoraFinalizacion = _agenda.horaFin;
         let duracionTurnos = _agenda.bloques[0].duracionTurno;
@@ -215,7 +210,6 @@ export async function getAgendasDeMongoPendientes() {
 }
 
 async function setEstadoAgendaToIntegrada(idAgenda) {
-    console.log(idAgenda);
     return await agendasCache.update({
             _id: idAgenda
         }, {
