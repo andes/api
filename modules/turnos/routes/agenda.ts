@@ -361,7 +361,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                                 err: error || false
                             });
                             if (error) {
-                                console.log('ddddd', error);
+                                // console.log('ddddd', error);
                                 return next(error);
                             }
                         });
