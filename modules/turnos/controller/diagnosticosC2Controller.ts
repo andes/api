@@ -98,7 +98,11 @@ export function getDiagnosticos(params) {
                     sifilisTempranaFemenino: 0,
                     sifilisTempranaMasculino: 0,
                     sifilisSEFemenino: 0,
-                    sifilisSEMasculino: 0
+                    sifilisSEMasculino: 0,
+                    secrecionPurulentaFemenino: 0,
+                    secrecionPurulentaMasculino: 0,
+                    secrecionSEFemenino: 0,
+                    secrecionSEMasculino: 0
                 };
                 let suma1 = {
                     default: 0,
@@ -106,7 +110,11 @@ export function getDiagnosticos(params) {
                     sifilisTempranaFemenino: 0,
                     sifilisTempranaMasculino: 0,
                     sifilisSEFemenino: 0,
-                    sifilisSEMasculino: 0
+                    sifilisSEMasculino: 0,
+                    secrecionPurulentaFemenino: 0,
+                    secrecionPurulentaMasculino: 0,
+                    secrecionSEFemenino: 0,
+                    secrecionSEMasculino: 0
                 };
                 let suma24 = {
                     default: 0,
@@ -114,7 +122,11 @@ export function getDiagnosticos(params) {
                     sifilisTempranaFemenino: 0,
                     sifilisTempranaMasculino: 0,
                     sifilisSEFemenino: 0,
-                    sifilisSEMasculino: 0
+                    sifilisSEMasculino: 0,
+                    secrecionPurulentaFemenino: 0,
+                    secrecionPurulentaMasculino: 0,
+                    secrecionSEFemenino: 0,
+                    secrecionSEMasculino: 0
                 };
                 let suma59 = {
                     default: 0,
@@ -122,7 +134,11 @@ export function getDiagnosticos(params) {
                     sifilisTempranaFemenino: 0,
                     sifilisTempranaMasculino: 0,
                     sifilisSEFemenino: 0,
-                    sifilisSEMasculino: 0
+                    sifilisSEMasculino: 0,
+                    secrecionPurulentaFemenino: 0,
+                    secrecionPurulentaMasculino: 0,
+                    secrecionSEFemenino: 0,
+                    secrecionSEMasculino: 0
                 };
                 let suma1014 = {
                     default: 0,
@@ -130,7 +146,11 @@ export function getDiagnosticos(params) {
                     sifilisTempranaFemenino: 0,
                     sifilisTempranaMasculino: 0,
                     sifilisSEFemenino: 0,
-                    sifilisSEMasculino: 0
+                    sifilisSEMasculino: 0,
+                    secrecionPurulentaFemenino: 0,
+                    secrecionPurulentaMasculino: 0,
+                    secrecionSEFemenino: 0,
+                    secrecionSEMasculino: 0
                 };
                 let suma1524 = {
                     default: 0,
@@ -138,7 +158,11 @@ export function getDiagnosticos(params) {
                     sifilisTempranaFemenino: 0,
                     sifilisTempranaMasculino: 0,
                     sifilisSEFemenino: 0,
-                    sifilisSEMasculino: 0
+                    sifilisSEMasculino: 0,
+                    secrecionPurulentaFemenino: 0,
+                    secrecionPurulentaMasculino: 0,
+                    secrecionSEFemenino: 0,
+                    secrecionSEMasculino: 0
                 };
                 let suma2534 = {
                     default: 0,
@@ -146,7 +170,11 @@ export function getDiagnosticos(params) {
                     sifilisTempranaFemenino: 0,
                     sifilisTempranaMasculino: 0,
                     sifilisSEFemenino: 0,
-                    sifilisSEMasculino: 0
+                    sifilisSEMasculino: 0,
+                    secrecionPurulentaFemenino: 0,
+                    secrecionPurulentaMasculino: 0,
+                    secrecionSEFemenino: 0,
+                    secrecionSEMasculino: 0
                 };
                 let suma3544 = {
                     default: 0,
@@ -154,7 +182,11 @@ export function getDiagnosticos(params) {
                     sifilisTempranaFemenino: 0,
                     sifilisTempranaMasculino: 0,
                     sifilisSEFemenino: 0,
-                    sifilisSEMasculino: 0
+                    sifilisSEMasculino: 0,
+                    secrecionPurulentaFemenino: 0,
+                    secrecionPurulentaMasculino: 0,
+                    secrecionSEFemenino: 0,
+                    secrecionSEMasculino: 0
                 };
                 let suma4564 = {
                     default: 0,
@@ -162,7 +194,11 @@ export function getDiagnosticos(params) {
                     sifilisTempranaFemenino: 0,
                     sifilisTempranaMasculino: 0,
                     sifilisSEFemenino: 0,
-                    sifilisSEMasculino: 0
+                    sifilisSEMasculino: 0,
+                    secrecionPurulentaFemenino: 0,
+                    secrecionPurulentaMasculino: 0,
+                    secrecionSEFemenino: 0,
+                    secrecionSEMasculino: 0
                 };
                 let sumaMayor65 = {
                     default: 0,
@@ -170,32 +206,35 @@ export function getDiagnosticos(params) {
                     sifilisTempranaFemenino: 0,
                     sifilisTempranaMasculino: 0,
                     sifilisSEFemenino: 0,
-                    sifilisSEMasculino: 0
+                    sifilisSEMasculino: 0,
+                    secrecionPurulentaFemenino: 0,
+                    secrecionPurulentaMasculino: 0,
+                    secrecionSEFemenino: 0,
+                    secrecionSEMasculino: 0
                 };
                 let sumaMasculino = {
                     default: 0,
                     botulismo: 0,
                     meningitis: 0,
+                    sifilisTemprana: 0,
+                    sifilisSinEspecificar: 0,
+                    secrecionPurulenta: 0,
+                    secrecionSE: 0
+
                 };
                 let sumaFemenino = {
                     default: 0,
                     botulismo: 0,
                     meningitis: 0,
+                    sifilisTemprana: 0,
+                    sifilisSinEspecificar: 0,
+                    secrecionPurulenta: 0,
+                    secrecionSE: 0
                 };
                 let sumaOtro = {
                     default: 0,
                     botulismo: 0,
                     meningitis: 0,
-                };
-                let sifilisTemprana = {
-                    masculino: 0,
-                    femenino: 0,
-                    total: 0
-                };
-                let sifilisSinEspecificar = {
-                    masculino: 0,
-                    femenino: 0,
-                    total: 0
                 };
                 let sumaMeningitis = 0;
                 let otroLactante = 0;
@@ -217,75 +256,118 @@ export function getDiagnosticos(params) {
                         function sumaSexo(sexo, tipo) {
                             switch (sexo) {
                                 case 'masculino':
+                                    if (tipo === 'botulismo') {
+                                        sumaMasculino.botulismo++;
+                                    }
                                     if (tipo === 'meningitis') {
                                         sumaMasculino.meningitis++;
                                     }
                                     if (tipo === 'sifilisTemprana') {
-                                        sifilisTemprana.masculino++;
+                                        sumaMasculino.sifilisTemprana++;
                                     }
                                     if (tipo === 'sifilisSE') {
-                                        sifilisSinEspecificar.masculino++;
+                                        sumaMasculino.sifilisSinEspecificar++;
                                     }
+                                    if (tipo === 'secrecionPurulenta') {
+                                        sumaMasculino.secrecionPurulenta++;
+                                    }
+                                    if (tipo === 'secrecionSE') {
+                                        sumaMasculino.secrecionSE++;
+                                    }
+
                                     break;
                                 case 'femenino':
+                                    if (tipo === 'botulismo') {
+                                        sumaFemenino.botulismo++;
+                                    }
                                     if (tipo === 'meningitis') {
                                         sumaFemenino.meningitis++;
                                     }
                                     if (tipo === 'sifilisTemprana') {
-                                        sifilisTemprana.femenino++;
+                                        sumaFemenino.sifilisTemprana++;
                                     }
                                     if (tipo === 'sifilisSE') {
-                                        sifilisSinEspecificar.femenino++;
+                                        sumaFemenino.sifilisSinEspecificar++;
+                                    }
+                                    if (tipo === 'secrecionPurulenta') {
+                                        sumaFemenino.secrecionPurulenta++;
+                                    }
+                                    if (tipo === 'secrecionSE') {
+                                        sumaFemenino.secrecionSE++;
                                     }
                                     break;
                                 case 'otro':
+                                    if (tipo === 'botulismo') {
+                                        sumaOtro.botulismo++;
+                                    }
                                     if (tipo === 'meningitis') {
                                         sumaOtro.meningitis++;
                                     }
                                     break;
                             }
                         }
+
+                        function actualizarContador(sexo, edad, tipo) {
+                            switch (elem.causa) {
+                                case 'A51': // Sífilis Temprana
+                                    if (sexo === 'femenino') {
+                                        tipo.sifilisTempranaFemenino++;
+                                    } else {
+                                        tipo.sifilisTempranaMasculino++;
+                                    }
+                                    sumaSexo(sexo, 'sifilisTemprana');
+                                    break;
+                                case 'A52' || 'A53': // Sífilis sin especificar
+                                    if (sexo === 'femenino') {
+                                        tipo.sifilisSEFemenino++;
+                                    } else {
+                                        tipo.sifilisSEMasculino++;
+                                    }
+                                    sumaSexo(sexo, 'sifilisSE');
+                                    break;
+                                case 'A54':
+                                    if (elem.codigo === 'A54.0' || elem.codigo === 'A54.2' || elem.codigo === 'A54.6') {
+                                        if (sexo === 'femenino') {
+                                            tipo.secrecionPurulentaFemenino++;
+                                        } else {
+                                            tipo.secrecionPurulentaMasculino++;
+                                        }
+                                        sumaSexo(sexo, 'secrecionPurulenta');
+                                        break;
+                                    } else {
+                                        tipo.default++;
+                                        break;
+                                    }
+                                default:
+                                    if (elem.reporteC2 === 'Secreción genital sin especificar') {
+                                        if (sexo === 'femenino') {
+                                            tipo.secrecionSEFemenino++;
+                                        } else {
+                                            tipo.secrecionSEMasculino++;
+                                        }
+                                        sumaSexo(sexo, 'secrecionSE');
+                                        break;
+                                    } else {
+                                        tipo.default++;
+                                    }
+                                    break;
+                            }
+
+                        }
+
                         function calcularContadores(edad, sexo) {
                             if (edad < 5) {
                                 if (edad < 1) {
                                     if (elem.codigo === 'A05.1') { // Botulismo
                                         sumaMenor1.botulismo++;
-                                        switch (sexo) {
-                                            case 'masculino':
-                                                sumaMasculino.botulismo++;
-                                                break;
-                                            case 'femenino':
-                                                sumaFemenino.botulismo++;
-                                                break;
-                                            case 'otro':
-                                                otroLactante++;
-                                                break;
-                                        }
+                                        sumaSexo(sexo, 'botulismo');
                                     } else {
                                         if (elem.codigo === 'A17.0') {  // Meningitis Tuberculosa
                                             sumaMeningitis++;
                                             sumaMenor1.meningitis++;
                                             sumaSexo(sexo, 'meningitis');
                                         } else {
-                                            if (elem.causa === 'A51') { // Sífilis temprana
-                                                if (sexo === 'femenino') {
-                                                    sumaMenor1.sifilisTempranaFemenino++;
-                                                } else {
-                                                    sumaMenor1.sifilisTempranaMasculino++;
-                                                }
-                                                sumaSexo(sexo, 'sifilisTemprana');
-                                            } else {
-                                                if (elem.causa === 'A52' || elem.causa === 'A53') {
-                                                    if (sexo === 'femenino') {
-                                                        sumaMenor1.sifilisSEFemenino++;
-                                                    } else {
-                                                        sumaMenor1.sifilisSEMasculino++;
-                                                    }
-                                                    sumaSexo(sexo, 'sifilisSE');
-                                                } else {
-                                                    sumaMenor1.default++;
-                                                }
-                                            }
+                                            actualizarContador(sexo, edad, sumaMenor1);
                                         }
                                     }
                                 }
@@ -295,25 +377,7 @@ export function getDiagnosticos(params) {
                                         suma1.meningitis++;
                                         sumaSexo(sexo, 'meningitis');
                                     } else {
-                                        if (elem.causa === 'A51') { // Sífilis Temprana
-                                            if (sexo === 'femenino') {
-                                                suma1.sifilisTempranaFemenino++;
-                                            } else {
-                                                suma1.sifilisTempranaMasculino++;
-                                            }
-                                            sumaSexo(sexo, 'sifilisTemprana');
-                                        } else {
-                                            if (elem.causa === 'A52' || elem.causa === 'A53') {
-                                                if (sexo === 'femenino') {
-                                                    suma1.sifilisSEFemenino++;
-                                                } else {
-                                                    suma1.sifilisSEMasculino++;
-                                                }
-                                                sumaSexo(sexo, 'sifilisSE');
-                                            } else {
-                                                suma1.default++;
-                                            }
-                                        }
+                                        actualizarContador(sexo, edad, suma1);
                                     }
                                 }
                                 if (edad >= 2 && edad <= 4) {
@@ -322,176 +386,34 @@ export function getDiagnosticos(params) {
                                         suma24.meningitis++;
                                         sumaSexo(sexo, 'meningitis');
                                     } else {
-                                        if (elem.causa === 'A51') { // Sífilis Temprana
-                                            if (sexo === 'femenino') {
-                                                suma24.sifilisTempranaFemenino++;
-                                            } else {
-                                                suma24.sifilisTempranaMasculino++;
-                                            }
-                                            sumaSexo(sexo, 'sifilisTemprana');
-                                        } else {
-                                            if (elem.causa === 'A52' || elem.causa === 'A53') {
-                                                if (sexo === 'femenino') {
-                                                    suma24.sifilisSEFemenino++;
-                                                } else {
-                                                    suma24.sifilisSEMasculino++;
-                                                }
-                                                sumaSexo(sexo, 'sifilisSE');
-                                            } else {
-                                                suma24.default++;
-                                            }
-                                        }
+                                        actualizarContador(sexo, edad, suma24);
                                     }
                                 }
                             }
                             if (edad >= 5 && edad <= 9) {
-                                if (elem.causa === 'A51') {
-                                    if (sexo === 'femenino') {
-                                        suma59.sifilisTempranaFemenino++;
-                                    } else {
-                                        suma59.sifilisTempranaMasculino++;
-                                    }
-                                    sumaSexo(sexo, 'sifilisTemprana');
-                                } else {
-                                    if (elem.causa === 'A52' || elem.causa === 'A53') {
-                                        if (sexo === 'femenino') {
-                                            suma59.sifilisSEFemenino++;
-                                        } else {
-                                            suma59.sifilisSEMasculino++;
-                                        }
-                                        sumaSexo(sexo, 'sifilisSE');
-                                    } else {
-                                        suma59.default++;
-                                    }
-                                }
+                                actualizarContador(sexo, edad, suma59);
                             }
                             if (edad >= 10 && edad <= 14) {
-                                if (elem.causa === 'A51') {
-                                    if (sexo === 'femenino') {
-                                        suma1014.sifilisTempranaFemenino++;
-                                    } else {
-                                        suma1014.sifilisTempranaMasculino++;
-                                    }
-                                    sumaSexo(sexo, 'sifilisTemprana');
-                                } else {
-                                    if (elem.causa === 'A52' || elem.causa === 'A53') {
-                                        if (sexo === 'femenino') {
-                                            suma1014.sifilisSEFemenino++;
-                                        } else {
-                                            suma1014.sifilisSEMasculino++;
-                                        }
-                                        sumaSexo(sexo, 'sifilisSE');
-                                    } else {
-                                        suma1014.default++;
-                                    }
-                                }
+                                actualizarContador(sexo, edad, suma1014);
                             }
                             if (edad >= 15 && edad <= 24) {
-                                if (elem.causa === 'A51') {
-                                    if (sexo === 'femenino') {
-                                        suma1524.sifilisTempranaFemenino++;
-                                    } else {
-                                        suma1524.sifilisTempranaMasculino++;
-                                    }
-                                    sumaSexo(sexo, 'sifilisTemprana');
-                                } else {
-                                    if (elem.causa === 'A52' || elem.causa === 'A53') {
-                                        if (sexo === 'femenino') {
-                                            suma1524.sifilisSEFemenino++;
-                                        } else {
-                                            suma1524.sifilisSEMasculino++;
-                                        }
-                                        sumaSexo(sexo, 'sifilisSE');
-                                    } else {
-                                        suma1524.default++;
-                                    }
-                                }
+                                actualizarContador(sexo, edad, suma1524);
                             }
                             if (edad >= 25 && edad <= 34) {
-                                if (elem.causa === 'A51') {
-                                    if (sexo === 'femenino') {
-                                        suma2534.sifilisTempranaFemenino++;
-                                    } else {
-                                        suma2534.sifilisTempranaMasculino++;
-                                    }
-                                    sumaSexo(sexo, 'sifilisTemprana');
-                                } else {
-                                    if (elem.causa === 'A52' || elem.causa === 'A53') {
-                                        if (sexo === 'femenino') {
-                                            suma2534.sifilisSEFemenino++;
-                                        } else {
-                                            suma2534.sifilisSEMasculino++;
-                                        }
-                                        sumaSexo(sexo, 'sifilisSE');
-                                    } else {
-                                        suma2534.default++;
-                                    }
-                                }
+                                actualizarContador(sexo, edad, suma2534);
                             }
                             if (edad >= 35 && edad <= 44) {
-                                if (elem.causa === 'A51') {
-                                    if (sexo === 'femenino') {
-                                        suma3544.sifilisTempranaFemenino++;
-                                    } else {
-                                        suma3544.sifilisTempranaMasculino++;
-                                    }
-                                    sumaSexo(sexo, 'sifilisTemprana');
-                                } else {
-                                    if (elem.causa === 'A52' || elem.causa === 'A53') {
-                                        if (sexo === 'femenino') {
-                                            suma3544.sifilisSEFemenino++;
-                                        } else {
-                                            suma3544.sifilisSEMasculino++;
-                                        }
-                                        sumaSexo(sexo, 'sifilisSE');
-                                    } else {
-                                        suma3544.default++;
-                                    }
-                                }
+                                actualizarContador(sexo, edad, suma3544);
                             }
                             if (edad >= 45 && edad <= 64) {
-                                if (elem.causa === 'A51') {
-                                    if (sexo === 'femenino') {
-                                        suma4564.sifilisTempranaFemenino++;
-                                    } else {
-                                        suma4564.sifilisTempranaMasculino++;
-                                    }
-                                    sumaSexo(sexo, 'sifilisTemprana');
-                                } else {
-                                    if (elem.causa === 'A52' || elem.causa === 'A53') {
-                                        if (sexo === 'femenino') {
-                                            suma4564.sifilisSEFemenino++;
-                                        } else {
-                                            suma4564.sifilisSEMasculino++;
-                                        }
-                                        sumaSexo(sexo, 'sifilisSE');
-                                    } else {
-                                        suma4564.default++;
-                                    }
-                                }
+                                actualizarContador(sexo, edad, suma4564);
                             }
                             if (edad > 65) {
-                                if (elem.causa === 'A51') {
-                                    if (sexo === 'femenino') {
-                                        sumaMayor65.sifilisTempranaFemenino++;
-                                    } else {
-                                        sumaMayor65.sifilisTempranaMasculino++;
-                                    }
-                                    sumaSexo(sexo, 'sifilisTemprana');
-                                } else {
-                                    if (elem.causa === 'A52' || elem.causa === 'A53') {
-                                        if (sexo === 'femenino') {
-                                            sumaMayor65.sifilisSEFemenino++;
-                                        } else {
-                                            sumaMayor65.sifilisSEMasculino++;
-                                        }
-                                        sumaSexo(sexo, 'sifilisSE');
-                                    } else {
-                                        sumaMayor65.default++;
-                                    }
-                                }
+                                actualizarContador(sexo, edad, sumaMayor65);
                             }
+
                             let codigoExcepcion = (elem.codigo === 'A05.1' && edad < 1) || (elem.codigo === 'A17.0' && edad < 5);
+
                             if (!codigoExcepcion && sexo === 'masculino') {
                                 sumaMasculino.default++;
                             }
@@ -619,7 +541,7 @@ export function getDiagnosticos(params) {
                                 }
                             } else {
                                 if (elem.causa === 'A51') {
-                                    if (sifilisTemprana.femenino > 0) {
+                                    if (sumaFemenino.sifilisTemprana > 0) {
                                         r2.reporteC2 = 'Sífilis temprana en mujeres';
                                         r2.sumaMenor1 = sumaMenor1.sifilisTempranaFemenino;
                                         r2.suma1 = suma1.sifilisTempranaFemenino;
@@ -631,12 +553,12 @@ export function getDiagnosticos(params) {
                                         r2.suma3544 = suma3544.sifilisTempranaFemenino;
                                         r2.suma4564 = suma4564.sifilisTempranaFemenino;
                                         r2.sumaMayor65 = sumaMayor65.sifilisTempranaFemenino;
-                                        r2.sumaFemenino = sifilisTemprana.femenino;
+                                        r2.sumaFemenino = sumaFemenino.sifilisTemprana;
                                         r2.sumaMasculino = 0;
-                                        r2.total = sifilisTemprana.femenino;
+                                        r2.total = sumaFemenino.sifilisTemprana;
                                         resultados.push(r2);
                                     }
-                                    if (sifilisTemprana.masculino > 0) {
+                                    if (sumaMasculino.sifilisTemprana > 0) {
                                         r1.reporteC2 = 'Sífilis temprana en hombres';
                                         r1.sumaMenor1 = sumaMenor1.sifilisTempranaMasculino;
                                         r1.suma1 = suma1.sifilisTempranaMasculino;
@@ -649,13 +571,13 @@ export function getDiagnosticos(params) {
                                         r1.suma4564 = suma4564.sifilisTempranaMasculino;
                                         r1.sumaMayor65 = sumaMayor65.sifilisTempranaMasculino;
                                         r1.sumaFemenino = 0;
-                                        r1.sumaMasculino = sifilisTemprana.masculino;
-                                        r1.total = sifilisTemprana.masculino;
+                                        r1.sumaMasculino = sumaMasculino.sifilisTemprana;
+                                        r1.total = sumaMasculino.sifilisTemprana;
                                         resultados.push(r1);
                                     }
                                 } else {
                                     if (elem.causa === 'A52' || elem.causa === 'A53') {
-                                        if (sifilisSinEspecificar.femenino > 0) {
+                                        if (sumaFemenino.sifilisSinEspecificar > 0) {
                                             r2.reporteC2 = 'Sífilis sin especificar en mujeres';
                                             r2.sumaMenor1 = sumaMenor1.sifilisSEFemenino;
                                             r2.suma1 = suma1.sifilisSEFemenino;
@@ -667,12 +589,12 @@ export function getDiagnosticos(params) {
                                             r2.suma3544 = suma3544.sifilisSEFemenino;
                                             r2.suma4564 = suma4564.sifilisSEFemenino;
                                             r2.sumaMayor65 = sumaMayor65.sifilisSEFemenino;
-                                            r2.sumaFemenino = sifilisSinEspecificar.femenino;
+                                            r2.sumaFemenino = sumaFemenino.sifilisSinEspecificar;
                                             r2.sumaMasculino = 0;
-                                            r2.total = sifilisSinEspecificar.femenino;
+                                            r2.total = sumaFemenino.sifilisSinEspecificar;
                                             resultados.push(r2);
                                         }
-                                        if (sifilisSinEspecificar.masculino > 0) {
+                                        if (sumaMasculino.sifilisSinEspecificar > 0) {
                                             r1.reporteC2 = 'Sífilis sin especificar en hombres';
                                             r1.sumaMenor1 = sumaMenor1.sifilisSEMasculino;
                                             r1.suma1 = suma1.sifilisSEMasculino;
@@ -685,13 +607,94 @@ export function getDiagnosticos(params) {
                                             r1.suma4564 = suma4564.sifilisSEMasculino;
                                             r1.sumaMayor65 = sumaMayor65.sifilisSEMasculino;
                                             r1.sumaFemenino = 0;
-                                            r1.sumaMasculino = sifilisSinEspecificar.masculino;
-                                            r1.total = sifilisSinEspecificar.masculino;
+                                            r1.sumaMasculino = sumaMasculino.sifilisSinEspecificar;
+                                            r1.total = sumaMasculino.sifilisSinEspecificar;
                                             resultados.push(r1);
                                         }
                                     } else {
-                                        if (sumaTotal > 0) {
-                                            resultados.push(r2);
+                                        if (elem.causa === 'A54') {
+                                            if (elem.codigo === 'A54.0' || elem.codigo === 'A54.2' || elem.codigo === 'A54.6') {
+
+                                                if (sumaFemenino.secrecionPurulenta > 0) {
+                                                    r2.reporteC2 = 'Secreción genital sin especificar en mujeres';
+                                                    r2.sumaMenor1 = sumaMenor1.secrecionPurulentaFemenino;
+                                                    r2.suma1 = suma1.secrecionPurulentaFemenino;
+                                                    r2.suma24 = suma24.secrecionPurulentaFemenino;
+                                                    r2.suma59 = suma59.secrecionPurulentaFemenino;
+                                                    r2.suma1014 = suma1014.secrecionPurulentaFemenino;
+                                                    r2.suma1524 = suma1524.secrecionPurulentaFemenino;
+                                                    r2.suma2534 = suma2534.secrecionPurulentaFemenino;
+                                                    r2.suma3544 = suma3544.secrecionPurulentaFemenino;
+                                                    r2.suma4564 = suma4564.secrecionPurulentaFemenino;
+                                                    r2.sumaMayor65 = sumaMayor65.secrecionPurulentaFemenino;
+                                                    r2.sumaFemenino = sumaFemenino.secrecionPurulenta;
+                                                    r2.sumaMasculino = 0;
+                                                    r2.total = sumaFemenino.secrecionPurulenta;
+                                                    resultados.push(r2);
+                                                }
+                                                if (sumaMasculino.secrecionPurulenta > 0) {
+                                                    r1.reporteC2 = 'Secreción genital purulenta en hombres';
+                                                    r1.sumaMenor1 = sumaMenor1.secrecionPurulentaMasculino;
+                                                    r1.suma1 = suma1.secrecionPurulentaMasculino;
+                                                    r1.suma24 = suma24.secrecionPurulentaMasculino;
+                                                    r1.suma59 = suma59.secrecionPurulentaMasculino;
+                                                    r1.suma1014 = suma1014.secrecionPurulentaMasculino;
+                                                    r1.suma1524 = suma1524.secrecionPurulentaMasculino;
+                                                    r1.suma2534 = suma2534.secrecionPurulentaMasculino;
+                                                    r1.suma3544 = suma3544.secrecionPurulentaMasculino;
+                                                    r1.suma4564 = suma4564.secrecionPurulentaMasculino;
+                                                    r1.sumaMayor65 = sumaMayor65.secrecionPurulentaMasculino;
+                                                    r1.sumaFemenino = 0;
+                                                    r1.sumaMasculino = sumaMasculino.secrecionPurulenta;
+                                                    r1.total = sumaMasculino.secrecionPurulenta;
+                                                    resultados.push(r1);
+                                                }
+                                            } else {
+                                                if (sumaTotal > 0) {
+                                                    resultados.push(r2);
+                                                }
+                                            }
+                                        } else {
+                                            if (elem.reporteC2 === 'Secreción genital sin especificar') {
+                                                if (sumaFemenino.secrecionSE > 0) {
+                                                    r2.reporteC2 = 'Secreción genital sin especificar en mujeres';
+                                                    r2.sumaMenor1 = sumaMenor1.secrecionSEFemenino;
+                                                    r2.suma1 = suma1.secrecionSEFemenino;
+                                                    r2.suma24 = suma24.secrecionSEFemenino;
+                                                    r2.suma59 = suma59.secrecionSEFemenino;
+                                                    r2.suma1014 = suma1014.secrecionSEFemenino;
+                                                    r2.suma1524 = suma1524.secrecionSEFemenino;
+                                                    r2.suma2534 = suma2534.secrecionSEFemenino;
+                                                    r2.suma3544 = suma3544.secrecionSEFemenino;
+                                                    r2.suma4564 = suma4564.secrecionSEFemenino;
+                                                    r2.sumaMayor65 = sumaMayor65.secrecionSEFemenino;
+                                                    r2.sumaFemenino = sumaFemenino.secrecionSE;
+                                                    r2.sumaMasculino = 0;
+                                                    r2.total = sumaFemenino.secrecionSE;
+                                                    resultados.push(r2);
+                                                }
+                                                if (sumaMasculino.secrecionSE > 0) {
+                                                    r1.reporteC2 = 'Secreción genital sin especificar en hombres';
+                                                    r1.sumaMenor1 = sumaMenor1.secrecionSEMasculino;
+                                                    r1.suma1 = suma1.secrecionSEMasculino;
+                                                    r1.suma24 = suma24.secrecionSEMasculino;
+                                                    r1.suma59 = suma59.secrecionSEMasculino;
+                                                    r1.suma1014 = suma1014.secrecionSEMasculino;
+                                                    r1.suma1524 = suma1524.secrecionSEMasculino;
+                                                    r1.suma2534 = suma2534.secrecionSEMasculino;
+                                                    r1.suma3544 = suma3544.secrecionSEMasculino;
+                                                    r1.suma4564 = suma4564.secrecionSEMasculino;
+                                                    r1.sumaMayor65 = sumaMayor65.secrecionSEMasculino;
+                                                    r1.sumaFemenino = 0;
+                                                    r1.sumaMasculino = sumaMasculino.secrecionSE;
+                                                    r1.total = sumaMasculino.secrecionSE;
+                                                    resultados.push(r1);
+                                                }
+                                            } else {
+                                                if (sumaTotal > 0) {
+                                                    resultados.push(r2);
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -758,6 +761,50 @@ export function getDiagnosticos(params) {
                 });
                 resultados.push(SSEM);
             }
+            // Se agrupan los códigos correspondientes a Secreción Genital Purulenta (codigos A54.0, A54.2 y A54.6) en sexos
+            let secrecionPFemenino = resultados.filter(resultado => {
+                return ((resultado.codigo === 'A54.0' || resultado.codigo === 'A54.2' || resultado.codigo === 'A54.6') && resultado.sumaFemenino > 0);
+            });
+            if (secrecionPFemenino.length > 0) {
+                let SPF = sumarCodigos(secrecionPFemenino);
+                resultados = resultados.filter(resultado => {
+                    return (!((resultado.codigo === 'A54.0' || resultado.codigo === 'A54.2' || resultado.codigo === 'A54.6') && resultado.sumaFemenino > 0));
+                });
+                resultados.push(SPF);
+            }
+            let secrecionPMasculino = resultados.filter(resultado => {
+                return ((resultado.codigo === 'A54.0' || resultado.codigo === 'A54.2' || resultado.codigo === 'A54.6') && resultado.sumaMasculino > 0);
+            });
+            if (secrecionPMasculino.length > 0) {
+                let SPM = sumarCodigos(secrecionPMasculino);
+                resultados = resultados.filter(resultado => {
+                    return (!((resultado.codigo === 'A54.0' || resultado.codigo === 'A54.2' || resultado.codigo === 'A54.6') && resultado.sumaMasculino > 0));
+                });
+                resultados.push(SPM);
+            }
+
+            // Se agrupan los códigos correspondientes a Secreción Genital sin especificar  en sexos
+            let secrecionSEFemenino = resultados.filter(resultado => {
+                return ((resultado.reporteC2==='Secreción genital sin especificar en mujeres'));
+            });
+            if (secrecionSEFemenino.length > 0) {
+                let SSEF = sumarCodigos(secrecionSEFemenino);
+                resultados = resultados.filter(resultado => {
+                    return (!(resultado.reporteC2==='Secreción genital sin especificar en mujeres' && resultado.sumaFemenino > 0));
+                });
+                resultados.push(SSEF);
+            }
+            let secrecionSEMasculino = resultados.filter(resultado => {
+                return ((resultado.reporteC2==='Secreción genital sin especificar en hombres') && resultado.sumaMasculino > 0);
+            });
+            if (secrecionSEMasculino.length > 0) {
+                let SSEM = sumarCodigos(secrecionSEMasculino);
+                resultados = resultados.filter(resultado => {
+                    return (!((resultado.reporteC2==='Secreción genital sin especificar en hombres') && resultado.sumaMasculino > 0));
+                });
+                resultados.push(SSEM);
+            }
+
 
             resultados.sort(sortResultados);
             resolve(resultados);
