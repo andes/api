@@ -1,3 +1,4 @@
+// import { mapaDeCama } from './../schemas/mapaDeCama';
 import * as express from 'express';
 import * as organizacion from '../schemas/organizacion';
 import * as utils from '../../../utils/utils';
@@ -5,9 +6,61 @@ import { defaultLimit, maxLimit } from './../../../config';
 import * as https from 'https';
 import * as configPrivate from '../../../config.private';
 import { toArray } from '../../../utils/utils';
+import { Auth } from '../../../auth/auth.class';
 
 let GeoJSON = require('geojson');
 let router = express.Router();
+
+
+
+/**
+ * Busca la cama por su id.
+ */
+
+router.get('/organizaciones/:id/camas/:idCama', function (req, res, next) {
+    organizacion.model.findOne({_id: req.params.id, 'camas._id': req.params.idCama}, function (err, data: any ) {
+        if (err) {
+            return next(err);
+        }
+        const index = data.camas.findIndex(cama => cama._id.toString() === req.params.idCama);
+        if (index === -1) {
+            return next(new Error('Cama no encontrada'));
+        }
+        res.json(data.camas[index]);
+    });
+});
+
+
+
+
+/**
+//  * busca las camas de una organizacion, por defecto trae todas o se
+//  * pueden filtrar por estado o habitacion.
+//  */
+
+router.get('/organizaciones/:id/camas', function (req, res, next) {
+
+    let query;
+    query =  organizacion.model.findOne({_id: req.params.id});
+    if (req.query.estado) {
+        query
+            .where('camas.estado')
+            .equals(req.query.estado);
+    }
+    if (req.query.habitacion) {
+        query
+            .where('camas.habitacion')
+            .equals(req.query.habitacion);
+    }
+    query.sort({ 'camas.numero': 1 , 'camas.habitacion': 1 });
+    query.exec({}, (err, data) => {
+        if (err) {
+            return next(err);
+        }
+        res.json(data.camas);
+    });
+});
+
 
 router.get('/organizaciones/georef/:id?', async function (req, res, next) {
     if (req.params.id) {
@@ -282,7 +335,17 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/organizacion'
  */
-router.post('/organizaciones', function (req, res, next) {
+
+
+
+
+
+
+
+
+
+
+ router.post('/organizaciones', function (req, res, next) {
     let newOrganization = new organizacion.model(req.body);
     newOrganization.save((err) => {
         if (err) {
@@ -291,6 +354,27 @@ router.post('/organizaciones', function (req, res, next) {
         res.json(newOrganization);
     });
 });
+
+
+// router.post('/organizaciones/:id/camas', function (req, res, next) {
+//     organizacion.model.findOne({_id: req.params.id}, function (err, data: any ) {
+//         if (err) {
+//             return next(err);
+//         }
+//         data.camas.push(req.body);
+//         let newCama = 
+//         organizacion.model.save((err) => {
+//         if (err) {
+//             return next(err);
+//         }
+//         res.json(newMapaDeCama);
+//     });
+// });
+
+
+
+
+
 
 /**
  * @swagger
@@ -331,6 +415,111 @@ router.put('/organizaciones/:id', function (req, res, next) {
         res.json(data);
     });
 });
+
+
+
+
+router.patch('/organizaciones/:id/camas/:id', function (req, res, next) {
+    organizacion.model.findOne({_id: req.params.id, 'camas._id': req.params.idCama}, function (err, data: any ) {
+        if (err) {
+            return next(err);
+        }
+
+        switch (req.body.op) {
+            case 'sector':
+                if (req.body.sector) {
+                    data.camas.sector = req.body.sector;
+                }
+                break;
+            case 'habitacion':
+                if (req.body.habitacion) {
+                    data.camas.habitacion = req.body.habitacion;
+                }
+                break;
+            case 'numero':
+                if (req.body.numero) {
+                    data.camas.numero = req.body.numero;
+                }
+                break;
+            case 'servicio':
+                if (req.body.servicio) {
+                    data.camas.servicio = req.body.servicio;
+                }
+                break;
+            case 'tipoCama':
+                if (req.body.tipoCama) {
+                    data.camas.tipoCama = req.body.tipoCama;
+                }
+                break;
+            case 'equipamiento':
+                if (req.body.equipamiento) {
+                    data
+                        .camas['equipamiento']
+                        .push(req.body.equipamiento);
+                }
+                break;
+            case 'ultimoEstado':
+                if (req.body.ultimoEstado) {
+                    data.camas.ultimoEstado = req.body.ultimoEstado;
+                }
+                break;
+            case 'paciente':
+                if (req.body.paciente) {
+                    data.camas.paciente = req.body.paciente;
+                }
+                break;
+            case 'observaciones':
+                if (req.body.observaciones) {
+                    data.camas.observaciones = req.body.observaciones;
+                }
+                break;
+            default:
+                return next(500);
+        }
+
+        Auth.audit(data, req);
+        data.save(function (error, cama) {
+            if (error) {
+                return next(error);
+            }
+            res.json(data.camas);
+        });
+    });
+});
+
+/**
+ * Agrega una nueva cama a la organizacion.
+ */
+
+
+
+router.patch('/organizaciones/:id/camas', function (req, res, next) {
+    organizacion.model.findOne({_id: req.params.id}, function (err, data: any ) {
+        if (err) {
+            return next(err);
+        }
+        switch (req.body.op) {
+            case 'newCama':
+                if (req.body.newCama) {
+                    data.camas.push(req.body.newCama);
+                }
+                break;
+            default:
+                return next(500);
+        }
+        let newOrganization = new organizacion.model(data);
+        newOrganization.save((err) => {
+            if (err) {
+                return next(err);
+            }
+        });
+        res.json(data.camas);
+    });
+});
+
+
+
+
 
 /**
  * @swagger
