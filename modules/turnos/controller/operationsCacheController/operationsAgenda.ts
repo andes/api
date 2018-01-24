@@ -37,11 +37,7 @@ let config = {
 export function getAgendasDeMongoExportadas() {
     return new Promise<Array<any>>(function (resolve, reject) {
         agendasCache.find({
-            $or: [{
-                estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS
-            }, {
-                estadoIntegracion: constantes.EstadoExportacionAgendaCache.codificada
-            }]
+            estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS
         }).exec(function (err, data) {
             if (err) {
                 reject(err);
@@ -75,8 +71,11 @@ export function getAgendasDeMongoPendientes() {
  */
 export async function checkCodificacion(agenda) {
     try {
-        poolAgendas = await new sql.ConnectionPool(config).connect();
-
+        try {
+            poolAgendas = await new sql.ConnectionPool(config).connect();
+        } catch (ex) {
+            return (ex);
+        }
         let turno;
         let datosTurno = {};
         let idEspecialidad: any;
@@ -100,17 +99,17 @@ export async function checkCodificacion(agenda) {
                         } else {
                             turno[z] = await codificacionCie10(idConsulta, turno[z]);
                         }
+                        datosTurno = {
+                            idAgenda: agenda.id,
+                            idTurno: turno[z]._id,
+                            idBloque: agenda.bloques[x]._id,
+                            idUsuario: constantes.idUsuarioSips,
+                            turno: turno[z]
+                        };
+                        await turnoCtrl.updateTurno(datosTurno);
+                        markAgendaAsProcessed(agenda);
                     }
-                    datosTurno = {
-                        idAgenda: agenda.id,
-                        idTurno: turno[z]._id,
-                        idBloque: agenda.bloques[x]._id,
-                        idUsuario: constantes.idUsuarioSips,
-                        turno: turno[z]
-                    };
-
-                    await turnoCtrl.updateTurno(datosTurno);
-                    markAgendaAsProcessed(agenda);
+                    return (agenda);
                 }
             }
         }
