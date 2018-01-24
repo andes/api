@@ -18,6 +18,7 @@ let matriculacionSchema = new mongoose.Schema({
         motivo: { type: String, required: false },
         fecha: { type: String, required: false }
     },
+    notificacionVencimiento: { type: Boolean, required: false },
     fin: Date,
     revalidacionNumero: Number
 });

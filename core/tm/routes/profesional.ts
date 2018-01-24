@@ -20,9 +20,13 @@ import {
     makeFsFirmaAdmin
 } from '../schemas/firmaAdmin';
 
+
 import * as stream from 'stream';
 import * as base64 from 'base64-stream';
 import { Auth } from '../../../auth/auth.class';
+
+import { sendSms } from '../../../utils/roboSender/sendSms';
+
 
 let router = express.Router();
 
@@ -390,6 +394,70 @@ router.post('/profesionales', Auth.authenticate(), function (req, res, next) {
         //     // }
         // });
     }
+
+});
+
+router.post('/profesionales/sms', function (req, res, next) {
+    let smsOptions = {
+        telefono: req.body.telefono,
+        mensaje:  req.body.mensaje
+    };
+
+    if (sendSms(smsOptions)) {
+        res.send();
+    }
+
+});
+
+router.post('/profesionales/sendMail', function (req, res, next) {
+    'use strict';
+    const config_private = require('../../../config.private');
+    const nodemailer = require('nodemailer');
+    const profesional = req.body.profesional;
+    // Generate test SMTP service account from ethereal.email
+    // Only needed if you don't have a real mail account for testing
+
+        // create reusable transporter object using the default SMTP transport
+        let transporter = nodemailer.createTransport({
+            host: config_private.enviarMail.host,
+            port: 587,
+            secure: false, // true for 465, false for other ports
+            auth: {
+                user: config_private.enviarMail.auth.user, // generated ethereal user
+                pass: config_private.enviarMail.auth.pass // generated ethereal password
+            }
+        });
+
+        let contactos = profesional.contactos;
+        let email;
+        contactos.forEach(element => {
+           if (element.tipo === 'email') {
+               email = element.valor;
+           }
+        });
+
+        const html1 = '<strong>Estimado ' + profesional.nombreCompleto + '</strong> <br> una de sus matriculas esta por vencer, por favor presentarse para realizar la renovacion de la misma.';
+        // setup email data with unicode symbols
+        let mailOptions = {
+            from: '"Matriculaciones Salud" <ultrakite6@gmail.com>', // sender address
+            to: email, // list of receivers
+            subject: 'Vencimiento', // Subject line
+            text: 'Vencimiento?', // plain text body
+            html: '' + html1 + '' // html body
+        };
+
+        // send mail with defined transport object
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                return console.log(error);
+            }
+             res.send(true);
+            // Preview only available when sending through an Ethereal account
+
+            // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@blurdybloop.com>
+            // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
+        });
+
 
 });
 
