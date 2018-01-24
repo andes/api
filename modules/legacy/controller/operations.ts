@@ -134,7 +134,8 @@ export async function getDetalles(idProtocolo, idEfector) {
 export async function cacheTurnosSips(unaAgenda) {
     // Armo el DTO para guardar en la cache de agendas
 
-    if ((unaAgenda.estado !== 'planificacion') && (unaAgenda.nominalizada) && (unaAgenda.tipoPrestaciones[0].term.includes('odonto'))) {
+    if ((unaAgenda.estado !== 'planificacion') && (unaAgenda.nominalizada) &&
+        ((unaAgenda.organizacion._id).equals('57fcf037326e73143fb48c3a')) && (unaAgenda.tipoPrestaciones[0].term.includes('odonto'))) {
         let organizacionAgenda;
         if (unaAgenda.organizacion) {
             organizacionAgenda = await organizacionCompleto(unaAgenda.organizacion.id);
