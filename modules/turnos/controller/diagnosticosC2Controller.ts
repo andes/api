@@ -95,6 +95,7 @@ export function getDiagnosticos(params) {
                     default: 0,
                     botulismo: 0,
                     meningitis: 0,
+                    poliomielitis: 0,
                     sifilisTempranaFemenino: 0,
                     sifilisTempranaMasculino: 0,
                     sifilisSEFemenino: 0,
@@ -118,11 +119,11 @@ export function getDiagnosticos(params) {
                     default: 0,
                     botulismo: 0,
                     meningitis: 0,
+                    poliomielitis: 0,
                     sifilisTemprana: 0,
                     sifilisSinEspecificar: 0,
                     secrecionPurulenta: 0,
-                    secrecionSE: 0,
-                    poliomielitis: 0
+                    secrecionSE: 0
                 };
                 let sumaFemenino = Object.assign({}, sumaMasculino);
 
@@ -134,6 +135,7 @@ export function getDiagnosticos(params) {
                 let sumaMeningitis = 0;
                 let otroLactante = 0;
                 let otroMeningitis = 0;
+                let poliomielitis = 0;
                 promises.push(new Promise((resolve1, reject1) => {
                     agendaModel.find({
                         'horaInicio': { '$gte': new Date(params.horaInicio) },
@@ -149,8 +151,6 @@ export function getDiagnosticos(params) {
                         }]
                     }).exec((err, agenda) => {
                         function sumaSexo(sexo, tipo) {
-                            // switch (sexo) {
-                            //     case 'masculino':
                             switch (tipo) {
                                 case 'botulismo':
                                     sexo.botulismo++;
@@ -197,18 +197,19 @@ export function getDiagnosticos(params) {
                                     }
                                     break;
 
-                                // case 'A80':
-                                //     if (edad < 15) {
-                                //         if (sexo === 'femenino') {
-                                //             tipo.poliomielitis++;
-                                //             sumaSexo(sumaFemenino, 'poliomielitis');
+                                case 'A80':
+                                    if (edad < 15) {
+                                        poliomielitis++;
+                                        if (sexo === 'femenino') {
+                                            tipo.poliomielitis++;
+                                            sumaSexo(sumaFemenino, 'poliomielitis');
 
-                                //         } else {
-                                //             tipo.poliomielitis++;
-                                //             sumaSexo(sumaMasculino, 'poliomielitis');
-                                //         }
-                                //     }
-                                //     break;
+                                        } else {
+                                            tipo.poliomielitis++;
+                                            sumaSexo(sumaMasculino, 'poliomielitis');
+                                        }
+                                    }
+                                    break;
                                 default:
                                     if (elem.reporteC2 === 'Secreción genital sin especificar') {
                                         if (sexo === 'femenino') {
@@ -570,11 +571,45 @@ export function getDiagnosticos(params) {
                                                 resultados.push(r1);
                                             }
                                         } else {
-                                            if (sumaTotal > 0) {
-                                                resultados.push(r2);
+                                            if (elem.causa === 'A80') {
+                                                if (sumaFemenino.poliomielitis > 0) {
+                                                    r2.sumaMenor1 = sumaMenor1.poliomielitis;
+                                                    r2.suma1 = suma1.poliomielitis;
+                                                    r2.suma24 = suma24.poliomielitis;
+                                                    r2.suma59 = suma59.poliomielitis;
+                                                    r2.suma1014 = suma1014.poliomielitis;
+                                                    r2.suma1524 = suma1524.poliomielitis;
+                                                    r2.suma2534 = suma2534.poliomielitis;
+                                                    r2.suma3544 = suma3544.poliomielitis;
+                                                    r2.suma4564 = suma4564.poliomielitis;
+                                                    r2.sumaMayor65 = sumaMayor65.poliomielitis;
+                                                    r2.sumaFemenino = sumaFemenino.poliomielitis;
+                                                    r2.sumaMasculino = 0;
+                                                    r2.total = sumaFemenino.poliomielitis;
+                                                    resultados.push(r2);
+                                                }
+                                                if (sumaMasculino.poliomielitis > 0) {
+                                                    r1.sumaMenor1 = sumaMenor1.poliomielitis;
+                                                    r1.suma1 = suma1.poliomielitis;
+                                                    r1.suma24 = suma24.poliomielitis;
+                                                    r1.suma59 = suma59.poliomielitis;
+                                                    r1.suma1014 = suma1014.poliomielitis;
+                                                    r1.suma1524 = suma1524.poliomielitis;
+                                                    r1.suma2534 = suma2534.poliomielitis;
+                                                    r1.suma3544 = suma3544.poliomielitis;
+                                                    r1.suma4564 = suma4564.poliomielitis;
+                                                    r1.sumaMayor65 = sumaMayor65.poliomielitis;
+                                                    r1.sumaFemenino = 0;
+                                                    r1.sumaMasculino = sumaMasculino.poliomielitis;
+                                                    r1.total = sumaMasculino.poliomielitis;
+                                                    resultados.push(r1);
+                                                }
+                                            } else {
+                                                if (sumaTotal > 0) {
+                                                    resultados.push(r2);
+                                                }
                                             }
                                         }
-                                        // }
                                     }
                                 }
                             }
@@ -682,6 +717,29 @@ export function getDiagnosticos(params) {
                     return (!((resultado.reporteC2 === 'Secreción genital sin especificar en hombres') && resultado.sumaMasculino > 0));
                 });
                 resultados.push(SSEM);
+            }
+
+            // Se agrupan los códigos correspondientes a Sífilis temprana (causa A51) en sexos
+            let poliomielitisFemenino = resultados.filter(resultado => {
+                return (resultado.causa === 'A80' && resultado.sumaFemenino > 0);
+            });
+            if (poliomielitisFemenino.length > 0) {
+                let PF = sumarCodigos(poliomielitisFemenino);
+                resultados = resultados.filter(resultado => {
+                    return (!(resultado.causa === 'A80' && resultado.sumaFemenino > 0));
+                });
+                resultados.push(PF);
+            }
+            let poliomielitisMasculino = resultados.filter(resultado => {
+                return (resultado.causa === 'A80' && resultado.sumaMasculino > 0);
+            });
+
+            if (poliomielitisMasculino.length > 0) {
+                let PM = sumarCodigos(poliomielitisMasculino);
+                resultados = resultados.filter(resultado => {
+                    return (!(resultado.causa === 'A80' && resultado.sumaMasculino > 0));
+                });
+                resultados.push(PM);
             }
 
             resultados.sort(sortResultados);
