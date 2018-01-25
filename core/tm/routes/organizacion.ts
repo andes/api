@@ -1,3 +1,5 @@
+import { create } from 'domain';
+import { camaEstado } from './../schemas/camaEstado';
 // import { mapaDeCama } from './../schemas/mapaDeCama';
 import * as express from 'express';
 import * as organizacion from '../schemas/organizacion';
@@ -7,6 +9,7 @@ import * as https from 'https';
 import * as configPrivate from '../../../config.private';
 import { toArray } from '../../../utils/utils';
 import { Auth } from '../../../auth/auth.class';
+import * as estadoCama from '../routes/camaEstado';
 
 let GeoJSON = require('geojson');
 let router = express.Router();
@@ -29,8 +32,6 @@ router.get('/organizaciones/:id/camas/:idCama', function (req, res, next) {
         res.json(data.camas[index]);
     });
 });
-
-
 
 
 /**
@@ -336,15 +337,6 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
  *           $ref: '#/definitions/organizacion'
  */
 
-
-
-
-
-
-
-
-
-
  router.post('/organizaciones', function (req, res, next) {
     let newOrganization = new organizacion.model(req.body);
     newOrganization.save((err) => {
@@ -354,26 +346,6 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
         res.json(newOrganization);
     });
 });
-
-
-// router.post('/organizaciones/:id/camas', function (req, res, next) {
-//     organizacion.model.findOne({_id: req.params.id}, function (err, data: any ) {
-//         if (err) {
-//             return next(err);
-//         }
-//         data.camas.push(req.body);
-//         let newCama = 
-//         organizacion.model.save((err) => {
-//         if (err) {
-//             return next(err);
-//         }
-//         res.json(newMapaDeCama);
-//     });
-// });
-
-
-
-
 
 
 /**
@@ -419,13 +391,20 @@ router.put('/organizaciones/:id', function (req, res, next) {
 
 
 
-router.patch('/organizaciones/:id/camas/:id', function (req, res, next) {
+router.patch('/organizaciones/:id/camas/:idCama', function (req, res, next) {
+    console.log('HOLAAAA');
     organizacion.model.findOne({_id: req.params.id, 'camas._id': req.params.idCama}, function (err, data: any ) {
         if (err) {
             return next(err);
         }
-
+        let copiaData = data.camas;
+        console.log(req.body.op , 'jaksjdkasjdkjsadkjsakdjaskjd');
         switch (req.body.op) {
+            case 'editCama':
+                if (req.body.editCama) {
+                    data.camas = req.body.editCama;
+                }
+                break;
             case 'sector':
                 if (req.body.sector) {
                     data.camas.sector = req.body.sector;
@@ -458,9 +437,9 @@ router.patch('/organizaciones/:id/camas/:id', function (req, res, next) {
                         .push(req.body.equipamiento);
                 }
                 break;
-            case 'ultimoEstado':
-                if (req.body.ultimoEstado) {
-                    data.camas.ultimoEstado = req.body.ultimoEstado;
+            case 'estado':
+                if (req.body.estado) {
+                    data.camas.ultimoEstado = req.body.estado;
                 }
                 break;
             case 'paciente':
@@ -477,21 +456,36 @@ router.patch('/organizaciones/:id/camas/:id', function (req, res, next) {
                 return next(500);
         }
 
-        Auth.audit(data, req);
-        data.save(function (error, cama) {
-            if (error) {
-                return next(error);
+        if (validaCama(copiaData, data.camas)) {
+            return next('No se puede editar la cama porque ya existe');
+        }
+        if (copiaData.ultimoEstado !== data.camas.ultimoEstado) {
+            this.estadoCama.create(req.body.objEstado);
+        }
+
+        let newCama = new organizacion.model(data.camas);
+        newCama.save((err) => {
+            if (err) {
+                return next(err);
             }
-            res.json(data.camas);
         });
+        res.json(data.camas);
     });
+
+    // TODO: Falta guardar la info de auth
+        // Auth.audit(data, req);
+        // data.save(function (error, cama) {
+        //     if (error) {
+        //         return next(error);
+        //     }
+        //     res.json(data.camas);
+        // });
+    // });
 });
 
 /**
  * Agrega una nueva cama a la organizacion.
  */
-
-
 
 router.patch('/organizaciones/:id/camas', function (req, res, next) {
     organizacion.model.findOne({_id: req.params.id}, function (err, data: any ) {
@@ -501,7 +495,10 @@ router.patch('/organizaciones/:id/camas', function (req, res, next) {
         switch (req.body.op) {
             case 'newCama':
                 if (req.body.newCama) {
-                    data.camas.push(req.body.newCama);
+                   if (validaCama(data.camas, req.body.newCama)) {
+                        return next('No se puede agregar la cama porque ya existe');
+                    }
+                        data.camas.push(req.body.newCama);
                 }
                 break;
             default:
@@ -555,5 +552,21 @@ router.delete('/organizaciones/:id', function (req, res, next) {
         res.json(data);
     });
 });
+
+function validaCama(camas, nuevaCama) {
+    let result = false;
+    camas.forEach(cama => {
+        if (cama.servicio.conceptId && cama.servicio.conceptId &&
+            cama.habitacion === nuevaCama.habitacion &&
+            cama.numero === nuevaCama.numero) {
+                result = true;
+        } else if (cama.habitacion === nuevaCama.habitacion &&
+            cama.numero === nuevaCama.numero) {
+                result = true;
+        }
+    });
+    return result;
+}
+
 
 export = router;

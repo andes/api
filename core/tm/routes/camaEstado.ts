@@ -15,13 +15,23 @@ router.get('/camas/:id/estados', function (req, res, next) {
 
 
 router.post('/camas', function (req, res, next) {
-    let newCamaEstado = new camaEstado(req.body);
-    newCamaEstado.save((err) => {
-        if (err) {
-            return next(err);
-        }
+    create(req.body).then( newCamaEstado => {
         res.json(newCamaEstado);
+    }).catch(err => {
+        return next(err);
     });
 });
 
+function create(estado) {
+    let newCamaEstado = new camaEstado(estado);
+
+    return new Promise((resolve, reject) => {
+        newCamaEstado.save((err, data) => {
+            if (err) {
+                return reject(err);
+            }
+            return resolve(data);
+        });
+    });
+}
 export = router;
