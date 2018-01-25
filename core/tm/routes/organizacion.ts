@@ -392,13 +392,11 @@ router.put('/organizaciones/:id', function (req, res, next) {
 
 
 router.patch('/organizaciones/:id/camas/:idCama', function (req, res, next) {
-    console.log('HOLAAAA');
     organizacion.model.findOne({_id: req.params.id, 'camas._id': req.params.idCama}, function (err, data: any ) {
         if (err) {
             return next(err);
         }
         let copiaData = data.camas;
-        console.log(req.body.op , 'jaksjdkasjdkjsadkjsakdjaskjd');
         switch (req.body.op) {
             case 'editCama':
                 if (req.body.editCama) {
@@ -510,7 +508,7 @@ router.patch('/organizaciones/:id/camas', function (req, res, next) {
                 return next(err);
             }
         });
-        res.json(data.camas);
+        res.json(data.camas[data.camas.length - 1]);
     });
 });
 
