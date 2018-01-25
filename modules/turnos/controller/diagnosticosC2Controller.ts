@@ -348,7 +348,26 @@ export function getDiagnosticos(params) {
                                         sumaSexo(sexo, 'secrecionSE');
                                         break;
                                     } else {
-                                        tipo.default++;
+                                        if (elem.codigo === 'A05.1') { // Botulismo
+                                            if (edad < 1) {
+                                                sumaMenor1.botulismo++;
+                                                sumaSexo(sexo, 'botulismo');
+                                            } else {
+                                                tipo.default++;
+                                            }
+                                        } else {
+                                            if (elem.codigo === 'A17.0') {  // Meningitis Tuberculosa
+                                                if (edad < 5) {
+                                                    sumaMeningitis++;
+                                                    tipo.meningitis++;
+                                                    sumaSexo(sexo, 'meningitis');
+                                                } else {
+                                                    tipo.default++;
+                                                }
+                                            } else {
+                                                tipo.default++;
+                                            }
+                                        }
                                     }
                                     break;
                             }
@@ -358,36 +377,13 @@ export function getDiagnosticos(params) {
                         function calcularContadores(edad, sexo) {
                             if (edad < 5) {
                                 if (edad < 1) {
-                                    if (elem.codigo === 'A05.1') { // Botulismo
-                                        sumaMenor1.botulismo++;
-                                        sumaSexo(sexo, 'botulismo');
-                                    } else {
-                                        if (elem.codigo === 'A17.0') {  // Meningitis Tuberculosa
-                                            sumaMeningitis++;
-                                            sumaMenor1.meningitis++;
-                                            sumaSexo(sexo, 'meningitis');
-                                        } else {
-                                            actualizarContador(sexo, edad, sumaMenor1);
-                                        }
-                                    }
+                                    actualizarContador(sexo, edad, sumaMenor1);
                                 }
                                 if (edad === 1) {
-                                    if (elem.codigo === 'A17.0') {  // Meningitis Tuberculosa
-                                        sumaMeningitis++;
-                                        suma1.meningitis++;
-                                        sumaSexo(sexo, 'meningitis');
-                                    } else {
-                                        actualizarContador(sexo, edad, suma1);
-                                    }
+                                    actualizarContador(sexo, edad, suma1);
                                 }
                                 if (edad >= 2 && edad <= 4) {
-                                    if (elem.codigo === 'A17.0') {  // Meningitis Tuberculosa
-                                        sumaMeningitis++;
-                                        suma24.meningitis++;
-                                        sumaSexo(sexo, 'meningitis');
-                                    } else {
-                                        actualizarContador(sexo, edad, suma24);
-                                    }
+                                    actualizarContador(sexo, edad, suma24);
                                 }
                             }
                             if (edad >= 5 && edad <= 9) {
@@ -785,22 +781,22 @@ export function getDiagnosticos(params) {
 
             // Se agrupan los códigos correspondientes a Secreción Genital sin especificar  en sexos
             let secrecionSEFemenino = resultados.filter(resultado => {
-                return ((resultado.reporteC2==='Secreción genital sin especificar en mujeres'));
+                return ((resultado.reporteC2 === 'Secreción genital sin especificar en mujeres'));
             });
             if (secrecionSEFemenino.length > 0) {
                 let SSEF = sumarCodigos(secrecionSEFemenino);
                 resultados = resultados.filter(resultado => {
-                    return (!(resultado.reporteC2==='Secreción genital sin especificar en mujeres' && resultado.sumaFemenino > 0));
+                    return (!(resultado.reporteC2 === 'Secreción genital sin especificar en mujeres' && resultado.sumaFemenino > 0));
                 });
                 resultados.push(SSEF);
             }
             let secrecionSEMasculino = resultados.filter(resultado => {
-                return ((resultado.reporteC2==='Secreción genital sin especificar en hombres') && resultado.sumaMasculino > 0);
+                return ((resultado.reporteC2 === 'Secreción genital sin especificar en hombres') && resultado.sumaMasculino > 0);
             });
             if (secrecionSEMasculino.length > 0) {
                 let SSEM = sumarCodigos(secrecionSEMasculino);
                 resultados = resultados.filter(resultado => {
-                    return (!((resultado.reporteC2==='Secreción genital sin especificar en hombres') && resultado.sumaMasculino > 0));
+                    return (!((resultado.reporteC2 === 'Secreción genital sin especificar en hombres') && resultado.sumaMasculino > 0));
                 });
                 resultados.push(SSEM);
             }
