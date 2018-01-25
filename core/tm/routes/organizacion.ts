@@ -396,78 +396,74 @@ router.patch('/organizaciones/:id/camas/:idCama', function (req, res, next) {
         if (err) {
             return next(err);
         }
-        let copiaData = data.camas;
+        let indexCama = data.camas.findIndex(cama => cama._id.toString() === req.params.idCama);
         switch (req.body.op) {
             case 'editCama':
                 if (req.body.editCama) {
-                    data.camas = req.body.editCama;
+                    data.camas[indexCama] = req.body.editCama;
                 }
                 break;
             case 'sector':
                 if (req.body.sector) {
-                    data.camas.sector = req.body.sector;
+                    data.camas[indexCama].sector = req.body.sector;
                 }
                 break;
             case 'habitacion':
                 if (req.body.habitacion) {
-                    data.camas.habitacion = req.body.habitacion;
+                    data.camas[indexCama].habitacion = req.body.habitacion;
                 }
                 break;
             case 'numero':
                 if (req.body.numero) {
-                    data.camas.numero = req.body.numero;
+                    data.camas[indexCama].numero = req.body.numero;
                 }
                 break;
             case 'servicio':
                 if (req.body.servicio) {
-                    data.camas.servicio = req.body.servicio;
+                    data.camas[indexCama].servicio = req.body.servicio;
                 }
                 break;
             case 'tipoCama':
                 if (req.body.tipoCama) {
-                    data.camas.tipoCama = req.body.tipoCama;
+                    data.camas[indexCama].tipoCama = req.body.tipoCama;
                 }
                 break;
             case 'equipamiento':
                 if (req.body.equipamiento) {
-                    data
-                        .camas['equipamiento']
-                        .push(req.body.equipamiento);
+                    data.camas[indexCama]['equipamiento'].push(req.body.equipamiento);
                 }
                 break;
             case 'estado':
                 if (req.body.estado) {
-                    data.camas.ultimoEstado = req.body.estado;
+                    data.camas[indexCama].ultimoEstado = req.body.estado;
                 }
                 break;
             case 'paciente':
                 if (req.body.paciente) {
-                    data.camas.paciente = req.body.paciente;
+                    data.camas[indexCama].paciente = req.body.paciente;
                 }
                 break;
             case 'observaciones':
                 if (req.body.observaciones) {
-                    data.camas.observaciones = req.body.observaciones;
+                    data.camas[indexCama].observaciones = req.body.observaciones;
                 }
                 break;
             default:
                 return next(500);
         }
 
-        if (validaCama(copiaData, data.camas)) {
-            return next('No se puede editar la cama porque ya existe');
-        }
-        if (copiaData.ultimoEstado !== data.camas.ultimoEstado) {
-            this.estadoCama.create(req.body.objEstado);
-        }
-
-        let newCama = new organizacion.model(data.camas);
-        newCama.save((err) => {
-            if (err) {
-                return next(err);
+        // if (validaCama(copiaData, data.camas)) {
+        //     return next('No se puede editar la cama porque ya existe');
+        // }
+        // if (copiaData.ultimoEstado !== data.camas.ultimoEstado) {
+        //     this.estadoCama.create(req.body.objEstado);
+        // }
+        data.save((errUpdate) => {
+            if (errUpdate) {
+                return next(errUpdate);
             }
         });
-        res.json(data.camas);
+        res.json(data.camas[indexCama]);
     });
 
     // TODO: Falta guardar la info de auth
@@ -502,10 +498,9 @@ router.patch('/organizaciones/:id/camas', function (req, res, next) {
             default:
                 return next(500);
         }
-        let newOrganization = new organizacion.model(data);
-        newOrganization.save((err) => {
-            if (err) {
-                return next(err);
+        data.save((errCreate) => {
+            if (errCreate) {
+                return next(errCreate);
             }
         });
         res.json(data.camas[data.camas.length - 1]);
