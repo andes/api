@@ -44,7 +44,8 @@ export function getAgendasDeMongoExportadas() {
                     }, {
                         estadoIntegracion: constantes.EstadoExportacionAgendaCache.codificada
                     }]
-                }
+                },
+                { horaFin: { $lte: new Date() } }
             ]
         }).exec(function (err, data) {
             if (err) {

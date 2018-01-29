@@ -28,17 +28,16 @@ export function updateTurno(datosTurno: any) {
                     _id: datosTurno.idAgenda,
                 };
                 delete datosTurno._id;
+                delete datosTurno.turno._id;
                 update[etiquetaTurno] = datosTurno.turno;
-                console.log("query:", query);
-                console.log("update", update);
                 // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
-                (agenda as any).findOneAndUpdate(query, update, { upsert: true, new: true },
+                (agenda as any).findOneAndUpdate(query, { $set: update }, { upsert: true, new: true },
                     function actualizarAgenda(err2, doc2) {
                         if (err2) {
-                            console.log("ERROR UPDATE-----------------", err2);
+                            // console.log("ERROR UPDATE-----------------", err2);
                             reject(err2);
                         } else {
-                            console.log("UPDATE-----------------", doc2);
+                            // console.log("UPDATE-----------------", doc2);
                             resolve(doc2._id);
                         }
                     });
