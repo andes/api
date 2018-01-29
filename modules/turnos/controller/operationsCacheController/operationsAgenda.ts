@@ -251,27 +251,25 @@ async function getCodificacionCie10(codcie10) {
 }
 
 function markAgendaAsProcessed(agenda) {
-    return new Promise((resolve, reject) => {
-        let estadoIntegracion;
-        switch (agenda.estadoIntegracion) {
-            case 'pendiente':
-                estadoIntegracion = constantes.EstadoExportacionAgendaCache.exportadaSIPS;
-                break;
-            case 'exportada a Sips':
-            default:
-                estadoIntegracion = constantes.EstadoExportacionAgendaCache.codificada;
+    let estadoIntegracion;
+    switch (agenda.estadoIntegracion) {
+        case 'pendiente':
+            estadoIntegracion = constantes.EstadoExportacionAgendaCache.exportadaSIPS;
+            break;
+        case 'exportada a Sips':
+        default:
+            estadoIntegracion = constantes.EstadoExportacionAgendaCache.codificada;
+    }
+    return agendasCache.update({ _id: agenda._id }, {
+        $set: {
+            estadoIntegracion: estadoIntegracion
         }
-        agendasCache.update({ _id: agenda._id }, {
-            $set: {
-                estadoIntegracion: estadoIntegracion
-            }
-        }, function (err, raw) {
-            if (err) {
-                reject(err);
-            }
-            resolve(raw);
-        }).exec();
-    });
+    }, function (err, raw) {
+        if (err) {
+            return (err);
+        }
+        return (raw);
+    }).exec();
 }
 
 async function getConsultaDiagnostico(idConsulta) {
