@@ -37,7 +37,15 @@ let config = {
 export function getAgendasDeMongoExportadas() {
     return new Promise<Array<any>>(function (resolve, reject) {
         agendasCache.find({
-            estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS
+            $and: [
+                {
+                    $or: [{
+                        estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS
+                    }, {
+                        estadoIntegracion: constantes.EstadoExportacionAgendaCache.codificada
+                    }]
+                }
+            ]
         }).exec(function (err, data) {
             if (err) {
                 reject(err);
@@ -76,43 +84,45 @@ export async function checkCodificacion(agenda) {
         } catch (ex) {
             return (ex);
         }
-        let turno;
+        let turnos;
         let datosTurno = {};
         let idEspecialidad: any;
-
+        let idConsulta;
         for (let x = 0; x < agenda.bloques.length; x++) {
-            turno = agenda.bloques[x].turnos;
+            turnos = agenda.bloques[x].turnos;
 
-            for (let z = 0; z < turno.length; z++) {
-                let resultado = await turnoOps.existeTurnoSips(turno[z], poolAgendas);
+            for (let z = 0; z < turnos.length; z++) {
+                let resultado = await turnoOps.existeTurnoSips(turnos[z], poolAgendas);
                 let cloneTurno: any = [];
 
                 if (resultado.recordset.length > 0) {
-                    let idConsulta = await existeConsultaTurno(resultado.recordset[0].idTurno);
-                    let turnoPaciente: any = await getPacienteAgenda(agenda, turno[z]._id);
+                    idConsulta = await existeConsultaTurno(resultado.recordset[0].idTurno);
+                    let turnoPaciente: any = await getPacienteAgenda(agenda, turnos[z]._id);
                     idEspecialidad = (agenda.tipoPrestaciones[0].term.includes('odonto')) ? 34 : 14;
-                    turno[z] = turnoPaciente;
+                    turnos[z] = turnoPaciente;
 
                     if (idConsulta) {
                         if (idEspecialidad === constantes.Especialidades.odontologia) {
-                            turno[z] = await codificaOdontologia(idConsulta, turno[z]);
+                            turnos[z] = await codificaOdontologia(idConsulta, turnos[z]);
                         } else {
-                            turno[z] = await codificacionCie10(idConsulta, turno[z]);
+                            turnos[z] = await codificacionCie10(idConsulta, turnos[z]);
                         }
                         datosTurno = {
                             idAgenda: agenda.id,
-                            idTurno: turno[z]._id,
-                            idBloque: agenda.bloques[x]._id,
+                            posTurno: z, // turnos[z]._id,
+                            posBloque: x, // agenda.bloques[x]._id,
                             idUsuario: constantes.idUsuarioSips,
-                            turno: turno[z]
+                            turno: turnos[z]
                         };
                         await turnoCtrl.updateTurno(datosTurno);
-                        markAgendaAsProcessed(agenda);
                     }
-                    return (agenda);
                 }
             }
         }
+        // if (idConsulta) {
+        //     await markAgendaAsProcessed(agenda);
+        // }
+        return (agenda);
     } catch (ex) {
         return (ex);
     }
@@ -126,28 +136,15 @@ async function codificaOdontologia(idConsulta: any, turno: any) {
         let m = 0;
         for (let i = 0; i < idNomenclador.length; i++) {
             codificacionOdonto = await getCodificacionOdonto(idNomenclador[i].idNomenclador);
-            if (i === 0) {
-                turno.asistencia = 'asistio';
-                turno.diagnosticoPrincipal = {
-                    ilegible: false,
-                    codificacion: {
-                        codigo: codificacionOdonto.codigo,
-                        nombre: codificacionOdonto.descripcion,
-                        sinonimo: codificacionOdonto.descripcion,
-                    }
-                };
-            } else {
-                turno.asistencia = 'asistio';
-                turno.diagnosticoSecundario[m] = {
-                    ilegible: false,
-                    codificacion: {
-                        codigo: codificacionOdonto.codigo,
-                        nombre: codificacionOdonto.descripcion,
-                        sinonimo: codificacionOdonto.descripcion,
-                    }
-                };
-                m++;
-            }
+            turno.asistencia = 'asistio';
+            turno.diagnostico.ilegible = false;
+            turno.diagnostico.codificaciones.push({
+                codificacionProfesional: {
+                    codigo: codificacionOdonto.codigo,
+                    nombre: codificacionOdonto.descripcion,
+                    sinonimo: codificacionOdonto.descripcion
+                }
+            });
         }
     } catch (ex) {
         return (ex);
@@ -263,22 +260,27 @@ async function getCodificacionCie10(codcie10) {
 }
 
 function markAgendaAsProcessed(agenda) {
-    let estadoIntegracion;
-    switch (agenda.estadoIntegracion) {
-        case 'pendiente':
-            estadoIntegracion = constantes.EstadoExportacionAgendaCache.exportadaSIPS;
-            break;
-        case 'exportada a Sips':
-        default:
-            estadoIntegracion = constantes.EstadoExportacionAgendaCache.codificada;
-    }
-    agendasCache.update({
-        _id: agenda._id
-    }, {
+    return new Promise((resolve, reject) => {
+        let estadoIntegracion;
+        switch (agenda.estadoIntegracion) {
+            case 'pendiente':
+                estadoIntegracion = constantes.EstadoExportacionAgendaCache.exportadaSIPS;
+                break;
+            case 'exportada a Sips':
+            default:
+                estadoIntegracion = constantes.EstadoExportacionAgendaCache.codificada;
+        }
+        agendasCache.update({ _id: agenda._id }, {
             $set: {
                 estadoIntegracion: estadoIntegracion
             }
+        }, function (err, raw) {
+            if (err) {
+                reject(err);
+            }
+            resolve(raw);
         }).exec();
+    });
 }
 
 async function getConsultaDiagnostico(idConsulta) {
@@ -303,9 +305,9 @@ async function getConsultaOdontologia(idConsulta) {
     }
 }
 
-function getCodificacionOdonto(idNomenclador) {
+async function getCodificacionOdonto(idNomenclador) {
     try {
-        let result = new sql.Request(poolAgendas)
+        let result = await new sql.Request(poolAgendas)
             .input('idNomenclador', sql.Int, idNomenclador)
             .query('SELECT codigo, descripcion FROM dbo.ODO_Nomenclador WHERE idNomenclador = @idNomenclador');
         return (result.recordset[0]);
@@ -325,7 +327,7 @@ guardarCacheASips(agenda) {
     // CON_Agenda de SIPS soporta solo un profesional NOT NULL.
     // En caso de ser nulo el paciente en agenda de ANDES, por defector
     // graba dni '0', correspondiente a 'Sin especifiar', efector SSS.
-    let dniProfesional = agenda.profesionales[0] ? agenda.profesionales[0].documento : '0';
+    let dniProfesional = agenda.profesionales ? agenda.profesionales[0].documento : '0';
     let codigoSisa = agenda.organizacion.codigo.sisa;
     let datosSips = {
         idEfector: '',
@@ -476,8 +478,8 @@ async function existeConsultaTurno(idTurno) {
             .input('idTurno', sql.Int, idTurno)
             .query('SELECT idConsulta FROM dbo.CON_Consulta WHERE idTurno = @idTurno');
 
-        if (result.length > 0) {
-            return (result[0].idConsulta);
+        if (result.recordset.length > 0) {
+            return (result.recordset[0].idConsulta);
         } else {
             return (false);
         }
@@ -527,7 +529,7 @@ async function grabaAgendaSips(agendaSips: any, datosSips: any) {
     let idMotivoInactivacion = 0;
     let multiprofesional = 0;
 
-    let dniProfesional = agendaSips.profesionales[0].documento;
+    let dniProfesional = agendaSips.profesionales ? agendaSips.profesionales[0].documento : '0';
     try {
 
         if (agendaSips.profesionales.length > 1) {
