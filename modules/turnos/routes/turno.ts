@@ -226,10 +226,10 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', (req, res, next) => {
             return next(err);
         }
         let indexBloque = (data as any).bloques.findIndex(bloq => {
-            return bloq._id.equals(req.params.idBLoque);
+            return (bloq.id === req.params.idBloque);
         });
         let indexTurno = (data as any).bloques[indexBloque].turnos.findIndex(t => {
-            return t._id.equals(req.params.idTurno);
+            return (t.id === req.params.idTurno);
         });
         let etiquetaAvisoSuspension: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.avisoSuspension';
         let query = {
@@ -242,9 +242,7 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', (req, res, next) => {
             if (doc == null) {
                 return next('noDisponible');
             }
-            if (writeOpResult) {
-                console.log(writeOpResult.value);
-            }
+            res.json(doc);
         });
     });
 });
