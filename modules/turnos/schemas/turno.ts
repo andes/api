@@ -43,7 +43,7 @@ let turnoSchema = new mongoose.Schema({
     },
     avisoSuspension: {
         type: String,
-        enum: ['pendiente', 'no enviado', 'enviado', 'fallido']
+        enum: ['no enviado', 'enviado', 'fallido']
     },
     paciente: { // pensar que otros datos del paciente conviene tener
         id: mongoose.Schema.Types.ObjectId,
