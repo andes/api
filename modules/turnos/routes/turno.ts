@@ -220,7 +220,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
 });
 
 
-router.patch('/turno/:idTurno/:idBloque/:idAgenda', (req, res, next) => {
+router.patch('/turno/:idTurno/:idBloque/:idAgenda', function (req, res, next) {
     agenda.findById(req.params.idAgenda, async function getAgenda(err, data) {
         if (err) {
             return next(err);
@@ -235,15 +235,16 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', (req, res, next) => {
         let query = {
             _id: req.params.idAgenda,
         };
-        (agenda as any).update(query, { $set: { avisoSuspension: req.query.avisoSuspension } }, { new: true }, function actualizarAgenda(err2, doc: any, writeOpResult) {
-            if (err2) {
-                return next(err2);
-            }
-            if (doc == null) {
-                return next('noDisponible');
-            }
-            res.json(doc);
-        });
+        (agenda as any).update(query, { $set: { etiquetaAvisoSuspension: req.query.avisoSuspension } },
+            { new: true }, function actualizarAgenda(err2, doc: any) {
+                if (err2) {
+                    return next(err2);
+                }
+                if (doc == null) {
+                    return next('noDisponible');
+                }
+                res.json(doc);
+            });
     });
 });
 
