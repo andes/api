@@ -16,21 +16,21 @@ let connection = {
 
 export async function integracionSips() {
     try {
-        let promisesArray: any = [];
-        let opsPromises = [];
-        opsPromises.push(operationsCache.getAgendasDeMongoPendientes());
-        opsPromises.push(operationsCache.getAgendasDeMongoExportadas());
-        let results = await Promise.all(opsPromises);
-        let agendasMongoPendientes = results[0];
-        let agendasMongoExportadas = results[1];
-
+        let agendasMongoPendientes = await operationsCache.getAgendasDeMongoPendientes();
         agendasMongoPendientes.forEach(async (agenda) => {
             await operationsCache.guardarCacheASips(agenda);
         });
+    } catch (ex) {
+        return (ex);
+    }
+}
+
+export async function integracionAndes() {
+    try {
+        let agendasMongoExportadas = await operationsCache.getAgendasDeMongoExportadas();
         agendasMongoExportadas.forEach(async (agenda) => {
             await operationsCache.checkCodificacion(agenda);
         });
-
     } catch (ex) {
         return (ex);
     }

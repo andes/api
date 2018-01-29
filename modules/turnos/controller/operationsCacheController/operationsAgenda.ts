@@ -36,23 +36,13 @@ let config = {
  */
 export function getAgendasDeMongoExportadas() {
     return new Promise<Array<any>>(function (resolve, reject) {
-        agendasCache.find({
-            $and: [
-                {
-                    $or: [{
-                        estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS
-                    }, {
-                        estadoIntegracion: constantes.EstadoExportacionAgendaCache.codificada
-                    }]
-                },
-                { horaFin: { $lte: new Date() } }
-            ]
-        }).exec(function (err, data) {
-            if (err) {
-                reject(err);
-            }
-            resolve(data);
-        });
+        agendasCache.find({ estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS })
+            .exec(function (err, data) {
+                if (err) {
+                    reject(err);
+                }
+                resolve(data);
+            });
     });
 }
 /**
@@ -110,8 +100,8 @@ export async function checkCodificacion(agenda) {
                         }
                         datosTurno = {
                             idAgenda: agenda.id,
-                            posTurno: z, // turnos[z]._id,
-                            posBloque: x, // agenda.bloques[x]._id,
+                            posTurno: z,
+                            posBloque: x,
                             idUsuario: constantes.idUsuarioSips,
                             turno: turnos[z]
                         };
@@ -120,9 +110,9 @@ export async function checkCodificacion(agenda) {
                 }
             }
         }
-        // if (idConsulta) {
-        //     await markAgendaAsProcessed(agenda);
-        // }
+        if (idConsulta) {
+            await markAgendaAsProcessed(agenda);
+        }
         return (agenda);
     } catch (ex) {
         return (ex);
