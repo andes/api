@@ -21,5 +21,6 @@ export let SemanticTag = {
         'organismo',
         'situación',
         'trastorno',
+        'régimen/tratamiento'
     ]
 };

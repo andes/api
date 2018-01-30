@@ -50,6 +50,17 @@ export default [
                 ]
             },
             {
+                key: 'turnos',
+                title: 'Operaciones sobre turnos',
+                child: [
+                    { key: 'registrarAsistencia', title: 'Registrar Asistencia', type: 'boolean' },
+                    { key: 'suspenderTurno', title: 'Suspender Turno', type: 'boolean' },
+                    { key: 'liberarTurno', title: 'Liberar Turno', type: 'boolean' },
+                    { key: 'editarCarpeta', title: 'Editar Carpeta', type: 'boolean' },
+                    { key: 'turnoDoble', title: 'Marcar/Desmarcar Turno Doble', type: 'boolean' },
+                ]
+            },
+            {
                 key: 'darTurnos',
                 title: 'Dar Turnos',
                 child: [
@@ -112,8 +123,9 @@ export default [
         key: 'rup',
         title: 'Modulo RUP',
         comment: '',
+        avoidAll: true,
         child: [
-            { key: 'tipoPrestacion', title: 'Tipo de prestación', type: 'prestacion' }
+            { key: 'tipoPrestacion', title: 'Tipo de prestación', type: 'prestacion', avoidAll: true }
         ]
     },
     {
@@ -151,6 +163,21 @@ export default [
             { key: 'ldap', title: 'Consutar usuario en LDAP', type: 'boolean' },
             { key: 'post', title: 'Crear usuario', type: 'boolean' },
             { key: 'put', title: 'Modificar usuario', type: 'boolean' }
+        ]
+    },
+    {
+        key: 'cda',
+        title: 'Modulo CDA',
+        child: [
+            { key: 'get', title: 'Leer CDA', type: 'boolean' },
+            { key: 'list', title: 'Listar CDA por paciente', type: 'boolean' },
+            { key: 'post', title: 'Generar CDA', type: 'boolean' },
+        ]
+    },
+    {
+        key: 'reportes',
+        title: 'Modulo Reportes',
+        child: [
         ]
     }
 ];

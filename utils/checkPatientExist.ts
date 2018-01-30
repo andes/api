@@ -36,7 +36,6 @@ export function exists(patient: any) {
             from: 0,
             query: query
         };
-
         connElastic.search({
                 index: 'andes',
                 body: body
@@ -49,19 +48,19 @@ export function exists(patient: any) {
                     let pacienteElastic = hit._source;
                     let pacDto = {
                         documento: patient.documento ? patient.documento.toString() : '',
-                        nombre: patient.nombre ? patient.nombre : '',
-                        apellido: patient.apellido ? patient.apellido : '',
-                        fechaNacimiento: patient.fechaNacimiento ? moment(new Date(patient.fechaNacimiento)).format('YYYY-MM-DD') : '',
+                        nombre: patient.nombre ? patient.nombre.toUpperCase() : '',
+                        apellido: patient.apellido ? patient.apellido.toUpperCase() : '',
+                        fechaNacimiento: patient.fechaNacimiento ? moment(new Date(patient.fechaNacimiento)).format('YYYY-MM-DD') : null,
                         sexo: patient.sexo ? patient.sexo : ''
                     };
                     let pacElasticDto = {
                         documento: pacienteElastic.documento ? pacienteElastic.documento.toString() : '',
-                        nombre: pacienteElastic.nombre ? pacienteElastic.nombre : '',
-                        apellido: pacienteElastic.apellido ? pacienteElastic.apellido : '',
-                        fechaNacimiento: pacienteElastic.fechaNacimiento ? moment(pacienteElastic.fechaNacimiento).format('YYYY-MM-DD') : '',
+                        nombre: pacienteElastic.nombre ? pacienteElastic.nombre.toUpperCase() : '',
+                        apellido: pacienteElastic.apellido ? pacienteElastic.apellido.toUpperCase() : '',
+                        fechaNacimiento: pacienteElastic.fechaNacimiento ? moment(pacienteElastic.fechaNacimiento).format('YYYY-MM-DD') : null,
                         sexo: pacienteElastic.sexo ? pacienteElastic.sexo : ''
                     };
-                    let valorMatching = match.matchPersonas(pacElasticDto, pacDto, weights, 'Levenshtein');
+                    let valorMatching = match.matchPersonas(pacDto, pacElasticDto, weights, 'Levenshtein');
                     pacienteElastic['id'] = hit._id;
 
                     if (valorMatching >= porcentajeMatchMax) {

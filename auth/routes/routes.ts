@@ -2,17 +2,15 @@ import * as express from 'express';
 import * as ldapjs from 'ldapjs';
 import * as configPrivate from '../../config.private';
 import { Auth } from './../auth.class';
-import { authOrganizaciones } from '../schemas/organizacion';
 import { authUsers } from '../schemas/permisos';
+import * as authOrganizaciones from './../../core/tm/schemas/organizacion';
 import { profesional } from './../../core/tm/schemas/profesional';
 import * as mongoose from 'mongoose';
 import * as authMobile from '../../modules/mobileApp/controller/AuthController';
 
 const isReachable = require('is-reachable');
 let sha1Hash = require('sha1');
-
 let shiroTrie = require('shiro-trie');
-
 let router = express.Router();
 
 /**
@@ -25,10 +23,9 @@ router.get('/sesion', Auth.authenticate(), function (req, res) {
 });
 
 /**
- * Listado de organizaciones a las que el user tiene permiso
+ * Listado de organizaciones a las que el usuario tiene permiso
  * @get /api/auth/organizaciones
  */
-
 router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
     let username = (req as any).user.usuario.username;
     authUsers.findOne({ usuario: username }, (err, user: any) => {
@@ -48,7 +45,7 @@ router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
                 return mongoose.Types.ObjectId(item._id);
             }
         }).filter(item => item !== null);
-        authOrganizaciones.find({ _id: { $in: organizaciones } }, (errOrgs, orgs: any[]) => {
+        authOrganizaciones.model.find({ _id: { $in: organizaciones } }, (errOrgs, orgs: any[]) => {
             if (errOrgs) {
                 return next(errOrgs);
             }
@@ -71,7 +68,7 @@ router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
             'usuario': username,
             'organizaciones._id': orgId
         }),
-        authOrganizaciones.findOne({ _id: orgId })
+        authOrganizaciones.model.findOne({ _id: orgId })
     ]).then((data: any[]) => {
         if (data[0] && data[1]) {
             let user = data[0];
@@ -83,7 +80,7 @@ router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
                 token: refreshToken
             });
         } else {
-            next('invalid organizacion');
+            next('Organización inválida');
         }
     });
 });
@@ -103,7 +100,6 @@ let checkMobile = function (profesionalId) {
                 });
                 return;
             }
-
             resolve(account);
         }).catch(() => {
             reject();
@@ -144,7 +140,6 @@ router.post('/login', function (req, res, next) {
             if (!data[0] || data[0].length === 0) {
                 return next(403);
             }
-
             if (req.body.mobile) {
                 checkMobile(data[1]._id).then((account: any) => {
                     // Crea el token con los datos de sesión
@@ -182,11 +177,9 @@ router.post('/login', function (req, res, next) {
             if (!data[0] || data[0].length === 0) {
                 return next(403);
             }
-
             let nombre = data[0].nombre;
             let apellido = data[0].apellido;
             let profesional2 = data[1];
-
             // Crea el token con los datos de sesión
             if (req.body.mobile) {
                 checkMobile(profesional2._id).then((account: any) => {
@@ -195,7 +188,6 @@ router.post('/login', function (req, res, next) {
                         token: Auth.generateUserToken(data[0], null, [], profesional2, account._id),
                         user: account
                     });
-
                 });
             } else {
                 // Crea el token con los datos de sesión
@@ -205,12 +197,10 @@ router.post('/login', function (req, res, next) {
             }
         });
     };
-
     // Valida datos
     if (!req.body.usuario || !req.body.password) {
         return next(403);
     }
-
     // Usar LDAP?
     if (!configPrivate.auth.useLdap) {
         // Access de prueba
@@ -255,6 +245,14 @@ router.post('/login', function (req, res, next) {
             }
         });
     }
+});
+
+/**
+ * Genera FileToken para poder acceder a archivos embebidos
+ */
+
+router.post('/file-token', Auth.authenticate(), (req, res, next) => {
+    return res.json({token: Auth.generateFileToken()});
 });
 
 export = router;

@@ -4,11 +4,12 @@ import * as utils from '../../../utils/utils';
 import { defaultLimit, maxLimit } from './../../../config';
 import * as https from 'https';
 import * as configPrivate from '../../../config.private';
+import { toArray } from '../../../utils/utils';
 
 let GeoJSON = require('geojson');
 let router = express.Router();
 
-router.get('/organizaciones/georef/:id?', function (req, res, next) {
+router.get('/organizaciones/georef/:id?', async function (req, res, next) {
     if (req.params.id) {
         organizacion.model.findById(req.params.id, function (err, data: any) {
             if (err) {
@@ -64,8 +65,7 @@ router.get('/organizaciones/georef/:id?', function (req, res, next) {
         });
 
     } else {
-        let query;
-        query = organizacion.model.aggregate([
+        let query = organizacion.model.aggregate([
             {
                 '$match': {
                     'direccion.geoReferencia': { $exists: true }
@@ -77,14 +77,11 @@ router.get('/organizaciones/georef/:id?', function (req, res, next) {
                     'lat': { $arrayElemAt: ['$direccion.geoReferencia', 0] },
                     'lng': { $arrayElemAt: ['$direccion.geoReferencia', 1] }
                 }
-            }]);
-        query.exec(function (err, data) {
-            if (err) {
-                return next(err);
-            }
-            let geoJsonData = GeoJSON.parse(data, { Point: ['lat', 'lng'], include: ['nombre'] });
-            res.json(geoJsonData);
-        });
+            }]).cursor({}).exec();
+
+        let data = await toArray(query);
+        let geoJsonData = GeoJSON.parse(data, { Point: ['lat', 'lng'], include: ['nombre'] });
+        res.json(geoJsonData);
     }
 });
 
@@ -241,6 +238,9 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
         }
         if (req.query.activo) {
             filtros['activo'] = req.query.activo;
+        }
+        if (req.query.tipoEstablecimiento) {
+            filtros['tipoEstablecimiento.nombre'] = {'$regex': utils.makePattern(req.query.tipoEstablecimiento) };
         }
 
         let skip: number = parseInt(req.query.skip || 0, 10);
