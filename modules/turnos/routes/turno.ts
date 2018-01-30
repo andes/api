@@ -12,8 +12,10 @@ import * as turnosController from '../controller/turnosController';
 import { esPrimerPaciente } from '../controller/agenda';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
+import * as debug from 'debug';
 
 let router = express.Router();
+let dbg = debug('turno');
 
 router.get('/turno/:id*?', async function (req, res, next) {
     try {
@@ -231,20 +233,20 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', function (req, res, next) {
         let indexTurno = (data as any).bloques[indexBloque].turnos.findIndex(t => {
             return (t.id === req.params.idTurno);
         });
+        let update = {};
         let etiquetaAvisoSuspension: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.avisoSuspension';
+        update[etiquetaAvisoSuspension] = req.body.avisoSuspension;
         let query = {
             _id: req.params.idAgenda,
         };
-        (agenda as any).update(query, { $set: { etiquetaAvisoSuspension: req.query.avisoSuspension } },
-            { new: true }, function actualizarAgenda(err2, doc: any) {
-                if (err2) {
-                    return next(err2);
-                }
-                if (doc == null) {
-                    return next('noDisponible');
-                }
-                res.json(doc);
-            });
+        dbg('query --->', query);
+
+        agenda.update(query, { $set: update }, function (error, data2) {
+            if (error) {
+                return next(error);
+            }
+            res.json(data2);
+        });
     });
 });
 
