@@ -24,7 +24,7 @@ export const modules = {
         active: true,
         path: './core/tm/routes',
         route: '/core/tm',
-        middleware: null,
+        middleware: appMiddleware,
     },
     term: {
         active: true,
