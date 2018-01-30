@@ -360,6 +360,7 @@ export function actualizarEstado(req, data) {
                     }
                     turno.motivoSuspension = 'agendaSuspendida';
                     turno.avisoSuspension = 'no enviado';
+
                 });
             });
         }
