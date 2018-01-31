@@ -272,6 +272,7 @@ function markAgendaAsProcessed(agenda) {
         case 'exportada a Sips':
         default:
             estadoIntegracion = constantes.EstadoExportacionAgendaCache.codificada;
+            break;
     }
     agendasCache.update({
         _id: agenda._id
