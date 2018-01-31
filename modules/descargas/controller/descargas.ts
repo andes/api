@@ -1,11 +1,13 @@
 
 import * as fs from 'fs';
-import * as moment from 'moment';
 import * as scss from 'node-sass';
 import * as pdf from 'html-pdf';
 import { Auth } from '../../../auth/auth.class';
 
 export class Documento {
+
+    private static locale = 'es-ES';
+    private static timeZone = 'America/Argentina/Buenos_Aires';
 
     /**
      * Opciones default de PDF rendering
@@ -58,7 +60,7 @@ export class Documento {
         <img src="data:image/png;base64,${logoPDP.toString('base64')}" style="display: inline-block; width: 100px; float: right;">
         <div style="display: inline-block; float: left; width: 400px; margin-right: 10px; text-align: justify;">
             El contenido de este informe ha sido validado digitalmente siguiendo los estándares de calidad y seguridad requeridos. El   Hospital Provincial Neuquén es responsable Inscripto en el Registro Nacional de Protección de Datos Personales bajo el N° de Registro 100000182, según lo requiere la Ley N° 25.326 (art. 3° y 21 inciso 1)
-            ${JSON.stringify(Auth.getUserName(req))} - ${moment().format('ddd DD/MM/YYYY H:m')} hs
+            ${JSON.stringify(Auth.getUserName(req))} - ${new Date().toLocaleString('locale', { timeZone: this.timeZone })} hs
         </div>
     </footer>`;
 
