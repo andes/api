@@ -1,0 +1,151 @@
+$red: #dd4b39;
+$orange: #ff8d22;
+$yellow: #ffd500;
+$green: #8CC63F;
+$blue: #00A8E0;
+$dark-blue: #002738;
+$light-grey: #f9f9f9;
+$dark-grey: #AAAAAA;
+// Brand
+$brand-primary: $blue;
+$brand-inverse: $dark-blue;
+// Body
+$body-bg: #e6e6e6;
+// Font
+$font-family: 'TypoPRO Source Sans Pro';
+$font-family-sans-serif: 'TypoPRO Source Sans Pro';
+$font-family-serif: 'TypoPRO Source Sans Pro';
+$font-family-base: 'TypoPRO Source Sans Pro';
+button,
+input,
+optgroup,
+select,
+textarea {
+  font-family: $font-family;
+}
+
+// Links
+$link-color: $blue;
+// Nav Bar
+$brand-inverse: $blue;
+$navbar-padding-x: 0;
+$navbar-padding-y: 0;
+$navbar-brand-padding-x: 0;
+$navbar-brand-padding-y: 0;
+$navbar-height: 50px;
+// Variable custom de layout.scss
+$navbar-brand-width: 100px; // Variable custom de layout.scss
+// Buttons
+$btn-primary-border: $blue;
+$btn-primary-bg: $blue;
+$btn-focus-box-shadow: none;
+$btn-border-radius: 0;
+$btn-border-radius-lg: 0;
+$btn-border-radius-sm: 0;
+$btn-box-shadow: 0;
+// Components
+$border-radius: 0;
+$border-radius-lg: 0;
+$border-radius-sm: 0;
+// Form
+$input-border-radius: 0;
+$input-border-radius-lg: 0;
+$input-border-radius-sm: 0;
+$input-color-placeholder: #e3e3e3;
+$form-group-margin-bottom: 0;
+// Validation states
+$state-success-text: $green;
+$state-success-bg: $green;
+$state-success-border: $green;
+$state-info-text: $blue;
+$state-info-bg: $blue;
+$state-info-border: $blue;
+$state-warning-text: $orange;
+$state-warning-bg: $orange;
+$state-warning-border: $orange;
+$state-danger-text: $red;
+$state-danger-bg: $red;
+$state-danger-border: $red;
+// Alerts
+$alert-border-radius: 0;
+$alert-border-width: 0;
+$alert-success-bg: $state-success-bg;
+$alert-success-text: white;
+$alert-success-border: $state-success-border;
+$alert-info-bg: $state-info-bg;
+$alert-info-text: white;
+$alert-info-border: $state-info-border;
+$alert-warning-bg: $state-warning-bg;
+$alert-warning-text: white;
+$alert-warning-border: $state-warning-border;
+$alert-danger-bg: $state-danger-bg;
+$alert-danger-text: white;
+$alert-danger-border: $state-danger-border;
+// List Group
+$list-group-border-radius: 0;
+$list-group-active-bg: $blue;
+$list-group-active-border: $blue;
+// Dropdown
+$dropdown-padding-y: 0;
+$dropdown-margin-top: 0;
+// Table
+$table-inverse-bg: $dark-blue;
+.table .bg-inverse {
+  background-color: $dark-blue !important;
+}
+
+// Tooltips: ;
+$tooltip-opacity: .8;
+$tooltip-padding-y: 10px;
+$tooltip-padding-x: 10px;
+$tooltip-bg: #333;
+$tooltip-arrow-color: $tooltip-bg;
+$tooltip-max-width: auto;
+// BADGE
+.badge-default,
+.badge-danger,
+.badge-success,
+.badge-warning,
+.badge-info,
+{
+  background: transparent;
+  border: 1.5px solid;
+  font-size: 0.75em;
+  font-weight: normal;
+  padding: 5px;
+  text-transform: uppercase; // Espaciado del ícono
+  i {
+    margin-right: 5px;
+  }
+}
+
+.badge-default {
+  border-color: $dark-grey;
+  color: $dark-grey;
+}
+
+.badge-danger {
+  border-color: $red;
+  color: $red;
+}
+
+.badge-success {
+  border-color: $green;
+  color: $green;
+}
+
+.badge-warning {
+  border-color: $orange;
+  color: $orange;
+}
+
+.badge-info {
+  color: $blue;
+  border-color: $blue;
+}
+
+// Espaciado del ícono
+[class^="badge-"]>i,
+[class^="label-"]>i {
+  margin-right: 5px;
+}
