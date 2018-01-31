@@ -1,3 +1,6 @@
+import { create } from 'domain';
+import { camaEstado } from './../schemas/camaEstado';
+// import { mapaDeCama } from './../schemas/mapaDeCama';
 import * as express from 'express';
 import * as organizacion from '../schemas/organizacion';
 import * as utils from '../../../utils/utils';
@@ -5,9 +8,60 @@ import { defaultLimit, maxLimit } from './../../../config';
 import * as https from 'https';
 import * as configPrivate from '../../../config.private';
 import { toArray } from '../../../utils/utils';
+import { Auth } from '../../../auth/auth.class';
+import * as estadoCama from '../routes/camaEstado';
 
 let GeoJSON = require('geojson');
 let router = express.Router();
+
+
+
+/**
+ * Busca la cama por su id.
+ */
+
+router.get('/organizaciones/:id/camas/:idCama', function (req, res, next) {
+    organizacion.model.findOne({_id: req.params.id, 'camas._id': req.params.idCama}, function (err, data: any ) {
+        if (err) {
+            return next(err);
+        }
+        const index = data.camas.findIndex(cama => cama._id.toString() === req.params.idCama);
+        if (index === -1) {
+            return next(new Error('Cama no encontrada'));
+        }
+        res.json(data.camas[index]);
+    });
+});
+
+
+/**
+//  * busca las camas de una organizacion, por defecto trae todas o se
+//  * pueden filtrar por estado o habitacion.
+//  */
+
+router.get('/organizaciones/:id/camas', function (req, res, next) {
+
+    let query;
+    query =  organizacion.model.findOne({_id: req.params.id});
+    if (req.query.estado) {
+        query
+            .where('camas.estado')
+            .equals(req.query.estado);
+    }
+    if (req.query.habitacion) {
+        query
+            .where('camas.habitacion')
+            .equals(req.query.habitacion);
+    }
+    query.sort({ 'camas.numero': 1 , 'camas.habitacion': 1 });
+    query.exec({}, (err, data) => {
+        if (err) {
+            return next(err);
+        }
+        res.json(data.camas);
+    });
+});
+
 
 router.get('/organizaciones/georef/:id?', async function (req, res, next) {
     if (req.params.id) {
@@ -282,7 +336,8 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/organizacion'
  */
-router.post('/organizaciones', function (req, res, next) {
+
+ router.post('/organizaciones', function (req, res, next) {
     let newOrganization = new organizacion.model(req.body);
     newOrganization.save((err) => {
         if (err) {
@@ -291,6 +346,7 @@ router.post('/organizaciones', function (req, res, next) {
         res.json(newOrganization);
     });
 });
+
 
 /**
  * @swagger
@@ -332,6 +388,129 @@ router.put('/organizaciones/:id', function (req, res, next) {
     });
 });
 
+
+
+
+router.patch('/organizaciones/:id/camas/:idCama', function (req, res, next) {
+    organizacion.model.findOne({_id: req.params.id, 'camas._id': req.params.idCama}, function (err, data: any ) {
+        if (err) {
+            return next(err);
+        }
+        let indexCama = data.camas.findIndex(cama => cama._id.toString() === req.params.idCama);
+        switch (req.body.op) {
+            case 'editCama':
+                if (req.body.editCama) {
+                    data.camas[indexCama] = req.body.editCama;
+                }
+                break;
+            case 'sector':
+                if (req.body.sector) {
+                    data.camas[indexCama].sector = req.body.sector;
+                }
+                break;
+            case 'habitacion':
+                if (req.body.habitacion) {
+                    data.camas[indexCama].habitacion = req.body.habitacion;
+                }
+                break;
+            case 'numero':
+                if (req.body.numero) {
+                    data.camas[indexCama].numero = req.body.numero;
+                }
+                break;
+            case 'servicio':
+                if (req.body.servicio) {
+                    data.camas[indexCama].servicio = req.body.servicio;
+                }
+                break;
+            case 'tipoCama':
+                if (req.body.tipoCama) {
+                    data.camas[indexCama].tipoCama = req.body.tipoCama;
+                }
+                break;
+            case 'equipamiento':
+                if (req.body.equipamiento) {
+                    data.camas[indexCama]['equipamiento'].push(req.body.equipamiento);
+                }
+                break;
+            case 'estado':
+                if (req.body.estado) {
+                    data.camas[indexCama].ultimoEstado = req.body.estado;
+                }
+                break;
+            case 'paciente':
+                if (req.body.paciente) {
+                    data.camas[indexCama].paciente = req.body.paciente;
+                }
+                break;
+            case 'observaciones':
+                if (req.body.observaciones) {
+                    data.camas[indexCama].observaciones = req.body.observaciones;
+                }
+                break;
+            default:
+                return next(500);
+        }
+
+        // if (validaCama(copiaData, data.camas)) {
+        //     return next('No se puede editar la cama porque ya existe');
+        // }
+        // if (copiaData.ultimoEstado !== data.camas.ultimoEstado) {
+        //     this.estadoCama.create(req.body.objEstado);
+        // }
+        data.save((errUpdate) => {
+            if (errUpdate) {
+                return next(errUpdate);
+            }
+        });
+        res.json(data.camas[indexCama]);
+    });
+
+    // TODO: Falta guardar la info de auth
+        // Auth.audit(data, req);
+        // data.save(function (error, cama) {
+        //     if (error) {
+        //         return next(error);
+        //     }
+        //     res.json(data.camas);
+        // });
+    // });
+});
+
+/**
+ * Agrega una nueva cama a la organizacion.
+ */
+
+router.patch('/organizaciones/:id/camas', function (req, res, next) {
+    organizacion.model.findOne({_id: req.params.id}, function (err, data: any ) {
+        if (err) {
+            return next(err);
+        }
+        switch (req.body.op) {
+            case 'newCama':
+                if (req.body.newCama) {
+                   if (validaCama(data.camas, req.body.newCama)) {
+                        return next('No se puede agregar la cama porque ya existe');
+                    }
+                        data.camas.push(req.body.newCama);
+                }
+                break;
+            default:
+                return next(500);
+        }
+        data.save((errCreate) => {
+            if (errCreate) {
+                return next(errCreate);
+            }
+        });
+        res.json(data.camas[data.camas.length - 1]);
+    });
+});
+
+
+
+
+
 /**
  * @swagger
  * /organizacion/{id}:
@@ -366,5 +545,21 @@ router.delete('/organizaciones/:id', function (req, res, next) {
         res.json(data);
     });
 });
+
+function validaCama(camas, nuevaCama) {
+    let result = false;
+    camas.forEach(cama => {
+        if (cama.servicio.conceptId && cama.servicio.conceptId &&
+            cama.habitacion === nuevaCama.habitacion &&
+            cama.numero === nuevaCama.numero) {
+                result = true;
+        } else if (cama.habitacion === nuevaCama.habitacion &&
+            cama.numero === nuevaCama.numero) {
+                result = true;
+        }
+    });
+    return result;
+}
+
 
 export = router;
