@@ -270,9 +270,10 @@ function markAgendaAsProcessed(agenda) {
             estadoIntegracion = constantes.EstadoExportacionAgendaCache.exportadaSIPS;
             break;
         case 'exportada a Sips':
-        default:
             estadoIntegracion = constantes.EstadoExportacionAgendaCache.codificada;
             break;
+        default:
+            estadoIntegracion = constantes.EstadoExportacionAgendaCache.codificada;
     }
     agendasCache.update({
         _id: agenda._id
@@ -280,7 +281,7 @@ function markAgendaAsProcessed(agenda) {
             $set: {
                 estadoIntegracion: estadoIntegracion
             }
-        }).exec();
+        })
 }
 
 async function getConsultaDiagnostico(idConsulta) {
