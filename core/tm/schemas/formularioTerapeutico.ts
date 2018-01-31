@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
 import { pacienteSchema } from '../../mpi/schemas/paciente';
 
-export let schema = new mongoose.Schema({
+let schema = new mongoose.Schema({
     capitulo: Number,
     nombre: String,
     subcapitulos: [{
@@ -22,5 +22,13 @@ export let schema = new mongoose.Schema({
         }]
     }]
 });
+
+// Habilitar plugin de auditoría
+schema.plugin(require('../../../mongoose/audit'));
+
+// Exportar modelo
+let model = mongoose.model('formulario', schema, 'formulario');
+
+export = model;
 
 
