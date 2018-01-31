@@ -8,6 +8,7 @@ import { NotificationService } from './NotificationService';
 import { sendSms, ISms } from '../../../utils/roboSender';
 
 import * as debug from 'debug';
+import { toArray } from '../../../utils/utils';
 
 let log = debug('RecordatorioController');
 
@@ -21,7 +22,7 @@ let agendasRemainderDays = 1;
  */
 
 export function buscarTurnosARecordar(dayOffset) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
 
         let startDay = moment.utc().add(dayOffset, 'days').startOf('day').toDate();
         let endDay = moment.utc().add(dayOffset, 'days').endOf('day').toDate();
@@ -39,21 +40,21 @@ export function buscarTurnosARecordar(dayOffset) {
             { '$unwind': '$bloques.turnos' },
             { '$match': matchTurno }
         ];
+        let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
 
-        return agendaModel.aggregate(pipeline).then((data) => {
-            let turnos = [];
-            data.forEach((elem: any) => {
-                let turno = elem.bloques.turnos;
-                turno.id = elem.bloques.turnos._id;
-                turno.paciente = elem.bloques.turnos.paciente;
-                turno.tipoRecordatorio = 'turno';
-                turnos.push(turno);
-            });
-
-            guardarRecordatorioTurno(turnos, function (ret) {
-                resolve();
-            });
+        let turnos = [];
+        data.forEach((elem: any) => {
+            let turno = elem.bloques.turnos;
+            turno.id = elem.bloques.turnos._id;
+            turno.paciente = elem.bloques.turnos.paciente;
+            turno.tipoRecordatorio = 'turno';
+            turnos.push(turno);
         });
+
+        guardarRecordatorioTurno(turnos, function (ret) {
+            resolve();
+        });
+
     });
 }
 
@@ -118,7 +119,7 @@ export function enviarTurnoRecordatorio() {
  */
 
 export function agendaRecordatorioQuery(dayOffset) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         let startDay = moment(new Date()).add(dayOffset, 'days').startOf('day').toDate() as any;
         let endDay = moment(new Date()).add(dayOffset, 'days').endOf('day').toDate() as any;
         let match = {
@@ -146,13 +147,9 @@ export function agendaRecordatorioQuery(dayOffset) {
             }
         ];
 
-        let query = agendaModel.aggregate(pipeline);
-        query.exec(function (err, data) {
-            if (err) {
-                return reject(err);
-            }
-            resolve(data);
-        });
+        let query = agendaModel.aggregate(pipeline).cursor({}).exec();
+        let data = await toArray(query);
+        return resolve(data);
     });
 }
 

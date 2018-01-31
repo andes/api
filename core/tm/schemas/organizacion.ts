@@ -1,8 +1,10 @@
+import * as camas from './camas';
 import * as mongoose from 'mongoose';
 import * as edificioSchema from './edificio';
 import * as direccionSchema from './direccion';
 import * as contactoSchema from './contacto';
 import * as tipoEstablecimientoSchema from './tipoEstablecimiento';
+import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
 
 let codigoSchema = new mongoose.Schema({
         sisa: {
@@ -27,7 +29,9 @@ let _schema = new mongoose.Schema({
         default: true
     },
     fechaAlta: Date,
-    fechaBaja: Date
+    fechaBaja: Date,
+    servicios: [SnomedConcept],
+    camas: [camas.schema]
 });
 
 export let schema = _schema;

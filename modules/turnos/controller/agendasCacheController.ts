@@ -1,4 +1,4 @@
-import * as operationsCache from './operationsCacheController';
+import * as operationsCache from './operationsCacheController/operationsAgenda';
 import * as configPrivate from '../../../config.private';
 import * as sql from 'mssql';
 
@@ -15,33 +15,23 @@ let connection = {
 };
 
 export async function integracionSips() {
-    return new Promise<Array<any>>(async function (resolve, reject) {
-        try {
-            let promisesArray: any = [];
-            pool = await sql.connect(connection);
-            let agendasMongoPendientes = await operationsCache.getAgendasDeMongoPendientes();
-            if (agendasMongoPendientes.length > 0) {
-                await operationsCache.guardarCacheASips(agendasMongoPendientes, 0, pool);
-                resolve();
-            } else {
-                resolve();
-            }
-            let agendasMongoExportadas = await operationsCache.getAgendasDeMongoExportadas();
-            agendasMongoExportadas.forEach(async (agenda) => {
-                promisesArray.push(await operationsCache.checkCodificacion(agenda, pool));
-            });
+    try {
+        let promisesArray: any = [];
+        let opsPromises = [];
+        opsPromises.push(operationsCache.getAgendasDeMongoPendientes());
+        opsPromises.push(operationsCache.getAgendasDeMongoExportadas());
+        let results = await Promise.all(opsPromises);
+        let agendasMongoPendientes = results[0];
+        let agendasMongoExportadas = results[1].slice(250);
 
-            if (promisesArray.length > agendasMongoExportadas) {
-                Promise.all(promisesArray).then(values => {
-                    pool.close();
-                    resolve();
-                });
-            } else {
-                resolve();
-            }
-        } catch (ex) {
-            pool.close();
-            reject(ex);
-        }
-    });
+        agendasMongoPendientes.forEach(async (agenda) => {
+            await operationsCache.guardarCacheASips(agenda);
+        });
+        agendasMongoExportadas.forEach(async (agenda) => {
+            await operationsCache.checkCodificacion(agenda);
+        });
+
+    } catch (ex) {
+        return (ex);
+    }
 }
