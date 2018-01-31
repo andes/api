@@ -17,8 +17,9 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
     let transaction = await new sql.Transaction(pool);
 
     return new Promise(async function (resolve2, reject) {
-        // TODO if (medicosExistentes.documentos.indexOf(agenda.profesionales[0].documento) >= 0) {
-        if (true) {
+        let idProfesional = await getIdProfesionalPrestaciones(agenda.profesionales[0].documento);
+        
+        if (idProfesional) {
             transaction.begin(async err => {
                 let rolledBack = false;
                 transaction.on('rollback', aborted => {
@@ -33,7 +34,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
                     if (idTipoPrestacion) {
                         if (!idAgendaHPN) {
                             idAgendaHPN = await saveAgenda(agenda, idTipoPrestacion);
-                            await saveAgendaProfesional(idAgendaHPN, await getIdProfesionalPrestaciones(agenda.profesionales[0].documento));
+                            await saveAgendaProfesional(idAgendaHPN, idProfesional);
                             await saveAgendaTipoPrestacion(idAgendaHPN, idTipoPrestacion);
                         }
 
@@ -56,6 +57,23 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
         }
     });
 
+    async function getIdProfesionalPrestaciones(documento) {
+        let query = 'select TOP(1) medicos.id ' +
+                    'from Medicos ' +
+                    'where documento = @documento ' + 
+                    'OR EXISTS ( ' +
+                        'SELECT * ' +
+                        'FROM Personal_Agentes ' +
+                        'WHERE Personal_Agentes.Numero = numeroAgente ' +
+                        'AND Personal_Agentes.Documento = @documento ' +
+                    ')';
+        let result = await pool.request()
+                .input('documento', sql.VarChar(50), documento)
+                .query(query);
+        
+        return (result.length > 0 ?  result[0].id : null);
+    }
+
     async function getIdAgendaHPN(idAndes) {
         let query = 'SELECT id FROM dbo.Prestaciones_Worklist_Programacion WHERE andesId = @idAndes';
         let result = await pool.request()
@@ -63,16 +81,6 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
             .query(query);
 
         return (result.length > 0 ?  result[0].id : null);
-    }
-
-    async function getIdProfesionalPrestaciones(documento) {
-        // let query = 'SELECT id FROM dbo.Medicos WHERE documento = @documento';
-        // let result = await pool.request()
-        //      .input('documento', sql.Varchar, documento)
-        //      .query(query);
-
-        // return result[0].id;
-        return 18;
     }
 
     async function saveAgendaProfesional(idProgramacion, idProfesional) {
