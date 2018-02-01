@@ -325,6 +325,16 @@ export function generateCDA(uniqueId, patient, date, author, organization, snome
 }
 
 /**
+ * Listado de CDA por metadata
+ * @param conds
+ */
+export function findByMetadata (conds) {
+    let CDAFiles = makeFs();
+    return CDAFiles.find(conds);
+}
+
+
+/**
  * listado de CDA por paciente y tipo de prestación
  */
 

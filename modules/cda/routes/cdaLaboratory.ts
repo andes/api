@@ -6,23 +6,17 @@ import * as moment from 'moment';
 import * as sql from 'mssql';
 
 import * as configPrivate from '../../../config.private';
-import {
-    model as Organizaciones
-} from '../../../core/tm/schemas/organizacion';
-import {
-    model as Cie10
-} from '../../../core/term/schemas/cie10';
-import {
-    makeFs
-} from '../schemas/CDAFiles';
+import { model as Organizaciones } from '../../../core/tm/schemas/organizacion';
+import { model as Cie10 } from '../../../core/term/schemas/cie10';
+import { makeFs } from '../schemas/CDAFiles';
 import * as pacienteCtr from '../../../core/mpi/controller/paciente';
 import * as cdaCtr from '../controller/CDAPatient';
 import * as operations from '../../legacy/controller/operations';
 import * as pdfGenerator from '../../../utils/pdfGenerator';
 
-import {
-    Auth
-} from '../../../auth/auth.class';
+import { Auth } from '../../../auth/auth.class';
+import * as labsImport from '../controller/import-labs';
+
 let path = require('path');
 let router = express.Router();
 let pool;
@@ -33,6 +27,11 @@ let connection = {
     database: configPrivate.conSql.serverSql.database
 };
 
+router.get('/testing/dfsdf', async(req: any, res, next) => {
+    pacienteCtr.buscarPaciente('5a7352a42b2d2a64e8721ee4').then((rest) => {
+        labsImport.importarDatos(rest.paciente);
+    });
+});
 
 // ATENCIÓN: SOLO PARA USAR A NIVEL DE INTEGRACIÓN!!!!
 

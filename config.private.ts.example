@@ -156,3 +156,8 @@ export const CDA = {
     rootOID: ''
 };
 
+export const wsSalud = {
+   host: '',
+   getPaciente: '',
+   getResultado: ''
+};
