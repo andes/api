@@ -31,7 +31,7 @@ router.get('/prestaciones/huds/:idPaciente', function (req, res, next) {
 
     let conceptos = (req.query.conceptIds) ? req.query.conceptIds : null;
 
-    Prestacion.find(query, (err, prestaciones) => {
+    return Prestacion.find(query, (err, prestaciones) => {
         if (err) {
             return next(err);
         }
