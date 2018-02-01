@@ -32,7 +32,7 @@ let schema = new mongoose.Schema({
 schema.plugin(require('../../../mongoose/audit'));
 
 // Exportar modelo
-let model = mongoose.model('formulario', schema, 'formulario');
+let model = mongoose.model('formularioTerapeutico', schema, 'formularioTerapeutico');
 
 export = model;
 
