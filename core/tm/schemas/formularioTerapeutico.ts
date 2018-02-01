@@ -7,7 +7,7 @@ let schema = new mongoose.Schema({
     nombre: String,
     subcapitulos: [{
         numero: Number,
-        nombre: String, 
+        nombre: String,
         medicamentos: [{
             clasificacion: String,
             numero: Number,
@@ -18,7 +18,12 @@ let schema = new mongoose.Schema({
             carroEmergencia: Boolean,
             indicaciones: String, // estandarizar?
             comentario: String, // estandarizar?            
-            conceptId: String
+            concepto: {
+                conceptId: String,
+                term: String,
+                fsn: String,
+                semanticTag: String,
+            }
         }]
     }]
 });
