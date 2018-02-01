@@ -68,7 +68,7 @@ router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
             'usuario': username,
             'organizaciones._id': orgId
         }),
-        authOrganizaciones.model.findOne({ _id: orgId })
+        authOrganizaciones.model.findOne({ _id: orgId }, { nombre: 1 })
     ]).then((data: any[]) => {
         if (data[0] && data[1]) {
             let user = data[0];
