@@ -13,6 +13,7 @@ import * as authController from '../controller/AuthController';
 import * as recordatorioController from '../controller/RecordatorioController';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import * as controllerPaciente from '../../../core/mpi/controller/paciente';
+import { toArray } from '../../../utils/utils';
 
 // let async = require('async');
 
@@ -35,7 +36,7 @@ router.get('/turnos/recordatorioTurno', function (req, res, next) {
  * Get turnos del Paciente App
  */
 
-router.get('/turnos', function (req: any, res, next) {
+router.get('/turnos', async function (req: any, res, next) {
     let pipelineTurno = [];
     let turnos = [];
     let turno;
@@ -55,8 +56,9 @@ router.get('/turnos', function (req: any, res, next) {
         matchTurno['bloques.turnos.asistencia'] = { '$exists': req.query.asistencia };
     }
 
+    // TODO: probar la siguiente condición
     if (req.query.codificado) {
-        matchTurno['bloques.turnos.diagnosticoPrincipal'] = { '$exists': true };
+        matchTurno['bloques.turnos.diagnosticos.0'] = { '$exists': true };
     }
 
     if (req.query.horaInicio) {
@@ -105,72 +107,66 @@ router.get('/turnos', function (req: any, res, next) {
     pipelineTurno.push({ '$unwind': '$bloques.turnos' });
     pipelineTurno.push({ '$sort': { 'bloques.turnos.horaInicio': 1 } });
 
-    agenda.aggregate(
-        pipelineTurno,
-        function (err2, data2) {
-            if (err2) {
-                return next(err2);
-            }
-            let promisesStack = [];
-            data2.forEach(elem => {
-                turno = elem.bloques.turnos;
-                turno.paciente = elem.bloques.turnos.paciente;
-                turno.profesionales = elem.profesionales;
-                turno.organizacion = elem.organizacion;
-                turno.espacioFisico = elem.espacioFisico;
-                turno.agenda_id = elem.agenda_id;
-                turno.duracionTurno = elem.duracionTurno;
-                turno.bloque_id = elem.bloque_id;
-                turno.agenda_estado = elem.agenda_estado;
+    let data2 = await toArray(agenda.aggregate(pipelineTurno).cursor({}).exec());
 
-                delete turno.updatedBy;
-                delete turno.updatedAt;
+    let promisesStack = [];
+    data2.forEach(elem => {
+        turno = elem.bloques.turnos;
+        turno.paciente = elem.bloques.turnos.paciente;
+        turno.profesionales = elem.profesionales;
+        turno.organizacion = elem.organizacion;
+        turno.espacioFisico = elem.espacioFisico;
+        turno.agenda_id = elem.agenda_id;
+        turno.duracionTurno = elem.duracionTurno;
+        turno.bloque_id = elem.bloque_id;
+        turno.agenda_estado = elem.agenda_estado;
 
-                /* Busco el turno anterior cuando fue reasignado */
-                let suspendido = turno.estado === 'suspendido' || turno.agenda_estado === 'suspendida';
-                let reasignado = turno.reasignado && turno.reasignado.siguiente;
+        delete turno.updatedBy;
+        delete turno.updatedAt;
 
-                if (turno.reasignado && turno.reasignado.anterior) {
-                    let promise = new Promise((resolve, reject) => {
-                        let datos = turno.reasignado.anterior;
-                        agenda.findById(datos.idAgenda, function (err, ag: any) {
-                            if (err) {
-                                resolve();
-                            }
-                            let bloque = ag.bloques.id(datos.idBloque);
-                            if (bloque) {
-                                let t = bloque.turnos.id(datos.idTurno);
-                                turno.reasignado_anterior = t;
-                                // turno.confirmadoAt = turno.reasignado.confirmadoAt;
-                                delete turno['reasignado'];
-                                resolve();
-                            } else {
-                                resolve();
-                            }
-                        });
-                    });
+        /* Busco el turno anterior cuando fue reasignado */
+        let suspendido = turno.estado === 'suspendido' || turno.agenda_estado === 'suspendida';
+        let reasignado = turno.reasignado && turno.reasignado.siguiente;
 
-                    promisesStack.push(promise);
-                }
-
-                /* si el turno fue reasignado mostramos el proximo turno y no este */
-                if (!reasignado) {
-                    turnos.push(turno);
-                }
+        if (turno.reasignado && turno.reasignado.anterior) {
+            let promise = new Promise((resolve, reject) => {
+                let datos = turno.reasignado.anterior;
+                agenda.findById(datos.idAgenda, function (err, ag: any) {
+                    if (err) {
+                        resolve();
+                    }
+                    let bloque = ag.bloques.id(datos.idBloque);
+                    if (bloque) {
+                        let t = bloque.turnos.id(datos.idTurno);
+                        turno.reasignado_anterior = t;
+                        // turno.confirmadoAt = turno.reasignado.confirmadoAt;
+                        delete turno['reasignado'];
+                        resolve();
+                    } else {
+                        resolve();
+                    }
+                });
             });
 
-            if (promisesStack.length === 0) {
-                promisesStack.push(Promise.resolve());
-            }
-
-            Promise.all(promisesStack).then(() => {
-                res.json(turnos);
-            }).catch((err) => {
-                res.status(422).json({ message: err });
-            });
-
+            promisesStack.push(promise);
         }
-    );
+
+        /* si el turno fue reasignado mostramos el proximo turno y no este */
+        if (!reasignado) {
+            turnos.push(turno);
+        }
+    });
+
+    if (promisesStack.length === 0) {
+        promisesStack.push(Promise.resolve());
+    }
+
+    Promise.all(promisesStack).then(() => {
+        res.json(turnos);
+    }).catch((err) => {
+        res.status(422).json({ message: err });
+    });
+
 
 });
 

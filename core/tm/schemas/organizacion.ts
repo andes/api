@@ -3,20 +3,23 @@ import * as edificioSchema from './edificio';
 import * as direccionSchema from './direccion';
 import * as contactoSchema from './contacto';
 import * as tipoEstablecimientoSchema from './tipoEstablecimiento';
+import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
 
-let _schema = new mongoose.Schema({
-    codigo: {
+let codigoSchema = new mongoose.Schema({
         sisa: {
             type: String,
             required: true
         },
         cuie: String,
         remediar: String
-    },
+    });
+
+let _schema = new mongoose.Schema({
+    codigo: { type: codigoSchema },
     nombre: String,
-    tipoEstablecimiento: tipoEstablecimientoSchema,
+    tipoEstablecimiento:  { type: tipoEstablecimientoSchema },
     contacto: [contactoSchema],
-    direccion: direccionSchema,
+    direccion: { type: direccionSchema },
     edificio: [edificioSchema],
     nivelComplejidad: Number,
     activo: {
@@ -25,7 +28,8 @@ let _schema = new mongoose.Schema({
         default: true
     },
     fechaAlta: Date,
-    fechaBaja: Date
+    fechaBaja: Date,
+    servicios: [SnomedConcept]
 });
 
 export let schema = _schema;

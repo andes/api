@@ -52,7 +52,10 @@ export class Auth {
         passport.use(new passportJWT.Strategy(
             {
                 secretOrKey: configPrivate.auth.jwtKey,
-                jwtFromRequest: passportJWT.ExtractJwt.fromAuthHeader()
+                jwtFromRequest: passportJWT.ExtractJwt.fromExtractors([
+                    passportJWT.ExtractJwt.fromAuthHeader(),
+                    passportJWT.ExtractJwt.fromUrlQueryParameter('token')
+                ])
             },
             function (jwt_payload, done) {
                 done(null, jwt_payload);
@@ -74,6 +77,27 @@ export class Auth {
     static authenticate() {
         return passport.authenticate('jwt', { session: false });
     }
+
+    /**
+     * optionalAuth: extract
+     */
+
+    static optionalAuth() {
+        return function (req, res, next) {
+            try {
+                let extractor = passportJWT.ExtractJwt.fromAuthHeader();
+                let token = extractor(req);
+                let tokenData = jwt.verify(token, configPrivate.auth.jwtKey);
+                if (tokenData) {
+                    req.user = tokenData;
+                }
+            next();
+            } catch (e) {
+                next();
+            }
+        };
+    }
+
 
     /**
      * Middleware Denied patients access
@@ -274,6 +298,23 @@ export class Auth {
             return null;
         }
 
+    }
+
+    /**
+     * Genera un token para visualizar archivos
+     *
+     * @static
+     * @returns {*} JWT
+     *
+     * @memberOf Auth
+     */
+    static generateFileToken(): any {
+        // Crea el token con los datos de sesión
+        let token = {
+            id: mongoose.Types.ObjectId(),
+            type: 'file-token'
+        };
+        return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: 60 * 60 * 2 }); // 2 Horas
     }
 
 }

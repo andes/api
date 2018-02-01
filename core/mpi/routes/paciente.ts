@@ -8,6 +8,8 @@ import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
 import { ElasticSync } from '../../../utils/elasticSync';
 import * as debug from 'debug';
+import { toArray } from '../../../utils/utils';
+
 
 let logD = debug('paciente-controller');
 let router = express.Router();
@@ -138,6 +140,7 @@ let router = express.Router();
  *              type: string
  */
 
+
 /* Consultas de estado de pacientes para el panel de información */
 router.get('/pacientes/counts/', function (req, res, next) {
     /* Este get es público ya que muestra sólamente la cantidad de pacientes en MPI */
@@ -179,7 +182,7 @@ router.get('/pacientes/counts/', function (req, res, next) {
     });
 });
 
-router.get('/pacientes/dashboard/', function (req, res, next) {
+router.get('/pacientes/dashboard/', async function (req, res, next) {
     /**
      * Se requiere autorización para acceder al dashboard de MPI
      */
@@ -187,12 +190,12 @@ router.get('/pacientes/dashboard/', function (req, res, next) {
         return next(403);
     }
     let result = {
-        paciente: null,
-        pacienteMpi: null,
-        logs: null
+        paciente: [],
+        pacienteMpi: [],
+        logs: []
     };
 
-    paciente.aggregate([{
+    let estadoAggregate = [{
         $group: {
             '_id': {
                 'estado': '$estado'
@@ -201,57 +204,45 @@ router.get('/pacientes/dashboard/', function (req, res, next) {
                 '$sum': 1
             }
         }
-    }],
-        function (err, data) {
-            if (err) {
-                return next(err);
+    }];
+
+    let logAggregate = [
+        {
+            $group: {
+                '_id': {
+                    'operacion': '$operacion',
+                    'modulo': '$modulo'
+                },
+                'count': {
+                    '$sum': 1
+                }
             }
-            result.paciente = data;
-            pacienteMpi.aggregate([{
-                $group: {
-                    '_id': {
-                        'estado': '$estado'
-                    },
-                    'count': {
-                        '$sum': 1
-                    }
-                }
-            }],
-                function (err1, data1) {
-                    if (err1) {
-                        return next(err1);
-                    }
-
-                    result.pacienteMpi = data1;
-                    log.aggregate([{
-                        $group: {
-                            '_id': {
-                                'operacion': '$operacion',
-                                'modulo': '$modulo'
-                            },
-                            'count': {
-                                '$sum': 1
-                            }
-                        }
-                    },
-                    {
-                        $match: {
-                            '_id.modulo': 'mpi'
-                        }
-                    }
-                    ],
-                        function (err2, data2) {
-                            if (err2) {
-                                return next(err2);
-                            }
-                            result.logs = data2;
-                            res.json(result);
-                        });
-                }
-            );
+        },
+        {
+            $match: {
+                '_id.modulo': 'mpi'
+            }
         }
-    );
+    ];
 
+    result.paciente = await toArray(paciente.aggregate(estadoAggregate).cursor({}).exec());
+    result.pacienteMpi = await toArray(pacienteMpi.aggregate(estadoAggregate).cursor({batchSize: 1000}).exec());
+    result.logs = await toArray(log.aggregate(logAggregate).cursor({batchSize: 1000}).exec());
+    res.json(result);
+
+    // paciente.aggregate(estadoAggregate).cursor({batchSize: 1000}).exec().on('data', function(doc) {
+    //     result.paciente.push(doc);
+    // }).on('end', function () {
+    //     pacienteMpi.aggregate(estadoAggregate).cursor({batchSize: 1000}).exec().on('data', function(doc) {
+    //         result.pacienteMpi.push(doc);
+    //     }).on('end', function () {
+    //         log.aggregate(logAggregate).cursor({batchSize: 1000}).exec().on('data', function(doc) {
+    //             result.logs.push(doc);
+    //         }).on('end', function () {
+    //             res.json(result);
+    //         });
+    //     });
+    // });
 });
 
 /**
@@ -459,7 +450,7 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
 
             let data = req.body;
 
-            controller.updatePaciente(patientFound, data, req).then((p) => {
+            controller.updatePacienteMpi(patientFound, data, req).then((p) => {
                 res.json(p);
             }).catch(next);
 
@@ -572,25 +563,34 @@ router.post('/pacientes', function (req, res, next) {
     if (!Auth.check(req, 'mpi:paciente:postAndes')) {
         return next(403);
     }
-    let condicion = {
-        'documento': req.body.documento
-    };
+    if (req.body.documento) {
+        let condicion = {
+            'documento': req.body.documento
+        };
+        controller.searchSimilar(req.body, 'andes', condicion).then((data) => {
+            logD('Encontrados', data.map(item => item.value));
+            if (data && data.length && data[0].value > 0.90) {
+                logD('hay uno parecido');
+                return next('existen similares');
+            } else {
+                req.body.activo = true;
+                return controller.createPaciente(req.body, req).then(pacienteObj => {
+                    return res.json(pacienteObj);
+                }).catch((error) => {
+                    return next(error);
+                });
+            }
+        });
+    } else {
+        req.body.activo = true;
+        return controller.createPaciente(req.body, req).then(pacienteObjSinDocumento => {
+            return res.json(pacienteObjSinDocumento);
+        }).catch((error2 => {
+            return next(error2);
+        }));
+    }
 
-    controller.searchSimilar(req.body, 'andes', condicion).then((data) => {
-        logD('Encontrados', data.map(item => item.value));
-        if (data && data.length && data[0].value > 0.90) {
-            logD('hay uno parecido');
-            return next('existen similares');
-        } else {
-            req.body.activo = true;
-            return controller.createPaciente(req.body, req).then(pacienteObj => {
-                return res.json(pacienteObj);
-            }).catch((error) => {
-                return next(error);
-            });
-        }
 
-    });
 
 });
 
@@ -629,7 +629,6 @@ router.put('/pacientes/:id', function (req, res, next) {
     if (!Auth.check(req, 'mpi:paciente:putAndes')) {
         return next(403);
     }
-
     let objectId = new mongoose.Types.ObjectId(req.params.id);
     let query = {
         _id: objectId
@@ -639,7 +638,7 @@ router.put('/pacientes/:id', function (req, res, next) {
         if (err) {
             return next(404);
         }
-        let pacienteOriginal = null;
+        // let pacienteOriginal = null;
         if (patientFound) {
             let data = req.body;
             if (patientFound.estado === 'validado' && !patientFound.isScan) {
@@ -653,39 +652,43 @@ router.put('/pacientes/:id', function (req, res, next) {
             }).catch(next);
 
         } else {
-            req.body._id = req.body.id;
-            let newPatient = new paciente(req.body);
-
-            // let claves = match.crearClavesBlocking(newPatient);
-            // newPatient['claveBlocking'] = claves;
-            // newPatient['apellido'] = newPatient['apellido'].toUpperCase();
-            // newPatient['nombre'] = newPatient['nombre'].toUpperCase();
-
-            /*Antes del save se podría realizar una búsqueda y matching para evitar cargar repetidos, actualmente este proceso sólo se realiza del lado de la app*/
-            Auth.audit(newPatient, req);
-            newPatient.save((err2) => {
-                if (err2) {
-                    return next(err2);
-                }
-
-                let nuevoPac = JSON.parse(JSON.stringify(newPatient));
-                // delete nuevoPac._id;
-                // delete nuevoPac.relaciones;
-                let connElastic = new ElasticSync();
-                connElastic.sync(newPatient).then(updated => {
-                    if (updated) {
-                        Logger.log(req, 'mpi', 'update', {
-                            original: nuevoPac,
-                            nuevo: newPatient
-                        });
-                    } else {
-                        Logger.log(req, 'mpi', 'insert', newPatient);
+            try {
+                req.body._id = req.body.id;
+                let newPatient = new paciente(req.body);
+                // verifico si el paciente ya está en MPI
+                pacienteMpi.findById(query, function (err3, patientFountMpi: any) {
+                    if (err3) {
+                        return next(404);
                     }
-                    res.json(nuevoPac);
-                }).catch(error => {
-                    return next(error);
+                    if (patientFountMpi) {
+                        Auth.audit(newPatient, req);
+                    }
+                    newPatient.save((err2) => {
+                        if (err2) {
+                            return next(err2);
+                        }
+                        let nuevoPac = JSON.parse(JSON.stringify(newPatient));
+                        // delete nuevoPac._id;
+                        // delete nuevoPac.relaciones;
+                        let connElastic = new ElasticSync();
+                        connElastic.sync(newPatient).then(updated => {
+                            if (updated) {
+                                Logger.log(req, 'mpi', 'update', {
+                                    original: nuevoPac,
+                                    nuevo: newPatient
+                                });
+                            } else {
+                                Logger.log(req, 'mpi', 'insert', newPatient);
+                            }
+                            res.json(nuevoPac);
+                        }).catch(error => {
+                            return next(error);
+                        });
+                    });
                 });
-            });
+            } catch (ex) {
+                return next(ex);
+            }
         }
     });
 });
@@ -777,16 +780,20 @@ router.patch('/pacientes/:id', function (req, res, next) {
                 case 'updateDireccion':
                     controller.updateDireccion(req, resultado.paciente);
                     break;
-                case 'updateCarpetaEfectores':
-                    // controller.updateCarpetaEfectores(req, resultado.paciente);
+                case 'updateCarpetaEfectores': // Update solo carpetas
                     resultado.paciente.markModified('carpetaEfectores');
                     resultado.paciente.carpetaEfectores = req.body.carpetaEfectores;
+                    // necesitamos llamar a la funcion que actualiza los turnos directamente, por no pasar por el controller.
+                    try {
+                        controller.updateTurnosPaciente(resultado.paciente);
+                    } catch (error) { return next(error); }
                     break;
-                case 'updateContactosCarpeta':
+                case 'updateContactos': // Update de carpeta y de contactos
                     resultado.paciente.markModified('contacto');
                     resultado.paciente.contacto = req.body.contacto;
-                    resultado.paciente.markModified('carpetaEfectores');
-                    resultado.paciente.carpetaEfectores = req.body.carpetaEfectores;
+                    try {
+                        controller.updateTurnosPaciente(resultado.paciente);
+                    } catch (error) { return next(error); }
                     break;
                 case 'linkIdentificadores':
                     controller.linkIdentificadores(req, resultado.paciente);
@@ -803,6 +810,9 @@ router.patch('/pacientes/:id', function (req, res, next) {
                 case 'deleteRelacion':
                     controller.deleteRelacion(req, resultado.paciente);
                     break;
+                case 'updateScan':
+                    controller.updateScan(req, resultado.paciente);
+                    break;
             }
 
             let pacienteAndes: any;
@@ -811,7 +821,6 @@ router.patch('/pacientes/:id', function (req, res, next) {
             } else {
                 pacienteAndes = resultado.paciente;
             }
-
             Auth.audit(pacienteAndes, req);
             pacienteAndes.save(function (errPatch) {
                 if (errPatch) {

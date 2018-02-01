@@ -83,7 +83,8 @@ export const modules = {
     turnos_mobile_auth: {
         active: true,
         path: './modules/mobileApp/auth_routes',
-        route: '/modules/mobileApp'
+        route: '/modules/mobileApp',
+        middleware: null
     },
     turnos_mobile: {
         active: true,
@@ -107,7 +108,13 @@ export const modules = {
         active: true,
         path: './fhir/patient/routes',
         route: '/fhir/patient',
-        middleware: appMiddleware,
+        middleware: appMiddleware
+    },
+    cda: {
+        active: true,
+        path: './modules/cda/routes',
+        route: '/modules/cda',
+        middleware: appMiddleware
     }
 };
 

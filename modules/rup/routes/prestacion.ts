@@ -1,11 +1,51 @@
+import * as mongoose from 'mongoose';
 import * as express from 'express';
 import * as moment from 'moment';
 // import * as async from 'async';
 import { Auth } from './../../../auth/auth.class';
 import { model as Prestacion } from '../schemas/prestacion';
+import { model as PrestacionAdjunto } from '../schemas/prestacion-adjuntos';
+
+import { buscarPaciente } from '../../../core/mpi/controller/paciente';
+
+import { NotificationService } from '../../mobileApp/controller/NotificationService';
+
+import { iterate, convertToObjectId, buscarEnHuds, matchConcepts } from '../controllers/rup';
 
 let router = express.Router();
 let async = require('async');
+
+router.get('/prestaciones/huds/:idPaciente', function (req, res, next) {
+
+    // verificamos que sea un ObjectId válido
+    if (!mongoose.Types.ObjectId.isValid(req.params.idPaciente)) {
+        return res.status(404).send('Turno no encontrado');
+    }
+
+    // por defecto traemos todas las validadas, si no vemos el estado que viene en la request
+    const estado = (req.query.estado) ? req.query.estado : 'validada';
+    let query = {
+        'paciente.id': req.params.idPaciente,
+        '$where': 'this.estados[this.estados.length - 1].tipo ==  \"' + estado + '\"'
+    };
+
+    let conceptos = (req.query.conceptIds) ? req.query.conceptIds : null;
+
+    return Prestacion.find(query, (err, prestaciones) => {
+        if (err) {
+            return next(err);
+        }
+
+        if (!prestaciones) {
+            return res.status(404).send('Paciente no encontrado');
+        }
+
+        // ejecutamos busqueda recursiva
+        let data = buscarEnHuds(prestaciones, conceptos);
+
+        res.json(data);
+    });
+});
 
 router.get('/prestaciones/:id*?', function (req, res, next) {
     if (req.params.id) {
@@ -20,10 +60,17 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             res.json(data);
         });
     } else {
-        let query = Prestacion.find({});
-
+        let query;
         if (req.query.estado) {
-            query.where('this.estados[this.estados.length - 1].tipo').equals(req.query.estado);
+            query = Prestacion.find({
+                $where: 'this.estados[this.estados.length - 1].tipo ==  \"' + req.query.estado + '\"'
+            });
+        } else {
+            query = Prestacion.find({}); // Trae todos
+        }
+
+        if (req.query.sinEstado) {
+            query.where('estados.tipo').ne(req.query.sinEstado);
         }
         if (req.query.fechaDesde) {
             query.where('ejecucion.fecha').gte(moment(req.query.fechaDesde).startOf('day').toDate() as any);
@@ -41,7 +88,11 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             query.where('solicitud.prestacionOrigen').equals(req.query.idPrestacionOrigen);
         }
         if (req.query.turnos) {
-            query.where('solicitud.idTurno').in(req.query.turnos);
+            query.where('solicitud.turno').in(req.query.turnos);
+        }
+
+        if (req.query.conceptsIdEjecucion) {
+            query.where('ejecucion.registros.concepto.conceptId').in(req.query.conceptsIdEjecucion);
         }
 
         // Solicitudes generadas desde puntoInicio Ventanilla
@@ -62,6 +113,8 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         // Ordenar por fecha de solicitud
         if (req.query.ordenFecha) {
             query.sort({ 'solicitud.fecha': -1 });
+        } else if (req.query.ordenFechaEjecucion) {
+            query.sort({ 'ejecucion.fecha': -1 });
         }
 
         if (req.query.limit) {
@@ -193,5 +246,6 @@ router.patch('/prestaciones/:id', function (req, res, next) {
         });
     });
 });
+
 
 export = router;
