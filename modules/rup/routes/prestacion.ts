@@ -27,7 +27,7 @@ router.get('/prestaciones/huds/:idPaciente', function(req, res, next) {
     let query = {
         'paciente.id': req.params.idPaciente,
         '$where': 'this.estados[this.estados.length - 1].tipo ==  \"' + estado + '\"'
-    }
+    };
 
     let conceptos = (req.query.conceptIds) ? req.query.conceptIds : null;
 

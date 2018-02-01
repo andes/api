@@ -10,6 +10,8 @@ import {
 import * as organizacion from './../../../core/tm/schemas/organizacion';
 import * as sql from 'mssql';
 import * as cdaCtr from '../../cda/controller/CDAPatient';
+import * as agendasHPNCtr from '../../turnos/controller/operationsCacheHPNController';
+import { ObjectID, ObjectId } from 'bson';
 
 
 
@@ -134,7 +136,7 @@ export async function getDetalles(idProtocolo, idEfector) {
 export async function cacheTurnosSips(unaAgenda) {
     // Armo el DTO para guardar en la cache de agendas
 
-    if ((unaAgenda.estado !== 'planificacion') && (unaAgenda.nominalizada) && (unaAgenda.tipoPrestaciones[0].term.includes('odonto'))) {
+    if ((unaAgenda.estado !== 'planificacion') && (unaAgenda.nominalizada) && (unaAgenda.tipoPrestaciones[0].term.includes('odonto')) || integraPrestacionesHPN(unaAgenda)) {
         let organizacionAgenda;
         if (unaAgenda.organizacion) {
             organizacionAgenda = await organizacionCompleto(unaAgenda.organizacion.id);
@@ -189,5 +191,9 @@ export async function cacheTurnosSips(unaAgenda) {
                 });
             }
         });
+    }
+
+    function integraPrestacionesHPN(_agenda) {
+        return (agendasHPNCtr.getIdTipoPrestacion(_agenda) !== null && (_agenda.organizacion.id === constantes.idOrganizacionHPN));
     }
 }

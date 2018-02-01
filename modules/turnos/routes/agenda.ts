@@ -362,7 +362,6 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                                 err: error || false
                             });
                             if (error) {
-                                console.log('ddddd', error);
                                 return next(error);
                             }
                         });
@@ -488,4 +487,14 @@ router.patch('/agenda/:id*?', function (req, res, next) {
 //         }
 //     });
 // });
+
+router.get('/integracionCitasHPN', async function (req, res, next) {
+    try {
+        await agendaHPNCacheCtrl.integracion();
+        res.json('OK');
+    } catch (ex) {
+        next(ex);
+    }
+});
+
 export = router;

@@ -29,8 +29,9 @@ async function getIdTurnoHPN(idAndes, pool) {
     let result = await pool.request()
         .input('idAndes', sql.VarChar(50), idAndes)
         .query(query);
+    result = result.recordset;
 
-    return (result.length > 0 ?  result[0].id : null);
+    return (result.length > 0 ? result[0].id : null);
 }
 
 async function saveTurno(idAgendaAndes, turno: any, datosPaciente, duracion, idTipoPrestacion, pool, transaction) {
@@ -55,7 +56,7 @@ async function saveTurno(idAgendaAndes, turno: any, datosPaciente, duracion, idT
         ',idTipoPrestacion' +
         ',idEstado' +
         ',idHistoria' +
-        // ',idPaciente' +
+        ',idPaciente' +
         ',idProgramacion' +
         ',andesId)' +
     ' VALUES (' +
@@ -67,20 +68,20 @@ async function saveTurno(idAgendaAndes, turno: any, datosPaciente, duracion, idT
         '@idTipoPrestacion, ' +
         '@idEstado, ' +
         '@idHistoria, ' +
-        // '@idPaciente, ' +
+        '@idPaciente, ' +
         '@idProgramacion, ' +
         '@andesId)';
 
     return await new sql.Request(transaction)
         .input('idUbicacion', sql.VarChar(50), idUbicacion)
-        .input('fechaHora', sql.DateTime, fechaHora)
-        .input('fechaHoraFinalizacion', sql.DateTime, fechaHoraFinalizacion)
+        .input('fechaHora', sql.DateTimeOffset, fechaHora)
+        .input('fechaHoraFinalizacion', sql.DateTimeOffset, fechaHoraFinalizacion)
         .input('idTipoWorklist', sql.Int, idTipoWorklist)
         .input('idPrioridad', sql.Int, idPrioridad)
         .input('idTipoPrestacion', sql.Int, idTipoPrestacion)
         .input('idEstado', sql.Int, idEstado)
         .input('idHistoria', sql.Int, idPaciente)
-        // .input('idPaciente', sql.Int, idPaciente)
+        .input('idPaciente', sql.Int, idPaciente)
         .input('idProgramacion', sql.Int, idProgramacion)
         .input('andesId', sql.VarChar(50), andesId)
         .query(query)

@@ -59,7 +59,7 @@ export async function savePaciente(paciente: any, transaction) {
         .query(query).then(result => {
             return {
                 idHistoria: hcNumero,
-                idPaciente: result[0].idHistoria
+                idPaciente: result.recordset[0].idHistoria
             };
         }).catch(err => {
             throw err;
@@ -80,5 +80,5 @@ export async function getDatosPaciente(tipoDocumento, documento, pool) {
             throw err;
         });
 
-    return result[0];
+    return result.recordset[0];
 }

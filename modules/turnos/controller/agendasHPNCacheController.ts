@@ -12,7 +12,7 @@ let connection = {
     password: configPrivate.conSqlHPN.auth.password,
     server: configPrivate.conSqlHPN.serverSql.server,
     database: configPrivate.conSqlHPN.serverSql.database,
-    port: configPrivate.conSqlHPN.serverSql.port //solo para test! BORRAR
+    port: configPrivate.conSqlHPN.serverSql.port // solo para test! BORRAR
 };
 
 export async function integracion() {
@@ -22,7 +22,7 @@ export async function integracion() {
             let agendasMongoPendientes = await operationsHPNCache.getAgendasDeMongoPendientes();
 
             for (let agenda of agendasMongoPendientes) {
-                pool = await sql.connect(connection);
+                pool = await new sql.ConnectionPool(connection).connect();
                 await operationsHPNCache.saveAgendaToPrestaciones(agenda, pool);
                 pool.close();
             }

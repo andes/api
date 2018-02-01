@@ -17,8 +17,8 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
     let transaction = await new sql.Transaction(pool);
 
     return new Promise(async function (resolve2, reject) {
-        let idProfesional = await getIdProfesionalPrestaciones(agenda.profesionales[0].documento);
-        
+        let idProfesional = agenda.profesionales ? await getIdProfesionalPrestaciones(agenda.profesionales[0].documento) : null;
+
         if (idProfesional) {
             transaction.begin(async err => {
                 let rolledBack = false;
@@ -60,7 +60,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
     async function getIdProfesionalPrestaciones(documento) {
         let query = 'select TOP(1) medicos.id ' +
                     'from Medicos ' +
-                    'where documento = @documento ' + 
+                    'where documento = @documento ' +
                     'OR EXISTS ( ' +
                         'SELECT * ' +
                         'FROM Personal_Agentes ' +
@@ -70,7 +70,8 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
         let result = await pool.request()
                 .input('documento', sql.VarChar(50), documento)
                 .query(query);
-        
+        result = result.recordset;
+
         return (result.length > 0 ?  result[0].id : null);
     }
 
@@ -79,6 +80,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
         let result = await pool.request()
             .input('idAndes', sql.VarChar(50), idAndes)
             .query(query);
+        result = result.recordset;
 
         return (result.length > 0 ?  result[0].id : null);
     }
@@ -105,7 +107,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
             .input('idProgramacion', sql.Int, idProgramacion)
             .input('idTipoPrestacion', sql.Int, idTipoPrestacion)
             .query(query).then(() => {
-                return;
+                    return;
             }).catch(err => {
                 throw err;
             });
@@ -160,33 +162,12 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
             .input('andesId', sql.VarChar(50), andesId)
             .query(query)
             .then(result => {
-                idAgendaHPN = result[0].id;
+                idAgendaHPN = result.recordset[0].id;
             }).catch(err => {
                 throw err;
             });
 
         return idAgendaHPN;
-    }
-
-    function getIdTipoPrestacion(_agenda) {
-        let idTipoPrestacion;
-        if (_agenda.tipoPrestaciones[0]) {
-            switch (_agenda.tipoPrestaciones[0].conceptId) {
-                case constantes.tiposPrestacionesHPN.clinicaMedica.conceptId:
-                idTipoPrestacion = constantes.tiposPrestacionesHPN.clinicaMedica.id;
-                break;
-
-                case constantes.tiposPrestacionesHPN.consultaPediatrica.conceptId:
-                idTipoPrestacion = constantes.tiposPrestacionesHPN.consultaPediatrica.id;
-                break;
-
-                default:
-                idTipoPrestacion = null;
-                break;
-            }
-        }
-
-        return idTipoPrestacion;
     }
 
     async function saveBloques(idAgendaAndes, bloques: Array<any>, idTipoPrestacion) {
@@ -201,7 +182,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
             return new sql.Request(transaction)
                 .query(query)
                 .then(result => {
-                    resolve2(result[0].id);
+                    resolve2(result.recordset[0].id);
                 }).catch(err => {
                     reject(err);
                 });
@@ -242,4 +223,25 @@ export function getAgendasDeMongoExportadas() {
             resolve2(data);
         });
     });
+}
+
+export function getIdTipoPrestacion(_agenda) {
+    let idTipoPrestacion;
+    if (_agenda.tipoPrestaciones[0]) {
+        switch (_agenda.tipoPrestaciones[0].conceptId) {
+            case constantes.tiposPrestacionesHPN.clinicaMedica.conceptId:
+            idTipoPrestacion = constantes.tiposPrestacionesHPN.clinicaMedica.id;
+            break;
+
+            case constantes.tiposPrestacionesHPN.consultaPediatrica.conceptId:
+            idTipoPrestacion = constantes.tiposPrestacionesHPN.consultaPediatrica.id;
+            break;
+
+            default:
+            idTipoPrestacion = null;
+            break;
+        }
+    }
+
+    return idTipoPrestacion;
 }
