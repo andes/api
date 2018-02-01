@@ -1,6 +1,6 @@
 import * as express from 'express';
-import * as formulario  from '../schemas/formularioTerapeutico';
-import * as snomed  from '../../term/schemas/snomed';
+import * as formulario from '../schemas/formularioTerapeutico';
+import * as snomed from '../../term/schemas/snomed';
 import * as mongoose from 'mongoose';
 import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
@@ -21,7 +21,7 @@ router.get('/formularioTerapeutico/:id?', function (req, res, next) {
     } else {
         let query;
         // Habría que hacer un aggregate para traer el nombre de los medicamentos
-        query = formulario.find({'subcapitulos.medicamentos':{$ne: null}});
+        query = formulario.find({ 'subcapitulos.medicamentos': { $ne: null } });
 
         if (req.query.capitulo) {
             query.where('capitulo').equals(req.query.capitulo);
@@ -29,7 +29,7 @@ router.get('/formularioTerapeutico/:id?', function (req, res, next) {
 
         if (req.query.nombreMedicamento) {
             query.where('subcapitulos.medicamentos.concepto.term').equals(req.query.nombreMedicamento);
-            
+
             //
         }
 
@@ -47,3 +47,5 @@ router.get('/formularioTerapeutico/:id?', function (req, res, next) {
         });
     }
 });
+
+export =router;
