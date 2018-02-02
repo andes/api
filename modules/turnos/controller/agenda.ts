@@ -229,7 +229,7 @@ export function codificarTurno(req, data, tid) {
                     });
                 });
             } else {
-                resolve(null);
+                return resolve(null);
             }
         });
     });

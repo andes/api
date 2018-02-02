@@ -12,7 +12,7 @@ function getAge(dateString) {
         age--;
     }
     return age;
-};
+}
 
 export function getDiagnosticos(params) {
     let resultados = [];
