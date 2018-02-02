@@ -148,6 +148,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                             let etiquetaEstado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.estado';
                             let etiquetaPaciente: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.paciente';
                             let etiquetaPrestacion: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.tipoPrestacion';
+                            let etiquetaNota: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.nota';
 
                             let etiquetaReasignado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.reasignado';
                             let etiquetaUpdateAt: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedAt';
@@ -158,6 +159,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                             update[etiquetaPrestacion] = req.body.tipoPrestacion;
                             update[etiquetaPaciente] = req.body.paciente;
                             update[etiquetaTipoTurno] = tipoTurno;
+                            update[etiquetaNota] = req.body.nota;
 
                             if (req.body.reasignado) {
                                 update[etiquetaReasignado] = req.body.reasignado;
@@ -194,6 +196,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                                         paciente: update[etiquetaPaciente],
                                         prestacion: update[etiquetaPrestacion],
                                         tipoTurno: update[etiquetaTipoTurno] !== null ? update[etiquetaTipoTurno] : null,
+                                        nota: update[etiquetaNota]
                                     };
                                     Logger.log(req, 'citas', 'asignarTurno', datosOp);
 
