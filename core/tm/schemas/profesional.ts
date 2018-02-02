@@ -26,6 +26,7 @@ export let profesionalSchema = new mongoose.Schema({
     habilitado: { type: Boolean, default: true },
     nombre: { type: String, required: false },
     apellido: { type: String, required: false },
+    tipoDocumento: { type: String, required: false },
     documento: { type: String, required: false },
     documentoVencimiento: { type: Date, required: false },
     cuit: { type: String, required: false },
