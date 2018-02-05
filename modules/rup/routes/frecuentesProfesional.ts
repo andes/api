@@ -124,7 +124,7 @@ router.put('/frecuentesProfesional/:id*?', function (req, res, next) {
                         if (indexConcepto === -1) {
                             resultado.frecuentes.push(frecuente);
                         } else {
-                            resultado.frecuentes[indexConcepto].frecuencia = parseInt(resultado.frecuentes[indexConcepto].frecuencia) + 1;
+                            resultado.frecuentes[indexConcepto].frecuencia = parseInt(resultado.frecuentes[indexConcepto].frecuencia, 0) + 1;
                         }
                     // });
                 });
