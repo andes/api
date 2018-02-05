@@ -23,6 +23,7 @@ let schema = new mongoose.Schema({
                 term: String,
                 fsn: String,
                 semanticTag: String,
+                words: [String]
             }
         }]
     }]
