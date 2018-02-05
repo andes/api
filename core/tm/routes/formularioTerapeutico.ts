@@ -48,6 +48,7 @@ router.get('/formularioTerapeutico/:id?', function (req, res, next) {
             }
             proyeccion['subcapitulos.medicamentos.$'] = 1;
             proyeccion['capitulo'] = 1;
+            proyeccion['nombre'] = 1;
         }
         query = formularioTerapeutico.find(opciones, proyeccion);
 
