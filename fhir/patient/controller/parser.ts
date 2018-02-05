@@ -25,6 +25,7 @@ export function pacientesAFHIR(ids: any[]) {
                     .then((data: any) => {
                         if (data) {
                             let identificadores = data.documento ? [{ assigner: 'DU', value: data.documento }] : [];
+                            identificadores.push({assigner: 'andes', value: id });
                             // Parsea contactos
                             let contactos = data.contacto ? data.contacto.map(unContacto => {
                                 let cont = {

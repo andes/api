@@ -12,7 +12,7 @@ function getAge(dateString) {
         age--;
     }
     return age;
-};
+}
 
 function sumarCodigos(codigos) {
     function getSum(total, num) {

@@ -115,6 +115,12 @@ export const modules = {
         path: './modules/cda/routes',
         route: '/modules/cda',
         middleware: appMiddleware
+    },
+    descargas: {
+        active: true,
+        path: './modules/descargas/routes',
+        route: '/modules/descargas',
+        middleware: appMiddleware
     }
 };
 

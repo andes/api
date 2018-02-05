@@ -69,8 +69,10 @@ let turnoSchema = new mongoose.Schema({
     diagnostico: {
         ilegible: Boolean,
         codificaciones: [{
-            codificacionProfesional: cie10.schema, // solamente obtenida de RUP o SIPS y definida por el profesional
-            codificacionAuditoria: cie10.schema,  // corresponde a la codificación establecida la instancia de revisión de agendas
+            // (ver schema) solamente obtenida de RUP o SIPS y definida por el profesional
+            codificacionProfesional: cie10.schema,
+            // (ver schema) corresponde a la codificación establecida la instancia de revisión de agendas
+            codificacionAuditoria: cie10.schema,
             primeraVez: Boolean,
         }]
     },
