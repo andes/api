@@ -33,6 +33,7 @@ let _schema = new mongoose.Schema({
     servicios: [SnomedConcept],
     camas: [camas.schema]
 });
-
+const audit = require('../../../mongoose/audit');
+_schema.plugin(audit);
 export let schema = _schema;
 export let model = mongoose.model('organizacion', _schema, 'organizacion');
