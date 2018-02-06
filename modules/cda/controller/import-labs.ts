@@ -2,8 +2,10 @@ import * as configPrivate from '../../../config.private';
 import * as config from '../../../config';
 import * as cdaCtr from './CDAPatient';
 import * as moment from 'moment';
+import * as sql from 'mssql';
 import { Matching } from '@andes/match';
 import * as mongoose from 'mongoose';
+import * as operations from '../../legacy/controller/operations';
 
 let request = require('request');
 let soap = require('soap');
@@ -52,23 +54,35 @@ function matchPaciente(pacMpi, pacLab) {
         sexo: pacMpi.sexo ? pacMpi.sexo : ''
     };
     let pacElastic = {
-        documento: pacLab.Documento ? pacLab.Documento.toString() : '',
-        nombre: pacLab.Nombres ? pacLab.Nombres : '',
-        apellido: pacLab.Apellidos ? pacLab.Apellidos : '',
-        fechaNacimiento: pacLab.FechaNacimiento ? moment(pacLab.FechaNacimiento, 'DD/MM/YYYY').format('YYYY-MM-DD') : '',
-        sexo: pacLab.Sexo === 'F' ? 'femenino' : 'masculino'
+        documento: pacLab.numeroDocumento ? pacLab.numeroDocumento.toString() : '',
+        nombre: pacLab.nombre ? pacLab.nombre : '',
+        apellido: pacLab.apellido ? pacLab.apellido : '',
+        fechaNacimiento: pacLab.fechaNacimiento ? moment(pacLab.fechaNacimiento, 'DD/MM/YYYY').format('YYYY-MM-DD') : '',
+        sexo: (pacLab.sexo === 'F' ? 'femenino' : (pacLab.sexo === 'M' ? 'masculino' : ''))
     };
     let match = new Matching();
     return match.matchPersonas(pacElastic, pacDto, weights, config.algoritmo);
 }
 
+let pool;
+let connection = {
+    user: configPrivate.conSql.auth.user,
+    password: configPrivate.conSql.auth.password,
+    server: configPrivate.conSql.serverSql.server,
+    database: configPrivate.conSql.serverSql.database
+};
+
 export async function importarDatos(paciente) {
     try {
-        let url = configPrivate.wsSalud.host + configPrivate.wsSalud.getPaciente + '?dni=' + paciente.documento;
-        let dataResponse: any = await HttpGet(url);
-        let laboratorios = toJson(dataResponse.html);
+        pool = await sql.connect(connection);
+        // let url = configPrivate.wsSalud.host + configPrivate.wsSalud.getPaciente + '?dni=' + paciente.documento;
+        // let dataResponse: any = await HttpGet(url);
+        // let laboratorios = toJson(dataResponse.html);
 
-        for (let lab of laboratorios) {
+        let laboratorios: any;
+        laboratorios = await operations.getEncabezados(paciente.documento);
+        for (let lab of laboratorios.recordset) {
+
 
             // Si ya lo pase no hacemos nada
             let existe = await cdaCtr.findByMetadata({
@@ -79,15 +93,26 @@ export async function importarDatos(paciente) {
                 continue;
             }
 
+            let details: any = await operations.getDetalles(lab.idProtocolo, lab.idEfector);
+            let organizacion = await operations.organizacionBySisaCode(lab.efectorCodSisa);
+
+            let validado = true;
+            let hiv = false;
+
+            details.recordset.forEach(detail => {
+                validado = validado && (detail.profesional_val !== '');
+                hiv = hiv || /hiv|vih/i.test(detail.item);
+            });
+
             let value = matchPaciente(paciente, lab);
-            if (value > 0.95) {
+            if (value > 0.95 && validado && details.recordset) {
 
                 let pdfUrl = configPrivate.wsSalud.host + configPrivate.wsSalud.getResultado + '?idProtocolo=' + lab.idProtocolo + '&idEfector=' + lab.idEfector;
 
-                let fecha = moment(lab.FechaProtocolo, 'DD/MM/YYYY');
+                let fecha = moment(lab.fecha, 'DD/MM/YYYY');
                 let profesional = {
-                    nombre: '',
-                    apellido: ''
+                    nombre: lab.solicitante,
+                    apellido: '' // Nombre y Apellido viene junto en los registros de laboratorio de SQL
                 };
                 let snomed = '4241000179101'; // informe de laboratorio (elemento de registro)
                 let cie10Laboratorio = {
@@ -104,14 +129,10 @@ export async function importarDatos(paciente) {
                     extension: 'pdf'
                 });
                 // }
-
-                let org = {
-                    nombre: lab.Efector,
-                    _id: '' + lab.idEfector
-                };
-                let cda = cdaCtr.generateCDA(uniqueId, paciente, fecha, profesional, org, snomed, cie10Laboratorio, texto, fileData);
+ 
+                let cda = cdaCtr.generateCDA(uniqueId, (hiv ? 'R' : 'N') , paciente, fecha, profesional, organizacion, snomed, cie10Laboratorio, texto, fileData);
                 let metadata = {
-                    paciente: paciente.id,
+                    paciente: mongoose.Types.ObjectId(paciente.id),
                     prestacion: snomed,
                     fecha: fecha,
                     adjuntos: [ fileData.data ],

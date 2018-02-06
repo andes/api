@@ -27,11 +27,11 @@ let connection = {
     database: configPrivate.conSql.serverSql.database
 };
 
-router.get('/testing/dfsdf', async(req: any, res, next) => {
-    pacienteCtr.buscarPaciente('5a7352a42b2d2a64e8721ee4').then((rest) => {
-        labsImport.importarDatos(rest.paciente);
-    });
-});
+// router.get('/testing/dfsdf', async(req: any, res, next) => {
+//     pacienteCtr.buscarPaciente('598acf57594f9b69fd336d48').then((rest) => {
+//         labsImport.importarDatos(rest.paciente);
+//     });
+// });
 
 // ATENCIÓN: SOLO PARA USAR A NIVEL DE INTEGRACIÓN!!!!
 
@@ -72,7 +72,7 @@ router.post('/laboratorios', async(req: any, res, next) => {
                 if (informePDF) {
                     fileData = await cdaCtr.storePdfFile(informePDF);
                 }
-                let cda = cdaCtr.generateCDA(uniqueId, paciente, fecha, profesional, organizacion, snomed, cie10Laboratorio, texto, fileData);
+                let cda = cdaCtr.generateCDA(uniqueId, 'R', paciente, fecha, profesional, organizacion, snomed, cie10Laboratorio, texto, fileData);
                 let metadata = {
                     paciente: paciente.id,
                     prestacion: snomed,

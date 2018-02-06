@@ -73,7 +73,7 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
             fileData = await cdaCtr.storeFile(cdaCtr.base64toStream(file));
         }
 
-        let cda = cdaCtr.generateCDA(uniqueId, paciente, fecha, dataProfesional, organizacion, snomed, cie10, texto, fileData);
+        let cda = cdaCtr.generateCDA(uniqueId, 'N', paciente, fecha, dataProfesional, organizacion, snomed, cie10, texto, fileData);
 
         let metadata = {
             paciente: paciente._id,

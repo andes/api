@@ -250,7 +250,7 @@ export function storeCDA (objectID, cdaXml, metadata) {
  * @param {string} text Texto descriptivo
  * @param {string} base64  Archivo para adjutar al CDA en base64
  */
-export function generateCDA(uniqueId, patient, date, author, organization, snomed, cie10, text, file) {
+export function generateCDA(uniqueId, confidentiality, patient, date, author, organization, snomed, cie10, text, file) {
 
     let cda = new CDA();
     cda.id(buildID(uniqueId));
@@ -260,6 +260,13 @@ export function generateCDA(uniqueId, patient, date, author, organization, snome
 
     // [TODO] Desde donde inferir el titulo
     cda.title(code.displayName);
+
+    if (confidentiality === 'R') {
+        cda.confidentialityCode({
+            codeSystem: '2.16.840.1.113883.5.25',
+            code: 'R'
+        });
+    }
 
     cda.versionNumber(1);
     cda.date(date);

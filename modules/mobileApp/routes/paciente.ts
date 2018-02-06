@@ -136,6 +136,7 @@ router.get('/laboratorios/(:id)', async (req, res, next) => {
             let _xml = await cdaCtr.loadCDA(cda.cda_id);
             let dom: any = xmlToJson(_xml);
             // console.log(dom);
+            cda.confidentialityCode = dom.ClinicalDocument.confidentialityCode['@attributes'].code;
             cda.title = dom.ClinicalDocument.title['#text'];
             cda.organizacion = dom.ClinicalDocument.custodian.assignedCustodian.representedCustodianOrganization.name['#text'];
         }

@@ -120,8 +120,8 @@ export function getEncabezados(documento): any {
 export async function getDetalles(idProtocolo, idEfector) {
     return new Promise(async function (resolve, reject) {
         try {
-            let query = 'select grupo, item, resultado, valorReferencia, observaciones ' +
-                ' from LAB_ResultadoDetalle as detalle where detalle.idProtocolo = ' + idProtocolo + ' and detalle.idEfector = ' + idEfector;
+            let query = 'select grupo, item, resultado, valorReferencia, observaciones, hiv, profesional_val ' +
+                ' from LAB_ResultadoDetalle as detalle where esTitulo = \'No\' and detalle.idProtocolo = ' + idProtocolo + ' and detalle.idEfector = ' + idEfector;
             let result = await new sql.Request().query(query);
             resolve(result);
         } catch (err) {
