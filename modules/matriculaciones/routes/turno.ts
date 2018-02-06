@@ -286,4 +286,26 @@ router.get('/turnos/:id*?', Auth.authenticate(), function (req, res, errorHandle
 });
 
 
+router.patch('/turnos/:id?', function (req, res, next) {
+    turno.findById(req.params.id, function (err, resultado: any) {
+        if (resultado) {
+            switch (req.body.op) {
+                case 'updateNotificado':
+                    resultado.notificado = req.body.data;
+                    break;
+            }
+        }
+
+        resultado.save((err2) => {
+            if (err2) {
+                next(err2);
+            }
+            res.json(resultado);
+        });
+
+
+    });
+});
+
+
 export = router;

@@ -6,6 +6,7 @@ let turnoSchena = new mongoose.Schema({
         type: String,
         enum: ['matriculacion', 'renovacion']
     },
+    notificado: { type: Boolean, default: false },
     sePresento: { type: Boolean, default: false },
     profesional: { type: mongoose.Schema.Types.ObjectId, ref: 'turnoSolicitado' }
 });
