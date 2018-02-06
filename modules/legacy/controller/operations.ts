@@ -91,11 +91,16 @@ export function organizacionBySisaCode(code): any {
             if (err) {
                 return reject(err);
             }
-            let org = {
-                _id: doc.id,
-                nombre: doc.nombre,
-            };
-            return resolve(org);
+            if (doc) {
+                let org = {
+                    _id: doc.id,
+                    nombre: doc.nombre,
+                };
+                return resolve(org);
+            } else {
+                console.log('Codigo SISA', code);
+                return reject();
+            }
         });
     });
 }
@@ -111,7 +116,7 @@ export function getEncabezados(documento): any {
             let result = await new sql.Request().query(query);
             resolve(result);
         } catch (err) {
-            reject(null);
+            reject(err);
         }
     });
 }
@@ -125,7 +130,7 @@ export async function getDetalles(idProtocolo, idEfector) {
             let result = await new sql.Request().query(query);
             resolve(result);
         } catch (err) {
-            reject(null);
+            reject(err);
         }
     });
 }

@@ -71,10 +71,9 @@ let connection = {
     server: configPrivate.conSql.serverSql.server,
     database: configPrivate.conSql.serverSql.database
 };
-
+pool = sql.connect(connection);
 export async function importarDatos(paciente) {
     try {
-        pool = await sql.connect(connection);
         // let url = configPrivate.wsSalud.host + configPrivate.wsSalud.getPaciente + '?dni=' + paciente.documento;
         // let dataResponse: any = await HttpGet(url);
         // let laboratorios = toJson(dataResponse.html);
@@ -129,7 +128,7 @@ export async function importarDatos(paciente) {
                     extension: 'pdf'
                 });
                 // }
- 
+
                 let cda = cdaCtr.generateCDA(uniqueId, (hiv ? 'R' : 'N') , paciente, fecha, profesional, organizacion, snomed, cie10Laboratorio, texto, fileData);
                 let metadata = {
                     paciente: mongoose.Types.ObjectId(paciente.id),
@@ -147,7 +146,8 @@ export async function importarDatos(paciente) {
                 // Ver que hacer si no matchea
             }
         }
+
     } catch (e) {
-        console.log(e);
+        console.log('ALGO', e);
     }
 }

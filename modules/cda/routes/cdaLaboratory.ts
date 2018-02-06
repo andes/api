@@ -17,6 +17,8 @@ import * as pdfGenerator from '../../../utils/pdfGenerator';
 import { Auth } from '../../../auth/auth.class';
 import * as labsImport from '../controller/import-labs';
 
+import { paciente as Paciente, pacienteMpi as PacienteMPI} from '../../../core/mpi/schemas/paciente';
+
 let path = require('path');
 let router = express.Router();
 let pool;
@@ -27,11 +29,29 @@ let connection = {
     database: configPrivate.conSql.serverSql.database
 };
 
-// router.get('/testing/dfsdf', async(req: any, res, next) => {
-//     pacienteCtr.buscarPaciente('598acf57594f9b69fd336d48').then((rest) => {
-//         labsImport.importarDatos(rest.paciente);
-//     });
-// });
+router.get('/testing/migrar', async(req: any, res, next) => {
+    let skip = parseInt(req.query.skip, 0);
+    let limit = parseInt(req.query.limit, 0);
+    console.log(skip, limit);
+    let _stream = PacienteMPI.find({}, {nombre: 1, apellido: 1, fechaNacimiento: 1, documento: 1, sexo: 1}).skip(skip).limit(limit);
+    // _stream.on('data', function(pac: any) {
+    //     console.log(pac._id, pac.nombre, pac.apellido);
+    //     labsImport.importarDatos(pac);
+    // });
+    // _stream.on('end', function() { console.log('Done!'); res.json({status: 'OK'}); });
+
+    _stream.then( async (pacientes: any[]) => {
+        console.log('Pacientes a migrar: ', pacientes.length);
+        for (let pac of pacientes) {
+            console.log(pac._id, pac.nombre, pac.apellido);
+            await labsImport.importarDatos(pac);
+        }
+        res.json({status: 'OK'});
+    });
+    // pacienteCtr.buscarPaciente('598acf57594f9b69fd336d48').then((rest) => {
+    //     labsImport.importarDatos(rest.paciente);
+    // });
+});
 
 // ATENCIÓN: SOLO PARA USAR A NIVEL DE INTEGRACIÓN!!!!
 
