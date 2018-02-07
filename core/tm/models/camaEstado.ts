@@ -1,5 +1,5 @@
 import * as express from 'express';
-import { camaEstado } from '../schemas/camaEstado';
+import * as camaEstado from '../schemas/camaEstado';
 import { Auth } from '../../../auth/auth.class';
 
 export function crear(estado, req) {
