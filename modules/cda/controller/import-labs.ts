@@ -42,10 +42,18 @@ function HttpGet(url) {
     idEfector: 205 }
  */
 
-
+let cota = 0.95;
 
 function matchPaciente(pacMpi, pacLab) {
+
+    // let weights = {
+    //     identity: 0.1,
+    //     name: 0.30,
+    //     gender: 0.30,
+    //     birthDate: 0.30
+    // };
     let weights = config.mpi.weightsDefault;
+
     let pacDto = {
         documento: pacMpi.documento ? pacMpi.documento.toString() : '',
         nombre: pacMpi.nombre ? pacMpi.nombre : '',
@@ -104,7 +112,7 @@ export async function importarDatos(paciente) {
             });
 
             let value = matchPaciente(paciente, lab);
-            if (value > 0.95 && validado && details.recordset) {
+            if (value >= cota && validado && details.recordset) {
 
                 let pdfUrl = configPrivate.wsSalud.host + configPrivate.wsSalud.getResultado + '?idProtocolo=' + lab.idProtocolo + '&idEfector=' + lab.idEfector;
 
@@ -144,10 +152,19 @@ export async function importarDatos(paciente) {
 
             } else {
                 // Ver que hacer si no matchea
+                if (value < cota) {
+                    // console.log('-----------------------------------');
+                    // console.log(paciente.nombre, lab.nombre);
+                    // console.log(paciente.apellido, lab.apellido);
+                    // console.log(paciente.documento, lab.numeroDocumento);
+                    // console.log(paciente.sexo, lab.sexo);
+                    // console.log(paciente.fechaNacimiento, lab.fechaNacimiento);
+                }
+
             }
         }
 
     } catch (e) {
-        console.log('ALGO', e);
+        console.log('Error', e);
     }
 }
