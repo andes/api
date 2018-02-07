@@ -317,7 +317,9 @@ export function matching(data) {
         query: query
     };
 
+
     return new Promise((resolve, reject) => {
+
         if (data.type === 'suggest') {
 
             connElastic.search(body)
@@ -417,11 +419,25 @@ export function matching(data) {
 
 export function deletePacienteAndes(objectId) {
     return new Promise((resolve, reject) => {
-        let connElastic = new ElasticSync();
         let query = {
             _id: objectId
         };
         paciente.findById(query, function (err, patientFound) {
+            if (err) {
+                reject(err);
+            }
+            patientFound.remove();
+            resolve(patientFound);
+        });
+    });
+}
+
+export function deletePacienteMpi(objectId) {
+    return new Promise((resolve, reject) => {
+        let query = {
+            _id: objectId
+        };
+        pacienteMpi.findById(query, function (err, patientFound) {
             if (err) {
                 reject(err);
             }

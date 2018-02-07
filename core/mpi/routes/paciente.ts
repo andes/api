@@ -1,12 +1,25 @@
 import * as express from 'express';
 import * as mongoose from 'mongoose';
-import { Matching } from '@andes/match';
-import { pacienteMpi, paciente } from '../schemas/paciente';
-import { log } from '../../log/schemas/log';
+import {
+    Matching
+} from '@andes/match';
+import {
+    pacienteMpi,
+    paciente
+} from '../schemas/paciente';
+import {
+    log
+} from '../../log/schemas/log';
 import * as controller from '../controller/paciente';
-import { Auth } from './../../../auth/auth.class';
-import { Logger } from '../../../utils/logService';
-import { ElasticSync } from '../../../utils/elasticSync';
+import {
+    Auth
+} from './../../../auth/auth.class';
+import {
+    Logger
+} from '../../../utils/logService';
+import {
+    ElasticSync
+} from '../../../utils/elasticSync';
 import * as debug from 'debug';
 
 let logD = debug('paciente-controller');
@@ -193,30 +206,30 @@ router.get('/pacientes/dashboard/', function (req, res, next) {
     };
 
     paciente.aggregate([{
-        $group: {
-            '_id': {
-                'estado': '$estado'
-            },
-            'count': {
-                '$sum': 1
+            $group: {
+                '_id': {
+                    'estado': '$estado'
+                },
+                'count': {
+                    '$sum': 1
+                }
             }
-        }
-    }],
+        }],
         function (err, data) {
             if (err) {
                 return next(err);
             }
             result.paciente = data;
             pacienteMpi.aggregate([{
-                $group: {
-                    '_id': {
-                        'estado': '$estado'
-                    },
-                    'count': {
-                        '$sum': 1
+                    $group: {
+                        '_id': {
+                            'estado': '$estado'
+                        },
+                        'count': {
+                            '$sum': 1
+                        }
                     }
-                }
-            }],
+                }],
                 function (err1, data1) {
                     if (err1) {
                         return next(err1);
@@ -224,22 +237,22 @@ router.get('/pacientes/dashboard/', function (req, res, next) {
 
                     result.pacienteMpi = data1;
                     log.aggregate([{
-                        $group: {
-                            '_id': {
-                                'operacion': '$operacion',
-                                'modulo': '$modulo'
+                                $group: {
+                                    '_id': {
+                                        'operacion': '$operacion',
+                                        'modulo': '$modulo'
+                                    },
+                                    'count': {
+                                        '$sum': 1
+                                    }
+                                }
                             },
-                            'count': {
-                                '$sum': 1
+                            {
+                                $match: {
+                                    '_id.modulo': 'mpi'
+                                }
                             }
-                        }
-                    },
-                    {
-                        $match: {
-                            '_id.modulo': 'mpi'
-                        }
-                    }
-                    ],
+                        ],
                         function (err2, data2) {
                             if (err2) {
                                 return next(err2);
@@ -283,7 +296,7 @@ router.get('/pacientes/auditoria/', function (req, res, next) {
             return next(err);
         }
         res.json(data);
-        });
+    });
 
 });
 
@@ -556,22 +569,19 @@ router.delete('/pacientes/mpi/:id', function (req, res, next) {
         return next(403);
     }
 
-    let query = {
-        _id: new mongoose.Types.ObjectId(req.params.id)
-    };
+    let ObjectId = mongoose.Types.ObjectId;
+    let objectId = new ObjectId(req.params.id);
 
-    pacienteMpi.findById(query, function (err, patientFound) {
-        if (err) {
-            return next(err);
-        }
-        patientFound.remove();
-
+    controller.deletePacienteMpi(objectId).then((patientFound: any) => {
         let connElastic = new ElasticSync();
         connElastic.delete(patientFound._id.toString()).then(() => {
             res.json(patientFound);
         }).catch(error => {
             return next(error);
         });
+        Auth.audit(patientFound, req);
+    }).catch((error) => {
+        return next(error);
     });
 });
 
@@ -765,17 +775,20 @@ router.delete('/pacientes/:id', function (req, res, next) {
     if (!Auth.check(req, 'mpi:paciente:deleteAndes')) {
         return next(403);
     }
-    let connElastic = new ElasticSync();
     let ObjectId = mongoose.Types.ObjectId;
     let objectId = new ObjectId(req.params.id);
     controller.deletePacienteAndes(objectId).then((patientFound: any) => {
+        let connElastic = new ElasticSync();
+        connElastic.delete(patientFound._id.toString()).then(() => {
+            res.json(patientFound);
+        }).catch(error => {
+            return next(error);
+        });
         Auth.audit(patientFound, req);
     }).catch((error) => {
         return next(error);
     });
 });
-
-
 
 /**
  * @swagger
@@ -829,14 +842,18 @@ router.patch('/pacientes/:id', function (req, res, next) {
                     // necesitamos llamar a la funcion que actualiza los turnos directamente, por no pasar por el controller.
                     try {
                         controller.updateTurnosPaciente(resultado.paciente);
-                    } catch (error) { return next(error); }
+                    } catch (error) {
+                        return next(error);
+                    }
                     break;
                 case 'updateContactos': // Update de carpeta y de contactos
                     resultado.paciente.markModified('contacto');
                     resultado.paciente.contacto = req.body.contacto;
                     try {
                         controller.updateTurnosPaciente(resultado.paciente);
-                    } catch (error) { return next(error); }
+                    } catch (error) {
+                        return next(error);
+                    }
                     break;
                 case 'linkIdentificadores':
                     controller.linkIdentificadores(req, resultado.paciente);
@@ -864,7 +881,17 @@ router.patch('/pacientes/:id', function (req, res, next) {
             } else {
                 pacienteAndes = resultado.paciente;
             }
+            console.log('paso por acaaaaa: ', pacienteAndes);
+            let connElastic = new ElasticSync();
+            connElastic.sync(pacienteAndes).then(() => {
+                res.json(pacienteAndes);
+            }).catch(error => {
+                console.log('dio un palenque: ', error);
+                return next(error);
+            });
+            console.log('antes del audit');
             Auth.audit(pacienteAndes, req);
+            console.log('antes del save...............');
             pacienteAndes.save(function (errPatch) {
                 if (errPatch) {
                     return next(errPatch);
