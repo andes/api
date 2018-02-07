@@ -9,8 +9,6 @@ import * as utils from '../../../utils/utils';
 import { log } from 'core-js/library/web/timers';
 let router = express.Router();
 
-
-
 router.get('/formularioTerapeutico/:id?', function (req, res, next) {
 
     if (mongoose.Types.ObjectId.isValid(req.params.id)) {
@@ -30,9 +28,6 @@ router.get('/formularioTerapeutico/:id?', function (req, res, next) {
             opciones['capitulo'] = req.query.capitulo;
         }
         if (req.query.nombreMedicamento) {
-            // opciones['subcapitulos.medicamentos.concepto.term'] = {
-            //     '$regex': utils.makePattern(req.query.nombreMedicamento)
-            // };
             // Busca por palabras
             if (isNaN(req.query.nombreMedicamento)) {
 
@@ -71,19 +66,18 @@ router.get('/formularioTerapeutico/:id?', function (req, res, next) {
                             let concepto = medicamento.concepto;
                             if (concepto.words && concepto.words.length > 0) {
                                 let words = String(req.query.nombreMedicamento).split(' ');
-                                // concepto.words.forEach(function (word) {
                                 words.forEach(function (word) {
                                     // normalizamos cada una de las palabras como hace SNOMED para poder buscar palabra a palabra
                                     word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08');
                                     let expWord = '^' + utils.removeDiacritics(word) + '.*';
                                     // agregamos la palabra a la condicion
-                                    let aux = concepto.words.findIndex(w =>{
+                                    let aux = concepto.words.findIndex(w => {
                                         return w.match(expWord) != null;
                                     });
-                                    if (aux > 0) {
+                                    if (aux >= 0) {
                                         cont++;
                                     }
-                                    if (cont === words.length){
+                                    if (cont === words.length) {
                                         filtrados.push(medicamento);
                                     }
                                 });
@@ -91,9 +85,7 @@ router.get('/formularioTerapeutico/:id?', function (req, res, next) {
                         });
                         subcapitulo.medicamentos = filtrados;
                     });
-
                 });
-
             }
             res.json(data)
         });
