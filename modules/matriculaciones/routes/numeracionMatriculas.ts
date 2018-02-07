@@ -23,25 +23,24 @@ var router = express.Router();
 
 router.get('/numeraciones/:id*?', function (req, res, next) {
     var resultado;
-console.log(req.params)
-if ( req.query.especialidad || req.query.profesion  ) {
-    if(req.query.profesion){
-    NumeracionMatriculas.find({'profesion._id': req.query.profesion}, function (err, data) {
-            if (err) {
-                next(err);
-            }
-            res.json(data);
-        });
-    }
-    if(req.query.especialidad){
-        NumeracionMatriculas.find({'especialidad._id': req.query.especialidad}, function (err, data) {
-            if (err) {
-                next(err);
-            }
-            res.json(data);
-        });
+    if (req.query.especialidad || req.query.profesion) {
+        if (req.query.profesion) {
+            NumeracionMatriculas.find({ 'profesion._id': req.query.profesion }, function (err, data) {
+                if (err) {
+                    next(err);
+                }
+                res.json(data);
+            });
+        }
+        if (req.query.especialidad) {
+            NumeracionMatriculas.find({ 'especialidad._id': req.query.especialidad }, function (err, data) {
+                if (err) {
+                    next(err);
+                }
+                res.json(data);
+            });
 
-    }
+        }
     } else {
 
         let offset = req.query.offset ? parseInt(req.query.offset, 10) : 0;
@@ -63,7 +62,7 @@ if ( req.query.especialidad || req.query.profesion  ) {
         NumeracionMatriculas.find(busquedaNumeracion)
             .skip(offset)
             .limit(chunkSize)
-            .exec(function(error, data) {
+            .exec(function (error, data) {
 
                 if (error) {
                     return next(error);
@@ -81,14 +80,14 @@ if ( req.query.especialidad || req.query.profesion  ) {
                         responseData.totalPages = Math.ceil(count / chunkSize) !== 0 ? Math.ceil(count / chunkSize) : 1;
                         res.status(201)
                             .json(responseData);
-                });
+                    });
 
-        });
+            });
 
 
 
     }
-    });
+});
 
 /**
  *
@@ -125,31 +124,53 @@ router.get('/numeracionesRestart', (req, resp, errorHandler) => {
 /**
  *
  */
-router.post('/numeraciones', function(request, response, errorHandler) {
-    if (request.body.id) {
-        NumeracionMatriculas.findByIdAndUpdate(request.body.id, request.body, (error, numeracion) => {
+router.post('/numeraciones', function (request, response, errorHandler) {
+    let opciones = {};
+    let query;
 
-            if (error) {
-                return errorHandler(error);
-            }
+    if (request.body.profesion) {
+        opciones['profesion._id'] = request.body.profesion._id;
+    }
 
-            response.json(numeracion);
-        });
-    } else {
-        const newNum = new NumeracionMatriculas(request.body);
-
-        newNum.save((error, numeracion) => {
-
-            if (error) {
-                return errorHandler(error);
-            }
-
-            response.status(201)
-                .json(numeracion);
-        });
+    if (request.body.especialidad) {
+        opciones['especialidad._id'] = request.body.especialidad._id;
     }
 
 
+    query = NumeracionMatriculas.find(opciones);
+
+
+    query.exec(function (err, data) {
+        if (data.length > 0) {
+            response.send(null);
+        } else {
+            const newNum = new NumeracionMatriculas(request.body);
+
+            newNum.save((error, numeracion) => {
+
+                if (error) {
+                    return errorHandler(error);
+                }
+
+                response.status(201)
+                    .json(numeracion);
+            });
+        }
+    });
+
+
+});
+
+
+router.put('/numeraciones', function (request, response, errorHandler) {
+    NumeracionMatriculas.findByIdAndUpdate(request.body.id, request.body, (error, numeracion) => {
+
+        if (error) {
+            return errorHandler(error);
+        }
+
+        response.json(numeracion);
+    });
 
 });
 
