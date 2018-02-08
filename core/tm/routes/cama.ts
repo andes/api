@@ -90,7 +90,7 @@ router.put('/camas/:id', (req, res, next) => {
 
 router.patch('/camas/:idCama', function (req, res, next) {
     cama.model.findById({
-        _id: req.params.id,
+        _id: req.params.idCama,
     }, function (err, data: any) {
         if (err) {
             return next(err);
