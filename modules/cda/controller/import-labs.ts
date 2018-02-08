@@ -6,10 +6,12 @@ import * as sql from 'mssql';
 import { Matching } from '@andes/match';
 import * as mongoose from 'mongoose';
 import * as operations from '../../legacy/controller/operations';
+import * as debug from 'debug';
 
 let request = require('request');
 let soap = require('soap');
 let libxmljs = require('libxmljs');
+let logger = debug('laboratorios');
 
 function toJson(xml) {
     xml = xml.replace('<?xml version="1.0" encoding="utf-8"?>', '');
@@ -165,6 +167,6 @@ export async function importarDatos(paciente) {
         }
 
     } catch (e) {
-        console.log('Error', e);
+        logger.log('Error', e);
     }
 }

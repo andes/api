@@ -4,9 +4,10 @@ import * as moment from 'moment';
 import { Logger } from '../utils/logService';
 import { log } from '../core/log/schemas/log';
 import * as config from '../config.private';
+import * as debug from 'debug';
 
 function run() {
-
+    let logger = debug('cdaSipsJob');
     log.find({
         'modulo': 'scheduler',
         'operacion': 'cda'
