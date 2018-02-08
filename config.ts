@@ -92,6 +92,12 @@ export const modules = {
         route: '/modules/mobileApp',
         middleware: mobileMiddleware
     },
+    turnero: {
+        active: true,
+        path: './modules/turnero/routes',
+        route: '/modules/turnero',
+        middleware: null
+    },
     fuentesAutenticas: {
         active: true,
         path: './modules/fuentesAutenticas/routes',
