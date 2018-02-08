@@ -131,7 +131,9 @@ router.get('/laboratorios/(:id)', async (req, res, next) => {
     let pacientes = (req as any).user.pacientes;
     let index = pacientes.findIndex(item => item.id === idPaciente);
     if (index >= 0) {
-        let cdas: any[] = await cdaCtr.searchByPatient(idPaciente, '4241000179101');
+        let limit = parseInt (req.query.limit || 10, 0);
+        let skip = parseInt (req.query.skip || 0, 0);
+        let cdas: any[] = await cdaCtr.searchByPatient(idPaciente, '4241000179101', { limit, skip });
         for (let cda of cdas) {
             let _xml = await cdaCtr.loadCDA(cda.cda_id);
             let dom: any = xmlToJson(_xml);

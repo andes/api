@@ -345,16 +345,21 @@ export function findByMetadata (conds) {
  * listado de CDA por paciente y tipo de prestación
  */
 
-export function searchByPatient (pacienteId, prestacion): Promise<any[]> {
+export function searchByPatient (pacienteId, prestacion, { limit, skip }): Promise<any[]> {
     return new Promise(async (resolve, reject) => {
         let CDAFiles = makeFs();
         let conditions: any = { 'metadata.paciente':  mongoose.Types.ObjectId(pacienteId) };
         if (prestacion) {
             conditions['metadata.prestacion'] = prestacion;
         }
-
+        if (limit === null) {
+            limit = 10;
+        }
+        if (skip === null) {
+            skip = 0;
+        }
         try {
-            let list = await CDAFiles.find(conditions).sort({'metadata.fecha': -1});
+            let list = await CDAFiles.find(conditions).sort({'metadata.fecha': -1}).limit(limit).skip(skip);
             list = list.map(item => {
                 let data = item.metadata;
                 data.cda_id = item._id;
