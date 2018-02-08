@@ -91,7 +91,7 @@ export class Auth {
                 if (tokenData) {
                     req.user = tokenData;
                 }
-            next();
+                next();
             } catch (e) {
                 next();
             }
@@ -185,6 +185,23 @@ export class Auth {
             return null;
         } else {
             return (req as any).user.organizacion.id;
+        }
+    }
+
+    /**
+     * Obtiene el nombre completo del usuario
+     *
+     * @static
+     * @param {express.Request} req Corresponde al request actual
+     * @returns {string} nombre y apellido del usuario
+     *
+     * @memberOf Auth
+     */
+    static getUserName(req: express.Request): string {
+        if (!(req as any).user) {
+            return null;
+        } else {
+            return (req as any).user.usuario.nombreCompleto;
         }
     }
 
