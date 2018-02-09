@@ -267,6 +267,7 @@ router.get('/pacientes/dashboard/', function (req, res, next) {
 
 });
 
+
 router.get('/pacientes/auditoria/', function (req, res, next) {
     let filtro;
     switch (req.query.estado) {
@@ -290,6 +291,19 @@ router.get('/pacientes/auditoria/', function (req, res, next) {
     }
     filtro['activo'] = req.query.activo === 'true' ? true : false;
 
+    let query = paciente.find(filtro);
+    query.exec(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        res.json(data);
+    });
+
+});
+
+router.get('/pacientes/auditoria/vinculados/', function (req, res, next) {
+    let filtro = {'identificadores.0': {$exists: true}};
+    filtro['activo'] = req.query.activo === 'true' ? true : false;
     let query = paciente.find(filtro);
     query.exec(function (err, data) {
         if (err) {
@@ -881,17 +895,13 @@ router.patch('/pacientes/:id', function (req, res, next) {
             } else {
                 pacienteAndes = resultado.paciente;
             }
-            console.log('paso por acaaaaa: ', pacienteAndes);
             let connElastic = new ElasticSync();
             connElastic.sync(pacienteAndes).then(() => {
                 res.json(pacienteAndes);
             }).catch(error => {
-                console.log('dio un palenque: ', error);
                 return next(error);
             });
-            console.log('antes del audit');
             Auth.audit(pacienteAndes, req);
-            console.log('antes del save...............');
             pacienteAndes.save(function (errPatch) {
                 if (errPatch) {
                     return next(errPatch);
