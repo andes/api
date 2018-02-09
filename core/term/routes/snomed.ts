@@ -53,7 +53,6 @@ router.get('/snomed', function (req, res, next) {
         conceptActive: true,
         active: true
     };
-    req.query.search = req.query.search.toLowerCase();
     // Filtramos por semanticTag
     if (req.query.semanticTag) {
         conditions['$or'] = [...[], req.query.semanticTag].map((i) => { return { semanticTag: i }; });
@@ -61,6 +60,7 @@ router.get('/snomed', function (req, res, next) {
 
     // creamos un array de palabras a partir de la separacion del espacio
     if (req.query.search) {
+        req.query.search = req.query.search.toLowerCase();
         if (isNaN(req.query.search)) {
             // Busca por palabras
             conditions['$and'] = [];
