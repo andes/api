@@ -7,5 +7,5 @@ let osPacienteSchema = new mongoose.Schema({
     codigoPuco: Number
 });
 
-export let osPaciente = mongoose.model('os_paciente', osPacienteSchema, 'os_paciente');
+export let osPaciente = mongoose.model('osPaciente', osPacienteSchema, 'osPaciente');
 
