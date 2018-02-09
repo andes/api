@@ -13,6 +13,10 @@ let soap = require('soap');
 let libxmljs = require('libxmljs');
 let logger = debug('laboratorios');
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 function toJson(xml) {
     xml = xml.replace('<?xml version="1.0" encoding="utf-8"?>', '');
     xml = xml.replace('<string xmlns="http://www.saludneuquen.gov.ar/">', '');
@@ -31,29 +35,9 @@ function HttpGet(url) {
     });
 }
 
-/**
- * { Documento: 34292120,
-    Apellidos: 'Garcia',
-    Nombres: 'Silvina Gabriela',
-    FechaNacimiento: '01/01/1900',
-    Sexo: 'F',
-    Efector: 'HOSPITAL PROVINCIAL NEUQUEN  "DR. EDUARDO CASTRO RENDON"',
-    NumeroProtocolo: '543251',
-    FechaProtocolo: '10/02/2017',
-    idProtocolo: 596142,
-    idEfector: 205 }
- */
-
 let cota = 0.95;
 
 function matchPaciente(pacMpi, pacLab) {
-
-    // let weights = {
-    //     identity: 0.1,
-    //     name: 0.30,
-    //     gender: 0.30,
-    //     birthDate: 0.30
-    // };
     let weights = config.mpi.weightsDefault;
 
     let pacDto = {
@@ -82,6 +66,23 @@ let connection = {
     database: configPrivate.conSql.serverSql.database
 };
 pool = sql.connect(connection);
+
+function downloadFile(url) {
+    return new Promise((resolve, reject) => {
+        let stm = request.get(url).on('response', function(response) {
+            // console.log(response.statusCode); // 200
+            // console.log(response.headers['content-type']); // 'image/png'
+            if (response.statusCode === 200) {
+                return resolve(response);
+            } else {
+                return reject({error: 'sips-pdf', status: response.statusCode});
+            }
+          }).on('error', function (error) {
+            return reject({error: 'sips-pdf', status: 0});
+        });
+    });
+}
+
 export async function importarDatos(paciente) {
     try {
         // let url = configPrivate.wsSalud.host + configPrivate.wsSalud.getPaciente + '?dni=' + paciente.documento;
@@ -130,12 +131,15 @@ export async function importarDatos(paciente) {
                 };
                 let texto = 'Exámen de Laboratorio';
                 let uniqueId = String(new mongoose.Types.ObjectId());
-                let fileData;
-                // if (stream) {
-                fileData = await cdaCtr.storeFile({
-                    stream: request.get(pdfUrl),
+
+                let response = await downloadFile(pdfUrl);
+                let fileData: any = await cdaCtr.storeFile({
+                    stream: response,
                     mimeType: 'application/pdf',
-                    extension: 'pdf'
+                    extension: 'pdf',
+                    metadata: {
+                        cdaId: uniqueId
+                    }
                 });
                 // }
 
@@ -151,22 +155,26 @@ export async function importarDatos(paciente) {
                     }
                 };
                 let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
-
+                await sleep(500);
             } else {
                 // Ver que hacer si no matchea
                 if (value < cota) {
-                    // console.log('-----------------------------------');
-                    // console.log(paciente.nombre, lab.nombre);
-                    // console.log(paciente.apellido, lab.apellido);
-                    // console.log(paciente.documento, lab.numeroDocumento);
-                    // console.log(paciente.sexo, lab.sexo);
-                    // console.log(paciente.fechaNacimiento, lab.fechaNacimiento);
+                    logger('-----------------------------------');
+                    logger(paciente.nombre, lab.nombre);
+                    logger(paciente.apellido, lab.apellido);
+                    logger(paciente.documento, lab.numeroDocumento);
+                    logger(paciente.sexo, lab.sexo);
+                    logger(paciente.fechaNacimiento, lab.fechaNacimiento);
                 }
 
             }
         }
-
+        return true;
     } catch (e) {
-        logger.log('Error', e);
+        logger('Error', e);
+        if (e.error === 'sips-pdf') {
+            return false;
+        }
+        return true;
     }
 }

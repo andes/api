@@ -164,7 +164,7 @@ export function base64toStream (base64) {
     };
 }
 
-export function storeFile ({extension, mimeType, stream }) {
+export function storeFile ({extension, mimeType, stream, metadata }) {
     return new Promise((resolve, reject) => {
         let CDAFiles = makeFs();
         let uniqueId = String(new mongoose.Types.ObjectId());
@@ -172,11 +172,15 @@ export function storeFile ({extension, mimeType, stream }) {
         CDAFiles.write({
                 _id: uniqueId,
                 filename:  uniqueId + '.' + extension,
-                contentType: mimeType
+                contentType: mimeType,
+                metadata
             },
             stream,
             (error, createdFile) => {
-                resolve({
+                if (error) {
+                    return reject(error);
+                }
+                return resolve({
                     id: createdFile._id,
                     data: 'files/' + createdFile.filename,
                     mime: mimeType,
@@ -345,7 +349,7 @@ export function findByMetadata (conds) {
  * listado de CDA por paciente y tipo de prestación
  */
 
-export function searchByPatient (pacienteId, prestacion, { limit, skip }): Promise<any[]> {
+export function searchByPatient (pacienteId, prestacion, { limit, skip  }): Promise<any[]> {
     return new Promise(async (resolve, reject) => {
         let CDAFiles = makeFs();
         let conditions: any = { 'metadata.paciente':  mongoose.Types.ObjectId(pacienteId) };
@@ -363,6 +367,7 @@ export function searchByPatient (pacienteId, prestacion, { limit, skip }): Promi
             list = list.map(item => {
                 let data = item.metadata;
                 data.cda_id = item._id;
+                data.adjuntos = data.adjuntos.map(item2 => item2.data);
                 return item.metadata;
             });
 

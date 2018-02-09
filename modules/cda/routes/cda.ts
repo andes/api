@@ -70,7 +70,9 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
 
         let fileData;
         if (file) {
-            fileData = await cdaCtr.storeFile(cdaCtr.base64toStream(file));
+            let fileObj: any = cdaCtr.base64toStream(file);
+            fileObj.cdaId = uniqueId;
+            fileData = await cdaCtr.storeFile(fileObj);
         }
 
         let cda = cdaCtr.generateCDA(uniqueId, 'N', paciente, fecha, dataProfesional, organizacion, snomed, cie10, texto, fileData);
@@ -149,7 +151,7 @@ router.get('/paciente/:id', async (req: any, res, next) => {
     let pacienteID = req.params.id;
     let prestacion = req.query.prestacion;
 
-    let list = await cdaCtr.searchByPatient(pacienteID, prestacion);
+    let list = await cdaCtr.searchByPatient(pacienteID, prestacion, {skip: 0, limit: 10});
     res.json(list);
 });
 
