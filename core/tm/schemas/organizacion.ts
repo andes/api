@@ -1,3 +1,4 @@
+import * as camas from './camas';
 import * as mongoose from 'mongoose';
 import * as edificioSchema from './edificio';
 import * as direccionSchema from './direccion';
@@ -29,8 +30,10 @@ let _schema = new mongoose.Schema({
     },
     fechaAlta: Date,
     fechaBaja: Date,
-    servicios: [SnomedConcept]
+    servicios: [SnomedConcept],
+    camas: [camas.schema]
 });
-
+const audit = require('../../../mongoose/audit');
+_schema.plugin(audit);
 export let schema = _schema;
 export let model = mongoose.model('organizacion', _schema, 'organizacion');

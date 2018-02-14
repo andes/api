@@ -229,7 +229,7 @@ export function codificarTurno(req, data, tid) {
                     });
                 });
             } else {
-                resolve(null);
+                return resolve(null);
             }
         });
     });
@@ -359,7 +359,7 @@ export function actualizarEstado(req, data) {
                         turno.estado = 'suspendido';
                     }
                     turno.motivoSuspension = 'agendaSuspendida';
-                    turno.tipoTurno = undefined;
+                    // turno.tipoTurno = undefined;
 
                     // if (turno.paciente.id && turno.paciente.telefono) {
                     //     let sms: any = {

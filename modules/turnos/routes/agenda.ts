@@ -9,7 +9,7 @@ import * as agendaCtrl from '../controller/agenda';
 // import * as agendaSipsCtrl from '../controller/agendaSipsController';
 
 import * as agendaCacheCtrl from '../controller/agendasCacheController';
-
+import * as diagnosticosCtrl from '../controller/diagnosticosC2Controller';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import * as operations from './../../legacy/controller/operations';
 import { toArray } from '../../../utils/utils';
@@ -99,6 +99,13 @@ router.get('/agenda/candidatas', async function (req, res, next) {
         res.json(out);
 
     });
+});
+
+router.get('/agenda/diagnosticos', async function (req, res, next) {
+    diagnosticosCtrl.getDiagnosticos(req.query).then((resultado) => {
+        res.json(resultado);
+    });
+
 });
 
 router.get('/agenda/:id?', function (req, res, next) {
@@ -354,7 +361,6 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                                 err: error || false
                             });
                             if (error) {
-                                console.log('ddddd', error);
                                 return next(error);
                             }
                         });
