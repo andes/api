@@ -16,7 +16,7 @@ router.get('/puco/:documento', async function (req, res, next) {
                 res.json({ nombre: respuesta.nombre, codigo: respuesta.codigoPuco });
             } else {
                 // default: sumar
-                res.json({ nombre: 'Sumar', codigo: '' });
+                res.json({ nombre: 'Sumar', codigo: '499' });
             }
         } catch (e) {
             // default: sumar
