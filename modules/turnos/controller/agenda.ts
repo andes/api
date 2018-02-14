@@ -359,14 +359,8 @@ export function actualizarEstado(req, data) {
                         turno.estado = 'suspendido';
                     }
                     turno.motivoSuspension = 'agendaSuspendida';
-                    // turno.tipoTurno = undefined;
+                    turno.avisoSuspension = 'no enviado';
 
-                    // if (turno.paciente.id && turno.paciente.telefono) {
-                    //     let sms: any = {
-                    //         telefono: turno.paciente.telefono,
-                    //         mensaje: 'Le avisamos que su turno para el día ' + moment(turno.horaInicio).format('ll').toString() + ' a las ' + moment(turno.horaInicio).format('LT').toString() + 'hs fue suspendido'
-                    //     };
-                    // }
                 });
             });
         }

@@ -41,6 +41,10 @@ let turnoSchema = new mongoose.Schema({
         type: String,
         enum: ['edilicia', 'profesional', 'organizacion', 'agendaSuspendida']
     },
+    avisoSuspension: {
+        type: String,
+        enum: ['no enviado', 'enviado', 'fallido']
+    },
     paciente: { // pensar que otros datos del paciente conviene tener
         id: mongoose.Schema.Types.ObjectId,
         nombre: String,
@@ -57,7 +61,6 @@ let turnoSchema = new mongoose.Schema({
     tipoPrestacion: {
         type: tipoPrestacionSchema
     },
-    // TODO: Enlace con RUP? cuando alguien defina ALGO
     idPrestacionPaciente: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'prestacionPaciente'

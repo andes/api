@@ -5,7 +5,7 @@ import * as moment from 'moment';
 import { profesional } from '../../../core/tm/schemas/profesional';
 import { pacienteApp } from '../schemas/pacienteApp';
 import { NotificationService } from './NotificationService';
-import { sendSms, ISms } from '../../../utils/roboSender';
+import { sendSms } from '../../../utils/roboSender/sendSms';
 
 import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
