@@ -12,17 +12,15 @@ router.get('/puco/:documento', async function (req, res, next) {
     if (req.params.documento) {
         try {
             let respuesta: any = await getOs(req.params.documento);
-            if (respuesta && respuesta.puco && respuesta.puco.resultado === 'OK') {
-                res.json({ nombre: respuesta.puco.coberturaSocial, codigo: respuesta.puco.rnos });
+            if (respuesta) {
+                res.json({ nombre: respuesta.nombre, codigo: respuesta.codigoPuco });
             } else {
-                // TODO: consultar BD mongo
                 // default: sumar
-                res.json({ nombre: 'Sumar', codigo: '123' });
+                res.json({ nombre: 'Sumar', codigo: '' });
             }
         } catch (e) {
-            // TODO: consultar BD mongo
             // default: sumar
-            res.json({ nombre: 'Sumar', codigo: '123' });
+            return next(e);
         }
     }
 });
@@ -30,11 +28,8 @@ router.get('/puco/:documento', async function (req, res, next) {
 async function getOs(doc) {
     let osPac: any = await osPaciente.find({ documento: doc }).exec();
     let codigo: string = osPac[0].codigoPuco;
-    console.log(codigo);
     let result = await obraSocial.find({ codigoPuco: parseInt(codigo, 10) }).exec();
-    console.log(result);
+    return result[0];
 }
-
-
 
 module.exports = router;
