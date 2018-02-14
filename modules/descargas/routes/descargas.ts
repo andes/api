@@ -6,8 +6,8 @@ import { Documento } from './../controller/descargas';
 let router = express.Router();
 
 
-router.post('/pdf', (req: any, res, next) => {
-    Documento.generarPDF(req, res, next);
+router.post('/:tipo', (req: any, res, next) => {
+    Documento.generar(req, res, next);
 });
 
 export = router;
