@@ -15,7 +15,7 @@ import { iterate, convertToObjectId, buscarEnHuds, matchConcepts } from '../cont
 let router = express.Router();
 let async = require('async');
 
-router.get('/prestaciones/huds/:idPaciente', function(req, res, next) {
+router.get('/prestaciones/huds/:idPaciente', function (req, res, next) {
 
     // verificamos que sea un ObjectId válido
     if (!mongoose.Types.ObjectId.isValid(req.params.idPaciente)) {
@@ -27,11 +27,11 @@ router.get('/prestaciones/huds/:idPaciente', function(req, res, next) {
     let query = {
         'paciente.id': req.params.idPaciente,
         '$where': 'this.estados[this.estados.length - 1].tipo ==  \"' + estado + '\"'
-    }
+    };
 
     let conceptos = (req.query.conceptIds) ? req.query.conceptIds : null;
 
-    Prestacion.find(query, (err, prestaciones) => {
+    return Prestacion.find(query, (err, prestaciones) => {
         if (err) {
             return next(err);
         }
