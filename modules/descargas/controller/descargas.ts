@@ -12,7 +12,7 @@ export class Documento {
     /**
      * Opciones default de PDF rendering
      */
-    private static options = {
+    private static phantomPDFOptions = {
         format: 'A4',
         border: {
             // default is 0, units: mm, cm, in, px
@@ -57,9 +57,9 @@ export class Documento {
         html = html.replace('<!--logotipoAndes-->', `<img src="data:image/png;base64,${logotipoAndes.toString('base64')}" style="width: 80px; margin-right: 10px;">`);
 
         html += `<footer id="pageFooter" style="background-color: rgba(0,0,0,0.1); display: inline-block; font-size: 8px; margin-bottom: 15px; padding: 5px;">
-        <img src="data:image/png;base64,${logoPDP.toString('base64')}" style="display: inline-block; width: 100px; float: right;">
-        <div style="display: inline-block; float: left; width: 400px; margin-right: 10px; text-align: justify;">
-            El contenido de este informe ha sido validado digitalmente siguiendo los estándares de calidad y seguridad requeridos. El   Hospital Provincial Neuquén es responsable Inscripto en el Registro Nacional de Protección de Datos Personales bajo el N° de Registro 100000182, según lo requiere la Ley N° 25.326 (art. 3° y 21 inciso 1)
+        <img src="data:image/png;base64,${logoPDP.toString('base64')}" style="width: 100px; float: right;">
+        <div style="float: left; width: 400px; margin-right: 10px; text-align: justify;">
+            El contenido de este informe ha sido validado digitalmente siguiendo los estándares de calidad y seguridad requeridos. El Hospital Provincial Neuquén es responsable Inscripto en el Registro Nacional de Protección de Datos Personales bajo el N° de Registro 100000182, según lo requiere la Ley N° 25.326 (art. 3° y 21 inciso 1)
             ${JSON.stringify(Auth.getUserName(req))} - ${new Date().toLocaleString('locale', { timeZone: this.timeZone })} hs
         </div>
     </footer>`;
@@ -96,30 +96,54 @@ export class Documento {
      * @param next ExpressJS next
      * @param options html-pdf/PhantonJS rendering options
      */
-    static generarPDF(req, res, next, options = null) {
+    static generar(req, res, next, options = null) {
 
-        // PhantomJS PDF rendering options
-        // https://www.npmjs.com/package/html-pdf
-        // http://phantomjs.org/api/webpage/property/paper-size.html
-        if (options) {
-            this.options = options;
+        let html = '';
+        switch (req.params.tipo) {
+            case 'pdf':
+                // PhantomJS PDF rendering options
+                // https://www.npmjs.com/package/html-pdf
+                // http://phantomjs.org/api/webpage/property/paper-size.html
+                if (options) {
+                    this.phantomPDFOptions = options;
+                }
+
+                html = this.generarHTML(req);
+
+                pdf.create(html, this.phantomPDFOptions).toFile((err2, file) => {
+
+                    if (err2) {
+                        return next(err2);
+                    }
+
+                    res.download(file.filename, (err3) => {
+                        if (err3) {
+                            next(err3);
+                        } else {
+                            next();
+                        }
+                    });
+                });
+                break;
+            case 'html':
+                html = this.generarHTML(req);
+
+                let htmlfile = fs.writeFileSync(__dirname + '/rup.html', html);
+                res.download(__dirname + '/rup.html', (err) => {
+                    if (err) {
+                        next(err);
+                    } else {
+                        next();
+                    }
+                });
+                break;
+            case 'txt':
+                // TODO
+                break;
+            case 'png':
+                // TODO
+                break;
         }
 
-        let html = this.generarHTML(req);
-
-        pdf.create(html, this.options).toFile((err2, file) => {
-
-            if (err2) {
-                return next(err2);
-            }
-
-            res.download(file.filename, (err3) => {
-                if (err2) {
-                    next(err3);
-                } else {
-                    next();
-                }
-            });
-        });
     }
 }
