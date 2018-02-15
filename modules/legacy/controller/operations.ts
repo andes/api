@@ -98,7 +98,7 @@ export function organizacionBySisaCode(code): any {
                 };
                 return resolve(org);
             } else {
-                return reject();
+                return reject({});
             }
         });
     });

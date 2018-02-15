@@ -147,7 +147,7 @@ export async function importarDatos(paciente) {
         return true;
     } catch (e) {
         logger('Error', e);
-        if (e.error === 'sips-pdf') {
+        if (e && e.error === 'sips-pdf') {
             return false;
         }
         return true;
