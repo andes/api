@@ -24,7 +24,7 @@ export const modules = {
         active: true,
         path: './core/tm/routes',
         route: '/core/tm',
-        middleware: null,
+        middleware: appMiddleware,
     },
     term: {
         active: true,
@@ -114,6 +114,12 @@ export const modules = {
         active: true,
         path: './modules/cda/routes',
         route: '/modules/cda',
+        middleware: appMiddleware
+    },
+    descargas: {
+        active: true,
+        path: './modules/descargas/routes',
+        route: '/modules/descargas',
         middleware: appMiddleware
     }
 };
