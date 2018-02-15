@@ -367,7 +367,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
 
                     });
                 }
-                // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
+                // Inserto la modificación en agendasCache
                 operations.cacheTurnosSips(data);
                 // Fin de insert cache
                 return res.json(data[0]);
@@ -403,7 +403,12 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                         break;
                     case 'suspenderTurno':
                         turno = agendaCtrl.getTurno(req, data, turnos[y]);
-                        LoggerPaciente.logTurno(req, 'turnos:suspender', (turno.paciente ? turno.paciente : null), turno, agendaCtrl.getBloque(data, turno)._id, data._id);
+                        if (agendaCtrl.getBloque(data, turno)) {
+                            LoggerPaciente.logTurno(req, 'turnos:suspender', (turno.paciente ? turno.paciente : null), turno, agendaCtrl.getBloque(data, turno)._id, data._id);
+                        } else {
+                            // Caso sobreturno
+                            LoggerPaciente.logTurno(req, 'turnos:suspender', (turno.paciente ? turno.paciente : null), turno, -1, data._id);
+                        }
                         agendaCtrl.suspenderTurno(req, data, turno);
                         break;
                     case 'codificarTurno': agendaCtrl.codificarTurno(req, data, turnos[y]);
