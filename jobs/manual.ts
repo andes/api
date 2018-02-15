@@ -1,6 +1,6 @@
-/** 
+/**
  * Corre una Jobs de forma manual. Corre desde el root del proyecto.
- * 
+ *
  * node jobs/manual.js [Js File to run]
 */
 let schedule = require('node-schedule');
