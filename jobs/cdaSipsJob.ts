@@ -16,7 +16,7 @@ function run() {
         'operacion': 'cda'
     }).sort({ fecha: -1 }).limit(1).then((docs) => {
         let skip = 0;
-        let limit = 30;
+        let limit = 4;
 
         if (docs.length) {
             let l: any = docs[0];
@@ -31,18 +31,22 @@ function run() {
         }).then((cuentas) => {
             let ids = [];
             cuentas.forEach((c: any) => {
-                if (c.pacientes) {
+                if (c.pacientes && c.pacientes[0] && c.pacientes[0].id) {
                     ids.push(c.pacientes[0].id);
                 }
             });
-            let _stream = PacienteMPI.find({ _id: { $in: ids }}, {nombre: 1, apellido: 1, fechaNacimiento: 1, documento: 1, sexo: 1}).skip(skip).limit(limit);
+
+            let _stream = PacienteMPI.find({ _id:  { $in: ids }}, {nombre: 1, apellido: 1, fechaNacimiento: 1, documento: 1, sexo: 1}).skip(skip).limit(limit);
             _stream.then( async (pacientes: any[]) => {
+
+                logger('Start with skip=' + skip);
                 for (let pac of pacientes) {
                     let result = await labsImport.importarDatos(pac);
                     if (!result) {
                         return;
                     }
                 }
+                logger('Stop  with skip=' + skip);
 
                 if (pacientes.length) {
                     Logger.log(config.userScheduler, 'scheduler', 'cda', { limit, skip });

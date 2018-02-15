@@ -367,7 +367,7 @@ export function searchByPatient (pacienteId, prestacion, { limit, skip  }): Prom
             list = list.map(item => {
                 let data = item.metadata;
                 data.cda_id = item._id;
-                data.adjuntos = data.adjuntos.map(item2 => item2.data);
+                data.adjuntos = data.adjuntos.map(item2 => item2.path);
                 return item.metadata;
             });
 

@@ -81,7 +81,7 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
             paciente: paciente._id,
             prestacion: snomed,
             fecha: fecha,
-            adjuntos: [ fileData.data ]
+            adjuntos: [{ path: fileData.data, id: fileData.id }]
         };
         let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
 

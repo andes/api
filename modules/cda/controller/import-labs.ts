@@ -8,34 +8,24 @@ import * as mongoose from 'mongoose';
 import * as operations from '../../legacy/controller/operations';
 import * as debug from 'debug';
 
+import * as http from 'http';
+
 let request = require('request');
 let soap = require('soap');
 let libxmljs = require('libxmljs');
 let logger = debug('laboratorios');
-
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-function toJson(xml) {
-    xml = xml.replace('<?xml version="1.0" encoding="utf-8"?>', '');
-    xml = xml.replace('<string xmlns="http://www.saludneuquen.gov.ar/">', '');
-    xml = xml.replace('</string>', '');
-    return JSON.parse(xml);
-}
-
-function HttpGet(url) {
-    return new Promise((resolve, reject) => {
-        request(url, function (error, response, html) {
-            if (error) {
-                return reject(error);
-            }
-            return resolve({response, html});
-        });
-    });
-}
-
 let cota = 0.95;
+
+let pool;
+let connection = {
+    user: configPrivate.conSql.auth.user,
+    password: configPrivate.conSql.auth.password,
+    server: configPrivate.conSql.serverSql.server,
+    database: configPrivate.conSql.serverSql.database
+};
+pool = sql.connect(connection);
+
+function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
 function matchPaciente(pacMpi, pacLab) {
     let weights = config.mpi.weightsDefault;
@@ -58,36 +48,20 @@ function matchPaciente(pacMpi, pacLab) {
     return match.matchPersonas(pacElastic, pacDto, weights, config.algoritmo);
 }
 
-let pool;
-let connection = {
-    user: configPrivate.conSql.auth.user,
-    password: configPrivate.conSql.auth.password,
-    server: configPrivate.conSql.serverSql.server,
-    database: configPrivate.conSql.serverSql.database
-};
-pool = sql.connect(connection);
-
 function downloadFile(url) {
     return new Promise((resolve, reject) => {
-        let stm = request.get(url).on('response', function(response) {
-            // console.log(response.statusCode); // 200
-            // console.log(response.headers['content-type']); // 'image/png'
+        http.get(url, function (response) {
             if (response.statusCode === 200) {
                 return resolve(response);
             } else {
                 return reject({error: 'sips-pdf', status: response.statusCode});
             }
-          }).on('error', function (error) {
-            return reject({error: 'sips-pdf', status: 0});
         });
     });
 }
 
 export async function importarDatos(paciente) {
     try {
-        // let url = configPrivate.wsSalud.host + configPrivate.wsSalud.getPaciente + '?dni=' + paciente.documento;
-        // let dataResponse: any = await HttpGet(url);
-        // let laboratorios = toJson(dataResponse.html);
 
         let laboratorios: any;
         laboratorios = await operations.getEncabezados(paciente.documento);
@@ -131,14 +105,15 @@ export async function importarDatos(paciente) {
                 };
                 let texto = 'Exámen de Laboratorio';
                 let uniqueId = String(new mongoose.Types.ObjectId());
-
                 let response = await downloadFile(pdfUrl);
+
                 let fileData: any = await cdaCtr.storeFile({
                     stream: response,
                     mimeType: 'application/pdf',
                     extension: 'pdf',
                     metadata: {
-                        cdaId: uniqueId
+                        cdaId: uniqueId,
+                        paciente: mongoose.Types.ObjectId(paciente.id)
                     }
                 });
                 // }
@@ -148,14 +123,14 @@ export async function importarDatos(paciente) {
                     paciente: mongoose.Types.ObjectId(paciente.id),
                     prestacion: snomed,
                     fecha: fecha,
-                    adjuntos: [ fileData.data ],
+                    adjuntos: [{ path: fileData.data, id: fileData.id }],
                     extras: {
                         idEfector: lab.idEfector,
                         idProtocolo: lab.idProtocolo
                     }
                 };
                 let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
-                await sleep(500);
+                await sleep(200);
             } else {
                 // Ver que hacer si no matchea
                 if (value < cota) {
