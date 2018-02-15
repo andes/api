@@ -13,6 +13,10 @@ cd api
 npm install
 ```
 
+### Configuración
+
+Renombrar el archivo `config.private.ts.example` a `config.private.ts`, y completar el mismo con la configuración deseada.
+
 ### Iniciar el servidor web
 
 ```bash
