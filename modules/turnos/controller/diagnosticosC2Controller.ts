@@ -337,11 +337,7 @@ export function getDiagnosticos(params) {
 
                                     let codigos = sobreturno.diagnostico.codificaciones;
                                     codigos.forEach(function (codigo) {
-<<<<<<< HEAD
                                         if (codigo.codificacionAuditoria && codigo.codificacionAuditoria.c2 === true) {
-=======
-                                        if (codigo.codificacionAuditoria) {
->>>>>>> a85a49756abc00c5cd91d18a0434263d622a6cf6
                                             if (elem.codigo === codigo.codificacionAuditoria.codigo) {
                                                 let edad = getAge(sobreturno.paciente.fechaNacimiento);
                                                 let sexo = sobreturno.paciente.sexo;
