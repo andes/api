@@ -98,7 +98,6 @@ export function organizacionBySisaCode(code): any {
                 };
                 return resolve(org);
             } else {
-                console.log('Codigo SISA', code);
                 return reject();
             }
         });
