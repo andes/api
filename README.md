@@ -4,10 +4,6 @@
 
 APIs para ANDES
 
-## Notas
-
-Como Angular2 y Angular-CLI son proyectos que están en constante actualización, recomendamos utilizar las versiones específicas detalladas en este documento
-
 ## Instalación
 
 ### Instalar dependencias
@@ -16,6 +12,10 @@ Como Angular2 y Angular-CLI son proyectos que están en constante actualización
 cd api
 npm install
 ```
+
+### Configuración
+
+Renombrar el archivo `config.private.ts.example` a `config.private.ts`, y completar el mismo con la configuración deseada.
 
 ### Iniciar el servidor web
 

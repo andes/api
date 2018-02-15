@@ -6,6 +6,7 @@ import * as authController from '../controller/AuthController';
 import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
 import * as agenda from '../../turnos/schemas/agenda';
+import * as labsImport from '../../cda/controller/import-labs';
 
 let router = express.Router();
 
@@ -50,6 +51,12 @@ router.post('/login', function (req, res, next) {
                     token: token,
                     user: user
                 });
+
+                // Hack momentaneo. Descargamos los laboratorios a demanda.
+                pacienteMpi.findById(user.pacientes[0].id, {nombre: 1, apellido: 1, fechaNacimiento: 1, documento: 1, sexo: 1}).then((pac: any) => {
+                    labsImport.importarDatos(pac);
+                });
+
                 return;
             } else {
                 return res.status(422).send({ error: 'e-mail o password incorrecto' });
