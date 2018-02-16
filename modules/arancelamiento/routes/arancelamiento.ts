@@ -27,9 +27,13 @@ router.get('/puco/:documento', async function (req, res, next) {
 
 async function getOs(doc) {
     let osPac: any = await osPaciente.find({ documento: doc }).exec();
-    let codigo: string = osPac[0].codigoPuco;
-    let result = await obraSocial.find({ codigoPuco: parseInt(codigo, 10) }).exec();
-    return result[0];
+    if (osPac && osPac.codigoPuco) {
+        let codigo: string = osPac[0].codigoPuco;
+        let result = await obraSocial.find({ codigoPuco: parseInt(codigo, 10) }).exec();
+        return result[0];
+    } else {
+        return null;
+    }
 }
 
 module.exports = router;
