@@ -121,6 +121,12 @@ export const modules = {
         path: './modules/descargas/routes',
         route: '/modules/descargas',
         middleware: appMiddleware
+    },
+    arancelamiento: {
+        active: true,
+        path: './modules/arancelamiento/routes',
+        route: '/modules/arancelamiento',
+        middleware: appMiddleware
     }
 };
 
