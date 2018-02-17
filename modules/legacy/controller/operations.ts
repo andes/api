@@ -44,7 +44,7 @@ function profesionalCompleto(lstProfesionales): any {
 /** Dado un id de Organización devuelve el objeto completo */
 function organizacionCompleto(idOrganizacion): any {
     return new Promise((resolve, reject) => {
-        this.organizacion.findById(mongoose.Types.ObjectId(idOrganizacion), function (err, unaOrganizacion) {
+        organizacion.model.findById(mongoose.Types.ObjectId(idOrganizacion), function (err, unaOrganizacion) {
             if (err) {
                 return reject(err);
             }
@@ -91,11 +91,15 @@ export function organizacionBySisaCode(code): any {
             if (err) {
                 return reject(err);
             }
-            let org = {
-                _id: doc.id,
-                nombre: doc.nombre,
-            };
-            return resolve(org);
+            if (doc) {
+                let org = {
+                    _id: doc.id,
+                    nombre: doc.nombre,
+                };
+                return resolve(org);
+            } else {
+                return reject({});
+            }
         });
     });
 }
@@ -111,7 +115,7 @@ export function getEncabezados(documento): any {
             let result = await new sql.Request().query(query);
             resolve(result);
         } catch (err) {
-            reject(null);
+            reject(err);
         }
     });
 }
@@ -120,12 +124,12 @@ export function getEncabezados(documento): any {
 export async function getDetalles(idProtocolo, idEfector) {
     return new Promise(async function (resolve, reject) {
         try {
-            let query = 'select grupo, item, resultado, valorReferencia, observaciones ' +
-                ' from LAB_ResultadoDetalle as detalle where detalle.idProtocolo = ' + idProtocolo + ' and detalle.idEfector = ' + idEfector;
+            let query = 'select grupo, item, resultado, valorReferencia, observaciones, hiv, profesional_val ' +
+                ' from LAB_ResultadoDetalle as detalle where esTitulo = \'No\' and detalle.idProtocolo = ' + idProtocolo + ' and detalle.idEfector = ' + idEfector;
             let result = await new sql.Request().query(query);
             resolve(result);
         } catch (err) {
-            reject(null);
+            reject(err);
         }
     });
 }
@@ -134,26 +138,61 @@ export async function getDetalles(idProtocolo, idEfector) {
 export async function cacheTurnosSips(unaAgenda) {
     // Armo el DTO para guardar en la cache de agendas
 
-    if ((unaAgenda.estado !== 'planificacion') && (unaAgenda.nominalizada)) {
-
+    if ((unaAgenda.estado !== 'planificacion') && (unaAgenda.nominalizada) &&
+        ((unaAgenda.organizacion._id).equals('57fcf037326e73143fb48c3a')) && (unaAgenda.tipoPrestaciones[0].term.includes('odonto'))) {
+        let organizacionAgenda;
+        if (unaAgenda.organizacion) {
+            organizacionAgenda = await organizacionCompleto(unaAgenda.organizacion.id);
+        }
+        let profesionalesAgenda;
+        if (unaAgenda.profesionales && unaAgenda.profesionales.length > 0) {
+            profesionalesAgenda = await profesionalCompleto(unaAgenda.profesionales);
+        }
         let agenda = new agendasCache({
             id: unaAgenda.id,
-            organizacion: await organizacionCompleto(unaAgenda.organizacion.id),
-            profesionales: await profesionalCompleto(unaAgenda.profesionales),
             tipoPrestaciones: unaAgenda.tipoPrestaciones,
             espacioFisico: unaAgenda.espacioFisico,
+            organizacion: organizacionAgenda,
+            profesionales: profesionalesAgenda,
             bloques: unaAgenda.bloques,
             estado: unaAgenda.estado,
             horaInicio: unaAgenda.horaInicio,
             horaFin: unaAgenda.horaFin,
-            estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente
+            estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente,
         });
 
-        agenda.save(function (err, agendaGuardada: any) {
+        let query = {
+            id: unaAgenda.id
+        };
+
+        agendasCache.find({ id: agenda.id }, function getAgenda(err, data) {
             if (err) {
-                return err;
+                return (err);
             }
-            return true;
+            if (data.length > 0) {
+                agendasCache.update({
+                    id: agenda.id
+                }, {
+                        $set: {
+                            tipoPrestaciones: unaAgenda.tipoPrestaciones,
+                            espacioFisico: unaAgenda.espacioFisico,
+                            organizacion: organizacionAgenda,
+                            profesionales: profesionalesAgenda,
+                            bloques: unaAgenda.bloques,
+                            estado: unaAgenda.estado,
+                            horaInicio: unaAgenda.horaInicio,
+                            horaFin: unaAgenda.horaFin,
+                            estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente
+                        }
+                    }).exec();
+            } else {
+                agenda.save(function (err2, agendaGuardada: any) {
+                    if (err2) {
+                        return err2;
+                    }
+                    return true;
+                });
+            }
         });
     }
 }

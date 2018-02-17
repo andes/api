@@ -1,9 +1,13 @@
+import { SnomedCIE10Mapping } from './../../../core/term/controller/mapping';
+import * as cie10 from './../../../core/term/schemas/cie10';
 import { log } from './../../../core/log/schemas/log';
 import * as agendaModel from '../../turnos/schemas/agenda';
 import * as moment from 'moment';
 import { Auth } from '../../../auth/auth.class';
 import { userScheduler } from '../../../config.private';
 import { Logger } from '../../../utils/logService';
+import { load } from 'google-maps';
+import { model as Prestacion } from '../../rup/schemas/prestacion';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -18,6 +22,13 @@ export function darAsistencia(req, data, tid = null) {
 export function sacarAsistencia(req, data, tid = null) {
     let turno = getTurno(req, data, tid);
     turno.asistencia = undefined;
+    turno.updatedAt = new Date();
+    turno.updatedBy = req.user.usuario || req.user;
+}
+// Turno
+export function marcarNoAsistio(req, data, tid = null) {
+    let turno = getTurno(req, data, tid);
+    turno.asistencia = 'noAsistio';
     turno.updatedAt = new Date();
     turno.updatedBy = req.user.usuario || req.user;
 }
@@ -117,27 +128,114 @@ export function suspenderTurno(req, data, turno) {
         turnoDoble.updatedBy = req.user.usuario || req.user;
     }
 
-
-
-    // El tipo de turno del cual se resta será en el orden : delDia, programado, autocitado, gestion
-    let position = getPosition(req, data, turno._id);
-    if (!turno.tipoTurno) {
-        if (data.bloques[position.indexBloque].restantesDelDia > 0) {
-            data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia - cant;
-        } else {
-            if (data.bloques[position.indexBloque].restantesProgramados > 0) {
-                data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados - cant;
+    // Chequeamos si es sobreturno
+    if (!(data.sobreturnos && data.sobreturnos.length > 0)) {
+        // El tipo de turno del cual se resta será en el orden : delDia, programado, autocitado, gestion
+        let position = getPosition(req, data, turno._id);
+        if (!turno.tipoTurno) {
+            if (data.bloques[position.indexBloque].restantesDelDia > 0) {
+                data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia - cant;
             } else {
-                if (data.bloques[position.indexBloque].restantesProfesional > 0) {
-                    data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional - cant;
+                if (data.bloques[position.indexBloque].restantesProgramados > 0) {
+                    data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados - cant;
                 } else {
-                    if (data.bloques[position.indexBloque].restantesGestion > 0) {
-                        data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion - cant;
+                    if (data.bloques[position.indexBloque].restantesProfesional > 0) {
+                        data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional - cant;
+                    } else {
+                        if (data.bloques[position.indexBloque].restantesGestion > 0) {
+                            data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion - cant;
+                        }
                     }
                 }
             }
         }
     }
+}
+
+// Turno
+export function codificarTurno(req, data, tid) {
+    return new Promise((resolve, reject) => {
+        let turno = getTurno(req, data[0], tid);
+
+        let query = Prestacion.find({ $where: 'this.estados[this.estados.length - 1].tipo ==  "validada"' });
+        query.where('solicitud.turno').equals(tid);
+        query.exec(function (err, data1) {
+            if (err) {
+                return ({
+                    err: 'No se encontro prestacion para el turno'
+                });
+            }
+            let arrPrestacion = data1 as any;
+            let codificaciones = [];
+            let promises = [];
+            if (arrPrestacion.length > 0 && arrPrestacion[0].ejecucion) {
+                let prestaciones = arrPrestacion[0].ejecucion.registros.filter(f => {
+                    return f.concepto.semanticTag === 'hallazgo' || f.concepto.semanticTag === 'trastorno' || f.concepto.semanticTag === 'situacion';
+                });
+                prestaciones.forEach(registro => {
+                    let parametros = {
+                        conceptId: registro.concepto.conceptId,
+                        paciente: turno.paciente,
+                        secondaryConcepts: prestaciones.map(r => r.concepto.conceptId)
+                    };
+                    let map = new SnomedCIE10Mapping(parametros.paciente, parametros.secondaryConcepts);
+                    map.transform(parametros.conceptId).then(target => {
+                        // Buscar en cie10 los primeros 5 digitos
+                        cie10.model.findOne({ codigo: (target as String).substring(0, 5) }).then(cie => {
+                            if (cie != null) {
+                                if (registro.esDiagnosticoPrincipal) {
+                                    codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del array
+                                        codificacionProfesional: {
+                                            causa: (cie as any).causa,
+                                            subcausa: (cie as any).subcausa,
+                                            codigo: (cie as any).codigo,
+                                            nombre: (cie as any).nombre,
+                                            sinonimo: (cie as any).sinonimo,
+                                            c2: (cie as any).c2,
+                                        },
+                                        primeraVez: registro.esPrimeraVez,
+                                    });
+
+                                } else {
+                                    codificaciones.push({
+                                        codificacionProfesional: {
+                                            causa: (cie as any).causa,
+                                            subcausa: (cie as any).subcausa,
+                                            codigo: (cie as any).codigo,
+                                            nombre: (cie as any).nombre,
+                                            sinonimo: (cie as any).sinonimo,
+                                            c2: (cie as any).c2,
+                                        },
+                                        // primeraVez: registro.esPrimeraVez
+                                    });
+                                }
+                            } else {
+                                // Todo: En el caso en q no mapea, logearlo
+                                codificaciones.push({});
+                            }
+                            if (prestaciones.length === codificaciones.length) {
+                                // console.log('codificaciones ', codificaciones);
+                                turno.diagnostico = {
+                                    ilegible: false,
+                                    codificaciones: codificaciones.filter(cod => Object.keys(cod).length > 0)
+                                };
+                                turno.asistencia = 'asistio';
+                                resolve(data);
+                            }
+
+                        }).catch(err1 => {
+                            reject(err1);
+                        });
+
+                    }).catch(error => {
+                        reject(error);
+                    });
+                });
+            } else {
+                return resolve(null);
+            }
+        });
+    });
 }
 
 // Turno
@@ -232,7 +330,16 @@ export function actualizarEstado(req, data) {
 
     // Si se pasa a publicada
     if (req.body.estado === 'publicada') {
+        let hoy = new Date();
         data.estado = 'publicada';
+        if (moment(data.horaInicio).isSame(hoy, 'day')) {
+            data.bloques.forEach(bloque => {
+                if (bloque.restantesProgramados > 0) {
+                    bloque.restantesDelDia += bloque.restantesProgramados;
+                    bloque.restantesProgramados = 0;
+                }
+            });
+        }
     }
 
     // Si se pasa a borrada
@@ -255,14 +362,8 @@ export function actualizarEstado(req, data) {
                         turno.estado = 'suspendido';
                     }
                     turno.motivoSuspension = 'agendaSuspendida';
-                    turno.tipoTurno = undefined;
+                    turno.avisoSuspension = 'no enviado';
 
-                    // if (turno.paciente.id && turno.paciente.telefono) {
-                    //     let sms: any = {
-                    //         telefono: turno.paciente.telefono,
-                    //         mensaje: 'Le avisamos que su turno para el día ' + moment(turno.horaInicio).format('ll').toString() + ' a las ' + moment(turno.horaInicio).format('LT').toString() + 'hs fue suspendido'
-                    //     };
-                    // }
                 });
             });
         }
@@ -395,43 +496,6 @@ export function calcularContadoresTipoTurno(posBloque, posTurno, agenda) {
     return countBloques;
 }
 
-
-// export function crearPrestacionVacia(turno, req) {
-
-// }
-
-// Dado un turno, se crea una prestacionPaciente
-// export function crearPrestacionVacia(turno, req) {
-//     let prestacion;
-//     let nuevaPrestacion;
-//     let pacienteTurno = turno.paciente;
-
-//     pacienteTurno['_id'] = turno.paciente.id;
-//     paciente.findById(pacienteTurno.id, (err, data) => {
-//         nuevaPrestacion = {
-//             paciente: data,
-//             solicitud: {
-//                 tipoPrestacion: turno.tipoPrestacion,
-//                 fecha: new Date(),
-//                 listaProblemas: [],
-//                 idTurno: turno.id,
-//             },
-//             estado: {
-//                 timestamp: new Date(),
-//                 tipo: 'pendiente'
-//             },
-//             ejecucion: {
-//                 fecha: new Date(),
-//                 evoluciones: []
-//             }
-//         };
-//         prestacion = new prestacionPaciente(nuevaPrestacion);
-
-//         Auth.audit(prestacion, req);
-//         prestacion.save();
-//     });
-// }
-
 export function getBloque(agenda, turno) {
     for (let i = 0; i < agenda.bloques.length; i++) {
         let bloque = agenda.bloques[i];
@@ -444,7 +508,6 @@ export function getBloque(agenda, turno) {
     }
     return null;
 }
-
 
 export function esPrimerPaciente(agenda: any, idPaciente: string, opciones: any[]) {
     return new Promise<any>((resolve, reject) => {
@@ -554,7 +617,6 @@ export function actualizarEstadoAgendas() {
     let condicion = {
         '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
         'horaInicio': {
-            // $gte: (moment(fechaActualizar).startOf('day').toDate() as any),
             $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
         }
     };
@@ -595,7 +657,6 @@ export function actualizarEstadoAgendas() {
 
     });
     return 'Agendas actualizadas';
-
 }
 
 /**
@@ -643,7 +704,6 @@ export function actualizarTurnosDelDia() {
     return 'Agendas actualizadas';
 
 }
-
 
 /**
  * Realiza el save de una agenda.

@@ -12,8 +12,10 @@ import * as turnosController from '../controller/turnosController';
 import { esPrimerPaciente } from '../controller/agenda';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
+import * as debug from 'debug';
 
 let router = express.Router();
+let dbg = debug('turno');
 
 router.get('/turno/:id*?', async function (req, res, next) {
     try {
@@ -148,6 +150,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                             let etiquetaEstado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.estado';
                             let etiquetaPaciente: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.paciente';
                             let etiquetaPrestacion: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.tipoPrestacion';
+                            let etiquetaNota: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.nota';
 
                             let etiquetaReasignado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.reasignado';
                             let etiquetaUpdateAt: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedAt';
@@ -158,6 +161,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                             update[etiquetaPrestacion] = req.body.tipoPrestacion;
                             update[etiquetaPaciente] = req.body.paciente;
                             update[etiquetaTipoTurno] = tipoTurno;
+                            update[etiquetaNota] = req.body.nota;
 
                             if (req.body.reasignado) {
                                 update[etiquetaReasignado] = req.body.reasignado;
@@ -194,6 +198,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                                         paciente: update[etiquetaPaciente],
                                         prestacion: update[etiquetaPrestacion],
                                         tipoTurno: update[etiquetaTipoTurno] !== null ? update[etiquetaTipoTurno] : null,
+                                        nota: update[etiquetaNota]
                                     };
                                     Logger.log(req, 'citas', 'asignarTurno', datosOp);
 
@@ -219,6 +224,34 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
     }
 });
 
+
+router.patch('/turno/:idTurno/:idBloque/:idAgenda', function (req, res, next) {
+    agenda.findById(req.params.idAgenda, async function getAgenda(err, data) {
+        if (err) {
+            return next(err);
+        }
+        let indexBloque = (data as any).bloques.findIndex(bloq => {
+            return (bloq.id === req.params.idBloque);
+        });
+        let indexTurno = (data as any).bloques[indexBloque].turnos.findIndex(t => {
+            return (t.id === req.params.idTurno);
+        });
+        let update = {};
+        let etiquetaAvisoSuspension: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.avisoSuspension';
+        update[etiquetaAvisoSuspension] = req.body.avisoSuspension;
+        let query = {
+            _id: req.params.idAgenda,
+        };
+        dbg('query --->', query);
+
+        agenda.update(query, { $set: update }, function (error, data2) {
+            if (error) {
+                return next(error);
+            }
+            res.json(data2);
+        });
+    });
+});
 
 router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, res, next) {
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion

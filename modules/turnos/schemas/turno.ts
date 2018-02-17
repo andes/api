@@ -41,6 +41,10 @@ let turnoSchema = new mongoose.Schema({
         type: String,
         enum: ['edilicia', 'profesional', 'organizacion', 'agendaSuspendida']
     },
+    avisoSuspension: {
+        type: String,
+        enum: ['no enviado', 'enviado', 'fallido']
+    },
     paciente: { // pensar que otros datos del paciente conviene tener
         id: mongoose.Schema.Types.ObjectId,
         nombre: String,
@@ -48,6 +52,7 @@ let turnoSchema = new mongoose.Schema({
         documento: String,
         fechaNacimiento: Date,
         telefono: String,
+        sexo: String,
         carpetaEfectores: [{
             organizacion: nombreSchema,
             nroCarpeta: String
@@ -56,7 +61,6 @@ let turnoSchema = new mongoose.Schema({
     tipoPrestacion: {
         type: tipoPrestacionSchema
     },
-    // TODO: Enlace con RUP? cuando alguien defina ALGO
     idPrestacionPaciente: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'prestacionPaciente'
@@ -68,8 +72,10 @@ let turnoSchema = new mongoose.Schema({
     diagnostico: {
         ilegible: Boolean,
         codificaciones: [{
-            codificacionProfesional: cie10.schema, // solamente obtenida de RUP o SIPS y definida por el profesional
-            codificacionAuditoria: cie10.schema,  // corresponde a la codificación establecida la instancia de revisión de agendas
+            // (ver schema) solamente obtenida de RUP o SIPS y definida por el profesional
+            codificacionProfesional: cie10.schema,
+            // (ver schema) corresponde a la codificación establecida la instancia de revisión de agendas
+            codificacionAuditoria: cie10.schema,
             primeraVez: Boolean,
         }]
     },

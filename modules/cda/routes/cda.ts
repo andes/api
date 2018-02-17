@@ -41,7 +41,7 @@ let router = express.Router();
 // 	"file": "data:image/jpeg;base64,AEFCSADE2D2D2
 // }
 
-router.post('/', cdaCtr.validateMiddleware,  async (req: any, res, next) => {
+router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
     if (!Auth.check(req, 'cda:post')) {
         return next(403);
     }
@@ -70,16 +70,18 @@ router.post('/', cdaCtr.validateMiddleware,  async (req: any, res, next) => {
 
         let fileData;
         if (file) {
-            fileData = await cdaCtr.storeFile(cdaCtr.base64toStream(file));
+            let fileObj: any = cdaCtr.base64toStream(file);
+            fileObj.cdaId = uniqueId;
+            fileData = await cdaCtr.storeFile(fileObj);
         }
 
-        let cda = cdaCtr.generateCDA(uniqueId, paciente, fecha, dataProfesional, organizacion, snomed, cie10, texto, fileData);
+        let cda = cdaCtr.generateCDA(uniqueId, 'N', paciente, fecha, dataProfesional, organizacion, snomed, cie10, texto, fileData);
 
         let metadata = {
             paciente: paciente._id,
             prestacion: snomed,
             fecha: fecha,
-            adjuntos: [ fileData.filename ]
+            adjuntos: [{ path: fileData.data, id: fileData.id }]
         };
         let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
 
@@ -102,18 +104,17 @@ router.get('/style/cda.xsl', (req, res, next) => {
  */
 
 router.get('/files/:name', async (req: any, res, next) => {
-    if (!Auth.check(req, 'cda:get')) {
-        return next(403);
-    }
+    // if (!Auth.check(req, 'cda:get')) {
+    //     return next(403);
+    // }
 
     let name = req.params.name;
     let CDAFiles = makeFs();
 
-    CDAFiles.findOne({filename: name}).then(file => {
-        var stream1  = CDAFiles.readById(file._id, function (err, buffer) {
-            res.contentType(file.contentType);
-            res.end(buffer);
-        });
+    CDAFiles.findOne({filename: name}).then(async file => {
+        let stream1  = await CDAFiles.readById(file._id);
+        res.contentType(file.contentType);
+        stream1.pipe(res);
     }).catch(next);
 });
 
@@ -131,7 +132,7 @@ router.get('/:id', async (req: any, res, next) => {
     let CDAFiles = makeFs();
 
     let contexto = await CDAFiles.findById(_base64);
-    var stream1  = CDAFiles.readById(_base64, function (err, buffer) {
+    var stream1 = CDAFiles.readById(_base64, function (err, buffer) {
         res.contentType(contexto.contentType);
         res.end(buffer);
     });
@@ -149,18 +150,8 @@ router.get('/paciente/:id', async (req: any, res, next) => {
     let CDAFiles = makeFs();
     let pacienteID = req.params.id;
     let prestacion = req.query.prestacion;
-    let conditions: any = { 'metadata.paciente':  mongoose.Types.ObjectId(pacienteID) };
-    if (prestacion) {
-        conditions.prestacion = prestacion;
-    }
 
-    let list = await CDAFiles.find(conditions);
-    list = list.map(item => {
-        let data = item.metadata;
-        data.cda_id = item._id;
-
-        return item.metadata;
-    });
+    let list = await cdaCtr.searchByPatient(pacienteID, prestacion, {skip: 0, limit: 10});
     res.json(list);
 });
 

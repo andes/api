@@ -50,6 +50,17 @@ export default [
                 ]
             },
             {
+                key: 'turnos',
+                title: 'Operaciones sobre turnos',
+                child: [
+                    { key: 'registrarAsistencia', title: 'Registrar Asistencia', type: 'boolean' },
+                    { key: 'suspenderTurno', title: 'Suspender Turno', type: 'boolean' },
+                    { key: 'liberarTurno', title: 'Liberar Turno', type: 'boolean' },
+                    { key: 'editarCarpeta', title: 'Editar Carpeta', type: 'boolean' },
+                    { key: 'turnoDoble', title: 'Marcar/Desmarcar Turno Doble', type: 'boolean' },
+                ]
+            },
+            {
                 key: 'darTurnos',
                 title: 'Dar Turnos',
                 child: [
@@ -161,6 +172,12 @@ export default [
             { key: 'get', title: 'Leer CDA', type: 'boolean' },
             { key: 'list', title: 'Listar CDA por paciente', type: 'boolean' },
             { key: 'post', title: 'Generar CDA', type: 'boolean' },
+        ]
+    },
+    {
+        key: 'reportes',
+        title: 'Modulo Reportes',
+        child: [
         ]
     }
 ];

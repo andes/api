@@ -67,6 +67,12 @@ export let schema = new mongoose.Schema({
     // Elementos RUP más frecuentes para la ejecución.
     // Por ejemplo, en "Consulta de medicina general" se puede sugerir ejecutar "Signos vitales"
     frecuentes: [SnomedConcept],
+
+    busqueda_guiada: [{
+        nombre: String,
+        conceptIds: [String],
+        query: String
+    }]
 });
 
 // Autopopula todos los hijos

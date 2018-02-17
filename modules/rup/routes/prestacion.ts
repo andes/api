@@ -10,8 +10,42 @@ import { buscarPaciente } from '../../../core/mpi/controller/paciente';
 
 import { NotificationService } from '../../mobileApp/controller/NotificationService';
 
+import { iterate, convertToObjectId, buscarEnHuds, matchConcepts } from '../controllers/rup';
+
 let router = express.Router();
 let async = require('async');
+
+router.get('/prestaciones/huds/:idPaciente', function (req, res, next) {
+
+    // verificamos que sea un ObjectId válido
+    if (!mongoose.Types.ObjectId.isValid(req.params.idPaciente)) {
+        return res.status(404).send('Turno no encontrado');
+    }
+
+    // por defecto traemos todas las validadas, si no vemos el estado que viene en la request
+    const estado = (req.query.estado) ? req.query.estado : 'validada';
+    let query = {
+        'paciente.id': req.params.idPaciente,
+        '$where': 'this.estados[this.estados.length - 1].tipo ==  \"' + estado + '\"'
+    };
+
+    let conceptos = (req.query.conceptIds) ? req.query.conceptIds : null;
+
+    return Prestacion.find(query, (err, prestaciones) => {
+        if (err) {
+            return next(err);
+        }
+
+        if (!prestaciones) {
+            return res.status(404).send('Paciente no encontrado');
+        }
+
+        // ejecutamos busqueda recursiva
+        let data = buscarEnHuds(prestaciones, conceptos);
+
+        res.json(data);
+    });
+});
 
 router.get('/prestaciones/:id*?', function (req, res, next) {
     if (req.params.id) {
@@ -35,6 +69,9 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             query = Prestacion.find({}); // Trae todos
         }
 
+        if (req.query.sinEstado) {
+            query.where('estados.tipo').ne(req.query.sinEstado);
+        }
         if (req.query.fechaDesde) {
             query.where('ejecucion.fecha').gte(moment(req.query.fechaDesde).startOf('day').toDate() as any);
         }
