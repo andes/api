@@ -129,13 +129,16 @@ async function codificaOdontologia(idConsulta: any, turno: any) {
             codificacionOdonto = await getCodificacionOdonto(idNomenclador[i].idNomenclador);
             turno.asistencia = 'asistio';
             turno.diagnostico.ilegible = false;
-            turno.diagnostico.codificaciones.push({
-                codificacionProfesional: {
-                    codigo: codificacionOdonto.codigo,
-                    nombre: codificacionOdonto.descripcion,
-                    sinonimo: codificacionOdonto.descripcion
-                }
-            });
+            let repetido = turno.diagnostico.codificaciones.filter(elem => elem.codificacionProfesional.codigo === codificacionOdonto);
+            if (repetido.length <= 0){
+                turno.diagnostico.codificaciones.push({
+                    codificacionProfesional: {
+                        codigo: codificacionOdonto.codigo,
+                        nombre: codificacionOdonto.descripcion,
+                        sinonimo: codificacionOdonto.descripcion
+                    }
+                });
+            }
         }
     } catch (ex) {
         return (ex);
