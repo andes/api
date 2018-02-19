@@ -411,32 +411,33 @@ export function getDiagnosticos(params) {
                         };
                         // Se asigna de esta manera para que sea otro objeto y no un puntero al mismo objeto
                         let r1 = Object.assign({}, r2);
-                        if (elem['codigo'] === 'A05.1') { // Botulismo
-                            let sumaResto = suma1.default + suma24.default + suma59.default + suma1014.default + suma1524.default + suma2534.default + suma3544.default
-                                + suma4564.default + sumaMayor65.default;
-                            if (sumaMenor1.botulismo > 0) { // Botulismo en lactantes (<1 año)
-                                r1.reporteC2 = 'Botulismo del Lactante';
-                                r1.sumaMenor1 = sumaMenor1.botulismo;
-                                r1.suma1 = 0;
-                                r1.suma24 = 0;
-                                r1.suma59 = 0;
-                                r1.suma1014 = 0;
-                                r1.suma1524 = 0;
-                                r1.suma2534 = 0;
-                                r1.suma3544 = 0;
-                                r1.suma4564 = 0;
-                                r1.sumaMayor65 = 0;
-                                r1.sumaMasculino = sumaMasculino.botulismo;
-                                r1.sumaFemenino = sumaFemenino.botulismo;
-                                r1.sumaOtro = otroLactante;
-                                r1.total = sumaMenor1.botulismo;
-                                resultados.push(r1);
-                            }
-                            if (sumaResto > 0) { // Botulismo en no lactantes (>= 1 año)
-                                resultados.push(r2);
-                            }
-                        } else { // No es Botulismo
-                            if (elem['codigo'] === 'A17.0') { // Meningitis Tuberculosa
+                        switch (elem['codigo']) {
+                            case 'A05.1':
+                                let sumaR = suma1.default + suma24.default + suma59.default + suma1014.default + suma1524.default + suma2534.default + suma3544.default
+                                    + suma4564.default + sumaMayor65.default;
+                                if (sumaMenor1.botulismo > 0) { // Botulismo en lactantes (<1 año)
+                                    r1.reporteC2 = 'Botulismo del Lactante';
+                                    r1.sumaMenor1 = sumaMenor1.botulismo;
+                                    r1.suma1 = 0;
+                                    r1.suma24 = 0;
+                                    r1.suma59 = 0;
+                                    r1.suma1014 = 0;
+                                    r1.suma1524 = 0;
+                                    r1.suma2534 = 0;
+                                    r1.suma3544 = 0;
+                                    r1.suma4564 = 0;
+                                    r1.sumaMayor65 = 0;
+                                    r1.sumaMasculino = sumaMasculino.botulismo;
+                                    r1.sumaFemenino = sumaFemenino.botulismo;
+                                    r1.sumaOtro = otroLactante;
+                                    r1.total = sumaMenor1.botulismo;
+                                    resultados.push(r1);
+                                }
+                                if (sumaR > 0) { // Botulismo en no lactantes (>= 1 año)
+                                    resultados.push(r2);
+                                }
+                                break;
+                            case 'A17.0':
                                 let sumaResto = suma59.default + suma1014.default + suma1524.default + suma2534.default + suma3544.default + suma4564.default + sumaMayor65.default;
                                 if (sumaMeningitis > 0) { // Meningitis Tuberculosa en menores de 5 años
                                     r1.reporteC2 = 'Meningitis tuberculosa en menores de 5 años';
@@ -464,44 +465,46 @@ export function getDiagnosticos(params) {
                                     r3.reporteC2 = 'Meningitis bacteriana sin especificar agente';
                                     resultados.push(r3);
                                 }
-                            } else {
-                                if (elem.causa === 'A51') {
-                                    if (sumaFemenino.sifilisTemprana > 0) {
-                                        r2.reporteC2 = 'Sífilis temprana en mujeres';
-                                        r2.sumaMenor1 = sumaMenor1.sifilisTempranaFemenino;
-                                        r2.suma1 = suma1.sifilisTempranaFemenino;
-                                        r2.suma24 = suma24.sifilisTempranaFemenino;
-                                        r2.suma59 = suma59.sifilisTempranaFemenino;
-                                        r2.suma1014 = suma1014.sifilisTempranaFemenino;
-                                        r2.suma1524 = suma1524.sifilisTempranaFemenino;
-                                        r2.suma2534 = suma2534.sifilisTempranaFemenino;
-                                        r2.suma3544 = suma3544.sifilisTempranaFemenino;
-                                        r2.suma4564 = suma4564.sifilisTempranaFemenino;
-                                        r2.sumaMayor65 = sumaMayor65.sifilisTempranaFemenino;
-                                        r2.sumaFemenino = sumaFemenino.sifilisTemprana;
-                                        r2.sumaMasculino = 0;
-                                        r2.total = sumaFemenino.sifilisTemprana;
-                                        resultados.push(r2);
-                                    }
-                                    if (sumaMasculino.sifilisTemprana > 0) {
-                                        r1.reporteC2 = 'Sífilis temprana en hombres';
-                                        r1.sumaMenor1 = sumaMenor1.sifilisTempranaMasculino;
-                                        r1.suma1 = suma1.sifilisTempranaMasculino;
-                                        r1.suma24 = suma24.sifilisTempranaMasculino;
-                                        r1.suma59 = suma59.sifilisTempranaMasculino;
-                                        r1.suma1014 = suma1014.sifilisTempranaMasculino;
-                                        r1.suma1524 = suma1524.sifilisTempranaMasculino;
-                                        r1.suma2534 = suma2534.sifilisTempranaMasculino;
-                                        r1.suma3544 = suma3544.sifilisTempranaMasculino;
-                                        r1.suma4564 = suma4564.sifilisTempranaMasculino;
-                                        r1.sumaMayor65 = sumaMayor65.sifilisTempranaMasculino;
-                                        r1.sumaFemenino = 0;
-                                        r1.sumaMasculino = sumaMasculino.sifilisTemprana;
-                                        r1.total = sumaMasculino.sifilisTemprana;
-                                        resultados.push(r1);
-                                    }
-                                } else {
-                                    if (elem.causa === 'A52' || elem.causa === 'A53') {
+                                break;
+                            default:
+                                switch (elem.causa) {
+                                    case 'A51':
+                                        if (sumaFemenino.sifilisTemprana > 0) {
+                                            r2.reporteC2 = 'Sífilis temprana en mujeres';
+                                            r2.sumaMenor1 = sumaMenor1.sifilisTempranaFemenino;
+                                            r2.suma1 = suma1.sifilisTempranaFemenino;
+                                            r2.suma24 = suma24.sifilisTempranaFemenino;
+                                            r2.suma59 = suma59.sifilisTempranaFemenino;
+                                            r2.suma1014 = suma1014.sifilisTempranaFemenino;
+                                            r2.suma1524 = suma1524.sifilisTempranaFemenino;
+                                            r2.suma2534 = suma2534.sifilisTempranaFemenino;
+                                            r2.suma3544 = suma3544.sifilisTempranaFemenino;
+                                            r2.suma4564 = suma4564.sifilisTempranaFemenino;
+                                            r2.sumaMayor65 = sumaMayor65.sifilisTempranaFemenino;
+                                            r2.sumaFemenino = sumaFemenino.sifilisTemprana;
+                                            r2.sumaMasculino = 0;
+                                            r2.total = sumaFemenino.sifilisTemprana;
+                                            resultados.push(r2);
+                                        }
+                                        if (sumaMasculino.sifilisTemprana > 0) {
+                                            r1.reporteC2 = 'Sífilis temprana en hombres';
+                                            r1.sumaMenor1 = sumaMenor1.sifilisTempranaMasculino;
+                                            r1.suma1 = suma1.sifilisTempranaMasculino;
+                                            r1.suma24 = suma24.sifilisTempranaMasculino;
+                                            r1.suma59 = suma59.sifilisTempranaMasculino;
+                                            r1.suma1014 = suma1014.sifilisTempranaMasculino;
+                                            r1.suma1524 = suma1524.sifilisTempranaMasculino;
+                                            r1.suma2534 = suma2534.sifilisTempranaMasculino;
+                                            r1.suma3544 = suma3544.sifilisTempranaMasculino;
+                                            r1.suma4564 = suma4564.sifilisTempranaMasculino;
+                                            r1.sumaMayor65 = sumaMayor65.sifilisTempranaMasculino;
+                                            r1.sumaFemenino = 0;
+                                            r1.sumaMasculino = sumaMasculino.sifilisTemprana;
+                                            r1.total = sumaMasculino.sifilisTemprana;
+                                            resultados.push(r1);
+                                        }
+                                        break;
+                                    case 'A52' || 'A53':
                                         if (sumaFemenino.sifilisSinEspecificar > 0) {
                                             r2.reporteC2 = 'Sífilis sin especificar en mujeres';
                                             r2.sumaMenor1 = sumaMenor1.sifilisSEFemenino;
@@ -536,7 +539,8 @@ export function getDiagnosticos(params) {
                                             r1.total = sumaMasculino.sifilisSinEspecificar;
                                             resultados.push(r1);
                                         }
-                                    } else {
+                                        break;
+                                    default:
                                         switch (elem.reporteC2) {
                                             case 'Secreción genital purulenta':
                                                 if (sumaFemenino.secrecionPurulenta > 0) {
@@ -667,10 +671,270 @@ export function getDiagnosticos(params) {
                                                 }
                                                 break;
                                         }
-                                    }
+                                        break;
                                 }
-                            }
+                                break;
                         }
+                        // if (elem['codigo'] === 'A05.1') { // Botulismo
+                        //     let sumaResto = suma1.default + suma24.default + suma59.default + suma1014.default + suma1524.default + suma2534.default + suma3544.default
+                        //         + suma4564.default + sumaMayor65.default;
+                        //     if (sumaMenor1.botulismo > 0) { // Botulismo en lactantes (<1 año)
+                        //         r1.reporteC2 = 'Botulismo del Lactante';
+                        //         r1.sumaMenor1 = sumaMenor1.botulismo;
+                        //         r1.suma1 = 0;
+                        //         r1.suma24 = 0;
+                        //         r1.suma59 = 0;
+                        //         r1.suma1014 = 0;
+                        //         r1.suma1524 = 0;
+                        //         r1.suma2534 = 0;
+                        //         r1.suma3544 = 0;
+                        //         r1.suma4564 = 0;
+                        //         r1.sumaMayor65 = 0;
+                        //         r1.sumaMasculino = sumaMasculino.botulismo;
+                        //         r1.sumaFemenino = sumaFemenino.botulismo;
+                        //         r1.sumaOtro = otroLactante;
+                        //         r1.total = sumaMenor1.botulismo;
+                        //         resultados.push(r1);
+                        //     }
+                        //     if (sumaResto > 0) { // Botulismo en no lactantes (>= 1 año)
+                        //         resultados.push(r2);
+                        //     }
+                        // } else { // No es Botulismo
+                        //     if (elem['codigo'] === 'A17.0') { // Meningitis Tuberculosa
+                        //         let sumaResto = suma59.default + suma1014.default + suma1524.default + suma2534.default + suma3544.default + suma4564.default + sumaMayor65.default;
+                        //         if (sumaMeningitis > 0) { // Meningitis Tuberculosa en menores de 5 años
+                        //             r1.reporteC2 = 'Meningitis tuberculosa en menores de 5 años';
+                        //             r1.sumaMenor1 = sumaMenor1.meningitis;
+                        //             r1.suma1 = suma1.meningitis;
+                        //             r1.suma24 = suma24.meningitis;
+                        //             r1.suma59 = 0;
+                        //             r1.suma1014 = 0;
+                        //             r1.suma1524 = 0;
+                        //             r1.suma2534 = 0;
+                        //             r1.suma3544 = 0;
+                        //             r1.suma4564 = 0;
+                        //             r1.sumaMayor65 = 0;
+                        //             r1.sumaMasculino = sumaMasculino.meningitis;
+                        //             r1.sumaFemenino = sumaFemenino.meningitis;
+                        //             r1.sumaOtro = otroMeningitis;
+                        //             r1.total = sumaMeningitis;
+                        //             resultados.push(r1);
+                        //         }
+                        //         if (sumaResto > 0) {
+                        //             // Se asigna de esta manera para que sea otro objeto y no un puntero al mismo objeto
+                        //             let r3 = Object.assign({}, r2);
+                        //             r2.reporteC2 = 'Tuberculosis';
+                        //             resultados.push(r2);
+                        //             r3.reporteC2 = 'Meningitis bacteriana sin especificar agente';
+                        //             resultados.push(r3);
+                        //         }
+                        //     } else {
+                        //         if (elem.causa === 'A51') {
+                        //             if (sumaFemenino.sifilisTemprana > 0) {
+                        //                 r2.reporteC2 = 'Sífilis temprana en mujeres';
+                        //                 r2.sumaMenor1 = sumaMenor1.sifilisTempranaFemenino;
+                        //                 r2.suma1 = suma1.sifilisTempranaFemenino;
+                        //                 r2.suma24 = suma24.sifilisTempranaFemenino;
+                        //                 r2.suma59 = suma59.sifilisTempranaFemenino;
+                        //                 r2.suma1014 = suma1014.sifilisTempranaFemenino;
+                        //                 r2.suma1524 = suma1524.sifilisTempranaFemenino;
+                        //                 r2.suma2534 = suma2534.sifilisTempranaFemenino;
+                        //                 r2.suma3544 = suma3544.sifilisTempranaFemenino;
+                        //                 r2.suma4564 = suma4564.sifilisTempranaFemenino;
+                        //                 r2.sumaMayor65 = sumaMayor65.sifilisTempranaFemenino;
+                        //                 r2.sumaFemenino = sumaFemenino.sifilisTemprana;
+                        //                 r2.sumaMasculino = 0;
+                        //                 r2.total = sumaFemenino.sifilisTemprana;
+                        //                 resultados.push(r2);
+                        //             }
+                        //             if (sumaMasculino.sifilisTemprana > 0) {
+                        //                 r1.reporteC2 = 'Sífilis temprana en hombres';
+                        //                 r1.sumaMenor1 = sumaMenor1.sifilisTempranaMasculino;
+                        //                 r1.suma1 = suma1.sifilisTempranaMasculino;
+                        //                 r1.suma24 = suma24.sifilisTempranaMasculino;
+                        //                 r1.suma59 = suma59.sifilisTempranaMasculino;
+                        //                 r1.suma1014 = suma1014.sifilisTempranaMasculino;
+                        //                 r1.suma1524 = suma1524.sifilisTempranaMasculino;
+                        //                 r1.suma2534 = suma2534.sifilisTempranaMasculino;
+                        //                 r1.suma3544 = suma3544.sifilisTempranaMasculino;
+                        //                 r1.suma4564 = suma4564.sifilisTempranaMasculino;
+                        //                 r1.sumaMayor65 = sumaMayor65.sifilisTempranaMasculino;
+                        //                 r1.sumaFemenino = 0;
+                        //                 r1.sumaMasculino = sumaMasculino.sifilisTemprana;
+                        //                 r1.total = sumaMasculino.sifilisTemprana;
+                        //                 resultados.push(r1);
+                        //             }
+                        //         } else {
+                        //             if (elem.causa === 'A52' || elem.causa === 'A53') {
+                        //                 if (sumaFemenino.sifilisSinEspecificar > 0) {
+                        //                     r2.reporteC2 = 'Sífilis sin especificar en mujeres';
+                        //                     r2.sumaMenor1 = sumaMenor1.sifilisSEFemenino;
+                        //                     r2.suma1 = suma1.sifilisSEFemenino;
+                        //                     r2.suma24 = suma24.sifilisSEFemenino;
+                        //                     r2.suma59 = suma59.sifilisSEFemenino;
+                        //                     r2.suma1014 = suma1014.sifilisSEFemenino;
+                        //                     r2.suma1524 = suma1524.sifilisSEFemenino;
+                        //                     r2.suma2534 = suma2534.sifilisSEFemenino;
+                        //                     r2.suma3544 = suma3544.sifilisSEFemenino;
+                        //                     r2.suma4564 = suma4564.sifilisSEFemenino;
+                        //                     r2.sumaMayor65 = sumaMayor65.sifilisSEFemenino;
+                        //                     r2.sumaFemenino = sumaFemenino.sifilisSinEspecificar;
+                        //                     r2.sumaMasculino = 0;
+                        //                     r2.total = sumaFemenino.sifilisSinEspecificar;
+                        //                     resultados.push(r2);
+                        //                 }
+                        //                 if (sumaMasculino.sifilisSinEspecificar > 0) {
+                        //                     r1.reporteC2 = 'Sífilis sin especificar en hombres';
+                        //                     r1.sumaMenor1 = sumaMenor1.sifilisSEMasculino;
+                        //                     r1.suma1 = suma1.sifilisSEMasculino;
+                        //                     r1.suma24 = suma24.sifilisSEMasculino;
+                        //                     r1.suma59 = suma59.sifilisSEMasculino;
+                        //                     r1.suma1014 = suma1014.sifilisSEMasculino;
+                        //                     r1.suma1524 = suma1524.sifilisSEMasculino;
+                        //                     r1.suma2534 = suma2534.sifilisSEMasculino;
+                        //                     r1.suma3544 = suma3544.sifilisSEMasculino;
+                        //                     r1.suma4564 = suma4564.sifilisSEMasculino;
+                        //                     r1.sumaMayor65 = sumaMayor65.sifilisSEMasculino;
+                        //                     r1.sumaFemenino = 0;
+                        //                     r1.sumaMasculino = sumaMasculino.sifilisSinEspecificar;
+                        //                     r1.total = sumaMasculino.sifilisSinEspecificar;
+                        //                     resultados.push(r1);
+                        //                 }
+                        //             } else {
+                        //                 switch (elem.reporteC2) {
+                        //                     case 'Secreción genital purulenta':
+                        //                         if (sumaFemenino.secrecionPurulenta > 0) {
+                        //                             r2.reporteC2 = 'Secreción genital sin especificar en mujeres';
+                        //                             r2.sumaMenor1 = sumaMenor1.secrecionPurulentaFemenino;
+                        //                             r2.suma1 = suma1.secrecionPurulentaFemenino;
+                        //                             r2.suma24 = suma24.secrecionPurulentaFemenino;
+                        //                             r2.suma59 = suma59.secrecionPurulentaFemenino;
+                        //                             r2.suma1014 = suma1014.secrecionPurulentaFemenino;
+                        //                             r2.suma1524 = suma1524.secrecionPurulentaFemenino;
+                        //                             r2.suma2534 = suma2534.secrecionPurulentaFemenino;
+                        //                             r2.suma3544 = suma3544.secrecionPurulentaFemenino;
+                        //                             r2.suma4564 = suma4564.secrecionPurulentaFemenino;
+                        //                             r2.sumaMayor65 = sumaMayor65.secrecionPurulentaFemenino;
+                        //                             r2.sumaFemenino = sumaFemenino.secrecionPurulenta;
+                        //                             r2.sumaMasculino = 0;
+                        //                             r2.total = sumaFemenino.secrecionPurulenta;
+                        //                             resultados.push(r2);
+                        //                         }
+                        //                         if (sumaMasculino.secrecionPurulenta > 0) {
+                        //                             r1.reporteC2 = 'Secreción genital purulenta en hombres';
+                        //                             r1.sumaMenor1 = sumaMenor1.secrecionPurulentaMasculino;
+                        //                             r1.suma1 = suma1.secrecionPurulentaMasculino;
+                        //                             r1.suma24 = suma24.secrecionPurulentaMasculino;
+                        //                             r1.suma59 = suma59.secrecionPurulentaMasculino;
+                        //                             r1.suma1014 = suma1014.secrecionPurulentaMasculino;
+                        //                             r1.suma1524 = suma1524.secrecionPurulentaMasculino;
+                        //                             r1.suma2534 = suma2534.secrecionPurulentaMasculino;
+                        //                             r1.suma3544 = suma3544.secrecionPurulentaMasculino;
+                        //                             r1.suma4564 = suma4564.secrecionPurulentaMasculino;
+                        //                             r1.sumaMayor65 = sumaMayor65.secrecionPurulentaMasculino;
+                        //                             r1.sumaFemenino = 0;
+                        //                             r1.sumaMasculino = sumaMasculino.secrecionPurulenta;
+                        //                             r1.total = sumaMasculino.secrecionPurulenta;
+                        //                             resultados.push(r1);
+                        //                         }
+                        //                         break;
+                        //                     case 'Secreción genital sin especificar':
+                        //                         if (sumaFemenino.secrecionSE > 0) {
+                        //                             r2.reporteC2 = 'Secreción genital sin especificar en mujeres';
+                        //                             r2.sumaMenor1 = sumaMenor1.secrecionSEFemenino;
+                        //                             r2.suma1 = suma1.secrecionSEFemenino;
+                        //                             r2.suma24 = suma24.secrecionSEFemenino;
+                        //                             r2.suma59 = suma59.secrecionSEFemenino;
+                        //                             r2.suma1014 = suma1014.secrecionSEFemenino;
+                        //                             r2.suma1524 = suma1524.secrecionSEFemenino;
+                        //                             r2.suma2534 = suma2534.secrecionSEFemenino;
+                        //                             r2.suma3544 = suma3544.secrecionSEFemenino;
+                        //                             r2.suma4564 = suma4564.secrecionSEFemenino;
+                        //                             r2.sumaMayor65 = sumaMayor65.secrecionSEFemenino;
+                        //                             r2.sumaFemenino = sumaFemenino.secrecionSE;
+                        //                             r2.sumaMasculino = 0;
+                        //                             r2.total = sumaFemenino.secrecionSE;
+                        //                             resultados.push(r2);
+                        //                         }
+                        //                         if (sumaMasculino.secrecionSE > 0) {
+                        //                             r1.reporteC2 = 'Secreción genital sin especificar en hombres';
+                        //                             r1.sumaMenor1 = sumaMenor1.secrecionSEMasculino;
+                        //                             r1.suma1 = suma1.secrecionSEMasculino;
+                        //                             r1.suma24 = suma24.secrecionSEMasculino;
+                        //                             r1.suma59 = suma59.secrecionSEMasculino;
+                        //                             r1.suma1014 = suma1014.secrecionSEMasculino;
+                        //                             r1.suma1524 = suma1524.secrecionSEMasculino;
+                        //                             r1.suma2534 = suma2534.secrecionSEMasculino;
+                        //                             r1.suma3544 = suma3544.secrecionSEMasculino;
+                        //                             r1.suma4564 = suma4564.secrecionSEMasculino;
+                        //                             r1.sumaMayor65 = sumaMayor65.secrecionSEMasculino;
+                        //                             r1.sumaFemenino = 0;
+                        //                             r1.sumaMasculino = sumaMasculino.secrecionSE;
+                        //                             r1.total = sumaMasculino.secrecionSE;
+                        //                             resultados.push(r1);
+                        //                         }
+                        //                         break;
+                        //                     case 'HIV':
+                        //                         r2.sumaMenor1 = sumaMenor1.hiv;
+                        //                         r2.suma1 = suma1.hiv;
+                        //                         r2.suma24 = suma24.hiv;
+                        //                         r2.suma59 = suma59.hiv;
+                        //                         r2.suma1014 = suma1014.hiv;
+                        //                         r2.suma1524 = suma1524.hiv;
+                        //                         r2.suma2534 = suma2534.hiv;
+                        //                         r2.suma3544 = suma3544.hiv;
+                        //                         r2.suma4564 = suma4564.hiv;
+                        //                         r2.sumaMayor65 = sumaMayor65.hiv;
+                        //                         r2.sumaMasculino = sumaMasculino.hiv;
+                        //                         r2.sumaFemenino = sumaFemenino.hiv;
+                        //                         // r2.sumaOtro = otroMeningitis;
+                        //                         r2.total = hiv;
+                        //                         resultados.push(r2);
+                        //                         break;
+                        //                     case 'Bronquiolitis':
+                        //                         r2.sumaMenor1 = sumaMenor1.bronquiolitis;
+                        //                         r2.suma1 = suma1.bronquiolitis;
+                        //                         r2.suma24 = suma24.bronquiolitis;
+                        //                         r2.suma59 = suma59.bronquiolitis;
+                        //                         r2.suma1014 = suma1014.bronquiolitis;
+                        //                         r2.suma1524 = suma1524.bronquiolitis;
+                        //                         r2.suma2534 = suma2534.bronquiolitis;
+                        //                         r2.suma3544 = suma3544.bronquiolitis;
+                        //                         r2.suma4564 = suma4564.bronquiolitis;
+                        //                         r2.sumaMayor65 = sumaMayor65.bronquiolitis;
+                        //                         r2.sumaMasculino = sumaMasculino.bronquiolitis;
+                        //                         r2.sumaFemenino = sumaFemenino.bronquiolitis;
+                        //                         // r2.sumaOtro = otroMeningitis;
+                        //                         r2.total = bronquiolitis;
+                        //                         resultados.push(r2);
+                        //                         break;
+                        //                     default:
+                        //                         if (elem.causa === 'A80') {
+                        //                             r2.sumaMenor1 = sumaMenor1.poliomielitis;
+                        //                             r2.suma1 = suma1.poliomielitis;
+                        //                             r2.suma24 = suma24.poliomielitis;
+                        //                             r2.suma59 = suma59.poliomielitis;
+                        //                             r2.suma1014 = suma1014.poliomielitis;
+                        //                             r2.suma1524 = suma1524.poliomielitis;
+                        //                             r2.suma2534 = suma2534.poliomielitis;
+                        //                             r2.suma3544 = suma3544.poliomielitis;
+                        //                             r2.suma4564 = suma4564.poliomielitis;
+                        //                             r2.sumaMayor65 = sumaMayor65.poliomielitis;
+                        //                             r2.sumaFemenino = sumaFemenino.poliomielitis;
+                        //                             r2.sumaMasculino = sumaFemenino.poliomielitis;
+                        //                             r2.total = poliomielitis;
+                        //                             resultados.push(r2);
+                        //                         } else {
+                        //                             if (sumaTotal > 0) {
+                        //                                 resultados.push(r2);
+                        //                             }
+                        //                         }
+                        //                         break;
+                        //                 }
+                        //             }
+                        //         }
+                        //     }
+                        // }
                         resolve1();
                     });
                 }));
