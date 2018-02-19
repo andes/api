@@ -2,6 +2,7 @@ import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import * as agendaModel from '../schemas/agenda';
 import { toArray } from '../../../utils/utils';
+import { Auth } from './../../../auth/auth.class';
 
 function getAge(dateString) {
     let today = new Date();
@@ -61,6 +62,7 @@ export function getDiagnosticos(params) {
                 ],
                 'horaInicio': { '$gte': new Date(params.horaInicio) },
                 'horaFin': { '$lte': new Date(params.horaFin) },
+                'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) }
             }
         },
         {
@@ -85,8 +87,7 @@ export function getDiagnosticos(params) {
                     $first: '$bloques.turnos.diagnostico.codificaciones.codificacionAuditoria.reporteC2'
                 }
             }
-        }
-        ];
+        }];
         let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
         data.forEach(elem => {
             if (elem._id != null) {
@@ -103,7 +104,9 @@ export function getDiagnosticos(params) {
                     secrecionPurulentaFemenino: 0,
                     secrecionPurulentaMasculino: 0,
                     secrecionSEFemenino: 0,
-                    secrecionSEMasculino: 0
+                    secrecionSEMasculino: 0,
+                    hiv: 0,
+                    bronquiolitis: 0
                 };
                 let suma1 = Object.assign({}, sumaMenor1);
                 let suma24 = Object.assign({}, sumaMenor1);
@@ -123,7 +126,9 @@ export function getDiagnosticos(params) {
                     sifilisTemprana: 0,
                     sifilisSinEspecificar: 0,
                     secrecionPurulenta: 0,
-                    secrecionSE: 0
+                    secrecionSE: 0,
+                    hiv: 0,
+                    bronquiolitis: 0
                 };
                 let sumaFemenino = Object.assign({}, sumaMasculino);
 
@@ -136,6 +141,8 @@ export function getDiagnosticos(params) {
                 let otroLactante = 0;
                 let otroMeningitis = 0;
                 let poliomielitis = 0;
+                let hiv = 0;
+                let bronquiolitis = 0;
                 promises.push(new Promise((resolve1, reject1) => {
                     agendaModel.find({
                         'horaInicio': { '$gte': new Date(params.horaInicio) },
@@ -173,6 +180,12 @@ export function getDiagnosticos(params) {
                                 case 'poliomielitis':
                                     sexo.poliomielitis++;
                                     break;
+                                case 'hiv':
+                                    sexo.hiv++;
+                                    break;
+                                case 'bronquiolitis':
+                                    sexo.bronquiolitis++;
+                                    break;
                             }
                         }
 
@@ -196,8 +209,7 @@ export function getDiagnosticos(params) {
                                         sumaSexo(sumaMasculino, 'sifilisSE');
                                     }
                                     break;
-
-                                case 'A80':
+                                case 'A80': // Poliomielitis
                                     if (edad < 15) {
                                         poliomielitis++;
                                         if (sexo === 'femenino') {
@@ -211,16 +223,17 @@ export function getDiagnosticos(params) {
                                     }
                                     break;
                                 default:
-                                    if (elem.reporteC2 === 'Secreción genital sin especificar') {
-                                        if (sexo === 'femenino') {
-                                            tipo.secrecionSEFemenino++;
-                                            sumaSexo(sumaFemenino, 'secrecionSE');
-                                        } else {
-                                            tipo.secrecionSEMasculino++;
-                                            sumaSexo(sumaMasculino, 'secrecionSE');
-                                        }
-                                    } else {
-                                        if (elem.reporteC2 === 'Secreción genital purulenta') {
+                                    switch (elem.reporteC2) {
+                                        case 'Secreción genital sin especificar':
+                                            if (sexo === 'femenino') {
+                                                tipo.secrecionSEFemenino++;
+                                                sumaSexo(sumaFemenino, 'secrecionSE');
+                                            } else {
+                                                tipo.secrecionSEMasculino++;
+                                                sumaSexo(sumaMasculino, 'secrecionSE');
+                                            }
+                                            break;
+                                        case 'Secreción genital purulenta':
                                             if (sexo === 'femenino') {
                                                 tipo.secrecionPurulentaFemenino++;
                                                 sumaSexo(sumaFemenino, 'secrecionPurulenta');
@@ -228,7 +241,32 @@ export function getDiagnosticos(params) {
                                                 tipo.secrecionPurulentaMasculino++;
                                                 sumaSexo(sumaMasculino, 'secrecionPurulenta');
                                             }
-                                        } else {
+                                            break;
+                                        case 'HIV':
+                                            hiv++;
+                                            if (sexo === 'femenino') {
+                                                tipo.hiv++;
+                                                sumaSexo(sumaFemenino, 'hiv');
+
+                                            } else {
+                                                tipo.hiv++;
+                                                sumaSexo(sumaMasculino, 'hiv');
+                                            }
+                                            break;
+                                        case 'Bronquiolitis':
+                                            if (edad < 2) {
+                                                bronquiolitis++;
+                                                if (sexo === 'femenino') {
+                                                    tipo.bronquiolitis++;
+                                                    sumaSexo(sumaFemenino, 'bronquiolitis');
+
+                                                } else {
+                                                    tipo.bronquiolitis++;
+                                                    sumaSexo(sumaMasculino, 'bronquiolitis');
+                                                }
+                                            }
+                                            break;
+                                        default:
                                             if (elem.codigo === 'A05.1') { // Botulismo
                                                 if (edad < 1) {
                                                     sumaMenor1.botulismo++;
@@ -258,7 +296,7 @@ export function getDiagnosticos(params) {
                                                     tipo.default++;
                                                 }
                                             }
-                                        }
+                                            break;
                                     }
                                     break;
                             }
@@ -499,80 +537,115 @@ export function getDiagnosticos(params) {
                                             resultados.push(r1);
                                         }
                                     } else {
-                                        if (elem.reporteC2 === 'Secreción genital purulenta') {
-                                            if (sumaFemenino.secrecionPurulenta > 0) {
-                                                r2.reporteC2 = 'Secreción genital sin especificar en mujeres';
-                                                r2.sumaMenor1 = sumaMenor1.secrecionPurulentaFemenino;
-                                                r2.suma1 = suma1.secrecionPurulentaFemenino;
-                                                r2.suma24 = suma24.secrecionPurulentaFemenino;
-                                                r2.suma59 = suma59.secrecionPurulentaFemenino;
-                                                r2.suma1014 = suma1014.secrecionPurulentaFemenino;
-                                                r2.suma1524 = suma1524.secrecionPurulentaFemenino;
-                                                r2.suma2534 = suma2534.secrecionPurulentaFemenino;
-                                                r2.suma3544 = suma3544.secrecionPurulentaFemenino;
-                                                r2.suma4564 = suma4564.secrecionPurulentaFemenino;
-                                                r2.sumaMayor65 = sumaMayor65.secrecionPurulentaFemenino;
-                                                r2.sumaFemenino = sumaFemenino.secrecionPurulenta;
-                                                r2.sumaMasculino = 0;
-                                                r2.total = sumaFemenino.secrecionPurulenta;
+                                        switch (elem.reporteC2) {
+                                            case 'Secreción genital purulenta':
+                                                if (sumaFemenino.secrecionPurulenta > 0) {
+                                                    r2.reporteC2 = 'Secreción genital sin especificar en mujeres';
+                                                    r2.sumaMenor1 = sumaMenor1.secrecionPurulentaFemenino;
+                                                    r2.suma1 = suma1.secrecionPurulentaFemenino;
+                                                    r2.suma24 = suma24.secrecionPurulentaFemenino;
+                                                    r2.suma59 = suma59.secrecionPurulentaFemenino;
+                                                    r2.suma1014 = suma1014.secrecionPurulentaFemenino;
+                                                    r2.suma1524 = suma1524.secrecionPurulentaFemenino;
+                                                    r2.suma2534 = suma2534.secrecionPurulentaFemenino;
+                                                    r2.suma3544 = suma3544.secrecionPurulentaFemenino;
+                                                    r2.suma4564 = suma4564.secrecionPurulentaFemenino;
+                                                    r2.sumaMayor65 = sumaMayor65.secrecionPurulentaFemenino;
+                                                    r2.sumaFemenino = sumaFemenino.secrecionPurulenta;
+                                                    r2.sumaMasculino = 0;
+                                                    r2.total = sumaFemenino.secrecionPurulenta;
+                                                    resultados.push(r2);
+                                                }
+                                                if (sumaMasculino.secrecionPurulenta > 0) {
+                                                    r1.reporteC2 = 'Secreción genital purulenta en hombres';
+                                                    r1.sumaMenor1 = sumaMenor1.secrecionPurulentaMasculino;
+                                                    r1.suma1 = suma1.secrecionPurulentaMasculino;
+                                                    r1.suma24 = suma24.secrecionPurulentaMasculino;
+                                                    r1.suma59 = suma59.secrecionPurulentaMasculino;
+                                                    r1.suma1014 = suma1014.secrecionPurulentaMasculino;
+                                                    r1.suma1524 = suma1524.secrecionPurulentaMasculino;
+                                                    r1.suma2534 = suma2534.secrecionPurulentaMasculino;
+                                                    r1.suma3544 = suma3544.secrecionPurulentaMasculino;
+                                                    r1.suma4564 = suma4564.secrecionPurulentaMasculino;
+                                                    r1.sumaMayor65 = sumaMayor65.secrecionPurulentaMasculino;
+                                                    r1.sumaFemenino = 0;
+                                                    r1.sumaMasculino = sumaMasculino.secrecionPurulenta;
+                                                    r1.total = sumaMasculino.secrecionPurulenta;
+                                                    resultados.push(r1);
+                                                }
+                                                break;
+                                            case 'Secreción genital sin especificar':
+                                                if (sumaFemenino.secrecionSE > 0) {
+                                                    r2.reporteC2 = 'Secreción genital sin especificar en mujeres';
+                                                    r2.sumaMenor1 = sumaMenor1.secrecionSEFemenino;
+                                                    r2.suma1 = suma1.secrecionSEFemenino;
+                                                    r2.suma24 = suma24.secrecionSEFemenino;
+                                                    r2.suma59 = suma59.secrecionSEFemenino;
+                                                    r2.suma1014 = suma1014.secrecionSEFemenino;
+                                                    r2.suma1524 = suma1524.secrecionSEFemenino;
+                                                    r2.suma2534 = suma2534.secrecionSEFemenino;
+                                                    r2.suma3544 = suma3544.secrecionSEFemenino;
+                                                    r2.suma4564 = suma4564.secrecionSEFemenino;
+                                                    r2.sumaMayor65 = sumaMayor65.secrecionSEFemenino;
+                                                    r2.sumaFemenino = sumaFemenino.secrecionSE;
+                                                    r2.sumaMasculino = 0;
+                                                    r2.total = sumaFemenino.secrecionSE;
+                                                    resultados.push(r2);
+                                                }
+                                                if (sumaMasculino.secrecionSE > 0) {
+                                                    r1.reporteC2 = 'Secreción genital sin especificar en hombres';
+                                                    r1.sumaMenor1 = sumaMenor1.secrecionSEMasculino;
+                                                    r1.suma1 = suma1.secrecionSEMasculino;
+                                                    r1.suma24 = suma24.secrecionSEMasculino;
+                                                    r1.suma59 = suma59.secrecionSEMasculino;
+                                                    r1.suma1014 = suma1014.secrecionSEMasculino;
+                                                    r1.suma1524 = suma1524.secrecionSEMasculino;
+                                                    r1.suma2534 = suma2534.secrecionSEMasculino;
+                                                    r1.suma3544 = suma3544.secrecionSEMasculino;
+                                                    r1.suma4564 = suma4564.secrecionSEMasculino;
+                                                    r1.sumaMayor65 = sumaMayor65.secrecionSEMasculino;
+                                                    r1.sumaFemenino = 0;
+                                                    r1.sumaMasculino = sumaMasculino.secrecionSE;
+                                                    r1.total = sumaMasculino.secrecionSE;
+                                                    resultados.push(r1);
+                                                }
+                                                break;
+                                            case 'HIV':
+                                                r2.sumaMenor1 = sumaMenor1.hiv;
+                                                r2.suma1 = suma1.hiv;
+                                                r2.suma24 = suma24.hiv;
+                                                r2.suma59 = suma59.hiv;
+                                                r2.suma1014 = suma1014.hiv;
+                                                r2.suma1524 = suma1524.hiv;
+                                                r2.suma2534 = suma2534.hiv;
+                                                r2.suma3544 = suma3544.hiv;
+                                                r2.suma4564 = suma4564.hiv;
+                                                r2.sumaMayor65 = sumaMayor65.hiv;
+                                                r2.sumaMasculino = sumaMasculino.hiv;
+                                                r2.sumaFemenino = sumaFemenino.hiv;
+                                                // r2.sumaOtro = otroMeningitis;
+                                                r2.total = hiv;
                                                 resultados.push(r2);
-                                            }
-                                            if (sumaMasculino.secrecionPurulenta > 0) {
-                                                r1.reporteC2 = 'Secreción genital purulenta en hombres';
-                                                r1.sumaMenor1 = sumaMenor1.secrecionPurulentaMasculino;
-                                                r1.suma1 = suma1.secrecionPurulentaMasculino;
-                                                r1.suma24 = suma24.secrecionPurulentaMasculino;
-                                                r1.suma59 = suma59.secrecionPurulentaMasculino;
-                                                r1.suma1014 = suma1014.secrecionPurulentaMasculino;
-                                                r1.suma1524 = suma1524.secrecionPurulentaMasculino;
-                                                r1.suma2534 = suma2534.secrecionPurulentaMasculino;
-                                                r1.suma3544 = suma3544.secrecionPurulentaMasculino;
-                                                r1.suma4564 = suma4564.secrecionPurulentaMasculino;
-                                                r1.sumaMayor65 = sumaMayor65.secrecionPurulentaMasculino;
-                                                r1.sumaFemenino = 0;
-                                                r1.sumaMasculino = sumaMasculino.secrecionPurulenta;
-                                                r1.total = sumaMasculino.secrecionPurulenta;
-                                                resultados.push(r1);
-                                            }
-                                        }
-                                        if (elem.reporteC2 === 'Secreción genital sin especificar') {
-                                            if (sumaFemenino.secrecionSE > 0) {
-                                                r2.reporteC2 = 'Secreción genital sin especificar en mujeres';
-                                                r2.sumaMenor1 = sumaMenor1.secrecionSEFemenino;
-                                                r2.suma1 = suma1.secrecionSEFemenino;
-                                                r2.suma24 = suma24.secrecionSEFemenino;
-                                                r2.suma59 = suma59.secrecionSEFemenino;
-                                                r2.suma1014 = suma1014.secrecionSEFemenino;
-                                                r2.suma1524 = suma1524.secrecionSEFemenino;
-                                                r2.suma2534 = suma2534.secrecionSEFemenino;
-                                                r2.suma3544 = suma3544.secrecionSEFemenino;
-                                                r2.suma4564 = suma4564.secrecionSEFemenino;
-                                                r2.sumaMayor65 = sumaMayor65.secrecionSEFemenino;
-                                                r2.sumaFemenino = sumaFemenino.secrecionSE;
-                                                r2.sumaMasculino = 0;
-                                                r2.total = sumaFemenino.secrecionSE;
+                                                break;
+                                            case 'Bronquiolitis':
+                                                r2.sumaMenor1 = sumaMenor1.bronquiolitis;
+                                                r2.suma1 = suma1.bronquiolitis;
+                                                r2.suma24 = suma24.bronquiolitis;
+                                                r2.suma59 = suma59.bronquiolitis;
+                                                r2.suma1014 = suma1014.bronquiolitis;
+                                                r2.suma1524 = suma1524.bronquiolitis;
+                                                r2.suma2534 = suma2534.bronquiolitis;
+                                                r2.suma3544 = suma3544.bronquiolitis;
+                                                r2.suma4564 = suma4564.bronquiolitis;
+                                                r2.sumaMayor65 = sumaMayor65.bronquiolitis;
+                                                r2.sumaMasculino = sumaMasculino.bronquiolitis;
+                                                r2.sumaFemenino = sumaFemenino.bronquiolitis;
+                                                // r2.sumaOtro = otroMeningitis;
+                                                r2.total = bronquiolitis;
                                                 resultados.push(r2);
-                                            }
-                                            if (sumaMasculino.secrecionSE > 0) {
-                                                r1.reporteC2 = 'Secreción genital sin especificar en hombres';
-                                                r1.sumaMenor1 = sumaMenor1.secrecionSEMasculino;
-                                                r1.suma1 = suma1.secrecionSEMasculino;
-                                                r1.suma24 = suma24.secrecionSEMasculino;
-                                                r1.suma59 = suma59.secrecionSEMasculino;
-                                                r1.suma1014 = suma1014.secrecionSEMasculino;
-                                                r1.suma1524 = suma1524.secrecionSEMasculino;
-                                                r1.suma2534 = suma2534.secrecionSEMasculino;
-                                                r1.suma3544 = suma3544.secrecionSEMasculino;
-                                                r1.suma4564 = suma4564.secrecionSEMasculino;
-                                                r1.sumaMayor65 = sumaMayor65.secrecionSEMasculino;
-                                                r1.sumaFemenino = 0;
-                                                r1.sumaMasculino = sumaMasculino.secrecionSE;
-                                                r1.total = sumaMasculino.secrecionSE;
-                                                resultados.push(r1);
-                                            }
-                                        } else {
-                                            if (elem.causa === 'A80') {
-                                                if (sumaFemenino.poliomielitis > 0) {
+                                                break;
+                                            default:
+                                                if (elem.causa === 'A80') {
                                                     r2.sumaMenor1 = sumaMenor1.poliomielitis;
                                                     r2.suma1 = suma1.poliomielitis;
                                                     r2.suma24 = suma24.poliomielitis;
@@ -584,31 +657,15 @@ export function getDiagnosticos(params) {
                                                     r2.suma4564 = suma4564.poliomielitis;
                                                     r2.sumaMayor65 = sumaMayor65.poliomielitis;
                                                     r2.sumaFemenino = sumaFemenino.poliomielitis;
-                                                    r2.sumaMasculino = 0;
-                                                    r2.total = sumaFemenino.poliomielitis;
+                                                    r2.sumaMasculino = sumaFemenino.poliomielitis;
+                                                    r2.total = poliomielitis;
                                                     resultados.push(r2);
+                                                } else {
+                                                    if (sumaTotal > 0) {
+                                                        resultados.push(r2);
+                                                    }
                                                 }
-                                                if (sumaMasculino.poliomielitis > 0) {
-                                                    r1.sumaMenor1 = sumaMenor1.poliomielitis;
-                                                    r1.suma1 = suma1.poliomielitis;
-                                                    r1.suma24 = suma24.poliomielitis;
-                                                    r1.suma59 = suma59.poliomielitis;
-                                                    r1.suma1014 = suma1014.poliomielitis;
-                                                    r1.suma1524 = suma1524.poliomielitis;
-                                                    r1.suma2534 = suma2534.poliomielitis;
-                                                    r1.suma3544 = suma3544.poliomielitis;
-                                                    r1.suma4564 = suma4564.poliomielitis;
-                                                    r1.sumaMayor65 = sumaMayor65.poliomielitis;
-                                                    r1.sumaFemenino = 0;
-                                                    r1.sumaMasculino = sumaMasculino.poliomielitis;
-                                                    r1.total = sumaMasculino.poliomielitis;
-                                                    resultados.push(r1);
-                                                }
-                                            } else {
-                                                if (sumaTotal > 0) {
-                                                    resultados.push(r2);
-                                                }
-                                            }
+                                                break;
                                         }
                                     }
                                 }
@@ -719,27 +776,40 @@ export function getDiagnosticos(params) {
                 resultados.push(SSEM);
             }
 
-            // Se agrupan los códigos correspondientes a Sífilis temprana (causa A51) en sexos
-            let poliomielitisFemenino = resultados.filter(resultado => {
-                return (resultado.causa === 'A80' && resultado.sumaFemenino > 0);
+            // Se agrupan los códigos correspondientes a poliomielitis
+            let poliomielitis = resultados.filter(resultado => {
+                return (resultado.causa === 'A80');
             });
-            if (poliomielitisFemenino.length > 0) {
-                let PF = sumarCodigos(poliomielitisFemenino);
+            if (poliomielitis.length > 0) {
+                let P = sumarCodigos(poliomielitis);
                 resultados = resultados.filter(resultado => {
-                    return (!(resultado.causa === 'A80' && resultado.sumaFemenino > 0));
+                    return (!(resultado.causa === 'A80'));
                 });
-                resultados.push(PF);
+                resultados.push(P);
             }
-            let poliomielitisMasculino = resultados.filter(resultado => {
-                return (resultado.causa === 'A80' && resultado.sumaMasculino > 0);
-            });
 
-            if (poliomielitisMasculino.length > 0) {
-                let PM = sumarCodigos(poliomielitisMasculino);
+            // Se agrupan los códigos correspondientes a hiv
+            let hiv = resultados.filter(resultado => {
+                return (resultado.reporteC2 === 'HIV');
+            });
+            if (hiv.length > 0) {
+                let HIV = sumarCodigos(hiv);
                 resultados = resultados.filter(resultado => {
-                    return (!(resultado.causa === 'A80' && resultado.sumaMasculino > 0));
+                    return (!(resultado.reporteC2 === 'HIV'));
                 });
-                resultados.push(PM);
+                resultados.push(HIV);
+            }
+
+            // Se agrupan los códigos correspondientes a bronquiolitis
+            let bronquiolitis = resultados.filter(resultado => {
+                return (resultado.reporteC2 === 'Bronquiolitis');
+            });
+            if (bronquiolitis.length > 0) {
+                let BR = sumarCodigos(bronquiolitis);
+                resultados = resultados.filter(resultado => {
+                    return (!(resultado.reporteC2 === 'Bronquiolitis'));
+                });
+                resultados.push(BR);
             }
 
             resultados.sort(sortResultados);
