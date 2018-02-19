@@ -250,7 +250,7 @@ async function getCodificacionCie10(codcie10) {
     }
 }
 
-function markAgendaAsProcessed(agenda) {
+async function markAgendaAsProcessed(agenda) {
     let estadoIntegracion;
     switch (agenda.estadoIntegracion) {
         case 'pendiente':
@@ -262,16 +262,20 @@ function markAgendaAsProcessed(agenda) {
         default:
             estadoIntegracion = constantes.EstadoExportacionAgendaCache.codificada;
     }
-    return agendasCache.update({ _id: agenda._id }, {
-        $set: {
-            estadoIntegracion: estadoIntegracion
-        }
-    }, function (err, raw) {
-        if (err) {
-            return (err);
-        }
-        return (raw);
-    }).exec();
+    try {
+        return agendasCache.update({ _id: agenda._id }, {
+            $set: {
+                estadoIntegracion: estadoIntegracion
+            }
+        }, function (err, raw) {
+            if (err) {
+                return (err);
+            }
+            return (raw);
+        });
+    } catch (err) {
+        return err;
+    }
 }
 
 async function getConsultaDiagnostico(idConsulta) {
