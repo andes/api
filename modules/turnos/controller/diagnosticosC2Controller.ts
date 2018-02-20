@@ -1,3 +1,4 @@
+import { log } from './../../../core/log/schemas/log';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import * as agendaModel from '../schemas/agenda';
@@ -19,6 +20,9 @@ function sumarCodigos(codigos) {
     function getSum(total, num) {
         return total + num;
     }
+    function concatArr(pacientes, rta) {
+        return rta.concat(pacientes);
+    }
     let respuesta = {
         codigo: codigos[0].causa,
         nombre: codigos[0].reporteC2,
@@ -38,6 +42,7 @@ function sumarCodigos(codigos) {
         sumaFemenino: codigos.map(c => { return c.sumaFemenino; }).reduce(getSum, 0),
         sumaOtro: codigos.map(c => { return c.sumaOtro; }).reduce(getSum, 0),
         total: codigos.map(c => { return c.total; }).reduce(getSum, 0),
+        pacientes: codigos.map(c => { return c.pacientes; }).reduce(concatArr, []),
     };
     return respuesta;
 }
@@ -50,16 +55,8 @@ export function getDiagnosticos(params) {
         let pipeline = [];
         pipeline = [{
             $match: {
-                $or: [
-                    {
-                        'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria': { $exists: true, $ne: {} },
-                        'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true
-                    },
-                    {
-                        'sobreturnos.diagnostico.codificaciones.0.codificacionAuditoria': { $exists: true, $ne: {} },
-                        'sobreturnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true
-                    }
-                ],
+                'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria': { $exists: true, $ne: {} },
+                'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
                 'horaInicio': { '$gte': new Date(params.horaInicio) },
                 'horaFin': { '$lte': new Date(params.horaFin) },
                 'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) }
@@ -88,7 +85,51 @@ export function getDiagnosticos(params) {
                 }
             }
         }];
+        let pipeline1 = [];
+        pipeline1 = [{
+            $match: {
+                'sobreturnos.diagnostico.codificaciones.0.codificacionAuditoria': { $exists: true, $ne: {} },
+                'sobreturnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
+                'horaInicio': { '$gte': new Date(params.horaInicio) },
+                'horaFin': { '$lte': new Date(params.horaFin) },
+                'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) }
+            }
+        },
+        {
+            $unwind: '$sobreturnos'
+        },
+        {
+            $unwind: '$sobreturnos.diagnostico.codificaciones'
+        },
+        {
+            $group: {
+                _id: '$sobreturnos.diagnostico.codificaciones.codificacionAuditoria.nombre',
+                codigo: {
+                    $first: '$sobreturnos.diagnostico.codificaciones.codificacionAuditoria.codigo'
+                },
+                causa: {
+                    $first: '$sobreturnos.diagnostico.codificaciones.codificacionAuditoria.causa'
+                },
+                reporteC2: {
+                    $first: '$sobreturnos.diagnostico.codificaciones.codificacionAuditoria.reporteC2'
+                }
+            }
+        }];
         let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
+        let data1 = await toArray(agendaModel.aggregate(pipeline1).cursor({}).exec());
+        data = data.concat(data1);
+
+        function removeDuplicates(arr){
+            let unique_array = [];
+            let arrMap = arr.map(m=>{return m._id});
+            for(let i = 0;i < arr.length; i++){
+                if(arrMap.lastIndexOf(arr[i]._id) === i){
+                    unique_array.push(arr[i]);
+                }
+            }
+            return unique_array;
+        }
+        data = removeDuplicates(data);
         data.forEach(elem => {
             if (elem._id != null) {
                 // Se definen variables cuantificadoras
@@ -142,7 +183,9 @@ export function getDiagnosticos(params) {
                 let otroMeningitis = 0;
                 let poliomielitis = 0;
                 let hiv = 0;
+                let pacienteshiv = [];
                 let bronquiolitis = 0;
+                let pacientesbronquiolitis = [];
                 promises.push(new Promise((resolve1, reject1) => {
                     agendaModel.find({
                         'horaInicio': { '$gte': new Date(params.horaInicio) },
@@ -189,7 +232,9 @@ export function getDiagnosticos(params) {
                             }
                         }
 
-                        function actualizarContador(sexo, edad, tipo) {
+                        function actualizarContador(paciente, tipo) {
+                            let edad = getAge(paciente.fechaNacimiento);
+                            let sexo = paciente.sexo;
                             switch (elem.causa) {
                                 case 'A51': // Sífilis Temprana
                                     if (sexo === 'femenino') {
@@ -244,6 +289,7 @@ export function getDiagnosticos(params) {
                                             break;
                                         case 'HIV':
                                             hiv++;
+                                            pacienteshiv.push(paciente);
                                             if (sexo === 'femenino') {
                                                 tipo.hiv++;
                                                 sumaSexo(sumaFemenino, 'hiv');
@@ -256,6 +302,7 @@ export function getDiagnosticos(params) {
                                         case 'Bronquiolitis':
                                             if (edad < 2) {
                                                 bronquiolitis++;
+                                                pacientesbronquiolitis.push(paciente);
                                                 if (sexo === 'femenino') {
                                                     tipo.bronquiolitis++;
                                                     sumaSexo(sumaFemenino, 'bronquiolitis');
@@ -303,38 +350,40 @@ export function getDiagnosticos(params) {
 
                         }
 
-                        function calcularContadores(edad, sexo) {
+                        function calcularContadores(paciente) {
+                            let edad = getAge(paciente.fechaNacimiento);
+                            let sexo = paciente.sexo;
                             if (edad < 5) {
                                 if (edad < 1) {
-                                    actualizarContador(sexo, edad, sumaMenor1);
+                                    actualizarContador(paciente, sumaMenor1);
                                 }
                                 if (edad === 1) {
-                                    actualizarContador(sexo, edad, suma1);
+                                    actualizarContador(paciente, suma1);
                                 }
                                 if (edad >= 2 && edad <= 4) {
-                                    actualizarContador(sexo, edad, suma24);
+                                    actualizarContador(paciente, suma24);
                                 }
                             }
                             if (edad >= 5 && edad <= 9) {
-                                actualizarContador(sexo, edad, suma59);
+                                actualizarContador(paciente, suma59);
                             }
                             if (edad >= 10 && edad <= 14) {
-                                actualizarContador(sexo, edad, suma1014);
+                                actualizarContador(paciente, suma1014);
                             }
                             if (edad >= 15 && edad <= 24) {
-                                actualizarContador(sexo, edad, suma1524);
+                                actualizarContador(paciente, suma1524);
                             }
                             if (edad >= 25 && edad <= 34) {
-                                actualizarContador(sexo, edad, suma2534);
+                                actualizarContador(paciente, suma2534);
                             }
                             if (edad >= 35 && edad <= 44) {
-                                actualizarContador(sexo, edad, suma3544);
+                                actualizarContador(paciente, suma3544);
                             }
                             if (edad >= 45 && edad <= 64) {
-                                actualizarContador(sexo, edad, suma4564);
+                                actualizarContador(paciente, suma4564);
                             }
                             if (edad > 65) {
-                                actualizarContador(sexo, edad, sumaMayor65);
+                                actualizarContador(paciente, sumaMayor65);
                             }
 
                             let codigoExcepcion = (elem.codigo === 'A05.1' && edad < 1) || (elem.codigo === 'A17.0' && edad < 5);
@@ -360,9 +409,7 @@ export function getDiagnosticos(params) {
                                     codigos.forEach(function (codigo) {
                                         if (codigo.codificacionAuditoria && codigo.codificacionAuditoria.c2 === true) {
                                             if (elem.codigo === codigo.codificacionAuditoria.codigo) {
-                                                let edad = getAge(turno.paciente.fechaNacimiento);
-                                                let sexo = turno.paciente.sexo;
-                                                calcularContadores(edad, sexo);
+                                                calcularContadores(turno.paciente);
                                             }
                                         }
                                     });
@@ -372,14 +419,11 @@ export function getDiagnosticos(params) {
                             // Se recorren los sobreturnos de la agenda actual
                             ag.sobreturnos.forEach(sobreturno => {
                                 if (sobreturno.diagnostico.codificaciones.length > 0) {
-
                                     let codigos = sobreturno.diagnostico.codificaciones;
                                     codigos.forEach(function (codigo) {
                                         if (codigo.codificacionAuditoria && codigo.codificacionAuditoria.c2 === true) {
                                             if (elem.codigo === codigo.codificacionAuditoria.codigo) {
-                                                let edad = getAge(sobreturno.paciente.fechaNacimiento);
-                                                let sexo = sobreturno.paciente.sexo;
-                                                calcularContadores(edad, sexo);
+                                                calcularContadores(sobreturno.paciente);
                                             }
                                         }
                                     });
@@ -408,6 +452,7 @@ export function getDiagnosticos(params) {
                             sumaFemenino: sumaFemenino.default,
                             sumaOtro: sumaOtro.default,
                             total: sumaTotal,
+                            pacientes: []
                         };
                         // Se asigna de esta manera para que sea otro objeto y no un puntero al mismo objeto
                         let r1 = Object.assign({}, r2);
@@ -629,6 +674,7 @@ export function getDiagnosticos(params) {
                                                 r2.sumaFemenino = sumaFemenino.hiv;
                                                 // r2.sumaOtro = otroMeningitis;
                                                 r2.total = hiv;
+                                                r2.pacientes = pacienteshiv;
                                                 resultados.push(r2);
                                                 break;
                                             case 'Bronquiolitis':
@@ -646,6 +692,7 @@ export function getDiagnosticos(params) {
                                                 r2.sumaFemenino = sumaFemenino.bronquiolitis;
                                                 // r2.sumaOtro = otroMeningitis;
                                                 r2.total = bronquiolitis;
+                                                r2.pacientes = pacientesbronquiolitis;
                                                 resultados.push(r2);
                                                 break;
                                             default:
@@ -693,6 +740,7 @@ export function getDiagnosticos(params) {
                 }
                 return 0;
             };
+            // console.log('resultados ', resultados);
             // Se agrupan los códigos correspondientes a Sífilis temprana (causa A51) en sexos
             let sifilisTempranaFemenino = resultados.filter(resultado => {
                 return (resultado.causa === 'A51' && resultado.sumaFemenino > 0);
