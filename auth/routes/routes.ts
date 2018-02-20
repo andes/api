@@ -68,7 +68,7 @@ router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
             'usuario': username,
             'organizaciones._id': orgId
         }),
-        authOrganizaciones.model.findOne({ _id: orgId })
+        authOrganizaciones.model.findOne({ _id: orgId }, { nombre: 1 })
     ]).then((data: any[]) => {
         if (data[0] && data[1]) {
             let user = data[0];
@@ -140,7 +140,6 @@ router.post('/login', function (req, res, next) {
             if (!data[0] || data[0].length === 0) {
                 return next(403);
             }
-
             if (req.body.mobile) {
                 checkMobile(data[1]._id).then((account: any) => {
                     // Crea el token con los datos de sesión
@@ -246,6 +245,14 @@ router.post('/login', function (req, res, next) {
             }
         });
     }
+});
+
+/**
+ * Genera FileToken para poder acceder a archivos embebidos
+ */
+
+router.post('/file-token', Auth.authenticate(), (req, res, next) => {
+    return res.json({token: Auth.generateFileToken()});
 });
 
 export = router;

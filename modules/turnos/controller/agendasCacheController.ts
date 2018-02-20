@@ -1,5 +1,4 @@
-// Se definen las operaciones de agendas y SIPS
-import * as operationsCache from './operationsCacheController';
+import * as operationsCache from './operationsCacheController/operationsAgenda';
 import * as configPrivate from '../../../config.private';
 import * as sql from 'mssql';
 
@@ -17,19 +16,22 @@ let connection = {
 
 export async function integracionSips() {
     try {
-        pool = await sql.connect(connection);
+        let agendasMongoPendientes = await operationsCache.getAgendasDeMongoPendientes();
+        agendasMongoPendientes.forEach(async (agenda) => {
+            await operationsCache.guardarCacheASips(agenda);
+        });
+    } catch (ex) {
+        return (ex);
+    }
+}
+
+export async function integracionAndes() {
+    try {
         let agendasMongoExportadas = await operationsCache.getAgendasDeMongoExportadas();
-        agendasMongoExportadas.forEach(async(agenda) => {
+        agendasMongoExportadas.forEach(async (agenda) => {
             await operationsCache.checkCodificacion(agenda);
         });
-        let agendasMongoPendientes = await operationsCache.getAgendasDeMongoPendientes();
-
-        if (agendasMongoPendientes.length > 0) {
-            await operationsCache.guardarCacheASips(agendasMongoPendientes, 0, pool);
-        } else {
-            pool.close();
-        }
     } catch (ex) {
-        pool.close();
+        return (ex);
     }
 }

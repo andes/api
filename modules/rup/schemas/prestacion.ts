@@ -6,6 +6,7 @@ import * as estado from './prestacion.estado';
 import { auditoriaPrestacionPacienteSchema } from '../../auditorias/schemas/auditoriaPrestacionPaciente';
 import { iterate, convertToObjectId } from '../controllers/rup';
 
+// tslint:disable
 export let schema = new mongoose.Schema({
     // Datos principales del paciente
     paciente: {
@@ -82,7 +83,7 @@ export let schema = new mongoose.Schema({
     },
     // Historia de estado de la prestación
     estados: [estado.schema]
-});
+}, { usePushEach: true } as any);
 
 // Valida el esquema
 schema.pre('save', function (next) {

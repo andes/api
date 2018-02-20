@@ -8,6 +8,8 @@ import { ElasticSync } from '../../../utils/elasticSync';
 import { Logger } from '../../../utils/logService';
 import * as debug from 'debug';
 import * as controllerPaciente from '../../../core/mpi/controller/paciente';
+import * as cdaCtr from '../../cda/controller/CDAPatient';
+import { xmlToJson } from '../../../utils/utils';
 
 let log = debug('mobileApp:paciente');
 
@@ -118,6 +120,28 @@ router.patch('/pacientes/:id', function (req, res, next) {
         }).catch((err) => {
             return next(err);
         });
+    }
+});
+
+
+
+
+router.get('/laboratorios/(:id)', async (req, res, next) => {
+    let idPaciente = req.params.id;
+    let pacientes = (req as any).user.pacientes;
+    let index = pacientes.findIndex(item => item.id === idPaciente);
+    if (index >= 0) {
+        let limit = parseInt (req.query.limit || 10, 0);
+        let skip = parseInt (req.query.skip || 0, 0);
+        let cdas: any[] = await cdaCtr.searchByPatient(idPaciente, '4241000179101', { limit, skip });
+        for (let cda of cdas) {
+            let _xml = await cdaCtr.loadCDA(cda.cda_id);
+            let dom: any = xmlToJson(_xml);
+            cda.confidentialityCode = dom.ClinicalDocument.confidentialityCode['@attributes'].code;
+            cda.title = dom.ClinicalDocument.title['#text'];
+            cda.organizacion = dom.ClinicalDocument.custodian.assignedCustodian.representedCustodianOrganization.name['#text'];
+        }
+        res.json(cdas);
     }
 });
 

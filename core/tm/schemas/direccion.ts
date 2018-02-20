@@ -31,7 +31,7 @@ let schema = new mongoose.Schema({
     },
     valor: String,
     codigoPostal: String,
-    ubicacion: ubicacionSchema,
+    ubicacion: { type: ubicacionSchema},
     geoReferencia: {
         type: [Number],
         index: '2d'
