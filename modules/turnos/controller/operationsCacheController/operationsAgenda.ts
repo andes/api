@@ -122,15 +122,17 @@ export async function checkCodificacion(agenda) {
 async function codificaOdontologia(idConsulta: any, turno: any) {
     let idNomenclador: any = [];
     let codificacionOdonto: any = {};
+    let repetido = [];
     try {
         idNomenclador = await getConsultaOdontologia(idConsulta);
         let m = 0;
         for (let i = 0; i < idNomenclador.length; i++) {
+            repetido = [];
             codificacionOdonto = await getCodificacionOdonto(idNomenclador[i].idNomenclador);
             turno.asistencia = 'asistio';
             turno.diagnostico.ilegible = false;
-            let repetido = turno.diagnostico.codificaciones.filter(elem => elem.codificacionProfesional.codigo === codificacionOdonto);
-            if (repetido.length <= 0){
+            repetido = turno.diagnostico.codificaciones.filter(elem => elem.codificacionProfesional.codigo === codificacionOdonto.codigo);
+            if (repetido && repetido.length <= 0) {
                 turno.diagnostico.codificaciones.push({
                     codificacionProfesional: {
                         codigo: codificacionOdonto.codigo,
@@ -216,8 +218,7 @@ async function existeConsultorio(agenda, idEfector) {
         let result = await new sql.Request(transaction)
             .input('objectId', sql.VarChar(50), espacioFisicoObjectId)
             .query('SELECT top 1 idConsultorio FROM dbo.CON_Consultorio WHERE objectId = @objectId');
-
-        if (result.recordset && result.recordset.length > 0) {
+        if (result && result.recordset && result.recordset.length) {
             return result.recordset[0].idConsultorio;
         } else {
             idConsultorio = await creaConsultorioSips(agenda, idEfector);
