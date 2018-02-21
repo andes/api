@@ -49,6 +49,7 @@ let turnoSchema = new mongoose.Schema({
         id: mongoose.Schema.Types.ObjectId,
         nombre: String,
         apellido: String,
+        alias: String,
         documento: String,
         fechaNacimiento: Date,
         telefono: String,

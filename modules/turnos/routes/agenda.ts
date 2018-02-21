@@ -6,9 +6,10 @@ import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
 import * as moment from 'moment';
 import * as agendaCtrl from '../controller/agenda';
-// import * as agendaSipsCtrl from '../controller/agendaSipsController';
 
 import * as agendaCacheCtrl from '../controller/agendasCacheController';
+import * as agendaHPNCacheCtrl from '../controller/agendasHPNCacheController';
+
 import * as diagnosticosCtrl from '../controller/diagnosticosC2Controller';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import * as operations from './../../legacy/controller/operations';
@@ -65,10 +66,7 @@ router.get('/agenda/candidatas', async function (req, res, next) {
         }
 
         let data1 = await toArray(agenda.aggregate([{ $match: match }]).cursor({}).exec());
-
-
         let out = [];
-
         // Verifico que existe un turno disponible o ya reasignado para el mismo tipo de prestación del turno
         data1.forEach(function (a, indiceA) {
             a.bloques.forEach(function (b, indiceB) {
@@ -156,6 +154,22 @@ router.get('/agenda/:id?', function (req, res, next) {
             query.where('organizacion._id').equals(req.query.organizacion);
         }
 
+        if (req.query.disponiblesProfesional) {
+            query.where('bloques.restantesProfesional').gt(0);
+        }
+
+        if (req.query.disponiblesGestion) {
+            query.where('bloques.restantesGestion').gt(0);
+        }
+
+        if (req.query.disponiblesDelDia) {
+            query.where('bloques.restantesDelDia').gt(0);
+        }
+
+        if (req.query.disponiblesProgramados) {
+            query.where('bloques.restantesProgramados').gt(0);
+        }
+
         // Trae las Agendas NO nominalizadas
         if (req.query.nominalizada && req.query.nominalizada === false) {
             query.where('nominalizada').equals(false);
@@ -164,16 +178,6 @@ router.get('/agenda/:id?', function (req, res, next) {
         // Filtra por el array de tipoPrestacion enviado como parametro
         if (req.query.tipoPrestaciones) {
             query.where('tipoPrestaciones._id').in(req.query.tipoPrestaciones);
-        }
-
-        // Dada una lista de prestaciones, filtra las agendas que tengan al menos una de ellas como prestación
-        if (req.query.prestaciones) {
-            let arr_prestaciones: any[] = JSON.parse(req.query.prestaciones);
-            let variable: any[] = [];
-            arr_prestaciones.forEach((prestacion, index) => {
-                variable.push({ 'prestaciones._id': prestacion.id });
-            });
-            query.or(variable);
         }
 
         if (req.query.profesionales) {
@@ -201,7 +205,6 @@ router.get('/agenda/:id?', function (req, res, next) {
             res.status(400).send('Debe ingresar al menos un parámetro');
             return next(400);
         }
-
 
         query.sort({ 'horaInicio': 1 });
 
@@ -471,7 +474,6 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 });
 
             }
-            // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
             operations.cacheTurnosSips(data);
             // Fin de insert cache
             return res.json(data);
@@ -491,4 +493,14 @@ router.patch('/agenda/:id*?', function (req, res, next) {
 //         }
 //     });
 // });
+
+router.get('/integracionCitasHPN', async function (req, res, next) {
+    try {
+        await agendaHPNCacheCtrl.integracion();
+        res.json('OK');
+    } catch (ex) {
+        next(ex);
+    }
+});
+
 export = router;

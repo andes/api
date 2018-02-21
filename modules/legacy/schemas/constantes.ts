@@ -3,10 +3,20 @@ const constantes = {
         type: String,
         enum: ['femenino', 'masculino', 'otro']
     },
+
+    EstadoAgendaAndes: {
+        publicada: 'publicada',
+        suspendida: 'suspendida'
+    },
+
     EstadoAgendaSips: {
         activa: 1,
         inactiva: 3,
         cerrada: 4
+    },
+
+    EstadoTurnosAndes: {
+        asignado: 'asignado'
     },
 
     EstadoTurnosSips: {
@@ -33,7 +43,18 @@ const constantes = {
         odontologia: 34,
         medicinaGral: 14
     },
-
-    idUsuarioSips: '1486739'
+    idUsuarioSips: '1486739',
+    idOrganizacionHPN: '57e9670e52df311059bc8964',
+    tiposPrestacionesHPN: {
+        clinicaMedica: {
+            id: 705,
+            conceptId: '268565007'
+        },
+        examenPediatrico: {
+            id: 901,
+            conceptId: '243788004'
+        }
+    }
 };
 export = constantes;
+
