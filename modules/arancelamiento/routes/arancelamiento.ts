@@ -24,12 +24,17 @@ router.get('/puco/:documento', async function (req, res, next) {
         }
     }
 });
-
+/**
+ * Obtiene los datos de la obra social asociada a un paciente
+ *
+ * @param {any} doc
+ * @returns
+ */
 async function getOs(doc) {
-    let osPac: any = await osPaciente.find({ documento: doc }).exec();
+    let osPac: any = await osPaciente.find({ documento: doc }).exec();  // obtiene el código de obra social asociado al paciente 
     if (osPac && osPac.length > 0) {
         let codigo: string = osPac[0].codigoPuco;
-        let result = await obraSocial.find({ codigoPuco: parseInt(codigo, 10) }).exec();
+        let result = await obraSocial.find({ codigoPuco: parseInt(codigo, 10) }).exec(); // obtiene la información de la obra social
         return result[0];
     } else {
         return null;
