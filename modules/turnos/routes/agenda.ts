@@ -66,10 +66,7 @@ router.get('/agenda/candidatas', async function (req, res, next) {
         }
 
         let data1 = await toArray(agenda.aggregate([{ $match: match }]).cursor({}).exec());
-
-
         let out = [];
-
         // Verifico que existe un turno disponible o ya reasignado para el mismo tipo de prestación del turno
         data1.forEach(function (a, indiceA) {
             a.bloques.forEach(function (b, indiceB) {
@@ -467,7 +464,6 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 });
 
             }
-            // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
             operations.cacheTurnosSips(data);
             // Fin de insert cache
             return res.json(data);

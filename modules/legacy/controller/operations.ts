@@ -11,7 +11,10 @@ import * as organizacion from './../../../core/tm/schemas/organizacion';
 import * as sql from 'mssql';
 import * as cdaCtr from '../../cda/controller/CDAPatient';
 import * as agendasHPNCtr from '../../turnos/controller/operationsCacheHPNController';
-import { ObjectID, ObjectId } from 'bson';
+import {
+    ObjectID,
+    ObjectId
+} from 'bson';
 
 
 
@@ -135,8 +138,9 @@ export async function getDetalles(idProtocolo, idEfector) {
 
 export async function cacheTurnosSips(unaAgenda) {
     // Armo el DTO para guardar en la cache de agendas
-
-    if ((unaAgenda.estado !== 'planificacion') && (unaAgenda.nominalizada) && (unaAgenda.tipoPrestaciones[0].term.includes('odonto')) || integraPrestacionesHPN(unaAgenda)) {
+    
+    // if ((unaAgenda.estado !== 'planificacion') && (unaAgenda.nominalizada) && (unaAgenda.tipoPrestaciones[0].term.includes('odonto')) || integraPrestacionesHPN(unaAgenda)) {
+    if (integraPrestacionesHPN(unaAgenda) && unaAgenda.estado !== 'planificacion') {
         let organizacionAgenda;
         if (unaAgenda.organizacion) {
             organizacionAgenda = await organizacionCompleto(unaAgenda.organizacion.id);
@@ -162,7 +166,9 @@ export async function cacheTurnosSips(unaAgenda) {
             id: unaAgenda.id
         };
 
-        agendasCache.find({ id: agenda.id }, function getAgenda(err, data) {
+        agendasCache.find({
+            id: agenda.id
+        }, function getAgenda(err, data) {
             if (err) {
                 return (err);
             }
@@ -170,18 +176,18 @@ export async function cacheTurnosSips(unaAgenda) {
                 agendasCache.update({
                     id: agenda.id
                 }, {
-                        $set: {
-                            tipoPrestaciones: unaAgenda.tipoPrestaciones,
-                            espacioFisico: unaAgenda.espacioFisico,
-                            organizacion: organizacionAgenda,
-                            profesionales: profesionalesAgenda,
-                            bloques: unaAgenda.bloques,
-                            estado: unaAgenda.estado,
-                            horaInicio: unaAgenda.horaInicio,
-                            horaFin: unaAgenda.horaFin,
-                            estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente
-                        }
-                    }).exec();
+                    $set: {
+                        tipoPrestaciones: unaAgenda.tipoPrestaciones,
+                        espacioFisico: unaAgenda.espacioFisico,
+                        organizacion: organizacionAgenda,
+                        profesionales: profesionalesAgenda,
+                        bloques: unaAgenda.bloques,
+                        estado: unaAgenda.estado,
+                        horaInicio: unaAgenda.horaInicio,
+                        horaFin: unaAgenda.horaFin,
+                        estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente
+                    }
+                }).exec();
             } else {
                 agenda.save(function (err2, agendaGuardada: any) {
                     if (err2) {
@@ -194,6 +200,7 @@ export async function cacheTurnosSips(unaAgenda) {
     }
 
     function integraPrestacionesHPN(_agenda) {
-        return (agendasHPNCtr.getIdTipoPrestacion(_agenda) !== null && (_agenda.organizacion.id === constantes.idOrganizacionHPN));
+        return true
+        // return (agendasHPNCtr.getIdTipoPrestacion(_agenda) !== null && (_agenda.organizacion._id === constantes.idOrganizacionHPN));
     }
 }

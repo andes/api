@@ -9,16 +9,13 @@ import * as constantes from '../../legacy/schemas/constantes';
 import * as logger from './../../../utils/loggerAgendaHPNCache';
 import * as agendaSchema from '../schemas/agenda';
 import * as pacienteHPN from './pacienteHPNController';
-import * as medicosExistentes from '../../legacy/schemas/medicosExistentesHPN';
 import * as turnoCtrl from './turnoHPNCacheController';
 import { resolve } from 'path';
 
 export async function saveAgendaToPrestaciones(agenda, pool) {
     let transaction = await new sql.Transaction(pool);
-
     return new Promise(async function (resolve2, reject) {
         let idProfesional = agenda.profesionales ? await getIdProfesionalPrestaciones(agenda.profesionales[0].documento) : null;
-
         if (idProfesional) {
             transaction.begin(async err => {
                 let rolledBack = false;
@@ -30,7 +27,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
                     // Asumimos que la agenda posee un único tipo de prestación,
                     // y que ese id de prestación sera el que mismo para los bloques y turnos
                     let idTipoPrestacion = await getIdTipoPrestacion(agenda);
-
+                    
                     if (idTipoPrestacion) {
                         if (!idAgendaHPN) {
                             idAgendaHPN = await saveAgenda(agenda, idTipoPrestacion);
@@ -232,16 +229,13 @@ export function getIdTipoPrestacion(_agenda) {
             case constantes.tiposPrestacionesHPN.clinicaMedica.conceptId:
             idTipoPrestacion = constantes.tiposPrestacionesHPN.clinicaMedica.id;
             break;
-
-            case constantes.tiposPrestacionesHPN.consultaPediatrica.conceptId:
-            idTipoPrestacion = constantes.tiposPrestacionesHPN.consultaPediatrica.id;
+            case constantes.tiposPrestacionesHPN.examenPediatrico.conceptId:
+            idTipoPrestacion = constantes.tiposPrestacionesHPN.examenPediatrico.id;
             break;
-
-            default:
+            default: // Si no cae en ninguna de las anteriores no se realiza la integración
             idTipoPrestacion = null;
             break;
         }
     }
-
     return idTipoPrestacion;
 }

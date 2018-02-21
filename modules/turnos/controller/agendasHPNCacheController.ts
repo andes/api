@@ -20,7 +20,6 @@ export async function integracion() {
         try {
             let promisesArray: any = [];
             let agendasMongoPendientes = await operationsHPNCache.getAgendasDeMongoPendientes();
-
             for (let agenda of agendasMongoPendientes) {
                 pool = await new sql.ConnectionPool(connection).connect();
                 await operationsHPNCache.saveAgendaToPrestaciones(agenda, pool);
