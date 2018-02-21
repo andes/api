@@ -13,7 +13,6 @@ function getAge(dateString) {
     }
     return age;
 }
-
 function sumarCodigos(codigos) {
     function getSum(total, num) {
         return total + num;
@@ -40,7 +39,6 @@ function sumarCodigos(codigos) {
     };
     return respuesta;
 }
-
 export function getDiagnosticos(params) {
     let resultados = [];
     let promises = [];

@@ -6,9 +6,10 @@ import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
 import * as moment from 'moment';
 import * as agendaCtrl from '../controller/agenda';
-// import * as agendaSipsCtrl from '../controller/agendaSipsController';
 
 import * as agendaCacheCtrl from '../controller/agendasCacheController';
+import * as agendaHPNCacheCtrl from '../controller/agendasHPNCacheController';
+
 import * as diagnosticosCtrl from '../controller/diagnosticosC2Controller';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import * as operations from './../../legacy/controller/operations';
@@ -65,10 +66,7 @@ router.get('/agenda/candidatas', async function (req, res, next) {
         }
 
         let data1 = await toArray(agenda.aggregate([{ $match: match }]).cursor({}).exec());
-
-
         let out = [];
-
         // Verifico que existe un turno disponible o ya reasignado para el mismo tipo de prestación del turno
         data1.forEach(function (a, indiceA) {
             a.bloques.forEach(function (b, indiceB) {
@@ -476,7 +474,6 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 });
 
             }
-            // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
             operations.cacheTurnosSips(data);
             // Fin de insert cache
             return res.json(data);
@@ -496,4 +493,14 @@ router.patch('/agenda/:id*?', function (req, res, next) {
 //         }
 //     });
 // });
+
+router.get('/integracionCitasHPN', async function (req, res, next) {
+    try {
+        await agendaHPNCacheCtrl.integracion();
+        res.json('OK');
+    } catch (ex) {
+        next(ex);
+    }
+});
+
 export = router;
