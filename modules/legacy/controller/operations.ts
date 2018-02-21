@@ -138,7 +138,6 @@ export async function getDetalles(idProtocolo, idEfector) {
 
 export async function cacheTurnosSips(unaAgenda) {
     // Armo el DTO para guardar en la cache de agendas
-    
     // if ((unaAgenda.estado !== 'planificacion') && (unaAgenda.nominalizada) && (unaAgenda.tipoPrestaciones[0].term.includes('odonto')) || integraPrestacionesHPN(unaAgenda)) {
     if (integraPrestacionesHPN(unaAgenda) && unaAgenda.estado !== 'planificacion') {
         let organizacionAgenda;
@@ -200,7 +199,7 @@ export async function cacheTurnosSips(unaAgenda) {
     }
 
     function integraPrestacionesHPN(_agenda) {
-        return true
+        return true;
         // return (agendasHPNCtr.getIdTipoPrestacion(_agenda) !== null && (_agenda.organizacion._id === constantes.idOrganizacionHPN));
     }
 }

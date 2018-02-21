@@ -43,11 +43,8 @@ const constantes = {
         odontologia: 34,
         medicinaGral: 14
     },
-
     idUsuarioSips: '1486739',
-
     idOrganizacionHPN: '57e9670e52df311059bc8964',
-    
     tiposPrestacionesHPN: {
         clinicaMedica: {
             id: 705,
@@ -60,3 +57,4 @@ const constantes = {
     }
 };
 export = constantes;
+

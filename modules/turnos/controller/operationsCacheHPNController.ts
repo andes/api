@@ -27,7 +27,6 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
                     // Asumimos que la agenda posee un único tipo de prestación,
                     // y que ese id de prestación sera el que mismo para los bloques y turnos
                     let idTipoPrestacion = await getIdTipoPrestacion(agenda);
-                    
                     if (idTipoPrestacion) {
                         if (!idAgendaHPN) {
                             idAgendaHPN = await saveAgenda(agenda, idTipoPrestacion);
