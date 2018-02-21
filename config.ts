@@ -29,7 +29,7 @@ export const modules = {
         active: true,
         path: './core/tm/routes',
         route: '/core/tm',
-        middleware: appMiddleware,
+        middleware: null,
     },
     term: {
         active: true,

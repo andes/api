@@ -10,12 +10,9 @@ import { defaultLimit, maxLimit } from './../../../config';
 
 import * as configPrivate from '../../../config.private';
 import { Auth } from '../../../auth/auth.class';
-<<<<<<< HEAD
-=======
 // import * as estadoCama from '../routes/camaEstado';
 // import {camaEstado} from './../schemas/camaEstado';
 import * as CamaEstadoModel from '../models/camaEstado';
->>>>>>> develop
 
 let GeoJSON = require('geojson');
 let router = express.Router();
@@ -262,19 +259,6 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
             'activo': act
         };
 
-<<<<<<< HEAD
-        let skip: number = parseInt(req.query.skip || 0, 10);
-        let limit: number = Math.min(parseInt(req.query.limit || defaultLimit, 10), maxLimit);
-
-
-        query = organizacion.model.find({}).skip(skip).limit(limit);
-
-        if (req.query.nombre) { query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i')); }
-        if (req.query.codigoSisa) { query.where('codigo.sisa').equals(RegExp('^.*' + req.query.codigoSisa + '.*$', 'i')); }
-        if (req.query.activo) { query.where('activo').equals(RegExp(req.query.activo)); }
-        query.exec((err, data) => {
-            if (err) { return next(err); }
-=======
         if (req.query.nombre) {
             filtros['nombre'] = {
                 '$regex': utils.makePattern(req.query.nombre)
@@ -313,7 +297,6 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
             if (err) {
                 return next(err);
             }
->>>>>>> develop
             res.json(data);
         });
 
@@ -370,15 +353,10 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/organizacion'
  */
-<<<<<<< HEAD
 router.post('/organizaciones', Auth.authenticate(), function (req, res, next) {
     if (!Auth.check(req, 'tm:especialidad:postEspecialidad')) {
         return next(403);
     }
-=======
-
-router.post('/organizaciones', function (req, res, next) {
->>>>>>> develop
     let newOrganization = new organizacion.model(req.body);
     newOrganization.save((err) => {
         if (err) {
@@ -418,7 +396,6 @@ router.post('/organizaciones', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/organizacion'
  */
-<<<<<<< HEAD
 router.put('/organizaciones/:id', Auth.authenticate(), function (req, res, next) {
     if (!Auth.check(req, 'tm:especialidad:putEspecialidad')) {
         return next(403);
@@ -427,15 +404,6 @@ router.put('/organizaciones/:id', Auth.authenticate(), function (req, res, next)
         if (err) {
             return next(err);
         }
-=======
-router.put('/organizaciones/:id', function (req, res, next) {
-    organizacion
-        .model
-        .findByIdAndUpdate(req.params.id, req.body, function (err, data) {
-            if (err) {
-                return next(err);
-            }
->>>>>>> develop
 
             res.json(data);
         });
@@ -466,7 +434,6 @@ router.put('/organizaciones/:id', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/organizacion'
  */
-<<<<<<< HEAD
 router.delete('/organizaciones/:id', Auth.authenticate(), function (req, res, next) {
     if (!Auth.check(req, 'tm:organizacion:deleteOrganizacion')) {
         return next(403);
@@ -475,15 +442,6 @@ router.delete('/organizaciones/:id', Auth.authenticate(), function (req, res, ne
         if (err) {
             return next(err);
         }
-=======
-router.delete('/organizaciones/:id', function (req, res, next) {
-    organizacion
-        .model
-        .findByIdAndRemove(req.params._id, function (err, data) {
-            if (err) {
-                return next(err);
-            }
->>>>>>> develop
 
             res.json(data);
         });
