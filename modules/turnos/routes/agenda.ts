@@ -154,6 +154,22 @@ router.get('/agenda/:id?', function (req, res, next) {
             query.where('organizacion._id').equals(req.query.organizacion);
         }
 
+        if (req.query.disponiblesProfesional) {
+            query.where('bloques.restantesProfesional').gt(0);
+        }
+
+        if (req.query.disponiblesGestion) {
+            query.where('bloques.restantesGestion').gt(0);
+        }
+
+        if (req.query.disponiblesDelDia) {
+            query.where('bloques.restantesDelDia').gt(0);
+        }
+
+        if (req.query.disponiblesProgramados) {
+            query.where('bloques.restantesProgramados').gt(0);
+        }
+
         // Trae las Agendas NO nominalizadas
         if (req.query.nominalizada && req.query.nominalizada === false) {
             query.where('nominalizada').equals(false);
@@ -162,16 +178,6 @@ router.get('/agenda/:id?', function (req, res, next) {
         // Filtra por el array de tipoPrestacion enviado como parametro
         if (req.query.tipoPrestaciones) {
             query.where('tipoPrestaciones._id').in(req.query.tipoPrestaciones);
-        }
-
-        // Dada una lista de prestaciones, filtra las agendas que tengan al menos una de ellas como prestación
-        if (req.query.prestaciones) {
-            let arr_prestaciones: any[] = JSON.parse(req.query.prestaciones);
-            let variable: any[] = [];
-            arr_prestaciones.forEach((prestacion, index) => {
-                variable.push({ 'prestaciones._id': prestacion.id });
-            });
-            query.or(variable);
         }
 
         if (req.query.profesionales) {
@@ -199,7 +205,6 @@ router.get('/agenda/:id?', function (req, res, next) {
             res.status(400).send('Debe ingresar al menos un parámetro');
             return next(400);
         }
-
 
         query.sort({ 'horaInicio': 1 });
 
@@ -365,7 +370,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
 
                     });
                 }
-                // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
+                // Inserto la modificación en agendasCache
                 operations.cacheTurnosSips(data);
                 // Fin de insert cache
                 return res.json(data[0]);
@@ -401,7 +406,12 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                         break;
                     case 'suspenderTurno':
                         turno = agendaCtrl.getTurno(req, data, turnos[y]);
-                        LoggerPaciente.logTurno(req, 'turnos:suspender', (turno.paciente ? turno.paciente : null), turno, agendaCtrl.getBloque(data, turno)._id, data._id);
+                        if (agendaCtrl.getBloque(data, turno)) {
+                            LoggerPaciente.logTurno(req, 'turnos:suspender', (turno.paciente ? turno.paciente : null), turno, agendaCtrl.getBloque(data, turno)._id, data._id);
+                        } else {
+                            // Caso sobreturno
+                            LoggerPaciente.logTurno(req, 'turnos:suspender', (turno.paciente ? turno.paciente : null), turno, -1, data._id);
+                        }
                         agendaCtrl.suspenderTurno(req, data, turno);
                         break;
                     case 'codificarTurno': agendaCtrl.codificarTurno(req, data, turnos[y]);
