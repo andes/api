@@ -143,7 +143,7 @@ export async function getDetalles(idProtocolo, idEfector) {
 export async function cacheTurnosSips(unaAgenda) {
     // Armo el DTO para guardar en la cache de agendas
     // if ((unaAgenda.estado !== 'planificacion') && (unaAgenda.nominalizada) && (unaAgenda.tipoPrestaciones[0].term.includes('odonto')) || integraPrestacionesHPN(unaAgenda)) {
-    if (integraPrestacionesHPN(unaAgenda) && unaAgenda.estado !== 'planificacion') {
+    if (integrarAgenda(unaAgenda) && unaAgenda.estado !== 'planificacion') {
         let organizacionAgenda;
         if (unaAgenda.organizacion) {
             organizacionAgenda = await organizacionCompleto(unaAgenda.organizacion.id);
@@ -179,18 +179,18 @@ export async function cacheTurnosSips(unaAgenda) {
                 agendasCache.update({
                     id: agenda.id
                 }, {
-                    $set: {
-                        tipoPrestaciones: unaAgenda.tipoPrestaciones,
-                        espacioFisico: unaAgenda.espacioFisico,
-                        organizacion: organizacionAgenda,
-                        profesionales: profesionalesAgenda,
-                        bloques: unaAgenda.bloques,
-                        estado: unaAgenda.estado,
-                        horaInicio: unaAgenda.horaInicio,
-                        horaFin: unaAgenda.horaFin,
-                        estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente
-                    }
-                }).exec();
+                        $set: {
+                            tipoPrestaciones: unaAgenda.tipoPrestaciones,
+                            espacioFisico: unaAgenda.espacioFisico,
+                            organizacion: organizacionAgenda,
+                            profesionales: profesionalesAgenda,
+                            bloques: unaAgenda.bloques,
+                            estado: unaAgenda.estado,
+                            horaInicio: unaAgenda.horaInicio,
+                            horaFin: unaAgenda.horaFin,
+                            estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente
+                        }
+                    }).exec();
             } else {
                 agenda.save(function (err2, agendaGuardada: any) {
                     if (err2) {
@@ -202,8 +202,20 @@ export async function cacheTurnosSips(unaAgenda) {
         });
     }
 
-    function integraPrestacionesHPN(_agenda) {
-        return true;
-        // return (agendasHPNCtr.getIdTipoPrestacion(_agenda) !== null && (_agenda.organizacion._id === constantes.idOrganizacionHPN));
+    function integrarAgenda(_agenda) {
+        let prestacionesIntegradas: any;
+        let datosOrganizacion = constantes.prestacionesIntegradasPorEfector.find(elem => elem.organizacion === _agenda.organizacion.id);
+        if (datosOrganizacion) {
+            prestacionesIntegradas = _agenda.tipoPrestaciones.find(prestacion => {
+                return (datosOrganizacion.prestaciones.filter(prest => prest.conceptId === prestacion.conceptId).length > 0);
+            });
+        }
+
+        if (prestacionesIntegradas) {
+            return true;
+        } else {
+            return false;
+        }
+
     }
 }
