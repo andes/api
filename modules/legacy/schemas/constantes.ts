@@ -44,18 +44,7 @@ const constantes = {
         medicinaGral: 14
     },
     idUsuarioSips: '1486739',
-    // idOrganizacionHPN: '57e9670e52df311059bc8964',
-    // tiposPrestacionesHPN: {
-    //     clinicaMedica: {
-    //         id: 705,
-    //         conceptId: '268565007'
-    //     },
-    //     examenPediatrico: {
-    //         id: 901,
-    //         conceptId: '243788004'
-    //     }
-    // },
-
+    idOrganizacionHPN: '57e9670e52df311059bc8964', // Lo tenemos para simplificar la búsqueda en el efector HPN
     prestacionesIntegradasPorEfector: [
         {
             organizacion: '57e9670e52df311059bc8964',
