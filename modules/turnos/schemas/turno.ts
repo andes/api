@@ -59,6 +59,7 @@ let turnoSchema = new mongoose.Schema({
         }],
         obraSocial: { type: obraSocialSchema }
     },
+    motivoConsulta: String,
     tipoPrestacion: {
         type: tipoPrestacionSchema
     },
