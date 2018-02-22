@@ -152,6 +152,21 @@ export const conSql = {
     }
 };
 
+export const conSqlHPN = {
+    auth : {
+        user: '',
+        password: ''
+    },
+    serverSql: {
+        server: '',
+        database: ''
+    },
+    pool: {
+        acquireTimeoutMillis: 15000
+    }
+
+}
+
 export const CDA = {
     rootOID: ''
 };

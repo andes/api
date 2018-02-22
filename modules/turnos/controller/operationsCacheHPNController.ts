@@ -55,20 +55,20 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
 
     async function getIdProfesionalPrestaciones(documento) {
         let query = 'select TOP(1) medicos.id ' +
-                    'from Medicos ' +
-                    'where documento = @documento ' +
-                    'OR EXISTS ( ' +
-                        'SELECT * ' +
-                        'FROM Personal_Agentes ' +
-                        'WHERE Personal_Agentes.Numero = numeroAgente ' +
-                        'AND Personal_Agentes.Documento = @documento ' +
-                    ')';
+            'from Medicos ' +
+            'where documento = @documento ' +
+            'OR EXISTS ( ' +
+            'SELECT * ' +
+            'FROM Personal_Agentes ' +
+            'WHERE Personal_Agentes.Numero = numeroAgente ' +
+            'AND Personal_Agentes.Documento = @documento ' +
+            ')';
         let result = await pool.request()
-                .input('documento', sql.VarChar(50), documento)
-                .query(query);
+            .input('documento', sql.VarChar(50), documento)
+            .query(query);
         result = result.recordset;
 
-        return (result.length > 0 ?  result[0].id : null);
+        return (result.length > 0 ? result[0].id : null);
     }
 
     async function getIdAgendaHPN(idAndes) {
@@ -78,7 +78,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
             .query(query);
         result = result.recordset;
 
-        return (result.length > 0 ?  result[0].id : null);
+        return (result.length > 0 ? result[0].id : null);
     }
 
     async function saveAgendaProfesional(idProgramacion, idProfesional) {
@@ -103,7 +103,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
             .input('idProgramacion', sql.Int, idProgramacion)
             .input('idTipoPrestacion', sql.Int, idTipoPrestacion)
             .query(query).then(() => {
-                    return;
+                return;
             }).catch(err => {
                 throw err;
             });
@@ -196,8 +196,8 @@ export async function getAgendasDeMongoPendientes() {
 
 async function setEstadoAgendaToIntegrada(idAgenda) {
     return await agendasCache.update({
-            _id: idAgenda
-        }, {
+        _id: idAgenda
+    }, {
             $set: {
                 estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS
             }
@@ -222,19 +222,18 @@ export function getAgendasDeMongoExportadas() {
 }
 
 export function getIdTipoPrestacion(_agenda) {
-    let idTipoPrestacion;
-    if (_agenda.tipoPrestaciones[0]) {
-        switch (_agenda.tipoPrestaciones[0].conceptId) {
-            case constantes.tiposPrestacionesHPN.clinicaMedica.conceptId:
-            idTipoPrestacion = constantes.tiposPrestacionesHPN.clinicaMedica.id;
-            break;
-            case constantes.tiposPrestacionesHPN.examenPediatrico.conceptId:
-            idTipoPrestacion = constantes.tiposPrestacionesHPN.examenPediatrico.id;
-            break;
-            default: // Si no cae en ninguna de las anteriores no se realiza la integración
-            idTipoPrestacion = null;
-            break;
-        }
+    let idTipoPrestacion = null;
+    let prestacionesIntegradas: any;
+    let datosOrganizacion = constantes.prestacionesIntegradasPorEfector.find(elem => { return elem.organizacion === _agenda.organizacion._id.toString(); } );
+    if (datosOrganizacion) {
+        prestacionesIntegradas = datosOrganizacion.prestaciones.find(prestacion => {
+            return (_agenda.tipoPrestaciones.filter(prest => prest.conceptId === prestacion.conceptId).length > 0);
+        });
     }
+
+    if (prestacionesIntegradas) {
+         idTipoPrestacion = prestacionesIntegradas.id;
+    }
+
     return idTipoPrestacion;
 }
