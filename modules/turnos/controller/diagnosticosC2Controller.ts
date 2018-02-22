@@ -785,7 +785,6 @@ export function getDiagnosticos(params) {
                 }
                 return 0;
             };
-            // console.log('resultados ', resultados);
             // Se agrupan los códigos correspondientes a Sífilis temprana (causa A51) en sexos
             let sifilisTempranaFemenino = resultados.filter(resultado => {
                 return (resultado.causa === 'A51' && resultado.sumaFemenino > 0);
