@@ -33,7 +33,7 @@ router.get('/puco/:documento', async function (req, res, next) {
 async function getOs(doc) {
     let osPac: any = await osPaciente.find({ documento: doc }).exec();  // obtiene el código de obra social asociado al paciente
     if (osPac && osPac.length > 0) {
-        //TODO: aqui deberíamos aplicar la priorización de obras sociales
+        // TODO: aqui deberíamos aplicar la priorización de obras sociales
         let codigo: string = osPac[0].codigoPuco;
         let result = await obraSocial.find({ codigoPuco: parseInt(codigo, 10) }).exec(); // obtiene la información de la obra social
         return result[0];
