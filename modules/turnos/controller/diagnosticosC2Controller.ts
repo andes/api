@@ -905,7 +905,6 @@ export function getDiagnosticos(params) {
                 resultados = resultados.filter(resultado => {
                     return (!(resultado.reporteC2 === 'Bronquiolitis'));
                 });
-                
                 resultados.push(BR);
             }
             resultados.sort(sortResultados);
