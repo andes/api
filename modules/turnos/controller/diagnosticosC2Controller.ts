@@ -128,7 +128,7 @@ export function getDiagnosticos(params) {
 
         function removeDuplicates(arr) {
             let unique_array = [];
-            let arrMap = arr.map(m => { return m._id });
+            let arrMap = arr.map(m => { return m._id; });
             for (let i = 0; i < arr.length; i++) {
                 if (arrMap.lastIndexOf(arr[i]._id) === i) {
                     unique_array.push(arr[i]);
@@ -192,21 +192,21 @@ export function getDiagnosticos(params) {
                 let hiv = 0;
                 let bronquiolitis = 0;
                 let pacientes = {
-                    hiv : [],
-                    polio : [],
-                    bronquiolitis : [],
-                    default : [],
-                    botulismo : [],
-                    meningitis : [],
-                    STF : [],
-                    STM : [],
-                    SSEF : [],
-                    SSEM : [],
-                    SECSEF : [],
-                    SECSEM : [],
-                    SECPF : [],
-                    SECPM : []
-                }
+                    hiv: [],
+                    polio: [],
+                    bronquiolitis: [],
+                    default: [],
+                    botulismo: [],
+                    meningitis: [],
+                    STF: [],
+                    STM: [],
+                    SSEF: [],
+                    SSEM: [],
+                    SECSEF: [],
+                    SECSEM: [],
+                    SECPF: [],
+                    SECPM: []
+                };
 
                 promises.push(new Promise((resolve1, reject1) => {
                     agendaModel.find({
@@ -481,7 +481,7 @@ export function getDiagnosticos(params) {
                             suma59: suma59.default,
                             suma1014: suma1014.default,
                             suma1524: suma1524.default,
-                            suma2534: suma2534.default, 
+                            suma2534: suma2534.default,
                             suma3544: suma3544.default,
                             suma4564: suma4564.default,
                             sumaMayor65: sumaMayor65.default,
@@ -904,7 +904,8 @@ export function getDiagnosticos(params) {
                 let BR = sumarCodigos(bronquiolitis);
                 resultados = resultados.filter(resultado => {
                     return (!(resultado.reporteC2 === 'Bronquiolitis'));
-                }); 
+                });
+                
                 resultados.push(BR);
             }
             resultados.sort(sortResultados);
