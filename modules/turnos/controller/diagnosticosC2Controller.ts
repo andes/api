@@ -904,7 +904,7 @@ export function getDiagnosticos(params) {
                 let BR = sumarCodigos(bronquiolitis);
                 resultados = resultados.filter(resultado => {
                     return (!(resultado.reporteC2 === 'Bronquiolitis'));
-                });
+                }); 
                 resultados.push(BR);
             }
             resultados.sort(sortResultados);
