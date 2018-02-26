@@ -600,7 +600,7 @@ async function grabaAgendaSips(agendaSips: any, datosSips: any, tr) {
                     '\'' + moment().format('YYYYMMDD HH:mm:ss') + '\', ' +
                     '\'' + moment().format('YYYYMMDD HH:mm:ss') + '\', ' +
                     idEspecialidad + ' ) ';
-                await executeQuery(query2, transaction);
+                await executeQuery(query2, poolAgendas);
             });
         }
 
