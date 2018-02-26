@@ -272,5 +272,4 @@ router.patch('/prestaciones/:id', function (req, res, next) {
     });
 });
 
-
 export = router;
