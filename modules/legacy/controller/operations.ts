@@ -200,6 +200,8 @@ export async function cacheTurnosSips(unaAgenda) {
                 });
             }
         });
+    } else {
+        // console.log('No cumple la condicion para guardar el turno!!!!')
     }
 
     function integrarAgenda(_agenda) {

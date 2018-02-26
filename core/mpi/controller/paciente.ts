@@ -195,6 +195,7 @@ export function buscarPaciente(id): Promise<{ db: String, paciente: any }> {
                         db: 'andes',
                         paciente: data
                     };
+
                     resolve(resultado);
                 } else {
                     pacienteMpi.findById(id, function (err2, dataMpi) {
@@ -205,6 +206,7 @@ export function buscarPaciente(id): Promise<{ db: String, paciente: any }> {
                                 db: 'mpi',
                                 paciente: dataMpi
                             };
+
                             resolve(resultado);
                         } else {
                             reject(null);
