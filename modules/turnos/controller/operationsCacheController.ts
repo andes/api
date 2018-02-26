@@ -212,7 +212,6 @@ async function codificacionCie10(idConsulta: any, turno: any) {
  */
 async function getIdObraSocialSips(documentoPaciente) {
     return new Promise(async function (resolve, reject) {
-        let transaction;
         const idSumar = 499;
         let query = 'SELECT TOP(1) sips_os.idObraSocial as idOS ' +
             'FROM [Padron].[dbo].[Pd_PUCO] puco ' +
@@ -229,7 +228,7 @@ async function getIdObraSocialSips(documentoPaciente) {
             ') ASC';
 
         try {
-            let result = await new sql.Request(transaction).query(query);
+            let result = await new sql.Request().query(query);
             resolve(result.length > 0 ? result[0].idOS : idSumar);
         } catch (err) {
             reject(err);
@@ -268,11 +267,10 @@ function existeConsultorio(agenda, idEfector) {
         espacioFisicoObjectId = 'andesCitas2017';
     }
     return new Promise((resolve: any, reject: any) => {
-        let transaction;
         (async function () {
             try {
                 let query = 'SELECT top 1 idConsultorio FROM dbo.CON_Consultorio WHERE objectId = @objectId';
-                let result = await new sql.Request(transaction)
+                let result = await new sql.Request()
                     .input('objectId', sql.VarChar(50), espacioFisicoObjectId)
                     .query(query);
 
@@ -283,7 +281,6 @@ function existeConsultorio(agenda, idEfector) {
                     idConsultorio = await creaConsultorioSips(agenda, idEfector);
                     resolve(idConsultorio);
                 }
-
             } catch (err) {
                 reject(err);
             }
@@ -352,8 +349,7 @@ function markAgendaAsProcessed(agenda) {
 
 function getConsultaDiagnostico(idConsulta) {
     return new Promise(function (resolve, reject) {
-        let transaction;
-        return new sql.Request(transaction)
+        return new sql.Request()
             .input('idConsulta', sql.Int, idConsulta)
             .query('SELECT CODCIE10, PRINCIPAL FROM dbo.CON_ConsultaDiagnostico WHERE idConsulta = @idConsulta')
             .then(result => {
@@ -366,8 +362,7 @@ function getConsultaDiagnostico(idConsulta) {
 
 function getConsultaOdontologia(idConsulta) {
     return new Promise(function (resolve, reject) {
-        let transaction;
-        return new sql.Request(transaction)
+        return new sql.Request()
             .input('idConsulta', sql.Int, idConsulta)
             .query('SELECT idNomenclador FROM dbo.CON_ConsultaOdontologia WHERE idConsulta = @idConsulta')
             .then(result => {
@@ -380,8 +375,7 @@ function getConsultaOdontologia(idConsulta) {
 
 function getCodificacionOdonto(idNomenclador) {
     return new Promise(function (resolve, reject) {
-        let transaction;
-        return new sql.Request(transaction)
+        return new sql.Request()
             .input('idNomenclador', sql.Int, idNomenclador)
             .query('SELECT codigo, descripcion FROM dbo.ODO_Nomenclador WHERE idNomenclador = @idNomenclador')
             .then(result => {
@@ -475,12 +469,11 @@ async function checkEstadoAgenda(agendaMongo: any, idAgendaSips: any) {
 
 function getEstadoAgenda(idAgenda: any) {
     return new Promise((resolve: any, reject: any) => {
-        let transaction;
         (async function () {
             try {
                 let query = 'SELECT idAgendaEstado as idEstado FROM dbo.CON_Agenda WHERE objectId = @idAgenda';
 
-                let result = await new sql.Request(transaction)
+                let result = await new sql.Request()
                     .input('idAgenda', sql.VarChar(50), idAgenda)
                     .query(query);
 
@@ -606,8 +599,7 @@ async function grabaTurnoSips(turno, idAgendaSips, idEfector) {
 
 export function existeTurnoSips(turno: any) {
     return new Promise(function (resolve, reject) {
-        let transaction;
-        return new sql.Request(transaction)
+        return new sql.Request()
             .input('idTurnoMongo', sql.VarChar(50), turno._id)
             .query('SELECT idTurno FROM dbo.CON_Turno WHERE objectId = @idTurnoMongo GROUP BY idTurno')
             .then(result => {
@@ -624,8 +616,7 @@ export function existeTurnoSips(turno: any) {
 
 function existeConsultaTurno(idTurno) {
     return new Promise(function (resolve, reject) {
-        let transaction;
-        return new sql.Request(transaction)
+        return new sql.Request()
             .input('idTurno', sql.Int, idTurno)
             .query('SELECT idConsulta FROM dbo.CON_Consulta WHERE idTurno = @idTurno')
             .then(result => {
@@ -750,7 +741,7 @@ async function grabaAgendaSips(agendaSips: any, datosSips: any, pool) {
         executeQuery(query).then(function (idAgendaCreada) {
             let query2;
 
-            if (listaIdProfesionales.length > 0) {
+            if (listaIdProfesionales && listaIdProfesionales.length > 0) {
                 listaIdProfesionales.forEach(async function (listaIdProf) {
 
                     query2 = 'INSERT INTO dbo.CON_AgendaProfesional ( idAgenda, idProfesional, baja, CreatedBy , ' +
@@ -1042,8 +1033,7 @@ function getEstadoTurnoSips(objectId: any) {
 function executeQuery(query: any) {
     query += ' select SCOPE_IDENTITY() as id';
     return new Promise((resolve: any, reject: any) => {
-        let transaction;
-        return new sql.Request(transaction)
+        return new sql.Request()
             .query(query)
             .then(result => {
                 resolve(result[0].id);
@@ -1056,11 +1046,10 @@ function executeQuery(query: any) {
 function existePacienteSips(pacienteSips) {
     let idPacienteSips;
     return new Promise((resolve: any, reject: any) => {
-        let transaction;
         (async function () {
             try {
                 let query = 'SELECT idPaciente FROM dbo.Sys_Paciente WHERE objectId = @objectId';
-                let result = await new sql.Request(transaction)
+                let result = await new sql.Request()
                     .input('objectId', sql.VarChar(50), pacienteSips.objectId)
                     .query(query);
 

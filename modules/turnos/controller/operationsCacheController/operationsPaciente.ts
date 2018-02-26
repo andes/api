@@ -3,7 +3,9 @@ import * as mongoose from 'mongoose';
 import {
     agendasCache
 } from '../../../legacy/schemas/agendasCache';
-import { Matching } from '@andes/match';
+import {
+    Matching
+} from '@andes/match';
 import * as sql from 'mssql';
 import * as moment from 'moment';
 import * as config from '../../../../config';
@@ -16,10 +18,11 @@ import * as turnoCtrl from './../turnoCacheController';
 
 let transaction;
 
-export async function verificarPaciente(pacienteSips: any) {
+export async function verificarPaciente(pacienteSips: any, poolAgendas: any) {
     try {
         let idPacienteSips;
-        let idPaciente = await existePacienteSips(pacienteSips);
+        let idPaciente = await existePacienteSips(pacienteSips, poolAgendas);
+        console.log('Id del paciente encontrado en existePacienteSips: ', idPaciente);
         if (idPaciente === 0) {
             let query = 'INSERT INTO dbo.Sys_Paciente ' +
                 ' ( idEfector ,' +
@@ -129,7 +132,7 @@ export async function verificarPaciente(pacienteSips: any) {
                 '\'' + pacienteSips.objectId + '\' ' +
                 ') ';
 
-            idPacienteSips = await executeQuery(query);
+            idPacienteSips = await executeQuery(query, poolAgendas);
         } else {
             idPacienteSips = idPaciente;
         }
@@ -140,18 +143,22 @@ export async function verificarPaciente(pacienteSips: any) {
 }
 
 /** Este método se llama desde grabaTurnoSips */
-export async function insertarPacienteEnSips(paciente: any, idEfectorSips: any, tr) {
-    transaction = tr;
+export async function insertarPacienteEnSips(paciente: any, idEfectorSips: any, poolAgendas: any) {
+    let identificador = [];
     try {
         // Verifica el array de identificadores de paciente de Andes. Busca si tiene un idSips asigando
-        if (paciente.identificadores) {
-            let identificador = paciente.identificadores.filter(elem => elem.entidad === 'SIPS');
-            if (identificador && identificador.length && identificador[0].valor) {
-                return parseInt(identificador[0].valor, 0);
-            }
+        if (paciente && paciente.identificadores) {
+            identificador = paciente.identificadores.filter(elem => elem.entidad === 'SIPS');
+        }
+        console.log('identificadorrrrrrrrrrrrrrrrrrr: ', identificador);
+        if (identificador && identificador.length > 0) {
+            console.log('entro por esta condicion!!!!!', identificador[0].valor);
+            return parseInt(identificador[0].valor, 0);
         } else {
-            // Busca paciente por documento y realiza un matcheo
-            let idPaciente = await buscarPacientePorDocumentoEnSips(paciente);
+            console.log('entra por el elseeeeeeeeeeeeee');
+             // Busca paciente por documento y realiza un matcheo
+            let idPaciente = await buscarPacientePorDocumentoEnSips(paciente, poolAgendas);
+            console.log('El paciente no existe, lo busca por documento en sips: ', idPaciente);
             if (idPaciente) {
                 return idPaciente;
             } else {
@@ -211,7 +218,7 @@ export async function insertarPacienteEnSips(paciente: any, idEfectorSips: any, 
                     objectId: paciente._id
                 };
 
-                let idPacienteSips = await verificarPaciente(pacienteSips);
+                let idPacienteSips = await verificarPaciente(pacienteSips, poolAgendas);
                 return (idPacienteSips);
             }
         }
@@ -242,11 +249,11 @@ function matchPaciente(pacMpi, pacSips) {
     return match.matchPersonas(pacAndes, pac, weights, config.algoritmo);
 }
 
-async function buscarPacientePorDocumentoEnSips(paciente) {
+async function buscarPacientePorDocumentoEnSips(paciente, poolAgendas) {
     let idPacienteSips = 0;
     try {
         let query = 'SELECT * FROM dbo.Sys_Paciente WHERE numeroDocumento = @documento';
-        let result = await new sql.Request(transaction)
+        let result = await new sql.Request(poolAgendas)
             .input('documento', sql.VarChar(50), paciente.documento)
             .query(query);
 
@@ -271,11 +278,11 @@ async function buscarPacientePorDocumentoEnSips(paciente) {
     }
 }
 
-async function existePacienteSips(pacienteSips) {
+async function existePacienteSips(pacienteSips, poolAgendas) {
     let idPacienteSips;
     try {
         let query = 'SELECT idPaciente FROM dbo.Sys_Paciente WHERE objectId = @objectId';
-        let result = await new sql.Request(transaction)
+        let result = await new sql.Request(poolAgendas)
             .input('objectId', sql.VarChar(50), pacienteSips.objectId)
             .query(query);
 
@@ -292,10 +299,10 @@ async function existePacienteSips(pacienteSips) {
     }
 }
 
-async function executeQuery(query: any) {
+async function executeQuery(query: any, poolAgendas) {
     try {
         query += ' select SCOPE_IDENTITY() as id';
-        let result = await new sql.Request(transaction).query(query);
+        let result = await new sql.Request(poolAgendas).query(query);
         if (result.recordset) {
             return result.recordset[0].id;
         }

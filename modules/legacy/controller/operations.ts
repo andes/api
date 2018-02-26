@@ -144,6 +144,7 @@ export async function cacheTurnosSips(unaAgenda) {
     // Armo el DTO para guardar en la cache de agendas
     // if ((unaAgenda.estado !== 'planificacion') && (unaAgenda.nominalizada) && (unaAgenda.tipoPrestaciones[0].term.includes('odonto')) || integraPrestacionesHPN(unaAgenda)) {
     if (integrarAgenda(unaAgenda) && unaAgenda.estado !== 'planificacion') {
+        console.log('entra para guardar el turno...');
         let organizacionAgenda;
         if (unaAgenda.organizacion) {
             organizacionAgenda = await organizacionCompleto(unaAgenda.organizacion.id);
@@ -200,6 +201,8 @@ export async function cacheTurnosSips(unaAgenda) {
                 });
             }
         });
+    } else {
+        console.log('No cumple la condicion para guardar el turno!!!!')
     }
 
     function integrarAgenda(_agenda) {
