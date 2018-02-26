@@ -22,7 +22,7 @@ export async function verificarPaciente(pacienteSips: any, poolAgendas: any) {
     try {
         let idPacienteSips;
         let idPaciente = await existePacienteSips(pacienteSips, poolAgendas);
-        console.log('Id del paciente encontrado en existePacienteSips: ', idPaciente);
+
         if (idPaciente === 0) {
             let query = 'INSERT INTO dbo.Sys_Paciente ' +
                 ' ( idEfector ,' +
@@ -150,15 +150,13 @@ export async function insertarPacienteEnSips(paciente: any, idEfectorSips: any, 
         if (paciente && paciente.identificadores) {
             identificador = paciente.identificadores.filter(elem => elem.entidad === 'SIPS');
         }
-        console.log('identificadorrrrrrrrrrrrrrrrrrr: ', identificador);
+
         if (identificador && identificador.length > 0) {
-            console.log('entro por esta condicion!!!!!', identificador[0].valor);
             return parseInt(identificador[0].valor, 0);
         } else {
-            console.log('entra por el elseeeeeeeeeeeeee');
+
              // Busca paciente por documento y realiza un matcheo
             let idPaciente = await buscarPacientePorDocumentoEnSips(paciente, poolAgendas);
-            console.log('El paciente no existe, lo busca por documento en sips: ', idPaciente);
             if (idPaciente) {
                 return idPaciente;
             } else {
