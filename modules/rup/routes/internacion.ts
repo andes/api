@@ -28,8 +28,8 @@ router.get('/internaciones/:idPaciente', function (req, res, next) {
     if (req.query.idProfesional) {
         query.where('solicitud.profesional.id').equals(req.query.idProfesional);
     }
-    if (req.query.idPaciente) {
-        query.where('paciente.id').equals(req.query.idPaciente);
+    if (req.params.idPaciente) {
+        query.where('paciente.id').equals(req.params.idPaciente);
     }
     if (req.query.organizacion) {
         query.where('solicitud.organizacion.id').equals(req.query.organizacion);
