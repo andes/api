@@ -397,7 +397,7 @@ async function processAgenda(agenda: any, datosSips) {
             result = await new sql.Request(poolAgendas)
                 .input('idAgendaMongo', sql.VarChar(50), agenda.id)
                 .query('SELECT idAgenda FROM dbo.CON_Agenda WHERE objectId = @idAgendaMongo GROUP BY idAgenda');
-        };
+        }
         if (result && result.recordset && result.recordset.length > 0) {
             idAgenda = result.recordset[0].idAgenda;
         } else {
@@ -618,7 +618,7 @@ async function executeQuery(query: any) {
         if (result && result.recordset) {
             return result.recordset[0].id;
         }
-    } catch (err) {;
+    } catch (err) {
         return (err);
     }
 }
