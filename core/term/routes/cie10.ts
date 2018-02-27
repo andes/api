@@ -6,7 +6,6 @@ import { defaultLimit, maxLimit } from './../../../config';
 let router = express.Router();
 
 router.get('/cie10', function (req, res, next) {
-    // let filtros = { 'sinonimo': { '$regex': utils.makePattern(req.query.nombre) } };
     let query;
     query = cie10.model.find({});
     let termino: String = '';
@@ -15,7 +14,7 @@ router.get('/cie10', function (req, res, next) {
     words.forEach(function (word) {
         // normalizamos cada una de las palabras como hace SNOMED para poder buscar palabra a palabra
         word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08');
-        let expWord = '^' + utils.removeDiacritics(word) + '.*';
+        let expWord = utils.removeDiacritics(word) + '.*';
         // agregamos la palabra al término de búsqueda
         termino = termino + expWord;
     });
@@ -39,3 +38,14 @@ router.get('/cie10', function (req, res, next) {
 });
 
 export = router;
+
+
+/* 
+let query;
+query = cie10.model.find({});
+let busqueda = [
+    { 'codigo': RegExp('^.*' + req.query.nombre + '.*$', 'i') },
+    { 'sinonimo': RegExp('^.*' + req.query.nombre + '.*$', 'i') },
+    { 'nombre': RegExp('^.*' + req.query.nombre + '.*$', 'i') },
+];
+query.or(busqueda); */
