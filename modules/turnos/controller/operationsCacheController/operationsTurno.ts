@@ -39,7 +39,7 @@ export async function processTurnos(agenda: any, idAgendaCreada: any, idEfector:
     for (let x = 0; x < agenda.bloques.length; x++) {
         turnos = agenda.bloques[x].turnos;
         for (let i = 0; i < turnos.length; i++) {
-            if (turnos[i].estado === 'asignado') {
+            if (turnos[i].estado === 'asignado' && turnos[i].paciente && turnos[i].paciente.documento) {
                 // let resultado = await existeTurnoSips(turnos[i], transaction);
                 // if (resultado.recordset && resultado.recordset.length <= 0) {
                 await grabaTurnoSips(turnos[i], idAgendaCreada, idEfector, poolAgendas);
