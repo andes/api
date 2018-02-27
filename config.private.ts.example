@@ -160,5 +160,6 @@ export const wsSalud = {
    host: '',
    getPaciente: '',
    getResultado: '',
-   heller: 'http://10.1.104.37/resultados_omg/'
+   hellerWS: '',
+   hellerFS: ''
 };

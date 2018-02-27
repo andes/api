@@ -29,6 +29,7 @@ function run() {
         PacienteApp.find({
             activacionApp: true
         }).then((cuentas) => {
+            // let ids = [ mongoose.Types.ObjectId('586e6e8627d3107fde116357') ];
             let ids = [];
             cuentas.forEach((c: any) => {
                 if (c.pacientes && c.pacientes[0] && c.pacientes[0].id) {

@@ -60,6 +60,26 @@ function downloadFile(url) {
     });
 }
 
+function donwloadFileHeller(idProtocolo, year) {
+    return new Promise((resolve, reject) => {
+        http.get(configPrivate.wsSalud.hellerWS + 'idPet=' + idProtocolo + '&year='  + year, (response) => {
+            return response.on('data', (buffer) => {
+                let resp = buffer.toString();
+
+                let regexp = /10.1.104.37\/resultados_omg\/([0-9\-\_]*).pdf/;
+                let match = resp.match(regexp);
+                if (match && match[1]) {
+                    return downloadFile(configPrivate.wsSalud.hellerFS + match[1] + '.pdf').then((resp) => {
+                        return resolve(resp);
+                    }).catch(reject);
+                } else {
+                    return reject({error: 'heller-error'});
+                }
+            });
+        });
+    });
+}
+
 export async function importarDatos(paciente) {
     try {
 
@@ -92,14 +112,6 @@ export async function importarDatos(paciente) {
             if (value >= cota && validado && details.recordset) {
                 let fecha = moment(lab.fecha, 'DD/MM/YYYY');
 
-                let pdfUrl;
-                if (lab.idEfector === '221') {
-                    pdfUrl = configPrivate.wsSalud.heller + lab.idProtocolo + '_' + fecha.format('YYYYMMDD') + '_' +  paciente.documento + '.pdf' ;
-                } else {
-                    pdfUrl = configPrivate.wsSalud.host + configPrivate.wsSalud.getResultado + '?idProtocolo=' + lab.idProtocolo + '&idEfector=' + lab.idEfector;
-
-                }
-
                 let profesional = {
                     nombre: lab.solicitante,
                     apellido: '' // Nombre y Apellido viene junto en los registros de laboratorio de SQL
@@ -111,7 +123,16 @@ export async function importarDatos(paciente) {
                 };
                 let texto = 'Exámen de Laboratorio';
                 let uniqueId = String(new mongoose.Types.ObjectId());
-                let response = await downloadFile(pdfUrl);
+
+                let pdfUrl;
+                let response;
+                if (String(lab.idEfector) === '221') {
+                    response = await donwloadFileHeller(lab.idProtocolo, fecha.format('YYYY'));
+                } else {
+                    pdfUrl = configPrivate.wsSalud.host + configPrivate.wsSalud.getResultado + '?idProtocolo=' + lab.idProtocolo + '&idEfector=' + lab.idEfector;
+                    response = await downloadFile(pdfUrl);
+                }
+
 
                 let fileData: any = await cdaCtr.storeFile({
                     stream: response,
