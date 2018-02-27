@@ -18,13 +18,13 @@ function run() {
         let skip = 0;
         let limit = 4;
 
-        if (docs.length) {
-            let l: any = docs[0];
-            if (l.datosOperacion.status === 'end') {
-                return;
-            }
-            skip = l.datosOperacion.skip + limit;
-        }
+        // if (docs.length) {
+        //     let l: any = docs[0];
+        //     if (l.datosOperacion.status === 'end') {
+        //         return;
+        //     }
+        //     skip = l.datosOperacion.skip + limit;
+        // }
 
         PacienteApp.find({
             activacionApp: true
@@ -35,8 +35,9 @@ function run() {
                     ids.push(c.pacientes[0].id);
                 }
             });
+            // let _stream = Paciente.find({ estado: 'validado' }, {nombre: 1, apellido: 1, fechaNacimiento: 1, documento: 1, sexo: 1});
 
-            let _stream = PacienteMPI.find({ _id:  { $in: ids }}, {nombre: 1, apellido: 1, fechaNacimiento: 1, documento: 1, sexo: 1}).skip(skip).limit(limit);
+            let _stream = PacienteMPI.find({ _id:  { $in: ids }}, {nombre: 1, apellido: 1, fechaNacimiento: 1, documento: 1, sexo: 1}); // .skip(skip).limit(limit);
             _stream.then( async (pacientes: any[]) => {
 
                 logger('Start with skip=' + skip);
@@ -48,11 +49,11 @@ function run() {
                 }
                 logger('Stop  with skip=' + skip);
 
-                if (pacientes.length) {
-                    Logger.log(config.userScheduler, 'scheduler', 'cda', { limit, skip });
-                } else {
-                    Logger.log(config.userScheduler, 'scheduler', 'cda', { limit, skip, status: 'end' });
-                }
+                // if (pacientes.length) {
+                //     Logger.log(config.userScheduler, 'scheduler', 'cda', { limit, skip });
+                // } else {
+                //     Logger.log(config.userScheduler, 'scheduler', 'cda', { limit, skip, status: 'end' });
+                // }
 
 
             });

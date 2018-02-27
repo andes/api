@@ -159,5 +159,6 @@ export const CDA = {
 export const wsSalud = {
    host: '',
    getPaciente: '',
-   getResultado: ''
+   getResultado: '',
+   heller: 'http://10.1.104.37/resultados_omg/'
 };

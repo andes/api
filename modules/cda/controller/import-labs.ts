@@ -90,10 +90,16 @@ export async function importarDatos(paciente) {
 
             let value = matchPaciente(paciente, lab);
             if (value >= cota && validado && details.recordset) {
-
-                let pdfUrl = configPrivate.wsSalud.host + configPrivate.wsSalud.getResultado + '?idProtocolo=' + lab.idProtocolo + '&idEfector=' + lab.idEfector;
-
                 let fecha = moment(lab.fecha, 'DD/MM/YYYY');
+
+                let pdfUrl;
+                if (lab.idEfector === '221') {
+                    pdfUrl = configPrivate.wsSalud.heller + lab.idProtocolo + '_' + fecha.format('YYYYMMDD') + '_' +  paciente.documento + '.pdf' ;
+                } else {
+                    pdfUrl = configPrivate.wsSalud.host + configPrivate.wsSalud.getResultado + '?idProtocolo=' + lab.idProtocolo + '&idEfector=' + lab.idEfector;
+
+                }
+
                 let profesional = {
                     nombre: lab.solicitante,
                     apellido: '' // Nombre y Apellido viene junto en los registros de laboratorio de SQL
@@ -122,7 +128,7 @@ export async function importarDatos(paciente) {
                 let metadata = {
                     paciente: mongoose.Types.ObjectId(paciente.id),
                     prestacion: snomed,
-                    fecha: fecha,
+                    fecha: fecha.toDate(),
                     adjuntos: [{ path: fileData.data, id: fileData.id }],
                     extras: {
                         idEfector: lab.idEfector,
