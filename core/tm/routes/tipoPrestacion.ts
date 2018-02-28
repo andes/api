@@ -17,6 +17,11 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
             // Si no, devuelve todos
             query = tipoPrestacion.find({});
         }
+        if (req.query.limit) {
+            console.log(req.query.limit)
+            let limit: number = Number(req.query.limit);
+            query = query.limit(limit);
+        }
 
         // Búsqueda por múltiples IDs
         if (req.query.id) {

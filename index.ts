@@ -25,26 +25,20 @@ io.on('connection', (socket) => {
 
         if (io.dataRooms) {
             io.dataRooms.forEach(element => {
-                if(io.sockets.adapter.rooms[element.pantalla] === undefined){
-                    console.log(element.pantalla)
-                    console.log(io.dataRooms);
+                if (io.sockets.adapter.rooms[element.pantalla] === undefined) {
+
                     var pantallasTotal = io.dataRooms;
                     var index = pantallasTotal.findIndex(obj => obj.pantalla === element.pantalla)
-                   
-                    console.log( pantallasTotal.findIndex(obj => obj.pantalla === element.pantalla))
-                    if(index != -1){
-                        io.dataRooms.splice(index,1);
-                        console.log(io.dataRooms)
+                    if (index != -1) {
+                        io.dataRooms.splice(index, 1);
                     }
                 }
             })
         }
     });
-    //console.log(socket.data)
     socket.on('room', function (room) {
         let existe = false;
         socket.join(room.pantalla);
-        console.log(socket.rooms)
         // console.log(socket.dataRooms)
         if (io.dataRooms) {
             io.dataRooms.forEach(element => {
@@ -53,16 +47,19 @@ io.on('connection', (socket) => {
                     existe = true;
                 }
             });
-            if (existe === false)
-                io.dataRooms.push(room)
+            if (existe === false) {
+                io.dataRooms.push(room);
+            }
+
         } else {
-            io.dataRooms = [room]
+            io.dataRooms = [room];
         }
-        console.log(io.dataRooms)
+
+        console.log(io.dataRooms);
 
         //socket.rooms.push(room)
         socket.data = "hola";
-        console.log(socket.rooms)
+        console.log(socket.rooms);
 
     });
 
@@ -71,8 +68,8 @@ io.on('connection', (socket) => {
         io.dataRooms.forEach(pantallas => {
             pantallas.prestaciones.forEach(element => {
                 if (element === numero.tipoPrestacion.conceptId) {
-                    console.log("entro")
-                    io.sockets.in(pantallas.pantalla).emit('muestraTurno', 'what is going on, party people?');
+                    console.log("entro");
+                    io.sockets.in(pantallas.pantalla).emit('muestraTurno', numero);
                 }
             });
 
@@ -90,7 +87,7 @@ io.on('connection', (socket) => {
 
         // });
         // io.emit(socket.handshake.query.pantalla, numero);
-        roomTotal.splice(-1, 1)
+        roomTotal.splice(-1, 1);
     });
 });
 
