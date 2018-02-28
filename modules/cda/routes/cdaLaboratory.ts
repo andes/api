@@ -6,23 +6,19 @@ import * as moment from 'moment';
 import * as sql from 'mssql';
 
 import * as configPrivate from '../../../config.private';
-import {
-    model as Organizaciones
-} from '../../../core/tm/schemas/organizacion';
-import {
-    model as Cie10
-} from '../../../core/term/schemas/cie10';
-import {
-    makeFs
-} from '../schemas/CDAFiles';
+import { model as Organizaciones } from '../../../core/tm/schemas/organizacion';
+import { model as Cie10 } from '../../../core/term/schemas/cie10';
+import { makeFs } from '../schemas/CDAFiles';
 import * as pacienteCtr from '../../../core/mpi/controller/paciente';
 import * as cdaCtr from '../controller/CDAPatient';
 import * as operations from '../../legacy/controller/operations';
 import * as pdfGenerator from '../../../utils/pdfGenerator';
 
-import {
-    Auth
-} from '../../../auth/auth.class';
+import { Auth } from '../../../auth/auth.class';
+import * as labsImport from '../controller/import-labs';
+
+import { paciente as Paciente, pacienteMpi as PacienteMPI} from '../../../core/mpi/schemas/paciente';
+
 let path = require('path');
 let router = express.Router();
 let pool;
@@ -33,6 +29,17 @@ let connection = {
     database: configPrivate.conSql.serverSql.database
 };
 
+// router.get('/testing/migrar', async(req: any, res, next) => {
+//     let skip = parseInt(req.query.skip, 0);
+//     let limit = parseInt(req.query.limit, 0);
+//     let _stream = PacienteMPI.find({}, {nombre: 1, apellido: 1, fechaNacimiento: 1, documento: 1, sexo: 1}).skip(skip).limit(limit);
+//     _stream.then( async (pacientes: any[]) => {
+//         for (let pac of pacientes) {
+//             await labsImport.importarDatos(pac);
+//         }
+//         res.json({status: 'OK', });
+//     });
+// });
 
 // ATENCIÓN: SOLO PARA USAR A NIVEL DE INTEGRACIÓN!!!!
 
@@ -73,7 +80,7 @@ router.post('/laboratorios', async(req: any, res, next) => {
                 if (informePDF) {
                     fileData = await cdaCtr.storePdfFile(informePDF);
                 }
-                let cda = cdaCtr.generateCDA(uniqueId, paciente, fecha, profesional, organizacion, snomed, cie10Laboratorio, texto, fileData);
+                let cda = cdaCtr.generateCDA(uniqueId, 'R', paciente, fecha, profesional, organizacion, snomed, cie10Laboratorio, texto, fileData);
                 let metadata = {
                     paciente: paciente.id,
                     prestacion: snomed,

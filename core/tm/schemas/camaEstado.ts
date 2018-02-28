@@ -1,20 +1,18 @@
 import { pacienteSchema } from './../../mpi/schemas/paciente';
 import * as mongoose from 'mongoose';
 
-let schema = new mongoose.Schema({
-    idCama: {
-        type: mongoose.Schema.Types.ObjectId,
-        default: null
-    },
+export let schema = new mongoose.Schema({
+    fecha: Date,
     estado: {
         type: String,
-        enum: ['ocupada', 'desocupada', 'desinfectada', 'libre', 'reparacion', 'bloqueada'],
+        enum: ['ocupada', 'desocupada', 'disponible', 'reparacion', 'bloqueada'],
         required: true,
         default: 'desocupada'
     },
-    paciente: {pacienteSchema},
+    paciente: pacienteSchema,
     idInternacion: {
-        // Schema de paciente, puede ser NULL
+        type: mongoose.Schema.Types.ObjectId,
+        default: null
     },
     observaciones: {
         type: String
@@ -23,4 +21,3 @@ let schema = new mongoose.Schema({
 
 // Habilitar plugin de auditoría
 schema.plugin(require('../../../mongoose/audit'));
-export let camaEstado = mongoose.model('camaEstado', schema, 'camaEstado');

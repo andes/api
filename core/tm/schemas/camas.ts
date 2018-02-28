@@ -1,45 +1,44 @@
 import * as mongoose from 'mongoose';
 import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
 import { pacienteSchema } from '../../mpi/schemas/paciente';
-import { camaEstado } from './camaEstado';
+import * as nombreSchema from './nombre';
+import * as estado from './camaEstado';
+import * as unidadOrganizativa from './unidadOrganizativa';
 
 export let schema = new mongoose.Schema({
+    organizacion: {
+        type: nombreSchema,
+        required: true
+    },
     sector: {
-        type: Number,
+        type: String,
         required: true
     },
     habitacion: {
-        type: Number,
+        type: String,
         required: true
     },
     numero: {
-        type: Number,
+        type: String,
         required: true
     },
-    servicio: SnomedConcept,
+    unidadesOrganizativas: [unidadOrganizativa.schema],
     tipoCama: {
         type: SnomedConcept,
         required: true
     },
+    esCensable: {
+        type: Boolean,
+        required: true,
+        default: true
+    },
     equipamiento: [SnomedConcept], // oxigeno / bomba / etc
     // ultimo estado de la cama
-    ultimoEstado: camaEstado.schema
-    // {
-        // estado: {
-        //     type: String,
-        //     enum: ['ocupada', 'desocupada', 'desinfectada', 'libre', 'reparacion', 'bloqueada'],
-        //     required: true,
-        //     default: 'desocupada'
-        // },
-        // paciente: {pacienteSchema},
-        // idInternacion: {
-        //     // id de la internacion definir.
-        // },
-        // observaciones: {
-        //     type: String
-        // }
-    // }
+    ultimoEstado: estado.schema,
+    estados: [estado.schema]
 });
 
 const audit = require('../../../mongoose/audit');
 schema.plugin(audit);
+
+export let model = mongoose.model('cama', schema, 'cama');

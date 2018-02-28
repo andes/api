@@ -2,24 +2,19 @@ import * as mongoose from 'mongoose';
 
 export let farmaciasTurnosSchema = new mongoose.Schema({
     nombre: {
-        type: String,
-        required: true
+        type: String
     },
     direccion: {
-        type: String,
-        required: true
+        type: String
     },
     telefono: {
-        type: String,
-        required: true
+        type: String
     },
     fecha: {
-        type: Date,
-        required: true
+        type: Date
     },
     localidad: {
         type: Number,
-        required: true
     }
 });
 

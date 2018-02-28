@@ -122,26 +122,32 @@ export async function checkCodificacion(agenda) {
 async function codificaOdontologia(idConsulta: any, turno: any) {
     let idNomenclador: any = [];
     let codificacionOdonto: any = {};
+    let repetido = [];
     try {
         idNomenclador = await getConsultaOdontologia(idConsulta);
         let m = 0;
         for (let i = 0; i < idNomenclador.length; i++) {
+            repetido = [];
             codificacionOdonto = await getCodificacionOdonto(idNomenclador[i].idNomenclador);
             turno.asistencia = 'asistio';
             turno.diagnostico.ilegible = false;
-            turno.diagnostico.codificaciones.push({
-                codificacionProfesional: {
-                    codigo: codificacionOdonto.codigo,
-                    nombre: codificacionOdonto.descripcion,
-                    sinonimo: codificacionOdonto.descripcion
-                }
-            });
+            repetido = turno.diagnostico.codificaciones.filter(elem => elem.codificacionProfesional.codigo === codificacionOdonto.codigo);
+            if (repetido && repetido.length <= 0) {
+                turno.diagnostico.codificaciones.push({
+                    codificacionProfesional: {
+                        codigo: codificacionOdonto.codigo,
+                        nombre: codificacionOdonto.descripcion,
+                        sinonimo: codificacionOdonto.descripcion
+                    }
+                });
+            }
         }
     } catch (ex) {
         return (ex);
     }
     return (turno);
 }
+
 async function codificacionCie10(idConsulta: any, turno: any) {
 
     let codCie10: any = [];
@@ -212,8 +218,7 @@ async function existeConsultorio(agenda, idEfector) {
         let result = await new sql.Request(transaction)
             .input('objectId', sql.VarChar(50), espacioFisicoObjectId)
             .query('SELECT top 1 idConsultorio FROM dbo.CON_Consultorio WHERE objectId = @objectId');
-
-        if (result.recordset && result.recordset.length > 0) {
+        if (result && result.recordset && result.recordset.length) {
             return result.recordset[0].idConsultorio;
         } else {
             idConsultorio = await creaConsultorioSips(agenda, idEfector);
@@ -250,7 +255,7 @@ async function getCodificacionCie10(codcie10) {
     }
 }
 
-function markAgendaAsProcessed(agenda) {
+async function markAgendaAsProcessed(agenda) {
     let estadoIntegracion;
     switch (agenda.estadoIntegracion) {
         case 'pendiente':
@@ -262,16 +267,20 @@ function markAgendaAsProcessed(agenda) {
         default:
             estadoIntegracion = constantes.EstadoExportacionAgendaCache.codificada;
     }
-    return agendasCache.update({ _id: agenda._id }, {
-        $set: {
-            estadoIntegracion: estadoIntegracion
-        }
-    }, function (err, raw) {
-        if (err) {
-            return (err);
-        }
-        return (raw);
-    }).exec();
+    try {
+        return agendasCache.update({ _id: agenda._id }, {
+            $set: {
+                estadoIntegracion: estadoIntegracion
+            }
+        }, function (err, raw) {
+            if (err) {
+                return (err);
+            }
+            return (raw);
+        });
+    } catch (err) {
+        return err;
+    }
 }
 
 async function getConsultaDiagnostico(idConsulta) {

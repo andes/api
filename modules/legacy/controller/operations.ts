@@ -10,6 +10,11 @@ import {
 import * as organizacion from './../../../core/tm/schemas/organizacion';
 import * as sql from 'mssql';
 import * as cdaCtr from '../../cda/controller/CDAPatient';
+import * as agendasHPNCtr from '../../turnos/controller/operationsCacheHPNController';
+import {
+    ObjectID,
+    ObjectId
+} from 'bson';
 
 
 
@@ -91,11 +96,15 @@ export function organizacionBySisaCode(code): any {
             if (err) {
                 return reject(err);
             }
-            let org = {
-                _id: doc.id,
-                nombre: doc.nombre,
-            };
-            return resolve(org);
+            if (doc) {
+                let org = {
+                    _id: doc.id,
+                    nombre: doc.nombre,
+                };
+                return resolve(org);
+            } else {
+                return reject({});
+            }
         });
     });
 }
@@ -111,7 +120,7 @@ export function getEncabezados(documento): any {
             let result = await new sql.Request().query(query);
             resolve(result);
         } catch (err) {
-            reject(null);
+            reject(err);
         }
     });
 }
@@ -120,12 +129,12 @@ export function getEncabezados(documento): any {
 export async function getDetalles(idProtocolo, idEfector) {
     return new Promise(async function (resolve, reject) {
         try {
-            let query = 'select grupo, item, resultado, valorReferencia, observaciones ' +
-                ' from LAB_ResultadoDetalle as detalle where detalle.idProtocolo = ' + idProtocolo + ' and detalle.idEfector = ' + idEfector;
+            let query = 'select grupo, item, resultado, valorReferencia, observaciones, hiv, profesional_val ' +
+                ' from LAB_ResultadoDetalle as detalle where esTitulo = \'No\' and detalle.idProtocolo = ' + idProtocolo + ' and detalle.idEfector = ' + idEfector;
             let result = await new sql.Request().query(query);
             resolve(result);
         } catch (err) {
-            reject(null);
+            reject(err);
         }
     });
 }
@@ -133,9 +142,8 @@ export async function getDetalles(idProtocolo, idEfector) {
 
 export async function cacheTurnosSips(unaAgenda) {
     // Armo el DTO para guardar en la cache de agendas
-
-    if ((unaAgenda.estado !== 'planificacion') && (unaAgenda.nominalizada) &&
-        ((unaAgenda.organizacion._id).equals('57fcf037326e73143fb48c3a')) && (unaAgenda.tipoPrestaciones[0].term.includes('odonto'))) {
+    // if ((unaAgenda.estado !== 'planificacion') && (unaAgenda.nominalizada) && (unaAgenda.tipoPrestaciones[0].term.includes('odonto')) || integraPrestacionesHPN(unaAgenda)) {
+    if (integrarAgenda(unaAgenda) && unaAgenda.estado !== 'planificacion') {
         let organizacionAgenda;
         if (unaAgenda.organizacion) {
             organizacionAgenda = await organizacionCompleto(unaAgenda.organizacion.id);
@@ -161,7 +169,9 @@ export async function cacheTurnosSips(unaAgenda) {
             id: unaAgenda.id
         };
 
-        agendasCache.find({ id: agenda.id }, function getAgenda(err, data) {
+        agendasCache.find({
+            id: agenda.id
+        }, function getAgenda(err, data) {
             if (err) {
                 return (err);
             }
@@ -190,5 +200,22 @@ export async function cacheTurnosSips(unaAgenda) {
                 });
             }
         });
+    }
+
+    function integrarAgenda(_agenda) {
+        let prestacionesIntegradas: any;
+        let datosOrganizacion = constantes.prestacionesIntegradasPorEfector.find(elem => elem.organizacion === _agenda.organizacion.id);
+        if (datosOrganizacion) {
+            prestacionesIntegradas = _agenda.tipoPrestaciones.find(prestacion => {
+                return (datosOrganizacion.prestaciones.filter(prest => prest.conceptId === prestacion.conceptId).length > 0);
+            });
+        }
+
+        if (prestacionesIntegradas) {
+            return true;
+        } else {
+            return false;
+        }
+
     }
 }
