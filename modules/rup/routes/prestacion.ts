@@ -203,15 +203,16 @@ router.patch('/prestaciones/:id', function (req, res, next) {
 
                 let dto = {
                     profesional: {
-                        id: req.user.profesional.id,
-                        nombre: req.user.usuario.nombre,
-                        apellido: req.user.usuario.apellido,
-                        documento: req.user.usuario.documento
+                        id: (req as any).user.profesional.id,
+                        nombre: (req as any).user.usuario.nombre,
+                        apellido: (req as any).user.usuario.apellido,
+                        documento: (req as any).user.usuario.documento
                     },
                     tipoPrestacion: prestacion.solicitud.tipoPrestacion,
                     organizacion: prestacion.solicitud.organizacion,
                     frecuentes: req.body.registros
-                }
+                };
+
                 frecuentescrl.actualizarFrecuentes(dto)
                     .then((resultadoFrec: any) => {
                         Logger.log(req, 'rup', 'update', {

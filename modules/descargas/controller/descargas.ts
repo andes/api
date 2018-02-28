@@ -12,27 +12,7 @@ export class Documento {
     /**
      * Opciones default de PDF rendering
      */
-    private static phantomPDFOptions = {
-        format: 'A4',
-        border: {
-            // default is 0, units: mm, cm, in, px
-            top: '0.5cm',
-            right: '0.5cm',
-            bottom: '1.5cm',
-            left: '1.5cm'
-        },
-        header: {
-            height: '2.5cm',
-        },
-        footer: {
-            height: '10mm',
-            contents: {
-            }
-        },
-        settings: {
-            resourceTimeout: 30
-        },
-    };
+    private static options: any = {};
 
     /**
      *
@@ -104,13 +84,37 @@ export class Documento {
                 // PhantomJS PDF rendering options
                 // https://www.npmjs.com/package/html-pdf
                 // http://phantomjs.org/api/webpage/property/paper-size.html
-                if (options) {
-                    this.phantomPDFOptions = options;
+                let phantomPDFOptions: any = {
+                    format: 'A4',
+                    border: {
+                        // default is 0, units: mm, cm, in, px
+                        top: '0.5cm',
+                        right: '0.5cm',
+                        bottom: '1.5cm',
+                        left: '1.5cm'
+                    },
+                    header: {
+                        height: '2.5cm',
+                    },
+                    footer: {
+                        height: '10mm',
+                        contents: {
+                        }
+                    },
+                    settings: {
+                        resourceTimeout: 30
+                    },
+                };
+
+                if (options !== {}) {
+                    this.options = options;
+                } else {
+                    this.options = phantomPDFOptions;
                 }
 
                 html = this.generarHTML(req);
 
-                pdf.create(html, this.phantomPDFOptions).toFile((err2, file) => {
+                pdf.create(html, this.options).toFile((err2, file) => {
 
                     if (err2) {
                         return next(err2);
