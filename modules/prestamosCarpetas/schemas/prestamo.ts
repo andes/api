@@ -1,8 +1,11 @@
 import { pacienteSchema } from '../../../core/mpi/schemas/paciente';
+import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
+import * as espacioFisicoSchema from '../../../modules/turnos/schemas/espacioFisico';
+import * as nombreApellidoSchema from '../../../core/tm/schemas/nombreApellido';
 import * as constantes from './constantes';
 import * as mongoose from 'mongoose';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
-import { Number } from 'core-js/library/web/timers';
+import { Number, Object } from 'core-js/library/web/timers';
 
 let schema = new mongoose.Schema({
     paciente: {
@@ -32,9 +35,9 @@ let schema = new mongoose.Schema({
     datosPrestamo: {
         observaciones: String,
         turno: {
-            profesional: mongoose.Schema.Types.ObjectId,
-            espacioFisico:  mongoose.Schema.Types.ObjectId,
-            conceptoTurneable: mongoose.Schema.Types.ObjectId
+            profesional: nombreApellidoSchema,
+            espacioFisico:  espacioFisicoSchema,
+            tipoPrestacion: tipoPrestacionSchema
         }
     },
     datosDevolucion: {
