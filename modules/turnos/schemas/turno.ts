@@ -57,7 +57,7 @@ let turnoSchema = new mongoose.Schema({
         carpetaEfectores: [{
             organizacion: nombreSchema,
             nroCarpeta: String
-        }],
+        }]
     },
     tipoPrestacion: {
         type: tipoPrestacionSchema

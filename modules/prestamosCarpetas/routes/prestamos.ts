@@ -18,6 +18,7 @@ router.get('/prestamosHC/', async function(req, res, next){
 router.post('/prestamosHC/prestarCarpeta', async function(req, res, next){
     try {
         let resultado = await prestamosController.prestarCarpeta(req);
+        console.log('resultado', resultado)
         res.json(resultado);
     } catch (err) {
         console.log(err);
@@ -28,6 +29,7 @@ router.post('/prestamosHC/prestarCarpeta', async function(req, res, next){
 router.post('/prestamosHC/devolverCarpeta', async function(req, res, next){
     try {
         let resultado = await prestamosController.devolverCarpeta(req);
+        console.log('resultado', resultado)
         res.json(resultado);
     } catch (err) {
         return next(err);

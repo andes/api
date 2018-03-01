@@ -8,6 +8,7 @@ import * as constantes from '../schemas/constantes';
 import { toArray } from '../../../utils/utils';
 import { paciente } from '../../../core/mpi/schemas/paciente';
 import { ObjectId } from 'bson';
+import { Object } from 'core-js/library/web/timers';
 
 export async function getCarpetas(req) {
     return new Promise(async (resolve, reject) => {
@@ -115,6 +116,7 @@ async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carp
                     fecha: new Date(),
                     organizacion: unaOrganizacion,
                     datosPrestamo: {
+                        agendaId: agenda._id,
                         observaciones: 'Obs hardcoded',
                         turno: {
                             idProfesional: agenda.profesionales,
@@ -148,33 +150,6 @@ async function findCarpetas(organizacionId, nrosCarpetas) {
     pipeline.push({ '$group': group });
 
     return await toArray(prestamo.aggregate(pipeline).cursor({}).exec());
-}
-
-async function savePrestamoCarpeta(req, unaOrganizacion, unPaciente, estadoPrestamoCarpeta)  {
-    // hardcodear datos faltantes de paciente para poder guardarlo en el documento
-    // revisar
-    unPaciente.estado = 'validado';
-    unPaciente.sexo = 'otro';
-    unPaciente.genero = 'otro';
-
-    let nuevoPrestamo;
-    
-    nuevoPrestamo = new prestamo({
-        paciente: unPaciente,
-        organizacion: unaOrganizacion,
-        numero: await getNextNroCarpeta(unaOrganizacion._id),
-        estado: estadoPrestamoCarpeta
-
-    });
-    Auth.audit(nuevoPrestamo, req);
-    await nuevoPrestamo.save(function (err2, agendaGuardada: any) {
-        if (err2) {
-            console.log(err2);
-            throw err2;
-        }
-        console.log('prestamo saved');
-    });
-    return nuevoPrestamo;
 }
 
 // function getDatosTurnos(agendas) {
@@ -256,24 +231,50 @@ async function buscarAgendasTurnos(organizacion, tipoPrestacion, espacioFisico, 
 }
 
 export async function prestarCarpeta(req) {
-                                                    
-    let prestamoCarpeta = await savePrestamoCarpeta(req, getOrganizacion(),  await paciente.findById(req.body.pacienteId), constantes.EstadosPrestamosCarpeta.Prestada);
-    let turno = agendaCtrl.getTurno
-    prestamoCarpeta.datosPrestamo = {};
-    prestamoCarpeta.datosPrestamo['observaciones'] = req.observaciones;
-    prestamoCarpeta.datosPrestamo['turno'] = {
+    let prestamoCarpeta = await createCarpeta(req, getOrganizacion(), constantes.EstadosPrestamosCarpeta.Prestada);
+    prestamoCarpeta['datosPrestamo'] = {};
+    prestamoCarpeta['datosPrestamo']['observaciones'] = req.observaciones;
+    prestamoCarpeta['datosPrestamo']['turno'] = {
         idProfesional: req.idProfesional,
         idEspacioFisico: req.idEspacioFisico,
         idConceptoTurneable: req.idConceptoTurneable
     };
+
+    return await savePrestamoCarpeta(req, prestamoCarpeta);
 }
 
 export async function devolverCarpeta(req) {
-    // let prestamoCarpeta = await savePrestamoCarpeta(req, await paciente.findById(req.body.pacienteId), constantes.EstadosPrestamosCarpeta.EnArchivo);
-    // prestamoCarpeta.datosDevolucion = {};
-    // prestamoCarpeta.datosDevolucion['observaciones'] = req.observaciones;
-    // prestamoCarpeta.datosDevolucion['estado'] = req.estado;
+    let prestamoCarpeta = await createCarpeta(req, getOrganizacion(), constantes.EstadosPrestamosCarpeta.Prestada);
+    prestamoCarpeta['datosDevolucion'] = {};
+    prestamoCarpeta['datosDevolucion']['observaciones'] = req.observaciones;
+    prestamoCarpeta['datosDevolucion']['estado'] = req.estado;
+
+    return await savePrestamoCarpeta(req, prestamoCarpeta);
 }
+
+async function createCarpeta(req, unaOrganizacion, estadoPrestamoCarpeta) {
+    let agendaId = req.body.agendaId;
+    let turnoId = req.body.turnoId;
+    let turno = agendaCtrl.getTurno(null, await agenda.findById(agendaId), turnoId);
+    
+    return new prestamo({
+        paciente: turno.paciente,
+        organizacion: unaOrganizacion,
+        numero: getNroCarpeta(unaOrganizacion._id, turno.paciente.carpetaEfectores),
+        estado: estadoPrestamoCarpeta
+    });
+}
+
+async function savePrestamoCarpeta(req, nuevoPrestamo) {
+    Auth.audit(nuevoPrestamo, req);
+    let prestamoGuardado = await nuevoPrestamo.save(function (err2, prestamoGuardado: any) {
+        if (err2) {
+            throw err2;
+        }
+    });
+    return prestamoGuardado;
+}
+
 
 function getOrganizacion() {
     // let organizacion = // get organizacion from Auth;
@@ -286,6 +287,12 @@ function getOrganizacion() {
     return organizacion;
 }
 
-async function getNextNroCarpeta(organizacionId) {
-    return Math.random() * (9999999) + 0;   
+function getNroCarpeta(organizacionId, carpetas) {
+    for (let i = 0; i < carpetas.length; i++) {
+        if (carpetas[i].organizacion._id.equals(organizacionId)) {
+            console.log('nro carpeta', carpetas[i].nroCarpeta)
+            return carpetas[i].nroCarpeta;
+        }
+    }
+    return;   
 }
