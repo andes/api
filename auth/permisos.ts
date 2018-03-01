@@ -179,5 +179,12 @@ export default [
         title: 'Modulo Reportes',
         child: [
         ]
-    }
+    },
+    {
+        key: 'descargas',
+        title: 'Descarga de Documentos',
+        child: [
+            { key: 'pdf', title: 'Documentos PDF', type: 'boolean' }
+        ]
+    },
 ];
