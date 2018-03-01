@@ -122,10 +122,10 @@ export const modules = {
         route: '/modules/descargas',
         middleware: appMiddleware
     },
-    arancelamiento: {
+    obraSocial: {
         active: true,
-        path: './modules/arancelamiento/routes',
-        route: '/modules/arancelamiento',
+        path: './modules/obraSocial/routes',
+        route: '/modules/obraSocial',
         middleware: appMiddleware
     }
 };
