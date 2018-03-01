@@ -6,9 +6,19 @@ import { Number } from 'core-js/library/web/timers';
 
 let schema = new mongoose.Schema({
     paciente: {
-        type: pacienteSchema
+        id: mongoose.Schema.Types.ObjectId,
+        nombre: String,
+        apellido: String,
+        alias: String,
+        documento: String,
+        fechaNacimiento: Date,
+        telefono: String,
+        sexo: String,
+        carpetaEfectores: [{
+            organizacion: nombreSchema,
+            nroCarpeta: String
+        }]
     },
-    // numero: Number,
     numero: String,
     organizacion: {
         type: nombreSchema,
