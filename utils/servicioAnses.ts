@@ -71,9 +71,10 @@ export function getServicioAnses(paciente) {
                         } catch (error) {
                             reject(error);
                         }
-                        if (matchPorcentaje >= 95) {
+                        if (matchPorcentaje >= 85) {
                             // La idea de este registro es usar sólo el cuil
-                            resolve({'entidad': 'Anses', 'matcheo': matchPorcentaje, 'pacienteConsultado': paciente, 'pacienteAnses': pacienteAnses });
+                            resolve({'cuil': pacienteAnses.cuil});
+                            // resolve({'entidad': 'Anses', 'matcheo': matchPorcentaje, 'pacienteConsultado': paciente, 'pacienteAnses': pacienteAnses });
                         } else {
                             resolve('Matcheo insuficiente: ' + matchPorcentaje);
                         }
