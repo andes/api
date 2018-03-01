@@ -11,13 +11,8 @@ import { ObjectId } from 'bson';
 
 export async function getCarpetas(req) {
     return new Promise(async (resolve, reject) => {
+        let organizacion = getOrganizacion();
         let body = req.body;
-        // let organizacion = body.idOrganizacion;
-        
-        let organizacion = {
-            nombre : "HOSPITAL PROVINCIAL NEUQUEN - DR. EDUARDO CASTRO RENDON",
-            _id : new ObjectId("57e9670e52df311059bc8964")
-        }
         let tipoPrestacionId = body.idTipoPrestacion;
         let espacioFisicoId = body.idEspacioFisico;
         let profesionalId = body.idProfesional;
@@ -28,7 +23,6 @@ export async function getCarpetas(req) {
         let agendas = await buscarAgendasTurnos(new ObjectId(organizacion._id), tipoPrestacionId, espacioFisicoId, profesionalId, horaInicio, horaFin);
         console.log('agendas.length',agendas.length);
         let nrosCarpetas = getNrosCarpetas(agendas);
-console.log('nrosCarpetas',nrosCarpetas);
         // let datosTurnos = await getDatosTurnos(turnos);
         // let carpetasPacientes = getCarpetasPacientes(turnos);
         // let nrosCarpetas = Object.keys(carpetasPacientes);
@@ -54,8 +48,8 @@ function getNrosCarpetas(agendas) {
         console.log('agenda');
         agenda.turnos.forEach(unTurno => {
             unTurno.paciente.carpetaEfectores.forEach(async unaCarpeta => {
-                if (nroCarpetas.indexOf[unaCarpeta.nroCarpeta] < 0) {
-                    nroCarpetas.push[unaCarpeta.nroCarpeta];
+                if (nroCarpetas.indexOf(unaCarpeta.nroCarpeta) < 0) {
+                    nroCarpetas.push(unaCarpeta.nroCarpeta);
                 }
             });
         });
@@ -101,33 +95,34 @@ async function getRegistroSolicitudCarpeta(organizacionId, nroCarpeta) {
 }
 
 async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carpetas) {
-console.log('getRegistrosSolicitudCarpetas');
     let registrosSolicitudCarpetas = [];
     let resBusquedaCarpeta;
 
     agendas.forEach(agenda => {
         agenda.turnos.forEach(unTurno => {
             unTurno.paciente.carpetaEfectores.forEach(async unaCarpeta => {
+                let carpeta;
+                
                 for (let i = 0; i < carpetas.length; i++) {
-                    let carpeta;
                     if (carpetas[i].numero === unaCarpeta.numero) {
                         carpeta = carpetas[i];
                         break; 
                     }
-                    registrosSolicitudCarpetas.push({
-                        estado: carpeta.estado,
-                        fecha: new Date(),
-                        organizacion: unaOrganizacion,
-                        datosPrestamo: {
-                            observaciones: 'Obs hardcoded',
-                            turno: {
-                                idProfesional: agenda.profesionales,
-                                idEspacioFisico:  agenda.espacioFisico,
-                                idConceptoTurneable: agenda.tipoPrestaciones
-                            }
-                        }
-                    });     
                 }
+                registrosSolicitudCarpetas.push({
+                    
+                    estado: carpeta ? carpeta.estado : constantes.EstadosPrestamosCarpeta.EnArchivo,
+                    fecha: new Date(),
+                    organizacion: unaOrganizacion,
+                    datosPrestamo: {
+                        observaciones: 'Obs hardcoded',
+                        turno: {
+                            idProfesional: agenda.profesionales,
+                            idEspacioFisico:  agenda.espacioFisico,
+                            idConceptoTurneable: agenda.tipoPrestaciones
+                        }
+                    }
+                });
             });
         });
     });
@@ -155,55 +150,32 @@ async function findCarpetas(organizacionId, nrosCarpetas) {
     return await toArray(prestamo.aggregate(pipeline).cursor({}).exec());
 }
 
-// async function savePrestamoCarpeta(req, unaOrganizacion, unNumeroCarpeta, unPaciente, estadoPrestamoCarpeta)  {
-//     // hardcodear datos faltantes de paciente para poder guardarlo en el documento
-//     // revisar
-//     console.log('savePrestamoCarpeta', unaOrganizacion);
-//     unPaciente.estado = 'validado';
-//     unPaciente.sexo = 'otro';
-//     unPaciente.genero = 'otro';
+async function savePrestamoCarpeta(req, unaOrganizacion, unPaciente, estadoPrestamoCarpeta)  {
+    // hardcodear datos faltantes de paciente para poder guardarlo en el documento
+    // revisar
+    unPaciente.estado = 'validado';
+    unPaciente.sexo = 'otro';
+    unPaciente.genero = 'otro';
 
-//     let nuevoPrestamo;
+    let nuevoPrestamo;
     
-//     nuevoPrestamo = new prestamo({
-//         paciente: unPaciente,
-//         organizacion: unaOrganizacion,
-//         numero: unNumeroCarpeta,
-//         estado: estadoPrestamoCarpeta
+    nuevoPrestamo = new prestamo({
+        paciente: unPaciente,
+        organizacion: unaOrganizacion,
+        numero: await getNextNroCarpeta(unaOrganizacion._id),
+        estado: estadoPrestamoCarpeta
 
-//     });
-//     Auth.audit(nuevoPrestamo, req);
-//     await nuevoPrestamo.save(function (err2, agendaGuardada: any) {
-//         if (err2) {
-//             console.log(err2);
-//             throw err2;
-//         }
-//         console.log('prestamo saved');
-//         return nuevoPrestamo;
-//     });
-    
-// }
-
-// export async function getLastNroCarpeta(organizacionId) {
-//     let match = {};
-//     match['carpetaEfectores.organizacion._id'] = { '$eq': organizacionId };
-        
-//     let pipeline = [{
-//         '$match': match
-//     },
-//     {
-//         '$sort' : {
-//             item: 1,
-//             date: 1 
-//         } 
-//     }];
-    
-//     let result = await paciente.aggregate(pipeline).cursor({}).exec();
-//     result.forEach(elem => {
-//         console.log(elem);
-//     });
-//     return result.carpetaEfectores[0].organizacion._id;
-// }
+    });
+    Auth.audit(nuevoPrestamo, req);
+    await nuevoPrestamo.save(function (err2, agendaGuardada: any) {
+        if (err2) {
+            console.log(err2);
+            throw err2;
+        }
+        console.log('prestamo saved');
+    });
+    return nuevoPrestamo;
+}
 
 // function getDatosTurnos(agendas) {
 //     return new Promise<Array<any>>(async (resolve, reject) => {
@@ -282,16 +254,18 @@ async function buscarAgendasTurnos(organizacion, tipoPrestacion, espacioFisico, 
     
     return await toArray(agenda.aggregate(pipelineCarpeta).cursor({}).exec());
 }
+
 export async function prestarCarpeta(req) {
-    // let prestamoCarpeta = await savePrestamoCarpeta(req, await paciente.findById(req.body.pacienteId), constantes.EstadosPrestamosCarpeta.Prestada);
-    // let turno = agendaCtrl.getTurno
-    // prestamoCarpeta.datosPrestamo = {};
-    // prestamoCarpeta.datosPrestamo['observaciones'] = req.observaciones;
-    // prestamoCarpeta.datosPrestamo['turno'] = {
-    //     idProfesional: req.idProfesional,
-    //     idEspacioFisico: req.idEspacioFisico,
-    //     idConceptoTurneable: req.idConceptoTurneable
-    // };
+                                                    
+    let prestamoCarpeta = await savePrestamoCarpeta(req, getOrganizacion(),  await paciente.findById(req.body.pacienteId), constantes.EstadosPrestamosCarpeta.Prestada);
+    let turno = agendaCtrl.getTurno
+    prestamoCarpeta.datosPrestamo = {};
+    prestamoCarpeta.datosPrestamo['observaciones'] = req.observaciones;
+    prestamoCarpeta.datosPrestamo['turno'] = {
+        idProfesional: req.idProfesional,
+        idEspacioFisico: req.idEspacioFisico,
+        idConceptoTurneable: req.idConceptoTurneable
+    };
 }
 
 export async function devolverCarpeta(req) {
@@ -299,4 +273,19 @@ export async function devolverCarpeta(req) {
     // prestamoCarpeta.datosDevolucion = {};
     // prestamoCarpeta.datosDevolucion['observaciones'] = req.observaciones;
     // prestamoCarpeta.datosDevolucion['estado'] = req.estado;
+}
+
+function getOrganizacion() {
+    // let organizacion = // get organizacion from Auth;
+        
+    let organizacion = {
+        nombre : "HOSPITAL PROVINCIAL NEUQUEN - DR. EDUARDO CASTRO RENDON",
+        _id : new ObjectId("57e9670e52df311059bc8964")
+    }
+
+    return organizacion;
+}
+
+async function getNextNroCarpeta(organizacionId) {
+    return Math.random() * (9999999) + 0;   
 }

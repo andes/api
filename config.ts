@@ -127,7 +127,13 @@ export const modules = {
         path: './modules/arancelamiento/routes',
         route: '/modules/arancelamiento',
         middleware: appMiddleware
-    }
+    },
+    prestamosCarpetas: {
+        active: true,
+        path: './modules/prestamosCarpetas/routes',
+        route: '/modules/prestamosCarpetas',
+        middleware: appMiddleware
+    },
 };
 
 // Cotas de consumo de APIs
