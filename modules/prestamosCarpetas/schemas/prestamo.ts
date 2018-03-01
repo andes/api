@@ -32,9 +32,9 @@ let schema = new mongoose.Schema({
     datosPrestamo: {
         observaciones: String,
         turno: {
-            idProfesional: mongoose.Schema.Types.ObjectId,
-            idEspacioFisico:  mongoose.Schema.Types.ObjectId,
-            idConceptoTurneable: mongoose.Schema.Types.ObjectId
+            profesional: mongoose.Schema.Types.ObjectId,
+            espacioFisico:  mongoose.Schema.Types.ObjectId,
+            conceptoTurneable: mongoose.Schema.Types.ObjectId
         }
     },
     datosDevolucion: {

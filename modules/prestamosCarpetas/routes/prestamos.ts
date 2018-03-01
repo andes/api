@@ -6,7 +6,7 @@ import { ObjectId } from 'bson';
 let router = express.Router();
 let dbg = debug('prestamo');
 
-router.post('/prestamosHC/', async function(req, res, next){
+router.get('/prestamosHC/', async function(req, res, next){
     try {
         let resultado = await prestamosController.getCarpetas(req);
         res.json(resultado);
@@ -18,7 +18,6 @@ router.post('/prestamosHC/', async function(req, res, next){
 router.post('/prestamosHC/prestarCarpeta', async function(req, res, next){
     try {
         let resultado = await prestamosController.prestarCarpeta(req);
-        console.log('resultado', resultado)
         res.json(resultado);
     } catch (err) {
         console.log(err);
