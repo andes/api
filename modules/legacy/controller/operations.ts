@@ -19,7 +19,6 @@ import {
 
 
 // Funciones privadas
-
 function traeProfesionalPorId(id) {
     return new Promise((resolve, reject) => {
         profesional.findById(mongoose.Types.ObjectId(id), function (err, unProfesional) {
@@ -59,7 +58,6 @@ function organizacionCompleto(idOrganizacion): any {
 }
 
 // Funciones públicas
-
 export function noExistCDA(protocol, dniPaciente) {
     return new Promise(async function (resolve, reject) {
         try {
@@ -219,3 +217,4 @@ export async function cacheTurnosSips(unaAgenda) {
 
     }
 }
+
