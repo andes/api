@@ -80,3 +80,4 @@ const constantes = {
     ]
 };
 export = constantes;
+
