@@ -9,6 +9,7 @@ let schema = new mongoose.Schema({
         conceptId: String,
     },
     nombre: String,
+    conceptId: String,
     // capitulo: Number,
     // nombre: String,
     medicamentos: [{
