@@ -375,6 +375,7 @@ export function actualizarEstado(req, data) {
 export function getTurno(req, data, idTurno = null) {
     let turno;
     idTurno = String(idTurno) || req.body.idTurno;
+    console.log("Get Turno: ", data)
     // Loop en los bloques
     for (let x = 0; x < data.bloques.length; x++) {
         // Si existe este bloque...

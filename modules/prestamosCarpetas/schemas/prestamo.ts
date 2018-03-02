@@ -1,6 +1,6 @@
 import { pacienteSchema } from '../../../core/mpi/schemas/paciente';
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
-import * as espacioFisicoSchema from '../../../modules/turnos/schemas/espacioFisico';
+import { espacioFisicoSchema } from '../../../modules/turnos/schemas/espacioFisico';
 import * as nombreApellidoSchema from '../../../core/tm/schemas/nombreApellido';
 import * as constantes from './constantes';
 import * as mongoose from 'mongoose';
@@ -35,8 +35,9 @@ let schema = new mongoose.Schema({
     datosPrestamo: {
         observaciones: String,
         turno: {
+            id: mongoose.Schema.Types.ObjectId,
             profesional: nombreApellidoSchema,
-            espacioFisico:  espacioFisicoSchema,
+            espacioFisico: espacioFisicoSchema,
             tipoPrestacion: tipoPrestacionSchema
         }
     },
@@ -45,7 +46,7 @@ let schema = new mongoose.Schema({
         estado: {
             type: String,
             enum: ['Normal', 'En mal estado', 'Fuera de término', 'Hojas o documentación faltante']
-        } 
+        }
     }
 });
 
