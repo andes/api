@@ -175,23 +175,23 @@ async function buscarAgendasTurnos(organizacion, tipoPrestacion, espacioFisico, 
 }
 
 export async function prestarCarpeta(req) {
-    let prestamoCarpeta = await createCarpeta(req, getOrganizacion(), constantes.EstadosPrestamosCarpeta.Prestada);
-    prestamoCarpeta['datosPrestamo'] = {};
-    prestamoCarpeta['datosPrestamo']['observaciones'] = req.observaciones;
-    prestamoCarpeta['datosPrestamo']['turno'] = {
-        profesional: req.idProfesional,
-        espacioFisico: req.idEspacioFisico,
-        conceptoTurneable: req.idConceptoTurneable
+    let prestamoCarpeta : any = await createCarpeta(req, getOrganizacion(), constantes.EstadosPrestamosCarpeta.Prestada);
+    prestamoCarpeta.datosPrestamo = {};
+    prestamoCarpeta.datosPrestamo.observaciones = req.observaciones;
+    prestamoCarpeta.datosPrestamo.turno = {
+        profesional: req.body.profesional,
+        espacioFisico: req.body.espacioFisico,
+        tipoPrestacion: req.body.tipoPrestacion
     };
 
     return await savePrestamoCarpeta(req, prestamoCarpeta);
 }
 
 export async function devolverCarpeta(req) {
-    let prestamoCarpeta = await createCarpeta(req, getOrganizacion(), constantes.EstadosPrestamosCarpeta.Prestada);
-    prestamoCarpeta['datosDevolucion'] = {};
-    prestamoCarpeta['datosDevolucion']['observaciones'] = req.observaciones;
-    prestamoCarpeta['datosDevolucion']['estado'] = req.estado;
+    let prestamoCarpeta : any = await createCarpeta(req, getOrganizacion(), constantes.EstadosPrestamosCarpeta.Prestada);
+    prestamoCarpeta.datosDevolucion = {};
+    prestamoCarpeta.datosDevolucion.observaciones = req.observaciones;
+    prestamoCarpeta.datosDevolucion.estado = req.estado;
 
     return await savePrestamoCarpeta(req, prestamoCarpeta);
 }
@@ -205,7 +205,9 @@ async function createCarpeta(req, unaOrganizacion, estadoPrestamoCarpeta) {
         paciente: turno.paciente,
         organizacion: unaOrganizacion,
         numero: getNroCarpeta(unaOrganizacion._id, turno.paciente.carpetaEfectores),
-        estado: estadoPrestamoCarpeta
+        estado: estadoPrestamoCarpeta,
+        datosDevolucion: {},
+        datosPrestamo: {}
     });
 }
 
