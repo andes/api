@@ -37,4 +37,18 @@ router.get('/internaciones/ultima/:idPaciente', function (req, res, next) {
         });
 });
 
+router.get('/internaciones/pases/:idInternacion', function (req, res, next) {
+    // buscamos los estados de la cama por donde "estuvo la internacion"
+    camasController.buscarPasesCamaXInternacion(mongoose.Types.ObjectId(req.params.idInternacion)).then(
+        camas => {
+            if (camas) {
+                res.json(camas);
+            } else {
+                res.json(null);
+            }
+        }).catch(err => {
+            return next(err);
+        });
+});
+
 export = router;

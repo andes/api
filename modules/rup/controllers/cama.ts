@@ -18,3 +18,18 @@ export function buscarCamaInternacion(idInternacion, estado) {
 
     return toArray(query.cursor({}).exec());
 }
+
+export function buscarPasesCamaXInternacion(idInternacion) {
+
+    let pipelineEstado = [];
+
+    pipelineEstado = [
+        { $match: { 'estados.idInternacion': idInternacion } },
+        { $unwind: "$estados" },
+        { $match: { 'estados.idInternacion': idInternacion } },
+        { $sort: { 'estados.fecha': 1 } }];
+
+    let query = cama.aggregate(pipelineEstado);
+
+    return toArray(query.cursor({}).exec());
+}
