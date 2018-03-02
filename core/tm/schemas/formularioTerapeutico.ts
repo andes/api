@@ -2,13 +2,16 @@ import * as mongoose from 'mongoose';
 import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
 import { pacienteSchema } from '../../mpi/schemas/paciente';
 
-let schema = new mongoose.Schema({
-    capitulo: Number,
-    nombre: String,
-    subcapitulos: [{
-        numero: Number,
+let schema = new mongoose.Schema({ 
+    // padre(id, nombre, conceptId)
+    padre: {
         nombre: String,
-        medicamentos: [{
+        conceptId: String,
+    },
+    nombre: String,
+    // capitulo: Number,
+    // nombre: String,
+    medicamentos: [{
             clasificacion: String,
             numero: Number,
             nivelComplejidad: String,
@@ -26,7 +29,7 @@ let schema = new mongoose.Schema({
                 words: [String]
             }
         }]
-    }]
+    // }]
 });
 
 // Habilitar plugin de auditoría
