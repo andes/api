@@ -9,6 +9,9 @@ export class Documento {
     private static locale = 'es-ES';
     private static timeZone = 'America/Argentina/Buenos_Aires';
 
+    private static headerHTML = fs.readFileSync('./templates/andes/html/header.html');
+    private static footerHTML = fs.readFileSync('./templates/andes/html/footer.html');
+
     /**
      * Opciones default de PDF rendering
      */
@@ -32,17 +35,17 @@ export class Documento {
         let logotipoAndes = fs.readFileSync('./templates/andes/logotipo-andes-blue.png');
         let logoPDP = fs.readFileSync('./templates/andes/logo-pdp.png');
 
-        // Se reemplazan ciertos <!--placeholders--> por logos de ANDES y Dirección de Protección de Datos Personales
-        html = html.replace('<!--logoAndes-->', `<img src="data:image/png;base64,${logoAndes.toString('base64')}" style="float: left;">`);
-        html = html.replace('<!--logotipoAndes-->', `<img src="data:image/png;base64,${logotipoAndes.toString('base64')}" style="width: 80px; margin-right: 10px;">`);
+        html += this.headerHTML.toString();
+        html += this.footerHTML.toString();
 
-        html += `<footer id="pageFooter" style="background-color: rgba(0,0,0,0.1); display: inline-block; font-size: 8px; margin-bottom: 15px; padding: 5px;">
-        <img src="data:image/png;base64,${logoPDP.toString('base64')}" style="width: 100px; float: right;">
-        <div style="float: left; width: 400px; margin-right: 10px; text-align: justify;">
-            El contenido de este informe ha sido validado digitalmente siguiendo los estándares de calidad y seguridad requeridos. El Hospital Provincial Neuquén es responsable Inscripto en el Registro Nacional de Protección de Datos Personales bajo el N° de Registro 100000182, según lo requiere la Ley N° 25.326 (art. 3° y 21 inciso 1)
-            ${JSON.stringify(Auth.getUserName(req))} - ${new Date().toLocaleString('locale', { timeZone: this.timeZone })} hs
-        </div>
-    </footer>`;
+        // Se reemplazan ciertos <!--placeholders--> por logos de ANDES y Dirección de Protección de Datos Personales
+        // Y datos de sesión (organización, nombre del usuario, timestamp)
+        html = html.replace('<!--logoAndes-->', `<img class="logoAndes" src="data:image/png;base64,${logoAndes.toString('base64')}">`)
+            .replace('<!--logotipoAndes-->', `<img class="logotipoAndes" src="data:image/png;base64,${logotipoAndes.toString('base64')}">`)
+            .replace('<!--logoPDP-->', `<img class="logoPDP" src="data:image/png;base64,${logoPDP.toString('base64')}">`)
+            .replace('<!--organizacion-->', Auth.getOrganization(req, 'nombre'))
+            .replace('<!--usuario-->', JSON.stringify(Auth.getUserName(req)))
+            .replace('<!--timestamp-->', new Date().toLocaleString('locale', { timeZone: this.timeZone }));
 
         return html;
     }
@@ -76,7 +79,7 @@ export class Documento {
      * @param next ExpressJS next
      * @param options html-pdf/PhantonJS rendering options
      */
-    static generar(req, res, next, options = null) {
+    static descargar(req, res, next, options = null) {
 
         let html = '';
         switch (req.params.tipo) {
@@ -106,7 +109,7 @@ export class Documento {
                     },
                 };
 
-                if (options !== {}) {
+                if (options !== null) {
                     this.options = options;
                 } else {
                     this.options = phantomPDFOptions;
