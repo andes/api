@@ -10,15 +10,9 @@ import { defaultLimit, maxLimit } from './../../../config';
 
 import * as configPrivate from '../../../config.private';
 import { Auth } from '../../../auth/auth.class';
-// import * as estadoCama from '../routes/camaEstado';
-// import {camaEstado} from './../schemas/camaEstado';
-import * as CamaEstadoModel from '../models/camaEstado';
 
 let GeoJSON = require('geojson');
 let router = express.Router();
-
-
-
 
 router.get('/organizaciones/georef/:id?', async function (req, res, next) {
     if (req.params.id) {
