@@ -18,7 +18,6 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
             query = tipoPrestacion.find({});
         }
         if (req.query.limit) {
-            console.log(req.query.limit)
             let limit: number = Number(req.query.limit);
             query = query.limit(limit);
         }
