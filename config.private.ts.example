@@ -174,5 +174,7 @@ export const CDA = {
 export const wsSalud = {
    host: '',
    getPaciente: '',
-   getResultado: ''
+   getResultado: '',
+   hellerWS: '',
+   hellerFS: ''
 };

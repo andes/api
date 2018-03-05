@@ -18,24 +18,26 @@ export let schema = new mongoose.Schema({
         type: String,
         required: true
     },
-    numero: {
+    nombre: {
         type: String,
         required: true
     },
-    unidadesOrganizativas: [unidadOrganizativa.schema],
     tipoCama: {
         type: SnomedConcept,
         required: true
     },
-    esCensable: {
-        type: Boolean,
-        required: true,
-        default: true
-    },
     equipamiento: [SnomedConcept], // oxigeno / bomba / etc
-    // ultimo estado de la cama
-    ultimoEstado: estado.schema,
     estados: [estado.schema]
+});
+
+/* Se definen los campos virtuals */
+schema.virtual('ultimoEstado').get(function () {
+    if (this.estados && this.estados.length > 0) {
+        return this.estados[this.estados.length - 1];
+    } else {
+        return null;
+    }
+
 });
 
 const audit = require('../../../mongoose/audit');

@@ -202,12 +202,7 @@ router.patch('/prestaciones/:id', function (req, res, next) {
             if (req.body.registrarFrecuentes && req.body.registros) {
 
                 let dto = {
-                    profesional: {
-                        id: (req as any).user.profesional.id,
-                        nombre: (req as any).user.usuario.nombre,
-                        apellido: (req as any).user.usuario.apellido,
-                        documento: (req as any).user.usuario.documento
-                    },
+                    profesional: Auth.getProfesional(req),
                     tipoPrestacion: prestacion.solicitud.tipoPrestacion,
                     organizacion: prestacion.solicitud.organizacion,
                     frecuentes: req.body.registros
@@ -277,6 +272,5 @@ router.patch('/prestaciones/:id', function (req, res, next) {
         });
     });
 });
-
 
 export = router;

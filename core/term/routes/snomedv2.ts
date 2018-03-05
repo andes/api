@@ -159,7 +159,7 @@ router.get('/snomed/search', async function (req, res, next) {
                 filters['type.conceptId'] = elem.typeid;
             }
             let cond = {
-                'concept.relationships' :  {
+                'concept.relationships': {
                     $elemMatch: filters
                 }
             };
@@ -175,23 +175,25 @@ router.get('/snomed/search', async function (req, res, next) {
     }
 
     let pipeline = [
-        {$match: conditions},
+        { $match: conditions },
 
         ...(lookUp ? [lookUp, secondMatch] : []),
         // ...(secondMatch ? [lookUp, secondMatch] : []),
 
-        {$sort: { term: 1 }},
-        {$skip: parseInt(req.query.skip, 0) || 0 },
-        {$limit: parseInt(req.query.limit, 0) || 1000 },
-        {$project: {
-            conceptId: 1,
-            term: 1,
-            fsn: 1,
-            semanticTag: 1,
-            refsetIds: 1,
-            aEq: {'$eq': ['$fsn', '$term']}
-        }},
-        {$match: { aEq: false }}
+        { $sort: { term: 1 } },
+        { $skip: parseInt(req.query.skip, 0) || 0 },
+        { $limit: parseInt(req.query.limit, 0) || 1000 },
+        {
+            $project: {
+                conceptId: 1,
+                term: 1,
+                fsn: 1,
+                semanticTag: 1,
+                refsetIds: 1,
+                aEq: { '$eq': ['$fsn', '$term'] }
+            }
+        },
+        { $match: { aEq: false } }
     ];
 
     let result = await toArray(textIndexModel.aggregate(pipeline).cursor({}).exec());
@@ -202,9 +204,9 @@ router.get('/snomed/search', async function (req, res, next) {
 router.get('/snomed/expression', async function (req, res, next) {
     let expression = req.query.expression;
     let query = makeMongoQuery(expression);
-    snomedModel.find(query, {fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1}).then((docs: any[]) => {
+    snomedModel.find(query, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docs: any[]) => {
         let response = docs.map((item) => {
-            let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1 );
+            let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
             return {
                 fsn: item.fullySpecifiedName,
                 term: term,

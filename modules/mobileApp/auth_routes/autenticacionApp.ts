@@ -1,6 +1,8 @@
 import * as jwt from 'jsonwebtoken';
 import { pacienteApp } from '../schemas/pacienteApp';
 import { paciente, pacienteMpi } from '../../../core/mpi/schemas/paciente';
+import { buscarPaciente } from '../../../core/mpi/controller/paciente';
+
 import * as express from 'express';
 import * as authController from '../controller/AuthController';
 import * as mongoose from 'mongoose';
@@ -53,8 +55,10 @@ router.post('/login', function (req, res, next) {
                 });
 
                 // Hack momentaneo. Descargamos los laboratorios a demanda.
-                pacienteMpi.findById(user.pacientes[0].id, {nombre: 1, apellido: 1, fechaNacimiento: 1, documento: 1, sexo: 1}).then((pac: any) => {
-                    labsImport.importarDatos(pac);
+                buscarPaciente(user.pacientes[0].id).then((resultado) => {
+                    if (resultado.paciente) {
+                        labsImport.importarDatos(resultado.paciente);
+                    }
                 });
 
                 return;
