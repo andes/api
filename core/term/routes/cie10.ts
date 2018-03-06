@@ -6,20 +6,29 @@ import { defaultLimit, maxLimit } from './../../../config';
 let router = express.Router();
 
 router.get('/cie10', function (req, res, next) {
-    // let filtros = { 'sinonimo': { '$regex': utils.makePattern(req.query.nombre) } };
     let query;
     query = cie10.model.find({});
+    let termino: String = '';
+    // separamos todas las palabras y eliminamos caracteres extraños
+    let words = String(req.query.nombre).split(' ');
+    words.forEach(function (word) {
+        // normalizamos cada una de las palabras como hace SNOMED para poder buscar palabra a palabra
+        word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08');
+        let expWord = utils.removeDiacritics(word) + '.*';
+        // agregamos la palabra al término de búsqueda
+        termino = termino + expWord;
+    });
+
     let busqueda = [
-        { 'codigo': RegExp('^.*' + req.query.nombre + '.*$', 'i') },
-        { 'sinonimo': RegExp('^.*' + req.query.nombre + '.*$', 'i') },
-        { 'nombre': RegExp('^.*' + req.query.nombre + '.*$', 'i') },
+        { 'codigo': RegExp('^.*' + termino + '.*$', 'i') },
+        { 'sinonimo': RegExp('^.*' + termino + '.*$', 'i') },
+        { 'nombre': RegExp('^.*' + termino + '.*$', 'i') },
     ];
     query.or(busqueda);
     let skip = parseInt(req.query.skip || 0, 10);
     let limit = Math.min(parseInt(req.query.limit || defaultLimit, 10), maxLimit);
     query.skip(skip);
     query.limit(limit);
-    // let query = cie10.model.find(filtros).skip(skip).limit(limit).sort('sinonimo');
     query.exec(function (err, data) {
         if (err) {
             return next(err);
