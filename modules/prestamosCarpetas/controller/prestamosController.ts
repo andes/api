@@ -18,8 +18,8 @@ export async function getCarpetas(req) {
         let tipoPrestacionId = body.idTipoPrestacion;
         let espacioFisicoId = body.idEspacioFisico;
         let profesionalId = body.idProfesional;
-        let horaInicio = body.horaInicio;
-        let horaFin = body.horaFin;
+        let horaInicio = body.fechaDesde;
+        let horaFin = body.fechaHasta;
 
         let agendas = await buscarAgendasTurnos(new ObjectId(organizacion._id), tipoPrestacionId, espacioFisicoId, profesionalId, horaInicio, horaFin);
         let nrosCarpetas = getNrosCarpetas(agendas);
@@ -130,15 +130,15 @@ async function buscarAgendasTurnos(organizacion, tipoPrestacion, espacioFisico, 
 
     let matchCarpeta = {};
     if (tipoPrestacion) {
-        matchCarpeta['bloques.turnos.tipoPrestacion._id'] = tipoPrestacion;
+        matchCarpeta['bloques.turnos.tipoPrestacion._id'] = new ObjectId(tipoPrestacion);
     }
 
     if (espacioFisico) {
-        matchCarpeta['espacioFisico.id'] = espacioFisico;
+        matchCarpeta['espacioFisico.id'] = new ObjectId(espacioFisico);
     }
 
     if (profesional) {
-        matchCarpeta['profesionales._id'] = profesional;
+        matchCarpeta['profesionales._id'] = new ObjectId(profesional);
     }
 
     if (horaInicio) {
@@ -231,7 +231,7 @@ function getOrganizacion() {
         _id: new ObjectId("57e9670e52df311059bc8964")
     }
 
-    return organizacion;
+    return  organizacion;
 }
 
 function getNroCarpeta(organizacionId, carpetas) {
