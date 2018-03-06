@@ -15,7 +15,9 @@ export let farmaciasTurnosSchema = new mongoose.Schema({
     },
     localidad: {
         type: Number,
-    }
+    },
+    latitud: Number,
+    longitud: Number
 });
 
 export let farmaciasLocalidadesSchema = new mongoose.Schema({
@@ -24,7 +26,7 @@ export let farmaciasLocalidadesSchema = new mongoose.Schema({
         required: true
     },
     localidadId: {
-        type: String,
+        type: Number,
         required: true
     }
 });
