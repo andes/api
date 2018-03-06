@@ -11,6 +11,7 @@ import { ObjectId, ObjectID } from 'bson';
 import { Object } from 'core-js/library/web/timers';
 
 export async function getCarpetas(req) {
+    console.log('getCarpetas', req.body);
     return new Promise(async (resolve, reject) => {
         let organizacion = getOrganizacion();
         let body = req.body;
@@ -179,14 +180,12 @@ async function buscarAgendasTurnos(organizacion, tipoPrestacion, espacioFisico, 
 }
 
 export async function prestarCarpeta(req) {
-    console.log('devolverCarpeta api', req.body)
     let prestamoCarpeta: any = await createCarpeta(req, getOrganizacion(), constantes.EstadosPrestamosCarpeta.Prestada);
     
     return await savePrestamoCarpeta(req, prestamoCarpeta);
 }
 
 export async function devolverCarpeta(req) {
-    console.log('devolverCarpeta!   ', req.body);
     let prestamoCarpeta: any = await createCarpeta(req, getOrganizacion(), constantes.EstadosPrestamosCarpeta.EnArchivo);
     prestamoCarpeta.datosDevolucion = {
         observaciones: req.body.observaciones,
@@ -197,13 +196,10 @@ export async function devolverCarpeta(req) {
 }
 
 async function createCarpeta(req, unaOrganizacion, estadoPrestamoCarpeta) {
-    let agendaId = req.body.params ? req.body.params.idAgenda : req.body.idAgenda;
-    let turnoId = req.body.params ? req.body.params.idTurno : req.body.idTurno;
-    
-    // agendaId = new ObjectId(agendaId);
+    let agendaId = req.body.idAgenda;
+    let turnoId = req.body.idTurno;
 
     let data = await agenda.findById(agendaId);
-    
     let turno = agendaCtrl.getTurno(null, data, turnoId);
     
     return new prestamo({
