@@ -170,7 +170,7 @@ export function codificarTurno(req, data, tid) {
             let promises = [];
             if (arrPrestacion.length > 0 && arrPrestacion[0].ejecucion) {
                 let prestaciones = arrPrestacion[0].ejecucion.registros.filter(f => {
-                    return f.concepto.semanticTag === 'hallazgo' || f.concepto.semanticTag === 'trastorno' || f.concepto.semanticTag === 'situacion';
+                    return f.concepto.semanticTag !== 'elemento de registro';
                 });
                 prestaciones.forEach(registro => {
                     let parametros = {
@@ -224,7 +224,7 @@ export function codificarTurno(req, data, tid) {
                                                 c2: (cie as any).c2,
                                             }
                                         },
-                                        // primeraVez: registro.esPrimeraVez
+                                        primeraVez: registro.esPrimeraVez
                                     });
                                 }
                             } else {
