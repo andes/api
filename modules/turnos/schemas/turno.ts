@@ -77,6 +77,11 @@ let turnoSchema = new mongoose.Schema({
         codificaciones: [{
             // (ver schema) solamente obtenida de RUP o SIPS y definida por el profesional
             codificacionProfesional: cie10.schema,
+            snomed: {
+                conceptId: String,
+                semtag: String,
+                preferredTerm: String
+            },
             // (ver schema) corresponde a la codificación establecida la instancia de revisión de agendas
             codificacionAuditoria: cie10.schema,
             primeraVez: Boolean,
