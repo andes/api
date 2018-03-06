@@ -4,6 +4,7 @@ import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 import * as cie10 from '../../../core/term/schemas/cie10';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import * as obraSocialSchema from '../../obraSocial/schemas/obraSocial';
+import { SnomedConcept } from '../../rup/schemas/snomed-concept';
 
 let turnoSchema = new mongoose.Schema({
     horaInicio: Date,
@@ -76,11 +77,9 @@ let turnoSchema = new mongoose.Schema({
         ilegible: Boolean,
         codificaciones: [{
             // (ver schema) solamente obtenida de RUP o SIPS y definida por el profesional
-            codificacionProfesional: cie10.schema,
-            snomed: {
-                conceptId: String,
-                semtag: String,
-                preferredTerm: String
+            codificacionProfesional: {
+                cie10: cie10.schema,
+                snomed: SnomedConcept
             },
             // (ver schema) corresponde a la codificación establecida la instancia de revisión de agendas
             codificacionAuditoria: cie10.schema,
