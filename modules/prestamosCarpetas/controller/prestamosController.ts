@@ -68,15 +68,12 @@ async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carp
     let registrosSolicitudCarpetas = [];
     let resBusquedaCarpeta;
 
-    console.log('find carpeta', ( carpetas))
-
     agendas.forEach(agenda => {
         agenda.turnos.forEach(unTurno => {
             unTurno.paciente.carpetaEfectores.forEach(async unaCarpeta => {
                 let carpeta;
 
                 for (let i = 0; i < carpetas.length; i++) {                   
-                    console.log('x', carpetas[i]._id, 'y' ,unaCarpeta.nroCarpeta)
                     if (carpetas[i]._id === unaCarpeta.nroCarpeta) {
                         carpeta = carpetas[i];
                         break;
@@ -112,7 +109,7 @@ async function findCarpetas(organizacionId, nrosCarpetas) {
     let match = {};
     let sort = {};
     let group = {};
-console.log('nrosCarpetas',nrosCarpetas)
+
     match['organizacion._id'] = { '$eq': organizacionId };
     match['numero'] = { '$in': nrosCarpetas };
     sort['createdAt'] = -1;
@@ -129,7 +126,7 @@ console.log('nrosCarpetas',nrosCarpetas)
 }
 
 async function buscarAgendasTurnos(organizacion, tipoPrestacion, espacioFisico, profesional, horaInicio, horaFin) {
-    console.log('buscarAgendasTurnos', organizacion)
+
     let matchCarpeta = {};
     if (tipoPrestacion) {
         matchCarpeta['bloques.turnos.tipoPrestacion._id'] = tipoPrestacion;
@@ -153,7 +150,9 @@ async function buscarAgendasTurnos(organizacion, tipoPrestacion, espacioFisico, 
 
     matchCarpeta['bloques.turnos.estado'] = { '$eq': 'asignado' };
     matchCarpeta['bloques.turnos.paciente.carpetaEfectores.organizacion._id'] = organizacion;
-    matchCarpeta['bloques.turnos.paciente.carpetaEfectores.numero'] = { '$ne': '' };
+    matchCarpeta['bloques.turnos.paciente.carpetaEfectores'] = { '$not': { '$size': 0 }};
+    matchCarpeta['bloques.turnos.paciente.carpetaEfectores.nroCarpeta'] = { '$ne': '' };
+
 
     let pipelineCarpeta = [{
         $match: matchCarpeta
@@ -176,36 +175,30 @@ async function buscarAgendasTurnos(organizacion, tipoPrestacion, espacioFisico, 
             'turnos': { $push: '$bloques.turnos' }
         }
     }]
-
     return await toArray(agenda.aggregate(pipelineCarpeta).cursor({}).exec());
 }
 
 export async function prestarCarpeta(req) {
+    console.log('devolverCarpeta api', req.body)
     let prestamoCarpeta: any = await createCarpeta(req, getOrganizacion(), constantes.EstadosPrestamosCarpeta.Prestada);
-    prestamoCarpeta.datosPrestamo = {};
-    prestamoCarpeta.datosPrestamo.observaciones = req.body.params.observaciones;
-    prestamoCarpeta.datosPrestamo.turno = {
-        profesional: req.body.params.profesional,
-        espacioFisico: req.body.params.espacioFisico,
-        tipoPrestacion: req.body.params.tipoPrestacion
+    
+    return await savePrestamoCarpeta(req, prestamoCarpeta);
+}
+
+export async function devolverCarpeta(req) {
+    console.log('devolverCarpeta!   ', req.body);
+    let prestamoCarpeta: any = await createCarpeta(req, getOrganizacion(), constantes.EstadosPrestamosCarpeta.EnArchivo);
+    prestamoCarpeta.datosDevolucion = {
+        observaciones: req.body.observaciones,
+        estado: req.body.estado.nombre
     };
 
     return await savePrestamoCarpeta(req, prestamoCarpeta);
 }
 
-export async function devolverCarpeta(req) {
-    let prestamoCarpeta: any = await createCarpeta(req, getOrganizacion(), constantes.EstadosPrestamosCarpeta.Prestada);
-    prestamoCarpeta.datosDevolucion = {};
-    prestamoCarpeta.datosDevolucion.observaciones = req.body.params.observaciones;
-    prestamoCarpeta.datosDevolucion.estado = req.body.params.estado;
-
-    return await savePrestamoCarpeta(req, prestamoCarpeta);
-}
-
 async function createCarpeta(req, unaOrganizacion, estadoPrestamoCarpeta) {
-    
-    let agendaId = req.body.params.idAgenda;
-    let turnoId = req.body.params.idTurno;
+    let agendaId = req.body.params ? req.body.params.idAgenda : req.body.idAgenda;
+    let turnoId = req.body.params ? req.body.params.idTurno : req.body.idTurno;
     
     // agendaId = new ObjectId(agendaId);
 
@@ -248,7 +241,6 @@ function getOrganizacion() {
 function getNroCarpeta(organizacionId, carpetas) {
     for (let i = 0; i < carpetas.length; i++) {
         if (carpetas[i].organizacion._id.equals(organizacionId)) {
-            console.log('nro carpeta', carpetas[i].nroCarpeta)
             return carpetas[i].nroCarpeta;
         }
     }

@@ -27,9 +27,9 @@ router.post('/prestamosHC/prestarCarpeta', async function(req, res, next){
 });
 
 router.post('/prestamosHC/devolverCarpeta', async function(req, res, next){
+    console.log('devolverCarpeta api');
     try {
         let resultado = await prestamosController.devolverCarpeta(req);
-        console.log('resultado', resultado)
         res.json(resultado);
     } catch (err) {
         return next(err);
