@@ -186,12 +186,21 @@ export function codificarTurno(req, data, tid) {
                                 if (registro.esDiagnosticoPrincipal) {
                                     codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del array
                                         codificacionProfesional: {
-                                            causa: (cie as any).causa,
-                                            subcausa: (cie as any).subcausa,
-                                            codigo: (cie as any).codigo,
-                                            nombre: (cie as any).nombre,
-                                            sinonimo: (cie as any).sinonimo,
-                                            c2: (cie as any).c2,
+                                            snomed: {
+                                                conceptId: registro.concepto.conceptId,
+                                                term: registro.concepto.term,
+                                                fsn: registro.concepto.fsn,
+                                                semanticTag: registro.concepto.semanticTag,
+                                                refsetIds: registro.concepto.refsetIds
+                                            },
+                                            cie10: {
+                                                causa: (cie as any).causa,
+                                                subcausa: (cie as any).subcausa,
+                                                codigo: (cie as any).codigo,
+                                                nombre: (cie as any).nombre,
+                                                sinonimo: (cie as any).sinonimo,
+                                                c2: (cie as any).c2,
+                                            }
                                         },
                                         primeraVez: registro.esPrimeraVez,
                                     });
@@ -199,12 +208,21 @@ export function codificarTurno(req, data, tid) {
                                 } else {
                                     codificaciones.push({
                                         codificacionProfesional: {
-                                            causa: (cie as any).causa,
-                                            subcausa: (cie as any).subcausa,
-                                            codigo: (cie as any).codigo,
-                                            nombre: (cie as any).nombre,
-                                            sinonimo: (cie as any).sinonimo,
-                                            c2: (cie as any).c2,
+                                            snomed: {
+                                                conceptId: registro.concepto.conceptId,
+                                                term: registro.concepto.term,
+                                                fsn: registro.concepto.fsn,
+                                                semanticTag: registro.concepto.semanticTag,
+                                                refsetIds: registro.concepto.refsetIds
+                                            },
+                                            cie10: {
+                                                causa: (cie as any).causa,
+                                                subcausa: (cie as any).subcausa,
+                                                codigo: (cie as any).codigo,
+                                                nombre: (cie as any).nombre,
+                                                sinonimo: (cie as any).sinonimo,
+                                                c2: (cie as any).c2,
+                                            }
                                         },
                                         // primeraVez: registro.esPrimeraVez
                                     });
