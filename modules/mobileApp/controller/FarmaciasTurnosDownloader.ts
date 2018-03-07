@@ -8,22 +8,37 @@ let moment = require('moment');
 
 import { farmaciasLocalidades, farmaciasTurnos } from '../schemas/farmacias';
 
-export function findAddress(localidad, farmacia) {
-    return farmaciasTurnos.findOne({
+export async function findAddress(localidad, farmacia) {
+    let data: any = await farmaciasTurnos.find({
         nombre: farmacia.nombre,
         direccion: farmacia.direccion,
-        latitud: { $exists: true }
-    }).then((data: any) => {
-        if (data) {
-            console.log('DESDE CACHE');
-            return Promise.resolve({
-                lat: data.latitud,
-                lng: data.longitud
-            });
-        } else {
-            return geocodeFarmacia(farmacia, localidad);
-        }
-    });
+        fecha: {$exists: false}
+    }).limit(1);
+
+    if (data.length) {
+        console.log('DESDE CACHE');
+        return Promise.resolve({
+            lat: data[0].latitud,
+            lng: data[0].longitud
+        });
+    } else {
+        let geo: any =  await geocodeFarmacia(farmacia, localidad);
+
+        let t = new farmaciasTurnos({
+            nombre: farmacia.nombre,
+            direccion: farmacia.direccion,
+            telefono: farmacia.telefono ? farmacia.telefono : '',
+            localidad: String(localidad.id),
+            latitud: geo.lat,
+            longitud: geo.lng
+        });
+
+        let saved = await t.save();
+
+        return geo;
+
+    }
+
 }
 
 export function geocodeFarmacia(farmacia, localidad) {
@@ -57,7 +72,7 @@ export function geocodeFarmacia(farmacia, localidad) {
             });
             res2.on('end', function () {
                 let salida = JSON.parse(jsonGoogle);
-                console.log(salida.status, address);
+                console.log(salida.status, address );
                 if (salida.status === 'OK') {
                     return resolve(salida.results[0].geometry.location);
                 } else {
@@ -74,15 +89,16 @@ export function donwloadData(desde, hasta) {
         let localidades = data.localidades;
         farmaciasLocalidades.remove({}, async function (err) {
 
+            await farmaciasTurnos.remove({ fecha: {$exists: true} });
+
             for (let item of localidades) {
-                let f = await new farmaciasLocalidades({
+                let f = await (new farmaciasLocalidades({
                     localidadId: item.id,
-                    nombre: item.nombre
-                }).save();
+                    nombre: String(item.nombre)
+                })).save();
 
                 let desdeD = moment(desde, 'YYYY-MM-DD').toDate();
                 let hastaD = moment(hasta, 'YYYY-MM-DD').toDate();
-                await farmaciasTurnos.remove({ fecha: { '$gte': desdeD, '$lte': hastaD } });
 
                 let _data: any = await getTurnos(data, item.id, desde, hasta);
 
@@ -99,12 +115,13 @@ export function donwloadData(desde, hasta) {
                             direccion: turno.direccion,
                             telefono: turno.telefono ? turno.telefono : '',
                             fecha: moment(turno.fecha, 'YYYY-MM-DD').toDate(),
-                            localidad: item.id,
+                            localidad: String(item.id),
                             latitud: geocode.lat,
                             longitud: geocode.lng
                         });
 
-                        await t.save();
+                        let saved = await t.save();
+
 
                     } catch (e) {
                         console.log('ERRRORRRR');
