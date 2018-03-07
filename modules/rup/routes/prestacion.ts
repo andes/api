@@ -33,6 +33,7 @@ router.get('/prestaciones/huds/:idPaciente', function (req, res, next) {
     let conceptos = (req.query.conceptIds) ? req.query.conceptIds : null;
 
     return Prestacion.find(query, (err, prestaciones) => {
+
         if (err) {
             return next(err);
         }
@@ -206,7 +207,8 @@ router.patch('/prestaciones/:id', function (req, res, next) {
                     tipoPrestacion: prestacion.solicitud.tipoPrestacion,
                     organizacion: prestacion.solicitud.organizacion,
                     frecuentes: req.body.registros
-                }
+                };
+
                 frecuentescrl.actualizarFrecuentes(dto)
                     .then((resultadoFrec: any) => {
                         Logger.log(req, 'rup', 'update', {
