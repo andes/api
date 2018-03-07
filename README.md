@@ -22,3 +22,28 @@ Renombrar el archivo `config.private.ts.example` a `config.private.ts`, y comple
 ```bash
 npm start
 ```
+
+## Docker
+
+### Build images
+
+```bash
+docker build -t andesnqn/api .
+```
+
+### Run images
+
+```bash
+docker run  -p  3002:3002  --rm --name andes_api andesnqn/api 
+```
+
+### Run images for developtment
+
+```bash
+docker run -v  ${pwd}:/usr/src/api  -p  3002:3002  --rm --name andes_api andesnqn/api 
+
+docker stop andes_api
+
+docker exec andes_api npm install
+
+```
