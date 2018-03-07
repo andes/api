@@ -36,9 +36,9 @@ let schema = new mongoose.Schema({
         observaciones: String,
         turno: {
             id: mongoose.Schema.Types.ObjectId,
-            profesional: nombreApellidoSchema,
+            profesional: [nombreApellidoSchema],
             espacioFisico: espacioFisicoSchema,
-            tipoPrestacion: tipoPrestacionSchema
+            tipoPrestacion: [tipoPrestacionSchema]
         }
     },
     datosDevolucion: {

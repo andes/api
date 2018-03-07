@@ -82,18 +82,18 @@ async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carp
                 }
 
                 registrosSolicitudCarpetas.push({
-                    numero: unaCarpeta.numero,
+                    numero: unaCarpeta.nroCarpeta,
                     estado: carpeta ? carpeta.estado : constantes.EstadosPrestamosCarpeta.EnArchivo,
                     fecha: new Date(),
                     organizacion: unaOrganizacion,
                     datosPrestamo: {
                         agendaId: agenda._id,
-                        observaciones: 'Obs hardcoded',
+                        observaciones: '',
                         turno: {
                             id: unTurno._id,
-                            profesional: agenda.profesionales,
-                            espacioFisico: agenda.espacioFisico,
-                            conceptoTurneable: agenda.tipoPrestaciones,
+                            profesionales: agenda.profesionales[0],
+                            espacioFisico: agenda.espacioFisico[0],
+                            tipoPrestaciones: agenda.tipoPrestaciones[0],
                             paciente: unTurno.paciente
                         }
                     }
@@ -134,7 +134,7 @@ async function buscarAgendasTurnos(organizacion, tipoPrestacion, espacioFisico, 
     }
 
     if (espacioFisico) {
-        matchCarpeta['espacioFisico.id'] = new ObjectId(espacioFisico);
+        matchCarpeta['espacioFisico.id'] = espacioFisico;
     }
 
     if (profesional) {
@@ -180,15 +180,16 @@ async function buscarAgendasTurnos(organizacion, tipoPrestacion, espacioFisico, 
 }
 
 export async function prestarCarpeta(req) {
+    console.log(req.body);
     let prestamoCarpeta: any = await createCarpeta(req, getOrganizacion(), constantes.EstadosPrestamosCarpeta.Prestada);
-    
     return await savePrestamoCarpeta(req, prestamoCarpeta);
 }
 
 export async function devolverCarpeta(req) {
+    console.log('devolver carpeta');
     let prestamoCarpeta: any = await createCarpeta(req, getOrganizacion(), constantes.EstadosPrestamosCarpeta.EnArchivo);
     prestamoCarpeta.datosDevolucion = {
-        observaciones: req.body.observaciones,
+        observaciones: req.body.observacionesDevolucion,
         estado: req.body.estado.nombre
     };
 
@@ -208,11 +209,19 @@ async function createCarpeta(req, unaOrganizacion, estadoPrestamoCarpeta) {
         numero: getNroCarpeta(unaOrganizacion._id, turno.paciente.carpetaEfectores),
         estado: estadoPrestamoCarpeta,
         datosDevolucion: {},
-        datosPrestamo: {}
+        datosPrestamo: {
+            turno: {
+                profesional: req.body.profesional,
+                espacioFisico: req.body.espacioFisico,
+                tipoPrestacion: req.body.tipoPrestacion,
+            },
+            observaciones: req.body.observacionesPrestamo
+        }
     });
 }
 
 async function savePrestamoCarpeta(req, nuevoPrestamo) {
+    console.log('savePrestamoCarpeta');
     Auth.audit(nuevoPrestamo, req);
     let prestamoGuardado = await nuevoPrestamo.save(function (err2, prestamoGuardado: any) {
         if (err2) {

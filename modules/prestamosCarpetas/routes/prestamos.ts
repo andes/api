@@ -16,7 +16,6 @@ router.post('/prestamosHC/', async function(req, res, next){
 });
 
 router.post('/prestamosHC/prestarCarpeta', async function(req, res, next){
-    
     try {
         let resultado = await prestamosController.prestarCarpeta(req);
         res.json(resultado);
