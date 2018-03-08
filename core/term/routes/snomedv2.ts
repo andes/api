@@ -3,7 +3,6 @@ import { textIndexModel, snomedModel, textIndexSchema } from '../schemas/snomed'
 import * as utils from '../../../utils/utils';
 import * as snomedCtr from '../controller/snomedCtr';
 import * as configPrivate from './../../../config.private';
-import { lookup } from 'mime';
 import * as debug from 'debug';
 import { makeMongoQuery } from '../controller/grammar/parser';
 import { toArray } from '../../../utils/utils';
