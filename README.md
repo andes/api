@@ -9,6 +9,7 @@ APIs para ANDES
 ### Instalar dependencias
 
 ```bash
+npm install -g nodemon
 cd api
 npm install
 ```
