@@ -1,34 +1,40 @@
+function getEnv(key, _default) {
+    return !!process.env[key] === false ?  _default : process.env[key] ;
+}
+
 // Configuración de Passport
 export const auth = {
-    useLdap: false,
-    jwtKey: 'API_KEY',
+    useLdap:  getEnv('LDAP', false),
+    jwtKey:  getEnv('APP_KEY', '5gCYFZPp3dfA2m5UNElVkgRLFcFnBfZp'),
     ldapOU: 'ou=People,o=integrabilidad,o=neuquen',
 };
+
+console.log(auth);
 
 // True: Expone una ruta de la api que lista todos los permisos disponibles
 export const enablePermisosDoc = false;
 
 // Puerto de LDAP
 export const ports = {
-    ldapPort: ':389'
+    ldapPort: getEnv('LDAP_PORT', ':389')
 };
 
 // Hosts
 export const hosts = {
-    ldap: 'ldap.neuquen.gov.ar',
-    elastic_main: 'localhost:9200',
+    ldap: getEnv('LDAP_HOST', 'ldap.neuquen.gov.ar'),
+    elastic_main: getEnv('ELASTIC_HOST', 'localhost:9200'),
     mongoDB_main: {
-        host: 'localhost:27017/andes',
+        host: getEnv('MONGO_MAIN', 'localhost:27017/andes'),
         auth: { authdb: 'admin' },
         server: { reconnectTries: Number.MAX_VALUE }
     },
     mongoDB_mpi: {
-        host: 'localhost:27017/mpi',
+        host: getEnv('MONGO_MPI', 'localhost:27017/mpi'),
         auth: { authdb: 'admin' },
         server: { reconnectTries: Number.MAX_VALUE }
     },
     mongoDB_snomed: {
-        host: 'mongodb://localhost:27017/es-edition',
+        host: getEnv('MONGO_SNOMED', 'mongodb://localhost:27017/es-edition'),
         auth: { authdb: 'admin' },
         server: { reconnectTries: Number.MAX_VALUE }
     }
@@ -73,8 +79,8 @@ export const authApp = {
 };
 
 export const snomed = {
-    dbName: 'es-edition',
-    dbVersion: 'v20171200'
+    dbName: getEnv('SNOMED_DB', 'es-edition'),
+    dbVersion: getEnv('SNOMED_VERSION', 'v20171200') 
 };
 
 // Push Notifications

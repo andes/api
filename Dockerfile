@@ -11,6 +11,8 @@ RUN npm install
 
 COPY . .
 
+RUN cp config.private.ts.example config.private.ts
+
 EXPOSE 3002
 CMD [ "npm", "start" ]
 
