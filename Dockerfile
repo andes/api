@@ -1,7 +1,7 @@
 ARG NODE_VERSION=8.9-alpine
 FROM node:${NODE_VERSION}
 
-RUN npm install -g typescript @angular/cli@1.4.0 nodemon
+RUN npm install -g typescript nodemon
 
 WORKDIR /usr/src/api
 
@@ -14,6 +14,8 @@ COPY . .
 RUN cp config.private.ts.example config.private.ts
 
 RUN npm run tsc
+
+RUN npm run parse
 
 EXPOSE 3002
 CMD [ "npm", "start" ]
