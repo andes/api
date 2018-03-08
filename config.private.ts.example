@@ -9,8 +9,6 @@ export const auth = {
     ldapOU: 'ou=People,o=integrabilidad,o=neuquen',
 };
 
-console.log(auth);
-
 // True: Expone una ruta de la api que lista todos los permisos disponibles
 export const enablePermisosDoc = false;
 
