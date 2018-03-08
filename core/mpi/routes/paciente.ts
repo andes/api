@@ -836,6 +836,38 @@ router.patch('/pacientes/:id', function (req, res, next) {
     });
 });
 
+// Patch específico para actualizar masivamente MPI (NINGUN USUARIO DEBERIA TENER PERMISOS PARA ESTO)
+router.patch('/pacientes/mpi/:id', function (req, res, next) {
+    if (!Auth.check(req, 'mpi:paciente:patchMpi')) {
+        return next(403);
+    }
+    controller.buscarPaciente(req.params.id).then((resultado: any) => {
+        if (resultado) {
+            switch (req.body.op) {
+                case 'updateCuil':
+                    controller.updateCuil(req, resultado.paciente);
+                    break;
+            }
+            let pacienteMpi: any;
+            if (resultado.db === 'mpi') {
+                pacienteMpi = resultado.paciente;
+                Auth.audit(pacienteMpi, req);
+                pacienteMpi.save(function (errPatch) {
+                    if (errPatch) {
+                        return next(errPatch);
+                    }
+                    return res.json(pacienteMpi);
+                });
+            } else {
+                return res.json(null);
+            }
+        }
+    }).catch((err) => {
+        return next(err);
+    });
+});
+
+
 
 // Comentado hasta incorporar esta funcionalidad
 //
