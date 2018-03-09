@@ -38,15 +38,12 @@ router.get('/formularioTerapeutico/:id?', function (req, res, next) {
                     word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08');
                     let expWord = '^' + utils.removeDiacritics(word) + '.*';
                     // agregamos la palabra a la condicion
-                    opciones['$and'].push({ 'subcapitulos.medicamentos.concepto.words': { '$regex': expWord } });
+                    // opciones['$and'].push({ 'subcapitulos.medicamentos.concepto.words': { '$regex': expWord } });
+                    opciones['$and'].push({ 'concepto.words': { '$regex': expWord } });
                 });
             }
-            proyeccion['subcapitulos.medicamentos.$'] = 1;
-            proyeccion['capitulo'] = 1;
-            proyeccion['nombre'] = 1;
         }
-        query = formularioTerapeutico.find(opciones, proyeccion);
-
+        query = formularioTerapeutico.find(opciones);
         if (!Object.keys(query).length) {
             res.status(400).send('Debe ingresar al menos un parámetro');
             return next(400);
@@ -57,37 +54,37 @@ router.get('/formularioTerapeutico/:id?', function (req, res, next) {
                 return next(err);
             }
             if (req.query.nombreMedicamento) { // Si es una búsqueda por nombre de medicamento
-                data.forEach(capitulo => {
-                    capitulo.subcapitulos.forEach(subcapitulo => {
-                        // El siguiente filter es necesario ya que en mongo no se pueden hacer proyecciones sobre arreglos anidados (o al menos eso entiendo)
-                        filtrados = [];
-                        subcapitulo.medicamentos.forEach(medicamento => {
-                            let cont = 0;
-                            let concepto = medicamento.concepto;
-                            if (concepto.words && concepto.words.length > 0) {
-                                let words = String(req.query.nombreMedicamento).split(' ');
-                                words.forEach(function (word) {
-                                    // normalizamos cada una de las palabras como hace SNOMED para poder buscar palabra a palabra
-                                    word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08');
-                                    let expWord = '^' + utils.removeDiacritics(word) + '.*';
-                                    // agregamos la palabra a la condicion
-                                    let aux = concepto.words.findIndex(w => {
-                                        return w.match(expWord) != null;
-                                    });
-                                    if (aux >= 0) {
-                                        cont++;
-                                    }
-                                    if (cont === words.length) {
-                                        filtrados.push(medicamento);
-                                    }
-                                });
-                            }
-                        });
-                        subcapitulo.medicamentos = filtrados;
-                    });
-                });
+                // data.forEach(capitulo => {
+                //     capitulo.subcapitulos.forEach(subcapitulo => {
+                //         // El siguiente filter es necesario ya que en mongo no se pueden hacer proyecciones sobre arreglos anidados (o al menos eso entiendo)
+                //         filtrados = [];
+                //         subcapitulo.medicamentos.forEach(medicamento => {
+                //             let cont = 0;
+                //             let concepto = medicamento.concepto;
+                //             if (concepto.words && concepto.words.length > 0) {
+                //                 let words = String(req.query.nombreMedicamento).split(' ');
+                //                 words.forEach(function (word) {
+                //                     // normalizamos cada una de las palabras como hace SNOMED para poder buscar palabra a palabra
+                //                     word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08');
+                //                     let expWord = '^' + utils.removeDiacritics(word) + '.*';
+                //                     // agregamos la palabra a la condicion
+                //                     let aux = concepto.words.findIndex(w => {
+                //                         return w.match(expWord) != null;
+                //                     });
+                //                     if (aux >= 0) {
+                //                         cont++;
+                //                     }
+                //                     if (cont === words.length) {
+                //                         filtrados.push(medicamento);
+                //                     }
+                //                 });
+                //             }
+                //         });
+                //         subcapitulo.medicamentos = filtrados;
+                //     });
+                // });
             }
-            res.json(data)
+            res.json(data);
         });
     }
 });
