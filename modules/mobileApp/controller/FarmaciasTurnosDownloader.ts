@@ -16,7 +16,6 @@ export async function findAddress(localidad, farmacia) {
     }).limit(1);
 
     if (data.length) {
-        console.log('DESDE CACHE');
         return Promise.resolve({
             lat: data[0].latitud,
             lng: data[0].longitud
@@ -72,7 +71,6 @@ export function geocodeFarmacia(farmacia, localidad) {
             });
             res2.on('end', function () {
                 let salida = JSON.parse(jsonGoogle);
-                console.log(salida.status, address );
                 if (salida.status === 'OK') {
                     return resolve(salida.results[0].geometry.location);
                 } else {
@@ -124,7 +122,6 @@ export function donwloadData(desde, hasta) {
 
 
                     } catch (e) {
-                        console.log('ERRRORRRR');
                     }
 
                 }
