@@ -6,7 +6,7 @@ import { ObjectId } from 'bson';
 let router = express.Router();
 let dbg = debug('prestamo');
 
-router.post('/prestamosHC/', async function(req, res, next){
+router.post('/prestamosHC/', async function(req, res, next) {
     try {
         let resultado = await prestamosController.getCarpetas(req);
         res.json(resultado);
@@ -15,18 +15,16 @@ router.post('/prestamosHC/', async function(req, res, next){
     }
 });
 
-router.post('/prestamosHC/prestarCarpeta', async function(req, res, next){
+router.post('/prestamosHC/prestarCarpeta', async function(req, res, next) {
     try {
         let resultado = await prestamosController.prestarCarpeta(req);
         res.json(resultado);
     } catch (err) {
-        console.log(err);
         return next(err);
     }
 });
 
-router.post('/prestamosHC/devolverCarpeta', async function(req, res, next){
-    console.log('devolverCarpeta api');
+router.post('/prestamosHC/devolverCarpeta', async function(req, res, next) {
     try {
         let resultado = await prestamosController.devolverCarpeta(req);
         res.json(resultado);

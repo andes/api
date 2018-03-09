@@ -1,5 +1,5 @@
 import * as mongoose from 'mongoose';
-import * as auth from './../../../auth/auth.class'
+import * as auth from './../../../auth/auth.class';
 import { Auth } from './../../../auth/auth.class';
 import * as agenda from '../../../modules/turnos/schemas/agenda';
 import * as agendaCtrl from '../../../modules/turnos/controller/agenda';
@@ -11,19 +11,18 @@ import { ObjectId, ObjectID } from 'bson';
 import { Object } from 'core-js/library/web/timers';
 
 export async function getCarpetas(req) {
-    console.log('getCarpetas', req.body);
     return new Promise(async (resolve, reject) => {
-        let organizacion = getOrganizacion();
         let body = req.body;
+        let organizacionId = body.organizacion;
         let tipoPrestacionId = body.idTipoPrestacion;
         let espacioFisicoId = body.idEspacioFisico;
         let profesionalId = body.idProfesional;
         let horaInicio = body.fechaDesde;
         let horaFin = body.fechaHasta;
-
-        let agendas = await buscarAgendasTurnos(new ObjectId(organizacion._id), tipoPrestacionId, espacioFisicoId, profesionalId, horaInicio, horaFin);
+        let agendas = await buscarAgendasTurnos(new ObjectId(organizacionId), tipoPrestacionId, espacioFisicoId, profesionalId, horaInicio, horaFin);
         let nrosCarpetas = getNrosCarpetas(agendas);
-        let prestamosCarpetas = await getRegistrosSolicitudCarpetas(req, organizacion._id, agendas, await findCarpetas(organizacion._id, nrosCarpetas));;
+        let carpetas = await findCarpetas(new ObjectId(organizacionId), nrosCarpetas);
+        let prestamosCarpetas = await getRegistrosSolicitudCarpetas(req, organizacionId, agendas, carpetas);
 
         resolve(prestamosCarpetas);
     });
@@ -31,8 +30,8 @@ export async function getCarpetas(req) {
 
 function getNrosCarpetas(agendas) {
     let nroCarpetas = [];
-    agendas.forEach(agenda => {
-        agenda.turnos.forEach(unTurno => {
+    agendas.forEach(_agenda => {
+        _agenda.turnos.forEach(unTurno => {
             unTurno.paciente.carpetaEfectores.forEach(async unaCarpeta => {
                 if (nroCarpetas.indexOf(unaCarpeta.nroCarpeta) < 0) {
                     nroCarpetas.push(unaCarpeta.nroCarpeta);
@@ -53,15 +52,14 @@ async function getRegistroSolicitudCarpeta(organizacionId, nroCarpeta) {
     match['numero'] = { '$eq': nroCarpeta };
     sort['createdAt'] = -1;
     group['_id'] = '$numero';
-    group['estado'] = { "$first": "$estado" };
-    group['fecha'] = { "$first": "$createdAt" };
-    group['fecha'] = { "$first": "$createdAt" };
+    group['estado'] = { '$first': '$estado' };
+    group['fecha'] = { '$first': '$createdAt' };
+    group['fecha'] = { '$first': '$createdAt' };
 
     pipeline.push({ '$match': match });
     pipeline.push({ '$sort': sort });
     pipeline.push({ '$group': group });
 
-    // return await toArray(prestamo.aggregate(pipeline).cursor({}).exec());
     return await prestamo.aggregate(pipeline).cursor({}).exec();
 }
 
@@ -69,12 +67,12 @@ async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carp
     let registrosSolicitudCarpetas = [];
     let resBusquedaCarpeta;
 
-    agendas.forEach(agenda => {
-        agenda.turnos.forEach(unTurno => {
-            unTurno.paciente.carpetaEfectores.forEach(async unaCarpeta => {
+    agendas.forEach(_agenda => {
+        _agenda.turnos.forEach(_turno => {
+            _turno.paciente.carpetaEfectores.forEach(async unaCarpeta => {
                 let carpeta;
 
-                for (let i = 0; i < carpetas.length; i++) {                   
+                for (let i = 0; i < carpetas.length; i++) {
                     if (carpetas[i]._id === unaCarpeta.nroCarpeta) {
                         carpeta = carpetas[i];
                         break;
@@ -82,19 +80,19 @@ async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carp
                 }
 
                 registrosSolicitudCarpetas.push({
+                    fecha: _turno.horaInicio,
+                    paciente: _turno.paciente,
                     numero: unaCarpeta.nroCarpeta,
                     estado: carpeta ? carpeta.estado : constantes.EstadosPrestamosCarpeta.EnArchivo,
-                    fecha: new Date(),
                     organizacion: unaOrganizacion,
                     datosPrestamo: {
-                        agendaId: agenda._id,
+                        agendaId: _agenda._id,
                         observaciones: '',
                         turno: {
-                            id: unTurno._id,
-                            profesionales: agenda.profesionales[0],
-                            espacioFisico: agenda.espacioFisico[0],
-                            tipoPrestaciones: agenda.tipoPrestaciones[0],
-                            paciente: unTurno.paciente
+                            id: _turno._id,
+                            profesionales: _agenda.profesionales[0],
+                            espacioFisico: _agenda.espacioFisico[0],
+                            tipoPrestaciones: _agenda.tipoPrestaciones[0],
                         }
                     }
                 });
@@ -115,9 +113,9 @@ async function findCarpetas(organizacionId, nrosCarpetas) {
     match['numero'] = { '$in': nrosCarpetas };
     sort['createdAt'] = -1;
     group['_id'] = '$numero';
-    group['estado'] = { "$first": "$estado" };
-    group['fecha'] = { "$first": "$createdAt" };
-    group['fecha'] = { "$first": "$createdAt" };
+    group['estado'] = { '$first': '$estado' };
+    group['fecha'] = { '$first': '$createdAt' };
+    group['fecha'] = { '$first': '$createdAt' };
 
     pipeline.push({ '$match': match });
     pipeline.push({ '$sort': sort });
@@ -175,19 +173,17 @@ async function buscarAgendasTurnos(organizacion, tipoPrestacion, espacioFisico, 
             'tipoPrestaciones': { $push: '$tipoPrestaciones' },
             'turnos': { $push: '$bloques.turnos' }
         }
-    }]
+    }];
     return await toArray(agenda.aggregate(pipelineCarpeta).cursor({}).exec());
 }
 
 export async function prestarCarpeta(req) {
-    console.log(req.body);
-    let prestamoCarpeta: any = await createCarpeta(req, getOrganizacion(), constantes.EstadosPrestamosCarpeta.Prestada);
+    let prestamoCarpeta: any = await createCarpeta(req, constantes.EstadosPrestamosCarpeta.Prestada);
     return await savePrestamoCarpeta(req, prestamoCarpeta);
 }
 
 export async function devolverCarpeta(req) {
-    console.log('devolver carpeta');
-    let prestamoCarpeta: any = await createCarpeta(req, getOrganizacion(), constantes.EstadosPrestamosCarpeta.EnArchivo);
+    let prestamoCarpeta: any = await createCarpeta(req, constantes.EstadosPrestamosCarpeta.EnArchivo);
     prestamoCarpeta.datosDevolucion = {
         observaciones: req.body.observacionesDevolucion,
         estado: req.body.estado.nombre
@@ -196,24 +192,25 @@ export async function devolverCarpeta(req) {
     return await savePrestamoCarpeta(req, prestamoCarpeta);
 }
 
-async function createCarpeta(req, unaOrganizacion, estadoPrestamoCarpeta) {
+async function createCarpeta(req, estadoPrestamoCarpeta) {
     let agendaId = req.body.idAgenda;
     let turnoId = req.body.idTurno;
 
     let data = await agenda.findById(agendaId);
     let turno = agendaCtrl.getTurno(null, data, turnoId);
-    
+
     return new prestamo({
         paciente: turno.paciente,
-        organizacion: unaOrganizacion,
-        numero: getNroCarpeta(unaOrganizacion._id, turno.paciente.carpetaEfectores),
+        organizacion: req.body.organizacion,
+        numero: getNroCarpeta(req.body.organizacion._id, turno.paciente.carpetaEfectores),
         estado: estadoPrestamoCarpeta,
         datosDevolucion: {},
         datosPrestamo: {
             turno: {
-                profesional: req.body.profesional,
+                id: turno._id,
+                profesionales: req.body.profesionales,
                 espacioFisico: req.body.espacioFisico,
-                tipoPrestacion: req.body.tipoPrestacion,
+                tipoPrestaciones: req.body.tipoPrestaciones
             },
             observaciones: req.body.observacionesPrestamo
         }
@@ -221,26 +218,13 @@ async function createCarpeta(req, unaOrganizacion, estadoPrestamoCarpeta) {
 }
 
 async function savePrestamoCarpeta(req, nuevoPrestamo) {
-    console.log('savePrestamoCarpeta');
     Auth.audit(nuevoPrestamo, req);
-    let prestamoGuardado = await nuevoPrestamo.save(function (err2, prestamoGuardado: any) {
+    let _prestamoGuardado = await nuevoPrestamo.save(function (err2, prestamoGuardado: any) {
         if (err2) {
             throw err2;
         }
     });
-    return prestamoGuardado;
-}
-
-
-function getOrganizacion() {
-    // let organizacion = // get organizacion from Auth;
-
-    let organizacion = {
-        nombre: "HOSPITAL PROVINCIAL NEUQUEN - DR. EDUARDO CASTRO RENDON",
-        _id: new ObjectId("57e9670e52df311059bc8964")
-    }
-
-    return  organizacion;
+    return _prestamoGuardado;
 }
 
 function getNroCarpeta(organizacionId, carpetas) {
