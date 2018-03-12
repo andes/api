@@ -12,7 +12,7 @@ export class Websockets {
      * @memberOf Auth
      */
     static initialize(server: Server) {
-            //     const wss = new ws.Server({ server });
+        //     const wss = new ws.Server({ server });
         let socketIO = require('socket.io');
         let io = socketIO(server);
         // const roomTotal = []
@@ -20,10 +20,10 @@ export class Websockets {
 
         io.on('connection', (socket) => {
 
-            console.log('user connected', socket.id);
+           // console.log('user connected', socket.id);
 
             socket.on('disconnect', function () {
-                if (io.dataRooms) {
+                if (io.dataRooms !== undefined) {
                     io.dataRooms.forEach(element => {
                         if (io.sockets.adapter.rooms[element.pantalla] === undefined) {
 
@@ -40,7 +40,7 @@ export class Websockets {
                 let existe = false;
                 socket.join(room.pantalla);
                 // console.log(socket.dataRooms)
-                if (io.dataRooms) {
+                if (io.dataRooms !== undefined) {
                     io.dataRooms.forEach(element => {
                         if (element.pantalla === room.pantalla) {
                             element.prestaciones = room.prestaciones;
@@ -61,55 +61,57 @@ export class Websockets {
 
 
             socket.on('proximoNumero', (numero) => {
-                io.dataRooms.forEach(pantallas => {
-                    pantallas.prestaciones.forEach(element => {
-                        if (element === numero.tipoPrestacion.conceptId) {
-                            io.sockets.in(pantallas.pantalla).emit('muestraTurno', numero);
-                        }
-                    });
-                });
+                if (io.dataRooms !== undefined) {
 
+                    io.dataRooms.forEach(pantallas => {
+                        pantallas.prestaciones.forEach(element => {
+                            if (element === numero.tipoPrestacion.conceptId) {
+                                io.sockets.in(pantallas.pantalla).emit('muestraTurno', numero);
+                            }
+                        });
+                    });
+                }
                 // roomTotal.splice(-1, 1);
             });
         });
 
 
-    // LO QUE ESTABA ANTES EN WEBSOCKETS.INITIALIZE    
-    //     const wss = new ws.Server({ server });
-    //     let log = debug('websockets');
-    //     log('open');
+        // LO QUE ESTABA ANTES EN WEBSOCKETS.INITIALIZE
+        //     const wss = new ws.Server({ server });
+        //     let log = debug('websockets');
+        //     log('open');
 
-    //     // When client connects ...
-    //     wss.on('connection', (socket: any, req) => {
-    //         log('connected %s', (req.headers['x-forwarded-for'] || req.connection.remoteAddress));
+        //     // When client connects ...
+        //     wss.on('connection', (socket: any, req) => {
+        //         log('connected %s', (req.headers['x-forwarded-for'] || req.connection.remoteAddress));
 
-    //         // Init keep-alive
-    //         socket.isAlive = true;
-    //         socket.on('pong', () => {
-    //             log('pong');
-    //             socket.isAlive = true;
-    //         });
+        //         // Init keep-alive
+        //         socket.isAlive = true;
+        //         socket.on('pong', () => {
+        //             log('pong');
+        //             socket.isAlive = true;
+        //         });
 
-    //         // const location = url.parse(req.url, true);
-    //         // You might use location.query.access_token to authenticate or share sessions
-    //         // or req.headers.cookie (see http://stackoverflow.com/a/16395220/151312)
-    //         // Init message handler
-    //         socket.on('message', (message) => {
-    //             socket.send(JSON.stringify({ echo: message }));
-    //         });
-    //     });
+        //         // const location = url.parse(req.url, true);
+        //         // You might use location.query.access_token to authenticate or share sessions
+        //         // or req.headers.cookie (see http://stackoverflow.com/a/16395220/151312)
+        //         // Init message handler
+        //         socket.on('message', (message) => {
+        //             socket.send(JSON.stringify({ echo: message }));
+        //         });
+        //     });
 
-    //     // Keep-alive connections
-    //     setInterval(function ping() {
-    //         wss.clients.forEach((socket: any) => {
-    //             if (socket.isAlive === false) {
-    //                 return socket.terminate();
-    //             }
-    //             socket.isAlive = false;
-    //             socket.ping('', false, true);
-    //         });
-    //     }, 5000);
-    // }
+        //     // Keep-alive connections
+        //     setInterval(function ping() {
+        //         wss.clients.forEach((socket: any) => {
+        //             if (socket.isAlive === false) {
+        //                 return socket.terminate();
+        //             }
+        //             socket.isAlive = false;
+        //             socket.ping('', false, true);
+        //         });
+        //     }, 5000);
+        // }
     }
 }
 
