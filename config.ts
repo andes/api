@@ -24,7 +24,7 @@ export const modules = {
         active: true,
         path: './core/tm/routes',
         route: '/core/tm',
-        middleware: null,
+        middleware: appMiddleware,
     },
     term: {
         active: true,
@@ -115,6 +115,18 @@ export const modules = {
         path: './modules/cda/routes',
         route: '/modules/cda',
         middleware: appMiddleware
+    },
+    descargas: {
+        active: true,
+        path: './modules/descargas/routes',
+        route: '/modules/descargas',
+        middleware: appMiddleware
+    },
+    obraSocial: {
+        active: true,
+        path: './modules/obraSocial/routes',
+        route: '/modules/obraSocial',
+        middleware: appMiddleware
     }
 };
 
@@ -152,5 +164,11 @@ export const mpi = {
         name: 0.3,
         gender: 0.1,
         birthDate: 0.3
+    },
+    weightsFaAnses: {
+        identity: 0.1,
+        name: 0.45,
+        gender: 0.3,
+        birthDate: 0.15
     }
 };

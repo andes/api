@@ -813,8 +813,10 @@ router.patch('/pacientes/:id', function (req, res, next) {
                 case 'updateScan':
                     controller.updateScan(req, resultado.paciente);
                     break;
+                case 'updateCuil':
+                    controller.updateCuil(req, resultado.paciente);
+                    break;
             }
-
             let pacienteAndes: any;
             if (resultado.db === 'mpi') {
                 pacienteAndes = new paciente(resultado.paciente.toObject());
@@ -833,6 +835,7 @@ router.patch('/pacientes/:id', function (req, res, next) {
         return next(err);
     });
 });
+
 
 // Comentado hasta incorporar esta funcionalidad
 //

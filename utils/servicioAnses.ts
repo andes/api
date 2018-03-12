@@ -1,16 +1,18 @@
 import * as config from '../config';
 import * as configPrivate from '../config.private';
 import { Matching } from '@andes/match';
+import * as moment from 'moment';
+
 let soap = require('soap');
 let url = configPrivate.anses.url;
 let serv = configPrivate.anses.serv;
 let serv2 = configPrivate.anses.serv2;
-
+let datosAnses = [];
 let login = configPrivate.anses;
 
 export function getServicioAnses(paciente) {
     let match = new Matching();
-    let weights = config.mpi.weightsDefault;
+    let weights = config.mpi.weightsFaAnses;
     let matchPorcentaje = 0;
     let resultado: any;
     let fecha: any;
@@ -40,31 +42,45 @@ export function getServicioAnses(paciente) {
                     } catch (error) {
                         reject(error);
                     }
-                    if (resultado.codigo === 0 && resultado.array) {
-                        if (resultado.array[2]) {
-                            fecha = new Date(resultado.array[2].substring(4), resultado.array[2].substring(3, 4) - 1, resultado.array[2].substring(0, 2));
+                    let registro = resultado[1] ? resultado[1].datos : null;
+                    let registrosAdicionales = resultado[2] ? resultado[2].adicionales : null;
+                    if (resultado[0].codigo === 0 && registro) {
+                        if (registro[2]) {
+                            fecha = new Date(registro[2].substring(4), registro[2].substring(3, 5) - 1 , registro[2].substring(0, 2));
                         } else {
                             fecha = '';
                         }
+                        let acreditado = registro[3];
                         let sex = '';
-                        if (resultado.array[3]) {
-                            (resultado.array[3] === 'M') ? sex = 'masculino' : sex = 'femenino';
+
+                        if (registrosAdicionales) {
+                            if (registrosAdicionales[0].sexo) {
+                                (registrosAdicionales[0].sexo === 'M') ? sex = 'masculino' : sex = 'femenino';
+                            }
                         }
                         let pacienteAnses = {
-                            nombre: resultado.array[0],
+                            nombre: registro[0],
                             apellido: '',
-                            documento: resultado.array[1],
+                            cuil: registro[1],
+                            documento: registro[1].substring(2, 10), // Obtengo el documento para usar en el matching como substring del cuil
                             fechaNacimiento: fecha,
                             sexo: sex
                         };
                         try {
-                            matchPorcentaje = await match.matchPersonas(paciente, pacienteAnses, weights, 'Levenshtein') * 100;
+                             matchPorcentaje = await match.matchPersonas(paciente, pacienteAnses, weights, 'Levenshtein') * 100;
                         } catch (error) {
                             reject(error);
                         }
-                        resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Anses', 'matcheo': matchPorcentaje, 'datosPaciente': pacienteAnses } });
+                        if (matchPorcentaje >= 85) {
+                            // La idea de este registro es usar sólo el cuil
+                            resolve({'cuil': pacienteAnses.cuil});
+                            // resolve({'entidad': 'Anses', 'matcheo': matchPorcentaje, 'pacienteConsultado': paciente, 'pacienteAnses': pacienteAnses });
+                        } else {
+                            resolve('Matcheo insuficiente: ' + matchPorcentaje);
+                        }
                     } else {
-                        resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Anses', 'matcheo': 0, 'datosPaciente': {} } });
+                        // No interesa devolver los datos básicos
+                        resolve (null);
                     }
                 });
             });
@@ -76,32 +92,36 @@ export function getServicioAnses(paciente) {
 
 function consultaAnses(sesion, tipo, filtro) {
     let resultadoCuil: any;
-    let resultado: any;
+    let rst: any;
+    datosAnses = [];
     return new Promise((resolve, reject) => {
         soap.createClient(serv2, function (err, client) {
             let args = {
                 IdSesion: sesion.return['$value'],
                 Base: 'PecasAutorizacion'
             };
-
             client.FijarBaseDeSesion(args, async function (err2, result) {
                 if (err2) {
                     reject(err2);
                 }
                 try {
-                    resultado = await solicitarServicio(sesion, tipo, filtro);
+                    rst = await solicitarServicio(sesion, tipo, filtro);
+                    datosAnses.push({'codigo': rst.codigo});
+                    datosAnses.push({'datos': rst.array});
                 } catch (error) {
                     reject(error);
                 }
-                if (tipo === 'Documento' && resultado.codigo === 0) {
+                if (tipo === 'Documento' && rst.codigo === 0) {
                     try {
-                        resultadoCuil = await solicitarServicio(sesion, 'Cuil', resultado.array[1]);
+                        resultadoCuil = await solicitarServicio(sesion, 'Cuil', rst.array[1]);
+                        let datosAdicionales = [{'sexo': resultadoCuil.array[3]}, {'Localidad': resultadoCuil.array[5]}, {'Calle': resultadoCuil.array[6]}, {'altura': resultadoCuil.array[7]}];
+                        datosAnses.push({'adicionales': datosAdicionales});
                     } catch (error) {
                         reject(error);
                     }
-                    resolve(resultadoCuil);
+                    resolve(datosAnses);
                 } else {
-                    resolve(resultado);
+                    resolve(datosAnses);
                 }
             });
         });
@@ -120,7 +140,7 @@ function solicitarServicio(sesion, tipo, filtro) {
                 Proveedor: 'GN-ANSES',
                 Servicio: tipo,
                 DatoAuditado: filtro,
-                Operador: login.username,
+                Operador: login.Usuario,
                 Cuerpo: 'hola',
                 CuerpoFirmado: false,
                 CuerpoEncriptado: false
