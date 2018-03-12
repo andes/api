@@ -206,7 +206,7 @@ router.patch('/prestaciones/:id', function (req, res, next) {
                     tipoPrestacion: prestacion.solicitud.tipoPrestacion,
                     organizacion: prestacion.solicitud.organizacion,
                     frecuentes: req.body.registros
-                }
+                };
                 frecuentescrl.actualizarFrecuentes(dto)
                     .then((resultadoFrec: any) => {
                         Logger.log(req, 'rup', 'update', {
