@@ -33,3 +33,44 @@ export function buscarPasesCamaXInternacion(idInternacion) {
 
     return toArray(query.cursor({}).exec());
 }
+
+export function camaOcupadasxUO(unidadOrganizativa, fecha) {
+
+    let pipelineEstado = [];
+
+    pipelineEstado =
+        [{
+            $match: {
+                'estados.unidadOrganizativa.conceptId': unidadOrganizativa,
+                'estados.estado': 'ocupada',
+                'estados.fecha': { "$lte": fecha }
+            }
+        },
+        { $unwind: "$estados" },
+        {
+            $match: {
+                'estados.estado': 'ocupada',
+                'estados.fecha': { "$lte": fecha }
+            }
+        },
+        { $sort: { 'nombre': 1, 'estados.fecha': 1 } },
+        {
+            $group:
+                {
+                    _id: {
+                        nombre: "$nombre",
+                        organizacion: "$organizacion",
+                        sector: "$sector",
+                        habitacion: "$habitacion",
+                        tipoCama: "$tipoCama"
+                    },
+
+                    ultimoEstado: { $last: "$estados" }
+                }
+        }]
+
+
+    let query = cama.aggregate(pipelineEstado);
+
+    return toArray(query.cursor({}).exec());
+}

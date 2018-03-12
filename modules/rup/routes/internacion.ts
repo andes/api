@@ -9,6 +9,7 @@ import { Auth } from './../../../auth/auth.class';
 import { model as Prestacion } from '../schemas/prestacion';
 import { model as cama } from '../../../core/tm/schemas/camas';
 
+
 let router = express.Router();
 
 router.get('/internaciones/ultima/:idPaciente', function (req, res, next) {
@@ -50,5 +51,31 @@ router.get('/internaciones/pases/:idInternacion', function (req, res, next) {
             return next(err);
         });
 });
+
+
+
+router.get('/internaciones/censo', function (req, res, next) {
+    // conceptId de la unidad organizativa
+    let unidad = req.query.unidad;//'310022001';
+    let fecha = new Date(req.query.fecha);
+    console.log(req.query, 'QUERYYY');
+    camasController.camaOcupadasxUO(unidad, fecha).then(
+        camas => {
+            if (camas) {
+                let pasesDeCama = Promise.all(camas.map(c => internacionesController.PasesParaCenso(c)))
+                pasesDeCama.then(resultado => {
+                    console.log(resultado);
+                    res.json(resultado);
+                }).catch(error => {
+                    return next(error);
+                });
+            } else {
+                res.json(null);
+            }
+        }).catch(err => {
+            return next(err);
+        });
+});
+
 
 export = router;

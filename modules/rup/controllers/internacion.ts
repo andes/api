@@ -3,6 +3,8 @@ import * as configPrivate from '../../../config.private';
 import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import { model as Prestacion } from '../schemas/prestacion';
+import * as camasController from './../controllers/cama';
+
 
 export function buscarUltimaInternacion(idPaciente, estado) {
     let query;
@@ -20,4 +22,20 @@ export function buscarUltimaInternacion(idPaciente, estado) {
 
     query.where('solicitud.ambitoOrigen').equals('internacion');
     return query.sort({ "solicitud.fecha": -1 }).limit(1).exec();
+}
+
+export function PasesParaCenso(dtoCama) {
+    return new Promise((resolve, reject) => {
+        camasController.buscarPasesCamaXInternacion(dtoCama.ultimoEstado.idInternacion).then(pases => {
+            let salida = {
+                cama: dtoCama._id,
+                ultimoEstado: dtoCama.ultimoEstado,
+                pases: pases
+            };
+            resolve(salida);
+        }).catch(error => {
+            reject(error)
+        });
+
+    });
 }
