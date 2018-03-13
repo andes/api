@@ -8,7 +8,6 @@ let router = express.Router();
 
 router.post('/', function (req, res, next) {
     let body = req.body;
-    let texto: any = req.body.extras;
     let data = {
         from: configPrivate.enviarMail.auth.user,
         to: configPrivate.enviarMail.auth.user,
@@ -16,7 +15,18 @@ router.post('/', function (req, res, next) {
         text: body.texto,
         html: ''
     };
-    SendEmail.sendMail(data).then(() => res.sendStatus(200), () => res.sendStatus(500));
+    SendEmail.sendMail(data).then(
+        () => {
+            res.json({
+                mensaje: 'Ok'
+            })
+        },
+        () => {
+            res.json({
+                mensaje: 'SERVICE UNAVAILABLE'
+            })
+        }
+    );
 })
 
 export = router
