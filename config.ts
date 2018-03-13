@@ -127,7 +127,13 @@ export const modules = {
         path: './modules/obraSocial/routes',
         route: '/modules/obraSocial',
         middleware: appMiddleware
-    }
+    },
+    sugerencias: {
+        active: true,
+        path: './modules/sugerencias/routes',
+        route: '/modules/sugerencias',
+        middleware: null
+    },
 };
 
 // Cotas de consumo de APIs
