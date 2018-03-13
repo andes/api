@@ -34,6 +34,7 @@ let schema = new mongoose.Schema({
     },
     datosPrestamo: {
         observaciones: String,
+        agendaId: mongoose.Schema.Types.ObjectId,
         turno: {
             id: mongoose.Schema.Types.ObjectId,
             profesionales: [nombreApellidoSchema],
