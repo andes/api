@@ -3,7 +3,7 @@ import * as agendaHPNCtrl from './../modules/turnos/controller/agendasHPNCacheCo
 
 function run() {
     agendaCtrl.integracionSips();
-    agendaHPNCtrl.integracion();
+    //agendaHPNCtrl.integracion();
 }
 
 export = run;
