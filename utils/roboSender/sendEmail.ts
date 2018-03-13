@@ -39,7 +39,7 @@ export function sendMail(options: MailOptions) {
             return resolve(info);
         });
     });
-} 
+}
 
 export function renderHTML(templateName: string, extras: any): Promise<string> {
     return new Promise((resolve, reject) => {
