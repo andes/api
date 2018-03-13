@@ -104,9 +104,9 @@ router.get('/style/cda.xsl', (req, res, next) => {
  */
 
 router.get('/files/:name', async (req: any, res, next) => {
-    // if (!Auth.check(req, 'cda:get')) {
-    //     return next(403);
-    // }
+    if (!Auth.check(req, 'cda:get')) {
+        return next(403);
+    }
 
     let name = req.params.name;
     let CDAFiles = makeFs();
