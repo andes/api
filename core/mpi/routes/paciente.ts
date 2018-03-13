@@ -848,7 +848,7 @@ router.patch('/pacientes/mpi/:id', function (req, res, next) {
                     controller.updateCuil(req, resultado.paciente);
                     break;
 
-            };
+            }
             let pacMpi: any;
             if (resultado.db === 'mpi') {
                 pacMpi = new pacienteMpi(resultado.paciente);
