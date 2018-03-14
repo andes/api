@@ -49,6 +49,7 @@ export function camaOcupadasxUO(unidadOrganizativa, fecha) {
         { $unwind: "$estados" },
         {
             $match: {
+                'estados.unidadOrganizativa.conceptId': unidadOrganizativa,
                 'estados.estado': 'ocupada',
                 'estados.fecha': { "$lte": fecha }
             }

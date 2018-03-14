@@ -58,7 +58,6 @@ router.get('/internaciones/censo', function (req, res, next) {
     // conceptId de la unidad organizativa
     let unidad = req.query.unidad;//'310022001';
     let fecha = new Date(req.query.fecha);
-    console.log(req.query, 'QUERYYY');
     camasController.camaOcupadasxUO(unidad, fecha).then(
         camas => {
             if (camas) {
