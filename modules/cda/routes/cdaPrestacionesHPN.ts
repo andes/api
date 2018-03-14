@@ -116,16 +116,16 @@ router.post('/prestaciones', async (req: any, res, next) => {
                         mimeType: 'application/pdf',
                         extension: 'pdf',
                         metadata: {
-                            cdaId: uniqueId,
+                            cdaId: mongoose.Types.ObjectId(uniqueId),
                             paciente: mongoose.Types.ObjectId(paciente.id)
                         }
                     });
-                    let cda = await cdaCtr.generateCDA(uniqueId, 'O', paciente, p.fecha, profesional, organizacion, snomed, cie10, texto, fileData);
+                    let cda = await cdaCtr.generateCDA(uniqueId, 'N', paciente, p.fecha, profesional, organizacion, snomed, cie10, texto, fileData);
                     let metadata = {
                         paciente: paciente.id,
                         prestacion: snomed,
                         fecha: p.fecha,
-                        adjuntos: [fileData.data],
+                        adjuntos: [{ path: fileData.data, id: fileData.id }],
                         extras: {
                             idPrestacion: p.Id,
                             idEfector: organizacion._id
