@@ -26,7 +26,7 @@ let cota = 0.95;
 export function postPrestaciones(documento) {
     return new Promise((resolve, reject) => {
         request({
-            url: configPrivate.wsSalud.hpnWS + 'BuscarEstudios',
+            url:  configPrivate.wsSalud.hostHPN + configPrivate.wsSalud.hpnWS + 'BuscarEstudios',
             method: 'POST',
             json: true,
             body: {
@@ -53,7 +53,7 @@ export function postPrestaciones(documento) {
 
 export function downloadFile(id) {
     return new Promise((resolve, reject) => {
-        let url = 'http://10.1.72.7/dotnet/WS/Services/WebService.asmx/Informe?idEstudio=' + id;
+        let url = configPrivate.wsSalud.hostHPN + configPrivate.wsSalud.hpnWS + 'Informe?idEstudio=' + id;
         http.get(url , function (response) {
             if (response.statusCode === 200) {
                 return resolve(response);
