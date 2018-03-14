@@ -29,7 +29,7 @@ export let schema = new mongoose.Schema({
             required: true
         },
 
-        // Ambito de la prestacion: ambulatorio, internacion, emergencia, etc
+        // Ambito de la prestacion: ambulatorio, internacion, emergencia, etc.
         ambitoOrigen: {
             type: String,
             required: false,
@@ -150,12 +150,12 @@ schema.pre('save', function (next) {
         return next(err);
     }
     if (prestacion.estados[prestacion.estados.length - 1].tipo === 'ejecucion') {
-        if (!prestacion.ejecucion.fecha) {
+        if (!prestacion.ejecucion.fecha && !prestacion.createdAt) {
             let err = new Error('Debe seleccionar la fecha en que se solicita');
             return next(err);
         }
 
-        if (!prestacion.ejecucion.organizacion.id) {
+        if (!prestacion.ejecucion.organizacion.id && !prestacion.solicitud.organizacion.id) {
             let err = new Error('Debe seleccionar la organizacion desde la cual se solicita');
             return next(err);
         }
