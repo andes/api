@@ -180,31 +180,54 @@ export function codificarTurno(req, data, tid) {
                     };
                     let map = new SnomedCIE10Mapping(parametros.paciente, parametros.secondaryConcepts);
                     map.transform(parametros.conceptId).then(target => {
-                        // Buscar en cie10 los primeros 5 digitos
-                        cie10.model.findOne({ codigo: (target as String).substring(0, 5) }).then(cie => {
-                            if (cie != null) {
-                                if (registro.esDiagnosticoPrincipal) {
-                                    codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del array
-                                        codificacionProfesional: {
-                                            snomed: {
-                                                conceptId: registro.concepto.conceptId,
-                                                term: registro.concepto.term,
-                                                fsn: registro.concepto.fsn,
-                                                semanticTag: registro.concepto.semanticTag,
-                                                refsetIds: registro.concepto.refsetIds
+                        if (target) {
+                            // Buscar en cie10 los primeros 5 digitos
+                            cie10.model.findOne({ codigo: (target as String).substring(0, 5) }).then(cie => {
+                                if (cie != null) {
+                                    if (registro.esDiagnosticoPrincipal) {
+                                        codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del array
+                                            codificacionProfesional: {
+                                                snomed: {
+                                                    conceptId: registro.concepto.conceptId,
+                                                    term: registro.concepto.term,
+                                                    fsn: registro.concepto.fsn,
+                                                    semanticTag: registro.concepto.semanticTag,
+                                                    refsetIds: registro.concepto.refsetIds
+                                                },
+                                                cie10: {
+                                                    causa: (cie as any).causa,
+                                                    subcausa: (cie as any).subcausa,
+                                                    codigo: (cie as any).codigo,
+                                                    nombre: (cie as any).nombre,
+                                                    sinonimo: (cie as any).sinonimo,
+                                                    c2: (cie as any).c2,
+                                                }
                                             },
-                                            cie10: {
-                                                causa: (cie as any).causa,
-                                                subcausa: (cie as any).subcausa,
-                                                codigo: (cie as any).codigo,
-                                                nombre: (cie as any).nombre,
-                                                sinonimo: (cie as any).sinonimo,
-                                                c2: (cie as any).c2,
-                                            }
-                                        },
-                                        primeraVez: registro.esPrimeraVez,
-                                    });
+                                            primeraVez: registro.esPrimeraVez,
+                                        });
 
+                                    } else {
+                                        codificaciones.push({
+                                            codificacionProfesional: {
+                                                snomed: {
+                                                    conceptId: registro.concepto.conceptId,
+                                                    term: registro.concepto.term,
+                                                    fsn: registro.concepto.fsn,
+                                                    semanticTag: registro.concepto.semanticTag,
+                                                    refsetIds: registro.concepto.refsetIds
+                                                },
+                                                cie10: {
+                                                    causa: (cie as any).causa,
+                                                    subcausa: (cie as any).subcausa,
+                                                    codigo: (cie as any).codigo,
+                                                    nombre: (cie as any).nombre,
+                                                    sinonimo: (cie as any).sinonimo,
+                                                    c2: (cie as any).c2,
+                                                }
+                                            },
+                                            primeraVez: registro.esPrimeraVez
+                                        });
+                                    }
                                 } else {
                                     codificaciones.push({
                                         codificacionProfesional: {
@@ -215,36 +238,38 @@ export function codificarTurno(req, data, tid) {
                                                 semanticTag: registro.concepto.semanticTag,
                                                 refsetIds: registro.concepto.refsetIds
                                             },
-                                            cie10: {
-                                                causa: (cie as any).causa,
-                                                subcausa: (cie as any).subcausa,
-                                                codigo: (cie as any).codigo,
-                                                nombre: (cie as any).nombre,
-                                                sinonimo: (cie as any).sinonimo,
-                                                c2: (cie as any).c2,
-                                            }
+                                            cie10: {}
                                         },
                                         primeraVez: registro.esPrimeraVez
                                     });
                                 }
-                            } else {
-                                // Todo: En el caso en q no mapea, logearlo
-                                codificaciones.push({});
-                            }
-                            if (prestaciones.length === codificaciones.length) {
-                                // console.log('codificaciones ', codificaciones);
-                                turno.diagnostico = {
-                                    ilegible: false,
-                                    codificaciones: codificaciones.filter(cod => Object.keys(cod).length > 0)
-                                };
-                                turno.asistencia = 'asistio';
-                                resolve(data);
-                            }
+                                if (prestaciones.length === codificaciones.length) {
+                                    // console.log('codificaciones ', codificaciones);
+                                    turno.diagnostico = {
+                                        ilegible: false,
+                                        codificaciones: codificaciones.filter(cod => Object.keys(cod).length > 0)
+                                    };
+                                    turno.asistencia = 'asistio';
+                                    resolve(data);
+                                }
 
-                        }).catch(err1 => {
-                            reject(err1);
-                        });
-
+                            }).catch(err1 => {
+                                reject(err1);
+                            });
+                        } else {
+                            codificaciones.push({
+                                codificacionProfesional: {
+                                    snomed: {
+                                        conceptId: registro.concepto.conceptId,
+                                        term: registro.concepto.term,
+                                        fsn: registro.concepto.fsn,
+                                        semanticTag: registro.concepto.semanticTag,
+                                        refsetIds: registro.concepto.refsetIds
+                                    }
+                                },
+                                primeraVez: registro.esPrimeraVez
+                            });
+                        }
                     }).catch(error => {
                         reject(error);
                     });
