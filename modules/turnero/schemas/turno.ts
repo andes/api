@@ -3,7 +3,7 @@ import * as mongoose from 'mongoose';
 export let turneroSchema = new mongoose.Schema({
     horaInicio: Date,
     horaLlamada: Date,
-    espacioFisico: String,
+    espacioFisico: Array,
     paciente: Array,
     profesional: Array,
     tipoPrestacion: Array
