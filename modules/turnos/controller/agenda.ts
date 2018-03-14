@@ -170,7 +170,8 @@ export function codificarTurno(req, data, tid) {
             let promises = [];
             if (arrPrestacion.length > 0 && arrPrestacion[0].ejecucion) {
                 let prestaciones = arrPrestacion[0].ejecucion.registros.filter(f => {
-                    return f.concepto.semanticTag === 'hallazgo' || f.concepto.semanticTag === 'trastorno' || f.concepto.semanticTag === 'situacion';
+                    // return f.concepto.semanticTag !== 'elemento de registro' || f.concepto.semanticTag === 'trastorno' || f.concepto.semanticTag === 'situacion';
+                    return f.concepto.semanticTag !== 'elemento de registro';
                 });
                 prestaciones.forEach(registro => {
                     let parametros = {
@@ -181,6 +182,9 @@ export function codificarTurno(req, data, tid) {
                     let map = new SnomedCIE10Mapping(parametros.paciente, parametros.secondaryConcepts);
                     map.transform(parametros.conceptId).then(target => {
                         // Buscar en cie10 los primeros 5 digitos
+                        if (!target) {
+                            reject ('No mapeo con nada');
+                        }
                         cie10.model.findOne({ codigo: (target as String).substring(0, 5) }).then(cie => {
                             if (cie != null) {
                                 if (registro.esDiagnosticoPrincipal) {
