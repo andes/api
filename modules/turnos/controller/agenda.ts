@@ -183,7 +183,7 @@ export function codificarTurno(req, data, tid) {
                     map.transform(parametros.conceptId).then(target => {
                         // Buscar en cie10 los primeros 5 digitos
                         if (!target) {
-                            reject ('No mapeo con nada');
+                            reject('No mapeo con nada');
                         }
                         cie10.model.findOne({ codigo: (target as String).substring(0, 5) }).then(cie => {
                             if (cie != null) {
@@ -343,6 +343,19 @@ export function actualizarEstado(req, data) {
                     bloque.restantesProgramados = 0;
                 }
             });
+            for (let j = 0; j < data.bloques.length; j++) {
+                let cantAccesoDirecto = data.bloques[j].accesoDirectoDelDia + data.bloques[j].accesoDirectoProgramado;
+                if (cantAccesoDirecto > 0) {
+                    data.bloques[j].restantesProgramados = data.bloques[j].restantesProgramados + data.bloques[j].restantesGestion + data.bloques[j].restantesProfesional;
+                    data.bloques[j].restantesGestion = 0;
+                    data.bloques[j].restantesProfesional = 0;
+                } else {
+                    if (data.bloques[j].reservadoProfesional > 0) {
+                        data.bloques[j].restantesGestion = data.bloques[j].restantesGestion + data.bloques[j].restantesProfesional;
+                        data.bloques[j].restantesProfesional = 0;
+                    }
+                }
+            }
         }
     }
 
