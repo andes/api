@@ -238,7 +238,9 @@ export function codificarTurno(req, data, tid) {
                                                 semanticTag: registro.concepto.semanticTag,
                                                 refsetIds: registro.concepto.refsetIds
                                             },
-                                            cie10: {}
+                                            cie10: {
+                                                codigo: 'Mapeo no disponible'
+                                            }
                                         },
                                         primeraVez: registro.esPrimeraVez
                                     });
@@ -265,6 +267,9 @@ export function codificarTurno(req, data, tid) {
                                         fsn: registro.concepto.fsn,
                                         semanticTag: registro.concepto.semanticTag,
                                         refsetIds: registro.concepto.refsetIds
+                                    },
+                                    cie10: {
+                                        codigo: 'Mapeo no disponible'
                                     }
                                 },
                                 primeraVez: registro.esPrimeraVez
