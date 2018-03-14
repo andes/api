@@ -88,10 +88,7 @@ router.post('/prestaciones', async (req: any, res, next) => {
                             {
                                 snomed = '438527007';
                                 // No tiene CIE10 el procedimiento
-                                cie10 = {
-                                    codigo: '',
-                                    nombre: ''
-                                };
+                                cie10 = null;
                                 texto = 'Ecografía de partes blandas';
                                 break;
                             }
@@ -99,10 +96,7 @@ router.post('/prestaciones', async (req: any, res, next) => {
                             {
                                 snomed = '15634001000119103';
                                 // No tiene CIE10 el procedimiento
-                                cie10 = {
-                                    codigo: '',
-                                    nombre: ''
-                                };
+                                cie10 = null;
                                 texto = 'Ecografía de cerebro';
                                 break;
                             }
@@ -110,10 +104,7 @@ router.post('/prestaciones', async (req: any, res, next) => {
                             {
                                 snomed = '241507002';
                                 // No tiene CIE10 el procedimiento
-                                cie10 = {
-                                    codigo: '',
-                                    nombre: ''
-                                };
+                                cie10 = null;
                                 texto = 'Ecografía musculoesquelética';
                                 break;
                             }
