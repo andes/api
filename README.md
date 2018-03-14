@@ -32,19 +32,21 @@ npm start
 docker build -t andesnqn/api .
 ```
 
-### Run images
+### Run image in container
 
 ```bash
 docker run  -p  3002:3002  --rm --name andes_api andesnqn/api 
 ```
 
-### Run images for developtment
+### Run container for developtment
 
 ```bash
 docker run -v  ${pwd}:/usr/src/api  -p  3002:3002  --rm --name andes_api andesnqn/api 
 
+#Stop container
 docker stop andes_api
 
+#Run command inside the conntainer
 docker exec andes_api npm install
 
 ```
