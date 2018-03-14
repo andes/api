@@ -21,7 +21,6 @@ export function getServicioAnses(paciente) {
         if (paciente && paciente.documento && band) {
             soap.createClient(url, function (err, client) {
                 if (err) {
-                    console.log('ERROR', err);
                     reject(err);
                 }
                 if (client) {
@@ -84,7 +83,7 @@ export function getServicioAnses(paciente) {
                             // No interesa devolver los datos básicos
                             resolve(null);
                         }
-                    })
+                    });
                 } else {
                     resolve(null);
                 }
