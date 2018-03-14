@@ -343,6 +343,10 @@ export function actualizarEstado(req, data) {
                     bloque.restantesProgramados = 0;
                 }
             });
+        }
+        // Si se esta publicando una agenda de hoy o mañana se pasan los turnos igual q en job
+        let tomorrow = moment(new Date()).add(1, 'days');
+        if (moment(data.horaInicio).isSame(hoy, 'day') || moment(data.horaInicio).isSame(tomorrow, 'day')) {
             for (let j = 0; j < data.bloques.length; j++) {
                 let cantAccesoDirecto = data.bloques[j].accesoDirectoDelDia + data.bloques[j].accesoDirectoProgramado;
                 if (cantAccesoDirecto > 0) {
