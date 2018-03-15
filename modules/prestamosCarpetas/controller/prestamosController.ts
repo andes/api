@@ -21,7 +21,7 @@ export async function getCarpetasSolicitud(req) {
         let horaFin = body.fechaHasta;
         let estado = body.estado;
         let agendas = await buscarAgendasTurnos(new ObjectId(organizacionId), tipoPrestacionId, espacioFisicoId, profesionalId, horaInicio, horaFin);
-        let nrosCarpetas = getNrosCarpetas(agendas);
+        let nrosCarpetas = getNrosCarpetas(agendas, organizacionId);
         let carpetas = await findCarpetas(new ObjectId(organizacionId), nrosCarpetas);
         let prestamosCarpetas = await getRegistrosSolicitudCarpetas(req, organizacionId, agendas, carpetas);
 
@@ -45,12 +45,12 @@ export async function getCarpetasPrestamo(req) {
     });
 }
 
-function getNrosCarpetas(agendas) {
+function getNrosCarpetas(agendas, organizacionId) {
     let nroCarpetas = [];
     agendas.forEach(_agenda => {
         _agenda.turnos.forEach(unTurno => {
             unTurno.paciente.carpetaEfectores.forEach(async unaCarpeta => {
-                if (nroCarpetas.indexOf(unaCarpeta.nroCarpeta) < 0) {
+                if ((nroCarpetas.indexOf(unaCarpeta.nroCarpeta) < 0) && unaCarpeta.organizacion._id.equals(organizacionId)) {
                     nroCarpetas.push(unaCarpeta.nroCarpeta);
                 }
             });
@@ -68,8 +68,9 @@ async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carp
             _turno.paciente.carpetaEfectores.forEach(async unaCarpeta => {
                 let estadoCarpeta = constantes.EstadosPrestamosCarpeta.EnArchivo;
 
+                if (unaCarpeta.organizacion._id === unaOrganizacion) {
                 for (let i = 0; i < carpetas.length; i++) {
-                    if (carpetas[i]._id === unaCarpeta.nroCarpeta) {
+                        if ((carpetas[i]._id === unaCarpeta.nroCarpeta)) {
                         estadoCarpeta = carpetas[i].estado;
                         break;
                     }
@@ -94,6 +95,8 @@ async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carp
                         }
                     });
                 }
+                }
+
             });
         });
     });
@@ -133,7 +136,7 @@ async function findCarpetasPrestamo(organizacionId, horaInicio, horaFin) {
         }
         if (horaFin) {
             match['createdAt']['$lte'] = new Date(horaFin);
-        }    
+        }
     }
     match['organizacion._id'] = { '$eq': organizacionId };
     sort['createdAt'] = -1;
@@ -144,11 +147,9 @@ async function findCarpetasPrestamo(organizacionId, horaInicio, horaFin) {
     group['datosPrestamo'] = { '$first': '$datosPrestamo' };
 
     pipeline.push({ '$match': match });
-    pipeline.push({ '$sort': sort }); 
+    pipeline.push({ '$sort': sort });
     pipeline.push({ '$group': group });
-    
-    let result:any = await toArray(prestamo.aggregate(pipeline).cursor({}).exec());
-
+    let result: any = await toArray(prestamo.aggregate(pipeline).cursor({}).exec());
     result = result.filter(function(el) {
         return el.estado === constantes.EstadosPrestamosCarpeta.Prestada;
     });
@@ -178,8 +179,8 @@ async function buscarAgendasTurnos(organizacionId, tipoPrestacion, espacioFisico
         }
         if (horaFin) {
             matchCarpeta['horaInicio']['$lte'] = new Date(horaFin);
-        }    
-    }    
+        }
+    }
 
     matchCarpeta['bloques.turnos.estado'] = { '$eq': 'asignado' };
     matchCarpeta['bloques.turnos.paciente.carpetaEfectores.organizacion._id'] = organizacionId;
@@ -205,8 +206,8 @@ async function buscarAgendasTurnos(organizacionId, tipoPrestacion, espacioFisico
             'tipoPrestaciones': { $push: '$tipoPrestaciones' },
             'turnos': { $push: '$bloques.turnos' }
         }
-    }]; 
-    
+    }];
+
     return await toArray(agenda.aggregate(pipelineCarpeta).cursor({}).exec());
 }
 
@@ -227,7 +228,7 @@ export async function devolverCarpeta(req) {
 
 async function createCarpeta(req, estadoPrestamoCarpeta) {
     let agendaId = req.body.idAgenda;
-    console.log('createCarpeta agendaId', agendaId)
+
     let turnoId = req.body.idTurno;
 
     let data = await agenda.findById(agendaId);
