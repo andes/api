@@ -1,3 +1,4 @@
+import * as camas from './camas';
 import * as mongoose from 'mongoose';
 import * as edificioSchema from './edificio';
 import * as direccionSchema from './direccion';
@@ -6,18 +7,18 @@ import * as tipoEstablecimientoSchema from './tipoEstablecimiento';
 import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
 
 let codigoSchema = new mongoose.Schema({
-        sisa: {
-            type: String,
-            required: true
-        },
-        cuie: String,
-        remediar: String
-    });
+    sisa: {
+        type: String,
+        required: true
+    },
+    cuie: String,
+    remediar: String
+});
 
 let _schema = new mongoose.Schema({
     codigo: { type: codigoSchema },
     nombre: String,
-    tipoEstablecimiento:  { type: tipoEstablecimientoSchema },
+    tipoEstablecimiento: { type: tipoEstablecimientoSchema },
     contacto: [contactoSchema],
     direccion: { type: direccionSchema },
     edificio: [edificioSchema],
@@ -29,8 +30,9 @@ let _schema = new mongoose.Schema({
     },
     fechaAlta: Date,
     fechaBaja: Date,
-    servicios: [SnomedConcept]
+    unidadesOrganizativas: [SnomedConcept]
 });
-
+const audit = require('../../../mongoose/audit');
+_schema.plugin(audit);
 export let schema = _schema;
 export let model = mongoose.model('organizacion', _schema, 'organizacion');

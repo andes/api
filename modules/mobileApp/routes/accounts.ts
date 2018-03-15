@@ -1,8 +1,9 @@
-import { pacienteApp } from '../schemas/pacienteApp';
+import { pacienteApp as PacienteApp } from '../schemas/pacienteApp';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import * as authController from '../controller/AuthController';
 import * as controllerPaciente from '../../../core/mpi/controller/paciente';
+import * as labsImport from '../../cda/controller/import-labs';
 
 let router = express.Router();
 
@@ -17,7 +18,7 @@ let router = express.Router();
 
 router.put('/account', function (req: any, res, next) {
     let id = req.user.account_id;
-    pacienteApp.findById(mongoose.Types.ObjectId(id), (err, account: any) => {
+    PacienteApp.findById(mongoose.Types.ObjectId(id), (err, account: any) => {
         if (!account) {
             return res.status(422).send({ error: '' });
         }
@@ -45,11 +46,15 @@ router.post('/create/:id', function (req: any, res, next) {
     }
     return controllerPaciente.buscarPaciente(pacienteId).then((resultado) => {
         let pacienteObj = resultado.paciente;
+
         authController.createUserFromPaciente(pacienteObj, contacto).then(() => {
+            // Hack momentaneo. Descargamos los laboratorios a demanda.
+            labsImport.importarDatos(pacienteObj);
             return res.send({ message: 'OK' });
         }).catch((error) => {
             return res.send(error);
         });
+
     }).catch(() => {
         return res.send({ error: 'paciente_error' });
     });
@@ -84,10 +89,12 @@ router.get('/check/:id', function (req: any, res, next) {
  * Reenviar código de activación a un paciente
  *
  * @param {ObjectId} id ID del paciente
+ * [DEPRECATED]
  */
 
 router.post('/v2/reenviar-codigo', (req, res, next) => {
     let pacienteId = req.body.id;
+    let contacto = req.body.contacto;
     if (!mongoose.Types.ObjectId.isValid(pacienteId)) {
         return res.status(422).send({ error: 'ObjectID Inválido' });
     }
@@ -98,15 +105,20 @@ router.post('/v2/reenviar-codigo', (req, res, next) => {
             if (resultado2.account) {
                 let account = resultado2.account;
 
-                account.codigoVerificacion = await authController.createUniqueCode(),
-                account.expirationTime = new Date(Date.now() + authController.expirationOffset);
-                account.save();
-                authController.enviarCodigoVerificacion(account);
+                account.email = contacto.email;
+                account.telefono = contacto.telefono;
 
-                return res.json({ status: 'OK' });
+                let passw = authController.generarCodigoVerificacion();
+                account.password = passw;
 
+                account.save((errSave, userSaved: any) => {
+                    if (errSave) {
+                        return res.send({ error: 'paciente_error' });
+                    }
+                    authController.enviarCodigoVerificacion(userSaved, passw);
+                    return res.json({ status: 'OK' });
+                });
             }
-            return res.send({ error: 'paciente_error' });
         }).catch((error) => {
             return res.send(error);
         });

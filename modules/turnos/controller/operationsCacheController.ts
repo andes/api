@@ -226,6 +226,7 @@ async function getIdObraSocialSips(documentoPaciente) {
             ') ASC';
 
         try {
+
             let result = await new sql.Request().query(query);
             resolve(result.length > 0 ? result[0].idOS : idSumar);
         } catch (err) {
@@ -279,6 +280,7 @@ function existeConsultorio(agenda, idEfector) {
                     idConsultorio = await creaConsultorioSips(agenda, idEfector);
                     resolve(idConsultorio);
                 }
+
             } catch (err) {
                 reject(err);
             }
@@ -576,6 +578,7 @@ async function grabaTurnoSips(turno, idAgendaSips, idEfector) {
             // if(!pacienteEncontrado) {
             //  pacienteEncontrado = buscar en andes.......
             // }
+
             let idObraSocial = await getIdObraSocialSips(paciente.documento);
             let pacienteId = await getPacienteMPI(paciente, idEfector);
 
