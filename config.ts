@@ -127,7 +127,13 @@ export const modules = {
         path: './modules/obraSocial/routes',
         route: '/modules/obraSocial',
         middleware: appMiddleware
-    }
+    },
+    prestamosCarpetas: {
+        active: true,
+        path: './modules/prestamosCarpetas/routes',
+        route: '/modules/prestamosCarpetas',
+        middleware: appMiddleware
+    },
 };
 
 // Cotas de consumo de APIs

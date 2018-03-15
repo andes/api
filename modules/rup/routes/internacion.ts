@@ -18,7 +18,7 @@ router.get('/internaciones/ultima/:idPaciente', function (req, res, next) {
             let salida = { ultimaInternacion: null, cama: null };
             if (internacion && internacion.length > 0) {
                 let ultimaInternacion = internacion[0];
-                // Ahora buscamos si se encuentra asociada la internacion a una cama 
+                // Ahora buscamos si se encuentra asociada la internacion a una cama
                 camasController.buscarCamaInternacion(mongoose.Types.ObjectId(ultimaInternacion.id), 'ocupada').then(
                     camas => {
                         salida = { ultimaInternacion: ultimaInternacion, cama: null };

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width"> <!-- Forcing initial-scale shouldn't be necessary -->
     <meta http-equiv="X-UA-Compatible" content="IE=edge"> <!-- Use the latest (edge) version of IE rendering engine -->
     <meta name="x-apple-disable-message-reformatting">  <!-- Disable auto-scale in iOS 10 Mail entirely -->
-    <title>ANDES - Resetear contraseña</title> <!-- The title tag shows in email notifications, like Android 4.4. -->
+    <title>ANDES - Clave de activación</title> <!-- The title tag shows in email notifications, like Android 4.4. -->
 
     <!-- CSS Reset : BEGIN -->
     <style>
@@ -104,11 +104,11 @@
     .button-a {
         transition: all 100ms ease-in;
     }
-    .button-td:hover,
+    /* .button-td:hover,
     .button-a:hover {
         background: #043750 !important;
         border-color: #043750 !important;
-    }
+    } */
 
     /* Media Queries */
     @media screen and (max-width: 600px) {
@@ -136,11 +136,11 @@
 
 </head>
 <body width="100%" bgcolor="#043750" style="margin: 0; mso-line-height-rule: exactly;">
-    <center style="width: 100%; background: #043750; text-align: left;">
+    <center style="width: 100%; /*background: #043750; */ text-align: left;">
 
         <!-- Visually Hidden Preheader Text : BEGIN -->
         <div style="display: none; font-size: 1px; line-height: 1px; max-height: 0px; max-width: 0px; opacity: 0; overflow: hidden; mso-hide: all; font-family: sans-serif;">
-            ANDES - Código de activación aplicación mobile.
+            ANDES - Password de activación de App Mobile
         </div>
         <!-- Visually Hidden Preheader Text : END -->
 
@@ -160,7 +160,7 @@
             <table role="presentation" cellspacing="0" cellpadding="0" border="0" align="center" width="100%" style="max-width: 600px;">
                 <tr>
                     <td style="padding: 20px 0; text-align: center">
-                        <img src="https://www.andes.gob.ar/images/andes_logo_w.png" width="100" height="100" alt="ANDES - Aplicaciones Neuquinas de Salud" border="0" style="height: auto; background: transparent; font-family: sans-serif; font-size: 15px; line-height: 20px; color: #555555;">
+                        <img src="https://www.andes.gob.ar/images/logo-andes.png" width="200" height="200" alt="ANDES - Aplicaciones Neuquinas de Salud" border="0" style="height: auto; background: transparent; font-family: sans-serif; font-size: 15px; line-height: 20px; color: #555555;">
                     </td>
                 </tr>
             </table>
@@ -175,9 +175,8 @@
                         <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
                             <tr>
                                 <td style="text-align: center; padding: 40px; font-family: sans-serif; font-size: 15px; line-height: 20px; color: #043750;">
-                                    Hola {{username}}, este es tu código de activación. 
-                                    <br />
-                                    El código estará disponible por un día. En caso contrario deberás volver a una ventanilla de acreditación para que te generen uno nuevo.
+                                    Hola {{username}}, esta es tu clave para activar la aplicación móvil de ANDES. Recordá ingresar con el e-mail  
+                                    que nos brindaste en el punto de acreditación. 
                                 
                                     <br><br>
                                     <!-- Button : Begin -->
@@ -192,6 +191,14 @@
                                             </td>
                                         </tr>
                                     </table>
+
+                                    <br>
+
+                                    Si todavía no la tenés, descargala desde acá: <br>
+
+                                    <a href='https://play.google.com/store/apps/details?id=org.andes.mobile&hl=es&pcampaignid=MKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img alt='Disponible en Google Play' width="300px" src='https://play.google.com/intl/en_us/badges/images/generic/es_badge_web_generic.png'/></a>
+
+
                                     <!-- Button : END -->
                                 </td>
                             </tr>
