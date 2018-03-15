@@ -122,10 +122,10 @@ export const modules = {
         route: '/modules/descargas',
         middleware: appMiddleware
     },
-    arancelamiento: {
+    obraSocial: {
         active: true,
-        path: './modules/arancelamiento/routes',
-        route: '/modules/arancelamiento',
+        path: './modules/obraSocial/routes',
+        route: '/modules/obraSocial',
         middleware: appMiddleware
     },
     prestamosCarpetas: {
@@ -170,5 +170,11 @@ export const mpi = {
         name: 0.3,
         gender: 0.1,
         birthDate: 0.3
+    },
+    weightsFaAnses: {
+        identity: 0.1,
+        name: 0.45,
+        gender: 0.3,
+        birthDate: 0.15
     }
 };

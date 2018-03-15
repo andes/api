@@ -1,6 +1,6 @@
 {
   "name": "api",
-  "version": "2.4.1",
+  "version": "2.5.0",
   "description": "API para ANDES",
   "main": "index.js",
   "dependencies": {
@@ -42,7 +42,7 @@
     "ldapjs": "^1.0.1",
     "libxmljs": "^0.18.4",
     "mime-db": "^1.29.0",
-    "moment": "^2.18.1",
+    "moment": "^2.19.3",
     "mongoosastic": "^4.2.4",
     "mongoose": "4.10.8",
     "mongoose-gridfs": "^0.3.2",

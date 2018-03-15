@@ -3,7 +3,7 @@ import * as mongoose from 'mongoose';
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 import * as cie10 from '../../../core/term/schemas/cie10';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
-// import * as organizacion from '../../../core/tm/schemas/organizacion';
+import * as obraSocialSchema from '../../obraSocial/schemas/obraSocial';
 
 let turnoSchema = new mongoose.Schema({
     horaInicio: Date,
@@ -57,8 +57,10 @@ let turnoSchema = new mongoose.Schema({
         carpetaEfectores: [{
             organizacion: nombreSchema,
             nroCarpeta: String
-        }]
+        }],
+        obraSocial: { type: obraSocialSchema }
     },
+    motivoConsulta: String,
     tipoPrestacion: {
         type: tipoPrestacionSchema
     },
