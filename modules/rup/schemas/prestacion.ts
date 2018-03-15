@@ -55,11 +55,6 @@ export let schema = new mongoose.Schema({
         // Registros de la solicitud ... para los planes o prestaciones futuras
         registros: [registro.schema],
 
-        /**
-         *  1. ORIGEN DE SOLICITUD
-         * 
-         */
-
         // Organización desde la que se solicita la Prestación.
         organizacion: {
             // requirido, validar en middleware
@@ -82,31 +77,6 @@ export let schema = new mongoose.Schema({
             ref: 'prestacion'
         },
 
-        /**
-         *  2. DESTINO DE SOLICITUD
-         *      a.  Organización: Si no existe se completa con una copia de ejecucion.registros.createdBy.organizacion.
-         *          Si no hay registros se completa con createdBy.organizacion
-         *      
-         *      b.  Profesionales: Si no existe se completa con una copia de solicitud.registros.valor.solicituPrestacion.profesionales.
-         *          Si no hay registros se completa con solicitud.profesional
-         * 
-         */
-
-        // Organización a la cual se le solicita la Prestación.
-        organizacionDestino: {
-            // requirido, validar en middleware
-            id: mongoose.Schema.Types.ObjectId,
-            nombre: String
-        },
-
-        // Profesional(es) a quienes se solicita la Prestación. Si no existe se usa createdBy.profesionales
-        profesionalesDestino: [{
-            // requerido, validar en middleware
-            id: mongoose.Schema.Types.ObjectId,
-            nombre: String,
-            apellido: String,
-            documento: String
-        }],
 
     },
 
@@ -124,6 +94,17 @@ export let schema = new mongoose.Schema({
             id: mongoose.Schema.Types.ObjectId,
             nombre: String
         },
+
+        /**
+         *  DESTINO DE SOLICITUD
+         *      a.  Organización: Si no existe se completa con una copia de ejecucion.registros.createdBy.organizacion.
+         *          Si no hay registros se completa con createdBy.organizacion
+         *      
+         *      b.  Profesionales: Si no existe se completa con una copia de solicitud.registros.valor.solicituPrestacion.profesionales.
+         *          Si no hay registros se completa con solicitud.profesional
+         * 
+         */
+
         // Registros de la ejecución
         registros: [registro.schema],
     },
