@@ -100,7 +100,10 @@ router.get('/agenda/candidatas', async function (req, res, next) {
 });
 
 router.get('/agenda/diagnosticos', async function (req, res, next) {
-    diagnosticosCtrl.getDiagnosticos(req.query).then((resultado) => {
+    let organizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
+    let params = req.query;
+    params['organizacion'] = organizacion;
+    diagnosticosCtrl.getDiagnosticos(params).then((resultado) => {
         res.json(resultado);
     });
 

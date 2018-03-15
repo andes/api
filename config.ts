@@ -164,5 +164,11 @@ export const mpi = {
         name: 0.3,
         gender: 0.1,
         birthDate: 0.3
+    },
+    weightsFaAnses: {
+        identity: 0.1,
+        name: 0.45,
+        gender: 0.3,
+        birthDate: 0.15
     }
 };
