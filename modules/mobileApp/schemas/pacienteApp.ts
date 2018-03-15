@@ -43,11 +43,6 @@ export let pacienteAppSchema = new mongoose.Schema({
         type: String
         // required: true
     },
-    codigoVerificacion: {
-        type: String,
-        /* unique: true, */
-        /* required: true */
-    },
     // Si fue usado o no
     pacientes: [
         {
@@ -63,14 +58,6 @@ export let pacienteAppSchema = new mongoose.Schema({
 
     profesionalId: mongoose.Schema.Types.ObjectId,
 
-    estadoCodigo: {
-        type: Boolean,
-        default: false
-    },
-    expirationTime: {
-        type: Date
-    },
-    envioCodigoCount: Number,
     activacionApp: {
         type: Boolean,
         default: false
