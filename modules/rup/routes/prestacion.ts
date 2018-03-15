@@ -68,7 +68,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             let estados = (typeof req.query.estado === 'string') ? [req.query.estado] : req.query.estado;
             query = Prestacion.find({
                 // $where: 'this.estados[this.estados.length - 1].tipo ==  \"' + req.query.estado + '\"',
-                $where: estados.map(x => 'this.estados[this.estados.length - 1].tipo ==  \"' + x + '"').join(' '),
+                $where: estados.map(x => 'this.estados[this.estados.length - 1].tipo ==  \"' + x + '"').join(' || '),
             });
         } else {
             query = Prestacion.find({}); // Trae todos
