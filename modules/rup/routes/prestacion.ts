@@ -96,6 +96,13 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             query.where('ejecucion.registros.concepto.conceptId').in(req.query.conceptsIdEjecucion);
         }
 
+        if (req.query.solicitudDesde) {
+            query.where('solicitud.fecha').gte(moment(req.query.solicitudDesde).startOf('day').toDate() as any);
+        }
+
+        if (req.query.solicitudHasta) {
+            query.where('solicitud.fecha').lte(moment(req.query.solicitudHasta).endOf('day').toDate() as any);
+        }
         // Solicitudes generadas desde puntoInicio Ventanilla
         // Solicitudes que no tienen prestacionOrigen ni turno
         // Si tienen prestacionOrigen son generadas por RUP y no se listan
