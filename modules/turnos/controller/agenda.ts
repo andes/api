@@ -613,9 +613,9 @@ export function actualizarTiposDeTurno() {
 export function actualizarEstadoAgendas() {
     // let fechaActualizar = moment(new Date()).subtract(1, 'days');
     let fechaActualizar = moment(new Date());
-    // actualiza los agendas en estado disponible o publicada que se hayan ejecutado el día anterior
+    // actualiza los agendas en estado pausada, disponible o publicada que se hayan ejecutado el día anterior
     let condicion = {
-        '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
+        '$or': [{ estado: 'disponible' }, { estado: 'publicada' }, { estado: 'pausada' }],
         'horaInicio': {
             $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
         }
