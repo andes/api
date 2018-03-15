@@ -39,7 +39,7 @@ export async function getCarpetasPrestamo(req) {
         let horaInicio = body.fechaDesde;
         let horaFin = body.fechaHasta;
         let estado = body.estado;
-        let carpetas = await findCarpetasPrestamo(new ObjectId(organizacionId), horaInicio, horaFin);
+        let carpetas = await findCarpetasPrestamo(new ObjectId(organizacionId), horaInicio, horaFin, tipoPrestacionId, espacioFisicoId, profesionalId);
 
         resolve(carpetas);
     });
@@ -62,37 +62,41 @@ function getNrosCarpetas(agendas) {
 async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carpetas) {
     let registrosSolicitudCarpetas = [];
     let resBusquedaCarpeta;
+    let mostrarPrestamos = req.body.mostrarPrestamos;
 
     agendas.forEach(_agenda => {
         _agenda.turnos.forEach(_turno => {
             _turno.paciente.carpetaEfectores.forEach(async unaCarpeta => {
-                let estadoCarpeta = constantes.EstadosPrestamosCarpeta.EnArchivo;
+                // Validación de PDR para ignorar números de carpetas autogenerados por HPN.
+                if (unaCarpeta.nroCarpeta.indexOf('PDR') < 0) {
+                    let estadoCarpeta = constantes.EstadosPrestamosCarpeta.EnArchivo;
 
-                for (let i = 0; i < carpetas.length; i++) {
-                    if (carpetas[i]._id === unaCarpeta.nroCarpeta) {
-                        estadoCarpeta = carpetas[i].estado;
-                        break;
-                    }
-                }
-
-                if (estadoCarpeta === constantes.EstadosPrestamosCarpeta.EnArchivo) {
-                    registrosSolicitudCarpetas.push({
-                        fecha: _turno.horaInicio,
-                        paciente: _turno.paciente,
-                        numero: unaCarpeta.nroCarpeta,
-                        estado: estadoCarpeta,
-                        organizacion: unaOrganizacion,
-                        datosPrestamo: {
-                            agendaId: _agenda._id,
-                            observaciones: '',
-                            turno: {
-                                id: _turno._id,
-                                profesionales: _agenda.profesionales[0],
-                                espacioFisico: _agenda.espacioFisico[0],
-                                tipoPrestaciones: _agenda.tipoPrestaciones[0],
-                            }
+                    for (let i = 0; i < carpetas.length; i++) {
+                        if (carpetas[i]._id === unaCarpeta.nroCarpeta) {
+                            estadoCarpeta = carpetas[i].estado;
+                            break;
                         }
-                    });
+                    }
+
+                    if (mostrarPrestamos || (estadoCarpeta === constantes.EstadosPrestamosCarpeta.EnArchivo)) {
+                        registrosSolicitudCarpetas.push({
+                            fecha: _turno.horaInicio,
+                            paciente: _turno.paciente,
+                            numero: unaCarpeta.nroCarpeta,
+                            estado: estadoCarpeta,
+                            organizacion: unaOrganizacion,
+                            datosPrestamo: {
+                                agendaId: _agenda._id,
+                                observaciones: '',
+                                turno: {
+                                    id: _turno._id,
+                                    profesionales: _agenda.profesionales[0],
+                                    espacioFisico: _agenda.espacioFisico[0],
+                                    tipoPrestaciones: _agenda.tipoPrestaciones[0],
+                                }
+                            }
+                        });
+                    }
                 }
             });
         });
@@ -120,7 +124,7 @@ async function findCarpetas(organizacionId, nrosCarpetas) {
     return await toArray(prestamo.aggregate(pipeline).cursor({}).exec());
 }
 
-async function findCarpetasPrestamo(organizacionId, horaInicio, horaFin) {
+async function findCarpetasPrestamo(organizacionId, horaInicio, horaFin, tipoPrestacion, espacioFisico, profesional) {
     let pipeline = [];
     let match = {};
     let sort = {};
@@ -133,9 +137,21 @@ async function findCarpetasPrestamo(organizacionId, horaInicio, horaFin) {
         }
         if (horaFin) {
             match['createdAt']['$lte'] = new Date(horaFin);
-        }    
+        }
+    }
+    if (tipoPrestacion) {
+        match['datosPrestamo.turno.tipoPrestaciones._id'] = new ObjectId(tipoPrestacion);
+    }
+
+    if (espacioFisico) {
+        match['datosPrestamo.turno.espacioFisico._id'] = espacioFisico;
+    }
+
+    if (profesional) {
+        match['datosPrestamo.turno.profesionales._id'] = new ObjectId(profesional);
     }
     match['organizacion._id'] = { '$eq': organizacionId };
+
     sort['createdAt'] = -1;
     group['_id'] = '$numero';
     group['estado'] = { '$first': '$estado' };
@@ -144,10 +160,10 @@ async function findCarpetasPrestamo(organizacionId, horaInicio, horaFin) {
     group['datosPrestamo'] = { '$first': '$datosPrestamo' };
 
     pipeline.push({ '$match': match });
-    pipeline.push({ '$sort': sort }); 
+    pipeline.push({ '$sort': sort });
     pipeline.push({ '$group': group });
-    
-    let result:any = await toArray(prestamo.aggregate(pipeline).cursor({}).exec());
+
+    let result: any = await toArray(prestamo.aggregate(pipeline).cursor({}).exec());
 
     result = result.filter(function(el) {
         return el.estado === constantes.EstadosPrestamosCarpeta.Prestada;
@@ -178,8 +194,8 @@ async function buscarAgendasTurnos(organizacionId, tipoPrestacion, espacioFisico
         }
         if (horaFin) {
             matchCarpeta['horaInicio']['$lte'] = new Date(horaFin);
-        }    
-    }    
+        }
+    }
 
     matchCarpeta['bloques.turnos.estado'] = { '$eq': 'asignado' };
     matchCarpeta['bloques.turnos.paciente.carpetaEfectores.organizacion._id'] = organizacionId;
@@ -205,8 +221,8 @@ async function buscarAgendasTurnos(organizacionId, tipoPrestacion, espacioFisico
             'tipoPrestaciones': { $push: '$tipoPrestaciones' },
             'turnos': { $push: '$bloques.turnos' }
         }
-    }]; 
-    
+    }];
+
     return await toArray(agenda.aggregate(pipelineCarpeta).cursor({}).exec());
 }
 
@@ -227,7 +243,6 @@ export async function devolverCarpeta(req) {
 
 async function createCarpeta(req, estadoPrestamoCarpeta) {
     let agendaId = req.body.idAgenda;
-    console.log('createCarpeta agendaId', agendaId)
     let turnoId = req.body.idTurno;
 
     let data = await agenda.findById(agendaId);
