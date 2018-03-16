@@ -164,7 +164,7 @@ export function codificarTurno(req, data, tid) {
             }
             let arrPrestacion = data1 as any;
             let codificaciones = [];
-            let promises = [];
+            // let promises = [];
             if (arrPrestacion.length > 0 && arrPrestacion[0].ejecucion) {
                 let prestaciones = arrPrestacion[0].ejecucion.registros.filter(f => {
                     return f.concepto.semanticTag === 'hallazgo' || f.concepto.semanticTag === 'trastorno' || f.concepto.semanticTag === 'situacion';
