@@ -63,7 +63,6 @@ router.get('/internaciones/censo', function (req, res, next) {
             if (camas) {
                 let pasesDeCama = Promise.all(camas.map(c => internacionesController.PasesParaCenso(c)))
                 pasesDeCama.then(resultado => {
-                    console.log(resultado);
                     res.json(resultado);
                 }).catch(error => {
                     return next(error);

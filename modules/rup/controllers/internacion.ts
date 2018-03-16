@@ -27,12 +27,15 @@ export function buscarUltimaInternacion(idPaciente, estado) {
 export function PasesParaCenso(dtoCama) {
     return new Promise((resolve, reject) => {
         camasController.buscarPasesCamaXInternacion(dtoCama.ultimoEstado.idInternacion).then(pases => {
-            let salida = {
-                cama: dtoCama._id,
-                ultimoEstado: dtoCama.ultimoEstado,
-                pases: pases
-            };
-            resolve(salida);
+            Prestacion.findById(dtoCama.ultimoEstado.idInternacion).then(internacion => {
+                let salida = {
+                    cama: dtoCama._id,
+                    ultimoEstado: dtoCama.ultimoEstado,
+                    pases: pases,
+                    internacion: internacion
+                };
+                resolve(salida);
+            });
         }).catch(error => {
             reject(error)
         });
