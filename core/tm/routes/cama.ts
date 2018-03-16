@@ -9,7 +9,7 @@ let router = express.Router();
  * Busca la cama por su id.
  */
 
-router.get('/camas/:idCama', function (req, res, next) {
+router.get('/camas/:idCama', Auth.authenticate(), function (req, res, next) {
     cama.model.findById({
         '_id': req.params.idCama
     }, function (err, data: any) {
@@ -25,7 +25,7 @@ router.get('/camas/:idCama', function (req, res, next) {
 //  * pueden filtrar por estado o habitacion.
 //  */
 
-router.get('/camas', function (req, res, next) {
+router.get('/camas', Auth.authenticate(), function (req, res, next) {
 
     let query;
     query = cama.model.find({});
@@ -53,7 +53,7 @@ router.get('/camas', function (req, res, next) {
  * Agrega una nueva cama a la organizacion.
  */
 
-router.post('/camas', (req, res, next) => {
+router.post('/camas', Auth.authenticate(), (req, res, next) => {
     let newCama = new cama.model(req.body);
     // agregamos audit a la cama
     Auth.audit(newCama, req);
@@ -69,7 +69,7 @@ router.post('/camas', (req, res, next) => {
  * Editar una cama
  */
 
-router.put('/camas/:id', (req, res, next) => {
+router.put('/camas/:id', Auth.authenticate(), (req, res, next) => {
 
     cama.model.findById({ _id: req.params.id }, function (err3, data: any) {
         if (err3) {
@@ -88,7 +88,7 @@ router.put('/camas/:id', (req, res, next) => {
 });
 
 
-router.patch('/camas/:idCama', function (req, res, next) {
+router.patch('/camas/:idCama', Auth.authenticate(), function (req, res, next) {
     cama.model.findById({
         _id: req.params.idCama,
     }, function (err, data: any) {
@@ -149,7 +149,7 @@ router.patch('/camas/:idCama', function (req, res, next) {
     });
 });
 
-router.patch('/camas/cambiaEstado/:idCama', function (req, res, next) {
+router.patch('/camas/cambiaEstado/:idCama', Auth.authenticate(), function (req, res, next) {
     cama.model.findById({
         _id: req.params.idCama,
     }, function (err, _cama: any) {
