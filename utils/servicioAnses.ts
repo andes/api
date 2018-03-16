@@ -21,7 +21,7 @@ export function getServicioAnses(paciente) {
         if (paciente && paciente.documento && band) {
             soap.createClient(url, function (err, client) {
                 if (err) {
-                    reject(err);
+                    return reject(err);
                 }
                 if (client) {
                     client.LoginPecas(login, async function (err2, result) {
