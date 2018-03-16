@@ -22,7 +22,7 @@ export function getServicioAnses(paciente) {
             soap.createClient(url, function (err, client) {
                 if (err) {
                     return reject(err);
-                } 
+                }
                 if (client) {
                     client.LoginPecas(login, async function (err2, result) {
                         if (err2) {
