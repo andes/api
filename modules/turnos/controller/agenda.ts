@@ -8,6 +8,7 @@ import { userScheduler } from '../../../config.private';
 import { Logger } from '../../../utils/logService';
 import { load } from 'google-maps';
 import { model as Prestacion } from '../../rup/schemas/prestacion';
+import * as http from 'http';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -543,6 +544,28 @@ export function esPrimerPaciente(agenda: any, idPaciente: string, opciones: any[
 
 }
 
+function getFeriados(fecha) {
+    console.log(fecha);
+
+    let anio = moment(fecha).year();
+    let mes = moment(fecha).month(); // de 0 a 11
+    let optionsgetmsg = {
+        host: 'nolaborables.com.ar',
+        port: 80,
+        path: '/api/v2/feriados/' + anio,
+        method: 'GET', // do GET,
+        // rejectUnauthorized: false,
+    };
+
+    // Realizar GET request
+    return new Promise((resolve, reject) => {
+        let reqGet = http.request(optionsgetmsg, function (res) {
+            res.on('data', function (d) {
+                console.log(d);
+            });
+        });
+    });
+}
 
 /**
  * Actualiza las cantidades de turnos restantes de la agenda antes de su fecha de inicio,
@@ -556,6 +579,7 @@ export function actualizarTiposDeTurno() {
     let cantDias = hsActualizar / 24;
     let fechaActualizar = moment(new Date()).add(cantDias, 'days');
 
+    getFeriados(fechaActualizar);
     // actualiza los turnos restantes de las agendas 2 dias antes de su horaInicio.
     let condicion = {
         'estado': 'publicada',
