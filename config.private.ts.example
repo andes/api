@@ -181,5 +181,6 @@ export const wsSalud = {
    getPaciente: '',
    getResultado: '',
    hellerWS: '',
-   hellerFS: ''
+   hellerFS: '',
+   hpnWS: ''
 };
