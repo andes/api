@@ -67,7 +67,7 @@ async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carp
     agendas.forEach(_agenda => {
         _agenda.turnos.forEach(_turno => {
             _turno.paciente.carpetaEfectores.forEach(async unaCarpeta => {
-                // Validación de PDR para ignorar números de carpetas autogenerados por HPN.
+                // Validación de PDR para ignorar los padrones de HPN
                 if ((unaCarpeta.nroCarpeta.indexOf('PDR') < 0) && (unaCarpeta.organizacion._id.equals(unaOrganizacion))) {
                     let estadoCarpeta = constantes.EstadosPrestamosCarpeta.EnArchivo;
 
