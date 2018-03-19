@@ -139,7 +139,7 @@ export async function importarDatos(paciente) {
                     mimeType: 'application/pdf',
                     extension: 'pdf',
                     metadata: {
-                        cdaId: uniqueId,
+                        cdaId: mongoose.Types.ObjectId(uniqueId),
                         paciente: mongoose.Types.ObjectId(paciente.id)
                     }
                 });

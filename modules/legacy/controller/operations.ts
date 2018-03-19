@@ -10,7 +10,6 @@ import {
 import * as organizacion from './../../../core/tm/schemas/organizacion';
 import * as sql from 'mssql';
 import * as cdaCtr from '../../cda/controller/CDAPatient';
-import * as agendasHPNCtr from '../../turnos/controller/operationsCacheHPNController';
 import {
     ObjectID,
     ObjectId

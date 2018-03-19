@@ -226,8 +226,8 @@ router.get('/pacientes/dashboard/', async function (req, res, next) {
     ];
 
     result.paciente = await toArray(paciente.aggregate(estadoAggregate).cursor({}).exec());
-    result.pacienteMpi = await toArray(pacienteMpi.aggregate(estadoAggregate).cursor({batchSize: 1000}).exec());
-    result.logs = await toArray(log.aggregate(logAggregate).cursor({batchSize: 1000}).exec());
+    result.pacienteMpi = await toArray(pacienteMpi.aggregate(estadoAggregate).cursor({ batchSize: 1000 }).exec());
+    result.logs = await toArray(log.aggregate(logAggregate).cursor({ batchSize: 1000 }).exec());
     res.json(result);
 
     // paciente.aggregate(estadoAggregate).cursor({batchSize: 1000}).exec().on('data', function(doc) {
@@ -813,8 +813,10 @@ router.patch('/pacientes/:id', function (req, res, next) {
                 case 'updateScan':
                     controller.updateScan(req, resultado.paciente);
                     break;
+                case 'updateCuil':
+                    controller.updateCuil(req, resultado.paciente);
+                    break;
             }
-
             let pacienteAndes: any;
             if (resultado.db === 'mpi') {
                 pacienteAndes = new paciente(resultado.paciente.toObject());
@@ -833,6 +835,44 @@ router.patch('/pacientes/:id', function (req, res, next) {
         return next(err);
     });
 });
+
+// Patch específico para actualizar masivamente MPI (NINGUN USUARIO DEBERIA TENER PERMISOS PARA ESTO)
+router.patch('/pacientes/mpi/:id', function (req, res, next) {
+    if (!Auth.check(req, 'mpi:paciente:patchMpi')) {
+        return next(403);
+    }
+    controller.buscarPaciente(req.params.id).then((resultado) => {
+        if (resultado) {
+            switch (req.body.op) {
+                case 'updateCuil':
+                    controller.updateCuil(req, resultado.paciente);
+                    break;
+
+            }
+            let pacMpi: any;
+            if (resultado.db === 'mpi') {
+                pacMpi = new pacienteMpi(resultado.paciente);
+                Auth.audit(pacMpi, req);
+                pacMpi.save(function (errPatch) {
+                    if (errPatch) {
+                        return next(errPatch);
+                    }
+                    return res.json(pacienteMpi);
+                });
+            } else {
+                return res.json({});
+            }
+        } else {
+            return next(500);
+        }
+
+    })
+        .catch((err) => {
+            return next(err);
+        });
+});
+
+
 
 // Comentado hasta incorporar esta funcionalidad
 //

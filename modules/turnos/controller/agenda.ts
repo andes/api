@@ -170,6 +170,7 @@ export function codificarTurno(req, data, tid) {
             let promises = [];
             if (arrPrestacion.length > 0 && arrPrestacion[0].ejecucion) {
                 let prestaciones = arrPrestacion[0].ejecucion.registros.filter(f => {
+
                     return f.concepto.semanticTag !== 'elemento de registro';
                 });
                 prestaciones.forEach(registro => {
@@ -180,6 +181,7 @@ export function codificarTurno(req, data, tid) {
                     };
                     let map = new SnomedCIE10Mapping(parametros.paciente, parametros.secondaryConcepts);
                     map.transform(parametros.conceptId).then(target => {
+
                         if (target) {
                             // Buscar en cie10 los primeros 5 digitos
                             cie10.model.findOne({ codigo: (target as String).substring(0, 5) }).then(cie => {
@@ -388,6 +390,23 @@ export function actualizarEstado(req, data) {
                 }
             });
         }
+        // Si se esta publicando una agenda de hoy o mañana se pasan los turnos igual q en job
+        let tomorrow = moment(new Date()).add(1, 'days');
+        if (moment(data.horaInicio).isSame(hoy, 'day') || moment(data.horaInicio).isSame(tomorrow, 'day')) {
+            for (let j = 0; j < data.bloques.length; j++) {
+                let cantAccesoDirecto = data.bloques[j].accesoDirectoDelDia + data.bloques[j].accesoDirectoProgramado;
+                if (cantAccesoDirecto > 0) {
+                    data.bloques[j].restantesProgramados = data.bloques[j].restantesProgramados + data.bloques[j].restantesGestion + data.bloques[j].restantesProfesional;
+                    data.bloques[j].restantesGestion = 0;
+                    data.bloques[j].restantesProfesional = 0;
+                } else {
+                    if (data.bloques[j].reservadoProfesional > 0) {
+                        data.bloques[j].restantesGestion = data.bloques[j].restantesGestion + data.bloques[j].restantesProfesional;
+                        data.bloques[j].restantesProfesional = 0;
+                    }
+                }
+            }
+        }
     }
 
     // Si se pasa a borrada
@@ -423,6 +442,7 @@ export function actualizarEstado(req, data) {
 export function getTurno(req, data, idTurno = null) {
     let turno;
     idTurno = String(idTurno) || req.body.idTurno;
+
     // Loop en los bloques
     for (let x = 0; x < data.bloques.length; x++) {
         // Si existe este bloque...
