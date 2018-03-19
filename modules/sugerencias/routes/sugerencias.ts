@@ -9,6 +9,7 @@ let router = express.Router();
 
 router.post('/', function (req, res, next) {
     let body = req.body;
+    // renderizacion del email
     let html_sugerencias = SendEmail.renderHTML("emails/email-sugerencias.html", body).then(function (html) {
         let data = {
             from: configPrivate.enviarMail.auth.user,
