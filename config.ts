@@ -24,7 +24,7 @@ export const modules = {
         active: true,
         path: './core/tm/routes',
         route: '/core/tm',
-        middleware: appMiddleware,
+        middleware: null,
     },
     term: {
         active: true,
@@ -133,6 +133,12 @@ export const modules = {
         path: './modules/sugerencias/routes',
         route: '/modules/sugerencias',
         middleware: null
+    },
+    prestamosCarpetas: {
+        active: true,
+        path: './modules/prestamosCarpetas/routes',
+        route: '/modules/prestamosCarpetas',
+        middleware: appMiddleware
     },
 };
 
