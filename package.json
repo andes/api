@@ -51,7 +51,6 @@
     "node-sass": "^4.7.2",
     "node-schedule": "^1.2.4",
     "nodemailer": "^4.0.1",
-    "nodemon": "^1.12.1",
     "passport": "^0.3.2",
     "passport-jwt": "^2.2.1",
     "pdfkit": "^0.8.3",
