@@ -10,7 +10,7 @@ let router = express.Router();
 router.post('/', function (req, res, next) {
     let body = req.body;
     // renderizacion del email
-    let html_sugerencias = SendEmail.renderHTML("emails/email-sugerencias.html", body).then(function (html) {
+    let html_sugerencias = SendEmail.renderHTML('emails/email-sugerencias.html', body).then(function (html) {
         let data = {
             from: configPrivate.enviarMail.auth.user,
             to: configPrivate.enviarMail.auth.user,
@@ -23,15 +23,15 @@ router.post('/', function (req, res, next) {
             () => {
                 res.json({
                     mensaje: 'Ok'
-                })
+                });
             },
             () => {
                 res.json({
                     mensaje: 'SERVICE UNAVAILABLE'
-                })
+                });
             }
         );
-    })
-})
+    });
+});
 
-export = router
+export = router;

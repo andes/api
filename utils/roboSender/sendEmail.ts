@@ -32,13 +32,12 @@ export function sendMail(options: MailOptions) {
             html: options.html,
             attachments: [{   // data uri as an attachment
                 path: options.attachments,
-                cid: "img-screenshot"
+                cid: 'img-screenshot'
             }]
         };
 
         transporter.sendMail(mailOptions, (error, info) => {
             if (error) {
-                log('Error al mandar mail: ', error);
                 return reject(error);
             }
             return resolve(info);
