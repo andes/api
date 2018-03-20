@@ -61,12 +61,17 @@ router.get('/internaciones/censo', function (req, res, next) {
     camasController.camaOcupadasxUO(unidad, fecha).then(
         camas => {
             if (camas) {
-                let pasesDeCama = Promise.all(camas.map(c => internacionesController.PasesParaCenso(c)))
-                pasesDeCama.then(resultado => {
-                    res.json(resultado);
-                }).catch(error => {
-                    return next(error);
-                });
+                let salidaCamas = Promise.all(camas.map(c => camasController.desocupadaEnDia(c, fecha)))
+                salidaCamas.then(salida => {
+                    salida = salida.filter(s => s);
+                    let pasesDeCama = Promise.all(salida.map(c => internacionesController.PasesParaCenso(c)))
+                    pasesDeCama.then(resultado => {
+                        res.json(resultado);
+                    }).catch(error => {
+                        return next(error);
+                    });
+                })
+
             } else {
                 res.json(null);
             }
