@@ -9,6 +9,7 @@ import { Logger } from '../../../utils/logService';
 import { load } from 'google-maps';
 import { model as Prestacion } from '../../rup/schemas/prestacion';
 import * as http from 'http';
+import * as request from 'request';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -544,25 +545,28 @@ export function esPrimerPaciente(agenda: any, idPaciente: string, opciones: any[
 
 }
 
-function getFeriados(fecha) {
-    console.log(fecha);
-
-    let anio = moment(fecha).year();
-    let mes = moment(fecha).month(); // de 0 a 11
-    let optionsgetmsg = {
-        host: 'nolaborables.com.ar',
-        port: 80,
-        path: '/api/v2/feriados/' + anio,
-        method: 'GET', // do GET,
-        // rejectUnauthorized: false,
-    };
-
-    // Realizar GET request
+function esFeriado(fecha) {
     return new Promise((resolve, reject) => {
-        let reqGet = http.request(optionsgetmsg, function (res) {
-            res.on('data', function (d) {
-                console.log(d);
-            });
+
+        let anio = moment(fecha).year();
+        let mes = moment(fecha).month(); // de 0 a 11
+        let dia = moment(fecha).date(); // de 1 a 31
+        let url = 'http://nolaborables.com.ar/api/v2/feriados/' + anio;
+
+        request({ url: url, json: true }, (err, response, body) => {
+            if (err) {
+                reject(err);
+            }
+            if (body) {
+                let feriados = body.filter(item => {
+                    return ((item.mes).toString() === (mes + 1).toString() && (item.dia).toString() === (dia).toString());
+                });
+                if (feriados.length > 0) {
+                    resolve(true);
+                } else {
+                    resolve(false);
+                }
+            }
         });
     });
 }
@@ -574,12 +578,15 @@ function getFeriados(fecha) {
  * @export actualizarTiposDeTurno()
  * @returns resultado
  */
-export function actualizarTiposDeTurno() {
+export async function actualizarTiposDeTurno() {
     let hsActualizar = 48;
     let cantDias = hsActualizar / 24;
     let fechaActualizar = moment(new Date()).add(cantDias, 'days');
+    if (moment(fechaActualizar.day()).toString() === '6') {
+        fechaActualizar = moment(fechaActualizar).add(2, 'days');
+    }
 
-    getFeriados(fechaActualizar);
+    console.log(await esFeriado(fechaActualizar))
     // actualiza los turnos restantes de las agendas 2 dias antes de su horaInicio.
     let condicion = {
         'estado': 'publicada',
