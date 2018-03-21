@@ -583,8 +583,9 @@ export async function actualizarTiposDeTurno() {
     let cantDias = hsActualizar / 24;
     let fechaActualizar = moment(new Date()).add(cantDias, 'days');
     let esDomingo = false;
-    while ((await esFeriado(fechaActualizar) && !esDomingo) || (moment(fechaActualizar.day()).toString() === '6')) {
-        switch (moment(fechaActualizar.day()).toString()) {
+
+    while ((await esFeriado(fechaActualizar) && !esDomingo) || (moment(fechaActualizar).day().toString() === '6')) {
+        switch (moment(fechaActualizar).day().toString()) {
             case '0': this.esDomingo = true;
                 break;
             case '6': fechaActualizar = moment(fechaActualizar).add(2, 'days');
