@@ -582,11 +582,17 @@ export async function actualizarTiposDeTurno() {
     let hsActualizar = 48;
     let cantDias = hsActualizar / 24;
     let fechaActualizar = moment(new Date()).add(cantDias, 'days');
-    if (moment(fechaActualizar.day()).toString() === '6') {
-        fechaActualizar = moment(fechaActualizar).add(2, 'days');
+    let esDomingo = false;
+    while ((await esFeriado(fechaActualizar) && !esDomingo) || (moment(fechaActualizar.day()).toString() === '6')) {
+        switch (moment(fechaActualizar.day()).toString()) {
+            case '0': this.esDomingo = true;
+                break;
+            case '6': fechaActualizar = moment(fechaActualizar).add(2, 'days');
+                break;
+            default: fechaActualizar = moment(fechaActualizar).add(1, 'days');
+                break;
+        }
     }
-
-    console.log(await esFeriado(fechaActualizar))
     // actualiza los turnos restantes de las agendas 2 dias antes de su horaInicio.
     let condicion = {
         'estado': 'publicada',
@@ -595,6 +601,7 @@ export async function actualizarTiposDeTurno() {
             $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
         }
     };
+
     let cursor = agendaModel.find(condicion).cursor();
 
     cursor.eachAsync(doc => {
