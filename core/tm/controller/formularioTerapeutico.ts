@@ -35,7 +35,7 @@ export function getPadres(hijo, arr) {
                 resolve(null);
             }
         } catch (e) {
-            console.log(e);
+            // console.log(e);
         }
     });
 }
