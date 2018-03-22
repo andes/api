@@ -179,5 +179,11 @@ export default [
         title: 'Modulo Reportes',
         child: [
         ]
+    },
+    {
+        key: 'solicitudes',
+        title: 'Modulo Solicitudes',
+        child: [
+        ]
     }
 ];

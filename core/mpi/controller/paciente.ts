@@ -512,6 +512,11 @@ export function updateScan(req, data) {
     data.scan = req.body.scan;
 }
 
+export function updateCuil(req, data) {
+    data.markModified('cuil');
+    data.cuil = req.body.cuil;
+}
+
 /* Hasta acá funciones del PATCH */
 
 

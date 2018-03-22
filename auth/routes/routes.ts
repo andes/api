@@ -73,7 +73,7 @@ router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
         if (data[0] && data[1]) {
             let user = data[0];
             let org = data[1];
-            let oldToken: string = req.headers.authorization.substring(4);
+            let oldToken: string = String(req.headers.authorization).substring(4);
             let nuevosPermisos = user.organizaciones.find(item => String(item._id) === String(org._id));
             let refreshToken = Auth.refreshToken(oldToken, user, nuevosPermisos.permisos, org);
             res.send({

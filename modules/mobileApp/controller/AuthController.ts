@@ -1,9 +1,8 @@
 import * as jwt from 'jsonwebtoken';
-import { pacienteApp } from '../schemas/pacienteApp';
+import { pacienteApp as PacienteApp } from '../schemas/pacienteApp';
 import { authApp } from '../../../config.private';
 import { Client } from 'elasticsearch';
 import { Matching } from '@andes/match';
-import { paciente, pacienteMpi } from '../../../core/mpi/schemas/paciente';
 import * as express from 'express';
 import * as config from '../../../config';
 import * as configPrivate from '../../../config.private';
@@ -59,12 +58,10 @@ export function enviarCodigoCambioPassword(user) {
 
 }
 
-export function enviarCodigoVerificacion(user) {
-    log('Enviando mail...');
-
+export function enviarCodigoVerificacion(user, password) {
     let replacements = {
         username: user.apellido + ', ' + user.nombre,
-        codigo: user.codigoVerificacion
+        codigo: password
     };
 
     let mailOptions: IEmail = {
@@ -72,32 +69,26 @@ export function enviarCodigoVerificacion(user) {
         subject: 'ANDES :: Código de activación',
         template: 'emails/active-app-code.html',
         extras: replacements,
-        plainText: 'Estimado ' + replacements.username + ', Su código de activación para ANDES Mobile es: ' + user.codigoVerificacion,
+        plainText: 'Estimado ' + replacements.username + ', Su código de activación para ANDES Mobile es: ' + password,
     };
 
     // enviamos email
     sendEmail(mailOptions);
 
-    let sms: ISms = {
-        message: 'ANDES :: Su código de activación para ANDES Mobile es: ' + user.codigoVerificacion,
-        phone: user.telefono
-    };
+    // let sms: ISms = {
+    //     message: 'ANDES :: Su código de activación para ANDES Mobile es: ' + user.codigoVerificacion,
+    //     phone: user.telefono
+    // };
 
-    sendSms(sms);
+    // sendSms(sms);
 }
-
-export function envioCodigoCount(user: any) {
-    // TODO: Implementar si se decide poner un límite al envío de códigos
-}
-
-
 
 /**
  * Devuelve un listao de los códigos en uso
  */
 
 export function listadoCodigos() {
-    return pacienteApp.find({ codigoVerificacion: { $ne: null } }, {codigoVerificacion: 1, _id: 0}).then(listado => {
+    return PacienteApp.find({ codigoVerificacion: { $ne: null } }, {codigoVerificacion: 1, _id: 0}).then(listado => {
         let numeros = listado.map((item: any) => item.codigoVerificacion);
         return Promise.resolve(numeros);
     }).catch(() => Promise.reject([]));
@@ -158,7 +149,7 @@ function searchContacto(pacienteData, key) {
 
 export function checkAppAccounts(pacienteData) {
     return new Promise((resolve, reject) => {
-        pacienteApp.find({ 'pacientes.id': pacienteData.id }, function (err, docs: any[]) {
+        PacienteApp.find({ 'pacientes.id': pacienteData.id }, function (err, docs: any[]) {
             if (docs.length > 0) {
                 return resolve({ message: 'account_assigned', account: docs[0] });
             } else {
@@ -173,7 +164,7 @@ export function checkAppAccounts(pacienteData) {
  * @param profesional {profesionalSchema}
  */
 export function getAccountByProfesional(id) {
-    return pacienteApp.findOne({ 'profesionalId': mongoose.Types.ObjectId(id) });
+    return PacienteApp.findOne({ 'profesionalId': mongoose.Types.ObjectId(id) });
 }
 
 
@@ -199,7 +190,7 @@ export function createUserFromProfesional(profesional) {
         pacientes: []
     };
 
-    let user = new pacienteApp(dataPacienteApp);
+    let user = new PacienteApp(dataPacienteApp);
 
     return user.save();
 
@@ -212,20 +203,20 @@ export function createUserFromProfesional(profesional) {
  */
 export function createUserFromPaciente(pacienteData, contacto) {
     return new Promise(async(resolve, reject) => {
+        let passw = generarCodigoVerificacion();
+
         let dataPacienteApp: any = {
             nombre: pacienteData.nombre,
             apellido: pacienteData.apellido,
             email: contacto.email,
-            password: null, /* generarCodigoVerificacion() */
+            password: passw,
             telefono: contacto.telefono,
-            envioCodigoCount: 0,
             nacionalidad: 'Argentina',
             documento: pacienteData.documento,
             fechaNacimiento: pacienteData.fechaNacimiento,
             sexo: pacienteData.genero,
             genero: pacienteData.genero,
-            codigoVerificacion: await createUniqueCode(),
-            expirationTime: new Date(Date.now() + expirationOffset),
+            activacionApp: false,
             permisos: [],
             pacientes: [{
                 id: pacienteData._id,
@@ -238,7 +229,7 @@ export function createUserFromPaciente(pacienteData, contacto) {
             return reject({ error: 'email_not_found' });
         }
 
-        pacienteApp.findOne({ email: dataPacienteApp.email }, function (err, existingUser) {
+        PacienteApp.findOne({ email: dataPacienteApp.email }, function (err, existingUser) {
 
             if (err) {
                 return reject({ error: 'unknow_error' });
@@ -248,15 +239,15 @@ export function createUserFromPaciente(pacienteData, contacto) {
                 return reject({ error: 'email_exists' });
             }
 
-            let user = new pacienteApp(dataPacienteApp);
+            let user = new PacienteApp(dataPacienteApp);
 
             user.save(function (errSave, userSaved: any) {
 
                 if (errSave) {
                     return reject(errSave);
                 }
-                enviarCodigoVerificacion(userSaved);
-                resolve(true);
+                enviarCodigoVerificacion(userSaved, passw);
+                resolve(user);
 
             });
 
@@ -389,7 +380,7 @@ export function updateAccount(account, data) {
         if (data.email) {
             account.email = data.email;
             promise = new Promise((resolveEmail, rejectEmail) => {
-                pacienteApp.findOne({ email: data.email }, function (err, acts) {
+                PacienteApp.findOne({ email: data.email }, function (err, acts) {
                     if (!acts) {
                         resolveEmail();
                     } else {
