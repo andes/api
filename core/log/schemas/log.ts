@@ -27,7 +27,7 @@ export let logSchema = new mongoose.Schema({
     organizacion: { type: organizacion },
     modulo: {
         type: String,
-        enum: ['mpi', 'citas', 'rup', 'configTipoPrestacion', 'fa_sintys', 'fa_sisa', 'fa_anses', 'usuarios']
+        enum: ['mpi', 'citas', 'rup', 'configTipoPrestacion', 'fa_sintys', 'fa_sisa', 'fa_anses', 'usuarios', 'scheduler']
     },
     operacion: {
         type: String,
@@ -46,7 +46,9 @@ export let logSchema = new mongoose.Schema({
             // hudsPrestacion -> Profesional abre una pretación para ver en la pantalla de ver huds
             'pacientes', 'hudsPantalla', 'hudsPrestacion',
             // ...Fuentes Autenticas
-            'validar', 'error'
+            'validar', 'error',
+            // Scheduler
+            'cda'
         ]
     },
     datosOperacion: mongoose.Schema.Types.Mixed,

@@ -128,20 +128,23 @@ export function suspenderTurno(req, data, turno) {
         turnoDoble.updatedBy = req.user.usuario || req.user;
     }
 
-    // El tipo de turno del cual se resta será en el orden : delDia, programado, autocitado, gestion
-    let position = getPosition(req, data, turno._id);
-    if (!turno.tipoTurno) {
-        if (data.bloques[position.indexBloque].restantesDelDia > 0) {
-            data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia - cant;
-        } else {
-            if (data.bloques[position.indexBloque].restantesProgramados > 0) {
-                data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados - cant;
+    // Chequeamos si es sobreturno
+    if (!(data.sobreturnos && data.sobreturnos.length > 0)) {
+        // El tipo de turno del cual se resta será en el orden : delDia, programado, autocitado, gestion
+        let position = getPosition(req, data, turno._id);
+        if (!turno.tipoTurno) {
+            if (data.bloques[position.indexBloque].restantesDelDia > 0) {
+                data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia - cant;
             } else {
-                if (data.bloques[position.indexBloque].restantesProfesional > 0) {
-                    data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional - cant;
+                if (data.bloques[position.indexBloque].restantesProgramados > 0) {
+                    data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados - cant;
                 } else {
-                    if (data.bloques[position.indexBloque].restantesGestion > 0) {
-                        data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion - cant;
+                    if (data.bloques[position.indexBloque].restantesProfesional > 0) {
+                        data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional - cant;
+                    } else {
+                        if (data.bloques[position.indexBloque].restantesGestion > 0) {
+                            data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion - cant;
+                        }
                     }
                 }
             }
@@ -167,7 +170,8 @@ export function codificarTurno(req, data, tid) {
             // let promises = [];
             if (arrPrestacion.length > 0 && arrPrestacion[0].ejecucion) {
                 let prestaciones = arrPrestacion[0].ejecucion.registros.filter(f => {
-                    return f.concepto.semanticTag === 'hallazgo' || f.concepto.semanticTag === 'trastorno' || f.concepto.semanticTag === 'situacion';
+                    // return f.concepto.semanticTag !== 'elemento de registro' || f.concepto.semanticTag === 'trastorno' || f.concepto.semanticTag === 'situacion';
+                    return f.concepto.semanticTag !== 'elemento de registro';
                 });
                 prestaciones.forEach(registro => {
                     let parametros = {
@@ -178,6 +182,9 @@ export function codificarTurno(req, data, tid) {
                     let map = new SnomedCIE10Mapping(parametros.paciente, parametros.secondaryConcepts);
                     map.transform(parametros.conceptId).then(target => {
                         // Buscar en cie10 los primeros 5 digitos
+                        if (!target) {
+                            reject('No mapeo con nada');
+                        }
                         cie10.model.findOne({ codigo: (target as String).substring(0, 5) }).then(cie => {
                             if (cie != null) {
                                 if (registro.esDiagnosticoPrincipal) {
@@ -337,6 +344,23 @@ export function actualizarEstado(req, data) {
                 }
             });
         }
+        // Si se esta publicando una agenda de hoy o mañana se pasan los turnos igual q en job
+        let tomorrow = moment(new Date()).add(1, 'days');
+        if (moment(data.horaInicio).isSame(hoy, 'day') || moment(data.horaInicio).isSame(tomorrow, 'day')) {
+            for (let j = 0; j < data.bloques.length; j++) {
+                let cantAccesoDirecto = data.bloques[j].accesoDirectoDelDia + data.bloques[j].accesoDirectoProgramado;
+                if (cantAccesoDirecto > 0) {
+                    data.bloques[j].restantesProgramados = data.bloques[j].restantesProgramados + data.bloques[j].restantesGestion + data.bloques[j].restantesProfesional;
+                    data.bloques[j].restantesGestion = 0;
+                    data.bloques[j].restantesProfesional = 0;
+                } else {
+                    if (data.bloques[j].reservadoProfesional > 0) {
+                        data.bloques[j].restantesGestion = data.bloques[j].restantesGestion + data.bloques[j].restantesProfesional;
+                        data.bloques[j].restantesProfesional = 0;
+                    }
+                }
+            }
+        }
     }
 
     // Si se pasa a borrada
@@ -359,14 +383,8 @@ export function actualizarEstado(req, data) {
                         turno.estado = 'suspendido';
                     }
                     turno.motivoSuspension = 'agendaSuspendida';
-                    // turno.tipoTurno = undefined;
+                    turno.avisoSuspension = 'no enviado';
 
-                    // if (turno.paciente.id && turno.paciente.telefono) {
-                    //     let sms: any = {
-                    //         telefono: turno.paciente.telefono,
-                    //         mensaje: 'Le avisamos que su turno para el día ' + moment(turno.horaInicio).format('ll').toString() + ' a las ' + moment(turno.horaInicio).format('LT').toString() + 'hs fue suspendido'
-                    //     };
-                    // }
                 });
             });
         }
@@ -378,6 +396,7 @@ export function actualizarEstado(req, data) {
 export function getTurno(req, data, idTurno = null) {
     let turno;
     idTurno = String(idTurno) || req.body.idTurno;
+
     // Loop en los bloques
     for (let x = 0; x < data.bloques.length; x++) {
         // Si existe este bloque...

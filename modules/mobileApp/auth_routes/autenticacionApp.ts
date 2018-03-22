@@ -1,11 +1,14 @@
 import * as jwt from 'jsonwebtoken';
 import { pacienteApp } from '../schemas/pacienteApp';
 import { paciente, pacienteMpi } from '../../../core/mpi/schemas/paciente';
+import { buscarPaciente } from '../../../core/mpi/controller/paciente';
+
 import * as express from 'express';
 import * as authController from '../controller/AuthController';
 import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
 import * as agenda from '../../turnos/schemas/agenda';
+import * as labsImport from '../../cda/controller/import-labs';
 
 let router = express.Router();
 
@@ -34,22 +37,38 @@ router.post('/login', function (req, res, next) {
             return res.status(422).send({ error: 'Cuenta inexistente' });
         }
 
-        if (!user.activacionApp) {
-            res.status(422).send({ message: 'cuenta no verificada' });
-            return;
-        }
-
         return user.comparePassword(password, (errPassword, isMatch) => {
             if (errPassword) {
                 return next(errPassword);
             }
             if (isMatch) {
                 // var userInfo = authController.setUserInfo(existingUser);
+
+                if (!user.activacionApp) {
+                    if (!req.body.new_password) {
+                        res.status(422).send({ message: 'new_password_needed' });
+                        return;
+                    } else {
+                        user.password = req.body.new_password;
+                        user.activacionApp = true;
+                        user.save();
+                    }
+
+                }
+
                 let token = Auth.generatePacienteToken(String(user.id), user.nombre + ' ' + user.apellido, user.email, user.pacientes, user.permisos);
                 res.status(200).json({
                     token: token,
                     user: user
                 });
+
+                // Hack momentaneo. Descargamos los laboratorios a demanda.
+                buscarPaciente(user.pacientes[0].id).then((resultado) => {
+                    if (resultado.paciente) {
+                        labsImport.importarDatos(resultado.paciente);
+                    }
+                });
+
                 return;
             } else {
                 return res.status(422).send({ error: 'e-mail o password incorrecto' });

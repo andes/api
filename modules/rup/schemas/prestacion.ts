@@ -61,7 +61,13 @@ export let schema = new mongoose.Schema({
         // Registros de la solicitud ... para los planes o prestaciones futuras
         registros: [registro.schema],
         // Datos de auditoría sobre el estado de la solicitud (aprobada, desaprobada, ...)
-        auditoria: auditoriaPrestacionPacienteSchema
+        auditoria: auditoriaPrestacionPacienteSchema,
+        // Ambito de la prestacion: ambulatorio, internacion, emergencia, etc
+        ambitoOrigen: {
+            type: String,
+            required: false,
+            default: 'ambulatorio'
+        }
     },
 
     // Datos de la ejecución (i.e. realización)

@@ -7,10 +7,11 @@ import { model as Prestacion } from '../schemas/prestacion';
 import { model as PrestacionAdjunto } from '../schemas/prestacion-adjuntos';
 
 import { buscarPaciente } from '../../../core/mpi/controller/paciente';
-
+import * as frecuentescrl from '../controllers/frecuentesProfesional';
 import { NotificationService } from '../../mobileApp/controller/NotificationService';
 
 import { iterate, convertToObjectId, buscarEnHuds, matchConcepts } from '../controllers/rup';
+import { Logger } from '../../../utils/logService';
 
 let router = express.Router();
 let async = require('async');
@@ -95,6 +96,13 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             query.where('ejecucion.registros.concepto.conceptId').in(req.query.conceptsIdEjecucion);
         }
 
+        if (req.query.solicitudDesde) {
+            query.where('solicitud.fecha').gte(moment(req.query.solicitudDesde).startOf('day').toDate() as any);
+        }
+
+        if (req.query.solicitudHasta) {
+            query.where('solicitud.fecha').lte(moment(req.query.solicitudHasta).endOf('day').toDate() as any);
+        }
         // Solicitudes generadas desde puntoInicio Ventanilla
         // Solicitudes que no tienen prestacionOrigen ni turno
         // Si tienen prestacionOrigen son generadas por RUP y no se listan
@@ -197,6 +205,31 @@ router.patch('/prestaciones/:id', function (req, res, next) {
                 return next(error);
             }
 
+            // Actualizar conceptos frecuentes por profesional y tipo de prestacion
+            if (req.body.registrarFrecuentes && req.body.registros) {
+
+                let dto = {
+                    profesional: Auth.getProfesional(req),
+                    tipoPrestacion: prestacion.solicitud.tipoPrestacion,
+                    organizacion: prestacion.solicitud.organizacion,
+                    frecuentes: req.body.registros
+                };
+                frecuentescrl.actualizarFrecuentes(dto)
+                    .then((resultadoFrec: any) => {
+                        Logger.log(req, 'rup', 'update', {
+                            accion: 'actualizarFrecuentes',
+                            ruta: req.url,
+                            method: req.method,
+                            data: req.body.listadoFrecuentes,
+                            err: false
+                        });
+                    })
+                    .catch((errFrec) => {
+                        return next(errFrec);
+                    });
+
+            }
+
             if (req.body.planes) {
                 // creamos una variable falsa para cuando retorne hacer el get
                 // de todas estas prestaciones
@@ -229,11 +262,10 @@ router.patch('/prestaciones/:id', function (req, res, next) {
                 });
 
             } else {
-
                 res.json(prestacion);
             }
 
-            // Auth.audit(data, req);
+            Auth.audit(data, req);
             /*
             Logger.log(req, 'prestacionPaciente', 'update', {
                 accion: req.body.op,
@@ -246,6 +278,5 @@ router.patch('/prestaciones/:id', function (req, res, next) {
         });
     });
 });
-
 
 export = router;

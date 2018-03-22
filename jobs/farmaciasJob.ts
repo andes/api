@@ -2,8 +2,8 @@ import * as farmacias from './../modules/mobileApp/controller/FarmaciasTurnosDow
 import * as moment from 'moment';
 
 function run() {
-    let start = moment(new Date()).add(1, 'months').startOf('month').format('YYYY-MM-DD');
-    let end = moment(new Date()).add(1, 'months').endOf('month').format('YYYY-MM-DD');
+    let start = moment(new Date()).add(1, 'days').format('YYYY-MM-DD');
+    let end = moment(new Date()).add(24, 'days').format('YYYY-MM-DD');
     farmacias.donwloadData(start, end);
 }
 
