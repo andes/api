@@ -53,6 +53,7 @@ export const sisa = {
     host: 'sisa.msal.gov.ar',
     port: 443,
     url: 'https://sisa.msal.gov.ar/sisa/services/rest/cmdb/obtener?'
+    urlBuscarOrganizaciones: 'https://sisa.msal.gov.ar/sisa/services/rest/establecimiento/buscar?'
 };
 // Configuración servicio ANSES
 export const anses = {

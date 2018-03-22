@@ -24,19 +24,23 @@ router.get('/organizacionesCache', function (req, res, next) {
     });
 });
 
-// router.post('/organizacionesCache', function (req, res, next) {
+router.post('/organizacionesCache', function (req, res, next) {
+    /**
+     * provincia: Int = 15 (id Pcia de Neuquén)
+     * origenFinanciamiento: str = "Público" o "Privado"
+     */
+    let options = {
+        ...(req.body.provincia) && { 'provincia': req.body.provincia },
+        ...(req.body.dependencia) && { 'dependencia': req.body.dependencia },
+        ...(req.body.origenFinanciamiento) && { 'origenFinanciamiento': req.body.origenFinanciamiento }
+    };
+    /**
+     * Esto era para el scheduler, en lanin no lo necesitamos
+     */
+    servicioSisa.getOrganizacionesSisa(options).then(result => {
+        res.json(result);
+    });
 
-//     let options = {
-//         ...(req.body.provincia) && { 'provincia': req.body.provincia },
-//         ...(req.body.dependencia) && { 'dependencia': req.body.dependencia },
-//         ...(req.body.origenDeFinanciamiento) && { 'origenDeFinanciamiento': req.body.origenDeFinanciamiento }
-//     };
-
-//     /**
-//      * Esto era para el scheduler, en lanin no lo necesitamos
-//      */
-//     // servicioSisa.getOrganizacionesSisa(configPrivate.sisa.username, configPrivate.sisa.password, options);
-
-// });
+});
 
 export = router;

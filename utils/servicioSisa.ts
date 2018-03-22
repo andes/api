@@ -6,6 +6,67 @@ import * as configPrivate from '../config.private';
 // import { Logger } from '../utils/logService';
 let to_json = require('xmljson').to_json;
 
+export function getOrganizacionesSisa(options) {
+    /**
+     * Capítulo 5.2.1 - Consulta múltiple de establecimientos de salud
+     * Se obtienen los datos desde Sisa
+     * Ejemplo de llamada https://sisa.msal.gov.ar/sisa/services/rest/establecimiento/buscar?provincia=1&dependencia=5Post:{"usuario":"jperez","clave":"xxxx"}
+     * Información de Campos https://sisa.msal.gov.ar/sisa/sisadoc/docs/050101/refes_ws_002.jsp
+     */
+    // options for POST
+    let xml = '';
+    let pathSisa = configPrivate.sisa.urlBuscarOrganizaciones;
+
+    Object.keys(options).forEach(k => {
+        pathSisa += k + "=" + options[k] + "&"
+    });
+    pathSisa = pathSisa.slice(0, -1);
+    // console.log("pathsisa ", pathSisa);
+    let optionsgetmsg = {
+        host: configPrivate.sisa.host,
+        port: configPrivate.sisa.port,
+        path: pathSisa,
+        method: 'POST',
+        headers: {
+            'content-type': 'application/json',
+        }
+    };
+    // Realizar POST request
+    return new Promise((resolve, reject) => {
+        let reqPost = https.request(optionsgetmsg);
+        reqPost.on('error', function (e) {
+            reject(e);
+        });
+        reqPost.write(JSON.stringify({ usuario: configPrivate.sisa.username, clave: configPrivate.sisa.password }));
+        reqPost.end();
+        reqPost.on('response', function (response) {
+            response.setEncoding('utf8');
+            response.on('data', function (chunk) {
+                if (chunk.toString()) {
+                    xml = xml + chunk.toString();
+                }
+                if (xml) {
+                    // Se parsea el xml obtenido a JSON
+                    to_json(xml, function (error, data) {
+                        if (error) {
+                            reject();
+                        } else {
+                            actualizarOrganizacionesSisa(data);
+                            // resolve({ data });
+                            resolve({ "status": "ok" });
+                        }
+                    });
+                } else {
+                    reject();
+                }
+            });
+        });
+    });
+}
+
+export function actualizarOrganizacionesSisa(datosSisa) {
+    console.log("entro a la funcion actualizarOrganizacionesSisa!")
+}
 
 export function getSisaCiudadano(nroDocumento, usuario, clave, sexo?: string) {
     /**
