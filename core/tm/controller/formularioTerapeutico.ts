@@ -1,8 +1,7 @@
 import * as formularioTerapeutico from '../schemas/formularioTerapeutico';
 import * as mongoose from 'mongoose';
-let arr = [];
 
-export function getPadre(hijo) {
+export function getAncestro(hijo) {
     return new Promise((resolve, reject) => {
         let query = formularioTerapeutico.find({ _id: { '$eq': mongoose.Types.ObjectId(hijo) } });
         query.exec(function (err, data) {
@@ -18,15 +17,25 @@ export function getPadre(hijo) {
     });
 }
 
-export async function getPadres(hijo) {
-    if (hijo !== null) {
-        return getPadre(hijo).then((padre) => {
-            arr.unshift(padre);
-            getPadres(padre['idpadre']);
-        });
-    } else {
-        console.log('arr ', arr);
-        return (arr);
-    }
+export function getPadres(hijo, arr) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (hijo !== null) {
+                let padre = await getAncestro(hijo); // Find a mongo
+                if (padre) {
+                    arr.unshift(padre);
+                    let result = await getPadres(padre['idpadre'], arr);
+                    if (result) {
+                        resolve(result);
+                    } else {
+                        resolve(arr);
+                    }
+                }
+            } else {
+                resolve(null);
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    });
 }
-

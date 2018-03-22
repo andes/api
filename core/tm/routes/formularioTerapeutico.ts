@@ -12,9 +12,7 @@ import * as formularioCtrl from '../controller/formularioTerapeutico';
 let router = express.Router();
 
 router.get('/formularioTerapeutico/:id?', async function (req, res, next) {
-
     if (mongoose.Types.ObjectId.isValid(req.params.id)) {
-
         formularioTerapeutico.findById(req.params.id, function (err, data) {
             if (err) {
                 return next(err);
@@ -26,38 +24,38 @@ router.get('/formularioTerapeutico/:id?', async function (req, res, next) {
         let filtrados;
         let opciones = {};
         let proyeccion = {};
-        if (req.query.capitulo) {
-            opciones['capitulo'] = req.query.capitulo;
-        }
-        if (req.query.nombreMedicamento) {
-            // Busca por palabras
-            if (isNaN(req.query.nombreMedicamento)) {
-
-                opciones['$and'] = [];
-                let words = String(req.query.nombreMedicamento).split(' ');
-                words.forEach(function (word) {
-                    // normalizamos cada una de las palabras como hace SNOMED para poder buscar palabra a palabra
-                    word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08');
-                    let expWord = '^' + utils.removeDiacritics(word) + '.*';
-                    // agregamos la palabra a la condicion
-                    // opciones['$and'].push({ 'subcapitulos.medicamentos.concepto.words': { '$regex': expWord } });
-                    opciones['$and'].push({ 'concepto.words': { '$regex': expWord } });
-                });
-            }
-        }
         if (req.query.padre) {
-            let arr = await formularioCtrl.getPadres(req.query.padre);
-            console.log('padress ', arr);
-            // res.json(arr);
-            // });
-            // formularioCtrl.getPadres(req.query.padre).then((resultado) => {
-            //     console.log('resultado ', resultado);
-            //     res.json(resultado);
-            // });
-            // if (mongoose.Types.ObjectId.isValid(req.query.padre)) {
-            //     opciones['_id'] = { '$eq': mongoose.Types.ObjectId(req.query.padre) };
-            // }
+            let arr = await formularioCtrl.getPadres(req.query.padre, []);
+            res.json(arr);
         } else {
+            if (req.query.nombreMedicamento) {
+                // Parámetro texto ingresado
+                if (isNaN(req.query.nombreMedicamento)) {
+
+                    opciones['$and'] = [];
+                    let words = String(req.query.nombreMedicamento).split(' ');
+                    words.forEach(function (word) {
+                        // normalizamos cada una de las palabras como hace SNOMED para poder buscar palabra a palabra
+                        word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08');
+                        let expWord = '^' + utils.removeDiacritics(word) + '.*';
+                        // agregamos la palabra a la condicion
+                        // opciones['$and'].push({ 'subcapitulos.medicamentos.concepto.words': { '$regex': expWord } });
+                        opciones['$and'].push({ 'concepto.words': { '$regex': '(?i)' + expWord } });
+                    });
+                }
+            }
+            // Parámetro Especialidad
+            if (req.query.especialidad) {
+                opciones['lespecialidades'] = String(req.query.especialidad);
+            }
+            // Parámetro Carro de Emergencia
+            if (req.query.carro) {
+                opciones['carro'] = Boolean(req.query.carro);
+            }
+            // Parámetro Nivel de Complejidad
+            if (req.query.nivel) {
+                opciones['nivelComplejidad'] = req.query.nivel;
+            }
             query = formularioTerapeutico.find(opciones);
             if (!Object.keys(query).length) {
                 res.status(400).send('Debe ingresar al menos un parámetro');
