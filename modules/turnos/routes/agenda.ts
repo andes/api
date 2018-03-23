@@ -417,7 +417,9 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                         }
                         agendaCtrl.suspenderTurno(req, data, turno);
                         break;
-                    case 'codificarTurno': agendaCtrl.codificarTurno(req, data, turnos[y]);
+                    case 'codificarTurno': agendaCtrl.codificarTurno(req, data, turnos[y]).catch((err2) => {
+                        return next(err2);
+                    });
                         break;
                     case 'guardarNotaTurno': agendaCtrl.guardarNotaTurno(req, data, req.body.idTurno);
                         break;
@@ -435,6 +437,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                     case 'pausada':
                     case 'prePausada':
                     case 'pendienteAuditoria':
+                    case 'pendienteAsistencia':
                     case 'auditada':
                     case 'suspendida':
                     case 'borrada':
