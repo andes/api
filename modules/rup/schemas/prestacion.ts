@@ -55,14 +55,14 @@ export let schema = new mongoose.Schema({
         // Registros de la solicitud ... para los planes o prestaciones futuras
         registros: [registro.schema],
 
-        // Organización desde la que se solicita la Prestación.
+        // Organización para la que se solicita la Prestación.
         organizacion: {
             // requirido, validar en middleware
             id: mongoose.Schema.Types.ObjectId,
             nombre: String
         },
 
-        // Profesional que solicita la Prestación
+        // Profesional para el que se solicita la Prestación
         profesional: {
             // requerido, validar en middleware
             id: mongoose.Schema.Types.ObjectId,

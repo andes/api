@@ -103,11 +103,11 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         }
 
         if (req.query.solicitudDesde) {
-            query.where('solicitud.fecha').gte(moment(req.query.solicitudDesde).startOf('day').toDate() as any);
+            query.where('solicitud.fecha').gte(req.query.solicitudDesde);
         }
 
         if (req.query.solicitudHasta) {
-            query.where('solicitud.fecha').lte(moment(req.query.solicitudHasta).endOf('day').toDate() as any);
+            query.where('solicitud.fecha').lte(req.query.solicitudHasta);
         }
         // Solicitudes generadas desde puntoInicio Ventanilla
         // Solicitudes que no tienen prestacionOrigen ni turno
