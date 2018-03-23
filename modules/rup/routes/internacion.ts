@@ -8,6 +8,7 @@ import * as camasController from './../controllers/cama';
 import { Auth } from './../../../auth/auth.class';
 import { model as Prestacion } from '../schemas/prestacion';
 import { model as cama } from '../../../core/tm/schemas/camas';
+import * as camaRouter from '../../../core/tm/routes/cama';
 
 
 let router = express.Router();
@@ -52,6 +53,42 @@ router.get('/internaciones/pases/:idInternacion', function (req, res, next) {
         });
 });
 
+
+router.patch('/internaciones/desocuparCama/:idInternacion', function (req, res, next) {
+    // buscamos el ultimo estado de la cama por donde "estuvo la internacion"
+    camasController.camaXInternacion(mongoose.Types.ObjectId(req.params.idInternacion)).then(
+        (unaCama: any) => {
+            if (unaCama) {
+                let ultimoEstado = unaCama.estados[unaCama.estados.length - 1];
+                let dto = {
+                    fecha: req.body.fecha,
+                    estado: 'desocupada',
+                    unidadOrganizativa: ultimoEstado.unidadOrganizativa ? ultimoEstado.unidadOrganizativa : null,
+                    especialidades: ultimoEstado.especialidades ? ultimoEstado.especialidades : null,
+                    esCensable: ultimoEstado.esCensable,
+                    genero: ultimoEstado.genero ? ultimoEstado.genero : null,
+                    paciente: null,
+                    idInternacion: null
+                };
+
+                unaCama.estados.push(dto);
+                Auth.audit(unaCama, req);
+                // guardamos organizacion
+                unaCama.save((errUpdate) => {
+                    if (errUpdate) {
+                        return next(errUpdate);
+                    }
+                    res.json(unaCama);
+                });
+
+                // res.json(cama);
+            } else {
+                res.json(null);
+            }
+        }).catch(err => {
+            return next(err);
+        });
+});
 
 
 router.get('/internaciones/censo', function (req, res, next) {

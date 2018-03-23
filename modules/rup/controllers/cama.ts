@@ -83,6 +83,9 @@ export function desocupadaEnDia(dtoCama, fecha) {
         let pipelineEstado = [];
         let finDia = moment(dtoCama.ultimoEstado.fecha).endOf('day').toDate();
         let finDiaConsulta = moment(fecha).endOf('day').toDate();
+        let inicioDia = moment(fecha).startOf('day').toDate()
+        console.log(dtoCama.ultimoEstado, 'estadoultimo');
+        console.log(finDiaConsulta, 'consulta');
         if (finDiaConsulta > finDia) {
 
 
@@ -93,7 +96,7 @@ export function desocupadaEnDia(dtoCama, fecha) {
                     $and:
                         [{
                             'estados.fecha': {
-                                "$lte": finDia,
+                                "$lte": inicioDia,
                                 "$gte": dtoCama.ultimoEstado.fecha
                             }
                         }, { 'estados.estado': { $ne: 'ocupada' } }]
@@ -116,6 +119,34 @@ export function desocupadaEnDia(dtoCama, fecha) {
             resolve(dtoCama);
         }
     });
-
-
 }
+export function camaXInternacion(idInternacion) {
+    return new Promise((resolve, reject) => {
+        let pipelineEstado = [];
+
+        pipelineEstado = [
+            { $match: { 'estados.idInternacion': idInternacion } },
+            { $unwind: "$estados" },
+            { $match: { 'estados.idInternacion': idInternacion } },
+            { $sort: { 'estados.fecha': -1 } },
+            { $limit: 1 }];
+
+        cama.aggregate(pipelineEstado, (err, data) => {
+            if (err) {
+                reject(err);
+            } else {
+                if (data && data.length) {
+                    cama.findById(data[0]._id).then(res => {
+                        resolve(res);
+                    }).catch(err1 => {
+                        reject(err1);
+                    });
+                } else {
+                    resolve(null);
+                }
+            }
+
+        });
+    });
+}
+
