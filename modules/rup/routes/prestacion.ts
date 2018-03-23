@@ -246,6 +246,9 @@ router.patch('/prestaciones/:id', function (req, res, next) {
 
                 async.each(req.body.planes, function (plan, callback) {
                     let nuevoPlan = new Prestacion(plan);
+                    nuevoPlan['organizacionOrigen'] = prestacion.organizacion;
+                    nuevoPlan['profesionalOrigen'] = prestacion.profesional;
+                    nuevoPlan['prestacionOrigen'] = prestacion.id;
 
                     Auth.audit(nuevoPlan, req);
                     nuevoPlan.save(function (errorPlan, nuevaPrestacion) {

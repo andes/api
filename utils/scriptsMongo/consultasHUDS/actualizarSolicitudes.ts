@@ -40,26 +40,28 @@ conn.once('open', () => {
 
     cursor.on('data', async (prestacion: any) => {
 
-        // No hay Organización destino?
-        // if (typeof prestacion.solicitud.organizacionDestino === 'undefined') {
-        if (prestacion.ejecucion.registros && prestacion.ejecucion.registros.createdBy) {
-            prestacion.solicitud.organizacionDestino = prestacion.ejecucion.registros.createdBy.organizacion;
-        } else {
-            prestacion.solicitud.organizacionDestino = prestacion.createdBy.organizacion;
-        }
-        // }
+        /******* SCRIPT CANCELADO *******/
 
-        // No hay Profesional(es) destino?
-        // if (typeof prestacion.solicitud.profesionalesDestino === 'undefined') {
-        if (prestacion.solicitud.registros.valor && prestacion.solicitud.registros.valor.solicituPrestacion && prestacion.solicitud.registros.valor.solicituPrestacion.profesionales) {
-            prestacion.solicitud.profesionalesDestino = prestacion.solicitud.registros.valor.solicituPrestacion.profesionales;
-        } else {
-            prestacion.solicitud.profesionalesDestino = [prestacion.solicitud.profesional];
-        }
+        // No hay Organización Origen?
+        // if (typeof prestacion.solicitud.organizacionOrigen === 'undefined') {
+        // if (prestacion.ejecucion.registros && prestacion.ejecucion.registros.createdBy) {
+        //     prestacion.solicitud.organizacionOrigen = prestacion.ejecucion.registros.createdBy.organizacion;
+        // } else {
+        //     prestacion.solicitud.organizacionOrigen = prestacion.createdBy.organizacion;
         // }
+        // // }
 
-        // console.log('organizacionDestino:   ', prestacion.solicitud.organizacionDestino.nombre);
-        // console.log('profesionalesDestino:  ', prestacion.solicitud.profesionalesDestino[0].nombre + ' ' + prestacion.solicitud.profesionalesDestino[0].apellido);
+        // // No hay Profesional(es) Origen?
+        // // if (typeof prestacion.solicitud.profesionalOrigen === 'undefined') {
+        // if (prestacion.solicitud.registros.valor && prestacion.solicitud.registros.find(x => { x.valor.solicitudPrestacion && x.valor.solicituPrestacion.profesionales })) {
+        //     prestacion.solicitud.profesionalOrigen = prestacion.solicitud.registros.find(x => x.valor.solicitudPrestacion && x.valor.solicituPrestacion.profesionales);
+        // } else {
+        //     prestacion.solicitud.profesionalOrigen = prestacion.solicitud.profesional;
+        // }
+        // // }
+
+        // console.log('organizacionOrigen:   ', prestacion.solicitud.organizacionOrigen.nombre);
+        // console.log('profesionalOrigen:  ', prestacion.solicitud.profesionalOrigen.nombre + ' ' + prestacion.solicitud.profesionalOrigen.apellido);
 
         // ** IMPORTANTE ** Descomentar las siguientes 2 líneas para habilitar la ejecución de este script
         // Auth.audit(prestacion, (configuraciones.userUpdater as any));
