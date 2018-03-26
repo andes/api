@@ -5,8 +5,6 @@ import * as mongoose from 'mongoose';
 import * as agenda from '../../../modules/turnos/schemas/agenda';
 import { toArray } from '../../../utils/utils';
 
-
-
 export function getTurno(req) {
     return new Promise(async (resolve, reject) => {
         let pipelineTurno = [];
@@ -43,10 +41,10 @@ export function getTurno(req) {
                 'bloques': { $push: { '_id': '$_id.bloqueId', 'turnos': '$turnos' } }
             }
         }];
-        if (req.params && mongoose.Types.ObjectId.isValid(req.params.id)) {
+        if ((req.params && mongoose.Types.ObjectId.isValid(req.params.id) || req.query && mongoose.Types.ObjectId.isValid(req.query.id))) {
             let matchId = {
                 '$match': {
-                    'bloques.turnos._id': mongoose.Types.ObjectId(req.params.id),
+                    'bloques.turnos._id': mongoose.Types.ObjectId(req.params.id || req.query.id),
                 }
             };
             pipelineTurno[0] = matchId;
@@ -64,6 +62,10 @@ export function getTurno(req) {
             // Se modifica el pipeline en la posición 0 y 3, que son las posiciones
             // donde se realiza el match
             let matchTurno = {};
+            if (req.query && req.query.id) {
+                matchTurno['bloques.turnos.id'] = req.query.id;
+            }
+
             if (req.query && req.query.estado) {
                 matchTurno['bloques.turnos.estado'] = req.query.estado;
             }
