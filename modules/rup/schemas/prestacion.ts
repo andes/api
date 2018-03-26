@@ -72,11 +72,7 @@ export let schema = new mongoose.Schema({
         },
 
         // ID de la Prestación desde la que se generó esta Solicitud
-        prestacionOrigen: {
-            // requirido, validar en middleware
-            id: mongoose.Schema.Types.ObjectId,
-            nombre: String
-        },
+        prestacionOrigen: mongoose.Schema.Types.ObjectId,
 
         organizacionOrigen: {
             id: mongoose.Schema.Types.ObjectId,
