@@ -12,7 +12,7 @@ export class Documento {
     /**
      * Opciones default de PDF rendering
      */
-    private static options = {
+    public static options: any = {
         format: 'A4',
         border: {
             // default is 0, units: mm, cm, in, px
@@ -37,9 +37,11 @@ export class Documento {
     /**
      *
      * @param req ExpressJS request
-     * TODO: Extender
      */
     private static generarHTML(req) {
+
+        // Directorio root
+        let rootDir = process.cwd();
 
         // Se genera HTML para ser transformado en PDF
         let html = Buffer.from(req.body.html, 'base64').toString();
@@ -47,10 +49,10 @@ export class Documento {
         // Se agregan los estilos CSS
         html += this.generarCSS();
 
-        // Se cargan logos
-        let logoAndes = fs.readFileSync('./templates/andes/logo-andes.png');
-        let logotipoAndes = fs.readFileSync('./templates/andes/logotipo-andes-blue.png');
-        let logoPDP = fs.readFileSync('./templates/andes/logo-pdp.png');
+        // Se cargan logos de ANDES y PDP (Protección de Datos Personales)
+        let logoAndes = fs.readFileSync(`${rootDir}/templates/andes/logo-andes.png`);
+        let logotipoAndes = fs.readFileSync(`${rootDir}/templates/andes/logotipo-andes-blue.png`);
+        let logoPDP = fs.readFileSync(`${rootDir}/templates/andes/logo-pdp.png`);
 
         // Se reemplazan ciertos <!--placeholders--> por logos de ANDES y Dirección de Protección de Datos Personales
         html = html.replace('<!--logoAndes-->', `<img src="data:image/png;base64,${logoAndes.toString('base64')}" style="float: left;">`);
@@ -96,14 +98,12 @@ export class Documento {
      * @param next ExpressJS next
      * @param options html-pdf/PhantonJS rendering options
      */
-    static generarPDF(req, res, next, options = null) {
+    public static generarPDF(req, res, next, options = null) {
 
         // PhantomJS PDF rendering options
         // https://www.npmjs.com/package/html-pdf
         // http://phantomjs.org/api/webpage/property/paper-size.html
-        if (options) {
-            this.options = options;
-        }
+        this.options = options ? options : this.options;
 
         let html = this.generarHTML(req);
 
