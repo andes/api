@@ -107,7 +107,7 @@ router.get('/internaciones/censo', function (req, res, next) {
                     }).catch(error => {
                         return next(error);
                     });
-                })
+                });
 
             } else {
                 res.json(null);

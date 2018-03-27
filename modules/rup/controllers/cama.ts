@@ -66,10 +66,12 @@ export function camaOcupadasxUO(unidadOrganizativa, fecha) {
                         sector: "$sector",
                         habitacion: "$habitacion",
                         tipoCama: "$tipoCama",
+                        idInternacion: "$estados.idInternacion",
                     },
                     ultimoEstado: { $last: "$estados" }
                 }
-        }];
+        },
+        { $sort: { 'ultimoEstado.fecha': 1 } },];
 
 
     let query = cama.aggregate(pipelineEstado);
@@ -84,8 +86,6 @@ export function desocupadaEnDia(dtoCama, fecha) {
         let finDia = moment(dtoCama.ultimoEstado.fecha).endOf('day').toDate();
         let finDiaConsulta = moment(fecha).endOf('day').toDate();
         let inicioDia = moment(fecha).startOf('day').toDate()
-        console.log(dtoCama.ultimoEstado, 'estadoultimo');
-        console.log(finDiaConsulta, 'consulta');
         if (finDiaConsulta > finDia) {
 
 
