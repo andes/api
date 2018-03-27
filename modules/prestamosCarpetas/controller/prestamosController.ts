@@ -92,7 +92,7 @@ async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carp
                                     id: _turno._id,
                                     profesionales: _agenda.profesionales[0],
                                     espacioFisico: _agenda.espacioFisico[0],
-                                    tipoPrestaciones: _agenda.tipoPrestaciones[0],
+                                    tipoPrestacion: _turno.tipoPrestacion
                                 }
                             }
                         });
@@ -140,7 +140,7 @@ async function findCarpetasPrestamo(organizacionId, horaInicio, horaFin, tipoPre
         }
     }
     if (tipoPrestacion) {
-        match['datosPrestamo.turno.tipoPrestaciones._id'] = new ObjectId(tipoPrestacion);
+        match['datosPrestamo.turno.tipoPrestacion._id'] = new ObjectId(tipoPrestacion);
     }
 
     if (espacioFisico) {
@@ -219,7 +219,7 @@ async function buscarAgendasTurnos(organizacionId, tipoPrestacion, espacioFisico
             '_id': { 'id': '$_id' },
             'profesionales': { $push: '$profesionales' },
             'espacioFisico': { $push: '$espacioFisico' },
-            'tipoPrestaciones': { $push: '$tipoPrestaciones' },
+            'tipoPrestacion': { $push: '$bloques.turnos.tipoPrestacion' },
             'turnos': { $push: '$bloques.turnos' }
         }
     }];
@@ -269,6 +269,7 @@ async function createCarpeta(datosCarpeta, estadoPrestamoCarpeta) {
 
 async function savePrestamoCarpeta(req, nuevoPrestamo) {
     Auth.audit(nuevoPrestamo, req);
+    console.log(nuevoPrestamo);
     let _prestamoGuardado = await nuevoPrestamo.save(function (err2, prestamoGuardado: any) {
         if (err2) {
             throw err2;
