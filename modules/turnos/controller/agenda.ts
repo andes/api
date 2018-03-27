@@ -444,22 +444,26 @@ export function getTurno(req, data, idTurno = null) {
     idTurno = String(idTurno) || req.body.idTurno;
 
     // Loop en los bloques
-    for (let x = 0; x < data.bloques.length; x++) {
-        // Si existe este bloque...
-        if (data.bloques[x] != null) {
-            // Buscamos y asignamos el turno con id que coincida (si no coincide "asigna" null)
-            turno = (data as any).bloques[x].turnos.id(idTurno);
+    if (data && data.bloques) {
+        for (let x = 0; x < data.bloques.length; x++) {
+            // Si existe este bloque...
+            if (data.bloques[x] != null) {
+                // Buscamos y asignamos el turno con id que coincida (si no coincide "asigna" null)
+                turno = (data as any).bloques[x].turnos.id(idTurno);
 
-            // Si encontró el turno dentro de alguno de los bloques, lo devuelve
-            if (turno !== null) {
-                return turno;
+                // Si encontró el turno dentro de alguno de los bloques, lo devuelve
+                if (turno !== null) {
+                    return turno;
+                }
             }
         }
     }
     // sobreturnos
-    turno = data.sobreturnos.id(idTurno);
-    if (turno !== null) {
-        return turno;
+    if (data && data.sobreturnos) {
+        turno = data.sobreturnos.id(idTurno);
+        if (turno !== null) {
+            return turno;
+        }
     }
     return false;
 }
