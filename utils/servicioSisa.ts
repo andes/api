@@ -1,3 +1,4 @@
+import { organizacionCache } from './../core/tm/schemas/organizacionCache';
 import { Matching } from '@andes/match';
 import * as https from 'https';
 import * as config from '../config';
@@ -5,6 +6,7 @@ import * as configPrivate from '../config.private';
 // Services
 // import { Logger } from '../utils/logService';
 let to_json = require('xmljson').to_json;
+let moment = require('moment');
 
 export function getOrganizacionesSisa(options) {
     /**
@@ -21,7 +23,7 @@ export function getOrganizacionesSisa(options) {
         pathSisa += k + "=" + options[k] + "&"
     });
     pathSisa = pathSisa.slice(0, -1);
-    // console.log("pathsisa ", pathSisa);
+
     let optionsgetmsg = {
         host: configPrivate.sisa.host,
         port: configPrivate.sisa.port,
@@ -49,11 +51,47 @@ export function getOrganizacionesSisa(options) {
                     // Se parsea el xml obtenido a JSON
                     to_json(xml, function (error, data) {
                         if (error) {
+                            console.log("error ", error)
                             reject();
                         } else {
-                            actualizarOrganizacionesSisa(data);
-                            // resolve({ data });
-                            resolve({ "status": "ok" });
+                            let dataSisa;
+                            dataSisa = new Object();
+                            dataSisa.organizaciones = data.EstablecimientoSearchResponse.establecimientos.establecimientoReducido;
+
+                            Object.keys(dataSisa.organizaciones).forEach(k => {
+                                let query = organizacionCache.find({ codigo: dataSisa.organizaciones[k].codigo });
+                                query.exec(function (err, data) {
+                                    if (err) {
+                                        console.log("error ", err);
+                                        reject();
+                                    }
+                                    if (data[0]) { // Si encuentra codigoSisa se actualizan datos.
+                                        let body = [dataSisa.organizaciones[k]].map(item => {
+                                            return {
+                                                coordenadasDeMapa: {
+                                                    latitud: parseFloat(item.coordenadasDeMapa.latitud),
+                                                    longitud: parseFloat(item.coordenadasDeMapa.longitud),
+                                                    nivelZoom: parseInt(item.coordenadasDeMapa.nivelZoom)
+                                                },
+                                                dependencia: item.dependencia,
+                                                nombre: item.nombre,
+                                                origenDelFinanciamiento: item.origenFinanciamiento,
+                                                tipologia: item.tipologia,
+                                                fechaModificacion: moment().format("DD/MM/YYYY")
+                                            }
+                                        });
+                                        organizacionCache.findByIdAndUpdate(data[0].id, { $set: body[0] }, function (err, data) {
+                                            if (err) {
+                                                reject(err);
+                                            }
+                                            resolve({ status: "ok", data: data });
+                                        });
+                                    } else { // Se agrega nueva organización ya que no existe codigoSisa en la organizacionCache.
+                                        // TODO consultar web service con codigo e ingresar nueva organizacion
+                                        console.log("org no exist --> ", dataSisa.organizaciones[k]);
+                                    }
+                                });
+                            });
                         }
                     });
                 } else {
@@ -62,10 +100,6 @@ export function getOrganizacionesSisa(options) {
             });
         });
     });
-}
-
-export function actualizarOrganizacionesSisa(datosSisa) {
-    console.log("entro a la funcion actualizarOrganizacionesSisa!")
 }
 
 export function getSisaCiudadano(nroDocumento, usuario, clave, sexo?: string) {
