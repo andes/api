@@ -71,7 +71,7 @@ export function camaOcupadasxUO(unidadOrganizativa, fecha) {
                     ultimoEstado: { $last: "$estados" }
                 }
         },
-        { $sort: { 'ultimoEstado.fecha': 1 } },];
+        { $sort: { 'ultimoEstado.fecha': 1 } }];
 
 
     let query = cama.aggregate(pipelineEstado);
@@ -106,7 +106,6 @@ export function desocupadaEnDia(dtoCama, fecha) {
                 if (err) {
                     reject(err);
                 } else {
-                    console.log('DATA ', data);
                     if (data && data.length > 0) {
                         resolve(null);
                     } else {
@@ -146,6 +145,90 @@ export function camaXInternacion(idInternacion) {
                 }
             }
 
+        });
+    });
+}
+
+export function disponibilidadXUO(unidad, fecha) {
+    return new Promise((resolve, reject) => {
+        let inicioDia = moment(fecha).startOf('day').toDate();
+        let finDia = moment(fecha).endOf('day').toDate();
+
+        let pipelineInicioDia = [{
+            $match: {
+                'estados.unidadOrganizativa.conceptId': unidad,
+                'estados.fecha': { "$lte": inicioDia }
+            }
+        },
+        { $unwind: "$estados" },
+        {
+            $match: {
+                'estados.unidadOrganizativa.conceptId': unidad,
+                'estados.fecha': { "$lte": inicioDia }
+            }
+        },
+        { $sort: { 'estados.fecha': 1 } },
+        {
+            $group:
+                {
+                    _id: {
+                        id: "$_id",
+                        nombre: "$nombre",
+                        organizacion: "$organizacion",
+                        sector: "$sector",
+                        habitacion: "$habitacion",
+                        tipoCama: "$tipoCama"
+                    },
+                    ultimoEstado: { $last: "$estados" }
+                }
+        },
+        { $match: { 'ultimoEstado.estado': { $nin: ['bloqueada', 'reparacion'] } } }];
+
+        let pipelineFinDia = [{
+            $match: {
+                'estados.unidadOrganizativa.conceptId': unidad,
+                'estados.fecha': { "$lte": finDia }
+            }
+        },
+        { $unwind: "$estados" },
+        {
+            $match: {
+                'estados.unidadOrganizativa.conceptId': unidad,
+                'estados.fecha': { "$lte": finDia }
+            }
+        },
+        { $sort: { 'estados.fecha': 1 } },
+        {
+            $group:
+                {
+                    _id: {
+                        id: "$_id",
+                        nombre: "$nombre",
+                        organizacion: "$organizacion",
+                        sector: "$sector",
+                        habitacion: "$habitacion",
+                        tipoCama: "$tipoCama"
+                    },
+                    ultimoEstado: { $last: "$estados" }
+                }
+        },
+        { $match: { 'ultimoEstado.estado': { $nin: ['bloqueada', 'reparacion'] } } }];
+
+        let salida = null;
+        cama.aggregate(pipelineInicioDia, function (err, dataIni) {
+            if (err) {
+                reject(err);
+            } else {
+                cama.aggregate(pipelineFinDia, function (errF, dataFin) {
+                    if (errF) {
+                        reject(errF);
+                    } else {
+                        salida = { disponibilidad0: dataIni.length, disponibilidad24: dataFin.length }
+                        resolve(salida);
+                    }
+                });
+
+            }
         });
     });
 }

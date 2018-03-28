@@ -117,5 +117,22 @@ router.get('/internaciones/censo', function (req, res, next) {
         });
 });
 
+router.get('/internaciones/censo/disponibilidad', function (req, res, next) {
+    // conceptId de la unidad organizativa
+    let unidad = req.query.unidad;//'310022001';
+    let fecha = new Date(req.query.fecha);
+
+    camasController.disponibilidadXUO(unidad, fecha).then(
+        resultado => {
+            if (resultado) {
+                res.json(resultado);
+
+            } else {
+                res.json(null);
+            }
+        }).catch(err => {
+            return next(err);
+        });
+});
 
 export = router;
