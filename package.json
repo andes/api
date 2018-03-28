@@ -91,6 +91,7 @@
   "devDependencies": {
     "before": "0.0.1",
     "chai": "^4.1.2",
+    "nodemon": "^1.17.2",
     "tslint-eslint-rules": "^4.1.1"
   }
 }
