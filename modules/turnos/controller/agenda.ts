@@ -435,6 +435,13 @@ export function actualizarEstado(req, data) {
 
                 });
             });
+            data.sobreturnos.forEach(sobreturno => {
+                if (sobreturno.estado !== 'turnoDoble') {
+                    sobreturno.estado = 'suspendido';
+                }
+                sobreturno.motivoSuspension = 'agendaSuspendida';
+                sobreturno.avisoSuspension = 'no enviado';
+            });
         }
 
     }
