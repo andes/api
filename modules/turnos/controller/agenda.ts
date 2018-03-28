@@ -8,6 +8,8 @@ import { userScheduler } from '../../../config.private';
 import { Logger } from '../../../utils/logService';
 import { load } from 'google-maps';
 import { model as Prestacion } from '../../rup/schemas/prestacion';
+import * as http from 'http';
+import * as request from 'request';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -615,6 +617,31 @@ export function esPrimerPaciente(agenda: any, idPaciente: string, opciones: any[
 
 }
 
+function esFeriado(fecha) {
+    return new Promise((resolve, reject) => {
+
+        let anio = moment(fecha).year();
+        let mes = moment(fecha).month(); // de 0 a 11
+        let dia = moment(fecha).date(); // de 1 a 31
+        let url = 'http://nolaborables.com.ar/api/v2/feriados/' + anio;
+
+        request({ url: url, json: true }, (err, response, body) => {
+            if (err) {
+                reject(err);
+            }
+            if (body) {
+                let feriados = body.filter(item => {
+                    return ((item.mes).toString() === (mes + 1).toString() && (item.dia).toString() === (dia).toString());
+                });
+                if (feriados.length > 0) {
+                    resolve(true);
+                } else {
+                    resolve(false);
+                }
+            }
+        });
+    });
+}
 
 /**
  * Actualiza las cantidades de turnos restantes de la agenda antes de su fecha de inicio,
@@ -623,11 +650,22 @@ export function esPrimerPaciente(agenda: any, idPaciente: string, opciones: any[
  * @export actualizarTiposDeTurno()
  * @returns resultado
  */
-export function actualizarTiposDeTurno() {
+export async function actualizarTiposDeTurno() {
     let hsActualizar = 48;
     let cantDias = hsActualizar / 24;
     let fechaActualizar = moment(new Date()).add(cantDias, 'days');
+    let esDomingo = false;
 
+    while ((await esFeriado(fechaActualizar) && !esDomingo) || (moment(fechaActualizar).day().toString() === '6')) {
+        switch (moment(fechaActualizar).day().toString()) {
+            case '0': this.esDomingo = true;
+                break;
+            case '6': fechaActualizar = moment(fechaActualizar).add(2, 'days');
+                break;
+            default: fechaActualizar = moment(fechaActualizar).add(1, 'days');
+                break;
+        }
+    }
     // actualiza los turnos restantes de las agendas 2 dias antes de su horaInicio.
     let condicion = {
         'estado': 'publicada',
@@ -636,6 +674,7 @@ export function actualizarTiposDeTurno() {
             $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
         }
     };
+
     let cursor = agendaModel.find(condicion).cursor();
 
     cursor.eachAsync(doc => {
@@ -685,9 +724,9 @@ export function actualizarTiposDeTurno() {
 export function actualizarEstadoAgendas() {
     // let fechaActualizar = moment(new Date()).subtract(1, 'days');
     let fechaActualizar = moment(new Date());
-    // actualiza los agendas en estado disponible o publicada que se hayan ejecutado el día anterior
+    // actualiza los agendas en estado pausada, disponible o publicada que se hayan ejecutado el día anterior
     let condicion = {
-        '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
+        '$or': [{ estado: 'disponible' }, { estado: 'publicada' }, { estado: 'pausada' }],
         'horaInicio': {
             $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
         }
