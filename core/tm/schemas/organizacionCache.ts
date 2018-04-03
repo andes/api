@@ -45,7 +45,7 @@ let organizacionCacheSchema = new mongoose.Schema({
     },
     provincia: String, // Neuquen
     telefono: {
-        numero: Number, // 0299-4490800
+        numero: String, // 0299-4490800
         tipo: String, // Conmutador
     },
     tipologia: String // Establecimiento de salud con internación general

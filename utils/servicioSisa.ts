@@ -1,3 +1,4 @@
+import { deviceModel } from './../modules/mobileApp/schemas/device';
 import { organizacionCache } from './../core/tm/schemas/organizacionCache';
 import { Matching } from '@andes/match';
 import * as https from 'https';
@@ -7,6 +8,56 @@ import * as configPrivate from '../config.private';
 // import { Logger } from '../utils/logService';
 let to_json = require('xmljson').to_json;
 let moment = require('moment');
+
+export function getOrganizacionSisa(codigo) {
+    /**
+     * Capítulo 5.1.1 - REFES. Registro Federal de Establecimientos de Salud
+     * Se obtienen los datos desde Sisa
+     * Ejemplo de llamada https://sisa.msal.gov.ar/sisa/services/rest/establecimiento/{código}
+     * Información de Campos https://sisa.msal.gov.ar/sisa/sisadoc/docs/050101/refes_ws_001.jsp
+     */
+    // codigo for POST
+    let xml = '';
+    let pathSisa = configPrivate.sisa.urlBuscarOrganizacion + codigo;
+
+    let optionsgetmsg = {
+        host: configPrivate.sisa.host,
+        port: configPrivate.sisa.port,
+        path: pathSisa,
+        method: 'POST',
+        headers: {
+            'content-type': 'application/json',
+        }
+    };
+    // Realizar POST request
+    return new Promise((resolve, reject) => {
+        let reqPost = https.request(optionsgetmsg);
+        reqPost.on('error', function (e) {
+            reject(e);
+        });
+        reqPost.write(JSON.stringify({ usuario: configPrivate.sisa.username, clave: configPrivate.sisa.password }));
+        reqPost.end();
+        reqPost.on('response', function (response) {
+            response.setEncoding('utf8');
+            response.on('data', function (chunk) {
+                if (chunk.toString()) {
+                    xml = xml + chunk.toString();
+                }
+                if (xml) {
+                    // Se parsea el xml obtenido a JSON
+                    to_json(xml, function (error, data) {
+                        if (error) {
+                            console.log("error ", error)
+                            reject();
+                        } else {
+                            resolve(data)
+                        }
+                    });
+                }
+            });
+        });
+    })
+};
 
 export function getOrganizacionesSisa(options) {
     /**
@@ -77,7 +128,6 @@ export function getOrganizacionesSisa(options) {
                                                 nombre: item.nombre,
                                                 origenDelFinanciamiento: item.origenFinanciamiento,
                                                 tipologia: item.tipologia,
-                                                fechaModificacion: moment().format("DD/MM/YYYY")
                                             }
                                         });
                                         organizacionCache.findByIdAndUpdate(data[0].id, { $set: body[0] }, function (err, data) {
@@ -86,9 +136,60 @@ export function getOrganizacionesSisa(options) {
                                             }
                                             resolve({ status: "ok", data: data });
                                         });
+                                        resolve();
                                     } else { // Se agrega nueva organización ya que no existe codigoSisa en la organizacionCache.
-                                        // TODO consultar web service con codigo e ingresar nueva organizacion
-                                        console.log("org no exist --> ", dataSisa.organizaciones[k]);
+                                        getOrganizacionSisa(dataSisa.organizaciones[k].codigo).then((resultado) => {
+                                            if (resultado) {
+                                                let organizacion = resultado["Establecimiento"];
+                                                let body = {
+                                                    categoriaDeLaTipologia: organizacion.categoriaDeLaTipologia, // str
+                                                    codIndecDepto: parseInt(organizacion.codIndecDepto), // int
+                                                    codIndecLocalidad: parseInt(organizacion.codIndecLocalidad), // int
+                                                    codIndecProvincia: parseInt(organizacion.codIndecProvincia), // int
+                                                    codigo: parseInt(organizacion.codigo),
+                                                    codigoSISA: parseInt(organizacion.codigoSISA), // int
+                                                    dependencia: organizacion.dependencia, // str
+                                                    depto: organizacion.depto, // str
+                                                    fechaModificacion: organizacion.fechaModificacion, // str
+                                                    fechaRegistro: organizacion.fechaRegistro, // str
+                                                    internacion: organizacion.internacion, // str
+                                                    localidad: organizacion.localidad, // str
+                                                    nombre: organizacion.nombre, // str
+                                                    origenDelFinanciamiento: organizacion.origenFinanciamiento, // str
+                                                    provincia: organizacion.provincia, // str
+                                                    tipologia: organizacion.tipologia, // str
+                                                    telefono: { numero: organizacion.telefono1.numero, tipo: organizacion.telefono1.tipo }, // {str,str}
+                                                    participaciones: {
+                                                        planNacer: organizacion.participaciones.planNacer,
+                                                        programaMedicosComunitarios: organizacion.participaciones.programaMedicosComunitarios,
+                                                        programaRemediar: organizacion.participaciones.programaRemediar,
+                                                        redDirectoresHospitales: organizacion.participaciones.redDirectoresHospitales,
+                                                        redEstablecimientosCCC: organizacion.participaciones.redEstablecimientosCCC,
+                                                        redNOMIVAC: organizacion.participaciones.redNOMIVAC,
+                                                        registroHPGD: organizacion.participaciones.registroHPGD,
+                                                        sistemaNacionalSangre: organizacion.participaciones.sistemaNacionalSangre,
+                                                        sistemaNacionalVigilanciaSalud: organizacion.participaciones.sistemaNacionalVigilanciaSalud
+                                                    },
+                                                    domicilio: {
+                                                        codigoPostal: parseInt(organizacion.domicilio.codigoPostal), // int
+                                                        direccion: organizacion.domicilio.direccion // str
+                                                    },
+                                                    coordenadasDeMapa: {
+                                                        nivelZoom: parseInt(organizacion.coordenadasDeMapa.nivelZoom), // int
+                                                        longitud: parseFloat(organizacion.coordenadasDeMapa.longitud),
+                                                        latitud: parseFloat(organizacion.coordenadasDeMapa.latitud)
+                                                    },
+                                                }
+                                                let newOrganization = new organizacionCache(body);
+                                                newOrganization.save((err) => {
+                                                    if (err) {
+                                                        reject(err);
+                                                    }
+                                                    console.log(newOrganization);
+                                                    resolve(newOrganization);
+                                                });
+                                            }
+                                        });
                                     }
                                 });
                             });
