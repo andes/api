@@ -1,12 +1,12 @@
 import * as express from 'express';
-import * as entidadFormadora from '../schemas/entidadFormadora';
+import * as modalidadesCertificacion from '../schemas/modalidadesCertificacion';
 
 var router = express.Router();
 
-router.get('/entidadesFormadoras/:id*?', function (req, res, next) {
+router.get('/modalidadesCertificacion/:id*?', function (req, res, next) {
 
  if (req.params.id) {
-        entidadFormadora.findById(req.params.id, function (err, data) {
+    modalidadesCertificacion.findById(req.params.id, function (err, data) {
             if (err) {
                 return next(err);
             }
@@ -16,7 +16,7 @@ router.get('/entidadesFormadoras/:id*?', function (req, res, next) {
 
     } else {
 
-        entidadFormadora.find({'habilitado': true}).sort({codigoSISA: 1}).exec((error, data) => {
+        modalidadesCertificacion.find().exec((error, data) => {
             if (error) {
                 return next(error);
             }
