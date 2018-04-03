@@ -53,6 +53,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
 
     if (req.params.id) {
         let query = Prestacion.findById(req.params.id);
+        query.where('solicitud.ambitoOrigen').equals('ambulatorio');
         query.exec(function (err, data) {
             if (err) {
                 return next(err);
@@ -70,6 +71,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
                 // $where: 'this.estados[this.estados.length - 1].tipo ==  \"' + req.query.estado + '\"',
                 $where: estados.map(x => 'this.estados[this.estados.length - 1].tipo ===  \"' + x + '"').join(' || '),
             });
+            query.where('solicitud.ambitoOrigen').equals('ambulatorio');
         } else {
             query = Prestacion.find({}); // Trae todos
         }
