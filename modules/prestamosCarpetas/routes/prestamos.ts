@@ -42,6 +42,15 @@ router.post('/prestamosHC/devolverCarpeta', async function(req, res, next) {
     }
 });
 
+router.post('/prestamosHC/devolverCarpetas', async function(req, res, next) {
+    try {
+        let resultado = await prestamosController.devolverCarpetas(req);
+        res.json(resultado);
+    } catch (err) {
+        return next(err);
+    }
+});
+
 router.post('/prestamosHC/historial', async function(req, res, next) {
     try {
         let resultado = await prestamosController.getHistorial(req);
