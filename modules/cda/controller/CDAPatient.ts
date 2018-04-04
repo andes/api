@@ -275,7 +275,7 @@ export function generateCDA(uniqueId, confidentiality, patient, date, author, or
     patientCDA.setBirthtime(patient.fechaNacimiento);
     patientCDA.setGender(patient.sexo);
     patientCDA.setDocumento(patient.documento);
-    
+
     if (patient.id) {
         patientCDA.setId(buildID(patient.id));
     }
@@ -290,6 +290,8 @@ export function generateCDA(uniqueId, confidentiality, patient, date, author, or
         let authorCDA = new Author();
         authorCDA.firstname(author.nombre);
         authorCDA.lastname(author.apellido);
+        authorCDA.documento(author.documento);
+        authorCDA.matricula(author.matricula);
         authorCDA.organization(orgCDA);
         if (author._id) {
             authorCDA.id(buildID(author._id));

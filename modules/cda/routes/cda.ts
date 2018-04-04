@@ -36,7 +36,9 @@ let router = express.Router();
 // 	"profesional": {
 // 		"id": "12345567",
 // 		"nombre": "Huds",
-// 		"apellido": "Doct1or"
+// 		"apellido": "Doct1or",
+//      "documento": "34344567",
+//      "matricula": "255" 
 // 	},
 // 	"file": "data:image/jpeg;base64,AEFCSADE2D2D2
 // }
