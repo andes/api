@@ -352,6 +352,13 @@ export function findByMetadata (conds) {
     return CDAFiles.find(conds);
 }
 
+export async function CDAExists (id) {
+    let existe = await findByMetadata({
+        'metadata.extras.id': id
+    });
+    return existe.length > 0;
+}
+
 
 /**
  * listado de CDA por paciente y tipo de prestación

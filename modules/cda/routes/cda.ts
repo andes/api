@@ -50,7 +50,12 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
     }
 
     try {
-        let idPrestacion = req.user.id;
+        let idPrestacion = req.body.id;
+
+        if (cdaCtr.CDAExists(idPrestacion)) {
+            next({error: 'prestacion_existente'});
+        }
+
         let orgId = req.user.organizacion;
         let dataPaciente = req.body.paciente;
         let dataProfesional = req.body.profesional;
@@ -89,7 +94,10 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
             paciente: paciente._id,
             prestacion: prestacion.conceptId,
             fecha: fecha,
-            adjuntos: [{ path: fileData.data, id: fileData.id }]
+            adjuntos: [{ path: fileData.data, id: fileData.id }],
+            extras: {
+                id: idPrestacion
+            }
         };
         let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
 
