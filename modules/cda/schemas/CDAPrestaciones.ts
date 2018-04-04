@@ -1,4 +1,5 @@
 import * as mongoose from 'mongoose';
+import { Timestamp } from 'bson';
 
 export let CDAPrestacionesSchema = new mongoose.Schema({
     conceptId: String,
@@ -12,6 +13,8 @@ export let CDAPrestacionesSchema = new mongoose.Schema({
         displayName: String
     }
 
-}, { timestamps: true });
+}, {
+    timestamps: true
+});
 
-export let CDAPrestacionesModel = mongoose.model('CDAPrestaciones', CDAPrestacionesSchema);
+export let CDAPrestacionesModel = mongoose.model('CDAPrestaciones', CDAPrestacionesSchema, 'CDAPrestaciones');

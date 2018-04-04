@@ -51,9 +51,9 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
 
     try {
         let idPrestacion = req.body.id;
-
-        if (cdaCtr.CDAExists(idPrestacion)) {
-            next({error: 'prestacion_existente'});
+        let yaExiste = await cdaCtr.CDAExists(idPrestacion);
+        if (yaExiste) {
+            return next({error: 'prestacion_existente'});
         }
 
         let orgId = req.user.organizacion;
@@ -62,7 +62,7 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
 
         let prestacion = await cdaCtr.matchCode(req.body.prestacionSnomed);
         if (!prestacion) {
-            next({error: 'prestacion_invalida'});
+            return next({error: 'prestacion_invalida'});
         }
 
         let fecha = moment(req.body.fecha).toDate();
@@ -73,8 +73,9 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
 
         // Terminar de decidir esto
         let organizacion = await Organizaciones.findById(orgId);
+        let cie10 = null;
         if (cie10Code) {
-            let cie10 = await Cie10.findOne({ codigo: cie10Code });
+            cie10 = await Cie10.findOne({ codigo: cie10Code });
             if (!cie10) {
                 throw new Error('cie10_invalid');
             }
@@ -83,11 +84,12 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
         let paciente = await cdaCtr.findOrCreate(req, dataPaciente, organizacion._id);
         let uniqueId = String(new mongoose.Types.ObjectId());
 
-        let fileData;
+        let fileData, adjuntos;
         if (file) {
             let fileObj: any = cdaCtr.base64toStream(file);
             fileObj.cdaId = uniqueId;
             fileData = await cdaCtr.storeFile(fileObj);
+            adjuntos = [{ path: fileData.data, id: fileData.id }];
         }
 
         let cda = cdaCtr.generateCDA(uniqueId, 'N', paciente, fecha, dataProfesional, organizacion, prestacion, cie10, texto, fileData);
@@ -96,7 +98,7 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
             paciente: paciente._id,
             prestacion: prestacion.conceptId,
             fecha: fecha,
-            adjuntos: [{ path: fileData.data, id: fileData.id }],
+            adjuntos: adjuntos,
             extras: {
                 id: idPrestacion
             }
