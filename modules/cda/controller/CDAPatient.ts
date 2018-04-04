@@ -14,6 +14,7 @@ import { create } from 'domain';
 import * as moment from 'moment';
 
 import { CDA as CDAConfig } from '../../../config.private';
+import { CDAPrestacionesModel } from '../schemas/CDAPrestaciones';
 
 /**
  * Crea un objeto paciente desde los datos
@@ -95,24 +96,31 @@ let rootOID = CDAConfig.rootOID;
  * Match desde snomed a un código LOINC para indentificar el CDA
  * @param snomed ConceptId
  */
-let snomedCodes = ['4241000179101'];
-function matchCode(snomed) {
-    switch (snomed) {
-        case '4241000179101':
-            return {
-                code: '26436-6',
-                codeSystem: '2.16.840.1.113883.6.1',
-                codeSystemName: 'LOINC',
-                displayName: 'Laboratory studies'
-            };
-        default:
-            return {
-                code: '34133-9',
-                codeSystem: '2.16.840.1.113883.6.1',
-                codeSystemName: 'LOINC',
-                displayName: 'Summarization of episode note'
-            };
+
+export async function matchCode(snomed) {
+
+    let prestacion: any = await CDAPrestacionesModel.findOne({conceptId: snomed});
+    if (prestacion) {
+        return prestacion.loinc;
+    } else {
+        // return {
+        //     code: '34133-9',
+        //     codeSystem: '2.16.840.1.113883.6.1',
+        //     codeSystemName: 'LOINC',
+        //     displayName: 'Summarization of episode note'
+        // };
     }
+    // switch (snomed) {
+    //     case '4241000179101':
+    //         return {
+    //             code: '26436-6',
+    //             codeSystem: '2.16.840.1.113883.6.1',
+    //             codeSystemName: 'LOINC',
+    //             displayName: 'Laboratory studies'
+    //         };
+    //     default:
+   
+    // }
 }
 
 /**
@@ -249,12 +257,13 @@ export function storeCDA (objectID, cdaXml, metadata) {
  * @param {string} text Texto descriptivo
  * @param {string} base64  Archivo para adjutar al CDA en base64
  */
-export function generateCDA(uniqueId, confidentiality, patient, date, author, organization, snomed, cie10, text, file) {
+export function generateCDA(uniqueId, confidentiality, patient, date, author, organization, prestacion, cie10, text, file) {
 
     let cda = new CDA();
     cda.id(buildID(uniqueId));
 
-    let code = matchCode(snomed);
+    // let code = await matchCode(snomed);
+    let code = prestacion.loinc;
     cda.code(code);
 
     // [TODO] Desde donde inferir el titulo
@@ -269,7 +278,7 @@ export function generateCDA(uniqueId, confidentiality, patient, date, author, or
 
     cda.versionNumber(1);
     cda.date(date);
-    // [TODO] Falta definir el tema del DNI
+
     let patientCDA = new Patient();
     patientCDA.setFirstname(patient.nombre).setLastname(patient.apellido);
     patientCDA.setBirthtime(patient.fechaNacimiento);
@@ -407,10 +416,6 @@ export function validateMiddleware(req, res, next) {
     let texto = req.body.texto;
     let snomed = req.body.prestacion;
 
-    if (snomedCodes.indexOf(snomed) < 0) {
-        errors.prestacion = 'not_valid_value';
-    }
-
     if (!moment(req.body.fecha).isValid()) {
         errors.fecha = 'invalid_format';
     }
@@ -453,8 +458,6 @@ export function validateMiddleware(req, res, next) {
         errors.paciente = errors.paciente || {};
         errors.paciente.fechaNacimiento = 'invalid_date';
     }
-
-
 
     if (Object.keys(errors).length > 0) {
         return next(errors);

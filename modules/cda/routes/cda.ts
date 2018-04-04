@@ -21,7 +21,8 @@ let router = express.Router();
  */
 
 // {
-// 	"prestacion": "1234556",
+//  "id": "asdasdasd"  
+// 	"prestacionSnomed": "1234556",
 // 	"fecha": "2017-11-11 12:10:00",
 // 	"texto": "esto es una prueba",
 // 	"cie10": "A.1.1",
@@ -49,11 +50,16 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
     }
 
     try {
+        let idPrestacion = req.user.id;
         let orgId = req.user.organizacion;
         let dataPaciente = req.body.paciente;
         let dataProfesional = req.body.profesional;
 
-        let snomed = req.body.prestacion;
+        let prestacion = await cdaCtr.matchCode(req.body.prestacionSnomed);
+        if (!prestacion) {
+            next({error: 'prestacion_invalida'});
+        }
+
         let fecha = moment(req.body.fecha).toDate();
 
         let cie10Code = req.body.cie10;
@@ -77,11 +83,11 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
             fileData = await cdaCtr.storeFile(fileObj);
         }
 
-        let cda = cdaCtr.generateCDA(uniqueId, 'N', paciente, fecha, dataProfesional, organizacion, snomed, cie10, texto, fileData);
+        let cda = cdaCtr.generateCDA(uniqueId, 'N', paciente, fecha, dataProfesional, organizacion, prestacion, cie10, texto, fileData);
 
         let metadata = {
             paciente: paciente._id,
-            prestacion: snomed,
+            prestacion: prestacion.conceptId,
             fecha: fecha,
             adjuntos: [{ path: fileData.data, id: fileData.id }]
         };

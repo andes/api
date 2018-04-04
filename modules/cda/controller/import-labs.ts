@@ -117,6 +117,7 @@ export async function importarDatos(paciente) {
                     apellido: '' // Nombre y Apellido viene junto en los registros de laboratorio de SQL
                 };
                 let snomed = '4241000179101'; // informe de laboratorio (elemento de registro)
+                let prestacion = await cdaCtr.matchCode(snomed);
                 let cie10Laboratorio = {
                     codigo: 'Z01.7', // Código CIE-10: Examen de Laboratorio
                     nombre: 'Examen de laboratorio'
@@ -145,7 +146,7 @@ export async function importarDatos(paciente) {
                 });
                 // }
 
-                let cda = cdaCtr.generateCDA(uniqueId, (hiv ? 'R' : 'N') , paciente, fecha, profesional, organizacion, snomed, cie10Laboratorio, texto, fileData);
+                let cda = cdaCtr.generateCDA(uniqueId, (hiv ? 'R' : 'N') , paciente, fecha, profesional, organizacion, prestacion, cie10Laboratorio, texto, fileData);
                 let metadata = {
                     paciente: mongoose.Types.ObjectId(paciente.id),
                     prestacion: snomed,
