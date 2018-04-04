@@ -73,6 +73,7 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
 
         // Terminar de decidir esto
         let organizacion = await Organizaciones.findById(orgId);
+        console.log(organizacion);
         let cie10 = null;
         if (cie10Code) {
             cie10 = await Cie10.findOne({ codigo: cie10Code });
