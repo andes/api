@@ -73,9 +73,11 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
 
         // Terminar de decidir esto
         let organizacion = await Organizaciones.findById(orgId);
-        let cie10 = await Cie10.findOne({ codigo: cie10Code });
-        if (!cie10) {
-            throw new Error('cie10_invalid');
+        if (cie10Code) {
+            let cie10 = await Cie10.findOne({ codigo: cie10Code });
+            if (!cie10) {
+                throw new Error('cie10_invalid');
+            }
         }
 
         let paciente = await cdaCtr.findOrCreate(req, dataPaciente, organizacion._id);

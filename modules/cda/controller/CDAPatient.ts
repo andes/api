@@ -463,7 +463,7 @@ export function validateMiddleware(req, res, next) {
 
     if (!dataPaciente.sexo ||  ['masculino', 'femenino'].indexOf(dataPaciente.sexo) < 0) {
         errors.paciente = errors.paciente || {};
-        errors.paciente.fechaNacimiento = 'invalid_date';
+        errors.paciente.fechaNacimiento = 'invalid_gender';
     }
 
     if (Object.keys(errors).length > 0) {
