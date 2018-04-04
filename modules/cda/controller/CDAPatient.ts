@@ -449,6 +449,12 @@ export function validateMiddleware(req, res, next) {
         errors.paciente.fechaNacimiento = 'invalid_date';
     }
 
+    if (!dataPaciente.sexo ||  ['masculino', 'femenino'].indexOf(dataPaciente.sexo) < 0) {
+        errors.paciente = errors.paciente || {};
+        errors.paciente.fechaNacimiento = 'invalid_date';
+    }
+
+
 
     if (Object.keys(errors).length > 0) {
         return next(errors);
