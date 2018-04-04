@@ -7,7 +7,8 @@ let schema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'organizacion'
     },
-    permisos: [String]
+    permisos: [String],
+    token: String
 });
 
 export let authUsers = mongoose.model('authApps', schema, 'authApps');
