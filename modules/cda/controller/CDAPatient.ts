@@ -132,9 +132,9 @@ function icd10Code (cie10) {
  * Crea la estructura IID a partir de un ID
  * @param id
  */
-function buildID (id) {
+function buildID (id, oid = rootOID) {
     return {
-        root: rootOID,
+        root: oid,
         extension: id
     };
 }
@@ -274,6 +274,8 @@ export function generateCDA(uniqueId, confidentiality, patient, date, author, or
     patientCDA.setFirstname(patient.nombre).setLastname(patient.apellido);
     patientCDA.setBirthtime(patient.fechaNacimiento);
     patientCDA.setGender(patient.sexo);
+    patientCDA.setDocumento(patient.documento);
+    
     if (patient.id) {
         patientCDA.setId(buildID(patient.id));
     }

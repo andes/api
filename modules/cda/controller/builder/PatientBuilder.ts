@@ -3,12 +3,23 @@ import { CDA } from '../class/CDA';
 import * as builder from 'xmlbuilder';
 import { Patient } from '../class/Patient';
 import { BaseBuilder } from './BaseBuilder';
+
+import { CDA as CDAConfig } from '../../../../config.private';
+
 export class PatientBuilder extends BaseBuilder {
 
     public build(patient: Patient) {
         let recordTarget = builder.create('recordTarget').ele('patientRole');
 
         this.createNode(recordTarget, 'id', patient.getId());
+
+        let dni = patient.getDocumento();
+        if (dni) {
+            this.createNode(recordTarget, 'id', {
+                root: CDAConfig.dniOID,
+                extension: dni
+            });
+        }
 
         let patientNode = recordTarget.ele('patient');
 

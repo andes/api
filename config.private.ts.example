@@ -173,7 +173,10 @@ export const conSqlHPN = {
 }
 
 export const CDA = {
-    rootOID: ''
+    rootOID: '',
+    dniOID: '',
+    idOID: '',
+    matriculaOID: '',
 };
 
 export const wsSalud = {
