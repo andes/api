@@ -275,7 +275,7 @@ export class Auth {
      * @memberOf Auth
      */
     static generateAppToken(nombre: string, organizacion: any, permisos: string[]): any {
-        // Crea el token con los datos de sesión
+        // Un token por organización. A futuro distintos permisos en la organización externa deberá modificarse esto!
         let token: AppToken = {
             id: mongoose.Types.ObjectId(),
             app: {
