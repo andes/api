@@ -67,6 +67,7 @@ export function getAgendasDeMongoPendientes() {
         });
     });
 }
+
 /**
  * @description Verifica la existencia de un turno en SIPS, actualiza la codificación del turno y marca la agenda como procesada.
  * @returns Devuelve una Promesa
@@ -114,6 +115,7 @@ export async function checkCodificacion(agenda) {
                 }
             }
         }
+
         if (idConsulta) {
             await markAgendaAsProcessed(agenda);
         }
@@ -493,7 +495,7 @@ async function grabaAgendaSips(agendaSips: any, datosSips: any, tr) {
     let horaFin = moment(agendaSips.horaFin).utcOffset('-03:00').format('HH:mm');
     let duracionTurno = agendaSips.bloques[0].duracionTurno;
 
-    let maximoSobreTurnos = 0;
+    let maximoSobreTurnos = 100;
     let porcentajeTurnosDia = 0;
     let porcentajeTurnosAnticipados = 0;
     let citarPorBloques = 0;

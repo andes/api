@@ -47,6 +47,15 @@ export async function processTurnos(agenda: any, idAgendaCreada: any, idEfector:
             }
         }
     }
+
+    for (let y = 0; y < agenda.sobreturnos.length; y++) {
+        if (agenda.sobreturnos[y].estado === 'asignado' && agenda.sobreturnos[y].paciente && agenda.sobreturnos[y].paciente.documento) {
+            // let resultado = await existeTurnoSips(turnos[i], transaction);
+            // if (resultado.recordset && resultado.recordset.length <= 0) {
+            await grabaTurnoSips(agenda.sobreturnos[y], idAgendaCreada, idEfector, poolAgendas);
+            // }
+        }
+    }
     debug(' 4 - turnos grabados');
 
 }
