@@ -27,17 +27,20 @@ export class Swagger {
                 },
                 host: '/',
                 basePath: '/api',
+                schemes: ['https'],
+                consumes: ['application/json'],
+                produces: ['application/json'],
             },
             // path to the API docs
             apis: [
-                // TODO: verificar la documento de las APIs existentes
-                // path.join(__dirname, '../core')
+                // TODO: verificar la documento de las APIs existentes 
                 path.join(__dirname, '../core/term/routes/**/*.ts')
             ],
         });
 
         // serve swagger
         app.get('/swagger.json', function (req, res) {
+            console.log(swagger);
             res.setHeader('Content-Type', 'application/json');
             res.send(swagger);
         });
