@@ -15,7 +15,7 @@ import * as moment from 'moment';
 import * as debug from 'debug';
 
 let router = express.Router();
-let dbg = debug('turno');
+let dbgTurno = debug('dbgTurno');
 
 router.get('/turno/:id*?', async function (req, res, next) {
     try {
@@ -151,6 +151,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                             let etiquetaPaciente: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.paciente';
                             let etiquetaPrestacion: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.tipoPrestacion';
                             let etiquetaNota: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.nota';
+                            let etiquetaMotivoConsulta: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.motivoConsulta';
 
                             let etiquetaReasignado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.reasignado';
                             let etiquetaUpdateAt: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedAt';
@@ -162,10 +163,9 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                             update[etiquetaPaciente] = req.body.paciente;
                             update[etiquetaTipoTurno] = tipoTurno;
                             update[etiquetaNota] = req.body.nota;
-
+                            update[etiquetaMotivoConsulta] = req.body.motivoConsulta;
                             if (req.body.reasignado) {
                                 update[etiquetaReasignado] = req.body.reasignado;
-
                             }
                             update[etiquetaUpdateAt] = new Date();
                             update[etiquetaUpdateBy] = usuario;
@@ -180,7 +180,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
 
                             // Agrega un tag al JSON query
                             query[etiquetaEstado] = 'disponible';
-
 
                             // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
                             (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true }, function actualizarAgenda(err4, doc2: any, writeOpResult) {
@@ -198,7 +197,8 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                                         paciente: update[etiquetaPaciente],
                                         prestacion: update[etiquetaPrestacion],
                                         tipoTurno: update[etiquetaTipoTurno] !== null ? update[etiquetaTipoTurno] : null,
-                                        nota: update[etiquetaNota]
+                                        nota: update[etiquetaNota],
+                                        motivoConsulta: update[etiquetaMotivoConsulta]
                                     };
                                     Logger.log(req, 'citas', 'asignarTurno', datosOp);
 
@@ -230,19 +230,26 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', function (req, res, next) {
         if (err) {
             return next(err);
         }
-        let indexBloque = (data as any).bloques.findIndex(bloq => {
-            return (bloq.id === req.params.idBloque);
-        });
-        let indexTurno = (data as any).bloques[indexBloque].turnos.findIndex(t => {
-            return (t.id === req.params.idTurno);
-        });
+        let etiquetaAvisoSuspension: string;
+        if (req.params.idBloque !== '-1') {
+            let indexBloque = (data as any).bloques.findIndex(bloq => {
+                return (bloq.id === req.params.idBloque);
+            });
+            let indexTurno = (data as any).bloques[indexBloque].turnos.findIndex(t => {
+                return (t.id === req.params.idTurno);
+            });
+            etiquetaAvisoSuspension = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.avisoSuspension';
+        } else {
+            let indexTurno = (data as any).sobreturnos.findIndex(sobreturno => Object.is(req.params.idTurno, String(sobreturno._id)));
+            etiquetaAvisoSuspension = 'sobreturnos.' + indexTurno + '.avisoSuspension';
+        }
+
         let update = {};
-        let etiquetaAvisoSuspension: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.avisoSuspension';
         update[etiquetaAvisoSuspension] = req.body.avisoSuspension;
         let query = {
             _id: req.params.idAgenda,
         };
-        dbg('query --->', query);
+        dbgTurno('query --->', query);
 
         agenda.update(query, { $set: update }, function (error, data2) {
             if (error) {

@@ -67,7 +67,16 @@ export default [
                     { key: 'prestacion', title: 'Tipo de prestacion', type: 'prestacion' },
                     { key: 'delDia', title: 'Turnos del día', type: 'boolean' },
                     { key: 'paraProfesional', title: 'Para profesional', type: 'boolean' },
-                    { key: 'programados', title: 'Turnos programados', type: 'boolean' },
+                    { key: 'programados', title: 'Turnos programados', type: 'boolean' }
+                ]
+            },
+            {
+                key: 'puntoInicio',
+                title: 'puntoInicio',
+                child: [
+                    { key: 'solicitud', title: 'Registrar solicitud', type: 'boolean' },
+                    { key: 'autocitado', title: 'Registrar Autocitación', type: 'boolean' },
+                    { key: 'darTurnos', title: 'Dar turnos desde punto inicio', type: 'boolean' },
                 ]
             }
         ]
@@ -238,7 +247,14 @@ export default [
     {
         key: 'reportes',
         title: 'Modulo Reportes',
-        child: []
+        child: [
+        ]
+    },
+    {
+        key: 'solicitudes',
+        title: 'Modulo Solicitudes',
+        child: [
+        ]
     }
     
 ];

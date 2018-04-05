@@ -14,8 +14,10 @@ export let farmaciasTurnosSchema = new mongoose.Schema({
         type: Date
     },
     localidad: {
-        type: Number,
-    }
+        type: String,
+    },
+    latitud: {type: Number, required: false},
+    longitud: {type: Number, required: false}
 });
 
 export let farmaciasLocalidadesSchema = new mongoose.Schema({

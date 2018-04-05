@@ -12,7 +12,7 @@ export function roboSender() {
 
         let condition = {
             status: 'pending',
-            scheduledAt: { $lte: new Date()  }
+            scheduledAt: { $lte: new Date() }
         };
 
         let counter = 0;
@@ -39,7 +39,8 @@ export function roboSender() {
                                 to: env.email,
                                 subject: env.subject,
                                 text: env.message,
-                                html: html
+                                html: html,
+                                attachments: ''
                             };
                             log('Enviando email a', env.email);
                             await mailTools.sendMail(mailOptions);

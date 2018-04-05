@@ -10,11 +10,14 @@ import {
 import * as organizacion from './../../../core/tm/schemas/organizacion';
 import * as sql from 'mssql';
 import * as cdaCtr from '../../cda/controller/CDAPatient';
+import {
+    ObjectID,
+    ObjectId
+} from 'bson';
 
 
 
 // Funciones privadas
-
 function traeProfesionalPorId(id) {
     return new Promise((resolve, reject) => {
         profesional.findById(mongoose.Types.ObjectId(id), function (err, unProfesional) {
@@ -54,7 +57,6 @@ function organizacionCompleto(idOrganizacion): any {
 }
 
 // Funciones públicas
-
 export function noExistCDA(protocol, dniPaciente) {
     return new Promise(async function (resolve, reject) {
         try {
@@ -137,9 +139,8 @@ export async function getDetalles(idProtocolo, idEfector) {
 
 export async function cacheTurnosSips(unaAgenda) {
     // Armo el DTO para guardar en la cache de agendas
-
-    if ((unaAgenda.estado !== 'planificacion') && (unaAgenda.nominalizada) &&
-        ((unaAgenda.organizacion._id).equals('57fcf037326e73143fb48c3a')) && (unaAgenda.tipoPrestaciones[0].term.includes('odonto'))) {
+    // if ((unaAgenda.estado !== 'planificacion') && (unaAgenda.nominalizada) && (unaAgenda.tipoPrestaciones[0].term.includes('odonto')) || integraPrestacionesHPN(unaAgenda)) {
+    if (integrarAgenda(unaAgenda) && unaAgenda.estado !== 'planificacion') {
         let organizacionAgenda;
         if (unaAgenda.organizacion) {
             organizacionAgenda = await organizacionCompleto(unaAgenda.organizacion.id);
@@ -165,7 +166,9 @@ export async function cacheTurnosSips(unaAgenda) {
             id: unaAgenda.id
         };
 
-        agendasCache.find({ id: agenda.id }, function getAgenda(err, data) {
+        agendasCache.find({
+            id: agenda.id
+        }, function getAgenda(err, data) {
             if (err) {
                 return (err);
             }
@@ -195,4 +198,24 @@ export async function cacheTurnosSips(unaAgenda) {
             }
         });
     }
+
+    function integrarAgenda(_agenda) {
+        let prestacionesIntegradas: any;
+        if (_agenda.organizacion) {
+            let datosOrganizacion = constantes.prestacionesIntegradasPorEfector.find(elem => elem.organizacion === _agenda.organizacion.id);
+            if (datosOrganizacion) {
+                prestacionesIntegradas = _agenda.tipoPrestaciones.find(prestacion => {
+                    return (datosOrganizacion.prestaciones.filter(prest => prest.conceptId === prestacion.conceptId).length > 0);
+                });
+            }
+        }
+
+        if (prestacionesIntegradas) {
+            return true;
+        } else {
+            return false;
+        }
+
+    }
 }
+

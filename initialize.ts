@@ -27,6 +27,7 @@ export function initAPI(app: Express) {
 
         // Permitir que el método OPTIONS funcione sin autenticación
         if ('OPTIONS' === req.method) {
+            res.header('Access-Control-Max-Age', '1728000');
             res.sendStatus(200);
         } else {
             next();

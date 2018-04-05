@@ -33,6 +33,7 @@ router.get('/prestaciones/huds/:idPaciente', function (req, res, next) {
     let conceptos = (req.query.conceptIds) ? req.query.conceptIds : null;
 
     return Prestacion.find(query, (err, prestaciones) => {
+
         if (err) {
             return next(err);
         }
@@ -49,6 +50,7 @@ router.get('/prestaciones/huds/:idPaciente', function (req, res, next) {
 });
 
 router.get('/prestaciones/:id*?', function (req, res, next) {
+
     if (req.params.id) {
         let query = Prestacion.findById(req.params.id);
         query.exec(function (err, data) {
@@ -63,8 +65,10 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
     } else {
         let query;
         if (req.query.estado) {
+            let estados = (typeof req.query.estado === 'string') ? [req.query.estado] : req.query.estado;
             query = Prestacion.find({
-                $where: 'this.estados[this.estados.length - 1].tipo ==  \"' + req.query.estado + '\"'
+                // $where: 'this.estados[this.estados.length - 1].tipo ==  \"' + req.query.estado + '\"',
+                $where: estados.map(x => 'this.estados[this.estados.length - 1].tipo ==  \"' + x + '"').join(' || '),
             });
         } else {
             query = Prestacion.find({}); // Trae todos
@@ -74,9 +78,11 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             query.where('estados.tipo').ne(req.query.sinEstado);
         }
         if (req.query.fechaDesde) {
+            // query.where('createdAt').gte(moment(req.query.fechaDesde).startOf('day').toDate() as any);
             query.where('ejecucion.fecha').gte(moment(req.query.fechaDesde).startOf('day').toDate() as any);
         }
         if (req.query.fechaHasta) {
+            // query.where('createdAt').lte(moment(req.query.fechaHasta).endOf('day').toDate() as any);
             query.where('ejecucion.fecha').lte(moment(req.query.fechaHasta).endOf('day').toDate() as any);
         }
         if (req.query.idProfesional) {
@@ -96,13 +102,22 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             query.where('ejecucion.registros.concepto.conceptId').in(req.query.conceptsIdEjecucion);
         }
 
+        if (req.query.solicitudDesde) {
+            query.where('solicitud.fecha').gte(moment(req.query.solicitudDesde).startOf('day').toDate() as any);
+        }
+
+        if (req.query.solicitudHasta) {
+            query.where('solicitud.fecha').lte(moment(req.query.solicitudHasta).endOf('day').toDate() as any);
+        }
         // Solicitudes generadas desde puntoInicio Ventanilla
         // Solicitudes que no tienen prestacionOrigen ni turno
         // Si tienen prestacionOrigen son generadas por RUP y no se listan
         // Si tienen turno, dejan de estar pendientes de turno y no se listan
+
         if (req.query.tienePrestacionOrigen === 'no') {
             query.where('solicitud.prestacionOrigen').equals(null);
         }
+
         if (req.query.tieneTurno === 'no') {
             query.where('solicitud.turno').equals(null);
         }
@@ -121,6 +136,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         if (req.query.limit) {
             query.limit(parseInt(req.query.limit, 10));
         }
+
         query.exec(function (err, data) {
             if (err) {
                 return next(err);
@@ -159,7 +175,7 @@ router.patch('/prestaciones/:id', function (req, res, next) {
             case 'estadoPush':
                 if (req.body.estado) {
                     if (data.estados[data.estados.length - 1].tipo === 'validada') {
-                        return next('Prestación validada, no puede volver a validar.');
+                        return next('Prestación validada, no se puede volver a validar.');
                     }
                     data['estados'].push(req.body.estado);
                 }
@@ -181,6 +197,10 @@ router.patch('/prestaciones/:id', function (req, res, next) {
             case 'registros':
                 if (req.body.registros) {
                     data.ejecucion.registros = req.body.registros;
+
+                    if (req.body.solicitud) {
+                        data.solicitud = req.body.solicitud;
+                    }
                 }
                 break;
             case 'asignarTurno':
@@ -202,16 +222,11 @@ router.patch('/prestaciones/:id', function (req, res, next) {
             if (req.body.registrarFrecuentes && req.body.registros) {
 
                 let dto = {
-                    profesional: {
-                        id: req.user.profesional.id,
-                        nombre: req.user.usuario.nombre,
-                        apellido: req.user.usuario.apellido,
-                        documento: req.user.usuario.documento
-                    },
+                    profesional: Auth.getProfesional(req),
                     tipoPrestacion: prestacion.solicitud.tipoPrestacion,
                     organizacion: prestacion.solicitud.organizacion,
                     frecuentes: req.body.registros
-                }
+                };
                 frecuentescrl.actualizarFrecuentes(dto)
                     .then((resultadoFrec: any) => {
                         Logger.log(req, 'rup', 'update', {
@@ -276,6 +291,5 @@ router.patch('/prestaciones/:id', function (req, res, next) {
         });
     });
 });
-
 
 export = router;

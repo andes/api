@@ -85,7 +85,7 @@ router.post('/laboratorios', async(req: any, res, next) => {
                     paciente: paciente.id,
                     prestacion: snomed,
                     fecha: fecha,
-                    adjuntos: [ fileData.data ]
+                    adjuntos: [ { path: fileData.data, id: fileData.id } ]
                 };
                 let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
                 // Marcamos el protocolo (encabezado) como generado, asignando el uniqueId
