@@ -256,5 +256,5 @@ export default [
         child: [
         ]
     }
-    
+
 ];

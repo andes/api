@@ -61,8 +61,8 @@ router.get('/profesionales/foto/:id*?', Auth.authenticate(), (req: any, res, nex
                         }
                         res.setHeader('Content-Type', file[0].contentType);
                         res.setHeader('Content-Length', file[0].length);
-                        let img = buffer.toString('base64');
-                        return res.send(img);
+                        let _img = buffer.toString('base64');
+                        return res.send(_img);
                     });
                 }
             });
@@ -424,7 +424,7 @@ router.post('/profesionales/sendMail', function (req, res, next) {
     'use strict';
     const config_private = require('../../../config.private');
     const nodemailer = require('nodemailer');
-    const profesional = req.body.profesional;
+    const _profesional = req.body.profesional;
     // Generate test SMTP service account from ethereal.email
     // Only needed if you don't have a real mail account for testing
 
@@ -439,7 +439,7 @@ router.post('/profesionales/sendMail', function (req, res, next) {
         }
     });
 
-    let contactos = profesional.contactos;
+    let contactos = _profesional.contactos;
     let email;
     contactos.forEach(element => {
         if (element.tipo === 'email') {
@@ -447,7 +447,7 @@ router.post('/profesionales/sendMail', function (req, res, next) {
         }
     });
 
-    const html1 = '<strong>Estimado ' + profesional.nombreCompleto + '</strong> <br> una de sus matriculas esta por vencer, por favor presentarse para realizar la renovacion de la misma.';
+    const html1 = '<strong>Estimado ' + _profesional.nombreCompleto + '</strong> <br> una de sus matriculas esta por vencer, por favor presentarse para realizar la renovacion de la misma.';
     // setup email data with unicode symbols
     let mailOptions = {
         from: '"Matriculaciones Salud" <ultrakite6@gmail.com>', // sender address
@@ -460,7 +460,7 @@ router.post('/profesionales/sendMail', function (req, res, next) {
     // send mail with defined transport object
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {
-            return console.log(error);
+            return next(error);
         }
         res.send(true);
         // Preview only available when sending through an Ethereal account

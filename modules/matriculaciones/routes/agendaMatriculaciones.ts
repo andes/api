@@ -27,17 +27,17 @@ router.post('/agendaMatriculaciones', Auth.authenticate(), function (req, res, n
         }
     }, function (err, resultado) {
         if (resultado[0] !== undefined) {
-            agenda.findByIdAndUpdate(resultado[0]._id, req.body, { new: true }, function (err, data) {
-                if (err) {
-                    return next(err);
+            agenda.findByIdAndUpdate(resultado[0]._id, req.body, { new: true }, function (errUpdate, data) {
+                if (errUpdate) {
+                    return next(errUpdate);
                 }
                 res.status(201).json(data);
             });
         } else {
             var newAgenda = new agenda(req.body);
-            newAgenda.save((err) => {
-                if (err) {
-                    return next(err);
+            newAgenda.save((errSave) => {
+                if (errSave) {
+                    return next(errSave);
                 }
                 res.status(201).json(newAgenda);
             });
