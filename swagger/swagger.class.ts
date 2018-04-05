@@ -30,17 +30,25 @@ export class Swagger {
                 schemes: ['https'],
                 consumes: ['application/json'],
                 produces: ['application/json'],
+                securityDefinitions: {
+                    JWT: {
+                        type: 'apiKey',
+                        in: 'header',
+                        name: 'Authorization'
+                    }
+                },
             },
             // path to the API docs
             apis: [
                 // TODO: verificar la documento de las APIs existentes 
-                path.join(__dirname, '../core/term/routes/**/*.ts')
+                path.join(__dirname, './definitions.yml'),
+                // path.join(__dirname, '../core/term/routes/**/*.ts'),
+                path.join(__dirname, '../modules/cda/api-doc.yml')
             ],
         });
 
         // serve swagger
-        app.get('/swagger.json', function (req, res) {
-            console.log(swagger);
+        app.get('/swagger.json', function (req, res) { 
             res.setHeader('Content-Type', 'application/json');
             res.send(swagger);
         });
