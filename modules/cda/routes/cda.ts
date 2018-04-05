@@ -21,7 +21,7 @@ let router = express.Router();
  */
 
 // {
-//  "id": "asdasdasd"  
+//  "id": "asdasdasd"
 // 	"prestacionSnomed": "1234556",
 // 	"fecha": "2017-11-11 12:10:00",
 // 	"texto": "esto es una prueba",
@@ -66,14 +66,12 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
         }
 
         let fecha = moment(req.body.fecha).toDate();
-
         let cie10Code = req.body.cie10;
         let file = req.body.file;
         let texto = req.body.texto;
 
         // Terminar de decidir esto
         let organizacion = await Organizaciones.findById(orgId);
-        console.log(organizacion);
         let cie10 = null;
         if (cie10Code) {
             cie10 = await Cie10.findOne({ codigo: cie10Code });
