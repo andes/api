@@ -21,7 +21,7 @@ let router = express.Router();
  */
 
 // {
-//  "id": "asdasdasd"  
+//  "id": "asdasdasd"
 // 	"prestacionSnomed": "1234556",
 // 	"fecha": "2017-11-11 12:10:00",
 // 	"texto": "esto es una prueba",
@@ -39,7 +39,7 @@ let router = express.Router();
 // 		"nombre": "Huds",
 // 		"apellido": "Doct1or",
 //      "documento": "34344567",
-//      "matricula": "255" 
+//      "matricula": "255"
 // 	},
 // 	"file": "data:image/jpeg;base64,AEFCSADE2D2D2
 // }
@@ -73,12 +73,11 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
 
         // Terminar de decidir esto
         let organizacion = await Organizaciones.findById(orgId);
-        console.log(organizacion);
         let cie10 = null;
         if (cie10Code) {
             cie10 = await Cie10.findOne({ codigo: cie10Code });
             if (!cie10) {
-                throw new Error('cie10_invalid');
+                return next({error: 'cie10_invalid'});
             }
         }
 
@@ -109,7 +108,7 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
         res.json({ cda: uniqueId, paciente: paciente._id });
 
     } catch (e) {
-        next(e);
+        return next(e);
     }
 });
 

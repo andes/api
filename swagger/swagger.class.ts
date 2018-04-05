@@ -40,7 +40,7 @@ export class Swagger {
             },
             // path to the API docs
             apis: [
-                // TODO: verificar la documento de las APIs existentes 
+                // TODO: verificar la documento de las APIs existentes
                 path.join(__dirname, './definitions.yml'),
                 // path.join(__dirname, '../core/term/routes/**/*.ts'),
                 path.join(__dirname, '../modules/cda/api-doc.yml')
@@ -48,7 +48,7 @@ export class Swagger {
         });
 
         // serve swagger
-        app.get('/swagger.json', function (req, res) { 
+        app.get('/swagger.json', function (req, res) {
             res.setHeader('Content-Type', 'application/json');
             res.send(swagger);
         });
