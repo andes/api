@@ -39,7 +39,7 @@ let router = express.Router();
 // 		"nombre": "Huds",
 // 		"apellido": "Doct1or",
 //      "documento": "34344567",
-//      "matricula": "255" 
+//      "matricula": "255"
 // 	},
 // 	"file": "data:image/jpeg;base64,AEFCSADE2D2D2
 // }
@@ -76,7 +76,7 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
         if (cie10Code) {
             cie10 = await Cie10.findOne({ codigo: cie10Code });
             if (!cie10) {
-                throw new Error('cie10_invalid');
+                return next({error: 'cie10_invalid'});
             }
         }
 
@@ -107,7 +107,7 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
         res.json({ cda: uniqueId, paciente: paciente._id });
 
     } catch (e) {
-        next(e);
+        return next(e);
     }
 });
 

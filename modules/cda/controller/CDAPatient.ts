@@ -402,7 +402,6 @@ export function validateMiddleware(req, res, next) {
     let cie10Code = req.body.cie10;
     let file = req.body.file;
     let texto = req.body.texto;
-    let snomed = req.body.prestacion;
 
     if (!moment(req.body.fecha).isValid()) {
         errors.fecha = 'invalid_format';

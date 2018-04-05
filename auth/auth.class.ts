@@ -77,7 +77,7 @@ export class Auth {
      * @memberOf Auth
      */
     static authenticate() {
-        return [ 
+        return [
             passport.authenticate('jwt', { session: false }),
             this.appTokenProtected()
         ];
@@ -122,7 +122,12 @@ export class Auth {
         };
     }
 
-
+    /**
+     * Middleware para controlar los apps token.
+     * Controla que el token esta almacenado en la DB.
+     *
+     * @memberOf Auth
+     */
     static appTokenProtected() {
         return function (req, res, next) {
             if (req.user.type === 'app-token') {
