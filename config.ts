@@ -13,6 +13,11 @@ const mobileMiddleware = [
     Auth.authenticate()
 ];
 
+const publicMiddleware = [
+    Auth.authenticatePublic()
+];
+
+
 // Habilita/deshabilita módulos de la API
 export const modules = {
     auth: {
@@ -103,6 +108,12 @@ export const modules = {
         path: './modules/usuarios/routes',
         route: '/modules/usuarios',
         middleware: appMiddleware
+    },
+    matriculaciones: {
+        active: true,
+        path: './modules/matriculaciones/routes',
+        route: '/modules/matriculaciones',
+        middleware: null
     },
     fhir: {
         active: true,

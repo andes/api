@@ -1,28 +1,60 @@
 import * as mongoose from 'mongoose';
-import * as ubicacionSchema from './ubicacion';
-import * as constantes from './constantes';
-import * as direccionSchema from './direccion';
-import * as contactoSchema from './contacto';
-import * as especialidadSchema from './especialidad';
-import * as paisSchema from './pais';
-import * as profesionSchema from './profesion';
-import { ObjSIISASchema } from './siisa';
-import * as moment from 'moment';
+// import * as ubicacionSchema from '../../../core/tm/schemas/ubicacion';
+import * as constantes from '../../../core/tm/schemas/constantes';
+// import * as direccionSchema from '../../../core/tm/schemas/direccion';
+import * as contactoSchema from '../../../core/tm/schemas/contacto';
+import * as especialidadSchema from '../../../core/tm/schemas/especialidad';
+import * as paisSchema from '../../../core/tm/schemas/pais';
+import * as profesionSchema from '../../../core/tm/schemas/profesion';
+import { ObjSIISASchema } from '../../../core/tm/schemas/siisa';
 
 let matriculacionSchema = new mongoose.Schema({
     matriculaNumero: { type: Number, required: false },
     libro: { type: String, required: false },
     folio: { type: String, required: false },
     inicio: Date,
-    baja : {
-        motivo: { type: String, required: false },
-        fecha: { type: String, required: false }
-    },
-    notificacionVencimiento: { type: Boolean, required: false },
     fin: Date,
     revalidacionNumero: Number
 });
-export let profesionalSchema = new mongoose.Schema({
+
+let nombreSchema = new mongoose.Schema({
+    nombre: {
+        type: String,
+        required: false
+    }
+});
+
+let ubicacionSchema = new mongoose.Schema({
+    barrio: nombreSchema,
+    localidad: nombreSchema,
+    provincia: nombreSchema,
+    pais: nombreSchema
+});
+
+let direccionSchema = new mongoose.Schema({
+    tipo: {
+        type: String,
+        required: false
+    },
+    valor: String,
+    codigoPostal: String,
+    ubicacion: ubicacionSchema,
+    geoReferencia: {
+        type: [Number],
+        index: '2d'
+    },
+    ranking: Number,
+    activo: {
+        type: Boolean,
+        required: true,
+        default: true
+    },
+    ultimaActualizacion: Date,
+});
+
+
+export let turnoSolicitadoSchema = new mongoose.Schema({
+// Persona
     habilitado: { type: Boolean, default: true },
     nombre: { type: String, required: false },
     apellido: { type: String, required: false },
@@ -43,18 +75,19 @@ export let profesionalSchema = new mongoose.Schema({
         imgArchivo: { type: String, required: false },
         fecha: { type: String, required: false },
     }],
+// ??
     incluidoSuperintendencia: { type: Boolean, default: false },
+// Formacion
     formacionGrado: [{
         profesion: { type: ObjSIISASchema, required: false },
         entidadFormadora: { type: ObjSIISASchema, required: false },
         titulo: { type: String, required: false },
         fechaTitulo: { type: Date, required: false },
-        fechaEgreso: { type: Date, required: false },
         renovacion: { type: Boolean, default: false },
+        fechaEgreso: { type: Date, required: false },
         papelesVerificados: { type: Boolean, default: false },
-        matriculacion: [matriculacionSchema],
-        matriculado: { type: Boolean, default: false },
-
+        revalida: { type: Boolean, default: false },
+        matriculacion: [matriculacionSchema]
     }],
     formacionPosgrado: [{
          profesion: { type: ObjSIISASchema, required: false },
@@ -68,11 +101,12 @@ export let profesionalSchema = new mongoose.Schema({
              modalidad: { type: ObjSIISASchema, required: false },
              establecimiento: { type: ObjSIISASchema, required: false },
          },
-         matriculacion: [matriculacionSchema],
-         matriculado: { type: Boolean, default: false },
-         revalida: { type: Boolean, default: false },
-         papelesVerificados: { type: Boolean, default: false },
+         matriculacion: [matriculacionSchema]
      }],
+    // origen: {
+    //     type: String,
+    //     enum: ['matriculación', 'rrhh', 'colegio de psicólogos']
+    // },
     sanciones: [{
          numero: {type: Number, required: false},
          sancion: {
@@ -95,15 +129,30 @@ export let profesionalSchema = new mongoose.Schema({
     }],
     idRenovacion: { type: String, required: false },
     documentoViejo: { type: Number, required: false }
+
 });
 
 
 // Virtuals
-profesionalSchema.virtual('nombreCompleto').get(function() {
+turnoSolicitadoSchema.virtual('nombreCompleto').get(function() {
     return this.apellido + ', ' + this.nombre;
 
 });
-profesionalSchema.virtual('fallecido').get(function() {
+
+turnoSolicitadoSchema.virtual('edad').get(function() {
+    let ageDifMs = Date.now() - this.fechaNacimiento.getTime();
+    let ageDate = new Date(ageDifMs);
+    return Math.abs(ageDate.getUTCFullYear() - 1970);
+});
+
+turnoSolicitadoSchema.virtual('fallecido').get(function() {
     return this.fechaFallecimiento;
 });
-export let profesional = mongoose.model('profesional', profesionalSchema, 'profesional');
+
+// profesionalSchema.virtual('ultimaFirma').get(function() {
+//     return this.firmas.sort((a, b) => {
+//         return new Date(a.fecha).getTime() - new Date(b.fecha).getTime();
+//     })[0];
+// });
+
+export let turnoSolicitado = mongoose.model('turnoSolicitado', turnoSolicitadoSchema, 'turnoSolicitado');
