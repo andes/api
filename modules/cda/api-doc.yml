@@ -1,0 +1,59 @@
+paths:
+  /modules/cda:
+    post:
+      tags:
+        - "cda"
+      description: Generador de CDA
+      summary: Generador de CDA
+      security:
+        - JWT: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: id
+          in: body
+          description: Identificador único de la prestación
+          required: true
+          type: string
+        - name: prestacionSnomed
+          in: body
+          description: Tipo de prestación (código Snomed)
+          required: true
+          type: string
+        - name: fecha
+          in: body
+          description: Fecha de la prestación
+          required: true
+          type: dateTime 
+        - name: texto
+          in: body
+          description: Resumen de la prestación
+          required: true
+          type: string
+        - name: cie10
+          in: body
+          description: Código CIE10 de la prestación
+          required: false
+          type: string
+        - name: paciente
+          in: body
+          description: Datos requeridos del paciente
+          required: true
+          schema:
+            $ref: '#/definitions/Paciente'
+        - name: profecional
+          in: body
+          description: Datos requeridos del profesional
+          required: true
+          schema:
+            $ref: '#/definitions/Profesional'
+        - name: file
+          in: body
+          description: Archivo adjunto en Base64
+          required: false
+      responses:
+        '200':
+          description: Devuelve ID del CDA generado 
+          
