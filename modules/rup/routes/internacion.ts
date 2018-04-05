@@ -3,6 +3,7 @@ import * as express from 'express';
 import * as moment from 'moment';
 // import * as async from 'async';
 
+import * as censoController from './../controllers/censo';
 import * as internacionesController from './../controllers/internacion';
 import * as camasController from './../controllers/cama';
 import { Auth } from './../../../auth/auth.class';
@@ -80,8 +81,6 @@ router.patch('/internaciones/desocuparCama/:idInternacion', function (req, res, 
                     }
                     res.json(unaCama);
                 });
-
-                // res.json(cama);
             } else {
                 res.json(null);
             }
@@ -92,8 +91,7 @@ router.patch('/internaciones/desocuparCama/:idInternacion', function (req, res, 
 
 
 router.get('/internaciones/censo', function (req, res, next) {
-    // conceptId de la unidad organizativa
-    let unidad = req.query.unidad;//'310022001';
+    let unidad = req.query.unidad;
     let fecha = new Date(req.query.fecha);
     camasController.camaOcupadasxUO(unidad, fecha).then(
         camas => {
@@ -101,14 +99,54 @@ router.get('/internaciones/censo', function (req, res, next) {
                 let salidaCamas = Promise.all(camas.map(c => camasController.desocupadaEnDia(c, fecha)))
                 salidaCamas.then(salida => {
                     salida = salida.filter(s => s);
-                    let pasesDeCama = Promise.all(salida.map(c => internacionesController.PasesParaCenso(c)))
+                    let pasesDeCama = Promise.all(salida.map(c => internacionesController.PasesParaCenso(c)));
                     pasesDeCama.then(resultado => {
-                        res.json(resultado);
+                        let pasesCamaCenso: any[] = resultado;
+                        let listadoCensos = [];
+                        // loopeamos todos los pases de las camas
+                        Promise.all(pasesCamaCenso.map((censo: any, indice) => {
+                            censo.pases = censo.pases.filter(p => { return p.estados.fecha <= moment(fecha).endOf('day').toDate(); });
+                            // Llamamos a la funcion completarUnCenso que se encarga de devolvernos un array
+                            // con la informacion que necesitamos para el censo. (ingreso, pase de, pase a, etc)
+                            let result = censoController.completarUnCenso(censo, indice, fecha, unidad, pasesCamaCenso[indice]);
+
+                            let index = -2;
+                            if (result['esIngreso'] && result['esPaseDe']) {
+                                index = censo.pases.findIndex(p => p.estados._id === result['esPaseDe']._id);
+                            }
+
+                            if (!result['esIngreso'] && result['esPaseA'] && result['esPaseDe']) {
+                                if (result['esPaseA'].fecha <= result['esPaseDe'].fecha) {
+                                    index = censo.pases.findIndex(p => p.estados._id === result['esPaseA']._id);
+                                }
+                            }
+
+                            if (index >= 0) {
+                                let pases1 = censo.pases.slice(0, (index + 1));
+                                let pases2 = censo.pases.slice(index, censo.pases.length);
+
+                                censo.pases = pases1;
+                                let nuevoCenso = Object.assign({}, censo);
+                                nuevoCenso.pases = pases2;
+                                let algo = censoController.completarUnCenso(censo, indice, fecha, unidad, pasesCamaCenso[indice]);
+                                listadoCensos.push(algo);
+                                let algo2 = censoController.completarUnCenso(nuevoCenso, indice, fecha, unidad, pasesCamaCenso[indice]);
+                                listadoCensos.push(algo2);
+
+                            } else {
+
+                                listadoCensos.push(result);
+                            }
+                        })).then(r => {
+                            res.json(listadoCensos)
+                        }).catch(error => {
+                            return next(error);
+                        });
+
                     }).catch(error => {
                         return next(error);
                     });
                 });
-
             } else {
                 res.json(null);
             }
