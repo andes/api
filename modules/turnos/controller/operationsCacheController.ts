@@ -544,17 +544,14 @@ function processTurnos(agendas: any, idAgendaCreada: any, idEfector: any) {
         try {
             for (let x = 0; x < agendas.bloques.length; x++) {
                 turnos = agendas.bloques[x].turnos;
-                
                 for (let i = 0; i < turnos.length; i++) {
-
                     if (turnos[i].estado === 'asignado') {
                         let idTurno = await existeTurnoSips(turnos[i]);
 
                         if (!idTurno) {
                             await grabaTurnoSips(turnos[i], idAgendaCreada, idEfector);
-                            // resolve();
                         }
-                    } 
+                    }
                 }
             }
             for (let y = 0; y < agendas.sobreturnos.length; y++) {
@@ -564,9 +561,8 @@ function processTurnos(agendas: any, idAgendaCreada: any, idEfector: any) {
 
                     if (!idSobreturno) {
                         await grabaTurnoSips(agendas.sobreturnos[y], idAgendaCreada, idEfector);
-                        // resolve();
                     }
-                } 
+                }
             }
 
             resolve();

@@ -269,7 +269,6 @@ async function createCarpeta(datosCarpeta, estadoPrestamoCarpeta) {
 
 async function savePrestamoCarpeta(req, nuevoPrestamo) {
     Auth.audit(nuevoPrestamo, req);
-    console.log(nuevoPrestamo);
     let _prestamoGuardado = await nuevoPrestamo.save(function (err2, prestamoGuardado: any) {
         if (err2) {
             throw err2;
