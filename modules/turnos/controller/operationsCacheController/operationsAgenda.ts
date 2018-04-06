@@ -35,10 +35,10 @@ let config = {
  * @returns
  */
 export function getAgendasDeMongoExportadas() {
-    return new Promise < Array < any >> (function (resolve, reject) {
+    return new Promise<Array<any>>(function (resolve, reject) {
         agendasCache.find({
-                estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS
-            })
+            estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS
+        })
             .exec(function (err, data) {
                 if (err) {
                     reject(err);
@@ -54,7 +54,7 @@ export function getAgendasDeMongoExportadas() {
  * @returns
  */
 export function getAgendasDeMongoPendientes() {
-    return new Promise < Array < any >> (function (resolve, reject) {
+    return new Promise<Array<any>>(function (resolve, reject) {
         agendasCache.find({
             estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente
         }).sort({
@@ -67,6 +67,7 @@ export function getAgendasDeMongoPendientes() {
         });
     });
 }
+
 /**
  * @description Verifica la existencia de un turno en SIPS, actualiza la codificación del turno y marca la agenda como procesada.
  * @returns Devuelve una Promesa
@@ -114,6 +115,37 @@ export async function checkCodificacion(agenda) {
                 }
             }
         }
+
+        // Caso especial sobreturnos
+        // TODO: refactorizar codigo repetido.
+        for (let z = 0; z < agenda.sobreturnos.length; z++) {
+            let resultado = await turnoOps.existeTurnoSips(agenda.sobreturnos[z], poolAgendas);
+            let cloneTurno: any = [];
+
+            if (resultado.recordset.length > 0) {
+                idConsulta = await existeConsultaTurno(resultado.recordset[0].idTurno);
+                let turnoPaciente: any = await getPacienteAgenda(agenda, agenda.sobreturnos[z]._id);
+                idEspecialidad = (agenda.tipoPrestaciones[0].term.includes('odonto')) ? 34 : 14;
+                agenda.sobreturnos[z] = turnoPaciente;
+
+                if (idConsulta) {
+                    if (idEspecialidad === constantes.Especialidades.odontologia) {
+                        agenda.sobreturnos[z] = await codificaOdontologia(idConsulta, agenda.sobreturnos[z]);
+                    } else {
+                        agenda.sobreturnos[z] = await codificacionCie10(idConsulta, agenda.sobreturnos[z]);
+                    }
+                    datosTurno = {
+                        idAgenda: agenda.id,
+                        posTurno: z,
+                        posBloque: -1,
+                        idUsuario: constantes.idUsuarioSips,
+                        turno: agenda.sobreturnos[z]
+                    };
+                    await turnoCtrl.updateTurno(datosTurno);
+                }
+            }
+        }
+
         if (idConsulta) {
             await markAgendaAsProcessed(agenda);
         }
@@ -135,13 +167,15 @@ async function codificaOdontologia(idConsulta: any, turno: any) {
             codificacionOdonto = await getCodificacionOdonto(idNomenclador[i].idNomenclador);
             turno.asistencia = 'asistio';
             turno.diagnostico.ilegible = false;
-            repetido = turno.diagnostico.codificaciones.filter(elem => elem.codificacionProfesional.codigo === codificacionOdonto.codigo);
+            repetido = turno.diagnostico.codificaciones.filter(elem => elem.codificacionProfesional && elem.codificacionProfesional.cie10 && elem.codificacionProfesional.cie10.codigo === codificacionOdonto.codigo);
             if (repetido && repetido.length <= 0) {
                 turno.diagnostico.codificaciones.push({
                     codificacionProfesional: {
+                        cie10 : {
                         codigo: codificacionOdonto.codigo,
                         nombre: codificacionOdonto.descripcion,
                         sinonimo: codificacionOdonto.descripcion
+                        }
                     }
                 });
             }
@@ -273,15 +307,15 @@ async function markAgendaAsProcessed(agenda) {
         return agendasCache.update({
             _id: agenda._id
         }, {
-            $set: {
-                estadoIntegracion: estadoIntegracion
-            }
-        }, function (err, raw) {
-            if (err) {
-                return (err);
-            }
-            return (raw);
-        });
+                $set: {
+                    estadoIntegracion: estadoIntegracion
+                }
+            }, function (err, raw) {
+                if (err) {
+                    return (err);
+                }
+                return (raw);
+            });
     } catch (err) {
         return err;
     }
@@ -326,7 +360,7 @@ async function getCodificacionOdonto(idNomenclador) {
  * @param pool
  */
 export async function
-guardarCacheASips(agenda) {
+    guardarCacheASips(agenda) {
 
     // CON_Agenda de SIPS soporta solo un profesional NOT NULL.
     // En caso de ser nulo el paciente en agenda de ANDES, por defector
@@ -493,7 +527,7 @@ async function grabaAgendaSips(agendaSips: any, datosSips: any, tr) {
     let horaFin = moment(agendaSips.horaFin).utcOffset('-03:00').format('HH:mm');
     let duracionTurno = agendaSips.bloques[0].duracionTurno;
 
-    let maximoSobreTurnos = 0;
+    let maximoSobreTurnos = 100;
     let porcentajeTurnosDia = 0;
     let porcentajeTurnosAnticipados = 0;
     let citarPorBloques = 0;

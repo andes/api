@@ -19,11 +19,11 @@ export function pacientesAFHIR(ids: any[]) {
     return new Promise((resolve: any, reject: any) => {
         let pacientesFHIR = [];
         let promises = [];
-
         ids.forEach(function (id) {
             promises.push(
                 controller.buscarPaciente(id)
-                    .then((data: any) => {
+                    .then((result: any) => {
+                        let data = result.paciente;
                         if (data) {
                             let identificadores = data.documento ? [{ assigner: 'DU', value: data.documento }] : [];
                             identificadores.push({assigner: 'andes', value: id });
@@ -92,7 +92,7 @@ export function pacientesAFHIR(ids: any[]) {
                                 name: [{
                                     resourceType: 'HumanName',
                                     family: data.apellido, // Family name (often called 'Surname')
-                                    given: data.nombre.split(' '), // Given names (not always 'first'). Includes middle names
+                                    given: data.nombre, // Given names (not always 'first'). Includes middle names
                                 }],
                                 gender: genero, // male | female | other | unknown
                                 birthDate: data.fechaNacimiento,

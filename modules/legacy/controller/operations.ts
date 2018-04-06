@@ -185,7 +185,9 @@ export async function cacheTurnosSips(unaAgenda) {
                             estado: unaAgenda.estado,
                             horaInicio: unaAgenda.horaInicio,
                             horaFin: unaAgenda.horaFin,
-                            estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente
+                            estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente,
+                            sobreturnos: unaAgenda.sobreturnos
+
                         }
                     }).exec();
             } else {

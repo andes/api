@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
 import * as express from 'express';
 import * as SendEmail from './../../../utils/roboSender/sendEmail';
-import * as configPrivate from './../../../../api/config.private';
+import * as configPrivate from './../../../config.private';
 let cheerio = require('cheerio');
 
 // Routes
