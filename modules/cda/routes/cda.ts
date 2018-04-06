@@ -67,10 +67,6 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
             return next({error: 'prestacion_invalida'});
         }
 
-<<<<<<< HEAD
-        let fecha = moment(req.body.fecha).toDate();
-=======
->>>>>>> a429f4421954d919ddc3a8903492feeead0c14de
         let cie10Code = req.body.cie10;
         let file = req.body.file;
         let texto = req.body.texto;
