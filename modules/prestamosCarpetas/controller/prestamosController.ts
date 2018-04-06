@@ -68,7 +68,7 @@ async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carp
         _agenda.turnos.forEach(_turno => {
             _turno.paciente.carpetaEfectores.forEach(async unaCarpeta => {
                 // Validación de PDR para ignorar números de carpetas autogenerados por HPN.
-                if ((unaCarpeta.nroCarpeta.indexOf('PDR') < 0) && unaCarpeta.organizacion._id === unaOrganizacion) {
+                if ((unaCarpeta.nroCarpeta.indexOf('PDR') < 0) && unaCarpeta.organizacion._id.equals(unaOrganizacion)) {
                     let estadoCarpeta = constantes.EstadosPrestamosCarpeta.EnArchivo;
 
                     for (let i = 0; i < carpetas.length; i++) {
@@ -86,13 +86,13 @@ async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carp
                             estado: estadoCarpeta,
                             organizacion: unaOrganizacion,
                             datosPrestamo: {
-                                agendaId: _agenda._id,
+                                agendaId: _agenda._id.id,
                                 observaciones: '',
                                 turno: {
                                     id: _turno._id,
                                     profesionales: _agenda.profesionales[0],
                                     espacioFisico: _agenda.espacioFisico[0],
-                                    tipoPrestaciones: _agenda.tipoPrestaciones[0],
+                                    tipoPrestacion: _turno.tipoPrestacion
                                 }
                             }
                         });
@@ -140,7 +140,7 @@ async function findCarpetasPrestamo(organizacionId, horaInicio, horaFin, tipoPre
         }
     }
     if (tipoPrestacion) {
-        match['datosPrestamo.turno.tipoPrestaciones._id'] = new ObjectId(tipoPrestacion);
+        match['datosPrestamo.turno.tipoPrestacion._id'] = new ObjectId(tipoPrestacion);
     }
 
     if (espacioFisico) {
@@ -158,6 +158,7 @@ async function findCarpetasPrestamo(organizacionId, horaInicio, horaFin, tipoPre
     group['fecha'] = { '$first': '$createdAt' };
     group['paciente'] = { '$first': '$paciente' };
     group['datosPrestamo'] = { '$first': '$datosPrestamo' };
+    group['datosDevolucion'] = { '$first': '$datosDevolucion' };
 
     pipeline.push({ '$match': match });
     pipeline.push({ '$sort': sort });
@@ -165,7 +166,7 @@ async function findCarpetasPrestamo(organizacionId, horaInicio, horaFin, tipoPre
 
     let result: any = await toArray(prestamo.aggregate(pipeline).cursor({}).exec());
 
-    result = result.filter(function(el) {
+    result = result.filter(function (el) {
         return el.estado === constantes.EstadosPrestamosCarpeta.Prestada;
     });
 
@@ -218,7 +219,7 @@ async function buscarAgendasTurnos(organizacionId, tipoPrestacion, espacioFisico
             '_id': { 'id': '$_id' },
             'profesionales': { $push: '$profesionales' },
             'espacioFisico': { $push: '$espacioFisico' },
-            'tipoPrestaciones': { $push: '$tipoPrestaciones' },
+            'tipoPrestacion': { $push: '$bloques.turnos.tipoPrestacion' },
             'turnos': { $push: '$bloques.turnos' }
         }
     }];
@@ -227,43 +228,53 @@ async function buscarAgendasTurnos(organizacionId, tipoPrestacion, espacioFisico
 }
 
 export async function prestarCarpeta(req) {
-    let prestamoCarpeta: any = await createCarpeta(req, constantes.EstadosPrestamosCarpeta.Prestada);
+    let prestamoCarpeta: any = await createCarpeta(req.body, constantes.EstadosPrestamosCarpeta.Prestada);
     return await savePrestamoCarpeta(req, prestamoCarpeta);
+}
+
+export async function prestarCarpetas(req) {
+    let datosCarpetas = req.body;
+    let prestamosCarpetas = [];
+
+    for (let i = 0; i < datosCarpetas.length; i++) {
+        prestamosCarpetas.push(await createCarpeta(datosCarpetas[i], constantes.EstadosPrestamosCarpeta.Prestada));
+    }
+
+    return await savePrestamosCarpetas(req, prestamosCarpetas);
 }
 
 export async function devolverCarpeta(req) {
-    let prestamoCarpeta: any = await createCarpeta(req, constantes.EstadosPrestamosCarpeta.EnArchivo);
-    prestamoCarpeta.datosDevolucion = {
-        observaciones: req.body.observacionesDevolucion,
-        estado: req.body.estado.nombre
-    };
-
+    let prestamoCarpeta: any = await createCarpeta(req.body, constantes.EstadosPrestamosCarpeta.EnArchivo);
     return await savePrestamoCarpeta(req, prestamoCarpeta);
 }
 
-async function createCarpeta(req, estadoPrestamoCarpeta) {
-    let agendaId = req.body.idAgenda;
-    let turnoId = req.body.idTurno;
+export async function devolverCarpetas(req) {
+    let datosCarpetas = req.body;
+    let prestamosCarpetas = [];
 
+    for (let i = 0; i < datosCarpetas.length; i++) {
+        prestamosCarpetas.push(await createCarpeta(datosCarpetas[i], constantes.EstadosPrestamosCarpeta.EnArchivo));
+    }
+
+    return await savePrestamosCarpetas(req, prestamosCarpetas);
+}
+
+async function createCarpeta(datosCarpeta, estadoPrestamoCarpeta) {
+    let agendaId = datosCarpeta.datosPrestamo.agendaId;
+    let turnoId = datosCarpeta.datosPrestamo.turno.id;
     let data = await agenda.findById(agendaId);
     let turno = agendaCtrl.getTurno(null, data, turnoId);
 
     return new prestamo({
         paciente: turno.paciente,
-        organizacion: req.body.organizacion,
-        numero: getNroCarpeta(req.body.organizacion._id, turno.paciente.carpetaEfectores),
+        organizacion: datosCarpeta.organizacion,
+        numero: getNroCarpeta(datosCarpeta.organizacion._id, turno.paciente.carpetaEfectores),
         estado: estadoPrestamoCarpeta,
-        datosDevolucion: {},
-        datosPrestamo: {
-            agendaId: agendaId,
-            turno: {
-                id: turno._id,
-                profesionales: req.body.profesionales,
-                espacioFisico: req.body.espacioFisico,
-                tipoPrestaciones: req.body.tipoPrestaciones
-            },
-            observaciones: req.body.observacionesPrestamo
-        }
+        datosPrestamo: datosCarpeta.datosPrestamo,
+        datosDevolucion: (datosCarpeta.datosDevolucion ?
+            datosCarpeta.datosDevolucion :
+            { observaciones: '', estado: 'Normal' })
+
     });
 }
 
@@ -277,6 +288,18 @@ async function savePrestamoCarpeta(req, nuevoPrestamo) {
     return _prestamoGuardado;
 }
 
+async function savePrestamosCarpetas(req, nuevosPrestamos) {
+    nuevosPrestamos.forEach(async _prestamo => {
+        Auth.audit(_prestamo, req);
+        await _prestamo.save(function (err2, prestamoGuardado: any) {
+            if (err2) {
+                throw err2;
+            }
+        });
+    });
+
+}
+
 function getNroCarpeta(organizacionId, carpetas) {
     for (let i = 0; i < carpetas.length; i++) {
         if (carpetas[i].organizacion._id.equals(organizacionId)) {
@@ -287,25 +310,13 @@ function getNroCarpeta(organizacionId, carpetas) {
 }
 
 export async function getHistorial(req) {
-    let nroCarpeta = req.body.nroCarpeta;
-    let pacienteId = req.body.pacienteId;
-    let organizacionId = req.body.organizacionId;
-    let fechaDesde = req.body.fechaDesde;
-    let fechaHasta = req.body.fechaHasta;
+    let nroCarpeta = req.body.numero;
+    let organizacionId = req.body.organizacion._id;
 
-    let filter: any = { 'organizacion._id':  organizacionId };
-    if (nroCarpeta) {
-        filter['numero'] = nroCarpeta;
-    }
-    if (pacienteId) {
-        filter['paciente.id'] = pacienteId;
-    }
-    if (fechaDesde) {
-        filter['createdAt'] = {'$gte': fechaDesde};
-    }
-    if (fechaHasta) {
-        filter['createdAt'] = {'$lt': fechaHasta};
-    }
+    let filter: any = {
+        'organizacion._id': organizacionId,
+        'numero': nroCarpeta
+    };
 
     return await prestamo.find(filter);
 }

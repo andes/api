@@ -1,6 +1,6 @@
 {
   "name": "api",
-  "version": "2.5.1",
+  "version": "2.6.0",
   "description": "API para ANDES",
   "main": "index.js",
   "dependencies": {
@@ -93,6 +93,7 @@
     "before": "0.0.1",
     "chai": "^4.1.2",
     "nodemon": "^1.17.2",
+    "tslint": "^5.9.1",
     "tslint-eslint-rules": "^4.1.1"
   }
 }
