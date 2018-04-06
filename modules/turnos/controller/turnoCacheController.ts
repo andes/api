@@ -5,7 +5,7 @@ import * as agenda from '../schemas/agenda';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { NotificationService } from '../../mobileApp/controller/NotificationService';
 
-/* Esta función es la misa que tiene el put de turno.ts - TODO: Ver como unificar*/
+/* Esta función es la misma que tiene el put de turno.ts - TODO: Ver como unificar*/
 export function updateTurno(datosTurno: any) {
 
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
@@ -21,7 +21,11 @@ export function updateTurno(datosTurno: any) {
                     reject(err);
                 }
                 let etiquetaTurno: string;
-                etiquetaTurno = 'bloques.' + posBloque + '.turnos.' + posTurno;
+                if (posBloque === -1) {
+                    etiquetaTurno = 'sobreturnos.' + posTurno;
+                } else {
+                    etiquetaTurno = 'bloques.' + posBloque + '.turnos.' + posTurno;
+                }
                 let usuario = datosTurno.idUsuarioSips;
                 let update: any = {};
                 let query = {
@@ -31,16 +35,15 @@ export function updateTurno(datosTurno: any) {
                 delete datosTurno.turno._id;
                 update[etiquetaTurno] = datosTurno.turno;
                 // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
-                (agenda as any).findOneAndUpdate(query, { $set: update }, { upsert: true, new: true },
-                    function actualizarAgenda(err2, doc2) {
-                        if (err2) {
-                            // console.log("ERROR UPDATE-----------------", err2);
-                            reject(err2);
-                        } else {
-                            // console.log("UPDATE-----------------", doc2);
-                            resolve(doc2._id);
-                        }
-                    });
+                (agenda as any).findOneAndUpdate(query, { $set: update }, { upsert: true, new: true }, function actualizarAgenda(err2, doc2) {
+                    if (err2) {
+                        // console.log("ERROR UPDATE-----------------", err2);
+                        reject(err2);
+                    } else {
+                        // console.log("UPDATE-----------------", doc2);
+                        resolve(doc2._id);
+                    }
+                });
             });
 
         } else {
