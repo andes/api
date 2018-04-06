@@ -56,21 +56,75 @@ router.get('/formularioTerapeutico/:id?', async function (req, res, next) {
             if (req.query.nivel) {
                 opciones['nivelComplejidad'] = req.query.nivel;
             }
-            query = formularioTerapeutico.find(opciones);
-            if (!Object.keys(query).length) {
-                res.status(400).send('Debe ingresar al menos un parámetro');
-                return next(400);
+            // Parámetro vista de arbol
+            if (req.query.tree) { // llevarlo a lado del controlador
+                let data = await toArray(formularioTerapeutico.aggregate(
+                    [
+                        { $match: { idpadre: mongoose.Types.ObjectId('5ac6512111764e32b35ad416') } },
+                        {
+                            $graphLookup: {
+                                from: 'formularioTerapeutico',
+                                startWith: '$_id',
+                                connectFromField: 'idpadre',
+                                connectToField: 'idpadre',
+                                as: 'arbol'
+                            }
+                        }
+                    ]
+                ).cursor({}).exec());
+                let out = [];
+                data.forEach(function (nodo, indiceNodo) {
+                    let objeto = {};
+                    if (nodo.descripcion) {
+                        console.log('nodo ', nodo.descripcion);
+                        objeto['descripcion'] = nodo.descripcion;
+                    }
+                    let hijos = [];
+                    nodo.arbol.forEach(async function (hijo, indiceHijo) {
+                        if (hijo) {
+                            let objetoHijo =  {};
+                            objetoHijo['descripcion'] = hijo.descripcion;
+                            // console.log('hijo ', hijo.descripcion);
+                            let data1 = await toArray(formularioTerapeutico.aggregate(
+                                [
+                                    { $match: { idpadre: hijo._id } },
+                                    {
+                                        $graphLookup: {
+                                            from: 'formularioTerapeutico',
+                                            startWith: '$_id',
+                                            connectFromField: 'idpadre',
+                                            connectToField: 'idpadre',
+                                            as: 'arbol'
+                                        }
+                                    }
+                                ]
+                            ).cursor({}).exec());
+                            data1.forEach(function (nieto, indiceNieto) {
+                                console.log('nodo ', nodo.descripcion);
+                                console.log('hijo ', hijo.descripcion);
+                                console.log('nieto ', nieto.descripcion);
+                            });
+                            hijos.push(hijo.descripcion);
+                            // console.log('hijo.arbol ', hijo.arbol);
+                        }
+                    });
+                });
+            } else {
+                query = formularioTerapeutico.find(opciones);
+                if (!Object.keys(query).length) {
+                    res.status(400).send('Debe ingresar al menos un parámetro');
+                    return next(400);
+                }
+                query.exec(function (err, data) {
+                    if (err) {
+                        return next(err);
+                    }
+                    if (req.query.nombreMedicamento) { // Si es una búsqueda por nombre de medicamento
+
+                    }
+                    res.json(data);
+                });
             }
-
-            query.exec(function (err, data) {
-                if (err) {
-                    return next(err);
-                }
-                if (req.query.nombreMedicamento) { // Si es una búsqueda por nombre de medicamento
-
-                }
-                res.json(data);
-            });
         }
 
     }
