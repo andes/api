@@ -51,12 +51,14 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
 
     try {
         let idPrestacion = req.body.id;
-        let yaExiste = await cdaCtr.CDAExists(idPrestacion);
+        let fecha = moment(req.body.fecha).toDate();
+        let orgId = req.user.organizacion;
+
+        let yaExiste = await cdaCtr.CDAExists(idPrestacion, fecha, orgId);
         if (yaExiste) {
             return next({error: 'prestacion_existente'});
         }
 
-        let orgId = req.user.organizacion;
         let dataPaciente = req.body.paciente;
         let dataProfesional = req.body.profesional;
 
@@ -65,7 +67,10 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
             return next({error: 'prestacion_invalida'});
         }
 
+<<<<<<< HEAD
         let fecha = moment(req.body.fecha).toDate();
+=======
+>>>>>>> a429f4421954d919ddc3a8903492feeead0c14de
         let cie10Code = req.body.cie10;
         let file = req.body.file;
         let texto = req.body.texto;
@@ -99,7 +104,8 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
             fecha: fecha,
             adjuntos: adjuntos,
             extras: {
-                id: idPrestacion
+                id: idPrestacion,
+                organizacion: organizacion._id
             }
         };
         let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
