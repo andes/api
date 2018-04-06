@@ -166,7 +166,7 @@ async function findCarpetasPrestamo(organizacionId, horaInicio, horaFin, tipoPre
 
     let result: any = await toArray(prestamo.aggregate(pipeline).cursor({}).exec());
 
-    result = result.filter(function(el) {
+    result = result.filter(function (el) {
         return el.estado === constantes.EstadosPrestamosCarpeta.Prestada;
     });
 
@@ -232,6 +232,17 @@ export async function prestarCarpeta(req) {
     return await savePrestamoCarpeta(req, prestamoCarpeta);
 }
 
+export async function prestarCarpetas(req) {
+    let datosCarpetas = req.body;
+    let prestamosCarpetas = [];
+
+    for (let i = 0; i < datosCarpetas.length; i++) {
+        prestamosCarpetas.push(await createCarpeta(datosCarpetas[i], constantes.EstadosPrestamosCarpeta.Prestada));
+    }
+
+    return await savePrestamosCarpetas(req, prestamosCarpetas);
+}
+
 export async function devolverCarpeta(req) {
     let prestamoCarpeta: any = await createCarpeta(req.body, constantes.EstadosPrestamosCarpeta.EnArchivo);
     return await savePrestamoCarpeta(req, prestamoCarpeta);
@@ -260,9 +271,9 @@ async function createCarpeta(datosCarpeta, estadoPrestamoCarpeta) {
         numero: getNroCarpeta(datosCarpeta.organizacion._id, turno.paciente.carpetaEfectores),
         estado: estadoPrestamoCarpeta,
         datosPrestamo: datosCarpeta.datosPrestamo,
-        datosDevolucion: ( datosCarpeta.datosDevolucion ?
-                            datosCarpeta.datosDevolucion :
-                            { observaciones: '', estado: 'Normal' })
+        datosDevolucion: (datosCarpeta.datosDevolucion ?
+            datosCarpeta.datosDevolucion :
+            { observaciones: '', estado: 'Normal' })
 
     });
 }
@@ -279,7 +290,7 @@ async function savePrestamoCarpeta(req, nuevoPrestamo) {
 }
 
 async function savePrestamosCarpetas(req, nuevosPrestamos) {
-        nuevosPrestamos.forEach(async _prestamo => {
+    nuevosPrestamos.forEach(async _prestamo => {
         Auth.audit(_prestamo, req);
         await _prestamo.save(function (err2, prestamoGuardado: any) {
             if (err2) {
@@ -304,7 +315,7 @@ export async function getHistorial(req) {
     let organizacionId = req.body.organizacion._id;
 
     let filter: any = {
-        'organizacion._id':  organizacionId,
+        'organizacion._id': organizacionId,
         'numero': nroCarpeta
     };
 
