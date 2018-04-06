@@ -333,9 +333,11 @@ export function findByMetadata (conds) {
     return CDAFiles.find(conds);
 }
 
-export async function CDAExists (id) {
+export async function CDAExists (id, fecha, orgId) {
     let existe = await findByMetadata({
-        'metadata.extras.id': id
+        'metadata.extras.id': id,
+        'metadata.fecha': fecha,
+        'metadata.extras.organizacion': mongoose.Types.ObjectId(orgId),
     });
     return existe.length > 0;
 }
