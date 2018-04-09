@@ -11,6 +11,8 @@ import * as base64 from 'base64-stream';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 
+import { xmlToJson } from '../../../utils/utils';
+
 import { Auth } from '../../../auth/auth.class';
 
 let path = require('path');
@@ -87,7 +89,10 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
         let fileData, adjuntos;
         if (file) {
             let fileObj: any = cdaCtr.base64toStream(file);
-            fileObj.cdaId = uniqueId;
+            fileObj.metadata = {
+                cdaId: mongoose.Types.ObjectId(uniqueId),
+                paciente: mongoose.Types.ObjectId(paciente.id)
+            }
             fileData = await cdaCtr.storeFile(fileObj);
             adjuntos = [{ path: fileData.data, id: fileData.id }];
         }
@@ -112,6 +117,39 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
         return next(e);
     }
 });
+
+router.post('/attach', async (req, res, next) => {
+    let cda64 = req.body.cda;
+    let adjunto64 = req.body.adjunto;
+
+    let cdaStream: any = cdaCtr.base64toStream(cda64);
+    let cdaXml: String = await cdaCtr.streamToString(cdaStream.stream);
+
+    // [TODO] Match de paciente?
+    // [TODO] Prestación desde el LOINC?
+
+    if (cdaXml.length > 0) {
+        cdaCtr.validateSchemaCDA(cdaXml).then(() => {
+            let dom: any = xmlToJson(cdaXml);
+            let b = cdaCtr.checkAndExtract(dom);
+
+            if (b) {
+                let uniqueId = (new mongoose.Types.ObjectId());
+
+
+
+            }
+
+        }).catch(next);
+    } else {
+        return next({error: 'xml_file_missing'});
+    }
+
+});
+
+/**
+ * Devuelve el archivo de estilo para renderizar HTML desde el browser.
+ */
 
 router.get('/style/cda.xsl', (req, res, next) => {
     let name = path.join(__dirname, '../controller/cda.xsl');
@@ -181,3 +219,122 @@ router.get('/paciente/:id', async (req: any, res, next) => {
 });
 
 export = router;
+
+let cdaXml2 = `<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="style/cda.xsl"?>
+<ClinicalDocument xmlns="urn:hl7-org:v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:voc="urn:hl7-org:v3/voc">
+  <typeId root="2.16.840.1.113883.1.3" extension="POCD_HD000040"/>
+  <!-- CDA ID -->
+  <id root="2.16.840.1.113883.2.10.35.1" extension="5ac7a37dcbc67353839715a3"/>
+  <code code="26436-6" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="Laboratory studies"/>
+  <title>Laboratory studies</title>
+  <effectiveTime value="20180406014237"/>
+  <confidentialityCode code="N" codeSystem="2.16.840.1.113883.5.25"/>
+  <languageCode code="es-AR"/>
+  <versionNumber value="1"></versionNumber>
+  <!-- Datos del paciente -->
+  <recordTarget>
+    <patientRole>
+      <id root="2.16.840.1.113883.2.10.35.1" extension="5ac7a376cbc673538397153d"/>
+      <id root="2.16.840.1.113883.2.10.35.1.1.1" extension="5ac7a376cbc673538397153d"/>
+      <patient>
+        <name>
+          <given>NELSON DAVID</given>
+          <family>CANTARUTTI</family>
+        </name>
+        <administrativeGenderCode codeSystem="2.16.840.1.113883.5.1" code="M" displayName="masculino"/>
+        <birthTime value="19620611120000"/>
+      </patient>
+    </patientRole>
+  </recordTarget>
+  <!-- Datos del Doctor -->
+  <author>
+    <time value="20180406014237"/>
+    <assignedAuthor>
+      <id root="2.16.840.1.113883.2.10.35.1" extension="5ac7a376cbc673538397153d"/>
+      <assignedPerson>
+        <name>
+          <given>H. BOUQUET ROLDAN</given>
+        </name>
+      </assignedPerson>
+      <representedOrganization>
+        <id root="2.16.840.1.113883.2.10.35.1" extension="57e9670e52df311059bc8964"/>
+        <name>HOSPITAL PROVINCIAL NEUQUEN - DR. EDUARDO CASTRO RENDON</name>
+      </representedOrganization>
+    </assignedAuthor>
+  </author>
+  <!-- Datos de la organización -->
+  <custodian>
+    <assignedCustodian>
+      <representedCustodianOrganization>
+        <id root="2.16.840.1.113883.2.10.35.1" extension="57e9670e52df311059bc8964"/>
+        <name>HOSPITAL PROVINCIAL NEUQUEN - DR. EDUARDO CASTRO RENDON</name>
+      </representedCustodianOrganization>
+    </assignedCustodian>
+  </custodian>
+
+  <documentationOf>
+    <serviceEvent classCode="PCPR">
+      <effectiveTime value="20161003120000">
+        <low value="20161003120000"/>
+        <high value="20161003120000"/>
+      </effectiveTime>
+      <performer typeCode="PRF">
+        <functionCode code="PCP" codeSystem="2.16.840.1.113883.5.88"/>
+        <assignedEntity>
+        <id root="2.16.840.1.113883.2.10.35.1" extension="5ac7a376cbc673538397153d"/>
+          <assignedPerson>
+            <name>
+              <given>H. BOUQUET ROLDAN</given>
+            </name>
+          </assignedPerson>
+          <representedOrganization>
+            <id root="2.16.840.1.113883.2.10.35.1" extension="57e9670e52df311059bc8964"/>
+            <name>HOSPITAL PROVINCIAL NEUQUEN - DR. EDUARDO CASTRO RENDON</name>
+          </representedOrganization>
+        </assignedEntity>
+      </performer>
+    </serviceEvent>
+  </documentationOf>
+
+  <!-- Fecha de la prestación -->
+  <componentOf>
+    <encompassingEncounter>
+      <effectiveTime>
+        <low value="20161003120000"></low>
+      </effectiveTime>
+    </encompassingEncounter>
+  </componentOf>
+
+  <component>
+    <structuredBody>
+      <component>
+        <section>
+          <code codeSystem="2.16.840.1.113883.6.90" code="Z01.7" codeSystemName="ICD-10" displayName="Examen de laboratorio"/>
+          <title>Resumen de la consulta</title>
+          <text>Exámen de Laboratorio</text>
+        </section>
+      </component>
+      <component>
+        <section>
+          <title>Archivo adjunto</title>
+          <text>
+            <renderMultiMedia referencedObject="Adjunto"/>
+          </text>
+          <entry>
+            <observationMedia classCode="OBS" moodCode="EVN" ID="Adjunto">
+              <value xsi:type="ED" mediaType="application/pdf">
+                <reference value="files/5ac7a37dcbc67353839715a4.pdf"/>
+              </value>
+            </observationMedia>
+          </entry>
+        </section>
+      </component>
+    </structuredBody>
+  </component>
+</ClinicalDocument>`;
+
+
+
+
+
