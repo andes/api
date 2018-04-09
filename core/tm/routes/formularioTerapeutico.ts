@@ -25,7 +25,10 @@ router.get('/formularioTerapeutico/:id?', async function (req, res, next) {
         let opciones = {};
         let proyeccion = {};
         if (req.query.padre) {
+            console.log('aca ');
             let arr = await formularioCtrl.getPadres(req.query.padre, []);
+            console.log('arr',arr);
+            
             res.json(arr);
         } else {
             if (req.query.nombreMedicamento) {
@@ -58,58 +61,53 @@ router.get('/formularioTerapeutico/:id?', async function (req, res, next) {
             }
             // Parámetro vista de arbol
             if (req.query.tree) { // llevarlo a lado del controlador
-                let data = await toArray(formularioTerapeutico.aggregate(
-                    [
-                        { $match: { idpadre: mongoose.Types.ObjectId('5ac6512111764e32b35ad416') } },
-                        {
-                            $graphLookup: {
-                                from: 'formularioTerapeutico',
-                                startWith: '$_id',
-                                connectFromField: 'idpadre',
-                                connectToField: 'idpadre',
-                                as: 'arbol'
-                            }
-                        }
-                    ]
-                ).cursor({}).exec());
+                let data;
                 let out = [];
-                data.forEach(function (nodo, indiceNodo) {
-                    let objeto = {};
-                    if (nodo.descripcion) {
-                        console.log('nodo ', nodo.descripcion);
-                        objeto['descripcion'] = nodo.descripcion;
-                    }
-                    let hijos = [];
-                    nodo.arbol.forEach(async function (hijo, indiceHijo) {
-                        if (hijo) {
-                            let objetoHijo =  {};
-                            objetoHijo['descripcion'] = hijo.descripcion;
-                            // console.log('hijo ', hijo.descripcion);
-                            let data1 = await toArray(formularioTerapeutico.aggregate(
-                                [
-                                    { $match: { idpadre: hijo._id } },
-                                    {
-                                        $graphLookup: {
-                                            from: 'formularioTerapeutico',
-                                            startWith: '$_id',
-                                            connectFromField: 'idpadre',
-                                            connectToField: 'idpadre',
-                                            as: 'arbol'
-                                        }
-                                    }
-                                ]
-                            ).cursor({}).exec());
-                            data1.forEach(function (nieto, indiceNieto) {
-                                console.log('nodo ', nodo.descripcion);
-                                console.log('hijo ', hijo.descripcion);
-                                console.log('nieto ', nieto.descripcion);
-                            });
-                            hijos.push(hijo.descripcion);
-                            // console.log('hijo.arbol ', hijo.arbol);
-                        }
+                if (req.query.root) {
+                    data = await toArray(formularioTerapeutico.aggregate(
+                        [
+                            { $match: { idpadre: mongoose.Types.ObjectId('5ac6512111764e32b35ad416') } },
+                            {
+                                $graphLookup: {
+                                    from: 'formularioTerapeutico',
+                                    startWith: '$_id',
+                                    connectFromField: 'idpadre',
+                                    connectToField: 'idpadre',
+                                    as: 'arbol'
+                                }
+                            }
+                        ]
+                    ).cursor({}).exec());
+                    out = [];
+                    data.forEach(function (nodo, indiceNodo) {
+                        out.push(nodo);
                     });
-                });
+                } else {
+                    console.log('no root');
+                    let idpadre = req.query.idpadre;
+                    data = await toArray(formularioTerapeutico.aggregate(
+                        [
+                            { $match: { idpadre: mongoose.Types.ObjectId(idpadre) } },
+                            {
+                                $graphLookup: {
+                                    from: 'formularioTerapeutico',
+                                    startWith: '$_id',
+                                    connectFromField: 'idpadre',
+                                    connectToField: 'idpadre',
+                                    as: 'arbol'
+                                }
+                            }
+                        ]
+                    ).cursor({}).exec());
+                    out = [];
+                    data.forEach(function (nodo, indiceNodo) {
+                        out.push(nodo);
+                    });
+                }
+                console.log('out ', out);
+                res.json(out);
             } else {
+                console.log('else ');
                 query = formularioTerapeutico.find(opciones);
                 if (!Object.keys(query).length) {
                     res.status(400).send('Debe ingresar al menos un parámetro');
