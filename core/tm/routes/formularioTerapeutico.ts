@@ -25,10 +25,7 @@ router.get('/formularioTerapeutico/:id?', async function (req, res, next) {
         let opciones = {};
         let proyeccion = {};
         if (req.query.padre) {
-            console.log('aca ');
             let arr = await formularioCtrl.getPadres(req.query.padre, []);
-            console.log('arr',arr);
-            
             res.json(arr);
         } else {
             if (req.query.nombreMedicamento) {
@@ -83,7 +80,6 @@ router.get('/formularioTerapeutico/:id?', async function (req, res, next) {
                         out.push(nodo);
                     });
                 } else {
-                    console.log('no root');
                     let idpadre = req.query.idpadre;
                     data = await toArray(formularioTerapeutico.aggregate(
                         [
@@ -104,10 +100,8 @@ router.get('/formularioTerapeutico/:id?', async function (req, res, next) {
                         out.push(nodo);
                     });
                 }
-                console.log('out ', out);
                 res.json(out);
             } else {
-                console.log('else ');
                 query = formularioTerapeutico.find(opciones);
                 if (!Object.keys(query).length) {
                     res.status(400).send('Debe ingresar al menos un parámetro');
