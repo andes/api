@@ -120,13 +120,11 @@ export async function checkCodificacion(agenda) {
         // TODO: refactorizar codigo repetido.
         for (let z = 0; z < agenda.sobreturnos.length; z++) {
             let resultado = await turnoOps.existeTurnoSips(agenda.sobreturnos[z], poolAgendas);
-            let cloneTurno: any = [];
 
             if (resultado.recordset.length > 0) {
                 idConsulta = await existeConsultaTurno(resultado.recordset[0].idTurno);
-                let turnoPaciente: any = await getPacienteAgenda(agenda, agenda.sobreturnos[z]._id);
+                // let turnoPaciente: any = await getPacienteAgenda(agenda, agenda.sobreturnos[z]._id);
                 idEspecialidad = (agenda.tipoPrestaciones[0].term.includes('odonto')) ? 34 : 14;
-                agenda.sobreturnos[z] = turnoPaciente;
 
                 if (idConsulta) {
                     if (idEspecialidad === constantes.Especialidades.odontologia) {
@@ -167,15 +165,16 @@ async function codificaOdontologia(idConsulta: any, turno: any) {
             codificacionOdonto = await getCodificacionOdonto(idNomenclador[i].idNomenclador);
             turno.asistencia = 'asistio';
             turno.diagnostico.ilegible = false;
-            repetido = turno.diagnostico.codificaciones.filter(elem => elem.codificacionProfesional && elem.codificacionProfesional.cie10 && elem.codificacionProfesional.cie10.codigo === codificacionOdonto.codigo);
+            repetido = turno.diagnostico.codificaciones.filter(elem => elem.codificacionAuditoria && elem.codificacionAuditoria.codigo === codificacionOdonto.codigo);
             if (repetido && repetido.length <= 0) {
                 turno.diagnostico.codificaciones.push({
-                    codificacionProfesional: {
-                        cie10 : {
+                    codificacionAuditoria: {
+                        causa: '',
+                        subcausa: '',
                         codigo: codificacionOdonto.codigo,
                         nombre: codificacionOdonto.descripcion,
-                        sinonimo: codificacionOdonto.descripcion
-                        }
+                        sinonimo: codificacionOdonto.descripcion,
+                        c2: false
                     }
                 });
             }
