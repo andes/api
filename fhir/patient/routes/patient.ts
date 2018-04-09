@@ -50,7 +50,6 @@ router.get('/([\$])match', function (req, res, next) {
             },
         };
     }
-
     // Configuramos la cantidad de resultados que quiero que se devuelva y la query correspondiente
     let body = {
         size: 3000,

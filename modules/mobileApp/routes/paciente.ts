@@ -124,7 +124,9 @@ router.patch('/pacientes/:id', function (req, res, next) {
 });
 
 
-
+/**
+ * Devuelve los CDA de laboratorios de un paciente.
+ */
 
 router.get('/laboratorios/(:id)', async (req, res, next) => {
     let idPaciente = req.params.id;

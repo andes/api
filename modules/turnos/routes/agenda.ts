@@ -437,6 +437,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                     case 'pausada':
                     case 'prePausada':
                     case 'pendienteAuditoria':
+                    case 'pendienteAsistencia':
                     case 'auditada':
                     case 'suspendida':
                     case 'borrada':

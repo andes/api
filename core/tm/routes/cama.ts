@@ -71,19 +71,34 @@ router.post('/camas', Auth.authenticate(), (req, res, next) => {
 
 router.put('/camas/:id', Auth.authenticate(), (req, res, next) => {
 
-    cama.model.findById({ _id: req.params.id }, function (err3, data: any) {
+    cama.model.findById(req.params.id, function (err3, data: any) {
         if (err3) {
             return next(404);
         }
-        data = req.body;
-        // agregamos audit a la cama
-        Auth.audit(data, req);
-        data.save((err2) => {
-            if (err2) {
-                return next(err2);
+        if (data) {
+            data.markModified('estados');
+            data.markModified('equipamiento');
+            data.organizacion = req.body.organizacion;
+            data.sector = req.body.sector;
+            data.habitacion = req.body.habitacion;
+            data.nombre = req.body.nombre;
+            data.tipoCama = req.body.tipoCama;
+            data.equipamiento = req.body.equipamiento;
+            if (req.body.estados.length > data.estados.length) {
+                data.estados.push(req.body.estados[req.body.estados.length - 1]);
             }
-            res.json(data);
-        });
+            // agregamos audit a la cama
+            Auth.audit(data, req);
+            data.save((err2) => {
+                if (err2) {
+                    return next(err2);
+                }
+                res.json(data);
+            }, );
+        } else {
+            res.json(null);
+        }
+
     });
 });
 
