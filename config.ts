@@ -128,6 +128,12 @@ export const modules = {
         route: '/modules/obraSocial',
         middleware: appMiddleware
     },
+    sugerencias: {
+        active: true,
+        path: './modules/sugerencias/routes',
+        route: '/modules/sugerencias',
+        middleware: null
+    },
     prestamosCarpetas: {
         active: true,
         path: './modules/prestamosCarpetas/routes',

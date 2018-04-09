@@ -185,7 +185,9 @@ export async function cacheTurnosSips(unaAgenda) {
                             estado: unaAgenda.estado,
                             horaInicio: unaAgenda.horaInicio,
                             horaFin: unaAgenda.horaFin,
-                            estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente
+                            estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente,
+                            sobreturnos: unaAgenda.sobreturnos
+
                         }
                     }).exec();
             } else {
@@ -201,11 +203,13 @@ export async function cacheTurnosSips(unaAgenda) {
 
     function integrarAgenda(_agenda) {
         let prestacionesIntegradas: any;
-        let datosOrganizacion = constantes.prestacionesIntegradasPorEfector.find(elem => elem.organizacion === _agenda.organizacion.id);
-        if (datosOrganizacion) {
-            prestacionesIntegradas = _agenda.tipoPrestaciones.find(prestacion => {
-                return (datosOrganizacion.prestaciones.filter(prest => prest.conceptId === prestacion.conceptId).length > 0);
-            });
+        if (_agenda.organizacion) {
+            let datosOrganizacion = constantes.prestacionesIntegradasPorEfector.find(elem => elem.organizacion === _agenda.organizacion.id);
+            if (datosOrganizacion) {
+                prestacionesIntegradas = _agenda.tipoPrestaciones.find(prestacion => {
+                    return (datosOrganizacion.prestaciones.filter(prest => prest.conceptId === prestacion.conceptId).length > 0);
+                });
+            }
         }
 
         if (prestacionesIntegradas) {
