@@ -148,6 +148,18 @@ export function base64toStream (base64) {
     };
 }
 
+export function streamToString(stream): Promise<String> {
+    return new Promise ((resolve, reject) => {
+        const chunks = [];
+        stream.on('data', (chunk) => {
+            chunks.push(chunk.toString());
+        });
+        stream.on('end', () => {
+            resolve (chunks.join(''));
+        });
+    });
+}
+
 export function storeFile ({extension, mimeType, stream, metadata }) {
     return new Promise((resolve, reject) => {
         let CDAFiles = makeFs();
@@ -452,4 +464,123 @@ export function validateMiddleware(req, res, next) {
         return next(errors);
     }
     return next();
+}
+
+/**
+ * Valida contra el archivo de esquemas de CDA CDA.xsd
+ */
+
+export function validateSchemaCDA (xmlRaw) {
+    const libxmljs = require('libxmljs');
+    let schemaXML = null;
+    function loadSchema () {
+        return new Promise((resolve, reject) => {
+            if (schemaXML) {
+                return resolve(schemaXML);
+            }
+
+            const path = require('path');
+            const fs = require('fs');
+
+            let filePath = path.join(__dirname, './schema/CDA.xsd');
+            fs.readFile(filePath, { encoding: 'utf8' }, function (err, xsd) {
+                if (err) {
+                    return reject(err);
+                }
+                schemaXML = libxmljs.parseXml(xsd, { baseUrl: path.join(__dirname, 'schema') + '/' });
+                return resolve(schemaXML);
+            });
+        });
+    }
+
+    return loadSchema().then(xsdDoc => {
+        let xmlDoc = libxmljs.parseXml(xmlRaw);
+        xmlDoc.validate(xsdDoc);
+
+        if (xmlDoc.validationErrors.length) {
+            return Promise.reject(xmlDoc.validationErrors);
+        }
+        return Promise.resolve();
+    });
+
+}
+
+
+/**
+ * Chequea datos obligatorios según nuestro template
+ * @param xmlDom
+ */
+export function checkAndExtract (xmlDom) {
+
+    /**
+     * { key: value },
+     * { key: { value,  } }
+     *
+     * @param tag
+     * @param params
+     */
+    function checkAttribute (tag, params = {}) {
+        if (tag && tag['@attributes']) {
+            let passed = true;
+            let attrs = tag['@attributes'] || {};
+
+            for (let key in params) {
+                if (typeof params[key] === 'string') {
+                    passed = passed && attrs[key] === params[key];
+                }
+            }
+            if (passed) {
+                return Object.keys(attrs).length > 0 ? attrs : null;
+            }
+            return null;
+        }
+        return null;
+    }
+
+    function checkTagExists (domRoot, tags) {
+        let passed = true;
+        for (let tag of tags) {
+            if (!domRoot[tag]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function checkPatient (patientRole) {
+        let ids = [];
+        if (patientRole.id && !Array.isArray(patientRole.id)) {
+            ids = [patientRole.id];
+        } else {
+            ids = patientRole.id;
+        }
+        let passed  = false;
+        let dni = '';
+        for (let cid of ids) {
+            let dniId = checkAttribute(cid, { root: CDAConfig.dniOID });
+            if (dniId) {
+                dni = dniId.extension;
+            }
+        }
+
+        passed = passed && checkTagExists(patientRole.patient, ['name', 'birthTime', 'administrativeGenderCode' ]);
+        if (passed) {
+
+        }
+        return passed;
+    }
+
+    let cTypeId = checkAttribute(xmlDom.ClinicalDocument.typeId, {root: '2.16.840.1.113883.1.3', extension: 'POCD_HD000040' });
+    let cId = checkAttribute(xmlDom.ClinicalDocument.id, { root: rootOID });
+    let cCode = checkAttribute(xmlDom.ClinicalDocument.code, { codeSystem: '2.16.840.1.113883.6.1' });
+
+    let cTags = checkTagExists(xmlDom.ClinicalDocument, [
+        'title', 'effectiveTime', 'confidentialityCode', 'languageCode', 'versionNumber'
+    ]);
+
+    let cPatientRole = xmlDom.ClinicalDocument.recordTarget ? xmlDom.ClinicalDocument.recordTarget.patientRole : {};
+    let patient = checkPatient(cPatientRole);
+
+    return cTypeId && cId && cCode && cTags && patient;
+
 }

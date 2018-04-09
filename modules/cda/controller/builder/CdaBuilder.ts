@@ -29,7 +29,7 @@ export class CDABuilder extends BaseBuilder {
         this.createNode(xml, 'effectiveTime', { value: this.fromDate(cda.effectiveTime()) });
         this.createNode(xml, 'confidentialityCode', cda.confidentialityCode());
         this.createNode(xml, 'languageCode', cda.languageCode());
-        this.createNode(xml, 'versionNumber', cda.versionNumber());
+        this.createNode(xml, 'versionNumber', { value: cda.versionNumber() });
 
         if (cda.setId()) {
             this.createNode(xml, 'setId', cda.setId());
@@ -63,18 +63,21 @@ export class CDABuilder extends BaseBuilder {
         }
 
         let date = cda.date() as Date;
+        let serviceEvent = xml.ele('documentationOf').ele('serviceEvent', {classCode: 'PCPR'});
+        if (date) {
+            let efTime = serviceEvent.ele('effectiveTime', { value: this.fromDate(date) });
+            efTime.ele('low', { value: this.fromDate(date) } );
+            efTime.ele('high', { value: this.fromDate(date) } );
+        }
+
+
         if (date) {
             xml.com('Fecha de la prestación');
             let elem = xml.ele('componentOf').ele('encompassingEncounter');
-            elem.ele('effectiveTime').ele('low', {value: this.fromDate(date)}, this.fromDate(date));
+            elem.ele('effectiveTime').ele('low', { value: this.fromDate(date) });
         }
 
-        let serviceEvent = xml.ele('documentationOf').ele('serviceEvent', {classCode: 'PCPR'});
-        if (date) {
-            let efTime = serviceEvent.ele('effectiveTime', {value: this.fromDate(date)});
-            efTime.ele('low', {value: this.fromDate(date)} );
-            efTime.ele('high', {value: this.fromDate(date)} );
-        }
+
         let performer = serviceEvent.ele('performer', {typeCode: 'PRF'});
         performer.ele('functionCode', {code: 'PCP', codeSystem: '2.16.840.1.113883.5.88'});
         let assignedEntity = performer.ele('assignedEntity');

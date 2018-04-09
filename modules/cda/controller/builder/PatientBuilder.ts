@@ -27,17 +27,18 @@ export class PatientBuilder extends BaseBuilder {
         this.createNode(nameNode, 'given', null, patient.getFirstname());
         this.createNode(nameNode, 'family', null, patient.getLastname());
 
-        if (patient.getBirthtime()) {
-            this.createNode(patientNode, 'birthTime', { value: this.fromDate(patient.getBirthtime()) } );
-        }
 
         let gender = patient.getGender();
         if (gender) {
             this.createNode(patientNode, 'administrativeGenderCode', {
-                codeSyatem: '2.16.840.1.113883.5.1',
+                codeSystem: '2.16.840.1.113883.5.1',
                 code: gender.toLowerCase() === 'masculino' ? 'M' : 'F',
                 displayName: gender
             });
+        }
+
+        if (patient.getBirthtime()) {
+            this.createNode(patientNode, 'birthTime', { value: this.fromDate(patient.getBirthtime()) } );
         }
         return recordTarget;
     }
