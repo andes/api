@@ -106,7 +106,7 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
         };
         let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
 
-        res.json({ cda: uniqueId, paciente: paciente._id });
+        res.json({ cda: uniqueId, paciente: paciente._id, date: metadata.fecha, idPrestacion: metadata.extras.id });
 
     } catch (e) {
         return next(e);
