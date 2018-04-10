@@ -118,6 +118,9 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
     }
 });
 
+/**
+ * Injecta un CDA ya armado al repositorio
+ */
 router.post('/attach', async (req: any, res, next) => {
     let orgId = req.user.organizacion;
     let cda64 = req.body.cda;
@@ -156,6 +159,7 @@ router.post('/attach', async (req: any, res, next) => {
                         cdaId: uniqueId,
                         paciente: mongoose.Types.ObjectId(paciente.id)
                     };
+                    fileObj.filename = cdaData.adjunto;
                     fileData = await cdaCtr.storeFile(fileObj);
                     adjuntos = [{ path: fileData.data, id: fileData.id }];
                 }

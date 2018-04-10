@@ -172,14 +172,14 @@ export function streamToString(stream): Promise<String> {
     });
 }
 
-export function storeFile ({extension, mimeType, stream, metadata }) {
+export function storeFile ({extension, mimeType, stream, metadata, filename }) {
     return new Promise((resolve, reject) => {
         let CDAFiles = makeFs();
         let uniqueId = String(new mongoose.Types.ObjectId());
 
         CDAFiles.write({
                 _id: uniqueId,
-                filename:  uniqueId + '.' + extension,
+                filename:  filename ? filename : uniqueId + '.' + extension,
                 contentType: mimeType,
                 metadata
             },
@@ -357,6 +357,12 @@ export function findByMetadata (conds) {
     return CDAFiles.find(conds);
 }
 
+/**
+ * Chequea si un CDA existe!
+ * @param id
+ * @param fecha
+ * @param orgId
+ */
 export async function CDAExists (id, fecha, orgId) {
     let existe = await findByMetadata({
         'metadata.extras.id': id,
@@ -591,5 +597,16 @@ export function checkAndExtract (xmlDom) {
 
     ];
 
-    return  checkArg(_root, _params);
+    let data: any = checkArg(_root, _params);
+
+    if (data.adjunto) {
+        let path: string = data.adjunto;
+        if (path.startsWith('files/')) {
+            data.adjunto = path.substring(6);
+        } else {
+            return null;
+        }
+    }
+
+    return data;
 }
