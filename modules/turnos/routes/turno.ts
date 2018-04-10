@@ -202,10 +202,14 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                                     };
                                     Logger.log(req, 'citas', 'asignarTurno', datosOp);
 
-                                    if (req.body.reasignado && req.body.reasignado === false) {
-                                        let turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
-                                        LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turno, req.params.idBloque, req.params.idAgenda);
-                                    }
+                                    let turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
+
+                                    LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turno, req.params.idBloque, req.params.idAgenda);
+
+                                    // if (req.body.reasignado && req.body.reasignado === false) {
+                                    //     let turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
+                                    //     LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turno, req.params.idBloque, req.params.idAgenda);
+                                    // }
                                     // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
                                     // Donde doc2 es el documeto Agenda actualizado
                                     operations.cacheTurnosSips(doc2);
