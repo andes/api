@@ -28,9 +28,9 @@ router.get('/sesion', Auth.authenticate(), function (req, res) {
  */
 router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
     let username;
-    if(req.query.user){
+    if (req.query.user) {
         username = req.query.user;
-    } else{
+    } else {
         username = (req as any).user.usuario.username;
     }
 
@@ -42,9 +42,9 @@ router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
             if ((req as any).query.admin) {
                 let shiro = shiroTrie.new();
                 shiro.add(item.permisos);
-                
-                if (shiro.check('usuarios:set')){
-                    return mongoose.Types.ObjectId(item._id);    
+
+                if (shiro.check('usuarios:set')) {
+                    return mongoose.Types.ObjectId(item._id);
                 } else {
                     return null;
                 }
