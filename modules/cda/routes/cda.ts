@@ -92,7 +92,7 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
             fileObj.metadata = {
                 cdaId: mongoose.Types.ObjectId(uniqueId),
                 paciente: mongoose.Types.ObjectId(paciente.id)
-            }
+            };
             fileData = await cdaCtr.storeFile(fileObj);
             adjuntos = [{ path: fileData.data, id: fileData.id }];
         }
@@ -118,7 +118,8 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
     }
 });
 
-router.post('/attach', async (req, res, next) => {
+router.post('/attach', async (req: any, res, next) => {
+    let orgId = req.user.organizacion;
     let cda64 = req.body.cda;
     let adjunto64 = req.body.adjunto;
 
@@ -129,14 +130,49 @@ router.post('/attach', async (req, res, next) => {
     // [TODO] Prestación desde el LOINC?
 
     if (cdaXml.length > 0) {
-        cdaCtr.validateSchemaCDA(cdaXml).then(() => {
+        cdaCtr.validateSchemaCDA(cdaXml).then(async () => {
             let dom: any = xmlToJson(cdaXml);
-            let b = cdaCtr.checkAndExtract(dom);
+            let cdaData: any = cdaCtr.checkAndExtract(dom);
 
-            if (b) {
+            if (cdaData) {
                 let uniqueId = (new mongoose.Types.ObjectId());
 
+                cdaData.fecha = moment(new Date(cdaData.fecha));
+                cdaData.paciente.fechaNacimiento = moment(new Date(cdaData.paciente.fechaNacimiento));
+                cdaData.paciente.sexo = cdaData.paciente.sexo === 'M' ? 'masculino' : 'femenino';
 
+                let yaExiste = await cdaCtr.CDAExists(cdaData.id, cdaData.fecha, orgId);
+                if (yaExiste) {
+                    return next({error: 'prestacion_existente'});
+                }
+
+                let prestacion = await cdaCtr.matchCode(cdaData.loinc);
+                let paciente = await cdaCtr.findOrCreate(req, cdaData.paciente, orgId);
+
+                let fileData, adjuntos;
+                if (cdaData.adjunto && adjunto64) {
+                    let fileObj: any = cdaCtr.base64toStream(adjunto64);
+                    fileObj.metadata = {
+                        cdaId: uniqueId,
+                        paciente: mongoose.Types.ObjectId(paciente.id)
+                    };
+                    fileData = await cdaCtr.storeFile(fileObj);
+                    adjuntos = [{ path: fileData.data, id: fileData.id }];
+                }
+
+                let metadata = {
+                    paciente: paciente._id,
+                    prestacion: prestacion.conceptId,
+                    fecha: cdaData.fecha,
+                    adjuntos: adjuntos,
+                    extras: {
+                        id: cdaData.id,
+                        organizacion: orgId
+                    }
+                };
+                let obj = await cdaCtr.storeCDA(uniqueId, cdaXml, metadata);
+
+                res.json({ cda: uniqueId, paciente: paciente._id });
 
             }
 
@@ -239,7 +275,8 @@ let cdaXml2 = `<?xml version="1.0"?>
       <id root="2.16.840.1.113883.2.10.35.1.1.1" extension="5ac7a376cbc673538397153d"/>
       <patient>
         <name>
-          <given>NELSON DAVID</given>
+          <given>NELSON</given>
+          <given>DAVID</given>
           <family>CANTARUTTI</family>
         </name>
         <administrativeGenderCode codeSystem="2.16.840.1.113883.5.1" code="M" displayName="masculino"/>
@@ -251,7 +288,7 @@ let cdaXml2 = `<?xml version="1.0"?>
   <author>
     <time value="20180406014237"/>
     <assignedAuthor>
-      <id root="2.16.840.1.113883.2.10.35.1" extension="5ac7a376cbc673538397153d"/>
+      <id root="2.16.840.1.113883.2.10.35.1.1.1" extension="5ac7a376cbc673538397153d"/>
       <assignedPerson>
         <name>
           <given>H. BOUQUET ROLDAN</given>
@@ -334,7 +371,10 @@ let cdaXml2 = `<?xml version="1.0"?>
   </component>
 </ClinicalDocument>`;
 
-
+cdaCtr.validateSchemaCDA(cdaXml2).then((dom) => {
+  let data = cdaCtr.checkAndExtract2(dom);
+  console.log(data);
+});
 
 
 

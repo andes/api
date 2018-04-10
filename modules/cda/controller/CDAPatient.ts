@@ -105,6 +105,18 @@ export async function matchCode(snomed) {
 }
 
 /**
+ * Match desde snomed a un código LOINC para indentificar el CDA
+ * @param snomed ConceptId
+ */
+
+export async function matchCodeByLoinc(loinc) {
+    let prestacion: any =  await CDAPrestacionesModel.find({'loinc.code': loinc});
+    if (prestacion.length > 0) {
+        return prestacion[0];
+    }
+}
+
+/**
  * Creamos la estructura ICode en base a un CIE10
  * @param cie10
  */
@@ -500,87 +512,84 @@ export function validateSchemaCDA (xmlRaw) {
         if (xmlDoc.validationErrors.length) {
             return Promise.reject(xmlDoc.validationErrors);
         }
-        return Promise.resolve();
+        return Promise.resolve(xmlDoc);
     });
 
 }
 
-
 /**
- * Chequea datos obligatorios según nuestro template
- * @param xmlDom
+ * Valida ciertos parametros del CDA y extrae otros
  */
+
 export function checkAndExtract (xmlDom) {
+    function nestedObject (data, keys, value) {
+        let key = keys[0];
+        if (keys.length > 1) {
+            if (!data[key]) {
+                data[key] = {};
+            }
+            nestedObject(data[key], keys.slice(1), value);
+        } else {
+            data[key] = value;
+        }
+    }
 
-    /**
-     * { key: value },
-     * { key: { value,  } }
-     *
-     * @param tag
-     * @param params
-     */
-    function checkAttribute (tag, params = {}) {
-        if (tag && tag['@attributes']) {
-            let passed = true;
-            let attrs = tag['@attributes'] || {};
+    function checkArg (root, params) {
+        let passed = true;
+        let data = {};
+        for (let param of params) {
 
-            for (let key in params) {
-                if (typeof params[key] === 'string') {
-                    passed = passed && attrs[key] === params[key];
+            let text = '';
+            if (param.many) {
+                let items = root.find(param.key, {x : 'urn:hl7-org:v3'});
+                for (let i of items) {
+                    text += i.text ? i.text() : i.value();
+                    text += ' ';
+                }
+                text.trim();
+            } else {
+                let item = root.get(param.key, {x : 'urn:hl7-org:v3'});
+                if (item) {
+                    text = item.text ? item.text() : item.value();
                 }
             }
-            if (passed) {
-                return Object.keys(attrs).length > 0 ? attrs : null;
-            }
-            return null;
-        }
-        return null;
-    }
 
-    function checkTagExists (domRoot, tags) {
-        let passed = true;
-        for (let tag of tags) {
-            if (!domRoot[tag]) {
-                return false;
+            if (param.match) {
+                passed = passed && text === param.match;
+            }
+
+            passed = passed && ( !param.require || text.length > 0 );
+
+            if (param.as) {
+                nestedObject(data, param.as.split('.'), text);
             }
         }
-        return true;
+        return passed ? data : null;
     }
+    let _root = xmlDom.root();
+    let _params = [
+        { key: '//x:ClinicalDocument/x:id/@root', match: CDAConfig.idOID },
+        { key: '//x:ClinicalDocument/x:id/@extension', as: 'id' },
+        { key: '//x:ClinicalDocument/x:typeId/@root', match: '2.16.840.1.113883.1.3' },
+        { key: '//x:ClinicalDocument/x:typeId/@extension', match: 'POCD_HD000040' },
+        { key: '//x:ClinicalDocument/x:code/@code', as: 'loinc', require: true },
+        { key: '//x:ClinicalDocument/x:effectiveTime/@value', as: 'fecha', require: true },
 
-    function checkPatient (patientRole) {
-        let ids = [];
-        if (patientRole.id && !Array.isArray(patientRole.id)) {
-            ids = [patientRole.id];
-        } else {
-            ids = patientRole.id;
-        }
-        let passed  = false;
-        let dni = '';
-        for (let cid of ids) {
-            let dniId = checkAttribute(cid, { root: CDAConfig.dniOID });
-            if (dniId) {
-                dni = dniId.extension;
-            }
-        }
+        { key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:id[@root='${CDAConfig.dniOID}']/@extension`, as: 'paciente.documento', require: true},
+        { key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:name/x:given`, many: true,  as: 'paciente.nombre', require: true},
+        { key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:name/x:family`, many: true,  as: 'paciente.apellido', require: true},
+        { key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:administrativeGenderCode/@code`, as: 'paciente.sexo', require: true},
+        { key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:birthTime/@value`, as: 'paciente.fechaNacimiento', require: true},
 
-        passed = passed && checkTagExists(patientRole.patient, ['name', 'birthTime', 'administrativeGenderCode' ]);
-        if (passed) {
 
-        }
-        return passed;
-    }
 
-    let cTypeId = checkAttribute(xmlDom.ClinicalDocument.typeId, {root: '2.16.840.1.113883.1.3', extension: 'POCD_HD000040' });
-    let cId = checkAttribute(xmlDom.ClinicalDocument.id, { root: rootOID });
-    let cCode = checkAttribute(xmlDom.ClinicalDocument.code, { codeSystem: '2.16.840.1.113883.6.1' });
+        { key: `//x:ClinicalDocument/x:author/x:assignedAuthor/x:id[@root='${CDAConfig.dniOID}']/@extension`, as: 'profesional.documento', require: true},
+        { key: `//x:ClinicalDocument/x:author/x:assignedAuthor/x:assignedPerson/x:name/x:given`,  many: true, as: 'profesional.nombre', require: true},
+        { key: `//x:ClinicalDocument/x:author/x:assignedAuthor/x:assignedPerson/x:name/x:family`,  many: true, as: 'profesional.apellido'},
 
-    let cTags = checkTagExists(xmlDom.ClinicalDocument, [
-        'title', 'effectiveTime', 'confidentialityCode', 'languageCode', 'versionNumber'
-    ]);
+        { key: `//x:ClinicalDocument/x:component/x:structuredBody/x:component/x:section/x:entry/x:observationMedia/x:value/x:reference/@value`, as: 'adjunto'},
 
-    let cPatientRole = xmlDom.ClinicalDocument.recordTarget ? xmlDom.ClinicalDocument.recordTarget.patientRole : {};
-    let patient = checkPatient(cPatientRole);
+    ];
 
-    return cTypeId && cId && cCode && cTags && patient;
-
+    return  checkArg(_root, _params);
 }
