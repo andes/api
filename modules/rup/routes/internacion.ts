@@ -92,67 +92,56 @@ router.patch('/internaciones/desocuparCama/:idInternacion', function (req, res, 
 
 router.get('/internaciones/censo', function (req, res, next) {
     let unidad = req.query.unidad;
+    let resultadoFinal;
     let fecha = new Date(req.query.fecha);
-    camasController.camaOcupadasxUO(unidad, fecha).then(
-        camas => {
-            if (camas) {
-                let salidaCamas = Promise.all(camas.map(c => camasController.desocupadaEnDia(c, fecha)))
-                salidaCamas.then(salida => {
-                    salida = salida.filter(s => s);
-                    let pasesDeCama = Promise.all(salida.map(c => internacionesController.PasesParaCenso(c)));
-                    pasesDeCama.then(resultado => {
-                        let pasesCamaCenso: any[] = resultado;
-                        let listadoCensos = [];
-                        // loopeamos todos los pases de las camas
-                        Promise.all(pasesCamaCenso.map((censo: any, indice) => {
-                            censo.pases = censo.pases.filter(p => { return p.estados.fecha <= moment(fecha).endOf('day').toDate(); });
-                            // Llamamos a la funcion completarUnCenso que se encarga de devolvernos un array
-                            // con la informacion que necesitamos para el censo. (ingreso, pase de, pase a, etc)
-                            let result = censoController.completarUnCenso(censo, indice, fecha, unidad, pasesCamaCenso[indice]);
+    censoController.censoDiario(unidad, fecha).then(censoDiario => {
+        console.log("salida", censoDiario)
+        let resumen = censoController.completarResumenDiario(censoDiario, unidad, fecha)
 
-                            let index = -2;
-                            if (result['esIngreso'] && result['esPaseDe']) {
-                                index = censo.pases.findIndex(p => p.estados._id === result['esPaseDe']._id);
-                            }
+        resultadoFinal = {
+            censoDiario: censoDiario,
+            resumen: resumen
+        }
+        res.json(resultadoFinal);
+    });
 
-                            if (!result['esIngreso'] && result['esPaseA'] && result['esPaseDe']) {
-                                if (result['esPaseA'].fecha <= result['esPaseDe'].fecha) {
-                                    index = censo.pases.findIndex(p => p.estados._id === result['esPaseA']._id);
-                                }
-                            }
 
-                            if (index >= 0) {
-                                let pases1 = censo.pases.slice(0, (index + 1));
-                                let pases2 = censo.pases.slice(index, censo.pases.length);
 
-                                censo.pases = pases1;
-                                let nuevoCenso = Object.assign({}, censo);
-                                nuevoCenso.pases = pases2;
-                                let algo = censoController.completarUnCenso(censo, indice, fecha, unidad, pasesCamaCenso[indice]);
-                                listadoCensos.push(algo);
-                                let algo2 = censoController.completarUnCenso(nuevoCenso, indice, fecha, unidad, pasesCamaCenso[indice]);
-                                listadoCensos.push(algo2);
+});
 
-                            } else {
+router.get('/internaciones/censoMensual', function (req, res, next) {
+    let unidad = req.query.unidad;
+    let resultadoFinal;
+    let censoMensual = [];
+    let fechaDesde = moment(req.query.fechaDesde).startOf('day');
+    let fechaHasta = moment(req.query.fechaHasta).endOf('day');
+    let fecha = new Date(req.query.fechaDesde);
+    
+    censoController.censoMensual(req.query.fechaDesde,req.query.fechaHasta,unidad).then(result => {
+        console.log("aca",result)
+        res.json(result);
+    })
 
-                                listadoCensos.push(result);
-                            }
-                        })).then(r => {
-                            res.json(listadoCensos)
-                        }).catch(error => {
-                            return next(error);
-                        });
 
-                    }).catch(error => {
-                        return next(error);
-                    });
-                });
-            } else {
-                res.json(null);
-            }
-        }).catch(err => {
-            return next(err);
-        });
+    //  while (fechaDesde < fechaHasta) {
+    //    fechaDesde.add(1, 'days');
+
+    //     censoController.censoDiario(unidad, fecha).then(censoDiario => {
+    //         console.log("hhola",censoDiario)
+    //         let resumen = censoController.completarResumenDiario(censoDiario, unidad, fechaDesde)
+    //         resultadoFinal = {
+
+    //             censoDiario: censoDiario,
+    //             resumen: resumen
+    //         }
+    //        censoMensual.push(resultadoFinal);
+    //        console.log("data",censoMensual);
+    //     });
+
+
+    //  }
+
+
 });
 
 router.get('/internaciones/censo/disponibilidad', function (req, res, next) {
