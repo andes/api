@@ -171,7 +171,8 @@ export default [
             { key: 'get', title: 'Ver usuario', type: 'boolean' },
             { key: 'ldap', title: 'Consutar usuario en LDAP', type: 'boolean' },
             { key: 'post', title: 'Crear usuario', type: 'boolean' },
-            { key: 'put', title: 'Modificar usuario', type: 'boolean' }
+            { key: 'put', title: 'Modificar usuario', type: 'boolean' },
+            { key: 'agregarEfector', title: 'Agregar efector', type: 'boolean' }
         ]
     },
     {

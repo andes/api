@@ -337,7 +337,6 @@ export class Auth {
         } catch (e) {
             return null;
         }
-
     }
 
     /**
