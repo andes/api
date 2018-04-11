@@ -21,7 +21,7 @@ router.get('/internaciones/ultima/:idPaciente', function (req, res, next) {
             let salida = { ultimaInternacion: null, cama: null };
             if (internacion && internacion.length > 0) {
                 let ultimaInternacion = internacion[0];
-                // Ahora buscamos si se encuentra asociada la internacion a una cama 
+                // Ahora buscamos si se encuentra asociada la internacion a una cama
                 camasController.buscarCamaInternacion(mongoose.Types.ObjectId(ultimaInternacion.id), 'ocupada').then(
                     camas => {
                         salida = { ultimaInternacion: ultimaInternacion, cama: null };
@@ -95,13 +95,12 @@ router.get('/internaciones/censo', function (req, res, next) {
     let resultadoFinal;
     let fecha = new Date(req.query.fecha);
     censoController.censoDiario(unidad, fecha).then(censoDiario => {
-        console.log("salida", censoDiario)
-        let resumen = censoController.completarResumenDiario(censoDiario, unidad, fecha)
+        let resumen = censoController.completarResumenDiario(censoDiario, unidad, fecha);
 
         resultadoFinal = {
             censoDiario: censoDiario,
             resumen: resumen
-        }
+        };
         res.json(resultadoFinal);
     });
 
@@ -113,14 +112,12 @@ router.get('/internaciones/censoMensual', function (req, res, next) {
     let unidad = req.query.unidad;
     let resultadoFinal;
     let censoMensual = [];
-    let fechaDesde = moment(req.query.fechaDesde).startOf('day');
-    let fechaHasta = moment(req.query.fechaHasta).endOf('day');
-    let fecha = new Date(req.query.fechaDesde);
-    
-    censoController.censoMensual(req.query.fechaDesde,req.query.fechaHasta,unidad).then(result => {
-        console.log("aca",result)
+    // let fechaDesde = moment(req.query.fechaDesde).startOf('day');
+    // let fechaHasta = moment(req.query.fechaHasta).endOf('day');
+
+    censoController.censoMensual(req.query.fechaDesde, req.query.fechaHasta, unidad).then(result => {
         res.json(result);
-    })
+    });
 
 
     //  while (fechaDesde < fechaHasta) {
@@ -146,7 +143,7 @@ router.get('/internaciones/censoMensual', function (req, res, next) {
 
 router.get('/internaciones/censo/disponibilidad', function (req, res, next) {
     // conceptId de la unidad organizativa
-    let unidad = req.query.unidad;//'310022001';
+    let unidad = req.query.unidad; // '310022001';
     let fecha = new Date(req.query.fecha);
 
     camasController.disponibilidadXUO(unidad, fecha).then(

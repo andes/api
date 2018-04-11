@@ -35,7 +35,6 @@ export function buscarPasesCamaXInternacion(idInternacion) {
 }
 
 export function camaOcupadasxUO(unidadOrganizativa, fecha) {
-
     let pipelineEstado = [];
     pipelineEstado =
         [{
