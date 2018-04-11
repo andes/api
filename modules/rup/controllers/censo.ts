@@ -117,6 +117,9 @@ export function completarResumenDiario(listadoCenso, unidad, fecha) {
         resumenCenso.pacientesDia = resumenCenso.existencia0 +
             resumenCenso.ingresos + resumenCenso.pasesDe -
             resumenCenso.egresosDefuncion - resumenCenso.egresosAlta;
+            if (resumenCenso.pacientesDia < 0) {
+                resumenCenso.pacientesDia = 0;
+            }
 
         resumenCenso.existencia24 = resumenCenso.existencia24 -
             resumenCenso.egresosDefuncion - resumenCenso.egresosAlta - resumenCenso.pasesA;
