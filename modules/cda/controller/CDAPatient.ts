@@ -172,7 +172,11 @@ export function streamToString(stream): Promise<String> {
     });
 }
 
-export function storeFile ({extension, mimeType, stream, metadata, filename }) {
+/**
+ * Guarda un archivo para ser almacenado en un CDA
+ */
+
+export function storeFile ({extension, mimeType, stream, metadata, filename = null }) {
     return new Promise((resolve, reject) => {
         let CDAFiles = makeFs();
         let uniqueId = String(new mongoose.Types.ObjectId());
@@ -190,7 +194,7 @@ export function storeFile ({extension, mimeType, stream, metadata, filename }) {
                 }
                 return resolve({
                     id: createdFile._id,
-                    data: 'files/' + createdFile.filename,
+                    data: createdFile.filename,
                     mime: mimeType,
                     is64: false
                 });
@@ -198,6 +202,10 @@ export function storeFile ({extension, mimeType, stream, metadata, filename }) {
         );
     });
 }
+
+/**
+ * Solo PDF
+ */
 
 export function storePdfFile (pdf) {
     return new Promise(( resolve, reject) => {
@@ -367,7 +375,7 @@ export async function CDAExists (id, fecha, orgId) {
     let existe = await findByMetadata({
         'metadata.extras.id': id,
         'metadata.fecha': fecha,
-        'metadata.extras.organizacion': mongoose.Types.ObjectId(orgId._id),
+        'metadata.extras.organizacion': mongoose.Types.ObjectId(orgId),
     });
     return existe.length > 0;
 }
@@ -396,6 +404,11 @@ export function searchByPatient (pacienteId, prestacion, { limit, skip  }): Prom
                 let data = item.metadata;
                 data.cda_id = item._id;
                 data.adjuntos = data.adjuntos.map(item2 => item2.path);
+                data.adjuntos.forEach((file: string) => {
+                    if (!file.startsWith('files/')) {
+                        file = data.cda_id + '/' + file;
+                    }
+                });
                 return item.metadata;
             });
 
@@ -574,7 +587,7 @@ export function checkAndExtract (xmlDom) {
     }
     let _root = xmlDom.root();
     let _params = [
-        { key: '//x:ClinicalDocument/x:id/@root', match: CDAConfig.idOID },
+        { key: '//x:ClinicalDocument/x:id/@root', match: CDAConfig.rootOID },
         { key: '//x:ClinicalDocument/x:id/@extension', as: 'id' },
         { key: '//x:ClinicalDocument/x:typeId/@root', match: '2.16.840.1.113883.1.3' },
         { key: '//x:ClinicalDocument/x:typeId/@extension', match: 'POCD_HD000040' },
@@ -596,17 +609,10 @@ export function checkAndExtract (xmlDom) {
         { key: `//x:ClinicalDocument/x:component/x:structuredBody/x:component/x:section/x:entry/x:observationMedia/x:value/x:reference/@value`, as: 'adjunto'},
 
     ];
-
-    let data: any = checkArg(_root, _params);
-
-    if (data.adjunto) {
-        let path: string = data.adjunto;
-        if (path.startsWith('files/')) {
-            data.adjunto = path.substring(6);
-        } else {
-            return null;
-        }
+    let metadata: any = checkArg(_root, _params);
+    if (metadata.adjunto && metadata.adjunto.indexOf('/') >= 0) {
+        return null;
     }
 
-    return data;
+    return metadata;
 }

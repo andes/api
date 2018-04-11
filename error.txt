@@ -1,0 +1,21 @@
+
+> api@2.6.0 start /desarrollo/programacion/andes/api
+> npm run parse && concurrently -r "npm run tsc:w" "npm run node" 
+
+
+> api@2.6.0 parse /desarrollo/programacion/andes/api
+> apg -i core/term/controller/grammar/Expression-ABNF.txt -o core/term/controller/grammar/grammar.js
+
+
+JavaScript parser generated: core/term/controller/grammar/grammar.js
+
+> api@2.6.0 tsc:w /desarrollo/programacion/andes/api
+> tsc -w
+
+
+> api@2.6.0 node /desarrollo/programacion/andes/api
+> nodemon -q ./index.js
+
+c09:19:38 - Starting compilation in watch mode...
+
+

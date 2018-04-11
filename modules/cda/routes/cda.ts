@@ -46,7 +46,7 @@ let router = express.Router();
 // 	"file": "data:image/jpeg;base64,AEFCSADE2D2D2
 // }
 
-router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
+router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) => {
     if (!Auth.check(req, 'cda:post')) {
         return next(403);
     }
@@ -54,7 +54,7 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
     try {
         let idPrestacion = req.body.id;
         let fecha = moment(req.body.fecha).toDate();
-        let orgId = req.user.organizacion;
+        let orgId = req.user.organizacion.id ? req.user.organizacion.id : req.user.organizacion;
 
         let yaExiste = await cdaCtr.CDAExists(idPrestacion, fecha, orgId);
         if (yaExiste) {
@@ -121,27 +121,25 @@ router.post('/', cdaCtr.validateMiddleware, async (req: any, res, next) => {
 /**
  * Injecta un CDA ya armado al repositorio
  */
-router.post('/attach', async (req: any, res, next) => {
-    let orgId = req.user.organizacion;
+
+router.post('/', async (req: any, res, next) => {
+    let orgId = req.user.organizacion.id ? req.user.organizacion.id : req.user.organizacion;
     let cda64 = req.body.cda;
     let adjunto64 = req.body.adjunto;
 
     let cdaStream: any = cdaCtr.base64toStream(cda64);
     let cdaXml: String = await cdaCtr.streamToString(cdaStream.stream);
 
-    // [TODO] Match de paciente?
-    // [TODO] Prestación desde el LOINC?
-
     if (cdaXml.length > 0) {
-        cdaCtr.validateSchemaCDA(cdaXml).then(async () => {
-            let dom: any = xmlToJson(cdaXml);
+        cdaCtr.validateSchemaCDA(cdaXml).then(async (dom) => {
+
             let cdaData: any = cdaCtr.checkAndExtract(dom);
 
             if (cdaData) {
-                let uniqueId = (new mongoose.Types.ObjectId());
+                let uniqueId = new mongoose.Types.ObjectId();
 
-                cdaData.fecha = moment(new Date(cdaData.fecha));
-                cdaData.paciente.fechaNacimiento = moment(new Date(cdaData.paciente.fechaNacimiento));
+                cdaData.fecha = moment(cdaData.fecha, 'YYYYMMDDhhmmss').toDate();
+                cdaData.paciente.fechaNacimiento = moment(cdaData.paciente.fechaNacimiento, 'YYYYMMDDhhmmss');
                 cdaData.paciente.sexo = cdaData.paciente.sexo === 'M' ? 'masculino' : 'femenino';
 
                 let yaExiste = await cdaCtr.CDAExists(cdaData.id, cdaData.fecha, orgId);
@@ -149,7 +147,10 @@ router.post('/attach', async (req: any, res, next) => {
                     return next({error: 'prestacion_existente'});
                 }
 
-                let prestacion = await cdaCtr.matchCode(cdaData.loinc);
+                let prestacion = await cdaCtr.matchCodeByLoinc(cdaData.loinc);
+                if (!prestacion) {
+                    return next({error: 'loinc_invalido'});
+                }
                 let paciente = await cdaCtr.findOrCreate(req, cdaData.paciente, orgId);
 
                 let fileData, adjuntos;
@@ -171,7 +172,7 @@ router.post('/attach', async (req: any, res, next) => {
                     adjuntos: adjuntos,
                     extras: {
                         id: cdaData.id,
-                        organizacion: orgId
+                        organizacion: mongoose.Types.ObjectId(orgId)
                     }
                 };
                 let obj = await cdaCtr.storeCDA(uniqueId, cdaXml, metadata);
@@ -200,6 +201,7 @@ router.get('/style/cda.xsl', (req, res, next) => {
 /**
  * Devuelve los archivos almacenados por los CDAs
  * Cuando se renderiza un CDA en el browser busca los archivos adjuntos en esta ruta
+ * [DEPRECATED]
  */
 
 router.get('/files/:name', async (req: any, res, next) => {
@@ -219,6 +221,35 @@ router.get('/files/:name', async (req: any, res, next) => {
         res.contentType(file.contentType);
         stream1.pipe(res);
     }).catch(next);
+});
+
+
+/**
+ * Devuelve los archivos almacenados por los CDAs
+ * Cuando se renderiza un CDA en el browser busca los archivos adjuntos en esta ruta
+ */
+
+router.get('/:id/:name', async (req: any, res, next) => {
+  if (req.user.type === 'user-token' &&  !Auth.check(req, 'cda:get')) {
+      return next(403);
+  }
+  let id = mongoose.Types.ObjectId(req.params.id);
+  let name = req.params.name;
+  let CDAFiles = makeFs();
+
+  let query = {
+    filename: name,
+    'metadata.cdaId' : id
+  };
+  CDAFiles.findOne(query).then(async file => {
+      if (req.user.type === 'paciente-token' &&  String(file.metadata.paciente) !== String(req.user.pacientes[0].id) ) {
+          return next(403);
+      }
+
+      let stream1  = await CDAFiles.readById(file._id);
+      res.contentType(file.contentType);
+      stream1.pipe(res);
+  }).catch(next);
 });
 
 
@@ -259,126 +290,3 @@ router.get('/paciente/:id', async (req: any, res, next) => {
 });
 
 export = router;
-
-let cdaXml2 = `<?xml version="1.0"?>
-<?xml-stylesheet type="text/xsl" href="style/cda.xsl"?>
-<ClinicalDocument xmlns="urn:hl7-org:v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:voc="urn:hl7-org:v3/voc">
-  <typeId root="2.16.840.1.113883.1.3" extension="POCD_HD000040"/>
-  <!-- CDA ID -->
-  <id root="2.16.840.1.113883.2.10.35.1" extension="5ac7a37dcbc67353839715a3"/>
-  <code code="26436-6" codeSystem="2.16.840.1.113883.6.1" codeSystemName="LOINC" displayName="Laboratory studies"/>
-  <title>Laboratory studies</title>
-  <effectiveTime value="20180406014237"/>
-  <confidentialityCode code="N" codeSystem="2.16.840.1.113883.5.25"/>
-  <languageCode code="es-AR"/>
-  <versionNumber value="1"></versionNumber>
-  <!-- Datos del paciente -->
-  <recordTarget>
-    <patientRole>
-      <id root="2.16.840.1.113883.2.10.35.1" extension="5ac7a376cbc673538397153d"/>
-      <id root="2.16.840.1.113883.2.10.35.1.1.1" extension="5ac7a376cbc673538397153d"/>
-      <patient>
-        <name>
-          <given>NELSON</given>
-          <given>DAVID</given>
-          <family>CANTARUTTI</family>
-        </name>
-        <administrativeGenderCode codeSystem="2.16.840.1.113883.5.1" code="M" displayName="masculino"/>
-        <birthTime value="19620611120000"/>
-      </patient>
-    </patientRole>
-  </recordTarget>
-  <!-- Datos del Doctor -->
-  <author>
-    <time value="20180406014237"/>
-    <assignedAuthor>
-      <id root="2.16.840.1.113883.2.10.35.1.1.1" extension="5ac7a376cbc673538397153d"/>
-      <assignedPerson>
-        <name>
-          <given>H. BOUQUET ROLDAN</given>
-        </name>
-      </assignedPerson>
-      <representedOrganization>
-        <id root="2.16.840.1.113883.2.10.35.1" extension="57e9670e52df311059bc8964"/>
-        <name>HOSPITAL PROVINCIAL NEUQUEN - DR. EDUARDO CASTRO RENDON</name>
-      </representedOrganization>
-    </assignedAuthor>
-  </author>
-  <!-- Datos de la organización -->
-  <custodian>
-    <assignedCustodian>
-      <representedCustodianOrganization>
-        <id root="2.16.840.1.113883.2.10.35.1" extension="57e9670e52df311059bc8964"/>
-        <name>HOSPITAL PROVINCIAL NEUQUEN - DR. EDUARDO CASTRO RENDON</name>
-      </representedCustodianOrganization>
-    </assignedCustodian>
-  </custodian>
-
-  <documentationOf>
-    <serviceEvent classCode="PCPR">
-      <effectiveTime value="20161003120000">
-        <low value="20161003120000"/>
-        <high value="20161003120000"/>
-      </effectiveTime>
-      <performer typeCode="PRF">
-        <functionCode code="PCP" codeSystem="2.16.840.1.113883.5.88"/>
-        <assignedEntity>
-        <id root="2.16.840.1.113883.2.10.35.1" extension="5ac7a376cbc673538397153d"/>
-          <assignedPerson>
-            <name>
-              <given>H. BOUQUET ROLDAN</given>
-            </name>
-          </assignedPerson>
-          <representedOrganization>
-            <id root="2.16.840.1.113883.2.10.35.1" extension="57e9670e52df311059bc8964"/>
-            <name>HOSPITAL PROVINCIAL NEUQUEN - DR. EDUARDO CASTRO RENDON</name>
-          </representedOrganization>
-        </assignedEntity>
-      </performer>
-    </serviceEvent>
-  </documentationOf>
-
-  <!-- Fecha de la prestación -->
-  <componentOf>
-    <encompassingEncounter>
-      <effectiveTime>
-        <low value="20161003120000"></low>
-      </effectiveTime>
-    </encompassingEncounter>
-  </componentOf>
-
-  <component>
-    <structuredBody>
-      <component>
-        <section>
-          <code codeSystem="2.16.840.1.113883.6.90" code="Z01.7" codeSystemName="ICD-10" displayName="Examen de laboratorio"/>
-          <title>Resumen de la consulta</title>
-          <text>Exámen de Laboratorio</text>
-        </section>
-      </component>
-      <component>
-        <section>
-          <title>Archivo adjunto</title>
-          <text>
-            <renderMultiMedia referencedObject="Adjunto"/>
-          </text>
-          <entry>
-            <observationMedia classCode="OBS" moodCode="EVN" ID="Adjunto">
-              <value xsi:type="ED" mediaType="application/pdf">
-                <reference value="files/5ac7a37dcbc67353839715a4.pdf"/>
-              </value>
-            </observationMedia>
-          </entry>
-        </section>
-      </component>
-    </structuredBody>
-  </component>
-</ClinicalDocument>`;
-
-cdaCtr.validateSchemaCDA(cdaXml2).then((dom) => {
-  let data = cdaCtr.checkAndExtract2(dom);
-  console.log(data);
-});
-
-
-
