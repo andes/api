@@ -148,6 +148,7 @@ export async function checkCodificacion(agenda) {
         if (idConsulta) {
             await markAgendaAsProcessed(agenda);
         }
+        console.log(agenda.id)
         return (agenda);
     } catch (ex) {
         return (ex);
@@ -216,16 +217,14 @@ async function codificacionCie10(idConsulta: any, turno: any) {
                 });
             } else {
                 turno.diagnostico.codificaciones.push({
-                    cie10: {
-                        codificacionProfesional: {
-                            cie10: {
-                                causa: codificaCie10.CAUSA,
-                                subcausa: codificaCie10.SUBCAUSA,
-                                codigo: codificaCie10.CODIGO,
-                                nombre: codificaCie10.Nombre,
-                                sinonimo: codificaCie10.Sinonimo,
-                                c2: codificaCie10.C2
-                            }
+                    codificacionProfesional: {
+                        cie10: {
+                            causa: codificaCie10.CAUSA,
+                            subcausa: codificaCie10.SUBCAUSA,
+                            codigo: codificaCie10.CODIGO,
+                            nombre: codificaCie10.Nombre,
+                            sinonimo: codificaCie10.Sinonimo,
+                            c2: codificaCie10.C2
                         }
                     }
                 });
