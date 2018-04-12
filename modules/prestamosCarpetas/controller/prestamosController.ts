@@ -116,7 +116,7 @@ async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carp
                     }
                 });
             });
-        });
+        })
     });
     return registrosSolicitudCarpetas;
 }
