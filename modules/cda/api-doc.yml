@@ -57,6 +57,17 @@ paths:
       responses:
         '200':
           description: Devuelve ID del CDA generado 
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cda:
+                    type: string
+                    description: ID del CDA generado
+                  paciente:
+                    type: string
+                    description: ID del Paciente 
   /modules/cda:
     post:
       tags:
@@ -84,5 +95,16 @@ paths:
           example: 'data:application/pdf;base64,AEFCSADE2D2D2...'
       responses:
         '200':
-          description: Devuelve ID del CDA generado
+          description: Devuelve ID del CDA generado 
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cda:
+                    type: string
+                    description: ID del CDA generado
+                  paciente:
+                    type: string
+                    description: ID del Paciente 
           
