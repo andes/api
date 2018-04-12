@@ -135,7 +135,7 @@ async function actualizarEstadoTurnoSips(idAgendaSips, turno, poolAgendas) {
             objectIdTurno = ' and objectId = \'' + turno._id + '\'';
         }
         let horaInicio = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
-        if ((estadoTurnoMongo === constantes.EstadoTurnosSips.suspendido || turno.estado === 'turnoDoble') && !await existeTurnoBloqueoSips(idAgendaSips, horaInicio)) {
+        if ((estadoTurnoMongo === constantes.EstadoTurnosSips.suspendido || turno.estado === 'turnoDoble') && !await existeTurnoBloqueoSips(idAgendaSips, horaInicio, poolAgendas)) {
             await grabarTurnoBloqueo(idAgendaSips, turno, poolAgendas);
         }
         let query = 'UPDATE dbo.CON_Turno SET idTurnoEstado = ' + estadoTurnoMongo + ' WHERE idAgenda = ' + idAgendaSips + objectIdTurno;
@@ -143,14 +143,14 @@ async function actualizarEstadoTurnoSips(idAgendaSips, turno, poolAgendas) {
     }
 }
 
-async function existeTurnoBloqueoSips(idAgendaSips, horaInicio) {
+async function existeTurnoBloqueoSips(idAgendaSips, horaInicio, poolAgendas) {
     let query = 'SELECT COUNT(b.idTurnoBloqueo) as count FROM CON_TurnoBloqueo b ' +
         'JOIN CON_TURNO t on t.idAgenda = b.idAgenda ' +
         'WHERE b.idAgenda = ' + idAgendaSips +
         ' AND b.horaTurno = \'' + horaInicio + '\'';
 
     try {
-        let result = await new sql.Request(transaction).query(query);
+        let result = await new sql.Request(poolAgendas).query(query);
         return (result[0].count > 0);
     } catch (err) {
         return (err);

@@ -546,7 +546,7 @@ async function grabaAgendaSips(agendaSips: any, datosSips: any, tr) {
     let dniProfesional = agendaSips.profesionales ? agendaSips.profesionales[0].documento : '0';
     try {
 
-        if (agendaSips.profesionales.length > 1) {
+        if (agendaSips.profesionales && agendaSips.profesionales.length > 1) {
             multiprofesional = 1;
         } else {
             multiprofesional = 0;
@@ -568,20 +568,22 @@ async function grabaAgendaSips(agendaSips: any, datosSips: any, tr) {
         let idAgendaCreada = await executeQuery(query);
 
         // ---> Obtenemos los id's de profesionales(SIPS) para la agenda actual y luego insertamos las "agendasProfesional" correspondientes en SIPS
-        let listaIdProfesionales = await Promise.all(getProfesionales(agendaSips.profesionales));
+        if (agendaSips.profesionales) {
+            let listaIdProfesionales = await Promise.all(getProfesionales(agendaSips.profesionales));
 
-        if (listaIdProfesionales[0].recordset && listaIdProfesionales[0].recordset.length > 0) {
-            let promiseArray = [];
-            listaIdProfesionales.forEach(async elem => {
-                let query2 = 'INSERT INTO dbo.CON_AgendaProfesional ( idAgenda, idProfesional, baja, CreatedBy , ' +
-                    ' CreatedOn, ModifiedBy, ModifiedOn, idEspecialidad ) VALUES  ( ' + idAgendaCreada + ',' +
-                    elem.recordset[0].idProfesional + ',' + 0 + ',' + constantes.idUsuarioSips + ',' +
-                    '\'' + moment().format('YYYYMMDD HH:mm:ss') + '\', ' +
-                    '\'' + moment().format('YYYYMMDD HH:mm:ss') + '\', ' +
-                    '\'' + moment().format('YYYYMMDD HH:mm:ss') + '\', ' +
-                    idEspecialidad + ' ) ';
-                await executeQuery(query2);
-            });
+            if (listaIdProfesionales && listaIdProfesionales[0].recordset && listaIdProfesionales[0].recordset.length > 0) {
+                let promiseArray = [];
+                listaIdProfesionales.forEach(async elem => {
+                    let query2 = 'INSERT INTO dbo.CON_AgendaProfesional ( idAgenda, idProfesional, baja, CreatedBy , ' +
+                        ' CreatedOn, ModifiedBy, ModifiedOn, idEspecialidad ) VALUES  ( ' + idAgendaCreada + ',' +
+                        elem.recordset[0].idProfesional + ',' + 0 + ',' + constantes.idUsuarioSips + ',' +
+                        '\'' + moment().format('YYYYMMDD HH:mm:ss') + '\', ' +
+                        '\'' + moment().format('YYYYMMDD HH:mm:ss') + '\', ' +
+                        '\'' + moment().format('YYYYMMDD HH:mm:ss') + '\', ' +
+                        idEspecialidad + ' ) ';
+                    await executeQuery(query2);
+                });
+            }
         }
 
         debug(' 2.5 - return graba agenda : ', idAgendaCreada);
@@ -621,6 +623,7 @@ function getEstadoAgendaSips(estadoCitas) {
  * @returns
  */
 function getProfesionales(profesionalesMongo) {
+    if (!profesionalesMongo) { return null; }
     let profesionalesSipsPromise = [];
     profesionalesMongo.map(async profMongo => profesionalesSipsPromise.push(arrayIdProfesionales(profMongo)));
     return profesionalesSipsPromise;
