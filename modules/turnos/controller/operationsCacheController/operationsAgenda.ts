@@ -595,14 +595,24 @@ async function grabaAgendaSips(agendaSips: any, datosSips: any, tr) {
 
 function getEstadoAgendaSips(estadoCitas) {
     let estado: any;
-    if (estadoCitas === 'disponible' || estadoCitas === 'publicada') {
-        estado = constantes.EstadoAgendaSips.activa; // 1
-    } else if (estadoCitas === 'suspendida') {
-        estado = constantes.EstadoAgendaSips.inactiva;
-    } else if (estadoCitas === 'codificada') {
-        estado = constantes.EstadoAgendaSips.cerrada;
+    switch (estadoCitas) {
+        case 'disponible':
+        case 'publicada':
+        case 'pausada':
+            estado = constantes.EstadoAgendaSips.activa;
+            break;
+        case 'suspendida':
+        case 'borrada':
+            estado = constantes.EstadoAgendaSips.inactiva;
+            break;
+        case 'codificada':
+        case 'pendienteAsistencia':
+        case 'pendienteAuditoria':
+        case 'auditada':
+            estado = constantes.EstadoAgendaSips.cerrada;
+            break;
     }
-    return (estado);
+    return estado;
 }
 
 /**
