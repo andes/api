@@ -21,9 +21,10 @@ export async function getCarpetasSolicitud(req) {
         let horaFin = body.fechaHasta;
         let estado = body.estado;
         let agendas = await buscarAgendasTurnos(new ObjectId(organizacionId), tipoPrestacionId, espacioFisicoId, profesionalId, horaInicio, horaFin);
-        let nrosCarpetas = getNrosCarpetas(agendas);
+        let agendasSobreturno = await buscarAgendasSobreturnos(new ObjectId(organizacionId), tipoPrestacionId, espacioFisicoId, profesionalId, horaInicio, horaFin);
+        let nrosCarpetas = getNrosCarpetas(agendas, agendasSobreturno);
         let carpetas = await findCarpetas(new ObjectId(organizacionId), nrosCarpetas);
-        let prestamosCarpetas = await getRegistrosSolicitudCarpetas(req, organizacionId, agendas, carpetas);
+        let prestamosCarpetas = await getRegistrosSolicitudCarpetas(req, organizacionId, [agendas, agendasSobreturno], carpetas);
 
         resolve(prestamosCarpetas);
     });
@@ -45,17 +46,31 @@ export async function getCarpetasPrestamo(req) {
     });
 }
 
-function getNrosCarpetas(agendas) {
+function getNrosCarpetas(agendas, agendasSobreturno) {
     let nroCarpetas = [];
-    agendas.forEach(_agenda => {
-        _agenda.turnos.forEach(unTurno => {
-            unTurno.paciente.carpetaEfectores.forEach(async unaCarpeta => {
-                if (nroCarpetas.indexOf(unaCarpeta.nroCarpeta) < 0) {
-                    nroCarpetas.push(unaCarpeta.nroCarpeta);
-                }
+    if (agendas) {
+        agendas.forEach(_agenda => {
+            _agenda.turnos.forEach(unTurno => {
+                unTurno.paciente.carpetaEfectores.forEach(async unaCarpeta => {
+                    if (nroCarpetas.indexOf(unaCarpeta.nroCarpeta) < 0) {
+                        nroCarpetas.push(unaCarpeta.nroCarpeta);
+                    }
+                });
             });
         });
-    });
+    }
+
+    if (agendasSobreturno) {
+        agendasSobreturno.forEach(_agenda => {
+            _agenda.turnos.forEach(unTurno => {
+                unTurno.paciente.carpetaEfectores.forEach(async unaCarpeta => {
+                    if (nroCarpetas.indexOf(unaCarpeta.nroCarpeta) < 0) {
+                        nroCarpetas.push(unaCarpeta.nroCarpeta);
+                    }
+                });
+            });
+        });
+    }
     return nroCarpetas;
 }
 
@@ -64,42 +79,44 @@ async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carp
     let resBusquedaCarpeta;
     let mostrarPrestamos = req.body.mostrarPrestamos;
 
-    agendas.forEach(_agenda => {
-        _agenda.turnos.forEach(_turno => {
-            _turno.paciente.carpetaEfectores.forEach(async unaCarpeta => {
-                // Validación de PDR para ignorar números de carpetas autogenerados por HPN.
-                if ((unaCarpeta.nroCarpeta.indexOf('PDR') < 0) && unaCarpeta.organizacion._id.equals(unaOrganizacion)) {
-                    let estadoCarpeta = constantes.EstadosPrestamosCarpeta.EnArchivo;
+    agendas.forEach(unaAgenda => {
+        unaAgenda.forEach(_agenda => {
+            _agenda.turnos.forEach(_turno => {
+                _turno.paciente.carpetaEfectores.forEach(async unaCarpeta => {
+                    // Validación de PDR para ignorar números de carpetas autogenerados por HPN.
+                    if ((unaCarpeta.nroCarpeta.indexOf('PDR') < 0) && unaCarpeta.organizacion._id.equals(unaOrganizacion)) {
+                        let estadoCarpeta = constantes.EstadosPrestamosCarpeta.EnArchivo;
 
-                    for (let i = 0; i < carpetas.length; i++) {
-                        if (carpetas[i]._id === unaCarpeta.nroCarpeta) {
-                            estadoCarpeta = carpetas[i].estado;
-                            break;
+                        for (let i = 0; i < carpetas.length; i++) {
+                            if (carpetas[i]._id === unaCarpeta.nroCarpeta) {
+                                estadoCarpeta = carpetas[i].estado;
+                                break;
+                            }
+                        }
+
+                        if (mostrarPrestamos || (estadoCarpeta === constantes.EstadosPrestamosCarpeta.EnArchivo)) {
+                            registrosSolicitudCarpetas.push({
+                                fecha: _turno.horaInicio,
+                                paciente: _turno.paciente,
+                                numero: unaCarpeta.nroCarpeta,
+                                estado: estadoCarpeta,
+                                organizacion: unaOrganizacion,
+                                datosPrestamo: {
+                                    agendaId: _agenda._id.id,
+                                    observaciones: '',
+                                    turno: {
+                                        id: _turno._id,
+                                        profesionales: _agenda.profesionales[0],
+                                        espacioFisico: _agenda.espacioFisico[0],
+                                        tipoPrestacion: _turno.tipoPrestacion
+                                    }
+                                }
+                            });
                         }
                     }
-
-                    if (mostrarPrestamos || (estadoCarpeta === constantes.EstadosPrestamosCarpeta.EnArchivo)) {
-                        registrosSolicitudCarpetas.push({
-                            fecha: _turno.horaInicio,
-                            paciente: _turno.paciente,
-                            numero: unaCarpeta.nroCarpeta,
-                            estado: estadoCarpeta,
-                            organizacion: unaOrganizacion,
-                            datosPrestamo: {
-                                agendaId: _agenda._id.id,
-                                observaciones: '',
-                                turno: {
-                                    id: _turno._id,
-                                    profesionales: _agenda.profesionales[0],
-                                    espacioFisico: _agenda.espacioFisico[0],
-                                    tipoPrestacion: _turno.tipoPrestacion
-                                }
-                            }
-                        });
-                    }
-                }
+                });
             });
-        });
+        })
     });
     return registrosSolicitudCarpetas;
 }
@@ -171,6 +188,57 @@ async function findCarpetasPrestamo(organizacionId, horaInicio, horaFin, tipoPre
     });
 
     return result;
+}
+
+async function buscarAgendasSobreturnos(organizacionId, tipoPrestacion, espacioFisico, profesional, horaInicio, horaFin) {
+
+    let matchCarpeta = {};
+    if (tipoPrestacion) {
+        matchCarpeta['sobreturnos.tipoPrestacion._id'] = new ObjectId(tipoPrestacion);
+    }
+
+    if (espacioFisico) {
+        matchCarpeta['espacioFisico.id'] = espacioFisico;
+    }
+
+    if (profesional) {
+        matchCarpeta['profesionales._id'] = new ObjectId(profesional);
+    }
+
+    if (horaInicio || horaFin) {
+        matchCarpeta['horaInicio'] = {};
+        if (horaInicio) {
+            matchCarpeta['horaInicio']['$gte'] = new Date(horaInicio);
+        }
+        if (horaFin) {
+            matchCarpeta['horaInicio']['$lte'] = new Date(horaFin);
+        }
+    }
+
+    matchCarpeta['sobreturnos.estado'] = { '$eq': 'asignado' };
+    matchCarpeta['sobreturnos.paciente.carpetaEfectores.organizacion._id'] = organizacionId;
+    matchCarpeta['sobreturnos.paciente.carpetaEfectores.nroCarpeta'] = { '$ne': '' };
+
+    let pipelineCarpeta = [{
+        $match: matchCarpeta
+    },
+    {
+        $unwind: '$sobreturnos'
+    },
+    {
+        $match: matchCarpeta
+    },
+    {
+        $group: {
+            '_id': { 'id': '$_id' },
+            'profesionales': { $push: '$profesionales' },
+            'espacioFisico': { $push: '$espacioFisico' },
+            'tipoPrestacion': { $push: '$sobreturnos.tipoPrestacion' },
+            'turnos': { $push: '$sobreturnos' }
+        }
+    }];
+
+    return await toArray(agenda.aggregate(pipelineCarpeta).cursor({}).exec());
 }
 
 async function buscarAgendasTurnos(organizacionId, tipoPrestacion, espacioFisico, profesional, horaInicio, horaFin) {
