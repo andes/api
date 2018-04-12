@@ -11,6 +11,7 @@ import {
 import {
     PacienteFHIR
 } from '../../interfaces/IPacienteFHIR';
+import * as controller from '../../../core/mpi/controller/paciente';
 import * as localidad from '../../../core/tm/schemas/localidad';
 
 
@@ -18,13 +19,14 @@ export function pacientesAFHIR(ids: any[]) {
     return new Promise((resolve: any, reject: any) => {
         let pacientesFHIR = [];
         let promises = [];
-
         ids.forEach(function (id) {
             promises.push(
-                pacienteMpi.findById(id)
-                    .then((data: any) => {
+                controller.buscarPaciente(id)
+                    .then((result: any) => {
+                        let data = result.paciente;
                         if (data) {
                             let identificadores = data.documento ? [{ assigner: 'DU', value: data.documento }] : [];
+                            identificadores.push({assigner: 'andes', value: id });
                             // Parsea contactos
                             let contactos = data.contacto ? data.contacto.map(unContacto => {
                                 let cont = {
@@ -90,7 +92,7 @@ export function pacientesAFHIR(ids: any[]) {
                                 name: [{
                                     resourceType: 'HumanName',
                                     family: data.apellido, // Family name (often called 'Surname')
-                                    given: data.nombre.split(' '), // Given names (not always 'first'). Includes middle names
+                                    given: data.nombre, // Given names (not always 'first'). Includes middle names
                                 }],
                                 gender: genero, // male | female | other | unknown
                                 birthDate: data.fechaNacimiento,

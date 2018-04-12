@@ -3,7 +3,8 @@ import * as mongoose from 'mongoose';
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 import * as cie10 from '../../../core/term/schemas/cie10';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
-// import * as organizacion from '../../../core/tm/schemas/organizacion';
+import * as obraSocialSchema from '../../obraSocial/schemas/obraSocial';
+import { SnomedConcept } from '../../rup/schemas/snomed-concept';
 
 let turnoSchema = new mongoose.Schema({
     horaInicio: Date,
@@ -41,10 +42,15 @@ let turnoSchema = new mongoose.Schema({
         type: String,
         enum: ['edilicia', 'profesional', 'organizacion', 'agendaSuspendida']
     },
+    avisoSuspension: {
+        type: String,
+        enum: ['no enviado', 'enviado', 'fallido']
+    },
     paciente: { // pensar que otros datos del paciente conviene tener
         id: mongoose.Schema.Types.ObjectId,
         nombre: String,
         apellido: String,
+        alias: String,
         documento: String,
         fechaNacimiento: Date,
         telefono: String,
@@ -53,11 +59,12 @@ let turnoSchema = new mongoose.Schema({
             organizacion: nombreSchema,
             nroCarpeta: String
         }],
+        obraSocial: { type: obraSocialSchema }
     },
+    motivoConsulta: String,
     tipoPrestacion: {
         type: tipoPrestacionSchema
     },
-    // TODO: Enlace con RUP? cuando alguien defina ALGO
     idPrestacionPaciente: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'prestacionPaciente'
@@ -69,8 +76,13 @@ let turnoSchema = new mongoose.Schema({
     diagnostico: {
         ilegible: Boolean,
         codificaciones: [{
-            codificacionProfesional: cie10.schema, // solamente obtenida de RUP o SIPS y definida por el profesional
-            codificacionAuditoria: cie10.schema,  // corresponde a la codificación establecida la instancia de revisión de agendas
+            // (ver schema) solamente obtenida de RUP o SIPS y definida por el profesional
+            codificacionProfesional: {
+                cie10: cie10.schema,
+                snomed: SnomedConcept
+            },
+            // (ver schema) corresponde a la codificación establecida la instancia de revisión de agendas
+            codificacionAuditoria: cie10.schema,
             primeraVez: Boolean,
         }]
     },

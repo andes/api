@@ -124,18 +124,22 @@ router.patch('/pacientes/:id', function (req, res, next) {
 });
 
 
-
+/**
+ * Devuelve los CDA de laboratorios de un paciente.
+ */
 
 router.get('/laboratorios/(:id)', async (req, res, next) => {
     let idPaciente = req.params.id;
     let pacientes = (req as any).user.pacientes;
     let index = pacientes.findIndex(item => item.id === idPaciente);
     if (index >= 0) {
-        let cdas: any[] = await cdaCtr.searchByPatient(idPaciente, '4241000179101');
+        let limit = parseInt (req.query.limit || 10, 0);
+        let skip = parseInt (req.query.skip || 0, 0);
+        let cdas: any[] = await cdaCtr.searchByPatient(idPaciente, '4241000179101', { limit, skip });
         for (let cda of cdas) {
             let _xml = await cdaCtr.loadCDA(cda.cda_id);
             let dom: any = xmlToJson(_xml);
-            // console.log(dom);
+            cda.confidentialityCode = dom.ClinicalDocument.confidentialityCode['@attributes'].code;
             cda.title = dom.ClinicalDocument.title['#text'];
             cda.organizacion = dom.ClinicalDocument.custodian.assignedCustodian.representedCustodianOrganization.name['#text'];
         }

@@ -55,22 +55,17 @@ export async function findOrCreate(req, dataPaciente, organizacion) {
             entidad: String(organizacion),
             valor: dataPaciente.id
         };
-
         try {
-
             let query = await pacienteCtr.buscarPacienteWithcondition({
                 identificadores: identificador
             });
-
             if (query) {
                 return query.paciente;
             }
-
         } catch (e) {
             // nothing to do here
         }
     }
-
     let pacientes = await pacienteCtr.matchPaciente(dataPaciente);
     if (pacientes.length > 0 && pacientes[0].value >= 0.95) {
         let realPac = await pacienteCtr.buscarPaciente(pacientes[0].paciente.id);
@@ -164,7 +159,7 @@ export function base64toStream (base64) {
     };
 }
 
-export function storeFile ({extension, mimeType, stream }) {
+export function storeFile ({extension, mimeType, stream, metadata }) {
     return new Promise((resolve, reject) => {
         let CDAFiles = makeFs();
         let uniqueId = String(new mongoose.Types.ObjectId());
@@ -172,11 +167,15 @@ export function storeFile ({extension, mimeType, stream }) {
         CDAFiles.write({
                 _id: uniqueId,
                 filename:  uniqueId + '.' + extension,
-                contentType: mimeType
+                contentType: mimeType,
+                metadata
             },
             stream,
             (error, createdFile) => {
-                resolve({
+                if (error) {
+                    return reject(error);
+                }
+                return resolve({
                     id: createdFile._id,
                     data: 'files/' + createdFile.filename,
                     mime: mimeType,
@@ -250,7 +249,7 @@ export function storeCDA (objectID, cdaXml, metadata) {
  * @param {string} text Texto descriptivo
  * @param {string} base64  Archivo para adjutar al CDA en base64
  */
-export function generateCDA(uniqueId, patient, date, author, organization, snomed, cie10, text, file) {
+export function generateCDA(uniqueId, confidentiality, patient, date, author, organization, snomed, cie10, text, file) {
 
     let cda = new CDA();
     cda.id(buildID(uniqueId));
@@ -260,6 +259,13 @@ export function generateCDA(uniqueId, patient, date, author, organization, snome
 
     // [TODO] Desde donde inferir el titulo
     cda.title(code.displayName);
+
+    if (confidentiality === 'R') {
+        cda.confidentialityCode({
+            codeSystem: '2.16.840.1.113883.5.25',
+            code: 'R'
+        });
+    }
 
     cda.versionNumber(1);
     cda.date(date);
@@ -325,22 +331,38 @@ export function generateCDA(uniqueId, patient, date, author, organization, snome
 }
 
 /**
+ * Listado de CDA por metadata
+ * @param conds
+ */
+export function findByMetadata (conds) {
+    let CDAFiles = makeFs();
+    return CDAFiles.find(conds);
+}
+
+
+/**
  * listado de CDA por paciente y tipo de prestación
  */
 
-export function searchByPatient (pacienteId, prestacion): Promise<any[]> {
+export function searchByPatient (pacienteId, prestacion, { limit, skip  }): Promise<any[]> {
     return new Promise(async (resolve, reject) => {
         let CDAFiles = makeFs();
         let conditions: any = { 'metadata.paciente':  mongoose.Types.ObjectId(pacienteId) };
         if (prestacion) {
             conditions['metadata.prestacion'] = prestacion;
         }
-
+        if (limit === null) {
+            limit = 10;
+        }
+        if (skip === null) {
+            skip = 0;
+        }
         try {
-            let list = await CDAFiles.find(conditions).sort({'metadata.fecha': -1});
+            let list = await CDAFiles.find(conditions).sort({'metadata.fecha': -1}).limit(limit).skip(skip);
             list = list.map(item => {
                 let data = item.metadata;
                 data.cda_id = item._id;
+                data.adjuntos = data.adjuntos.map(item2 => item2.path);
                 return item.metadata;
             });
 

@@ -20,9 +20,23 @@ export let schema = new mongoose.Schema({
         fechaNacimiento: Date
     },
 
-    // Datos de la solicitud
+    // Datos de la Solicitud
     solicitud: {
-        // Tipo de prestación de ejecutarse
+
+        // Fecha de Solicitud: este dato se podría obtener del array de estados, pero está aquí para facilitar la consulta
+        fecha: {
+            type: Date,
+            required: true
+        },
+
+        // Ambito de la prestacion: ambulatorio, internacion, emergencia, etc.
+        ambitoOrigen: {
+            type: String,
+            required: false,
+            default: 'ambulatorio'
+        },
+
+        // Tipo de Prestación a ejecutarse
         tipoPrestacion: {
             id: mongoose.Schema.Types.ObjectId,
             conceptId: String,
@@ -31,15 +45,24 @@ export let schema = new mongoose.Schema({
             semanticTag: SemanticTag,
             refsetIds: [String]
         },
-        // Fecha de solicitud
-        // Nota: Este dato podría obtener del array de estados, pero está aquí para facilidar de consulta
-        fecha: {
-            type: Date,
-            required: true
-        },
+
+        // Datos de auditoría sobre el estado de la solicitud (aprobada, desaprobada, ...)
+        auditoria: auditoriaPrestacionPacienteSchema,
+
         // ID del turno relacionado con esta prestación
         turno: mongoose.Schema.Types.ObjectId,
-        // Profesional que solicita la prestacion
+
+        // Registros de la solicitud ... para los planes o prestaciones futuras
+        registros: [registro.schema],
+
+        // Organización desde la que se solicita la Prestación.
+        organizacion: {
+            // requirido, validar en middleware
+            id: mongoose.Schema.Types.ObjectId,
+            nombre: String
+        },
+
+        // Profesional que solicita la Prestación
         profesional: {
             // requerido, validar en middleware
             id: mongoose.Schema.Types.ObjectId,
@@ -47,21 +70,14 @@ export let schema = new mongoose.Schema({
             apellido: String,
             documento: String
         },
-        // Organizacion desde la que se solicita la prestacion
-        organizacion: {
-            // requirido, validar en middleware
-            id: mongoose.Schema.Types.ObjectId,
-            nombre: String
-        },
-        // ID de la prestación desde la que se generó esta solicitud
+
+        // ID de la Prestación desde la que se generó esta Solicitud
         prestacionOrigen: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'prestacion'
         },
-        // Registros de la solicitud ... para los planes o prestaciones futuras
-        registros: [registro.schema],
-        // Datos de auditoría sobre el estado de la solicitud (aprobada, desaprobada, ...)
-        auditoria: auditoriaPrestacionPacienteSchema
+
+
     },
 
     // Datos de la ejecución (i.e. realización)
@@ -78,6 +94,17 @@ export let schema = new mongoose.Schema({
             id: mongoose.Schema.Types.ObjectId,
             nombre: String
         },
+
+        /**
+         *  DESTINO DE SOLICITUD
+         *      a.  Organización: Si no existe se completa con una copia de ejecucion.registros.createdBy.organizacion.
+         *          Si no hay registros se completa con createdBy.organizacion
+         *      
+         *      b.  Profesionales: Si no existe se completa con una copia de solicitud.registros.valor.solicituPrestacion.profesionales.
+         *          Si no hay registros se completa con solicitud.profesional
+         * 
+         */
+
         // Registros de la ejecución
         registros: [registro.schema],
     },
@@ -104,12 +131,12 @@ schema.pre('save', function (next) {
         return next(err);
     }
     if (prestacion.estados[prestacion.estados.length - 1].tipo === 'ejecucion') {
-        if (!prestacion.ejecucion.fecha) {
+        if (!prestacion.ejecucion.fecha && !prestacion.createdAt) {
             let err = new Error('Debe seleccionar la fecha en que se solicita');
             return next(err);
         }
 
-        if (!prestacion.ejecucion.organizacion.id) {
+        if (!prestacion.ejecucion.organizacion.id && !prestacion.solicitud.organizacion.id) {
             let err = new Error('Debe seleccionar la organizacion desde la cual se solicita');
             return next(err);
         }

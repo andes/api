@@ -7,7 +7,8 @@ export let schema = new mongoose.Schema({
     nombre: String,
     sinonimo: String,
     c2: Boolean,
-    reporteC2: String
+    reporteC2: String,
+    ficha: String
 });
 
 export let model = mongoose.model('cie10', schema, 'cie10');

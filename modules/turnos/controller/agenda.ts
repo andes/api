@@ -8,6 +8,8 @@ import { userScheduler } from '../../../config.private';
 import { Logger } from '../../../utils/logService';
 import { load } from 'google-maps';
 import { model as Prestacion } from '../../rup/schemas/prestacion';
+import * as http from 'http';
+import * as request from 'request';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -128,20 +130,23 @@ export function suspenderTurno(req, data, turno) {
         turnoDoble.updatedBy = req.user.usuario || req.user;
     }
 
-    // El tipo de turno del cual se resta será en el orden : delDia, programado, autocitado, gestion
-    let position = getPosition(req, data, turno._id);
-    if (!turno.tipoTurno) {
-        if (data.bloques[position.indexBloque].restantesDelDia > 0) {
-            data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia - cant;
-        } else {
-            if (data.bloques[position.indexBloque].restantesProgramados > 0) {
-                data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados - cant;
+    // Chequeamos si es sobreturno
+    if (!(data.sobreturnos && data.sobreturnos.length > 0)) {
+        // El tipo de turno del cual se resta será en el orden : delDia, programado, autocitado, gestion
+        let position = getPosition(req, data, turno._id);
+        if (!turno.tipoTurno) {
+            if (data.bloques[position.indexBloque].restantesDelDia > 0) {
+                data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia - cant;
             } else {
-                if (data.bloques[position.indexBloque].restantesProfesional > 0) {
-                    data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional - cant;
+                if (data.bloques[position.indexBloque].restantesProgramados > 0) {
+                    data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados - cant;
                 } else {
-                    if (data.bloques[position.indexBloque].restantesGestion > 0) {
-                        data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion - cant;
+                    if (data.bloques[position.indexBloque].restantesProfesional > 0) {
+                        data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional - cant;
+                    } else {
+                        if (data.bloques[position.indexBloque].restantesGestion > 0) {
+                            data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion - cant;
+                        }
                     }
                 }
             }
@@ -164,10 +169,11 @@ export function codificarTurno(req, data, tid) {
             }
             let arrPrestacion = data1 as any;
             let codificaciones = [];
-            let promises = [];
+            // let promises = [];
             if (arrPrestacion.length > 0 && arrPrestacion[0].ejecucion) {
                 let prestaciones = arrPrestacion[0].ejecucion.registros.filter(f => {
-                    return f.concepto.semanticTag === 'hallazgo' || f.concepto.semanticTag === 'trastorno' || f.concepto.semanticTag === 'situacion';
+
+                    return f.concepto.semanticTag !== 'elemento de registro';
                 });
                 prestaciones.forEach(registro => {
                     let parametros = {
@@ -177,59 +183,108 @@ export function codificarTurno(req, data, tid) {
                     };
                     let map = new SnomedCIE10Mapping(parametros.paciente, parametros.secondaryConcepts);
                     map.transform(parametros.conceptId).then(target => {
-                        // Buscar en cie10 los primeros 5 digitos
-                        cie10.model.findOne({ codigo: (target as String).substring(0, 5) }).then(cie => {
-                            if (cie != null) {
-                                if (registro.esDiagnosticoPrincipal) {
-                                    codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del array
-                                        codificacionProfesional: {
-                                            causa: (cie as any).causa,
-                                            subcausa: (cie as any).subcausa,
-                                            codigo: (cie as any).codigo,
-                                            nombre: (cie as any).nombre,
-                                            sinonimo: (cie as any).sinonimo,
-                                            c2: (cie as any).c2,
-                                        },
-                                        primeraVez: registro.esPrimeraVez,
-                                    });
 
+                        if (target) {
+                            // Buscar en cie10 los primeros 5 digitos
+                            cie10.model.findOne({ codigo: (target as String).substring(0, 5) }).then(cie => {
+                                if (cie != null) {
+                                    if (registro.esDiagnosticoPrincipal) {
+                                        codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del array
+                                            codificacionProfesional: {
+                                                snomed: {
+                                                    conceptId: registro.concepto.conceptId,
+                                                    term: registro.concepto.term,
+                                                    fsn: registro.concepto.fsn,
+                                                    semanticTag: registro.concepto.semanticTag,
+                                                    refsetIds: registro.concepto.refsetIds
+                                                },
+                                                cie10: {
+                                                    causa: (cie as any).causa,
+                                                    subcausa: (cie as any).subcausa,
+                                                    codigo: (cie as any).codigo,
+                                                    nombre: (cie as any).nombre,
+                                                    sinonimo: (cie as any).sinonimo,
+                                                    c2: (cie as any).c2,
+                                                }
+                                            },
+                                            primeraVez: registro.esPrimeraVez,
+                                        });
+
+                                    } else {
+                                        codificaciones.push({
+                                            codificacionProfesional: {
+                                                snomed: {
+                                                    conceptId: registro.concepto.conceptId,
+                                                    term: registro.concepto.term,
+                                                    fsn: registro.concepto.fsn,
+                                                    semanticTag: registro.concepto.semanticTag,
+                                                    refsetIds: registro.concepto.refsetIds
+                                                },
+                                                cie10: {
+                                                    causa: (cie as any).causa,
+                                                    subcausa: (cie as any).subcausa,
+                                                    codigo: (cie as any).codigo,
+                                                    nombre: (cie as any).nombre,
+                                                    sinonimo: (cie as any).sinonimo,
+                                                    c2: (cie as any).c2,
+                                                }
+                                            },
+                                            primeraVez: registro.esPrimeraVez
+                                        });
+                                    }
                                 } else {
                                     codificaciones.push({
                                         codificacionProfesional: {
-                                            causa: (cie as any).causa,
-                                            subcausa: (cie as any).subcausa,
-                                            codigo: (cie as any).codigo,
-                                            nombre: (cie as any).nombre,
-                                            sinonimo: (cie as any).sinonimo,
-                                            c2: (cie as any).c2,
+                                            snomed: {
+                                                conceptId: registro.concepto.conceptId,
+                                                term: registro.concepto.term,
+                                                fsn: registro.concepto.fsn,
+                                                semanticTag: registro.concepto.semanticTag,
+                                                refsetIds: registro.concepto.refsetIds
+                                            },
+                                            cie10: {
+                                                codigo: 'Mapeo no disponible'
+                                            }
                                         },
-                                        // primeraVez: registro.esPrimeraVez
+                                        primeraVez: registro.esPrimeraVez
                                     });
                                 }
-                            } else {
-                                // Todo: En el caso en q no mapea, logearlo
-                                codificaciones.push({});
-                            }
-                            if (prestaciones.length === codificaciones.length) {
-                                // console.log('codificaciones ', codificaciones);
-                                turno.diagnostico = {
-                                    ilegible: false,
-                                    codificaciones: codificaciones.filter(cod => Object.keys(cod).length > 0)
-                                };
-                                turno.asistencia = 'asistio';
-                                resolve(data);
-                            }
+                                if (prestaciones.length === codificaciones.length) {
+                                    // console.log('codificaciones ', codificaciones);
+                                    turno.diagnostico = {
+                                        ilegible: false,
+                                        codificaciones: codificaciones.filter(cod => Object.keys(cod).length > 0)
+                                    };
+                                    turno.asistencia = 'asistio';
+                                    resolve(data);
+                                }
 
-                        }).catch(err1 => {
-                            reject(err1);
-                        });
-
+                            }).catch(err1 => {
+                                reject(err1);
+                            });
+                        } else {
+                            codificaciones.push({
+                                codificacionProfesional: {
+                                    snomed: {
+                                        conceptId: registro.concepto.conceptId,
+                                        term: registro.concepto.term,
+                                        fsn: registro.concepto.fsn,
+                                        semanticTag: registro.concepto.semanticTag,
+                                        refsetIds: registro.concepto.refsetIds
+                                    },
+                                    cie10: {
+                                        codigo: 'Mapeo no disponible'
+                                    }
+                                },
+                                primeraVez: registro.esPrimeraVez
+                            });
+                        }
                     }).catch(error => {
                         reject(error);
                     });
                 });
             } else {
-                resolve(null);
+                return resolve(null);
             }
         });
     });
@@ -337,6 +392,23 @@ export function actualizarEstado(req, data) {
                 }
             });
         }
+        // Si se esta publicando una agenda de hoy o mañana se pasan los turnos igual q en job
+        let tomorrow = moment(new Date()).add(1, 'days');
+        if (moment(data.horaInicio).isSame(hoy, 'day') || moment(data.horaInicio).isSame(tomorrow, 'day')) {
+            for (let j = 0; j < data.bloques.length; j++) {
+                let cantAccesoDirecto = data.bloques[j].accesoDirectoDelDia + data.bloques[j].accesoDirectoProgramado;
+                if (cantAccesoDirecto > 0) {
+                    data.bloques[j].restantesProgramados = data.bloques[j].restantesProgramados + data.bloques[j].restantesGestion + data.bloques[j].restantesProfesional;
+                    data.bloques[j].restantesGestion = 0;
+                    data.bloques[j].restantesProfesional = 0;
+                } else {
+                    if (data.bloques[j].reservadoProfesional > 0) {
+                        data.bloques[j].restantesGestion = data.bloques[j].restantesGestion + data.bloques[j].restantesProfesional;
+                        data.bloques[j].restantesProfesional = 0;
+                    }
+                }
+            }
+        }
     }
 
     // Si se pasa a borrada
@@ -359,15 +431,16 @@ export function actualizarEstado(req, data) {
                         turno.estado = 'suspendido';
                     }
                     turno.motivoSuspension = 'agendaSuspendida';
-                    // turno.tipoTurno = undefined;
+                    turno.avisoSuspension = 'no enviado';
 
-                    // if (turno.paciente.id && turno.paciente.telefono) {
-                    //     let sms: any = {
-                    //         telefono: turno.paciente.telefono,
-                    //         mensaje: 'Le avisamos que su turno para el día ' + moment(turno.horaInicio).format('ll').toString() + ' a las ' + moment(turno.horaInicio).format('LT').toString() + 'hs fue suspendido'
-                    //     };
-                    // }
                 });
+            });
+            data.sobreturnos.forEach(sobreturno => {
+                if (sobreturno.estado !== 'turnoDoble') {
+                    sobreturno.estado = 'suspendido';
+                }
+                sobreturno.motivoSuspension = 'agendaSuspendida';
+                sobreturno.avisoSuspension = 'no enviado';
             });
         }
 
@@ -378,23 +451,28 @@ export function actualizarEstado(req, data) {
 export function getTurno(req, data, idTurno = null) {
     let turno;
     idTurno = String(idTurno) || req.body.idTurno;
-    // Loop en los bloques
-    for (let x = 0; x < data.bloques.length; x++) {
-        // Si existe este bloque...
-        if (data.bloques[x] != null) {
-            // Buscamos y asignamos el turno con id que coincida (si no coincide "asigna" null)
-            turno = (data as any).bloques[x].turnos.id(idTurno);
 
-            // Si encontró el turno dentro de alguno de los bloques, lo devuelve
-            if (turno !== null) {
-                return turno;
+    // Loop en los bloques
+    if (data && data.bloques) {
+        for (let x = 0; x < data.bloques.length; x++) {
+            // Si existe este bloque...
+            if (data.bloques[x] != null) {
+                // Buscamos y asignamos el turno con id que coincida (si no coincide "asigna" null)
+                turno = (data as any).bloques[x].turnos.id(idTurno);
+
+                // Si encontró el turno dentro de alguno de los bloques, lo devuelve
+                if (turno !== null) {
+                    return turno;
+                }
             }
         }
     }
     // sobreturnos
-    turno = data.sobreturnos.id(idTurno);
-    if (turno !== null) {
-        return turno;
+    if (data && data.sobreturnos) {
+        turno = data.sobreturnos.id(idTurno);
+        if (turno !== null) {
+            return turno;
+        }
     }
     return false;
 }
@@ -546,6 +624,31 @@ export function esPrimerPaciente(agenda: any, idPaciente: string, opciones: any[
 
 }
 
+function esFeriado(fecha) {
+    return new Promise((resolve, reject) => {
+
+        let anio = moment(fecha).year();
+        let mes = moment(fecha).month(); // de 0 a 11
+        let dia = moment(fecha).date(); // de 1 a 31
+        let url = 'http://nolaborables.com.ar/api/v2/feriados/' + anio;
+
+        request({ url: url, json: true }, (err, response, body) => {
+            if (err) {
+                reject(err);
+            }
+            if (body) {
+                let feriados = body.filter(item => {
+                    return ((item.mes).toString() === (mes + 1).toString() && (item.dia).toString() === (dia).toString());
+                });
+                if (feriados.length > 0) {
+                    resolve(true);
+                } else {
+                    resolve(false);
+                }
+            }
+        });
+    });
+}
 
 /**
  * Actualiza las cantidades de turnos restantes de la agenda antes de su fecha de inicio,
@@ -554,11 +657,22 @@ export function esPrimerPaciente(agenda: any, idPaciente: string, opciones: any[
  * @export actualizarTiposDeTurno()
  * @returns resultado
  */
-export function actualizarTiposDeTurno() {
+export async function actualizarTiposDeTurno() {
     let hsActualizar = 48;
     let cantDias = hsActualizar / 24;
     let fechaActualizar = moment(new Date()).add(cantDias, 'days');
+    let esDomingo = false;
 
+    while ((await esFeriado(fechaActualizar) && !esDomingo) || (moment(fechaActualizar).day().toString() === '6')) {
+        switch (moment(fechaActualizar).day().toString()) {
+            case '0': this.esDomingo = true;
+                break;
+            case '6': fechaActualizar = moment(fechaActualizar).add(2, 'days');
+                break;
+            default: fechaActualizar = moment(fechaActualizar).add(1, 'days');
+                break;
+        }
+    }
     // actualiza los turnos restantes de las agendas 2 dias antes de su horaInicio.
     let condicion = {
         'estado': 'publicada',
@@ -567,6 +681,7 @@ export function actualizarTiposDeTurno() {
             $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
         }
     };
+
     let cursor = agendaModel.find(condicion).cursor();
 
     cursor.eachAsync(doc => {
@@ -616,9 +731,9 @@ export function actualizarTiposDeTurno() {
 export function actualizarEstadoAgendas() {
     // let fechaActualizar = moment(new Date()).subtract(1, 'days');
     let fechaActualizar = moment(new Date());
-    // actualiza los agendas en estado disponible o publicada que se hayan ejecutado el día anterior
+    // actualiza los agendas en estado pausada, disponible o publicada que se hayan ejecutado el día anterior
     let condicion = {
-        '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
+        '$or': [{ estado: 'disponible' }, { estado: 'publicada' }, { estado: 'pausada' }],
         'horaInicio': {
             $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
         }
