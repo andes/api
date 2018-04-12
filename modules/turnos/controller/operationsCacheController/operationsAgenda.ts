@@ -168,13 +168,15 @@ async function codificaOdontologia(idConsulta: any, turno: any) {
             repetido = turno.diagnostico.codificaciones.filter(elem => elem.codificacionAuditoria && elem.codificacionAuditoria.codigo === codificacionOdonto.codigo);
             if (repetido && repetido.length <= 0) {
                 turno.diagnostico.codificaciones.push({
-                    codificacionAuditoria: {
-                        causa: '',
-                        subcausa: '',
-                        codigo: codificacionOdonto.codigo,
-                        nombre: codificacionOdonto.descripcion,
-                        sinonimo: codificacionOdonto.descripcion,
-                        c2: false
+                    codificacionProfesional: {
+                        cie10: {
+                            causa: '',
+                            subcausa: '',
+                            codigo: codificacionOdonto.codigo,
+                            nombre: codificacionOdonto.descripcion,
+                            sinonimo: codificacionOdonto.descripcion,
+                            c2: false
+                        }
                     }
                 });
             }
