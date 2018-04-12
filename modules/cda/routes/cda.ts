@@ -183,6 +183,8 @@ router.post('/', async (req: any, res, next) => {
 
                 res.json({ cda: uniqueId, paciente: paciente._id });
 
+            } else {
+                return next({error: 'cda_format_error'});
             }
 
         }).catch(next);

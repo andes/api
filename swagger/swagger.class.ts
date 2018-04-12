@@ -22,8 +22,8 @@ export class Swagger {
             swaggerDefinition: {
                 info: {
                     title: 'ANDES API',
-                    version: '2.0.0',
-                    description: 'API para el proyecto ANDES',
+                    version: '2.6.0',
+                    description: 'Documentación del proyecto ANDES',
                 },
                 host: '/',
                 basePath: '/api',

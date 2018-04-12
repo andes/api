@@ -1,5 +1,5 @@
 paths:
-  /modules/cda:
+  /modules/cda/create:
     post:
       tags:
         - "cda"
@@ -53,7 +53,36 @@ paths:
           in: body
           description: Archivo adjunto en Base64
           required: false
+          example: 'data:application/pdf;base64,AEFCSADE2D2D2..'
       responses:
         '200':
           description: Devuelve ID del CDA generado 
+  /modules/cda:
+    post:
+      tags:
+        - "cda"
+      description: Almacena un CDA de una organización externa.
+      summary: Almacena un CDA de una organización externa.
+      security:
+        - JWT: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: cda
+          in: body
+          description: Archivo XML en Base64
+          required: true
+          type: string
+          example: 'data:application/xml;base64,AEFCSADE2D2D2...'
+        - name: adjunto
+          in: body
+          description: Archivo adjunto en Base64
+          required: false
+          type: string
+          example: 'data:application/pdf;base64,AEFCSADE2D2D2...'
+      responses:
+        '200':
+          description: Devuelve ID del CDA generado
           
