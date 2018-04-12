@@ -40,7 +40,7 @@
     "is-reachable": "^2.3.2",
     "jsonwebtoken": "^7.3.0",
     "ldapjs": "^1.0.1",
-    "libxmljs": "^0.18.4",
+    "libxmljs": "^0.18.7",
     "mime-db": "^1.29.0",
     "moment": "^2.18.1",
     "mongoosastic": "^4.2.4",
