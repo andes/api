@@ -118,32 +118,33 @@ export async function checkCodificacion(agenda) {
 
         // Caso especial sobreturnos
         // TODO: refactorizar codigo repetido.
-        for (let z = 0; z < agenda.sobreturnos.length; z++) {
-            let resultado = await turnoOps.existeTurnoSips(agenda.sobreturnos[z], poolAgendas);
+        if (agenda.sobreturnos) {
+            for (let z = 0; z < agenda.sobreturnos.length; z++) {
+                let resultado = await turnoOps.existeTurnoSips(agenda.sobreturnos[z], poolAgendas);
 
-            if (resultado.recordset.length > 0) {
-                idConsulta = await existeConsultaTurno(resultado.recordset[0].idTurno);
-                // let turnoPaciente: any = await getPacienteAgenda(agenda, agenda.sobreturnos[z]._id);
-                idEspecialidad = (agenda.tipoPrestaciones[0].term.includes('odonto')) ? 34 : 14;
+                if (resultado.recordset.length > 0) {
+                    idConsulta = await existeConsultaTurno(resultado.recordset[0].idTurno);
+                    // let turnoPaciente: any = await getPacienteAgenda(agenda, agenda.sobreturnos[z]._id);
+                    idEspecialidad = (agenda.tipoPrestaciones[0].term.includes('odonto')) ? 34 : 14;
 
-                if (idConsulta) {
-                    if (idEspecialidad === constantes.Especialidades.odontologia) {
-                        agenda.sobreturnos[z] = await codificaOdontologia(idConsulta, agenda.sobreturnos[z]);
-                    } else {
-                        agenda.sobreturnos[z] = await codificacionCie10(idConsulta, agenda.sobreturnos[z]);
+                    if (idConsulta) {
+                        if (idEspecialidad === constantes.Especialidades.odontologia) {
+                            agenda.sobreturnos[z] = await codificaOdontologia(idConsulta, agenda.sobreturnos[z]);
+                        } else {
+                            agenda.sobreturnos[z] = await codificacionCie10(idConsulta, agenda.sobreturnos[z]);
+                        }
+                        datosTurno = {
+                            idAgenda: agenda.id,
+                            posTurno: z,
+                            posBloque: -1,
+                            idUsuario: constantes.idUsuarioSips,
+                            turno: agenda.sobreturnos[z]
+                        };
+                        await turnoCtrl.updateTurno(datosTurno);
                     }
-                    datosTurno = {
-                        idAgenda: agenda.id,
-                        posTurno: z,
-                        posBloque: -1,
-                        idUsuario: constantes.idUsuarioSips,
-                        turno: agenda.sobreturnos[z]
-                    };
-                    await turnoCtrl.updateTurno(datosTurno);
                 }
             }
         }
-
         if (idConsulta) {
             await markAgendaAsProcessed(agenda);
         }
@@ -165,7 +166,7 @@ async function codificaOdontologia(idConsulta: any, turno: any) {
             codificacionOdonto = await getCodificacionOdonto(idNomenclador[i].idNomenclador);
             turno.asistencia = 'asistio';
             turno.diagnostico.ilegible = false;
-            repetido = turno.diagnostico.codificaciones.filter(elem => elem.codificacionAuditoria && elem.codificacionAuditoria.codigo === codificacionOdonto.codigo);
+            // repetido = turno.diagnostico.codificaciones.filter(elem => elem.codificacionAuditoria && elem.codificacionAuditoria.codigo === codificacionOdonto.codigo);
             if (repetido && repetido.length <= 0) {
                 turno.diagnostico.codificaciones.push({
                     codificacionProfesional: {
@@ -202,24 +203,30 @@ async function codificacionCie10(idConsulta: any, turno: any) {
             if (codCie10[i].PRINCIPAL === true) {
                 turno.diagnostico.codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del arrays
                     codificacionProfesional: {
-                        causa: codificaCie10.CAUSA,
-                        subcausa: codificaCie10.SUBCAUSA,
-                        codigo: codificaCie10.CODIGO,
-                        nombre: codificaCie10.Nombre,
-                        sinonimo: codificaCie10.Sinonimo,
-                        c2: codificaCie10.C2
-                        // TODO: campo primeraVez -> verificar en SIPS
+                        cie10: {
+                            causa: codificaCie10.CAUSA,
+                            subcausa: codificaCie10.SUBCAUSA,
+                            codigo: codificaCie10.CODIGO,
+                            nombre: codificaCie10.Nombre,
+                            sinonimo: codificaCie10.Sinonimo,
+                            c2: codificaCie10.C2
+                            // TODO: campo primeraVez -> verificar en SIPS
+                        }
                     }
                 });
             } else {
                 turno.diagnostico.codificaciones.push({
-                    codificacionProfesional: {
-                        causa: codificaCie10.CAUSA,
-                        subcausa: codificaCie10.SUBCAUSA,
-                        codigo: codificaCie10.CODIGO,
-                        nombre: codificaCie10.Nombre,
-                        sinonimo: codificaCie10.Sinonimo,
-                        c2: codificaCie10.C2
+                    cie10: {
+                        codificacionProfesional: {
+                            cie10: {
+                                causa: codificaCie10.CAUSA,
+                                subcausa: codificaCie10.SUBCAUSA,
+                                codigo: codificaCie10.CODIGO,
+                                nombre: codificaCie10.Nombre,
+                                sinonimo: codificaCie10.Sinonimo,
+                                c2: codificaCie10.C2
+                            }
+                        }
                     }
                 });
             }
