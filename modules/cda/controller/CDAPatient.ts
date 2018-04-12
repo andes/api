@@ -600,7 +600,9 @@ export function checkAndExtract (xmlDom) {
         { key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:administrativeGenderCode/@code`, as: 'paciente.sexo', require: true},
         { key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:birthTime/@value`, as: 'paciente.fechaNacimiento', require: true},
 
-
+        { key: `//x:ClinicalDocument/x:custodian/x:assignedCustodian/x:representedCustodianOrganization/x:id/@root`, match: CDAConfig.rootOID },
+        { key: `//x:ClinicalDocument/x:custodian/x:assignedCustodian/x:representedCustodianOrganization/x:id/@extension`, as: 'organizacion.id', require: true },
+        { key: `//x:ClinicalDocument/x:custodian/x:assignedCustodian/x:representedCustodianOrganization/x:name`, as: 'organizacion.name', require: true },
 
         { key: `//x:ClinicalDocument/x:author/x:assignedAuthor/x:id[@root='${CDAConfig.dniOID}']/@extension`, as: 'profesional.documento', require: true},
         { key: `//x:ClinicalDocument/x:author/x:assignedAuthor/x:assignedPerson/x:name/x:given`,  many: true, as: 'profesional.nombre', require: true},

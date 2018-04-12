@@ -138,6 +138,10 @@ router.post('/', async (req: any, res, next) => {
             if (cdaData) {
                 let uniqueId = new mongoose.Types.ObjectId();
 
+                if (cdaData.organizacion.id !== orgId) {
+                    return next({error: 'wrong_organization'});
+                }
+
                 cdaData.fecha = moment(cdaData.fecha, 'YYYYMMDDhhmmss').toDate();
                 cdaData.paciente.fechaNacimiento = moment(cdaData.paciente.fechaNacimiento, 'YYYYMMDDhhmmss');
                 cdaData.paciente.sexo = cdaData.paciente.sexo === 'M' ? 'masculino' : 'femenino';
