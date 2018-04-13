@@ -38,7 +38,7 @@
     "http-status-codes": "^1.1.6",
     "ipaddr.js": "^1.4.0",
     "is-reachable": "^2.3.2",
-    "jsonwebtoken": "^7.3.0",
+    "jsonwebtoken": "^8.2.1",
     "ldapjs": "^1.0.1",
     "libxmljs": "^0.18.4",
     "mime-db": "^1.29.0",
