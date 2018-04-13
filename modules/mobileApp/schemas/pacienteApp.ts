@@ -4,6 +4,11 @@ import * as bcrypt from 'bcrypt-nodejs';
 import { pacienteSchema } from '../../../core/mpi/schemas/paciente';
 import { deviceSchema } from './device';
 
+interface IPacienteAppModel extends mongoose.Document {
+    updatedAt: Date;
+    password: string;
+}
+
 export let pacienteAppSchema = new mongoose.Schema({
 
     nombre: {
@@ -72,7 +77,7 @@ export let pacienteAppSchema = new mongoose.Schema({
         timestamps: true
     });
 
-pacienteAppSchema.pre('save', function (next) {
+pacienteAppSchema.pre<IPacienteAppModel>('save', function (next) {
 
     let user = this;
     let SALT_FACTOR = 5;

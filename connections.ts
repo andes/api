@@ -28,14 +28,15 @@ export class Connections {
 
         // Conecta y configura conexiones
         // 1. PRINCIPAL
-        mongoose.connect(`${configPrivate.hosts.mongoDB_main.host}`, { auth: configPrivate.hosts.mongoDB_main.auth, server: configPrivate.hosts.mongoDB_main.server });
+        mongoose.connect(configPrivate.hosts.mongoDB_main.host, configPrivate.hosts.mongoDB_main.options );
         this.main = mongoose.connection;
         // 2. MPI
-        this.mpi = mongoose.createConnection(`${configPrivate.hosts.mongoDB_mpi.host}`, { auth: configPrivate.hosts.mongoDB_mpi.auth, server: configPrivate.hosts.mongoDB_mpi.server });
+        this.mpi = mongoose.createConnection(configPrivate.hosts.mongoDB_mpi.host, configPrivate.hosts.mongoDB_mpi.options);
 
         // 3. SNOMED
-        this.snomed = mongoose.createConnection(`${configPrivate.hosts.mongoDB_snomed.host}`, { auth: configPrivate.hosts.mongoDB_snomed.auth, server: configPrivate.hosts.mongoDB_snomed.server });
-        // Configura eventos
+        this.snomed = mongoose.createConnection(configPrivate.hosts.mongoDB_snomed.host, configPrivate.hosts.mongoDB_snomed.options);
+ 
+            // Configura eventos
         this.configEvents('main', this.main);
         this.configEvents('mpi', this.mpi);
         this.configEvents('snomed', this.snomed);

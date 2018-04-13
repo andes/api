@@ -6,6 +6,10 @@ import * as turnoSchema from '../../../modules/turnos/schemas/turno';
 import * as nombreApellidoSchema from '../../../core/tm/schemas/nombreApellido';
 import * as mongoose from 'mongoose';
 
+interface IAgenda extends mongoose.Document {
+    intercalar: string;
+}
+
 let schema = new mongoose.Schema({
     organizacion: {
         type: nombreSchema,
@@ -123,7 +127,7 @@ schema.virtual('estadosAgendas').get(function () {
 
 
 // Validaciones
-schema.pre('save', function (next) {
+schema.pre<IAgenda>('save', function (next) {
     // Intercalar
     if (!/true|false/i.test(this.intercalar)) {
         return next(new Error('invalido'));

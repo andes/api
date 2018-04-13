@@ -6,6 +6,13 @@ import * as estado from './prestacion.estado';
 import { auditoriaPrestacionPacienteSchema } from '../../auditorias/schemas/auditoriaPrestacionPaciente';
 import { iterate, convertToObjectId } from '../controllers/rup';
 
+interface IPrestacion extends mongoose.Document {
+    paciente: any;
+    solicitud: any;
+    ejecucion: any;
+    estados: any[];
+}
+
 // tslint:disable
 export let schema = new mongoose.Schema({
     // Datos principales del paciente
@@ -92,7 +99,7 @@ export let schema = new mongoose.Schema({
 }, { usePushEach: true } as any);
 
 // Valida el esquema
-schema.pre('save', function (next) {
+schema.pre<IPrestacion>('save', function (next) {
     let prestacion = this;
 
     if (!prestacion.paciente.id) {

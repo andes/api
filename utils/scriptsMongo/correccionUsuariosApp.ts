@@ -6,7 +6,7 @@ import * as authController from './../../modules/mobileApp/controller/AuthContro
 import * as mongoose from 'mongoose';
 import * as configuraciones from './../../config.private';
 
-mongoose.connect(configuraciones.hosts.mongoDB_main.host, { auth: configuraciones.hosts.mongoDB_main.auth, server: configuraciones.hosts.mongoDB_main.server });
+mongoose.connect(configuraciones.hosts.mongoDB_main.host,  configuraciones.hosts.mongoDB_main.options);
 var conn = mongoose.connection;
 
 // conn.once('open', function () {

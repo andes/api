@@ -23,18 +23,24 @@ export const hosts = {
     elastic_main: getEnv('ELASTIC_HOST', 'localhost:9200'),
     mongoDB_main: {
         host: getEnv('MONGO_MAIN', 'localhost:27017/andes'),
-        auth: { authdb: 'admin' },
-        server: { reconnectTries: Number.MAX_VALUE }
+        options: {
+            reconnectTries: Number.MAX_VALUE, // Never stop trying to reconnect
+            reconnectInterval: 500,
+        }
     },
     mongoDB_mpi: {
         host: getEnv('MONGO_MPI', 'localhost:27017/mpi'),
-        auth: { authdb: 'admin' },
-        server: { reconnectTries: Number.MAX_VALUE }
+        options: {
+            reconnectTries: Number.MAX_VALUE, // Never stop trying to reconnect
+            reconnectInterval: 500,
+        }
     },
     mongoDB_snomed: {
         host: getEnv('MONGO_SNOMED', 'mongodb://localhost:27017/es-edition'),
-        auth: { authdb: 'admin' },
-        server: { reconnectTries: Number.MAX_VALUE }
+        options: {
+            reconnectTries: Number.MAX_VALUE, // Never stop trying to reconnect
+            reconnectInterval: 500,
+        }
     }
 };
 // Mongoose config

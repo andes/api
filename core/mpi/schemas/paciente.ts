@@ -9,7 +9,14 @@ import * as moment from 'moment';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import { Matching } from '@andes/match';
 
-export let pacienteSchema = new mongoose.Schema({
+interface IUserModel extends mongoose.Document {
+    nombre: String;
+    apellido: String;
+    claveBlocking: string[];
+}
+
+
+export let pacienteSchema: mongoose.Schema = new mongoose.Schema({
     identificadores: [{
         _id: false,
         entidad: String,
@@ -77,7 +84,7 @@ export let pacienteSchema = new mongoose.Schema({
     }]
 }, { versionKey: false });
 
-pacienteSchema.pre('save', function (next) {
+pacienteSchema.pre<IUserModel>('save', function (next) {
 
     if (this.isModified('nombre')) {
         this.nombre = this.nombre.toUpperCase();
@@ -156,12 +163,12 @@ pacienteSchema.virtual('edadReal').get(function () {
 });
 
 /* Creo un indice para fulltext Search */
-pacienteSchema.index({
-    '$**': 'text'
-});
+// pacienteSchema.index({
+//     '$**': 'text'
+// });
 
 // Habilitar plugin de auditoría
 pacienteSchema.plugin(require('../../../mongoose/audit'));
 
-export let paciente = mongoose.model('paciente', pacienteSchema, 'paciente');
-export let pacienteMpi = Connections.mpi.model('paciente', pacienteSchema, 'paciente');
+export let paciente: mongoose.Model<IUserModel> = mongoose.model<IUserModel>('paciente', pacienteSchema, 'paciente');
+export let pacienteMpi: mongoose.Model<IUserModel> = Connections.mpi.model<IUserModel>('paciente', pacienteSchema, 'paciente');
