@@ -28,6 +28,8 @@ export function censoDiario(unidad, fechaConsulta) {
                                 // con la informacion que necesitamos para el censo. (ingreso, pase de, pase a, etc)
                                 let result = completarUnCenso(censo, indice, fecha, unidad, pasesCamaCenso[indice]);
 
+
+
                                 let index = -2;
                                 if (result['esIngreso'] && result['esPaseDe']) {
                                     index = censo.pases.findIndex(p => p.estados._id === result['esPaseDe']._id);
@@ -38,21 +40,48 @@ export function censoDiario(unidad, fechaConsulta) {
                                         index = censo.pases.findIndex(p => p.estados._id === result['esPaseA']._id);
                                     }
                                 }
-                                if (index >= 0) {
-                                    let pases1 = censo.pases.slice(0, (index + 1));
-                                    let pases2 = censo.pases.slice(index, censo.pases.length);
+                                let registros = censo.internacion.ejecucion.registros;
+                                let egresoExiste = registros.find(registro => registro.concepto.conceptId === '58000006');
+                                let fechaActual = new Date(fechaConsulta);
+                                if (egresoExiste) {
+                                    if (moment(fechaActual).endOf('day') <= moment(new Date(egresoExiste.valor.InformeEgreso.fechaEgreso)).endOf('day')) {
+                                        if (index >= 0) {
+                                            let pases1 = censo.pases.slice(0, (index + 1));
+                                            let pases2 = censo.pases.slice(index, censo.pases.length);
 
-                                    censo.pases = pases1;
-                                    let nuevoCenso = Object.assign({}, censo);
-                                    nuevoCenso.pases = pases2;
-                                    let censo1 = completarUnCenso(censo, indice, fecha, unidad, pasesCamaCenso[indice]);
-                                    listadoCensos.push({ censo: censo1, fecha: fecha });
-                                    let censo2 = completarUnCenso(nuevoCenso, indice, fecha, unidad, pasesCamaCenso[indice]);
-                                    listadoCensos.push({ censo: censo2, fecha: fecha });
+                                            censo.pases = pases1;
+                                            let nuevoCenso = Object.assign({}, censo);
+                                            nuevoCenso.pases = pases2;
+                                            let censo1 = completarUnCenso(censo, indice, fecha, unidad, pasesCamaCenso[indice]);
+                                            listadoCensos.push({ censo: censo1, fecha: fecha });
+                                            let censo2 = completarUnCenso(nuevoCenso, indice, fecha, unidad, pasesCamaCenso[indice]);
+                                            listadoCensos.push({ censo: censo2, fecha: fecha });
+
+                                        } else {
+
+                                            listadoCensos.push({ censo: result, fecha: fecha });
+                                        }
+                                    }
+
+
 
                                 } else {
+                                    if (index >= 0) {
+                                        let pases1 = censo.pases.slice(0, (index + 1));
+                                        let pases2 = censo.pases.slice(index, censo.pases.length);
 
-                                    listadoCensos.push({ censo: result, fecha: fecha });
+                                        censo.pases = pases1;
+                                        let nuevoCenso = Object.assign({}, censo);
+                                        nuevoCenso.pases = pases2;
+                                        let censo1 = completarUnCenso(censo, indice, fecha, unidad, pasesCamaCenso[indice]);
+                                        listadoCensos.push({ censo: censo1, fecha: fecha });
+                                        let censo2 = completarUnCenso(nuevoCenso, indice, fecha, unidad, pasesCamaCenso[indice]);
+                                        listadoCensos.push({ censo: censo2, fecha: fecha });
+
+                                    } else {
+
+                                        listadoCensos.push({ censo: result, fecha: fecha });
+                                    }
                                 }
 
                             });
@@ -120,9 +149,9 @@ export function completarResumenDiario(listadoCenso, unidad, fecha) {
         resumenCenso.pacientesDia = resumenCenso.existencia0 +
             resumenCenso.ingresos + resumenCenso.pasesDe -
             resumenCenso.egresosDefuncion - resumenCenso.egresosAlta;
-            if (resumenCenso.pacientesDia < 0) {
-                resumenCenso.pacientesDia = 0;
-            }
+        if (resumenCenso.pacientesDia < 0) {
+            resumenCenso.pacientesDia = 0;
+        }
 
         resumenCenso.existencia24 = resumenCenso.existencia24 -
             resumenCenso.egresosDefuncion - resumenCenso.egresosAlta - resumenCenso.pasesA;
