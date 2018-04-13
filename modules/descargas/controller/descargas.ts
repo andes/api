@@ -28,7 +28,7 @@ export class Documento {
         let html = Buffer.from(req.body.html, 'base64').toString();
 
         // Se agregan los estilos CSS
-        html += this.generarCSS();
+        html += this.generarCSS('./templates/rup/' + req.body.scssFile + '.scss');
 
         // Se cargan logos
         let logoAndes = fs.readFileSync('./templates/andes/logo-andes.png');
@@ -54,14 +54,14 @@ export class Documento {
      * Genera CSS de RUP
      * TODO: Extender
      */
-    private static generarCSS() {
+    private static generarCSS(scssFile = './templates/rup/prestacionValidacion-print.scss') {
 
         // Se agregan los estilos
         let css = '<style>\n\n';
 
         // SCSS => CSS
         css += scss.renderSync({
-            file: './templates/rup/prestacionValidacion-print.scss',
+            file: scssFile,
             includePaths: [
                 './templates/rup/'
             ]
