@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as scss from 'node-sass';
 import * as pdf from 'html-pdf';
 import { Auth } from '../../../auth/auth.class';
+import * as path from 'path';
 
 export class Documento {
 
@@ -31,9 +32,9 @@ export class Documento {
         html += this.generarCSS('./templates/rup/' + req.body.scssFile + '.scss');
 
         // Se cargan logos
-        let logoAndes = fs.readFileSync('./templates/andes/logo-andes.png');
-        let logotipoAndes = fs.readFileSync('./templates/andes/logotipo-andes-blue.png');
-        let logoPDP = fs.readFileSync('./templates/andes/logo-pdp.png');
+        let logoAndes = fs.readFileSync(path.join(__dirname, './templates/andes/logo-andes.png'));
+        let logotipoAndes = fs.readFileSync(path.join(__dirname, './templates/andes/logotipo-andes-blue.png'));
+        let logoPDP = fs.readFileSync(path.join(__dirname, './templates/andes/logo-pdp.png'));
 
         html += this.headerHTML.toString();
         html += this.footerHTML.toString();
@@ -52,9 +53,8 @@ export class Documento {
 
     /**
      * Genera CSS de RUP
-     * TODO: Extender
      */
-    private static generarCSS(scssFile = './templates/rup/prestacionValidacion-print.scss') {
+    private static generarCSS(scssFile = './templates/rup/prestacion-print.scss') {
 
         // Se agregan los estilos
         let css = '<style>\n\n';
@@ -135,8 +135,8 @@ export class Documento {
             case 'html':
                 html = this.generarHTML(req);
 
-                let htmlfile = fs.writeFileSync(__dirname + '/rup.html', html);
-                res.download(__dirname + '/rup.html', (err) => {
+                let htmlfile = fs.writeFileSync(path.join(__dirname, '/rup.html'), html);
+                res.download(path.join(__dirname, '/rup.html'), (err) => {
                     if (err) {
                         next(err);
                     } else {
