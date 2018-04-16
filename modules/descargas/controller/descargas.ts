@@ -29,12 +29,12 @@ export class Documento {
         let html = Buffer.from(req.body.html, 'base64').toString();
 
         // Se agregan los estilos CSS
-        html += this.generarCSS('./templates/rup/' + req.body.scssFile + '.scss');
+        html += this.generarCSS(path.join(__dirname, '../../../templates/rup/' + req.body.scssFile + '.scss'));
 
         // Se cargan logos
-        let logoAndes = fs.readFileSync(path.join(__dirname, './templates/andes/logo-andes.png'));
-        let logotipoAndes = fs.readFileSync(path.join(__dirname, './templates/andes/logotipo-andes-blue.png'));
-        let logoPDP = fs.readFileSync(path.join(__dirname, './templates/andes/logo-pdp.png'));
+        let logoAndes = fs.readFileSync(path.join(__dirname, '../../../templates/andes/logo-andes.png'));
+        let logotipoAndes = fs.readFileSync(path.join(__dirname, '../../../templates/andes/logotipo-andes-blue.png'));
+        let logoPDP = fs.readFileSync(path.join(__dirname, '../../../templates/andes/logo-pdp.png'));
 
         html += this.headerHTML.toString();
         html += this.footerHTML.toString();
@@ -54,7 +54,7 @@ export class Documento {
     /**
      * Genera CSS de RUP
      */
-    private static generarCSS(scssFile = './templates/rup/prestacion-print.scss') {
+    private static generarCSS(scssFile = path.join(__dirname, '../../../templates/rup/prestacion-print.scss')) {
 
         // Se agregan los estilos
         let css = '<style>\n\n';
@@ -63,7 +63,7 @@ export class Documento {
         css += scss.renderSync({
             file: scssFile,
             includePaths: [
-                './templates/rup/'
+                path.join(__dirname, '../../../templates/rup/')
             ]
         }).css;
 
@@ -135,14 +135,15 @@ export class Documento {
             case 'html':
                 html = this.generarHTML(req);
 
-                let htmlfile = fs.writeFileSync(path.join(__dirname, '/rup.html'), html);
-                res.download(path.join(__dirname, '/rup.html'), (err) => {
+                let htmlfile = fs.writeFileSync('/tmp/rup.html', html);
+                res.download('/tmp/rup.html', (err) => {
                     if (err) {
                         next(err);
                     } else {
                         next();
                     }
                 });
+
                 break;
             case 'txt':
                 // TODO
