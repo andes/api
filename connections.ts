@@ -35,7 +35,7 @@ export class Connections {
 
         // 3. SNOMED
         this.snomed = mongoose.createConnection(configPrivate.hosts.mongoDB_snomed.host, configPrivate.hosts.mongoDB_snomed.options);
- 
+
             // Configura eventos
         this.configEvents('main', this.main);
         this.configEvents('mpi', this.mpi);
