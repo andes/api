@@ -14,6 +14,6 @@ let turnoSchena = new mongoose.Schema({
 // Virtuals
 
 
-let turno = mongoose.model('turno', turnoSchena, 'turno');
+let turno = mongoose.model('turnoMatriculacion', turnoSchena, 'turno');
 
 export = turno;
