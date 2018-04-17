@@ -21,5 +21,24 @@ export function buscarUltimaInternacion(idPaciente, estado) {
     }
 
     query.where('solicitud.ambitoOrigen').equals('internacion');
-    return query.sort({ 'solicitud.fecha': -1 }).limit(1).exec();
+    return query.sort({ "solicitud.fecha": -1 }).limit(1).exec();
+}
+
+export function PasesParaCenso(dtoCama) {
+    return new Promise((resolve, reject) => {
+        camasController.buscarPasesCamaXInternacion(dtoCama.ultimoEstado.idInternacion).then(pases => {
+            Prestacion.findById(dtoCama.ultimoEstado.idInternacion).then(internacion => {
+                let salida = {
+                    cama: dtoCama._id,
+                    ultimoEstado: dtoCama.ultimoEstado,
+                    pases: pases,
+                    internacion: internacion
+                };
+                resolve(salida);
+            });
+        }).catch(error => {
+            reject(error)
+        });
+
+    });
 }
