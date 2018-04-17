@@ -1,6 +1,6 @@
 import * as express from 'express';
 import * as turno from '../schemas/turno';
-// import{ profesional } from '../../../core/tm/schemas/profesional';
+ import{ profesional } from '../../../core/tm/schemas/profesional';
 import { turnoSolicitado } from '../schemas/turnoSolicitado';
 import { Auth } from '../../../auth/auth.class';
 let router = express.Router();
@@ -23,12 +23,16 @@ router.post('/turnos/save/:turnoId', function(request, response, errorHandler) {
 router.post('/turnos/:tipo/:profesionalId/', function(request, response, errorHandler) {
 
     // Convert date to user datetime.
-    let  fechaTurno = new Date(request.body.fecha);
-
-    turnoSolicitado.findById(request.params.profesionalId, function(error, datos) {
+    let  fechaTurno = new Date(request.body.turno.fecha);
+    console.log(request.body.sobreTurno);
+    if(request.body.sobreTurno){
+        console.log("sobreturno renovacion")
+        console.log(request.params.profesionalId)
+            profesional.findById(request.params.profesionalId, function(error, datos) {
+                console.log(datos)
         let nTurno = new turno({
             fecha: fechaTurno,
-            tipo: request.body.tipo,
+            tipo: request.body.turno.tipo,
             profesional: datos
         });
 
@@ -40,6 +44,25 @@ router.post('/turnos/:tipo/:profesionalId/', function(request, response, errorHa
             response.json(nTurno);
         });
     });
+    }else{
+        console.log("no sobreturno")
+   
+    turnoSolicitado.findById(request.params.profesionalId, function(error, datos) {
+        let nTurno = new turno({
+            fecha: fechaTurno,
+            tipo: request.body.turno.tipo,
+            profesional: datos
+        });
+
+        nTurno.save((err) => {
+            if (err) {
+                errorHandler(err);
+            }
+
+            response.json(nTurno);
+        });
+    });
+}
 });
 
 
