@@ -37,17 +37,25 @@ router.post('/login', function (req, res, next) {
             return res.status(422).send({ error: 'Cuenta inexistente' });
         }
 
-        if (!user.activacionApp) {
-            res.status(422).send({ message: 'cuenta no verificada' });
-            return;
-        }
-
         return user.comparePassword(password, (errPassword, isMatch) => {
             if (errPassword) {
                 return next(errPassword);
             }
             if (isMatch) {
                 // var userInfo = authController.setUserInfo(existingUser);
+
+                if (!user.activacionApp) {
+                    if (!req.body.new_password) {
+                        res.status(422).send({ message: 'new_password_needed' });
+                        return;
+                    } else {
+                        user.password = req.body.new_password;
+                        user.activacionApp = true;
+                        user.save();
+                    }
+
+                }
+
                 let token = Auth.generatePacienteToken(String(user.id), user.nombre + ' ' + user.apellido, user.email, user.pacientes, user.permisos);
                 res.status(200).json({
                     token: token,

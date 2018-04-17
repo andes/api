@@ -14,9 +14,19 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
         if (req.query.term) {
             query = tipoPrestacion.find({ term: { '$regex': utils.makePattern(req.query.term) } });
         } else {
-            // Si no, devuelve todos
-            query = tipoPrestacion.find({});
+            //temporal, ya que con utils.makePattern no funciona bien en el turnero
+            if (req.query.termTurnero) {
+                query = tipoPrestacion.find({ term: RegExp('^.*' + req.query.termTurnero + '.*$', 'i') });
+            } else {
+                // Si no, devuelve todos
+                query = tipoPrestacion.find({});
+            }
         }
+        if (req.query.limit) {
+            let limit: number = Number(req.query.limit);
+            query = query.limit(limit);
+        }
+
 
         // Búsqueda por múltiples IDs
         if (req.query.id) {

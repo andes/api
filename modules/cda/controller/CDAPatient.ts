@@ -55,22 +55,17 @@ export async function findOrCreate(req, dataPaciente, organizacion) {
             entidad: String(organizacion),
             valor: dataPaciente.id
         };
-
         try {
-
             let query = await pacienteCtr.buscarPacienteWithcondition({
                 identificadores: identificador
             });
-
             if (query) {
                 return query.paciente;
             }
-
         } catch (e) {
             // nothing to do here
         }
     }
-
     let pacientes = await pacienteCtr.matchPaciente(dataPaciente);
     if (pacientes.length > 0 && pacientes[0].value >= 0.95) {
         let realPac = await pacienteCtr.buscarPaciente(pacientes[0].paciente.id);

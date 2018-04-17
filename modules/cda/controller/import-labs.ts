@@ -23,7 +23,11 @@ let connection = {
     server: configPrivate.conSql.serverSql.server,
     database: configPrivate.conSql.serverSql.database
 };
-pool = sql.connect(connection);
+
+pool = sql.connect(connection, (err) => {
+    logger('MSSSQL connection error');
+});
+
 
 function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
@@ -139,7 +143,7 @@ export async function importarDatos(paciente) {
                     mimeType: 'application/pdf',
                     extension: 'pdf',
                     metadata: {
-                        cdaId: uniqueId,
+                        cdaId: mongoose.Types.ObjectId(uniqueId),
                         paciente: mongoose.Types.ObjectId(paciente.id)
                     }
                 });

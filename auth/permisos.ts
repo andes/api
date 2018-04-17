@@ -67,7 +67,16 @@ export default [
                     { key: 'prestacion', title: 'Tipo de prestacion', type: 'prestacion' },
                     { key: 'delDia', title: 'Turnos del día', type: 'boolean' },
                     { key: 'paraProfesional', title: 'Para profesional', type: 'boolean' },
-                    { key: 'programados', title: 'Turnos programados', type: 'boolean' },
+                    { key: 'programados', title: 'Turnos programados', type: 'boolean' }
+                ]
+            },
+            {
+                key: 'puntoInicio',
+                title: 'puntoInicio',
+                child: [
+                    { key: 'solicitud', title: 'Registrar solicitud', type: 'boolean' },
+                    { key: 'autocitado', title: 'Registrar Autocitación', type: 'boolean' },
+                    { key: 'darTurnos', title: 'Dar turnos desde punto inicio', type: 'boolean' },
                 ]
             }
         ]
@@ -162,7 +171,69 @@ export default [
             { key: 'get', title: 'Ver usuario', type: 'boolean' },
             { key: 'ldap', title: 'Consutar usuario en LDAP', type: 'boolean' },
             { key: 'post', title: 'Crear usuario', type: 'boolean' },
-            { key: 'put', title: 'Modificar usuario', type: 'boolean' }
+            { key: 'put', title: 'Modificar usuario', type: 'boolean' },
+            { key: 'agregarEfector', title: 'Agregar efector', type: 'boolean' }
+        ]
+    },
+    {
+        key: 'matriculaciones',
+        title: 'matriculaciones',
+        comment: '',
+        child: [
+            {
+                key: 'profesionales',
+                title: 'Gestor de profesionales',
+                child: [
+                    { key: 'getProfesional', title: 'Ver profesional', type: 'boolean' },
+                    { key: 'getProfesionalFoto', title: 'Ver foto profesional', type: 'boolean' },
+                    { key: 'postProfesional', title: 'crea profesional', type: 'boolean' },
+                    { key: 'putProfesional', title: 'actualiza profesional', type: 'boolean' },
+                    { key: 'deleteProfesional', title: 'borrar profesional', type: 'boolean' }
+                ]
+            },
+            {
+                key: 'turnos',
+                title: 'Gestor de turnos',
+                child: [
+                    { key: 'postTurno', title: 'insert turno', type: 'boolean' },
+                    { key: 'postTurnoTipo', title: '', type: 'boolean' },
+                    { key: 'getTurnosProximos', title: 'trae proximos turnos', type: 'boolean' },
+                    { key: 'getTurnoTipo', title: '', type: 'boolean' },
+                    { key: 'getTurno', title: 'traeTurno', type: 'boolean' }
+                ]
+            },
+            {
+                key: 'agenda',
+                title: 'Agenda',
+                child: [
+                    { key: 'postAgenda', title: 'insert agenda', type: 'boolean' },
+                    { key: 'putAgenda', title: 'actualizar agenda', type: 'boolean' }
+                ]
+            }
+        ]
+    },
+    {
+        key: 'tm',
+        title: 'tablas maestras',
+        child: [
+            {
+                key: 'especialidad',
+                title: 'especialidad',
+                child: [
+                    { key: 'postEspecialidad', title: 'insertar especialidad', type: 'boolean' },
+                    { key: 'putEspecialidad', title: 'actualizar especialidad', type: 'boolean' },
+                    { key: 'deleteEspecialidad', title: 'borrar especialidad', type: 'boolean' }
+                ]
+            },
+            {
+                key: 'organizacion',
+                title: 'organizacion',
+                child: [
+                    { key: 'postOrganizacion', title: 'insertar organizacion', type: 'boolean' },
+                    { key: 'putOrganizacion', title: 'actualizar organizacion', type: 'boolean' },
+                    { key: 'deleteOrganizacion', title: 'borrar organizacion', type: 'boolean' }
+                ]
+            },
         ]
     },
     {
@@ -186,4 +257,5 @@ export default [
         child: [
         ]
     }
+
 ];

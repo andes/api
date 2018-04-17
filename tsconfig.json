@@ -9,7 +9,7 @@
         "removeComments": false,
         "noImplicitAny": false,
         "noImplicitReturns": true,
-        "allowUnusedLabels": false,
+        "allowUnusedLabels": false,  
         "typeRoots": [
             "node_modules/@types"
         ]

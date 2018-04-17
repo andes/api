@@ -104,14 +104,18 @@ router.get('/style/cda.xsl', (req, res, next) => {
  */
 
 router.get('/files/:name', async (req: any, res, next) => {
-    // if (!Auth.check(req, 'cda:get')) {
-    //     return next(403);
-    // }
+    if (req.user.type === 'user-token' &&  !Auth.check(req, 'cda:get')) {
+        return next(403);
+    }
 
     let name = req.params.name;
     let CDAFiles = makeFs();
 
     CDAFiles.findOne({filename: name}).then(async file => {
+        if (req.user.type === 'paciente-token' &&  String(file.metadata.paciente) !== String(req.user.pacientes[0].id) ) {
+            return next(403);
+        }
+
         let stream1  = await CDAFiles.readById(file._id);
         res.contentType(file.contentType);
         stream1.pipe(res);

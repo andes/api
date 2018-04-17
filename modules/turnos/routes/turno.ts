@@ -230,14 +230,21 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', function (req, res, next) {
         if (err) {
             return next(err);
         }
-        let indexBloque = (data as any).bloques.findIndex(bloq => {
-            return (bloq.id === req.params.idBloque);
-        });
-        let indexTurno = (data as any).bloques[indexBloque].turnos.findIndex(t => {
-            return (t.id === req.params.idTurno);
-        });
+        let etiquetaAvisoSuspension: string;
+        if (req.params.idBloque !== '-1') {
+            let indexBloque = (data as any).bloques.findIndex(bloq => {
+                return (bloq.id === req.params.idBloque);
+            });
+            let indexTurno = (data as any).bloques[indexBloque].turnos.findIndex(t => {
+                return (t.id === req.params.idTurno);
+            });
+            etiquetaAvisoSuspension = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.avisoSuspension';
+        } else {
+            let indexTurno = (data as any).sobreturnos.findIndex(sobreturno => Object.is(req.params.idTurno, String(sobreturno._id)));
+            etiquetaAvisoSuspension = 'sobreturnos.' + indexTurno + '.avisoSuspension';
+        }
+
         let update = {};
-        let etiquetaAvisoSuspension: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.avisoSuspension';
         update[etiquetaAvisoSuspension] = req.body.avisoSuspension;
         let query = {
             _id: req.params.idAgenda,
