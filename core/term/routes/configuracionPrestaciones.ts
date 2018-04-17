@@ -9,23 +9,20 @@ router.get('/:id*', function (req, res, next) {
     //     return next(403);
     // }
 
-    if (req.params.id) {
-        let identificador = req.params.id;
-        configuracionPrestacion.configuracionPrestacionModel.findById({id: identificador}, function (err, result) {
-            if (err) {
-                return next(err);
-            }
-            res.json(result);
-        });
-    } else {
-        configuracionPrestacion.configuracionPrestacionModel.find({}, function(err, result) {
-            if (err) {
-                return next(err);
-            }
-            res.json(result);
-        });
+    let query;
+    query = configuracionPrestacion.configuracionPrestacionModel.find({});
+    if (req.query.tipoPrestacion) {
+        query.where('tipoPrestacion.conceptId').equals(req.query.tipoPrestacion);
     }
+    if (req.query.organizacion) {
+        query.where('organizacionesSips._id').equals(req.query.organizaciones);
+    }
+    query.exec(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        res.json(data);
+    });
 });
-
 
 export = router;
