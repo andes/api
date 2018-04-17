@@ -151,6 +151,12 @@ export const modules = {
         route: '/modules/prestamosCarpetas',
         middleware: appMiddleware
     },
+    facturacionAutomatica: {
+        active: true,
+        path: './modules/facturacionAutomatica/routes',
+        route: '/modules/facturacionAutomatica',
+        // middleware: appMiddleware
+    },
 };
 
 // Cotas de consumo de APIs
