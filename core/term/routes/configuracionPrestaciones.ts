@@ -3,23 +3,21 @@ import * as configuracionPrestacion from '../schemas/configuracionPrestaciones';
 
 let router = express.Router();
 
-router.get('/:id*', function (req, res, next) {
+router.get('/:id*?', function (req, res, next) {
     // Agregar seguridad!!
     // if (!Auth.check(req, 'string')) {
     //     return next(403);
     // }
 
     if (req.params.id) {
-        configuracionPrestacion.configuracionPrestacionModel.findById({
-            _id: req.params.id
-        }, function (err, data) {
+        configuracionPrestacion.configuracionPrestacionModel.findById(req.params.id
+        , function (err, data) {
             if (err) {
                 return next(err);
             }
             res.json(data);
         });
     } else {
-
         let query;
         query = configuracionPrestacion.configuracionPrestacionModel.find({});
         if (req.query.tipoPrestacion) {
