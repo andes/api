@@ -37,7 +37,8 @@ router.get('/turno/:id*?', async function (req, res, next) {
         idTurno: String,
         paciente: paciente,
         tipoPrestacion: conceptoTurneable,
-        tipoTurno: enum: delDia | programado | gestion | profesional
+        tipoTurno: enum: delDia | programado | gestion | profesional,
+        motivoConsulta: String
     };
  */
 router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, res, next) {
