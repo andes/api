@@ -232,6 +232,7 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', function (req, res, next) {
             return next(err);
         }
         let etiquetaAvisoSuspension: string;
+        let etiquetaMotivoConsulta: string;
         if (req.params.idBloque !== '-1') {
             let indexBloque = (data as any).bloques.findIndex(bloq => {
                 return (bloq.id === req.params.idBloque);
@@ -240,13 +241,19 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', function (req, res, next) {
                 return (t.id === req.params.idTurno);
             });
             etiquetaAvisoSuspension = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.avisoSuspension';
+            etiquetaMotivoConsulta = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.motivoConsulta';
         } else {
             let indexTurno = (data as any).sobreturnos.findIndex(sobreturno => Object.is(req.params.idTurno, String(sobreturno._id)));
             etiquetaAvisoSuspension = 'sobreturnos.' + indexTurno + '.avisoSuspension';
         }
 
         let update = {};
-        update[etiquetaAvisoSuspension] = req.body.avisoSuspension;
+        if (req.body.avisoSuspension) {
+            update[etiquetaAvisoSuspension] = req.body.avisoSuspension;
+        }
+        if (req.body.motivoConsulta) {
+            update[etiquetaMotivoConsulta] = req.body.motivoConsulta;
+        }
         let query = {
             _id: req.params.idAgenda,
         };
