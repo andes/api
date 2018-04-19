@@ -396,9 +396,9 @@ router.post('/organizaciones', Auth.authenticate(), function (req, res, next) {
  *           $ref: '#/definitions/organizacion'
  */
 router.put('/organizaciones/:id', Auth.authenticate(), function (req, res, next) {
-    if (!Auth.check(req, 'tm:especialidad:putEspecialidad')) {
-        return next(403);
-    }
+    // if (!Auth.check(req, 'tm:especialidad:putEspecialidad')) {
+    //     return next(403);
+    // }
     organizacion.model.findByIdAndUpdate(req.params.id, req.body, function (err, data) {
         if (err) {
             return next(err);

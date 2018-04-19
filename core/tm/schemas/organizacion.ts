@@ -6,6 +6,16 @@ import * as contactoSchema from './contacto';
 import * as tipoEstablecimientoSchema from './tipoEstablecimiento';
 import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
 
+let unidadesOrganizativasSchema = new mongoose.Schema({
+    tipoSector: SnomedConcept,
+    unidadConcept: {
+        type: SnomedConcept,
+        required: false
+    },
+    nombre: String
+});
+unidadesOrganizativasSchema.add({ hijos: [ unidadesOrganizativasSchema ] });
+
 let codigoSchema = new mongoose.Schema({
     sisa: {
         type: String,
@@ -30,7 +40,7 @@ let _schema = new mongoose.Schema({
     },
     fechaAlta: Date,
     fechaBaja: Date,
-    unidadesOrganizativas: [SnomedConcept]
+    unidadesOrganizativas: [unidadesOrganizativasSchema]
 });
 const audit = require('../../../mongoose/audit');
 _schema.plugin(audit);
