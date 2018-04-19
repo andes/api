@@ -37,6 +37,12 @@ let schema = new mongoose.Schema({
         required: true,
         default: 'planificacion'
     },
+    estadoFacturacion: {
+        type: String,
+        enum: ['pendiente', 'facturada'],
+        required: true,
+        default: 'pendienteFacturacion'
+    },
     avisos: [{
         _id: false,
         profesionalId: mongoose.Schema.Types.ObjectId,
@@ -58,7 +64,6 @@ let schema = new mongoose.Schema({
         type: Boolean,
         default: true
     }
-
 }, { versionKey: false });
 
 // Defino Virtuals
