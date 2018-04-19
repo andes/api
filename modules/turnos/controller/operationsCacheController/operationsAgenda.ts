@@ -3,6 +3,8 @@ import * as mongoose from 'mongoose';
 import {
     agendasCache
 } from '../../../legacy/schemas/agendasCache';
+import { tipoPrestacion } from './../../../../core/tm/schemas/tipoPrestacion';
+import { configuracionPrestacionModel } from './../../../../core/term/schemas/configuracionPrestaciones';
 import * as sql from 'mssql';
 import * as moment from 'moment';
 import * as pacientes from './../../../../core/mpi/controller/paciente';
@@ -69,6 +71,38 @@ export function getAgendasDeMongoPendientes() {
 }
 
 /**
+ * Obtiene el idEspecialidad a partir del tipo de prestacion y la organizacion.
+ * Si no existe en la coleccion configuracionPrestacion por defecto se asigna consulta ambulatoria.
+ * @export
+ * @returns
+ */
+export function getEspecialidad(agenda, conceptId, organizacion) {
+    return new Promise<Array<any>>(function (resolve, reject) {
+        let especialidad: any = 14;
+        configuracionPrestacionModel.find({
+            'tipoPrestacion.conceptId': { $eq: conceptId },
+            'organizacionesSips._id': { $eq: agenda.organizacion._id }
+        }).exec(function (err, data: any) {
+            if (err) {
+                reject(err);
+            }
+            // resolve(data);
+            let datos;
+            if (data.length > 0) {
+                let organizacionesSips = data[0]['organizacionesSips'];
+                if (organizacionesSips && organizacionesSips.length > 0) {
+                    datos = organizacionesSips.filter((elem) => String(elem._id) === String(agenda.organizacion._id));
+                    if (datos && datos.length > 0) {
+                        especialidad = datos[0].idEspecialidad;
+                    }
+                }
+            }
+            resolve(especialidad);
+        });
+    });
+}
+
+/**
  * @description Verifica la existencia de un turno en SIPS, actualiza la codificación del turno y marca la agenda como procesada.
  * @returns Devuelve una Promesa
  * @param agenda
@@ -94,10 +128,11 @@ export async function checkCodificacion(agenda) {
                 if (resultado.recordset.length > 0) {
                     idConsulta = await existeConsultaTurno(resultado.recordset[0].idTurno);
                     let turnoPaciente: any = await getPacienteAgenda(agenda, turnos[z]._id);
-                    idEspecialidad = (agenda.tipoPrestaciones[0].term.includes('odonto')) ? 34 : 14;
+                    // idEspecialidad = (agenda.tipoPrestaciones[0].term.includes('odonto')) ? 34 : 14;
+                    idEspecialidad = await getEspecialidad(agenda, agenda.tipoPrestaciones[0].conceptId, agenda.organizacion._id);
                     turnos[z] = turnoPaciente;
-
                     if (idConsulta) {
+                        // console.log('idagenda ', agenda.id, 'idespecialidad ', idEspecialidad);
                         if (idEspecialidad === constantes.Especialidades.odontologia) {
                             turnos[z] = await codificaOdontologia(idConsulta, turnos[z]);
                         } else {
@@ -124,8 +159,8 @@ export async function checkCodificacion(agenda) {
 
                 if (resultado.recordset.length > 0) {
                     idConsulta = await existeConsultaTurno(resultado.recordset[0].idTurno);
-                    // let turnoPaciente: any = await getPacienteAgenda(agenda, agenda.sobreturnos[z]._id);
-                    idEspecialidad = (agenda.tipoPrestaciones[0].term.includes('odonto')) ? 34 : 14;
+                    // idEspecialidad = (agenda.tipoPrestaciones[0].term.includes('odonto')) ? 34 : 14;
+                    idEspecialidad = await getEspecialidad(agenda, agenda.tipoPrestaciones[0].conceptId, agenda.organizacion._id);
 
                     if (idConsulta) {
                         if (idEspecialidad === constantes.Especialidades.odontologia) {
@@ -148,7 +183,6 @@ export async function checkCodificacion(agenda) {
         if (idConsulta) {
             await markAgendaAsProcessed(agenda);
         }
-        console.log(agenda.id)
         return (agenda);
     } catch (ex) {
         return (ex);
@@ -554,7 +588,8 @@ async function grabaAgendaSips(agendaSips: any, datosSips: any, tr) {
 
         let idEfector = datosSips.idEfector;
         let idProfesional = datosSips.idProfesional;
-        let idEspecialidad = (agendaSips.tipoPrestaciones[0].term.includes('odonto')) ? 34 : 14; /*IdEspecialidad 34 = odontologia en SIPS*/
+        // let idEspecialidad = (agendaSips.tipoPrestaciones[0].term.includes('odonto')) ? 34 : 14; /*IdEspecialidad 34 = odontologia en SIPS*/
+        let idEspecialidad = await getEspecialidad(agendaSips, agendaSips.tipoPrestaciones[0].conceptId, agendaSips.organizacion._id);
         let idServicio = 177;
         let idTipoPrestacion = 0;
         let idConsultorio = await existeConsultorio(agendaSips, idEfector);
