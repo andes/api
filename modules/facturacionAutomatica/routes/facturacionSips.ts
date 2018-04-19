@@ -5,9 +5,8 @@ import * as facturacionCtrl from '../controllers/facturacionCtrl';
 
 let router = express.Router();
 
-router.get('/pepe',async function  (req, res, next) {
-    console.log("Entra a facturacion")
-    res.send(await facturacionCtrl.facturacionCtrl());
+router.get('/facturacion', function (req, res, next) {    
+    facturacionCtrl.facturacionCtrl();
 });
 
 export = router;

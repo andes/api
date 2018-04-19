@@ -42,7 +42,8 @@ let comprobante = {
 
 
 export async function facturacionSumar(pacienteSumar){
-    completaComprobante()
+    console.log(pacienteSumar)
+   // completaComprobante()
 }
 
 

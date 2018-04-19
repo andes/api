@@ -39,6 +39,10 @@ const constantes = {
         codificada: 'codificada'
     },
 
+    EstadoFacturacionAgendasCache: {
+        pendiente: 'pendiente'
+    },
+
     Especialidades: {
         odontologia: 34,
         medicinaGral: 14
