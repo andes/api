@@ -98,9 +98,22 @@ let rootOID = CDAConfig.rootOID;
  */
 
 export async function matchCode(snomed) {
-    let prestacion: any =  await CDAPrestacionesModel.find({conceptId: snomed});
-    if (prestacion.length > 0) {
-        return prestacion[0];
+    let prestacion: any;
+    if (!isNaN(snomed)) {
+        prestacion =  await CDAPrestacionesModel.find({conceptId: snomed});
+        if (prestacion.length > 0) {
+            return prestacion[0];
+        }
+    } else {
+        // Devolvemos una prestación generica para que no falle
+        return prestacion = {
+            loinc : {
+                'code' : '26436-6',
+                'codeSystem' : '2.16.840.1.113883.6.1',
+                'codeSystemName' : 'LOINC',
+                'displayName' : 'ESTO ES DE DEMOOO'
+            }
+        };
     }
 }
 

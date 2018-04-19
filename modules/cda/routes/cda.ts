@@ -66,9 +66,7 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
         // Devuelve un Loinc asociado al código SNOMED
         let prestacion = await cdaCtr.matchCode(req.body.prestacionSnomed);
         if (!prestacion) {
-            // Para las pruebas de integracion si no se encontro nada le ponemos un codigo LOINC GENERICO
-            prestacion = '78254-0'; // Clinical Genetics Consult note
-            // return next({error: 'prestacion_invalida'});
+            return next({error: 'prestacion_invalida'});
         }
 
         let cie10Code = req.body.cie10;
