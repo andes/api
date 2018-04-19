@@ -41,7 +41,7 @@ let comprobante = {
 };
 
 
-export async function facturacionSumar(){
+export async function facturacionSumar(pacienteSumar){
     completaComprobante()
 }
 
