@@ -124,7 +124,6 @@ export function updatingMpi() {
                     // Verifico cuil anses
                     if (!pacienteAndes.cuil) {
                         let cuilData = await servicioAnses.getServicioAnses(pacienteAndes);
-                        console.log('El cuil es: ', cuilData);
                         pacienteAndes.cuil = cuilData['cuil'];
                     }
                     await controller.updatePacienteMpi(pacMpi, pacienteAndes, userScheduler);
