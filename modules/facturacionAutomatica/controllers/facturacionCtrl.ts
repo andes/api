@@ -5,7 +5,7 @@ import * as agenda from '../../turnos/schemas/agenda';
 
 import * as turnoCtrl from '../../turnos/controller/turnoCacheController';
 import * as operationSumar from '../../facturacionAutomatica/controllers/operationsCtrl/operationsSumar';
-import * as operationRF from '../../facturacionAutomatica/controllers/operationsCtrl/operationsRF';
+// import * as operationRF from '../../facturacionAutomatica/controllers/operationsCtrl/operationsRF';
 
 import * as configPrivate from '../../../config.private';
 import * as constantes from './../../legacy/schemas/constantes';
@@ -57,7 +57,7 @@ export async function facturacionCtrl() {
         });
 
         operationSumar.facturacionSumar(pacientesSumar);
-        operationRF.facturacionRF(pacientesRF);
+        // operationRF.facturacionRF(pacientesRF);
     } catch (ex) {
         return (ex);
     }

@@ -3,6 +3,7 @@ import * as mongoose from 'mongoose';
 import {
     agendasCache
 } from '../../../legacy/schemas/agendasCache';
+import * as organizacion from '../../../../core/tm/schemas/organizacion';
 import * as sql from 'mssql';
 import * as moment from 'moment';
 import * as configPrivate from '../../../../config.private';
@@ -41,54 +42,81 @@ let comprobante = {
 };
 
 
-export async function facturacionSumar(pacienteSumar){
-    console.log(pacienteSumar)
-   // completaComprobante()
+export async function facturacionSumar(agenda: any) {
+    completaComprobante(agenda)
 }
 
 
-export async function completaComprobante() {
-
-
-
-    let agenda = [{
-        pacienteDni: '34292120',
-        efector: 'Q03119'
-    }, {
-        pacienteDni: '51119848',
-        efector: 'Q06391'
-    }, {
-        pacienteDni: '47849904',
-        efector: 'Q06391'
-    }, {
-        pacienteDni: '31760727',
-        efector: 'Q06391'
-    }
-
-    ];
-
+export async function completaComprobante(agenda) { 
 
     for (var index = 0; index < agenda.length; index++) {
-        console.log("paciente", index)
-        await comprobaciones(agenda[index].pacienteDni, agenda[index].efector)
-
-
-
-
+        await comprobaciones(agenda[index].paciente.documento, agenda[index].efector)
     }
-    return comprobante;
 
+    return comprobante;
+}
+
+async function comprobaciones(documento, efectorEntrada) {
+    let efector = await mapeoEfector(efectorEntrada)
+    comprobante.cuie = efector.cuie;
+
+    console.log("Documen: ", documento)
+    // VERIFICA SI ES PACIENTE
+    if (await mapeoPacientes(documento)) {
+        console.log("es Paciente")
+        // VERIFICA SI EL PACIENTE ES BENEFICIARIO
+        if (await mapeoBeneficiario(documento)) {
+            console.log("es Beneficiario")
+            // VERIFICA SI EL PACIENTE ES AFILIADO
+            if (await mapeoSfiadiliados(documento) !== undefined) {
+                // COMPLETA LOS DATOS DEL COMPROBANTE
+                console.log("es smAfiliado")
+
+                let resSmafiliados = await mapeoSfiadiliados(documento);
+                if (resSmafiliados) {
+                    comprobante.clavebeneficiario = resSmafiliados.clavebeneficiario;
+                    comprobante.id_smiafiliados = resSmafiliados.idSmiafiliados
+                    comprobante.periodo = comprobante.fecha_comprobante.getFullYear() + "/" + (comprobante.fecha_comprobante.getMonth() + 1);
+                    console.log("comprobante", comprobante);
+                };
+            } else {
+                // SE INSERTA EN LA TABLA AFILIADO
+                console.log("no es smAfiliado")
+            }
+        } else {
+            // SE INSERTA EN LA TABLA BENEFICIARIO
+            console.log("no es Beneficiario")
+        }
+    } else {
+        // DEBE INGRESAR AL PACIENTE Y VOLVER A LLAMAR A LA FUNCION        
+        console.log("buscamos paciente en mongo y despues insertamos")
+        await traePacienteMongo("59cd3430055fd362a46fd48d", efector)
+    }
 }
 
 // mapeo de los efectores
-async function mapeoEfector(cuie) {
+async function mapeoEfector(idEfector) {
+    let efectorMongo: any = await mapeoEfectorMongo(idEfector);
+
     poolAgendas = await new sql.ConnectionPool(config).connect();
     let query = 'SELECT * FROM dbo.Sys_efector WHERE cuie = @codigo';
     let resultado = await new sql.Request(poolAgendas)
-        .input('codigo', sql.VarChar(50), cuie)
+        .input('codigo', sql.VarChar(50), efectorMongo.codigo.cuie)
         .query(query);
     poolAgendas.close()
+
     return resultado.recordset[0];
+}
+
+/* Se trae el efector de mongo por ObjectId*/
+async function mapeoEfectorMongo(idEfector: any) {
+    return new Promise((resolve, reject) => {
+        organizacion.model.findById(idEfector).then(efector => {
+            // console.log("Efector: ", efector)
+
+            resolve(efector);
+        })
+    });
 }
 
 async function mapeoPacientes(documento) {
@@ -98,6 +126,8 @@ async function mapeoPacientes(documento) {
         .input('documento', sql.VarChar(50), documento)
         .query(query);
     poolAgendas.close()
+
+    console.log("REsult PAciente: ", resultado.recordset)
     if (resultado.recordset.length > 0) {
         return true;
     } else {
@@ -135,7 +165,6 @@ async function mapeoSfiadiliados(documento) {
             idSmiafiliados: paciente.recordset[0].id_smiafiliados
         }
     }
-
 
     return resultado;
 }
@@ -204,47 +233,8 @@ async function traePacienteMongo(id, efector) {
                 objectId: paciente[0]._id
             };
 
-            console.log(pacienteSips)
+            // console.log(pacienteSips)
             resolve(paciente)
         });
     });
-}
-
-
-async function comprobaciones(documento, efectorEntrada) {
-    let efector = await mapeoEfector(efectorEntrada)
-    comprobante.cuie = efector.cuie;
-    // VERIFICA SI ES PACIENTE
-    if (await mapeoPacientes(documento)) {
-        console.log("es Paciente")
-        // VERIFICA SI EL PACIENTE ES BENEFICIARIO
-        if (await mapeoBeneficiario(documento)) {
-            console.log("es Beneficiario")
-            // VERIFICA SI EL PACIENTE ES AFILIADO
-            if (await mapeoSfiadiliados(documento) !== undefined) {
-                // COMPLETA LOS DATOS DEL COMPROBANTE
-                console.log("es smAfiliado")
-
-                let resSmafiliados = await mapeoSfiadiliados(documento);
-                if (resSmafiliados) {
-                    comprobante.clavebeneficiario = resSmafiliados.clavebeneficiario;
-                    comprobante.id_smiafiliados = resSmafiliados.idSmiafiliados
-                    comprobante.periodo = comprobante.fecha_comprobante.getFullYear() + "/" + (comprobante.fecha_comprobante.getMonth() + 1);
-                    console.log("comprobante", comprobante);
-                };
-            } else {
-                // SE INSERTA EN LA TABLA AFILIADO
-                console.log("no es smAfiliado")
-            }
-        } else {
-            // SE INSERTA EN LA TABLA BENEFICIARIO
-            console.log("no es Beneficiario")
-        }
-    } else {
-        // DEBE INGRESAR AL PACIENTE Y VOLVER A LLAMAR A LA FUNCION
-        await traePacienteMongo("59cd3430055fd362a46fd48d", efector)
-        console.log("buscamos paciente en mongo y despues insertamos")
-
-
-    }
 }
