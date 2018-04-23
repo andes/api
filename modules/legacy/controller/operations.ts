@@ -146,7 +146,7 @@ export async function cacheTurnosSips(unaAgenda) {
         integrar = await integrarAgenda(unaAgenda);
 
     } catch (error) {
-        console.log(error);
+        return error;
     }
 
     if (unaAgenda.estado !== 'planificacion' && integrar) {
