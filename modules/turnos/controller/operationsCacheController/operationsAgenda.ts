@@ -105,9 +105,9 @@ export function getEspecialidad(agenda, conceptId, organizacion) {
 /**
  * @description Verifica la existencia de un turno en SIPS, actualiza la codificación del turno y marca la agenda como procesada.
  * @returns Devuelve una Promesa
- * @param agenda
+ * @param agendaCacheada
  */
-export async function checkCodificacion(agenda) {
+export async function checkCodificacion(agendaCacheada) {
     try {
         try {
             poolAgendas = await new sql.ConnectionPool(config).connect();
@@ -118,8 +118,8 @@ export async function checkCodificacion(agenda) {
         let datosTurno = {};
         let idEspecialidad: any;
         let idConsulta;
-        for (let x = 0; x < agenda.bloques.length; x++) {
-            turnos = agenda.bloques[x].turnos;
+        for (let x = 0; x < agendaCacheada.bloques.length; x++) {
+            turnos = agendaCacheada.bloques[x].turnos;
 
             for (let z = 0; z < turnos.length; z++) {
                 let resultado = await turnoOps.existeTurnoSips(turnos[z], poolAgendas);
@@ -127,9 +127,9 @@ export async function checkCodificacion(agenda) {
 
                 if (resultado.recordset.length > 0) {
                     idConsulta = await existeConsultaTurno(resultado.recordset[0].idTurno);
-                    let turnoPaciente: any = await getPacienteAgenda(agenda, turnos[z]._id);
+                    let turnoPaciente: any = await getPacienteAgenda(agendaCacheada, turnos[z]._id);
                     // idEspecialidad = (agenda.tipoPrestaciones[0].term.includes('odonto')) ? 34 : 14;
-                    idEspecialidad = await getEspecialidad(agenda, agenda.tipoPrestaciones[0].conceptId, agenda.organizacion._id);
+                    idEspecialidad = await getEspecialidad(agendaCacheada, agendaCacheada.tipoPrestaciones[0].conceptId, agendaCacheada.organizacion._id);
                     turnos[z] = turnoPaciente;
                     if (idConsulta) {
                         // console.log('idagenda ', agenda.id, 'idespecialidad ', idEspecialidad);
@@ -139,13 +139,14 @@ export async function checkCodificacion(agenda) {
                             turnos[z] = await codificacionCie10(idConsulta, turnos[z]);
                         }
                         datosTurno = {
-                            idAgenda: agenda.id,
+                            idAgenda: agendaCacheada.id,
                             posTurno: z,
                             posBloque: x,
                             idUsuario: constantes.idUsuarioSips,
                             turno: turnos[z]
                         };
-                        await turnoCtrl.updateTurno(datosTurno);
+                        await turnoCtrl.updateTurnoAgendaMongo(datosTurno);
+                        await turnoCtrl.updateTurnoAgendaCache(datosTurno, agendaCacheada);
                     }
                 }
             }
@@ -153,37 +154,37 @@ export async function checkCodificacion(agenda) {
 
         // Caso especial sobreturnos
         // TODO: refactorizar codigo repetido.
-        if (agenda.sobreturnos) {
-            for (let z = 0; z < agenda.sobreturnos.length; z++) {
-                let resultado = await turnoOps.existeTurnoSips(agenda.sobreturnos[z], poolAgendas);
+        if (agendaCacheada.sobreturnos) {
+            for (let z = 0; z < agendaCacheada.sobreturnos.length; z++) {
+                let resultado = await turnoOps.existeTurnoSips(agendaCacheada.sobreturnos[z], poolAgendas);
 
                 if (resultado.recordset.length > 0) {
                     idConsulta = await existeConsultaTurno(resultado.recordset[0].idTurno);
                     // idEspecialidad = (agenda.tipoPrestaciones[0].term.includes('odonto')) ? 34 : 14;
-                    idEspecialidad = await getEspecialidad(agenda, agenda.tipoPrestaciones[0].conceptId, agenda.organizacion._id);
+                    idEspecialidad = await getEspecialidad(agendaCacheada, agendaCacheada.tipoPrestaciones[0].conceptId, agendaCacheada.organizacion._id);
 
                     if (idConsulta) {
                         if (idEspecialidad === constantes.Especialidades.odontologia) {
-                            agenda.sobreturnos[z] = await codificaOdontologia(idConsulta, agenda.sobreturnos[z]);
+                            agendaCacheada.sobreturnos[z] = await codificaOdontologia(idConsulta, agendaCacheada.sobreturnos[z]);
                         } else {
-                            agenda.sobreturnos[z] = await codificacionCie10(idConsulta, agenda.sobreturnos[z]);
+                            agendaCacheada.sobreturnos[z] = await codificacionCie10(idConsulta, agendaCacheada.sobreturnos[z]);
                         }
                         datosTurno = {
-                            idAgenda: agenda.id,
+                            idAgenda: agendaCacheada.id,
                             posTurno: z,
                             posBloque: -1,
                             idUsuario: constantes.idUsuarioSips,
-                            turno: agenda.sobreturnos[z]
+                            turno: agendaCacheada.sobreturnos[z]
                         };
-                        await turnoCtrl.updateTurno(datosTurno);
+                        await turnoCtrl.updateTurnoAgendaMongo(datosTurno);
                     }
                 }
             }
         }
         if (idConsulta) {
-            await markAgendaAsProcessed(agenda);
+            await markAgendaAsProcessed(agendaCacheada);
         }
-        return (agenda);
+        return (agendaCacheada);
     } catch (ex) {
         return (ex);
     }
@@ -195,19 +196,48 @@ async function codificaOdontologia(idConsulta: any, turno: any) {
     let repetido = [];
     try {
         idNomenclador = await getConsultaOdontologia(idConsulta);
+        /*
+        cantidad:1
+        caraD:false
+        caraL:false
+        caraM:false
+        caraO:true
+        caraP:false
+        caraV:false
+        diente:22
+        idConsulta:1153795
+        idConsultaOdontologia:280775
+        idNomenclador:23
+        */
+        let caras = '';
+        if (idNomenclador[0].caraD) { caras = caras + 'caraD '; }
+        if (idNomenclador[0].caraL) { caras = caras + 'caraL '; }
+        if (idNomenclador[0].caraM) { caras = caras + 'caraM '; }
+        if (idNomenclador[0].caraO) { caras = caras + 'caraO '; }
+        if (idNomenclador[0].caraP) { caras = caras + 'caraP '; }
+        if (idNomenclador[0].caraV) { caras = caras + 'caraV '; }
+        let diente = idNomenclador[0].diente;
         let m = 0;
         for (let i = 0; i < idNomenclador.length; i++) {
             repetido = [];
             codificacionOdonto = await getCodificacionOdonto(idNomenclador[i].idNomenclador);
+            console.log("CodificacionOdonto->>", codificacionOdonto);
+            /*
+            clasificacion:"Conservadora"
+            codigo:"03010"
+            descripcion:"TRATAMIENTO CONDUCTO UNIRRADICULAR. CONDUCTO CONVENCIONAL EN PIEZA UNI-RADICULAR PERMANENTE, OBTURADO CON CONOC Y CEMENTO DE GROSSMAN."
+            idNomenclador:23
+            piezaDental:true
+             */
             turno.asistencia = 'asistio';
             turno.diagnostico.ilegible = false;
-            // repetido = turno.diagnostico.codificaciones.filter(elem => elem.codificacionAuditoria && elem.codificacionAuditoria.codigo === codificacionOdonto.codigo);
+            repetido = turno.diagnostico.codificaciones.filter(elem => elem.codificacionAuditoria && elem.codificacionAuditoria.codigo === codificacionOdonto.codigo);
             if (repetido && repetido.length <= 0) {
                 turno.diagnostico.codificaciones.push({
                     codificacionProfesional: {
                         cie10: {
-                            causa: '',
-                            subcausa: '',
+                            causa: diente,
+                            subcausa: caras,
                             codigo: codificacionOdonto.codigo,
                             nombre: codificacionOdonto.descripcion,
                             sinonimo: codificacionOdonto.descripcion,
@@ -233,6 +263,8 @@ async function codificacionCie10(idConsulta: any, turno: any) {
         turno.diagnostico.codificaciones = [];
         for (let i = 0; i < codCie10.length; i++) {
             codificaCie10 = await getCodificacionCie10(codCie10[i].CODCIE10);
+            console.log("codificaCie10->>", codificaCie10);
+
             turno.asistencia = 'asistio';
             turno.diagnostico.ilegible = false;
             if (codCie10[i].PRINCIPAL === true) {
@@ -377,7 +409,7 @@ async function getConsultaOdontologia(idConsulta) {
     try {
         let result = await new sql.Request(poolAgendas)
             .input('idConsulta', sql.Int, idConsulta)
-            .query('SELECT idNomenclador FROM dbo.CON_ConsultaOdontologia WHERE idConsulta = @idConsulta');
+            .query('SELECT * FROM dbo.CON_ConsultaOdontologia WHERE idConsulta = @idConsulta');
         return result.recordset;
     } catch (err) {
         return (err);
@@ -388,7 +420,7 @@ async function getCodificacionOdonto(idNomenclador) {
     try {
         let result = await new sql.Request(poolAgendas)
             .input('idNomenclador', sql.Int, idNomenclador)
-            .query('SELECT codigo, descripcion FROM dbo.ODO_Nomenclador WHERE idNomenclador = @idNomenclador');
+            .query('SELECT * FROM dbo.ODO_Nomenclador WHERE idNomenclador = @idNomenclador');
         return (result.recordset[0]);
     } catch (err) {
         return (err);
