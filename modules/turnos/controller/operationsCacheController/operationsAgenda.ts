@@ -236,32 +236,36 @@ async function codificacionCie10(idConsulta: any, turno: any) {
             turno.asistencia = 'asistio';
             turno.diagnostico.ilegible = false;
             if (codCie10[i].PRINCIPAL === true) {
-                turno.diagnostico.codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del arrays
-                    codificacionProfesional: {
-                        cie10: {
-                            causa: codificaCie10.CAUSA,
-                            subcausa: codificaCie10.SUBCAUSA,
-                            codigo: codificaCie10.CODIGO,
-                            nombre: codificaCie10.Nombre,
-                            sinonimo: codificaCie10.Sinonimo,
-                            c2: codificaCie10.C2
-                            // TODO: campo primeraVez -> verificar en SIPS
+                if (codificaCie10 && codificaCie10[0]) {
+                    turno.diagnostico.codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del arrays
+                        codificacionProfesional: {
+                            cie10: {
+                                causa: codificaCie10[0].CAUSA,
+                                subcausa: codificaCie10[0].SUBCAUSA,
+                                codigo: codificaCie10[0].CODIGO,
+                                nombre: codificaCie10[0].Nombre,
+                                sinonimo: codificaCie10[0].Sinonimo,
+                                c2: codificaCie10[0].C2
+                                // TODO: campo primeraVez -> verificar en SIPS
+                            }
                         }
-                    }
-                });
+                    });
+                }
             } else {
-                turno.diagnostico.codificaciones.push({
-                    codificacionProfesional: {
-                        cie10: {
-                            causa: codificaCie10.CAUSA,
-                            subcausa: codificaCie10.SUBCAUSA,
-                            codigo: codificaCie10.CODIGO,
-                            nombre: codificaCie10.Nombre,
-                            sinonimo: codificaCie10.Sinonimo,
-                            c2: codificaCie10.C2
+                if (codificaCie10 && codificaCie10[0]) {
+                    turno.diagnostico.codificaciones.push({
+                        codificacionProfesional: {
+                            cie10: {
+                                causa: codificaCie10[0].CAUSA,
+                                subcausa: codificaCie10[0].SUBCAUSA,
+                                codigo: codificaCie10[0].CODIGO,
+                                nombre: codificaCie10[0].Nombre,
+                                sinonimo: codificaCie10[0].Sinonimo,
+                                c2: codificaCie10[0].C2
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }
         }
     } catch (ex) {

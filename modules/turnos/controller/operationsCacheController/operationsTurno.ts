@@ -42,7 +42,7 @@ export async function processTurnos(agenda: any, idAgendaCreada: any, idEfector:
             if (turnos[i].estado === 'asignado' && turnos[i].paciente && turnos[i].paciente.documento) {
                 // let resultado = await existeTurnoSips(turnos[i], transaction);
                 // if (resultado.recordset && resultado.recordset.length <= 0) {
-                await grabaTurnoSips(turnos[i], idAgendaCreada, idEfector, poolAgendas);
+                await grabaTurnoSips(turnos[i], idAgendaCreada, idEfector,0, poolAgendas);
                 // }
             }
         }
@@ -52,7 +52,7 @@ export async function processTurnos(agenda: any, idAgendaCreada: any, idEfector:
             if (agenda.sobreturnos[y].estado === 'asignado' && agenda.sobreturnos[y].paciente && agenda.sobreturnos[y].paciente.documento) {
                 // let resultado = await existeTurnoSips(turnos[i], transaction);
                 // if (resultado.recordset && resultado.recordset.length <= 0) {
-                await grabaTurnoSips(agenda.sobreturnos[y], idAgendaCreada, idEfector, poolAgendas);
+                await grabaTurnoSips(agenda.sobreturnos[y], idAgendaCreada, idEfector,1, poolAgendas);
                 // }
             }
         }
@@ -68,7 +68,7 @@ export async function existeTurnoSips(turno: any, poolAgendas) {
     return result;
 }
 
-async function grabaTurnoSips(turno, idAgendaSips, idEfector, poolAgendas) {
+async function grabaTurnoSips(turno, idAgendaSips, idEfector, sobreturno, poolAgendas) {
     let pacienteEncontrado = await pacientes.buscarPaciente(turno.paciente.id);
     let paciente = pacienteEncontrado.paciente;
     let idObraSocial = await getIdObraSocialSips(paciente.documento, poolAgendas);
@@ -81,7 +81,7 @@ async function grabaTurnoSips(turno, idAgendaSips, idEfector, poolAgendas) {
         if (resultado && resultado.recordset && resultado.recordset.length > 0) {
             query = 'UPDATE dbo.CON_Turno SET idPaciente = ' + pacienteId + ', idObraSocial = ' + idObraSocial + '  WHERE idAgenda = ' + idAgendaSips + ' and objectId = \'' + turno._id + '\'';
         } else {
-            query = 'INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente , fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante, objectId ) VALUES  ( ' + idAgendaSips + ' , 1 , ' + constantes.idUsuarioSips + ' ,' + pacienteId + ', \'' + fechaTurno + '\' ,\'' + horaTurno + '\' , 0 , 0 ,' + idObraSocial + ' , 0, \'' + turno._id + '\')';
+            query = 'INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente , fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante, objectId ) VALUES  ( ' + idAgendaSips + ' , 1 , ' + constantes.idUsuarioSips + ' ,' + pacienteId + ', \'' + fechaTurno + '\' ,\'' + horaTurno + '\' , ' + sobreturno + ', 0 ,' + idObraSocial + ' , 0, \'' + turno._id + '\')';
             query += ' select SCOPE_IDENTITY() as id';
         }
         debug('Q:', query);
