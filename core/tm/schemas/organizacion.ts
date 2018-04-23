@@ -6,7 +6,7 @@ import * as contactoSchema from './contacto';
 import * as tipoEstablecimientoSchema from './tipoEstablecimiento';
 import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
 
-let unidadesOrganizativasSchema = new mongoose.Schema({
+export let unidadesOrganizativasSchema = new mongoose.Schema({
     tipoSector: SnomedConcept,
     unidadConcept: {
         type: SnomedConcept,

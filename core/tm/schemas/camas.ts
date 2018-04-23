@@ -4,12 +4,14 @@ import { pacienteSchema } from '../../mpi/schemas/paciente';
 import * as nombreSchema from './nombre';
 import * as estado from './camaEstado';
 import * as unidadOrganizativa from './unidadOrganizativa';
+import { unidadesOrganizativasSchema } from './organizacion';
 
 export let schema = new mongoose.Schema({
     organizacion: {
         type: nombreSchema,
         required: true
     },
+    /*
     sector: {
         type: String,
         required: true
@@ -18,6 +20,15 @@ export let schema = new mongoose.Schema({
         type: String,
         required: true
     },
+    */
+    sectores: [{
+        tipoSector: SnomedConcept,
+        unidadConcept: {
+            type: SnomedConcept,
+            required: false
+        },
+        nombre: String
+    }],
     nombre: {
         type: String,
         required: true

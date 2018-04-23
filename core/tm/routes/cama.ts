@@ -55,7 +55,6 @@ router.get('/camas', Auth.authenticate(), function (req, res, next) {
 
 router.post('/camas', Auth.authenticate(), (req, res, next) => {
     let newCama = new cama.model(req.body);
-    // agregamos audit a la cama
     Auth.audit(newCama, req);
     newCama.save((err) => {
         if (err) {
@@ -79,8 +78,7 @@ router.put('/camas/:id', Auth.authenticate(), (req, res, next) => {
             data.markModified('estados');
             data.markModified('equipamiento');
             data.organizacion = req.body.organizacion;
-            data.sector = req.body.sector;
-            data.habitacion = req.body.habitacion;
+            data.sectores = req.body.sectores;
             data.nombre = req.body.nombre;
             data.tipoCama = req.body.tipoCama;
             data.equipamiento = req.body.equipamiento;
