@@ -17,6 +17,7 @@ import { toArray } from '../../../utils/utils';
 
 let router = express.Router();
 
+
 router.get('/agenda/paciente/:idPaciente', function (req, res, next) {
 
     if (req.params.idPaciente) {
@@ -99,10 +100,22 @@ router.get('/agenda/candidatas', async function (req, res, next) {
     });
 });
 
+router.get('/agenda/consultaDiagnostico', async function (req, res, next) {
+    let organizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
+    let params = req.query;
+    params['organizacion'] = organizacion;
+    agendaCtrl.getConsultaDiagnostico(params).then((resultado) => {
+        res.json(resultado);
+    
+    });
+
+});
+
 router.get('/agenda/diagnosticos', async function (req, res, next) {
     let organizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
     let params = req.query;
     params['organizacion'] = organizacion;
+    
     diagnosticosCtrl.getDiagnosticos(params).then((resultado) => {
         res.json(resultado);
     });
@@ -533,5 +546,6 @@ router.get('/integracionCitasHPN', async function (req, res, next) {
         next(ex);
     }
 });
+
 
 export = router;
