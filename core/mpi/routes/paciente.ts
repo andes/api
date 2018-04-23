@@ -596,9 +596,6 @@ router.post('/pacientes', function (req, res, next) {
             return next(error2);
         }));
     }
-
-
-
 });
 
 /**
