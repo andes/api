@@ -106,6 +106,14 @@ export async function matchCode(snomed) {
         } else {
             // Devolvemos una prestación generica para que no falle
         return prestacion = {
+            snomed : {
+                'tipoPrestacion' : {
+                    'conceptId' : '391000013108',
+                    'term' : 'consulta de medicina general',
+                    'fsn' : 'consulta de medicina general',
+                    'semanticTag' : 'procedimiento'
+                },
+            },
             loinc : {
                 'code' : '26436-6',
                 'codeSystem' : '2.16.840.1.113883.6.1',
@@ -117,6 +125,14 @@ export async function matchCode(snomed) {
     } else {
         // Devolvemos una prestación generica para que no falle
         return prestacion = {
+            snomed : {
+                'tipoPrestacion' : {
+                    'conceptId' : '391000013108',
+                    'term' : 'consulta de medicina general',
+                    'fsn' : 'consulta de medicina general',
+                    'semanticTag' : 'procedimiento'
+                },
+            },
             loinc : {
                 'code' : '26436-6',
                 'codeSystem' : '2.16.840.1.113883.6.1',
