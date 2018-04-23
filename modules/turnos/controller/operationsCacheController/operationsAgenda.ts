@@ -139,7 +139,7 @@ export async function checkCodificacion(agendaCacheada) {
                             turnos[z] = await codificacionCie10(idConsulta, turnos[z]);
                         }
                         datosTurno = {
-                            idAgenda: agendaCacheada.id,
+                            idAgenda: agendaCacheada.id, // este es el id de la agenda original de ANDES
                             posTurno: z,
                             posBloque: x,
                             idUsuario: constantes.idUsuarioSips,
@@ -170,13 +170,14 @@ export async function checkCodificacion(agendaCacheada) {
                             agendaCacheada.sobreturnos[z] = await codificacionCie10(idConsulta, agendaCacheada.sobreturnos[z]);
                         }
                         datosTurno = {
-                            idAgenda: agendaCacheada.id,
+                            idAgenda: agendaCacheada.id, // este es el id de la agenda original de ANDES
                             posTurno: z,
                             posBloque: -1,
                             idUsuario: constantes.idUsuarioSips,
                             turno: agendaCacheada.sobreturnos[z]
                         };
                         await turnoCtrl.updateTurnoAgendaMongo(datosTurno);
+                        await turnoCtrl.updateTurnoAgendaCache(datosTurno, agendaCacheada);
                     }
                 }
             }
@@ -221,7 +222,6 @@ async function codificaOdontologia(idConsulta: any, turno: any) {
         for (let i = 0; i < idNomenclador.length; i++) {
             repetido = [];
             codificacionOdonto = await getCodificacionOdonto(idNomenclador[i].idNomenclador);
-            console.log("CodificacionOdonto->>", codificacionOdonto);
             /*
             clasificacion:"Conservadora"
             codigo:"03010"
@@ -231,7 +231,24 @@ async function codificaOdontologia(idConsulta: any, turno: any) {
              */
             turno.asistencia = 'asistio';
             turno.diagnostico.ilegible = false;
-            repetido = turno.diagnostico.codificaciones.filter(elem => elem.codificacionAuditoria && elem.codificacionAuditoria.codigo === codificacionOdonto.codigo);
+            if (diente && caras === '') {
+                repetido = turno.diagnostico.codificaciones.filter(elem =>
+                    elem.codificacionProfesional
+                    && elem.codificacionProfesional.codigo === codificacionOdonto.codigo
+                    && elem.causa && elem.causa === diente);
+            }
+            if (diente && caras !== '') {
+                repetido = turno.diagnostico.codificaciones.filter(elem =>
+                    elem.codificacionProfesional
+                    && elem.codificacionProfesional.codigo === codificacionOdonto.codigo
+                    && elem.causa && elem.causa === diente
+                    && elem.subcausa && elem.subcausa === caras);
+            }
+            if (!diente) {
+                repetido = turno.diagnostico.codificaciones.filter(elem =>
+                    elem.codificacionProfesional
+                    && elem.codificacionProfesional.codigo === codificacionOdonto.codigo);
+            }
             if (repetido && repetido.length <= 0) {
                 turno.diagnostico.codificaciones.push({
                     codificacionProfesional: {
@@ -263,8 +280,6 @@ async function codificacionCie10(idConsulta: any, turno: any) {
         turno.diagnostico.codificaciones = [];
         for (let i = 0; i < codCie10.length; i++) {
             codificaCie10 = await getCodificacionCie10(codCie10[i].CODCIE10);
-            console.log("codificaCie10->>", codificaCie10);
-
             turno.asistencia = 'asistio';
             turno.diagnostico.ilegible = false;
             if (codCie10[i].PRINCIPAL === true) {
