@@ -101,7 +101,9 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
 
         let metadata = {
             paciente: paciente._id,
-            prestacion: prestacion.conceptId,
+            prestacion: prestacion,
+            profesional: dataProfesional,
+            organizacion: organizacion,
             fecha: fecha,
             adjuntos: adjuntos,
             extras: {
@@ -151,6 +153,10 @@ router.post('/', async (req: any, res, next) => {
                     return next({error: 'prestacion_existente'});
                 }
 
+                let organizacion = await Organizaciones.findById(orgId);
+
+                let dataProfesional = req.body.profesional;
+
                 let prestacion = await cdaCtr.matchCodeByLoinc(cdaData.loinc);
                 if (!prestacion) {
                     return next({error: 'loinc_invalido'});
@@ -171,7 +177,9 @@ router.post('/', async (req: any, res, next) => {
 
                 let metadata = {
                     paciente: paciente._id,
-                    prestacion: prestacion.conceptId,
+                    prestacion: prestacion,
+                    profesional: dataProfesional,
+                    organizacion: organizacion,
                     fecha: cdaData.fecha,
                     adjuntos: adjuntos,
                     extras: {
