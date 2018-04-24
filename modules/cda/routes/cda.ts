@@ -58,15 +58,16 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
 
         let yaExiste = await cdaCtr.CDAExists(idPrestacion, fecha, orgId);
         if (yaExiste) {
-            return next({error: 'prestacion_existente'});
+            return next({ error: 'prestacion_existente' });
         }
 
         let dataPaciente = req.body.paciente;
         let dataProfesional = req.body.profesional;
+
         // Devuelve un Loinc asociado al código SNOMED
         let prestacion = await cdaCtr.matchCode(req.body.prestacionSnomed);
         if (!prestacion) {
-            return next({error: 'prestacion_invalida'});
+            return next({ error: 'prestacion_invalida' });
         }
 
         let cie10Code = req.body.cie10;
@@ -79,7 +80,7 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
         if (cie10Code) {
             cie10 = await Cie10.findOne({ codigo: cie10Code });
             if (!cie10) {
-                return next({error: 'cie10_invalid'});
+                return next({ error: 'cie10_invalid' });
             }
         }
 
@@ -102,10 +103,8 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
         let metadata = {
             paciente: paciente._id,
             prestacion: prestacion,
-            profesional: dataProfesional,
-            organizacion: organizacion,
-            fecha: fecha,
             adjuntos: adjuntos,
+            fecha: fecha,
             extras: {
                 id: idPrestacion,
                 organizacion: organizacion._id
@@ -141,7 +140,7 @@ router.post('/', async (req: any, res, next) => {
                 let uniqueId = new mongoose.Types.ObjectId();
 
                 if (cdaData.organizacion.id !== orgId) {
-                    return next({error: 'wrong_organization'});
+                    return next({ error: 'wrong_organization' });
                 }
 
                 cdaData.fecha = moment(cdaData.fecha, 'YYYYMMDDhhmmss').toDate();
@@ -150,16 +149,16 @@ router.post('/', async (req: any, res, next) => {
 
                 let yaExiste = await cdaCtr.CDAExists(cdaData.id, cdaData.fecha, orgId);
                 if (yaExiste) {
-                    return next({error: 'prestacion_existente'});
+                    return next({ error: 'prestacion_existente' });
                 }
 
-                let organizacion = await Organizaciones.findById(orgId);
+                // let organizacion = await Organizaciones.findById(orgId);
 
-                let dataProfesional = req.body.profesional;
+                // let dataProfesional = req.body.profesional;
 
                 let prestacion = await cdaCtr.matchCodeByLoinc(cdaData.loinc);
                 if (!prestacion) {
-                    return next({error: 'loinc_invalido'});
+                    return next({ error: 'loinc_invalido' });
                 }
                 let paciente = await cdaCtr.findOrCreate(req, cdaData.paciente, orgId);
 
@@ -178,8 +177,6 @@ router.post('/', async (req: any, res, next) => {
                 let metadata = {
                     paciente: paciente._id,
                     prestacion: prestacion,
-                    profesional: dataProfesional,
-                    organizacion: organizacion,
                     fecha: cdaData.fecha,
                     adjuntos: adjuntos,
                     extras: {
@@ -192,12 +189,12 @@ router.post('/', async (req: any, res, next) => {
                 res.json({ cda: uniqueId, paciente: paciente._id });
 
             } else {
-                return next({error: 'cda_format_error'});
+                return next({ error: 'cda_format_error' });
             }
 
         }).catch(next);
     } else {
-        return next({error: 'xml_file_missing'});
+        return next({ error: 'xml_file_missing' });
     }
 
 });
@@ -219,52 +216,25 @@ router.get('/style/cda.xsl', (req, res, next) => {
  */
 
 router.get('/files/:name', async (req: any, res, next) => {
-    if (req.user.type === 'user-token' &&  !Auth.check(req, 'cda:get')) {
+    if (req.user.type === 'user-token' && !Auth.check(req, 'cda:get')) {
         return next(403);
     }
 
     let name = req.params.name;
     let CDAFiles = makeFs();
 
-    CDAFiles.findOne({filename: name}).then(async file => {
-        if (req.user.type === 'paciente-token' &&  String(file.metadata.paciente) !== String(req.user.pacientes[0].id) ) {
+    CDAFiles.findOne({ filename: name }).then(async file => {
+        if (req.user.type === 'paciente-token' && String(file.metadata.paciente) !== String(req.user.pacientes[0].id)) {
             return next(403);
         }
 
-        let stream1  = await CDAFiles.readById(file._id);
+        let stream1 = await CDAFiles.readById(file._id);
         res.contentType(file.contentType);
         stream1.pipe(res);
     }).catch(next);
 });
 
 
-/**
- * Devuelve los archivos almacenados por los CDAs
- * Cuando se renderiza un CDA en el browser busca los archivos adjuntos en esta ruta
- */
-
-router.get('/:id/:name', async (req: any, res, next) => {
-  if (req.user.type === 'user-token' &&  !Auth.check(req, 'cda:get')) {
-      return next(403);
-  }
-  let id = mongoose.Types.ObjectId(req.params.id);
-  let name = req.params.name;
-  let CDAFiles = makeFs();
-
-  let query = {
-    filename: name,
-    'metadata.cdaId' : id
-  };
-  CDAFiles.findOne(query).then(async file => {
-      if (req.user.type === 'paciente-token' &&  String(file.metadata.paciente) !== String(req.user.pacientes[0].id) ) {
-          return next(403);
-      }
-
-      let stream1  = await CDAFiles.readById(file._id);
-      res.contentType(file.contentType);
-      stream1.pipe(res);
-  }).catch(next);
-});
 
 
 /**
@@ -299,8 +269,38 @@ router.get('/paciente/:id', async (req: any, res, next) => {
     let pacienteID = req.params.id;
     let prestacion = req.query.prestacion;
 
-    let list = await cdaCtr.searchByPatient(pacienteID, prestacion, {skip: 0, limit: 10});
+    let list = await cdaCtr.searchByPatient(pacienteID, prestacion, { skip: 0, limit: 10 });
     res.json(list);
 });
+
+/**
+ * Devuelve los archivos almacenados por los CDAs
+ * Cuando se renderiza un CDA en el browser busca los archivos adjuntos en esta ruta
+ */
+
+router.get('/:id/:name', async (req: any, res, next) => {
+    if (req.user.type === 'user-token' && !Auth.check(req, 'cda:get')) {
+        return next(403);
+    }
+    let id = mongoose.Types.ObjectId(req.params.id);
+    let name = req.params.name;
+    let CDAFiles = makeFs();
+
+    let query = {
+        filename: name,
+        'metadata.cdaId': id
+    };
+    CDAFiles.findOne(query).then(async file => {
+        if (req.user.type === 'paciente-token' && String(file.metadata.paciente) !== String(req.user.pacientes[0].id)) {
+            return next(403);
+        }
+
+        let stream1 = await CDAFiles.readById(file._id);
+        res.contentType(file.contentType);
+        stream1.pipe(res);
+    }).catch(next);
+});
+
+
 
 export = router;
