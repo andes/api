@@ -897,35 +897,38 @@ export function updatePaciente(pacienteModified, turno) {
 
 
 export function getConsultaDiagnostico(params) {
-    
+
     return new Promise(async (resolve, reject) => {
         let pipeline = [];
         pipeline = [{
             $match: {
-                $and : [
-                {'horaInicio': { '$gte': new Date(params.horaInicio) }},
-                {'horaFin': { '$lte': new Date(params.horaFin) }},
-                {'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) }}
+                $and: [
+                    { 'horaInicio': { '$gte': new Date(params.horaInicio) } },
+                    { 'horaFin': { '$lte': new Date(params.horaFin) } },
+                    { 'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) } }
+
                 ]
-        }},
+            }
+        },
         {
-            $project:{
-            nombrePaciente: '$bloques.turnos.paciente.nombre', 
-            apellidoPaciente: '$bloques.turnos.paciente.apellido', 
-            documentoPaciente:'$bloques.turnos.paciente.documento', 
-            tipoPrestacion:'$bloques.tipoPrestaciones.conceptId',
-            descripcionPrestacion:'$bloques.tipoPrestaciones.term',
-            auditoriaCodigo:'$bloques.turnos.diagnostico.codificaciones.codificacionAuditoria.codigo',
-            auditoriaNombre:'$bloques.turnos.diagnostico.codificaciones.codificacionAuditoria.nombre',
-            codProfesionalCie10Codigo:'$bloques.turnos.diagnostico.codificaciones.codificacionProfesional.cie10.codigo',
-            codrofesionalCie10Nombre:'bloques.turnos.diagnostico.codificaciones.codificacionProfesional.cie10.nombre',
-            codProfesionalSnomedCodigo:'$bloques.turnos.diagnostico.codificaciones.codificacionProfesional.snomed.codigo',
-            codProfesionalSnomedNombre:'$bloques.turnos.diagnostico.codificaciones.codificacionProfesional.snomed.nombre',  
-        }}
+            $project: {
+                nombrePaciente: '$bloques.turnos.paciente.nombre',
+                apellidoPaciente: '$bloques.turnos.paciente.apellido',
+                documentoPaciente: '$bloques.turnos.paciente.documento',
+                tipoPrestacion: '$bloques.tipoPrestaciones.conceptId',
+                descripcionPrestacion: '$bloques.tipoPrestaciones.term',
+                auditoriaCodigo: '$bloques.turnos.diagnostico.codificaciones.codificacionAuditoria.codigo',
+                auditoriaNombre: '$bloques.turnos.diagnostico.codificaciones.codificacionAuditoria.nombre',
+                codProfesionalCie10Codigo: '$bloques.turnos.diagnostico.codificaciones.codificacionProfesional.cie10.codigo',
+                codrofesionalCie10Nombre: 'bloques.turnos.diagnostico.codificaciones.codificacionProfesional.cie10.nombre',
+                codProfesionalSnomedCodigo: '$bloques.turnos.diagnostico.codificaciones.codificacionProfesional.snomed.codigo',
+                codProfesionalSnomedNombre: '$bloques.turnos.diagnostico.codificaciones.codificacionProfesional.snomed.nombre',
+            }
+        }
         ];
-          
+
         let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
         resolve(data);
-         
+
     });
 }
