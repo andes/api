@@ -3,7 +3,7 @@ import * as configuracionPrestacion from '../schemas/configuracionPrestaciones';
 
 let router = express.Router();
 
-router.get('/:id*?', function (req, res, next) {
+router.get('/configuracionPrestaciones/:id*?', function (req, res, next) {
     // Agregar seguridad!!
     // if (!Auth.check(req, 'string')) {
     //     return next(403);
