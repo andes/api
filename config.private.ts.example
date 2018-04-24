@@ -78,7 +78,7 @@ export const authApp = {
 
 export const snomed = {
     dbName: getEnv('SNOMED_DB', 'es-edition'),
-    dbVersion: getEnv('SNOMED_VERSION', 'v20171200') 
+    dbVersion: getEnv('SNOMED_VERSION', 'v20171200')
 };
 
 // Push Notifications
@@ -170,7 +170,7 @@ export const conSqlHPN = {
         acquireTimeoutMillis: 15000
     }
 
-}
+};
 
 export const CDA = {
     rootOID: ''
