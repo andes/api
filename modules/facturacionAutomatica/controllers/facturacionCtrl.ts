@@ -1,11 +1,11 @@
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 
-import * as agenda from '../../turnos/schemas/agenda';
+import * as agendaSchema from '../../turnos/schemas/agenda';
 
 import * as turnoCtrl from '../../turnos/controller/turnoCacheController';
 import * as operationSumar from '../../facturacionAutomatica/controllers/operationsCtrl/operationsSumar';
-// import * as operationRF from '../../facturacionAutomatica/controllers/operationsCtrl/operationsRF';
+import * as operationRF from '../../facturacionAutomatica/controllers/operationsCtrl/operationsRF';
 
 import * as configPrivate from '../../../config.private';
 import * as constantes from './../../legacy/schemas/constantes';
@@ -55,9 +55,8 @@ export async function facturacionCtrl() {
                 }
             }
         });
-
-        operationSumar.facturacionSumar(pacientesSumar);
-        // operationRF.facturacionRF(pacientesRF);
+        //operationSumar.facturacionSumar(pacientesSumar);
+        operationRF.facturacionRF(pacientesRF);
     } catch (ex) {
         return (ex);
     }
@@ -65,7 +64,7 @@ export async function facturacionCtrl() {
 
 function getAgendasDeMongoPendientes() {
     return new Promise<Array<any>>(function (resolve, reject) {
-        agenda.find({
+        agendaSchema.find({
             estadoFacturacion: constantes.EstadoFacturacionAgendasCache.pendiente
         }).sort({
             _id: 1

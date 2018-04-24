@@ -92,7 +92,7 @@ export async function facturacionRF(turnos) {
         // rfObraSocial = rfObraSocial.recordset[0];
 
         // let rfDiagnostico = (turnoRF.diagnostico) ? await mapeoDiagnostico(turnoRF.diagnostico) : null;
-        
+
         // crearOrden(orden, rfEfector, rfServicio, rfPaciente, rfProfesional, rfTipoPractica, rfObraSocial, rfDiagnostico);
     });
     // sql.close();
@@ -177,6 +177,7 @@ export async function mapeoTipoPractica(id) {
 }
 
 export async function mapeoObraSocial(codigoObraSocial) {
+    console.log('mapeoObraSocial(codigoObraSocial): ', codigoObraSocial);
     let query = 'SELECT idObraSocial, cod_puco FROM dbo.Sys_ObraSocial WHERE cod_PUCO = @codigo;';
     let result = await new sql.Request(poolAgendas)
     .input('codigo', sql.VarChar(50),  codigoObraSocial)
