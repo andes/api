@@ -20,7 +20,13 @@ let config = {
     database: configPrivate.conSql.serverSql.database,
     requestTimeout: 45000
 };
+var thingSchema = new mongoose.Schema({
+   id: Object,
+    tipoPrestacion: Object,
+    nomencladorSUMAR:String
 
+});
+export let configuracionPrestaciones = mongoose.model('configuracionPrestacion', thingSchema, 'configuracionPrestacion');
 /* IMPORTANTE!!!!!
 TENER EN CUENTA QUE PARA FACTURAR EL PACIENTE TIENE QUE EXISTIR EN LA TABLA PN_SMIAFILIADOS Y QUE ESTAR ACTIVO*/
 export async function facturacionSumar(agenda: any) {
@@ -41,7 +47,8 @@ export async function facturacionSumar(agenda: any) {
                 activo: 'S',
                 idTipoPrestacion: 1
             }
-            creaComprobanteSumar(comprobante);
+            console.log("se creo la wea")
+             creaComprobanteSumar(comprobante,agenda[index]);
         } else {
             console.log("NOOOOOO Es paciente SUMAr afiliado")
         }
@@ -97,7 +104,7 @@ async function getPeriodo() {
     });
 }
 
-async function creaComprobanteSumar(datosComprobante) {
+async function creaComprobanteSumar(datosComprobante,prestacion) {
     return new Promise(async (resolve, reject) => {           
 
         let query = "INSERT INTO dbo.PN_comprobante ( cuie, id_factura, nombre_medico, fecha_comprobante, clavebeneficiario, id_smiafiliados, " +
@@ -109,7 +116,50 @@ async function creaComprobanteSumar(datosComprobante) {
           let idComprobante = await executeQuery(query);
           console.log("Query: ", query)
           console.log("IdComprobante: ", idComprobante)
+
+
+          creaPrestaciones(prestacion,idComprobante)
     });
+}
+
+ function creaPrestaciones(prestacionEntrante,idComprobante){
+
+let prestacion = {
+    id: null,
+    id_comprobante:idComprobante,
+    id_nomenclador:null,
+    cantidad: 1,
+    precio_prestacion: null,
+    id_anexo: 301
+}
+
+configuracionPrestaciones.find({
+'tipoPrestacion.conceptId': prestacionEntrante.tipoPrestacion.conceptId}, {},async function (err, file:any) {
+    console.log("acaaa",file[0].nomencladorSUMAR)
+
+   let nomenclador:any = await mapeoNomenclador(file[0].nomencladorSUMAR);
+   prestacion.precio_prestacion = nomenclador.precio;
+   prestacion.id_nomenclador = nomenclador.id;
+
+   console.log(prestacion)
+    });
+
+}
+
+async function mapeoNomenclador(codigoNomenclador){
+    poolAgendas = await new sql.ConnectionPool(config).connect();
+    let query = 'SELECT * FROM [dbo].[PN_nomenclador] where id_nomenclador = @codigo';
+    let resultado = await new sql.Request(poolAgendas)
+        .input('codigo', sql.VarChar(50), 919)
+        .query(query);
+    poolAgendas.close()
+    
+    let res = {
+        id: resultado.recordset[0].id_nomenclador,
+        precio: resultado.recordset[0].precio
+    }
+    console.log(res)
+    return res;
 }
 
 async function executeQuery(query: any) {

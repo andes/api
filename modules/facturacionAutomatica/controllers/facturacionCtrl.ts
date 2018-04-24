@@ -18,6 +18,7 @@ let async = require('async');
 
 
 export async function facturacionCtrl() {
+    console.log("aca")
     try {
         let turnos;
         let unPacienteSumar: any;
@@ -28,7 +29,7 @@ export async function facturacionCtrl() {
         /* Se traen las agendas pendientes de facturación*/
         let agendasMongoPendientes = await getAgendasDeMongoPendientes();
         agendasMongoPendientes.forEach(async (agenda) => {
-
+            console.log(agenda);
             for (let x = 0; x < agenda.bloques.length; x++) {
                 turnos = agenda.bloques[x].turnos;
                 for (let z = 0; z < turnos.length; z++) {
@@ -36,7 +37,8 @@ export async function facturacionCtrl() {
                         if (turnos[z].paciente.obraSocial.codigo === '499') {
                             unPacienteSumar = {
                                 efector: agenda.organizacion,
-                                paciente: turnos[z].paciente
+                                paciente: turnos[z].paciente,
+                                tipoPrestacion: turnos[z].tipoPrestacion,
                             }
 
                             pacientesSumar.push(unPacienteSumar);
@@ -55,7 +57,7 @@ export async function facturacionCtrl() {
                 }
             }
         });
-
+        console.log(pacientesSumar);
         operationSumar.facturacionSumar(pacientesSumar);
         // operationRF.facturacionRF(pacientesRF);
     } catch (ex) {

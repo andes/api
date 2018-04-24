@@ -41,7 +41,7 @@ let schema = new mongoose.Schema({
         type: String,
         enum: ['pendiente', 'facturada'],
         required: true,
-        default: 'pendienteFacturacion'
+        default: 'pendiente'
     },
     avisos: [{
         _id: false,
