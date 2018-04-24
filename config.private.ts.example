@@ -6,7 +6,7 @@ function getEnv(key, _default) {
 export const auth = {
     useLdap:  getEnv('LDAP', false),
     jwtKey:  getEnv('APP_KEY', '5gCYFZPp3dfA2m5UNElVkgRLFcFnBfZp'),
-    ldapOU: 'ou=People,o=integrabilidad,o=neuquen',
+    ldapOU: getEnv('LDAP_HOST', 'ou=People,o=integrabilidad,o=neuquen')
 };
 
 // True: Expone una ruta de la api que lista todos los permisos disponibles
@@ -44,7 +44,7 @@ export let mongooseDebugMode = false;
 export let enableSwagger = false;
 
 // Configuración de Google Geocoding
-export const geoKey = 'GOOGLE_MAP_KEY';
+export const geoKey = getEnv('GOOGLE_MAP_KEY', 'GOOGLE_MAP_KEY');
 
 // Configuración servicio SISA
 export const sisa = {
@@ -71,20 +71,15 @@ export const sintys = {
     path: ''
 };
 
-// Auth App Mobile
-export const authApp = {
-    secret: ''
-};
-
 export const snomed = {
     dbName: getEnv('SNOMED_DB', 'es-edition'),
-    dbVersion: getEnv('SNOMED_VERSION', 'v20171200') 
+    dbVersion: getEnv('SNOMED_VERSION', 'v20171200')
 };
 
 // Push Notifications
 export const pushNotificationsSettings = {
     gcm: {
-        id: 'GCM_API_KEY',
+        id: getEnv('GCM_API_KEY', 'GCM_API_KEY'),
         phonegap: true
     },
     apn: {
@@ -98,12 +93,12 @@ export const pushNotificationsSettings = {
 
 // E-mail server settings
 export const enviarMail = {
-    host: '',
-    port: 587,
-    secure: false, // true for 465, false for other ports
+    host: getEnv('EMAIL_HOST', ''),
+    port: getEnv('EMAIL_PORT', 587),
+    secure: getEnv('EMAIL_SECURE', false), // true for 465, false for other ports
     auth: {
-        user: '', // generated ethereal user
-        pass: ''  // generated ethereal password
+        user: getEnv('EMAIL_USERNAME', ''), // generated ethereal user
+        pass: getEnv('EMAIL_PASSWORD', '')  // generated ethereal password
     }
 };
 
@@ -170,7 +165,7 @@ export const conSqlHPN = {
         acquireTimeoutMillis: 15000
     }
 
-}
+};
 
 export const CDA = {
     rootOID: ''
@@ -182,5 +177,6 @@ export const wsSalud = {
    getResultado: '',
    hellerWS: '',
    hellerFS: '',
-   hpnWS: ''
+   hpnWS: '',
+   hostHPN: ''
 };
