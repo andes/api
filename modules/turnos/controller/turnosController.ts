@@ -79,7 +79,7 @@ export function getTurno(req) {
 
             // TODO: probar la siguiente condición
             if (req.query && req.query.codificado) {
-                matchTurno['bloques.turnos.diagnosticos.0'] = { '$exists': true };
+                matchTurno['bloques.turnos.diagnostico.codificaciones.0'] = { '$exists': true };
             }
 
             if (req.query && req.query.horaInicio) {
