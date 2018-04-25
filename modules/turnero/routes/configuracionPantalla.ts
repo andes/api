@@ -59,9 +59,9 @@ router.post('/insertConfiguracion', function (req: any, res, next) {
                     res.send(null);
                 } else {
                     let newTurno = new configuracionPantalla(req.body);
-                    newTurno.save((err1) => {
-                        if (err) {
-                            return next(err1);
+                    newTurno.save((err2) => {
+                        if (err2) {
+                            return next(err2);
                         }
                         res.json(newTurno);
                     });
