@@ -18,7 +18,6 @@ let async = require('async');
 
 
 export async function facturacionCtrl() {
-    console.log("aca")
     try {
         let turnos;
         let unPacienteSumar: any;
@@ -29,7 +28,6 @@ export async function facturacionCtrl() {
         /* Se traen las agendas pendientes de facturación*/
         let agendasMongoPendientes = await getAgendasDeMongoPendientes();
         agendasMongoPendientes.forEach(async (agenda) => {
-            console.log(agenda);
             for (let x = 0; x < agenda.bloques.length; x++) {
                 turnos = agenda.bloques[x].turnos;
                 for (let z = 0; z < turnos.length; z++) {
@@ -44,7 +42,7 @@ export async function facturacionCtrl() {
                             pacientesSumar.push(unPacienteSumar);
                         } else {
                             unPacienteRF = {
-                                profesional: agenda.profesionales,
+                                profesionales: agenda.profesionales,
                                 tipoPrestacion: turnos[z].tipoPrestacion,
                                 diagnostico: turnos[z].diagnostico,
                                 efector: agenda.organizacion,
