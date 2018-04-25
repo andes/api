@@ -1,12 +1,12 @@
+import { log } from './../core/log/schemas/log';
 import { logPaciente } from '../core/log/schemas/logPaciente';
 
 export class LoggerPaciente {
 
     public static logTurno(req, op, paciente, turno, bloque, agenda, callback?): any {
-
         let newLogPaciente = new logPaciente({
             operacion: op,
-            paciente: paciente._id ? paciente._id : {}, // Un turno puede tener o no tener paciente
+            paciente: paciente.id ? paciente.id : {}, // Un turno puede tener o no tener paciente
             createdAt: new Date(),
             dataTurno: {
                 turno: turno,
