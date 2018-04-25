@@ -23,7 +23,6 @@ router.get('/busqueda/:id*?', function (req: any, res, next) {
             query = turno.find(opciones).sort({ _id: -1 }).limit(Number(req.query.limit));
         } else {
             query = turno.find(opciones);
-
         }
 
 
