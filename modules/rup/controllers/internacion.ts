@@ -21,7 +21,7 @@ export function buscarUltimaInternacion(idPaciente, estado) {
     }
 
     query.where('solicitud.ambitoOrigen').equals('internacion');
-    return query.sort({ "solicitud.fecha": -1 }).limit(1).exec();
+    return query.sort({ 'solicitud.fecha': -1 }).limit(1).exec();
 }
 
 export function PasesParaCenso(dtoCama) {
@@ -37,7 +37,7 @@ export function PasesParaCenso(dtoCama) {
                 resolve(salida);
             });
         }).catch(error => {
-            reject(error)
+            reject(error);
         });
 
     });

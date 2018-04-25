@@ -25,7 +25,7 @@ export function buscarPasesCamaXInternacion(idInternacion) {
 
     pipelineEstado = [
         { $match: { 'estados.idInternacion': idInternacion } },
-        { $unwind: "$estados" },
+        { $unwind: '$estados' },
         { $match: { 'estados.idInternacion': idInternacion } },
         { $sort: { 'estados.fecha': 1 } }];
 
@@ -40,16 +40,16 @@ export function camaOcupadasxUO(unidadOrganizativa, fecha) {
         [{
             $match: {
                 'estados.unidadOrganizativa.conceptId': unidadOrganizativa,
-                'estados.fecha': { "$lte": fecha },
+                'estados.fecha': { '$lte': fecha },
                 'estados.esCensable': true,
                 'estados.estado': 'ocupada',
             }
         },
-        { $unwind: "$estados" },
+        { $unwind: '$estados' },
         {
             $match: {
                 'estados.unidadOrganizativa.conceptId': unidadOrganizativa,
-                'estados.fecha': { "$lte": fecha },
+                'estados.fecha': { '$lte': fecha },
                 'estados.esCensable': true,
                 'estados.estado': 'ocupada'
             }
@@ -59,15 +59,15 @@ export function camaOcupadasxUO(unidadOrganizativa, fecha) {
             $group:
                 {
                     _id: {
-                        id: "$_id",
-                        nombre: "$nombre",
-                        organizacion: "$organizacion",
-                        sector: "$sector",
-                        habitacion: "$habitacion",
-                        tipoCama: "$tipoCama",
-                        idInternacion: "$estados.idInternacion",
+                        id: '$_id',
+                        nombre: '$nombre',
+                        organizacion: '$organizacion',
+                        sector: '$sector',
+                        habitacion: '$habitacion',
+                        tipoCama: '$tipoCama',
+                        idInternacion: '$estados.idInternacion',
                     },
-                    ultimoEstado: { $last: "$estados" }
+                    ultimoEstado: { $last: '$estados' }
                 }
         },
         { $sort: { 'ultimoEstado.fecha': 1 } }];
@@ -84,7 +84,7 @@ export function desocupadaEnDia(dtoCama, fecha) {
         let pipelineEstado = [];
         let finDia = moment(dtoCama.ultimoEstado.fecha).endOf('day').toDate();
         let finDiaConsulta = moment(fecha).endOf('day').toDate();
-        let inicioDia = moment(fecha).startOf('day').toDate()
+        let inicioDia = moment(fecha).startOf('day').toDate();
         if (finDiaConsulta > finDia) {
 
 
@@ -95,8 +95,8 @@ export function desocupadaEnDia(dtoCama, fecha) {
                     $and:
                         [{
                             'estados.fecha': {
-                                "$lte": inicioDia,
-                                "$gte": dtoCama.ultimoEstado.fecha
+                                '$lte': inicioDia,
+                                '$gte': dtoCama.ultimoEstado.fecha
                             }
                         }, { 'estados.estado': { $ne: 'ocupada' } }]
                 }
@@ -124,7 +124,7 @@ export function camaXInternacion(idInternacion) {
 
         pipelineEstado = [
             { $match: { 'estados.idInternacion': idInternacion } },
-            { $unwind: "$estados" },
+            { $unwind: '$estados' },
             { $match: { 'estados.idInternacion': idInternacion } },
             { $sort: { 'estados.fecha': -1 } },
             { $limit: 1 }];
@@ -156,14 +156,14 @@ export function disponibilidadXUO(unidad, fecha) {
         let pipelineInicioDia = [{
             $match: {
                 'estados.unidadOrganizativa.conceptId': unidad,
-                'estados.fecha': { "$lte": inicioDia }
+                'estados.fecha': { '$lte': inicioDia }
             }
         },
-        { $unwind: "$estados" },
+        { $unwind: '$estados' },
         {
             $match: {
                 'estados.unidadOrganizativa.conceptId': unidad,
-                'estados.fecha': { "$lte": inicioDia }
+                'estados.fecha': { '$lte': inicioDia }
             }
         },
         { $sort: { 'estados.fecha': 1 } },
@@ -171,14 +171,14 @@ export function disponibilidadXUO(unidad, fecha) {
             $group:
                 {
                     _id: {
-                        id: "$_id",
-                        nombre: "$nombre",
-                        organizacion: "$organizacion",
-                        sector: "$sector",
-                        habitacion: "$habitacion",
-                        tipoCama: "$tipoCama"
+                        id: '$_id',
+                        nombre: '$nombre',
+                        organizacion: '$organizacion',
+                        sector: '$sector',
+                        habitacion: '$habitacion',
+                        tipoCama: '$tipoCama'
                     },
-                    ultimoEstado: { $last: "$estados" }
+                    ultimoEstado: { $last: '$estados' }
                 }
         },
         { $match: { 'ultimoEstado.estado': { $nin: ['bloqueada', 'reparacion'] } } }];
@@ -186,14 +186,14 @@ export function disponibilidadXUO(unidad, fecha) {
         let pipelineFinDia = [{
             $match: {
                 'estados.unidadOrganizativa.conceptId': unidad,
-                'estados.fecha': { "$lte": finDia }
+                'estados.fecha': { '$lte': finDia }
             }
         },
-        { $unwind: "$estados" },
+        { $unwind: '$estados' },
         {
             $match: {
                 'estados.unidadOrganizativa.conceptId': unidad,
-                'estados.fecha': { "$lte": finDia }
+                'estados.fecha': { '$lte': finDia }
             }
         },
         { $sort: { 'estados.fecha': 1 } },
@@ -201,14 +201,14 @@ export function disponibilidadXUO(unidad, fecha) {
             $group:
                 {
                     _id: {
-                        id: "$_id",
-                        nombre: "$nombre",
-                        organizacion: "$organizacion",
-                        sector: "$sector",
-                        habitacion: "$habitacion",
-                        tipoCama: "$tipoCama"
+                        id: '$_id',
+                        nombre: '$nombre',
+                        organizacion: '$organizacion',
+                        sector: '$sector',
+                        habitacion: '$habitacion',
+                        tipoCama: '$tipoCama'
                     },
-                    ultimoEstado: { $last: "$estados" }
+                    ultimoEstado: { $last: '$estados' }
                 }
         },
         { $match: { 'ultimoEstado.estado': { $nin: ['bloqueada', 'reparacion'] } } }];
@@ -222,7 +222,7 @@ export function disponibilidadXUO(unidad, fecha) {
                     if (errF) {
                         reject(errF);
                     } else {
-                        salida = { disponibilidad0: dataIni.length, disponibilidad24: dataFin.length }
+                        salida = { disponibilidad0: dataIni.length, disponibilidad24: dataFin.length };
                         resolve(salida);
                     }
                 });

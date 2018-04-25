@@ -15,36 +15,32 @@ export function censoDiario(unidad, fechaConsulta) {
                 if (camas) {
                     let salidaCamas = Promise.all(camas.map(c => camasController.desocupadaEnDia(c, fecha)));
                     salidaCamas.then(salida => {
-
                         salida = salida.filter(s => s);
                         let pasesDeCama = Promise.all(salida.map(c => internacionesController.PasesParaCenso(c)));
                         pasesDeCama.then(resultado => {
-
-                            let pasesCamaCenso: any[] = resultado;
-                            // loopeamos todos los pases de las camas
-                            pasesCamaCenso.map((censo: any, indice) => {
-                                censo.pases = censo.pases.filter(p => { return p.estados.fecha <= moment(fecha).endOf('day').toDate(); });
-                                // Llamamos a la funcion completarUnCenso que se encarga de devolvernos un array
-                                // con la informacion que necesitamos para el censo. (ingreso, pase de, pase a, etc)
-                                let result = completarUnCenso(censo, indice, fecha, unidad, pasesCamaCenso[indice]);
-
-
-
-                                let index = -2;
-                                if (result['esIngreso'] && result['esPaseDe']) {
-                                    index = censo.pases.findIndex(p => p.estados._id === result['esPaseDe']._id);
-                                }
-
-                                if (!result['esIngreso'] && result['esPaseA'] && result['esPaseDe']) {
-                                    if (result['esPaseA'].fecha <= result['esPaseDe'].fecha) {
-                                        index = censo.pases.findIndex(p => p.estados._id === result['esPaseA']._id);
+                            if (resultado.length) {
+                                let pasesCamaCenso: any[] = resultado;
+                                // loopeamos todos los pases de las camas
+                                pasesCamaCenso.map((censo: any, indice) => {
+                                    censo.pases = censo.pases.filter(p => { return p.estados.fecha <= moment(fecha).endOf('day').toDate(); });
+                                    // Llamamos a la funcion completarUnCenso que se encarga de devolvernos un array
+                                    // con la informacion que necesitamos para el censo. (ingreso, pase de, pase a, etc)
+                                    let result = completarUnCenso(censo, indice, fecha, unidad, pasesCamaCenso[indice]);
+                                    let index = -2;
+                                    if (result['esIngreso'] && result['esPaseDe']) {
+                                        index = censo.pases.findIndex(p => p.estados._id === result['esPaseDe']._id);
                                     }
-                                }
-                                let registros = censo.internacion.ejecucion.registros;
-                                let egresoExiste = registros.find(registro => registro.concepto.conceptId === '58000006');
-                                let fechaActual = new Date(fechaConsulta);
-                                if (egresoExiste) {
-                                    if (moment(fechaActual).endOf('day') <= moment(new Date(egresoExiste.valor.InformeEgreso.fechaEgreso)).endOf('day')) {
+                                    if (!result['esIngreso'] && result['esPaseA'] && result['esPaseDe']) {
+                                        if (result['esPaseA'].fecha <= result['esPaseDe'].fecha) {
+                                            index = censo.pases.findIndex(p => p.estados._id === result['esPaseA']._id);
+                                        }
+                                    }
+                                    let registros = censo.internacion.ejecucion.registros;
+                                    let egresoExiste = registros.find(registro => registro.concepto.conceptId === '58000006');
+                                    let fechaActual = new Date(fechaConsulta);
+
+                                    if (egresoExiste && moment(fechaActual).endOf('day') <= moment(new Date(egresoExiste.valor.InformeEgreso.fechaEgreso)).endOf('day')) {
+
                                         if (index >= 0) {
                                             let pases1 = censo.pases.slice(0, (index + 1));
                                             let pases2 = censo.pases.slice(index, censo.pases.length);
@@ -61,32 +57,25 @@ export function censoDiario(unidad, fechaConsulta) {
 
                                             listadoCensos.push({ censo: result, fecha: fecha });
                                         }
-                                    }
-
-
-
-                                } else {
-                                    if (index >= 0) {
-                                        let pases1 = censo.pases.slice(0, (index + 1));
-                                        let pases2 = censo.pases.slice(index, censo.pases.length);
-
-                                        censo.pases = pases1;
-                                        let nuevoCenso = Object.assign({}, censo);
-                                        nuevoCenso.pases = pases2;
-                                        let censo1 = completarUnCenso(censo, indice, fecha, unidad, pasesCamaCenso[indice]);
-                                        listadoCensos.push({ censo: censo1, fecha: fecha });
-                                        let censo2 = completarUnCenso(nuevoCenso, indice, fecha, unidad, pasesCamaCenso[indice]);
-                                        listadoCensos.push({ censo: censo2, fecha: fecha });
-
                                     } else {
-
-                                        listadoCensos.push({ censo: result, fecha: fecha });
+                                        if (index >= 0) {
+                                            let pases1 = censo.pases.slice(0, (index + 1));
+                                            let pases2 = censo.pases.slice(index, censo.pases.length);
+                                            censo.pases = pases1;
+                                            let nuevoCenso = Object.assign({}, censo);
+                                            nuevoCenso.pases = pases2;
+                                            let censo1 = completarUnCenso(censo, indice, fecha, unidad, pasesCamaCenso[indice]);
+                                            listadoCensos.push({ censo: censo1, fecha: fecha });
+                                            let censo2 = completarUnCenso(nuevoCenso, indice, fecha, unidad, pasesCamaCenso[indice]);
+                                            listadoCensos.push({ censo: censo2, fecha: fecha });
+                                        } else {
+                                            listadoCensos.push({ censo: result, fecha: fecha });
+                                        }
                                     }
-                                }
-
-                            });
-
-
+                                });
+                            } else {
+                                listadoCensos.push({ censo: null, fecha: fecha });
+                            }
                             return resolve(listadoCensos);
                         }).catch(error => {
                             return reject(error);
@@ -98,7 +87,6 @@ export function censoDiario(unidad, fechaConsulta) {
             }).catch(err => {
                 return reject(err);
             });
-
     });
 }
 
@@ -118,34 +106,38 @@ export function completarResumenDiario(listadoCenso, unidad, fecha) {
     };
     if (listadoCenso && listadoCenso.length > 0) {
         Object.keys(listadoCenso).forEach(indice => {
-            resumenCenso.disponibles24 += 1;
-            resumenCenso.existencia24 += 1;
-            if (listadoCenso[indice].censo['esIngreso']) {
-                resumenCenso.ingresos += 1;
-            }
-            if (listadoCenso[indice].censo['esIngreso'] && listadoCenso[indice].censo['esPaseDe']) {
-                resumenCenso.existencia0 += 1;
-            }
+            if (listadoCenso[indice].censo !== null) {
 
-            if (listadoCenso[indice].censo['esPaseDe']) {
-                resumenCenso.pasesDe += 1;
-            }
-
-            if (listadoCenso[indice].censo['esPaseA']) {
-                resumenCenso.pasesA += 1;
-            }
-
-            if (listadoCenso[indice].censo['egreso'] !== '') {
-                if (listadoCenso[indice].censo['egreso'] === 'Defunción') {
-                    resumenCenso.egresosDefuncion += 1;
-                } else {
-                    resumenCenso.egresosAlta += 1;
-                }
+                resumenCenso.disponibles24 += 1;
+                resumenCenso.existencia24 += 1;
                 if (listadoCenso[indice].censo['esIngreso']) {
-                    resumenCenso.ingresoEgresoDia += 1;
+                    resumenCenso.ingresos += 1;
+                }
+                if (listadoCenso[indice].censo['esIngreso'] && listadoCenso[indice].censo['esPaseDe']) {
+                    resumenCenso.existencia0 += 1;
+                }
+
+                if (listadoCenso[indice].censo['esPaseDe']) {
+                    resumenCenso.pasesDe += 1;
+                }
+
+                if (listadoCenso[indice].censo['esPaseA']) {
+                    resumenCenso.pasesA += 1;
+                }
+
+                if (listadoCenso[indice].censo['egreso'] !== '') {
+                    if (listadoCenso[indice].censo['egreso'] === 'Defunción') {
+                        resumenCenso.egresosDefuncion += 1;
+                    } else {
+                        resumenCenso.egresosAlta += 1;
+                    }
+                    if (listadoCenso[indice].censo['esIngreso']) {
+                        resumenCenso.ingresoEgresoDia += 1;
+                    }
                 }
             }
         });
+
         resumenCenso.pacientesDia = resumenCenso.existencia0 +
             resumenCenso.ingresos + resumenCenso.pasesDe -
             resumenCenso.egresosDefuncion - resumenCenso.egresosAlta;
@@ -157,8 +149,6 @@ export function completarResumenDiario(listadoCenso, unidad, fecha) {
             resumenCenso.egresosDefuncion - resumenCenso.egresosAlta - resumenCenso.pasesA;
 
     }
-
-
     camasController.disponibilidadXUO(unidad, fecha).then((respuesta: any) => {
         if (respuesta) {
             resumenCenso.disponibles0 = respuesta.disponibilidad0 ? respuesta.disponibilidad0 : 0;
@@ -173,32 +163,24 @@ export function completarResumenDiario(listadoCenso, unidad, fecha) {
 export function censoMensual(fechaDesde, fechaHasta, unidad) {
     return new Promise(async function (resolve, reject) {
         let censoMensualTotal = [];
-
         let nuevaFechaDesde = new Date(fechaDesde);
         let nuevaFechaHasta = new Date(fechaHasta);
         let promises = [];
-
+        let algo = 0;
         while (nuevaFechaDesde <= nuevaFechaHasta) {
-
             let censo = await censoDiario(unidad, new Date(nuevaFechaDesde));
             promises.push(censo);
             let nuevoDia = nuevaFechaDesde.getDate() + 1;
             nuevaFechaDesde.setDate(nuevoDia);
-
         }
-
         Promise.all(promises).then(censosDiarios => {
-
             censosDiarios.forEach(unCenso => {
                 if (unCenso.length > 0) {
-
                     let resumen = censoController.completarResumenDiario(unCenso, unidad, unCenso[0].fecha);
                     let resultadoFinal = {
-
                         fecha: unCenso[0].fecha,
                         resumen: resumen
                     };
-
                     censoMensualTotal.push(resultadoFinal);
                 }
             });
@@ -207,9 +189,6 @@ export function censoMensual(fechaDesde, fechaHasta, unidad) {
 
     });
 }
-
-
-
 
 export function completarUnCenso(censo, indice, fecha, idUnidadOrganizativa, CamaCenso) {
     let internacion = CamaCenso.internacion;
