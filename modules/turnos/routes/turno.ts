@@ -37,7 +37,8 @@ router.get('/turno/:id*?', async function (req, res, next) {
         idTurno: String,
         paciente: paciente,
         tipoPrestacion: conceptoTurneable,
-        tipoTurno: enum: delDia | programado | gestion | profesional
+        tipoTurno: enum: delDia | programado | gestion | profesional,
+        motivoConsulta: String
     };
  */
 router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, res, next) {
@@ -201,11 +202,10 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                                         motivoConsulta: update[etiquetaMotivoConsulta]
                                     };
                                     Logger.log(req, 'citas', 'asignarTurno', datosOp);
+                                    let turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
 
-                                    if (req.body.reasignado && req.body.reasignado === false) {
-                                        let turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
-                                        LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turno, req.params.idBloque, req.params.idAgenda);
-                                    }
+                                    LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turno, req.params.idBloque, req.params.idAgenda);
+
                                     // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
                                     // Donde doc2 es el documeto Agenda actualizado
                                     operations.cacheTurnosSips(doc2);
@@ -231,6 +231,7 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', function (req, res, next) {
             return next(err);
         }
         let etiquetaAvisoSuspension: string;
+        let etiquetaMotivoConsulta: string;
         if (req.params.idBloque !== '-1') {
             let indexBloque = (data as any).bloques.findIndex(bloq => {
                 return (bloq.id === req.params.idBloque);
@@ -239,13 +240,19 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', function (req, res, next) {
                 return (t.id === req.params.idTurno);
             });
             etiquetaAvisoSuspension = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.avisoSuspension';
+            etiquetaMotivoConsulta = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.motivoConsulta';
         } else {
             let indexTurno = (data as any).sobreturnos.findIndex(sobreturno => Object.is(req.params.idTurno, String(sobreturno._id)));
             etiquetaAvisoSuspension = 'sobreturnos.' + indexTurno + '.avisoSuspension';
         }
 
         let update = {};
-        update[etiquetaAvisoSuspension] = req.body.avisoSuspension;
+        if (req.body.avisoSuspension) {
+            update[etiquetaAvisoSuspension] = req.body.avisoSuspension;
+        }
+        if (req.body.motivoConsulta) {
+            update[etiquetaMotivoConsulta] = req.body.motivoConsulta;
+        }
         let query = {
             _id: req.params.idAgenda,
         };
