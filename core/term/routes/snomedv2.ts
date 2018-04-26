@@ -17,8 +17,9 @@ let router = express.Router();
 
 router.get('/snomed/concepts/:sctid', async function (req, res, next) {
     let sctid = req.params.sctid;
+    let format = req.query.format || false;
     try {
-        let concept = await snomedCtr.getConcept(sctid);
+        let concept = await snomedCtr.getConcept(sctid, format);
         return res.json(concept);
     } catch (e) {
         return next(e);
@@ -203,18 +204,66 @@ router.get('/snomed/search', async function (req, res, next) {
 router.get('/snomed/expression', async function (req, res, next) {
     let expression = req.query.expression;
     let query = makeMongoQuery(expression);
-    snomedModel.find(query, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docs: any[]) => {
-        let response = docs.map((item) => {
-            let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
-            return {
-                fsn: item.fullySpecifiedName,
-                term: term,
-                conceptId: item.conceptId,
-                semanticTag: item.semtag
-            };
+    let project = { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 };
+    let languageCode = req.query.languageCode ? req.query.languageCode : 'es';
+
+    if (req.query.field && req.query.field === 'term') {
+
+        let conditions = [];
+        let words = req.query.words.split(' ');
+        words.forEach((word) => {
+            // normalizamos cada una de las palabras como hace SNOMED para poder buscar palabra a palabra
+            word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08');
+            let expWord = '^' + utils.removeDiacritics(word) + '.*';
+            // agregamos la palabra a la condicion
+            conditions.push({ 'descriptions.words': { '$regex': expWord } });
         });
-        return res.json(response);
-    }).catch(next);
+
+        let pipeline = [
+            {
+                '$match': query,
+
+            },
+            {
+                '$project': { ...project, descriptions: 1 }
+            },
+            {
+                '$unwind': '$descriptions'
+            },
+            {
+                '$match': {
+                    'descriptions.languageCode': languageCode,
+                    '$and': conditions
+                }
+
+            },
+            {
+                '$project': {
+                    fsn: '$fullySpecifiedName',
+                    term: '$descriptions.term',
+                    conceptId: '$conceptId',
+                    semanticTag: '$semtag'
+                }
+            }
+        ];
+
+        res.json(await toArray(snomedModel.aggregate(pipeline).cursor({}).exec()));
+
+    } else {
+
+        snomedModel.find(query, project).sort({ fullySpecifiedName: 1 }).then((docs: any[]) => {
+            let response = docs.map((item) => {
+                let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
+                return {
+                    fsn: item.fullySpecifiedName,
+                    term: term,
+                    conceptId: item.conceptId,
+                    semanticTag: item.semtag
+                };
+            });
+            return res.json(response);
+        }).catch(next);
+    }
 });
 
 export = router;
