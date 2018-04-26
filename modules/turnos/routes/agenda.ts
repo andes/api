@@ -442,6 +442,10 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                         }
                         agendaCtrl.suspenderTurno(req, data, turno);
                         break;
+                    case 'codificarTurno': agendaCtrl.codificarTurno(req, data, turnos[y]).catch((err2) => {
+                        return next(err2);
+                    });
+                        break;
                     case 'guardarNotaTurno': agendaCtrl.guardarNotaTurno(req, data, req.body.idTurno);
                         break;
                     case 'darTurnoDoble': agendaCtrl.darTurnoDoble(req, data, turnos[y]);

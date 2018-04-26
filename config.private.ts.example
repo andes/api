@@ -17,7 +17,7 @@ function getEnv(key, _default, type = 's') {
 export const auth = {
     useLdap:  getEnv('LDAP', false),
     jwtKey:  getEnv('APP_KEY', '5gCYFZPp3dfA2m5UNElVkgRLFcFnBfZp'),
-    ldapOU: 'ou=People,o=integrabilidad,o=neuquen',
+    ldapOU: getEnv('LDAP_HOST', 'ou=People,o=integrabilidad,o=neuquen')
 };
 
 // True: Expone una ruta de la api que lista todos los permisos disponibles
@@ -80,11 +80,6 @@ export const sintys = {
     host: getEnv('SINTYS_HOST', ''),
     port: getEnv('SINTYS_PORT', 443, 'n'),
     path: getEnv('SINTYS_PATH', '')
-};
-
-// Auth App Mobile
-export const authApp = {
-    secret: ''
 };
 
 export const snomed = {

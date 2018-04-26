@@ -112,7 +112,6 @@ router.get('/formularioTerapeutico/:id?', async function (req, res, next) {
                         return next(err);
                     }
                     if (req.query.nombreMedicamento) { // Si es una búsqueda por nombre de medicamento
-
                     }
                     res.json(data);
                 });
