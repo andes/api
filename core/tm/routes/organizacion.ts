@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as https from 'https';
 
-import * as organizacion from '../schemas/organizacion';
+import { model as OrganizacionModel } from '../schemas/organizacion';
 
 import * as utils from '../../../utils/utils';
 import { toArray } from '../../../utils/utils';
@@ -18,9 +18,7 @@ let router = express.Router();
 
 router.get('/organizaciones/georef/:id?', async function (req, res, next) {
     if (req.params.id) {
-        organizacion
-            .model
-            .findById(req.params.id, function (err, data: any) {
+        OrganizacionModel.findById(req.params.id, (err, data: any) => {
                 if (err) {
                     return next(err);
                 }
@@ -75,9 +73,7 @@ router.get('/organizaciones/georef/:id?', async function (req, res, next) {
             });
 
     } else {
-        let query = organizacion
-            .model
-            .aggregate([
+        let query = OrganizacionModel.aggregate([
                 {
                     '$match': {
                         'direccion.geoReferencia': {
@@ -240,9 +236,7 @@ router.get('/organizaciones/georef/:id?', async function (req, res, next) {
  */
 router.get('/organizaciones/:id*?', function (req, res, next) {
     if (req.params.id) {
-        organizacion
-            .model
-            .findById(req.params.id, function (err, data) {
+        OrganizacionModel.findById(req.params.id, (err, data) => {
                 if (err) {
                     return next(err);
                 }
@@ -287,43 +281,13 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
         let skip: number = parseInt(req.query.skip || 0, 10);
         let limit: number = Math.min(parseInt(req.query.limit || defaultLimit, 10), maxLimit);
 
-        query = organizacion
-            .model
-            .find(filtros)
-            .skip(skip)
-            .limit(limit);
-        query.exec(function (err, data) {
+        query = OrganizacionModel.find(filtros).skip(skip).limit(limit);
+        query.exec((err, data) => {
             if (err) {
                 return next(err);
             }
             res.json(data);
         });
-
-        // if (req.query.nombre) {
-        //     filtros['nombre'] = { '$regex': utils.makePattern(req.query.nombre) };
-        // }
-
-        // if (req.query.cuie) {
-        //     filtros['codigo.cuie'] = { '$regex': utils.makePattern(req.query.cuie) };
-        // }
-
-        // if (req.query.sisa) {
-        //     filtros['codigo.sisa'] = { '$regex': utils.makePattern(req.query.sisa) };
-        // }
-        // if (req.query.activo) {
-        //     filtros['activo'] = req.query.activo;
-        // }
-        // if (req.query.tipoEstablecimiento) {
-        //     filtros['tipoEstablecimiento.nombre'] = {'$regex': utils.makePattern(req.query.tipoEstablecimiento) };
-        // }
-
-
-        // query.exec(function (err, data) {
-        //     if (err) {
-        //         return next(err);
-        //     }
-        //     res.json(data);
-        // });
     }
 });
 
@@ -353,10 +317,10 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
  *           $ref: '#/definitions/organizacion'
  */
 router.post('/organizaciones', Auth.authenticate(), function (req, res, next) {
-    if (!Auth.check(req, 'tm:especialidad:postEspecialidad')) {
+    if (!Auth.check(req, 'tm:organizacion:create')) {
         return next(403);
     }
-    let newOrganization = new organizacion.model(req.body);
+    let newOrganization = new OrganizacionModel(req.body);
     newOrganization.save((err) => {
         if (err) {
             return next(err);
@@ -396,10 +360,10 @@ router.post('/organizaciones', Auth.authenticate(), function (req, res, next) {
  *           $ref: '#/definitions/organizacion'
  */
 router.put('/organizaciones/:id', Auth.authenticate(), function (req, res, next) {
-    // if (!Auth.check(req, 'tm:especialidad:putEspecialidad')) {
-    //     return next(403);
-    // }
-    organizacion.model.findByIdAndUpdate(req.params.id, req.body, function (err, data) {
+    if (!Auth.check(req, 'tm:organizacion:edit')) {
+        return next(403);
+    }
+    OrganizacionModel.findByIdAndUpdate(req.params.id, req.body, function (err, data) {
         if (err) {
             return next(err);
         }
@@ -434,10 +398,10 @@ router.put('/organizaciones/:id', Auth.authenticate(), function (req, res, next)
  *           $ref: '#/definitions/organizacion'
  */
 router.delete('/organizaciones/:id', Auth.authenticate(), function (req, res, next) {
-    if (!Auth.check(req, 'tm:organizacion:deleteOrganizacion')) {
+    if (!Auth.check(req, 'tm:organizacion:delete')) {
         return next(403);
     }
-    organizacion.model.findByIdAndRemove(req.params._id, function (err, data) {
+    OrganizacionModel.findByIdAndRemove(req.params._id, function (err, data) {
         if (err) {
             return next(err);
         }
