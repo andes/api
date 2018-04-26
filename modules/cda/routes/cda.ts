@@ -103,6 +103,8 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
         let metadata = {
             paciente: paciente._id,
             prestacion: prestacion,
+            profesional: dataProfesional,
+            organizacion: organizacion,
             adjuntos: adjuntos,
             fecha: fecha,
             extras: {
@@ -152,9 +154,8 @@ router.post('/', async (req: any, res, next) => {
                     return next({ error: 'prestacion_existente' });
                 }
 
-                // let organizacion = await Organizaciones.findById(orgId);
-
-                // let dataProfesional = req.body.profesional;
+                let organizacion = await Organizaciones.findById(orgId);
+                let dataProfesional = req.body.profesional;
 
                 let prestacion = await cdaCtr.matchCodeByLoinc(cdaData.loinc);
                 if (!prestacion) {
@@ -173,10 +174,12 @@ router.post('/', async (req: any, res, next) => {
                     fileData = await cdaCtr.storeFile(fileObj);
                     adjuntos = [{ path: fileData.data, id: fileData.id }];
                 }
-
+                // Pendiente para revisar con Mariano ya que modificamos la estructura
                 let metadata = {
                     paciente: paciente._id,
                     prestacion: prestacion,
+                    organizacion: organizacion,
+                    profesional: dataProfesional,
                     fecha: cdaData.fecha,
                     adjuntos: adjuntos,
                     extras: {
