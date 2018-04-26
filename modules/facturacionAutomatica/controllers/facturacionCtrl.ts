@@ -46,7 +46,9 @@ export async function facturacionCtrl() {
                                 tipoPrestacion: turnos[z].tipoPrestacion,
                                 diagnostico: turnos[z].diagnostico,
                                 efector: agenda.organizacion,
-                                paciente: turnos[z].paciente
+                                paciente: turnos[z].paciente,
+                                fecha: turnos[z].horaInicio,
+                                motivoConsulta: turnos[z].motivoConsulta,
                             }
 
                             pacientesRF.push(unPacienteRF);
