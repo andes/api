@@ -54,7 +54,7 @@ router.post('/insertConfiguracion', function (req: any, res, next) {
                 sort: {
                     '_id': -1
                 }
-            }, function (err, file) {
+            }, function (err1, file) {
                 if (file.length > 0) {
                     res.send(null);
                 } else {
