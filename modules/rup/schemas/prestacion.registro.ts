@@ -43,7 +43,8 @@ schema.add({
     // Almacena los registros de los átomos asociados a la molécula
     registros: [schema],
     // Indica los id de otros registros dentro array 'registros' de la prestación
-    relacionadoCon: [mongoose.Schema.Types.ObjectId],
+    // O un conceptId si el registro está relacionado con un concepto (ej: un registro de "caries" con concepto "diente 18")
+    relacionadoCon: [mongoose.Schema.Types.Mixed],
 });
 
 // Habilitar plugin de auditoría
