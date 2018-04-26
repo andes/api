@@ -42,6 +42,7 @@ export async function facturacionCtrl() {
                             pacientesSumar.push(unPacienteSumar);
                         } else {
                             unPacienteRF = {
+                                _id: turnos[z]._id,
                                 profesionales: agenda.profesionales,
                                 tipoPrestacion: turnos[z].tipoPrestacion,
                                 diagnostico: turnos[z].diagnostico,
