@@ -56,20 +56,66 @@ router.get('/formularioTerapeutico/:id?', async function (req, res, next) {
             if (req.query.nivel) {
                 opciones['nivelComplejidad'] = req.query.nivel;
             }
-            query = formularioTerapeutico.find(opciones);
-            if (!Object.keys(query).length) {
-                res.status(400).send('Debe ingresar al menos un parámetro');
-                return next(400);
+            // Parámetro vista de arbol
+            if (req.query.tree) { // llevarlo a lado del controlador
+                let data;
+                let out = [];
+                if (req.query.root) {
+                    data = await toArray(formularioTerapeutico.aggregate(
+                        [
+                            { $match: { idpadre: mongoose.Types.ObjectId('5ac6512111764e32b35ad416') } },
+                            {
+                                $graphLookup: {
+                                    from: 'formularioTerapeutico',
+                                    startWith: '$_id',
+                                    connectFromField: 'idpadre',
+                                    connectToField: 'idpadre',
+                                    as: 'arbol'
+                                }
+                            }
+                        ]
+                    ).cursor({}).exec());
+                    out = [];
+                    data.forEach(function (nodo, indiceNodo) {
+                        out.push(nodo);
+                    });
+                } else {
+                    let idpadre = req.query.idpadre;
+                    data = await toArray(formularioTerapeutico.aggregate(
+                        [
+                            { $match: { idpadre: mongoose.Types.ObjectId(idpadre) } },
+                            {
+                                $graphLookup: {
+                                    from: 'formularioTerapeutico',
+                                    startWith: '$_id',
+                                    connectFromField: 'idpadre',
+                                    connectToField: 'idpadre',
+                                    as: 'arbol'
+                                }
+                            }
+                        ]
+                    ).cursor({}).exec());
+                    out = [];
+                    data.forEach(function (nodo, indiceNodo) {
+                        out.push(nodo);
+                    });
+                }
+                res.json(out);
+            } else {
+                query = formularioTerapeutico.find(opciones);
+                if (!Object.keys(query).length) {
+                    res.status(400).send('Debe ingresar al menos un parámetro');
+                    return next(400);
+                }
+                query.exec(function (err, data) {
+                    if (err) {
+                        return next(err);
+                    }
+                    if (req.query.nombreMedicamento) { // Si es una búsqueda por nombre de medicamento
+                    }
+                    res.json(data);
+                });
             }
-
-            query.exec(function (err, data) {
-                if (err) {
-                    return next(err);
-                }
-                if (req.query.nombreMedicamento) { // Si es una búsqueda por nombre de medicamento
-                }
-                res.json(data);
-            });
         }
 
     }
