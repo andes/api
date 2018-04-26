@@ -13,6 +13,11 @@ const mobileMiddleware = [
     Auth.authenticate()
 ];
 
+const publicMiddleware = [
+    Auth.authenticatePublic()
+];
+
+
 // Habilita/deshabilita módulos de la API
 export const modules = {
     auth: {
@@ -24,7 +29,7 @@ export const modules = {
         active: true,
         path: './core/tm/routes',
         route: '/core/tm',
-        middleware: appMiddleware,
+        middleware: null,
     },
     term: {
         active: true,
@@ -92,6 +97,12 @@ export const modules = {
         route: '/modules/mobileApp',
         middleware: mobileMiddleware
     },
+    turnero: {
+        active: true,
+        path: './modules/turnero/routes',
+        route: '/modules/turnero',
+        middleware: null
+    },
     fuentesAutenticas: {
         active: true,
         path: './modules/fuentesAutenticas/routes',
@@ -103,6 +114,12 @@ export const modules = {
         path: './modules/usuarios/routes',
         route: '/modules/usuarios',
         middleware: appMiddleware
+    },
+    matriculaciones: {
+        active: true,
+        path: './modules/matriculaciones/routes',
+        route: '/modules/matriculaciones',
+        middleware: null
     },
     fhir: {
         active: true,
@@ -127,7 +144,19 @@ export const modules = {
         path: './modules/obraSocial/routes',
         route: '/modules/obraSocial',
         middleware: appMiddleware
-    }
+    },
+    sugerencias: {
+        active: true,
+        path: './modules/sugerencias/routes',
+        route: '/modules/sugerencias',
+        middleware: null
+    },
+    prestamosCarpetas: {
+        active: true,
+        path: './modules/prestamosCarpetas/routes',
+        route: '/modules/prestamosCarpetas',
+        middleware: appMiddleware
+    },
 };
 
 // Cotas de consumo de APIs
@@ -164,5 +193,11 @@ export const mpi = {
         name: 0.3,
         gender: 0.1,
         birthDate: 0.3
+    },
+    weightsFaAnses: {
+        identity: 0.1,
+        name: 0.45,
+        gender: 0.3,
+        birthDate: 0.15
     }
 };

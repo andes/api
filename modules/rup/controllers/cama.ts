@@ -25,7 +25,7 @@ export function buscarPasesCamaXInternacion(idInternacion) {
 
     pipelineEstado = [
         { $match: { 'estados.idInternacion': idInternacion } },
-        { $unwind: "$estados" },
+        { $unwind: '$estados' },
         { $match: { 'estados.idInternacion': idInternacion } },
         { $sort: { 'estados.fecha': 1 } }];
 

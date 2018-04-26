@@ -544,24 +544,27 @@ function processTurnos(agendas: any, idAgendaCreada: any, idEfector: any) {
         try {
             for (let x = 0; x < agendas.bloques.length; x++) {
                 turnos = agendas.bloques[x].turnos;
-
                 for (let i = 0; i < turnos.length; i++) {
-
                     if (turnos[i].estado === 'asignado') {
                         let idTurno = await existeTurnoSips(turnos[i]);
 
                         if (!idTurno) {
                             await grabaTurnoSips(turnos[i], idAgendaCreada, idEfector);
-                            // resolve();
-                        } else {
-                            // resolve();
                         }
-                        // resolve();
-                    } else {
-                        // resolve();
                     }
                 }
             }
+            for (let y = 0; y < agendas.sobreturnos.length; y++) {
+
+                if (agendas.sobreturnos[y].estado === 'asignado') {
+                    let idSobreturno = await existeTurnoSips(agendas.sobreturnos[y]);
+
+                    if (!idSobreturno) {
+                        await grabaTurnoSips(agendas.sobreturnos[y], idAgendaCreada, idEfector);
+                    }
+                }
+            }
+
             resolve();
         } catch (ex) {
             reject(ex);
@@ -704,7 +707,7 @@ async function grabaAgendaSips(agendaSips: any, datosSips: any, pool) {
     let horaFin = moment(agendaSips.horaFin).utcOffset('-03:00').format('HH:mm');
     let duracionTurno = agendaSips.bloques[0].duracionTurno;
 
-    let maximoSobreTurnos = 0;
+    let maximoSobreTurnos = 100;
     let porcentajeTurnosDia = 0;
     let porcentajeTurnosAnticipados = 0;
     let citarPorBloques = 0;

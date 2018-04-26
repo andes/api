@@ -12,6 +12,7 @@ export interface MailOptions {
     subject: string;
     text: string;
     html: string;
+    attachments: string;
 }
 
 export function sendMail(options: MailOptions) {
@@ -28,18 +29,21 @@ export function sendMail(options: MailOptions) {
             to: options.to,
             subject: options.subject,
             text: options.text,
-            html: options.html
+            html: options.html,
+            attachments: [{   // data uri as an attachment
+                path: options.attachments,
+                cid: 'img-screenshot'
+            }]
         };
 
         transporter.sendMail(mailOptions, (error, info) => {
             if (error) {
-                log('Error al mandar mail: ', error);
                 return reject(error);
             }
             return resolve(info);
         });
     });
-} 
+}
 
 export function renderHTML(templateName: string, extras: any): Promise<string> {
     return new Promise((resolve, reject) => {

@@ -355,22 +355,46 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 if (err) {
                     return next(err);
                 }
-                if (req.body.op === 'codificarTurno') {
-                    agendaCtrl.codificarTurno(req, data, t[0]).then(() => {
-                        Auth.audit(data[0], req);
-                        data[0].save(function (error) {
-                            Logger.log(req, 'citas', 'update', {
-                                accion: req.body.op,
-                                ruta: req.url,
-                                method: req.method,
-                                data: data,
-                                err: error || false
+                if (data.length > 0) {
+                    if (req.body.op === 'codificarTurno') {
+                        agendaCtrl.codificarTurno(req, data, t[0]).then(() => {
+                            Auth.audit(data[0], req);
+                            data[0].save(function (error) {
+                                Logger.log(req, 'citas', 'update', {
+                                    accion: req.body.op,
+                                    ruta: req.url,
+                                    method: req.method,
+                                    data: data,
+                                    err: error || false
+                                });
+                                if (error) {
+                                    return next(error);
+                                }
                             });
-                            if (error) {
-                                return next(error);
-                            }
                         });
-
+                    }
+                } else {
+                    agenda.find({ 'sobreturnos._id': mongoose.Types.ObjectId(t[0]) }, function (err2, data2) {
+                        if (err2) {
+                            return next(err2);
+                        }
+                        if (req.body.op === 'codificarTurno') {
+                            agendaCtrl.codificarTurno(req, data2, t[0]).then(() => {
+                                Auth.audit(data2[0], req);
+                                data2[0].save(function (error) {
+                                    Logger.log(req, 'citas', 'update', {
+                                        accion: req.body.op,
+                                        ruta: req.url,
+                                        method: req.method,
+                                        data: data2,
+                                        err: error || false
+                                    });
+                                    if (error) {
+                                        return next(error);
+                                    }
+                                });
+                            });
+                        }
                     });
                 }
                 // Inserto la modificación en agendasCache
@@ -417,8 +441,6 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                         }
                         agendaCtrl.suspenderTurno(req, data, turno);
                         break;
-                    case 'codificarTurno': agendaCtrl.codificarTurno(req, data, turnos[y]);
-                        break;
                     case 'guardarNotaTurno': agendaCtrl.guardarNotaTurno(req, data, req.body.idTurno);
                         break;
                     case 'darTurnoDoble': agendaCtrl.darTurnoDoble(req, data, turnos[y]);
@@ -435,6 +457,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                     case 'pausada':
                     case 'prePausada':
                     case 'pendienteAuditoria':
+                    case 'pendienteAsistencia':
                     case 'auditada':
                     case 'suspendida':
                     case 'borrada':

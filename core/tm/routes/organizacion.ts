@@ -1,4 +1,3 @@
-// import { mapaDeCama } from './../schemas/mapaDeCama';
 import * as express from 'express';
 import * as https from 'https';
 
@@ -278,6 +277,9 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
                 '$regex': utils.makePattern(req.query.tipoEstablecimiento)
             };
         }
+        if (req.query.ids) {
+            filtros['_id'] = {$in : req.query.ids};
+        }
 
         let skip: number = parseInt(req.query.skip || 0, 10);
         let limit: number = Math.min(parseInt(req.query.limit || defaultLimit, 10), maxLimit);
@@ -293,6 +295,32 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
             }
             res.json(data);
         });
+
+        // if (req.query.nombre) {
+        //     filtros['nombre'] = { '$regex': utils.makePattern(req.query.nombre) };
+        // }
+
+        // if (req.query.cuie) {
+        //     filtros['codigo.cuie'] = { '$regex': utils.makePattern(req.query.cuie) };
+        // }
+
+        // if (req.query.sisa) {
+        //     filtros['codigo.sisa'] = { '$regex': utils.makePattern(req.query.sisa) };
+        // }
+        // if (req.query.activo) {
+        //     filtros['activo'] = req.query.activo;
+        // }
+        // if (req.query.tipoEstablecimiento) {
+        //     filtros['tipoEstablecimiento.nombre'] = {'$regex': utils.makePattern(req.query.tipoEstablecimiento) };
+        // }
+
+
+        // query.exec(function (err, data) {
+        //     if (err) {
+        //         return next(err);
+        //     }
+        //     res.json(data);
+        // });
     }
 });
 
@@ -321,8 +349,10 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/organizacion'
  */
-
-router.post('/organizaciones', function (req, res, next) {
+router.post('/organizaciones', Auth.authenticate(), function (req, res, next) {
+    if (!Auth.check(req, 'tm:especialidad:postEspecialidad')) {
+        return next(403);
+    }
     let newOrganization = new organizacion.model(req.body);
     newOrganization.save((err) => {
         if (err) {
@@ -362,13 +392,14 @@ router.post('/organizaciones', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/organizacion'
  */
-router.put('/organizaciones/:id', function (req, res, next) {
-    organizacion
-        .model
-        .findByIdAndUpdate(req.params.id, req.body, function (err, data) {
-            if (err) {
-                return next(err);
-            }
+router.put('/organizaciones/:id', Auth.authenticate(), function (req, res, next) {
+    if (!Auth.check(req, 'tm:especialidad:putEspecialidad')) {
+        return next(403);
+    }
+    organizacion.model.findByIdAndUpdate(req.params.id, req.body, function (err, data) {
+        if (err) {
+            return next(err);
+        }
 
             res.json(data);
         });
@@ -399,13 +430,14 @@ router.put('/organizaciones/:id', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/organizacion'
  */
-router.delete('/organizaciones/:id', function (req, res, next) {
-    organizacion
-        .model
-        .findByIdAndRemove(req.params._id, function (err, data) {
-            if (err) {
-                return next(err);
-            }
+router.delete('/organizaciones/:id', Auth.authenticate(), function (req, res, next) {
+    if (!Auth.check(req, 'tm:organizacion:deleteOrganizacion')) {
+        return next(403);
+    }
+    organizacion.model.findByIdAndRemove(req.params._id, function (err, data) {
+        if (err) {
+            return next(err);
+        }
 
             res.json(data);
         });
