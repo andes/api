@@ -37,7 +37,7 @@ export async function facturacionCtrl() {
                                 efector: agenda.organizacion,
                                 paciente: turnos[z].paciente,
                                 tipoPrestacion: turnos[z].tipoPrestacion,
-                            }
+                            };
 
                             pacientesSumar.push(unPacienteSumar);
                         } else {
@@ -50,7 +50,7 @@ export async function facturacionCtrl() {
                                 paciente: turnos[z].paciente,
                                 fecha: turnos[z].horaInicio,
                                 motivoConsulta: turnos[z].motivoConsulta,
-                            }
+                            };
 
                             pacientesRF.push(unPacienteRF);
                         }
