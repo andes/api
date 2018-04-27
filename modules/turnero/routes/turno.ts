@@ -19,11 +19,11 @@ router.get('/busqueda/:id*?', function (req: any, res, next) {
         });
     } else {
 
-        if(req.query.limit){
+        if (req.query.limit) {
             query = turno.find(opciones).sort( { _id: -1 } ).limit(Number(req.query.limit));
-        }else{
+        } else {
             query = turno.find(opciones);
-            
+
         }
 
 
