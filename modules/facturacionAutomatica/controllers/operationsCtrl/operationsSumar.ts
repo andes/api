@@ -6,6 +6,9 @@ import * as sql from 'mssql';
 import * as moment from 'moment';
 import * as configPrivate from '../../../../config.private';
 import * as dbg from 'debug';
+import * as operacionesLegacy from './../../../legacy/controller/operations';
+
+import * as pacienteCrtl from './../../../../core/mpi/controller/paciente';
 import * as constantes from '../../../legacy/schemas/constantes';
 import { paciente, pacienteMpi } from '../../../../core/mpi/schemas/paciente'
 import { insertarPacienteEnSips } from '../../../turnos/controller/operationsCacheController/operationsPaciente';
@@ -21,9 +24,9 @@ let config = {
     requestTimeout: 45000
 };
 var thingSchema = new mongoose.Schema({
-   id: Object,
+    id: Object,
     tipoPrestacion: Object,
-    nomencladorSUMAR:String
+    nomencladorSUMAR: String
 
 });
 export let configuracionPrestaciones = mongoose.model('configuracionPrestacion', thingSchema, 'configuracionPrestacion');
@@ -47,10 +50,25 @@ export async function facturacionSumar(agenda: any) {
                 activo: 'S',
                 idTipoPrestacion: 1
             }
-            console.log("se creo la wea")
-             creaComprobanteSumar(comprobante,agenda[index]);
+
+             let pacienteSips = await mapeoPaciente(agenda[index].paciente.documento);
+
+             let datosPaciente = {
+                fechaNacimiento :pacienteSips.fechaNacimiento,
+                sexo: (pacienteSips.idSexo === 3 ? 'M' : pacienteSips.idSexo === 2 ? 'F': 1),
+                edad: moment(agenda[index].fecha).diff(pacienteSips.fechaNacimiento, 'years')
+             }
+            creaComprobanteSumar(comprobante, agenda[index],agenda[index].fecha,datosPaciente);
         } else {
             console.log("NOOOOOO Es paciente SUMAr afiliado")
+            // let idPacienteSips = await mapeoPaciente(agenda[index].paciente.documento);
+
+            // if (!idPacienteSips) {
+            //     let resultadoBusquedaPaciente: any = await pacienteCrtl.buscarPaciente(agenda[index].paciente.id);
+            //     let idNivelCentral = 127; // Por defecto seteamos como efector nivel central (ID 127)
+            //     let pacienteSips = operacionesLegacy.pacienteSipsFactory(resultadoBusquedaPaciente.paciente, idNivelCentral);
+            //     idPacienteSips = await operacionesLegacy.insertaPacienteSips(pacienteSips);
+            // }
         }
     }
 }
@@ -104,62 +122,89 @@ async function getPeriodo() {
     });
 }
 
-async function creaComprobanteSumar(datosComprobante,prestacion) {
-    return new Promise(async (resolve, reject) => {           
-
+async function creaComprobanteSumar(datosComprobante, prestacion,fechaAgenda,datosPaciente) {
+    return new Promise(async (resolve, reject) => {
         let query = "INSERT INTO dbo.PN_comprobante ( cuie, id_factura, nombre_medico, fecha_comprobante, clavebeneficiario, id_smiafiliados, " +
-          " fecha_carga, comentario, marca, periodo, activo, idTipoDePrestacion) values ( " +
-          "'" + datosComprobante.cuie + "'," + null + "," + null + ",'" + datosComprobante.fechaComprobante + "'," + "'" + datosComprobante.claveBeneficiario + "'" +
-          "," + datosComprobante.idAfiliado + ",'" + datosComprobante.fechaCarga + "','" + datosComprobante.comentario + "'," + datosComprobante.marca +
-          ",'" + datosComprobante.periodo + "','" + datosComprobante.activo + "'," + datosComprobante.idTipoPrestacion + ")";
+            " fecha_carga, comentario, marca, periodo, activo, idTipoDePrestacion) values ( " +
+            "'" + datosComprobante.cuie + "'," + null + "," + null + ",'" + datosComprobante.fechaComprobante + "'," + "'" + datosComprobante.claveBeneficiario + "'" +
+            "," + datosComprobante.idAfiliado + ",'" + datosComprobante.fechaCarga + "','" + datosComprobante.comentario + "'," + datosComprobante.marca +
+            ",'" + datosComprobante.periodo + "','" + datosComprobante.activo + "'," + datosComprobante.idTipoPrestacion + ")";
 
-          let idComprobante = await executeQuery(query);
-          console.log("Query: ", query)
-          console.log("IdComprobante: ", idComprobante)
+        let idComprobante = await executeQuery(query);
+        console.log("Query: ", query)
+        console.log("IdComprobante: ", idComprobante)
 
-
-          creaPrestaciones(prestacion,idComprobante)
+      let  codigo =  crearCodigoComp(datosComprobante.cuie,fechaAgenda,datosComprobante.claveBeneficiario,datosPaciente.fechaNacimiento,datosPaciente.sexo,datosPaciente.edad,'CT','C002','A98');
+        creaPrestaciones(prestacion, idComprobante,fechaAgenda,datosPaciente.fechaNacimiento,datosPaciente.sexo,datosPaciente.edad,codigo)
     });
 }
 
- function creaPrestaciones(prestacionEntrante,idComprobante){
+function creaPrestaciones(prestacionEntrante, idComprobante,fechaPrestacion,fechaNacimiento,sexo,edad,codigo) {
 
-let prestacion = {
-    id: null,
-    id_comprobante:idComprobante,
-    id_nomenclador:null,
-    cantidad: 1,
-    precio_prestacion: null,
-    id_anexo: 301
-}
+    let prestacion = {
+        id: null,
+        id_comprobante: idComprobante,
+        id_nomenclador: null,
+        cantidad: 1,
+        codigo:codigo,
+        sexo:sexo,
+        edad:edad,
+        fechaPrestacion:fechaPrestacion,
+        anio:moment(fechaPrestacion).format('YYYY'),
+        mes:moment(fechaPrestacion).format('MM'),
+        dia:moment(fechaPrestacion).format('DD'),
+        fechaNacimiento: fechaNacimiento,
+        precio_prestacion: null,
+        id_anexo: 301
+    }
+    
 
-configuracionPrestaciones.find({
-'tipoPrestacion.conceptId': prestacionEntrante.tipoPrestacion.conceptId}, {},async function (err, file:any) {
-    console.log("acaaa",file[0].nomencladorSUMAR)
+    configuracionPrestaciones.find({
+        'tipoPrestacion.conceptId': prestacionEntrante.tipoPrestacion.conceptId
+    }, {}, async function (err, file: any) {
 
-   let nomenclador:any = await mapeoNomenclador(file[0].nomencladorSUMAR);
-   prestacion.precio_prestacion = nomenclador.precio;
-   prestacion.id_nomenclador = nomenclador.id;
-
-   console.log(prestacion)
+        let nomenclador: any = await mapeoNomenclador(file[0].nomencladorSUMAR);
+        prestacion.precio_prestacion = nomenclador.precio;
+        prestacion.id_nomenclador = nomenclador.id;
+        console.log(prestacion);
     });
 
+
+
 }
 
-async function mapeoNomenclador(codigoNomenclador){
+async function mapeoNomenclador(codigoNomenclador) {
     poolAgendas = await new sql.ConnectionPool(config).connect();
     let query = 'SELECT * FROM [dbo].[PN_nomenclador] where id_nomenclador = @codigo';
     let resultado = await new sql.Request(poolAgendas)
-        .input('codigo', sql.VarChar(50), 919)
+        .input('codigo', sql.VarChar(50), 919) //919 HARDCOOOODIIIIINGGGG
         .query(query);
     poolAgendas.close()
-    
+
     let res = {
         id: resultado.recordset[0].id_nomenclador,
         precio: resultado.recordset[0].precio
     }
-    console.log(res)
     return res;
+}
+
+export async function mapeoPaciente(dni) {
+    poolAgendas = await new sql.ConnectionPool(config).connect();
+    let query = 'SELECT TOP 1 * FROM dbo.Sys_Paciente where activo=1 and numeroDocumento=@dni order by objectId DESC;';
+    let result = await new sql.Request(poolAgendas)
+        .input('dni', sql.VarChar(50), dni)
+        .query(query);
+    poolAgendas.close()
+    return result.recordset[0] ? result.recordset[0] : null;
+}
+
+export function crearCodigoComp(cuie,fechaPrestacion:Date,claveB, fechaNac:Date, sexo,año,grupo,codigo,diagnostico){
+
+let fechaPrestParseada = moment(fechaPrestacion).format('YYYY')+''+moment(fechaPrestacion).format('MM')+''+ moment(fechaPrestacion).format('DD') ;
+let fechaNacParseada = moment(fechaNac).format('YYYY')+''+moment(fechaNac).format('MM')+''+ moment(fechaNac).format('DD') ;
+let codigoFinal = cuie + fechaPrestParseada + claveB + sexo + fechaNacParseada + año + grupo + codigo + diagnostico + 'P99';
+console.log(codigoFinal)
+return codigoFinal;
 }
 
 async function executeQuery(query: any) {
