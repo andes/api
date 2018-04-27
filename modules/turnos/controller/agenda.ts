@@ -920,7 +920,7 @@ export function getConsultaDiagnostico(params) {
                 auditoriaCodigo: '$bloques.turnos.diagnostico.codificaciones.codificacionAuditoria.codigo',
                 auditoriaNombre: '$bloques.turnos.diagnostico.codificaciones.codificacionAuditoria.nombre',
                 codProfesionalCie10Codigo: '$bloques.turnos.diagnostico.codificaciones.codificacionProfesional.cie10.codigo',
-                codrofesionalCie10Nombre: 'bloques.turnos.diagnostico.codificaciones.codificacionProfesional.cie10.nombre',
+                codrofesionalCie10Nombre: '$bloques.turnos.diagnostico.codificaciones.codificacionProfesional.cie10.nombre',
                 codProfesionalSnomedCodigo: '$bloques.turnos.diagnostico.codificaciones.codificacionProfesional.snomed.codigo',
                 codProfesionalSnomedNombre: '$bloques.turnos.diagnostico.codificaciones.codificacionProfesional.snomed.nombre',
             }
