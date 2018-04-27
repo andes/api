@@ -1,11 +1,11 @@
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 
-import * as agenda from '../../turnos/schemas/agenda';
+import * as agendaSchema from '../../turnos/schemas/agenda';
 
 import * as turnoCtrl from '../../turnos/controller/turnoCacheController';
 import * as operationSumar from '../../facturacionAutomatica/controllers/operationsCtrl/operationsSumar';
-// import * as operationRF from '../../facturacionAutomatica/controllers/operationsCtrl/operationsRF';
+import * as operationRF from '../../facturacionAutomatica/controllers/operationsCtrl/operationsRF';
 
 import * as configPrivate from '../../../config.private';
 import * as constantes from './../../legacy/schemas/constantes';
@@ -38,17 +38,20 @@ export async function facturacionCtrl() {
                                 fecha: agenda.horaInicio,
                                 paciente: turnos[z].paciente,
                                 tipoPrestacion: turnos[z].tipoPrestacion,
-                            }
+                            };
 
                             pacientesSumar.push(unPacienteSumar);
                         } else {
                             unPacienteRF = {
-                                profesional: agenda.profesionales,
+                                _id: turnos[z]._id,
+                                profesionales: agenda.profesionales,
                                 tipoPrestacion: turnos[z].tipoPrestacion,
                                 diagnostico: turnos[z].diagnostico,
                                 efector: agenda.organizacion,
-                                paciente: turnos[z].paciente
-                            }
+                                paciente: turnos[z].paciente,
+                                fecha: turnos[z].horaInicio,
+                                motivoConsulta: turnos[z].motivoConsulta,
+                            };
 
                             pacientesRF.push(unPacienteRF);
                         }
@@ -56,8 +59,13 @@ export async function facturacionCtrl() {
                 }
             }
         });
+<<<<<<< HEAD
         operationSumar.facturacionSumar(pacientesSumar);
         // operationRF.facturacionRF(pacientesRF);
+=======
+        //operationSumar.facturacionSumar(pacientesSumar);
+        operationRF.facturacionRF(pacientesRF);
+>>>>>>> c6311af6274a0b981075e7e5d44d3a2e0047f4e6
     } catch (ex) {
         return (ex);
     }
@@ -65,7 +73,7 @@ export async function facturacionCtrl() {
 
 function getAgendasDeMongoPendientes() {
     return new Promise<Array<any>>(function (resolve, reject) {
-        agenda.find({
+        agendaSchema.find({
             estadoFacturacion: constantes.EstadoFacturacionAgendasCache.pendiente
         }).sort({
             _id: 1
