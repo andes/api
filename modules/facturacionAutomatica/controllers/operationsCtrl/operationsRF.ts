@@ -67,7 +67,7 @@ export async function facturacionRF(turnos) {
         // crearOrden(orden, rfEfector, rfServicio, idPacienteSips, rfProfesional, rfTipoPractica, rfObraSocial, rfDiagnostico);
         crearOrden(orden, turnoRF, idEfector, 148, idPacienteSips, rfProfesional, 1, rfObraSocial, codificacion);
         orden.idOrden = await guardarOrden(orden);
-        let nomenclador = await mapeoNomenclador('42.01.02');
+        let nomenclador = await mapeoNomenclador('42.01.01');
         let ordenDetalleSips: any = await crearOdenDetalle(orden, nomenclador);
         ordenDetalleSips.idOrdenDetalle = await guardarOrdenDetalle(ordenDetalleSips);
         orden.detalles.push(ordenDetalleSips);
@@ -210,7 +210,9 @@ let query = 'INSERT INTO [dbo].[FAC_Orden]' +
                 ' ,@fechaSiniestro' +
                 ' ,@facturaFueraConvenio ' +
                 ' ,@esInternacion) ' +
-            'SELECT SCOPE_IDENTITY() as ID';
+            'DECLARE @numeroOrden Int =  SCOPE_IDENTITY() ' +
+            'UPDATE FAC_Orden SET numero = @numeroOrden WHERE idOrden = @numeroOrden ' +
+            'SELECT @numeroOrden as ID';
 
     let result = await new sql.Request(pool)
         .input('idEfector', sql.Int, orden.idEfector)
