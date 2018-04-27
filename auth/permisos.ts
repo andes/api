@@ -138,6 +138,22 @@ export default [
         ]
     },
     {
+        key: 'internacion',
+        title: 'Modulo Internación',
+        comment: '',
+        child: [
+            {
+                key: 'cama',
+                title: 'Acciones sobre una cama',
+                child: [
+                    { key: 'create', title: 'Crear nueva cama', type: 'boolean' }
+                ]
+            },
+            { key: 'censo', title: 'Ver senso diario y mensual', type: 'boolean' },
+            { key: 'alta', title: 'Ingregar paciente', type: 'boolean' },
+        ]
+    },
+    {
         key: 'fa',
         title: 'Fuentas Autenticas',
         comment: 'Habilita el acceso a distintas fuentes autenticas',
@@ -177,7 +193,7 @@ export default [
     },
     {
         key: 'matriculaciones',
-        title: 'matriculaciones',
+        title: 'Matriculaciones',
         comment: '',
         child: [
             {
@@ -214,11 +230,11 @@ export default [
     },
     {
         key: 'tm',
-        title: 'tablas maestras',
+        title: 'Tablas maestras',
         child: [
             {
                 key: 'especialidad',
-                title: 'especialidad',
+                title: 'Especialidades',
                 child: [
                     { key: 'postEspecialidad', title: 'insertar especialidad', type: 'boolean' },
                     { key: 'putEspecialidad', title: 'actualizar especialidad', type: 'boolean' },
@@ -227,11 +243,12 @@ export default [
             },
             {
                 key: 'organizacion',
-                title: 'organizacion',
+                title: 'Organizaciones',
                 child: [
-                    { key: 'postOrganizacion', title: 'insertar organizacion', type: 'boolean' },
-                    { key: 'putOrganizacion', title: 'actualizar organizacion', type: 'boolean' },
-                    { key: 'deleteOrganizacion', title: 'borrar organizacion', type: 'boolean' }
+                    { key: 'create', title: 'Crear nueva', type: 'boolean' },
+                    { key: 'edit', title: 'Editar organizaciones', type: 'boolean' },
+                    { key: 'delete', title: 'Borrar organizaciones', type: 'boolean' },
+                    { key: 'sectores', title: 'Editar sectores físicos', type: 'organizacion' }
                 ]
             },
         ]
