@@ -1,5 +1,7 @@
 import * as config from './config';
-import * as sqlserver from './sqlserver';
+import * as sql from 'mssql';
+import * as debug from 'debug';
+let logger = debug('carpetasJob');
 
 export function migrar(q_objeto, q_limites, page_size, addNuevoObjeto) {
     let max;
@@ -12,30 +14,42 @@ export function migrar(q_objeto, q_limites, page_size, addNuevoObjeto) {
         requestTimeout: config.requestTimeout
     };
 
-    function navegar(connection, index) {
+    async function navegar(pool, index) {
         if (index < max) {
             let offset = index + page_size;
-            return sqlserver.query(connection, q_objeto)
+            return pool.request()
+                .query(q_objeto)
                 .then(objetos => {
+                    logger('Resultado Navegar---->', objetos);
                     if (objetos && objetos.length) {
                         let nuevosObjetos = objetos.map(o => addNuevoObjeto(o));
                         return Promise.all(nuevosObjetos).then(res =>
-                            navegar(connection, offset + 1)
+                            navegar(pool, offset + 1)
                         );
-                    } else {return navegar(connection, offset + 1); }
+                    } else { return navegar(pool, offset + 1); }
                 });
+        } else {
+            pool.close();
         }
     }
 
-    return sqlserver.query(connection, q_limites)
-        .then(resultado => {
-            if (resultado[0]) {
-                console.log(resultado[0]['min'] + ' - ' + resultado[0]['max']);
-                let min = resultado[0]['min'];
-                max = resultado[0]['max'];
-                return navegar(connection, min);
-            }
+    async function runQuery() {
+        let connectionPool = await sql.connect(connection);
+        sql.on('error', err => {
+            logger('Error mssql---->', err);
         });
+
+        logger('RunQuery...');
+        if (connectionPool.pool.max) {
+            logger(connectionPool.pool.min + ' - ' + connectionPool.pool.max);
+            let min = connectionPool.pool.min;
+            max = connectionPool.pool.max;
+            return navegar(connectionPool, min);
+        }
+
+    }
+
+    return runQuery();
 }
 
 
@@ -51,13 +65,13 @@ export function migrarOffset(q_objeto, q_limites, page_size, addNuevoObjeto) {
     };
 
     function jobMigracion(connection, i, page_size1, total) {
-        console.log(i, page_size1);
+        logger(i, page_size1);
         if (i * page_size1 < total) {
             let offset = i * page_size1;
             return sqlserver.queryOffset(connection, q_objeto, page_size1, offset)
                 .then(objetos => {
                     if (objetos && objetos.length) {
-                        console.log('Cant pacientes', objetos.length);
+                        logger('Cant pacientes', objetos.length);
                         let nuevosObjetos = objetos.map(o => addNuevoObjeto(o));
                         return Promise.all(nuevosObjetos).then(res =>
                             jobMigracion(connection, i + 1, page_size1, total)
@@ -72,10 +86,10 @@ export function migrarOffset(q_objeto, q_limites, page_size, addNuevoObjeto) {
     return sqlserver.query(connection, q_limites)
         .then(resultado => {
             if (resultado[0]) {
-                console.log(resultado[0]['min'] + ' - ' + resultado[0]['max']);
+                logger(resultado[0]['min'] + ' - ' + resultado[0]['max']);
                 let min = resultado[0]['min'];
                 max = resultado[0]['max'];
-                console.log('MAX', max);
+                logger('MAX', max);
                 return jobMigracion(connection, 0, 5000, max);
             }
         });

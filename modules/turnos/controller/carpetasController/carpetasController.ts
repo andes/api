@@ -103,9 +103,9 @@ export async function migrar() {
                             WHERE PAC.activo = 1` + ' AND rhe.idEfector=' + config.organizacionSips.idSips;
     // Se busca la organización de la que se van a migrar las carpetas de pacientes
     logger('codigo ', config.organizacionSips.codigoSisa);
-
     try {
-        let efectores: any = await Organizaciones.find({ 'codigo.sisa': config.organizacionSips.codigoSisa }).exec();
+        let efectores = await Organizaciones.find({ 'codigo.sisa': config.organizacionSips.codigoSisa }).exec();
+
         if (efectores && efectores.length > 0) {
             logger('Se actualizarán las carpetas de los pacientes desde SIPS de ', efectores[0].nombre);
             organizacion = efectores[0];
@@ -114,15 +114,14 @@ export async function migrar() {
                 let consulta = config.consultaCarpetaPacienteSips + ' AND rhe.idEfector=' + config.organizacionSips.idSips;
                 logger('EFECTOR', config.organizacionSips.idSips, organizacion.nombre);
                 // return utils.migrarOffset(consulta, q_limites, 100, insertCarpeta);
-                return utils.migrar(consulta, q_limites, 10000, findUpdateCarpeta).then(() => {
-                    logger('vuelve de migrar');
-                    return db.close();
-                    // mongodb.close();
-                });
+                await utils.migrar(consulta, q_limites, 10000, findUpdateCarpeta);
+                logger('Migracion de datos completa desde ', organizacion.nombre);
+
+            } else {
+                logger('Código de organización inválido, verifica el codigo Sisa ingresado');
             }
         } else {
             logger('Código de organización inválido, verifica el codigo Sisa ingresado');
-            return null;
         }
     } catch (err) {
         logger('Error al obtener la organización', err);
