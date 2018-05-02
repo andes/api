@@ -269,6 +269,13 @@ export default [
         ]
     },
     {
+        key: 'descargas',
+        title: 'Descarga de Documentos',
+        child: [
+            { key: 'pdf', title: 'Documentos PDF', type: 'boolean' }
+        ]
+    },
+    {
         key: 'solicitudes',
         title: 'Modulo Solicitudes',
         child: [

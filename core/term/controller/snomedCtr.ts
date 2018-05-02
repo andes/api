@@ -10,11 +10,21 @@ const InferredSct = '900000000000011006';
  *
  * @param sctid ConceptId
  */
-export function getConcept(sctid) {
+export function getConcept(sctid, format = 'full') {
     return new Promise((resolve, reject) => {
         snomedModel.findOne({ conceptId: sctid }).then((concept: any) => {
             if (concept) {
-                return resolve(concept);
+                if (format === 'full') {
+                    return resolve(concept);
+                } else {
+                    return resolve({
+                        conceptId: concept.conceptId,
+                        term: concept.preferredTerm,
+                        fsn: concept.fullySpecifiedName,
+                        semanticTag: concept.semtag,
+                        refsetIds: concept.memberships.map(m => m.refset.conceptId)
+                    });
+                }
             }
             return reject('not_found');
         }).catch(reject);
@@ -60,7 +70,7 @@ function checkType(concept, sctid) {
  * @param {Boolean} all True para devolver hijos, nietos, bisnietos... de un concepto, false solo hijos directos.
  *
  */
-export function getChilds(sctid, { all = false, completed = true, leaf = false } ) {
+export function getChilds(sctid, { all = false, completed = true, leaf = false }) {
     let query;
     if (all) {
         query = {
@@ -106,7 +116,7 @@ export function getChilds(sctid, { all = false, completed = true, leaf = false }
 
 // "characteristicType.conceptId": "900000000000010007"
 
-export async function contextFilter (options) {
+export async function contextFilter(options) {
     let conditions = {};
     if (options.attributes) {
         let attributes = options.attributes;
@@ -129,8 +139,8 @@ export async function contextFilter (options) {
             }
             conds.push(filters);
         }
-        conditions['relationships'] =  {
-                $elemMatch: conds
+        conditions['relationships'] = {
+            $elemMatch: conds
         };
     }
 

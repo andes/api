@@ -5,9 +5,12 @@ import { Documento } from './../controller/descargas';
 
 let router = express.Router();
 
-
-router.post('/pdf', (req: any, res, next) => {
-    Documento.generarPDF(req, res, next);
+/**
+ * Se usa POST para generar la descarga porque se envían datos
+ * que van a ser parte del archivo
+ */
+router.post('/:tipo', (req: any, res, next) => {
+    Documento.descargar(req, res, next);
 });
 
 export = router;

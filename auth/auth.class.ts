@@ -185,11 +185,11 @@ export class Auth {
      *
      * @memberOf Auth
      */
-    static getOrganization(req: express.Request): string {
+    static getOrganization(req: express.Request, key = 'id'): string {
         if (!(req as any).user || !(req as any).user.organizacion) {
             return null;
         } else {
-            return (req as any).user.organizacion.id;
+            return (req as any).user.organizacion[key];
         }
     }
 

@@ -3,36 +3,20 @@ import * as fs from 'fs';
 import * as scss from 'node-sass';
 import * as pdf from 'html-pdf';
 import { Auth } from '../../../auth/auth.class';
+import * as path from 'path';
 
 export class Documento {
 
     private static locale = 'es-ES';
     private static timeZone = 'America/Argentina/Buenos_Aires';
 
+    private static headerHTML = fs.readFileSync('./templates/andes/html/header.html');
+    private static footerHTML = fs.readFileSync('./templates/andes/html/footer.html');
+
     /**
      * Opciones default de PDF rendering
      */
-    private static options = {
-        format: 'A4',
-        border: {
-            // default is 0, units: mm, cm, in, px
-            top: '0.5cm',
-            right: '0.5cm',
-            bottom: '1.5cm',
-            left: '1.5cm'
-        },
-        header: {
-            height: '2.5cm',
-        },
-        footer: {
-            height: '10mm',
-            contents: {
-            }
-        },
-        settings: {
-            resourceTimeout: 30
-        },
-    };
+    private static options: any = {};
 
     /**
      *
@@ -45,42 +29,41 @@ export class Documento {
         let html = Buffer.from(req.body.html, 'base64').toString();
 
         // Se agregan los estilos CSS
-        html += this.generarCSS();
+        html += this.generarCSS(path.join(__dirname, '../../../templates/rup/' + req.body.scssFile + '.scss'));
 
         // Se cargan logos
-        let logoAndes = fs.readFileSync('./templates/andes/logo-andes.png');
-        let logotipoAndes = fs.readFileSync('./templates/andes/logotipo-andes-blue.png');
-        let logoPDP = fs.readFileSync('./templates/andes/logo-pdp.png');
+        let logoAndes = fs.readFileSync(path.join(__dirname, '../../../templates/andes/logo-andes.png'));
+        let logotipoAndes = fs.readFileSync(path.join(__dirname, '../../../templates/andes/logotipo-andes-blue.png'));
+        let logoPDP = fs.readFileSync(path.join(__dirname, '../../../templates/andes/logo-pdp.png'));
+
+        html += this.headerHTML.toString();
+        html += this.footerHTML.toString();
 
         // Se reemplazan ciertos <!--placeholders--> por logos de ANDES y Dirección de Protección de Datos Personales
-        html = html.replace('<!--logoAndes-->', `<img src="data:image/png;base64,${logoAndes.toString('base64')}" style="float: left;">`);
-        html = html.replace('<!--logotipoAndes-->', `<img src="data:image/png;base64,${logotipoAndes.toString('base64')}" style="width: 80px; margin-right: 10px;">`);
-
-        html += `<footer id="pageFooter" style="background-color: rgba(0,0,0,0.1); display: inline-block; font-size: 8px; margin-bottom: 15px; padding: 5px;">
-        <img src="data:image/png;base64,${logoPDP.toString('base64')}" style="display: inline-block; width: 100px; float: right;">
-        <div style="display: inline-block; float: left; width: 400px; margin-right: 10px; text-align: justify;">
-            El contenido de este informe ha sido validado digitalmente siguiendo los estándares de calidad y seguridad requeridos. El   Hospital Provincial Neuquén es responsable Inscripto en el Registro Nacional de Protección de Datos Personales bajo el N° de Registro 100000182, según lo requiere la Ley N° 25.326 (art. 3° y 21 inciso 1)
-            ${JSON.stringify(Auth.getUserName(req))} - ${new Date().toLocaleString('locale', { timeZone: this.timeZone })} hs
-        </div>
-    </footer>`;
+        // Y datos de sesión (organización, nombre del usuario, timestamp)
+        html = html.replace('<!--logoAndes-->', `<img class="logoAndes" src="data:image/png;base64,${logoAndes.toString('base64')}">`)
+            .replace('<!--logotipoAndes-->', `<img class="logotipoAndes" src="data:image/png;base64,${logotipoAndes.toString('base64')}">`)
+            .replace('<!--logoPDP-->', `<img class="logoPDP" src="data:image/png;base64,${logoPDP.toString('base64')}">`)
+            .replace('<!--organizacion-->', Auth.getOrganization(req, 'nombre'))
+            .replace('<!--usuario-->', JSON.stringify(Auth.getUserName(req)))
+            .replace('<!--timestamp-->', new Date().toLocaleString('locale', { timeZone: this.timeZone }));
 
         return html;
     }
 
     /**
      * Genera CSS de RUP
-     * TODO: Extender
      */
-    private static generarCSS() {
+    private static generarCSS(scssFile = path.join(__dirname, '../../../templates/rup/prestacion-print.scss')) {
 
         // Se agregan los estilos
         let css = '<style>\n\n';
 
         // SCSS => CSS
         css += scss.renderSync({
-            file: './templates/rup/prestacionValidacion-print.scss',
+            file: scssFile,
             includePaths: [
-                './templates/rup/'
+                path.join(__dirname, '../../../templates/rup/')
             ]
         }).css;
 
@@ -96,30 +79,79 @@ export class Documento {
      * @param next ExpressJS next
      * @param options html-pdf/PhantonJS rendering options
      */
-    static generarPDF(req, res, next, options = null) {
+    static descargar(req, res, next, options = null) {
 
-        // PhantomJS PDF rendering options
-        // https://www.npmjs.com/package/html-pdf
-        // http://phantomjs.org/api/webpage/property/paper-size.html
-        if (options) {
-            this.options = options;
+        let html = '';
+        switch (req.params.tipo) {
+            case 'pdf':
+                // PhantomJS PDF rendering options
+                // https://www.npmjs.com/package/html-pdf
+                // http://phantomjs.org/api/webpage/property/paper-size.html
+                let phantomPDFOptions: any = {
+                    format: 'A4',
+                    border: {
+                        // default is 0, units: mm, cm, in, px
+                        top: '0.5cm',
+                        right: '0.5cm',
+                        bottom: '1.5cm',
+                        left: '1.5cm'
+                    },
+                    header: {
+                        height: '2.5cm',
+                    },
+                    footer: {
+                        height: '10mm',
+                        contents: {
+                        }
+                    },
+                    settings: {
+                        resourceTimeout: 30
+                    },
+                };
+
+                if (options !== null) {
+                    this.options = options;
+                } else {
+                    this.options = phantomPDFOptions;
+                }
+
+                html = this.generarHTML(req);
+
+                pdf.create(html, this.options).toFile((err2, file) => {
+
+                    if (err2) {
+                        return next(err2);
+                    }
+
+                    res.download(file.filename, (err3) => {
+                        if (err3) {
+                            next(err3);
+                        } else {
+                            next();
+                        }
+                    });
+                });
+                break;
+            case 'html':
+                html = this.generarHTML(req);
+
+                let htmlfile = fs.writeFileSync('/tmp/rup.html', html);
+                res.download('/tmp/rup.html', (err) => {
+                    if (err) {
+                        next(err);
+                    } else {
+                        next();
+                    }
+                });
+
+                break;
+            case 'txt':
+                // TODO
+                break;
+            case 'png':
+                // TODO
+                break;
         }
 
-        let html = this.generarHTML(req);
-
-        pdf.create(html, this.options).toFile((err2, file) => {
-
-            if (err2) {
-                return next(err2);
-            }
-
-            res.download(file.filename, (err3) => {
-                if (err2) {
-                    next(err3);
-                } else {
-                    next();
-                }
-            });
-        });
     }
 }
