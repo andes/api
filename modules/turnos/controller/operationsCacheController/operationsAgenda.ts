@@ -36,8 +36,8 @@ let config = {
  */
 export function getAgendasDeMongoExportadas() {
     return new Promise<Array<any>>(function (resolve, reject) {
-        agendasCache.find({ estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS })
-            .exec(function (err, data) {
+        agendasCache.find({ estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS, estado: { $in: ['pendienteAsistencia', 'pendienteAuditoria'] } })
+        .limit(10).exec(function (err, data) {
                 if (err) {
                     reject(err);
                 }
@@ -313,7 +313,7 @@ async function getCodificacionOdonto(idNomenclador) {
  * @param pool
  */
 export async function
-guardarCacheASips(agenda) {
+    guardarCacheASips(agenda) {
 
     // CON_Agenda de SIPS soporta solo un profesional NOT NULL.
     // En caso de ser nulo el paciente en agenda de ANDES, por defector
