@@ -20,7 +20,6 @@ export function migrar(q_objeto, q_limites, page_size, addNuevoObjeto) {
             return pool.request()
                 .query(q_objeto)
                 .then(objetos => {
-                    logger('Resultado Navegar---->', objetos);
                     if (objetos && objetos.length) {
                         let nuevosObjetos = objetos.map(o => addNuevoObjeto(o));
                         return Promise.all(nuevosObjetos).then(res =>
@@ -34,19 +33,21 @@ export function migrar(q_objeto, q_limites, page_size, addNuevoObjeto) {
     }
 
     async function runQuery() {
-        let connectionPool = await sql.connect(connection);
-        sql.on('error', err => {
-            logger('Error mssql---->', err);
-        });
-
-        logger('RunQuery...');
-        if (connectionPool.pool.max) {
-            logger(connectionPool.pool.min + ' - ' + connectionPool.pool.max);
-            let min = connectionPool.pool.min;
-            max = connectionPool.pool.max;
-            return navegar(connectionPool, min);
+        try {
+            let connectionPool = await sql.connect(connection);
+            logger('RunQuery...');
+            if (connectionPool.pool.max) {
+                logger(connectionPool.pool.min + ' - ' + connectionPool.pool.max);
+                let min = connectionPool.pool.min;
+                max = connectionPool.pool.max;
+                return navegar(connectionPool, min);
+            }
+        } catch (err) {
+            logger('Catched error en runQuery() ---->', err);
         }
-
+        sql.on('error', err => {
+            logger('Error SQL---->', err);
+        });
     }
 
     return runQuery();
