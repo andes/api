@@ -3,12 +3,35 @@
 @import 'rup';
 @import 'assets/font.css';
 @import 'page';
-.odontograma {
+.row {
+    display: block !important;
     width: 100%;
 }
 
-svg#cuadrante-sup-der {
+svg {
+    // display: inline-block;
+    width: 20px;
+    height: 20px;
+}
+
+.readonly span {
+    font-weight: normal;
+    color: #818182;
+}
+
+.odontograma {
+    width: 1000px;
+}
+
+.diente-container {
     display: inline-block;
+    width: 20px;
+    height: 30px !important;
+    font-size: 12px;
+    .text-diente {
+        font-size: 10px;
+    }
+    margin-bottom: 10px;
 }
 
 .diente {
@@ -20,6 +43,31 @@ svg#cuadrante-sup-der {
     &:hover {
         fill: #4776d3;
     }
+}
+
+.diente-procedimiento {
+    fill: $procedimiento;
+}
+
+.diente-trastorno {
+    fill: $trastorno;
+}
+
+.diente-hallazgo {
+    fill: $hallazgo;
+}
+
+.evolucionada {
+    // fill: repeating-linear-gradient( 45deg, #606dbc, #606dbc 3px, #465298 3px, #465298 6px) !important;
+    fill: rgb(133, 133, 133); // fill: url(#striped);
+    // fill: url(#pattern1);
+}
+
+.evolucionada-stroke {
+    stroke: rgb(133, 133, 133);
+    fill: none;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
 }
 
 .st1 {
@@ -39,31 +87,6 @@ svg#cuadrante-sup-der {
     &:hover {
         fill: #4776d3;
     }
-}
-
-.distal {
-    /* fill: #4776d3; */
-}
-
-.vestibular {
-    /* fill: #4776d3; */
-}
-
-.mesial {
-    /* fill: #4776d3; */
-}
-
-.palatina {
-    /* fill: #4776d3; */
-}
-
-.oclusal {
-    /* fill: #4776d3; */
-}
-
-.diente-container {
-    display: inline-block;
-    width: 100px;
 }
 
 .st0 {
