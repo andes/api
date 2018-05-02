@@ -1,16 +1,16 @@
 import * as mongoose from 'mongoose';
 import * as utils from './utils';
 import * as config from './config';
-import * as mongodb from 'mongodb';
 import * as sql from 'mssql';
-import * as organizacionSchema from '../../../../core/tm/schemas/organizacion';
+import { model as Organizaciones } from '../../../../core/tm/schemas/organizacion';
+import * as debug from 'debug';
+let logger = debug('carpetasJob');
 
-
-var db;
-var organizacion;
+let db;
+let organizacion;
 
 function abrirConexion(url) {
-    return mongodb.MongoClient.connect(url);
+    // return mongodb.MongoClient.connect(url);
 }
 
 // function cerrarConexion() {
@@ -69,7 +69,7 @@ const findUpdateCarpeta = (paciente) => {
                 if (carpetas && carpetas.length) {
                     carpetaPaciente.carpetaEfectores.map(c => {
                         if (c.organizacion._id === organizacion._id) {
-                            return c.nroCarpeta = paciente['historiaClinica']
+                            return c.nroCarpeta = paciente['historiaClinica'];
                         }
                     });
                 } else {
@@ -86,7 +86,7 @@ const findUpdateCarpeta = (paciente) => {
             } else {
                 // El dni no existe en la colección carpetaPaciente 
                 // Se guarda el documento en la colección carpetaPaciente
-                console.log('nuevo', documentoPaciente);
+                logger('nuevo', documentoPaciente);
                 return insert('carpetaPaciente', {
                     'documento': documentoPaciente,
                     'carpetaEfectores': [carpetaNueva]
@@ -96,40 +96,37 @@ const findUpdateCarpeta = (paciente) => {
         });
 };
 
-export function migrar() {
-    console.log('Migrando carpetas de pacientes');
-    let q_limites = `select MIN(PAC.idPaciente) as min, COUNT(PAC.idPaciente) as max from
-    dbo.sys_paciente as PAC inner join dbo.Sys_RelHistoriaClinicaEfector AS rhe ON rhe.idPaciente = pac.idPaciente
-     WHERE PAC.activo = 1` + ' AND rhe.idEfector=' + config.organizacionSips.idSips;
-    new sql.connect(config.dbMssql).then(base => {
-        // abrirConexion(config.urlMongoAndes).then(base => {
-        db = base;
-        // Se busca la organización de la que se van a migrar las carpetas de pacientes
-        console.log('codigo ', config.organizacionSips.codigoSisa);
-        
-        organizacionSchema.model.find({ 'codigo.sisa': config.organizacionSips.codigoSisa }, function (err, efectores: any[]) {
-            console.log('model');
-            if (efectores && efectores.length) {
-                console.log('Se actualizarán las carpetas de los pacientes desde SIPS de ', efectores[0].nombre);
-                organizacion = efectores[0];
-                if (config.organizacionSips.idSips) {
-                    // let consulta = config.consultaPacienteSipsHC + ' AND efector.idEfector=' + config.organizacionSips.idSips + ' AND PAC.idPaciente between @offset and @limit';
-                    let consulta = config.consultaCarpetaPacienteSips + ' AND rhe.idEfector=' + config.organizacionSips.idSips;
-                    console.log('EFECTOR', config.organizacionSips.idSips, organizacion.nombre);
-                    // return utils.migrarOffset(consulta, q_limites, 100, insertCarpeta);
-                    return utils.migrar(consulta, q_limites, 10000, findUpdateCarpeta).then(() => {
-                        console.log('vuelve de migrar');
-                        return db.close();
-                        // mongodb.close();
-                    });
-                }
-            } else {
-                console.log('Código de organización inválido, verifica el codigo Sisa ingresado');
-            }
-            if (err) {
-                console.log('Error al obtener la organización', err);
-            }
-        });
-    });
+export async function migrar() {
+    logger('Migrando carpetas de pacientes');
+    let q_limites = `select MIN(PAC.idPaciente) as min, COUNT(PAC.idPaciente) as max from dbo.sys_paciente as PAC inner
+                        join dbo.Sys_RelHistoriaClinicaEfector AS rhe ON rhe.idPaciente = pac.idPaciente
+                            WHERE PAC.activo = 1` + ' AND rhe.idEfector=' + config.organizacionSips.idSips;
+    // Se busca la organización de la que se van a migrar las carpetas de pacientes
+    logger('codigo ', config.organizacionSips.codigoSisa);
 
+    try {
+        let efectores: any = await Organizaciones.find({ 'codigo.sisa': config.organizacionSips.codigoSisa }).exec();
+        if (efectores && efectores.length > 0) {
+            logger('Se actualizarán las carpetas de los pacientes desde SIPS de ', efectores[0].nombre);
+            organizacion = efectores[0];
+            if (config.organizacionSips.idSips) {
+                // let consulta = config.consultaPacienteSipsHC + ' AND efector.idEfector=' + config.organizacionSips.idSips + ' AND PAC.idPaciente between @offset and @limit';
+                let consulta = config.consultaCarpetaPacienteSips + ' AND rhe.idEfector=' + config.organizacionSips.idSips;
+                logger('EFECTOR', config.organizacionSips.idSips, organizacion.nombre);
+                // return utils.migrarOffset(consulta, q_limites, 100, insertCarpeta);
+                return utils.migrar(consulta, q_limites, 10000, findUpdateCarpeta).then(() => {
+                    logger('vuelve de migrar');
+                    return db.close();
+                    // mongodb.close();
+                });
+            }
+        } else {
+            logger('Código de organización inválido, verifica el codigo Sisa ingresado');
+            return null;
+        }
+    } catch (err) {
+        logger('Error al obtener la organización', err);
+    }
 }
+
+

@@ -4,5 +4,4 @@ function run() {
     carpetasCtrl.migrar();
 }
 
-// export = run;
-run();
+export = run;
