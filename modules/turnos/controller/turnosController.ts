@@ -4,7 +4,6 @@ import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import * as agenda from '../../../modules/turnos/schemas/agenda';
 import { toArray } from '../../../utils/utils';
-import { Auth } from '../../../auth/auth.class';
 
 
 export function getTurno(req) {
