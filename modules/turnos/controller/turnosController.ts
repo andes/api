@@ -12,12 +12,6 @@ export function getTurno(req) {
         let pipelineTurno = [];
         let turnos = [];
         let turno;
-        // let idEfector = Auth.getOrganization(req);
-        // if (idEfector) {
-        //     let matchTurno = {};
-        //     matchTurno['organizacion._id'] = idEfector;
-        //     pipelineTurno[0] = { '$match': matchTurno };
-        // }
 
         pipelineTurno = [{
             '$match': {
