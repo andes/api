@@ -113,7 +113,7 @@ export function getTurno(req) {
                     '$match': { 'pacientes_docs': { $ne: [] } }
                 };
             }
-            let data2 = await toArray(agenda.aggregate(pipelineTurno).cursor({}).exec());
+            let data2 = await toArray(agenda.aggregate(pipelineTurno, { 'allowDiskUse': true }).cursor({}).exec());
             data2.forEach(elem => {
                 turno = elem.bloques.turnos;
                 turno.id = turno._id;
