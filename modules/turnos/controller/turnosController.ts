@@ -4,7 +4,7 @@ import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import * as agenda from '../../../modules/turnos/schemas/agenda';
 import { toArray } from '../../../utils/utils';
-
+import { Auth } from '../../../auth/auth.class';
 
 
 export function getTurno(req) {
@@ -12,9 +12,16 @@ export function getTurno(req) {
         let pipelineTurno = [];
         let turnos = [];
         let turno;
+        // let idEfector = Auth.getOrganization(req);
+        // if (idEfector) {
+        //     let matchTurno = {};
+        //     matchTurno['organizacion._id'] = idEfector;
+        //     pipelineTurno[0] = { '$match': matchTurno };
+        // }
 
         pipelineTurno = [{
             '$match': {
+                'estado': 'publicada'
             }
         },
         // Unwind cada array
@@ -23,6 +30,7 @@ export function getTurno(req) {
         // Filtra los elementos que matchean
         {
             '$match': {
+                'estado': 'publicada'
             }
         },
         {
@@ -64,6 +72,7 @@ export function getTurno(req) {
             // Se modifica el pipeline en la posición 0 y 3, que son las posiciones
             // donde se realiza el match
             let matchTurno = {};
+            matchTurno['estado'] = 'publicada';
             if (req.query && req.query.estado) {
                 matchTurno['bloques.turnos.estado'] = req.query.estado;
             }
