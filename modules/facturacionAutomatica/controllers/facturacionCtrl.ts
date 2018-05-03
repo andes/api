@@ -59,13 +59,8 @@ export async function facturacionCtrl() {
                 }
             }
         });
-<<<<<<< HEAD
         operationSumar.facturacionSumar(pacientesSumar);
-        // operationRF.facturacionRF(pacientesRF);
-=======
-        //operationSumar.facturacionSumar(pacientesSumar);
-        operationRF.facturacionRF(pacientesRF);
->>>>>>> c6311af6274a0b981075e7e5d44d3a2e0047f4e6
+        //operationRF.facturacionRF(pacientesRF);
     } catch (ex) {
         return (ex);
     }
