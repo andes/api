@@ -6,9 +6,7 @@ import { organizacionCache } from './../../../../core/tm/schemas/organizacionCac
 import { obraSocial } from './../../../obraSocial/schemas/obraSocial';
 import { profesional } from './../../../../core/tm/schemas/profesional';
 import * as pacienteCrtl from './../../../../core/mpi/controller/paciente';
-// import { paciente } from './../../../../core/mpi/schemas/paciente';
 import { ObjectId } from 'bson';
-// Imports
 import * as operacionesLegacy from './../../../legacy/controller/operations';
 import * as mongoose from 'mongoose';
 import {agendasCache} from '../../../legacy/schemas/agendasCache';
@@ -18,11 +16,9 @@ import * as configPrivate from '../../../../config.private';
 import * as dbg from 'debug';
 import * as sql from 'mssql';
 import { map } from 'async';
-import { SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION } from 'constants';
 
 const debug = dbg('integracion');
 
-let transaction;
 let pool;
 
 let config = {
@@ -55,19 +51,18 @@ export async function facturacionRF(turnos) {
             let pacienteSips = operacionesLegacy.pacienteSipsFactory(resultadoBusquedaPaciente.paciente, idNivelCentral);
             idPacienteSips = await operacionesLegacy.insertaPacienteSips(pacienteSips);
         }
-
         let unProfesional: any = await profesional.findById(turnoRF.profesionales[0]._id);
         let rfProfesional = await mapeoProfesional(unProfesional.documento);
-        let rfTipoPractica = await mapeoTipoPractica(1);
         let rfObraSocial = (turnoRF.paciente.obraSocial && turnoRF.paciente.obraSocial.codigo) ? await mapeoObraSocial(turnoRF.paciente.obraSocial.codigo) : null;
 
         let codificacion = turnoRF.motivoConsulta ? turnoRF.motivoConsulta : getCodificacion(turnoRF.diagnostico, turnoRF);
         // let rfDiagnostico = (codificacion) ? await mapeoDiagnostico(codificacion) : null;
-
-        // crearOrden(orden, rfEfector, rfServicio, idPacienteSips, rfProfesional, rfTipoPractica, rfObraSocial, rfDiagnostico);
-        crearOrden(orden, turnoRF, idEfector, 148, idPacienteSips, rfProfesional, 1, rfObraSocial, codificacion);
-        orden.idOrden = await guardarOrden(orden);
         let nomenclador = await mapeoNomenclador('42.01.01');
+        let rfTipoPractica = nomenclador.idTipoPractica;
+
+        crearOrden(orden, turnoRF, idEfector, rfServicio, idPacienteSips, rfProfesional, rfTipoPractica, rfObraSocial, codificacion);
+        orden.idOrden = await guardarOrden(orden);
+
         let ordenDetalleSips: any = await crearOdenDetalle(orden, nomenclador);
         ordenDetalleSips.idOrdenDetalle = await guardarOrdenDetalle(ordenDetalleSips);
         orden.detalles.push(ordenDetalleSips);
@@ -285,7 +280,6 @@ export async function mapeoServicio(id) {
 }
 
 export async function mapeoEfector(organizacionId) {
-
     let efectorMongo: any = await organizacion.model.findById(organizacionId);
     let query = 'SELECT idEfector FROM dbo.Sys_efector WHERE codigoSisa = @codigo';
     let result = await new sql.Request(pool)
