@@ -905,10 +905,24 @@ export function getConsultaDiagnostico(params) {
                 $and: [
                     { 'horaInicio': { '$gte': new Date(params.horaInicio) } },
                     { 'horaFin': { '$lte': new Date(params.horaFin) } },
-                    { 'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) } }
+                    { 'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) } },
+                    { 'bloques.turnos.estado': 'asignado' }
 
                 ]
             }
+        },
+        {
+            $unwind: '$bloques'
+        },
+        {
+            $unwind: '$bloques.tipoPrestaciones'
+        },
+        {
+            $unwind: '$bloques.turnos'
+        },
+
+        {
+            $unwind: { path: '$bloques.turnos.diagnostico.codificaciones', preserveNullAndEmptyArrays: true }
         },
         {
             $project: {
@@ -921,8 +935,8 @@ export function getConsultaDiagnostico(params) {
                 auditoriaNombre: '$bloques.turnos.diagnostico.codificaciones.codificacionAuditoria.nombre',
                 codProfesionalCie10Codigo: '$bloques.turnos.diagnostico.codificaciones.codificacionProfesional.cie10.codigo',
                 codrofesionalCie10Nombre: '$bloques.turnos.diagnostico.codificaciones.codificacionProfesional.cie10.nombre',
-                codProfesionalSnomedCodigo: '$bloques.turnos.diagnostico.codificaciones.codificacionProfesional.snomed.codigo',
-                codProfesionalSnomedNombre: '$bloques.turnos.diagnostico.codificaciones.codificacionProfesional.snomed.nombre',
+                codProfesionalSnomedCodigo: '$bloques.turnos.diagnostico.codificaciones.codificacionProfesional.snomed.conceptId',
+                codProfesionalSnomedNombre: '$bloques.turnos.diagnostico.codificaciones.codificacionProfesional.snomed.term',
             }
         }
         ];
