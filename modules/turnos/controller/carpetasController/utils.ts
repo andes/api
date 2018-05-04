@@ -20,8 +20,9 @@ export function migrar(q_objeto, q_limites, page_size, addNuevoObjeto) {
             return pool.request()
                 .query(q_objeto)
                 .then(objetos => {
-                    if (objetos && objetos.length) {
-                        let nuevosObjetos = objetos.map(o => addNuevoObjeto(o));
+                    if (objetos.recordset && objetos.recordset.length) {
+                        logger("ACA ESTAMOS", objetos.recordset)
+                        let nuevosObjetos = objetos.recordset.map(o => addNuevoObjeto(o));
                         return Promise.all(nuevosObjetos).then(res =>
                             navegar(pool, offset + 1)
                         );
