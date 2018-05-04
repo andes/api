@@ -259,7 +259,8 @@ async function codificaOdontologia(idConsulta: any, turno: any) {
                             nombre: codificacionOdonto.descripcion,
                             sinonimo: codificacionOdonto.descripcion,
                             c2: false
-                        }
+                        },
+                        codificacionAuditoria: {}
                     }
                 });
             }
@@ -310,7 +311,8 @@ async function codificacionCie10(idConsulta: any, turno: any) {
                                 sinonimo: codificaCie10[0].Sinonimo,
                                 c2: codificaCie10[0].C2
                             }
-                        }
+                        },
+                        codificacionAuditoria: {}
                     });
                 }
             }
