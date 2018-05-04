@@ -78,8 +78,8 @@ export const weights = {
 };
 
 export const organizacionSips = {
-    codigoSisa: '50580352167107',
-    idSips: '217'
+    codigoSisa: '50580352167101',
+    idSips: '208'
 };
 
 
