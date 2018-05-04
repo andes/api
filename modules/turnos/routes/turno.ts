@@ -172,7 +172,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
 
                             // TODO: buscar si es primera vez del paciente => TP y paciente => Profesional
 
-                            update[etiquetaPrimeraVez] = await esPrimerPaciente(agenda, req.body.paciente.id, ['primerPrestacion', 'primerProfesional']);
+                            // update[etiquetaPrimeraVez] = await esPrimerPaciente(agenda, req.body.paciente.id, ['primerPrestacion', 'primerProfesional']);
 
                             let query = {
                                 _id: req.params.idAgenda,
