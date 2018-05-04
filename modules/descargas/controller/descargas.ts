@@ -29,7 +29,8 @@ export class Documento {
         let html = Buffer.from(req.body.html, 'base64').toString();
 
         // Se agregan los estilos CSS
-        html += this.generarCSS(path.join(__dirname, '../../../templates/rup/' + req.body.scssFile + '.scss'));
+        let fileOrNull = req.body.scssFile ? path.join(__dirname, '../../../templates/rup/' + req.body.scssFile + '.scss') : null;
+        html += this.generarCSS(fileOrNull);
 
         // Se cargan logos
         let logoAndes = fs.readFileSync(path.join(__dirname, '../../../templates/andes/logo-andes.png'));
@@ -54,8 +55,13 @@ export class Documento {
     /**
      * Genera CSS de RUP
      */
-    private static generarCSS(scssFile = path.join(__dirname, '../../../templates/rup/prestacion-print.scss')) {
-
+    private static generarCSS(scssFile) {
+        if (scssFile === null) {
+            scssFile = path.join(__dirname, '../../../templates/rup/prestacion-print.scss');
+        }
+        // else {
+        //     scssFile = path.join(__dirname, scssFile);
+        // }
         // Se agregan los estilos
         let css = '<style>\n\n';
 
@@ -80,10 +86,11 @@ export class Documento {
      * @param options html-pdf/PhantonJS rendering options
      */
     static descargar(req, res, next, options = null) {
-
+        console.log('++++++++++', req.body.horizontal, 'reeewqq');
         let html = '';
         switch (req.params.tipo) {
             case 'pdf':
+
                 // PhantomJS PDF rendering options
                 // https://www.npmjs.com/package/html-pdf
                 // http://phantomjs.org/api/webpage/property/paper-size.html
@@ -108,7 +115,9 @@ export class Documento {
                         resourceTimeout: 30
                     },
                 };
-
+                if (req.body.horizontal) {
+                    phantomPDFOptions = { ...phantomPDFOptions, orientation: 'landscape' };
+                }
                 if (options !== null) {
                     this.options = options;
                 } else {

@@ -214,3 +214,15 @@ $rotate: -90deg;
         font-size: .75rem;
     }
 }
+table tr>* {
+    display: block;
+}
+table tr {
+    display: table-cell;
+}
+th {
+    font-size: 0.7rem;
+}
+tr {
+    // border-bottom: 2px solid rgba(0, 0, 0, .15);
+}
