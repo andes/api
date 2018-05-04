@@ -42,7 +42,7 @@ const insertCarpeta = (paciente) => {
 
 };
 
-const findUpdateCarpeta = (paciente) => {
+const findUpdateCarpeta = async (paciente) => {
     let documentoPaciente = paciente['numeroDocumento'];
     let condicion = { documento: documentoPaciente };
     let carpetaNueva = {
@@ -85,8 +85,8 @@ const findUpdateCarpeta = (paciente) => {
         });
 
     }
-});
 };
+
 
 export async function migrar() {
     logger('Migrando carpetas de pacientes');

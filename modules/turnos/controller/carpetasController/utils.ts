@@ -1,17 +1,17 @@
-import * as config from './config';
+import * as config from '../../../../config.private';
 import * as sql from 'mssql';
 import * as debug from 'debug';
-let logger = debug('carpetasJob');
+const logger = debug('carpetasJob');
 
 export function migrar(q_objeto, q_limites, page_size, addNuevoObjeto) {
     let max;
-    let connection = {
-        user: config.user,
-        password: config.password,
-        server: config.serverSql2,
-        database: config.dbMigracion,
-        // connectionTimeout: config.connectionTimeout,
-        requestTimeout: config.requestTimeout
+    const connection = {
+        user: config.sqlCarpetasJob.user,
+        password: config.sqlCarpetasJob.password,
+        server: config.sqlCarpetasJob.server,
+        database: config.sqlCarpetasJob.database,
+        // connectionTimeout: config.sqlCarpetasJob.connectionTimeout,
+        requestTimeout: config.sqlCarpetasJob.requestTimeout
     };
 
     async function navegar(pool, index) {
@@ -54,45 +54,45 @@ export function migrar(q_objeto, q_limites, page_size, addNuevoObjeto) {
 }
 
 
-export function migrarOffset(q_objeto, q_limites, page_size, addNuevoObjeto) {
-    let max;
-    let connection = {
-        user: config.user,
-        password: config.password,
-        server: config.serverSql2,
-        database: config.dbMigracion,
-        // connectionTimeout: config.connectionTimeout,
-        requestTimeout: config.requestTimeout
-    };
+// export function migrarOffset(q_objeto, q_limites, page_size, addNuevoObjeto) {
+//     let max;
+//     const connection = {
+//         user: config.sqlCarpetasJob.user,
+//         password: config.sqlCarpetasJob.password,
+//         server: config.sqlCarpetasJob.server,
+//         database: config.sqlCarpetasJob.database,
+//         // connectionTimeout: config.sqlCarpetasJob.connectionTimeout,
+//         requestTimeout: config.sqlCarpetasJob.requestTimeout
+//     };
 
-    function jobMigracion(connection, i, page_size1, total) {
-        logger(i, page_size1);
-        if (i * page_size1 < total) {
-            let offset = i * page_size1;
-            return sqlserver.queryOffset(connection, q_objeto, page_size1, offset)
-                .then(objetos => {
-                    if (objetos && objetos.length) {
-                        logger('Cant pacientes', objetos.length);
-                        let nuevosObjetos = objetos.map(o => addNuevoObjeto(o));
-                        return Promise.all(nuevosObjetos).then(res =>
-                            jobMigracion(connection, i + 1, page_size1, total)
-                        );
-                    } else {
-                        return jobMigracion(connection, i + 1, page_size1, total);
-                    }
-                });
-        }
-    }
+//     function jobMigracion(connection, i, page_size1, total) {
+//         logger(i, page_size1);
+//         if (i * page_size1 < total) {
+//             let offset = i * page_size1;
+//             return sqlserver.queryOffset(connection, q_objeto, page_size1, offset)
+//                 .then(objetos => {
+//                     if (objetos && objetos.length) {
+//                         logger('Cant pacientes', objetos.length);
+//                         let nuevosObjetos = objetos.map(o => addNuevoObjeto(o));
+//                         return Promise.all(nuevosObjetos).then(res =>
+//                             jobMigracion(connection, i + 1, page_size1, total)
+//                         );
+//                     } else {
+//                         return jobMigracion(connection, i + 1, page_size1, total);
+//                     }
+//                 });
+//         }
+//     }
 
-    return sqlserver.query(connection, q_limites)
-        .then(resultado => {
-            if (resultado[0]) {
-                logger(resultado[0]['min'] + ' - ' + resultado[0]['max']);
-                let min = resultado[0]['min'];
-                max = resultado[0]['max'];
-                logger('MAX', max);
-                return jobMigracion(connection, 0, 5000, max);
-            }
-        });
-}
+//     return sqlserver.query(connection, q_limites)
+//         .then(resultado => {
+//             if (resultado[0]) {
+//                 logger(resultado[0]['min'] + ' - ' + resultado[0]['max']);
+//                 let min = resultado[0]['min'];
+//                 max = resultado[0]['max'];
+//                 logger('MAX', max);
+//                 return jobMigracion(connection, 0, 5000, max);
+//             }
+//         });
+// }
 
