@@ -1,36 +1,3 @@
-export const user = 'nhuenchuman';
-export const password = 'naty2017';
-export const serverSql = '10.1.232.229';
-export const serverSql2 = '10.1.232.229';
-export const databaseSql = 'SIPS';
-export const dbMigracion = 'SIPS';
-export const requestTimeout = 100000;
-export const connectionTimeout = 15000;
-
-export const dbMssql = {
-    user: 'nhuenchuman',
-    password: 'naty2017',
-    server: '10.1.232.229',
-    database: 'SIPS',
-    // port: 20008,
-    requestTimeout: 190000,
-    stream: true,
-};
-
-
-// export const urlMongoAndes:string = 'mongodb://10.1.62.17:27017/andes';
-// export const urlMongoAndes:string = 'mongodb://murbano:lagartij0r@mongolito.hospitalneuquen.org.ar/andes?authSource=admin';
-// export const urlMongoAndes:string = 'mongodb://admin:golitoMon04@andeshpn.hospitalneuquen.org.ar/andes?authSource=admin';
-// export const urlMongoAndes: string = 'mongodb://admin:golitoMon04@10.1.72.7:27022/andes';
-export const urlMongoAndes = 'mongodb://localhost:27017/andes';
-// export const urlMigraSips:string = 'mongodb://10.1.62.17:27017/migrasips';
-export const urlMigraSips = 'mongodb://localhost:27017/migrasips';
-// export const urlMigracion: string = 'mongodb://localhost:27017/migracion';
-export const urlMigracion = 'mongodb://localhost:27017/migracion?connectTimeoutMS=600000&socketTimeoutMS=60000';
-export const urlMigracionAndes = 'mongodb://localhost:27017/andes?connectTimeoutMS=600000&socketTimeoutMS=60000';
-
-export const usuarioSisa = 'bcpintos';
-export const passwordSisa = '*123456';
 
 export const consultaPaciente = 'SELECT PAC.idPaciente,PAC.nombre, PAC.apellido, convert(varchar(20),PAC.numeroDocumento) as numeroDocumento,idsexo,convert(varchar(10),PAC.fechaNacimiento,103) AS fechaNacimiento, ' +
     'PAC.calle, PAC.numero, PAC.piso, PAC.departamento, PAC.manzana, PAC.lote, PAC.parcela, L.idLocalidad,' +
