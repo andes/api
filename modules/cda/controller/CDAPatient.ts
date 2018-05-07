@@ -1,20 +1,42 @@
 import * as pacienteCtr from '../../../core/mpi/controller/paciente';
 import * as mongoose from 'mongoose';
-import { CDA } from './class/CDA';
-import { Patient } from './class/Patient';
-import { Organization } from './class/Organization';
-import { Author } from './class/Author';
-import { Body, Component, ImageComponent } from './class/Body';
-import { CDABuilder } from './builder/CdaBuilder';
+import {
+    CDA
+} from './class/CDA';
+import {
+    Patient
+} from './class/Patient';
+import {
+    Organization
+} from './class/Organization';
+import {
+    Author
+} from './class/Author';
+import {
+    Body,
+    Component,
+    ImageComponent
+} from './class/Body';
+import {
+    CDABuilder
+} from './builder/CdaBuilder';
 
 import * as base64_stream from 'base64-stream';
-import { makeFs } from '../schemas/CDAFiles';
+import {
+    makeFs
+} from '../schemas/CDAFiles';
 import * as Stream from 'stream';
-import { create } from 'domain';
+import {
+    create
+} from 'domain';
 import * as moment from 'moment';
 
-import { CDA as CDAConfig } from '../../../config.private';
-import { CDAPrestacionesModel } from '../schemas/CDAPrestaciones';
+import {
+    CDA as CDAConfig
+} from '../../../config.private';
+import {
+    ConfiguracionPrestacion
+} from './../../../core/term/schemas/configuracionPrestacion';
 
 /**
  * Crea un objeto paciente desde los datos
@@ -81,7 +103,9 @@ export async function findOrCreate(req, dataPaciente, organizacion) {
                 entidad: organizacion,
                 valor: dataPaciente.id
             });
-            await pacienteCtr.updatePaciente(paciente, { identificadores: paciente.identificadores }, req);
+            await pacienteCtr.updatePaciente(paciente, {
+                identificadores: paciente.identificadores
+            }, req);
         }
         return paciente;
     } else {
@@ -100,19 +124,19 @@ let rootOID = CDAConfig.rootOID;
 export async function matchCode(snomed) {
     let prestacion: any;
     if (!isNaN(snomed)) {
-        prestacion = await CDAPrestacionesModel.find({ conceptId: snomed });
+        prestacion = await ConfiguracionPrestacion.find({
+            'snomed.conceptId': snomed
+        });
         if (prestacion.length > 0) {
             return prestacion[0];
         } else {
             // Devolvemos una prestación generica para que no falle
             return prestacion = {
                 snomed: {
-                    'tipoPrestacion': {
-                        'conceptId': '391000013108',
-                        'term': 'consulta de medicina general',
-                        'fsn': 'consulta de medicina general',
-                        'semanticTag': 'procedimiento'
-                    },
+                    'conceptId': '391000013108',
+                    'term': 'consulta de medicina general',
+                    'fsn': 'consulta de medicina general',
+                    'semanticTag': 'procedimiento'
                 },
                 loinc: {
                     'code': '26436-6',
@@ -126,12 +150,10 @@ export async function matchCode(snomed) {
         // Devolvemos una prestación generica para que no falle
         return prestacion = {
             snomed: {
-                'tipoPrestacion': {
-                    'conceptId': '391000013108',
-                    'term': 'consulta de medicina general',
-                    'fsn': 'consulta de medicina general',
-                    'semanticTag': 'procedimiento'
-                },
+                'conceptId': '391000013108',
+                'term': 'consulta de medicina general',
+                'fsn': 'consulta de medicina general',
+                'semanticTag': 'procedimiento'
             },
             loinc: {
                 'code': '26436-6',
@@ -149,7 +171,9 @@ export async function matchCode(snomed) {
  */
 
 export async function matchCodeByLoinc(loinc) {
-    let prestacion: any = await CDAPrestacionesModel.find({ 'loinc.code': loinc });
+    let prestacion: any = await ConfiguracionPrestacion.find({
+        'loinc.code': loinc
+    });
     if (prestacion.length > 0) {
         return prestacion[0];
     }
@@ -215,7 +239,13 @@ export function streamToString(stream): Promise<String> {
  * Guarda un archivo para ser almacenado en un CDA
  */
 
-export function storeFile({ extension, mimeType, stream, metadata, filename = null }) {
+export function storeFile({
+    extension,
+    mimeType,
+    stream,
+    metadata,
+    filename = null
+}) {
     return new Promise((resolve, reject) => {
         let CDAFiles = makeFs();
         let uniqueId = String(new mongoose.Types.ObjectId());
@@ -424,11 +454,15 @@ export async function CDAExists(id, fecha, orgId) {
  * listado de CDA por paciente y tipo de prestación
  */
 
-export function searchByPatient(pacienteId, prestacion, { limit, skip }): Promise<any[]> {
+export function searchByPatient(pacienteId, prestacion, {
+    limit,
+    skip
+}): Promise<any[]> {
     return new Promise(async (resolve, reject) => {
         let CDAFiles = makeFs();
-        // TODO :: PREGUNTAR POR SI EL FILTRO PARA SABES SI ES UN ADJUNTO ES CORRECTO
-        let conditions: any = { 'metadata.paciente': mongoose.Types.ObjectId(pacienteId), 'metadata.cdaId': { $exists: false } };
+        let conditions: any = {
+            'metadata.paciente': mongoose.Types.ObjectId(pacienteId)
+        };
         if (prestacion) {
             conditions['metadata.prestacion'] = prestacion;
         }
@@ -439,7 +473,9 @@ export function searchByPatient(pacienteId, prestacion, { limit, skip }): Promis
             skip = 0;
         }
         try {
-            let list = await CDAFiles.find(conditions).sort({ 'metadata.fecha': -1 }).limit(limit).skip(skip);
+            let list = await CDAFiles.find(conditions).sort({
+                'metadata.fecha': -1
+            }).limit(limit).skip(skip);
             list = list.map(item => {
                 let data = item.metadata;
                 data.cda_id = item._id;
@@ -557,11 +593,15 @@ export function validateSchemaCDA(xmlRaw) {
             const fs = require('fs');
 
             let filePath = path.join(__dirname, './schema/CDA.xsd');
-            fs.readFile(filePath, { encoding: 'utf8' }, function (err, xsd) {
+            fs.readFile(filePath, {
+                encoding: 'utf8'
+            }, function (err, xsd) {
                 if (err) {
                     return reject(err);
                 }
-                schemaXML = libxmljs.parseXml(xsd, { baseUrl: path.join(__dirname, 'schema') + '/' });
+                schemaXML = libxmljs.parseXml(xsd, {
+                    baseUrl: path.join(__dirname, 'schema') + '/'
+                });
                 return resolve(schemaXML);
             });
         });
@@ -603,14 +643,18 @@ export function checkAndExtract(xmlDom) {
 
             let text = '';
             if (param.many) {
-                let items = root.find(param.key, { x: 'urn:hl7-org:v3' });
+                let items = root.find(param.key, {
+                    x: 'urn:hl7-org:v3'
+                });
                 for (let i of items) {
                     text += i.text ? i.text() : i.value();
                     text += ' ';
                 }
                 text.trim();
             } else {
-                let item = root.get(param.key, { x: 'urn:hl7-org:v3' });
+                let item = root.get(param.key, {
+                    x: 'urn:hl7-org:v3'
+                });
                 if (item) {
                     text = item.text ? item.text() : item.value();
                 }
@@ -629,29 +673,97 @@ export function checkAndExtract(xmlDom) {
         return passed ? data : null;
     }
     let _root = xmlDom.root();
-    let _params = [
-        { key: '//x:ClinicalDocument/x:id/@root', match: CDAConfig.rootOID },
-        { key: '//x:ClinicalDocument/x:id/@extension', as: 'id' },
-        { key: '//x:ClinicalDocument/x:typeId/@root', match: '2.16.840.1.113883.1.3' },
-        { key: '//x:ClinicalDocument/x:typeId/@extension', match: 'POCD_HD000040' },
-        { key: '//x:ClinicalDocument/x:code/@code', as: 'loinc', require: true },
-        { key: '//x:ClinicalDocument/x:effectiveTime/@value', as: 'fecha', require: true },
+    let _params = [{
+        key: '//x:ClinicalDocument/x:id/@root',
+        match: CDAConfig.rootOID
+    },
+    {
+        key: '//x:ClinicalDocument/x:id/@extension',
+        as: 'id'
+    },
+    {
+        key: '//x:ClinicalDocument/x:typeId/@root',
+        match: '2.16.840.1.113883.1.3'
+    },
+    {
+        key: '//x:ClinicalDocument/x:typeId/@extension',
+        match: 'POCD_HD000040'
+    },
+    {
+        key: '//x:ClinicalDocument/x:code/@code',
+        as: 'loinc',
+        require: true
+    },
+    {
+        key: '//x:ClinicalDocument/x:effectiveTime/@value',
+        as: 'fecha',
+        require: true
+    },
 
-        { key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:id[@root='${CDAConfig.dniOID}']/@extension`, as: 'paciente.documento', require: true },
-        { key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:name/x:given`, many: true, as: 'paciente.nombre', require: true },
-        { key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:name/x:family`, many: true, as: 'paciente.apellido', require: true },
-        { key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:administrativeGenderCode/@code`, as: 'paciente.sexo', require: true },
-        { key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:birthTime/@value`, as: 'paciente.fechaNacimiento', require: true },
+    {
+        key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:id[@root='${CDAConfig.dniOID}']/@extension`,
+        as: 'paciente.documento',
+        require: true
+    },
+    {
+        key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:name/x:given`,
+        many: true,
+        as: 'paciente.nombre',
+        require: true
+    },
+    {
+        key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:name/x:family`,
+        many: true,
+        as: 'paciente.apellido',
+        require: true
+    },
+    {
+        key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:administrativeGenderCode/@code`,
+        as: 'paciente.sexo',
+        require: true
+    },
+    {
+        key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:birthTime/@value`,
+        as: 'paciente.fechaNacimiento',
+        require: true
+    },
 
-        { key: `//x:ClinicalDocument/x:custodian/x:assignedCustodian/x:representedCustodianOrganization/x:id/@root`, match: CDAConfig.rootOID },
-        { key: `//x:ClinicalDocument/x:custodian/x:assignedCustodian/x:representedCustodianOrganization/x:id/@extension`, as: 'organizacion.id', require: true },
-        { key: `//x:ClinicalDocument/x:custodian/x:assignedCustodian/x:representedCustodianOrganization/x:name`, as: 'organizacion.name', require: true },
+    {
+        key: `//x:ClinicalDocument/x:custodian/x:assignedCustodian/x:representedCustodianOrganization/x:id/@root`,
+        match: CDAConfig.rootOID
+    },
+    {
+        key: `//x:ClinicalDocument/x:custodian/x:assignedCustodian/x:representedCustodianOrganization/x:id/@extension`,
+        as: 'organizacion.id',
+        require: true
+    },
+    {
+        key: `//x:ClinicalDocument/x:custodian/x:assignedCustodian/x:representedCustodianOrganization/x:name`,
+        as: 'organizacion.name',
+        require: true
+    },
 
-        { key: `//x:ClinicalDocument/x:author/x:assignedAuthor/x:id[@root='${CDAConfig.dniOID}']/@extension`, as: 'profesional.documento', require: true },
-        { key: `//x:ClinicalDocument/x:author/x:assignedAuthor/x:assignedPerson/x:name/x:given`, many: true, as: 'profesional.nombre', require: true },
-        { key: `//x:ClinicalDocument/x:author/x:assignedAuthor/x:assignedPerson/x:name/x:family`, many: true, as: 'profesional.apellido' },
+    {
+        key: `//x:ClinicalDocument/x:author/x:assignedAuthor/x:id[@root='${CDAConfig.dniOID}']/@extension`,
+        as: 'profesional.documento',
+        require: true
+    },
+    {
+        key: `//x:ClinicalDocument/x:author/x:assignedAuthor/x:assignedPerson/x:name/x:given`,
+        many: true,
+        as: 'profesional.nombre',
+        require: true
+    },
+    {
+        key: `//x:ClinicalDocument/x:author/x:assignedAuthor/x:assignedPerson/x:name/x:family`,
+        many: true,
+        as: 'profesional.apellido'
+    },
 
-        { key: `//x:ClinicalDocument/x:component/x:structuredBody/x:component/x:section/x:entry/x:observationMedia/x:value/x:reference/@value`, as: 'adjunto' },
+    {
+        key: `//x:ClinicalDocument/x:component/x:structuredBody/x:component/x:section/x:entry/x:observationMedia/x:value/x:reference/@value`,
+        as: 'adjunto'
+    },
 
     ];
     let metadata: any = checkArg(_root, _params);
