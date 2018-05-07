@@ -60,8 +60,8 @@ export async function facturacionRF(turnos) {
         let codificacion = turnoRF.motivoConsulta ? turnoRF.motivoConsulta : getCodificacion(turnoRF.diagnostico, turnoRF);
         // let rfDiagnostico = (codificacion) ? await mapeoDiagnostico(codificacion) : null;
         let codNomenclador = await getNomencladorByConceptId(turnoRF.tipoPrestacion.conceptId);
-
-        let nomenclador = await mapeoNomenclador(codNomenclador);
+        let idTipoNomenclador = await getTipoNomenclador(rfObraSocial, turnoRF.fecha);
+        let nomenclador = await mapeoNomenclador(codNomenclador, idTipoNomenclador);
         let rfTipoPractica = nomenclador.idTipoPractica;
 
         crearOrden(orden, turnoRF, idEfector, idServicio, idPacienteSips, rfProfesional, rfTipoPractica, rfObraSocial, codificacion);
@@ -335,10 +335,11 @@ export async function mapeoObraSocial(codigoObraSocial) {
 //     return result.recordset[0];
 // }
 
-export async function mapeoNomenclador(codigo) {
-    let query = 'SELECT TOP 1 * FROM dbo.FAC_Nomenclador WHERE codigo = @codigo;';
+export async function mapeoNomenclador(codigo, idTipoNomenclador) {
+    let query = 'SELECT TOP 1 * FROM dbo.FAC_Nomenclador WHERE codigo = @codigo and idTipoNomenclador = @idTipoNomenclador;';
     let result = await new sql.Request(pool)
         .input('codigo', sql.VarChar(50), codigo)
+        .input('idTipoNomenclador', sql.Int, idTipoNomenclador)
         .query(query);
     return result.recordset[0];
 }
@@ -349,4 +350,17 @@ async function getNomencladorByConceptId(conceptId) {
             resolve(data ? data.nomencladorRecuperoFinanciero : '42.01.01');
         });
     });
+}
+
+async function getTipoNomenclador(idObraSocial, fecha) {
+    let query = 'SELECT isnull( C.idTipoNomenclador, 0 ) as idTipoNomenclador FROM dbo.FAC_ContratoObraSocial C ' +
+    ' INNER JOIN dbo.FAC_TipoNomenclador TN ON C.idTipoNomenclador = TN.idTipoNomenclador ' +
+    ' WHERE C.idObraSocial = @idObraSocial ' +
+    ' AND TN.fechaDesde <= @fecha ' +
+    ' AND fechaHasta >= @fecha ';
+    let result = await new sql.Request(pool)
+        .input('idObraSocial', sql.Int, idObraSocial)
+        .input('fecha', sql.DateTime, fecha)
+        .query(query);
+    return result.recordset[0] ? result.recordset[0].idTipoNomenclador : 0;
 }
