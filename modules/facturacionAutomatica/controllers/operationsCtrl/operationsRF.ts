@@ -1,3 +1,4 @@
+import {configuracionPrestaciones}  from './operationsSumar';
 import { SnomedCIE10Mapping } from './../../../../core/term/controller/mapping';
 import { Body } from './../../../cda/controller/class/Body';
 import { tipoPrestacion } from './../../../../core/tm/schemas/tipoPrestacion';
@@ -16,6 +17,7 @@ import * as configPrivate from '../../../../config.private';
 import * as dbg from 'debug';
 import * as sql from 'mssql';
 import { map } from 'async';
+import { Promise } from 'core-js';
 
 const debug = dbg('integracion');
 
@@ -42,7 +44,7 @@ export async function facturacionRF(turnos) {
     turnos.forEach(async turnoRF => {
         let orden = ordenFactory();
         let idEfector = await mapeoEfector(turnoRF.efector.id);
-        let rfServicio = await mapeoServicio(148);
+        let idServicio = await mapeoServicio(148);
         let idPacienteSips = await mapeoPaciente(turnoRF.paciente.documento);
 
         if (!idPacienteSips) {
@@ -57,10 +59,12 @@ export async function facturacionRF(turnos) {
 
         let codificacion = turnoRF.motivoConsulta ? turnoRF.motivoConsulta : getCodificacion(turnoRF.diagnostico, turnoRF);
         // let rfDiagnostico = (codificacion) ? await mapeoDiagnostico(codificacion) : null;
-        let nomenclador = await mapeoNomenclador('42.01.01');
+        let codNomenclador = await getNomencladorByConceptId(turnoRF.tipoPrestacion.conceptId);
+
+        let nomenclador = await mapeoNomenclador(codNomenclador);
         let rfTipoPractica = nomenclador.idTipoPractica;
 
-        crearOrden(orden, turnoRF, idEfector, rfServicio, idPacienteSips, rfProfesional, rfTipoPractica, rfObraSocial, codificacion);
+        crearOrden(orden, turnoRF, idEfector, idServicio, idPacienteSips, rfProfesional, rfTipoPractica, rfObraSocial, codificacion);
         orden.idOrden = await guardarOrden(orden);
 
         let ordenDetalleSips: any = await crearOdenDetalle(orden, nomenclador);
@@ -276,7 +280,7 @@ export async function mapeoServicio(id) {
     let result = await new sql.Request(pool)
         .input('id', sql.VarChar(50), id)
         .query(query);
-    return result.recordset[0];
+    return result.recordset[0] ? result.recordset[0].idServicio : null;
 }
 
 export async function mapeoEfector(organizacionId) {
@@ -304,6 +308,9 @@ export async function mapeoProfesional(dni) {
     return result.recordset[0] ? result.recordset[0].idProfesional : 0;
 }
 
+/**
+ * @deprecated se calcula a partir de un item del nomenclador
+ */
 export async function mapeoTipoPractica(id) {
     let query = 'SELECT idTipoPractica FROM dbo.FAC_TipoPractica WHERE idTipoPractica = @id;';
     let result = await new sql.Request(pool)
@@ -333,5 +340,13 @@ export async function mapeoNomenclador(codigo) {
     let result = await new sql.Request(pool)
         .input('codigo', sql.VarChar(50), codigo)
         .query(query);
-    return result.recordset[0] ;
+    return result.recordset[0];
+}
+
+async function getNomencladorByConceptId(conceptId) {
+    return new Promise((resolve, reject) => {
+        configuracionPrestaciones.findOne({'tipoPrestacion.conceptId': conceptId}).then(async (data: any) => {
+            resolve(data ? data.nomencladorRecuperoFinanciero : '42.01.01');
+        });
+    });
 }
