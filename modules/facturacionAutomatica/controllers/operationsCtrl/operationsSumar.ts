@@ -26,7 +26,8 @@ let config = {
 var thingSchema = new mongoose.Schema({
     id: Object,
     tipoPrestacion: Object,
-    nomencladorSUMAR: String
+    nomencladorSUMAR: String,
+    nomencladorRecuperoFinanciero: String
 
 });
 export let configuracionPrestaciones = mongoose.model('configuracionPrestacion', thingSchema, 'configuracionPrestacion');
