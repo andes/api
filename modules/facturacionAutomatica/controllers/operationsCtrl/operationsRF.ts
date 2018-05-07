@@ -17,7 +17,6 @@ import * as configPrivate from '../../../../config.private';
 import * as dbg from 'debug';
 import * as sql from 'mssql';
 import { map } from 'async';
-import { Promise } from 'core-js';
 
 const debug = dbg('integracion');
 
