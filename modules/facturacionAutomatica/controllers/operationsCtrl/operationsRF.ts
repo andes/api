@@ -106,7 +106,7 @@ function ordenFactory() {
 }
 
 function getCodificacion(diagnostico, t) {
-    let result = t._id; // 'sin codificar';
+    let result = 'sin codificar';
     let codificacion = diagnostico.codificaciones[0] ? diagnostico.codificaciones[0] : null;
 
     if (codificacion) {
