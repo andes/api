@@ -6,7 +6,7 @@ import * as contactoSchema from './contacto';
 import * as tipoEstablecimientoSchema from './tipoEstablecimiento';
 import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
 
-export let unidadesOrganizativasSchema = new mongoose.Schema({
+export let mapaSectoresSchema = new mongoose.Schema({
     tipoSector: SnomedConcept,
     unidadConcept: {
         type: SnomedConcept,
@@ -14,7 +14,7 @@ export let unidadesOrganizativasSchema = new mongoose.Schema({
     },
     nombre: String
 });
-unidadesOrganizativasSchema.add({ hijos: [ unidadesOrganizativasSchema ] });
+mapaSectoresSchema.add({ hijos: [ mapaSectoresSchema ] });
 
 let codigoSchema = new mongoose.Schema({
     sisa: {
@@ -40,7 +40,8 @@ let _schema = new mongoose.Schema({
     },
     fechaAlta: Date,
     fechaBaja: Date,
-    unidadesOrganizativas: [unidadesOrganizativasSchema]
+    mapaSectores: [mapaSectoresSchema],
+    unidadesOrganizativas: [ SnomedConcept ]
 });
 const audit = require('../../../mongoose/audit');
 _schema.plugin(audit);
