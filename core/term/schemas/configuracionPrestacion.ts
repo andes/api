@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-export let configuracionPrestacionSchema = new mongoose.Schema({
+let configuracionPrestacionSchema = new mongoose.Schema({
 
     snomed: {
         conceptId: String,
