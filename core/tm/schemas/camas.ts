@@ -4,7 +4,6 @@ import { pacienteSchema } from '../../mpi/schemas/paciente';
 import * as nombreSchema from './nombre';
 import * as estado from './camaEstado';
 import * as unidadOrganizativa from './unidadOrganizativa';
-import { unidadesOrganizativasSchema } from './organizacion';
 
 export let schema = new mongoose.Schema({
     organizacion: {
