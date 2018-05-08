@@ -11,37 +11,6 @@ let logger = debug('carpetasJob');
 let db;
 let organizacion;
 
-function find(coleccion, condicion) {
-    return db.collection(coleccion).find(condicion).toArray();
-}
-
-function update(coleccion, condicion, camposupdate) {
-    return db.collection(coleccion).findOneAndUpdate(condicion, camposupdate);
-}
-
-function insert(coleccion, documento) {
-    return db.collection(coleccion).insertOne(documento);
-}
-
-const insertCarpeta = (paciente) => {
-    let documentoPaciente = paciente['numeroDocumento'];
-    let condicion = { documento: documentoPaciente };
-    let carpetaNueva = {
-        organizacion: {
-            _id: organizacion._id,
-            nombre: organizacion.nombre
-        },
-        idPaciente: paciente['idPaciente'],
-        nroCarpeta: paciente['historiaClinica']
-    };
-
-    return insert('carpetaPacienteEfector', {
-        'documento': documentoPaciente,
-        'carpetaEfectores': [carpetaNueva]
-    });
-
-};
-
 const findUpdateCarpeta = async (paciente) => {
     let documentoPaciente = paciente['numeroDocumento'];
     let condicion = { documento: documentoPaciente };
@@ -69,21 +38,20 @@ const findUpdateCarpeta = async (paciente) => {
         }
 
         if (carpeta._id) {
-            return update('carpetaPaciente', { '_id': carpeta._id }, {
+            carpetaPaciente.update({ '_id': carpeta._id }, {
                 $set:
                     { 'carpetaEfectores': carpeta.carpetaEfectores }
             });
         }
-
     } else {
         // El dni no existe en la colección carpetaPaciente
         // Se guarda el documento en la colección carpetaPaciente
         logger('nuevo', documentoPaciente);
-        return insert('carpetaPaciente', {
+        let nuevo = new carpetaPaciente({
             'documento': documentoPaciente,
             'carpetaEfectores': [carpetaNueva]
         });
-
+        nuevo.save();
     }
 };
 
@@ -107,8 +75,12 @@ export async function migrar() {
                 // return utils.migrarOffset(consulta, q_limites, 100, insertCarpeta);
                 await utils.migrar(consulta, q_limites, 10000, findUpdateCarpeta);
                 logger('Migracion de datos completa desde ', organizacion.nombre);
-            } else { logger('Código de organización inválido, verifica el codigo Sisa ingresado'); }
-        } else { logger('Código de organización inválido, verifica el codigo Sisa ingresado'); }
+            } else {
+                logger('Código de organización inválido, verifica el codigo Sisa ingresado');
+            }
+        } else {
+            logger('Código de organización inválido, verifica el codigo Sisa ingresado');
+        }
     } catch (err) { logger('Error al obtener la organización', err); }
 }
 
