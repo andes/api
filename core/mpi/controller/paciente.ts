@@ -636,4 +636,21 @@ export async function matchPaciente(dataPaciente) {
         return [];
     }
 }
+var thingSchema = new mongoose.Schema({
+    id: Object,
+
+});
+export let puco = mongoose.model('puco', thingSchema, 'puco');
+export function mapeoPuco(dni){
+    dni = 315465;
+    puco.find({
+        'dni': dni
+    }, {},  function (err, data: any) {
+       if(data.length === 0){
+           console.log("insertamos en sumar(falta verificar por edad)")
+       }else{
+           console.log("no insertamos, existe en puco")
+       }
+    });
+}
 
