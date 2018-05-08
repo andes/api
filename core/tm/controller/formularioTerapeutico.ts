@@ -20,7 +20,7 @@ export function getAncestro(hijo) {
 export function getPadres(hijo, arr) {
     return new Promise(async (resolve, reject) => {
         try {
-            if (hijo !== null && hijo !== '5ac6512111764e32b35ad416') {
+            if (hijo !== null) {
                 let padre = await getAncestro(hijo); // Find a mongo
                 if (padre) {
                     arr.unshift(padre);

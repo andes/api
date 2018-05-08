@@ -90,7 +90,7 @@ export const snomed = {
 // Push Notifications
 export const pushNotificationsSettings = {
     gcm: {
-        id: getEnv('GCM_API_KEY', ''),
+        id: getEnv('GCM_API_KEY', 'GCM_API_KEY'),
         phonegap: true
     },
     apn: {
