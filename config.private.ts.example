@@ -1,5 +1,16 @@
-function getEnv(key, _default) {
-    return !!process.env[key] === false ?  _default : process.env[key] ;
+function getEnv(key, _default, type = 's') {
+    if (!!process.env[key] === false) {
+        return _default;
+    }
+    let value = process.env[key];
+    switch (type) {
+        case 'b':
+            return value.toLowerCase() === 'true';
+        case 'n':
+            return parseInt(value, 10);
+        default:
+            return value;
+    }
 }
 
 // Configuración de Passport
@@ -48,27 +59,27 @@ export const geoKey = getEnv('GOOGLE_MAP_KEY', 'GOOGLE_MAP_KEY');
 
 // Configuración servicio SISA
 export const sisa = {
-    username: '',
-    password: '',
-    host: 'sisa.msal.gov.ar',
-    port: 443,
-    url: 'https://sisa.msal.gov.ar/sisa/services/rest/cmdb/obtener?'
+    username: getEnv('SISA_USERNAME', ''),
+    password: getEnv('SISA_PASSWORD', ''),
+    host: getEnv('SISA_HOST', 'sisa.msal.gov.ar'),
+    port: getEnv('SISA_PORT', 443, 'n'),
+    url: getEnv('SISA_URL', 'https://sisa.msal.gov.ar/sisa/services/rest/cmdb/obtener?')
 };
 // Configuración servicio ANSES
 export const anses = {
-    Usuario: '',
-    password: '',
-    url: '',
-    serv: '',
-    serv2: ''
+    Usuario: getEnv('ANSES_USERNAME', ''),
+    password: getEnv('ANSES_PASSWORD', ''),
+    url: getEnv('ANSES_URL', ''),
+    serv: getEnv('ANSES_SERV', ''),
+    serv2: getEnv('ANSES_SERV2', '')
 };
 // Configuración servicio SINTYS
 export const sintys = {
-    username: '',
-    password: '',
-    host: '',
-    port: 443,
-    path: ''
+    username: getEnv('SINTYS_USERNAME', ''),
+    password: getEnv('SINTYS_PASSWORD', ''),
+    host: getEnv('SINTYS_HOST', ''),
+    port: getEnv('SINTYS_PORT', 443, 'n'),
+    path: getEnv('SINTYS_PATH', '')
 };
 
 export const snomed = {
@@ -94,11 +105,11 @@ export const pushNotificationsSettings = {
 // E-mail server settings
 export const enviarMail = {
     host: getEnv('EMAIL_HOST', ''),
-    port: getEnv('EMAIL_PORT', 587),
-    secure: getEnv('EMAIL_SECURE', false), // true for 465, false for other ports
+    port: getEnv('EMAIL_PORT', 587, 'n'),
+    secure: getEnv('EMAIL_SECURE', false, 'b'),
     auth: {
-        user: getEnv('EMAIL_USERNAME', ''), // generated ethereal user
-        pass: getEnv('EMAIL_PASSWORD', '')  // generated ethereal password
+        user: getEnv('EMAIL_USERNAME', ''),
+        pass: getEnv('EMAIL_PASSWORD', '')
     }
 };
 

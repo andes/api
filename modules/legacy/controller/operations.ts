@@ -213,22 +213,6 @@ export async function cacheTurnosSips(unaAgenda) {
     }
 
     async function integrarAgenda(_agenda) {
-        // return true;
-        // let prestacionesIntegradas: any;
-        // if (_agenda.organizacion) {
-        //     let datosOrganizacion = constantes.prestacionesIntegradasPorEfector.find(elem => elem.organizacion === _agenda.organizacion.id);
-        //     if (datosOrganizacion) {
-        //         prestacionesIntegradas = _agenda.tipoPrestaciones.find(prestacion => {
-        //             return (datosOrganizacion.prestaciones.filter(prest => prest.conceptId === prestacion.conceptId).length > 0);
-        //         });
-        //     }
-        // }
-
-        // if (prestacionesIntegradas) {
-        //     return true;
-        // } else {
-        //     return false;
-        // }
         return new Promise(function (resolve, reject) {
             configuracionPrestacionModel.find({
                 'tipoPrestacion.conceptId': { $eq: _agenda.tipoPrestaciones[0].conceptId },

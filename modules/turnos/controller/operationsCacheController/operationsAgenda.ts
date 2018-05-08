@@ -325,7 +325,6 @@ async function codificacionCie10(idConsulta: any, turno: any) {
 // Fin de sección de operaciones sobre mongoDB
 // Sección de operaciones sobre SIPS
 
-
 /**
  * Verifica que exista el consultorio en sips || crea el consultorio en sips
  *
