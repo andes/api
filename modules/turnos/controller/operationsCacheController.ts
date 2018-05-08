@@ -102,7 +102,7 @@ export function checkCodificacion(agenda, pool) {
                         turno: turno[z]
                     };
 
-                    await turnoCtrl.updateTurno(datosTurno);
+                    await turnoCtrl.updateTurnoAgendaMongo(datosTurno);
                     await markAgendaAsProcessed(agenda);
 
                     // resolve();

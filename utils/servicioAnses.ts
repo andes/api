@@ -24,6 +24,7 @@ export function getServicioAnses(paciente) {
                     return reject(err);
                 }
                 if (client) {
+                    let pacAndes: any;
                     client.LoginPecas(login, async function (err2, result) {
                         if (err2) {
                             reject(err2);
@@ -34,10 +35,13 @@ export function getServicioAnses(paciente) {
                             tipoConsulta = 'Cuil';
                             filtro = paciente.cuil;
                         }
-                        if (paciente.nombre && paciente.apellido) {
-                            paciente.nombre = paciente.apellido + ' ' + paciente.nombre;
-                            paciente.apellido = '';
-                        }
+                        pacAndes = { // Este objeto se arma así exclusivamente para comparar con anses
+                            nombre : paciente.apellido + ' ' + paciente.nombre,
+                            apellido : '',
+                            sexo: paciente.sexo,
+                            fechaNacimiento: paciente.fechaNacimiento,
+                            documento : paciente.documento
+                        };
                         try {
                             resultado = await consultaAnses(result, tipoConsulta, filtro);
                         } catch (error) {
@@ -68,7 +72,7 @@ export function getServicioAnses(paciente) {
                                 sexo: sex
                             };
                             try {
-                                matchPorcentaje = await match.matchPersonas(paciente, pacienteAnses, weights, 'Levenshtein') * 100;
+                                matchPorcentaje = await match.matchPersonas(pacAndes, pacienteAnses, weights, 'Levenshtein') * 100;
                             } catch (error) {
                                 reject(error);
                             }

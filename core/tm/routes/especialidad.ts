@@ -1,6 +1,7 @@
 import * as express from 'express';
 import * as especialidad from '../schemas/especialidad_model';
 import { defaultLimit, maxLimit } from './../../../config';
+import { Auth } from '../../../auth/auth.class';
 
 let router = express.Router();
 
@@ -138,7 +139,10 @@ router.get('/especialidades/:id*?', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/especialidad'
  */
-router.post('/especialidades', function (req, res, next) {
+router.post('/especialidades', Auth.authenticate(), function (req, res, next) {
+    if (!Auth.check(req, 'tm:especialidad:postEspecialidad')) {
+        return next(403);
+    }
     let newEspecialidad = new especialidad(req.body);
     newEspecialidad.save((err) => {
         if (err) {
@@ -178,7 +182,10 @@ router.post('/especialidades', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/especialidad'
  */
-router.put('/especialidades/:id', function (req, res, next) {
+router.put('/especialidades/:id', Auth.authenticate(), function (req, res, next) {
+    if (!Auth.check(req, 'tm:especialidad:putEspecialidad')) {
+        return next(403);
+    }
     especialidad.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
         if (err) {
             return next(err);
@@ -212,7 +219,10 @@ router.put('/especialidades/:id', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/especialidad'
  */
-router.delete('/especialidades/:id', function (req, res, next) {
+router.delete('/especialidades/:id', Auth.authenticate(), function (req, res, next) {
+    if (!Auth.check(req, 'tm:especialidad:deleteEspecialidad')) {
+        return next(403);
+    }
     especialidad.findByIdAndRemove(req.params.id, function (err, data) {
         if (err) {
             return next(err);

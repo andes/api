@@ -9,12 +9,13 @@ import * as moment from 'moment';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import { Matching } from '@andes/match';
 
+/*
 interface IUserModel extends mongoose.Document {
     nombre: String;
     apellido: String;
     claveBlocking: string[];
 }
-
+*/
 
 export let pacienteSchema: mongoose.Schema = new mongoose.Schema({
     identificadores: [{
@@ -84,17 +85,17 @@ export let pacienteSchema: mongoose.Schema = new mongoose.Schema({
     }]
 }, { versionKey: false });
 
-pacienteSchema.pre<IUserModel>('save', function (next) {
-
-    if (this.isModified('nombre')) {
-        this.nombre = this.nombre.toUpperCase();
+pacienteSchema.pre('save', function (next) {
+    let user: any = this;
+    if (user.isModified('nombre')) {
+        user.nombre = user.nombre.toUpperCase();
     }
-    if (this.isModified('apellido')) {
-        this.apellido = this.apellido.toUpperCase();
+    if (user.isModified('apellido')) {
+        user.apellido = user.apellido.toUpperCase();
     }
-    if (this.isModified('nombre') || this.isModified('apellido') || this.isModified('documento')) {
+    if (user.isModified('nombre') || user.isModified('apellido') || user.isModified('documento')) {
         let match = new Matching();
-        this.claveBlocking = match.crearClavesBlocking(this);
+        user.claveBlocking = match.crearClavesBlocking(user);
     }
     next();
 
@@ -170,5 +171,5 @@ pacienteSchema.virtual('edadReal').get(function () {
 // Habilitar plugin de auditoría
 pacienteSchema.plugin(require('../../../mongoose/audit'));
 
-export let paciente: mongoose.Model<IUserModel> = mongoose.model<IUserModel>('paciente', pacienteSchema, 'paciente');
-export let pacienteMpi: mongoose.Model<IUserModel> = Connections.mpi.model<IUserModel>('paciente', pacienteSchema, 'paciente');
+export let paciente = mongoose.model('paciente', pacienteSchema, 'paciente');
+export let pacienteMpi = Connections.mpi.model('paciente', pacienteSchema, 'paciente');

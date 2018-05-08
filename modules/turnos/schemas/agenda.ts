@@ -6,10 +6,6 @@ import * as turnoSchema from '../../../modules/turnos/schemas/turno';
 import * as nombreApellidoSchema from '../../../core/tm/schemas/nombreApellido';
 import * as mongoose from 'mongoose';
 
-interface IAgenda extends mongoose.Document {
-    intercalar: string;
-}
-
 let schema = new mongoose.Schema({
     organizacion: {
         type: nombreSchema,
@@ -127,9 +123,10 @@ schema.virtual('estadosAgendas').get(function () {
 
 
 // Validaciones
-schema.pre<IAgenda>('save', function (next) {
+schema.pre('save', function (next) {
     // Intercalar
-    if (!/true|false/i.test(this.intercalar)) {
+    let agenda: any = this;
+    if (!/true|false/i.test(agenda.intercalar)) {
         return next(new Error('invalido'));
         // TODO: loopear bloques y definir si horaInicio/Fin son required
         // TODO: si pacientesSimultaneos, tiene que haber cantidadSimultaneos (> 0)
