@@ -76,18 +76,21 @@ router.get('/localidades/:id*?', function (req, res, next) {
             if (err) {
                 return next(err);
             }
+
             res.json(data);
         });
     } else {
         let query;
-        query = localidad.find({}).sort({ nombre: 1 });
+        query = localidad.find({});
+
         if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
         if (req.query.provincia) {
-            query.where('provincia._id').equals(mongoose.Types.ObjectId(req.query.provincia));
+            query.where("provincia._id").equals(mongoose.Types.ObjectId(req.query.provincia));
         }
-        query.exec((err, data) => {
+
+        query.sort({ 'nombre': 1 }).exec((err, data) => {
             if (err) {
                 return next(err);
             }

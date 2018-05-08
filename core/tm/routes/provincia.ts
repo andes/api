@@ -1,4 +1,4 @@
-// import * as mongoose from 'mongoose';
+import * as mongoose from 'mongoose';
 import * as express from 'express';
 import * as provincia from '../schemas/provincia_model';
 // import * as utils from '../../../utils/utils';
@@ -69,10 +69,11 @@ let router = express.Router();
  *         schema:
  *           $ref: '#/definitions/provincia'
  */
-router.get('/provincias/:id*?', function (req, res, next) {
-
-    if (req.params.id) {
-        provincia.findById(req.params.id, function (err, data) {
+//router.get('/provincias/:id*?', function (req, res, next) {
+router.get('/provincias', function (req, res, next) {
+    if (req.query.id) {
+        console.log('id');
+        provincia.findById(req.query.id, function (err, data) {
             if (err) {
                 return next(err);
             }
@@ -80,17 +81,20 @@ router.get('/provincias/:id*?', function (req, res, next) {
             res.json(data);
         });
     } else {
-        let query;
-        query = provincia.find({});
+        let consulta;
+        consulta = provincia.find({}).sort({ 'nombre': 1 });
 
         if (req.query.nombre) {
-            query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
+            console.log('nombre');
+            consulta.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
         if (req.query.pais) {
-            query.where('pais._id').equals(req.query.pais);
+            console.log('pais');
+            consulta.where('pais._id').equals(mongoose.Types.ObjectId(req.query.pais));
         }
 
-        query.sort({ 'nombre': 1 }).exec((err, data) => {
+        consulta.exec((err, data) => {
+            console.log('ordena');
             if (err) { return next(err); }
 
             res.json(data);
