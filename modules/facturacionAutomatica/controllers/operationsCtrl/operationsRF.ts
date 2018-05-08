@@ -1,3 +1,4 @@
+import {configuracionPrestaciones}  from './operationsSumar';
 import { SnomedCIE10Mapping } from './../../../../core/term/controller/mapping';
 import { Body } from './../../../cda/controller/class/Body';
 import { tipoPrestacion } from './../../../../core/tm/schemas/tipoPrestacion';
@@ -6,9 +7,7 @@ import { organizacionCache } from './../../../../core/tm/schemas/organizacionCac
 import { obraSocial } from './../../../obraSocial/schemas/obraSocial';
 import { profesional } from './../../../../core/tm/schemas/profesional';
 import * as pacienteCrtl from './../../../../core/mpi/controller/paciente';
-// import { paciente } from './../../../../core/mpi/schemas/paciente';
 import { ObjectId } from 'bson';
-// Imports
 import * as operacionesLegacy from './../../../legacy/controller/operations';
 import * as mongoose from 'mongoose';
 import {agendasCache} from '../../../legacy/schemas/agendasCache';
@@ -18,11 +17,9 @@ import * as configPrivate from '../../../../config.private';
 import * as dbg from 'debug';
 import * as sql from 'mssql';
 import { map } from 'async';
-import { SSL_OP_NO_SESSION_RESUMPTION_ON_RENEGOTIATION } from 'constants';
 
 const debug = dbg('integracion');
 
-let transaction;
 let pool;
 
 let config = {
@@ -46,7 +43,7 @@ export async function facturacionRF(turnos) {
     turnos.forEach(async turnoRF => {
         let orden = ordenFactory();
         let idEfector = await mapeoEfector(turnoRF.efector.id);
-        let rfServicio = await mapeoServicio(148);
+        let idServicio = await mapeoServicio(148);
         let idPacienteSips = await mapeoPaciente(turnoRF.paciente.documento);
 
         if (!idPacienteSips) {
@@ -55,19 +52,20 @@ export async function facturacionRF(turnos) {
             let pacienteSips = operacionesLegacy.pacienteSipsFactory(resultadoBusquedaPaciente.paciente, idNivelCentral);
             idPacienteSips = await operacionesLegacy.insertaPacienteSips(pacienteSips);
         }
-
         let unProfesional: any = await profesional.findById(turnoRF.profesionales[0]._id);
         let rfProfesional = await mapeoProfesional(unProfesional.documento);
-        let rfTipoPractica = await mapeoTipoPractica(1);
         let rfObraSocial = (turnoRF.paciente.obraSocial && turnoRF.paciente.obraSocial.codigo) ? await mapeoObraSocial(turnoRF.paciente.obraSocial.codigo) : null;
 
         let codificacion = turnoRF.motivoConsulta ? turnoRF.motivoConsulta : getCodificacion(turnoRF.diagnostico, turnoRF);
         // let rfDiagnostico = (codificacion) ? await mapeoDiagnostico(codificacion) : null;
+        let codNomenclador = await getNomencladorByConceptId(turnoRF.tipoPrestacion.conceptId);
+        let idTipoNomenclador = await getTipoNomenclador(rfObraSocial, turnoRF.fecha);
+        let nomenclador = await mapeoNomenclador(codNomenclador, idTipoNomenclador);
+        let rfTipoPractica = nomenclador.idTipoPractica;
 
-        // crearOrden(orden, rfEfector, rfServicio, idPacienteSips, rfProfesional, rfTipoPractica, rfObraSocial, rfDiagnostico);
-        crearOrden(orden, turnoRF, idEfector, 148, idPacienteSips, rfProfesional, 1, rfObraSocial, codificacion);
+        crearOrden(orden, turnoRF, idEfector, idServicio, idPacienteSips, rfProfesional, rfTipoPractica, rfObraSocial, codificacion);
         orden.idOrden = await guardarOrden(orden);
-        let nomenclador = await mapeoNomenclador('42.01.01');
+
         let ordenDetalleSips: any = await crearOdenDetalle(orden, nomenclador);
         ordenDetalleSips.idOrdenDetalle = await guardarOrdenDetalle(ordenDetalleSips);
         orden.detalles.push(ordenDetalleSips);
@@ -107,7 +105,7 @@ function ordenFactory() {
 }
 
 function getCodificacion(diagnostico, t) {
-    let result = t._id; // 'sin codificar';
+    let result = 'sin codificar';
     let codificacion = diagnostico.codificaciones[0] ? diagnostico.codificaciones[0] : null;
 
     if (codificacion) {
@@ -281,11 +279,10 @@ export async function mapeoServicio(id) {
     let result = await new sql.Request(pool)
         .input('id', sql.VarChar(50), id)
         .query(query);
-    return result.recordset[0];
+    return result.recordset[0] ? result.recordset[0].idServicio : null;
 }
 
 export async function mapeoEfector(organizacionId) {
-
     let efectorMongo: any = await organizacion.model.findById(organizacionId);
     let query = 'SELECT idEfector FROM dbo.Sys_efector WHERE codigoSisa = @codigo';
     let result = await new sql.Request(pool)
@@ -310,6 +307,9 @@ export async function mapeoProfesional(dni) {
     return result.recordset[0] ? result.recordset[0].idProfesional : 0;
 }
 
+/**
+ * @deprecated se calcula a partir de un item del nomenclador
+ */
 export async function mapeoTipoPractica(id) {
     let query = 'SELECT idTipoPractica FROM dbo.FAC_TipoPractica WHERE idTipoPractica = @id;';
     let result = await new sql.Request(pool)
@@ -334,10 +334,32 @@ export async function mapeoObraSocial(codigoObraSocial) {
 //     return result.recordset[0];
 // }
 
-export async function mapeoNomenclador(codigo) {
-    let query = 'SELECT TOP 1 * FROM dbo.FAC_Nomenclador WHERE codigo = @codigo;';
+export async function mapeoNomenclador(codigo, idTipoNomenclador) {
+    let query = 'SELECT TOP 1 * FROM dbo.FAC_Nomenclador WHERE codigo = @codigo and idTipoNomenclador = @idTipoNomenclador;';
     let result = await new sql.Request(pool)
         .input('codigo', sql.VarChar(50), codigo)
+        .input('idTipoNomenclador', sql.Int, idTipoNomenclador)
         .query(query);
-    return result.recordset[0] ;
+    return result.recordset[0];
+}
+
+async function getNomencladorByConceptId(conceptId) {
+    return new Promise((resolve, reject) => {
+        configuracionPrestaciones.findOne({'tipoPrestacion.conceptId': conceptId}).then(async (data: any) => {
+            resolve(data ? data.nomencladorRecuperoFinanciero : '42.01.01');
+        });
+    });
+}
+
+async function getTipoNomenclador(idObraSocial, fecha) {
+    let query = 'SELECT isnull( C.idTipoNomenclador, 0 ) as idTipoNomenclador FROM dbo.FAC_ContratoObraSocial C ' +
+    ' INNER JOIN dbo.FAC_TipoNomenclador TN ON C.idTipoNomenclador = TN.idTipoNomenclador ' +
+    ' WHERE C.idObraSocial = @idObraSocial ' +
+    ' AND TN.fechaDesde <= @fecha ' +
+    ' AND fechaHasta >= @fecha ';
+    let result = await new sql.Request(pool)
+        .input('idObraSocial', sql.Int, idObraSocial)
+        .input('fecha', sql.DateTime, fecha)
+        .query(query);
+    return result.recordset[0] ? result.recordset[0].idTipoNomenclador : 0;
 }
