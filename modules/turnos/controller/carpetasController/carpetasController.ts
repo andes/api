@@ -46,7 +46,6 @@ const findUpdateCarpeta = async (paciente) => {
     } else {
         // El dni no existe en la colección carpetaPaciente
         // Se guarda el documento en la colección carpetaPaciente
-        logger('nuevo', documentoPaciente);
         let nuevo = new carpetaPaciente({
             'documento': documentoPaciente,
             'carpetaEfectores': [carpetaNueva]
@@ -57,27 +56,34 @@ const findUpdateCarpeta = async (paciente) => {
 
 
 export async function migrar() {
-    logger('Migrando carpetas de pacientes');
-    let q_limites = `select MIN(PAC.idPaciente) as min, COUNT(PAC.idPaciente) as max from dbo.sys_paciente as PAC inner
-                        join dbo.Sys_RelHistoriaClinicaEfector AS rhe ON rhe.idPaciente = pac.idPaciente
-                            WHERE PAC.activo = 1` + ' AND rhe.idEfector=' + config.organizacionSips.idSips;
-    // Se busca la organización de la que se van a migrar las carpetas de pacientes
-    logger('codigo ', config.organizacionSips.codigoSisa);
     try {
-        let efectores: any = await Organizaciones.find({ 'codigo.sisa': config.organizacionSips.codigoSisa }).exec();
+        let efectores: any = await Organizaciones.find({ 'integracionActiva': true }).exec();
         if (efectores && efectores.length > 0) {
-            logger('Se actualizarán las carpetas de los pacientes desde SIPS de ', efectores[0].nombre);
-            organizacion = efectores[0];
-            if (config.organizacionSips.idSips) {
-                // let consulta = config.consultaPacienteSipsHC + ' AND efector.idEfector=' + config.organizacionSips.idSips + ' AND PAC.idPaciente between @offset and @limit';
-                let consulta = config.consultaCarpetaPacienteSips + ' AND rhe.idEfector=' + config.organizacionSips.idSips;
-                logger('EFECTOR', config.organizacionSips.idSips, organizacion.nombre);
-                // return utils.migrarOffset(consulta, q_limites, 100, insertCarpeta);
-                await utils.migrar(consulta, q_limites, 10000, findUpdateCarpeta);
-                logger('Migracion de datos completa desde ', organizacion.nombre);
-            } else {
-                logger('Código de organización inválido, verifica el codigo Sisa ingresado');
-            }
+            efectores.forEach(async element => {
+                logger('Migrando carpetas de pacientes en:  ', element.nombre);
+                let q_idSips = `select idEfector from dbo.sys_Efector as efector
+                                WHERE codigoSisa=` + element.codigo.sisa;
+                let q_limites = `select MIN(PAC.idPaciente) as min, COUNT(PAC.idPaciente) as max from dbo.sys_paciente as PAC inner
+                            join dbo.Sys_RelHistoriaClinicaEfector AS rhe ON rhe.idPaciente = pac.idPaciente
+                            WHERE PAC.activo = 1` + ' AND rhe.idEfector=' + element.codigo.idSips;
+                // Se busca la organización de la que se van a migrar las carpetas de pacientes
+                logger('codigo ', element.codigo.codigoSisa);
+                logger('Se actualizarán las carpetas de los pacientes desde SIPS de ', efectores[0].nombre);
+
+                organizacion = efectores[0];
+                if (element.codigo.idSips) {
+
+                    // let consulta = config.consultaPacienteSipsHC + ' AND efector.idEfector=' + element.codigo.idSips + ' AND PAC.idPaciente between @offset and @limit';
+                    let consulta = config.consultaCarpetaPacienteSips + ' AND rhe.idEfector=' + element.codigo.idSips;
+                    logger('EFECTOR', element.codigo.idSips, organizacion.nombre);
+                    // return utils.migrarOffset(consulta, q_limites, 100, insertCarpeta);
+                    await utils.migrar(consulta, q_limites, 10000, findUpdateCarpeta);
+                    logger('Migracion de datos completa desde ', organizacion.nombre);
+
+                } else {
+                    logger('Código de organización inválido, verifica el codigo Sisa ingresado');
+                }
+            });
         } else {
             logger('Código de organización inválido, verifica el codigo Sisa ingresado');
         }
