@@ -10,7 +10,9 @@ import { Auth } from './../../../auth/auth.class';
 import * as agenda from '../../../modules/turnos/schemas/agenda';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
-
+import * as operacionesLegacy from './../../../modules/legacy/controller/operations';
+import { resolve } from 'dns';
+import { reject } from 'async';
 /**
  * Crea un paciente y lo sincroniza con elastic
  *
@@ -651,6 +653,43 @@ export function mapeoPuco(dni){
        }else{
            console.log("no insertamos, existe en puco")
        }
+    });
+}
+
+
+export async function insertSips(paciente, efector) {
+    console.log("aca paciente nuevo ", paciente)
+    //  let pacienteSips = operacionesLegacy.pacienteSipsFactory(paciente, 1);
+    //let idPacienteSips = await operacionesLegacy.insertaPacienteSips(pacienteSips);
+}
+
+
+export function pacientesDelDia() {
+    return new Promise<any>((resolve, reject) => {
+        console.log("pacientes dia");
+        let hoyDesde = moment(new Date()).startOf('day').format();
+        let hoyHasta = moment(new Date()).endOf('day').format();
+
+        // let start = moment(req.query.fechaDesde).startOf('day').toDate();
+        // let end = moment(req.query.fechaHasta).endOf('day').toDate();
+        console.log("hoy", hoyDesde)
+        console.log("hoy hasta", hoyHasta)
+
+        let pacientes = paciente.aggregate({
+            $match: {
+                'createdAt': {
+                    $gte: new Date(hoyDesde), $lte: new Date(hoyHasta)
+                }
+            }
+        });
+
+        pacientes.exec(function (err, data) {
+            if (err) {
+                reject(err);
+            }
+            console.log("Observa esta ", data);
+            resolve(data);
+        });
     });
 }
 

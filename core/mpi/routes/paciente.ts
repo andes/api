@@ -563,6 +563,9 @@ router.post('/pacientes', function (req, res, next) {
     if (!Auth.check(req, 'mpi:paciente:postAndes')) {
         return next(403);
     }
+    console.log("aca routes")
+
+
     if (req.body.documento) {
         let condicion = {
             'documento': req.body.documento
@@ -575,6 +578,8 @@ router.post('/pacientes', function (req, res, next) {
             } else {
                 req.body.activo = true;
                 return controller.createPaciente(req.body, req).then(pacienteObj => {
+                        //insert en sips
+
                     return res.json(pacienteObj);
                 }).catch((error) => {
                     return next(error);
@@ -593,6 +598,12 @@ router.post('/pacientes', function (req, res, next) {
 
 
 });
+
+router.post('/exportPacientesSips', function (req, res, next) {
+    console.log("ruta correcta")
+     
+    controller.pacientesDelDia();
+})
 
 /**
  * @swagger
