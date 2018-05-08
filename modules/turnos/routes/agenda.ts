@@ -426,6 +426,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                         break;
                     case 'liberarTurno':
                         turno = agendaCtrl.getTurno(req, data, turnos[y]);
+                        // LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, bloqueId, agendaId);
                         if (turno.paciente.id) {
                             LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, agendaCtrl.getBloque(data, turno)._id, data._id);
                         }

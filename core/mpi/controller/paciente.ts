@@ -517,6 +517,21 @@ export function updateCuil(req, data) {
     data.cuil = req.body.cuil;
 }
 
+export function checkCarpeta(req, data) {
+    return new Promise((resolve, reject) => {
+        let query = {
+            'carpetaEfectores.nroCarpeta': req.body.carpetaEfectores[0].nroCarpeta,
+            'carpetaEfectores.organizacion._id': req.body.carpetaEfectores[0].organizacion._id
+        };
+        paciente.find(query, function (err, res) {
+            if (err) {
+                reject(err);
+            }
+            resolve((res && res.length > 0));
+        });
+    });
+}
+
 /* Hasta acá funciones del PATCH */
 
 
