@@ -91,73 +91,72 @@ export function censoDiario(unidad, fechaConsulta) {
 }
 
 export function completarResumenDiario(listadoCenso, unidad, fecha) {
-    let resumenCenso = {
-        existencia0: 0,
-        ingresos: 0,
-        pasesDe: 0,
-        egresosAlta: 0,
-        egresosDefuncion: 0,
-        pasesA: 0,
-        existencia24: 0,
-        ingresoEgresoDia: 0,
-        pacientesDia: 0,
-        disponibles24: 0,
-        disponibles0: 0
-    };
-    if (listadoCenso && listadoCenso.length > 0) {
-        Object.keys(listadoCenso).forEach(indice => {
-            if (listadoCenso[indice].censo !== null) {
+    return new Promise(function (resolve, reject) {
+        let resumenCenso = {
+            existencia0: 0,
+            ingresos: 0,
+            pasesDe: 0,
+            egresosAlta: 0,
+            egresosDefuncion: 0,
+            pasesA: 0,
+            existencia24: 0,
+            ingresoEgresoDia: 0,
+            pacientesDia: 0,
+            disponibles24: 0,
+            disponibles0: 0
+        };
+        if (listadoCenso && listadoCenso.length > 0) {
+            Object.keys(listadoCenso).forEach(indice => {
+                if (listadoCenso[indice].censo !== null) {
 
-                resumenCenso.disponibles24 += 1;
-                resumenCenso.existencia24 += 1;
-                if (listadoCenso[indice].censo['esIngreso']) {
-                    resumenCenso.ingresos += 1;
-                }
-                if (listadoCenso[indice].censo['esIngreso'] && listadoCenso[indice].censo['esPaseDe']) {
-                    resumenCenso.existencia0 += 1;
-                }
-
-                if (listadoCenso[indice].censo['esPaseDe']) {
-                    resumenCenso.pasesDe += 1;
-                }
-
-                if (listadoCenso[indice].censo['esPaseA']) {
-                    resumenCenso.pasesA += 1;
-                }
-
-                if (listadoCenso[indice].censo['egreso'] !== '') {
-                    if (listadoCenso[indice].censo['egreso'] === 'Defunción') {
-                        resumenCenso.egresosDefuncion += 1;
-                    } else {
-                        resumenCenso.egresosAlta += 1;
-                    }
+                    resumenCenso.disponibles24 += 1;
+                    resumenCenso.existencia24 += 1;
                     if (listadoCenso[indice].censo['esIngreso']) {
-                        resumenCenso.ingresoEgresoDia += 1;
+                        resumenCenso.ingresos += 1;
+                    }
+                    if (listadoCenso[indice].censo['esIngreso'] && listadoCenso[indice].censo['esPaseDe']) {
+                        resumenCenso.existencia0 += 1;
+                    }
+
+                    if (listadoCenso[indice].censo['esPaseDe']) {
+                        resumenCenso.pasesDe += 1;
+                    }
+
+                    if (listadoCenso[indice].censo['esPaseA']) {
+                        resumenCenso.pasesA += 1;
+                    }
+
+                    if (listadoCenso[indice].censo['egreso'] !== '') {
+                        if (listadoCenso[indice].censo['egreso'] === 'Defunción') {
+                            resumenCenso.egresosDefuncion += 1;
+                        } else {
+                            resumenCenso.egresosAlta += 1;
+                        }
+                        if (listadoCenso[indice].censo['esIngreso']) {
+                            resumenCenso.ingresoEgresoDia += 1;
+                        }
                     }
                 }
+            });
+            resumenCenso.pacientesDia = resumenCenso.existencia0 +
+                resumenCenso.ingresos + resumenCenso.pasesDe -
+                resumenCenso.egresosDefuncion - resumenCenso.egresosAlta;
+            if (resumenCenso.pacientesDia < 0) {
+                resumenCenso.pacientesDia = 0;
             }
+            resumenCenso.existencia24 = resumenCenso.existencia24 -
+                resumenCenso.egresosDefuncion - resumenCenso.egresosAlta - resumenCenso.pasesA;
+        }
+        camasController.disponibilidadXUO(unidad, fecha).then((respuesta: any) => {
+            if (respuesta) {
+                resumenCenso.disponibles0 = respuesta.disponibilidad0 ? respuesta.disponibilidad0 : 0;
+                resumenCenso.disponibles24 = respuesta.disponibilidad24 ? respuesta.disponibilidad24 : 0;
+            }
+            return resolve(resumenCenso);
+        }).catch(err => {
+            return reject(err);
         });
-
-        resumenCenso.pacientesDia = resumenCenso.existencia0 +
-            resumenCenso.ingresos + resumenCenso.pasesDe -
-            resumenCenso.egresosDefuncion - resumenCenso.egresosAlta;
-        if (resumenCenso.pacientesDia < 0) {
-            resumenCenso.pacientesDia = 0;
-        }
-
-        resumenCenso.existencia24 = resumenCenso.existencia24 -
-            resumenCenso.egresosDefuncion - resumenCenso.egresosAlta - resumenCenso.pasesA;
-
-    }
-    camasController.disponibilidadXUO(unidad, fecha).then((respuesta: any) => {
-        if (respuesta) {
-            resumenCenso.disponibles0 = respuesta.disponibilidad0 ? respuesta.disponibilidad0 : 0;
-            resumenCenso.disponibles24 = respuesta.disponibilidad24 ? respuesta.disponibilidad24 : 0;
-        }
-
-
     });
-    return resumenCenso;
 }
 
 export function censoMensual(fechaDesde, fechaHasta, unidad) {

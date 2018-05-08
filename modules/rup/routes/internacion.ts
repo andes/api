@@ -95,17 +95,18 @@ router.get('/internaciones/censo', function (req, res, next) {
     let resultadoFinal;
     let fecha = new Date(req.query.fecha);
     censoController.censoDiario(unidad, fecha).then(censoDiario => {
-        let resumen = censoController.completarResumenDiario(censoDiario, unidad, fecha);
-
-        resultadoFinal = {
-            censoDiario: censoDiario,
-            resumen: resumen
-        };
-        res.json(resultadoFinal);
+        censoController.completarResumenDiario(censoDiario, unidad, fecha).then(resumen => {
+            resultadoFinal = {
+                censoDiario: censoDiario,
+                resumen: resumen
+            };
+            res.json(resultadoFinal);
+        }).catch(err => {
+            return next(err);
+        });
+    }).catch(err => {
+        return next(err);
     });
-
-
-
 });
 
 router.get('/internaciones/censoMensual', function (req, res, next) {
