@@ -461,7 +461,8 @@ export function searchByPatient(pacienteId, prestacion, {
     return new Promise(async (resolve, reject) => {
         let CDAFiles = makeFs();
         let conditions: any = {
-            'metadata.paciente': mongoose.Types.ObjectId(pacienteId)
+            'metadata.paciente': mongoose.Types.ObjectId(pacienteId),
+            'metadata.cdaId': { $exists: false }
         };
         if (prestacion) {
             conditions['metadata.prestacion'] = prestacion;
