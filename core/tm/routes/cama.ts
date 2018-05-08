@@ -1,5 +1,5 @@
 import * as express from 'express';
-import * as cama from '../schemas/camas';
+import { model as CamaModel } from '../schemas/camas';
 import { Auth } from './../../../auth/auth.class';
 import * as mongoose from 'mongoose';
 
@@ -10,7 +10,7 @@ let router = express.Router();
  */
 
 router.get('/camas/:idCama', Auth.authenticate(), function (req, res, next) {
-    cama.model.findById({
+    CamaModel.findById({
         '_id': req.params.idCama
     }, function (err, data: any) {
         if (err) {
@@ -28,7 +28,7 @@ router.get('/camas/:idCama', Auth.authenticate(), function (req, res, next) {
 router.get('/camas', Auth.authenticate(), function (req, res, next) {
 
     let query;
-    query = cama.model.find({});
+    query = CamaModel.find({});
     if (req.query.idOrganizacion) {
         query.where('organizacion._id').equals(req.query.idOrganizacion);
     }
@@ -54,7 +54,8 @@ router.get('/camas', Auth.authenticate(), function (req, res, next) {
  */
 
 router.post('/camas', Auth.authenticate(), (req, res, next) => {
-    let newCama = new cama.model(req.body);
+    let newCama: any = new CamaModel(req.body);
+    newCama.unidadOrganizativaOriginal = req.body.estados[0].unidadOrganizativa;
     Auth.audit(newCama, req);
     newCama.save((err) => {
         if (err) {
@@ -70,7 +71,7 @@ router.post('/camas', Auth.authenticate(), (req, res, next) => {
 
 router.put('/camas/:id', Auth.authenticate(), (req, res, next) => {
 
-    cama.model.findById(req.params.id, function (err3, data: any) {
+    CamaModel.findById(req.params.id, function (err3, data: any) {
         if (err3) {
             return next(404);
         }
@@ -102,7 +103,7 @@ router.put('/camas/:id', Auth.authenticate(), (req, res, next) => {
 
 
 router.patch('/camas/:idCama', Auth.authenticate(), function (req, res, next) {
-    cama.model.findById({
+    CamaModel.findById({
         _id: req.params.idCama,
     }, function (err, data: any) {
         if (err) {
@@ -163,14 +164,18 @@ router.patch('/camas/:idCama', Auth.authenticate(), function (req, res, next) {
 });
 
 router.patch('/camas/cambiaEstado/:idCama', Auth.authenticate(), function (req, res, next) {
-    cama.model.findById({
+    CamaModel.findById({
         _id: req.params.idCama,
     }, function (err, _cama: any) {
         if (err) {
             return next(err);
         }
         let ultimoEstado = _cama.estados[_cama.estados.length - 1];
-        if (req.body.estado === 'reparacion') {
+
+        if (req.body.estado === ultimoEstado.estado) {
+            _cama.estados.push(req.body);
+
+        } else if (req.body.estado === 'reparacion') {
             // validamos que la cama no este ya en reparacion
             if (ultimoEstado.estado === 'reparacion') {
 
