@@ -38,10 +38,11 @@ const findUpdateCarpeta = async (paciente) => {
         }
 
         if (carpeta._id) {
+            logger('actualizo', documentoPaciente);
             carpetaPaciente.update({ '_id': carpeta._id }, {
                 $set:
                     { 'carpetaEfectores': carpeta.carpetaEfectores }
-            });
+            }).exec();
         }
     } else {
         // El dni no existe en la colección carpetaPaciente
