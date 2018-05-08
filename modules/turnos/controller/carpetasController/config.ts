@@ -78,8 +78,15 @@ export const weights = {
 };
 
 export const organizacionSips = {
-    codigoSisa: '50580352167101',
-    idSips: '208'
+    // progreso
+    // codigoSisa: '50580352167107',
+    // idSips: '217'
+    // mariano moreno
+    // codigoSisa: '50580352167101',
+    // idSips: '208'
+    // villa farrel
+    codigoSisa: '50580352167126',
+    idSips: '207'
 };
 
 
