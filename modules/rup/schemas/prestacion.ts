@@ -75,9 +75,7 @@ export let schema = new mongoose.Schema({
         prestacionOrigen: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'prestacion'
-        },
-
-
+        }
     },
 
     // Datos de la ejecución (i.e. realización)

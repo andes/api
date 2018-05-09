@@ -7,7 +7,6 @@ import { obraSocial } from '../schemas/obraSocial';
 let to_json = require('xmljson').to_json;
 
 let router = express.Router();
-/*
 router.get('/puco/:documento', async function (req, res, next) {
     if (req.params.documento) {
         try {

@@ -72,7 +72,6 @@ let router = express.Router();
 
 router.get('/provincias', function (req, res, next) {
     if (req.query.id) {
-        console.log('id');
         provincia.findById(req.query.id, function (err, data) {
             if (err) {
                 return next(err);
@@ -85,16 +84,13 @@ router.get('/provincias', function (req, res, next) {
         consulta = provincia.find({}).sort({ 'nombre': 1 });
 
         if (req.query.nombre) {
-            console.log('nombre');
             consulta.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
         if (req.query.pais) {
-            console.log('pais');
             consulta.where('pais._id').equals(mongoose.Types.ObjectId(req.query.pais));
         }
 
         consulta.exec((err, data) => {
-            console.log('ordena');
             if (err) { return next(err); }
 
             res.json(data);

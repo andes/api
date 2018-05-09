@@ -172,7 +172,6 @@ export function codificarTurno(req, data, tid) {
             // let promises = [];
             if (arrPrestacion.length > 0 && arrPrestacion[0].ejecucion) {
                 let prestaciones = arrPrestacion[0].ejecucion.registros.filter(f => {
-
                     return f.concepto.semanticTag !== 'elemento de registro';
                 });
                 prestaciones.forEach(registro => {
