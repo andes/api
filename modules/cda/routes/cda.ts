@@ -128,9 +128,9 @@ router.get('/files/:name', async (req: any, res, next) => {
  */
 
 router.get('/:id', async (req: any, res, next) => {
-    if (!Auth.check(req, 'cda:get')) {
-        return next(403);
-    }
+    // if (!Auth.check(req, 'cda:get')) {
+    //     return next(403);
+    // }
 
     let _base64 = req.params.id;
     let CDAFiles = makeFs();

@@ -14,6 +14,7 @@ import {
     ObjectID,
     ObjectId
 } from 'bson';
+import { configuracionPrestacionModel } from '../../../core/term/schemas/configuracionPrestaciones';
 
 
 
@@ -140,7 +141,15 @@ export async function getDetalles(idProtocolo, idEfector) {
 export async function cacheTurnosSips(unaAgenda) {
     // Armo el DTO para guardar en la cache de agendas
     // if ((unaAgenda.estado !== 'planificacion') && (unaAgenda.nominalizada) && (unaAgenda.tipoPrestaciones[0].term.includes('odonto')) || integraPrestacionesHPN(unaAgenda)) {
-    if (integrarAgenda(unaAgenda) && unaAgenda.estado !== 'planificacion') {
+    let integrar;
+    try {
+        integrar = await integrarAgenda(unaAgenda);
+
+    } catch (error) {
+        return error;
+    }
+
+    if (unaAgenda.estado !== 'planificacion' && integrar) {
         let organizacionAgenda;
         if (unaAgenda.organizacion) {
             organizacionAgenda = await organizacionCompleto(unaAgenda.organizacion.id);
@@ -199,25 +208,26 @@ export async function cacheTurnosSips(unaAgenda) {
                 });
             }
         });
+    } else {
+        return true;
     }
 
-    function integrarAgenda(_agenda) {
-        let prestacionesIntegradas: any;
-        if (_agenda.organizacion) {
-            let datosOrganizacion = constantes.prestacionesIntegradasPorEfector.find(elem => elem.organizacion === _agenda.organizacion.id);
-            if (datosOrganizacion) {
-                prestacionesIntegradas = _agenda.tipoPrestaciones.find(prestacion => {
-                    return (datosOrganizacion.prestaciones.filter(prest => prest.conceptId === prestacion.conceptId).length > 0);
-                });
-            }
-        }
-
-        if (prestacionesIntegradas) {
-            return true;
-        } else {
-            return false;
-        }
-
+    async function integrarAgenda(_agenda) {
+        return new Promise(function (resolve, reject) {
+            configuracionPrestacionModel.find({
+                'tipoPrestacion.conceptId': { $eq: _agenda.tipoPrestaciones[0].conceptId },
+                'organizacionesSips._id': { $eq: _agenda.organizacion._id }
+            }).exec(function (err, data: any) {
+                if (err) {
+                    reject(err);
+                }
+                if (data.length > 0) {
+                    resolve(true);
+                } else {
+                    resolve(false);
+                }
+            });
+        });
     }
 }
 
