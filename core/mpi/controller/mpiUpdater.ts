@@ -13,6 +13,7 @@ import {
 } from '@andes/match';
 
 import * as debug from 'debug';
+import * as servicioAnses from './../../../utils/servicioAnses';
 let log = debug('mpiUpdater');
 
 
@@ -118,8 +119,13 @@ export function updatingMpi() {
                     /*Se fusionan los pacientes, pacFusionar es un paciente de ANDES y tengo q agregar
                     los campos de este paciente al paciente de mpi*/
                     let pacienteAndes = pacAndes;
-                    let pacMpi = new pacienteMpi(resultado[1]);
+                    let pacMpi: any = new pacienteMpi(resultado[1]);
                     await controller.deletePacienteAndes(pacAndes._id); // Borro el paciente de mongodb Local
+                    // Verifico cuil anses
+                    if (!pacienteAndes.cuil) {
+                        let cuilData = await servicioAnses.getServicioAnses(pacienteAndes);
+                        pacienteAndes.cuil = cuilData['cuil'];
+                    }
                     await controller.updatePacienteMpi(pacMpi, pacienteAndes, userScheduler);
                 }
                 log('Termino con el paciente');

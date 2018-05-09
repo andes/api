@@ -426,6 +426,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                         break;
                     case 'liberarTurno':
                         turno = agendaCtrl.getTurno(req, data, turnos[y]);
+                        // LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, bloqueId, agendaId);
                         if (turno.paciente.id) {
                             LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, agendaCtrl.getBloque(data, turno)._id, data._id);
                         }
@@ -440,6 +441,10 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                             LoggerPaciente.logTurno(req, 'turnos:suspender', (turno.paciente ? turno.paciente : null), turno, -1, data._id);
                         }
                         agendaCtrl.suspenderTurno(req, data, turno);
+                        break;
+                    case 'codificarTurno': agendaCtrl.codificarTurno(req, data, turnos[y]).catch((err2) => {
+                        return next(err2);
+                    });
                         break;
                     case 'guardarNotaTurno': agendaCtrl.guardarNotaTurno(req, data, req.body.idTurno);
                         break;

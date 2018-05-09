@@ -49,5 +49,3 @@ schema.plugin(require('../../../mongoose/audit'));
 let model = mongoose.model('formularioTerapeutico', schema, 'formularioTerapeutico');
 
 export = model;
-
-
