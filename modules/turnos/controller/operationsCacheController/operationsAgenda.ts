@@ -210,17 +210,17 @@ async function codificaOdontologia(idConsulta: any, turno: any) {
         idConsultaOdontologia:280775
         idNomenclador:23
         */
-        let caras = '';
-        if (idNomenclador[0].caraD) { caras = caras + 'caraD '; }
-        if (idNomenclador[0].caraL) { caras = caras + 'caraL '; }
-        if (idNomenclador[0].caraM) { caras = caras + 'caraM '; }
-        if (idNomenclador[0].caraO) { caras = caras + 'caraO '; }
-        if (idNomenclador[0].caraP) { caras = caras + 'caraP '; }
-        if (idNomenclador[0].caraV) { caras = caras + 'caraV '; }
-        let diente = idNomenclador[0].diente;
-        let m = 0;
         for (let i = 0; i < idNomenclador.length; i++) {
             repetido = [];
+            let caras = '';
+            let diente = '';
+            if (idNomenclador[i].caraD) { caras = caras + 'caraD '; }
+            if (idNomenclador[i].caraL) { caras = caras + 'caraL '; }
+            if (idNomenclador[i].caraM) { caras = caras + 'caraM '; }
+            if (idNomenclador[i].caraO) { caras = caras + 'caraO '; }
+            if (idNomenclador[i].caraP) { caras = caras + 'caraP '; }
+            if (idNomenclador[i].caraV) { caras = caras + 'caraV '; }
+            diente = idNomenclador[i].diente.toString();
             codificacionOdonto = await getCodificacionOdonto(idNomenclador[i].idNomenclador);
             /*
             clasificacion:"Conservadora"
@@ -233,23 +233,23 @@ async function codificaOdontologia(idConsulta: any, turno: any) {
             turno.diagnostico.ilegible = false;
             if (diente && caras === '') {
                 repetido = turno.diagnostico.codificaciones.filter(elem =>
-                    elem.codificacionProfesional
-                    && elem.codificacionProfesional.codigo === codificacionOdonto.codigo
-                    && elem.causa && elem.causa === diente);
+                    elem.codificacionProfesional && elem.codificacionProfesional.cie10
+                    && elem.codificacionProfesional.cie10.codigo === codificacionOdonto.codigo
+                    && elem.codificacionProfesional.cie10.causa && elem.codificacionProfesional.cie10.causa === diente);
             }
             if (diente && caras !== '') {
                 repetido = turno.diagnostico.codificaciones.filter(elem =>
-                    elem.codificacionProfesional
-                    && elem.codificacionProfesional.codigo === codificacionOdonto.codigo
-                    && elem.causa && elem.causa === diente
-                    && elem.subcausa && elem.subcausa === caras);
+                    elem.codificacionProfesional && elem.codificacionProfesional.cie10
+                    && elem.codificacionProfesional.cie10.codigo === codificacionOdonto.codigo
+                    && elem.codificacionProfesional.cie10.causa && elem.codificacionProfesional.cie10.causa === diente
+                    && elem.codificacionProfesional.cie10.subcausa && elem.codificacionProfesional.cie10.subcausa === caras);
             }
             if (!diente) {
                 repetido = turno.diagnostico.codificaciones.filter(elem =>
-                    elem.codificacionProfesional
-                    && elem.codificacionProfesional.codigo === codificacionOdonto.codigo);
+                    elem.codificacionProfesional && elem.codificacionProfesional.cie10
+                    && elem.codificacionProfesional.cie10.codigo === codificacionOdonto.codigo);
             }
-            if (repetido && repetido.length <= 0) {
+            if (repetido.length === 0) {
                 turno.diagnostico.codificaciones.push({
                     codificacionProfesional: {
                         cie10: {
@@ -324,7 +324,6 @@ async function codificacionCie10(idConsulta: any, turno: any) {
 
 // Fin de sección de operaciones sobre mongoDB
 // Sección de operaciones sobre SIPS
-
 
 /**
  * Verifica que exista el consultorio en sips || crea el consultorio en sips

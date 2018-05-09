@@ -773,7 +773,7 @@ router.patch('/pacientes/:id', function (req, res, next) {
     if (!Auth.check(req, 'mpi:paciente:patchAndes')) {
         return next(403);
     }
-    controller.buscarPaciente(req.params.id).then((resultado: any) => {
+    controller.buscarPaciente(req.params.id).then(async (resultado: any) => {
         if (resultado) {
             switch (req.body.op) {
                 case 'updateContactos':
@@ -787,12 +787,15 @@ router.patch('/pacientes/:id', function (req, res, next) {
                 case 'updateDireccion':
                     controller.updateDireccion(req, resultado.paciente);
                     break;
-                case 'updateCarpetaEfectores': // Update solo carpetas
-                    resultado.paciente.markModified('carpetaEfectores');
-                    resultado.paciente.carpetaEfectores = req.body.carpetaEfectores;
-                    // necesitamos llamar a la funcion que actualiza los turnos directamente, por no pasar por el controller.
-                    try {
-                        controller.updateTurnosPaciente(resultado.paciente);
+                case 'updateCarpetaEfectores':
+                    try { // Actualizamos los turnos activos del paciente
+                        let repetida = await controller.checkCarpeta(req, resultado.paciente);
+                        if (!repetida) {
+                            controller.updateTurnosPaciente(resultado.paciente);
+                            controller.updateCarpetaEfectores(req, resultado.paciente);
+                        } else {
+                            return next('El numero de carpeta ya existe');
+                        }
                     } catch (error) { return next(error); }
                     break;
                 case 'updateContactos': // Update de carpeta y de contactos
