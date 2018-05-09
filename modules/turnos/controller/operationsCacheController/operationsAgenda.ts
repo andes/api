@@ -114,6 +114,7 @@ export async function checkCodificacion(agendaCacheada) {
         } catch (ex) {
             return (ex);
         }
+
         let turnos;
         let datosTurno = {};
         let idEspecialidad: any;
@@ -125,10 +126,21 @@ export async function checkCodificacion(agendaCacheada) {
                 let resultado = await turnoOps.existeTurnoSips(turnos[z], poolAgendas);
                 let cloneTurno: any = [];
 
+                let result = await new sql.Request(poolAgendas)
+                    .input('idTurnoMongo', sql.VarChar(50), turnos[z]._id)
+                    .query('select * from vw_andes_integracion WHERE objectId = @idTurnoMongo');
+                console.log("ID CONSULTADO", turnos[z]._id);
+
+
+                console.log("RESULTADO VIEW:   ", result.recordset.length);
+                if (result.recordset.length > 0) {
+                    console.log(result.recordset[0]);
+                }
                 if (resultado.recordset.length > 0) {
                     idConsulta = await existeConsultaTurno(resultado.recordset[0].idTurno);
+                    // TODO: REVISAR SI ES NECESARIO OBTENER EL TURNO DESDE LA AGENDA DE ANDES NUEVAMENTE.
                     let turnoPaciente: any = await getPacienteAgenda(agendaCacheada, turnos[z]._id);
-                    // idEspecialidad = (agenda.tipoPrestaciones[0].term.includes('odonto')) ? 34 : 14;
+                    // TODO: obtener especialidad desde la agenda SIPS
                     idEspecialidad = await getEspecialidad(agendaCacheada, agendaCacheada.tipoPrestaciones[0].conceptId, agendaCacheada.organizacion._id);
                     turnos[z] = turnoPaciente;
                     if (idConsulta) {
