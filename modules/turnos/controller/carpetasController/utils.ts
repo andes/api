@@ -3,7 +3,7 @@ import * as sql from 'mssql';
 import * as debug from 'debug';
 const logger = debug('carpetasJob');
 
-export function migrar(q_objeto, q_limites, page_size, addNuevoObjeto) {
+export function migrar(q_objeto, q_limites, page_size, addNuevoObjeto, connectionPool) {
     let max;
     const connection = {
         user: config.sqlCarpetasJob.user,
@@ -34,7 +34,6 @@ export function migrar(q_objeto, q_limites, page_size, addNuevoObjeto) {
 
     async function runQuery() {
         try {
-            let connectionPool = await sql.connect(connection);
             logger('RunQuery...');
             if (connectionPool.pool.max) {
                 logger(connectionPool.pool.min + ' - ' + connectionPool.pool.max);
@@ -45,9 +44,6 @@ export function migrar(q_objeto, q_limites, page_size, addNuevoObjeto) {
         } catch (err) {
             logger('Catched error en runQuery() ---->', err);
         }
-        sql.on('error', err => {
-            logger('Error SQL---->', err);
-        });
     }
 
     return runQuery();
