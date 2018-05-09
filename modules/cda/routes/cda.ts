@@ -11,13 +11,13 @@ import * as base64 from 'base64-stream';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 
-import { xmlToJson } from '../../../utils/utils';
+
 
 import { Auth } from '../../../auth/auth.class';
 
 let path = require('path');
 let router = express.Router();
-
+let to_json = require('xmljson').to_json;
 /**
  * Genera un CDA con los datos provisto
  */
@@ -259,6 +259,29 @@ router.get('/:id', async (req: any, res, next) => {
     });
 });
 
+
+/**
+ * Devuelve el CDA parseado a json según un ID
+ */
+
+router.get('/tojson/:id', async (req: any, res, next) => {
+    if (!Auth.check(req, 'cda:get')) {
+        return next(403);
+    }
+
+    let _base64 = req.params.id;
+    let CDAFiles = makeFs();
+
+    let contexto = await cdaCtr.loadCDA(_base64);
+    to_json(contexto, function (error, data) {
+        if (error) {
+            return next(error);
+        } else {
+            res.json(data);
+        }
+    });
+});
+
 /**
  * Listado de los CDAs de un paciente
  * API demostrativa, falta analizar como se va a buscar en el repositorio
@@ -282,6 +305,7 @@ router.get('/paciente/:id', async (req: any, res, next) => {
  */
 
 router.get('/:id/:name', async (req: any, res, next) => {
+
     if (req.user.type === 'user-token' && !Auth.check(req, 'cda:get')) {
         return next(403);
     }
