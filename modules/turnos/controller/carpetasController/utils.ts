@@ -1,6 +1,7 @@
 import * as config from '../../../../config.private';
 import * as sql from 'mssql';
 import * as debug from 'debug';
+import { LoggerJobs } from '../../../../utils/loggerJobs';
 const logger = debug('carpetasJob');
 
 export function migrar(q_objeto, q_limites, page_size, addNuevoObjeto, connectionPool) {
@@ -43,6 +44,8 @@ export function migrar(q_objeto, q_limites, page_size, addNuevoObjeto, connectio
             }
         } catch (err) {
             logger('Catched error en runQuery() ---->', err);
+            LoggerJobs.log('actualizar carpetas', 'Error catched en runQuery(): ' + err);
+
         }
     }
 
