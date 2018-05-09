@@ -36,11 +36,11 @@ export function getServicioAnses(paciente) {
                             filtro = paciente.cuil;
                         }
                         pacAndes = { // Este objeto se arma así exclusivamente para comparar con anses
-                            nombre : paciente.apellido + ' ' + paciente.nombre,
-                            apellido : '',
+                            nombre: paciente.apellido + ' ' + paciente.nombre,
+                            apellido: '',
                             sexo: paciente.sexo,
                             fechaNacimiento: paciente.fechaNacimiento,
-                            documento : paciente.documento
+                            documento: paciente.documento
                         };
                         try {
                             resultado = await consultaAnses(result, tipoConsulta, filtro);
