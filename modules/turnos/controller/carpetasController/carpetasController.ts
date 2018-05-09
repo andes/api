@@ -11,7 +11,12 @@ let logger = debug('carpetasJob');
 
 let db;
 let organizacion;
-
+const connection = {
+    user: configPrivate.conSql.auth.user,
+    password: configPrivate.conSql.auth.password,
+    server: configPrivate.conSql.serverSql.server,
+    database: configPrivate.conSql.serverSql.database
+};
 const findUpdateCarpeta = async (paciente) => {
     let documentoPaciente = paciente['numeroDocumento'];
     let condicion = { documento: documentoPaciente };
@@ -27,7 +32,12 @@ const findUpdateCarpeta = async (paciente) => {
     let lista = await carpetaPaciente.find(condicion).exec();
     if (lista && lista.length) {
         let carpeta: any = lista[0];
-        let carpetas = carpeta.carpetaEfectores.filter(c => c.organizacion._id === organizacion._id);
+
+        let carpetas = carpeta.carpetaEfectores.filter(c => {
+            // logger('c.organizacion: ', c.organizacion._id, 'organizacion._id: ', organizacion._id);
+            return (String(c.organizacion._id) === String(organizacion._id));
+        });
+        // logger('CARPETAS', carpetas.length);
         if (carpetas && carpetas.length) {
             carpeta.carpetaEfectores.map(c => {
                 if (c.organizacion._id === organizacion._id) {
@@ -88,7 +98,12 @@ export async function migrar() {
             let consulta = config.consultaCarpetaPacienteSips + ' AND rhe.idEfector=' + idSips.idEfector;
             logger('EFECTOR', idSips, organizacion.nombre);
             // return utils.migrarOffset(consulta, q_limites, 100, insertCarpeta);
-            await utils.migrar(consulta, q_limites, 10000, findUpdateCarpeta);
+            let connectionPool = await sql.connect(connection);
+            sql.on('error', err => {
+                logger('Error SQL---->', err);
+            });
+            await utils.migrar(consulta, q_limites, 10000, findUpdateCarpeta, connectionPool);
+            sql.close();
             logger('Migracion de datos completa desde ', organizacion.nombre);
         } else {
             logger('ID sips inválido');
@@ -98,12 +113,6 @@ export async function migrar() {
 
     async function getIdSips(efector) {
 
-        let connection = {
-            user: configPrivate.conSql.auth.user,
-            password: configPrivate.conSql.auth.password,
-            server: configPrivate.conSql.serverSql.server,
-            database: configPrivate.conSql.serverSql.database
-        };
         try {
             const connectionPool = await sql.connect(connection);
             sql.on('error', err => {
@@ -115,6 +124,7 @@ export async function migrar() {
                 .query(querySips);
             resultado = resultado.recordset[0];
             logger('IDSIPS', resultado);
+            sql.close();
             return resultado;
         } catch (err) { logger('Error obteniendo ID sips', err); }
     }
