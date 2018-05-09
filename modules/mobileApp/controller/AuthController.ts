@@ -1,6 +1,5 @@
 import * as jwt from 'jsonwebtoken';
 import { pacienteApp as PacienteApp } from '../schemas/pacienteApp';
-import { authApp } from '../../../config.private';
 import { Client } from 'elasticsearch';
 import { Matching } from '@andes/match';
 import * as express from 'express';

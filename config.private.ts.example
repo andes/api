@@ -1,12 +1,23 @@
-function getEnv(key, _default) {
-    return !!process.env[key] === false ?  _default : process.env[key] ;
+function getEnv(key, _default, type = 's') {
+    if (!!process.env[key] === false) {
+        return _default;
+    }
+    let value = process.env[key];
+    switch (type) {
+        case 'b':
+            return value.toLowerCase() === 'true';
+        case 'n':
+            return parseInt(value, 10);
+        default:
+            return value;
+    }
 }
 
 // Configuración de Passport
 export const auth = {
     useLdap:  getEnv('LDAP', false),
     jwtKey:  getEnv('APP_KEY', '5gCYFZPp3dfA2m5UNElVkgRLFcFnBfZp'),
-    ldapOU: 'ou=People,o=integrabilidad,o=neuquen',
+    ldapOU: getEnv('LDAP_HOST', 'ou=People,o=integrabilidad,o=neuquen')
 };
 
 // True: Expone una ruta de la api que lista todos los permisos disponibles
@@ -44,47 +55,42 @@ export let mongooseDebugMode = false;
 export let enableSwagger = false;
 
 // Configuración de Google Geocoding
-export const geoKey = 'GOOGLE_MAP_KEY';
+export const geoKey = getEnv('GOOGLE_MAP_KEY', 'GOOGLE_MAP_KEY');
 
 // Configuración servicio SISA
 export const sisa = {
-    username: '',
-    password: '',
-    host: 'sisa.msal.gov.ar',
-    port: 443,
-    url: 'https://sisa.msal.gov.ar/sisa/services/rest/cmdb/obtener?'
+    username: getEnv('SISA_USERNAME', ''),
+    password: getEnv('SISA_PASSWORD', ''),
+    host: getEnv('SISA_HOST', 'sisa.msal.gov.ar'),
+    port: getEnv('SISA_PORT', 443, 'n'),
+    url: getEnv('SISA_URL', 'https://sisa.msal.gov.ar/sisa/services/rest/cmdb/obtener?')
 };
 // Configuración servicio ANSES
 export const anses = {
-    Usuario: '',
-    password: '',
-    url: '',
-    serv: '',
-    serv2: ''
+    Usuario: getEnv('ANSES_USERNAME', ''),
+    password: getEnv('ANSES_PASSWORD', ''),
+    url: getEnv('ANSES_URL', ''),
+    serv: getEnv('ANSES_SERV', ''),
+    serv2: getEnv('ANSES_SERV2', '')
 };
 // Configuración servicio SINTYS
 export const sintys = {
-    username: '',
-    password: '',
-    host: '',
-    port: 443,
-    path: ''
-};
-
-// Auth App Mobile
-export const authApp = {
-    secret: ''
+    username: getEnv('SINTYS_USERNAME', ''),
+    password: getEnv('SINTYS_PASSWORD', ''),
+    host: getEnv('SINTYS_HOST', ''),
+    port: getEnv('SINTYS_PORT', 443, 'n'),
+    path: getEnv('SINTYS_PATH', '')
 };
 
 export const snomed = {
     dbName: getEnv('SNOMED_DB', 'es-edition'),
-    dbVersion: getEnv('SNOMED_VERSION', 'v20171200') 
+    dbVersion: getEnv('SNOMED_VERSION', 'v20171200')
 };
 
 // Push Notifications
 export const pushNotificationsSettings = {
     gcm: {
-        id: 'GCM_API_KEY',
+        id: getEnv('GCM_API_KEY', 'GCM_API_KEY'),
         phonegap: true
     },
     apn: {
@@ -98,12 +104,12 @@ export const pushNotificationsSettings = {
 
 // E-mail server settings
 export const enviarMail = {
-    host: '',
-    port: 587,
-    secure: false, // true for 465, false for other ports
+    host: getEnv('EMAIL_HOST', ''),
+    port: getEnv('EMAIL_PORT', 587, 'n'),
+    secure: getEnv('EMAIL_SECURE', false, 'b'),
     auth: {
-        user: '', // generated ethereal user
-        pass: ''  // generated ethereal password
+        user: getEnv('EMAIL_USERNAME', ''),
+        pass: getEnv('EMAIL_PASSWORD', '')
     }
 };
 
@@ -170,7 +176,7 @@ export const conSqlHPN = {
         acquireTimeoutMillis: 15000
     }
 
-}
+};
 
 export const CDA = {
     rootOID: '',
@@ -185,5 +191,6 @@ export const wsSalud = {
    getResultado: '',
    hellerWS: '',
    hellerFS: '',
-   hpnWS: ''
+   hpnWS: '',
+   hostHPN: ''
 };

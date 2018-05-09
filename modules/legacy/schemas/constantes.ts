@@ -63,20 +63,20 @@ const constantes = {
                 id: 901,
                 conceptId: '243788004'
             }]
-        },
-        {
-            organizacion: '57fcf037326e73143fb48c3a',
-            prestaciones: [{
-                nombre: 'Odontología',
-                id: 34,
-                conceptId: '34043003'
-            },
-            {
-                nombre: 'Odontopediatría',
-                id: 34,
-                conceptId: '481000013101'
-            }]
         }
+        // {
+        //     organizacion: '57fcf037326e73143fb48c3a',
+        //     prestaciones: [{
+        //         nombre: 'Odontología',
+        //         id: 34,
+        //         conceptId: '34043003'
+        //     },
+        //     {
+        //         nombre: 'Odontopediatría',
+        //         id: 34,
+        //         conceptId: '481000013101'
+        //     }]
+        // }
     ]
 };
 export = constantes;
