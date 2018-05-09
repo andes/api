@@ -107,7 +107,6 @@ export async function migrar() {
                 // let consulta = config.consultaPacienteSipsHC + ' AND efector.idEfector=' + element.codigo.idSips + ' AND PAC.idPaciente between @offset and @limit';
                 let consulta = config.consultaCarpetaPacienteSips + ' AND rhe.idEfector=' + idSips.idEfector;
                 logger('EFECTOR', idSips, organizacion.nombre);
-                // return utils.migrarOffset(consulta, q_limites, 100, insertCarpeta);
                 let connectionPool = await sql.connect(connection);
                 sql.on('error', err => {
                     logger('Error SQL---->', err);

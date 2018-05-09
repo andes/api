@@ -11,7 +11,6 @@ export function migrar(q_objeto, q_limites, page_size, addNuevoObjeto, connectio
         password: config.sqlCarpetasJob.password,
         server: config.sqlCarpetasJob.server,
         database: config.sqlCarpetasJob.database,
-        // connectionTimeout: config.sqlCarpetasJob.connectionTimeout,
         requestTimeout: config.sqlCarpetasJob.requestTimeout
     };
 
