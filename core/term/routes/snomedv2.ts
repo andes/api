@@ -201,7 +201,7 @@ router.get('/snomed/search', async function (req, res, next) {
 
 });
 
-router.get('/snomed/expression', async function (req, res, next) {
+router.get('/snomed/expression', async (req, res, next) => {
     let expression = req.query.expression;
     let query = makeMongoQuery(expression);
     let project = { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 };
@@ -222,7 +222,6 @@ router.get('/snomed/expression', async function (req, res, next) {
         let pipeline = [
             {
                 '$match': query,
-
             },
             {
                 '$project': { ...project, descriptions: 1 }
@@ -235,7 +234,6 @@ router.get('/snomed/expression', async function (req, res, next) {
                     'descriptions.languageCode': languageCode,
                     '$and': conditions
                 }
-
             },
             {
                 '$project': {
