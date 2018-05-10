@@ -106,7 +106,16 @@ router.get('/agenda/consultaDiagnostico', async function (req, res, next) {
     params['organizacion'] = organizacion;
     agendaCtrl.getConsultaDiagnostico(params).then((resultado) => {
         res.json(resultado);
-    
+    });
+
+});
+
+router.get('/agenda/cantidadConsultaXPrestacion', async function (req, res, next) {
+    let organizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
+    let params = req.query;
+    params['organizacion'] = organizacion;
+    agendaCtrl.getCantidadConsultaXPrestacion(params).then((resultado) => {
+        res.json(resultado);
     });
 
 });
@@ -115,7 +124,7 @@ router.get('/agenda/diagnosticos', async function (req, res, next) {
     let organizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
     let params = req.query;
     params['organizacion'] = organizacion;
-    
+
     diagnosticosCtrl.getDiagnosticos(params).then((resultado) => {
         res.json(resultado);
     });

@@ -946,3 +946,66 @@ export function getConsultaDiagnostico(params) {
 
     });
 }
+
+
+
+export function getCantidadConsultaXPrestacion(params) {
+
+    return new Promise(async (resolve, reject) => {
+        let pipeline = [];
+        pipeline = [
+            {
+                $match: {
+                    $and: [
+                        { 'horaInicio': { '$gte': new Date(params.horaInicio) } },
+                        { 'horaFin': { '$lte': new Date(params.horaFin) } },
+                        { 'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) } },
+                        { 'bloques.turnos.estado': 'asignado' }
+                    ]
+                }
+            },
+            {
+                $unwind: '$bloques'
+            },
+            {
+                $project: {
+                    idBloque: '$bloques._id',
+                    bloqueTurnos: '$bloques.turnos'
+                }
+            },
+            {
+                $unwind: '$bloqueTurnos'
+            },
+            {
+                $project: {
+                    hora: '$bloqueTurnos.horaInicio',
+                    estado: '$bloqueTurnos.estado',
+                    tipoPrestacion: '$bloqueTurnos.tipoPrestacion'
+                }
+            },
+            {
+                $match: {
+                    'estado': 'asignado'
+                }
+            },
+            {
+                $group: {
+                    _id: {
+                        nombrePrestacion: '$tipoPrestacion.term',
+                        conceptId: '$tipoPrestacion.conceptId'
+                    },
+                    count: { $sum: 1 }
+
+
+
+                }
+            }
+
+        ];
+
+        let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
+        resolve(data);
+
+    });
+}
+
