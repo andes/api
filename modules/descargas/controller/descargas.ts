@@ -48,9 +48,10 @@ export class Documento {
         html += this.generarCSS();
 
         // Se cargan logos
-        let logoAndes = fs.readFileSync('./templates/andes/logo-andes.png');
-        let logotipoAndes = fs.readFileSync('./templates/andes/logotipo-andes-blue.png');
-        let logoPDP = fs.readFileSync('./templates/andes/logo-pdp.png');
+        let path = require('path');
+        let logoAndes = fs.readFileSync(path.join(__dirname, '../../../templates/andes/logo-andes.png'));
+        let logotipoAndes = fs.readFileSync(path.join(__dirname, '../../../templates/andes/logotipo-andes-blue.png'));
+        let logoPDP = fs.readFileSync(path.join(__dirname, '../../../templates/andes/logo-pdp.png'));
 
         // Se reemplazan ciertos <!--placeholders--> por logos de ANDES y Dirección de Protección de Datos Personales
         html = html.replace('<!--logoAndes-->', `<img src="data:image/png;base64,${logoAndes.toString('base64')}" style="float: left;">`);
@@ -77,10 +78,11 @@ export class Documento {
         let css = '<style>\n\n';
 
         // SCSS => CSS
+        let path = require('path');
         css += scss.renderSync({
-            file: './templates/rup/prestacionValidacion-print.scss',
+            file: path.join(__dirname, '../../../templates/rup/prestacionValidacion-print.scss'),
             includePaths: [
-                './templates/rup/'
+                path.join(__dirname, '../../../templates/rup/')
             ]
         }).css;
 
