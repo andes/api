@@ -123,32 +123,19 @@ export async function checkCodificacion(agendaCacheada) {
             turnos = agendaCacheada.bloques[x].turnos;
 
             for (let z = 0; z < turnos.length; z++) {
-                let resultado = await turnoOps.existeTurnoSips(turnos[z], poolAgendas);
-                let cloneTurno: any = [];
-
-                let result = await new sql.Request(poolAgendas)
+                let arrayPrestaciones = await new sql.Request(poolAgendas)
                     .input('idTurnoMongo', sql.VarChar(50), turnos[z]._id)
                     .query('select * from vw_andes_integracion WHERE objectId = @idTurnoMongo');
-                console.log("ID CONSULTADO", turnos[z]._id);
-
-
-                console.log("RESULTADO VIEW:   ", result.recordset.length);
-                if (result.recordset.length > 0) {
-                    console.log(result.recordset[0]);
-                }
-                if (resultado.recordset.length > 0) {
-                    idConsulta = await existeConsultaTurno(resultado.recordset[0].idTurno);
-                    // TODO: REVISAR SI ES NECESARIO OBTENER EL TURNO DESDE LA AGENDA DE ANDES NUEVAMENTE.
-                    let turnoPaciente: any = await getPacienteAgenda(agendaCacheada, turnos[z]._id);
-                    // TODO: obtener especialidad desde la agenda SIPS
-                    idEspecialidad = await getEspecialidad(agendaCacheada, agendaCacheada.tipoPrestaciones[0].conceptId, agendaCacheada.organizacion._id);
-                    turnos[z] = turnoPaciente;
+                if (arrayPrestaciones.recordset.length > 0) {
+                    arrayPrestaciones = arrayPrestaciones.recordset;
+                    idConsulta = arrayPrestaciones[0].idConsulta; // ambas prestaciones tienen el mismo id de consulta.
+                    idEspecialidad = arrayPrestaciones[0].idEspecialidad;
                     if (idConsulta) {
                         // console.log('idagenda ', agenda.id, 'idespecialidad ', idEspecialidad);
                         if (idEspecialidad === constantes.Especialidades.odontologia) {
-                            turnos[z] = await codificaOdontologia(idConsulta, turnos[z]);
+                            turnos[z] = await codificaOdontologia(idConsulta, turnos[z], arrayPrestaciones);
                         } else {
-                            turnos[z] = await codificacionCie10(idConsulta, turnos[z]);
+                            turnos[z] = await codificacionCie10(idConsulta, turnos[z], arrayPrestaciones);
                         }
                         datosTurno = {
                             idAgenda: agendaCacheada.id, // este es el id de la agenda original de ANDES
@@ -168,18 +155,19 @@ export async function checkCodificacion(agendaCacheada) {
         // TODO: refactorizar codigo repetido.
         if (agendaCacheada.sobreturnos) {
             for (let z = 0; z < agendaCacheada.sobreturnos.length; z++) {
-                let resultado = await turnoOps.existeTurnoSips(agendaCacheada.sobreturnos[z], poolAgendas);
+                let arrayPrestaciones = await new sql.Request(poolAgendas)
+                    .input('idTurnoMongo', sql.VarChar(50), turnos[z]._id)
+                    .query('select * from vw_andes_integracion WHERE objectId = @idTurnoMongo');
 
-                if (resultado.recordset.length > 0) {
-                    idConsulta = await existeConsultaTurno(resultado.recordset[0].idTurno);
-                    // idEspecialidad = (agenda.tipoPrestaciones[0].term.includes('odonto')) ? 34 : 14;
-                    idEspecialidad = await getEspecialidad(agendaCacheada, agendaCacheada.tipoPrestaciones[0].conceptId, agendaCacheada.organizacion._id);
+                if (arrayPrestaciones.recordset.length > 0) {
+                    idConsulta = arrayPrestaciones[0].idConsulta; // ambas prestaciones tienen el mismo id de consulta y especialidad
+                    idEspecialidad = arrayPrestaciones[0].idEspecialidad;
 
                     if (idConsulta) {
                         if (idEspecialidad === constantes.Especialidades.odontologia) {
-                            agendaCacheada.sobreturnos[z] = await codificaOdontologia(idConsulta, agendaCacheada.sobreturnos[z]);
+                            agendaCacheada.sobreturnos[z] = await codificaOdontologia(idConsulta, agendaCacheada.sobreturnos[z], arrayPrestaciones);
                         } else {
-                            agendaCacheada.sobreturnos[z] = await codificacionCie10(idConsulta, agendaCacheada.sobreturnos[z]);
+                            agendaCacheada.sobreturnos[z] = await codificacionCie10(idConsulta, agendaCacheada.sobreturnos[z], arrayPrestaciones);
                         }
                         datosTurno = {
                             idAgenda: agendaCacheada.id, // este es el id de la agenda original de ANDES
@@ -203,12 +191,11 @@ export async function checkCodificacion(agendaCacheada) {
     }
 }
 
-async function codificaOdontologia(idConsulta: any, turno: any) {
+async function codificaOdontologia(idConsulta: any, turno: any, prestaciones) {
     let idNomenclador: any = [];
     let codificacionOdonto: any = {};
     let repetido = [];
     try {
-        idNomenclador = await getConsultaOdontologia(idConsulta);
         /*
         cantidad:1
         caraD:false
@@ -222,18 +209,18 @@ async function codificaOdontologia(idConsulta: any, turno: any) {
         idConsultaOdontologia:280775
         idNomenclador:23
         */
-        for (let i = 0; i < idNomenclador.length; i++) {
+        for (let prestacion of prestaciones) {
             repetido = [];
             let caras = '';
             let diente = '';
-            if (idNomenclador[i].caraD) { caras = caras + 'caraD '; }
-            if (idNomenclador[i].caraL) { caras = caras + 'caraL '; }
-            if (idNomenclador[i].caraM) { caras = caras + 'caraM '; }
-            if (idNomenclador[i].caraO) { caras = caras + 'caraO '; }
-            if (idNomenclador[i].caraP) { caras = caras + 'caraP '; }
-            if (idNomenclador[i].caraV) { caras = caras + 'caraV '; }
-            diente = idNomenclador[i].diente.toString();
-            codificacionOdonto = await getCodificacionOdonto(idNomenclador[i].idNomenclador);
+            if (prestacion.caraD) { caras = caras + 'caraD '; }
+            if (prestacion.caraL) { caras = caras + 'caraL '; }
+            if (prestacion.caraM) { caras = caras + 'caraM '; }
+            if (prestacion.caraO) { caras = caras + 'caraO '; }
+            if (prestacion.caraP) { caras = caras + 'caraP '; }
+            if (prestacion.caraV) { caras = caras + 'caraV '; }
+            diente = prestacion.diente.toString();
+            codificacionOdonto = await getCodificacionOdonto(prestacion.idNomenclador);
             /*
             clasificacion:"Conservadora"
             codigo:"03010"
@@ -282,49 +269,39 @@ async function codificaOdontologia(idConsulta: any, turno: any) {
     return (turno);
 }
 
-async function codificacionCie10(idConsulta: any, turno: any) {
-
+async function codificacionCie10(idConsulta: any, turno: any, prestaciones) {
     let codCie10: any = [];
-    let codificaCie10: any = {};
     try {
-        codCie10 = await getConsultaDiagnostico(idConsulta);
-        let diagnosticos = [];
         turno.diagnostico.codificaciones = [];
-        for (let i = 0; i < codCie10.length; i++) {
-            codificaCie10 = await getCodificacionCie10(codCie10[i].CODCIE10);
+        for (let prestacion of prestaciones) {
             turno.asistencia = 'asistio';
             turno.diagnostico.ilegible = false;
-            if (codCie10[i].PRINCIPAL === true) {
-                if (codificaCie10 && codificaCie10[0]) {
-                    turno.diagnostico.codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del arrays
-                        codificacionProfesional: {
-                            cie10: {
-                                causa: codificaCie10[0].CAUSA,
-                                subcausa: codificaCie10[0].SUBCAUSA,
-                                codigo: codificaCie10[0].CODIGO,
-                                nombre: codificaCie10[0].Nombre,
-                                sinonimo: codificaCie10[0].Sinonimo,
-                                c2: codificaCie10[0].C2
-                                // TODO: campo primeraVez -> verificar en SIPS
-                            }
+            if (prestacion.PRINCIPAL === true) {
+                turno.diagnostico.codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del arrays
+                    codificacionProfesional: {
+                        cie10: {
+                            causa: prestacion.CAUSA,
+                            subcausa: prestacion.SUBCAUSA,
+                            codigo: prestacion.CODIGO,
+                            nombre: prestacion.Nombre,
+                            sinonimo: prestacion.Sinonimo,
+                            c2: prestacion.C2
                         }
-                    });
-                }
+                    }
+                });
             } else {
-                if (codificaCie10 && codificaCie10[0]) {
-                    turno.diagnostico.codificaciones.push({
-                        codificacionProfesional: {
-                            cie10: {
-                                causa: codificaCie10[0].CAUSA,
-                                subcausa: codificaCie10[0].SUBCAUSA,
-                                codigo: codificaCie10[0].CODIGO,
-                                nombre: codificaCie10[0].Nombre,
-                                sinonimo: codificaCie10[0].Sinonimo,
-                                c2: codificaCie10[0].C2
-                            }
+                turno.diagnostico.codificaciones.push({
+                    codificacionProfesional: {
+                        cie10: {
+                            causa: prestacion.CAUSA,
+                            subcausa: prestacion.SUBCAUSA,
+                            codigo: prestacion.CODIGO,
+                            nombre: prestacion.Nombre,
+                            sinonimo: prestacion.Sinonimo,
+                            c2: prestacion.C2
                         }
-                    });
-                }
+                    }
+                });
             }
         }
     } catch (ex) {

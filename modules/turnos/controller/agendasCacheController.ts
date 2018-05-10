@@ -29,7 +29,6 @@ export async function integracionSips() {
 export async function integracionAndes() {
     try {
         let agendasMongoExportadas = await operationsCache.getAgendasDeMongoExportadas();
-        console.log("AGENDAS EXPORTADAS", agendasMongoExportadas)
         agendasMongoExportadas.forEach(async (agenda) => {
             await operationsCache.checkCodificacion(agenda);
         });
