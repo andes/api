@@ -14,6 +14,7 @@ let configuracionPrestacionSchema = new mongoose.Schema({
         codeSystemName: String,
         displayName: String
     },
+    idServicio: Number,
     organizacionesSips: [{
         _id: {
             type: mongoose.Schema.Types.ObjectId,
