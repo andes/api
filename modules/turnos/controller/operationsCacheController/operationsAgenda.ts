@@ -4,7 +4,7 @@ import {
     agendasCache
 } from '../../../legacy/schemas/agendasCache';
 import { tipoPrestacion } from './../../../../core/tm/schemas/tipoPrestacion';
-import { configuracionPrestacionModel } from './../../../../core/term/schemas/configuracionPrestaciones';
+import { ConfiguracionPrestacionModel } from './../../../../core/term/schemas/configuracionPrestacion';
 import * as sql from 'mssql';
 import * as moment from 'moment';
 import * as pacientes from './../../../../core/mpi/controller/paciente';
@@ -79,8 +79,8 @@ export function getAgendasDeMongoPendientes() {
 export function getEspecialidad(agenda, conceptId, organizacion) {
     return new Promise<Array<any>>(function (resolve, reject) {
         let especialidad: any = 14;
-        configuracionPrestacionModel.find({
-            'tipoPrestacion.conceptId': { $eq: conceptId },
+        ConfiguracionPrestacionModel.find({
+            'snomed.conceptId': { $eq: conceptId },
             'organizacionesSips._id': { $eq: agenda.organizacion._id }
         }).exec(function (err, data: any) {
             if (err) {

@@ -14,7 +14,7 @@ import {
     ObjectID,
     ObjectId
 } from 'bson';
-import { configuracionPrestacionModel } from '../../../core/term/schemas/configuracionPrestaciones';
+import { ConfiguracionPrestacionModel } from '../../../core/term/schemas/configuracionPrestacion';
 
 
 
@@ -214,8 +214,8 @@ export async function cacheTurnosSips(unaAgenda) {
 
     async function integrarAgenda(_agenda) {
         return new Promise(function (resolve, reject) {
-            configuracionPrestacionModel.find({
-                'tipoPrestacion.conceptId': { $eq: _agenda.tipoPrestaciones[0].conceptId },
+            ConfiguracionPrestacionModel.find({
+                'snomed.conceptId': { $eq: _agenda.tipoPrestaciones[0].conceptId },
                 'organizacionesSips._id': { $eq: _agenda.organizacion._id }
             }).exec(function (err, data: any) {
                 if (err) {
