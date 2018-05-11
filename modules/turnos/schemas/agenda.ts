@@ -59,7 +59,7 @@ let schema = new mongoose.Schema({
         default: true
     }
 
-}, { versionKey: false });
+}, { versionKey: false, usePushEach: true });
 
 // Defino Virtuals
 schema.virtual('turnosDisponibles').get(function () {
