@@ -4,20 +4,20 @@ import { Matching } from '@andes/match';
 import * as moment from 'moment';
 
 let soap = require('soap');
-let url = configPrivate.anses.url;
-let serv = configPrivate.anses.serv;
-let serv2 = configPrivate.anses.serv2;
-let datosAnses = [];
-let login = configPrivate.anses;
-// documento=40899702;sexo=M
-export function getServicioAnses(paciente) {
+let url = configPrivate.renaper.url;
+let serv = configPrivate.renaper.serv;
+// let serv2 = configPrivate.anses.serv2;
+let datosRenaper = [];
+let login = configPrivate.renaper;
+
+export function getServicioRenaper(paciente) {
     let match = new Matching();
     let weights = config.mpi.weightsFaAnses;
     let matchPorcentaje = 0;
     let resultado: any;
     let fecha: any;
     return new Promise((resolve, reject) => {
-        let band = (paciente.entidadesValidadoras) ? (paciente.entidadesValidadoras.indexOf('anses') < 0) : true;
+        let band = (paciente.entidadesValidadoras) ? (paciente.entidadesValidadoras.indexOf('renaper') < 0) : true;
         if (paciente && paciente.documento && band) {
             soap.createClient(url, function (err, client) {
                 if (err) {
@@ -31,7 +31,7 @@ export function getServicioAnses(paciente) {
                         }
                         let tipoConsulta = 'Documento';
                         let filtro = paciente.documento;
-                        if (paciente.cuil && paciente.cuil.lenght > 0) {
+              /*          if (paciente.cuil && paciente.cuil.lenght > 0) {
                             tipoConsulta = 'Cuil';
                             filtro = paciente.cuil;
                         }
@@ -42,8 +42,8 @@ export function getServicioAnses(paciente) {
                             fechaNacimiento: paciente.fechaNacimiento,
                             documento: paciente.documento
                         };
-                        try {
-                            resultado = await consultaAnses(result, tipoConsulta, filtro);
+                */        try {
+                            resultado = await consultaRenaper(result, tipoConsulta, filtro);
                         } catch (error) {
                             reject(error);
                         }
@@ -63,26 +63,25 @@ export function getServicioAnses(paciente) {
                                     (registrosAdicionales[0].sexo === 'M') ? sex = 'masculino' : sex = 'femenino';
                                 }
                             }
-                            let pacienteAnses = {
+                            let pacienteRenaper = {
                                 nombre: registro[0],
                                 apellido: '',
-                                cuil: registro[1],
+                                //      cuil: registro[1],
                                 documento: registro[1].substring(2, 10), // Obtengo el documento para usar en el matching como substring del cuil
                                 fechaNacimiento: fecha,
                                 sexo: sex
                             };
-                            try {
-                                matchPorcentaje = await match.matchPersonas(pacAndes, pacienteAnses, weights, 'Levenshtein') * 100;
-                            } catch (error) {
-                                reject(error);
-                            }
-                            if (matchPorcentaje >= 85) {
-                                // La idea de este registro es usar sólo el cuil
-                                resolve({ 'cuil': pacienteAnses.cuil });
-                                // resolve({'entidad': 'Anses', 'matcheo': matchPorcentaje, 'pacienteConsultado': paciente, 'pacienteAnses': pacienteAnses });
-                            } else {
-                                resolve('Matcheo insuficiente: ' + matchPorcentaje);
-                            }
+                            /*    try {
+                                    matchPorcentaje = await match.matchPersonas(pacAndes, pacienteRenaper, weights, 'Levenshtein') * 100;
+                                } catch (error) {
+                                    reject(error);
+                                }
+                                if (matchPorcentaje >= 85) {
+                                    resolve({ 'documento': pacienteRenaper.documento });
+                                    // resolve({'entidad': 'Anses', 'matcheo': matchPorcentaje, 'pacienteConsultado': paciente, 'pacienteAnses': pacienteAnses });
+                                } else {
+                                    resolve('Matcheo insuficiente: ' + matchPorcentaje);
+                                   } */
                         } else {
                             // No interesa devolver los datos básicos
                             resolve(null);
@@ -93,17 +92,17 @@ export function getServicioAnses(paciente) {
                 }
             });
         } else {
-            resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Anses', 'matcheo': 0, 'datosPaciente': {} } });
+            resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Renaper', 'matcheo': 0, 'datosPaciente': {} } });
         }
     });
 }
 
-function consultaAnses(sesion, tipo, filtro) {
-    let resultadoCuil: any;
+function consultaRenaper(sesion, tipo, filtro) {
+    let resultado: any;
     let rst: any;
-    datosAnses = [];
+    datosRenaper = [];
     return new Promise((resolve, reject) => {
-        soap.createClient(serv2, function (err, client) {
+        soap.createClient(serv, function (err, client) {
             let args = {
                 IdSesion: sesion.return['$value'],
                 Base: 'PecasAutorizacion'
@@ -114,22 +113,22 @@ function consultaAnses(sesion, tipo, filtro) {
                 }
                 try {
                     rst = await solicitarServicio(sesion, tipo, filtro);
-                    datosAnses.push({ 'codigo': rst.codigo });
-                    datosAnses.push({ 'datos': rst.array });
+                    datosRenaper.push({ 'codigo': rst.codigo });
+                    datosRenaper.push({ 'datos': rst.array });
                 } catch (error) {
                     reject(error);
                 }
                 if (tipo === 'Documento' && rst.codigo === 0) {
                     try {
-                        resultadoCuil = await solicitarServicio(sesion, 'Cuil', rst.array[1]);
-                        let datosAdicionales = [{ 'sexo': resultadoCuil.array[3] }, { 'Localidad': resultadoCuil.array[5] }, { 'Calle': resultadoCuil.array[6] }, { 'altura': resultadoCuil.array[7] }];
-                        datosAnses.push({ 'adicionales': datosAdicionales });
+                        //        resultadoCuil = await solicitarServicio(sesion, 'Cuil', rst.array[1]);
+                        let datosAdicionales = [{ 'sexo': resultado.array[3] }, { 'Localidad': resultado.array[5] }, { 'Calle': resultado.array[6] }, { 'altura': resultado.array[7] }];
+                        datosRenaper.push({ 'adicionales': datosAdicionales });
                     } catch (error) {
                         reject(error);
                     }
-                    resolve(datosAnses);
+                    resolve(datosRenaper);
                 } else {
-                    resolve(datosAnses);
+                    resolve(datosRenaper);
                 }
             });
         });
@@ -145,7 +144,7 @@ function solicitarServicio(sesion, tipo, filtro) {
             let args2 = {
                 IdSesionPecas: sesion.return['$value'],
                 Cliente: 'ANDES SISTEMA',
-                Proveedor: 'GN-ANSES',
+                Proveedor: 'GP-RENAPER',
                 Servicio: tipo,
                 DatoAuditado: filtro,
                 Operador: login.Usuario,
@@ -168,7 +167,7 @@ function solicitarServicio(sesion, tipo, filtro) {
                     }
                 });
             } else {
-                reject('Error en el cliente2 servicioAnses');
+                reject('Error en el cliente2 servicio ReNaPer');
             }
         });
     });
