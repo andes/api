@@ -468,7 +468,7 @@ export function searchByPatient(pacienteId, prestacion, {
             conditions['metadata.prestacion'] = prestacion;
         }
         if (limit === null) {
-            limit = 10;
+            limit = 100;
         }
         if (skip === null) {
             skip = 0;

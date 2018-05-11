@@ -273,6 +273,7 @@ router.get('/tojson/:id', async (req: any, res, next) => {
     let CDAFiles = makeFs();
 
     let contexto = await cdaCtr.loadCDA(_base64);
+    contexto = contexto.toString().replace(new RegExp('<br>', 'g'), ' ');
     to_json(contexto, function (error, data) {
         if (error) {
             return next(error);
@@ -294,8 +295,10 @@ router.get('/paciente/:id', async (req: any, res, next) => {
     let CDAFiles = makeFs();
     let pacienteID = req.params.id;
     let prestacion = req.query.prestacion;
+    // let limit = req.query.limit ? req.query.limit : 10;
+    // let skip = req.query.skip ? req.query.skip : 0;
 
-    let list = await cdaCtr.searchByPatient(pacienteID, prestacion, { skip: 0, limit: 10 });
+    let list = await cdaCtr.searchByPatient(pacienteID, prestacion, { skip: 0, limit: 100 });
     res.json(list);
 });
 
