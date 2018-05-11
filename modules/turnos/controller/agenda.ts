@@ -915,34 +915,106 @@ export function getConsultaDiagnostico(params) {
             $unwind: '$bloques'
         },
         {
-            $unwind: '$bloques.tipoPrestaciones'
+            $project: {
+                bloqueTurnos: '$bloques.turnos'
+            }
         },
         {
-            $unwind: '$bloques.turnos'
-        },
-
-        {
-            $unwind: { path: '$bloques.turnos.diagnostico.codificaciones', preserveNullAndEmptyArrays: true }
+            $unwind: '$bloqueTurnos'
         },
         {
             $project: {
-                nombrePaciente: '$bloques.turnos.paciente.nombre',
-                apellidoPaciente: '$bloques.turnos.paciente.apellido',
-                documentoPaciente: '$bloques.turnos.paciente.documento',
-                tipoPrestacion: '$bloques.tipoPrestaciones.conceptId',
-                descripcionPrestacion: '$bloques.tipoPrestaciones.term',
-                auditoriaCodigo: '$bloques.turnos.diagnostico.codificaciones.codificacionAuditoria.codigo',
-                auditoriaNombre: '$bloques.turnos.diagnostico.codificaciones.codificacionAuditoria.nombre',
-                codProfesionalCie10Codigo: '$bloques.turnos.diagnostico.codificaciones.codificacionProfesional.cie10.codigo',
-                codrofesionalCie10Nombre: '$bloques.turnos.diagnostico.codificaciones.codificacionProfesional.cie10.nombre',
-                codProfesionalSnomedCodigo: '$bloques.turnos.diagnostico.codificaciones.codificacionProfesional.snomed.conceptId',
-                codProfesionalSnomedNombre: '$bloques.turnos.diagnostico.codificaciones.codificacionProfesional.snomed.term',
+                estado: '$bloqueTurnos.estado',
+                paciente: '$bloqueTurnos.paciente',
+                tipoPrestacion: '$bloqueTurnos.tipoPrestacion',
+                diagnosticoCodificaciones: '$bloqueTurnos.diagnostico.codificaciones',
+                codificacionesAuditoria: '$bloqueTurnos.diagnosticoCodificaciones.codificacionesAuditoria',
+            }
+        },
+        {
+            $match: {
+                'estado': 'asignado'
+            }
+        },
+
+        {
+            $unwind: { path: '$diagnosticoCodificaciones', preserveNullAndEmptyArrays: true }
+        },
+
+        {
+            $project: {
+                estado: '$estado',
+                nombrePaciente: '$paciente.nombre',
+                apellidoPaciente: '$paciente.apellido',
+                documentoPaciente: '$paciente.documento',
+                tipoPrestacion: '$tipoPrestacion.conceptId',
+                descripcionPrestacion: '$tipoPrestacion.term',
+                auditoriaCodigo: '$diagnosticoCodificaciones.codificacionAuditoria.codigo',
+                auditoriaNombre: '$diagnosticoCodificaciones.codificacionAuditoria.nombre',
+                codProfesionalCie10Codigo: '$diagnosticoCodificaciones.codificacionProfesional.cie10.codigo',
+                codrofesionalCie10Nombre: '$diagnosticoCodificaciones.codificacionProfesional.cie10.nombre',
+                codProfesionalSnomedCodigo: '$diagnosticoCodificaciones.codificacionProfesional.snomed.conceptId',
+                codProfesionalSnomedNombre: '$diagnosticoCodificaciones.codificacionProfesional.snomed.term',
+            }
+        },
+        ];
+        //SOBRETURNOS controlar
+        let pipeline1 = [];
+        pipeline1 = [{
+            $match: {
+                $and: [
+                    { 'horaInicio': { '$gte': new Date(params.horaInicio) } },
+                    { 'horaFin': { '$lte': new Date(params.horaFin) } },
+                    { 'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) } },
+                    { 'bloques.turnos.estado': 'asignado' }
+
+                ]
+            }
+        },
+        {
+            $unwind: '$sobreturnos'
+        },
+        {
+            $unwind: '$sobreturnos.tipoPrestacion'
+        },
+        {
+            $unwind: { path: '$sobreturnos.diagnostico.codificaciones', preserveNullAndEmptyArrays: true }
+        },
+        {
+            $project: {
+                nombrePaciente: '$sobreturnos.paciente.nombre',
+                apellidoPaciente: '$sobreturnos.paciente.apellido',
+                documentoPaciente: '$sobreturnos.paciente.documento',
+                tipoPrestacion: '$sobreturnos.tipoPrestacion.conceptId',
+                descripcionPrestacion: '$sobreturnos.tipoPrestacion.term',
+                auditoriaCodigo: '$sobreturnos.diagnostico.codificaciones.codificacionAuditoria.codigo',
+                auditoriaNombre: '$sobreturnos.diagnostico.codificaciones.codificacionAuditoria.nombre',
+                codProfesionalCie10Codigo: '$sobreturnos.diagnostico.codificaciones.codificacionProfesional.cie10.codigo',
+                codrofesionalCie10Nombre: '$sobreturnos.diagnostico.codificaciones.codificacionProfesional.cie10.nombre',
+                codProfesionalSnomedCodigo: '$sobreturnos.diagnostico.codificaciones.codificacionProfesional.snomed.conceptId',
+                codProfesionalSnomedNombre: '$sobreturnos.diagnostico.codificaciones.codificacionProfesional.snomed.term',
             }
         }
+
         ];
 
         let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
+        let data1 = await toArray(agendaModel.aggregate(pipeline1).cursor({}).exec());
+        data = data.concat(data1);
+
+        function removeDuplicates(arr) {
+            let unique_array = [];
+            let arrMap = arr.map(m => { return m._id; });
+            for (let i = 0; i < arr.length; i++) {
+                if (arrMap.lastIndexOf(arr[i]._id) === i) {
+                    unique_array.push(arr[i]);
+                }
+            }
+            return unique_array;
+        }
+        data = removeDuplicates(data);
         resolve(data);
+
 
     });
 }
@@ -990,20 +1062,77 @@ export function getCantidadConsultaXPrestacion(params) {
             },
             {
                 $group: {
-                    _id: {
-                        nombrePrestacion: '$tipoPrestacion.term',
-                        conceptId: '$tipoPrestacion.conceptId'
+                    _id: '$tipoPrestacion.term',
+                    nombrePrestacion: { $first: '$tipoPrestacion.term' },
+                    conceptId: {
+                        $first: '$tipoPrestacion.conceptId'
                     },
-                    count: { $sum: 1 }
-
-
-
+                    total: { $sum: 1 },
                 }
+
+
+            }
+
+        ];
+
+        //SOBRETURNOS controlar
+        let pipeline1 = [];
+        pipeline1 = [
+            {
+                $match: {
+                    $and: [
+                        { 'horaInicio': { '$gte': new Date(params.horaInicio) } },
+                        { 'horaFin': { '$lte': new Date(params.horaFin) } },
+                        { 'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) } },
+                        { 'sobreturnos.estado': 'asignado' }
+                    ]
+                }
+            },
+            {
+                $unwind: '$sobreturnos'
+            },
+            {
+                $project: {
+                    hora: '$sobreturnos.horaInicio',
+                    estado: '$sobreturnos.estado',
+                    tipoPrestacion: '$sobreturnos.tipoPrestacion'
+                }
+            },
+            {
+                $match: {
+                    'estado': 'asignado'
+                }
+            },
+            {
+                $group: {
+                    _id: '$tipoPrestacion.term',
+                    nombrePrestacion: { $first: '$tipoPrestacion.term' },
+                    conceptId: {
+                        $first: '$tipoPrestacion.conceptId'
+                    },
+                    total: { $sum: 1 },
+                }
+
+
             }
 
         ];
 
         let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
+        let data1 = await toArray(agendaModel.aggregate(pipeline1).cursor({}).exec());
+        data = data.concat(data1);
+
+        function removeDuplicates(arr) {
+            let unique_array = [];
+            let arrMap = arr.map(m => { return m._id; });
+            for (let i = 0; i < arr.length; i++) {
+                if (arrMap.lastIndexOf(arr[i]._id) === i) {
+                    unique_array.push(arr[i]);
+                }
+            }
+            return unique_array;
+        }
+        data = removeDuplicates(data);
         resolve(data);
 
     });
