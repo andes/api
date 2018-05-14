@@ -59,24 +59,17 @@ let efector = await mapeoEfector(agenda[index].efector);
                 sexo: (pacienteSips.idSexo === 3 ? 'M' : pacienteSips.idSexo === 2 ? 'F' : 1),
                 edad: moment(agenda[index].fecha).diff(pacienteSips.fechaNacimiento, 'years')
             }
+            let idComprobante = await creaComprobanteSumar(comprobante);
+            console.log(idComprobante);
 
-            insertBeneficiario(pacienteSips,efector)
-            creaComprobanteSumar(comprobante, agenda[index], agenda[index].fecha, datosPaciente);
-        } else {
-            console.log("NOOOOOO Es paciente SUMAr afiliado")
-            // let idPacienteSips = await mapeoPaciente(agenda[index].paciente.documento);
+             let prestacion = await creaPrestaciones( agenda[index].tipoPrestacion,idComprobante,agenda[index].fecha,datosPaciente)
 
-            // if (!idPacienteSips) {
-            //     let resultadoBusquedaPaciente: any = await pacienteCrtl.buscarPaciente(agenda[index].paciente.id);
-            //     let idNivelCentral = 127; // Por defecto seteamos como efector nivel central (ID 127)
-            //     let pacienteSips = operacionesLegacy.pacienteSipsFactory(resultadoBusquedaPaciente.paciente, idNivelCentral);
-            //     idPacienteSips = await operacionesLegacy.insertaPacienteSips(pacienteSips);
-            // }
-        }
+
+        } 
     }
 }
 
-async function getAfiliadoSumar(documento) {
+export async function getAfiliadoSumar(documento) {
 
     poolAgendas = await new sql.ConnectionPool(config).connect();
     let query = "SELECT * FROM dbo.PN_smiafiliados WHERE afidni = @documento AND activo = 'S'";
@@ -90,7 +83,7 @@ async function getAfiliadoSumar(documento) {
 }
 
 // mapeo de los efectores
-async function mapeoEfector(idEfector) {
+export async function mapeoEfector(idEfector) {
     let efectorMongo: any = await mapeoEfectorMongo(idEfector);
 
     poolAgendas = await new sql.ConnectionPool(config).connect();
@@ -125,7 +118,8 @@ async function getPeriodo() {
     });
 }
 
-async function creaComprobanteSumar(datosComprobante, prestacion, fechaAgenda, datosPaciente) {
+async function creaComprobanteSumar(datosComprobante) {
+    console.log("entre wacho")
     return new Promise(async (resolve, reject) => {
         let query = "INSERT INTO dbo.PN_comprobante ( cuie, id_factura, nombre_medico, fecha_comprobante, clavebeneficiario, id_smiafiliados, " +
             " fecha_carga, comentario, marca, periodo, activo, idTipoDePrestacion) values ( " +
@@ -134,47 +128,46 @@ async function creaComprobanteSumar(datosComprobante, prestacion, fechaAgenda, d
             ",'" + datosComprobante.periodo + "','" + datosComprobante.activo + "'," + datosComprobante.idTipoPrestacion + ")";
 
         let idComprobante = await executeQuery(query);
-        console.log("Query: ", query)
-        console.log("IdComprobante: ", idComprobante)
-
-        let codigo = crearCodigoComp(datosComprobante.cuie, fechaAgenda, datosComprobante.claveBeneficiario, datosPaciente.fechaNacimiento, datosPaciente.sexo, datosPaciente.edad, 'CT', 'C002', 'A98');
-        creaPrestaciones(prestacion, idComprobante, fechaAgenda, datosPaciente.fechaNacimiento, datosPaciente.sexo, datosPaciente.edad, codigo)
+        resolve(idComprobante);
+        // let codigo = crearCodigoComp(datosComprobante.cuie, fechaAgenda, datosComprobante.claveBeneficiario, datosPaciente.fechaNacimiento, datosPaciente.sexo, datosPaciente.edad, 'CT', 'C002', 'A98');
+        // creaPrestaciones(prestacion, idComprobante, fechaAgenda, datosPaciente.fechaNacimiento, datosPaciente.sexo, datosPaciente.edad, codigo)
     });
 }
 
-function creaPrestaciones(prestacionEntrante, idComprobante, fechaPrestacion, fechaNacimiento, sexo, edad, codigo) {
-
+function creaPrestaciones(prestacionEntrante, idComprobante, fechaPrestacion, datosPaciente) {
     let prestacion = {
         id: null,
         id_comprobante: idComprobante,
         id_nomenclador: null,
         cantidad: 1,
-        codigo: codigo,
-        sexo: sexo,
-        edad: edad,
-        fechaPrestacion: fechaPrestacion,
+        codigo:"falta",
+        sexo: datosPaciente.sexo,
+        edad: datosPaciente.edad,
+        fechaPrestacion: moment(fechaPrestacion).format('YYYY-MM-DD') ,
         anio: moment(fechaPrestacion).format('YYYY'),
         mes: moment(fechaPrestacion).format('MM'),
         dia: moment(fechaPrestacion).format('DD'),
-        fechaNacimiento: fechaNacimiento,
+        fechaNacimiento: moment(datosPaciente.fechaNacimiento).format('YYYY-MM-DD') ,
         precio_prestacion: null,
-        id_anexo: 301
+        id_anexo: 301,
+        diagnostico: 'A97' //HARDDDDCOOODINGGG 
     }
 
-
     configuracionPrestaciones.find({
-        'tipoPrestacion.conceptId': prestacionEntrante.tipoPrestacion.conceptId
-    }, {}, async function (err, file: any) {
-
-        let nomenclador: any = await mapeoNomenclador(file[0].nomencladorSUMAR);
+        'tipoPrestacion.conceptId': prestacionEntrante.conceptId
+    }, {}, async function (err, data: any) {
+        let nomenclador: any = await mapeoNomenclador(data[0].nomencladorSUMAR);
         prestacion.precio_prestacion = nomenclador.precio;
         prestacion.id_nomenclador = nomenclador.id;
-        console.log(prestacion);
     });
 
 
+}
+
+async function creaComprobanteSumar(datosComprobante) {
 
 }
+
 
 async function mapeoNomenclador(codigoNomenclador) {
     poolAgendas = await new sql.ConnectionPool(config).connect();
@@ -192,83 +185,7 @@ async function mapeoNomenclador(codigoNomenclador) {
 }
 
 
-function insertBeneficiario(paciente,efector) {
-    let beneficiario = {
-        id: null,
-        estado_enviado: 'n',
-        clave_beneficiario: 2101300000000000, //falta sumar id
-        tipo_transaccion: "A",
-        apellido: paciente.apellido,
-        nombr: paciente.nombre,
-        clase_doc: null,
-        tipo_documento: "DNI",
-        numero_doc: paciente.numeroDocumento,
-        id_categoria: null,
-        sexo: (paciente.idSexo === 3 ? 'M' : paciente.idSexo === 2 ? 'F' : 1),
-        fechaNacimiento: paciente.fechaNacimiento,
-        pais: "ARGENTINA",
-        indigena: "N",
-        idTribu: 0,
-        idLengua: 0,
-        anioMayorNivel: 0,
-        anioMayorNivelMadre: 0,
-        tipoDocMadre: null,
-        numeroDocMadre: null,
-        apellidoMadre: null,
-        nombreMadre: null,
-        cuie_ea: efector,
-        cuie_ah: efector,
-        fecha_carga: new Date(),
-        fecha_inscripcion: new Date(),
 
-    };
-
-    // let query = "INSERT INTO [dbo].[PN_beneficiarios] ([estado_envio], [clave_beneficiario], [tipo_transaccion], [apellido_benef], [nombre_benef], [clase_documento_benef]"
-    //    + ", [tipo_documento], [numero_doc], [id_categoria], [sexo], [fecha_nacimiento_benef], [provincia_nac], [localidad_nac] , [pais_nac]" +
-    //    +", [indigena] , [id_tribu], [id_lengua] , [alfabeta] , [estudios] , [anio_mayor_nivel] , [tipo_doc_madre] , [nro_doc_madre] , [apellido_madre]" + 
-    //    + " , [nombre_madre] , [alfabeta_madre], [estudios_madre], [anio_mayor_nivel_madre] , [tipo_doc_padre], [nro_doc_padre], [apellido_padre]"
-    //     + ", [nombre_padre], [alfabeta_padre] , [estudios_padre], [anio_mayor_nivel_padre] , [tipo_doc_tutor], [nro_doc_tutor], [apellido_tutor]
-    //     , [nombre_tutor]
-    //     , [alfabeta_tutor]
-    //     , [estudios_tutor]
-    //     , [anio_mayor_nivel_tutor]
-    //     , [fecha_diagnostico_embarazo]
-    //     , [semanas_embarazo]
-    //     , [fecha_probable_parto]
-    //     , [fecha_efectiva_parto]
-    //     , [cuie_ea]
-    //     , [cuie_ah]
-    //     , [menor_convive_con_adulto]
-    //     , [calle]
-    //     , [numero_calle]
-    //     , [piso]
-    //     , [dpto]
-    //     , [manzana]
-    //     , [entre_calle_1]
-    //     , [entre_calle_2]
-    //     , [telefono]
-    //     , [departamento]
-    //     , [localidad]
-    //     , [municipio]
-    //     , [barrio]
-    //     , [cod_pos]
-    //     , [observaciones]
-    //     , [fecha_inscripcion]
-    //     , [fecha_carga]
-    //     , [usuario_carga]
-    //     , [activo]
-    //     , [fum]
-    //     , [tipo_ficha]
-    //     , [responsable]
-    //     , [discv]
-    //     , [disca]
-    //     , [discmo]
-    //     , [discme]
-    //     , [otradisc]
-    //     , [rcv])
-    //     VALUES(" + + ")";
-    console.log(beneficiario)
-}
 
 export async function mapeoPaciente(dni) {
     poolAgendas = await new sql.ConnectionPool(config).connect();
@@ -285,7 +202,6 @@ export function crearCodigoComp(cuie, fechaPrestacion: Date, claveB, fechaNac: D
     let fechaPrestParseada = moment(fechaPrestacion).format('YYYY') + '' + moment(fechaPrestacion).format('MM') + '' + moment(fechaPrestacion).format('DD');
     let fechaNacParseada = moment(fechaNac).format('YYYY') + '' + moment(fechaNac).format('MM') + '' + moment(fechaNac).format('DD');
     let codigoFinal = cuie + fechaPrestParseada + claveB + sexo + fechaNacParseada + año + grupo + codigo + diagnostico + 'P99';
-    console.log(codigoFinal)
     return codigoFinal;
 }
 

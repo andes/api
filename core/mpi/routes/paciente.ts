@@ -563,8 +563,6 @@ router.post('/pacientes', function (req, res, next) {
     if (!Auth.check(req, 'mpi:paciente:postAndes')) {
         return next(403);
     }
-    console.log("aca routes")
-
 
     if (req.body.documento) {
         let condicion = {
@@ -600,10 +598,8 @@ router.post('/pacientes', function (req, res, next) {
 });
 
 router.post('/exportPacientesSips', function (req, res, next) {
-    console.log("ruta correcta")
-     
-    controller.pacientesDelDia();
-})
+     controller.insertSips(null, null);
+});
 
 /**
  * @swagger
