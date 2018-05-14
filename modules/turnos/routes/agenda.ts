@@ -15,7 +15,15 @@ import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import * as operations from './../../legacy/controller/operations';
 import { toArray } from '../../../utils/utils';
 
+import * as AgendasEstadisticas from '../controller/estadisticas';
+
 let router = express.Router();
+
+
+router.get('/estadistica', async (req, res, next) => {
+    let stats = await AgendasEstadisticas.estadisticas(req.query);
+    return res.json(stats);
+});
 
 router.get('/agenda/paciente/:idPaciente', function (req, res, next) {
 
