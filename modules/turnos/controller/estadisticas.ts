@@ -73,6 +73,22 @@ const facets = {
                 nombre: { $first: '$turno.tipoPrestacion.term' }
             }
         }
+    ],
+
+    'estadoTurno': [
+        { $match: { 'turno.estado': { $ne: 'turnoDoble' } } },
+        {
+            $addFields: {
+                'real-state': {
+                    $cond:  {
+                        if: { $eq: ['$estado', 'suspendida'] } ,
+                        then: { $cond: { if: { $ne: ['$turno.reasignado.siguiente', null]  }, then: 'reasignado', else: 'suspendida' } },
+                        else: '$turno.estado'
+                    }
+                }
+            }
+        },
+        { $sortByCount: '$real-state' }
     ]
 };
 
@@ -151,6 +167,8 @@ function makeFacet (filtros) {
         facet['prestacion'] = facets['prestacion'];
     }
 
+    facet['estado_turno'] = facets.estadoTurno;
+
     return facet;
 }
 
@@ -167,7 +185,7 @@ export async function estadisticas(filtros) {
                 turno: { $concatArrays: ['$sobreturnos', '$bloques.turnos'] },
                 profesionales: 1,
                 prestaciones: '$bloques.tipoPrestaciones',
-                estado: '$estados'
+                estado: '$estado'
             },
         },
         { $unwind: '$turno' },
