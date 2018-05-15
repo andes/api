@@ -105,10 +105,10 @@ router.get('/agenda/diagnosticos', async function (req, res, next) {
     let organizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
     let params = req.query;
     params['organizacion'] = organizacion;
-    diagnosticosCtrl.getDiagnosticos(params).then((resultado) => {
+    try {
+        let resultado = await diagnosticosCtrl.getDiagnosticos(params);
         res.json(resultado);
-    });
-
+    } catch (err) { return next(err); }
 });
 
 router.get('/agenda/:id?', function (req, res, next) {
@@ -238,7 +238,7 @@ router.post('/agenda', function (req, res, next) {
             return next(err);
         }
         // Al crear una nueva agenda la cacheo para Sips
-        operations.cacheTurnosSips(data);
+        operations.cacheTurnosSips(data).catch(error => { return next(error); });
         // Fin de insert cache
         res.json(data);
     });
@@ -323,7 +323,7 @@ router.post('/agenda/clonar', function (req, res, next) {
             });
             Promise.all(listaSaveAgenda).then(resultado => {
                 res.json(resultado);
-            });
+            }).catch(error => { return next(error); });
         });
     }
 });
@@ -341,7 +341,7 @@ router.put('/agenda/:id', function (req, res, next) {
             return next(err);
         }
         // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
-        operations.cacheTurnosSips(data);
+        operations.cacheTurnosSips(data).catch(error => { return next(error); });
         // Fin de insert cache
         res.json(data);
     });
@@ -373,7 +373,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                                     return next(error);
                                 }
                             });
-                        });
+                        }).catch(err2 => { return next(err2); });
                     }
                 } else {
                     agenda.find({ 'sobreturnos._id': mongoose.Types.ObjectId(t[0]) }, function (err2, data2) {
@@ -395,12 +395,12 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                                         return next(error);
                                     }
                                 });
-                            });
+                            }).catch(err3 => { return next(err3); });
                         }
                     });
                 }
                 // Inserto la modificación en agendasCache
-                operations.cacheTurnosSips(data);
+                operations.cacheTurnosSips(data).catch(error => { return next(error); });
                 // Fin de insert cache
                 return res.json(data[0]);
             });
@@ -507,25 +507,12 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 });
 
             }
-            operations.cacheTurnosSips(data);
+            operations.cacheTurnosSips(data).catch(error => { return next(error); });
             // Fin de insert cache
             return res.json(data);
         });
     }
 });
-
-// Código de prueba queda comentado
-
-// router.get('/integracionSips', function (req, res, next) {
-//     return new Promise<Array<any>>(async function (resolve, reject) {
-//         try {
-//             await agendaCacheCtrl.integracionSips();
-//             resolve();
-//         } catch (ex) {
-//             reject(ex);
-//         }
-//     });
-// });
 
 router.get('/integracionCitasHPN', async function (req, res, next) {
     try {
