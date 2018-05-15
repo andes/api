@@ -17,7 +17,7 @@ router.get('/cie10', function (req, res, next) {
         // normalizamos cada una de las palabras como hace SNOMED para poder buscar palabra a palabra
         word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08');
         let expWord = utils.removeDiacritics(word) + '.*';
-        conditions['$or'].push({ 'words': { '$regex': '(?i)' + word } });
+        // conditions['$or'].push({ 'words': { '$regex': '(?i)' + word } });
         // agregamos la palabra al término de búsqueda
         termino = termino + expWord;
     });
