@@ -6,10 +6,7 @@ import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
 import * as moment from 'moment';
 import * as agendaCtrl from '../controller/agenda';
-
-import * as agendaCacheCtrl from '../controller/agendasCacheController';
 import * as agendaHPNCacheCtrl from '../controller/agendasHPNCacheController';
-
 import * as diagnosticosCtrl from '../controller/diagnosticosC2Controller';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import * as operations from './../../legacy/controller/operations';
@@ -35,7 +32,7 @@ router.get('/agenda/paciente/:idPaciente', function (req, res, next) {
 
 });
 
-
+// devuelve las agendas candidatas para la operacion clonar agenda
 router.get('/agenda/candidatas', async function (req, res, next) {
     agenda.findById(req.query.idAgenda, async function (err, data) {
         if (err) {
