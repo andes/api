@@ -4,6 +4,7 @@ import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import { model as cama } from '../../../core/tm/schemas/camas';
 import { toArray } from '../../../utils/utils';
+import { REQUEST_HEADER_FIELDS_TOO_LARGE } from 'http-status-codes';
 
 export function buscarCamaInternacion(idInternacion, estado) {
     let query = cama.aggregate([
@@ -79,47 +80,42 @@ export function camaOcupadasxUO(unidadOrganizativa, fecha) {
 }
 
 export function desocupadaEnDia(dtoCama, fecha) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
 
         let pipelineEstado = [];
         let finDia = moment(dtoCama.ultimoEstado.fecha).endOf('day').toDate();
         let finDiaConsulta = moment(fecha).endOf('day').toDate();
         let inicioDia = moment(fecha).startOf('day').toDate();
         if (finDiaConsulta > finDia) {
-
-
-            pipelineEstado = [{ $match: { _id: dtoCama._id.id } },
-            { $unwind: '$estados' },
-            {
-                $match: {
-                    $and:
-                        [{
-                            'estados.fecha': {
-                                '$lte': inicioDia,
-                                '$gte': dtoCama.ultimoEstado.fecha
-                            }
-                        }, { 'estados.estado': { $ne: 'ocupada' } }]
-                }
-            }];
-            cama.aggregate(pipelineEstado, function (err, data) {
-                if (err) {
-                    reject(err);
-                } else {
-                    if (data && data.length > 0) {
-                        resolve(null);
-                    } else {
-                        resolve(dtoCama);
+            pipelineEstado = [
+                { $match: { _id: dtoCama._id.id } },
+                { $unwind: '$estados' },
+                {
+                    $match: {
+                        $and:
+                            [{
+                                'estados.fecha': {
+                                    '$lte': inicioDia,
+                                    '$gte': dtoCama.ultimoEstado.fecha
+                                }
+                            }, { 'estados.estado': { $ne: 'ocupada' } }]
                     }
-
                 }
-            });
+            ];
+            let data = await toArray(cama.aggregate(pipelineEstado).cursor({}).exec());
+
+            if (data && data.length > 0) {
+                return resolve(dtoCama);
+            } else {
+                return resolve(null);
+            }
         } else {
-            resolve(dtoCama);
+            return resolve(dtoCama);
         }
     });
 }
 export function camaXInternacion(idInternacion) {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         let pipelineEstado = [];
 
         pipelineEstado = [
@@ -129,22 +125,17 @@ export function camaXInternacion(idInternacion) {
             { $sort: { 'estados.fecha': -1 } },
             { $limit: 1 }];
 
-        cama.aggregate(pipelineEstado, (err, data) => {
-            if (err) {
-                reject(err);
-            } else {
-                if (data && data.length) {
-                    cama.findById(data[0]._id).then(res => {
-                        resolve(res);
-                    }).catch(err1 => {
-                        reject(err1);
-                    });
-                } else {
-                    resolve(null);
-                }
-            }
+        let data = await toArray(cama.aggregate(pipelineEstado).cursor({}).exec());
+        if (data && data.length) {
+            cama.findById(data[0]._id).then(res => {
+                return resolve(res);
+            }).catch(err1 => {
+                return reject(err1);
+            });
+        } else {
+            return resolve(null);
+        }
 
-        });
     });
 }
 
@@ -213,21 +204,14 @@ export function disponibilidadXUO(unidad, fecha) {
         },
         { $match: { 'ultimoEstado.estado': { $nin: ['bloqueada', 'reparacion'] } } }];
 
-        let salida = null;
-        cama.aggregate(pipelineInicioDia, function (err, dataIni) {
-            if (err) {
-                reject(err);
-            } else {
-                cama.aggregate(pipelineFinDia, function (errF, dataFin) {
-                    if (errF) {
-                        reject(errF);
-                    } else {
-                        salida = { disponibilidad0: dataIni.length, disponibilidad24: dataFin.length };
-                        resolve(salida);
-                    }
-                });
+        let promises = [
+            toArray(cama.aggregate(pipelineInicioDia).cursor({}).exec()),
+            toArray(cama.aggregate(pipelineFinDia).cursor({}).exec())
+        ];
+        return Promise.all(promises).then(([dataIni, dataFin]) => {
+            const salida = { disponibilidad0: dataIni.length, disponibilidad24: dataFin.length };
+            return resolve(salida);
+        }).catch(reject);
 
-            }
-        });
     });
 }

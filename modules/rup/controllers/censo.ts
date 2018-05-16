@@ -173,7 +173,6 @@ export function censoMensual(fechaDesde, fechaHasta, unidad) {
             nuevaFechaDesde.setDate(nuevoDia);
         }
         Promise.all(promises).then(async censosDiarios => {
-
             for (let unCenso of censosDiarios) {
                 if (unCenso.length > 0) {
                     let resumen = await censoController.completarResumenDiario(unCenso, unidad, unCenso[0].fecha);

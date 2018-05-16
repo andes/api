@@ -114,33 +114,10 @@ router.get('/internaciones/censoMensual', function (req, res, next) {
     let unidad = req.query.unidad;
     let resultadoFinal;
     let censoMensual = [];
-    // let fechaDesde = moment(req.query.fechaDesde).startOf('day');
-    // let fechaHasta = moment(req.query.fechaHasta).endOf('day');
 
     censoController.censoMensual(req.query.fechaDesde, req.query.fechaHasta, unidad).then(result => {
         res.json(result);
     });
-
-
-    //  while (fechaDesde < fechaHasta) {
-    //    fechaDesde.add(1, 'days');
-
-    //     censoController.censoDiario(unidad, fecha).then(censoDiario => {
-    //         console.log("hhola",censoDiario)
-    //         let resumen = censoController.completarResumenDiario(censoDiario, unidad, fechaDesde)
-    //         resultadoFinal = {
-
-    //             censoDiario: censoDiario,
-    //             resumen: resumen
-    //         }
-    //        censoMensual.push(resultadoFinal);
-    //        console.log("data",censoMensual);
-    //     });
-
-
-    //  }
-
-
 });
 
 router.get('/internaciones/censo/disponibilidad', function (req, res, next) {

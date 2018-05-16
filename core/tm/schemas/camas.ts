@@ -32,7 +32,7 @@ export let schema = new mongoose.Schema({
     },
     equipamiento: [SnomedConcept], // oxigeno / bomba / etc
     estados: [estado.schema]
-});
+}, { usePushEach: true });
 
 /* Se definen los campos virtuals */
 schema.virtual('ultimoEstado').get(function () {
