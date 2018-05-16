@@ -40,6 +40,7 @@ export function getTurno(req) {
                 '$group': {
                     '_id': '$_id.id',
                     'agenda_id': { $first: '$agenda_id' },
+                    'bloque_id': { $first: '$_id.bloqueId' },
                     'organizacion': { $first: '$organizacion' },
                     'profesionales': { $first: '$profesionales' },
                     'bloques': { $push: { '_id': '$_id.bloqueId', 'turnos': '$turnos' } }
@@ -118,6 +119,7 @@ export function getTurno(req) {
                     turno = elem.bloques.turnos;
                     turno.id = turno._id;
                     turno.agenda_id = elem.agenda_id;
+                    turno.bloque_id = elem.bloque_id;
                     turno.organizacion = elem.organizacion;
                     turno.profesionales = elem.profesionales;
                     turno.paciente = (elem.pacientes_docs && elem.pacientes_docs.length > 0) ? elem.pacientes_docs[0] : elem.bloques.turnos.paciente;

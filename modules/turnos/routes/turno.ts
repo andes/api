@@ -237,8 +237,15 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', function (req, res, next) {
             return (t.id === req.params.idTurno);
         });
         let update = {};
-        let etiquetaAvisoSuspension: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.avisoSuspension';
-        update[etiquetaAvisoSuspension] = req.body.avisoSuspension;
+        if (req.body.avisoSuspension) {
+            let etiquetaAvisoSuspension: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.avisoSuspension';
+            update[etiquetaAvisoSuspension] = req.body.avisoSuspension;
+        }
+        if (req.body.motivoConsulta) {
+            let etiquetaMotivoConsulta: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.motivoConsulta';
+            update[etiquetaMotivoConsulta] = req.body.motivoConsulta;
+
+        }
         let query = {
             _id: req.params.idAgenda,
         };
