@@ -958,7 +958,7 @@ export function getConsultaDiagnostico(params) {
             }
         },
         ];
-        //SOBRETURNOS controlar
+        // SOBRETURNOS controlar
         let pipeline1 = [];
         pipeline1 = [{
             $match: {
@@ -1075,7 +1075,7 @@ export function getCantidadConsultaXPrestacion(params) {
 
         ];
 
-        //SOBRETURNOS controlar
+        // SOBRETURNOS controlar
         let pipeline1 = [];
         pipeline1 = [
             {
