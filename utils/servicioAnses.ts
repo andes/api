@@ -9,7 +9,7 @@ let serv = configPrivate.anses.serv;
 let serv2 = configPrivate.anses.serv2;
 let datosAnses = [];
 let login = configPrivate.anses;
-// documento=40899702;sexo=M
+
 export function getServicioAnses(paciente) {
     let match = new Matching();
     let weights = config.mpi.weightsFaAnses;

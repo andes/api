@@ -6,17 +6,17 @@ import { Logger } from '../../../utils/logService';
 let router = express.Router();
 
 router.get('/renaper', async function (req, res, next) {
-    if (!Auth.check(req, 'fa:get:renaper')) {
-        return next(403);
-    }
+    // if (!Auth.check(req, 'fa:get:renaper')) {
+    //     return next(403);
+    // }
     if (req.query) {
         let paciente = req.query;
         try {
             let resultado = await getServicioRenaper(paciente);
             res.json(resultado);
-            Logger.log(req, 'fa_renaper', 'validar', {
-                resultado: resultado
-            });
+            // Logger.log(req, 'fa_anses', 'validar', {
+            //     resultado: resultado
+            // });
         } catch (err) {
             Logger.log(req, 'fa_renaper', 'error', {
                 error: err

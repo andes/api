@@ -12,8 +12,9 @@ router.get('/anses', async function (req, res, next) {
     if (req.query) {
         let paciente = req.query;
         try {
-            let resultado =  await getServicioAnses(paciente);
+            let resultado = await getServicioAnses(paciente);
             res.json(resultado);
+            console.log('ahi va el resultado:');
             Logger.log(req, 'fa_anses', 'validar', {
                 resultado: resultado
             });

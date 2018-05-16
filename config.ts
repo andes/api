@@ -107,7 +107,7 @@ export const modules = {
         active: true,
         path: './modules/fuentesAutenticas/routes',
         route: '/modules/fuentesAutenticas',
-        middleware: appMiddleware
+        middleware: null//appMiddleware
     },
     usuarios: {
         active: true,
