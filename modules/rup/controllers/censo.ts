@@ -172,20 +172,20 @@ export function censoMensual(fechaDesde, fechaHasta, unidad) {
             let nuevoDia = nuevaFechaDesde.getDate() + 1;
             nuevaFechaDesde.setDate(nuevoDia);
         }
-        Promise.all(promises).then(censosDiarios => {
-            censosDiarios.forEach(unCenso => {
+        Promise.all(promises).then(async censosDiarios => {
+
+            for (let unCenso of censosDiarios) {
                 if (unCenso.length > 0) {
-                    let resumen = censoController.completarResumenDiario(unCenso, unidad, unCenso[0].fecha);
+                    let resumen = await censoController.completarResumenDiario(unCenso, unidad, unCenso[0].fecha);
                     let resultadoFinal = {
                         fecha: unCenso[0].fecha,
                         resumen: resumen
                     };
                     censoMensualTotal.push(resultadoFinal);
                 }
-            });
+            }
             return resolve(censoMensualTotal);
         });
-
     });
 }
 

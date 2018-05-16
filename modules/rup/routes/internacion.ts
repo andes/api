@@ -55,6 +55,7 @@ router.get('/internaciones/pases/:idInternacion', function (req, res, next) {
 });
 
 
+
 router.patch('/internaciones/desocuparCama/:idInternacion', function (req, res, next) {
     // buscamos el ultimo estado de la cama por donde "estuvo la internacion"
     camasController.camaXInternacion(mongoose.Types.ObjectId(req.params.idInternacion)).then(

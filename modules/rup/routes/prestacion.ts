@@ -13,8 +13,61 @@ import { NotificationService } from '../../mobileApp/controller/NotificationServ
 import { iterate, convertToObjectId, buscarEnHuds, matchConcepts } from '../controllers/rup';
 import { Logger } from '../../../utils/logService';
 
+import * as camasController from './../controllers/cama';
+import { resolve } from 'path';
+import { json } from 'body-parser';
+
 let router = express.Router();
 let async = require('async');
+
+
+
+// Trae todas las prestaciones con ambitoOrigen = internacion y
+// que el paciente no tiene una cama asignada.
+
+router.get('/prestaciones/sinCama', function (req, res, next) {
+    let query = {
+        'solicitud.ambitoOrigen': 'internacion',
+        '$where': 'this.estados[this.estados.length - 1].tipo ==  \"' + 'ejecucion' + '\"'
+    };
+    Prestacion.find(query, async (err, prestaciones) => {
+        if (err) {
+            return next(err);
+        }
+        if (!prestaciones) {
+            return res.status(404).send('No se encontraron prestaciones de internacion');
+        }
+        // Ahora buscamos si se encuentra asociada la internacion a una cama
+        let listaEspera = [];
+        let prestacion: any;
+        for (prestacion of prestaciones) {
+            let enEspera = {
+                prestacion: prestacion,
+                ultimoEstado: null,
+                paseDe: false,
+                esEgreso: false
+            };
+
+            let cama = await camasController.buscarCamaInternacion(mongoose.Types.ObjectId(prestacion.id), 'ocupada');
+            let esEgreso = prestacion.ejecucion.registros.find(r => r.valor.InformeEgreso);
+            if (cama && cama.length === 0) {
+                if (esEgreso) {
+                    enEspera.ultimoEstado = esEgreso.concepto.term;
+                    enEspera.esEgreso = true;
+                } else {
+                    let ultimoEstado: any = await camasController.camaXInternacion(prestacion._id);
+                    if (ultimoEstado) {
+                        enEspera.ultimoEstado = ultimoEstado.estados[ultimoEstado.estados.length - 1].unidadOrganizativa.term;
+                        enEspera.paseDe = true;
+                    }
+                }
+                listaEspera.push(enEspera);
+            }
+        }
+        return res.json(listaEspera);
+    });
+});
+
 
 router.get('/prestaciones/huds/:idPaciente', function (req, res, next) {
 
@@ -127,6 +180,9 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
 
         if (req.query.organizacion) {
             query.where('solicitud.organizacion.id').equals(req.query.organizacion);
+        }
+        if (req.query.ambitoOrigen) {
+            query.where('solicitud.ambitoOrigen').equals(req.query.ambitoOrigen);
         }
 
         // Ordenar por fecha de solicitud
