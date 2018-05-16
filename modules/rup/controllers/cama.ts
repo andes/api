@@ -35,6 +35,11 @@ export function buscarPasesCamaXInternacion(idInternacion) {
     return toArray(query.cursor({}).exec());
 }
 
+/**
+ * Devuelve todas las camas ocupadas por unidad organizativa en una fecha dada
+ * @param unidadOrganizativa
+ * @param fecha
+ */
 export function camaOcupadasxUO(unidadOrganizativa, fecha) {
     let pipelineEstado = [];
     pipelineEstado =
@@ -63,8 +68,6 @@ export function camaOcupadasxUO(unidadOrganizativa, fecha) {
                         id: '$_id',
                         nombre: '$nombre',
                         organizacion: '$organizacion',
-                        sector: '$sector',
-                        habitacion: '$habitacion',
                         tipoCama: '$tipoCama',
                         idInternacion: '$estados.idInternacion',
                     },
@@ -83,10 +86,10 @@ export function desocupadaEnDia(dtoCama, fecha) {
     return new Promise(async (resolve, reject) => {
 
         let pipelineEstado = [];
-        let finDia = moment(dtoCama.ultimoEstado.fecha).endOf('day').toDate();
+        let ultimoEstadofinDia = moment(dtoCama.ultimoEstado.fecha).endOf('day').toDate();
         let finDiaConsulta = moment(fecha).endOf('day').toDate();
         let inicioDia = moment(fecha).startOf('day').toDate();
-        if (finDiaConsulta > finDia) {
+        if (finDiaConsulta > ultimoEstadofinDia) {
             pipelineEstado = [
                 { $match: { _id: dtoCama._id.id } },
                 { $unwind: '$estados' },
@@ -105,9 +108,9 @@ export function desocupadaEnDia(dtoCama, fecha) {
             let data = await toArray(cama.aggregate(pipelineEstado).cursor({}).exec());
 
             if (data && data.length > 0) {
-                return resolve(dtoCama);
-            } else {
                 return resolve(null);
+            } else {
+                return resolve(dtoCama);
             }
         } else {
             return resolve(dtoCama);
@@ -172,7 +175,7 @@ export function disponibilidadXUO(unidad, fecha) {
                     ultimoEstado: { $last: '$estados' }
                 }
         },
-        { $match: { 'ultimoEstado.estado': { $nin: ['bloqueada', 'reparacion'] } } }];
+        { $match: { 'ultimoEstado.unidadOrganizativa.conceptId': unidad,  'ultimoEstado.estado': { $nin: ['bloqueada', 'reparacion', 'ocupada'] } } }];
 
         let pipelineFinDia = [{
             $match: {
@@ -202,7 +205,7 @@ export function disponibilidadXUO(unidad, fecha) {
                     ultimoEstado: { $last: '$estados' }
                 }
         },
-        { $match: { 'ultimoEstado.estado': { $nin: ['bloqueada', 'reparacion'] } } }];
+        { $match: { 'ultimoEstado.estado': { $nin: ['bloqueada', 'reparacion', 'ocupada'] } } }];
 
         let promises = [
             toArray(cama.aggregate(pipelineInicioDia).cursor({}).exec()),

@@ -109,7 +109,7 @@ export function completarResumenDiario(listadoCenso, unidad, fecha) {
             Object.keys(listadoCenso).forEach(indice => {
                 if (listadoCenso[indice].censo !== null) {
 
-                    resumenCenso.disponibles24 += 1;
+                    // resumenCenso.disponibles24 += 1;
                     resumenCenso.existencia24 += 1;
                     if (listadoCenso[indice].censo['esIngreso']) {
                         resumenCenso.ingresos += 1;
@@ -146,6 +146,9 @@ export function completarResumenDiario(listadoCenso, unidad, fecha) {
             }
             resumenCenso.existencia24 = resumenCenso.existencia24 -
                 resumenCenso.egresosDefuncion - resumenCenso.egresosAlta - resumenCenso.pasesA;
+            resumenCenso.existencia0 = resumenCenso.existencia24 +
+                resumenCenso.egresosDefuncion + resumenCenso.egresosAlta + resumenCenso.pasesA
+                - resumenCenso.ingresos - resumenCenso.pasesDe;
         }
         camasController.disponibilidadXUO(unidad, fecha).then((respuesta: any) => {
             if (respuesta) {
