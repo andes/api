@@ -40,6 +40,7 @@ export class Auth {
         return shiro;
     }
 
+
     /**
      * Inicializa el middleware de auditoría para JSON Web Token
      *
@@ -81,6 +82,10 @@ export class Auth {
             passport.authenticate('jwt', { session: false }),
             this.appTokenProtected()
         ];
+    }
+
+    static authenticatePublic() {
+        return  passport.authenticate();
     }
 
     /**
@@ -365,7 +370,6 @@ export class Auth {
         } catch (e) {
             return null;
         }
-
     }
 
     /**

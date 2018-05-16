@@ -13,6 +13,11 @@ const mobileMiddleware = [
     Auth.authenticate()
 ];
 
+const publicMiddleware = [
+    Auth.authenticatePublic()
+];
+
+
 // Habilita/deshabilita módulos de la API
 export const modules = {
     auth: {
@@ -92,6 +97,12 @@ export const modules = {
         route: '/modules/mobileApp',
         middleware: mobileMiddleware
     },
+    turnero: {
+        active: true,
+        path: './modules/turnero/routes',
+        route: '/modules/turnero',
+        middleware: null
+    },
     fuentesAutenticas: {
         active: true,
         path: './modules/fuentesAutenticas/routes',
@@ -103,6 +114,12 @@ export const modules = {
         path: './modules/usuarios/routes',
         route: '/modules/usuarios',
         middleware: appMiddleware
+    },
+    matriculaciones: {
+        active: true,
+        path: './modules/matriculaciones/routes',
+        route: '/modules/matriculaciones',
+        middleware: null
     },
     fhir: {
         active: true,

@@ -35,7 +35,7 @@ import {
     CDA as CDAConfig
 } from '../../../config.private';
 import {
-    ConfiguracionPrestacion
+    ConfiguracionPrestacionModel
 } from './../../../core/term/schemas/configuracionPrestacion';
 
 /**
@@ -124,7 +124,7 @@ let rootOID = CDAConfig.rootOID;
 export async function matchCode(snomed) {
     let prestacion: any;
     if (!isNaN(snomed)) {
-        prestacion = await ConfiguracionPrestacion.find({
+        prestacion = await ConfiguracionPrestacionModel.find({
             'snomed.conceptId': snomed
         });
         if (prestacion.length > 0) {
@@ -171,7 +171,7 @@ export async function matchCode(snomed) {
  */
 
 export async function matchCodeByLoinc(loinc) {
-    let prestacion: any = await ConfiguracionPrestacion.find({
+    let prestacion: any = await ConfiguracionPrestacionModel.find({
         'loinc.code': loinc
     });
     if (prestacion.length > 0) {
@@ -468,7 +468,7 @@ export function searchByPatient(pacienteId, prestacion, {
             conditions['metadata.prestacion.snomed.concepId'] = prestacion;
         }
         if (limit === null) {
-            limit = 10;
+            limit = 100;
         }
         if (skip === null) {
             skip = 0;
