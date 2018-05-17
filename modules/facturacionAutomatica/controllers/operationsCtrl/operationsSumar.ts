@@ -290,8 +290,6 @@ async function mapeoNomenclador(codigoNomenclador) {
 }
 
 
-
-
 export async function mapeoPaciente(dni) {
     poolAgendas = await new sql.ConnectionPool(config).connect();
     let query = 'SELECT TOP 1 * FROM dbo.Sys_Paciente where activo=1 and numeroDocumento=@dni order by objectId DESC;';
@@ -323,7 +321,7 @@ async function executeQuery(query: any) {
 }
 
 
-
+//FUNCIONA PERO NO SE LLAMA A LA FUNCION
 export async function busquedaPrestaciones(){
     let Prestaciones = await toArray(Prestacion.aggregate({
         $match: {
@@ -333,6 +331,7 @@ export async function busquedaPrestaciones(){
     return Prestaciones
 }
 
+//FUNCIONA PERO NO SE LLAMA A LA FUNCION
 function cambioEstado(idTurno) {
 
     return new Promise<Array<any>>(function (resolve, reject) {
