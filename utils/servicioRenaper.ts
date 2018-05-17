@@ -22,6 +22,7 @@ export function getServicioRenaper(paciente) {
                     return reject(err);
                 }
                 if (client) {
+                    if (paciente.documento && paciente.sexo) {
                     client.LoginPecas(login, async function (err2, result) {
                         if (err2) {
                             reject(err2);
@@ -36,6 +37,9 @@ export function getServicioRenaper(paciente) {
                         resolve(resultado);
 
                     });
+                } else {
+                    resolve(null);
+                }
                 } else {
                     resolve(null);
                 }
@@ -99,11 +103,11 @@ function solicitarServicio(sesion, tipo, filtro) {
 
                     if (result2.return.Resultado['$value']) {
                         let resultado = Buffer.from(result2.return.Resultado['$value'], 'base64').toString('ascii');
-                        let resArray = resultado.split(';');
-
-                        resolve({ codigo: codigoResultado, array: resArray });
+                        // convertimos a JSON el resultado
+                        let resArray = JSON.parse(resultado);
+                        resolve({ codigo: codigoResultado, datos: resArray });
                     } else {
-                        resolve({ codigo: codigoResultado, array: [] });
+                        resolve({ codigo: codigoResultado, datos: [] });
                     }
                 });
             } else {
@@ -111,4 +115,4 @@ function solicitarServicio(sesion, tipo, filtro) {
             }
         });
     });
-} 
+}

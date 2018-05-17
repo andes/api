@@ -18,9 +18,9 @@ router.get('/renaper', async function (req, res, next) {
             //     resultado: resultado
             // });
         } catch (err) {
-            Logger.log(req, 'fa_renaper', 'error', {
-                error: err
-            });
+            // Logger.log(req, 'fa_renaper', 'error', {
+            //     error: err
+            // });
             return next(err);
         }
     } else {
