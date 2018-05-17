@@ -6,9 +6,9 @@ import { Logger } from '../../../utils/logService';
 let router = express.Router();
 
 router.get('/renaper', async function (req, res, next) {
-    // if (!Auth.check(req, 'fa:get:renaper')) {
-    //     return next(403);
-    // }
+    if (!Auth.check(req, 'fa:get:renaper')) {
+        return next(403);
+    }
     if (req.query) {
         let paciente = req.query;
         try {
