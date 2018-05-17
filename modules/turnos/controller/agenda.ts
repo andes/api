@@ -10,6 +10,8 @@ import { load } from 'google-maps';
 import { model as Prestacion } from '../../rup/schemas/prestacion';
 import * as http from 'http';
 import * as request from 'request';
+import * as mongoose from 'mongoose';
+import { toArray } from '../../../utils/utils';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -891,3 +893,166 @@ export function updatePaciente(pacienteModified, turno) {
         }
     });
 }
+
+
+
+export function getConsultaDiagnostico(params) {
+
+    return new Promise(async (resolve, reject) => {
+        let pipeline = [];
+        pipeline = [{
+            $match: {
+                $and: [
+                    { 'horaInicio': { '$gte': new Date(params.horaInicio) } },
+                    { 'horaFin': { '$lte': new Date(params.horaFin) } },
+                    { 'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) } },
+                    { 'bloques.turnos.estado': 'asignado' }
+
+                ]
+            }
+        },
+        {
+            $unwind: '$bloques'
+        },
+        {
+            $project: {
+                bloqueTurnos: { $concatArrays: ['$sobreturnos', '$bloques.turnos'] }
+            }
+        },
+        {
+            $unwind: '$bloqueTurnos'
+        },
+        {
+            $project: {
+                estado: '$bloqueTurnos.estado',
+                paciente: '$bloqueTurnos.paciente',
+                tipoPrestacion: '$bloqueTurnos.tipoPrestacion',
+                diagnosticoCodificaciones: '$bloqueTurnos.diagnostico.codificaciones',
+                codificacionesAuditoria: '$bloqueTurnos.diagnosticoCodificaciones.codificacionesAuditoria',
+            }
+        },
+        {
+            $match: {
+                'estado': 'asignado'
+            }
+        },
+
+        {
+            $unwind: { path: '$diagnosticoCodificaciones', preserveNullAndEmptyArrays: true }
+        },
+
+        {
+            $project: {
+                estado: '$estado',
+                nombrePaciente: '$paciente.nombre',
+                apellidoPaciente: '$paciente.apellido',
+                documentoPaciente: '$paciente.documento',
+                tipoPrestacion: '$tipoPrestacion.conceptId',
+                descripcionPrestacion: '$tipoPrestacion.term',
+                auditoriaCodigo: '$diagnosticoCodificaciones.codificacionAuditoria.codigo',
+                auditoriaNombre: '$diagnosticoCodificaciones.codificacionAuditoria.nombre',
+                codProfesionalCie10Codigo: '$diagnosticoCodificaciones.codificacionProfesional.cie10.codigo',
+                codrofesionalCie10Nombre: '$diagnosticoCodificaciones.codificacionProfesional.cie10.nombre',
+                codProfesionalSnomedCodigo: '$diagnosticoCodificaciones.codificacionProfesional.snomed.conceptId',
+                codProfesionalSnomedNombre: '$diagnosticoCodificaciones.codificacionProfesional.snomed.term',
+            }
+        },
+        ];
+
+        let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
+
+        function removeDuplicates(arr) {
+            let unique_array = [];
+            let arrMap = arr.map(m => { return m._id; });
+            for (let i = 0; i < arr.length; i++) {
+                if (arrMap.lastIndexOf(arr[i]._id) === i) {
+                    unique_array.push(arr[i]);
+                }
+            }
+            return unique_array;
+        }
+        data = removeDuplicates(data);
+        resolve(data);
+
+
+    });
+}
+
+
+
+export function getCantidadConsultaXPrestacion(params) {
+
+    return new Promise(async (resolve, reject) => {
+        let pipeline = [];
+        pipeline = [
+            {
+                $match: {
+                    $and: [
+                        { 'horaInicio': { '$gte': new Date(params.horaInicio) } },
+                        { 'horaFin': { '$lte': new Date(params.horaFin) } },
+                        { 'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) } },
+                        { 'bloques.turnos.estado': 'asignado' }
+                    ]
+                }
+            },
+            {
+                $unwind: '$bloques'
+            },
+            {
+                $project: {
+                    idBloque: '$bloques._id',
+                    bloqueTurnos: { $concatArrays: ['$sobreturnos', '$bloques.turnos'] }
+                }
+            },
+
+
+            {
+                $unwind: '$bloqueTurnos'
+            },
+            {
+                $project: {
+                    hora: '$bloqueTurnos.horaInicio',
+                    estado: '$bloqueTurnos.estado',
+                    tipoPrestacion: '$bloqueTurnos.tipoPrestacion'
+                }
+            },
+            {
+                $match: {
+                    'estado': 'asignado'
+                }
+            },
+            {
+                $group: {
+                    _id: '$tipoPrestacion.term',
+                    nombrePrestacion: { $first: '$tipoPrestacion.term' },
+                    conceptId: {
+                        $first: '$tipoPrestacion.conceptId'
+                    },
+                    total: { $sum: 1 },
+                }
+
+
+            }
+
+        ];
+
+
+
+        let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
+
+        function removeDuplicates(arr) {
+            let unique_array = [];
+            let arrMap = arr.map(m => { return m._id; });
+            for (let i = 0; i < arr.length; i++) {
+                if (arrMap.lastIndexOf(arr[i]._id) === i) {
+                    unique_array.push(arr[i]);
+                }
+            }
+            return unique_array;
+        }
+        data = removeDuplicates(data);
+        resolve(data);
+
+    });
+}
+
