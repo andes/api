@@ -13,21 +13,21 @@ router.get('/renaper', async function (req, res, next) {
         let paciente = req.query;
         try {
             let resultado = await getServicioRenaper(paciente);
+            // Logueamos la operación de búsqueda en la colección.
+            Logger.log(req, 'fa_renaper', 'validar', {
+                data: resultado
+            });
             res.json(resultado);
-            // Logger.log(req, 'fa_anses', 'validar', {
-            //     resultado: resultado
-            // });
         } catch (err) {
-            // Logger.log(req, 'fa_renaper', 'error', {
-            //     error: err
-            // });
+            Logger.log(req, 'fa_renaper', 'error', {
+                error: err
+            });
             return next(err);
         }
     } else {
         return next(500);
     }
 });
-
 
 module.exports = router;
 
