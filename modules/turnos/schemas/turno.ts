@@ -21,6 +21,11 @@ let turnoSchema = new mongoose.Schema({
         enum: ['disponible', 'asignado', 'suspendido', 'turnoDoble'],
         default: 'disponible'
     },
+    estadoFacturacion: {
+        type: String,
+        enum: ['facturado', 'sinFacturar'],
+        default: 'sinFacturar'
+    },
     reasignado: {
         anterior: {
             idAgenda: mongoose.Schema.Types.ObjectId,
