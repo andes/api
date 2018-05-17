@@ -13,6 +13,9 @@ import { Auth } from '../../../auth/auth.class';
 let GeoJSON = require('geojson');
 let router = express.Router();
 
+
+
+
 router.get('/organizaciones/georef/:id?', async function (req, res, next) {
     if (req.params.id) {
         OrganizacionModel.findById(req.params.id, (err, data: any) => {
@@ -285,6 +288,32 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
             }
             res.json(data);
         });
+
+        // if (req.query.nombre) {
+        //     filtros['nombre'] = { '$regex': utils.makePattern(req.query.nombre) };
+        // }
+
+        // if (req.query.cuie) {
+        //     filtros['codigo.cuie'] = { '$regex': utils.makePattern(req.query.cuie) };
+        // }
+
+        // if (req.query.sisa) {
+        //     filtros['codigo.sisa'] = { '$regex': utils.makePattern(req.query.sisa) };
+        // }
+        // if (req.query.activo) {
+        //     filtros['activo'] = req.query.activo;
+        // }
+        // if (req.query.tipoEstablecimiento) {
+        //     filtros['tipoEstablecimiento.nombre'] = {'$regex': utils.makePattern(req.query.tipoEstablecimiento) };
+        // }
+
+
+        // query.exec(function (err, data) {
+        //     if (err) {
+        //         return next(err);
+        //     }
+        //     res.json(data);
+        // });
     }
 });
 

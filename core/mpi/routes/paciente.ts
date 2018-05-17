@@ -332,6 +332,9 @@ router.get('/pacientes/:id', function (req, res, next) {
     if (!Auth.check(req, 'mpi:paciente:getbyId')) {
         return next(403);
     }
+    if (!(mongoose.Types.ObjectId.isValid(req.params.id))) {
+        return next(404);
+    }
     controller.buscarPaciente(req.params.id).then((resultado: any) => {
         if (resultado) {
             Logger.log(req, 'mpi', 'query', {
@@ -430,6 +433,10 @@ router.get('/pacientes', function (req, res, next) {
 router.put('/pacientes/mpi/:id', function (req, res, next) {
     if (!Auth.check(req, 'mpi:paciente:putMpi')) {
         return next(403);
+    }
+    if (!(mongoose.Types.ObjectId.isValid(req.params.id))) {
+        return next(404);
+
     }
     let ObjectId = mongoose.Types.ObjectId;
     let objectId = new ObjectId(req.params.id);
@@ -589,9 +596,6 @@ router.post('/pacientes', function (req, res, next) {
             return next(error2);
         }));
     }
-
-
-
 });
 
 /**
@@ -628,6 +632,9 @@ router.post('/pacientes', function (req, res, next) {
 router.put('/pacientes/:id', function (req, res, next) {
     if (!Auth.check(req, 'mpi:paciente:putAndes')) {
         return next(403);
+    }
+    if (!(mongoose.Types.ObjectId.isValid(req.params.id))) {
+        return next(404);
     }
     let objectId = new mongoose.Types.ObjectId(req.params.id);
     let query = {

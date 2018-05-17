@@ -233,6 +233,46 @@ export class Auth {
         }
     }
 
+    /**
+     * Obtiene el nombre completo del usuario
+     *
+     * @static
+     * @param {express.Request} req Corresponde al request actual
+     * @returns {string} nombre y apellido del usuario
+     *
+     * @memberOf Auth
+     */
+    static getUserName(req: express.Request): string {
+        if (!(req as any).user) {
+            return null;
+        } else {
+            return (req as any).user.usuario.nombreCompleto;
+        }
+    }
+
+    /**
+     * Obtiene datos del profesional
+     *
+     * @static
+     * @param {express.Request} req Corresponde al request actual
+     * @returns {string} id de la organización
+     *
+     * @memberOf Auth
+     */
+    static getProfesional(req: express.Request): any {
+        if (!(req as any).user || !(req as any).user.profesional || !(req as any).user.usuario) {
+            return null;
+        } else {
+            let profesional = {
+                id: (req as any).user.profesional.id,
+                nombre: (req as any).user.usuario.nombre,
+                apellido: (req as any).user.usuario.apellido,
+                documento: (req as any).user.usuario.documento
+            };
+            return profesional;
+        }
+    }
+
 
     /**
      * Genera un token de usuario firmado

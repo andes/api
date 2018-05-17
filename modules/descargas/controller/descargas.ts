@@ -86,7 +86,6 @@ export class Documento {
      * @param options html-pdf/PhantonJS rendering options
      */
     static descargar(req, res, next, options = null) {
-        console.log('++++++++++', req.body.horizontal, 'reeewqq');
         let html = '';
         switch (req.params.tipo) {
             case 'pdf':

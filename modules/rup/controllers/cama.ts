@@ -4,7 +4,6 @@ import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import { model as cama } from '../../../core/tm/schemas/camas';
 import { toArray } from '../../../utils/utils';
-import { REQUEST_HEADER_FIELDS_TOO_LARGE } from 'http-status-codes';
 
 export function buscarCamaInternacion(idInternacion, estado) {
     let query = cama.aggregate([

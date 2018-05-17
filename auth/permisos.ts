@@ -193,7 +193,7 @@ export default [
     },
     {
         key: 'matriculaciones',
-        title: 'Matriculaciones',
+        title: 'matriculaciones',
         comment: '',
         child: [
             {

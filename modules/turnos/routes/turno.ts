@@ -173,7 +173,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
 
                             // TODO: buscar si es primera vez del paciente => TP y paciente => Profesional
 
-                            update[etiquetaPrimeraVez] = await esPrimerPaciente(agenda, req.body.paciente.id, ['primerPrestacion', 'primerProfesional']);
+                            // update[etiquetaPrimeraVez] = await esPrimerPaciente(agenda, req.body.paciente.id, ['primerPrestacion', 'primerProfesional']);
 
                             let query = {
                                 _id: req.params.idAgenda,
@@ -230,28 +230,21 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', function (req, res, next) {
         if (err) {
             return next(err);
         }
-        let etiquetaAvisoSuspension: string;
-        let etiquetaMotivoConsulta: string;
-        if (req.params.idBloque !== '-1') {
-            let indexBloque = (data as any).bloques.findIndex(bloq => {
-                return (bloq.id === req.params.idBloque);
-            });
-            let indexTurno = (data as any).bloques[indexBloque].turnos.findIndex(t => {
-                return (t.id === req.params.idTurno);
-            });
-            etiquetaAvisoSuspension = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.avisoSuspension';
-            etiquetaMotivoConsulta = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.motivoConsulta';
-        } else {
-            let indexTurno = (data as any).sobreturnos.findIndex(sobreturno => Object.is(req.params.idTurno, String(sobreturno._id)));
-            etiquetaAvisoSuspension = 'sobreturnos.' + indexTurno + '.avisoSuspension';
-        }
-
+        let indexBloque = (data as any).bloques.findIndex(bloq => {
+            return (bloq.id === req.params.idBloque);
+        });
+        let indexTurno = (data as any).bloques[indexBloque].turnos.findIndex(t => {
+            return (t.id === req.params.idTurno);
+        });
         let update = {};
         if (req.body.avisoSuspension) {
+            let etiquetaAvisoSuspension: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.avisoSuspension';
             update[etiquetaAvisoSuspension] = req.body.avisoSuspension;
         }
         if (req.body.motivoConsulta) {
+            let etiquetaMotivoConsulta: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.motivoConsulta';
             update[etiquetaMotivoConsulta] = req.body.motivoConsulta;
+
         }
         let query = {
             _id: req.params.idAgenda,
