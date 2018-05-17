@@ -916,7 +916,7 @@ export function getConsultaDiagnostico(params) {
         },
         {
             $project: {
-                bloqueTurnos: '$bloques.turnos'
+                bloqueTurnos: { $concatArrays: ['$sobreturnos', '$bloques.turnos'] }
             }
         },
         {
@@ -958,49 +958,8 @@ export function getConsultaDiagnostico(params) {
             }
         },
         ];
-        // SOBRETURNOS controlar
-        let pipeline1 = [];
-        pipeline1 = [{
-            $match: {
-                $and: [
-                    { 'horaInicio': { '$gte': new Date(params.horaInicio) } },
-                    { 'horaFin': { '$lte': new Date(params.horaFin) } },
-                    { 'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) } },
-                    { 'bloques.turnos.estado': 'asignado' }
-
-                ]
-            }
-        },
-        {
-            $unwind: '$sobreturnos'
-        },
-        {
-            $unwind: '$sobreturnos.tipoPrestacion'
-        },
-        {
-            $unwind: { path: '$sobreturnos.diagnostico.codificaciones', preserveNullAndEmptyArrays: true }
-        },
-        {
-            $project: {
-                nombrePaciente: '$sobreturnos.paciente.nombre',
-                apellidoPaciente: '$sobreturnos.paciente.apellido',
-                documentoPaciente: '$sobreturnos.paciente.documento',
-                tipoPrestacion: '$sobreturnos.tipoPrestacion.conceptId',
-                descripcionPrestacion: '$sobreturnos.tipoPrestacion.term',
-                auditoriaCodigo: '$sobreturnos.diagnostico.codificaciones.codificacionAuditoria.codigo',
-                auditoriaNombre: '$sobreturnos.diagnostico.codificaciones.codificacionAuditoria.nombre',
-                codProfesionalCie10Codigo: '$sobreturnos.diagnostico.codificaciones.codificacionProfesional.cie10.codigo',
-                codrofesionalCie10Nombre: '$sobreturnos.diagnostico.codificaciones.codificacionProfesional.cie10.nombre',
-                codProfesionalSnomedCodigo: '$sobreturnos.diagnostico.codificaciones.codificacionProfesional.snomed.conceptId',
-                codProfesionalSnomedNombre: '$sobreturnos.diagnostico.codificaciones.codificacionProfesional.snomed.term',
-            }
-        }
-
-        ];
 
         let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
-        let data1 = await toArray(agendaModel.aggregate(pipeline1).cursor({}).exec());
-        data = data.concat(data1);
 
         function removeDuplicates(arr) {
             let unique_array = [];
@@ -1042,9 +1001,11 @@ export function getCantidadConsultaXPrestacion(params) {
             {
                 $project: {
                     idBloque: '$bloques._id',
-                    bloqueTurnos: '$bloques.turnos'
+                    bloqueTurnos: { $concatArrays: ['$sobreturnos', '$bloques.turnos'] }
                 }
             },
+
+
             {
                 $unwind: '$bloqueTurnos'
             },
@@ -1075,52 +1036,9 @@ export function getCantidadConsultaXPrestacion(params) {
 
         ];
 
-        // SOBRETURNOS controlar
-        let pipeline1 = [];
-        pipeline1 = [
-            {
-                $match: {
-                    $and: [
-                        { 'horaInicio': { '$gte': new Date(params.horaInicio) } },
-                        { 'horaFin': { '$lte': new Date(params.horaFin) } },
-                        { 'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) } },
-                        { 'sobreturnos.estado': 'asignado' }
-                    ]
-                }
-            },
-            {
-                $unwind: '$sobreturnos'
-            },
-            {
-                $project: {
-                    hora: '$sobreturnos.horaInicio',
-                    estado: '$sobreturnos.estado',
-                    tipoPrestacion: '$sobreturnos.tipoPrestacion'
-                }
-            },
-            {
-                $match: {
-                    'estado': 'asignado'
-                }
-            },
-            {
-                $group: {
-                    _id: '$tipoPrestacion.term',
-                    nombrePrestacion: { $first: '$tipoPrestacion.term' },
-                    conceptId: {
-                        $first: '$tipoPrestacion.conceptId'
-                    },
-                    total: { $sum: 1 },
-                }
 
-
-            }
-
-        ];
 
         let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
-        let data1 = await toArray(agendaModel.aggregate(pipeline1).cursor({}).exec());
-        data = data.concat(data1);
 
         function removeDuplicates(arr) {
             let unique_array = [];
