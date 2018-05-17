@@ -182,6 +182,36 @@ export async function checkCodificacion(agendaCacheada) {
                 }
             }
         }
+
+        // Caso especial sobreturnos
+        // TODO: refactorizar codigo repetido.
+        for (let z = 0; z < agendaCacheada.sobreturnos.length; z++) {
+            let resultado = await turnoOps.existeTurnoSips(agendaCacheada.sobreturnos[z], poolAgendas);
+
+            if (resultado.recordset.length > 0) {
+                idConsulta = await existeConsultaTurno(resultado.recordset[0].idTurno);
+                // let turnoPaciente: any = await getPacienteAgenda(agenda, agendaCacheada.sobreturnos[z]._id);
+                idEspecialidad = (agendaCacheada.tipoPrestaciones[0].term.includes('odonto')) ? 34 : 14;
+
+                if (idConsulta) {
+                    if (idEspecialidad === constantes.Especialidades.odontologia) {
+                        agendaCacheada.sobreturnos[z] = await codificaOdontologia(idConsulta, agendaCacheada.sobreturnos[z]);
+                    } else {
+                        agendaCacheada.sobreturnos[z] = await codificacionCie10(idConsulta, agendaCacheada.sobreturnos[z]);
+                    }
+                    datosTurno = {
+                        idAgenda: agendaCacheada.id,
+                        posTurno: z,
+                        posBloque: -1,
+                        idUsuario: constantes.idUsuarioSips,
+                        turno: agendaCacheada.sobreturnos[z]
+                    };
+                    await turnoCtrl.updateTurnoAgendaMongo(datosTurno);
+                    await turnoCtrl.updateTurnoAgendaCache(datosTurno, agendaCacheada);
+                }
+            }
+        }
+
         if (idConsulta) {
             await markAgendaAsProcessed(agendaCacheada);
         }

@@ -87,7 +87,7 @@ export function enviarCodigoVerificacion(user, password) {
  */
 
 export function listadoCodigos() {
-    return PacienteApp.find({ codigoVerificacion: { $ne: null } }, {codigoVerificacion: 1, _id: 0}).then(listado => {
+    return PacienteApp.find({ codigoVerificacion: { $ne: null } }, { codigoVerificacion: 1, _id: 0 }).then(listado => {
         let numeros = listado.map((item: any) => item.codigoVerificacion);
         return Promise.resolve(numeros);
     }).catch(() => Promise.reject([]));
@@ -152,7 +152,7 @@ export function checkAppAccounts(pacienteData) {
             if (docs.length > 0) {
                 return resolve({ message: 'account_assigned', account: docs[0] });
             } else {
-                return resolve({message: 'account_doesntExists', account: null});
+                return resolve({ message: 'account_doesntExists', account: null });
             }
         });
     });
@@ -201,7 +201,7 @@ export function createUserFromProfesional(profesional) {
  * @param pacienteData {pacienteSchema}
  */
 export function createUserFromPaciente(pacienteData, contacto) {
-    return new Promise(async(resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         let passw = generarCodigoVerificacion();
 
         let dataPacienteApp: any = {

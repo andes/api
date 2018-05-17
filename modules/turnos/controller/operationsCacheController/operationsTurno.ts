@@ -50,10 +50,7 @@ export async function processTurnos(agenda: any, idAgendaCreada: any, idEfector:
     if (agenda.sobreturnos) {
         for (let y = 0; y < agenda.sobreturnos.length; y++) {
             if (agenda.sobreturnos[y].estado === 'asignado' && agenda.sobreturnos[y].paciente && agenda.sobreturnos[y].paciente.documento) {
-                // let resultado = await existeTurnoSips(turnos[i], transaction);
-                // if (resultado.recordset && resultado.recordset.length <= 0) {
                 await grabaTurnoSips(agenda.sobreturnos[y], idAgendaCreada, idEfector, 1, poolAgendas);
-                // }
             }
         }
     }

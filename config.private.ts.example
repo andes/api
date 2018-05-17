@@ -191,3 +191,12 @@ export const wsSalud = {
    hpnWS: '',
    hostHPN: ''
 };
+
+export const sqlCarpetasJob = {
+    user: '',
+    password: '',
+    server: '',
+    database: '',
+    requestTimeout: '',
+    stream: '',
+};
