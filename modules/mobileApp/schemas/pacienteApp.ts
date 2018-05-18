@@ -74,7 +74,7 @@ export let pacienteAppSchema = new mongoose.Schema({
 
 pacienteAppSchema.pre('save', function (next) {
 
-    let user = this;
+    let user: any = this;
     let SALT_FACTOR = 5;
 
     if (user.isModified()) {
