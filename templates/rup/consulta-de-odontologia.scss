@@ -1,0 +1,97 @@
+@import 'plex/variables';
+@import 'variables';
+@import 'rup';
+@import 'assets/font.css';
+@import 'page';
+.row {
+    display: block !important;
+    width: 100%;
+}
+
+svg {
+    // display: inline-block;
+    width: 20px;
+    height: 20px;
+}
+
+.readonly span {
+    font-weight: normal;
+    color: #818182;
+}
+
+.odontograma {
+    width: 1000px;
+}
+
+.diente-container {
+    display: inline-block;
+    width: 20px;
+    height: 30px !important;
+    font-size: 12px;
+    .text-diente {
+        font-size: 10px;
+    }
+    margin-bottom: 10px;
+}
+
+.diente {
+    fill: white;
+    stroke: #000000;
+    stroke-width: 3px solid #4776d3;
+    stroke-miterlimit: 10;
+    cursor: pointer;
+    &:hover {
+        fill: #4776d3;
+    }
+}
+
+.diente-procedimiento {
+    fill: $procedimiento;
+}
+
+.diente-trastorno {
+    fill: $trastorno;
+}
+
+.diente-hallazgo {
+    fill: $hallazgo;
+}
+
+.evolucionada {
+    // fill: repeating-linear-gradient( 45deg, #606dbc, #606dbc 3px, #465298 3px, #465298 6px) !important;
+    fill: rgb(133, 133, 133); // fill: url(#striped);
+    // fill: url(#pattern1);
+}
+
+.evolucionada-stroke {
+    stroke: rgb(133, 133, 133);
+    fill: none;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+}
+
+.st1 {
+    fill: white;
+}
+
+.st1:hover {
+    fill: #4776d3;
+}
+
+.seleccionada {
+    fill: #4776d3 !important;
+}
+
+.pieza {
+    cursor: pointer;
+    &:hover {
+        fill: #4776d3;
+    }
+}
+
+.st0 {
+    fill: none;
+    stroke: #5074B9;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+}
