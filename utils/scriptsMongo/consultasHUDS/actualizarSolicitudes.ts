@@ -1,9 +1,8 @@
 import { Matching } from '@andes/match';
-import { model as Prestacion } from '../../../modules/rup/schemas/prestacion';
 import { Auth } from './../../../auth/auth.class';
 import * as mongoose from 'mongoose';
 import * as configuraciones from './../../../config.private';
-
+import { Connections } from '../../../connections';
 /**
  *  Sobre este script:
  *  - Antes de ejecutarlo hay que descomentar las líneas bajo el texto "IMPORTANTE"
@@ -20,13 +19,10 @@ import * as configuraciones from './../../../config.private';
  *          Si no hay registros se completa con solicitud.profesional
  */
 
-let conn = mongoose.connect(configuraciones.hosts.mongoDB_main.host, {
-    auth: configuraciones.hosts.mongoDB_main.auth,
-    server: configuraciones.hosts.mongoDB_main.server
-}).connection;
+let Prestacion = require('../../../modules/rup/schemas/prestacion').model;
 
+Connections.initialize();
 // Ya está abierta?
-conn.once('open', () => {
 
     // console.log('Conectado.');
 
@@ -34,8 +30,7 @@ conn.once('open', () => {
     let cursor = Prestacion.findOne().cursor();
 
     cursor.on('close', function () { // Si no encuentra nada, termina el script.
-        // console.log('Fin.');
-        conn.close();
+        process.exit();
     });
 
     cursor.on('data', async (prestacion: any) => {
@@ -66,5 +61,3 @@ conn.once('open', () => {
         // await prestacion.save();
 
     });
-
-});
