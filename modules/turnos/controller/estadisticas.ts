@@ -194,10 +194,18 @@ export async function estadisticas(filtros) {
         // { $match: { 'turno.paciente.nombre': { $exists: true }, 'turno.estado': 'asignado' } },
 
         // Agregamos la edad del paciente cuando tomo el turno
+
         {
             $addFields: {
                 'turno.paciente.edad': {
-                    $divide: [{ $subtract: ['$turno.horaInicio', '$turno.paciente.fechaNacimiento']}, (365 * 24 * 60 * 60 * 1000)]
+                    $divide: [{ $subtract: [
+                        '$turno.horaInicio',
+                        { $cond:  {
+                            if: {  $eq: [{$type: '$turno.paciente.fechaNacimiento' }, 'string' ]   },
+                            then: { $dateFromString: { dateString: '$turno.paciente.fechaNacimiento' } },
+                            else:  '$turno.paciente.fechaNacimiento'
+                        } }
+                    ]}, (365 * 24 * 60 * 60 * 1000)]
                 }
             }
         },
