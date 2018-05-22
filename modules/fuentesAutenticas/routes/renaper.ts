@@ -1,7 +1,13 @@
 import * as express from 'express';
-import { Auth } from '../../../auth/auth.class';
-import { getServicioRenaper } from '../../../utils/servicioRenaper';
-import { Logger } from '../../../utils/logService';
+import {
+    Auth
+} from '../../../auth/auth.class';
+import {
+    getServicioRenaper
+} from '../../../utils/servicioRenaper';
+import {
+    Logger
+} from '../../../utils/logService';
 
 let router = express.Router();
 
@@ -12,7 +18,7 @@ router.get('/renaper', async function (req, res, next) {
     if (req.query) {
         let paciente = req.query;
         try {
-            let resultado = await getServicioRenaper(paciente);
+            let resultado: any = await getServicioRenaper(paciente);
             // Logueamos la operación de búsqueda en la colección.
             Logger.log(req, 'fa_renaper', 'validar', {
                 data: resultado
@@ -30,4 +36,3 @@ router.get('/renaper', async function (req, res, next) {
 });
 
 module.exports = router;
-
