@@ -256,6 +256,11 @@ export default [
         title: 'Modulo Solicitudes',
         child: [
         ]
+    },
+    {
+        key: 'prestamos',
+        title: 'Prestamo de Carpetas',
+        comment: '',
     }
 
 ];
