@@ -10,8 +10,8 @@ export class Documento {
     private static locale = 'es-ES';
     private static timeZone = 'America/Argentina/Buenos_Aires';
 
-    private static headerHTML = fs.readFileSync('./templates/andes/html/header.html');
-    private static footerHTML = fs.readFileSync('./templates/andes/html/footer.html');
+    private static headerHTML = fs.readFileSync(path.join(__dirname, '../../../templates/andes/html/header.html'));
+    private static footerHTML = fs.readFileSync(path.join(__dirname, '../../../templates/andes/html/footer.html'));
 
     /**
      * Opciones default de PDF rendering

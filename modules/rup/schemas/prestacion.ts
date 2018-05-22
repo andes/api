@@ -6,7 +6,6 @@ import * as estado from './prestacion.estado';
 import { auditoriaPrestacionPacienteSchema } from '../../auditorias/schemas/auditoriaPrestacionPaciente';
 import { iterate, convertToObjectId } from '../controllers/rup';
 
-// tslint:disable
 export let schema = new mongoose.Schema({
     // Datos principales del paciente
     paciente: {
@@ -97,10 +96,10 @@ export let schema = new mongoose.Schema({
          *  DESTINO DE SOLICITUD
          *      a.  Organización: Si no existe se completa con una copia de ejecucion.registros.createdBy.organizacion.
          *          Si no hay registros se completa con createdBy.organizacion
-         *      
+         *
          *      b.  Profesionales: Si no existe se completa con una copia de solicitud.registros.valor.solicituPrestacion.profesionales.
          *          Si no hay registros se completa con solicitud.profesional
-         * 
+         *
          */
 
         // Registros de la ejecución
