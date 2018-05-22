@@ -354,7 +354,7 @@ function executeQuery(query: any) {
         return new sql.Request()
             .query(query)
             .then(result => {
-                resolve(result[0].id);
+                resolve(result.recordset[0].id);
             }).catch(err => {
                 reject(err);
             });

@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 import * as express from 'express';
 import * as facturacionCtrl from '../controllers/facturacionCtrl';
 import * as organizacion from '../../../core/tm/schemas/organizacion';
-import { configuracionPrestaciones } from '../controllers/operationsCtrl/operationsSumar';
+import { configuracionPrestaciones } from '../schemas/configuracionPrestacion';
 
 let router = express.Router();
 
@@ -32,6 +32,19 @@ router.get('/efector/:id', async function (req, res, next) {
             };
 
             res.json(_organizacion ? _organizacion.codigo.cuie : null);
+        });
+    } catch (error) {
+        res.end(error);
+    }
+});
+
+router.get('/configuracionPrestacion/:id', async function (req, res, next) {
+    try {
+        configuracionPrestaciones.findOne({'tipoPrestacion.conceptId': req.params.id}, function (err, result: any) {
+            if (err) {
+                return next(err);
+            };
+            res.json(result);
         });
     } catch (error) {
         res.end(error);
