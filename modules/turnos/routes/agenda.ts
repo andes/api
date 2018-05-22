@@ -15,6 +15,8 @@ import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import * as operations from './../../legacy/controller/operations';
 import { toArray } from '../../../utils/utils';
 
+import * as AgendasEstadisticas from '../controller/estadisticas';
+
 let router = express.Router();
 
 router.get('/agenda/paciente/:idPaciente', function (req, res, next) {
@@ -99,10 +101,31 @@ router.get('/agenda/candidatas', async function (req, res, next) {
     });
 });
 
+router.get('/agenda/consultaDiagnostico', async function (req, res, next) {
+    let organizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
+    let params = req.query;
+    params['organizacion'] = organizacion;
+    agendaCtrl.getConsultaDiagnostico(params).then((resultado) => {
+        res.json(resultado);
+    });
+
+});
+
+router.get('/agenda/cantidadConsultaXPrestacion', async function (req, res, next) {
+    let organizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
+    let params = req.query;
+    params['organizacion'] = organizacion;
+    agendaCtrl.getCantidadConsultaXPrestacion(params).then((resultado) => {
+        res.json(resultado);
+    });
+
+});
+
 router.get('/agenda/diagnosticos', async function (req, res, next) {
     let organizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
     let params = req.query;
     params['organizacion'] = organizacion;
+
     diagnosticosCtrl.getDiagnosticos(params).then((resultado) => {
         res.json(resultado);
     });
@@ -355,22 +378,46 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 if (err) {
                     return next(err);
                 }
-                if (req.body.op === 'codificarTurno') {
-                    agendaCtrl.codificarTurno(req, data, t[0]).then(() => {
-                        Auth.audit(data[0], req);
-                        data[0].save(function (error) {
-                            Logger.log(req, 'citas', 'update', {
-                                accion: req.body.op,
-                                ruta: req.url,
-                                method: req.method,
-                                data: data,
-                                err: error || false
+                if (data.length > 0) {
+                    if (req.body.op === 'codificarTurno') {
+                        agendaCtrl.codificarTurno(req, data, t[0]).then(() => {
+                            Auth.audit(data[0], req);
+                            data[0].save(function (error) {
+                                Logger.log(req, 'citas', 'update', {
+                                    accion: req.body.op,
+                                    ruta: req.url,
+                                    method: req.method,
+                                    data: data,
+                                    err: error || false
+                                });
+                                if (error) {
+                                    return next(error);
+                                }
                             });
-                            if (error) {
-                                return next(error);
-                            }
                         });
-
+                    }
+                } else {
+                    agenda.find({ 'sobreturnos._id': mongoose.Types.ObjectId(t[0]) }, function (err2, data2) {
+                        if (err2) {
+                            return next(err2);
+                        }
+                        if (req.body.op === 'codificarTurno') {
+                            agendaCtrl.codificarTurno(req, data2, t[0]).then(() => {
+                                Auth.audit(data2[0], req);
+                                data2[0].save(function (error) {
+                                    Logger.log(req, 'citas', 'update', {
+                                        accion: req.body.op,
+                                        ruta: req.url,
+                                        method: req.method,
+                                        data: data2,
+                                        err: error || false
+                                    });
+                                    if (error) {
+                                        return next(error);
+                                    }
+                                });
+                            });
+                        }
                     });
                 }
                 // Inserto la modificación en agendasCache
@@ -402,6 +449,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                         break;
                     case 'liberarTurno':
                         turno = agendaCtrl.getTurno(req, data, turnos[y]);
+                        // LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, bloqueId, agendaId);
                         if (turno.paciente.id) {
                             LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, agendaCtrl.getBloque(data, turno)._id, data._id);
                         }
@@ -507,6 +555,11 @@ router.get('/integracionCitasHPN', async function (req, res, next) {
     } catch (ex) {
         next(ex);
     }
+});
+
+router.get('/estadistica', async (req, res, next) => {
+    let stats = await AgendasEstadisticas.estadisticas(req.query);
+    return res.json(stats);
 });
 
 export = router;

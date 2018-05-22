@@ -39,6 +39,7 @@ export class Auth {
         return shiro;
     }
 
+
     /**
      * Inicializa el middleware de auditoría para JSON Web Token
      *
@@ -53,7 +54,7 @@ export class Auth {
             {
                 secretOrKey: configPrivate.auth.jwtKey,
                 jwtFromRequest: passportJWT.ExtractJwt.fromExtractors([
-                    passportJWT.ExtractJwt.fromAuthHeader(),
+                    passportJWT.ExtractJwt.fromAuthHeaderWithScheme('jwt'),
                     passportJWT.ExtractJwt.fromUrlQueryParameter('token')
                 ])
             },
@@ -78,6 +79,10 @@ export class Auth {
         return passport.authenticate('jwt', { session: false });
     }
 
+    static authenticatePublic() {
+        return  passport.authenticate();
+    }
+
     /**
      * optionalAuth: extract
      */
@@ -85,7 +90,7 @@ export class Auth {
     static optionalAuth() {
         return function (req, res, next) {
             try {
-                let extractor = passportJWT.ExtractJwt.fromAuthHeader();
+                let extractor = passportJWT.ExtractJwt.fromAuthHeaderWithScheme('jwt');
                 let token = extractor(req);
                 let tokenData = jwt.verify(token, configPrivate.auth.jwtKey);
                 if (tokenData) {
@@ -337,7 +342,6 @@ export class Auth {
         } catch (e) {
             return null;
         }
-
     }
 
     /**
