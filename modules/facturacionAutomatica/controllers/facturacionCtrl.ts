@@ -31,7 +31,8 @@ export async function facturacionCtrl() {
         agendasMongoPendientes.forEach(async (agenda) => {
             for (let x = 0; x < agenda.bloques.length; x++) {
                 turnos = agenda.bloques[x].turnos;
-                for (let z = 0; z < turnos.length; z++) {-
+                for (let z = 0; z < turnos.length; z++) {
+                    -
                     console.log(turnos[z].estadoFacturacion);
                     if (turnos[z].estadoFacturacion === 'sinFacturar') {
                         if (turnos[z].paciente.obraSocial) {
@@ -72,24 +73,40 @@ export async function facturacionCtrl() {
 }
 
 export async function getTurnosPendientesSumar() {
+    let hoyDesde = moment(new Date()).startOf('day').format();
+    let hoyHasta = moment(new Date()).endOf('day').format();
     let data = await toArray(agendaSchema.aggregate([
-        { $match: { 'bloques.turnos.estadoFacturacion': {$eq: 'pendiente'} } },
+        {
+            $match: {
+                'createdAt': {
+                    $gte: new Date(hoyDesde), $lte: new Date(hoyHasta)
+                }
+            }
+        },
+        { $match: { 'bloques.turnos.estadoFacturacion': { $eq: 'sinFacturar' } } },
         { $unwind: '$bloques' },
         { $unwind: '$bloques.turnos' },
-        { $match: { 'bloques.turnos.estadoFacturacion': {$eq: 'pendiente'} } }
+        { $match: { 'bloques.turnos.estadoFacturacion': { $eq: 'sinFacturar' } } },
+        {
+            $match: {
+                'createdAt': {
+                    $gte: new Date(hoyDesde), $lte: new Date(hoyHasta)
+                }
+            }
+        }
     ]).cursor({})
-    .exec());
+        .exec());
 
     let turnos = [];
     data.forEach(agenda => {
-        turnos.push({ 
-            datosAgenda : {
-                'organizacion' : agenda.organizacion,
+        turnos.push({
+            datosAgenda: {
+                'organizacion': agenda.organizacion,
                 'horaInicio': agenda.horaInicio,
-                'profesionales' : agenda.profesionales
+                'profesionales': agenda.profesionales
             },
             turno: agenda.bloques.turnos,
-        });        
+        });
     });
 
     return turnos;
