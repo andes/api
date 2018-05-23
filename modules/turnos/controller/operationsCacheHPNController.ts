@@ -199,7 +199,7 @@ async function setEstadoAgendaToIntegrada(idAgenda) {
         _id: idAgenda
     }, {
             $set: {
-                estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS
+                estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportada
             }
         }).exec();
 }
@@ -208,7 +208,7 @@ export function getAgendasDeMongoExportadas() {
     return new Promise<Array<any>>(function (resolve2, reject) {
         agendasCache.find({
             $or: [{
-                estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS
+                estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportada
             }, {
                 estadoIntegracion: constantes.EstadoExportacionAgendaCache.codificada
             }]

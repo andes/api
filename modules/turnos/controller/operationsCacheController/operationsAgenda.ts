@@ -39,7 +39,7 @@ let config = {
 export function getAgendasDeMongoExportadas() {
     return new Promise<Array<any>>(function (resolve, reject) {
         agendasCache.find({
-            estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS
+            estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportada
         })
             .exec(function (err, data) {
                 if (err) {
@@ -386,9 +386,9 @@ async function markAgendaAsProcessed(agenda) {
     let estadoIntegracion;
     switch (agenda.estadoIntegracion) {
         case 'pendiente':
-            estadoIntegracion = constantes.EstadoExportacionAgendaCache.exportadaSIPS;
+            estadoIntegracion = constantes.EstadoExportacionAgendaCache.exportada;
             break;
-        case 'exportada a Sips':
+        case 'exportada':
             estadoIntegracion = constantes.EstadoExportacionAgendaCache.codificada;
             break;
         default:
