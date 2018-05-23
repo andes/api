@@ -183,12 +183,12 @@
     .type {
         // background-color: rgba(0, 0, 0, 0.69) !important;
     }
-    .rup-body {
-        padding: 5px 10px !important;
-    }
-    .rup-card {
-        margin-bottom: 0 !important;
-    }
+    // .rup-body {
+    //     padding: 5px 10px !important;
+    // }
+    // .rup-card {
+    //     margin-bottom: 0 !important;
+    // }
     .relaciones {
         display: none;
     }
@@ -205,4 +205,12 @@
     .readonly span {
         font-weight: bold;
     }
+}
+
+.rup-card2 {
+    border: 2px solid #ccc;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
 }
