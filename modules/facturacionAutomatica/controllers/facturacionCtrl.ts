@@ -61,7 +61,7 @@ export async function facturacionCtrl() {
             }
         });
         operationSumar.facturacionSumar(pacientesSumar);
-        //operationRF.facturacionRF(pacientesRF);
+        operationRF.facturacionRF(pacientesRF);
     } catch (ex) {
         return (ex);
     }
@@ -84,7 +84,7 @@ export async function getTurnosPendientesSumar() {
                 'horaInicio': agenda.horaInicio,
                 'profesionales' : agenda.profesionales
             },
-            turno: agenda.bloques.turnos,            
+            turno: agenda.bloques.turnos,
         });        
     });
 
