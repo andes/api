@@ -263,65 +263,6 @@ export async function insertaPacienteSips(paciente: any) {
     });
 }
 
-export function pacienteSipsFactory(paciente: any, idEfectorSips: any) {
-    let pacienteSips = {
-        idEfector: idEfectorSips,
-        nombre: paciente.nombre,
-        apellido: paciente.apellido,
-        numeroDocumento: paciente.documento,
-        idSexo: (paciente.sexo === 'masculino' ? 3 : paciente.sexo === 'femenino' ? 2 : 1),
-        fechaNacimiento: moment(paciente.fechaNacimiento).format('YYYYMMDD'),
-        idEstado: 3,
-        /* Estado Validado en SIPS*/
-        idMotivoNI: 0,
-        idPais: 54,
-        idProvincia: 139,
-        idNivelInstruccion: 0,
-        idSituacionLaboral: 0,
-        idProfesion: 0,
-        idOcupacion: 0,
-        calle: '',
-        numero: 0,
-        piso: '',
-        departamento: '',
-        manzana: '',
-        idBarrio: -1,
-        idLocalidad: 52,
-        idDepartamento: 557,
-        idProvinciaDomicilio: 139,
-        referencia: '',
-        informacionContacto: '',
-        cronico: 0,
-        idObraSocial: 499,
-        idUsuario: constantes.idUsuarioSips,
-        fechaAlta: moment().format('YYYYMMDD HH:mm:ss'),
-        fechaDefuncion: '19000101',
-        fechaUltimaActualizacion: moment().format('YYYYMMDD HH:mm:ss'),
-        idEstadoCivil: 0,
-        idEtnia: 0,
-        idPoblacion: 0,
-        idIdioma: 0,
-        otroBarrio: '',
-        camino: '',
-        campo: '',
-        esUrbano: 1,
-        lote: '',
-        parcela: '',
-        edificio: '',
-        activo: 1,
-        fechaAltaObraSocial: '19000101',
-        numeroAfiliado: null,
-        numeroExtranjero: '',
-        telefonoFijo: 0,
-        telefonoCelular: 0,
-        email: '',
-        latitud: 0,
-        longitud: 0,
-        objectId: paciente._id
-    };
-
-    return pacienteSips;
-}
 
 function existepaciente(paciente) {
     let idpaciente;

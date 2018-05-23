@@ -29,14 +29,7 @@ let config = {
     database: configPrivate.conSql.serverSql.database,
     requestTimeout: 45000
 };
-var thingSchema = new mongoose.Schema({
-    id: Object,
-    tipoPrestacion: Object,
-    nomencladorSUMAR: String,
-    nomencladorRecuperoFinanciero: String
 
-});
-export let configuracionPrestaciones = mongoose.model('configuracionPrestacion', thingSchema, 'configuracionPrestacion');
 /* IMPORTANTE!!!!!
 TENER EN CUENTA QUE PARA FACTURAR EL PACIENTE TIENE QUE EXISTIR EN LA TABLA PN_SMIAFILIADOS Y QUE ESTAR ACTIVO*/
 export async function facturacionSumar(agenda: any) {
@@ -170,15 +163,15 @@ function creaPrestaciones(prestacionEntrante, idComprobante, fechaPrestacion, da
             diagnostico: 'A98' //HARDDDDCOOODINGGG 
         }
 
-        configuracionPrestaciones.find({
-            'tipoPrestacion.conceptId': prestacionEntrante.conceptId
-        }, {}, async function (err, data: any) {
-            let nomenclador: any = await mapeoNomenclador(null);
-            prestacion.precio_prestacion = nomenclador.precio;
-            prestacion.id_nomenclador = nomenclador.id;
-            resolve(prestacion)
+        // configuracionPrestaciones.find({
+        //     'tipoPrestacion.conceptId': prestacionEntrante.conceptId
+        // }, {}, async function (err, data: any) {
+        //     let nomenclador: any = await mapeoNomenclador(null);
+        //     prestacion.precio_prestacion = nomenclador.precio;
+        //     prestacion.id_nomenclador = nomenclador.id;
+        //     resolve(prestacion)
 
-        });
+        // });
 
     })
 
@@ -350,7 +343,7 @@ function cambioEstado(idTurno) {
             turno.estadoFacturacion = "facturado";
 
 
-            Auth.audit(data[0],configPrivate.userScheduler);
+            Auth.audit(data[0], configPrivate.userScheduler);
             data[0].save((err, dataAgenda) => {
 
                 if(err){

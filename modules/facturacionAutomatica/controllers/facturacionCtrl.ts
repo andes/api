@@ -6,6 +6,7 @@ import * as agendaSchema from '../../turnos/schemas/agenda';
 import * as turnoCtrl from '../../turnos/controller/turnoCacheController';
 import * as operationSumar from '../../facturacionAutomatica/controllers/operationsCtrl/operationsSumar';
 import * as operationRF from '../../facturacionAutomatica/controllers/operationsCtrl/operationsRF';
+import * as operations from '../../facturacionAutomatica/controllers/operationsCtrl/operations';
 
 import * as configPrivate from '../../../config.private';
 import * as constantes from './../../legacy/schemas/constantes';
@@ -30,7 +31,7 @@ export async function facturacionCtrl() {
         agendasMongoPendientes.forEach(async (agenda) => {
             for (let x = 0; x < agenda.bloques.length; x++) {
                 turnos = agenda.bloques[x].turnos;
-                for (let z = 0; z < turnos.length; z++) {
+                for (let z = 0; z < turnos.length; z++) {-
                     console.log(turnos[z].estadoFacturacion);
                     if (turnos[z].estadoFacturacion === 'sinFacturar') {
                         if (turnos[z].paciente.obraSocial) {
@@ -64,10 +65,34 @@ export async function facturacionCtrl() {
             }
         });
         operationSumar.facturacionSumar(pacientesSumar);
-        //operationRF.facturacionRF(pacientesRF);
+        operationRF.facturacionRF(pacientesRF);
     } catch (ex) {
         return (ex);
     }
+}
+
+export async function getTurnosPendientesSumar() {
+    let data = await toArray(agendaSchema.aggregate([
+        { $match: { 'bloques.turnos.estadoFacturacion': {$eq: 'pendiente'} } },
+        { $unwind: '$bloques' },
+        { $unwind: '$bloques.turnos' },
+        { $match: { 'bloques.turnos.estadoFacturacion': {$eq: 'pendiente'} } }
+    ]).cursor({})
+    .exec());
+
+    let turnos = [];
+    data.forEach(agenda => {
+        turnos.push({ 
+            datosAgenda : {
+                'organizacion' : agenda.organizacion,
+                'horaInicio': agenda.horaInicio,
+                'profesionales' : agenda.profesionales
+            },
+            turno: agenda.bloques.turnos,
+        });        
+    });
+
+    return turnos;
 }
 
 export async function getAgendasDeMongoPendientes() {

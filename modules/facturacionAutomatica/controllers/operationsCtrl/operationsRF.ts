@@ -1,4 +1,4 @@
-import {configuracionPrestaciones}  from './operationsSumar';
+import { configuracionPrestaciones } from './../../schemas/configuracionPrestacion';
 import { SnomedCIE10Mapping } from './../../../../core/term/controller/mapping';
 import { Body } from './../../../cda/controller/class/Body';
 import { tipoPrestacion } from './../../../../core/tm/schemas/tipoPrestacion';
