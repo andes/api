@@ -72,7 +72,10 @@ export async function facturacionSumar(agenda: any) {
             let prestacion = await creaPrestaciones(agenda[index].tipoPrestacion, idComprobante, agenda[index].fecha, datosPaciente, codigo)
             let idPrestacion = await insertPrestaciones(prestacion);
             console.log("prestacionId", idPrestacion);
-            await insertDatosReportables(idPrestacion);
+            if(idPrestacion){
+               await cambioEstado(agenda[index].idTurno);
+            }
+           // await insertDatosReportables(idPrestacion);
 
         } else {
             console.log("no es afiliado")
@@ -164,7 +167,7 @@ function creaPrestaciones(prestacionEntrante, idComprobante, fechaPrestacion, da
             fechaNacimiento: datosPaciente.fechaNacimiento,
             precio_prestacion: null,
             id_anexo: 301,
-            diagnostico: 'A97' //HARDDDDCOOODINGGG 
+            diagnostico: 'A98' //HARDDDDCOOODINGGG 
         }
 
         configuracionPrestaciones.find({
