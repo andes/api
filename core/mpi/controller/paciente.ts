@@ -519,9 +519,14 @@ export function updateCuil(req, data) {
 
 export function checkCarpeta(req, data) {
     return new Promise((resolve, reject) => {
+        let indiceCarpeta = req.body.carpetaEfectores.findIndex(x => x.organizacion._id === req.user.organizacion.id);
         let query = {
-            'carpetaEfectores.nroCarpeta': req.body.carpetaEfectores[0].nroCarpeta,
-            'carpetaEfectores.organizacion._id': req.body.carpetaEfectores[0].organizacion._id
+            carpetaEfectores: {
+                $elemMatch: {
+                    'nroCarpeta': req.body.carpetaEfectores[indiceCarpeta].nroCarpeta,
+                    'organizacion._id': req.body.carpetaEfectores[indiceCarpeta].organizacion._id
+                }
+            }
         };
         paciente.find(query, function (err, res) {
             if (err) {
