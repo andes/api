@@ -3,6 +3,7 @@ import * as express from 'express';
 import * as facturacionCtrl from '../controllers/facturacionCtrl';
 import * as organizacion from '../../../core/tm/schemas/organizacion';
 import { configuracionPrestaciones } from '../schemas/configuracionPrestacion';
+import * as operationSumar from '../../facturacionAutomatica/controllers/operationsCtrl/operationsSumar';
 
 let router = express.Router();
 
@@ -49,6 +50,17 @@ router.get('/configuracionPrestacion/:id', async function (req, res, next) {
     } catch (error) {
         res.end(error);
     }
+});
+
+
+router.get('/cambioEstado/:id',  function (req, res, next) {
+console.log("hola",)
+try {
+    let result = operationSumar.cambioEstado(req.params.id);
+    res.json(result);
+} catch (error) {
+    res.end(error);
+}
 });
 
 export = router;

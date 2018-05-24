@@ -328,7 +328,7 @@ export async function busquedaPrestaciones(){
 }
 
 //FUNCIONA PERO NO SE LLAMA A LA FUNCION
-function cambioEstado(idTurno) {
+export function cambioEstado(idTurno) {
 
     return new Promise<Array<any>>(function (resolve, reject) {
         console.log(idTurno)

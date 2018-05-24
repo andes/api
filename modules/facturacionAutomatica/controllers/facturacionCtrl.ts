@@ -33,7 +33,7 @@ export async function facturacionCtrl() {
                 turnos = agenda.bloques[x].turnos;
                 for (let z = 0; z < turnos.length; z++) {
                     -
-                    console.log(turnos[z].estadoFacturacion);
+                        console.log(turnos[z].estadoFacturacion);
                     if (turnos[z].estadoFacturacion === 'sinFacturar') {
                         if (turnos[z].paciente.obraSocial) {
                             if (turnos[z].paciente.obraSocial.codigo === '499') {
@@ -78,22 +78,16 @@ export async function getTurnosPendientesSumar() {
     let data = await toArray(agendaSchema.aggregate([
         {
             $match: {
-                'createdAt': {
-                    $gte: new Date(hoyDesde), $lte: new Date(hoyHasta)
-                }
+                $and: [{ 'bloques.turnos.estadoFacturacion': { $eq: 'sinFacturar' } },
+                { 'createdAt': { $gte: new Date(hoyDesde), $lte: new Date(hoyHasta) } },
+                { 'bloques.turnos.estado': { $eq: 'asignado' } },
+                { 'bloques.turnos.asistencia': { $exists: true, $eq: 'asistio' } },
+                ]
             }
         },
-        { $match: { 'bloques.turnos.estadoFacturacion': { $eq: 'sinFacturar' } } },
         { $unwind: '$bloques' },
         { $unwind: '$bloques.turnos' },
-        { $match: { 'bloques.turnos.estadoFacturacion': { $eq: 'sinFacturar' } } },
-        {
-            $match: {
-                'createdAt': {
-                    $gte: new Date(hoyDesde), $lte: new Date(hoyHasta)
-                }
-            }
-        }
+        { $match: { $and: [{ 'bloques.turnos.estadoFacturacion': { $eq: 'sinFacturar' } }, { 'createdAt': { $gte: new Date(hoyDesde), $lte: new Date(hoyHasta) } }, { 'bloques.turnos.estado': { $eq: 'asignado' } }] } },
     ]).cursor({})
         .exec());
 
