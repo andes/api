@@ -227,7 +227,7 @@ export async function getIdTipoPrestacion(_agenda) {
     let prestacionesIntegrada: any = null;
 
     // Esta parte no se hace más ya que estaba hardcodeado
-    //------------------------------------------------------
+    // -----------------------------------------------------
     // let datosOrganizacion = constantes.prestacionesIntegradasPorEfector.find(elem => { return elem.organizacion === _agenda.organizacion._id.toString(); } );
     // -----------------------------------------------------
 
