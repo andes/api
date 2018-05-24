@@ -161,7 +161,12 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
 
                             update[etiquetaEstado] = 'asignado';
                             update[etiquetaPrestacion] = req.body.tipoPrestacion;
-                            update[etiquetaPaciente] = req.body.paciente;
+
+                            // Parche para que funcione findOneAndUpdate con mongoose v5.
+                            let pacienteupdate = req.body.paciente;
+                            pacienteupdate.id = new mongoose.Types.ObjectId(req.body.paciente.id);
+                            update[etiquetaPaciente] = pacienteupdate;
+                            // -----
                             update[etiquetaTipoTurno] = tipoTurno;
                             update[etiquetaNota] = req.body.nota;
                             update[etiquetaMotivoConsulta] = req.body.motivoConsulta;
