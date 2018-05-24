@@ -14,7 +14,7 @@ export let configuracionPrestacionSchema = new mongoose.Schema({
         codeSystemName: String,
         displayName: String
     },
-    organizacionesSips: [{
+    organizaciones: [{
         _id: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'organizacion'
