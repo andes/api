@@ -27,7 +27,6 @@ router.post('/incrementarCuenta', function (req: any, res, next) {
             let update = {
                 ultimaCarpeta: data.ultimaCarpeta + 1
             };
-            console.log(data)
             ultimaCarpeta.update({ idEfector: req.user.organizacion.id }, { $set: update }, { new: true }, function (errUpdate, dataUpdate) {
                 if (err) {
                     return next(errUpdate);
