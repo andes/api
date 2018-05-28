@@ -78,17 +78,12 @@ export async function consultaPecas() {
                     console.log('todo mal');
                 }
                 agendas = await toArray(cursor);
-                let indexAg = 0;
-
                 agendas.forEach((a, indexA) => {
-                    indexAg++;
                     // En cada agenda se recorren los bloques
                     async.every(a.bloques, (b, indexB) => {
-                        let indexTU = 0;
-                        let turno: any = {};
                         // RESTA REALIZAR LO MISMO PARA LOS SOBRETURNOS
                         async.every((b as any).turnos, async (t: any, indexT) => {
-                            indexTU++;
+                            let turno: any = {};
                             if (t.estado === 'asignado' && t.paciente && t.asistencia && t.asistencia === 'asistio' && t.diagnostico.codificaciones
                                 && t.diagnostico.codificaciones.length > 0 && t.diagnostico.codificaciones[0].codificacionAuditoria
                                 && t.diagnostico.codificaciones[0].codificacionAuditoria.codigo) {
@@ -125,10 +120,6 @@ export async function consultaPecas() {
                                 turno.TAD = null;
                                 turno.IMC = null;
                                 turno.RCVG = null;
-                                let c2;
-                                let primeraVez;
-                                let principal;
-                                let codifica;
 
                                 // Diagnóstico 1
                                 if (t.diagnostico && t.diagnostico.codificaciones
@@ -138,14 +129,14 @@ export async function consultaPecas() {
                                     turno.Diag1Codigo = t.diagnostico.codificaciones[0].codificacionAuditoria.codigo;
                                     turno.Diag1Capitulo = await getCapitulo(turno.Diag1Codigo);
                                     turno.Desc1Diag = t.diagnostico.codificaciones[0].codificacionAuditoria.nombre;
-                                    c2 = t.diagnostico.codificaciones[0].codificacionAuditoria.c2 ? 'SI' : 'NO';
-                                    primeraVez = t.diagnostico.codificaciones[0].primeraVez ? 'Primera vez' : '';
-                                    principal = 1;
+                                    turno.ConsC2 = t.diagnostico.codificaciones[0].codificacionAuditoria.c2 ? 'SI' : 'NO';
+                                    turno.Tipodeconsulta = t.diagnostico.codificaciones[0].primeraVez ? 'Primera vez' : 'Ulterior';
+                                    turno.Principal = 1;
                                     turno.Diag1Grupo = '';
                                     if (t.diagnostico.codificaciones[0].codificacionProfesional && t.diagnostico.codificaciones[0].codificacionProfesional.codigo) {
-                                        codifica = 'PROFESIONAL';
+                                        turno.codifica = 'PROFESIONAL';
                                     } else {
-                                        codifica = 'NO PROFESIONAL';
+                                        turno.codifica = 'NO PROFESIONAL';
                                     }
 
                                 } else {
@@ -153,10 +144,10 @@ export async function consultaPecas() {
                                     turno.Diag1Capitulo = null;
                                     turno.Desc1Diag = null;
                                     turno.Diag1Grupo = null;
-                                    c2 = null;
-                                    primeraVez = null;
-                                    principal = 0;
-                                    codifica = null;
+                                    turno.ConsC2 = null;
+                                    turno.Tipodeconsulta = null;
+                                    turno.Principal = 0;
+                                    turno.codifica = null;
                                 }
 
                                 // Diagnóstico 2
@@ -181,7 +172,7 @@ export async function consultaPecas() {
                                     && t.diagnostico.codificaciones[2].codificacionAuditoria
                                     && t.diagnostico.codificaciones[2].codificacionAuditoria.codigo) {
                                     turno.Diag3Codigo = t.diagnostico.codificaciones[2].codificacionAuditoria.codigo;
-                                    turno.Diag3Capitulo = await getCapitulo(turno.Diag3Codigo);
+                                    turno.Diag3Capitulo = await getCapitulo(turno.Diag2Codigo);
                                     turno.Desc3Diag = t.diagnostico.codificaciones[2].codificacionAuditoria.nombre;
                                     turno.Diag3Grupo = '';
                                 } else {
@@ -211,10 +202,7 @@ export async function consultaPecas() {
                                 turno.Piso = null;
                                 turno.Depto = null;
                                 turno.Manzana = null;
-                                turno.ConsC2 = c2;
-                                turno.ConsObst = null;
-                                turno.Tipodeconsulta = primeraVez;
-                                turno.Principal = principal;
+                                turno.ConsObst = t.tipoPrestacion.term.includes('obstetricia') ? 'SI' : 'NO';
                                 turno.TipoConsultorio = null;
                                 turno.IdObraSocial = (t.paciente.obraSocial && t.paciente.obraSocial.codigo) ? t.paciente.obraSocial.codigo : null;
                                 turno.ObraSocial = (t.paciente.obraSocial && t.paciente.obraSocial.nombre) ? t.paciente.obraSocial.nombre : null;
@@ -237,16 +225,31 @@ export async function consultaPecas() {
                                 turno.Latitud = '';
                                 turno.Cantidad = 1;
                                 turno.idproceso = 0;
-                                turno.codifica = codifica;
+                                // turno.codifica = codifica;
                                 turno.telefono = t.paciente && t.paciente.telefono ? t.paciente.telefono : '';
                                 try {
-                                    let jsonWrite = fs.appendFileSync(outputFile, JSON.stringify(turno) + ',', {
-                                        encoding: 'utf8'
-                                    });
-                                    let query = 'INSERT INTO dbo.Pecas_consolidado ( idEfector, Efector, idTurno, FechaConsulta, HoraTurno, Periodo, DNI, Apellido, Nombres, HC, CodSexo, Sexo) ' +
+                                    let query = 'INSERT INTO dbo.Pecas_consolidado ( idEfector, Efector, idTurno, FechaConsulta, HoraTurno, Periodo, DNI, Apellido, Nombres, HC, CodSexo, Sexo, ' +
+                                        'FechaNacimiento, Edad, UniEdad, CodRangoEdad, RangoEdad, Peso, Talla, TAS, TAD, IMC, RCVG, Diag1Codigo, Diag1Capitulo, Desc1Diag, Diag1Grupo, Diag2Codigo, ' +
+                                        'Diag2Capitulo, Desc2Diag, Diag2Grupo, Diag3Codigo, Diag3Capitulo, Desc3Diag, Diag3Grupo, Profesional, TipoProfesional, CodigoEspecialidad, Especialidad, ' +
+                                        'CodigoServicio, Servicio, IdBarrio, Barrio, IdLocalidad, Localidad, IdDpto, Departamento, IdPcia, Provincia, IdNacionalidad, Nacionalidad, Calle, Altura, ' +
+                                        'Piso, Depto, Manzana, ConsC2, ConsObst, Tipodeconsulta, Principal, TipoConsultorio, IdObraSocial, ObraSocial, TipoEfector, DescTipoEfector, IdZona, Zona, ' +
+                                        'SubZona, idEfectorSuperior, EfectorSuperior, AreaPrograma, IdPaciente, Longitud, Latitud, Cantidad, idproceso, codifica, telefono) ' +
                                         'VALUES  ( ' + turno.idEfector + ',\'' + turno.Organizacion + '\',\'' + turno.idTurno + '\',\'' + turno.FechaConsulta + '\',\'' + turno.HoraTurno +
                                         '\',' + turno.Periodo + ',' + turno.DNI + ',\'' + turno.Apellido + '\',\'' + turno.Nombres + '\',\'' + turno.HC + '\',\'' + turno.codSexo +
-                                        '\',\'' + turno.Sexo + '\' ) ';
+                                        '\',\'' + turno.Sexo + '\',\'' + turno.FechaNacimiento + '\',' + turno.Edad + ',\'' + turno.uniEdad + '\',\'' + turno.CodRangoEdad +
+                                        '\',\'' + turno.RangoEdad + '\' ,' + turno.Peso + ',' + turno.Talla + ',\'' + turno.TAS + '\',\'' + turno.TAD + '\',\'' + turno.IMC +
+                                        '\',\'' + turno.RCVG + '\',\'' + turno.Diag1Codigo + '\',\'' + turno.Diag1Capitulo + '\',\'' + turno.Desc1Diag + '\',\'' + turno.Diag1Grupo +
+                                        '\',\'' + turno.Diag2Codigo + '\',\'' + turno.Diag2Capitulo + '\',\'' + turno.Desc2Diag + '\',\'' + turno.Diag2Grupo +
+                                        '\',\'' + turno.Diag3Codigo + '\',\'' + turno.Diag3Capitulo + '\',\'' + turno.Desc3Diag + '\',\'' + turno.Diag3Grupo +
+                                        '\',\'' + turno.Profesional + '\',\'' + turno.TipoProfesional + '\',' + turno.CodigoEspecialidad + ',\'' + turno.Especialidad +
+                                        '\',' + turno.CodigoServicio + ',\'' + turno.Servicio + '\',' + turno.IdBarrio + ',\'' + turno.Barrio + '\',' + turno.IdLocalidad +
+                                        ',\'' + turno.Localidad + '\',' + turno.IdDpto + ',\'' + turno.Departamento + '\',' + turno.IdPcia + ',\'' + turno.Provincia +
+                                        '\',' + turno.IdNacionalidad + ',\'' + turno.Nacionalidad + '\',\'' + turno.Calle + '\',\'' + turno.Altura + '\',\'' + turno.Piso +
+                                        '\',\'' + turno.Depto + '\',\'' + turno.Manzana + '\',\'' + turno.ConsC2 + '\',\'' + turno.ConsObst + '\',\'' + turno.Tipodeconsulta +
+                                        '\',\'' + turno.Principal + '\',\'' + turno.TipoConsultorio + '\',' + turno.IdObraSocial + ',\'' + turno.ObraSocial + '\',\'' + turno.TipoEfector +
+                                        '\',\'' + turno.DescTipoEfector + '\',' + turno.IdZona + ',\'' + turno.Zona + '\',\'' + turno.SubZona + '\',' + turno.idEfectorSuperior +
+                                        ',\'' + turno.EfectorSuperior + '\',\'' + turno.AreaPrograma + '\',\'' + turno.IdPaciente + '\',\'' + turno.Longitud + '\',\'' + turno.Latitud +
+                                        '\',' + turno.Cantidad + ',' + turno.idproceso + ',\'' + turno.codifica + '\',\'' + turno.telefono + '\') ';
                                     console.log('query ', query);
                                     await executeQuery(query);
                                 } catch (error) {
