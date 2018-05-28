@@ -600,9 +600,8 @@ router.post('/pacientes', function (req, res, next) {
 });
 
 router.post('/exportPacientesSips', function (req, res, next) {
-    console.log("ruta correcta")
      
-    controller.pacientesDelDia();
+    controller.insertSips();
 })
 
 /**
