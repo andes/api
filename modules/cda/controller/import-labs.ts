@@ -21,7 +21,10 @@ let connection = {
     user: configPrivate.conSql.auth.user,
     password: configPrivate.conSql.auth.password,
     server: configPrivate.conSql.serverSql.server,
-    database: configPrivate.conSql.serverSql.database
+    database: configPrivate.conSql.serverSql.database,
+    options: {
+        encrypt: true // Use this if you're on Windows Azure
+    }
 };
 
 pool = sql.connect(connection, (err) => {
@@ -86,11 +89,10 @@ function donwloadFileHeller(idProtocolo, year) {
 
 export async function importarDatos(paciente) {
     try {
-
         let laboratorios: any;
         laboratorios = await operations.getEncabezados(paciente.documento);
         for (let lab of laboratorios.recordset) {
-
+            console.log(lab)
 
             // Si ya lo pase no hacemos nada
             let existe = await cdaCtr.findByMetadata({
