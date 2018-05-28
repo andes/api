@@ -17,5 +17,28 @@ router.get('/ultimaCarpeta', function (req: any, res, next) {
 
 });
 
+router.post('/incrementarCuenta', function (req: any, res, next) {
+
+    if (req.user.organizacion && req.user.organizacion.id) {
+        ultimaCarpeta.findOne({ idEfector: req.user.organizacion.id }, function (err, data: any) {
+            if (err) {
+                return next(err);
+            }
+            let update = {
+                ultimaCarpeta: data.ultimaCarpeta + 1
+            };
+            console.log(data)
+            ultimaCarpeta.update({ idEfector: req.user.organizacion.id }, { $set: update }, { new: true }, function (errUpdate, dataUpdate) {
+                if (err) {
+                    return next(errUpdate);
+                }
+                res.json(dataUpdate);
+            });
+        });
+    }
+
+
+});
+
 
 export = router;
