@@ -92,7 +92,6 @@ export async function importarDatos(paciente) {
         let laboratorios: any;
         laboratorios = await operations.getEncabezados(paciente.documento);
         for (let lab of laboratorios.recordset) {
-            console.log(lab)
 
             // Si ya lo pase no hacemos nada
             let existe = await cdaCtr.findByMetadata({
@@ -155,7 +154,7 @@ export async function importarDatos(paciente) {
                 let cda = cdaCtr.generateCDA(uniqueId, (hiv ? 'R' : 'N') , paciente, fecha, profesional, organizacion, prestacion, cie10Laboratorio, texto, fileData);
                 let metadata = {
                     paciente: mongoose.Types.ObjectId(paciente.id),
-                    prestacion: snomed,
+                    prestacion: prestacion,
                     fecha: fecha.toDate(),
                     adjuntos: [{ path: fileData.data, id: fileData.id }],
                     extras: {

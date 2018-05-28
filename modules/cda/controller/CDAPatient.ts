@@ -465,7 +465,7 @@ export function searchByPatient(pacienteId, prestacion, {
             'metadata.cdaId': { $exists: false }
         };
         if (prestacion) {
-            conditions['metadata.prestacion.snomed.concepId'] = prestacion;
+            conditions['metadata.prestacion.snomed.conceptId'] = prestacion;
         }
         if (limit === null) {
             limit = 100;
