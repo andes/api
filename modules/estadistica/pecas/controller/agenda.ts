@@ -28,7 +28,6 @@ let config = {
  * @returns resultado
  */
 export async function consultaPecas() {
-    console.log('CONSULTA PECAS');
     try {
         poolTurnos = await new sql.ConnectionPool(config).connect();
     } catch (ex) {
@@ -38,7 +37,6 @@ export async function consultaPecas() {
     const type = 'PECAS-' + (new Date()).toISOString();
     const outputFile = './turnos-agendas-' + type + '.json';
     let match = {
-        // 'organizacion._id': mongoose.Types.ObjectId('57fcf037326e73143fb48c3a'),
         'horaInicio': {
             $gt: new Date('2018-05-01T00:00:00.000-03:00')
         },
@@ -75,7 +73,7 @@ export async function consultaPecas() {
         ]).cursor({ async: true }).exec(
             async function (error, cursor) {
                 if (error) {
-                    console.log('todo mal');
+                    return(error);
                 }
                 agendas = await toArray(cursor);
                 agendas.forEach((a, indexA) => {
@@ -92,7 +90,7 @@ export async function consultaPecas() {
                 });
             });
     } catch (error) {
-        console.log('error', error);
+        return(error);
     }
 }
 
@@ -239,7 +237,6 @@ async function auxiliar(a: any, t: any) {
         turno.Latitud = '';
         turno.Cantidad = 1;
         turno.idproceso = 0;
-        // turno.codifica = codifica;
         turno.telefono = t.paciente && t.paciente.telefono ? t.paciente.telefono : '';
         try {
             let query = 'INSERT INTO dbo.Pecas_consolidado ( idEfector, Efector, idTurno, FechaConsulta, HoraTurno, Periodo, DNI, Apellido, Nombres, HC, CodSexo, Sexo, ' +
@@ -264,7 +261,7 @@ async function auxiliar(a: any, t: any) {
                 '\',\'' + turno.DescTipoEfector + '\',' + turno.IdZona + ',\'' + turno.Zona + '\',\'' + turno.SubZona + '\',' + turno.idEfectorSuperior +
                 ',\'' + turno.EfectorSuperior + '\',\'' + turno.AreaPrograma + '\',\'' + turno.IdPaciente + '\',\'' + turno.Longitud + '\',\'' + turno.Latitud +
                 '\',' + turno.Cantidad + ',' + turno.idproceso + ',\'' + turno.codifica + '\',\'' + turno.telefono + '\') ';
-            console.log('query ', query);
+            // console.log('query ', query);
             await executeQuery(query);
         } catch (error) {
             return (error);
@@ -385,7 +382,6 @@ function calcularEdad(fechaNacimiento) {
         };
     }
     return edad;
-    // return (String(edad.valor) + ' ' + edad.unidad);
 }
 
 async function executeQuery(query: any) {
