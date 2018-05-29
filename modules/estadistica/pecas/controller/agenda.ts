@@ -40,10 +40,10 @@ export async function consultaPecas() {
     let match = {
         // 'organizacion._id': mongoose.Types.ObjectId('57fcf037326e73143fb48c3a'),
         'horaInicio': {
-            $gt: new Date('2018-02-15T00:00:00.000-03:00')
+            $gt: new Date('2018-05-01T00:00:00.000-03:00')
         },
         'horaFin': {
-            $lt: new Date('2018-02-15T23:00:00.000-03:00')
+            $lt: new Date('2018-05-31T23:59:00.000-03:00')
         },
         'bloques': {
             $ne: null
