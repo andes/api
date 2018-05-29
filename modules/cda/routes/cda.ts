@@ -67,6 +67,7 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
         // Devuelve un Loinc asociado al código SNOMED
         let prestacion = await cdaCtr.matchCode(req.body.prestacionSnomed);
         if (!prestacion) {
+            // Es obligatorio que posea prestación
             return next({ error: 'prestacion_invalida' });
         }
 
@@ -174,7 +175,6 @@ router.post('/', async (req: any, res, next) => {
                     fileData = await cdaCtr.storeFile(fileObj);
                     adjuntos = [{ path: fileData.data, id: fileData.id }];
                 }
-                // Pendiente para revisar con Mariano ya que modificamos la estructura
                 let metadata = {
                     paciente: paciente._id,
                     prestacion: prestacion,

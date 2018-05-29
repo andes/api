@@ -124,44 +124,16 @@ let rootOID = CDAConfig.rootOID;
 export async function matchCode(snomed) {
     let prestacion: any;
     if (!isNaN(snomed)) {
-        prestacion = await ConfiguracionPrestacionModel.find({
+        prestacion = await ConfiguracionPrestacionModel.findOne({
             'snomed.conceptId': snomed
         });
-        if (prestacion.length > 0) {
-            return prestacion[0];
+        if (prestacion) {
+            return prestacion;
         } else {
-            // Devolvemos una prestación generica para que no falle
-            return prestacion = {
-                snomed: {
-                    'conceptId': '391000013108',
-                    'term': 'consulta de medicina general',
-                    'fsn': 'consulta de medicina general',
-                    'semanticTag': 'procedimiento'
-                },
-                loinc: {
-                    'code': '26436-6',
-                    'codeSystem': '2.16.840.1.113883.6.1',
-                    'codeSystemName': 'LOINC',
-                    'displayName': 'ESTO ES DE DEMOOO'
-                }
-            };
+            return null;
         }
     } else {
-        // Devolvemos una prestación generica para que no falle
-        return prestacion = {
-            snomed: {
-                'conceptId': '391000013108',
-                'term': 'consulta de medicina general',
-                'fsn': 'consulta de medicina general',
-                'semanticTag': 'procedimiento'
-            },
-            loinc: {
-                'code': '26436-6',
-                'codeSystem': '2.16.840.1.113883.6.1',
-                'codeSystemName': 'LOINC',
-                'displayName': 'ESTO ES DE DEMOOO'
-            }
-        };
+        return null;
     }
 }
 
