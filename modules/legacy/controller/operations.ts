@@ -14,7 +14,7 @@ import {
     ObjectID,
     ObjectId
 } from 'bson';
-import { ConfiguracionPrestacionModel } from '../../../core/term/schemas/configuracionPrestacion';
+import { configuracionPrestacionModel } from '../../../core/term/schemas/configuracionPrestaciones';
 
 
 
@@ -138,7 +138,7 @@ export async function getDetalles(idProtocolo, idEfector) {
 }
 
 
-export async function cacheTurnosSips(unaAgenda) {
+export async function cacheTurnos(unaAgenda) {
     // Armo el DTO para guardar en la cache de agendas
     // if ((unaAgenda.estado !== 'planificacion') && (unaAgenda.nominalizada) && (unaAgenda.tipoPrestaciones[0].term.includes('odonto')) || integraPrestacionesHPN(unaAgenda)) {
     let integrar;
@@ -214,9 +214,9 @@ export async function cacheTurnosSips(unaAgenda) {
 
     async function integrarAgenda(_agenda) {
         return new Promise(function (resolve, reject) {
-            ConfiguracionPrestacionModel.find({
+            configuracionPrestacionModel.find({
                 'snomed.conceptId': { $eq: _agenda.tipoPrestaciones[0].conceptId },
-                'organizacionesSips._id': { $eq: _agenda.organizacion._id }
+                'organizaciones._id': { $eq: _agenda.organizacion._id }
             }).exec(function (err, data: any) {
                 if (err) {
                     reject(err);

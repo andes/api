@@ -4,7 +4,7 @@ import {
     agendasCache
 } from '../../../legacy/schemas/agendasCache';
 import { tipoPrestacion } from './../../../../core/tm/schemas/tipoPrestacion';
-import { ConfiguracionPrestacionModel } from './../../../../core/term/schemas/configuracionPrestacion';
+import { configuracionPrestacionModel } from './../../../../core/term/schemas/configuracionPrestaciones';
 import * as sql from 'mssql';
 import * as moment from 'moment';
 import * as pacientes from './../../../../core/mpi/controller/paciente';
@@ -39,7 +39,7 @@ let config = {
 export function getAgendasDeMongoExportadas() {
     return new Promise<Array<any>>(function (resolve, reject) {
         agendasCache.find({
-            estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS
+            estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportada
         })
             .exec(function (err, data) {
                 if (err) {
@@ -79,9 +79,9 @@ export function getAgendasDeMongoPendientes() {
 export function getEspecialidad(agenda, conceptId, organizacion) {
     return new Promise<Array<any>>(function (resolve, reject) {
         let especialidad: any = 14;
-        ConfiguracionPrestacionModel.find({
-            'snomed.conceptId': { $eq: conceptId },
-            'organizacionesSips._id': { $eq: agenda.organizacion._id }
+        configuracionPrestacionModel.find({
+            'tipoPrestacion.conceptId': { $eq: conceptId },
+            'organizaciones._id': { $eq: agenda.organizacion._id }
         }).exec(function (err, data: any) {
             if (err) {
                 reject(err);
@@ -89,9 +89,9 @@ export function getEspecialidad(agenda, conceptId, organizacion) {
             // resolve(data);
             let datos;
             if (data.length > 0) {
-                let organizacionesSips = data[0]['organizacionesSips'];
-                if (organizacionesSips && organizacionesSips.length > 0) {
-                    datos = organizacionesSips.filter((elem) => String(elem._id) === String(agenda.organizacion._id));
+                let organizaciones = data[0]['organizaciones'];
+                if (organizaciones && organizaciones.length > 0) {
+                    datos = organizaciones.filter((elem) => String(elem._id) === String(agenda.organizacion._id));
                     if (datos && datos.length > 0) {
                         especialidad = datos[0].idEspecialidad;
                     }
@@ -386,9 +386,9 @@ async function markAgendaAsProcessed(agenda) {
     let estadoIntegracion;
     switch (agenda.estadoIntegracion) {
         case 'pendiente':
-            estadoIntegracion = constantes.EstadoExportacionAgendaCache.exportadaSIPS;
+            estadoIntegracion = constantes.EstadoExportacionAgendaCache.exportada;
             break;
-        case 'exportada a Sips':
+        case 'exportada':
             estadoIntegracion = constantes.EstadoExportacionAgendaCache.codificada;
             break;
         default:
