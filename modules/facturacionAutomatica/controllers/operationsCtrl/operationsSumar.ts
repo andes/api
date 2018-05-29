@@ -65,10 +65,10 @@ export async function facturacionSumar(agenda: any) {
             let prestacion = await creaPrestaciones(agenda[index].tipoPrestacion, idComprobante, agenda[index].fecha, datosPaciente, codigo)
             let idPrestacion = await insertPrestaciones(prestacion);
             console.log("prestacionId", idPrestacion);
-            if(idPrestacion){
-               await cambioEstado(agenda[index].idTurno);
+            if (idPrestacion) {
+                await cambioEstado(agenda[index].idTurno);
             }
-           // await insertDatosReportables(idPrestacion);
+            // await insertDatosReportables(idPrestacion);
 
         } else {
             console.log("no es afiliado")
@@ -318,14 +318,19 @@ async function executeQuery(query: any) {
 
 
 //FUNCIONA PERO NO SE LLAMA A LA FUNCION
-export async function busquedaPrestaciones(){
-    let Prestaciones = await toArray(Prestacion.aggregate({
-        $match: {
-            'solicitud.tipoPrestacion.conceptId': '2091000013100'
+export async function busquedaPrestaciones(conceptId) {
+    let Prestaciones = await toArray(Prestacion.aggregate([
+        {
+            $match: {
+                'solicitud.tipoPrestacion.conceptId': conceptId,
+                'solicitud.turno': { $exists: false },
+            }
         }
-    }).cursor({ batchSize: 1000 }).exec());
+    ]).cursor({}).exec());
     return Prestaciones
 }
+
+
 
 //FUNCIONA PERO NO SE LLAMA A LA FUNCION
 export function cambioEstado(idTurno) {
@@ -346,7 +351,7 @@ export function cambioEstado(idTurno) {
             Auth.audit(data[0], configPrivate.userScheduler);
             data[0].save((err, dataAgenda) => {
 
-                if(err){
+                if (err) {
                     console.log(err)
                 }
                 console.log("aca", dataAgenda)
