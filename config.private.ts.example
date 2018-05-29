@@ -191,3 +191,14 @@ export const wsSalud = {
    hpnWS: '',
    hostHPN: ''
 };
+
+export const conSqlPecas = {
+    auth: {
+        user: '',
+        password: ''
+    },
+    serverSql: {
+        server: '',
+        database: ''
+    }
+};
