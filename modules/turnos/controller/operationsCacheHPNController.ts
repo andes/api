@@ -11,7 +11,7 @@ import * as agendaSchema from '../schemas/agenda';
 import * as pacienteHPN from './pacienteHPNController';
 import * as turnoCtrl from './turnoHPNCacheController';
 import { resolve } from 'path';
-import { configuracionPrestacionModel } from '../../../core/term/schemas/configuracionPrestaciones';
+import { configuracionPrestacionModel } from '../../../core/term/schemas/configuracionPrestacion';
 
 export async function saveAgendaToPrestaciones(agenda, pool) {
     let transaction = await new sql.Transaction(pool);

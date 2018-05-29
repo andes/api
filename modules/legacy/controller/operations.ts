@@ -14,7 +14,7 @@ import {
     ObjectID,
     ObjectId
 } from 'bson';
-import { configuracionPrestacionModel } from '../../../core/term/schemas/configuracionPrestaciones';
+import { configuracionPrestacionModel } from '../../../core/term/schemas/configuracionPrestacion';
 
 
 
