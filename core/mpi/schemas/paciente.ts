@@ -9,7 +9,15 @@ import * as moment from 'moment';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import { Matching } from '@andes/match';
 
-export let pacienteSchema = new mongoose.Schema({
+/*
+interface IUserModel extends mongoose.Document {
+    nombre: String;
+    apellido: String;
+    claveBlocking: string[];
+}
+*/
+
+export let pacienteSchema: mongoose.Schema = new mongoose.Schema({
     identificadores: [{
         _id: false,
         entidad: String,
@@ -78,16 +86,16 @@ export let pacienteSchema = new mongoose.Schema({
 }, { versionKey: false });
 
 pacienteSchema.pre('save', function (next) {
-
-    if (this.isModified('nombre')) {
-        this.nombre = this.nombre.toUpperCase();
+    let user: any = this;
+    if (user.isModified('nombre')) {
+        user.nombre = user.nombre.toUpperCase();
     }
-    if (this.isModified('apellido')) {
-        this.apellido = this.apellido.toUpperCase();
+    if (user.isModified('apellido')) {
+        user.apellido = user.apellido.toUpperCase();
     }
-    if (this.isModified('nombre') || this.isModified('apellido') || this.isModified('documento')) {
+    if (user.isModified('nombre') || user.isModified('apellido') || user.isModified('documento')) {
         let match = new Matching();
-        this.claveBlocking = match.crearClavesBlocking(this);
+        user.claveBlocking = match.crearClavesBlocking(user);
     }
     next();
 
@@ -156,9 +164,9 @@ pacienteSchema.virtual('edadReal').get(function () {
 });
 
 /* Creo un indice para fulltext Search */
-pacienteSchema.index({
-    '$**': 'text'
-});
+// pacienteSchema.index({
+//     '$**': 'text'
+// });
 
 // Habilitar plugin de auditoría
 pacienteSchema.plugin(require('../../../mongoose/audit'));
