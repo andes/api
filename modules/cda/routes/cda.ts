@@ -271,11 +271,13 @@ router.get('/tojson/:id', async (req: any, res, next) => {
 
     let _base64 = req.params.id;
     let CDAFiles = makeFs();
-
     let contexto = await cdaCtr.loadCDA(_base64);
+    // Limpiamos xml previo al parsing
     contexto = contexto.toString().replace(new RegExp('<br>', 'g'), ' ');
+    contexto = contexto.toString().replace(new RegExp('[\$]', 'g'), '');
     to_json(contexto, function (error, data) {
         if (error) {
+            console.log('DIO PALO MALL: ', error);
             return next(error);
         } else {
             res.json(data);
