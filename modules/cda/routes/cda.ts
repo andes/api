@@ -277,7 +277,6 @@ router.get('/tojson/:id', async (req: any, res, next) => {
     contexto = contexto.toString().replace(new RegExp('[\$]', 'g'), '');
     to_json(contexto, function (error, data) {
         if (error) {
-            console.log('DIO PALO MALL: ', error);
             return next(error);
         } else {
             res.json(data);
@@ -293,7 +292,6 @@ router.get('/paciente/:id', async (req: any, res, next) => {
     if (!Auth.check(req, 'cda:list')) {
         return next(403);
     }
-
     let CDAFiles = makeFs();
     let pacienteID = req.params.id;
     let prestacion = req.query.prestacion;
