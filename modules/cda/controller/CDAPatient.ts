@@ -126,7 +126,7 @@ export async function matchCode(snomed) {
     if (!isNaN(snomed)) {
         prestacion = await configuracionPrestacionModel.findOne({
             'snomed.conceptId': snomed
-        });
+        }, {snomed: 1, loinc: 1});
         if (prestacion) {
             return prestacion;
         } else {
