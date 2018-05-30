@@ -41,7 +41,7 @@ router.get('/efector/:id', async function (req, res, next) {
 
 router.get('/configuracionPrestacion/:id', async function (req, res, next) {
     try {
-        configuracionPrestaciones.findOne({'tipoPrestacion.conceptId': req.params.id}, function (err, result: any) {
+        configuracionPrestaciones.findOne({'snomed.conceptId': req.params.id}, function (err, result: any) {
             if (err) {
                 return next(err);
             };
@@ -61,5 +61,13 @@ try {
     res.end(error);
 }
 });
+
+
+router.get('/sinTurno/:conceptId', async function (req, res, next) {
+
+        let result = await operationSumar.busquedaPrestaciones(req.params.conceptId);
+        res.json(result);
+
+    });
 
 export = router;
