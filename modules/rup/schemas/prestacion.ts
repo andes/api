@@ -112,7 +112,7 @@ export let schema = new mongoose.Schema({
 
 // Valida el esquema
 schema.pre('save', function (next) {
-    let prestacion = this;
+    let prestacion: any = this;
 
     if (!prestacion.paciente.id) {
         let err = new Error('Debe seleccionar el paciente');

@@ -12,6 +12,8 @@ import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import * as operations from './../../legacy/controller/operations';
 import { toArray } from '../../../utils/utils';
 
+import * as AgendasEstadisticas from '../controller/estadisticas';
+
 let router = express.Router();
 
 // devuelve los 10 ultimos turnos del paciente
@@ -96,6 +98,26 @@ router.get('/agenda/candidatas', async function (req, res, next) {
             res.json(out);
         } catch (err) { return next(err); }
     });
+});
+
+router.get('/agenda/consultaDiagnostico', async function (req, res, next) {
+    let organizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
+    let params = req.query;
+    params['organizacion'] = organizacion;
+    agendaCtrl.getConsultaDiagnostico(params).then((resultado) => {
+        res.json(resultado);
+    });
+
+});
+
+router.get('/agenda/cantidadConsultaXPrestacion', async function (req, res, next) {
+    let organizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
+    let params = req.query;
+    params['organizacion'] = organizacion;
+    agendaCtrl.getCantidadConsultaXPrestacion(params).then((resultado) => {
+        res.json(resultado);
+    });
+
 });
 
 router.get('/agenda/diagnosticos', async function (req, res, next) {
@@ -518,6 +540,11 @@ router.get('/integracionCitasHPN', async function (req, res, next) {
     } catch (ex) {
         next(ex);
     }
+});
+
+router.get('/estadistica', async (req, res, next) => {
+    let stats = await AgendasEstadisticas.estadisticas(req.query);
+    return res.json(stats);
 });
 
 export = router;
