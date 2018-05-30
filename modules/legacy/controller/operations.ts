@@ -165,7 +165,7 @@ export function pacienteSipsFactory(paciente: any, idEfectorSips: any) {
         informacionContacto: '',
         cronico: 0,
         idObraSocial: 499,
-        idUsuario: '1486739', //ID USUARIO POR DEFECTO
+        idUsuario: '1486739', // ID USUARIO POR DEFECTO
         fechaAlta: moment().format('YYYYMMDD HH:mm:ss'),
         fechaDefuncion: '19000101',
         fechaUltimaActualizacion: moment().format('YYYYMMDD HH:mm:ss'),

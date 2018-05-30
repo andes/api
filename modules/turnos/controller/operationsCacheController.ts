@@ -584,7 +584,7 @@ async function grabaTurnoSips(turno, idAgendaSips, idEfector) {
             // }
 
             let idObraSocial = await getIdObraSocialSips(paciente.documento);
-            let pacienteSips = operacionesLegacy.pacienteSipsFactory(paciente, idEfector)
+            let pacienteSips = operacionesLegacy.pacienteSipsFactory(paciente, idEfector);
             let pacienteId = await operacionesLegacy.insertaPacienteSips(pacienteSips);
 
             let fechaTurno = moment(turno.horaInicio).format('YYYYMMDD');
