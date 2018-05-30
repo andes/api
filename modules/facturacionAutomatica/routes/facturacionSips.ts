@@ -54,7 +54,6 @@ router.get('/configuracionPrestacion/:id', async function (req, res, next) {
 
 
 router.get('/cambioEstado/:id',  function (req, res, next) {
-console.log("hola",)
 try {
     let result = operationSumar.cambioEstado(req.params.id);
     res.json(result);
