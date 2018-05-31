@@ -260,7 +260,8 @@ export default [
     {
         key: 'prestamos',
         title: 'Prestamo de Carpetas',
-        comment: '',
+        child: [
+        ]
     }
 
 ];
