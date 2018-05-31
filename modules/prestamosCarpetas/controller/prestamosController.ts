@@ -125,7 +125,7 @@ async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carp
                     }
                 });
             });
-        })
+        });
     });
     if (solicitudesManuales) {
         solicitudesManuales.forEach(element => {
@@ -443,9 +443,6 @@ export async function getHistorial(req) {
     };
 
     return await prestamo.find(filter);
-<<<<<<< HEAD
-}
-=======
 }
 
 export async function solicitudManualCarpeta(req) {
@@ -501,4 +498,3 @@ function cambiarEstadoSolicitudManual(req, idSolicitud, idOrganizacion) {
         });
     });
 }
->>>>>>> 955ae6d2... Se agrega la funcionalidad de los prestamos manuales de carpeta
