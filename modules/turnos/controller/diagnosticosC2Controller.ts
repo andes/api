@@ -313,7 +313,6 @@ export function getDiagnosticos(params) {
 
                         function actualizarContador(paciente, tipo) {
                             let edad = calculoEdad(paciente.fechaNacimiento);
-                            console.log('edad ', edad);
                             let sexo = paciente.sexo;
                             switch (elem.causa) {
                                 case 'A51': // Sífilis Temprana
