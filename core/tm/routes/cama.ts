@@ -194,7 +194,10 @@ router.patch('/camas/cambiaEstado/:idCama', Auth.authenticate(), function (req, 
             // ocupada, bloqueada o en reparacion.
             if (ultimoEstado.estado === 'reparacion' || ultimoEstado.estado === 'ocupada' || ultimoEstado.estado === 'bloqueada') {
                 // Limpiamos los datos del paciente
-
+                if (req.body.sugierePase) {
+                    _cama.estados[_cama.estados.length - 1].sugierePase = req.body.sugierePase;
+                    delete req.body['sugierePase'];
+                }
                 _cama.estados.push(req.body);
             }
         } else if (req.body.estado === 'bloqueada') {
