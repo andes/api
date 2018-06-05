@@ -517,6 +517,30 @@ export function updateCuil(req, data) {
     data.cuil = req.body.cuil;
 }
 
+export function checkCarpeta(req, data) {
+    return new Promise((resolve, reject) => {
+        let indiceCarpeta = req.body.carpetaEfectores.findIndex(x => x.organizacion._id === req.user.organizacion.id);
+        if (indiceCarpeta > -1) {
+            let query = {
+                carpetaEfectores: {
+                    $elemMatch: {
+                        'nroCarpeta': req.body.carpetaEfectores[indiceCarpeta].nroCarpeta,
+                        'organizacion._id': req.body.carpetaEfectores[indiceCarpeta].organizacion._id
+                    }
+                }
+            };
+            paciente.find(query, function (err, res) {
+                if (err) {
+                    reject(err);
+                }
+                resolve((res && res.length > 0));
+            });
+        } else {
+            resolve(false);
+        }
+    });
+}
+
 /* Hasta acá funciones del PATCH */
 
 

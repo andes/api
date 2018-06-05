@@ -37,7 +37,8 @@ router.get('/turno/:id*?', async function (req, res, next) {
         idTurno: String,
         paciente: paciente,
         tipoPrestacion: conceptoTurneable,
-        tipoTurno: enum: delDia | programado | gestion | profesional
+        tipoTurno: enum: delDia | programado | gestion | profesional,
+        motivoConsulta: String
     };
  */
 router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, res, next) {
@@ -201,11 +202,10 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                                         motivoConsulta: update[etiquetaMotivoConsulta]
                                     };
                                     Logger.log(req, 'citas', 'asignarTurno', datosOp);
+                                    let turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
 
-                                    if (req.body.reasignado && req.body.reasignado === false) {
-                                        let turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
-                                        LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turno, req.params.idBloque, req.params.idAgenda);
-                                    }
+                                    LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turno, req.params.idBloque, req.params.idAgenda);
+
                                     // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
                                     // Donde doc2 es el documeto Agenda actualizado
                                     operations.cacheTurnosSips(doc2);
@@ -237,8 +237,15 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', function (req, res, next) {
             return (t.id === req.params.idTurno);
         });
         let update = {};
-        let etiquetaAvisoSuspension: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.avisoSuspension';
-        update[etiquetaAvisoSuspension] = req.body.avisoSuspension;
+        if (req.body.avisoSuspension) {
+            let etiquetaAvisoSuspension: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.avisoSuspension';
+            update[etiquetaAvisoSuspension] = req.body.avisoSuspension;
+        }
+        if (req.body.motivoConsulta) {
+            let etiquetaMotivoConsulta: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.motivoConsulta';
+            update[etiquetaMotivoConsulta] = req.body.motivoConsulta;
+
+        }
         let query = {
             _id: req.params.idAgenda,
         };
