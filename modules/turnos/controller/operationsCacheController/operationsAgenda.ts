@@ -37,16 +37,8 @@ let config = {
  * @returns
  */
 export function getAgendasDeMongoExportadas() {
-    return new Promise<Array<any>>(function (resolve, reject) {
-        agendasCache.find({
-            estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS
-        })
-            .exec(function (err, data) {
-                if (err) {
-                    reject(err);
-                }
-                resolve(data);
-            });
+    return agendasCache.find({
+        estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS
     });
 }
 /**
@@ -382,17 +374,22 @@ async function getCodificacionCie10(codcie10) {
     }
 }
 
-async function markAgendaAsProcessed(agenda) {
+async function markAgendaAsProcessed(agenda, error = null) {
+    let estados = constantes.EstadoExportacionAgendaCache;
     let estadoIntegracion;
-    switch (agenda.estadoIntegracion) {
-        case 'pendiente':
-            estadoIntegracion = constantes.EstadoExportacionAgendaCache.exportadaSIPS;
-            break;
-        case 'exportada a Sips':
-            estadoIntegracion = constantes.EstadoExportacionAgendaCache.codificada;
-            break;
-        default:
-            estadoIntegracion = constantes.EstadoExportacionAgendaCache.codificada;
+    if (error) {
+        estadoIntegracion = estados.error;
+    } else {
+        switch (agenda.estadoIntegracion) {
+            case estados.pendiente:
+                estadoIntegracion = constantes.EstadoExportacionAgendaCache.exportadaSIPS;
+                break;
+            case estados.exportadaSIPS:
+                estadoIntegracion = constantes.EstadoExportacionAgendaCache.codificada;
+                break;
+            default:
+                estadoIntegracion = constantes.EstadoExportacionAgendaCache.codificada;
+        }
     }
     try {
         return agendasCache.update({
@@ -401,11 +398,6 @@ async function markAgendaAsProcessed(agenda) {
                 $set: {
                     estadoIntegracion: estadoIntegracion
                 }
-            }, function (err, raw) {
-                if (err) {
-                    return (err);
-                }
-                return (raw);
             });
     } catch (err) {
         return err;
@@ -450,8 +442,7 @@ async function getCodificacionOdonto(idNomenclador) {
  * @param index
  * @param pool
  */
-export async function
-    guardarCacheASips(agenda) {
+export async function guardarCacheASips(agenda) {
 
     // CON_Agenda de SIPS soporta solo un profesional NOT NULL.
     // En caso de ser nulo el paciente en agenda de ANDES, por defector
@@ -465,23 +456,24 @@ export async function
     try {
         poolAgendas = await new sql.ConnectionPool(config).connect();
 
-        sql.on('error', err => {
-            // ... error handler
-            debug('error SQL', err);
-        });
-        let result: any = await new sql.Request(poolAgendas)
+        let resultEfector: any = await new sql.Request(poolAgendas)
             .input('codigoSisa', sql.VarChar(50), codigoSisa)
             .query('select idEfector from dbo.Sys_Efector WHERE codigoSisa = @codigoSisa');
-        if (result.recordset[0] && result.recordset[0].idEfector) {
-            datosSips.idEfector = result.recordset[0].idEfector;
+        if (resultEfector.recordset[0] && resultEfector.recordset[0].idEfector) {
+            datosSips.idEfector = resultEfector.recordset[0].idEfector;
         }
-        debug('1 - result', result);
-        let result2 = await new sql.Request(poolAgendas)
+        debug('1 - efector', resultEfector);
+
+
+        let resultProfesional = await new sql.Request(poolAgendas)
             .input('dniProfesional', sql.Int, dniProfesional)
             .query('SELECT idProfesional FROM dbo.Sys_Profesional WHERE numeroDocumento = @dniProfesional and activo = 1');
-        debug('2 - result2', result2);
-        if (result2.recordset[0] && result2.recordset[0].idProfesional) {
-            datosSips.idProfesional = result2.recordset[0].idProfesional;
+        debug('2 - Profesinoal', resultProfesional);
+        if (resultProfesional.recordset[0] && resultProfesional.recordset[0].idProfesional) {
+            datosSips.idProfesional = resultProfesional.recordset[0].idProfesional;
+        }
+
+        if (datosSips.idProfesional && datosSips.idEfector) {
             let idAgenda = await processAgenda(agenda, datosSips);
             if (typeof idAgenda === 'number') { // Controlamos el idAgenda por si la fun processAgenda() da timeout
                 try {
@@ -489,11 +481,18 @@ export async function
                     await checkEstadoAgenda(agenda, idAgenda);
                     await turnoOps.checkEstadoTurno(agenda, idAgenda, poolAgendas);
                     await turnoOps.checkAsistenciaTurno(agenda, poolAgendas);
-                    markAgendaAsProcessed(agenda);
+                    await markAgendaAsProcessed(agenda);
+
+                    poolAgendas.close();
+                    debug('Cierro conexión');
+
                 } catch (error) {
                     /** Handleamos errores acá para poder rollbackear la transacción si pincha en algún punto**/
-                    debug('----------------------------> ERROR guardarCacheASips', error);
+                    debug('ERROR guardarCacheASips', error);
                     logger.LoggerAgendaCache.logAgenda(agenda._id, error);
+                    poolAgendas.close();
+                    debug('Cierro conexión');
+
                     if (error === 'Error grabaTurnoSips') {
                         debug('Procesando agenda con error');
                     }
@@ -504,10 +503,14 @@ export async function
             }
         } else {
             debug('Profesional inexistente en SIPS, agenda no copiada');
-            markAgendaAsProcessed(agenda);
+            await markAgendaAsProcessed(agenda, true);
         }
     } catch (error) {
         debug('Error GuardaCacheSIPS ', error);
+        if (poolAgendas) {
+            poolAgendas.close();
+            poolAgendas = null;
+        }
         logger.LoggerAgendaCache.logAgenda(agenda._id, error);
         return (error);
     }
