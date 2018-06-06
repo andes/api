@@ -54,7 +54,7 @@ router.get('/prestaciones/sinCama', function (req, res, next) {
 
             // Buscamos si tiene una cama ocupada con el id de la internacion.
             let cama = await camasController.buscarCamaInternacion(mongoose.Types.ObjectId(prestacion.id), 'ocupada');
-            //Loopeamos los registros de la prestacion buscando el informe de egreso.
+            // Loopeamos los registros de la prestacion buscando el informe de egreso.
             let esEgreso = prestacion.ejecucion.registros.find(r => r.valor.InformeEgreso);
             // Si no encontramos una cama ocupada quiere decir que esa prestacion va a formar parte
             // de nuestra lista.
