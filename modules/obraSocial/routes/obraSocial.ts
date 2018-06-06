@@ -8,7 +8,7 @@ let to_json = require('xmljson').to_json;
 
 let router = express.Router();
 
-router.get('/puco/:documento', async function (req, res, next) {
+router.get('/puco/:documento?', async function (req, res, next) {
     if (req.params.documento) {
         try {
             let respuesta: any = await getOs(req.params.documento);
@@ -19,9 +19,11 @@ router.get('/puco/:documento', async function (req, res, next) {
                 res.json({ nombre: 'Sumar', codigo: '499' });
             }
         } catch (e) {
-            // default: sumar
             return next(e);
         }
+    } else {
+        // default: sumar
+        res.json({ nombre: 'Sumar', codigo: '499' });
     }
 });
 /**
