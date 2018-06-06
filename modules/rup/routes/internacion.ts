@@ -91,10 +91,11 @@ router.patch('/internaciones/desocuparCama/:idInternacion', function (req, res, 
 
 router.get('/internaciones/censo', function (req, res, next) {
     let unidad = req.query.unidad;
+    let idOrganizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
     let resultadoFinal;
     let fecha = new Date(req.query.fecha);
-    censoController.censoDiario(unidad, fecha).then(censoDiario => {
-        censoController.completarResumenDiario(censoDiario, unidad, fecha).then(resumen => {
+    censoController.censoDiario(unidad, fecha, idOrganizacion).then(censoDiario => {
+        censoController.completarResumenDiario(censoDiario, unidad, fecha, idOrganizacion).then(resumen => {
             resultadoFinal = {
                 censoDiario: censoDiario,
                 resumen: resumen
@@ -110,10 +111,12 @@ router.get('/internaciones/censo', function (req, res, next) {
 
 router.get('/internaciones/censoMensual', function (req, res, next) {
     let unidad = req.query.unidad;
+
+    let idOrganizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
     let resultadoFinal;
     let censoMensual = [];
 
-    censoController.censoMensual(req.query.fechaDesde, req.query.fechaHasta, unidad).then(result => {
+    censoController.censoMensual(req.query.fechaDesde, req.query.fechaHasta, unidad, idOrganizacion).then(result => {
         res.json(result);
     });
 });
@@ -122,8 +125,8 @@ router.get('/internaciones/censo/disponibilidad', function (req, res, next) {
     // conceptId de la unidad organizativa
     let unidad = req.query.unidad; // '310022001';
     let fecha = new Date(req.query.fecha);
-
-    camasController.disponibilidadXUO(unidad, fecha).then(
+    let idOrganizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
+    camasController.disponibilidadXUO(unidad, fecha, idOrganizacion).then(
         resultado => {
             if (resultado) {
                 res.json(resultado);
