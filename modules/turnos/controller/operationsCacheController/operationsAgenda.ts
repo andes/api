@@ -476,8 +476,10 @@ export async function guardarCacheASips(agenda) {
 
         if (datosSips.idProfesional && datosSips.idEfector) {
             let idAgenda = await processAgenda(agenda, datosSips);
+            debug('Cual es el id de agenda?: ', idAgenda);
             if (typeof idAgenda === 'number') { // Controlamos el idAgenda por si la fun processAgenda() da timeout
                 try {
+                    debug('Antes de procesar los turnos');
                     await turnoOps.processTurnos(agenda, idAgenda, datosSips.idEfector, poolAgendas);
                     await checkEstadoAgenda(agenda, idAgenda);
                     await turnoOps.checkEstadoTurno(agenda, idAgenda, poolAgendas);
@@ -490,7 +492,7 @@ export async function guardarCacheASips(agenda) {
                 } catch (error) {
                     debug('ERROR guardarCacheASips', error);
                     logger.LoggerAgendaCache.logAgenda(agenda._id, error);
-                    poolAgendas.close();
+                    // poolAgendas.close();
                     debug('Cierro conexión');
 
                     if (error === 'Error grabaTurnoSips') {
@@ -499,8 +501,8 @@ export async function guardarCacheASips(agenda) {
                     return (error);
                 }
             } else {
-                debug('TIMEOUT PROCESS AGENDA, cerramos conexión', idAgenda);
-                poolAgendas.close();
+                debug('TIMEOUT PROCESS AGENDA, cerramos conexión');
+                // poolAgendas.close();
             }
         } else {
             debug('Profesional inexistente en SIPS, agenda no copiada');
@@ -532,6 +534,7 @@ async function processAgenda(agenda: any, datosSips) {
             // aca debemos actualizar la agenda en sips
             let agendaSips = result.recordset[0];
             await updateAgendaSips(agendaSips, datosSips);
+            idAgenda = agendaSips.idAgenda;
         } else {
             idAgenda = await grabaAgendaSips(agenda, datosSips, poolAgendas);
         }

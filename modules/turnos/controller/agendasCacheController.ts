@@ -18,6 +18,7 @@ let connection = {
 export async function integracionSips() {
     try {
         let agendasMongoPendientes = await operationsCache.getAgendasDeMongoPendientes();
+        debug('agendas pendientes: ', agendasMongoPendientes);
         agendasMongoPendientes.forEach(async (agenda) => {
             await operationsCache.guardarCacheASips(agenda);
         });
