@@ -39,11 +39,12 @@ export function buscarPasesCamaXInternacion(idInternacion) {
  * @param unidadOrganizativa
  * @param fecha
  */
-export function camaOcupadasxUO(unidadOrganizativa, fecha) {
+export function camaOcupadasxUO(unidadOrganizativa, fecha, idOrganizacion) {
     let pipelineEstado = [];
     pipelineEstado =
         [{
             $match: {
+                'organizacion._id': idOrganizacion,
                 'estados.unidadOrganizativa.conceptId': unidadOrganizativa,
                 'estados.fecha': { '$lte': fecha },
                 'estados.esCensable': true,
@@ -141,13 +142,14 @@ export function camaXInternacion(idInternacion) {
     });
 }
 
-export function disponibilidadXUO(unidad, fecha) {
+export function disponibilidadXUO(unidad, fecha, idOrganizacion) {
     return new Promise((resolve, reject) => {
         let inicioDia = moment(fecha).startOf('day').toDate();
         let finDia = moment(fecha).endOf('day').toDate();
 
         let pipelineInicioDia = [{
             $match: {
+                'organizacion._id': idOrganizacion,
                 'estados.unidadOrganizativa.conceptId': unidad,
                 'estados.fecha': { '$lte': inicioDia }
             }
@@ -174,7 +176,7 @@ export function disponibilidadXUO(unidad, fecha) {
                     ultimoEstado: { $last: '$estados' }
                 }
         },
-        { $match: { 'ultimoEstado.unidadOrganizativa.conceptId': unidad,  'ultimoEstado.estado': { $nin: ['bloqueada', 'reparacion', 'ocupada'] } } }];
+        { $match: { 'ultimoEstado.unidadOrganizativa.conceptId': unidad, 'ultimoEstado.estado': { $nin: ['bloqueada', 'reparacion', 'ocupada'] } } }];
 
         let pipelineFinDia = [{
             $match: {

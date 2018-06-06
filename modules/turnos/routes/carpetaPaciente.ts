@@ -92,6 +92,8 @@ router.get('/carpetasPacientes/:id*?', function (req, res, next) {
                 }
 
             });
+        } else {
+            res.json({});
         }
     }
 

@@ -519,16 +519,25 @@ export function updateCuil(req, data) {
 
 export function checkCarpeta(req, data) {
     return new Promise((resolve, reject) => {
-        let query = {
-            'carpetaEfectores.nroCarpeta': req.body.carpetaEfectores[0].nroCarpeta,
-            'carpetaEfectores.organizacion._id': req.body.carpetaEfectores[0].organizacion._id
-        };
-        paciente.find(query, function (err, res) {
-            if (err) {
-                reject(err);
-            }
-            resolve((res && res.length > 0));
-        });
+        let indiceCarpeta = req.body.carpetaEfectores.findIndex(x => x.organizacion._id === req.user.organizacion.id);
+        if (indiceCarpeta > -1) {
+            let query = {
+                carpetaEfectores: {
+                    $elemMatch: {
+                        'nroCarpeta': req.body.carpetaEfectores[indiceCarpeta].nroCarpeta,
+                        'organizacion._id': req.body.carpetaEfectores[indiceCarpeta].organizacion._id
+                    }
+                }
+            };
+            paciente.find(query, function (err, res) {
+                if (err) {
+                    reject(err);
+                }
+                resolve((res && res.length > 0));
+            });
+        } else {
+            resolve(false);
+        }
     });
 }
 

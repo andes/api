@@ -6,11 +6,11 @@ import * as camasController from './../controllers/cama';
 import * as internacionesController from './../controllers/internacion';
 import * as censoController from './../controllers/censo';
 
-export function censoDiario(unidad, fechaConsulta) {
+export function censoDiario(unidad, fechaConsulta, idOrganizacion) {
     return new Promise(function (resolve, reject) {
         const fecha = fechaConsulta;
         let listadoCensos = [];
-        camasController.camaOcupadasxUO(unidad, fecha).then(
+        camasController.camaOcupadasxUO(unidad, fecha, idOrganizacion).then(
             camas => {
                 if (camas) {
                     let salidaCamas = Promise.all(camas.map(c => camasController.desocupadaEnDia(c, fecha)));
@@ -90,7 +90,7 @@ export function censoDiario(unidad, fechaConsulta) {
     });
 }
 
-export function completarResumenDiario(listadoCenso, unidad, fecha) {
+export function completarResumenDiario(listadoCenso, unidad, fecha, idOrganizacion) {
     return new Promise(function (resolve, reject) {
         let resumenCenso = {
             existencia0: 0,
@@ -150,7 +150,7 @@ export function completarResumenDiario(listadoCenso, unidad, fecha) {
                 resumenCenso.egresosDefuncion + resumenCenso.egresosAlta + resumenCenso.pasesA
                 - resumenCenso.ingresos - resumenCenso.pasesDe;
         }
-        camasController.disponibilidadXUO(unidad, fecha).then((respuesta: any) => {
+        camasController.disponibilidadXUO(unidad, fecha, idOrganizacion).then((respuesta: any) => {
             if (respuesta) {
                 resumenCenso.disponibles0 = respuesta.disponibilidad0 ? respuesta.disponibilidad0 : 0;
                 resumenCenso.disponibles24 = respuesta.disponibilidad24 ? respuesta.disponibilidad24 : 0;
@@ -162,7 +162,7 @@ export function completarResumenDiario(listadoCenso, unidad, fecha) {
     });
 }
 
-export function censoMensual(fechaDesde, fechaHasta, unidad) {
+export function censoMensual(fechaDesde, fechaHasta, unidad, idOrganizacion) {
     return new Promise(async function (resolve, reject) {
         let censoMensualTotal = [];
         let nuevaFechaDesde = new Date(fechaDesde);
@@ -170,7 +170,7 @@ export function censoMensual(fechaDesde, fechaHasta, unidad) {
         let promises = [];
         let algo = 0;
         while (nuevaFechaDesde <= nuevaFechaHasta) {
-            let censo = await censoDiario(unidad, new Date(nuevaFechaDesde));
+            let censo = await censoDiario(unidad, new Date(nuevaFechaDesde), idOrganizacion);
             promises.push(censo);
             let nuevoDia = nuevaFechaDesde.getDate() + 1;
             nuevaFechaDesde.setDate(nuevoDia);
@@ -178,7 +178,7 @@ export function censoMensual(fechaDesde, fechaHasta, unidad) {
         Promise.all(promises).then(async censosDiarios => {
             for (let unCenso of censosDiarios) {
                 if (unCenso.length > 0) {
-                    let resumen = await censoController.completarResumenDiario(unCenso, unidad, unCenso[0].fecha);
+                    let resumen = await censoController.completarResumenDiario(unCenso, unidad, unCenso[0].fecha, idOrganizacion);
                     let resultadoFinal = {
                         fecha: unCenso[0].fecha,
                         resumen: resumen

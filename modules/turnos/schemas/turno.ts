@@ -6,6 +6,23 @@ import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import * as obraSocialSchema from '../../obraSocial/schemas/obraSocial';
 import { SnomedConcept } from '../../rup/schemas/snomed-concept';
 
+let pacienteSchema = new mongoose.Schema({
+    id: mongoose.Schema.Types.ObjectId,
+            nombre: String,
+            apellido: String,
+            alias: String,
+            documento: String,
+            fechaNacimiento: Date,
+            telefono: String,
+            sexo: String,
+            carpetaEfectores: [{
+                organizacion: nombreSchema,
+                nroCarpeta: String
+            }],
+            obraSocial: { type: obraSocialSchema }
+});
+
+
 let turnoSchema = new mongoose.Schema({
     horaInicio: Date,
     asistencia: {
@@ -50,23 +67,24 @@ let turnoSchema = new mongoose.Schema({
         type: String,
         enum: ['no enviado', 'enviado', 'fallido']
     },
-    paciente: {
-        type: {
-            id: mongoose.Schema.Types.ObjectId,
-            nombre: String,
-            apellido: String,
-            alias: String,
-            documento: String,
-            fechaNacimiento: Date,
-            telefono: String,
-            sexo: String,
-            carpetaEfectores: [{
-                organizacion: nombreSchema,
-                nroCarpeta: String
-            }],
-            obraSocial: { type: obraSocialSchema }
-        }
-    },
+    // paciente: {
+    //     type: {
+    //         id: mongoose.Schema.Types.ObjectId,
+    //         nombre: String,
+    //         apellido: String,
+    //         alias: String,
+    //         documento: String,
+    //         fechaNacimiento: Date,
+    //         telefono: String,
+    //         sexo: String,
+    //         carpetaEfectores: [{
+    //             organizacion: nombreSchema,
+    //             nroCarpeta: String
+    //         }],
+    //         obraSocial: { type: obraSocialSchema }
+    //     }
+    // },
+    paciente: pacienteSchema,
     motivoConsulta: String,
     tipoPrestacion: {
         type: tipoPrestacionSchema

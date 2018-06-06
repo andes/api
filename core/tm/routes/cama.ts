@@ -210,7 +210,6 @@ router.patch('/camas/cambiaEstado/:idCama', Auth.authenticate(), function (req, 
             if (ultimoEstado.estado !== 'disponible') {
                 return res.status(500).send('La cama actualmente no esta preparada');
             }
-            console.log(req.body, 'BODYYY')
             if (!req.body.paciente.id) {
                 return res.status(500).send('No puede ocupar una cama sin un paciente');
             }
