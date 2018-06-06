@@ -620,9 +620,12 @@ function getDatosSips(codigoSisa, dniProfesional) {
 async function updateAgendaSips(idAgenda, datosSips: any, pool) {
     let idProfesional = datosSips.idProfesional;
 
-    let query = 'update Con_Agenda set idProfesional = ' + datosSips.idProfesional + ' where idAgenda = ' + idAgenda;
-    debug('la query de update es: ', query);
-    await executeQuery(query);
+    let queryAgenda = 'update Con_Agenda set idProfesional = ' + datosSips.idProfesional + ' where idAgenda = ' + idAgenda;
+    debug('Actualizamos el profesional en la agenda OK');
+    await executeQuery(queryAgenda);
+    let queryAgendaProfesional = 'update CON_AgendaProfesional set idProfesional = ' + datosSips.idProfesional + 'where idAgenda = ' + idAgenda;
+    debug('Actualizamos el profesional en la con_agendaProfesional OK');
+    await executeQuery(queryAgenda);
 }
 
 async function grabaAgendaSips(agendaSips: any, datosSips: any, tr) {
