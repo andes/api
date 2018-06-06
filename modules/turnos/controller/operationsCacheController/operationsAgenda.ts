@@ -529,7 +529,9 @@ async function processAgenda(agenda: any, datosSips) {
                 .query('SELECT idAgenda FROM dbo.CON_Agenda WHERE objectId = @idAgendaMongo GROUP BY idAgenda');
         }
         if (result && result.recordset && result.recordset.length > 0) {
+            // aca debemos actualizar la agenda en sips
             idAgenda = result.recordset[0].idAgenda;
+            await updateAgendaSips(idAgenda, datosSips, poolAgendas);
         } else {
             idAgenda = await grabaAgendaSips(agenda, datosSips, poolAgendas);
         }
@@ -612,6 +614,16 @@ function getDatosSips(codigoSisa, dniProfesional) {
     return ([result1, result2]); // devuelvo un arreglo de promesas para que se ejecuten en paralelo y las capturo con un promise.all
 }
 
+/**
+ * Realiza la actualización de una agenda en sips
+ */
+async function updateAgendaSips(idAgenda, datosSips: any, pool) {
+    let idProfesional = datosSips.idProfesional;
+
+    let query = 'update Con_Agenda set idProfesional = ' + datosSips.idProfesional + ' where idAgenda = ' + idAgenda;
+    debug('la query de update es: ', query);
+    await executeQuery(query);
+}
 
 async function grabaAgendaSips(agendaSips: any, datosSips: any, tr) {
     let transactoin = tr;
