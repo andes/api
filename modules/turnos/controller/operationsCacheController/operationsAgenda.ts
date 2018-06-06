@@ -526,12 +526,12 @@ async function processAgenda(agenda: any, datosSips) {
         if (agenda) {
             result = await new sql.Request(poolAgendas)
                 .input('idAgendaMongo', sql.VarChar(50), agenda.id)
-                .query('SELECT idAgenda FROM dbo.CON_Agenda WHERE objectId = @idAgendaMongo GROUP BY idAgenda');
+                .query('SELECT * FROM dbo.CON_Agenda WHERE objectId = @idAgendaMongo');
         }
         if (result && result.recordset && result.recordset.length > 0) {
             // aca debemos actualizar la agenda en sips
-            idAgenda = result.recordset[0].idAgenda;
-            await updateAgendaSips(idAgenda, datosSips);
+            let agendaSips = result.recordset[0];
+            await updateAgendaSips(agendaSips, datosSips);
         } else {
             idAgenda = await grabaAgendaSips(agenda, datosSips, poolAgendas);
         }
@@ -617,15 +617,15 @@ function getDatosSips(codigoSisa, dniProfesional) {
 /**
  * Realiza la actualización de una agenda en sips
  */
-async function updateAgendaSips(idAgenda, datosSips: any) {
+async function updateAgendaSips(agenda, datosSips: any) {
     let idProfesional = datosSips.idProfesional;
 
-    let queryAgenda = 'update Con_Agenda set idProfesional = ' + datosSips.idProfesional + ' where idAgenda = ' + idAgenda;
+    let queryAgenda = 'update Con_Agenda set idProfesional = ' + datosSips.idProfesional + ' where idAgenda = ' + agenda.idAgenda;
     debug('Actualizamos el profesional en la agenda OK');
     await executeQuery(queryAgenda);
 
     let agendaProfesional = await new sql.Request(poolAgendas)
-            .input('idAgenda', sql.Int, idAgenda)
+            .input('idAgenda', sql.Int, agenda.idAgenda)
             .query('SELECT idAgendaProfesional FROM CON_AgendaProfesional where idAgenda = @idAgenda');
     debug('Buscamos en agenda profesional si existe el registro: ');
 
@@ -636,13 +636,13 @@ async function updateAgendaSips(idAgenda, datosSips: any) {
         await executeQuery(queryAgenda);
     } else {
             let insertProfesional = 'INSERT INTO dbo.CON_AgendaProfesional ( idAgenda, idProfesional, baja, CreatedBy , ' +
-                ' CreatedOn, ModifiedBy, ModifiedOn, idEspecialidad ) VALUES  ( ' + idAgenda + ',' +
+                ' CreatedOn, ModifiedBy, ModifiedOn, idEspecialidad ) VALUES  ( ' + agenda.idAgenda + ',' +
                 idProfesional + ',' + 0 + ',' + constantes.idUsuarioSips + ',' +
                 '\'' + moment().format('YYYYMMDD HH:mm:ss') + '\', ' +
                 '\'' + moment().format('YYYYMMDD HH:mm:ss') + '\', ' +
                 '\'' + moment().format('YYYYMMDD HH:mm:ss') + '\', ' +
-                datosSips.idEspecialidad + ' ) ';
-            debug('Inserta el profesional en la tabla de con_agendaProfesional');
+                agenda.idEspecialidad + ' ) ';
+            debug('Inserta el profesional en la tabla de con_agendaProfesional: ', insertProfesional);
             await executeQuery(insertProfesional);
     }
 
