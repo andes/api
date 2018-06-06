@@ -531,7 +531,7 @@ async function processAgenda(agenda: any, datosSips) {
         if (result && result.recordset && result.recordset.length > 0) {
             // aca debemos actualizar la agenda en sips
             idAgenda = result.recordset[0].idAgenda;
-            await updateAgendaSips(idAgenda, datosSips, poolAgendas);
+            await updateAgendaSips(idAgenda, datosSips);
         } else {
             idAgenda = await grabaAgendaSips(agenda, datosSips, poolAgendas);
         }
@@ -617,15 +617,34 @@ function getDatosSips(codigoSisa, dniProfesional) {
 /**
  * Realiza la actualización de una agenda en sips
  */
-async function updateAgendaSips(idAgenda, datosSips: any, pool) {
+async function updateAgendaSips(idAgenda, datosSips: any) {
     let idProfesional = datosSips.idProfesional;
 
     let queryAgenda = 'update Con_Agenda set idProfesional = ' + datosSips.idProfesional + ' where idAgenda = ' + idAgenda;
     debug('Actualizamos el profesional en la agenda OK');
     await executeQuery(queryAgenda);
-    let queryAgendaProfesional = 'update CON_AgendaProfesional set idProfesional = ' + datosSips.idProfesional + 'where idAgenda = ' + idAgenda;
-    debug('Actualizamos el profesional en la con_agendaProfesional OK');
-    await executeQuery(queryAgenda);
+
+    let idAgendaProfesional = await new sql.Request(poolAgendas)
+            .input('idAgenda', sql.Int, idAgenda)
+            .query('SELECT idAgendaProfesional FROM CON_AgendaProfesional where idAgenda = @idAgenda');
+    debug('Buscamos en agenda profesional si existe el registro');
+
+    if (idAgendaProfesional) {
+        let queryAgendaProfesional = 'update CON_AgendaProfesional set idProfesional = ' + datosSips.idProfesional + 'where idAgendaProfesional = ' + idAgendaProfesional;
+        debug('Actualizamos el profesional en la con_agendaProfesional OK');
+        await executeQuery(queryAgenda);
+    } else {
+            let insertProfesional = 'INSERT INTO dbo.CON_AgendaProfesional ( idAgenda, idProfesional, baja, CreatedBy , ' +
+                ' CreatedOn, ModifiedBy, ModifiedOn, idEspecialidad ) VALUES  ( ' + idAgenda + ',' +
+                idProfesional + ',' + 0 + ',' + constantes.idUsuarioSips + ',' +
+                '\'' + moment().format('YYYYMMDD HH:mm:ss') + '\', ' +
+                '\'' + moment().format('YYYYMMDD HH:mm:ss') + '\', ' +
+                '\'' + moment().format('YYYYMMDD HH:mm:ss') + '\', ' +
+                datosSips.idEspecialidad + ' ) ';
+            debug('Inserta el profesional en la tabla de con_agendaProfesional');
+            await executeQuery(insertProfesional);
+    }
+
 }
 
 async function grabaAgendaSips(agendaSips: any, datosSips: any, tr) {
