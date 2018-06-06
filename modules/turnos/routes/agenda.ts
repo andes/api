@@ -15,8 +15,9 @@ import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import * as operations from './../../legacy/controller/operations';
 import { toArray } from '../../../utils/utils';
 
-let router = express.Router();
+import * as AgendasEstadisticas from '../controller/estadisticas';
 
+let router = express.Router();
 
 router.get('/agenda/paciente/:idPaciente', function (req, res, next) {
 
@@ -556,5 +557,9 @@ router.get('/integracionCitasHPN', async function (req, res, next) {
     }
 });
 
+router.get('/estadistica', async (req, res, next) => {
+    let stats = await AgendasEstadisticas.estadisticas(req.query);
+    return res.json(stats);
+});
 
 export = router;
