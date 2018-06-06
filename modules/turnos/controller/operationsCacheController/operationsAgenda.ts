@@ -378,6 +378,7 @@ async function markAgendaAsProcessed(agenda, error = null) {
     let estados = constantes.EstadoExportacionAgendaCache;
     let estadoIntegracion;
     if (error) {
+        // O no tiene efector o no tiene asociado un profesional
         estadoIntegracion = estados.error;
     } else {
         switch (agenda.estadoIntegracion) {
@@ -487,7 +488,6 @@ export async function guardarCacheASips(agenda) {
                     debug('Cierro conexión');
 
                 } catch (error) {
-                    /** Handleamos errores acá para poder rollbackear la transacción si pincha en algún punto**/
                     debug('ERROR guardarCacheASips', error);
                     logger.LoggerAgendaCache.logAgenda(agenda._id, error);
                     poolAgendas.close();
@@ -499,11 +499,13 @@ export async function guardarCacheASips(agenda) {
                     return (error);
                 }
             } else {
-                debug('TIMEOUT PROCESS AGENDA', idAgenda);
+                debug('TIMEOUT PROCESS AGENDA, cerramos conexión', idAgenda);
+                poolAgendas.close();
             }
         } else {
             debug('Profesional inexistente en SIPS, agenda no copiada');
             await markAgendaAsProcessed(agenda, true);
+            poolAgendas.close();
         }
     } catch (error) {
         debug('Error GuardaCacheSIPS ', error);
