@@ -624,14 +624,15 @@ async function updateAgendaSips(idAgenda, datosSips: any) {
     debug('Actualizamos el profesional en la agenda OK');
     await executeQuery(queryAgenda);
 
-    let idAgendaProfesional = await new sql.Request(poolAgendas)
+    let agendaProfesional = await new sql.Request(poolAgendas)
             .input('idAgenda', sql.Int, idAgenda)
             .query('SELECT idAgendaProfesional FROM CON_AgendaProfesional where idAgenda = @idAgenda');
-    debug('Buscamos en agenda profesional si existe el registro');
+    debug('Buscamos en agenda profesional si existe el registro: ');
 
-    if (idAgendaProfesional) {
-        let queryAgendaProfesional = 'update CON_AgendaProfesional set idProfesional = ' + datosSips.idProfesional + 'where idAgendaProfesional = ' + idAgendaProfesional;
-        debug('Actualizamos el profesional en la con_agendaProfesional OK');
+    if (agendaProfesional && agendaProfesional.recordset && agendaProfesional.recordset.length > 0) {
+        let idAP = agendaProfesional.recordset[0].idAgendaProfesional;
+        let queryAgendaProfesional = 'update CON_AgendaProfesional set idProfesional = ' + datosSips.idProfesional + 'where idAgendaProfesional = ' + idAP;
+        debug('Actualizamos el profesional en la con_agendaProfesional OK', idAP);
         await executeQuery(queryAgenda);
     } else {
             let insertProfesional = 'INSERT INTO dbo.CON_AgendaProfesional ( idAgenda, idProfesional, baja, CreatedBy , ' +
