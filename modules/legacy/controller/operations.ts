@@ -16,7 +16,9 @@ import {
 } from 'bson';
 import * as pacienteCtrl from './../../../core/mpi/controller/paciente'
 import { osPaciente } from '../../obraSocial/schemas/osPaciente';
-
+import * as configPrivate from '../../../config.private';
+let to_json = require('xmljson').to_json;
+import * as https from 'https';
 
 
 // Funciones privadas
@@ -138,7 +140,6 @@ export async function getDetalles(idProtocolo, idEfector) {
 }
 
 export async function pacienteSipsFactory(paciente: any, idEfectorSips: any) {
-   console.log("obra",)
     return {
         idEfector: idEfectorSips,
         nombre: paciente.nombre,
@@ -167,7 +168,7 @@ export async function pacienteSipsFactory(paciente: any, idEfectorSips: any) {
         referencia: '',
         informacionContacto: '',
         cronico: 0,
-        idObraSocial:  await codigoPucoPorDni(paciente.documento),
+        idObraSocial: await codigoPucoPorDni(paciente.documento),
         idUsuario: '1486739', //ID USUARIO POR DEFECTO
         fechaAlta: moment().format('YYYYMMDD HH:mm:ss'),
         fechaDefuncion: '19000101',
@@ -198,14 +199,9 @@ export async function pacienteSipsFactory(paciente: any, idEfectorSips: any) {
 
 async function codigoPucoPorDni(dni) {
     let idObraSocial;
-    let osPac: any = await osPaciente.find({ documento: dni }).exec();
-    if (osPac.length > 0) { // obtiene el código de obra social asociado al paciente
-        console.log("OBRA SOCIAL", osPac[0].codigoPuco)
-        if (osPac && osPac.length > 0) {
-            // TODO: aqui deberíamos aplicar la priorización de obras sociales
-            idObraSocial = await mapeoObraSocial(osPac[0].codigoPuco)
-            console.log(idObraSocial);
-        }
+    let obraSocial: any = await postPuco(dni)
+    if (obraSocial.puco.resultado === 'OK') {
+        idObraSocial = await mapeoObraSocial(obraSocial.puco.rnos)
     } else {
         idObraSocial = 499;
 
@@ -486,4 +482,49 @@ export async function cacheTurnosSips(unaAgenda) {
 
     }
 }
+
+
+export function postPuco(documento) {
+    let xml = '';
+    let pathSisa = 'https://sisa.msal.gov.ar/sisa/services/rest/puco/' + documento;
+    let optionsgetmsg = {
+        host: configPrivate.sisa.host,
+        port: configPrivate.sisa.port,
+        path: pathSisa,
+        method: 'POST',
+        headers: {
+            'content-type': 'application/json',
+        }
+    };
+    // Realizar POST request
+    return new Promise((resolve, reject) => {
+        let reqPost = https.request(optionsgetmsg);
+        reqPost.on('error', function (e) {
+            reject(e);
+        });
+        reqPost.write(JSON.stringify({ usuario: 'hhfernandez', clave: 'develop666' }));
+        reqPost.end();
+        reqPost.on('response', function (response) {
+            response.setEncoding('utf8');
+            response.on('data', function (chunk) {
+                if (chunk.toString()) {
+                    xml = xml + chunk.toString();
+                }
+                if (xml) {
+                    // Se parsea el xml obtenido a JSON
+                    to_json(xml, function (error, data) {
+                        if (error) {
+                            reject();
+                        } else {
+                            resolve(data);
+                        }
+                    });
+                } else {
+                    reject();
+                }
+            });
+        });
+    });
+}
+
 

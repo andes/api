@@ -1,6 +1,6 @@
 import * as config from '../../../config';
 import * as sql from 'mssql';
-import * as operationsSumar from './../../../modules/facturacionAutomatica/controllers/operationsCtrl/operationsSumar';
+// import * as operationsSumar from './../../../modules/facturacionAutomatica/controllers/operationsCtrl/operationsSumar';
 import * as configPrivate from '../../../config.private';
 import * as moment from 'moment';
 import * as mongoose from 'mongoose';
@@ -13,10 +13,11 @@ import * as agenda from '../../../modules/turnos/schemas/agenda';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
 import * as operacionesLegacy from './../../../modules/legacy/controller/operations';
-import { resolve } from 'dns';
-import { reject } from 'async';
 import * as organizacion from '../../../core/tm/schemas/organizacion';
 import { toArray } from '../../../utils/utils';
+let to_json = require('xmljson').to_json;
+import * as https from 'https';
+// import * as sisa from '../../../modules/fuentesAutenticas/routes/sisa'
 /**
  * Crea un paciente y lo sincroniza con elastic
  *
@@ -24,7 +25,7 @@ import { toArray } from '../../../utils/utils';
  * @param req  request de express para poder auditar
  */
 
-
+var sisa = require('../../../modules/fuentesAutenticas/routes/sisa');
 let poolAgendas;
 let configSql = {
     user: configPrivate.conSql.auth.user,
@@ -672,12 +673,11 @@ export async function mapeoPuco(dni) {
 
 
 export async function insertSips() {
-
     let pacientes = await pacientesDelDia();
-    console.log("pacientes", pacientes)
+
     for (var index = 0; index < pacientes.length; index++) {
         let existeEnSips = await getPacienteSips(pacientes[index].documento);
-        let existeEnPuco: any = await mapeoPuco(pacientes[index].documento);
+        let existeEnPuco: any = await operacionesLegacy.postPuco(pacientes[index].documento)
         let esBeneficiario = await getBeneficiario(pacientes[index].documento);
         let edad = moment().diff(pacientes[index].fechaNacimiento, 'years');
         let efector = await mapeoEfector(pacientes[index].createdBy.organizacion.id);
@@ -693,22 +693,23 @@ export async function insertSips() {
         if (existeEnSips.length === 0) {
             //FALTA EL EFECTOR(busqueda por id)
             let pacienteSips = await operacionesLegacy.pacienteSipsFactory(pacientes[index], efector.idEfector);
-            console.log("pacientes Sips",pacienteSips)
-            // let idPacienteSips = await operacionesLegacy.insertaPacienteSips(pacienteSips);
+            let idPacienteSips = await operacionesLegacy.insertaPacienteSips(pacienteSips);
         }
-        console.log(existeEnPuco);
-        if (existeEnPuco.length === 0 && edad <= 64) {
+        if (existeEnPuco.puco.resultado === 'REGISTRO_NO_ENCONTRADO' && edad <= 64) {
             if (esBeneficiario.length === 0) {
                 // FALTA EL EFECTOR
-                // let benef = beneficiarioFactory(pacientes[index], efector.cuie);
+                let benef = beneficiarioFactory(pacientes[index], efector.cuie);
+                await insertBeneficiario(benef);
             }
-        }
+        } 
 
     }
 
     // console.log("aca paciente nuevo ", paciente)
 
 }
+
+
 
 
 export async function mapeoEfector(idEfector) {
@@ -738,7 +739,7 @@ async function mapeoEfectorMongo(idEfector: any) {
 export async function getPacienteSips(documento) {
 
     poolAgendas = await new sql.ConnectionPool(configSql).connect();
-    let query = "SELECT * FROM dbo.Sys_Paciente WHERE numeroDocumento = @documento";
+    let query = 'SELECT * FROM dbo.Sys_Paciente WHERE numeroDocumento = @documento';
     let resultado = await new sql.Request(poolAgendas)
         .input('documento', sql.VarChar(50), documento)
         .query(query);
@@ -751,7 +752,7 @@ export async function getPacienteSips(documento) {
 export async function getBeneficiario(documento) {
 
     poolAgendas = await new sql.ConnectionPool(configSql).connect();
-    let query = "SELECT * FROM dbo.PN_beneficiarios  WHERE numero_doc = @documento";
+    let query = 'SELECT * FROM dbo.PN_beneficiarios  WHERE numero_doc = @documento';
     let resultado = await new sql.Request(poolAgendas)
         .input('documento', sql.VarChar(50), documento)
         .query(query);
@@ -763,7 +764,7 @@ export async function getBeneficiario(documento) {
 
 export async function updateEstadoSips(id) {
     poolAgendas = await new sql.ConnectionPool(configSql).connect();
-    let query = "UPDATE  [dbo].[Sys_Paciente] SET activo = 1 where idPaciente = @id ";
+    let query = 'UPDATE  [dbo].[Sys_Paciente] SET activo = 1 where idPaciente = @id';
     let resultado = await new sql.Request(poolAgendas)
         .input('id', sql.VarChar(50), id)
         .query(query);
@@ -807,17 +808,14 @@ export async function pacientesDelDia() {
         }
     }).cursor({ batchSize: 1000 }).exec());
 
-
     pacientesMpi.forEach(element => {
-        pacientesTotal.push(element)
+        pacientesTotal.push(element);
     });
 
-    return pacientesTotal
-
+    return pacientesTotal;
 }
 
 function beneficiarioFactory(paciente, efector) {
-    console.log("aca", paciente)
     let tipoCategoria;
     let edad = moment().diff(paciente.fechaNacimiento, 'years');
     if ((edad >= 0) && (edad <= 10)) {
@@ -895,7 +893,6 @@ async function executeQueryBeneficiario(query: any) {
 
         let resultUpdate = await new sql.Request(poolAgendas).query(queryUpdate);
         if (resultUpdate && resultUpdate.recordset) {
-            console.log(resultUpdate)
             return resultUpdate.recordset[0].clave_beneficiario;
         }
 
@@ -903,3 +900,6 @@ async function executeQueryBeneficiario(query: any) {
         return (err);
     }
 }
+
+
+
