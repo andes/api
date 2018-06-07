@@ -57,8 +57,12 @@ let schema = new mongoose.Schema({
     nominalizada: {
         type: Boolean,
         default: true
+    },
+    // Una agenda dinamica no tiene turnos predefinidos, estos se van agregando como en una estructura FIFO.
+    dinamica : {
+        type: Boolean,
+        default: false
     }
-
 }, { versionKey: false });
 
 // Defino Virtuals
