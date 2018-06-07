@@ -239,16 +239,38 @@ export async function checkAsistenciaTurno(agenda: any, poolAgendas) {
     for (let x = 0; x < agenda.bloques.length; x++) {
         turnos = agenda.bloques[x].turnos;
         for (let i = 0; i < turnos.length; i++) {
-            if (turnos[i].asistencia === 'asistio') {
-
-                let idTurno: any = await getEstadoTurnoSips(turnos[i]._id, poolAgendas);
-                let fechaAsistencia = moment(turnos[i].updatedAt).format('YYYYMMDD');
-                let query = 'INSERT INTO dbo.CON_TurnoAsistencia ( idTurno , idUsuario , fechaAsistencia ) VALUES  ( ' +
-                    idTurno.idTurno + ' , ' + constantes.idUsuarioSips + ' , \'' + fechaAsistencia + '\' )';
-                await executeQuery(query, poolAgendas);
+            if (turnos[i].asistencia === 'asistio' && turnos[i].estado === 'asignado') {
+                let turno: any = await getEstadoTurnoSips(turnos[i]._id, poolAgendas);
+                if (turno) {
+                    let fechaAsistencia = moment(turnos[i].updatedAt).format('YYYYMMDD');
+                    let query = 'INSERT INTO dbo.CON_TurnoAsistencia ( idTurno , idUsuario , fechaAsistencia ) VALUES  ( ' +
+                        turno.idTurno + ' , ' + constantes.idUsuarioSips + ' , \'' + fechaAsistencia + '\' )';
+                    await executeQuery(query, poolAgendas);
+                } else {
+                    debug('No existe turno', agenda._id, turnos[i]._id);
+                }
             }
         }
     }
+
+    if (agenda.sobreturnos) {
+        for (let i = 0; i < agenda.sobreturnos.length; i++) {
+            let turnoAgenda = agenda.sobreturnos[i];
+
+            if (turnoAgenda.asistencia === 'asistio' && turnoAgenda.estado === 'asignado') {
+                let turno: any = await getEstadoTurnoSips(turnoAgenda._id, poolAgendas);
+                if (turno) {
+                    let fechaAsistencia = moment(turnoAgenda.updatedAt).format('YYYYMMDD');
+                    let query = 'INSERT INTO dbo.CON_TurnoAsistencia ( idTurno , idUsuario , fechaAsistencia ) VALUES  ( ' +
+                        turno.idTurno + ' , ' + constantes.idUsuarioSips + ' , \'' + fechaAsistencia + '\' )';
+                    await executeQuery(query, poolAgendas);
+                } else {
+                    debug('No existe turno', agenda._id, turnoAgenda._id);
+                }
+            }
+        }
+    }
+
 }
 
 
@@ -299,7 +321,7 @@ async function executeQuery(query: any, poolAgendas) {
             return result.recordset[0].id;
         }
     } catch (err) {
-        debug('executeQUERY----------____>', err);
+        debug('executeQUERY----------____>', query);
         return (err);
     }
 }
