@@ -14,6 +14,8 @@ import {
     ObjectID,
     ObjectId
 } from 'bson';
+import * as pacienteCtrl from './../../../core/mpi/controller/paciente'
+import { osPaciente } from '../../obraSocial/schemas/osPaciente';
 
 
 
@@ -135,7 +137,8 @@ export async function getDetalles(idProtocolo, idEfector) {
     });
 }
 
-export function pacienteSipsFactory(paciente: any, idEfectorSips: any) {
+export async function pacienteSipsFactory(paciente: any, idEfectorSips: any) {
+   console.log("obra",)
     return {
         idEfector: idEfectorSips,
         nombre: paciente.nombre,
@@ -143,7 +146,7 @@ export function pacienteSipsFactory(paciente: any, idEfectorSips: any) {
         numeroDocumento: paciente.documento,
         idSexo: (paciente.sexo === 'masculino' ? 3 : paciente.sexo === 'femenino' ? 2 : 1),
         fechaNacimiento: moment(paciente.fechaNacimiento).format('YYYYMMDD'),
-        idEstado: 3,
+        idEstado: mapeoEstado(paciente.estado),
         /* Estado Validado en SIPS*/
         idMotivoNI: 0,
         idPais: 54,
@@ -164,7 +167,7 @@ export function pacienteSipsFactory(paciente: any, idEfectorSips: any) {
         referencia: '',
         informacionContacto: '',
         cronico: 0,
-        idObraSocial: 499,
+        idObraSocial:  await codigoPucoPorDni(paciente.documento),
         idUsuario: '1486739', //ID USUARIO POR DEFECTO
         fechaAlta: moment().format('YYYYMMDD HH:mm:ss'),
         fechaDefuncion: '19000101',
@@ -191,6 +194,46 @@ export function pacienteSipsFactory(paciente: any, idEfectorSips: any) {
         longitud: 0,
         objectId: paciente._id
     };
+}
+
+async function codigoPucoPorDni(dni) {
+    let idObraSocial;
+    let osPac: any = await osPaciente.find({ documento: dni }).exec();
+    if (osPac.length > 0) { // obtiene el código de obra social asociado al paciente
+        console.log("OBRA SOCIAL", osPac[0].codigoPuco)
+        if (osPac && osPac.length > 0) {
+            // TODO: aqui deberíamos aplicar la priorización de obras sociales
+            idObraSocial = await mapeoObraSocial(osPac[0].codigoPuco)
+            console.log(idObraSocial);
+        }
+    } else {
+        idObraSocial = 499;
+
+    }
+
+
+    return idObraSocial;
+
+}
+
+
+function mapeoEstado(estado) {
+    let res;
+    if (estado === "temporal") {
+        res = 2
+    }
+    if (estado === "validado") {
+        res = 3;
+    }
+    return res;
+
+}
+
+
+export async function mapeoObraSocial(codigoObraSocial) {
+    let query = 'SELECT idObraSocial, cod_puco FROM dbo.Sys_ObraSocial WHERE cod_PUCO = ' + codigoObraSocial + ';';
+    let result = await new sql.Request().query(query);
+    return result.recordset[0] ? result.recordset[0].idObraSocial : 0;
 }
 
 export async function insertaPacienteSips(paciente: any) {

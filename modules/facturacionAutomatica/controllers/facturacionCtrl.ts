@@ -75,6 +75,7 @@ export async function facturacionCtrl() {
 export async function getTurnosPendientesSumar() {
     let hoyDesde = moment(new Date()).startOf('day').format();
     let hoyHasta = moment(new Date()).endOf('day').format();
+    let prestaciones = ['2091000013100', '2091000013101'];
     let data = await toArray(agendaSchema.aggregate([
         {
             $match: {
@@ -82,6 +83,8 @@ export async function getTurnosPendientesSumar() {
                 { 'createdAt': { $gte: new Date(hoyDesde), $lte: new Date(hoyHasta) } },
                 { 'bloques.turnos.estado': { $eq: 'asignado' } },
                 { 'bloques.turnos.asistencia': { $exists: true, $eq: 'asistio' } },
+                { 'bloques.turnos.tipoPrestacion.conceptId': { $in: prestaciones } }
+
                 ]
             }
         },

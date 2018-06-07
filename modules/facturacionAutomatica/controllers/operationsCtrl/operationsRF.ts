@@ -49,7 +49,7 @@ export async function facturacionRF(turnos) {
         if (!idPacienteSips) {
             let resultadoBusquedaPaciente: any = await pacienteCrtl.buscarPaciente(turnoRF.paciente.id);
             let idNivelCentral = 127; // Por defecto seteamos como efector nivel central (ID 127)
-            let pacienteSips = operacionesLegacy.pacienteSipsFactory(resultadoBusquedaPaciente.paciente, idNivelCentral);
+            let pacienteSips = await operacionesLegacy.pacienteSipsFactory(resultadoBusquedaPaciente.paciente, idNivelCentral);
             idPacienteSips = await operacionesLegacy.insertaPacienteSips(pacienteSips);
         }
         let unProfesional: any = await profesional.findById(turnoRF.profesionales[0]._id);

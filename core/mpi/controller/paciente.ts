@@ -660,19 +660,13 @@ var thingSchema = new mongoose.Schema({
 });
 export let puco = mongoose.model('puco', thingSchema, 'puco');
 export async function mapeoPuco(dni) {
-    let respuesta;
-    puco.find({
-        'dni': dni
-    }, {}, function (err, data: any) {
-        if (data.length === 0) {
-
-            respuesta = false;
-        } else {
-
-            respuesta = true;
-        }
-
-        return respuesta;
+    return new Promise((resolve, reject) => {
+        let respuesta;
+        puco.find({
+            'dni': dni
+        }, {}, function (err, data: any) {
+            resolve(data)
+        });
     });
 }
 
@@ -680,10 +674,10 @@ export async function mapeoPuco(dni) {
 export async function insertSips() {
 
     let pacientes = await pacientesDelDia();
-    console.log("pacientes",pacientes)
+    console.log("pacientes", pacientes)
     for (var index = 0; index < pacientes.length; index++) {
         let existeEnSips = await getPacienteSips(pacientes[index].documento);
-        let existeEnPuco = await mapeoPuco(pacientes[index].documento);
+        let existeEnPuco: any = await mapeoPuco(pacientes[index].documento);
         let esBeneficiario = await getBeneficiario(pacientes[index].documento);
         let edad = moment().diff(pacientes[index].fechaNacimiento, 'years');
         let efector = await mapeoEfector(pacientes[index].createdBy.organizacion.id);
@@ -698,15 +692,17 @@ export async function insertSips() {
 
         if (existeEnSips.length === 0) {
             //FALTA EL EFECTOR(busqueda por id)
-            let pacienteSips = operacionesLegacy.pacienteSipsFactory(pacientes[index], efector.idEfector);
-            let idPacienteSips = await operacionesLegacy.insertaPacienteSips(pacienteSips);
+            let pacienteSips = await operacionesLegacy.pacienteSipsFactory(pacientes[index], efector.idEfector);
+            console.log("pacientes Sips",pacienteSips)
+            // let idPacienteSips = await operacionesLegacy.insertaPacienteSips(pacienteSips);
         }
-        if (!existeEnPuco && edad <= 64) {
+        console.log(existeEnPuco);
+        if (existeEnPuco.length === 0 && edad <= 64) {
             if (esBeneficiario.length === 0) {
                 // FALTA EL EFECTOR
-                let benef = beneficiarioFactory(pacientes[index], efector.cuie);
+                // let benef = beneficiarioFactory(pacientes[index], efector.cuie);
             }
-        } 
+        }
 
     }
 
@@ -782,46 +778,46 @@ export async function pacientesDelDia() {
     // TODO: DEBEMOS BUSCAR LOS PACIENTES DIA VENCIDO 
 
 
-        let hoyDesde = moment(new Date()).startOf('day').format();
-        let hoyHasta = moment(new Date()).endOf('day').format();
-        let pacientesTotal = [];
-        // let start = moment(req.query.fechaDesde).startOf('day').toDate();
-        // let end = moment(req.query.fechaHasta).endOf('day').toDate();
+    let hoyDesde = moment(new Date()).startOf('day').format();
+    let hoyHasta = moment(new Date()).endOf('day').format();
+    let pacientesTotal = [];
+    // let start = moment(req.query.fechaDesde).startOf('day').toDate();
+    // let end = moment(req.query.fechaHasta).endOf('day').toDate();
 
-//PACIENTES ANDES
-        let pacientesAndes = await toArray(paciente.aggregate({
-            $match: {
-                'createdAt': {
-                    $gte: new Date(hoyDesde), $lte: new Date(hoyHasta)
-                }
+    //PACIENTES ANDES
+    let pacientesAndes = await toArray(paciente.aggregate({
+        $match: {
+            'createdAt': {
+                $gte: new Date(hoyDesde), $lte: new Date(hoyHasta)
             }
-        }).cursor({ batchSize: 1000 }).exec());
+        }
+    }).cursor({ batchSize: 1000 }).exec());
 
 
-        pacientesAndes.forEach(element => {
-            pacientesTotal.push(element)
-        });
+    pacientesAndes.forEach(element => {
+        pacientesTotal.push(element)
+    });
 
-//PACIENTES MPI
-        let pacientesMpi = await toArray(pacienteMpi.aggregate({
-            $match: {
-                'createdAt': {
-                    $gte: new Date(hoyDesde), $lte: new Date(hoyHasta)
-                }
+    //PACIENTES MPI
+    let pacientesMpi = await toArray(pacienteMpi.aggregate({
+        $match: {
+            'createdAt': {
+                $gte: new Date(hoyDesde), $lte: new Date(hoyHasta)
             }
-        }).cursor({ batchSize: 1000 }).exec());
+        }
+    }).cursor({ batchSize: 1000 }).exec());
 
-        
-        pacientesMpi.forEach(element => {
-            pacientesTotal.push(element)
-        });
 
-      return pacientesTotal
- 
+    pacientesMpi.forEach(element => {
+        pacientesTotal.push(element)
+    });
+
+    return pacientesTotal
+
 }
 
 function beneficiarioFactory(paciente, efector) {
-    console.log("aca",paciente)
+    console.log("aca", paciente)
     let tipoCategoria;
     let edad = moment().diff(paciente.fechaNacimiento, 'years');
     if ((edad >= 0) && (edad <= 10)) {
