@@ -1,19 +1,7 @@
 import * as operationsCache from './operationsCacheController/operationsAgenda';
-import * as configPrivate from '../../../config.private';
-import * as sql from 'mssql';
 import * as dbg from 'debug';
 
-const MongoClient = require('mongodb').MongoClient;
-let async = require('async');
-let pool;
-let transaction;
 let debug = dbg('integracion');
-let connection = {
-    user: configPrivate.conSql.auth.user,
-    password: configPrivate.conSql.auth.password,
-    server: configPrivate.conSql.serverSql.server,
-    database: configPrivate.conSql.serverSql.database
-};
 
 export async function integracionSips() {
     try {
