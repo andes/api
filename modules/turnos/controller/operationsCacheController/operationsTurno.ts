@@ -309,7 +309,7 @@ async function getIdObraSocialSips(documentoPaciente, poolAgendas) {
 
         return ((result.recordset && result.recordset.length > 0) ? result.recordset[0].idOS : idSumar);
     } catch (err) {
-        return (err);
+        return (idSumar);
     }
 }
 
