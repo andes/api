@@ -525,7 +525,7 @@ async function processAgenda(connection, agenda: any, datosSips) {
             await updateAgendaSips(connection, agendaSips, datosSips);
             idAgenda = agendaSips.idAgenda;
         } else {
-            idAgenda = await grabaAgendaSips(agenda, datosSips, connection);
+            idAgenda = await grabaAgendaSips(connection, agenda, datosSips);
         }
         debug('3- return idAgenda');
         return (idAgenda);
