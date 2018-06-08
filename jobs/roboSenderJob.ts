@@ -1,10 +1,10 @@
 import * as roboSender from '../utils/roboSender/roboSender';
 
-function run() {
+function run(done) {
     roboSender.roboSender().then(() => {
-        process.exit();
+        done();
     }, () => {
-        process.exit();
+        done();
     });
 }
 

@@ -43,7 +43,7 @@ export function roboSender() {
                                 attachments: ''
                             };
                             log('Enviando email a', env.email);
-                            // await mailTools.sendMail(mailOptions);
+                            await mailTools.sendMail(mailOptions);
                         }
 
                         if (env.phone) {
@@ -52,7 +52,7 @@ export function roboSender() {
                                 mensaje: env.message
                             };
                             log('Enviando SMS a', env.phone);
-                            // await smsTools.sendSms(smsOptions);
+                            await smsTools.sendSms(smsOptions);
                         }
 
                         await changeState(env, 'success');
@@ -74,12 +74,10 @@ export function roboSender() {
             } else {
                 log('Termina la ejecución');
                 return resolve();
-                // db.close();
-                // console.log('Proceso finalizado, nada para enviar: ', Date.now());
             }
 
         }).catch((err) => {
-            log('Termina la ejecución');
+            log('Termina la ejecución', err);
             return reject();
         });
     });
