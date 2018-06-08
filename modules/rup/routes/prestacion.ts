@@ -27,8 +27,9 @@ let async = require('async');
  * que el paciente no tiene una cama asignada.
  */
 
-router.get('/prestaciones/sinCama', function (req, res, next) {
+router.get('/prestaciones/sinCama/:idOrganizacion', function (req, res, next) {
     let query = {
+        'solicitud.organizacion.id': mongoose.Types.ObjectId(req.params.idOrganizacion),
         'solicitud.ambitoOrigen': 'internacion',
         '$where': 'this.estados[this.estados.length - 1].tipo ==  \"' + 'ejecucion' + '\"'
     };
