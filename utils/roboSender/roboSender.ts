@@ -43,7 +43,7 @@ export function roboSender() {
                                 attachments: ''
                             };
                             log('Enviando email a', env.email);
-                            await mailTools.sendMail(mailOptions);
+                            // await mailTools.sendMail(mailOptions);
                         }
 
                         if (env.phone) {
@@ -52,7 +52,7 @@ export function roboSender() {
                                 mensaje: env.message
                             };
                             log('Enviando SMS a', env.phone);
-                            await smsTools.sendSms(smsOptions);
+                            // await smsTools.sendSms(smsOptions);
                         }
 
                         await changeState(env, 'success');
@@ -79,7 +79,8 @@ export function roboSender() {
             }
 
         }).catch((err) => {
-            reject();
+            log('Termina la ejecución');
+            return reject();
         });
     });
 }

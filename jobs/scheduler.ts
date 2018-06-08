@@ -1,6 +1,7 @@
 let schedule = require('node-schedule');
 import { Connections } from './../connections';
 import { jobs } from '../config.private';
+const { spawn, exec } = require('child_process');
 
 class Scheduler {
 
@@ -14,10 +15,15 @@ class Scheduler {
          */
 
         jobs.forEach(job => {
-            let action = require('../' + job.action);
+            // let action = require('../' + job.action);
+
             schedule.scheduleJob(job.when, function () {
-                action();
+                exec('node jobs/manual.js ' + job.action, {},  (error, stdout, stderr) => {
+                });
+                // action();
             });
+
+
         });
 
     }
