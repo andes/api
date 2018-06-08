@@ -29,7 +29,13 @@ export let schema = new mongoose.Schema({
     },
     observaciones: {
         type: String
-    }
+    },
+    sugierePase: {
+        type: SnomedConcept,
+        required: false,
+        default: null
+    },
+
 });
 
 // Habilitar plugin de auditoría

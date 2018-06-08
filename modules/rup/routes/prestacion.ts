@@ -22,14 +22,17 @@ let async = require('async');
 
 
 
-// Trae todas las prestaciones con ambitoOrigen = internacion y
-// que el paciente no tiene una cama asignada.
+/**
+ * Trae todas las prestaciones con ambitoOrigen = internacion y
+ * que el paciente no tiene una cama asignada.
+ */
 
 router.get('/prestaciones/sinCama', function (req, res, next) {
     let query = {
         'solicitud.ambitoOrigen': 'internacion',
         '$where': 'this.estados[this.estados.length - 1].tipo ==  \"' + 'ejecucion' + '\"'
     };
+    // Buscamos prestaciones que sean del ambito de internacion.
     Prestacion.find(query, async (err, prestaciones) => {
         if (err) {
             return next(err);
@@ -45,20 +48,29 @@ router.get('/prestaciones/sinCama', function (req, res, next) {
                 prestacion: prestacion,
                 ultimoEstado: null,
                 paseDe: false,
-                esEgreso: false
+                esEgreso: false,
+                paseA: null
             };
 
+            // Buscamos si tiene una cama ocupada con el id de la internacion.
             let cama = await camasController.buscarCamaInternacion(mongoose.Types.ObjectId(prestacion.id), 'ocupada');
-            let esEgreso = prestacion.ejecucion.registros.find(r => r.valor.InformeEgreso);
+            // Loopeamos los registros de la prestacion buscando el informe de egreso.
+            let esEgreso = prestacion.ejecucion.registros.find(r => { r.valor && r.valor.InformeEgreso; });
+            // Si no encontramos una cama ocupada quiere decir que esa prestacion va a formar parte
+            // de nuestra lista.
             if (cama && cama.length === 0) {
+                // Si encontramos el informe de ingreso en la prestacion entonces es
+                // un egreso. En caso de que no sea ingreso utilizamos la funcion buscarPasesCamaXInternacion.
                 if (esEgreso) {
                     enEspera.ultimoEstado = esEgreso.concepto.term;
                     enEspera.esEgreso = true;
                 } else {
-                    let ultimoEstado: any = await camasController.camaXInternacion(prestacion._id);
-                    if (ultimoEstado) {
-                        enEspera.ultimoEstado = ultimoEstado.estados[ultimoEstado.estados.length - 1].unidadOrganizativa.term;
+                    // Buscamos los pases que tiene la internacion
+                    let _camas: any = await camasController.buscarPasesCamaXInternacion(prestacion._id);
+                    if (_camas && _camas.length) {
+                        enEspera.ultimoEstado = _camas[_camas.length - 1].estados.unidadOrganizativa.term;
                         enEspera.paseDe = true;
+                        enEspera.paseA = _camas[_camas.length - 1].estados.sugierePase;
                     }
                 }
                 listaEspera.push(enEspera);
