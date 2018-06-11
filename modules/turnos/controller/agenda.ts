@@ -1,14 +1,11 @@
 import { SnomedCIE10Mapping } from './../../../core/term/controller/mapping';
 import * as cie10 from './../../../core/term/schemas/cie10';
-import { log } from './../../../core/log/schemas/log';
 import * as agendaModel from '../../turnos/schemas/agenda';
 import * as moment from 'moment';
 import { Auth } from '../../../auth/auth.class';
 import { userScheduler } from '../../../config.private';
 import { Logger } from '../../../utils/logService';
-import { load } from 'google-maps';
 import { model as Prestacion } from '../../rup/schemas/prestacion';
-import * as http from 'http';
 import * as request from 'request';
 import * as mongoose from 'mongoose';
 import { toArray } from '../../../utils/utils';
@@ -795,7 +792,7 @@ export function actualizarTurnosDelDia() {
         }
     };
     let cursor = agendaModel.find(condicion).cursor();
-
+    let promises = [];
     cursor.eachAsync(doc => {
         let agenda: any = doc;
         for (let j = 0; j < agenda.bloques.length; j++) {
@@ -806,7 +803,7 @@ export function actualizarTurnosDelDia() {
         }
 
         Auth.audit(agenda, (userScheduler as any));
-        saveAgenda(agenda).then((nuevaAgenda) => {
+        let p = saveAgenda(agenda).then(() => {
             Logger.log(userScheduler, 'citas', 'actualizarTurnosDelDia', {
                 idAgenda: agenda._id,
                 organizacion: agenda.organizacion,
@@ -815,13 +812,14 @@ export function actualizarTurnosDelDia() {
                 updatedBy: agenda.updatedBy
 
             });
-        }).catch(error => {
-            return (error);
+            return Promise.resolve();
+        }).catch(() => {
+            return Promise.resolve();
         });
+        promises.push(p);
 
     });
-    return 'Agendas actualizadas';
-
+    return Promise.all(promises);
 }
 
 /**
