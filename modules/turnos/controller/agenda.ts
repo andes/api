@@ -279,6 +279,15 @@ export function codificarTurno(req, data, tid) {
                                 },
                                 primeraVez: registro.esPrimeraVez
                             });
+                            if (prestaciones.length === codificaciones.length) {
+                                // console.log('codificaciones ', codificaciones);
+                                turno.diagnostico = {
+                                    ilegible: false,
+                                    codificaciones: codificaciones.filter(cod => Object.keys(cod).length > 0)
+                                };
+                                turno.asistencia = 'asistio';
+                                resolve(data);
+                            }
                         }
                     }).catch(error => {
                         reject(error);

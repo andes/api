@@ -420,8 +420,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                         }
                     });
                 }
-                // Inserto la modificación en agendasCache
-                operations.cacheTurnosSips(data);
+
                 // Fin de insert cache
                 return res.json(data[0]);
             });
