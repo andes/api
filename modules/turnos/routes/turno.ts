@@ -13,6 +13,7 @@ import { esPrimerPaciente } from '../controller/agenda';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import * as debug from 'debug';
+import * as turnoSchema from '../schemas/turno';
 
 let router = express.Router();
 let dbgTurno = debug('dbgTurno');
@@ -26,6 +27,100 @@ router.get('/turno/:id*?', async function (req, res, next) {
     }
 
 });
+
+router.patch('/turno/agenda/:idAgenda', function (req, res, next) {
+    let continues = ValidateDarTurno.checkTurno(req.body);
+
+    if (continues.valid) {
+
+        // Se verifica la existencia del paciente
+        paciente.findById(req.body.paciente.id, function verificarPaciente(err, cant) {
+            if (err) {
+                return next(err);
+            } else {
+                // Se verifica la existencia del tipoPrestacion
+                tipoPrestacion.findById(req.body.tipoPrestacion._id, function verificarTipoPrestacion(err2, data2) {
+                    if (err2) {
+                        return next(err2);
+                    } else {
+                        // Se obtiene la agenda que se va a modificar
+                        agenda.findById(req.params.idAgenda, async function getAgenda(err3, data) {
+                            if (err3) {
+                                return next(err3);
+                            }
+                            let esHoy = false;
+                            // Ver si el día de la agenda coincide con el día de hoy
+                            if ((data as any).horaInicio >= moment(new Date()).startOf('day').toDate() && (data as any).horaInicio <= moment(new Date()).endOf('day').toDate()) {
+                                esHoy = true;
+                            }
+
+                            let usuario = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
+                            // Copia la organización desde el token
+                            usuario.organizacion = (req as any).user.organizacion;
+                            let tipoTurno = (esHoy ? 'delDia' : 'programado');
+                            let turno = {
+                                horaInicio: moment(new Date(), 'YYYY-MM-DD HH:mm:ss'),
+                                estado: 'asignado',
+                                tipoTurno: tipoTurno,
+                                nota: req.body.nota,
+                                motivoConsulta: req.body.motivoConsulta,
+                                paciente: req.body.paciente,
+                                tipoPrestacion: req.body.tipoPrestacion,
+                                updatedAt: new Date(),
+                                updatedBy: usuario
+                            };
+                            let turnos = ((data as any).bloques[0].turnos);
+                            turnos.push(turno);
+                            let update = { 'bloques.0.turnos': turnos };
+                            let query = {
+                                _id: req.params.idAgenda,
+                            };
+                            // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
+                            (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true }, function actualizarAgenda(err4, doc2: any, writeOpResult) {
+                                if (err4) {
+                                    return next(err4);
+                                }
+                                if (doc2 == null) {
+                                    return next('noDisponible');
+                                }
+                                if (writeOpResult && writeOpResult.value === null) {
+                                    return next('noDisponible');
+                                } else {
+                                    let datosOp = {
+                                        estado: doc2.estado,
+                                        paciente: doc2.paciente,
+                                        prestacion: doc2.tipoPrestacion,
+                                        tipoTurno: doc2.tipoTurno,
+                                        nota: doc2.nota,
+                                        motivoConsulta: doc2.motivoConsulta
+                                    };
+                                    Logger.log(req, 'citas', 'asignarTurno', datosOp);
+                                    let turnoLog = doc2.bloques[0].turnos[turnos.length - 1];
+
+                                    LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turnoLog, doc2.bloques[0].id, req.params.idAgenda);
+
+
+                                    //  Existe este tipo de agendas en SIPS??
+                                    /*   // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
+                                      // Donde doc2 es el documeto Agenda actualizado
+                                      operations.cacheTurnosSips(doc2);
+                                      // Fin de insert cache */
+                                    res.json(data);
+                                }
+                            });
+                        });
+
+                    }
+                });
+            }
+        });
+    } else {
+        return next('Los datos del paciente son inválidos');
+    }
+});
+
+
+
 
 
 /**
