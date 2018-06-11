@@ -22,6 +22,7 @@ export async function integracionSips(done) {
     } catch (ex) {
         // No pudo traer las agendas
         debug('Error al buscar agendas pendientes: ', ex);
+        done();
         return (ex);
     }
 }

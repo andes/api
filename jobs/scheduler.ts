@@ -10,9 +10,9 @@ class Scheduler {
 
     static preventDeadLock(job, child: ChildProcess) {
         let id = setTimeout(() => {
-            log('stoping' , job.action, 'timeout');
+            log('stoping', job.action, 'timeout');
             child.kill();
-        }, 1000 * 60 * 10 ); // 10 minutes
+        }, 1000 * 60 * 10); // 10 minutes
         return id;
     }
 
@@ -39,31 +39,35 @@ class Scheduler {
         jobs.forEach(job => {
             _self.runningProccess[job.action] = [];
             schedule.scheduleJob(job.when, function () {
-                log(`${job.action}  start`);
+                if (_self.runningProccess[job.action].length === 0) {
+                    log(`${job.action}  start`);
 
-                let child: any = spawn('node', ['jobs/manual.js', job.action], { env: process.env });
+                    let child: any = spawn('node', ['jobs/manual.js', job.action], { env: process.env });
 
-                child.on('close', function (code, signal) {
-                    log(`${job.action} finish`);
-                    _self.removeJob(job,  child);
-                });
+                    child.on('close', function (code, signal) {
+                        log(`${job.action} finish`);
+                        _self.removeJob(job, child);
+                    });
 
-                child.stderr.on('data', (data) => {
-                    process.stderr.write(data);
-                });
+                    child.stderr.on('data', (data) => {
+                        process.stderr.write(data);
+                    });
 
-                child.stdout.on('data', (data) => {
-                    process.stdout.write(data);
-                });
+                    child.stdout.on('data', (data) => {
+                        process.stdout.write(data);
+                    });
 
-                child.on('error', (err) => {
-                    log(`${job.action} error`, err);
-                    _self.removeJob(job,  child);
-                });
+                    child.on('error', (err) => {
+                        log(`${job.action} error`, err);
+                        _self.removeJob(job, child);
+                    });
 
-                child.timer = _self.preventDeadLock(job, child);
-                _self.runningProccess[job.action].push(child);
+                    child.timer = _self.preventDeadLock(job, child);
+                    _self.runningProccess[job.action].push(child);
 
+                } else {
+                    log(`${job.action}  already run`);
+                }
             });
         });
     }
