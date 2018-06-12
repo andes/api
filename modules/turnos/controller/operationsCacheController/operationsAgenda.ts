@@ -623,9 +623,9 @@ async function updateAgendaSips(connection, agenda, datosSips: any) {
 
     if (agendaProfesional && agendaProfesional.recordset && agendaProfesional.recordset.length > 0) {
         let idAP = agendaProfesional.recordset[0].idAgendaProfesional;
-        let queryAgendaProfesional = 'update CON_AgendaProfesional set idProfesional = ' + datosSips.idProfesional + 'where idAgendaProfesional = ' + idAP;
+        let queryAgendaProfesional = 'update CON_AgendaProfesional set idProfesional = ' + datosSips.idProfesional + ' where idAgendaProfesional = ' + idAP;
         debug('Actualizamos el profesional en la con_agendaProfesional OK', idAP);
-        await executeQuery(connection, queryAgenda);
+        await executeQuery(connection, queryAgendaProfesional);
     } else {
             let insertProfesional = 'INSERT INTO dbo.CON_AgendaProfesional ( idAgenda, idProfesional, baja, CreatedBy , ' +
                 ' CreatedOn, ModifiedBy, ModifiedOn, idEspecialidad ) VALUES  ( ' + agenda.idAgenda + ',' +
