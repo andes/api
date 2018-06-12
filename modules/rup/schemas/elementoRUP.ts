@@ -26,6 +26,10 @@ export let schema = new mongoose.Schema({
         required: true,
         default: false
     },
+
+    // true si no muestra el label de motivo de consulta.
+    motivoConsoltaOpcional: Boolean,
+
     // Conceptos SNOMED relacionados que se muestran e implementan de la misma manera.
     // Por ejemplo: "Toma de temperatura del paciente (SCTID: 56342008)" y
     //              "Toma de temperatura rectal del paciente (SCTID: 18649001")

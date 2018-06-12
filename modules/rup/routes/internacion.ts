@@ -1,14 +1,9 @@
 import * as mongoose from 'mongoose';
 import * as express from 'express';
-import * as moment from 'moment';
 import * as censoController from './../controllers/censo';
 import * as internacionesController from './../controllers/internacion';
 import * as camasController from './../controllers/cama';
 import { Auth } from './../../../auth/auth.class';
-import { model as Prestacion } from '../schemas/prestacion';
-import { model as cama } from '../../../core/tm/schemas/camas';
-import * as camaRouter from '../../../core/tm/routes/cama';
-
 
 let router = express.Router();
 
