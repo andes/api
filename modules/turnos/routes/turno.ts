@@ -75,9 +75,11 @@ router.patch('/turno/agenda/:idAgenda', async function (req, res, next) {
         };
         let turnos = ((agendaRes as any).bloques[0].turnos);
         turnos.push(turno);
-        let update = { 'bloques.0.turnos': turnos };
+        let nuevoCupo = ((agendaRes as any).cupo > 0) ? (agendaRes as any).cupo - 1 : 0;
+        let update = { 'bloques.0.turnos': turnos, 'cupo': nuevoCupo };
         let query = {
             _id: req.params.idAgenda,
+            cupo: { $gt: 0 }
         };
         // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
         (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true }, function actualizarAgenda(err4, doc2: any, writeOpResult) {
@@ -85,10 +87,10 @@ router.patch('/turno/agenda/:idAgenda', async function (req, res, next) {
                 return next(err4);
             }
             if (doc2 == null) {
-                return next('noDisponible');
+                return next('Turno no disponible');
             }
             if (writeOpResult && writeOpResult.value === null) {
-                return next('noDisponible');
+                return next('Turno no disponible');
             } else {
                 let datosOp = {
                     estado: doc2.estado,
