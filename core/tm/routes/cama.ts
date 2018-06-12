@@ -6,6 +6,51 @@ import * as camaController from '../../../modules/rup/controllers/cama';
 
 let router = express.Router();
 
+
+/**
+//  * busca las camas de una organizacion, por defecto trae todas o se
+//  * pueden filtrar por estado o habitacion.
+//  */
+
+
+router.get('/camas', Auth.authenticate(), function (req, res, next) {
+
+    let query;
+    query = CamaModel.find({});
+    if (req.query.idOrganizacion) {
+        query.where('organizacion._id').equals(req.query.idOrganizacion);
+    }
+    // busqueda por el estado actual de la cama
+    if (req.query.ultimoEstado) {
+        query.where('ultimoEstado.estado').equals(req.query.ultimoEstado);
+    }
+    if (req.query.habitacion) {
+        query.where('habitacion').equals(req.query.habitacion);
+    }
+    query.sort({ 'numero': 1, 'habitacion': 1 });
+    query.exec({}, (err, data) => {
+        if (err) {
+            return next(err);
+        }
+        res.json(data);
+    });
+});
+
+
+/**
+ * trae las camas por fecha y hora.
+ */
+
+router.get('/camas/porfecha', Auth.authenticate(), function (req, res, next) {
+    camaController.camasXfecha(new mongoose.Types.ObjectId(req.query.idOrganizacion), new Date(req.query.fecha)).then(
+        camas => {
+            res.json(camas);
+        }).catch(error => {
+            return next(error);
+        });
+});
+
+
 /**
  * Busca la cama por su id.
  */
@@ -19,20 +64,6 @@ router.get('/camas/:idCama', Auth.authenticate(), function (req, res, next) {
         }
         res.json(data);
     });
-});
-
-/**
-//  * busca las camas de una organizacion, por defecto trae todas o se
-//  * pueden filtrar por estado o habitacion.
-//  */
-
-router.get('/camas', Auth.authenticate(), function (req, res, next) {
-    camaController.camasXfecha(new mongoose.Types.ObjectId(req.query.idOrganizacion), new Date(req.query.fecha)).then(
-        camas => {
-            res.json(camas);
-        }).catch(error => {
-            return next(error);
-        });
 });
 
 
