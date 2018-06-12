@@ -44,6 +44,8 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
     let continues = ValidateDarTurno.checkTurno(req.body);
 
+    console.log(req.body)
+
     if (continues.valid) {
 
         // Se verifica la existencia del paciente
@@ -148,6 +150,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
 
                             let etiquetaTipoTurno: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.tipoTurno';
                             let etiquetaEstado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.estado';
+                            let etiquetaEstadoFacturacion: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.estadoFacturacion';
                             let etiquetaPaciente: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.paciente';
                             let etiquetaPrestacion: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.tipoPrestacion';
                             let etiquetaNota: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.nota';
@@ -159,6 +162,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                             let etiquetaPrimeraVez: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.primeraVez';
 
                             update[etiquetaEstado] = 'asignado';
+                            update[etiquetaEstadoFacturacion] = 'sinFacturar';
                             update[etiquetaPrestacion] = req.body.tipoPrestacion;
                             update[etiquetaPaciente] = req.body.paciente;
                             update[etiquetaTipoTurno] = tipoTurno;

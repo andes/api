@@ -53,7 +53,7 @@ export const modules = {
         active: true,
         path: './core/mpi/routes',
         route: '/core/mpi',
-        middleware: null
+        middleware: appMiddleware
     },
     auditoria: {
         active: true,

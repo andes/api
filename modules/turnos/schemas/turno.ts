@@ -23,8 +23,7 @@ let turnoSchema = new mongoose.Schema({
     },
     estadoFacturacion: {
         type: String,
-        enum: ['facturado', 'sinFacturar'],
-        default: 'sinFacturar'
+        enum: ['facturado', 'sinFacturar']
     },
     reasignado: {
         anterior: {

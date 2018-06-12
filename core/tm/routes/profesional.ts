@@ -264,32 +264,33 @@ router.get('/profesionales/:id*?', Auth.authenticate(), function (req, res, next
                 '$regex': utils.makePattern(req.query.especialidad)
             };
         }
-    }
+        let radix = 10;
+        let skip: number = parseInt(req.query.skip || 0, radix);
+        let limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
 
-    let radix = 10;
-    let skip: number = parseInt(req.query.skip || 0, radix);
-    let limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
-
-    if (req.query.nombreCompleto) {
-        query = profesional.find({
-            apellido: {
-                '$regex': utils.makePattern(req.query.nombreCompleto)
-            }
-        }).
-            sort({
-                apellido: 1,
-                nombre: 1
-            });
-    } else {
-        query = profesional.find(opciones).skip(skip).limit(limit);
-    }
-
-    query.exec(function (err, data) {
-        if (err) {
-            return next(err);
+        if (req.query.nombreCompleto) {
+            query = profesional.find({
+                apellido: {
+                    '$regex': utils.makePattern(req.query.nombreCompleto)
+                }
+            }).
+                sort({
+                    apellido: 1,
+                    nombre: 1
+                });
+        } else {
+            query = profesional.find(opciones).skip(skip).limit(limit);
         }
-        res.json(data);
-    });
+
+        query.exec(function (err, data) {
+            if (err) {
+                return next(err);
+            }
+            res.json(data);
+        });
+    }
+
+
 });
 
 
