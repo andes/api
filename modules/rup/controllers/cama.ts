@@ -245,7 +245,7 @@ export function camasXfecha(idOrganizacion, fecha) {
                     _id: { id: '$_id', },
                     ultimoEstado: { $last: '$estados' },
                     organizacion: { $last: '$organizacion' },
-                    sector: { $last: '$sector' },
+                    sectores: { $last: '$sectores' },
                     habitacion: { $last: '$habitacion' },
                     nombre: { $last: '$nombre' },
                     tipoCama: { $last: '$tipoCama' },
