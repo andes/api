@@ -1,21 +1,14 @@
 import * as mongoose from 'mongoose';
 import * as express from 'express';
 import * as moment from 'moment';
-// import * as async from 'async';
 import { Auth } from './../../../auth/auth.class';
 import { model as Prestacion } from '../schemas/prestacion';
-import { model as PrestacionAdjunto } from '../schemas/prestacion-adjuntos';
-
-import { buscarPaciente } from '../../../core/mpi/controller/paciente';
 import * as frecuentescrl from '../controllers/frecuentesProfesional';
-import { NotificationService } from '../../mobileApp/controller/NotificationService';
 
-import { iterate, convertToObjectId, buscarEnHuds, matchConcepts } from '../controllers/rup';
+import { buscarEnHuds } from '../controllers/rup';
 import { Logger } from '../../../utils/logService';
 
 import * as camasController from './../controllers/cama';
-import { resolve } from 'path';
-import { json } from 'body-parser';
 
 let router = express.Router();
 let async = require('async');
@@ -27,9 +20,9 @@ let async = require('async');
  * que el paciente no tiene una cama asignada.
  */
 
-router.get('/prestaciones/sinCama/:idOrganizacion', function (req, res, next) {
+router.get('/prestaciones/sin-cama', function (req, res, next) {
     let query = {
-        'solicitud.organizacion.id': mongoose.Types.ObjectId(req.params.idOrganizacion),
+        'solicitud.organizacion.id': mongoose.Types.ObjectId(Auth.getOrganization(req)),
         'solicitud.ambitoOrigen': 'internacion',
         '$where': 'this.estados[this.estados.length - 1].tipo ==  \"' + 'ejecucion' + '\"'
     };
