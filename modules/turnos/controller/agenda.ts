@@ -107,6 +107,9 @@ export function liberarTurno(req, data, turno) {
             turno.tipoTurno = undefined;
         }
     } else {
+        if (data.cupo > -1) {
+            data.cupo++;
+        }
         let newTurnos = data.bloques[position.indexBloque].turnos;
         newTurnos.splice(position.indexTurno, 1);
         data.bloques[position.indexBloque].turnos = newTurnos;

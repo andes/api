@@ -499,7 +499,6 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 }
 
                 Auth.audit(data, req);
-
                 data.save(function (error) {
 
                     Logger.log(req, 'citas', 'update', {
