@@ -243,6 +243,7 @@ export function camasXfecha(idOrganizacion, fecha) {
             $group:
                 {
                     _id: { id: '$_id', },
+                    id:  { $last:  '$_id' },
                     ultimoEstado: { $last: '$estados' },
                     organizacion: { $last: '$organizacion' },
                     sectores: { $last: '$sectores' },
