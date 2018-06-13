@@ -13,6 +13,14 @@ function getEnv(key, _default, type = 's') {
     }
 }
 
+// Configuracion servicio RENAPER
+export const renaper = {
+    Usuario: getEnv('RENAPER_USERNAME', ''),
+    password: getEnv('RENAPER_PASSWORD', ''),
+    url: getEnv('RENAPER_URL', ''),
+    serv: getEnv('RENAPER_SRV', '')
+};
+
 // Configuración de Passport
 export const auth = {
     useLdap:  getEnv('LDAP', false),
@@ -200,4 +208,15 @@ export const wsSalud = {
    hellerFS: '',
    hpnWS: '',
    hostHPN: ''
+};
+
+export const conSqlPecas = {
+    auth: {
+        user: '',
+        password: ''
+    },
+    serverSql: {
+        server: '',
+        database: ''
+    }
 };

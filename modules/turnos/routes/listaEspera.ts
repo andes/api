@@ -57,7 +57,11 @@ router.post('/listaEspera', function (req, res, next) {
         if (err) {
             return next(err);
         }
-        Logger.log(req, 'citas', 'lista espera');
+        Logger.log(req, 'citas', 'lista espera', function (errLog) {
+            if (errLog) {
+                return next(err);
+            }
+        });
         res.json(newItem);
     });
 
