@@ -281,7 +281,8 @@ export function matching(data) {
                     multi_match: {
                         query: data.cadenaInput,
                         type: 'cross_fields',
-                        fields: ['documento^5', 'nombre', 'apellido^3'],
+                        fields: ['documento', 'apellido^5', 'nombre^4'],
+                        operator: 'and'
                     }
                 };
             }
