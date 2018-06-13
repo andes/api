@@ -78,7 +78,7 @@ router.get('/cambioEstadoAgenda/:id', function (req, res, next) {
         agendaSchema.find({
             '_id': req.params.id, 'bloques.turnos.estadoFacturacion': 'sinFacturar'
         }).exec(function (err, data: any) {
-           console.log("encontre")
+            console.log("encontre")
             if (data.length === 0) {
                 console.log("entro al condicion", data)
 
@@ -100,21 +100,58 @@ router.get('/cambioEstadoAgenda/:id', function (req, res, next) {
 });
 
 
-router.get('/sinTurno/:conceptId', async function (req, res, next) {
+router.get('/cambioEstadoPrestaciones/:id', function (req, res, next) {
+    console.log("entre a la ruta", )
     try {
-        prestacion.aggregate([
-            {
-                $match: {
-                    'solicitud.tipoPrestacion.conceptId': req.params.conceptId,
-                    'solicitud.turno': { $exists: false },
+        prestacion.find({
+            '_id': mongoose.Types.ObjectId(req.params.id)
+        }).exec(function (err, data: any) {
+            console.log(data)
+            data[0].estadoFacturacion = 'facturado';
+
+            Auth.audit(data[0], configPrivate.userScheduler);
+            data[0].save((err2, result) => {
+                if (err2) {
+                    return next(err2);
                 }
-            }
-        ]).cursor({}).exec((err, data: any) => {
-            if (err) {
-                return next(err);
-            }
-            res.json(toArray(data));
+                // res.json(result);
+            });
+            // res.send(data);
         });
+    } catch (error) {
+        res.end(error);
+    }
+});
+
+
+router.get('/sinTurno/:conceptId', async function (req, res, next) {
+    console.log("funcion ruta", req.params.conceptId)
+    try {
+        // prestacion.aggregate([
+        //     {
+        //         $match: {
+        //             'solicitud.tipoPrestacion.conceptId': req.params.conceptId,
+        //             'solicitud.turno': { $exists: false },
+        //         }
+        //     }
+        // ]).cursor({}).exec((err, data: any) => {
+        //     if (err) {
+        //         return next(err);
+        //     }
+        //     console.log(data)
+        //     res.json(toArray(data));
+        // });
+
+        let prestaciones = await toArray(prestacion.aggregate({
+            $match: {
+                'solicitud.tipoPrestacion.conceptId': req.params.conceptId,
+                'solicitud.turno': { $exists: false },
+                'estadoFacturacion': 'sinFacturar'
+            }
+        }).cursor({ batchSize: 1000 }).exec());
+
+        console.log(prestaciones)
+        res.json(prestaciones);
     } catch (error) {
         res.end(error);
     }

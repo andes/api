@@ -79,7 +79,10 @@ export let schema = new mongoose.Schema({
 
 
     },
-
+    estadoFacturacion: {
+        type: String,
+        enum: ['facturado', 'sinFacturar']
+    },
     // Datos de la ejecución (i.e. realización)
     ejecucion: {
         // Fecha de ejecución
