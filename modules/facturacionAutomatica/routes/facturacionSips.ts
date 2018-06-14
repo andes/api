@@ -127,21 +127,6 @@ router.get('/cambioEstadoPrestaciones/:id', function (req, res, next) {
 router.get('/sinTurno/:conceptId', async function (req, res, next) {
     console.log("funcion ruta", req.params.conceptId)
     try {
-        // prestacion.aggregate([
-        //     {
-        //         $match: {
-        //             'solicitud.tipoPrestacion.conceptId': req.params.conceptId,
-        //             'solicitud.turno': { $exists: false },
-        //         }
-        //     }
-        // ]).cursor({}).exec((err, data: any) => {
-        //     if (err) {
-        //         return next(err);
-        //     }
-        //     console.log(data)
-        //     res.json(toArray(data));
-        // });
-
         let prestaciones = await toArray(prestacion.aggregate({
             $match: {
                 'solicitud.tipoPrestacion.conceptId': req.params.conceptId,
@@ -155,6 +140,18 @@ router.get('/sinTurno/:conceptId', async function (req, res, next) {
     } catch (error) {
         res.end(error);
     }
+});
+
+
+router.get('/prestacionesConTurno/:id', async function (req, res, next) {
+console.log("prestaciones con turno");
+        prestacion.find({
+            'solicitud.turno': mongoose.Types.ObjectId(req.params.id)
+        }).exec(function (err, data: any) {
+            res.json(data);
+
+        })
+
 });
 
 export = router;
