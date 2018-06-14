@@ -15,6 +15,56 @@ function getAge(dateString) {
     }
     return age;
 }
+
+function calculoEdad(dateString) {
+    let edad: any;
+    let fechaNac: any;
+    let fechaActual: Date = new Date();
+    let fechaAct: any;
+    let difAnios: any;
+    let difDias: any;
+    let difMeses: any;
+    let difD: any;
+    let difHs: any;
+    let difMn: any;
+
+    fechaNac = moment(dateString, 'YYYY-MM-DD HH:mm:ss');
+    fechaAct = moment(fechaActual, 'YYYY-MM-DD HH:mm:ss');
+    difDias = fechaAct.diff(fechaNac, 'd'); // Diferencia en días
+    difAnios = Math.floor(difDias / 365.25);
+    difMeses = Math.floor(difDias / 30.4375);
+    difHs = fechaAct.diff(fechaNac, 'h'); // Diferencia en horas
+    difMn = fechaAct.diff(fechaNac, 'm'); // Diferencia en minutos
+
+    if (difAnios !== 0) {
+        edad = {
+            valor: difAnios,
+            unidad: 'años'
+        };
+    } else if (difMeses !== 0) {
+        edad = {
+            valor: difMeses,
+            unidad: 'meses'
+        };
+    } else if (difDias !== 0) {
+        edad = {
+            valor: difDias,
+            unidad: 'días'
+        };
+    } else if (difHs !== 0) {
+        edad = {
+            valor: difHs,
+            unidad: 'horas'
+        };
+    } else if (difMn !== 0) {
+        edad = {
+            valor: difMn,
+            unidad: 'minutos'
+        };
+    }
+
+    return edad;
+}
 function sumarCodigos(codigos) {
     function getSum(total, num) {
         return total + num;
@@ -28,16 +78,21 @@ function sumarCodigos(codigos) {
         reporteC2: codigos[0].reporteC2,
         causa: codigos[0].causa,
         ficha: codigos[0].ficha,
-        sumaMenor1: codigos.map(c => { return c.sumaMenor1; }).reduce(getSum, 0),
+        sumaMenor6m: codigos.map(c => { return c.sumaMenor6m; }).reduce(getSum, 0),
+        suma711m: codigos.map(c => { return c.suma711m; }).reduce(getSum, 0),
+        // sumaMenor1: codigos.map(c => { return c.sumaMenor1; }).reduce(getSum, 0),
         suma1: codigos.map(c => { return c.suma1; }).reduce(getSum, 0),
         suma24: codigos.map(c => { return c.suma24; }).reduce(getSum, 0),
         suma59: codigos.map(c => { return c.suma59; }).reduce(getSum, 0),
         suma1014: codigos.map(c => { return c.suma1014; }).reduce(getSum, 0),
-        suma1524: codigos.map(c => { return c.suma1524; }).reduce(getSum, 0),
+        // suma1524: codigos.map(c => { return c.suma1524; }).reduce(getSum, 0),
+        suma1519: codigos.map(c => { return c.suma1519; }).reduce(getSum, 0),
+        suma2024: codigos.map(c => { return c.suma2024; }).reduce(getSum, 0),
         suma2534: codigos.map(c => { return c.suma2534; }).reduce(getSum, 0),
         suma3544: codigos.map(c => { return c.suma3544; }).reduce(getSum, 0),
         suma4564: codigos.map(c => { return c.suma4564; }).reduce(getSum, 0),
-        sumaMayor65: codigos.map(c => { return c.sumaMayor65; }).reduce(getSum, 0),
+        suma6574: codigos.map(c => { return c.suma6574; }).reduce(getSum, 0),
+        sumaMayor75: codigos.map(c => { return c.sumaMayor75; }).reduce(getSum, 0),
         sumaMasculino: codigos.map(c => { return c.sumaMasculino; }).reduce(getSum, 0),
         sumaFemenino: codigos.map(c => { return c.sumaFemenino; }).reduce(getSum, 0),
         sumaOtro: codigos.map(c => { return c.sumaOtro; }).reduce(getSum, 0),
@@ -138,7 +193,7 @@ export function getDiagnosticos(params) {
         data.forEach(elem => {
             if (elem._id != null) {
                 // Se definen variables cuantificadoras
-                let sumaMenor1 = {
+                let suma = {
                     default: 0,
                     botulismo: 0,
                     meningitis: 0,
@@ -154,15 +209,19 @@ export function getDiagnosticos(params) {
                     hiv: 0,
                     bronquiolitis: 0
                 };
-                let suma1 = Object.assign({}, sumaMenor1);
-                let suma24 = Object.assign({}, sumaMenor1);
-                let suma59 = Object.assign({}, sumaMenor1);
-                let suma1014 = Object.assign({}, sumaMenor1);
-                let suma1524 = Object.assign({}, sumaMenor1);
-                let suma2534 = Object.assign({}, sumaMenor1);
-                let suma3544 = Object.assign({}, sumaMenor1);
-                let suma4564 = Object.assign({}, sumaMenor1);
-                let sumaMayor65 = Object.assign({}, sumaMenor1);
+                let sumaMenor6m = Object.assign({}, suma);
+                let suma711m = Object.assign({}, suma);
+                let suma1 = Object.assign({}, suma);
+                let suma24 = Object.assign({}, suma);
+                let suma59 = Object.assign({}, suma);
+                let suma1014 = Object.assign({}, suma);
+                let suma1519 = Object.assign({}, suma);
+                let suma2024 = Object.assign({}, suma);
+                let suma2534 = Object.assign({}, suma);
+                let suma3544 = Object.assign({}, suma);
+                let suma4564 = Object.assign({}, suma);
+                let suma6574 = Object.assign({}, suma);
+                let sumaMayor75 = Object.assign({}, suma);
 
                 let sumaMasculino = {
                     default: 0,
@@ -253,7 +312,7 @@ export function getDiagnosticos(params) {
                         }
 
                         function actualizarContador(paciente, tipo) {
-                            let edad = getAge(paciente.fechaNacimiento);
+                            let edad = calculoEdad(paciente.fechaNacimiento);
                             let sexo = paciente.sexo;
                             switch (elem.causa) {
                                 case 'A51': // Sífilis Temprana
@@ -279,7 +338,7 @@ export function getDiagnosticos(params) {
                                     }
                                     break;
                                 case 'A80': // Poliomielitis
-                                    if (edad < 15) {
+                                    if ((edad.unidad === 'años' && edad.valor < 15) || (edad.unidad === 'meses') || (edad.unidad === 'días')) {
                                         poliomielitis++;
                                         pacientes.polio.push(paciente);
                                         if (sexo === 'femenino') {
@@ -329,7 +388,7 @@ export function getDiagnosticos(params) {
                                             }
                                             break;
                                         case 'Bronquiolitis':
-                                            if (edad < 2) {
+                                            if ((edad.unidad === 'años' && edad.valor < 2) || (edad.unidad === 'meses') || (edad.unidad === 'días')) {
                                                 bronquiolitis++;
                                                 pacientes.bronquiolitis.push(paciente);
                                                 if (sexo === 'femenino') {
@@ -344,8 +403,15 @@ export function getDiagnosticos(params) {
                                             break;
                                         default:
                                             if (elem.codigo === 'A05.1') { // Botulismo
-                                                if (edad < 1) {
-                                                    sumaMenor1.botulismo++;
+                                                // if (edad < 1) {
+                                                if (edad.unidad === 'meses') {
+                                                    // sumaMenor1.botulismo++;
+                                                    if ((edad.unidad === 'meses' && edad.valor <= 6) || edad.unidad === 'días') {
+                                                        sumaMenor6m.botulismo++;
+                                                    }
+                                                    if ((edad.unidad === 'meses' && edad.valor >= 7)) {
+                                                        suma711m.botulismo++;
+                                                    }
                                                     pacientes.botulismo.push(paciente);
                                                     if (sexo === 'femenino') {
                                                         sumaSexo(sumaFemenino, 'botulismo');
@@ -358,7 +424,7 @@ export function getDiagnosticos(params) {
                                                 }
                                             } else {
                                                 if (elem.codigo === 'A17.0') {  // Meningitis Tuberculosa
-                                                    if (edad < 5) {
+                                                    if ((edad.unidad === 'años' && edad.valor < 5) || (edad.unidad === 'meses') || (edad.unidad === 'días')) { // Paciente menor a 5 años
                                                         sumaMeningitis++;
                                                         pacientes.meningitis.push(paciente);
                                                         tipo.meningitis++;
@@ -385,42 +451,55 @@ export function getDiagnosticos(params) {
                         }
 
                         function calcularContadores(paciente) {
-                            let edad = getAge(paciente.fechaNacimiento);
+                            let edad = calculoEdad(paciente.fechaNacimiento);
+                            // let edad = getAge(paciente.fechaNacimiento);
                             let sexo = paciente.sexo;
-                            if (edad < 5) {
-                                if (edad < 1) {
-                                    actualizarContador(paciente, sumaMenor1);
+                            if ((edad.unidad === 'años' && edad.valor < 5) || (edad.unidad === 'meses') || (edad.unidad === 'días')) {
+                                if (edad.unidad === 'meses' || (edad.unidad === 'días')) {
+                                    // actualizarContador(paciente, sumaMenor1);
+                                    if ((edad.unidad === 'meses' && edad.valor <= 6) || edad.unidad === 'días') {
+                                        actualizarContador(paciente, sumaMenor6m);
+                                    }
+                                    if (edad.unidad === 'meses' && edad.valor >= 7) {
+                                        actualizarContador(paciente, suma711m);
+                                    }
                                 }
-                                if (edad === 1) {
+                                if (edad.unidad === 'años' && edad.valor === 1) {
                                     actualizarContador(paciente, suma1);
                                 }
-                                if (edad >= 2 && edad <= 4) {
+                                if (edad.unidad === 'años' && edad.valor >= 2 && edad.valor <= 4) {
                                     actualizarContador(paciente, suma24);
                                 }
                             }
-                            if (edad >= 5 && edad <= 9) {
+                            if (edad.unidad === 'años' && edad.valor >= 5 && edad.valor <= 9) {
                                 actualizarContador(paciente, suma59);
                             }
-                            if (edad >= 10 && edad <= 14) {
+                            if (edad.unidad === 'años' && edad.valor >= 10 && edad.valor <= 14) {
                                 actualizarContador(paciente, suma1014);
                             }
-                            if (edad >= 15 && edad <= 24) {
-                                actualizarContador(paciente, suma1524);
+                            if (edad.unidad === 'años' && edad.valor >= 15 && edad.valor <= 19) {
+                                actualizarContador(paciente, suma1519);
                             }
-                            if (edad >= 25 && edad <= 34) {
+                            if (edad.unidad === 'años' && edad.valor >= 20 && edad.valor <= 24) {
+                                actualizarContador(paciente, suma2024);
+                            }
+                            if (edad.unidad === 'años' && edad.valor >= 25 && edad.valor <= 34) {
                                 actualizarContador(paciente, suma2534);
                             }
-                            if (edad >= 35 && edad <= 44) {
+                            if (edad.unidad === 'años' && edad.valor >= 35 && edad.valor <= 44) {
                                 actualizarContador(paciente, suma3544);
                             }
-                            if (edad >= 45 && edad <= 64) {
+                            if (edad.unidad === 'años' && edad.valor >= 45 && edad.valor <= 64) {
                                 actualizarContador(paciente, suma4564);
                             }
-                            if (edad > 65) {
-                                actualizarContador(paciente, sumaMayor65);
+                            if (edad.unidad === 'años' && edad.valor >= 65 && edad.valor <= 74) {
+                                actualizarContador(paciente, suma6574);
+                            }
+                            if (edad.unidad === 'años' && edad.valor > 75) {
+                                actualizarContador(paciente, sumaMayor75);
                             }
 
-                            let codigoExcepcion = (elem.codigo === 'A05.1' && edad < 1) || (elem.codigo === 'A17.0' && edad < 5);
+                            let codigoExcepcion = (elem.codigo === 'A05.1' && edad.unidad === 'meses') || (elem.codigo === 'A17.0' && ((edad.unidad === 'años' && edad.valor < 5) || (edad.unidad === 'meses') || (edad.unidad === 'días')));
 
                             if (!codigoExcepcion && sexo === 'masculino') {
                                 sumaMasculino.default++;
@@ -465,24 +544,27 @@ export function getDiagnosticos(params) {
                             });
                         });
 
-                        let sumaTotal = sumaMenor1.default + suma1.default + suma24.default + suma59.default + suma1014.default + suma1524.default + suma2534.default
-                            + suma3544.default + suma4564.default + sumaMayor65.default;
+                        let sumaTotal = sumaMenor6m.default + suma711m.default + suma1.default + suma24.default + suma59.default + suma1014.default + suma1519.default + suma2024.default + suma2534.default
+                            + suma3544.default + suma4564.default + suma6574.default + sumaMayor75.default;
                         let r2 = {
                             codigo: elem.codigo,
                             nombre: elem._id,
                             reporteC2: elem.reporteC2,
                             ficha: elem.ficha,
                             causa: elem.causa,
-                            sumaMenor1: sumaMenor1.default,
+                            sumaMenor6m: sumaMenor6m.default,
+                            suma711m: suma711m.default,
                             suma1: suma1.default,
                             suma24: suma24.default,
                             suma59: suma59.default,
                             suma1014: suma1014.default,
-                            suma1524: suma1524.default,
+                            suma1519: suma1519.default,
+                            suma2024: suma2024.default,
                             suma2534: suma2534.default,
                             suma3544: suma3544.default,
                             suma4564: suma4564.default,
-                            sumaMayor65: sumaMayor65.default,
+                            suma6574: suma6574.default,
+                            sumaMayor75: sumaMayor75.default,
                             sumaMasculino: sumaMasculino.default,
                             sumaFemenino: sumaFemenino.default,
                             sumaOtro: sumaOtro.default,
@@ -493,24 +575,27 @@ export function getDiagnosticos(params) {
                         let r1 = Object.assign({}, r2);
                         switch (elem.codigo) {
                             case 'A05.1':
-                                let sumaR = suma1.default + suma24.default + suma59.default + suma1014.default + suma1524.default + suma2534.default + suma3544.default
-                                    + suma4564.default + sumaMayor65.default;
-                                if (sumaMenor1.botulismo > 0) { // Botulismo en lactantes (< 1 año)
+                                let sumaR = suma1.default + suma24.default + suma59.default + suma1014.default + suma1519.default + suma2024.default + suma2534.default + suma3544.default
+                                    + suma4564.default + suma6574.default + sumaMayor75.default;
+                                if (sumaMenor6m.botulismo > 0 || suma711m.botulismo > 0) { // Botulismo en lactantes (< 1 año)
                                     r1.reporteC2 = 'Botulismo del Lactante';
-                                    r1.sumaMenor1 = sumaMenor1.botulismo;
+                                    r1.sumaMenor6m = sumaMenor6m.botulismo;
+                                    r1.suma711m = suma711m.botulismo;
                                     r1.suma1 = 0;
                                     r1.suma24 = 0;
                                     r1.suma59 = 0;
                                     r1.suma1014 = 0;
-                                    r1.suma1524 = 0;
+                                    r1.suma1519 = 0;
+                                    r1.suma2024 = 0;
                                     r1.suma2534 = 0;
                                     r1.suma3544 = 0;
                                     r1.suma4564 = 0;
-                                    r1.sumaMayor65 = 0;
+                                    r1.suma6574 = 0;
+                                    r1.sumaMayor75 = 0;
                                     r1.sumaMasculino = sumaMasculino.botulismo;
                                     r1.sumaFemenino = sumaFemenino.botulismo;
                                     r1.sumaOtro = otroLactante;
-                                    r1.total = sumaMenor1.botulismo;
+                                    r1.total = sumaMenor6m.botulismo + suma711m.botulismo;
                                     r1.pacientes = pacientes.botulismo;
                                     resultados.push(r1);
                                 }
@@ -519,19 +604,22 @@ export function getDiagnosticos(params) {
                                 }
                                 break;
                             case 'A17.0':
-                                let sumaResto = suma59.default + suma1014.default + suma1524.default + suma2534.default + suma3544.default + suma4564.default + sumaMayor65.default;
+                                let sumaResto = suma59.default + suma1014.default + suma1519.default + suma2024.default + suma2534.default + suma3544.default + suma4564.default + suma6574.default + sumaMayor75.default;
                                 if (sumaMeningitis > 0) { // Meningitis Tuberculosa en menores de 5 años
                                     r1.reporteC2 = 'Meningitis tuberculosa en menores de 5 años';
-                                    r1.sumaMenor1 = sumaMenor1.meningitis;
+                                    r1.sumaMenor6m = sumaMenor6m.meningitis;
+                                    r1.suma711m = suma711m.meningitis;
                                     r1.suma1 = suma1.meningitis;
                                     r1.suma24 = suma24.meningitis;
                                     r1.suma59 = 0;
                                     r1.suma1014 = 0;
-                                    r1.suma1524 = 0;
+                                    r1.suma1519 = 0;
+                                    r1.suma2024 = 0;
                                     r1.suma2534 = 0;
                                     r1.suma3544 = 0;
                                     r1.suma4564 = 0;
-                                    r1.sumaMayor65 = 0;
+                                    r1.suma6574 = 0;
+                                    r1.sumaMayor75 = 0;
                                     r1.sumaMasculino = sumaMasculino.meningitis;
                                     r1.sumaFemenino = sumaFemenino.meningitis;
                                     r1.sumaOtro = otroMeningitis;
@@ -551,16 +639,19 @@ export function getDiagnosticos(params) {
                             default:
                                 switch (elem.causa) {
                                     case 'A80':
-                                        r2.sumaMenor1 = sumaMenor1.poliomielitis;
+                                        r2.sumaMenor6m = sumaMenor6m.poliomielitis;
+                                        r2.suma711m = suma711m.poliomielitis;
                                         r2.suma1 = suma1.poliomielitis;
                                         r2.suma24 = suma24.poliomielitis;
                                         r2.suma59 = suma59.poliomielitis;
                                         r2.suma1014 = suma1014.poliomielitis;
-                                        r2.suma1524 = suma1524.poliomielitis;
+                                        r2.suma1519 = suma1519.poliomielitis;
+                                        r2.suma2024 = suma2024.poliomielitis;
                                         r2.suma2534 = suma2534.poliomielitis;
                                         r2.suma3544 = suma3544.poliomielitis;
                                         r2.suma4564 = suma4564.poliomielitis;
-                                        r2.sumaMayor65 = sumaMayor65.poliomielitis;
+                                        r2.suma6574 = suma6574.poliomielitis;
+                                        r2.sumaMayor75 = sumaMayor75.poliomielitis;
                                         r2.sumaFemenino = sumaFemenino.poliomielitis;
                                         r2.sumaMasculino = sumaMasculino.poliomielitis;
                                         r2.total = poliomielitis;
@@ -570,16 +661,19 @@ export function getDiagnosticos(params) {
                                     case 'A51':
                                         if (sumaFemenino.sifilisTemprana > 0) {
                                             r2.reporteC2 = 'Sífilis temprana en mujeres';
-                                            r2.sumaMenor1 = sumaMenor1.sifilisTempranaFemenino;
+                                            r2.sumaMenor6m = sumaMenor6m.sifilisTempranaFemenino;
+                                            r2.suma711m = suma711m.sifilisTempranaFemenino;
                                             r2.suma1 = suma1.sifilisTempranaFemenino;
                                             r2.suma24 = suma24.sifilisTempranaFemenino;
                                             r2.suma59 = suma59.sifilisTempranaFemenino;
                                             r2.suma1014 = suma1014.sifilisTempranaFemenino;
-                                            r2.suma1524 = suma1524.sifilisTempranaFemenino;
+                                            r2.suma1519 = suma1519.sifilisTempranaFemenino;
+                                            r2.suma2024 = suma2024.sifilisTempranaFemenino;
                                             r2.suma2534 = suma2534.sifilisTempranaFemenino;
                                             r2.suma3544 = suma3544.sifilisTempranaFemenino;
                                             r2.suma4564 = suma4564.sifilisTempranaFemenino;
-                                            r2.sumaMayor65 = sumaMayor65.sifilisTempranaFemenino;
+                                            r2.suma6574 = suma6574.sifilisTempranaFemenino;
+                                            r2.sumaMayor75 = sumaMayor75.sifilisTempranaFemenino;
                                             r2.sumaFemenino = sumaFemenino.sifilisTemprana;
                                             r2.sumaMasculino = 0;
                                             r2.total = sumaFemenino.sifilisTemprana;
@@ -588,16 +682,19 @@ export function getDiagnosticos(params) {
                                         }
                                         if (sumaMasculino.sifilisTemprana > 0) {
                                             r1.reporteC2 = 'Sífilis temprana en hombres';
-                                            r1.sumaMenor1 = sumaMenor1.sifilisTempranaMasculino;
+                                            r1.sumaMenor6m = sumaMenor6m.sifilisTempranaMasculino;
+                                            r1.suma711m = suma711m.sifilisTempranaMasculino;
                                             r1.suma1 = suma1.sifilisTempranaMasculino;
                                             r1.suma24 = suma24.sifilisTempranaMasculino;
                                             r1.suma59 = suma59.sifilisTempranaMasculino;
                                             r1.suma1014 = suma1014.sifilisTempranaMasculino;
-                                            r1.suma1524 = suma1524.sifilisTempranaMasculino;
+                                            r1.suma1519 = suma1519.sifilisTempranaMasculino;
+                                            r1.suma2024 = suma2024.sifilisTempranaMasculino;
                                             r1.suma2534 = suma2534.sifilisTempranaMasculino;
                                             r1.suma3544 = suma3544.sifilisTempranaMasculino;
                                             r1.suma4564 = suma4564.sifilisTempranaMasculino;
-                                            r1.sumaMayor65 = sumaMayor65.sifilisTempranaMasculino;
+                                            r1.suma6574 = suma6574.sifilisTempranaMasculino;
+                                            r1.sumaMayor75 = sumaMayor75.sifilisTempranaMasculino;
                                             r1.sumaFemenino = 0;
                                             r1.sumaMasculino = sumaMasculino.sifilisTemprana;
                                             r1.total = sumaMasculino.sifilisTemprana;
@@ -608,16 +705,19 @@ export function getDiagnosticos(params) {
                                     case 'A52' || 'A53':
                                         if (sumaFemenino.sifilisSinEspecificar > 0) {
                                             r2.reporteC2 = 'Sífilis sin especificar en mujeres';
-                                            r2.sumaMenor1 = sumaMenor1.sifilisSEFemenino;
+                                            r2.sumaMenor6m = sumaMenor6m.sifilisSEFemenino;
+                                            r2.suma711m = suma711m.sifilisSEFemenino;
                                             r2.suma1 = suma1.sifilisSEFemenino;
                                             r2.suma24 = suma24.sifilisSEFemenino;
                                             r2.suma59 = suma59.sifilisSEFemenino;
                                             r2.suma1014 = suma1014.sifilisSEFemenino;
-                                            r2.suma1524 = suma1524.sifilisSEFemenino;
+                                            r2.suma1519 = suma1519.sifilisSEFemenino;
+                                            r2.suma2024 = suma2024.sifilisSEFemenino;
                                             r2.suma2534 = suma2534.sifilisSEFemenino;
                                             r2.suma3544 = suma3544.sifilisSEFemenino;
                                             r2.suma4564 = suma4564.sifilisSEFemenino;
-                                            r2.sumaMayor65 = sumaMayor65.sifilisSEFemenino;
+                                            r2.suma6574 = suma6574.sifilisSEFemenino;
+                                            r2.sumaMayor75 = sumaMayor75.sifilisSEFemenino;
                                             r2.sumaFemenino = sumaFemenino.sifilisSinEspecificar;
                                             r2.sumaMasculino = 0;
                                             r2.total = sumaFemenino.sifilisSinEspecificar;
@@ -626,16 +726,19 @@ export function getDiagnosticos(params) {
                                         }
                                         if (sumaMasculino.sifilisSinEspecificar > 0) {
                                             r1.reporteC2 = 'Sífilis sin especificar en hombres';
-                                            r1.sumaMenor1 = sumaMenor1.sifilisSEMasculino;
+                                            r1.sumaMenor6m = sumaMenor6m.sifilisSEMasculino;
+                                            r1.suma711m = suma711m.sifilisSEMasculino;
                                             r1.suma1 = suma1.sifilisSEMasculino;
                                             r1.suma24 = suma24.sifilisSEMasculino;
                                             r1.suma59 = suma59.sifilisSEMasculino;
                                             r1.suma1014 = suma1014.sifilisSEMasculino;
-                                            r1.suma1524 = suma1524.sifilisSEMasculino;
+                                            r1.suma1519 = suma1519.sifilisSEMasculino;
+                                            r1.suma2024 = suma2024.sifilisSEMasculino;
                                             r1.suma2534 = suma2534.sifilisSEMasculino;
                                             r1.suma3544 = suma3544.sifilisSEMasculino;
                                             r1.suma4564 = suma4564.sifilisSEMasculino;
-                                            r1.sumaMayor65 = sumaMayor65.sifilisSEMasculino;
+                                            r1.suma6574 = suma6574.sifilisSEMasculino;
+                                            r1.sumaMayor75 = sumaMayor75.sifilisSEMasculino;
                                             r1.sumaFemenino = 0;
                                             r1.sumaMasculino = sumaMasculino.sifilisSinEspecificar;
                                             r1.total = sumaMasculino.sifilisSinEspecificar;
@@ -648,16 +751,19 @@ export function getDiagnosticos(params) {
                                             case 'Secreción genital purulenta':
                                                 if (sumaFemenino.secrecionPurulenta > 0) {
                                                     r2.reporteC2 = 'Secreción genital sin especificar en mujeres';
-                                                    r2.sumaMenor1 = sumaMenor1.secrecionPurulentaFemenino;
+                                                    r2.sumaMenor6m = sumaMenor6m.secrecionPurulentaFemenino;
+                                                    r2.suma711m = suma711m.secrecionPurulentaFemenino;
                                                     r2.suma1 = suma1.secrecionPurulentaFemenino;
                                                     r2.suma24 = suma24.secrecionPurulentaFemenino;
                                                     r2.suma59 = suma59.secrecionPurulentaFemenino;
                                                     r2.suma1014 = suma1014.secrecionPurulentaFemenino;
-                                                    r2.suma1524 = suma1524.secrecionPurulentaFemenino;
+                                                    r2.suma1519 = suma1519.secrecionPurulentaFemenino;
+                                                    r2.suma2024 = suma2024.secrecionPurulentaFemenino;
                                                     r2.suma2534 = suma2534.secrecionPurulentaFemenino;
                                                     r2.suma3544 = suma3544.secrecionPurulentaFemenino;
                                                     r2.suma4564 = suma4564.secrecionPurulentaFemenino;
-                                                    r2.sumaMayor65 = sumaMayor65.secrecionPurulentaFemenino;
+                                                    r2.suma6574 = suma6574.secrecionPurulentaFemenino;
+                                                    r2.sumaMayor75 = sumaMayor75.secrecionPurulentaFemenino;
                                                     r2.sumaFemenino = sumaFemenino.secrecionPurulenta;
                                                     r2.sumaMasculino = 0;
                                                     r2.total = sumaFemenino.secrecionPurulenta;
@@ -666,16 +772,19 @@ export function getDiagnosticos(params) {
                                                 }
                                                 if (sumaMasculino.secrecionPurulenta > 0) {
                                                     r1.reporteC2 = 'Secreción genital purulenta en hombres';
-                                                    r1.sumaMenor1 = sumaMenor1.secrecionPurulentaMasculino;
+                                                    r1.sumaMenor6m = sumaMenor6m.secrecionPurulentaMasculino;
+                                                    r1.suma711m = suma711m.secrecionPurulentaMasculino;
                                                     r1.suma1 = suma1.secrecionPurulentaMasculino;
                                                     r1.suma24 = suma24.secrecionPurulentaMasculino;
                                                     r1.suma59 = suma59.secrecionPurulentaMasculino;
                                                     r1.suma1014 = suma1014.secrecionPurulentaMasculino;
-                                                    r1.suma1524 = suma1524.secrecionPurulentaMasculino;
+                                                    r1.suma1519 = suma1519.secrecionPurulentaMasculino;
+                                                    r1.suma2024 = suma2024.secrecionPurulentaMasculino;
                                                     r1.suma2534 = suma2534.secrecionPurulentaMasculino;
                                                     r1.suma3544 = suma3544.secrecionPurulentaMasculino;
                                                     r1.suma4564 = suma4564.secrecionPurulentaMasculino;
-                                                    r1.sumaMayor65 = sumaMayor65.secrecionPurulentaMasculino;
+                                                    r1.suma6574 = suma6574.secrecionPurulentaMasculino;
+                                                    r1.sumaMayor75 = sumaMayor75.secrecionPurulentaMasculino;
                                                     r1.sumaFemenino = 0;
                                                     r1.sumaMasculino = sumaMasculino.secrecionPurulenta;
                                                     r1.total = sumaMasculino.secrecionPurulenta;
@@ -686,16 +795,19 @@ export function getDiagnosticos(params) {
                                             case 'Secreción genital sin especificar':
                                                 if (sumaFemenino.secrecionSE > 0) {
                                                     r2.reporteC2 = 'Secreción genital sin especificar en mujeres';
-                                                    r2.sumaMenor1 = sumaMenor1.secrecionSEFemenino;
+                                                    r2.sumaMenor6m = sumaMenor6m.secrecionSEFemenino;
+                                                    r2.suma711m = suma711m.secrecionSEFemenino;
                                                     r2.suma1 = suma1.secrecionSEFemenino;
                                                     r2.suma24 = suma24.secrecionSEFemenino;
                                                     r2.suma59 = suma59.secrecionSEFemenino;
                                                     r2.suma1014 = suma1014.secrecionSEFemenino;
-                                                    r2.suma1524 = suma1524.secrecionSEFemenino;
+                                                    r2.suma1519 = suma1519.secrecionSEFemenino;
+                                                    r2.suma2024 = suma2024.secrecionSEFemenino;
                                                     r2.suma2534 = suma2534.secrecionSEFemenino;
                                                     r2.suma3544 = suma3544.secrecionSEFemenino;
                                                     r2.suma4564 = suma4564.secrecionSEFemenino;
-                                                    r2.sumaMayor65 = sumaMayor65.secrecionSEFemenino;
+                                                    r2.suma6574 = suma6574.secrecionSEFemenino;
+                                                    r2.sumaMayor75 = sumaMayor75.secrecionSEFemenino;
                                                     r2.sumaFemenino = sumaFemenino.secrecionSE;
                                                     r2.sumaMasculino = 0;
                                                     r2.total = sumaFemenino.secrecionSE;
@@ -704,16 +816,19 @@ export function getDiagnosticos(params) {
                                                 }
                                                 if (sumaMasculino.secrecionSE > 0) {
                                                     r1.reporteC2 = 'Secreción genital sin especificar en hombres';
-                                                    r1.sumaMenor1 = sumaMenor1.secrecionSEMasculino;
+                                                    r1.sumaMenor6m = sumaMenor6m.secrecionSEMasculino;
+                                                    r1.suma711m = suma711m.secrecionSEMasculino;
                                                     r1.suma1 = suma1.secrecionSEMasculino;
                                                     r1.suma24 = suma24.secrecionSEMasculino;
                                                     r1.suma59 = suma59.secrecionSEMasculino;
                                                     r1.suma1014 = suma1014.secrecionSEMasculino;
-                                                    r1.suma1524 = suma1524.secrecionSEMasculino;
+                                                    r1.suma1519 = suma1519.secrecionSEMasculino;
+                                                    r1.suma2024 = suma2024.secrecionSEMasculino;
                                                     r1.suma2534 = suma2534.secrecionSEMasculino;
                                                     r1.suma3544 = suma3544.secrecionSEMasculino;
                                                     r1.suma4564 = suma4564.secrecionSEMasculino;
-                                                    r1.sumaMayor65 = sumaMayor65.secrecionSEMasculino;
+                                                    r1.suma6574 = suma6574.secrecionSEMasculino;
+                                                    r1.sumaMayor75 = sumaMayor75.secrecionSEMasculino;
                                                     r1.sumaFemenino = 0;
                                                     r1.sumaMasculino = sumaMasculino.secrecionSE;
                                                     r1.total = sumaMasculino.secrecionSE;
@@ -722,16 +837,19 @@ export function getDiagnosticos(params) {
                                                 }
                                                 break;
                                             case 'HIV':
-                                                r2.sumaMenor1 = sumaMenor1.hiv;
+                                                r2.sumaMenor6m = sumaMenor6m.hiv;
+                                                r2.suma711m = suma711m.hiv;
                                                 r2.suma1 = suma1.hiv;
                                                 r2.suma24 = suma24.hiv;
                                                 r2.suma59 = suma59.hiv;
                                                 r2.suma1014 = suma1014.hiv;
-                                                r2.suma1524 = suma1524.hiv;
+                                                r2.suma1519 = suma1519.hiv;
+                                                r2.suma2024 = suma2024.hiv;
                                                 r2.suma2534 = suma2534.hiv;
                                                 r2.suma3544 = suma3544.hiv;
                                                 r2.suma4564 = suma4564.hiv;
-                                                r2.sumaMayor65 = sumaMayor65.hiv;
+                                                r2.suma6574 = suma6574.hiv;
+                                                r2.sumaMayor75 = sumaMayor75.hiv;
                                                 r2.sumaMasculino = sumaMasculino.hiv;
                                                 r2.sumaFemenino = sumaFemenino.hiv;
                                                 r2.total = hiv;
@@ -739,16 +857,19 @@ export function getDiagnosticos(params) {
                                                 resultados.push(r2);
                                                 break;
                                             case 'Bronquiolitis':
-                                                r2.sumaMenor1 = sumaMenor1.bronquiolitis;
+                                                r2.sumaMenor6m = sumaMenor6m.bronquiolitis;
+                                                r2.suma711m = suma711m.bronquiolitis;
                                                 r2.suma1 = suma1.bronquiolitis;
                                                 r2.suma24 = suma24.bronquiolitis;
                                                 r2.suma59 = suma59.bronquiolitis;
                                                 r2.suma1014 = suma1014.bronquiolitis;
-                                                r2.suma1524 = suma1524.bronquiolitis;
+                                                r2.suma1519 = suma1519.bronquiolitis;
+                                                r2.suma2024 = suma2024.bronquiolitis;
                                                 r2.suma2534 = suma2534.bronquiolitis;
                                                 r2.suma3544 = suma3544.bronquiolitis;
                                                 r2.suma4564 = suma4564.bronquiolitis;
-                                                r2.sumaMayor65 = sumaMayor65.bronquiolitis;
+                                                r2.suma6574 = suma6574.bronquiolitis;
+                                                r2.sumaMayor75 = sumaMayor75.bronquiolitis;
                                                 r2.sumaMasculino = sumaMasculino.bronquiolitis;
                                                 r2.sumaFemenino = sumaFemenino.bronquiolitis;
                                                 r2.total = bronquiolitis;

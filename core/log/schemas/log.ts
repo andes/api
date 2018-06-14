@@ -27,7 +27,7 @@ export let logSchema = new mongoose.Schema({
     organizacion: { type: organizacion },
     modulo: {
         type: String,
-        enum: ['mpi', 'citas', 'rup', 'configTipoPrestacion', 'fa_sintys', 'fa_sisa', 'fa_anses', 'usuarios', 'scheduler']
+        enum: ['mpi', 'citas', 'rup', 'configTipoPrestacion', 'fa_sintys', 'fa_sisa', 'fa_anses', 'fa_renaper', 'usuarios', 'scheduler']
     },
     operacion: {
         type: String,
@@ -40,7 +40,7 @@ export let logSchema = new mongoose.Schema({
             // OperacionesElastic
             'elasticInsert', 'elasticInsertInPut', 'elasticUpdate', 'elasticDelete', 'elasticError',
             // ... Citas
-            'asignarTurno', 'cancelarTurno', 'listaEspera', 'actualizarTiposDeTurno', 'actualizarEstadoAgendas', 'actualizarTurnosDelDia',
+            'asignarTurno', 'cancelarTurno', 'listaEspera', 'actualizarTiposDeTurno', 'actualizarEstadoAgendas', 'actualizarTurnosDelDia', 'lista espera',
             // ... RUP
             // hudsPantalla -> Profesional entra a la pantalla de huds de un paciente
             // hudsPrestacion -> Profesional abre una pretación para ver en la pantalla de ver huds
