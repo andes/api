@@ -111,6 +111,7 @@ export function getDiagnosticos(params) {
             $match: {
                 'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria': { $exists: true, $ne: {} },
                 'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
+                'bloques.turnos.diagnostico.codificaciones.0.primeraVez': true,
                 'horaInicio': { '$gte': new Date(params.horaInicio) },
                 'horaFin': { '$lte': new Date(params.horaFin) },
                 'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) }
@@ -147,6 +148,7 @@ export function getDiagnosticos(params) {
             $match: {
                 'sobreturnos.diagnostico.codificaciones.0.codificacionAuditoria': { $exists: true, $ne: {} },
                 'sobreturnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
+                'bloques.turnos.diagnostico.codificaciones.0.primeraVez': true,
                 'horaInicio': { '$gte': new Date(params.horaInicio) },
                 'horaFin': { '$lte': new Date(params.horaFin) },
                 'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) }
@@ -269,6 +271,7 @@ export function getDiagnosticos(params) {
                     agendaModel.find({
                         'horaInicio': { '$gte': new Date(params.horaInicio) },
                         'horaFin': { '$lte': new Date(params.horaFin) },
+                        'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) },
                         $or: [{
                             'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria.codigo': {
                                 $eq: elem.codigo
@@ -520,7 +523,7 @@ export function getDiagnosticos(params) {
                                 bloque.turnos.forEach(turno => {
                                     let codigos = turno.diagnostico.codificaciones;
                                     codigos.forEach(function (codigo) {
-                                        if (codigo.codificacionAuditoria && codigo.codificacionAuditoria.c2 === true) {
+                                        if (codigo.codificacionAuditoria && codigo.codificacionAuditoria.c2 === true && codigo.primeraVez === true) {
                                             if (elem.codigo === codigo.codificacionAuditoria.codigo) {
                                                 calcularContadores(turno.paciente);
                                             }
@@ -534,7 +537,7 @@ export function getDiagnosticos(params) {
                                 if (sobreturno.diagnostico.codificaciones.length > 0) {
                                     let codigos = sobreturno.diagnostico.codificaciones;
                                     codigos.forEach(function (codigo) {
-                                        if (codigo.codificacionAuditoria && codigo.codificacionAuditoria.c2 === true) {
+                                        if (codigo.codificacionAuditoria && codigo.codificacionAuditoria.c2 === true && codigo.primeraVez === true) {
                                             if (elem.codigo === codigo.codificacionAuditoria.codigo) {
                                                 calcularContadores(sobreturno.paciente);
                                             }
