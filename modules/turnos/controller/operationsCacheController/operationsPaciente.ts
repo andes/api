@@ -14,6 +14,9 @@ import * as constantes from '../../../legacy/schemas/constantes';
 import * as logger from './../../../../utils/loggerAgendaSipsCache';
 import * as agendaSchema from '../../schemas/agenda';
 import * as turnoCtrl from './../turnoCacheController';
+import * as dbg from 'debug';
+
+const debug = dbg('integracion');
 
 
 let transaction;
@@ -22,7 +25,6 @@ export async function verificarPaciente(pacienteSips: any, poolAgendas: any) {
     try {
         let idPacienteSips;
         let idPaciente = await existePacienteSips(pacienteSips, poolAgendas);
-
         if (idPaciente === 0) {
             let query = 'INSERT INTO dbo.Sys_Paciente ' +
                 ' ( idEfector ,' +
@@ -155,8 +157,13 @@ export async function insertarPacienteEnSips(paciente: any, idEfectorSips: any, 
             return parseInt(identificador[0].valor, 0);
         } else {
 
-             // Busca paciente por documento y realiza un matcheo
-            let idPaciente = await buscarPacientePorDocumentoEnSips(paciente, poolAgendas);
+            // Busca paciente por documento y realiza un matcheo
+            let idPaciente;
+            if (paciente.documento) {
+                idPaciente = await buscarPacientePorDocumentoEnSips(paciente, poolAgendas);
+            } else {
+                idPaciente = await existePacienteSips(paciente, poolAgendas);
+            }
             if (idPaciente) {
                 return idPaciente;
             } else {
@@ -164,7 +171,7 @@ export async function insertarPacienteEnSips(paciente: any, idEfectorSips: any, 
                     idEfector: idEfectorSips,
                     nombre: paciente.nombre,
                     apellido: paciente.apellido,
-                    numeroDocumento: paciente.documento,
+                    numeroDocumento: paciente.documento ? paciente.documento : 0,
                     idSexo: (paciente.sexo === 'masculino' ? 3 : paciente.sexo === 'femenino' ? 2 : 1),
                     fechaNacimiento: paciente.fechaNacimiento ? moment(paciente.fechaNacimiento).format('YYYYMMDD') : '19000101',
                     idEstado: (paciente.estado === 'validado' ? 3 : 2),
@@ -217,11 +224,12 @@ export async function insertarPacienteEnSips(paciente: any, idEfectorSips: any, 
                 };
 
                 let idPacienteSips = await verificarPaciente(pacienteSips, poolAgendas);
-                return (idPacienteSips);
+                return idPacienteSips;
             }
         }
 
     } catch (ex) {
+        debug('Error al insertar paciente en sips ', ex);
         return (ex);
     }
 }
