@@ -418,7 +418,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                         }
                     });
                 }
-              
+
                 // Fin de insert cache
                 return res.json(data[0]);
             });
