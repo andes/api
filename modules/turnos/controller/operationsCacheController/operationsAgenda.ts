@@ -637,12 +637,12 @@ export function getAgendasDeMongoPendientes() {
             .query('SELECT idAgendaProfesional FROM CON_AgendaProfesional where idAgenda = @idAgenda');
         debug('Buscamos en agenda profesional si existe el registro: ');
 
-        if (agendaProfesional && agendaProfesional.recordset && agendaProfesional.recordset.length > 0) {
-            let idAP = agendaProfesional.recordset[0].idAgendaProfesional;
-            let queryAgendaProfesional = 'update CON_AgendaProfesional set idProfesional = ' + datosSips.idProfesional + 'where idAgendaProfesional = ' + idAP;
-            debug('Actualizamos el profesional en la con_agendaProfesional OK', idAP);
-            await executeQuery(connection, queryAgenda);
-        } else {
+    if (agendaProfesional && agendaProfesional.recordset && agendaProfesional.recordset.length > 0) {
+        let idAP = agendaProfesional.recordset[0].idAgendaProfesional;
+        let queryAgendaProfesional = 'update CON_AgendaProfesional set idProfesional = ' + datosSips.idProfesional + ' where idAgendaProfesional = ' + idAP;
+        debug('Actualizamos el profesional en la con_agendaProfesional OK', idAP);
+        await executeQuery(connection, queryAgendaProfesional);
+    } else {
             let insertProfesional = 'INSERT INTO dbo.CON_AgendaProfesional ( idAgenda, idProfesional, baja, CreatedBy , ' +
                 ' CreatedOn, ModifiedBy, ModifiedOn, idEspecialidad ) VALUES  ( ' + agenda.idAgenda + ',' +
                 idProfesional + ',' + 0 + ',' + constantes.idUsuarioSips + ',' +
