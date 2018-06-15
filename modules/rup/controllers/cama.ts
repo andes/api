@@ -219,3 +219,48 @@ export function disponibilidadXUO(unidad, fecha, idOrganizacion) {
 
     });
 }
+
+
+
+export function camasXfecha(idOrganizacion, fecha) {
+    return new Promise(async (resolve, reject) => {
+        let pipelineEstado = [];
+
+        pipelineEstado = [{
+            $match: {
+                'organizacion._id': idOrganizacion,
+                'estados.fecha': { '$lte': fecha }
+            }
+        },
+        { $unwind: '$estados' },
+        {
+            $match: {
+                'estados.fecha': { '$lte': fecha }
+            }
+        },
+        { $sort: { 'estados.fecha': 1 } },
+        {
+            $group:
+                {
+                    _id: { id: '$_id', },
+                    id:  { $last:  '$_id' },
+                    ultimoEstado: { $last: '$estados' },
+                    organizacion: { $last: '$organizacion' },
+                    sectores: { $last: '$sectores' },
+                    habitacion: { $last: '$habitacion' },
+                    nombre: { $last: '$nombre' },
+                    tipoCama: { $last: '$tipoCama' },
+                    unidadOrganizativaOriginal: { $last: '$unidadOrganizativaOriginal' },
+                    equipamiento: { $last: '$equipamiento' }
+
+                }
+        }];
+        let camas = await toArray(cama.aggregate(pipelineEstado).cursor({}).exec());
+        if (camas && camas.length) {
+            return resolve(camas);
+        } else {
+            return resolve(null);
+        }
+
+    });
+}
