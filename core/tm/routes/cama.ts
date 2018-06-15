@@ -39,6 +39,9 @@ router.get('/camas', Auth.authenticate(), function (req, res, next) {
     if (req.query.habitacion) {
         query.where('habitacion').equals(req.query.habitacion);
     }
+    if (req.query.sectorId) {
+        query.where('sectores._id').equals(req.query.sectorId);
+    }
     query.sort({ 'numero': 1, 'habitacion': 1 });
     query.exec({}, (err, data) => {
         if (err) {
