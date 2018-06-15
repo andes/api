@@ -4,15 +4,22 @@ import { spawn, ChildProcess } from 'child_process';
 
 let schedule = require('node-schedule');
 const log = debug('jobs');
+const defaultTimeout = 1000 * 60 * 10; // default 10 minutes
 
 class Scheduler {
     static runningProccess: any = {};
 
+    /**
+     *
+     * @param job
+     * @param child
+     */
     static preventDeadLock(job, child: ChildProcess) {
+        let timer = job.timeout || defaultTimeout;
         let id = setTimeout(() => {
             log('stoping', job.action, 'timeout');
             child.kill();
-        }, 1000 * 60 * 10); // 10 minutes
+        }, timer);
         return id;
     }
 
