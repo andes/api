@@ -13,6 +13,7 @@
     "@types/google-maps": "^3.2.0",
     "@types/jasmine": "^2.2.30",
     "@types/mongoose": "^5.0.9",
+    "@types/mssql": "^4.0.7",
     "@types/node": "^6.0.42",
     "@types/node-sass": "^3.10.32",
     "@types/ws": "^3.0.2",

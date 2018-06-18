@@ -2,7 +2,7 @@ import { conSqlPecas } from './../../../../config.private';
 import fs = require('fs');
 import async = require('async');
 import * as agendaModel from '../../../turnos/schemas/agenda';
-import { toArray } from '../../../../utils/utils';
+// import { toArray } from '../../../../utils/utils';
 import { configuracionPrestacionModel as configPrestacion } from './../../../../core/term/schemas/configuracionPrestaciones';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
@@ -28,14 +28,15 @@ let config = {
  * @returns resultado
  */
 export async function consultaPecas() {
+    console.log('consultaPecas');
     try {
         poolTurnos = await new sql.ConnectionPool(config).connect();
     } catch (ex) {
         return (ex);
     }
     const query_limit = 10000000000;
-    const type = 'PECAS-' + (new Date()).toISOString();
-    const outputFile = './turnos-agendas-' + type + '.json';
+    // const type = 'PECAS-' + (new Date()).toISOString();
+    // const outputFile = './turnos-agendas-' + type + '.json';
     let match = {
         'horaInicio': {
             $gt: new Date('2018-05-01T00:00:00.000-03:00')
@@ -67,30 +68,31 @@ export async function consultaPecas() {
         }],
     };
     try {
+        console.log('match ', match);
         let agendas = agendaModel.aggregate([
             { $match: match },
             { $limit: query_limit }
-        ]).cursor({ async: true }).exec(
-            async function (error, cursor) {
-                if (error) {
-                    return(error);
-                }
-                agendas = await toArray(cursor);
-                agendas.forEach((a, indexA) => {
-                    // En cada agenda se recorren los bloques
-                    async.every(a.bloques, (b, indexB) => {
-                        // RESTA REALIZAR LO MISMO PARA LOS SOBRETURNOS
-                        async.every((b as any).turnos, async (t: any, indexT) => {
-                            auxiliar(a, t);
-                        });
-                    });
-                    async.every((a as any).sobreturnos, async (t: any, indexT) => {
+        ]).cursor({ batchSize: 10000000000 }).exec();
+        agendas.eachAsync((a, error) => {
+            if (error) {
+                console.log('error ', error);
+                return (error);
+            }
+                // En cada agenda se recorren los bloques
+                async.every(a.bloques, (b, indexB) => {
+                    // RESTA REALIZAR LO MISMO PARA LOS SOBRETURNOS
+                    async.every((b as any).turnos, async (t: any, indexT) => {
                         auxiliar(a, t);
                     });
                 });
+                async.every((a as any).sobreturnos, async (t: any, indexT) => {
+                    auxiliar(a, t);
+                });
             });
+        // });
+            // );
     } catch (error) {
-        return(error);
+        return (error);
     }
 }
 
@@ -261,7 +263,7 @@ async function auxiliar(a: any, t: any) {
                 '\',\'' + turno.DescTipoEfector + '\',' + turno.IdZona + ',\'' + turno.Zona + '\',\'' + turno.SubZona + '\',' + turno.idEfectorSuperior +
                 ',\'' + turno.EfectorSuperior + '\',\'' + turno.AreaPrograma + '\',\'' + turno.IdPaciente + '\',\'' + turno.Longitud + '\',\'' + turno.Latitud +
                 '\',' + turno.Cantidad + ',' + turno.idproceso + ',\'' + turno.codifica + '\',\'' + turno.telefono + '\') ';
-            // console.log('query ', query);
+            console.log('query ', query);
             await executeQuery(query);
         } catch (error) {
             return (error);
