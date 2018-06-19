@@ -21,6 +21,7 @@ export function buscarUltimaInternacion(idPaciente, estado) {
     }
 
     query.where('solicitud.ambitoOrigen').equals('internacion');
+    query.where('solicitud.tipoPrestacion.conceptId').equals('32485007'); // Ver si encontramos otra forma de diferenciar las prestaciones de internacion
     return query.sort({ 'solicitud.fecha': -1 }).limit(1).exec();
 }
 
