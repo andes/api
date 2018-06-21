@@ -16,16 +16,19 @@ let async = require('async');
 
 
 /**
- * Trae todas las prestaciones con ambitoOrigen = internacion y
+ * Trae todas las prestaciones con ambitoOrigen = internacion, tambien solo las prestaciones
+ * internación y
  * que el paciente no tiene una cama asignada.
  */
 
-router.get('/prestaciones/sin-cama', function (req, res, next) {
+router.get('/prestaciones/sinCama', function (req, res, next) {
     let query = {
         'solicitud.organizacion.id': mongoose.Types.ObjectId(Auth.getOrganization(req)),
         'solicitud.ambitoOrigen': 'internacion',
-        '$where': 'this.estados[this.estados.length - 1].tipo ==  \"' + 'ejecucion' + '\"'
+        'solicitud.tipoPrestacion.conceptId': '32485007',  // Ver si encontramos otra forma de diferenciar las prestaciones de internacion
+        '$where': 'this.estados[this.estados.length - 1].tipo ==  \"' + 'ejecucion' + '\"',
     };
+
     // Buscamos prestaciones que sean del ambito de internacion.
     Prestacion.find(query, async (err, prestaciones) => {
         if (err) {
