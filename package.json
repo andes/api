@@ -39,7 +39,7 @@
     "is-reachable": "^2.3.2",
     "jsonwebtoken": "^8.2.1",
     "ldapjs": "^1.0.1",
-    "libxmljs": "^0.18.7",
+    "libxmljs": "0.18.7",
     "mime-db": "^1.29.0",
     "moment": "^2.19.3",
     "mongoose": "^5.0.14",
