@@ -375,17 +375,19 @@ async function createCarpeta(datosCarpeta, estadoPrestamoCarpeta) {
             carpetaEfectores = turno.paciente.carpetaEfectores;
             pacienteSeleccionado = turno.paciente;
         } else {
-            datosCarpeta.datosPrestamo = { observaciones: datosCarpeta.datosSolicitudManual.observaciones };
-            datosSolicitudManual = {
-                espacioFisico: datosCarpeta.datosSolicitudManual.espacioFisico,
-                prestacion: datosCarpeta.datosSolicitudManual.prestacion,
-                profesional: (datosCarpeta.datosSolicitudManual.profesional ?
-                    { nombre: datosCarpeta.datosSolicitudManual.profesional.nombre, apellido: datosCarpeta.datosSolicitudManual.profesional.apellido } : null),
-                responsable: (datosCarpeta.datosSolicitudManual.responsable ?
-                    { nombre: datosCarpeta.datosSolicitudManual.responsable.nombre, apellido: datosCarpeta.datosSolicitudManual.responsable.apellido } : null),
-                observaciones: datosCarpeta.datosSolicitudManual.observaciones,
-                idSolicitud: datosCarpeta.idSolicitud
-            };
+            if (datosCarpeta.datosSolicitudManual) {
+                datosCarpeta.datosPrestamo = { observaciones: datosCarpeta.datosSolicitudManual.observaciones };
+                datosSolicitudManual = {
+                    espacioFisico: datosCarpeta.datosSolicitudManual.espacioFisico,
+                    prestacion: datosCarpeta.datosSolicitudManual.prestacion,
+                    profesional: (datosCarpeta.datosSolicitudManual.profesional ?
+                        { nombre: datosCarpeta.datosSolicitudManual.profesional.nombre, apellido: datosCarpeta.datosSolicitudManual.profesional.apellido } : null),
+                    responsable: (datosCarpeta.datosSolicitudManual.responsable ?
+                        { nombre: datosCarpeta.datosSolicitudManual.responsable.nombre, apellido: datosCarpeta.datosSolicitudManual.responsable.apellido } : null),
+                    observaciones: datosCarpeta.datosSolicitudManual.observaciones,
+                    idSolicitud: datosCarpeta.idSolicitud
+                };
+            }
         }
     }
 
