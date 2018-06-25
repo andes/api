@@ -407,7 +407,7 @@ export function getDiagnosticos(params) {
                                         default:
                                             if (elem.codigo === 'A05.1') { // Botulismo
                                                 // if (edad < 1) {
-                                                if (edad.unidad === 'meses') {
+                                                if (edad.unidad === 'meses' || edad.unidad === 'días') {
                                                     // sumaMenor1.botulismo++;
                                                     if ((edad.unidad === 'meses' && edad.valor <= 6) || edad.unidad === 'días') {
                                                         sumaMenor6m.botulismo++;
@@ -521,28 +521,28 @@ export function getDiagnosticos(params) {
                             // Se recorren los turnos de la agenda actual
                             ag.bloques.forEach(bloque => {
                                 bloque.turnos.forEach(turno => {
-                                    let codigos = turno.diagnostico.codificaciones;
-                                    codigos.forEach(function (codigo) {
-                                        if (codigo.codificacionAuditoria && codigo.codificacionAuditoria.c2 === true && codigo.primeraVez === true) {
-                                            if (elem.codigo === codigo.codificacionAuditoria.codigo) {
-                                                calcularContadores(turno.paciente);
-                                            }
+                                    let codigo = turno.diagnostico.codificaciones[0];
+                                    // codigos.forEach(function (codigo) {
+                                    if (codigo && codigo.codificacionAuditoria && codigo.codificacionAuditoria.c2 === true && codigo.primeraVez === true) {
+                                        if (elem.codigo === codigo.codificacionAuditoria.codigo) {
+                                            calcularContadores(turno.paciente);
                                         }
-                                    });
+                                    }
+                                    // });
                                 });
                             });
 
                             // Se recorren los sobreturnos de la agenda actual
                             ag.sobreturnos.forEach(sobreturno => {
                                 if (sobreturno.diagnostico.codificaciones.length > 0) {
-                                    let codigos = sobreturno.diagnostico.codificaciones;
-                                    codigos.forEach(function (codigo) {
-                                        if (codigo.codificacionAuditoria && codigo.codificacionAuditoria.c2 === true && codigo.primeraVez === true) {
-                                            if (elem.codigo === codigo.codificacionAuditoria.codigo) {
-                                                calcularContadores(sobreturno.paciente);
-                                            }
+                                    let codigo = sobreturno.diagnostico.codificaciones[0];
+                                    // codigos.forEach(function (codigo) {
+                                    if (codigo && codigo.codificacionAuditoria && codigo.codificacionAuditoria.c2 === true && codigo.primeraVez === true) {
+                                        if (elem.codigo === codigo.codificacionAuditoria.codigo) {
+                                            calcularContadores(sobreturno.paciente);
                                         }
-                                    });
+                                    }
+                                    // });
                                 }
                             });
                         });
@@ -642,24 +642,26 @@ export function getDiagnosticos(params) {
                             default:
                                 switch (elem.causa) {
                                     case 'A80':
-                                        r2.sumaMenor6m = sumaMenor6m.poliomielitis;
-                                        r2.suma711m = suma711m.poliomielitis;
-                                        r2.suma1 = suma1.poliomielitis;
-                                        r2.suma24 = suma24.poliomielitis;
-                                        r2.suma59 = suma59.poliomielitis;
-                                        r2.suma1014 = suma1014.poliomielitis;
-                                        r2.suma1519 = suma1519.poliomielitis;
-                                        r2.suma2024 = suma2024.poliomielitis;
-                                        r2.suma2534 = suma2534.poliomielitis;
-                                        r2.suma3544 = suma3544.poliomielitis;
-                                        r2.suma4564 = suma4564.poliomielitis;
-                                        r2.suma6574 = suma6574.poliomielitis;
-                                        r2.sumaMayor75 = sumaMayor75.poliomielitis;
-                                        r2.sumaFemenino = sumaFemenino.poliomielitis;
-                                        r2.sumaMasculino = sumaMasculino.poliomielitis;
-                                        r2.total = poliomielitis;
-                                        r2.pacientes = pacientes.polio;
-                                        resultados.push(r2);
+                                        if (poliomielitis) {
+                                            r2.sumaMenor6m = sumaMenor6m.poliomielitis;
+                                            r2.suma711m = suma711m.poliomielitis;
+                                            r2.suma1 = suma1.poliomielitis;
+                                            r2.suma24 = suma24.poliomielitis;
+                                            r2.suma59 = suma59.poliomielitis;
+                                            r2.suma1014 = suma1014.poliomielitis;
+                                            r2.suma1519 = suma1519.poliomielitis;
+                                            r2.suma2024 = suma2024.poliomielitis;
+                                            r2.suma2534 = suma2534.poliomielitis;
+                                            r2.suma3544 = suma3544.poliomielitis;
+                                            r2.suma4564 = suma4564.poliomielitis;
+                                            r2.suma6574 = suma6574.poliomielitis;
+                                            r2.sumaMayor75 = sumaMayor75.poliomielitis;
+                                            r2.sumaFemenino = sumaFemenino.poliomielitis;
+                                            r2.sumaMasculino = sumaMasculino.poliomielitis;
+                                            r2.total = poliomielitis;
+                                            r2.pacientes = pacientes.polio;
+                                            resultados.push(r2);
+                                        }
                                         break;
                                     case 'A51':
                                         if (sumaFemenino.sifilisTemprana > 0) {
@@ -860,24 +862,26 @@ export function getDiagnosticos(params) {
                                                 resultados.push(r2);
                                                 break;
                                             case 'Bronquiolitis':
-                                                r2.sumaMenor6m = sumaMenor6m.bronquiolitis;
-                                                r2.suma711m = suma711m.bronquiolitis;
-                                                r2.suma1 = suma1.bronquiolitis;
-                                                r2.suma24 = suma24.bronquiolitis;
-                                                r2.suma59 = suma59.bronquiolitis;
-                                                r2.suma1014 = suma1014.bronquiolitis;
-                                                r2.suma1519 = suma1519.bronquiolitis;
-                                                r2.suma2024 = suma2024.bronquiolitis;
-                                                r2.suma2534 = suma2534.bronquiolitis;
-                                                r2.suma3544 = suma3544.bronquiolitis;
-                                                r2.suma4564 = suma4564.bronquiolitis;
-                                                r2.suma6574 = suma6574.bronquiolitis;
-                                                r2.sumaMayor75 = sumaMayor75.bronquiolitis;
-                                                r2.sumaMasculino = sumaMasculino.bronquiolitis;
-                                                r2.sumaFemenino = sumaFemenino.bronquiolitis;
-                                                r2.total = bronquiolitis;
-                                                r2.pacientes = pacientes.bronquiolitis;
-                                                resultados.push(r2);
+                                                if (bronquiolitis) {
+                                                    r2.sumaMenor6m = sumaMenor6m.bronquiolitis;
+                                                    r2.suma711m = suma711m.bronquiolitis;
+                                                    r2.suma1 = suma1.bronquiolitis;
+                                                    r2.suma24 = suma24.bronquiolitis;
+                                                    r2.suma59 = suma59.bronquiolitis;
+                                                    r2.suma1014 = suma1014.bronquiolitis;
+                                                    r2.suma1519 = suma1519.bronquiolitis;
+                                                    r2.suma2024 = suma2024.bronquiolitis;
+                                                    r2.suma2534 = suma2534.bronquiolitis;
+                                                    r2.suma3544 = suma3544.bronquiolitis;
+                                                    r2.suma4564 = suma4564.bronquiolitis;
+                                                    r2.suma6574 = suma6574.bronquiolitis;
+                                                    r2.sumaMayor75 = sumaMayor75.bronquiolitis;
+                                                    r2.sumaMasculino = sumaMasculino.bronquiolitis;
+                                                    r2.sumaFemenino = sumaFemenino.bronquiolitis;
+                                                    r2.total = bronquiolitis;
+                                                    r2.pacientes = pacientes.bronquiolitis;
+                                                    resultados.push(r2);
+                                                }
                                                 break;
                                             default:
                                                 if (sumaTotal > 0) {
