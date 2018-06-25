@@ -12,14 +12,10 @@ let router = express.Router();
 router.get('/puco/', async function (req, res, next) {
     if (req.query.dni) {
         puco.find({ dni: Number.parseInt(req.query.dni) }, function (err, data) {
-            if (data.length > 0) {
-                res.json(data);
-            } else {
-                res.json([{ dni: req.query.dni, financiador: 'Sumar', codigoFinanciador: '499', transmite: '-'}]);
-            }
             if (err) {
                 return next(err);
             }
+            res.json(data);
         });
     }
 
