@@ -1,10 +1,12 @@
 import { model as Prestacion } from '../schemas/prestacion';
 import { toArray } from '../../../utils/utils';
+import * as mongoose from 'mongoose';
 
-export async function dashboard(prestaciones, desde, hasta) {
+export async function dashboard(org, prestaciones, desde, hasta) {
     let pipeline = [
         {
             $match: {
+                'solicitud.organizacion.id': mongoose.Types.ObjectId(org),
                 'solicitud.tipoPrestacion.conceptId': { $in: prestaciones },
                 $and: [
                     { 'solicitud.fecha': { $lt: hasta } },
