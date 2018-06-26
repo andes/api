@@ -108,18 +108,18 @@ export function getAgendasDeMongoPendientes() {
                 turnos = agendaCacheada.bloques[x].turnos;
 
                 for (let z = 0; z < turnos.length; z++) {
-                    let resultado = await turnoOps.existeTurnoSips(turnos[z], connection);
+                    let arrayPrestaciones = await new sql.Request(connection)
+                    .input('idTurnoMongo', sql.VarChar(50), turnos[z]._id)
+                    .query('select * from vw_andes_integracion WHERE objectId = @idTurnoMongo');
 
-                    if (resultado.recordset.length > 0) {
-                        idConsulta = await existeConsultaTurno(connection, resultado.recordset[0].idTurno);
-                        let turnoPaciente: any = await getPacienteAgenda(agendaCacheada, turnos[z]._id);
-                        // idEspecialidad = (agenda.tipoPrestaciones[0].term.includes('odonto')) ? 34 : 14;
-                        idEspecialidad = await getEspecialidad(agendaCacheada, agendaCacheada.tipoPrestaciones[0].conceptId, agendaCacheada.organizacion._id);
-                        turnos[z] = turnoPaciente;
+                    if (arrayPrestaciones.recordset.length > 0) {
+                        arrayPrestaciones = arrayPrestaciones.recordset;
+                        idConsulta = arrayPrestaciones[0].idConsulta; // ambas prestaciones tienen el mismo id de consulta.
+                        idEspecialidad = arrayPrestaciones[0].idEspecialidad;
                         if (idConsulta) {
                             // console.log('idagenda ', agenda.id, 'idespecialidad ', idEspecialidad);
                             if (idEspecialidad === constantes.Especialidades.odontologia) {
-                                turnos[z] = await codificaOdontologia(connection, idConsulta, turnos[z]);
+                                turnos[z] = await codificaOdontologia(connection, idConsulta, turnos[z], arrayPrestaciones);
                             } else {
                                 turnos[z] = await codificacionCie10(connection, idConsulta, turnos[z]);
                             }
@@ -141,16 +141,17 @@ export function getAgendasDeMongoPendientes() {
             // TODO: refactorizar codigo repetido.
             if (agendaCacheada.sobreturnos) {
                 for (let z = 0; z < agendaCacheada.sobreturnos.length; z++) {
-                    let resultado = await turnoOps.existeTurnoSips(agendaCacheada.sobreturnos[z], connection);
+                    let arrayPrestaciones = await new sql.Request(connection)
+                    .input('idTurnoMongo', sql.VarChar(50), turnos[z]._id)
+                    .query('select * from vw_andes_integracion WHERE objectId = @idTurnoMongo');
 
-                    if (resultado.recordset.length > 0) {
-                        idConsulta = await existeConsultaTurno(connection, resultado.recordset[0].idTurno);
-                        // idEspecialidad = (agenda.tipoPrestaciones[0].term.includes('odonto')) ? 34 : 14;
-                        idEspecialidad = await getEspecialidad(agendaCacheada, agendaCacheada.tipoPrestaciones[0].conceptId, agendaCacheada.organizacion._id);
+                    if (arrayPrestaciones.recordset.length > 0) {
+                        idConsulta = arrayPrestaciones[0].idConsulta; // ambas prestaciones tienen el mismo id de consulta y especialidad
+                        idEspecialidad = arrayPrestaciones[0].idEspecialidad;
 
                         if (idConsulta) {
                             if (idEspecialidad === constantes.Especialidades.odontologia) {
-                                agendaCacheada.sobreturnos[z] = await codificaOdontologia(connection, idConsulta, agendaCacheada.sobreturnos[z]);
+                                agendaCacheada.sobreturnos[z] = await codificaOdontologia(connection, idConsulta, agendaCacheada.sobreturnos[z], arrayPrestaciones);
                             } else {
                                 agendaCacheada.sobreturnos[z] = await codificacionCie10(connection, idConsulta, agendaCacheada.sobreturnos[z]);
                             }
@@ -176,12 +177,36 @@ export function getAgendasDeMongoPendientes() {
         }
     }
 
-    async function codificaOdontologia(connection, idConsulta: any, turno: any) {
-        let idNomenclador: any = [];
-        let codificacionOdonto: any = {};
-        let repetido = [];
-        try {
-            idNomenclador = await getConsultaOdontologia(connection, idConsulta);
+async function codificaOdontologia(connection, idConsulta: any, turno: any, prestaciones) {
+    let idNomenclador: any = [];
+    let codificacionOdonto: any = {};
+    let repetido = [];
+    try {
+        /*
+        cantidad:1
+        caraD:false
+        caraL:false
+        caraM:false
+        caraO:true
+        caraP:false
+        caraV:false
+        diente:22
+        idConsulta:1153795
+        idConsultaOdontologia:280775
+        idNomenclador:23
+        */
+        for (let prestacion of prestaciones) {
+            repetido = [];
+            let caras = '';
+            let diente = '';
+            if (prestacion.caraD) { caras = caras + 'caraD '; }
+            if (prestacion.caraL) { caras = caras + 'caraL '; }
+            if (prestacion.caraM) { caras = caras + 'caraM '; }
+            if (prestacion.caraO) { caras = caras + 'caraO '; }
+            if (prestacion.caraP) { caras = caras + 'caraP '; }
+            if (prestacion.caraV) { caras = caras + 'caraV '; }
+            diente = prestacion.diente.toString();
+            codificacionOdonto = await getCodificacionOdonto(connection, prestacion.idNomenclador);
             /*
             cantidad:1
             caraD:false
@@ -194,128 +219,99 @@ export function getAgendasDeMongoPendientes() {
             idConsulta:1153795
             idConsultaOdontologia:280775
             idNomenclador:23
-            */
-            for (let i = 0; i < idNomenclador.length; i++) {
-                repetido = [];
-                let caras = '';
-                let diente = '';
-                if (idNomenclador[i].caraD) {
-                    caras = caras + 'caraD ';
+            piezaDental:true
+             */
+            turno.asistencia = 'asistio';
+            turno.diagnostico.ilegible = false;
+            if (diente && caras === '') {
+                repetido = turno.diagnostico.codificaciones.filter(elem =>
+                    elem.codificacionProfesional && elem.codificacionProfesional.cie10
+                    && elem.codificacionProfesional.cie10.codigo === codificacionOdonto.codigo
+                    && elem.codificacionProfesional.cie10.causa && elem.codificacionProfesional.cie10.causa === diente);
+            }
+            if (diente && caras !== '') {
+                repetido = turno.diagnostico.codificaciones.filter(elem =>
+                    elem.codificacionProfesional && elem.codificacionProfesional.cie10
+                    && elem.codificacionProfesional.cie10.codigo === codificacionOdonto.codigo
+                    && elem.codificacionProfesional.cie10.causa && elem.codificacionProfesional.cie10.causa === diente
+                    && elem.codificacionProfesional.cie10.subcausa && elem.codificacionProfesional.cie10.subcausa === caras);
+            }
+            if (!diente) {
+                repetido = turno.diagnostico.codificaciones.filter(elem =>
+                    elem.codificacionProfesional && elem.codificacionProfesional.cie10
+                    && elem.codificacionProfesional.cie10.codigo === codificacionOdonto.codigo);
+            }
+            if (repetido.length === 0) {
+                turno.diagnostico.codificaciones.push({
+                    codificacionProfesional: {
+                        cie10: {
+                            causa: diente,
+                            subcausa: caras,
+                            codigo: codificacionOdonto.codigo,
+                            nombre: codificacionOdonto.descripcion,
+                            sinonimo: codificacionOdonto.descripcion,
+                            c2: false
+                        }
+                    }
+                });
+            }
+        }
+    } catch (ex) {
+        return (ex);
+    }
+    return (turno);
+}
+
+
+async function codificacionCie10(connection, idConsulta: any, turno: any) {
+
+    let codCie10: any = [];
+    let codificaCie10: any = {};
+    try {
+        codCie10 = await getConsultaDiagnostico(connection, idConsulta);
+        turno.diagnostico.codificaciones = [];
+        for (let i = 0; i < codCie10.length; i++) {
+            codificaCie10 = await getCodificacionCie10(connection, codCie10[i].CODCIE10);
+            turno.asistencia = 'asistio';
+            turno.diagnostico.ilegible = false;
+            if (codCie10[i].PRINCIPAL === true) {
+                if (codificaCie10 && codificaCie10[0]) {
+                    turno.diagnostico.codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del arrays
+                        codificacionProfesional: {
+                            cie10: {
+                                causa: codificaCie10[0].CAUSA,
+                                subcausa: codificaCie10[0].SUBCAUSA,
+                                codigo: codificaCie10[0].CODIGO,
+                                nombre: codificaCie10[0].Nombre,
+                                sinonimo: codificaCie10[0].Sinonimo,
+                                c2: codificaCie10[0].C2
+                                // TODO: campo primeraVez -> verificar en SIPS
+                            }
+                        }
+                    });
                 }
-                if (idNomenclador[i].caraL) {
-                    caras = caras + 'caraL ';
-                }
-                if (idNomenclador[i].caraM) {
-                    caras = caras + 'caraM ';
-                }
-                if (idNomenclador[i].caraO) {
-                    caras = caras + 'caraO ';
-                }
-                if (idNomenclador[i].caraP) {
-                    caras = caras + 'caraP ';
-                }
-                if (idNomenclador[i].caraV) {
-                    caras = caras + 'caraV ';
-                }
-                diente = idNomenclador[i].diente.toString();
-                codificacionOdonto = await getCodificacionOdonto(connection, idNomenclador[i].idNomenclador);
-                /*
-                clasificacion:"Conservadora"
-                codigo:"03010"
-                descripcion:"TRATAMIENTO CONDUCTO UNIRRADICULAR. CONDUCTO CONVENCIONAL EN PIEZA UNI-RADICULAR PERMANENTE, OBTURADO CON CONOC Y CEMENTO DE GROSSMAN."
-                idNomenclador:23
-                piezaDental:true
-                 */
-                turno.asistencia = 'asistio';
-                turno.diagnostico.ilegible = false;
-                if (diente && caras === '') {
-                    repetido = turno.diagnostico.codificaciones.filter(elem =>
-                        elem.codificacionProfesional && elem.codificacionProfesional.cie10 &&
-                        elem.codificacionProfesional.cie10.codigo === codificacionOdonto.codigo &&
-                        elem.codificacionProfesional.cie10.causa && elem.codificacionProfesional.cie10.causa === diente);
-                }
-                if (diente && caras !== '') {
-                    repetido = turno.diagnostico.codificaciones.filter(elem =>
-                        elem.codificacionProfesional && elem.codificacionProfesional.cie10 &&
-                        elem.codificacionProfesional.cie10.codigo === codificacionOdonto.codigo &&
-                        elem.codificacionProfesional.cie10.causa && elem.codificacionProfesional.cie10.causa === diente &&
-                        elem.codificacionProfesional.cie10.subcausa && elem.codificacionProfesional.cie10.subcausa === caras);
-                }
-                if (!diente) {
-                    repetido = turno.diagnostico.codificaciones.filter(elem =>
-                        elem.codificacionProfesional && elem.codificacionProfesional.cie10 &&
-                        elem.codificacionProfesional.cie10.codigo === codificacionOdonto.codigo);
-                }
-                if (repetido.length === 0) {
+            } else {
+                if (codificaCie10 && codificaCie10[0]) {
                     turno.diagnostico.codificaciones.push({
                         codificacionProfesional: {
                             cie10: {
-                                causa: diente,
-                                subcausa: caras,
-                                codigo: codificacionOdonto.codigo,
-                                nombre: codificacionOdonto.descripcion,
-                                sinonimo: codificacionOdonto.descripcion,
-                                c2: false
+                                causa: codificaCie10[0].CAUSA,
+                                subcausa: codificaCie10[0].SUBCAUSA,
+                                codigo: codificaCie10[0].CODIGO,
+                                nombre: codificaCie10[0].Nombre,
+                                sinonimo: codificaCie10[0].Sinonimo,
+                                c2: codificaCie10[0].C2
                             }
                         }
                     });
                 }
             }
-        } catch (ex) {
-            return (ex);
         }
-        return (turno);
+    } catch (ex) {
+        return (ex);
     }
-
-    async function codificacionCie10(connection, idConsulta: any, turno: any) {
-
-        let codCie10: any = [];
-        let codificaCie10: any = {};
-        try {
-            codCie10 = await getConsultaDiagnostico(connection, idConsulta);
-            turno.diagnostico.codificaciones = [];
-            for (let i = 0; i < codCie10.length; i++) {
-                codificaCie10 = await getCodificacionCie10(connection, codCie10[i].CODCIE10);
-                turno.asistencia = 'asistio';
-                turno.diagnostico.ilegible = false;
-                if (codCie10[i].PRINCIPAL === true) {
-                    if (codificaCie10 && codificaCie10[0]) {
-                        turno.diagnostico.codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del arrays
-                            codificacionProfesional: {
-                                cie10: {
-                                    causa: codificaCie10[0].CAUSA,
-                                    subcausa: codificaCie10[0].SUBCAUSA,
-                                    codigo: codificaCie10[0].CODIGO,
-                                    nombre: codificaCie10[0].Nombre,
-                                    sinonimo: codificaCie10[0].Sinonimo,
-                                    c2: codificaCie10[0].C2
-                                    // TODO: campo primeraVez -> verificar en SIPS
-                                }
-                            }
-                        });
-                    }
-                } else {
-                    if (codificaCie10 && codificaCie10[0]) {
-                        turno.diagnostico.codificaciones.push({
-                            codificacionProfesional: {
-                                cie10: {
-                                    causa: codificaCie10[0].CAUSA,
-                                    subcausa: codificaCie10[0].SUBCAUSA,
-                                    codigo: codificaCie10[0].CODIGO,
-                                    nombre: codificaCie10[0].Nombre,
-                                    sinonimo: codificaCie10[0].Sinonimo,
-                                    c2: codificaCie10[0].C2
-                                }
-                            }
-                        });
-                    }
-                }
-            }
-        } catch (ex) {
-            return (ex);
-        }
-        return (turno);
-    }
+    return (turno);
+}
 
 
     // Fin de sección de operaciones sobre mongoDB
