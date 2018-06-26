@@ -38,26 +38,18 @@ export async function processTurnos(agenda: any, idAgendaCreada: any, idEfector:
     for (let x = 0; x < agenda.bloques.length; x++) {
         turnos = agenda.bloques[x].turnos;
         for (let i = 0; i < turnos.length; i++) {
-<<<<<<< HEAD
-            if (turnos[i].estado === 'asignado' && turnos[i].paciente && turnos[i].paciente.documento) {
-=======
             if (turnos[i].estado === 'asignado' && turnos[i].paciente) {
                 // let resultado = await existeTurnoSips(turnos[i], transaction);
                 // if (resultado.recordset && resultado.recordset.length <= 0) {
->>>>>>> master
                 await grabaTurnoSips(turnos[i], idAgendaCreada, idEfector, 0, poolAgendas);
             }
         }
     }
     if (agenda.sobreturnos) {
         for (let y = 0; y < agenda.sobreturnos.length; y++) {
-<<<<<<< HEAD
-            if (agenda.sobreturnos[y].estado === 'asignado' && agenda.sobreturnos[y].paciente && agenda.sobreturnos[y].paciente.documento) {
-=======
             if (agenda.sobreturnos[y].estado === 'asignado' && agenda.sobreturnos[y].paciente) {
                 // let resultado = await existeTurnoSips(turnos[i], transaction);
                 // if (resultado.recordset && resultado.recordset.length <= 0) {
->>>>>>> master
                 await grabaTurnoSips(agenda.sobreturnos[y], idAgendaCreada, idEfector, 1, poolAgendas);
             }
         }
