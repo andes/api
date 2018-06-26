@@ -13,6 +13,14 @@ function getEnv(key, _default, type = 's') {
     }
 }
 
+// Configuracion servicio RENAPER
+export const renaper = {
+    Usuario: getEnv('RENAPER_USERNAME', ''),
+    password: getEnv('RENAPER_PASSWORD', ''),
+    url: getEnv('RENAPER_URL', ''),
+    serv: getEnv('RENAPER_SRV', '')
+};
+
 // Configuración de Passport
 export const auth = {
     useLdap:  getEnv('LDAP', false),
@@ -33,19 +41,25 @@ export const hosts = {
     ldap: getEnv('LDAP_HOST', 'ldap.neuquen.gov.ar'),
     elastic_main: getEnv('ELASTIC_HOST', 'localhost:9200'),
     mongoDB_main: {
-        host: getEnv('MONGO_MAIN', 'localhost:27017/andes'),
-        auth: { authdb: 'admin' },
-        server: { reconnectTries: Number.MAX_VALUE }
+        host: getEnv('MONGO_MAIN', 'localhost:27017/andes'), // ?authSource=admin
+        options: {
+            reconnectTries: Number.MAX_VALUE, // Never stop trying to reconnect
+            reconnectInterval: 500,
+        }
     },
     mongoDB_mpi: {
-        host: getEnv('MONGO_MPI', 'localhost:27017/mpi'),
-        auth: { authdb: 'admin' },
-        server: { reconnectTries: Number.MAX_VALUE }
+        host: getEnv('MONGO_MPI', 'localhost:27017/mpi'), // ?authSource=admin
+        options: {
+            reconnectTries: Number.MAX_VALUE, // Never stop trying to reconnect
+            reconnectInterval: 500,
+        }
     },
     mongoDB_snomed: {
-        host: getEnv('MONGO_SNOMED', 'mongodb://localhost:27017/es-edition'),
-        auth: { authdb: 'admin' },
-        server: { reconnectTries: Number.MAX_VALUE }
+        host: getEnv('MONGO_SNOMED', 'mongodb://localhost:27017/es-edition'), // ?authSource=admin
+        options: {
+            reconnectTries: Number.MAX_VALUE, // Never stop trying to reconnect
+            reconnectInterval: 500,
+        }
     }
 };
 // Mongoose config
@@ -190,4 +204,15 @@ export const wsSalud = {
    hellerFS: '',
    hpnWS: '',
    hostHPN: ''
+};
+
+export const conSqlPecas = {
+    auth: {
+        user: '',
+        password: ''
+    },
+    serverSql: {
+        server: '',
+        database: ''
+    }
 };

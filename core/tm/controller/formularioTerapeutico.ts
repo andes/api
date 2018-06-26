@@ -30,12 +30,14 @@ export function getPadres(hijo, arr) {
                     } else {
                         resolve(arr);
                     }
+                } else {
+                    resolve(null);
                 }
             } else {
                 resolve(null);
             }
         } catch (e) {
-            // console.log(e);
+            reject(e);
         }
     });
 }
