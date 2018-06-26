@@ -36,7 +36,8 @@ const constantes = {
     EstadoExportacionAgendaCache: {
         pendiente: 'pendiente',
         exportada: 'exportada',
-        codificada: 'codificada'
+        codificada: 'codificada',
+        error: 'error'
     },
 
     Especialidades: {

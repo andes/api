@@ -1,12 +1,13 @@
 import * as labsImport from '../modules/cda/controller/import-labs';
-import { paciente as Paciente, pacienteMpi as PacienteMPI} from '../core/mpi/schemas/paciente';
-import * as moment from 'moment';
-import { Logger } from '../utils/logService';
+import { pacienteMpi as PacienteMPI} from '../core/mpi/schemas/paciente';
 import { log } from '../core/log/schemas/log';
-import * as config from '../config.private';
 import * as debug from 'debug';
-import * as mongoose from 'mongoose';
 import { pacienteApp as PacienteApp } from '../modules/mobileApp/schemas/pacienteApp';
+
+/**
+ * Es proceso esta hecho para ejecutarse manual.
+ */
+
 
 function run() {
     let logger = debug('cdaSipsJob');

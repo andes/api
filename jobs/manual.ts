@@ -3,10 +3,18 @@
  *
  * node jobs/manual.js [Js File to run]
 */
-let schedule = require('node-schedule');
+
+
 import { Connections } from './../connections';
-import { jobs } from '../config.private';
+let path = require('path');
 
 Connections.initialize();
-let action = require('../' + process.argv[2]);
-action();
+
+let done = () => {
+    process.exit(0);
+};
+
+let actionName = process.argv[2];
+let action = require(path.join('..', actionName));
+
+action(done);
