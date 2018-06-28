@@ -95,15 +95,29 @@ export let schema = new mongoose.Schema({
             nombre: String
         },
 
-        /**
-         *  DESTINO DE SOLICITUD
-         *      a.  Organización: Si no existe se completa con una copia de ejecucion.registros.createdBy.organizacion.
-         *          Si no hay registros se completa con createdBy.organizacion
-         *      
-         *      b.  Profesionales: Si no existe se completa con una copia de solicitud.registros.valor.solicituPrestacion.profesionales.
-         *          Si no hay registros se completa con solicitud.profesional
-         * 
-         */
+        reglas: {
+            type: Object,
+            required: false,
+            default: false,
+            opcionales: [
+                {
+                    motivoDeConsultaPrincipal: {
+                        type: Object,
+                        required: false,
+                        default: true,
+                    }
+                }
+            ],
+            requeridos: [
+                {
+                    registros: {
+                        type: Object,
+                        required: false,
+                        default: true,
+                    }
+                }
+            ]
+        },
 
         // Registros de la ejecución
         registros: [registro.schema],
