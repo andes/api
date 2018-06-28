@@ -14,7 +14,8 @@ export let configuracionPrestacionSchema = new mongoose.Schema({
         codeSystemName: String,
         displayName: String
     },
-    organizacionesSips: [{
+    idServicio: Number,
+    organizaciones: [{
         _id: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'organizacion'
@@ -22,7 +23,13 @@ export let configuracionPrestacionSchema = new mongoose.Schema({
         idEspecialidad: Number, // id Interno de SIPS
         nombreEspecialidad: String, // nombre de la especialidad en SIPS
         codigo : Number // Codigo de la prestación (va a servir para vincular las prestaciones que tengan distinto ID)
-    }]
+    }],
+    nomencladores: [
+        {
+            sumar: String,
+            recuperoFinanciero: String
+        }
+    ]
 });
 
 export let configuracionPrestacionModel = mongoose.model('configuracionPrestacion', configuracionPrestacionSchema, 'configuracionPrestacion');

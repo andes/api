@@ -9,16 +9,13 @@ export async function saveTurnos(idAgendaAndes, bloque, idTipoPrestacion, pool, 
     for (let turno of bloque.turnos) {
         if (turno.estado === constantes.EstadoTurnosAndes.asignado
             && (! await (getIdTurnoHPN(turno._id, pool)))) {
-
             let result = await pacientes.buscarPaciente(turno.paciente.id);
             let paciente = result.paciente;
 
             let datosPaciente = await pacienteCtrl.getDatosPaciente('DNI', paciente.documento, pool);
-
             if (!datosPaciente) {
                 datosPaciente = await pacienteCtrl.savePaciente(paciente, transaction);
             }
-
             await saveTurno(idAgendaAndes, turno, datosPaciente, bloque.duracionTurno, idTipoPrestacion, pool, transaction);
         }
     }
@@ -30,7 +27,6 @@ async function getIdTurnoHPN(idAndes, pool) {
         .input('idAndes', sql.VarChar(50), idAndes)
         .query(query);
     result = result.recordset;
-
     return (result.length > 0 ? result[0].id : null);
 }
 

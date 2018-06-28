@@ -257,7 +257,7 @@ router.post('/agenda', function (req, res, next) {
             return next(err);
         }
         // Al crear una nueva agenda la cacheo para Sips
-        operations.cacheTurnosSips(data).catch(error => { return next(error); });
+        operations.cacheTurnos(data).catch(error => { return next(error); });
         // Fin de insert cache
         res.json(data);
     });
@@ -360,7 +360,7 @@ router.put('/agenda/:id', function (req, res, next) {
             return next(err);
         }
         // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
-        operations.cacheTurnosSips(data).catch(error => { return next(error); });
+        operations.cacheTurnos(data).catch(error => { return next(error); });
         // Fin de insert cache
         res.json(data);
     });
@@ -418,7 +418,6 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                         }
                     });
                 }
-
                 // Fin de insert cache
                 return res.json(data[0]);
             });
@@ -525,7 +524,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 });
 
             }
-            operations.cacheTurnosSips(data).catch(error => { return next(error); });
+            operations.cacheTurnos(data).catch(error => { return next(error); });
             // Fin de insert cache
             return res.json(data);
         });
