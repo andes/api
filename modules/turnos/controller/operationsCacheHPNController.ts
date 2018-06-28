@@ -226,12 +226,6 @@ export async function getIdTipoPrestacion(_agenda) {
     let idTipoPrestacion = null;
     let prestacionesIntegrada: any = null;
 
-    // Esta parte no se hace más ya que estaba hardcodeado
-    // -----------------------------------------------------
-    // let datosOrganizacion = constantes.prestacionesIntegradasPorEfector.find(elem => { return elem.organizacion === _agenda.organizacion._id.toString(); } );
-    // -----------------------------------------------------
-
-
     // Primero filtramos por el conceptId de la agenda que (según requerimientos era siempre 1) por eso verificamos _agenda.tipoPrestaciones[0]
     let configuracionesPrestacion: any = await configuracionPrestacionModel.findOne({ 'snomed.conceptId': _agenda.tipoPrestaciones[0].conceptId });
     if (configuracionesPrestacion) {
