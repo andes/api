@@ -12,6 +12,8 @@ router.get('/profe/', function (req, res, next) {
             }
             res.json(data);
         });
+    } else {
+        res.status(400).json({ msg: 'Parámetros incorrectos' });
     }
 });
 
