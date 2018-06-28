@@ -12,7 +12,8 @@ let codigoSchema = new mongoose.Schema({
         required: true
     },
     cuie: String,
-    remediar: String
+    remediar: String,
+    sips: String
 });
 
 let _schema = new mongoose.Schema({

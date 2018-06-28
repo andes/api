@@ -1,4 +1,5 @@
 import * as express from 'express';
+import * as solicitudManualCarpeta from '../schemas/solicitudCarpetaManual';
 import * as debug from 'debug';
 import * as prestamosController from '../controller/prestamosController';
 import { ObjectId } from 'bson';
@@ -63,6 +64,15 @@ router.post('/prestamosHC/devolverCarpetas', async function (req, res, next) {
 router.post('/prestamosHC/historial', async function (req, res, next) {
     try {
         let resultado = await prestamosController.getHistorial(req);
+        res.json(resultado);
+    } catch (err) {
+        return next(err);
+    }
+});
+
+router.post('/prestamosHC/solicitudManualCarpeta', async function (req, res, next) {
+    try {
+        let resultado = await prestamosController.solicitudManualCarpeta(req);
         res.json(resultado);
     } catch (err) {
         return next(err);
