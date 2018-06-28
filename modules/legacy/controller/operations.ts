@@ -138,7 +138,7 @@ export async function getDetalles(idProtocolo, idEfector) {
 }
 
 
-export async function cacheTurnos(unaAgenda) {
+export async function cacheTurnosSips(unaAgenda) {
     // Armo el DTO para guardar en la cache de agendas
     // if ((unaAgenda.estado !== 'planificacion') && (unaAgenda.nominalizada) && (unaAgenda.tipoPrestaciones[0].term.includes('odonto')) || integraPrestacionesHPN(unaAgenda)) {
     let integrar;
