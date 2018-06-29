@@ -1,8 +1,7 @@
 import * as mongoose from 'mongoose';
 
 export let configuracionPrestacionSchema = new mongoose.Schema({
-    tipoPrestacion: {
-        id: mongoose.Schema.Types.ObjectId,
+    snomed: {
         conceptId: String,
         term: String,
         fsn: String,
@@ -22,7 +21,7 @@ export let configuracionPrestacionSchema = new mongoose.Schema({
         },
         idEspecialidad: Number, // id Interno de SIPS
         nombreEspecialidad: String, // nombre de la especialidad en SIPS
-        codigo : Number // Codigo de la prestación (va a servir para vincular las prestaciones que tengan distinto ID)
+        codigo: Number, // Codigo de la prestación (va a servir para vincular las prestaciones que tengan distinto ID)
     }],
     nomencladores: [
         {
@@ -32,4 +31,4 @@ export let configuracionPrestacionSchema = new mongoose.Schema({
     ]
 });
 
-export let configuracionPrestacionModel = mongoose.model('configuracionPrestacion', configuracionPrestacionSchema, 'configuracionPrestacion');
+export let configuracionPrestacionModel = mongoose.model('configuracionPrestacion_new', configuracionPrestacionSchema, 'configuracionPrestacion_new');
