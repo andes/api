@@ -44,9 +44,9 @@ export async function consultaPecas() {
     // const type = 'PECAS-' + (new Date()).toISOString();
     // const outputFile = './turnos-agendas-' + type + '.json';
     let match = {
-        '$and': [{ updatedAt: { $gt: new Date('2018-06-25T00:00:00.000-03:00') } },
-                 { updatedAt: { $lt: new Date('2018-06-27T23:59:00.000-03:00') } }
-                ],
+        '$and': [{ updatedAt: { $gt: new Date('2018-06-28T00:00:00.000-03:00') } },
+        { updatedAt: { $lt: new Date('2018-06-28T23:59:00.000-03:00') } }
+        ],
         'bloques': {
             $ne: null
         },
@@ -101,9 +101,12 @@ export async function consultaPecas() {
 // castea cada turno asignado y lo inserta en la tabla Sql
 async function auxiliar(a: any, t: any) {
     let turno: any = {};
-    if (t.estado === 'asignado' && t.paciente && t.asistencia && t.asistencia === 'asistio' && t.diagnostico && t.diagnostico.codificaciones
-        && t.diagnostico.codificaciones.length > 0) {
+    if (t.estado === 'asignado' && t.paciente && t.asistencia /*&& t.asistencia === 'asistio' && t.diagnostico && t.diagnostico.codificaciones
+&& t.diagnostico.codificaciones.length > 0*/) {
+        if (a.organizacion._id === '57fcf12e326e73143fb4927d') {
 
+            console.log('lala', a.organizacion);
+        }
         let efector = await getEfector(a.organizacion._id) as any;
         let idEfector = efector ? efector.codigo : null;
         let tipoEfector = efector ? efector.tipoEfector : null;
@@ -149,9 +152,14 @@ async function auxiliar(a: any, t: any) {
         turno.Principal = 0;
         turno.Tipodeconsulta = null;
         turno.ConsC2 = null;
-
+        turno.asistencia = t.asistencia ? t.asistencia : null;
         // Diagnóstico 1 ORIGINAL
-        if (t.diagnostico.codificaciones[0].codificacionProfesional) {
+        if (t.diagnostico.codificaciones.length > 0 && t.diagnostico.codificaciones[0] && t.diagnostico.codificaciones[0].primeraVez !== undefined) {
+            turno.primeraVez1 = (t.diagnostico.codificaciones[0].primeraVez === true) ? 1 : 0;
+        } else {
+            turno.primeraVez1 = null;
+        }
+        if (t.diagnostico.codificaciones.length > 0 && t.diagnostico.codificaciones[0].codificacionProfesional) {
             turno.codifica = 'PROFESIONAL';
             if (t.diagnostico.codificaciones[0].codificacionProfesional.cie10 && t.diagnostico.codificaciones[0].codificacionProfesional.cie10.codigo) {
                 turno.Diag1CodigoOriginal = t.diagnostico.codificaciones[0].codificacionProfesional.cie10.codigo;
@@ -165,7 +173,7 @@ async function auxiliar(a: any, t: any) {
             turno.codifica = 'NO PROFESIONAL';
         }
         // Diagnóstico 1 AUDITADO
-        if (t.diagnostico.codificaciones[0].codificacionAuditoria && t.diagnostico.codificaciones[0].codificacionAuditoria.codigo) {
+        if (t.diagnostico.codificaciones.length > 0 && t.diagnostico.codificaciones[0].codificacionAuditoria && t.diagnostico.codificaciones[0].codificacionAuditoria.codigo) {
             turno.Diag1CodigoAuditado = t.diagnostico.codificaciones[0].codificacionAuditoria.codigo;
             turno.Desc1DiagAuditado = t.diagnostico.codificaciones[0].codificacionAuditoria.nombre;
             turno.ConsC2 = t.diagnostico.codificaciones[0].codificacionAuditoria.c2 ? 'SI' : 'NO';
@@ -180,6 +188,11 @@ async function auxiliar(a: any, t: any) {
         turno.Desc2DiagAuditado = null;
         turno.conceptId2 = null;
         turno.term2 = null;
+        if (t.diagnostico.codificaciones.length > 1 && t.diagnostico.codificaciones[1] && t.diagnostico.codificaciones[1].primeraVez !== undefined) {
+            turno.primeraVez2 = (t.diagnostico.codificaciones[1].primeraVez === true) ? 1 : 0;
+        } else {
+            turno.primeraVez2 = null;
+        }
         if (t.diagnostico.codificaciones.length > 1 && t.diagnostico.codificaciones[1].codificacionProfesional) {
             if (t.diagnostico.codificaciones[1].codificacionProfesional.cie10 && t.diagnostico.codificaciones[1].codificacionProfesional.cie10.codigo) {
                 turno.Diag2CodigoOriginal = t.diagnostico.codificaciones[1].codificacionProfesional.cie10.codigo;
@@ -202,6 +215,11 @@ async function auxiliar(a: any, t: any) {
         turno.Desc3DiagAuditado = null;
         turno.conceptId3 = null;
         turno.term3 = null;
+        if (t.diagnostico.codificaciones.length > 2 && t.diagnostico.codificaciones[2] && t.diagnostico.codificaciones[2].primeraVez !== undefined) {
+            turno.primeraVez3 = (t.diagnostico.codificaciones[2].primeraVez === true) ? 1 : 0;
+        } else {
+            turno.primeraVez3 = null;
+        }
         if (t.diagnostico.codificaciones.length > 2 && t.diagnostico.codificaciones[2].codificacionProfesional) {
             if (t.diagnostico.codificaciones[2].codificacionProfesional.cie10 && t.diagnostico.codificaciones[2].codificacionProfesional.cie10.codigo) {
                 turno.Diag3CodigoOriginal = t.diagnostico.codificaciones[2].codificacionProfesional.cie10.codigo;
@@ -252,6 +270,9 @@ async function auxiliar(a: any, t: any) {
         if (tipoEfector && tipoEfector === 'Puesto Sanitario') {
             turno.TipoEfector = '3';
         }
+        if (tipoEfector && tipoEfector === 'ONG') {
+            turno.TipoEfector = '6';
+        }
         turno.DescTipoEfector = tipoEfector;
         turno.IdZona = null;
         turno.Zona = null;
@@ -275,10 +296,10 @@ async function auxiliar(a: any, t: any) {
                 'DNI, Apellido, Nombres, HC, CodSexo, Sexo, FechaNacimiento, Edad, UniEdad, CodRangoEdad, RangoEdad, IdObraSocial, ObraSocial, IdPaciente, telefono, ' +
                 'IdBarrio, Barrio, IdLocalidad, Localidad, IdDpto, Departamento, IdPcia, Provincia, IdNacionalidad, Nacionalidad, ' +
                 'Calle, Altura, Piso, Depto, Manzana, Longitud, Latitud, ' +
-                'Peso, Talla, TAS, TAD, IMC, RCVG, ' +
-                'Diag1CodigoOriginal, Desc1DiagOriginal, Diag1CodigoAuditado, Desc1DiagAuditado, SnomedConcept1, SnomedTerm1, ' +
-                'Diag2CodigoOriginal, Desc2DiagOriginal, Diag2CodigoAuditado, Desc2DiagAuditado, SnomedConcept2, SnomedTerm2, ' +
-                'Diag3CodigoOriginal, Desc3DiagOriginal, Diag3CodigoAuditado, Desc3DiagAuditado, SnomedConcept3, SnomedTerm3, ' +
+                'Peso, Talla, TAS, TAD, IMC, RCVG, asistencia, ' +
+                'Diag1CodigoOriginal, Desc1DiagOriginal, Diag1CodigoAuditado, Desc1DiagAuditado, SnomedConcept1, SnomedTerm1, primeraVez1, ' +
+                'Diag2CodigoOriginal, Desc2DiagOriginal, Diag2CodigoAuditado, Desc2DiagAuditado, SnomedConcept2, SnomedTerm2, primeraVez2, ' +
+                'Diag3CodigoOriginal, Desc3DiagOriginal, Diag3CodigoAuditado, Desc3DiagAuditado, SnomedConcept3, SnomedTerm3, primeraVez3, ' +
                 'Profesional, TipoProfesional, CodigoEspecialidad, Especialidad, CodigoServicio, Servicio, ' +
                 'codifica, estadoAgenda) ' +
                 'VALUES  ( ' + turno.idEfector + ',\'' + turno.Organizacion + '\',\'' + turno.TipoEfector + '\',\'' + turno.DescTipoEfector +
@@ -295,10 +316,14 @@ async function auxiliar(a: any, t: any) {
                 '\',\'' + turno.Depto + '\',\'' + turno.Manzana + '\',\'' + turno.Longitud + '\',\'' + turno.Latitud +
                 '\',' + turno.Peso + ',' + turno.Talla + ',\'' + turno.TAS + '\',\'' + turno.TAD + '\',\'' + turno.IMC + '\',\'' + turno.RCVG +
                 // DATOS CONSULTA
-                '\',\'' + turno.Diag1CodigoOriginal + '\',\'' + turno.Desc1DiagOriginal + '\',\'' + turno.Diag1CodigoAuditado + '\',\'' + turno.Desc1DiagAuditado + '\',\'' + turno.conceptId1 + '\',\'' + turno.term1 +
-                '\',\'' + turno.Diag2CodigoOriginal + '\',\'' + turno.Desc2DiagOriginal + '\',\'' + turno.Diag2CodigoAuditado + '\',\'' + turno.Desc2DiagAuditado + '\',\'' + turno.conceptId2 + '\',\'' + turno.term2 +
-                '\',\'' + turno.Diag3CodigoOriginal + '\',\'' + turno.Desc3DiagOriginal + '\',\'' + turno.Diag3CodigoAuditado + '\',\'' + turno.Desc3DiagAuditado + '\',\'' + turno.conceptId3 + '\',\'' + turno.term3 +
-                '\',\'' + turno.Profesional + '\',\'' + turno.TipoProfesional + '\',' + turno.CodigoEspecialidad + ',\'' + turno.Especialidad +
+                '\',\'' + turno.asistencia +
+                '\',\'' + turno.Diag1CodigoOriginal + '\',\'' + turno.Desc1DiagOriginal + '\',\'' + turno.Diag1CodigoAuditado + '\',\'' + turno.Desc1DiagAuditado +
+                '\',\'' + turno.conceptId1 + '\',\'' + turno.term1 + '\',' + turno.primeraVez1 +
+                ',\'' + turno.Diag2CodigoOriginal + '\',\'' + turno.Desc2DiagOriginal + '\',\'' + turno.Diag2CodigoAuditado + '\',\'' + turno.Desc2DiagAuditado +
+                '\',\'' + turno.conceptId2 + '\',\'' + turno.term2 + '\',' + turno.primeraVez2 +
+                ',\'' + turno.Diag3CodigoOriginal + '\',\'' + turno.Desc3DiagOriginal + '\',\'' + turno.Diag3CodigoAuditado + '\',\'' + turno.Desc3DiagAuditado +
+                '\',\'' + turno.conceptId3 + '\',\'' + turno.term3 + '\',' + turno.primeraVez3 +
+                ',\'' + turno.Profesional + '\',\'' + turno.TipoProfesional + '\',' + turno.CodigoEspecialidad + ',\'' + turno.Especialidad +
                 '\',' + turno.CodigoServicio + ',\'' + turno.Servicio + '\',\'' + turno.codifica + '\',\'' + turno.estadoAgenda + '\') ';
             let rta = await existeTurnoPecas(turno.idTurno);
             if (rta.recordset.length > 0 && rta.recordset[0].idTurno) {
@@ -362,7 +387,7 @@ function getEfector(idOrganizacion: any) {
             if ((data as any).codigo) {
                 let codigoSips = (data as any).codigo as any;
                 let efector = {
-                    codigo: codigoSips.sips,
+                    codigo: codigoSips.sips ? codigoSips.sips : null,
                     tipoEfector: (data as any).tipoEstablecimiento.nombre
                 };
                 if (codigoSips) {
