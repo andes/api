@@ -60,7 +60,7 @@ export function getEspecialidad(agenda, conceptId, organizacion) {
     return new Promise<Array<any>>(function (resolve, reject) {
         let especialidad: any = 14;
         configuracionPrestacionModel.find({
-            'tipoPrestacion.conceptId': { $eq: conceptId },
+            'snomed.conceptId': { $eq: conceptId },
             'organizaciones._id': { $eq: agenda.organizacion._id }
         }).exec(function (err, data: any) {
             if (err) {
