@@ -20,12 +20,12 @@ router.get('/configuracionPrestaciones/:id*?', function (req, res, next) {
             });
     } else {
         let query;
-        query = configuracionPrestacion.configuracionPrestacionModel.find({});
         if (req.query.snomed) {
-            query.where('snomed.conceptId').equals(req.query.snomed);
+            query = configuracionPrestacion.configuracionPrestacionModel.find({ 'snomed.conceptId': req.query.snomed });
         }
         if (req.query.organizacion) {
-            query.where('organizaciones._id').equals(req.query.organizaciones);
+            query = configuracionPrestacion.configuracionPrestacionModel.find({ 'organizaciones._id': req.query.organizacion });
+            // query.where('organizaciones._id').equals(req.query.organizaciones);
         }
         query.exec(function (err, data) {
             if (err) {
