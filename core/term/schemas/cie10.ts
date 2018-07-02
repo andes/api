@@ -1,6 +1,8 @@
 import * as mongoose from 'mongoose';
 
 export let schema = new mongoose.Schema({
+    capitulo: String,
+    grupo: String,
     causa: String,
     subcausa: String,
     codigo: String,

@@ -1,7 +1,7 @@
 import * as agendaCtrl from './../modules/turnos/controller/agendasCacheController';
 
-function run() {
-    agendaCtrl.integracionSips();
+function run(done) {
+    agendaCtrl.integracionSips(done);
 }
 
 export = run;
