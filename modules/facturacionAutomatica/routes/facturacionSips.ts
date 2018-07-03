@@ -48,7 +48,7 @@ router.get('/configuracionPrestacion/:id', async function (req, res, next) {
 });
 
 
-router.get('/cambioEstado/:id', function (req, res, next) {
+router.post('/cambioEstado/:id', function (req, res, next) {
     try {
         agendaSchema.find({
             'bloques.turnos._id': req.params.id
@@ -73,18 +73,12 @@ router.get('/cambioEstado/:id', function (req, res, next) {
 
 
 router.get('/cambioEstadoAgenda/:id', function (req, res, next) {
-    console.log("entre a la ruta")
     try {
         agendaSchema.find({
             '_id': req.params.id, 'bloques.turnos.estadoFacturacion': 'sinFacturar'
         }).exec(function (err, data: any) {
-            console.log("encontre")
             if (data.length === 0) {
-                console.log("entro al condicion", data)
-
                 agendaSchema.findByIdAndUpdate(req.params.id, { estadoFacturacion: 'facturado' }, { new: true }, function (err, agenda) {
-                    console.log("update", agenda)
-
                     res.json(agenda);
                 });
             }
@@ -100,13 +94,11 @@ router.get('/cambioEstadoAgenda/:id', function (req, res, next) {
 });
 
 
-router.get('/cambioEstadoPrestaciones/:id', function (req, res, next) {
-    console.log("entre a la ruta", )
+router.post('/cambioEstadoPrestaciones/:id', function (req, res, next) {
     try {
         prestacion.find({
             '_id': mongoose.Types.ObjectId(req.params.id)
         }).exec(function (err, data: any) {
-            console.log(data)
             data[0].estadoFacturacion = 'facturado';
 
             Auth.audit(data[0], configPrivate.userScheduler);
@@ -125,7 +117,6 @@ router.get('/cambioEstadoPrestaciones/:id', function (req, res, next) {
 
 
 router.get('/sinTurno/:conceptId', async function (req, res, next) {
-    console.log("funcion ruta", req.params.conceptId)
     try {
         let prestaciones = await toArray(prestacion.aggregate({
             $match: {
@@ -135,7 +126,6 @@ router.get('/sinTurno/:conceptId', async function (req, res, next) {
             }
         }).cursor({ batchSize: 1000 }).exec());
 
-        console.log(prestaciones)
         res.json(prestaciones);
     } catch (error) {
         res.end(error);
@@ -144,7 +134,6 @@ router.get('/sinTurno/:conceptId', async function (req, res, next) {
 
 
 router.get('/prestacionesConTurno/:id', async function (req, res, next) {
-console.log("prestaciones con turno");
         prestacion.find({
             'solicitud.turno': mongoose.Types.ObjectId(req.params.id)
         }).exec(function (err, data: any) {

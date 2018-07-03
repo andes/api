@@ -18,7 +18,6 @@ let async = require('async');
 
 
 export async function getTurnosFacturacionPendiente() {
-    console.log("aca acho")
     let hoyDesde = moment(new Date()).startOf('day').format();
     let hoyHasta = moment(new Date()).endOf('day').format();
     let prestaciones = ['2091000013100', '2091000013101'];
@@ -44,7 +43,6 @@ export async function getTurnosFacturacionPendiente() {
 
     let turnos = [];
     data.forEach(agenda => {
-        console.log(agenda)
         turnos.push({
             datosAgenda: {
                 'id' : agenda._id,

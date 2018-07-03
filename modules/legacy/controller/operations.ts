@@ -19,6 +19,7 @@ import { osPaciente } from '../../obraSocial/schemas/osPaciente';
 import * as configPrivate from '../../../config.private';
 let to_json = require('xmljson').to_json;
 import * as https from 'https';
+import * as sisaController from '../../../modules/fuentesAutenticas/controller/sisaController'
 
 
 // Funciones privadas
@@ -199,7 +200,7 @@ export async function pacienteSipsFactory(paciente: any, idEfectorSips: any) {
 
 async function codigoPucoPorDni(dni) {
     let idObraSocial;
-    let obraSocial: any = await postPuco(dni)
+    let obraSocial: any = await sisaController.postPuco(dni)
     if (obraSocial.puco.resultado === 'OK') {
         idObraSocial = await mapeoObraSocial(obraSocial.puco.rnos)
     } else {
@@ -483,48 +484,5 @@ export async function cacheTurnosSips(unaAgenda) {
     }
 }
 
-
-export function postPuco(documento) {
-    let xml = '';
-    let pathSisa = 'https://sisa.msal.gov.ar/sisa/services/rest/puco/' + documento;
-    let optionsgetmsg = {
-        host: configPrivate.sisa.host,
-        port: configPrivate.sisa.port,
-        path: pathSisa,
-        method: 'POST',
-        headers: {
-            'content-type': 'application/json',
-        }
-    };
-    // Realizar POST request
-    return new Promise((resolve, reject) => {
-        let reqPost = https.request(optionsgetmsg);
-        reqPost.on('error', function (e) {
-            reject(e);
-        });
-        reqPost.write(JSON.stringify({ usuario: 'hhfernandez', clave: 'develop666' }));
-        reqPost.end();
-        reqPost.on('response', function (response) {
-            response.setEncoding('utf8');
-            response.on('data', function (chunk) {
-                if (chunk.toString()) {
-                    xml = xml + chunk.toString();
-                }
-                if (xml) {
-                    // Se parsea el xml obtenido a JSON
-                    to_json(xml, function (error, data) {
-                        if (error) {
-                            reject();
-                        } else {
-                            resolve(data);
-                        }
-                    });
-                } else {
-                    reject();
-                }
-            });
-        });
-    });
-}
 
 

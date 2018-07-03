@@ -17,7 +17,7 @@ import * as organizacion from '../../../core/tm/schemas/organizacion';
 import { toArray } from '../../../utils/utils';
 let to_json = require('xmljson').to_json;
 import * as https from 'https';
-// import * as sisa from '../../../modules/fuentesAutenticas/routes/sisa'
+ import * as sisaController from '../../../modules/fuentesAutenticas/controller/sisaController'
 /**
  * Crea un paciente y lo sincroniza con elastic
  *
@@ -25,7 +25,7 @@ import * as https from 'https';
  * @param req  request de express para poder auditar
  */
 
-var sisa = require('../../../modules/fuentesAutenticas/routes/sisa');
+
 let poolAgendas;
 let configSql = {
     user: configPrivate.conSql.auth.user,
@@ -674,10 +674,12 @@ export async function mapeoPuco(dni) {
 
 export async function insertSips() {
     let pacientes = await pacientesDelDia();
-
+    console.log(pacientes)
     for (var index = 0; index < pacientes.length; index++) {
         let existeEnSips = await getPacienteSips(pacientes[index].documento);
-        let existeEnPuco: any = await operacionesLegacy.postPuco(pacientes[index].documento)
+        
+
+        // let existeEnPuco: any = await operacionesLegacy.postPuco(pacientes[index].documento)
         let esBeneficiario = await getBeneficiario(pacientes[index].documento);
         let edad = moment().diff(pacientes[index].fechaNacimiento, 'years');
         let efector = await mapeoEfector(pacientes[index].createdBy.organizacion.id);
@@ -694,7 +696,9 @@ export async function insertSips() {
             //FALTA EL EFECTOR(busqueda por id)
             let pacienteSips = await operacionesLegacy.pacienteSipsFactory(pacientes[index], efector.idEfector);
             let idPacienteSips = await operacionesLegacy.insertaPacienteSips(pacienteSips);
+            console.log(idPacienteSips)
         }
+        let existeEnPuco: any = await sisaController.postPuco(pacientes[index].documento);
         if (existeEnPuco.puco.resultado === 'REGISTRO_NO_ENCONTRADO' && edad <= 64) {
             if (esBeneficiario.length === 0) {
                 // FALTA EL EFECTOR
