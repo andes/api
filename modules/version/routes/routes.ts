@@ -10,6 +10,7 @@ router.get('/', (req, res) => {
     });
     EventCore.emitAsync('api-version', {
         version: require('../../../package.json').version,
+        name: 'hola'
         // host: require('os').hostname()
     });
     // EventCore.emitAsync('api-status');

@@ -7,12 +7,24 @@ const request = require('request');
 
 let router = express.Router();
 
+function filterData (filter: any[], data) {
+    for (let key in filter) {
+        if (!data[key] || data[key] !== filter[key]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 EventCore.on(/.*/, async function (body) {
     const event = this.event;
 
     let subscriptions = await WebHook.find({ event });
 
     subscriptions.forEach ((sub: any) => {
+        if (!filterData(sub.filter, body)) {
+            return null;
+        }
 
         let data = {
             id: new mongoose.Types.ObjectId(),
