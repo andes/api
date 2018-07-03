@@ -5,6 +5,7 @@ import * as bloqueSchema from '../../../modules/turnos/schemas/bloque';
 import * as turnoSchema from '../../../modules/turnos/schemas/turno';
 import * as nombreApellidoSchema from '../../../core/tm/schemas/nombreApellido';
 import * as mongoose from 'mongoose';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 let schema = new mongoose.Schema({
     organizacion: {
@@ -137,7 +138,7 @@ schema.pre('save', function (next) {
 });
 
 // Habilitar plugin de auditoría
-schema.plugin(require('../../../mongoose/audit'));
+schema.plugin(AuditPlugin);
 
 // Exportar modelo
 let model = mongoose.model('agenda', schema, 'agenda');

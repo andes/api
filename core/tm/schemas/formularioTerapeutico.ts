@@ -1,4 +1,6 @@
 import * as mongoose from 'mongoose';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+
 import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
 import { pacienteSchema } from '../../mpi/schemas/paciente';
 
@@ -43,7 +45,7 @@ let schema = new mongoose.Schema({
 });
 
 // Habilitar plugin de auditoría
-schema.plugin(require('../../../mongoose/audit'));
+schema.plugin(AuditPlugin);
 
 // Exportar modelo
 let model = mongoose.model('formularioTerapeutico', schema, 'formularioTerapeutico');

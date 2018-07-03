@@ -7,6 +7,7 @@ import * as constantes from './constantes';
 import * as mongoose from 'mongoose';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import { Number, Object } from 'core-js/library/web/timers';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 let schema = new mongoose.Schema({
     paciente: {
@@ -62,7 +63,7 @@ let schema = new mongoose.Schema({
     }
 });
 
-schema.plugin(require('../../../mongoose/audit'));
+schema.plugin(AuditPlugin);
 
 // Exportar modelo
 let model = mongoose.model('prestamo', schema, 'prestamo');

@@ -5,7 +5,7 @@ import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 import { espacioFisicoSchema } from '../../../modules/turnos/schemas/espacioFisico';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import * as constantes from './constantes';
-
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 let solicitudCarpetaManualSchema = new mongoose.Schema({
     fecha: Date,
@@ -29,7 +29,7 @@ let solicitudCarpetaManualSchema = new mongoose.Schema({
     }
 });
 
-solicitudCarpetaManualSchema.plugin(require('../../../mongoose/audit'));
+solicitudCarpetaManualSchema.plugin(AuditPlugin);
 
 let solicitudCarpetaManual = mongoose.model('solicitudCarpetaManual', solicitudCarpetaManualSchema, 'solicitudCarpetaManual');
 export = solicitudCarpetaManual;
