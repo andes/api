@@ -5,9 +5,14 @@ let router = express.Router();
 
 router.get('/', (req, res) => {
     res.json({
-        version: require('../../../package.json').version
+        version: require('../../../package.json').version,
+        // host: require('os').hostname()
     });
-    EventCore.emitAsync('api-version');
+    EventCore.emitAsync('api-version', {
+        version: require('../../../package.json').version,
+        // host: require('os').hostname()
+    });
+    // EventCore.emitAsync('api-status');
 });
 
 export = router;

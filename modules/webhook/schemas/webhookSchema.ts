@@ -12,7 +12,7 @@ export let WebHookSchema = new mongoose.Schema({
     data: mongoose.SchemaTypes.Mixed, // a projections of data to send
     filter: mongoose.SchemaTypes.Mixed, // posibles filtros filtros
 
-});
+}, { timestamps: true });
 
 export let WebHook = mongoose.model('webhook', WebHookSchema, 'webhook');
 
@@ -28,9 +28,9 @@ export let WebHookLogSchema = new mongoose.Schema({
     body: mongoose.SchemaTypes.Mixed, // a projections of data to send
     subscriptionId: mongoose.SchemaTypes.ObjectId,
     status: Number,
-    messageResponse: String
+    response: mongoose.SchemaTypes.Mixed
 
 
 }, { timestamps: true });
 
-export let WebHookLog = mongoose.model('webhookLog', WebHookSchema, 'webhookLog');
+export let WebHookLog = mongoose.model('webhookLog', WebHookLogSchema, 'webhookLog');
