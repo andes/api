@@ -25,7 +25,6 @@ router.get('/configuracionPrestaciones/:id*?', function (req, res, next) {
         }
         if (req.query.organizacion) {
             query = configuracionPrestacion.configuracionPrestacionModel.find({ 'organizaciones._id': req.query.organizacion });
-            // query.where('organizaciones._id').equals(req.query.organizaciones);
         }
         query.exec(function (err, data) {
             if (err) {
@@ -45,20 +44,31 @@ Elimina un 'mapeo' (Elemento del arreglo 'organizaciones') de tipoPrestacion - E
 */
 
 router.put('/configuracionPrestaciones', function (req, res, next) {
+    console.log('entro: ' + req);
+    if (req.query.idOrganizacion && req.query.conceptIdSnomed) {
+        let query;
+        console.log('esp: ' + req.query.idEspecialidad);
+        if (req.query.idEspecialidad) {
 
-    if (req.query.idOrganizacion && req.query.conceptIdSnomed && req.query.codigoEspecialidad) {
+            query = configuracionPrestacion.configuracionPrestacionModel.update(
+                { 'organizaciones._id': req.query.idOrganizacion, 'snomed.conceptId': req.query.conceptIdSnomed, 'organizaciones.idEspecialidad': req.query.idEspecialidad }
+                , { $pull: { 'organizaciones': { '_id': req.query.idOrganizacion } } });
 
-        configuracionPrestacion.configuracionPrestacionModel.update(
-            { 'organizaciones._id': req.query.idOrganizacion, 'snomed.conceptId': req.query.conceptIdSnomed, 'organizaciones.codigo': req.query.codigoEspecialidad }
-            , { $pull: { 'organizaciones': { '_id': req.query.idOrganizacion } } }, function (err, resultado) {
+        }
+        console.log('cod: ' + req.query.codigo);
+        if (req.query.codigo) {
 
-                if (err) {
-                    return next(err);
-                } else {
-                    res.send({ status: 'ok' });
-                }
+            query = configuracionPrestacion.configuracionPrestacionModel.update(
+                { 'organizaciones._id': req.query.idOrganizacion, 'snomed.conceptId': req.query.conceptIdSnomed, 'organizaciones.codigo': req.query.codigo }
+                , { $pull: { 'organizaciones': { '_id': req.query.idOrganizacion } } });
+        }
+        query.exec(function (err, data) {
+            if (err) {
+                return next(err);
+            }
+            res.send({ status: 'ok' });
+        });
 
-            });
     } else {
         res.status(404).send('Error ejecutando el método');
     }
@@ -67,28 +77,26 @@ router.put('/configuracionPrestaciones', function (req, res, next) {
 /**
 Inserta un 'mapeo' de tipoPrestacion - Especialidad - Organicación.
 
-@param {any} organizacion (id)
-@param {any} conceptSnomed (dto de concepto turneable)
+@param {any} organizacion
+@param {any} conceptSnomed
 @param {any} prestacionLegacy
 */
 router.post('/configuracionPrestaciones', function (req, res, next) {
-
+    console.log(req.query.organizacion);
     if (req.query.organizacion && req.query.conceptSnomed && req.query.prestacionLegacy) {
         let idSnomed = req.query.conceptSnomed.conceptId;
         let codigoPrestacion = req.query.prestacionLegacy.codigo;
-        let coincidencias = false;
-        let organizacionesAux = [];     // Arreglo de organizaciones en las cuales se insertará el mapeo.
-
         let existeConcepto = (configuracionPrestacion.configuracionPrestacionModel.find({ 'snomed.conceptId': idSnomed }));
 
+        // Se verifica que no esixta un mapeo correspondiente a este concepto
         if (existeConcepto) {
             let result = configuracionPrestacion.configuracionPrestacionModel.find(
-                { 'organizaciones._id': req.query.organizacion, 'snomed.conceptId': idSnomed, 'organizaciones.codigo': codigoPrestacion }).exec();
+                { 'organizaciones._id': req.query.organizacion.id, 'snomed.conceptId': idSnomed, 'organizaciones.codigo': codigoPrestacion }).exec();
 
             if (result) {
                 return next({ error: 'Mapeo existente' });
             } else {
-                configuracionPrestacion.configuracionPrestacionModel.update({ 'organizaciones._id': req.query.organizacion }, { $push: req.query.prestacionLegacy }, function (err, resultado) {
+                configuracionPrestacion.configuracionPrestacionModel.update({ 'organizaciones._id': req.query.organizacion.id }, { $push: req.query.prestacionLegacy }, function (err, resultado) {
                     if (err) {
                         return next(err);
                     } else {
@@ -100,7 +108,7 @@ router.post('/configuracionPrestaciones', function (req, res, next) {
             let newConfigPres = {
                 'snomed': req.query.conceptSnomed,
                 'organizaciones': [{
-                    _id: new mongoose.Types.ObjectId(req.query.organizacion),
+                    _id: new mongoose.Types.ObjectId(req.query.organizacion.id),
                     'idEspecialidad': req.query.prestacionLegacy.idEspecialidad,
                     'nombreEspecialidad': req.query.prestacionLegacy.nombreEspecialidad,
                     'codigo': req.query.prestacionLegacy.codigo
