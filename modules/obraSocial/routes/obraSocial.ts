@@ -21,4 +21,14 @@ router.get('/puco/', async function (req, res, next) {
         res.status(400).json({ msg: 'Parámetros incorrectos' });
     }
 });
+
+router.get('/puco/version/', async function (req, res, next) {
+    // periodo especifico
+    if (req.params.periodo) {
+        res.json({});
+    } else {    // no se ingresa periodo
+        res.json();
+    }
+});
+
 module.exports = router;
