@@ -16,6 +16,7 @@ import * as AgendasEstadisticas from '../controller/estadisticas';
 
 let router = express.Router();
 
+
 // devuelve los 10 ultimos turnos del paciente
 router.get('/agenda/paciente/:idPaciente', function (req, res, next) {
 

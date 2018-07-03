@@ -4,6 +4,7 @@
   "description": "API para ANDES",
   "main": "index.js",
   "dependencies": {
+    "@andes/event-bus": "file:packages/event-bus",
     "@andes/match": "^1.1.9",
     "@types/async": "^2.0.49",
     "@types/bcrypt-nodejs": "0.0.30",
