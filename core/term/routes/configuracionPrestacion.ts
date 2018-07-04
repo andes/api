@@ -1,6 +1,8 @@
 import * as express from 'express';
 import * as configuracionPrestacion from '../schemas/configuracionPrestacion';
 import * as mongoose from 'mongoose';
+import { Organization } from '../../../modules/cda/controller/class/Organization';
+import { tipoPrestacionSchema } from '../../tm/schemas/tipoPrestacion';
 
 let router = express.Router();
 
@@ -44,33 +46,31 @@ Elimina un 'mapeo' (Elemento del arreglo 'organizaciones') de tipoPrestacion - E
 */
 
 router.put('/configuracionPrestaciones', function (req, res, next) {
-    console.log('entro: ' + req);
-    if (req.query.idOrganizacion && req.query.conceptIdSnomed) {
+
+    if (req.body.idOrganizacion && req.body.conceptIdSnomed) {
         let query;
-        console.log('esp: ' + req.query.idEspecialidad);
-        if (req.query.idEspecialidad) {
+        if (req.body.idEspecialidad) {
 
             query = configuracionPrestacion.configuracionPrestacionModel.update(
-                { 'organizaciones._id': req.query.idOrganizacion, 'snomed.conceptId': req.query.conceptIdSnomed, 'organizaciones.idEspecialidad': req.query.idEspecialidad }
-                , { $pull: { 'organizaciones': { '_id': req.query.idOrganizacion } } });
+                { 'organizaciones._id': req.body.idOrganizacion, 'snomed.conceptId': req.body.conceptIdSnomed, 'organizaciones.idEspecialidad': req.body.idEspecialidad }
+                , { $pull: { 'organizaciones': { '_id': req.body.idOrganizacion } } });
 
         }
-        console.log('cod: ' + req.query.codigo);
-        if (req.query.codigo) {
+        if (req.body.codigo) {
 
             query = configuracionPrestacion.configuracionPrestacionModel.update(
-                { 'organizaciones._id': req.query.idOrganizacion, 'snomed.conceptId': req.query.conceptIdSnomed, 'organizaciones.codigo': req.query.codigo }
-                , { $pull: { 'organizaciones': { '_id': req.query.idOrganizacion } } });
+                { 'organizaciones._id': req.body.idOrganizacion, 'snomed.conceptId': req.body.conceptIdSnomed, 'organizaciones.codigo': req.body.codigo }
+                , { $pull: { 'organizaciones': { '_id': req.body.idOrganizacion } } });
         }
         query.exec(function (err, data) {
             if (err) {
                 return next(err);
             }
-            res.send({ status: 'ok' });
+            res.json(data);
         });
 
     } else {
-        res.status(404).send('Error ejecutando el método');
+        res.status(404).send('Error, parámetros incorrectos.');
     }
 });
 
@@ -81,48 +81,53 @@ Inserta un 'mapeo' de tipoPrestacion - Especialidad - Organicación.
 @param {any} conceptSnomed
 @param {any} prestacionLegacy
 */
-router.post('/configuracionPrestaciones', function (req, res, next) {
-    console.log(req.query.organizacion);
-    if (req.query.organizacion && req.query.conceptSnomed && req.query.prestacionLegacy) {
-        let idSnomed = req.query.conceptSnomed.conceptId;
-        let codigoPrestacion = req.query.prestacionLegacy.codigo;
-        let existeConcepto = (configuracionPrestacion.configuracionPrestacionModel.find({ 'snomed.conceptId': idSnomed }));
+router.post('/configuracionPrestaciones', async function (req, res, next) {
 
-        // Se verifica que no esixta un mapeo correspondiente a este concepto
-        if (existeConcepto) {
-            let result = configuracionPrestacion.configuracionPrestacionModel.find(
-                { 'organizaciones._id': req.query.organizacion.id, 'snomed.conceptId': idSnomed, 'organizaciones.codigo': codigoPrestacion }).exec();
+    if (req.body.organizacion && req.body.conceptSnomed && req.body.prestacionLegacy) {
+        let idSnomed = req.body.conceptSnomed.conceptId;
+        let existeTipoPrestacion = await configuracionPrestacion.configuracionPrestacionModel.findOne({ 'snomed.conceptId': idSnomed });
 
-            if (result) {
-                return next({ error: 'Mapeo existente' });
+        if (existeTipoPrestacion) {
+            let existeOrganizacion = await configuracionPrestacion.configuracionPrestacionModel.findOne(
+                { 'snomed.conceptId': idSnomed, 'organizaciones._id': req.body.organizacion.id });
+
+            if (existeOrganizacion) {
+                return next('Este concepto ya se encuentra mapeado');
             } else {
-                configuracionPrestacion.configuracionPrestacionModel.update({ 'organizaciones._id': req.query.organizacion.id }, { $push: req.query.prestacionLegacy }, function (err, resultado) {
+                let newOrganizacion = [{
+                    _id: new mongoose.Types.ObjectId(req.body.organizacion.id),
+                    'idEspecialidad': req.body.prestacionLegacy.idEspecialidad,
+                    'nombreEspecialidad': req.body.prestacionLegacy.nombreEspecialidad,
+                    'codigo': req.body.prestacionLegacy.codigo
+                }];
+                configuracionPrestacion.configuracionPrestacionModel.update({ 'snomed.conceptId': idSnomed }, { $push: { organizaciones: newOrganizacion } }, function (err, resultado) {
                     if (err) {
                         return next(err);
                     } else {
-                        res.send({ status: 'ok' });
+                        res.json(resultado);
                     }
                 });
             }
         } else {
+            // Se crea el objeto ConfiguracionPrestacion completo
             let newConfigPres = {
-                'snomed': req.query.conceptSnomed,
+                'snomed': req.body.conceptSnomed,
                 'organizaciones': [{
-                    _id: new mongoose.Types.ObjectId(req.query.organizacion.id),
-                    'idEspecialidad': req.query.prestacionLegacy.idEspecialidad,
-                    'nombreEspecialidad': req.query.prestacionLegacy.nombreEspecialidad,
-                    'codigo': req.query.prestacionLegacy.codigo
+                    _id: new mongoose.Types.ObjectId(req.body.organizacion.id),
+                    'idEspecialidad': req.body.prestacionLegacy.idEspecialidad,
+                    'nombreEspecialidad': req.body.prestacionLegacy.nombreEspecialidad,
+                    'codigo': req.body.prestacionLegacy.codigo
                 }]
             };
-
-            try {
-                configuracionPrestacion.configuracionPrestacionModel.create(newConfigPres);
-            } catch (ex) {
-                return next(ex);
-            }
+            configuracionPrestacion.configuracionPrestacionModel.create(newConfigPres), function (err, data) {
+                if (err) {
+                    return next(err);
+                }
+                res.json(data);
+            };
         }
     } else {
-        res.status(404).send('Error ejecutando el método');
+        res.status(404).send('Error, parámetros incorrectos.');
     }
 });
 
