@@ -74,12 +74,11 @@ export function roboSender() {
             } else {
                 log('Termina la ejecución');
                 return resolve();
-                // db.close();
-                // console.log('Proceso finalizado, nada para enviar: ', Date.now());
             }
 
         }).catch((err) => {
-            reject();
+            log('Termina la ejecución', err);
+            return reject();
         });
     });
 }

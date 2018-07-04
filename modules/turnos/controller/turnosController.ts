@@ -15,7 +15,7 @@ export function getTurno(req) {
 
             pipelineTurno = [{
                 '$match': {
-                    'estado': { $in: ['publicada', 'pendienteAsistencia', 'pendienteAuditoria', 'auditada'] }
+                    'estado': 'publicada'
                 }
             },
             // Unwind cada array
@@ -67,7 +67,7 @@ export function getTurno(req) {
                 // Se modifica el pipeline en la posición 0 y 3, que son las posiciones
                 // donde se realiza el match
                 let matchTurno = {};
-                matchTurno['estado'] = { $in: ['publicada', 'pendienteAsistencia', 'pendienteAuditoria', 'auditada'] };
+                matchTurno['estado'] = 'publicada';
                 if (req.query && req.query.estado) {
                     matchTurno['bloques.turnos.estado'] = req.query.estado;
                 }
