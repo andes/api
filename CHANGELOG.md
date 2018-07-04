@@ -10,3 +10,9 @@
 * Historial de turnos de paciente: Se muestra el histórico del paciente de todos los turnos en cualquier efector
 * Reportes C2: se agrega detalle de los pacientes por diagnóstico c2. Se agrega control que los diagnósticos sean Primera Vez y principal. [#317](https://github.com/andes/api/pull/305)
 * Fix de screening de otoemisión
+
+## [3.2.1] - 2018-07-04
+
+#### Changed
+
+* Fix en envio de sms al momento realizar un a reasignación de un turno suspendido
