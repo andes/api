@@ -1,15 +1,13 @@
 import * as config from '../../../config';
-import * as configPrivate from '../../../config.private';
 import * as moment from 'moment';
-import * as mongoose from 'mongoose';
 import { paciente, pacienteMpi } from '../schemas/paciente';
 import { ElasticSync } from '../../../utils/elasticSync';
 import { Logger } from '../../../utils/logService';
 import { Matching } from '@andes/match';
 import { Auth } from './../../../auth/auth.class';
-import * as agenda from '../../../modules/turnos/schemas/agenda';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
+import { EventCore } from '@andes/event-bus';
 
 /**
  * Crea un paciente y lo sincroniza con elastic
@@ -33,6 +31,7 @@ export function createPaciente(data, req) {
             let connElastic = new ElasticSync();
             connElastic.create(newPatient._id.toString(), nuevoPac).then(() => {
                 Logger.log(req, 'mpi', 'insert', newPatient);
+                EventCore.emitAsync('mpi:new-patient', newPatient);
                 return resolve(newPatient);
             }).catch(error => {
                 return reject(error);
