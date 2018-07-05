@@ -88,6 +88,18 @@ export class Auth {
         return  passport.authenticate();
     }
 
+    static validateToken(token) {
+        try { 
+            let tokenData = jwt.verify(token, configPrivate.auth.jwtKey);
+            if (tokenData) {
+                return tokenData;
+            }
+            return null;
+        } catch (e) {
+            return null;
+        }
+    }
+
     /**
      * optionalAuth: extract
      */

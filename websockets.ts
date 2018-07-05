@@ -1,6 +1,6 @@
-import * as ws from 'ws';
 import { Server } from 'http';
 import * as debug from 'debug';
+import { Auth } from './auth/auth.class';
 
 export class Websockets {
     /**
@@ -20,59 +20,46 @@ export class Websockets {
 
         io.on('connection', (socket) => {
 
-           // console.log('user connected', socket.id);
-
             socket.on('disconnect', function () {
-                if (io.dataRooms !== undefined) {
-                    io.dataRooms.forEach(element => {
-                        if (io.sockets.adapter.rooms[element.pantalla] === undefined) {
 
-                            var pantallasTotal = io.dataRooms;
-                            var index = pantallasTotal.findIndex(obj => obj.pantalla === element.pantalla);
-                            if (index !== -1) {
-                                io.dataRooms.splice(index, 1);
-                            }
-                        }
-                    });
-                }
             });
-            socket.on('room', function (room) {
-                let existe = false;
-                socket.join(room.pantalla);
-                // console.log(socket.dataRooms)
-                if (io.dataRooms !== undefined) {
-                    io.dataRooms.forEach(element => {
-                        if (element.pantalla === room.pantalla) {
-                            element.prestaciones = room.prestaciones;
-                            existe = true;
-                        }
-                    });
-                    if (existe === false) {
-                        io.dataRooms.push(room);
+
+            socket.on('auth', (data) => {
+                let token = data.token;
+                let user = Auth.validateToken(token);
+                if (user) {
+                    socket.user = user;
+                    socket.emit('auth', { status: 'ok' });
+                    // [TODO] Ver si es turnero u otro servicio
+                    if (user.type === 'app-token') {
+                        socket.join(`turnero-pantalla-${user.app.nombre}`);
+                    } else {
+                        // console.log(user.usuario);
                     }
                 } else {
-                    io.dataRooms = [room];
+                    socket.emit('auth', { status: 'error' });
                 }
+            });
 
-
-                socket.data = 'hola';
-
+            socket.on('turnero-proximo-llamado', (turno) => {
+                console.log(turno);
+                io.sockets.emit('muestraTurno', turno)
             });
 
 
-            socket.on('proximoNumero', (numero) => {
-                if (io.dataRooms !== undefined) {
+            // socket.on('proximoNumero', (numero) => {
+            //     if (io.dataRooms !== undefined) {
 
-                    io.dataRooms.forEach(pantallas => {
-                        pantallas.prestaciones.forEach(element => {
-                            if (element === numero.tipoPrestacion.conceptId) {
-                                io.sockets.in(pantallas.pantalla).emit('muestraTurno', numero);
-                            }
-                        });
-                    });
-                }
-                // roomTotal.splice(-1, 1);
-            });
+            //         io.dataRooms.forEach(pantallas => {
+            //             pantallas.prestaciones.forEach(element => {
+            //                 if (element === numero.tipoPrestacion.conceptId) {
+            //                     io.sockets.in(pantallas.pantalla).emit('muestraTurno', numero);
+            //                 }
+            //             });
+            //         });
+            //     }
+            //     // roomTotal.splice(-1, 1);
+            // });
         });
     }
 }

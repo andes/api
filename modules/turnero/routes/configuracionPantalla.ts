@@ -3,13 +3,10 @@ import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import { turneroPantallaModel } from '../schemas/turneroPantalla';
 import { Auth } from '../../../auth/auth.class';
-import { nextTick } from 'async';
 
 let router = express.Router();
 
-
-
-router.get('/pantalla', async (req: any, res, next) => {
+router.get('/pantalla', Auth.authenticate(), async (req: any, res, next) => {
     let organizacion = Auth.getOrganization(req);
 
     let opciones = {
@@ -28,7 +25,7 @@ router.get('/pantalla', async (req: any, res, next) => {
     }
 });
 
-router.get('/pantalla/:id', (req: any, res, next) => {
+router.get('/pantalla/:id', Auth.authenticate(), (req: any, res, next) => {
     turneroPantallaModel.findById(req.params.id, (err, data) => {
         if (err) {
             return next(err);
@@ -47,7 +44,7 @@ export function generarToken() {
     return codigo;
 }
 
-router.post('/pantalla/', (req: any, res, next) => {
+router.post('/pantalla/', Auth.authenticate(), (req: any, res, next) => {
     let pantallaData = req.body;
     let organizacion = Auth.getOrganization(req);
 
@@ -65,7 +62,7 @@ router.post('/pantalla/', (req: any, res, next) => {
     });
 });
 
-router.post('/pantalla/:id/retoken', (req: any, res, next) => {
+router.post('/pantalla/:id/retoken', Auth.authenticate(), (req: any, res, next) => {
     let id = req.params.id;
     let organizacion = Auth.getOrganization(req);
     let query = {
@@ -90,7 +87,7 @@ router.post('/pantalla/:id/retoken', (req: any, res, next) => {
 
 });
 
-router.patch('/pantalla/:id', (req, res, next) => {
+router.patch('/pantalla/:id', Auth.authenticate(), (req, res, next) => {
     let id = req.params.id;
     let data = req.body;
     turneroPantallaModel.findByIdAndUpdate(id, data, { new: true }, (err, pantalla) => {
@@ -101,7 +98,7 @@ router.patch('/pantalla/:id', (req, res, next) => {
     });
 });
 
-router.delete('/pantalla/:id', (req: any, res, next) => {
+router.delete('/pantalla/:id', Auth.authenticate(), (req: any, res, next) => {
     turneroPantallaModel.findById(req.params.id, (err, data) => {
         if (err) {
             return next(err);
@@ -123,10 +120,12 @@ router.post('/pantalla/activate', async (req, res, next) => {
         let pantalla: any = pantallas[0];
         pantalla.token = null;
         pantalla.expirationTime = null;
-        await pantalla.save(); 
+        await pantalla.save();
+
+        let token = Auth.generateAppToken(String(pantalla._id), {} , [`turnero:${pantalla._id}`]);
+        return res.send({ token });
     }
     return next({message: 'no eiste pantalla'});
 });
-
 
 module.exports = router;
