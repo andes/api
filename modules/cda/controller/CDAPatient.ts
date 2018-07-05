@@ -364,14 +364,19 @@ export function generateCDA(uniqueId, confidentiality, patient, date, author, or
 
     let body = new Body();
 
+    let textComponent = new Component();
+    textComponent.title('Resumen de la consulta');
     if (text) {
-        let textComponent = new Component();
-        textComponent.title('Resumen de la consulta');
         textComponent.text(text);
         if (cie10) {
             textComponent.code(icd10Code(cie10));
         }
         body.addComponent(textComponent);
+    } else {
+        textComponent.text('Sin datos');
+        if (cie10) {
+            textComponent.code(icd10Code(cie10));
+        }
     }
 
     // [TODO] Archivo en base64 o aparte
