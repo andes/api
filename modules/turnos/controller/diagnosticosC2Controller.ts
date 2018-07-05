@@ -148,7 +148,7 @@ export function getDiagnosticos(params) {
             $match: {
                 'sobreturnos.diagnostico.codificaciones.0.codificacionAuditoria': { $exists: true, $ne: {} },
                 'sobreturnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
-                'bloques.turnos.diagnostico.codificaciones.0.primeraVez': true,
+                'sobreturnos.diagnostico.codificaciones.0.primeraVez': true,
                 'horaInicio': { '$gte': new Date(params.horaInicio) },
                 'horaFin': { '$lte': new Date(params.horaFin) },
                 'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) }
