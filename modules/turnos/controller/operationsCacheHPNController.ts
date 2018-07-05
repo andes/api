@@ -11,6 +11,7 @@ import * as agendaSchema from '../schemas/agenda';
 import * as pacienteHPN from './pacienteHPNController';
 import * as turnoCtrl from './turnoHPNCacheController';
 import { resolve } from 'path';
+import { configuracionPrestacionModel } from '../../../core/term/schemas/configuracionPrestacion';
 
 export async function saveAgendaToPrestaciones(agenda, pool) {
     let transaction = await new sql.Transaction(pool);
@@ -199,7 +200,7 @@ async function setEstadoAgendaToIntegrada(idAgenda) {
         _id: idAgenda
     }, {
             $set: {
-                estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS
+                estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportada
             }
         }).exec();
 }
@@ -208,7 +209,7 @@ export function getAgendasDeMongoExportadas() {
     return new Promise<Array<any>>(function (resolve2, reject) {
         agendasCache.find({
             $or: [{
-                estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS
+                estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportada
             }, {
                 estadoIntegracion: constantes.EstadoExportacionAgendaCache.codificada
             }]
@@ -221,19 +222,26 @@ export function getAgendasDeMongoExportadas() {
     });
 }
 
-export function getIdTipoPrestacion(_agenda) {
+export async function getIdTipoPrestacion(_agenda) {
     let idTipoPrestacion = null;
-    let prestacionesIntegradas: any;
-    let datosOrganizacion = constantes.prestacionesIntegradasPorEfector.find(elem => { return elem.organizacion === _agenda.organizacion._id.toString(); } );
-    if (datosOrganizacion) {
-        prestacionesIntegradas = datosOrganizacion.prestaciones.find(prestacion => {
-            return (_agenda.tipoPrestaciones.filter(prest => prest.conceptId === prestacion.conceptId).length > 0);
+    let prestacionesIntegrada: any = null;
+
+    // Primero filtramos por el conceptId de la agenda que (según requerimientos era siempre 1) por eso verificamos _agenda.tipoPrestaciones[0]
+    let configuracionesPrestacion: any = await configuracionPrestacionModel.findOne({ 'snomed.conceptId': _agenda.tipoPrestaciones[0].conceptId });
+    if (configuracionesPrestacion) {
+        // Verificamos si nuestra organización tiene a esta prestación para integrar y así continuar con el proceso.
+        configuracionesPrestacion.organizaciones.forEach(obj => {
+            if (obj._id.toString() === _agenda.organizacion._id.toString()) {
+                prestacionesIntegrada = obj;
+                return prestacionesIntegrada;
+            }
         });
+        // Si está integrada devuelvo el identificador de la prestación en sistema legacy.
+        if (prestacionesIntegrada) {
+            idTipoPrestacion = prestacionesIntegrada.codigo;
+        }
+        return idTipoPrestacion;
+    } else {
+        return null;
     }
-
-    if (prestacionesIntegradas) {
-         idTipoPrestacion = prestacionesIntegradas.id;
-    }
-
-    return idTipoPrestacion;
 }
