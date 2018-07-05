@@ -15,4 +15,10 @@
 
 #### Changed
 
-* Fix en envio de sms al momento realizar un a reasignación de un turno suspendido
+* Fix en envio de sms al momento realizar un a reasignación de un turno suspendido.
+
+## [3.2.2] - 2018-07-05
+
+#### Changed
+
+* Fix para el reporte de C2.  Se agrega control para verificar primera vez en los diagnósticos de los sobreturnos.
