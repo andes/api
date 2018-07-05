@@ -1,7 +1,9 @@
 import * as express from 'express';
 import * as mongoose from 'mongoose';
+import * as moment from 'moment';
 import { turneroPantallaModel } from '../schemas/turneroPantalla';
 import { Auth } from '../../../auth/auth.class';
+import { nextTick } from 'async';
 
 let router = express.Router();
 
@@ -35,18 +37,57 @@ router.get('/pantalla/:id', (req: any, res, next) => {
     });
 });
 
+export function generarToken() {
+    let codigo = '';
+    let length = 6;
+    let caracteres = '0123456789';
+    for (let i = 0; i < length; i++) {
+        codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
+    }
+    return codigo;
+}
 
 router.post('/pantalla/', (req: any, res, next) => {
     let pantallaData = req.body;
+    let organizacion = Auth.getOrganization(req);
 
     let pantalla: any = new turneroPantallaModel(pantallaData);
-    pantalla.token = Number(Math.random() * 1000000);
+
+    pantalla.organizacion = mongoose.Types.ObjectId(organizacion);
+    pantalla.token = generarToken();
+    pantalla.expirationTime = moment().add(1, 'hours').toDate();
+
     pantalla.save((err2) => {
         if (err2) {
             return next(err2);
         }
         res.json(pantalla);
     });
+});
+
+router.post('/pantalla/:id/retoken', (req: any, res, next) => {
+    let id = req.params.id;
+    let organizacion = Auth.getOrganization(req);
+    let query = {
+        _id: mongoose.Types.ObjectId(id),
+        organizacion:  mongoose.Types.ObjectId(organizacion)
+    };
+    turneroPantallaModel.find(query, (err, pantallas: any[]) => {
+        if (err) {
+            return next(err);
+        }
+        if (pantallas.length) {
+            let pantalla = pantallas[0];
+            pantalla.token = generarToken();
+            pantalla.expirationTime = moment().add(1, 'hours').toDate();
+            return pantalla.save().then(() => {
+                return res.json(pantalla);
+            });
+        }
+        return next(422);
+    });
+
+
 });
 
 router.patch('/pantalla/:id', (req, res, next) => {
@@ -70,6 +111,21 @@ router.delete('/pantalla/:id', (req: any, res, next) => {
             });
         }
     });
+});
+
+router.post('/pantalla/activate', async (req, res, next) => {
+    let codigo = req.body.codigo;
+    let pantallas = await turneroPantallaModel.find({
+        token: codigo,
+        expirationTime: { $gt: new Date() },
+    });
+    if (pantallas.length) {
+        let pantalla: any = pantallas[0];
+        pantalla.token = null;
+        pantalla.expirationTime = null;
+        await pantalla.save(); 
+    }
+    return next({message: 'no eiste pantalla'});
 });
 
 

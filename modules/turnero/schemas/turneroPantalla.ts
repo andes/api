@@ -2,8 +2,9 @@ import * as mongoose from 'mongoose';
 
 export let turneroPantallaSchema = new mongoose.Schema({
     nombre: String,
-    token: String,
+    token: { type: String, required: false },
     organizacion: mongoose.SchemaTypes.ObjectId,
+    expirationTime: Date,
     espaciosFisicos: [{
         _id: false,
         id: mongoose.SchemaTypes.ObjectId,
