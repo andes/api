@@ -371,13 +371,13 @@ export function generateCDA(uniqueId, confidentiality, patient, date, author, or
         if (cie10) {
             textComponent.code(icd10Code(cie10));
         }
-        body.addComponent(textComponent);
     } else {
         textComponent.text('Sin datos');
         if (cie10) {
             textComponent.code(icd10Code(cie10));
         }
     }
+    body.addComponent(textComponent);
 
     // [TODO] Archivo en base64 o aparte
     if (file) {
