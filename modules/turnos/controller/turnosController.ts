@@ -202,12 +202,69 @@ export function getHistorialPaciente(req) {
 
                 ];
 
+                let pipelineSobreturno = [];
+                pipelineSobreturno = [
+
+                    {
+                        '$match': {
+                            'estado': {
+                                '$in': [
+                                    'publicada',
+                                    'pendienteAsistencia',
+                                    'pendienteAuditoria',
+                                    'auditada',
+                                    'disponible',
+                                    'pausada'
+                                ]
+                            },
+                            'sobreturnos.paciente.id': mongoose.Types.ObjectId(req.query.pacienteId)
+                        }
+                    },
+                    {
+                        '$unwind': {
+                            'path': '$sobreturnos'
+                        }
+                    },
+                    {
+                        '$match': {
+                            'sobreturnos.paciente.id': mongoose.Types.ObjectId(req.query.pacienteId)
+                        }
+                    },
+                    {
+                        '$group': {
+                            '_id': {
+                                'id': '$_id',
+                                'turnoId': '$sobreturnos._id'
+                            },
+                            'agenda_id': {
+                                '$first': '$_id'
+                            },
+                            'organizacion': {
+                                '$first': '$organizacion'
+                            },
+                            'profesionales': {
+                                '$first': '$profesionales'
+                            },
+                            'turno': {
+                                '$first': '$sobreturnos'
+                            }
+                        }
+                    },
+                    {
+                        '$sort': {
+                            'turno.horaInicio': -1.0
+                        }
+                    }
+
+                ];
                 let data2 = await agenda.aggregate(pipelineTurno).exec();
+                let sobreturnos = await agenda.aggregate(pipelineSobreturno).exec();
+                data2 = data2.concat(sobreturnos);
                 data2.forEach(elem => {
                     turno = elem.turno;
                     turno.id = turno._id;
                     turno.agenda_id = elem.agenda_id;
-                    turno.bloque_id = elem.bloque_id;
+                    turno.bloque_id = (elem.bloque) ? elem.bloque_id : null;
                     turno.organizacion = elem.organizacion;
                     turno.profesionales = elem.profesionales;
                     turno.paciente = elem.paciente;
