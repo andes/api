@@ -3,14 +3,16 @@ import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import { turneroPantallaModel } from '../schemas/turneroPantalla';
 import { Auth } from '../../../auth/auth.class';
+import { EventSocket } from '@andes/event-bus';
 
+const ObjectId = mongoose.Types.ObjectId;
 let router = express.Router();
 
 router.get('/pantalla', Auth.authenticate(), async (req: any, res, next) => {
     let organizacion = Auth.getOrganization(req);
 
     let opciones = {
-        organizacion:  mongoose.Types.ObjectId(organizacion)
+        organizacion:  ObjectId(organizacion)
     };
 
     if (req.query.nombre) {
@@ -50,7 +52,7 @@ router.post('/pantalla/', Auth.authenticate(), (req: any, res, next) => {
 
     let pantalla: any = new turneroPantallaModel(pantallaData);
 
-    pantalla.organizacion = mongoose.Types.ObjectId(organizacion);
+    pantalla.organizacion = ObjectId(organizacion);
     pantalla.token = generarToken();
     pantalla.expirationTime = moment().add(1, 'hours').toDate();
 
@@ -66,8 +68,8 @@ router.post('/pantalla/:id/retoken', Auth.authenticate(), (req: any, res, next) 
     let id = req.params.id;
     let organizacion = Auth.getOrganization(req);
     let query = {
-        _id: mongoose.Types.ObjectId(id),
-        organizacion:  mongoose.Types.ObjectId(organizacion)
+        _id: ObjectId(id),
+        organizacion:  ObjectId(organizacion)
     };
     turneroPantallaModel.find(query, (err, pantallas: any[]) => {
         if (err) {
@@ -126,6 +128,23 @@ router.post('/pantalla/activate', async (req, res, next) => {
         return res.send({ token });
     }
     return next({message: 'no eiste pantalla'});
+});
+
+
+EventSocket.on('turnero-proximo-llamado', (paquete) => {
+    const turno = paquete.data;
+    const espacioFisico =  ObjectId(turno.espacioFisico.id);
+
+    turneroPantallaModel.find({
+        'espaciosFisicos.id': espacioFisico
+    }).then((pantallas) => {
+        pantallas.forEach((pantalla) => {
+            let id = pantalla.id;
+            paquete.toRoom(`turnero-pantalla-${id}`, 'muestrar-turno', turno);
+        });
+    }).catch((e) => {
+
+    });
 });
 
 module.exports = router;
