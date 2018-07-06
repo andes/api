@@ -3,7 +3,6 @@ import * as pacienteCtrl from './pacienteHPNController';
 import * as pacientes from './../../../core/mpi/controller/paciente';
 import * as moment from 'moment';
 import * as sql from 'mssql';
-import { getDatosPaciente } from './pacienteHPNController';
 
 export async function saveTurnos(idAgendaAndes, bloque, idTipoPrestacion, pool, transaction) {
     for (let turno of bloque.turnos) {
@@ -17,6 +16,9 @@ export async function saveTurnos(idAgendaAndes, bloque, idTipoPrestacion, pool, 
                 datosPaciente = await pacienteCtrl.savePaciente(paciente, transaction);
             }
             await saveTurno(idAgendaAndes, turno, datosPaciente, bloque.duracionTurno, idTipoPrestacion, pool, transaction);
+        }
+        if (turno.estado === constantes.EstadoTurnosAndes.suspendido) {
+            await updateTurno(turno._id, pool, transaction);
         }
     }
 }
@@ -85,6 +87,19 @@ async function saveTurno(idAgendaAndes, turno: any, datosPaciente, duracion, idT
             throw err;
         });
 }
+
+
+async function updateTurno(id, pool, transaction) {
+    const idEstado = 30; // HARDCODE: prestación Suspendida
+    let query = 'UPDATE dbo.Prestaciones_Worklist SET ' +
+        'idEstado=' + idEstado + ' where andesId=' + '\'' + id + '\'';
+    return await new sql.Request(transaction)
+        .query(query)
+        .catch(err => {
+            throw err;
+        });
+}
+
 
 export function getUbicacion(idTipoPrestacion) {
     // Se asume que el metodo recibe por parámetro o id de clínica médica o id de consulta pediatrica

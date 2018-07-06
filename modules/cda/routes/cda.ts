@@ -52,14 +52,12 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
     }
 
     try {
-        console.log('entro al createeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee');
         let idPrestacion = req.body.id;
         let fecha = moment(req.body.fecha).toDate();
         let orgId = req.user.organizacion.id ? req.user.organizacion.id : req.user.organizacion;
 
         let yaExiste = await cdaCtr.CDAExists(idPrestacion, fecha, orgId);
         if (yaExiste) {
-            console.log('ya esisiiissssteeee');
             return next({ error: 'prestacion_existente' });
         }
 
@@ -67,17 +65,14 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
         let dataProfesional = req.body.profesional;
 
         // Devuelve un Loinc asociado al código SNOMED
-        console.log('antes de buscar la prestacion');
         let prestacion = await cdaCtr.matchCode(req.body.prestacionSnomed);
         if (!prestacion) {
             // Es obligatorio que posea prestación
             return next({ error: 'prestacion_invalida' });
         }
-        console.log('antes del cie');
         let cie10Code = req.body.cie10;
         let file = req.body.file;
         let texto = req.body.texto;
-        console.log('el cie10: ', cie10Code);
         // Terminar de decidir esto
         let organizacion = await Organizaciones.findById(orgId);
         let cie10 = null;
@@ -121,7 +116,6 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
         res.json({ cda: uniqueId, paciente: paciente._id, date: metadata.fecha, idPrestacion: metadata.extras.id });
 
     } catch (e) {
-        console.log('algun palenque: ', e);
         return next(e);
     }
 });
