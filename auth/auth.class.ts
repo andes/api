@@ -89,7 +89,7 @@ export class Auth {
     }
 
     static validateToken(token) {
-        try { 
+        try {
             let tokenData = jwt.verify(token, configPrivate.auth.jwtKey);
             if (tokenData) {
                 return tokenData;

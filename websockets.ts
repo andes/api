@@ -95,30 +95,7 @@ export class Websockets {
 
             socket.on('disconnect', function () {
                 // console.log('Disconnected');
-            });
-
-            // socket.on('auth', (data) => {
-
-            // });
-
-            // socket.on('turnero-proximo-llamado', (turno) => {
-            //     io.sockets.emit('muestraTurno', turno);
-            // });
-
-
-            // socket.on('proximoNumero', (numero) => {
-            //     if (io.dataRooms !== undefined) {
-
-            //         io.dataRooms.forEach(pantallas => {
-            //             pantallas.prestaciones.forEach(element => {
-            //                 if (element === numero.tipoPrestacion.conceptId) {
-            //                     io.sockets.in(pantallas.pantalla).emit('muestraTurno', numero);
-            //                 }
-            //             });
-            //         });
-            //     }
-            //     // roomTotal.splice(-1, 1);
-            // });
+            }); 
         });
     }
 }

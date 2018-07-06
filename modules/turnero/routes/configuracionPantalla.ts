@@ -140,7 +140,7 @@ EventSocket.on('turnero-proximo-llamado', (paquete) => {
     }).then((pantallas) => {
         pantallas.forEach((pantalla) => {
             let id = pantalla.id;
-            paquete.toRoom(`turnero-pantalla-${id}`, 'muestrar-turno', turno);
+            paquete.toRoom(`turnero-pantalla-${id}`, 'mostrar-turno', turno);
         });
     }).catch((e) => {
 
