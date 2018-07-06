@@ -160,7 +160,9 @@ export async function checkCodificacion(agendaCacheada) {
                 }
             }
         }
-        if (idConsulta) {
+
+        let estadoAgendaSips: any = await getEstadoAgenda(connection, agendaCacheada.id);
+        if (estadoAgendaSips === 4) {  // estado cerrada en sips
             await markAgendaAsProcessed(agendaCacheada);
         }
         return (agendaCacheada);
