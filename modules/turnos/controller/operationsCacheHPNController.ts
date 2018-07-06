@@ -31,7 +31,6 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
                     if (idTipoPrestacion) {
                         if (!idAgendaHPN) {
                             idAgendaHPN = await saveAgenda(agenda, idTipoPrestacion);
-                            console.log('guarda agendaaaa: ', idAgendaHPN);
                             await saveAgendaProfesional(idAgendaHPN, idProfesional);
                             await saveAgendaTipoPrestacion(idAgendaHPN, idTipoPrestacion);
                         }
