@@ -1,6 +1,7 @@
 import { Server } from 'http';
 import * as debug from 'debug';
 import { Auth } from './auth/auth.class';
+import { RedisWebSockets } from './config.private';
 
 import { EventSocket } from '@andes/event-bus';
 
@@ -68,8 +69,12 @@ export class Websockets {
 
     static initialize(server: Server) {
         log('Websocket start');
+        var redis = require('socket.io-redis');
         let socketIO = require('socket.io');
         this.io = socketIO(server);
+        if (RedisWebSockets.active) {
+            this.io.adapter(redis({ host: RedisWebSockets.host, port: RedisWebSockets.port }));
+        }
 
         this.io.on('connection', (socket) => {
             log('onConnection');

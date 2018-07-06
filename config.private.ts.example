@@ -219,3 +219,9 @@ export const conSqlPecas = {
         database: ''
     }
 };
+
+export const RedisWebSockets = {
+    active: getEnv('REDIS', false),
+    host: getEnv('REDIS_HOST', 'localhost', 'b'),
+    port: getEnv('REDIS_PORT', '6379', 'n')
+};
