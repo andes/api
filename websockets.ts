@@ -2,7 +2,37 @@ import { Server } from 'http';
 import * as debug from 'debug';
 import { Auth } from './auth/auth.class';
 
+import { EventSocket } from '@andes/event-bus';
+
+let log = debug('websocket');
+
+class Packet {
+    private io;
+    private socket;
+    public event: String;
+    public data: any;
+    public user: any;
+
+    constructor (io, socket, event, data) {
+        this.io = io;
+        this.socket = socket;
+        this.event = event;
+        this.data = data;
+        this.user = socket.user;
+    }
+
+    broadcast (event, data) {
+        this.socket.emit(event, data);
+    }
+
+    toRoom (room, event, data) {
+        this.socket.to(room).emit(event, data);
+    }
+}
+
+
 export class Websockets {
+    static io;
     /**
      * Inicializa el servicio de websockets
      *
@@ -11,40 +41,69 @@ export class Websockets {
      *
      * @memberOf Auth
      */
+
+    static onAuth (socket, token) {
+        let user = Auth.validateToken(token);
+        if (user) {
+            socket.user = user;
+            socket.emit('auth', { status: 'ok' });
+            // [TODO] Ver si es turnero u otro servicio
+            if (user.type === 'app-token') {
+                socket.join(`turnero-pantalla-${user.app.nombre}`);
+            } else {
+                // console.log(user.usuario);
+            }
+        } else {
+            socket.emit('auth', { status: 'error' });
+        }
+    }
+
+    static broadcast (event, data) {
+        this.io.emit(event, data);
+    }
+
+    static toRoom (room, event, data) {
+        this.io.to(room).emit(event, data);
+    }
+
     static initialize(server: Server) {
-        //     const wss = new ws.Server({ server });
+        log('Websocket start');
         let socketIO = require('socket.io');
-        let io = socketIO(server);
-        // const roomTotal = []
+        this.io = socketIO(server);
 
+        this.io.on('connection', (socket) => {
+            log('onConnection');
+            socket.use((packet, next) => {
+                // Handler
+                let [event, data] = packet;
+                log(event, data);
 
-        io.on('connection', (socket) => {
+                switch (event) {
+                    case 'auth':
+                        let token = data.token;
+                        this.onAuth(socket, token);
+                        break;
+
+                    default:
+                        let p = new Packet(this.io, socket, event, data);
+                        EventSocket.emitAsync(event, p);
+                        break;
+                }
+                next();
+
+              });
 
             socket.on('disconnect', function () {
-
+                // console.log('Disconnected');
             });
 
-            socket.on('auth', (data) => {
-                let token = data.token;
-                let user = Auth.validateToken(token);
-                if (user) {
-                    socket.user = user;
-                    socket.emit('auth', { status: 'ok' });
-                    // [TODO] Ver si es turnero u otro servicio
-                    if (user.type === 'app-token') {
-                        socket.join(`turnero-pantalla-${user.app.nombre}`);
-                    } else {
-                        // console.log(user.usuario);
-                    }
-                } else {
-                    socket.emit('auth', { status: 'error' });
-                }
-            });
+            // socket.on('auth', (data) => {
 
-            socket.on('turnero-proximo-llamado', (turno) => {
-                console.log(turno);
-                io.sockets.emit('muestraTurno', turno)
-            });
+            // });
+
+            // socket.on('turnero-proximo-llamado', (turno) => {
+            //     io.sockets.emit('muestraTurno', turno);
+            // });
 
 
             // socket.on('proximoNumero', (numero) => {
