@@ -365,7 +365,6 @@ export function generateCDA(uniqueId, confidentiality, patient, date, author, or
     let body = new Body();
 
     let textComponent = new Component();
-    textComponent.title('Resumen de la consulta');
     if (text) {
         textComponent.text(text);
         if (cie10) {
@@ -742,6 +741,7 @@ export function checkAndExtract(xmlDom) {
         key: `//x:ClinicalDocument/x:component/x:structuredBody/x:component/x:section/x:entry/x:observationMedia/x:value/x:reference/@value`,
         as: 'adjunto'
     },
+
 
     ];
     let metadata: any = checkArg(_root, _params);
