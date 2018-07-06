@@ -93,7 +93,6 @@ export async function consultaPecas() {
             });
         });
     } catch (error) {
-        console.log('2');
         return (error);
     }
 }
@@ -101,12 +100,7 @@ export async function consultaPecas() {
 // castea cada turno asignado y lo inserta en la tabla Sql
 async function auxiliar(a: any, t: any) {
     let turno: any = {};
-    if (t.estado === 'asignado' && t.paciente && t.asistencia /*&& t.asistencia === 'asistio' && t.diagnostico && t.diagnostico.codificaciones
-&& t.diagnostico.codificaciones.length > 0*/) {
-        if (a.organizacion._id === '57fcf12e326e73143fb4927d') {
-
-            console.log('lala', a.organizacion);
-        }
+    if (t.estado === 'asignado' && t.paciente && t.asistencia) {
         let efector = await getEfector(a.organizacion._id) as any;
         let idEfector = efector ? efector.codigo : null;
         let tipoEfector = efector ? efector.tipoEfector : null;
