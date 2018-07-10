@@ -33,11 +33,11 @@ let total = 0;
  * @returns resultado
  */
 export async function consultaPecas() {
-    console.log('consultaPecas');
+    // console.log('consultaPecas');
     try {
         poolTurnos = await new sql.ConnectionPool(config).connect();
     } catch (ex) {
-        console.log('ex', ex);
+        // console.log('ex', ex);
         return (ex);
     }
     const query_limit = 10000000000;
@@ -78,7 +78,7 @@ export async function consultaPecas() {
         ]).cursor({ batchSize: 10000000000 }).exec();
         agendas.eachAsync((a, error) => {
             if (error) {
-                console.log('error ', error);
+                // console.log('error ', error);
                 return (error);
             }
             // Se recorren los turnos dentro de los bloques
@@ -329,7 +329,6 @@ async function auxiliar(a: any, t: any) {
                 await executeQuery(queryInsert);
             }
         } catch (error) {
-            console.log('error ', error);
             return (error);
         }
     }
@@ -470,21 +469,13 @@ async function executeQuery(query: any) {
         let result = await new sql.Request(poolTurnos).query(query);
         if (result && result.recordset) {
             return result.recordset[0].id;
-        } else {
-            console.log('1');
         }
     } catch (err) {
-        // loggear
-        // if (total === 0) {
-        // debug('err ', err);
-        // debug('query ', query);
-        console.log('err ', err);
-        console.log('query ', query);
+        // console.log('err ', err);
+        // console.log('query ', query);
         let jsonWrite = fs.appendFileSync(outputFile, query + '\r', {
             encoding: 'utf8'
         });
-        // }
-        // total++;
         return (err);
     }
 }
