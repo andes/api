@@ -93,6 +93,7 @@ export async function checkCodificacion(agendaCacheada) {
         let connection = await new sql.ConnectionPool(config).connect();
 
         let turnos;
+        let sobreturnos;
         let datosTurno = {};
         let idEspecialidad: any;
         let idConsulta;
@@ -103,7 +104,6 @@ export async function checkCodificacion(agendaCacheada) {
                 let arrayPrestaciones = await new sql.Request(connection)
                     .input('idTurnoMongo', sql.VarChar(50), turnos[z]._id)
                     .query('select * from vw_andes_integracion WHERE objectId = @idTurnoMongo');
-
                 if (arrayPrestaciones.recordset.length > 0) {
                     arrayPrestaciones = arrayPrestaciones.recordset;
                     idConsulta = arrayPrestaciones[0].idConsulta; // ambas prestaciones tienen el mismo id de consulta.
@@ -132,15 +132,16 @@ export async function checkCodificacion(agendaCacheada) {
         // Caso especial sobreturnos
         // TODO: refactorizar codigo repetido.
         if (agendaCacheada.sobreturnos) {
+            sobreturnos =  agendaCacheada.sobreturnos;
             for (let z = 0; z < agendaCacheada.sobreturnos.length; z++) {
                 let arrayPrestaciones = await new sql.Request(connection)
-                    .input('idTurnoMongo', sql.VarChar(50), turnos[z]._id)
+                    .input('idTurnoMongo', sql.VarChar(50), sobreturnos[z]._id)
                     .query('select * from vw_andes_integracion WHERE objectId = @idTurnoMongo');
 
                 if (arrayPrestaciones.recordset.length > 0) {
+                    arrayPrestaciones = arrayPrestaciones.recordset;
                     idConsulta = arrayPrestaciones[0].idConsulta; // ambas prestaciones tienen el mismo id de consulta y especialidad
                     idEspecialidad = arrayPrestaciones[0].idEspecialidad;
-
                     if (idConsulta) {
                         if (idEspecialidad === constantes.Especialidades.odontologia) {
                             agendaCacheada.sobreturnos[z] = await codificaOdontologia(connection, idConsulta, agendaCacheada.sobreturnos[z], arrayPrestaciones);
