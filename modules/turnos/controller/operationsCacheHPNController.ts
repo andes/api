@@ -166,13 +166,13 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
         return idAgendaHPN;
     }
 
-    async function saveBloques(idAgendaAndes, agenda: any, idTipoPrestacion) {
-        let bloques = agenda.bloques;
+    async function saveBloques(idAgendaAndes, ag, idTipoPrestacion) {
+        let bloques = ag.bloques;
         for (let bloque of bloques) {
             await turnoCtrl.saveTurnos(idAgendaAndes, bloque, idTipoPrestacion, pool, transaction);
         }
-        if (agenda.sobreturnos) {
-            for (let sobreturno of agenda.sobreturnos) {
+        if (ag.sobreturnos) {
+            for (let sobreturno of ag.sobreturnos) {
                 await turnoCtrl.saveSobreturno(idAgendaAndes, sobreturno, idTipoPrestacion, pool, transaction);
             }
         }
