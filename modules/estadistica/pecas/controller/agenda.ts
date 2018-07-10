@@ -107,6 +107,10 @@ async function auxiliar(a: any, t: any) {
         turno.tipoPrestacion = (t.tipoPrestacion && t.tipoPrestacion.term) ? t.tipoPrestacion.term : null;
         turno.idEfector = parseInt(idEfector, 10);
         turno.Organizacion = a.organizacion.nombre;
+        turno.idAgenda = a._id;
+        turno.FechaAgenda = moment(a.horaInicio).format('YYYYMMDD');
+        turno.HoraAgenda = moment(a.horaInicio).format('HH:mm').toString();
+        turno.estadoAgenda = a.estado;
         turno.idTurno = String(t._id);
         turno.FechaConsulta = moment(t.horaInicio).format('YYYYMMDD');
         turno.HoraTurno = moment(t.horaInicio).format('HH:mm').toString();
@@ -286,6 +290,7 @@ async function auxiliar(a: any, t: any) {
             // se verifica si existe el turno en sqñ
             let queryInsert = 'INSERT INTO dbo.Pecas_consolidado_1' +
                 '(idEfector, Efector, TipoEfector, DescTipoEfector, IdZona, Zona, SubZona, idEfectorSuperior, EfectorSuperior, AreaPrograma, ' +
+                'idAgenda, FechaAgenda, HoraAgenda, estadoAgenda' +
                 'idTurno, FechaConsulta, HoraTurno, Periodo, Tipodeconsulta, Principal, ConsC2, ConsObst, tipoPrestacion, ' +
                 'DNI, Apellido, Nombres, HC, CodSexo, Sexo, FechaNacimiento, Edad, UniEdad, CodRangoEdad, RangoEdad, IdObraSocial, ObraSocial, IdPaciente, telefono, ' +
                 'IdBarrio, Barrio, IdLocalidad, Localidad, IdDpto, Departamento, IdPcia, Provincia, IdNacionalidad, Nacionalidad, ' +
@@ -298,6 +303,7 @@ async function auxiliar(a: any, t: any) {
                 'codifica, estadoAgenda) ' +
                 'VALUES  ( ' + turno.idEfector + ',\'' + turno.Organizacion + '\',\'' + turno.TipoEfector + '\',\'' + turno.DescTipoEfector +
                 '\',' + turno.IdZona + ',\'' + turno.Zona + '\',\'' + turno.SubZona + '\',' + turno.idEfectorSuperior + ',\'' + turno.EfectorSuperior + '\',\'' + turno.AreaPrograma +
+                '\',\'' + turno.idAgenda + '\',\'' + turno.FechaAgenda + '\',\'' + turno.HoraAgenda + '\',\'' + turno.estadoAgenda +
                 '\',\'' + turno.idTurno + '\',\'' + turno.FechaConsulta + '\',\'' + turno.HoraTurno + '\',' + turno.Periodo + ',\'' + turno.Tipodeconsulta + '\',\'' + turno.Principal +
                 '\',\'' + turno.ConsC2 + '\',\'' + turno.ConsObst + '\',\'' + turno.tipoPrestacion +
                 // DATOS PACIENTE
