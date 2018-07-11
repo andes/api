@@ -83,52 +83,48 @@ export function geocodeFarmacia(farmacia, localidad) {
 }
 
 export function donwloadData(desde, hasta) {
-    getLocalidades().then((data: any) => {
+    return getLocalidades().then( async (data: any) => {
         let localidades = data.localidades;
-        farmaciasLocalidades.remove({}, async function (err) {
+        await farmaciasLocalidades.remove({});
 
-            await farmaciasTurnos.remove({ fecha: {$exists: true} });
+        await farmaciasTurnos.remove({ fecha: {$exists: true} });
 
-            for (let item of localidades) {
-                let f = await (new farmaciasLocalidades({
-                    localidadId: item.id,
-                    nombre: String(item.nombre)
-                })).save();
+        for (let item of localidades) {
+            let f = await (new farmaciasLocalidades({
+                localidadId: item.id,
+                nombre: String(item.nombre)
+            })).save();
 
-                let desdeD = moment(desde, 'YYYY-MM-DD').toDate();
-                let hastaD = moment(hasta, 'YYYY-MM-DD').toDate();
+            let _data: any = await getTurnos(data, item.id, desde, hasta);
 
-                let _data: any = await getTurnos(data, item.id, desde, hasta);
+            for (let turno of _data) {
+                try {
 
-                for (let turno of _data) {
-                    try {
+                    let geocode: any = await findAddress(item, {
+                        nombre: turno.nombre,
+                        direccion: turno.direccion
+                    });
 
-                        let geocode: any = await findAddress(item, {
-                            nombre: turno.nombre,
-                            direccion: turno.direccion
-                        });
+                    let t = new farmaciasTurnos({
+                        nombre: turno.nombre,
+                        direccion: turno.direccion,
+                        telefono: turno.telefono ? turno.telefono : '',
+                        fecha: moment(turno.fecha, 'YYYY-MM-DD').toDate(),
+                        localidad: String(item.id),
+                        latitud: geocode.lat,
+                        longitud: geocode.lng
+                    });
 
-                        let t = new farmaciasTurnos({
-                            nombre: turno.nombre,
-                            direccion: turno.direccion,
-                            telefono: turno.telefono ? turno.telefono : '',
-                            fecha: moment(turno.fecha, 'YYYY-MM-DD').toDate(),
-                            localidad: String(item.id),
-                            latitud: geocode.lat,
-                            longitud: geocode.lng
-                        });
-
-                        let saved = await t.save();
+                    await t.save();
 
 
-                    } catch (e) {
-                    }
+                } catch (e) {
 
                 }
+
             }
-
-        });
-
+        }
+        return Promise.resolve();
     }).catch(() => false);
 }
 
