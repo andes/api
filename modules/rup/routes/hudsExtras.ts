@@ -4,7 +4,7 @@ import * as controller from './../../../core/mpi/controller/paciente';
 
 let router = express.Router();
 
-router.get('/huds/vacunas', (req, res, next) => {
+router.get('/huds/vacunas', (req, res) => {
     let pacienteId = req.query.idPaciente;
 
     controller.buscarPaciente(pacienteId).then(async data => {
