@@ -111,7 +111,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
 
     async function saveAgenda(_agenda, idTipoPrestacion) {
         let idAgendaHPN;
-        let idUbicacion = turnoCtrl.getUbicacion(idTipoPrestacion); // checkar datos en produccion
+        let idUbicacion = turnoCtrl.getUbicacion(idTipoPrestacion);
         let fechaHora = _agenda.horaInicio;
         let fechaHoraFinalizacion = _agenda.horaFin;
         let duracionTurnos = _agenda.bloques[0].duracionTurno;
@@ -166,13 +166,13 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
         return idAgendaHPN;
     }
 
-    async function saveBloques(idAgendaAndes, agenda: any, idTipoPrestacion) {
-        let bloques = agenda.bloques;
+    async function saveBloques(idAgendaAndes, _agenda: any, idTipoPrestacion) {
+        let bloques = _agenda.bloques;
         for (let bloque of bloques) {
             await turnoCtrl.saveTurnos(idAgendaAndes, bloque, idTipoPrestacion, pool, transaction);
         }
-        if (agenda.sobreturnos) {
-            for (let sobreturno of agenda.sobreturnos) {
+        if (_agenda.sobreturnos) {
+            for (let sobreturno of _agenda.sobreturnos) {
                 await turnoCtrl.saveSobreturno(idAgendaAndes, sobreturno, idTipoPrestacion, pool, transaction);
             }
         }

@@ -17,8 +17,8 @@ export async function saveTurnos(idAgendaAndes, bloque, idTipoPrestacion, pool, 
             }
             await saveTurno(idAgendaAndes, turno, datosPaciente, bloque.duracionTurno, idTipoPrestacion, pool, transaction);
         }
-        if (turno.estado === constantes.EstadoTurnosAndes.suspendido) {
-            await updateTurno(turno._id, pool, transaction);
+        if (turno.estado === constantes.EstadoTurnosAndes.suspendido || turno.estado === constantes.EstadoTurnosAndes.disponible) {
+            await updateTurno(turno._id, turno.estado, pool, transaction);
         }
     }
 }
@@ -159,8 +159,12 @@ async function saveTurno(idAgendaAndes, turno: any, datosPaciente, duracion, idT
 }
 
 
-async function updateTurno(id, pool, transaction) {
-    const idEstado = 30; // HARDCODE: prestación Suspendida
+async function updateTurno(id, estado, pool, transaction) {
+    let idEstado = 30; // Suponemos la prestación suspendida
+
+    if (estado === constantes.EstadoTurnosAndes.disponible) {
+        idEstado = 50; // Prestación ha sido liberada
+    }
     let query = 'UPDATE dbo.Prestaciones_Worklist SET ' +
         'idEstado=' + idEstado + ' where andesId=' + '\'' + id + '\'';
     return await new sql.Request(transaction)
