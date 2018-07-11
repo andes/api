@@ -97,73 +97,75 @@ export async function checkCodificacion(agendaCacheada) {
         let datosTurno = {};
         let idEspecialidad: any;
         let idConsulta;
-        for (let x = 0; x < agendaCacheada.bloques.length; x++) {
-            turnos = agendaCacheada.bloques[x].turnos;
+        if (agendaCacheada.estado !== 'auditada') {
 
-            for (let z = 0; z < turnos.length; z++) {
-                let arrayPrestaciones = await new sql.Request(connection)
-                    .input('idTurnoMongo', sql.VarChar(50), turnos[z]._id)
-                    .query('select * from vw_andes_integracion WHERE objectId = @idTurnoMongo');
-                if (arrayPrestaciones.recordset.length > 0) {
-                    arrayPrestaciones = arrayPrestaciones.recordset;
-                    idConsulta = arrayPrestaciones[0].idConsulta; // ambas prestaciones tienen el mismo id de consulta.
-                    idEspecialidad = arrayPrestaciones[0].idEspecialidad;
-                    if (idConsulta) {
-                        // console.log('idagenda ', agenda.id, 'idespecialidad ', idEspecialidad);
-                        if (idEspecialidad === constantes.Especialidades.odontologia) {
-                            turnos[z] = await codificaOdontologia(connection, idConsulta, turnos[z], arrayPrestaciones);
-                        } else {
-                            turnos[z] = await codificacionCie10(connection, idConsulta, turnos[z]);
+            for (let x = 0; x < agendaCacheada.bloques.length; x++) {
+                turnos = agendaCacheada.bloques[x].turnos;
+                for (let z = 0; z < turnos.length; z++) {
+                    let arrayPrestaciones = await new sql.Request(connection)
+                        .input('idTurnoMongo', sql.VarChar(50), turnos[z]._id)
+                        .query('select * from vw_andes_integracion WHERE objectId = @idTurnoMongo');
+                    if (arrayPrestaciones.recordset.length > 0) {
+                        arrayPrestaciones = arrayPrestaciones.recordset;
+                        idConsulta = arrayPrestaciones[0].idConsulta; // ambas prestaciones tienen el mismo id de consulta.
+                        idEspecialidad = arrayPrestaciones[0].idEspecialidad;
+                        if (idConsulta) {
+                            // console.log('idagenda ', agenda.id, 'idespecialidad ', idEspecialidad);
+                            if (idEspecialidad === constantes.Especialidades.odontologia) {
+                                turnos[z] = await codificaOdontologia(connection, idConsulta, turnos[z], arrayPrestaciones);
+                            } else {
+                                turnos[z] = await codificacionCie10(connection, idConsulta, turnos[z]);
+                            }
+                            datosTurno = {
+                                idAgenda: agendaCacheada.id, // este es el id de la agenda original de ANDES
+                                posTurno: z,
+                                posBloque: x,
+                                idUsuario: constantes.idUsuarioSips,
+                                turno: turnos[z]
+                            };
+                            await turnoCtrl.updateTurnoAgendaMongo(datosTurno);
+                            await turnoCtrl.updateTurnoAgendaCache(datosTurno, agendaCacheada);
                         }
-                        datosTurno = {
-                            idAgenda: agendaCacheada.id, // este es el id de la agenda original de ANDES
-                            posTurno: z,
-                            posBloque: x,
-                            idUsuario: constantes.idUsuarioSips,
-                            turno: turnos[z]
-                        };
-                        await turnoCtrl.updateTurnoAgendaMongo(datosTurno);
-                        await turnoCtrl.updateTurnoAgendaCache(datosTurno, agendaCacheada);
                     }
                 }
             }
-        }
 
-        // Caso especial sobreturnos
-        // TODO: refactorizar codigo repetido.
-        if (agendaCacheada.sobreturnos) {
-            sobreturnos =  agendaCacheada.sobreturnos;
-            for (let z = 0; z < agendaCacheada.sobreturnos.length; z++) {
-                let arrayPrestaciones = await new sql.Request(connection)
-                    .input('idTurnoMongo', sql.VarChar(50), sobreturnos[z]._id)
-                    .query('select * from vw_andes_integracion WHERE objectId = @idTurnoMongo');
+            // Caso especial sobreturnos
+            // TODO: refactorizar codigo repetido.
+            if (agendaCacheada.sobreturnos) {
+                sobreturnos =  agendaCacheada.sobreturnos;
+                for (let z = 0; z < agendaCacheada.sobreturnos.length; z++) {
+                    let arrayPrestaciones = await new sql.Request(connection)
+                        .input('idTurnoMongo', sql.VarChar(50), sobreturnos[z]._id)
+                        .query('select * from vw_andes_integracion WHERE objectId = @idTurnoMongo');
 
-                if (arrayPrestaciones.recordset.length > 0) {
-                    arrayPrestaciones = arrayPrestaciones.recordset;
-                    idConsulta = arrayPrestaciones[0].idConsulta; // ambas prestaciones tienen el mismo id de consulta y especialidad
-                    idEspecialidad = arrayPrestaciones[0].idEspecialidad;
-                    if (idConsulta) {
-                        if (idEspecialidad === constantes.Especialidades.odontologia) {
-                            agendaCacheada.sobreturnos[z] = await codificaOdontologia(connection, idConsulta, agendaCacheada.sobreturnos[z], arrayPrestaciones);
-                        } else {
-                            agendaCacheada.sobreturnos[z] = await codificacionCie10(connection, idConsulta, agendaCacheada.sobreturnos[z]);
+                    if (arrayPrestaciones.recordset.length > 0) {
+                        arrayPrestaciones = arrayPrestaciones.recordset;
+                        idConsulta = arrayPrestaciones[0].idConsulta; // ambas prestaciones tienen el mismo id de consulta y especialidad
+                        idEspecialidad = arrayPrestaciones[0].idEspecialidad;
+                        if (idConsulta) {
+                            if (idEspecialidad === constantes.Especialidades.odontologia) {
+                                agendaCacheada.sobreturnos[z] = await codificaOdontologia(connection, idConsulta, agendaCacheada.sobreturnos[z], arrayPrestaciones);
+                            } else {
+                                agendaCacheada.sobreturnos[z] = await codificacionCie10(connection, idConsulta, agendaCacheada.sobreturnos[z]);
+                            }
+                            datosTurno = {
+                                idAgenda: agendaCacheada.id, // este es el id de la agenda original de ANDES
+                                posTurno: z,
+                                posBloque: -1,
+                                idUsuario: constantes.idUsuarioSips,
+                                turno: agendaCacheada.sobreturnos[z]
+                            };
+                            await turnoCtrl.updateTurnoAgendaMongo(datosTurno);
+                            await turnoCtrl.updateTurnoAgendaCache(datosTurno, agendaCacheada);
                         }
-                        datosTurno = {
-                            idAgenda: agendaCacheada.id, // este es el id de la agenda original de ANDES
-                            posTurno: z,
-                            posBloque: -1,
-                            idUsuario: constantes.idUsuarioSips,
-                            turno: agendaCacheada.sobreturnos[z]
-                        };
-                        await turnoCtrl.updateTurnoAgendaMongo(datosTurno);
-                        await turnoCtrl.updateTurnoAgendaCache(datosTurno, agendaCacheada);
                     }
                 }
             }
         }
 
         let estadoAgendaSips: any = await getEstadoAgenda(connection, agendaCacheada.id);
-        if (estadoAgendaSips === 4) {  // estado cerrada en sips
+        if (estadoAgendaSips === 4 || agendaCacheada.estado === 'auditada') {  // estado cerrada en sips o agenda en estado auditada
             await markAgendaAsProcessed(agendaCacheada);
         }
         return (agendaCacheada);
