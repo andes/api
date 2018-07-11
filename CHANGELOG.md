@@ -22,3 +22,17 @@
 #### Changed
 
 * Fix para el reporte de C2.  Se agrega control para verificar primera vez en los diagnósticos de los sobreturnos.
+
+## [3.2.3] - 2018-07-11
+
+#### Changed
+
+* Cambios en pdf de Arancelamiento (https://github.com/andes/app/issues/568)
+* Agrega la posibilidad de cargar una evolución - informe con richtext en RUP
+
+#### Added
+* Estadisticas del módulo de RUP 
+  
+
+
+
