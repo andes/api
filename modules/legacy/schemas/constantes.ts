@@ -17,7 +17,8 @@ const constantes = {
 
     EstadoTurnosAndes: {
         asignado: 'asignado',
-        suspendido: 'suspendido'
+        suspendido: 'suspendido',
+        disponible: 'disponible'
     },
 
     EstadoTurnosSips: {
