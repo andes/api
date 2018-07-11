@@ -44,18 +44,61 @@ export class Websockets {
      */
 
     static onAuth (socket, token) {
+
         let user = Auth.validateToken(token);
         if (user) {
             socket.user = user;
-            socket.emit('auth', { status: 'ok' });
-            // [TODO] Ver si es turnero u otro servicio
-            if (user.type === 'app-token') {
-                socket.join(`turnero-pantalla-${user.app.nombre}`);
-            } else {
-                // console.log(user.usuario);
+
+            // Automaticamente agregamos al usuario a ciertos rooms.
+            switch (user.type) {
+                case 'user-token':
+                    socket.join(`user-${user.usuario.id}`);
+                    break;
+                case 'turnero-token':
+                    socket.join(`turnero-pantalla-${user.app.id}`);
+                    break;
+                case 'paciente-token':
+                    for (let paciente of user.pacientes) {
+                        socket.join(`paciente-${paciente.id}`);
+                    }
+                    break;
+                default:
+                    socket.emit('auth', { status: 'error' });
+                    return null;
             }
+            socket.emit('auth', { status: 'ok' });
         } else {
             socket.emit('auth', { status: 'error' });
+        }
+    }
+
+    static onRoom (socket, { name }) {
+        if (name) {
+            switch (name) {
+                case 'turnero':
+                    if (socket.user.organizacion) {
+                        socket.join(`turnero-${socket.user.organizacion._id}`);
+                    }
+                    break;
+                default:
+                    socket.join(name);
+                    break;
+            }
+        }
+    }
+
+    static onLeave (socket, { name }) {
+        if (name) {
+            switch (name) {
+                case 'turnero':
+                    if (socket.user.organizacion) {
+                        socket.leave(`turnero-${socket.user.organizacion._id}`);
+                    }
+                    break;
+                default:
+                    socket.leave(name);
+                    break;
+            }
         }
     }
 
@@ -88,7 +131,12 @@ export class Websockets {
                         let token = data.token;
                         this.onAuth(socket, token);
                         break;
-
+                    case 'room':
+                        this.onRoom(socket, data);
+                        break;
+                    case 'leave':
+                        this.onLeave(socket, data);
+                        break;
                     default:
                         let p = new Packet(this.io, socket, event, data);
                         EventSocket.emitAsync(event, p);
@@ -100,7 +148,7 @@ export class Websockets {
 
             socket.on('disconnect', function () {
                 // console.log('Disconnected');
-            }); 
+            });
         });
     }
 }

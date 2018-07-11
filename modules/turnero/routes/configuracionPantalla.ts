@@ -4,7 +4,7 @@ import * as moment from 'moment';
 import { turneroPantallaModel } from '../schemas/turneroPantalla';
 import { Auth } from '../../../auth/auth.class';
 import { EventSocket } from '@andes/event-bus';
-import { Packet } from '../../../websockets';
+import { Packet, Websockets } from '../../../websockets';
 
 const ObjectId = mongoose.Types.ObjectId;
 let router = express.Router();
@@ -62,6 +62,7 @@ router.post('/pantalla/', Auth.authenticate(), (req: any, res, next) => {
             return next(err2);
         }
         res.json(pantalla);
+        Websockets.toRoom(`turnero-${pantalla.organizacion}`, 'turnero-create', { pantalla });
     });
 });
 
@@ -93,21 +94,23 @@ router.post('/pantalla/:id/retoken', Auth.authenticate(), (req: any, res, next) 
 router.patch('/pantalla/:id', Auth.authenticate(), (req, res, next) => {
     let id = req.params.id;
     let data = req.body;
-    turneroPantallaModel.findByIdAndUpdate(id, data, { new: true }, (err, pantalla) => {
+    turneroPantallaModel.findByIdAndUpdate(id, data, { new: true }, (err, pantalla: any) => {
         if (err) {
             return next(err);
         }
-        return res.json(pantalla);
+        res.json(pantalla);
+        Websockets.toRoom(`turnero-${pantalla.organizacion}`, 'turnero-update', { pantalla });
     });
 });
 
 router.delete('/pantalla/:id', Auth.authenticate(), (req: any, res, next) => {
-    turneroPantallaModel.findById(req.params.id, (err, data) => {
+    turneroPantallaModel.findById(req.params.id, (err, data: any) => {
         if (err) {
             return next(err);
         } else if (data) {
             data.remove().then(() => {
-                return res.json({message: 'OK'});
+                res.json({message: 'OK'});
+                Websockets.toRoom(`turnero-${data.organizacion}`, 'turnero-remove', { id: data._id });
             });
         }
     });
@@ -125,8 +128,12 @@ router.post('/pantalla/activate', async (req, res, next) => {
         pantalla.expirationTime = null;
         await pantalla.save();
 
-        let token = Auth.generateAppToken(String(pantalla._id), {} , [`turnero:${pantalla._id}`]);
-        return res.send({ token });
+
+        let token = Auth.generateAppToken(pantalla, {} , [`turnero:${pantalla._id}`], 'turnero-token');
+        res.send({ token });
+
+        Websockets.toRoom(`turnero-${pantalla.organizacion}`, 'turnero-activated', { id: pantalla.id });
+
     }
     return next({message: 'no eiste pantalla'});
 });

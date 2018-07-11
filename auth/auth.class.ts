@@ -292,6 +292,7 @@ export class Auth {
         let token: UserToken = {
             id: mongoose.Types.ObjectId(),
             usuario: {
+                id: user._id,
                 nombreCompleto: user.nombre + ' ' + user.apellido,
                 nombre: user.nombre,
                 apellido: user.apellido,
@@ -319,17 +320,19 @@ export class Auth {
      *
      * @memberOf Auth
      */
-    static generateAppToken(nombre: string, organizacion: any, permisos: string[]): any {
+
+    static generateAppToken(user: any, organizacion: any, permisos: string[], type: 'app-token' | 'turnero-token' = 'app-token'): any {
         // Un token por organización. A futuro distintos permisos en la organización externa deberá modificarse esto!
         let token: AppToken = {
             id: mongoose.Types.ObjectId(),
             app: {
-                nombre: nombre
+                id: user._id,
+                nombre: user.nombre
             },
             organizacion: organizacion,
             permisos: permisos,
             account_id: null,
-            type: 'app-token'
+            type: type
         };
         return jwt.sign(token, configPrivate.auth.jwtKey);
     }
