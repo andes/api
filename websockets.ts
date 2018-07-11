@@ -7,7 +7,7 @@ import { EventSocket } from '@andes/event-bus';
 
 let log = debug('websocket');
 
-class Packet {
+export class Packet {
     private io;
     private socket;
     public event: String;

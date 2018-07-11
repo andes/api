@@ -4,6 +4,7 @@ import * as moment from 'moment';
 import { turneroPantallaModel } from '../schemas/turneroPantalla';
 import { Auth } from '../../../auth/auth.class';
 import { EventSocket } from '@andes/event-bus';
+import { Packet } from '../../../websockets';
 
 const ObjectId = mongoose.Types.ObjectId;
 let router = express.Router();
@@ -131,7 +132,7 @@ router.post('/pantalla/activate', async (req, res, next) => {
 });
 
 
-EventSocket.on('turnero-proximo-llamado', (paquete) => {
+EventSocket.on('turnero-proximo-llamado', (paquete: Packet) => {
     const turno = paquete.data;
     const espacioFisico =  ObjectId(turno.espacioFisico.id);
 
