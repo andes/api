@@ -109,7 +109,9 @@ export async function findOrCreate(req, dataPaciente, organizacion) {
         }
         return paciente;
     } else {
-        return await pacienteCtr.createPaciente(dataToPac(dataPaciente, organizacion), req);
+         // No creamos más el paciente en MPI
+         // return await pacienteCtr.createPaciente(dataToPac(dataPaciente, organizacion), req);
+         return null;
     }
 }
 
