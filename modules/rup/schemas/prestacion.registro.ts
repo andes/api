@@ -34,8 +34,9 @@ schema.add({
         default: false
     },
     esPrimeraVez: {
-        type: Boolean,
-        default: false
+        type: String,
+        enum: ['Si', 'No', ''],
+        default: ''
     },
     // Almacena el valor del átomo, molécula o fórmula.
     // Para el caso de las moléculas, el valor puede ser nulo.
