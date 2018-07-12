@@ -9,6 +9,7 @@ import { model as prestacion } from '../../rup/schemas/prestacion';
 import { Auth } from './../../../auth/auth.class';
 import { toArray } from '../../../utils/utils';
 import * as mongoose from 'mongoose';
+import { prestacionesAFacturarModel } from '../schemas/prestacionesAFacturar';
 let router = express.Router();
 
 router.get('/facturacion/turnos', async function (req, res, next) {
@@ -93,6 +94,11 @@ router.get('/cambioEstadoAgenda/:id', function (req, res, next) {
     }
 });
 
+router.get('/prueba', (req, res, next) => {
+
+})
+
+
 
 router.post('/cambioEstadoPrestaciones/:id', function (req, res, next) {
     try {
@@ -134,12 +140,12 @@ router.get('/sinTurno/:conceptId', async function (req, res, next) {
 
 
 router.get('/prestacionesConTurno/:id', async function (req, res, next) {
-        prestacion.find({
-            'solicitud.turno': mongoose.Types.ObjectId(req.params.id)
-        }).exec(function (err, data: any) {
-            res.json(data);
+    prestacion.find({
+        'solicitud.turno': mongoose.Types.ObjectId(req.params.id)
+    }).exec(function (err, data: any) {
+        res.json(data);
 
-        })
+    })
 
 });
 

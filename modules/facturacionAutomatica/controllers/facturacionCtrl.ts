@@ -13,14 +13,29 @@ import * as constantes from './../../legacy/schemas/constantes';
 import * as sql from 'mssql';
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 import { toArray } from '../../../utils/utils';
+import { prestacionesAFacturarModel } from '../schemas/prestacionesAFacturar';
 const MongoClient = require('mongodb').MongoClient;
 let async = require('async');
+
+async function getPrestacionesAfacturar() {
+    let arrayConceptId = [];
+    return new Promise((resolve, reject) => {
+        prestacionesAFacturarModel.find({ 'activo': true }).exec((err, data: any) => {
+            data.forEach(unaPrestacion => {
+                arrayConceptId.push(unaPrestacion.conceptId)
+            });
+            console.log(arrayConceptId)
+            resolve(arrayConceptId);
+        });
+    })
+}
 
 
 export async function getTurnosFacturacionPendiente() {
     let hoyDesde = moment(new Date()).startOf('day').format();
     let hoyHasta = moment(new Date()).endOf('day').format();
-    let prestaciones = ['2091000013100', '2091000013101'];
+    let prestaciones = await getPrestacionesAfacturar();
+    console.log("aca prestacionnes", prestaciones)
     let match = {
         $match: {
             $and: [{ 'bloques.turnos.estadoFacturacion': { $eq: 'sinFacturar' } },
@@ -45,7 +60,7 @@ export async function getTurnosFacturacionPendiente() {
     data.forEach(agenda => {
         turnos.push({
             datosAgenda: {
-                'id' : agenda._id,
+                'id': agenda._id,
                 'organizacion': agenda.organizacion,
                 'horaInicio': agenda.horaInicio,
                 'profesionales': agenda.profesionales
