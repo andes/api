@@ -1,10 +1,6 @@
-import { tipoPrestacion } from './../../../../core/tm/schemas/tipoPrestacion';
-import { conSqlPecas } from './../../../../config.private';
 import fs = require('fs');
 import async = require('async');
 import * as agendaModel from '../../../turnos/schemas/agenda';
-// import { toArray } from '../../../../utils/utils';
-import { configuracionPrestacionModel as configPrestacion } from './../../../../core/term/schemas/configuracionPrestaciones';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import { model as organizacion } from '../../../../core/tm/schemas/organizacion';
@@ -33,20 +29,18 @@ let total = 0;
  * @returns resultado
  */
 export async function consultaPecas(start, end) {
-    console.log('consultaPecas');
+    // console.log('consultaPecas');
     try {
         poolTurnos = await new sql.ConnectionPool(config).connect();
     } catch (ex) {
-        console.log('ex', ex);
+        // console.log('ex', ex);
         return (ex);
     }
     const query_limit = 10000000000;
-    // const type = 'PECAS-' + (new Date()).toISOString();
-    // const outputFile = './turnos-agendas-' + type + '.json';
     let match = {
         '$and': [
-            // { updatedAt: { $gt: new Date('2018-07-06T00:00:00.000-03:00') } },
-            // { updatedAt: { $lt: new Date('2018-07-06T23:00:00.000-03:00') } }
+            // { updatedAt: { $gt: new Date('2018-07-02T00:00:00.000-03:00') } },
+            // { updatedAt: { $lt: new Date('2018-07-02T23:00:00.000-03:00') } }
             { updatedAt: { $gt: new Date(start) } },
             { updatedAt: { $lt: new Date(end) } }
         ],
@@ -57,11 +51,6 @@ export async function consultaPecas(start, end) {
             $ne: null
         },
         '$or': [
-            // {
-            //     estado: {
-            //         $ne: 'suspendida'
-            //     }
-            // },
             {
                 estado: {
                     $ne: 'planificacion'
@@ -85,7 +74,7 @@ export async function consultaPecas(start, end) {
         ]).cursor({ batchSize: 10000000000 }).exec();
         agendas.eachAsync((a, error) => {
             if (error) {
-                console.log('error ', error);
+                // console.log('error ', error);
                 return (error);
             }
             // Se recorren los turnos dentro de los bloques
@@ -349,10 +338,9 @@ async function auxiliar(a: any, b: any, t: any) {
             await executeQuery(queryInsert);
         }
     } catch (error) {
-        console.log('error ', error);
+        // console.log('error ', error);
         return (error);
     }
-    // }
 }
 
 // function getEspecialidad(conceptId, idOrganizacion: string) {
@@ -490,21 +478,13 @@ async function executeQuery(query: any) {
         let result = await new sql.Request(poolTurnos).query(query);
         if (result && result.recordset) {
             return result.recordset[0].id;
-        } else {
-            console.log('1');
         }
     } catch (err) {
-        // loggear
-        // if (total === 0) {
-        // debug('err ', err);
-        // debug('query ', query);
-        console.log('err ', err);
-        console.log('query ', query);
+        // console.log('err ', err);
+        // console.log('query ', query);
         let jsonWrite = fs.appendFileSync(outputFile, query + '\r', {
             encoding: 'utf8'
         });
-        // }
-        // total++;
         return (err);
     }
 }
