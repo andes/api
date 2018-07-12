@@ -69,6 +69,8 @@ router.post('/laboratorios', async(req: any, res, next) => {
                     apellido: '' // Nombre y Apellido viene junto en los registros de laboratorio de SQL
                 };
                 let snomed = '4241000179101'; // informe de laboratorio (elemento de registro)
+                let prestacion = await cdaCtr.matchCode(snomed);
+
                 let cie10Laboratorio = {
                     codigo: 'Z01.7', // Código CIE-10: Examen de Laboratorio
                     nombre: 'Examen de laboratorio'
@@ -80,7 +82,7 @@ router.post('/laboratorios', async(req: any, res, next) => {
                 if (informePDF) {
                     fileData = await cdaCtr.storePdfFile(informePDF);
                 }
-                let cda = cdaCtr.generateCDA(uniqueId, 'R', paciente, fecha, profesional, organizacion, snomed, cie10Laboratorio, texto, fileData);
+                let cda = cdaCtr.generateCDA(uniqueId, 'R', paciente, fecha, profesional, organizacion, prestacion, cie10Laboratorio, texto, fileData);
                 let metadata = {
                     paciente: paciente.id,
                     prestacion: snomed,

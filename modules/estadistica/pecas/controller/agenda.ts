@@ -1,9 +1,6 @@
-import { conSqlPecas } from './../../../../config.private';
-import fs = require('fs');
 import async = require('async');
 import * as agendaModel from '../../../turnos/schemas/agenda';
 import { toArray } from '../../../../utils/utils';
-import { configuracionPrestacionModel as configPrestacion } from './../../../../core/term/schemas/configuracionPrestaciones';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import { model as organizacion } from '../../../../core/tm/schemas/organizacion';
@@ -34,8 +31,6 @@ export async function consultaPecas() {
         return (ex);
     }
     const query_limit = 10000000000;
-    const type = 'PECAS-' + (new Date()).toISOString();
-    const outputFile = './turnos-agendas-' + type + '.json';
     let match = {
         'horaInicio': {
             $gt: new Date('2018-05-01T00:00:00.000-03:00')
@@ -76,15 +71,15 @@ export async function consultaPecas() {
                     return(error);
                 }
                 agendas = await toArray(cursor);
-                agendas.forEach((a, indexA) => {
+                agendas.forEach((a) => {
                     // En cada agenda se recorren los bloques
-                    async.every(a.bloques, (b, indexB) => {
+                    async.every(a.bloques, (b) => {
                         // RESTA REALIZAR LO MISMO PARA LOS SOBRETURNOS
-                        async.every((b as any).turnos, async (t: any, indexT) => {
+                        async.every((b as any).turnos, async (t: any) => {
                             auxiliar(a, t);
                         });
                     });
-                    async.every((a as any).sobreturnos, async (t: any, indexT) => {
+                    async.every((a as any).sobreturnos, async (t: any) => {
                         auxiliar(a, t);
                     });
                 });
@@ -269,26 +264,6 @@ async function auxiliar(a: any, t: any) {
     }
 }
 
-function getEspecialidad(conceptId, idOrganizacion: string) {
-    return new Promise((resolve, reject) => {
-        var especialidad = '';
-        configPrestacion.find({
-            'tipoPrestacion.conceptId': conceptId,
-            'organizacionesSips._id': mongoose.Types.ObjectId(idOrganizacion)
-        }).exec().then(configuraciones => {
-            if (configuraciones.length > 0) {
-                let organizacionesSips = configuraciones[0]['organizacionesSips'];
-                if (organizacionesSips && organizacionesSips.length > 0) {
-                    var datos = organizacionesSips.filter((elem) => String(elem._id) === String(idOrganizacion));
-                    if (datos && datos.length > 0) {
-                        especialidad = datos[0].nombreEspecialidad;
-                    }
-                }
-            }
-            resolve(especialidad);
-        });
-    });
-}
 
 function getEfector(idOrganizacion: any) {
     return new Promise((resolve, reject) => {

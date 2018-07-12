@@ -1,8 +1,7 @@
 import * as mongoose from 'mongoose';
 
 export let configuracionPrestacionSchema = new mongoose.Schema({
-    tipoPrestacion: {
-        id: mongoose.Schema.Types.ObjectId,
+    snomed: {
         conceptId: String,
         term: String,
         fsn: String,
@@ -14,7 +13,8 @@ export let configuracionPrestacionSchema = new mongoose.Schema({
         codeSystemName: String,
         displayName: String
     },
-    organizacionesSips: [{
+    idServicio: Number,
+    organizaciones: [{
         _id: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'organizacion'
