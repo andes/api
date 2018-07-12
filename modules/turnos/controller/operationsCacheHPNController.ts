@@ -166,6 +166,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
         return idAgendaHPN;
     }
 
+
     async function saveBloques(idAgendaAndes, _agenda: any, idTipoPrestacion) {
         let bloques = _agenda.bloques;
         for (let bloque of bloques) {
