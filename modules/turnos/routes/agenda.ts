@@ -450,6 +450,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                             LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, agendaCtrl.getBloque(data, turno)._id, data._id);
                         }
                         agendaCtrl.liberarTurno(req, data, turno);
+                        // Aca tendria q verificar si el idTurno esta en alguna solicitud y en ese caso quitarlo
                         break;
                     case 'suspenderTurno':
                         turno = agendaCtrl.getTurno(req, data, turnos[y]);
