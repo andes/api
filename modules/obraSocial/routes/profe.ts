@@ -1,12 +1,21 @@
-import * as mongoose from 'mongoose';
 import * as express from 'express';
 import { profe } from '../schemas/profe';
+import { periodoPadronesProfe } from '../schemas/periodoPadronesProfe';
 
 let router = express.Router();
 
-router.get('/profe/', function (req, res, next) {
+router.get('/profe/', async function (req, res, next) {
     if (req.query.dni) {
-        profe.find({ dni: Number.parseInt(req.query.dni) }, function (err, data) {
+        let padron;
+
+        if (req.query.periodo) {
+            padron = req.query.periodo.substring(0, 7); // YYYY/MM
+        } else {
+            padron = await periodoPadronesProfe.find({}).sort({ $natural: 1 }).limit(1);  // ultimo padron
+            padron = padron[0].version;
+        }
+
+        profe.find({ dni: Number.parseInt(req.query.dni), version: { $regex: padron } }, function (err, data) {
             if (err) {
                 return next(err);
             }

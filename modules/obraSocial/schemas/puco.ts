@@ -9,4 +9,4 @@ let pucoSchema = new mongoose.Schema({
     financiador: String
 });
 
-export let puco = mongoose.model('puco', pucoSchema, 'puco');
+export let puco: any = mongoose.model('puco', pucoSchema, 'puco');

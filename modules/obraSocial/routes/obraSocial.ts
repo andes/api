@@ -1,8 +1,7 @@
 import * as express from 'express';
 import { puco } from '../schemas/puco';
-// import { Date } from 'core-js';
-import * as moment from 'moment';
-import { stringify } from 'querystring';
+import { obraSocial } from '../schemas/obraSocial';
+import { periodoPadronesPuco } from '../schemas/periodoPadronesPuco';
 
 let router = express.Router();
 
@@ -12,48 +11,33 @@ let router = express.Router();
  * @param {any} dni
  * @returns
  */
+
 router.get('/puco/', async function (req, res, next) {
     if (req.query.dni) {
-        puco.find({ dni: Number.parseInt(req.query.dni) }, function (err, data) {
-            if (err) {
-                return next(err);
-            }
-            res.json(data);
-        });
-    } else {
-        res.status(400).json({ msg: 'Parámetros incorrectos' });
-    }
-});
+        let padron;
+        let rta;
 
-router.get('/puco/version/:periodo*?', async function (req, res, next) {
-    // se selecciona periodo especifico --> retorna padron de dicho periodo
-    if (req.params.periodo) {
-        puco.find({ version: req.params.periodo }, function (err, data) {
-            if (err) {
-                return next(err);
-            }
-            res.json(data);
-        });
-    } else {    // no se selecciona periodo --> retorna los padrones de los ultimos <ultimos> periodos
-        if (req.query.ultimos) {
-            // obtiene ultimo registro insertado
-            let ultimoReg: any = await puco.find({}).sort({ $natural: 1 }).limit(1);
-            let ultimaVersion = JSON.parse(JSON.stringify(ultimoReg[0])).version;
+        if (req.query.periodo) {
+            padron = req.query.periodo.substring(0, 7); // YYYY/MM
+        } else {
+            padron = await periodoPadronesPuco.find({}).sort({ $natural: 1 }).limit(1);   // ultimo padron
+            padron = padron[0].version;
+        }
 
-            // Se crea un objeto Date para delegar el calculo de periodos hacia atras a buscar
-            let ultimaFecha = moment(new Date(String(ultimaVersion).substring(0, 4) + '/' + (String(ultimaVersion).substring(4, 6) + '/' + String(ultimaVersion).substring(6, 8)))).format('YYYY/MM/DD');
-            let fechaAux = moment(new Date(ultimaFecha)).subtract(req.query.ultimos, 'months').format('YYYYMMDD');
-            let fechaDesde = Number.parseInt(fechaAux);
+        rta = await puco.find({ dni: Number.parseInt(req.query.dni), version: { $regex: padron } }).exec();
 
-            puco.find({ version: { $gt: fechaDesde } }, function (err, data) {
+        if (rta.length > 0) {
+            obraSocial.find({ codigoPuco: rta[0].codigoFinanciador }, function (err, data) {
                 if (err) {
                     return next(err);
                 }
-                res.json({ ultimoPeriodo: ultimaVersion, padrones: data });
+                res.json([{ dni: rta[0].dni, transmite: rta[0].transmite, nombre: rta[0].nombre, financiador: data[0].nombre, version: rta[0].version }]);
             });
         } else {
-            res.status(400).json({ msg: 'Parámetros incorrectos' });
+            res.json();
         }
+    } else {
+        res.status(400).json({ msg: 'Parámetros incorrectos' });
     }
 });
 
