@@ -12,6 +12,8 @@ logs
 *.map
 **.map
 
+!packages/**/*.js
+
 # Dependency directories
 node_modules
 typings
