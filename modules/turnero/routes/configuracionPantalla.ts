@@ -3,7 +3,7 @@ import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import { turneroPantallaModel } from '../schemas/turneroPantalla';
 import { Auth } from '../../../auth/auth.class';
-import { EventSocket } from '@andes/event-bus';
+import { EventSocket, EventCore } from '@andes/event-bus';
 import { Packet, Websockets } from '../../../websockets';
 
 const ObjectId = mongoose.Types.ObjectId;
@@ -62,7 +62,7 @@ router.post('/pantalla/', Auth.authenticate(), (req: any, res, next) => {
             return next(err2);
         }
         res.json(pantalla);
-        Websockets.toRoom(`turnero-${pantalla.organizacion}`, 'turnero-create', { pantalla });
+        EventCore.emitAsync('turnero-create', { pantalla });
     });
 });
 
@@ -99,7 +99,8 @@ router.patch('/pantalla/:id', Auth.authenticate(), (req, res, next) => {
             return next(err);
         }
         res.json(pantalla);
-        Websockets.toRoom(`turnero-${pantalla.organizacion}`, 'turnero-update', { pantalla });
+        EventCore.emitAsync('turnero-update', { pantalla });
+
     });
 });
 
@@ -110,7 +111,7 @@ router.delete('/pantalla/:id', Auth.authenticate(), (req: any, res, next) => {
         } else if (data) {
             data.remove().then(() => {
                 res.json({message: 'OK'});
-                Websockets.toRoom(`turnero-${data.organizacion}`, 'turnero-remove', { id: data._id });
+                EventCore.emitAsync('turnero-remove', { pantalla: data });
             });
         }
     });
@@ -132,17 +133,29 @@ router.post('/pantalla/activate', async (req, res, next) => {
         let token = Auth.generateAppToken(pantalla, {} , [`turnero:${pantalla._id}`], 'turnero-token');
         res.send({ token });
 
-        Websockets.toRoom(`turnero-${pantalla.organizacion}`, 'turnero-activated', { id: pantalla.id });
-
+        EventCore.emitAsync('turnero-activated', { pantalla });
+    } else {
+        return next({message: 'no eiste pantalla'});
     }
-    return next({message: 'no eiste pantalla'});
 });
 
+/**
+ * Por el momento cada evento del core lo reenviamos por el websockets
+ * Analizar si las cosas de websocket quedan en cada modulo o hay un modulo especial
+ */
+
+EventCore.on(/turnero-(.*)/, function (data) {
+    const event = this.event;
+    Websockets.toRoom(`turnero-${data.pantalla.organizacion}`, event, data);
+});
+
+/**
+ * Respondemos a un evento de proximo turno
+ */
 
 EventSocket.on('turnero-proximo-llamado', (paquete: Packet) => {
     const turno = paquete.data;
     const espacioFisico =  ObjectId(turno.espacioFisico.id);
-
     turneroPantallaModel.find({
         'espaciosFisicos.id': espacioFisico
     }).then((pantallas) => {
