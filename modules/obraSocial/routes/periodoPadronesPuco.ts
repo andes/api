@@ -26,7 +26,12 @@ router.get('/periodoPadronesPuco/:id*?', function (req, res, next) {
                 res.json(data);
             });
         } else {
-            res.status(400).json({ msg: 'Parámetros incorrectos' });
+            periodoPadronesPuco.find({}, function (err, data) {
+                if (err) {
+                    return next(err);
+                }
+                res.json(data);
+            });
         }
     }
 });
