@@ -6,7 +6,8 @@ let pucoSchema = new mongoose.Schema({
     transmite: String,
     nombre: String,
     codigoFinanciador: Number,
-    financiador: String
+    financiador: String,
+    version: Date
 });
 
 export let puco: any = mongoose.model('puco', pucoSchema, 'puco');

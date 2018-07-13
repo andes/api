@@ -18,13 +18,16 @@ router.get('/puco/', async function (req, res, next) {
         let rta;
 
         if (req.query.periodo) {
-            padron = req.query.periodo.substring(0, 7); // YYYY/MM
+            let date = new Date(req.query.periodo);
+            let primerDia = new Date(date.getFullYear(), date.getMonth(), 1);
+            let ultimoDia = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+            padron = { $gte: primerDia, $lt: ultimoDia };
         } else {
             padron = await periodoPadronesPuco.find({}).sort({ $natural: 1 }).limit(1);   // ultimo padron
             padron = padron[0].version;
         }
 
-        rta = await puco.find({ dni: Number.parseInt(req.query.dni), version: { $regex: padron } }).exec();
+        rta = await puco.find({ dni: Number.parseInt(req.query.dni), version: padron }).exec();
 
         if (rta.length > 0) {
             obraSocial.find({ codigoPuco: rta[0].codigoFinanciador }, function (err, data) {

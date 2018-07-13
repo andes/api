@@ -19,8 +19,7 @@ router.get('/periodoPadronesPuco/:id*?', function (req, res, next) {
         });
     } else {
         if (req.query.desde) {
-            let versionDesde = Number.parseInt(req.query.desde);
-            periodoPadronesPuco.find({ version: { $gte: versionDesde } }, function (err, data) {
+            periodoPadronesPuco.find({ version: { $gte: req.query.desde } }, function (err, data) {
                 if (err) {
                     return next(err);
                 }

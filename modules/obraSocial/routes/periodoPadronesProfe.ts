@@ -19,8 +19,7 @@ router.get('/periodoPadronesProfe/:id*?', function (req, res, next) {
         });
     } else {
         if (req.query.desde) {
-            let versionDesde = Number.parseInt(req.query.desde);
-            periodoPadronesProfe.find({ version: { $gte: versionDesde } }, function (err, data) {
+            periodoPadronesProfe.find({ version: { $gte: req.query.desde } }, function (err, data) {
                 if (err) {
                     return next(err);
                 }

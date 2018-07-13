@@ -9,13 +9,16 @@ router.get('/profe/', async function (req, res, next) {
         let padron;
 
         if (req.query.periodo) {
-            padron = req.query.periodo.substring(0, 7); // YYYY/MM
+            let date = new Date(req.query.periodo);
+            let primerDia = new Date(date.getFullYear(), date.getMonth(), 1);
+            let ultimoDia = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+            padron = { $gte: primerDia, $lt: ultimoDia };
         } else {
             padron = await periodoPadronesProfe.find({}).sort({ $natural: 1 }).limit(1);  // ultimo padron
             padron = padron[0].version;
         }
 
-        profe.find({ dni: Number.parseInt(req.query.dni), version: { $regex: padron } }, function (err, data) {
+        profe.find({ dni: Number.parseInt(req.query.dni), version: padron }, function (err, data) {
             if (err) {
                 return next(err);
             }
