@@ -7,9 +7,9 @@ import { defaultLimit, maxLimit } from './../../../config';
 let router = express.Router();
 
 router.post('/', function (req, res, next) {
-    // if (!Auth.check(req, 'log:post')) {
-    //     return next(403);
-    // }
+    if (!Auth.check(req, 'log:post')) {
+        return next(403);
+    }
     if (!req.body.key && !req.body.paciente) {
         return next(400);
     }
@@ -21,9 +21,9 @@ router.post('/', function (req, res, next) {
 });
 
 router.get('/', function (req, res, next) {
-    // if (!Auth.check(req, 'log:get')) {
-    //     return next(403);
-    // }
+    if (!Auth.check(req, 'log:get')) {
+        return next(403);
+    }
     if (!req.query.key && !req.query.paciente) {
         return next(400);
     }
