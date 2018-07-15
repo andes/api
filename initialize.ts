@@ -1,10 +1,11 @@
-import * as bodyParser from 'body-parser';
 import * as config from './config';
 import { Auth } from './auth/auth.class';
 import { Swagger } from './swagger/swagger.class';
 import { Connections } from './connections';
 import * as HttpStatus from 'http-status-codes';
 import { Express } from 'express';
+import * as bodyParser from 'body-parser';
+import * as userAgent from 'express-useragent';
 
 let requireDir = require('require-dir');
 
@@ -17,9 +18,8 @@ export function initAPI(app: Express) {
 
     // Configura Express
     app.use(bodyParser.json({ limit: '150mb' }));
-    app.use(bodyParser.urlencoded({
-        extended: true
-    }));
+    app.use(bodyParser.urlencoded({ extended: true }));
+    app.use(userAgent.express());
     app.all('*', function (req, res, next) {
         res.header('Access-Control-Allow-Origin', '*');
         res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');

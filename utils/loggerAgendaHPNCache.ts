@@ -1,4 +1,4 @@
-import { logAgendaCache } from '../core/log/schemas/logAgendaHPNCache';
+import { logAgendaCache } from '../core/deprecated_log/schemas/logAgendaHPNCache';
 
 export class LoggerAgendaCache {
 
