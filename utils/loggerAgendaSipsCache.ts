@@ -1,4 +1,4 @@
-import { logAgendaCache } from '../core/deprecated_log/schemas/logAgendaSipsCache';
+import { logAgendaCache } from '../core/log/schemas/logAgendaSipsCache';
 
 export class LoggerAgendaCache {
 

@@ -1,4 +1,4 @@
-import { logPaciente } from '../core/deprecated_log/schemas/logPaciente';
+import { logPaciente } from '../core/log/schemas/logPaciente';
 
 export class LoggerPaciente {
 
