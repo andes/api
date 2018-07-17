@@ -1,7 +1,7 @@
 import { AppToken } from './schemas/app-token.interface';
 import { UserToken } from './schemas/user-token.interface';
 import { PacienteToken } from './schemas/paciente-token.interface';
-import { authApps }  from './schemas/authApps';
+import { authApps } from './schemas/authApps';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import * as passport from 'passport';
@@ -85,12 +85,9 @@ export class Auth {
     }
 
     static authenticatePublic() {
-        return  passport.authenticate();
+        return passport.authenticate();
     }
 
-    static authenticatePublic() {
-        return  passport.authenticate();
-    }
 
     /**
      * optionalAuth: extract
@@ -140,7 +137,7 @@ export class Auth {
     static appTokenProtected() {
         return function (req, res, next) {
             if (req.user.type === 'app-token') {
-                authApps.findOne({organizacion:  mongoose.Types.ObjectId(req.user.organizacion)}).then((app: any) => {
+                authApps.findOne({ organizacion: mongoose.Types.ObjectId(req.user.organizacion) }).then((app: any) => {
                     let token: string = req.headers.authorization.substring(4);
                     if (app.token && app.token === token) {
                         next();
