@@ -1,13 +1,18 @@
 import * as mongoose from 'mongoose';
 import * as express from 'express';
-import { EventCore } from '@andes/event-bus';
-import { WebHook, WebHookLog } from '../schemas/webhookSchema';
+import {
+    EventCore
+} from '@andes/event-bus';
+import {
+    WebHook,
+    WebHookLog
+} from '../schemas/webhookSchema';
 
 const request = require('request');
 
 let router = express.Router();
 
-function filterData (filter: any[], data) {
+function filterData(filter: any[], data) {
     for (let key in filter) {
         if (!data[key] || data[key] !== filter[key]) {
             return false;
@@ -18,21 +23,19 @@ function filterData (filter: any[], data) {
 
 EventCore.on(/.*/, async function (body) {
     const event = this.event;
-
-    let subscriptions = await WebHook.find({ event });
-
-    subscriptions.forEach ((sub: any) => {
+    let subscriptions = await WebHook.find({
+        event
+    });
+    subscriptions.forEach((sub: any) => {
         if (!filterData(sub.filter, body)) {
             return null;
         }
-
         let data = {
             id: new mongoose.Types.ObjectId(),
             subscription: sub._id,
             data: body,
             event: event
         };
-
         request({
             method: sub.method,
             uri: sub.url,
@@ -57,5 +60,4 @@ EventCore.on(/.*/, async function (body) {
 
     });
 });
-
 export = router;

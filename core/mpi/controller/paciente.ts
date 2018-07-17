@@ -31,7 +31,9 @@ export function createPaciente(data, req) {
             let connElastic = new ElasticSync();
             connElastic.create(newPatient._id.toString(), nuevoPac).then(() => {
                 Logger.log(req, 'mpi', 'insert', newPatient);
-                EventCore.emitAsync('mpi:new-patient', newPatient);
+                // Código para emitir eventos
+                EventCore.emitAsync('mpi:patient:create', newPatient);
+                //
                 return resolve(newPatient);
             }).catch(error => {
                 return reject(error);
@@ -57,8 +59,8 @@ export function updatePaciente(pacienteObj, data, req) {
                 return reject(err2);
             }
             try {
-                updateTurnosPaciente(pacienteObj);
-            } catch (error) { return error; }
+                updateTurnosPaciente(pacienteObj);  // Claro ejemplo de lo que no hay que hacer más!!
+            } catch (error) { return error; }       // Para esto se podría emitir un evento entre módulos!!!
             let connElastic = new ElasticSync();
             connElastic.sync(pacienteObj).then(updated => {
                 if (updated) {
@@ -69,6 +71,9 @@ export function updatePaciente(pacienteObj, data, req) {
                 } else {
                     Logger.log(req, 'mpi', 'insert', pacienteObj);
                 }
+                // Código para emitir eventos
+                EventCore.emitAsync('mpi:patient:update', pacienteObj);
+                //
                 resolve(pacienteObj);
             }).catch(error => {
                 return reject(error);
