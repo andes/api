@@ -31,4 +31,4 @@ export let configuracionPrestacionSchema = new mongoose.Schema({
     ]
 });
 
-export let configuracionPrestacionModel = mongoose.model('configuracionPrestacion', configuracionPrestacionSchema, 'configuracionPrestacion_new');
+export let configuracionPrestacionModel = mongoose.model('configuracionPrestacion', configuracionPrestacionSchema, 'configuracionPrestacion');

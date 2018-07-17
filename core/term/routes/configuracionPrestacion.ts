@@ -46,28 +46,29 @@ Elimina un 'mapeo' (Elemento del arreglo 'organizaciones') de tipoPrestacion - E
 */
 
 router.put('/configuracionPrestaciones', function (req, res, next) {
-
+    console.log('entro');
     if (req.body.idOrganizacion && req.body.conceptIdSnomed) {
-        let query;
+        console.log('tiene');
         if (req.body.idEspecialidad) {
-
-            query = configuracionPrestacion.configuracionPrestacionModel.update(
+            // busca por especialidad
+            console.log('id especialidad: ', req.body.idEspecialidad);
+            configuracionPrestacion.configuracionPrestacionModel.update(
                 { 'organizaciones._id': req.body.idOrganizacion, 'snomed.conceptId': req.body.conceptIdSnomed, 'organizaciones.idEspecialidad': req.body.idEspecialidad }
-                , { $pull: { 'organizaciones': { '_id': req.body.idOrganizacion } } });
-
+                , { $pull: { 'organizaciones': { '_id': req.body.idOrganizacion } } }, function (err, data) {
+                    if (err) {
+                        return next(err);
+                    }
+                    console.log(res.json(data));
+                    res.json(data);
+                });
         }
-        if (req.body.codigo) {
-
-            query = configuracionPrestacion.configuracionPrestacionModel.update(
-                { 'organizaciones._id': req.body.idOrganizacion, 'snomed.conceptId': req.body.conceptIdSnomed, 'organizaciones.codigo': req.body.codigo }
-                , { $pull: { 'organizaciones': { '_id': req.body.idOrganizacion } } });
-        }
-        query.exec(function (err, data) {
-            if (err) {
-                return next(err);
-            }
-            res.json(data);
-        });
+        // if (req.body.codigo) {
+        //     console.log('codigo');
+        //     // busca por codigo
+        //     query = configuracionPrestacion.configuracionPrestacionModel.update(
+        //         { 'organizaciones._id': req.body.idOrganizacion, 'snomed.conceptId': req.body.conceptIdSnomed, 'organizaciones.codigo': req.body.codigo }
+        //         , { $pull: { 'organizaciones': { '_id': req.body.idOrganizacion } } });
+        // }
 
     } else {
         res.status(404).send('Error, parámetros incorrectos.');
@@ -82,7 +83,6 @@ Inserta un 'mapeo' de tipoPrestacion - Especialidad - Organicación.
 @param {any} prestacionLegacy
 */
 router.post('/configuracionPrestaciones', async function (req, res, next) {
-
     if (req.body.organizacion && req.body.conceptSnomed && req.body.prestacionLegacy) {
         let idSnomed = req.body.conceptSnomed.conceptId;
         let existeTipoPrestacion = await configuracionPrestacion.configuracionPrestacionModel.findOne({ 'snomed.conceptId': idSnomed });
@@ -113,7 +113,7 @@ router.post('/configuracionPrestaciones', async function (req, res, next) {
             let newConfigPres = {
                 'snomed': req.body.conceptSnomed,
                 'organizaciones': [{
-                    _id: new mongoose.Types.ObjectId(req.body.organizacion.id),
+                    '_id': new mongoose.Types.ObjectId(req.body.organizacion.id),
                     'idEspecialidad': req.body.prestacionLegacy.idEspecialidad,
                     'nombreEspecialidad': req.body.prestacionLegacy.nombreEspecialidad,
                     'codigo': req.body.prestacionLegacy.codigo
