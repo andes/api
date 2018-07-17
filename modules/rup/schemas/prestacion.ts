@@ -75,13 +75,7 @@ export let schema = new mongoose.Schema({
         prestacionOrigen: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'prestacion'
-<<<<<<< HEAD
-        },
-
-
-=======
         }
->>>>>>> 2cbe6bef90b9a2937c208fc6928699d748751343
     },
 
     // Datos de la ejecución (i.e. realización)
@@ -99,31 +93,6 @@ export let schema = new mongoose.Schema({
             nombre: String
         },
 
-<<<<<<< HEAD
-        reglas: {
-            type: Object,
-            required: false,
-            default: false,
-            opcionales: [
-                {
-                    motivoDeConsultaPrincipal: {
-                        type: Object,
-                        required: false,
-                        default: true,
-                    }
-                }
-            ],
-            requeridos: [
-                {
-                    registros: {
-                        type: Object,
-                        required: false,
-                        default: true,
-                    }
-                }
-            ]
-        },
-=======
         /**
          *  DESTINO DE SOLICITUD
          *      a.  Organización: Si no existe se completa con una copia de ejecucion.registros.createdBy.organizacion.
@@ -133,7 +102,6 @@ export let schema = new mongoose.Schema({
          *          Si no hay registros se completa con solicitud.profesional
          * 
          */
->>>>>>> 2cbe6bef90b9a2937c208fc6928699d748751343
 
         // Registros de la ejecución
         registros: [registro.schema],
