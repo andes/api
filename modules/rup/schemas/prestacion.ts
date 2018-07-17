@@ -75,9 +75,13 @@ export let schema = new mongoose.Schema({
         prestacionOrigen: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'prestacion'
+<<<<<<< HEAD
         },
 
 
+=======
+        }
+>>>>>>> 2cbe6bef90b9a2937c208fc6928699d748751343
     },
 
     // Datos de la ejecución (i.e. realización)
@@ -95,6 +99,7 @@ export let schema = new mongoose.Schema({
             nombre: String
         },
 
+<<<<<<< HEAD
         reglas: {
             type: Object,
             required: false,
@@ -118,6 +123,17 @@ export let schema = new mongoose.Schema({
                 }
             ]
         },
+=======
+        /**
+         *  DESTINO DE SOLICITUD
+         *      a.  Organización: Si no existe se completa con una copia de ejecucion.registros.createdBy.organizacion.
+         *          Si no hay registros se completa con createdBy.organizacion
+         *      
+         *      b.  Profesionales: Si no existe se completa con una copia de solicitud.registros.valor.solicituPrestacion.profesionales.
+         *          Si no hay registros se completa con solicitud.profesional
+         * 
+         */
+>>>>>>> 2cbe6bef90b9a2937c208fc6928699d748751343
 
         // Registros de la ejecución
         registros: [registro.schema],
@@ -128,7 +144,7 @@ export let schema = new mongoose.Schema({
 
 // Valida el esquema
 schema.pre('save', function (next) {
-    let prestacion = this;
+    let prestacion: any = this;
 
     if (!prestacion.paciente.id) {
         let err = new Error('Debe seleccionar el paciente');

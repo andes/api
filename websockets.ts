@@ -23,12 +23,6 @@ export class Websockets {
 
             // console.log('user connected', socket.id);
 
-            socket.emit('SERVER_STATUS', {
-                API: 'NOT OK',
-                DB: Connections.main.readyState !== 1 ? 'Error' : 'OK',
-                MPI: Connections.mpi.readyState !== 1 ? 'Error' : 'OK',
-            });
-
             socket.on('disconnect', function () {
                 if (io.dataRooms !== undefined) {
                     io.dataRooms.forEach(element => {
@@ -43,7 +37,6 @@ export class Websockets {
                     });
                 }
             });
-
             socket.on('room', function (room) {
                 let existe = false;
                 socket.join(room.pantalla);

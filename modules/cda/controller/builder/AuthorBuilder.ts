@@ -5,6 +5,8 @@ import { Patient } from '../class/Patient';
 import { Author } from '../class/Author';
 import { BaseBuilder } from './BaseBuilder';
 import { Organization } from '../class/Organization';
+import { CDA as CDAConfig } from '../../../../config.private';
+
 export class AuthorBuilder extends BaseBuilder {
     private completed = true;
 
@@ -18,6 +20,24 @@ export class AuthorBuilder extends BaseBuilder {
         this.createNode(author, 'time', { value: this.fromDate(new Date()) } );
 
         let assignedAuthor = author.ele('assignedAuthor');
+        if (doctor.id()) {
+            this.createNode(assignedAuthor, 'id', doctor.id());
+        }
+
+        if (doctor.documento()) {
+            this.createNode(assignedAuthor, 'id', {
+                root: CDAConfig.dniOID,
+                extension: doctor.documento()
+            });
+        }
+
+        if (doctor.matricula()) {
+            this.createNode(assignedAuthor, 'id', {
+                root: CDAConfig.matriculaOID,
+                extension: doctor.matricula()
+            });
+        }
+
         if (doctor.id()) {
             this.createNode(assignedAuthor, 'id', doctor.id());
         }
