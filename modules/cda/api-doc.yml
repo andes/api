@@ -17,21 +17,26 @@ paths:
           description: Identificador único de la prestación
           required: true
           type: string
+          example: "1"
         - name: tipoPrestacion
           in: body
           description: Tipo de prestación (código Snomed)
           required: true
           type: string
+          example: "308251003"
         - name: fecha
           in: body
           description: Fecha de la prestación
           required: true
-          type: dateTime 
+          type: string
+          format: date-time
+          example: "2017-10-10 12:12:12"
         - name: texto
           in: body
           description: Resumen de la prestación
           required: true
           type: string
+          example: "prueba"
         - name: cie10
           in: body
           description: Código CIE10 de la prestación
@@ -43,7 +48,7 @@ paths:
           required: true
           schema:
             $ref: '#/definitions/Paciente'
-        - name: profecional
+        - name: profesional
           in: body
           description: Datos requeridos del profesional
           required: true
@@ -56,18 +61,9 @@ paths:
           example: 'data:application/pdf;base64,AEFCSADE2D2D2..'
       responses:
         '200':
-          description: Devuelve ID del CDA generado 
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  cda:
-                    type: string
-                    description: ID del CDA generado
-                  paciente:
-                    type: string
-                    description: ID del Paciente 
+          description: Devuelve un json con el ID del CDA generado, y el ID del paciente 
+          schema:
+            $ref: "#/definitions/CdaResponse"
   /modules/cda/{id}:
     get:
       tags:
@@ -83,12 +79,12 @@ paths:
       parameters:
         - name: id
           in: path
-          description: identificación del cda
+          description: Identificación del CDA
           required: true
           type: string
       responses:
         '200':
-          description: Devuelve el xml del cda  
+          description: Devuelve el xml del CDA  
   /modules/cda/{id}/{fileName}:
     get:
       tags:
@@ -113,7 +109,6 @@ paths:
       responses:
         '200':
           description: Devuelve el archivo adjunto del cda     
-     
   /modules/cda/:
     post:
       tags:
@@ -142,15 +137,5 @@ paths:
       responses:
         '200':
           description: Devuelve ID del CDA generado 
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  cda:
-                    type: string
-                    description: ID del CDA generado
-                  paciente:
-                    type: string
-                    description: ID del Paciente 
-  
+          schema:
+            $ref: "#/definitions/CdaResponse"
