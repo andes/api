@@ -68,7 +68,53 @@ paths:
                   paciente:
                     type: string
                     description: ID del Paciente 
-  /modules/cda:
+  /modules/cda/{id}:
+    get:
+      tags:
+        - "cda"
+      description: Consulta un cda de acuerdo a su id.
+      summary: Consulta un cda de acuerdo a su id.
+      security:
+        - JWT: []
+      consumes:
+        - application/json
+      produces:
+        - application/xml
+      parameters:
+        - name: id
+          in: path
+          description: identificación del cda
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Devuelve el xml del cda  
+  /modules/cda/{id}/{fileName}:
+    get:
+      tags:
+        - "cda"
+      description: Devuelve el archivo adjunto del cda.
+      summary: Devuelve el archivo adjunto del cda.
+      security:
+        - JWT: []
+      consumes:
+        - application/json
+      parameters:
+        - name: id
+          in: path
+          description: identificación del cda
+          required: true
+          type: string
+        - name: fileName
+          in: path
+          description: archivo adjunto del cda
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Devuelve el archivo adjunto del cda     
+     
+  /modules/cda/:
     post:
       tags:
         - "cda"
@@ -107,4 +153,4 @@ paths:
                   paciente:
                     type: string
                     description: ID del Paciente 
-          
+  

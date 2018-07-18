@@ -346,9 +346,9 @@ export function generateCDA(uniqueId, confidentiality, patient, date, author, or
     }
     cda.patient(patientCDA);
     let orgCDA = new Organization();
-    orgCDA.id(buildID(organization._id));
-    orgCDA.name(organization.nombre);
-
+    // mover a config.private en algún momento
+    orgCDA.id(buildID('59380153db8e90fe4602ec02'));
+    orgCDA.name('SUBSECRETARIA DE SALUD');
     cda.custodian(orgCDA);
 
     if (author) {
