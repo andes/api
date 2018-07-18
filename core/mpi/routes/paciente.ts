@@ -1,12 +1,25 @@
 import * as express from 'express';
 import * as mongoose from 'mongoose';
-import { Matching } from '@andes/match';
-import { pacienteMpi, paciente } from '../schemas/paciente';
-import { log } from '../../log/schemas/log';
+import {
+    Matching
+} from '@andes/match';
+import {
+    pacienteMpi,
+    paciente
+} from '../schemas/paciente';
+import {
+    log
+} from '../../log/schemas/log';
 import * as controller from '../controller/paciente';
-import { Auth } from './../../../auth/auth.class';
-import { Logger } from '../../../utils/logService';
-import { ElasticSync } from '../../../utils/elasticSync';
+import {
+    Auth
+} from './../../../auth/auth.class';
+import {
+    Logger
+} from '../../../utils/logService';
+import {
+    ElasticSync
+} from '../../../utils/elasticSync';
 import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
 
@@ -182,6 +195,47 @@ router.get('/pacientes/counts/', function (req, res, next) {
     });
 });
 
+/* Consultas de estado de pacientes para el panel de información */
+router.get('/pacientes/counts/', function (req, res, next) {
+    /* Este get es público ya que muestra sólamente la cantidad de pacientes en MPI */
+    let filtro;
+    switch (req.query.consulta) {
+        case 'validados':
+            filtro = {
+                estado: 'validado'
+            };
+            break;
+        case 'temporales':
+            filtro = {
+                estado: 'temporal'
+            };
+            break;
+        case 'fallecidos':
+            filtro = {
+                fechaFallecimiento: {
+                    $exists: true
+                }
+            };
+            break;
+    }
+    let query = paciente.find(filtro).count();
+    query.exec(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+
+        let queryMPI = pacienteMpi.find(filtro).count();
+        queryMPI.exec(function (err1, data1) {
+            if (err1) {
+                return next(err1);
+            }
+            let total = data + data1;
+            res.json(total);
+        });
+
+    });
+});
+
 router.get('/pacientes/dashboard/', async function (req, res, next) {
     /**
      * Se requiere autorización para acceder al dashboard de MPI
@@ -244,6 +298,54 @@ router.get('/pacientes/dashboard/', async function (req, res, next) {
     //     });
     // });
 });
+
+
+router.get('/pacientes/auditoria/', function (req, res, next) {
+    let filtro;
+    switch (req.query.estado) {
+        case 'validados':
+            filtro = {
+                estado: 'validado'
+            };
+            break;
+        case 'temporales':
+            filtro = {
+                estado: 'temporal'
+            };
+            break;
+        case 'fallecidos':
+            filtro = {
+                fechaFallecimiento: {
+                    $exists: true
+                }
+            };
+            break;
+    }
+    filtro['activo'] = req.query.activo === 'true' ? true : false;
+
+    let query = paciente.find(filtro);
+    query.exec(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        res.json(data);
+    });
+
+});
+
+router.get('/pacientes/auditoria/vinculados/', function (req, res, next) {
+    let filtro = {'identificadores.0': {$exists: true}};
+    filtro['activo'] = req.query.activo === 'true' ? true : false;
+    let query = paciente.find(filtro);
+    query.exec(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        res.json(data);
+    });
+
+});
+
 
 /**
  * @swagger
@@ -520,22 +622,19 @@ router.delete('/pacientes/mpi/:id', function (req, res, next) {
         return next(403);
     }
 
-    let query = {
-        _id: new mongoose.Types.ObjectId(req.params.id)
-    };
+    let ObjectId = mongoose.Types.ObjectId;
+    let objectId = new ObjectId(req.params.id);
 
-    pacienteMpi.findById(query, function (err, patientFound) {
-        if (err) {
-            return next(err);
-        }
-        patientFound.remove();
-
+    controller.deletePacienteMpi(objectId).then((patientFound: any) => {
         let connElastic = new ElasticSync();
         connElastic.delete(patientFound._id.toString()).then(() => {
             res.json(patientFound);
         }).catch(error => {
             return next(error);
         });
+        Auth.audit(patientFound, req);
+    }).catch((error) => {
+        return next(error);
     });
 });
 
@@ -732,13 +831,17 @@ router.delete('/pacientes/:id', function (req, res, next) {
     let ObjectId = mongoose.Types.ObjectId;
     let objectId = new ObjectId(req.params.id);
     controller.deletePacienteAndes(objectId).then((patientFound: any) => {
+        let connElastic = new ElasticSync();
+        connElastic.delete(patientFound._id.toString()).then(() => {
+            res.json(patientFound);
+        }).catch(error => {
+            return next(error);
+        });
         Auth.audit(patientFound, req);
     }).catch((error) => {
         return next(error);
     });
 });
-
-
 
 /**
  * @swagger
@@ -802,7 +905,9 @@ router.patch('/pacientes/:id', function (req, res, next) {
                     resultado.paciente.contacto = req.body.contacto;
                     try {
                         controller.updateTurnosPaciente(resultado.paciente);
-                    } catch (error) { return next(error); }
+                    } catch (error) {
+                        return next(error);
+                    }
                     break;
                 case 'linkIdentificadores':
                     controller.linkIdentificadores(req, resultado.paciente);
@@ -832,6 +937,12 @@ router.patch('/pacientes/:id', function (req, res, next) {
             } else {
                 pacienteAndes = resultado.paciente;
             }
+            let connElastic = new ElasticSync();
+            connElastic.sync(pacienteAndes).then(() => {
+                res.json(pacienteAndes);
+            }).catch(error => {
+                return next(error);
+            });
             Auth.audit(pacienteAndes, req);
             pacienteAndes.save(function (errPatch) {
                 if (errPatch) {

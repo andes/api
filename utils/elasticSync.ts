@@ -89,26 +89,6 @@ export class ElasticSync {
         });
     }
 
-    // Cambiamos este método ya que teníamos problemas con el metadata de Elastic para pacientes viejos creados con mongoconnector
-    // public update(id, data) {
-    //     return new Promise((resolve, reject) => {
-    //         this.connElastic.update({
-    //             index: this.INDEX,
-    //             type: this.TYPE,
-    //             id,
-    //             body: {
-    //                 doc: data
-    //             }
-    //         }, function (error, response) {
-    //             if (error) {
-    //                 console.log('error gros en update elastico', error, data);
-    //                 reject(error);
-    //             }
-    //             resolve(true);
-    //         });
-    //     });
-    // }
-
     public delete(id) {
         return new Promise((resolve, reject) => {
             this.connElastic.delete({
