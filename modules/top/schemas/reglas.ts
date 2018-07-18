@@ -1,16 +1,32 @@
 import * as mongoose from 'mongoose';
-import { profesionalSchema } from '../../../core/tm/schemas/profesional';
 
 let reglasSchema = new mongoose.Schema({
     origen: {
-        organizacion: String,
-        prestacion: String
+        organizacion: {
+            nombre: String,
+            id: { type: mongoose.Schema.Types.ObjectId, ref: 'organizacion' }
+        },
+        tipoPrestacion: {
+            nombre: String,
+            id: { type: mongoose.Schema.Types.ObjectId }
+        }
     },
     destino: {
-        organizacion: String,
-        prestacion: String,
-        profesionales: [profesionalSchema]
-
+        organizacion: {
+            nombre: String,
+            id: { type: mongoose.Schema.Types.ObjectId, ref: 'organizacion' }
+        },
+        tipoPrestacion: {
+            nombre: String,
+            id: { type: mongoose.Schema.Types.ObjectId }
+        },
+        profesionales: [
+            {
+                id: { type: mongoose.Schema.Types.ObjectId },
+                nombre: String,
+                apellido: String
+            }
+        ]
     },
     auditable: Boolean,
 });
