@@ -17,7 +17,7 @@ paths:
           description: Identificador único de la prestación
           required: true
           type: string
-        - name: prestacionSnomed
+        - name: tipoPrestacion
           in: body
           description: Tipo de prestación (código Snomed)
           required: true

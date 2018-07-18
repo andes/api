@@ -24,7 +24,7 @@ let to_json = require('xmljson').to_json;
 
 // {
 //  "id": "asdasdasd"
-// 	"prestacionSnomed": "1234556",
+// 	"tipoPrestacion": "1234556",
 // 	"fecha": "2017-11-11 12:10:00",
 // 	"texto": "esto es una prueba",
 // 	"cie10": "A.1.1",
@@ -64,7 +64,7 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
         let dataProfesional = req.body.profesional;
 
         // Devuelve un Loinc asociado al código SNOMED
-        let prestacion = await cdaCtr.matchCode(req.body.prestacionSnomed);
+        let prestacion = await cdaCtr.matchCode(req.body.tipoPrestacion);
         if (!prestacion) {
             // Es obligatorio que posea prestación
             return next({ error: 'prestacion_invalida' });
