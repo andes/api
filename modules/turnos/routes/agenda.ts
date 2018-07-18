@@ -6,6 +6,7 @@ import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
 import * as moment from 'moment';
 import * as agendaCtrl from '../controller/agenda';
+import * as prestacionCtrl from '../../rup/controllers/prestacion';
 import * as agendaHPNCacheCtrl from '../controller/agendasHPNCacheController';
 import * as diagnosticosCtrl from '../controller/diagnosticosC2Controller';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
@@ -450,7 +451,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                             LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, agendaCtrl.getBloque(data, turno)._id, data._id);
                         }
                         agendaCtrl.liberarTurno(req, data, turno);
-                        // Aca tendria q verificar si el idTurno esta en alguna solicitud y en ese caso quitarlo
+                        prestacionCtrl.liberarRefTurno(turno._id, req);
                         break;
                     case 'suspenderTurno':
                         turno = agendaCtrl.getTurno(req, data, turnos[y]);
