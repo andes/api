@@ -109,9 +109,9 @@ export async function findOrCreate(req, dataPaciente, organizacion) {
         }
         return paciente;
     } else {
-         // No creamos más el paciente en MPI
-         // return await pacienteCtr.createPaciente(dataToPac(dataPaciente, organizacion), req);
-         return null;
+        // No creamos más el paciente en MPI
+        return await pacienteCtr.createPaciente(dataToPac(dataPaciente, organizacion), req);
+        return null;
     }
 }
 
@@ -128,7 +128,7 @@ export async function matchCode(snomed) {
     if (!isNaN(snomed)) {
         prestacion = await configuracionPrestacionModel.findOne({
             'snomed.conceptId': snomed
-        }, {snomed: 1, loinc: 1});
+        }, { snomed: 1, loinc: 1 });
         if (prestacion) {
             return prestacion;
         } else {
@@ -552,6 +552,7 @@ export function validateMiddleware(req, res, next) {
     if (Object.keys(errors).length > 0) {
         return next(errors);
     }
+    console.log("cda paciente");
     return next();
 }
 

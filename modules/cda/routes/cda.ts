@@ -55,7 +55,6 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
         let idPrestacion = req.body.id;
         let fecha = moment(req.body.fecha).toDate();
         let orgId = req.user.organizacion.id ? req.user.organizacion.id : req.user.organizacion;
-
         let yaExiste = await cdaCtr.CDAExists(idPrestacion, fecha, orgId);
         if (yaExiste) {
             return next({ error: 'prestacion_existente' });
@@ -85,7 +84,7 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
 
         let paciente = await cdaCtr.findOrCreate(req, dataPaciente, organizacion._id);
         if (!paciente) {
-            return next({ error: 'paciente_inexistente'});
+            return next({ error: 'paciente_inexistente' });
         }
         let uniqueId = String(new mongoose.Types.ObjectId());
 
