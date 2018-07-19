@@ -1,6 +1,6 @@
 import * as express from 'express';
 import { reglas } from '../schemas/reglas';
-import { Auth } from '../../../auth/auth.class';
+import { Auth } from './../../../auth/auth.class';
 import * as mongoose from 'mongoose';
 
 const router = express.Router();
@@ -30,9 +30,9 @@ router.post('/', function (req, res, next) {
 });
 
 router.get('/reglas/:idDestino?', function (req, res, next) {
-    if (req.params.idDestino) {
+    if (req.query.idDestino) {
         let query = {
-            'destino.organizacion.id': new mongoose.Types.ObjectId(req.params.idDestino),
+            'destino.organizacion.id': new mongoose.Types.ObjectId(req.query.idDestino),
         };
         reglas.find(query, function (err, data) {
             if (err) {
@@ -40,9 +40,9 @@ router.get('/reglas/:idDestino?', function (req, res, next) {
             }
             res.json(data);
         });
+    } else {
+        res.json({});
     }
-
 });
 
 export = router;
-
