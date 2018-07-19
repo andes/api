@@ -11,9 +11,11 @@ let router = express.Router();
  * /snomed:
  *   get:
  *     tags:
- *       - Terminología
+ *       - "snomed"
  *     description: Una info
  *     summary: Búsqueda de conceptos de SNOMED
+ *     security:
+ *       - JWT: []
  *     consumes:
  *       - application/json
  *     produces:
@@ -44,6 +46,7 @@ let router = express.Router();
  *         type: integer
  *         default: 0
  */
+
 router.get('/snomed', function (req, res, next) {
     if (!req.query.search && !req.query.refsetId && req.query.search !== '') {
         return next('Debe ingresar un parámetro de búsqueda');

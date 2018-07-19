@@ -6,6 +6,23 @@ import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import * as obraSocialSchema from '../../obraSocial/schemas/obraSocial';
 import { SnomedConcept } from '../../rup/schemas/snomed-concept';
 
+let pacienteSchema = new mongoose.Schema({
+    id: mongoose.Schema.Types.ObjectId,
+            nombre: String,
+            apellido: String,
+            alias: String,
+            documento: String,
+            fechaNacimiento: Date,
+            telefono: String,
+            sexo: String,
+            carpetaEfectores: [{
+                organizacion: nombreSchema,
+                nroCarpeta: String
+            }],
+            obraSocial: { type: obraSocialSchema }
+});
+
+
 let turnoSchema = new mongoose.Schema({
     horaInicio: Date,
     asistencia: {
@@ -13,8 +30,10 @@ let turnoSchema = new mongoose.Schema({
         enum: ['asistio', 'noAsistio', 'sinDatos']
     },
     primeraVez: {
-        profesional: Boolean,
-        tipoPrestacion: Boolean
+        type : {
+            profesional: Boolean,
+            tipoPrestacion: Boolean
+        }
     },
     estado: {
         type: String,
@@ -26,15 +45,17 @@ let turnoSchema = new mongoose.Schema({
         enum: ['facturado', 'sinFacturar']
     },
     reasignado: {
-        anterior: {
-            idAgenda: mongoose.Schema.Types.ObjectId,
-            idBloque: mongoose.Schema.Types.ObjectId,
-            idTurno: mongoose.Schema.Types.ObjectId
-        },
-        siguiente: {
-            idAgenda: mongoose.Schema.Types.ObjectId,
-            idBloque: mongoose.Schema.Types.ObjectId,
-            idTurno: mongoose.Schema.Types.ObjectId
+        type: {
+            anterior: {
+                idAgenda: mongoose.Schema.Types.ObjectId,
+                idBloque: mongoose.Schema.Types.ObjectId,
+                idTurno: mongoose.Schema.Types.ObjectId
+            },
+            siguiente: {
+                idAgenda: mongoose.Schema.Types.ObjectId,
+                idBloque: mongoose.Schema.Types.ObjectId,
+                idTurno: mongoose.Schema.Types.ObjectId
+            }
         },
     },
     tipoTurno: {
@@ -50,21 +71,24 @@ let turnoSchema = new mongoose.Schema({
         type: String,
         enum: ['no enviado', 'enviado', 'fallido']
     },
-    paciente: { // pensar que otros datos del paciente conviene tener
-        id: mongoose.Schema.Types.ObjectId,
-        nombre: String,
-        apellido: String,
-        alias: String,
-        documento: String,
-        fechaNacimiento: Date,
-        telefono: String,
-        sexo: String,
-        carpetaEfectores: [{
-            organizacion: nombreSchema,
-            nroCarpeta: String
-        }],
-        obraSocial: { type: obraSocialSchema }
-    },
+    // paciente: {
+    //     type: {
+    //         id: mongoose.Schema.Types.ObjectId,
+    //         nombre: String,
+    //         apellido: String,
+    //         alias: String,
+    //         documento: String,
+    //         fechaNacimiento: Date,
+    //         telefono: String,
+    //         sexo: String,
+    //         carpetaEfectores: [{
+    //             organizacion: nombreSchema,
+    //             nroCarpeta: String
+    //         }],
+    //         obraSocial: { type: obraSocialSchema }
+    //     }
+    // },
+    paciente: pacienteSchema,
     motivoConsulta: String,
     tipoPrestacion: {
         type: tipoPrestacionSchema

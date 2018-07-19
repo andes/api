@@ -14,12 +14,10 @@ import {
     ObjectID,
     ObjectId
 } from 'bson';
-import * as pacienteCtrl from './../../../core/mpi/controller/paciente'
-import { osPaciente } from '../../obraSocial/schemas/osPaciente';
-import * as configPrivate from '../../../config.private';
 let to_json = require('xmljson').to_json;
-import * as https from 'https';
-import * as sisaController from '../../../modules/fuentesAutenticas/controller/sisaController'
+import * as sisaController from '../../../modules/fuentesAutenticas/controller/sisaController';
+import { configuracionPrestacionModel } from '../../../core/term/schemas/configuracionPrestacion';
+
 
 
 // Funciones privadas
@@ -170,7 +168,7 @@ export async function pacienteSipsFactory(paciente: any, idEfectorSips: any) {
         informacionContacto: '',
         cronico: 0,
         idObraSocial: await codigoPucoPorDni(paciente.documento),
-        idUsuario: '1486739', //ID USUARIO POR DEFECTO
+        idUsuario: '1486739', // ID USUARIO POR DEFECTO
         fechaAlta: moment().format('YYYYMMDD HH:mm:ss'),
         fechaDefuncion: '19000101',
         fechaUltimaActualizacion: moment().format('YYYYMMDD HH:mm:ss'),
@@ -200,9 +198,9 @@ export async function pacienteSipsFactory(paciente: any, idEfectorSips: any) {
 
 async function codigoPucoPorDni(dni) {
     let idObraSocial;
-    let obraSocial: any = await sisaController.postPuco(dni)
+    let obraSocial: any = await sisaController.postPuco(dni);
     if (obraSocial.puco.resultado === 'OK') {
-        idObraSocial = await mapeoObraSocial(obraSocial.puco.rnos)
+        idObraSocial = await mapeoObraSocial(obraSocial.puco.rnos);
     } else {
         idObraSocial = 499;
 
@@ -216,10 +214,10 @@ async function codigoPucoPorDni(dni) {
 
 function mapeoEstado(estado) {
     let res;
-    if (estado === "temporal") {
-        res = 2
+    if (estado === 'temporal') {
+        res = 2;
     }
-    if (estado === "validado") {
+    if (estado === 'validado') {
         res = 3;
     }
     return res;
@@ -400,10 +398,18 @@ function executeQuery(query: any) {
     });
 }
 
-export async function cacheTurnosSips(unaAgenda) {
+export async function cacheTurnos(unaAgenda) {
     // Armo el DTO para guardar en la cache de agendas
     // if ((unaAgenda.estado !== 'planificacion') && (unaAgenda.nominalizada) && (unaAgenda.tipoPrestaciones[0].term.includes('odonto')) || integraPrestacionesHPN(unaAgenda)) {
-    if (integrarAgenda(unaAgenda) && unaAgenda.estado !== 'planificacion') {
+    let integrar;
+    try {
+        integrar = await integrarAgenda(unaAgenda);
+
+    } catch (error) {
+        return error;
+    }
+
+    if (unaAgenda.estado !== 'planificacion' && integrar) {
         let organizacionAgenda;
         if (unaAgenda.organizacion) {
             organizacionAgenda = await organizacionCompleto(unaAgenda.organizacion.id);
@@ -462,25 +468,26 @@ export async function cacheTurnosSips(unaAgenda) {
                 });
             }
         });
+    } else {
+        return true;
     }
 
-    function integrarAgenda(_agenda) {
-        let prestacionesIntegradas: any;
-        if (_agenda.organizacion) {
-            let datosOrganizacion = constantes.prestacionesIntegradasPorEfector.find(elem => elem.organizacion === _agenda.organizacion.id);
-            if (datosOrganizacion) {
-                prestacionesIntegradas = _agenda.tipoPrestaciones.find(prestacion => {
-                    return (datosOrganizacion.prestaciones.filter(prest => prest.conceptId === prestacion.conceptId).length > 0);
-                });
-            }
-        }
-
-        if (prestacionesIntegradas) {
-            return true;
-        } else {
-            return false;
-        }
-
+    async function integrarAgenda(_agenda) {
+        return new Promise(function (resolve, reject) {
+            configuracionPrestacionModel.find({
+                'snomed.conceptId': { $eq: _agenda.tipoPrestaciones[0].conceptId },
+                'organizaciones._id': { $eq: _agenda.organizacion._id }
+            }).exec(function (err, data: any) {
+                if (err) {
+                    reject(err);
+                }
+                if (data.length > 0) {
+                    resolve(true);
+                } else {
+                    resolve(false);
+                }
+            });
+        });
     }
 }
 

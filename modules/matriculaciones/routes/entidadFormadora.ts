@@ -16,7 +16,7 @@ router.get('/entidadesFormadoras/:id*?', function (req, res, next) {
 
     } else {
 
-        entidadFormadora.find({}).sort({codigoSISA: 1}).exec((error, data) => {
+        entidadFormadora.find({'habilitado': true}).sort({codigoSISA: 1}).exec((error, data) => {
             if (error) {
                 return next(error);
             }

@@ -130,7 +130,8 @@ schema.virtual('estadosAgendas').get(function () {
 // Validaciones
 schema.pre('save', function (next) {
     // Intercalar
-    if (!/true|false/i.test(this.intercalar)) {
+    let agenda: any = this;
+    if (!/true|false/i.test(agenda.intercalar)) {
         return next(new Error('invalido'));
         // TODO: loopear bloques y definir si horaInicio/Fin son required
         // TODO: si pacientesSimultaneos, tiene que haber cantidadSimultaneos (> 0)

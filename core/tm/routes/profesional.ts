@@ -174,7 +174,7 @@ router.get('/profesionales/matricula/:id', (req, resp, errHandler) => {
 
     });
 });
-router.get('/profesionales/:id*?', function (req, res, next) {
+router.get('/profesionales/:id*?', Auth.authenticate(), function (req, res, next) {
     // if (!Auth.check(req, 'matriculaciones:profesionales:getProfesional')) {
     //     return next(403);
     // }
@@ -264,33 +264,32 @@ router.get('/profesionales/:id*?', function (req, res, next) {
                 '$regex': utils.makePattern(req.query.especialidad)
             };
         }
-        let radix = 10;
-        let skip: number = parseInt(req.query.skip || 0, radix);
-        let limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
-
-        if (req.query.nombreCompleto) {
-            query = profesional.find({
-                apellido: {
-                    '$regex': utils.makePattern(req.query.nombreCompleto)
-                }
-            }).
-                sort({
-                    apellido: 1,
-                    nombre: 1
-                });
-        } else {
-            query = profesional.find(opciones).skip(skip).limit(limit);
-        }
-
-        query.exec(function (err, data) {
-            if (err) {
-                return next(err);
-            }
-            res.json(data);
-        });
     }
 
+    let radix = 10;
+    let skip: number = parseInt(req.query.skip || 0, radix);
+    let limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
 
+    if (req.query.nombreCompleto) {
+        query = profesional.find({
+            apellido: {
+                '$regex': utils.makePattern(req.query.nombreCompleto)
+            }
+        }).
+            sort({
+                apellido: 1,
+                nombre: 1
+            });
+    } else {
+        query = profesional.find(opciones).skip(skip).limit(limit);
+    }
+
+    query.exec(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        res.json(data);
+    });
 });
 
 
@@ -428,7 +427,6 @@ router.post('/profesionales/sendMail', function (req, res, next) {
     const _profesional = req.body.profesional;
     // Generate test SMTP service account from ethereal.email
     // Only needed if you don't have a real mail account for testing
-
     // create reusable transporter object using the default SMTP transport
     let transporter = nodemailer.createTransport({
         host: config_private.enviarMail.host,
@@ -465,7 +463,6 @@ router.post('/profesionales/sendMail', function (req, res, next) {
         }
         res.send(true);
         // Preview only available when sending through an Ethereal account
-
         // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@blurdybloop.com>
         // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
     });

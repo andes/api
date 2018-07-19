@@ -1,6 +1,7 @@
 import { AppToken } from './schemas/app-token.interface';
 import { UserToken } from './schemas/user-token.interface';
 import { PacienteToken } from './schemas/paciente-token.interface';
+import { authApps }  from './schemas/authApps';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import * as passport from 'passport';
@@ -54,7 +55,7 @@ export class Auth {
             {
                 secretOrKey: configPrivate.auth.jwtKey,
                 jwtFromRequest: passportJWT.ExtractJwt.fromExtractors([
-                    passportJWT.ExtractJwt.fromAuthHeader(),
+                    passportJWT.ExtractJwt.fromAuthHeaderWithScheme('jwt'),
                     passportJWT.ExtractJwt.fromUrlQueryParameter('token')
                 ])
             },
@@ -65,6 +66,7 @@ export class Auth {
 
         // Inicializa passport
         app.use(passport.initialize());
+
     }
 
     /**
@@ -76,7 +78,14 @@ export class Auth {
      * @memberOf Auth
      */
     static authenticate() {
-        return passport.authenticate('jwt', { session: false });
+        return [
+            passport.authenticate('jwt', { session: false }),
+            this.appTokenProtected()
+        ];
+    }
+
+    static authenticatePublic() {
+        return  passport.authenticate();
     }
 
     static authenticatePublic() {
@@ -90,7 +99,7 @@ export class Auth {
     static optionalAuth() {
         return function (req, res, next) {
             try {
-                let extractor = passportJWT.ExtractJwt.fromAuthHeader();
+                let extractor = passportJWT.ExtractJwt.fromAuthHeaderWithScheme('jwt');
                 let token = extractor(req);
                 let tokenData = jwt.verify(token, configPrivate.auth.jwtKey);
                 if (tokenData) {
@@ -118,6 +127,29 @@ export class Auth {
                 next();
             } else {
                 next(403);
+            }
+        };
+    }
+
+    /**
+     * Middleware para controlar los apps token.
+     * Controla que el token esta almacenado en la DB.
+     *
+     * @memberOf Auth
+     */
+    static appTokenProtected() {
+        return function (req, res, next) {
+            if (req.user.type === 'app-token') {
+                authApps.findOne({organizacion:  mongoose.Types.ObjectId(req.user.organizacion)}).then((app: any) => {
+                    let token: string = req.headers.authorization.substring(4);
+                    if (app.token && app.token === token) {
+                        next();
+                    } else {
+                        next(403);
+                    }
+                });
+            } else {
+                next();
             }
         };
     }
@@ -280,7 +312,7 @@ export class Auth {
      * @memberOf Auth
      */
     static generateAppToken(nombre: string, organizacion: any, permisos: string[]): any {
-        // Crea el token con los datos de sesión
+        // Un token por organización. A futuro distintos permisos en la organización externa deberá modificarse esto!
         let token: AppToken = {
             id: mongoose.Types.ObjectId(),
             app: {
