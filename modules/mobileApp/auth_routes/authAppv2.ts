@@ -7,6 +7,7 @@ import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
 import * as agenda from '../../turnos/schemas/agenda';
 import * as moment from 'moment';
+import { EventCore } from '@andes/event-bus';
 
 let router = express.Router();
 // let emailRegex = /^[a-z0-9]+(\.[_a-z0-9]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,15})$/;
@@ -134,10 +135,13 @@ router.post('/v2/registrar', function (req, res, next) {
         // authController.verificarCuenta(datosUsuario, mpiData).then(() => {
             authController.habilitarCuenta(datosUsuario, password).then((user: any) => {
                 let token = Auth.generatePacienteToken(String(user._id), user.nombre + ' ' + user.apellido, user.email, user.pacientes, user.permisos);
+
                 res.status(200).json({
                     token: token,
                     user: user
                 });
+
+                EventCore.emitAsync('mobile:patient:register', datosUsuario);
 
             }).catch((er) => {
                 return next(er);

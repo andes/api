@@ -9,6 +9,7 @@ import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
 import * as agenda from '../../turnos/schemas/agenda';
 import * as labsImport from '../../cda/controller/import-labs';
+import { EventCore } from '@andes/event-bus';
 
 let router = express.Router();
 
@@ -62,7 +63,11 @@ router.post('/login', function (req, res, next) {
                     user: user
                 });
 
+                EventCore.emitAsync('mobile:patient:login', user);
+
                 // Hack momentaneo. Descargamos los laboratorios a demanda.
+                // Después vamos a cambiar esto.
+
                 buscarPaciente(user.pacientes[0].id).then((resultado) => {
                     if (resultado.paciente) {
                         labsImport.importarDatos(resultado.paciente);
@@ -107,6 +112,7 @@ router.post('/olvide-password', function (req, res, next) {
                 return next(errSave);
             }
 
+            EventCore.emitAsync('mobile:patient:reset-password', user);
             // enviamos email de reestablecimiento de password
             authController.enviarCodigoCambioPassword(datosUsuario);
 
@@ -182,6 +188,8 @@ router.post('/reestablecer-password', function (req, res, next) {
             res.status(200).json({
                 valid: true
             });
+            EventCore.emitAsync('mobile:patient:reset-password', user);
+
         });
     });
 });

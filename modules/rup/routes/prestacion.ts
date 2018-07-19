@@ -12,6 +12,7 @@ import { NotificationService } from '../../mobileApp/controller/NotificationServ
 
 import { iterate, convertToObjectId, buscarEnHuds, matchConcepts } from '../controllers/rup';
 import { Logger } from '../../../utils/logService';
+import { EventCore } from '@andes/event-bus';
 
 let router = express.Router();
 let async = require('async');
@@ -157,6 +158,7 @@ router.post('/prestaciones', function (req, res, next) {
             return next(err);
         }
         res.json(data);
+        EventCore.emitAsync('rup:prestacion:create', data);
     });
 });
 
@@ -216,6 +218,10 @@ router.patch('/prestaciones/:id', function (req, res, next) {
         data.save(function (error, prestacion) {
             if (error) {
                 return next(error);
+            }
+
+            if (req.body.estado.tipo === 'validada') {
+                EventCore.emitAsync('rup:prestacion:validated', data);
             }
 
             // Actualizar conceptos frecuentes por profesional y tipo de prestacion

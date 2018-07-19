@@ -10,6 +10,7 @@ import { Logger } from '../../../utils/logService';
 import { authUsers } from '../../../auth/schemas/permisos';
 // imports
 import { Auth } from '../../../auth/auth.class';
+import { EventCore } from '@andes/event-bus';
 // Constantes
 const isReachable = require('is-reachable');
 
@@ -35,6 +36,9 @@ router.post('/alta', function (req, res, next) {
             err: err || false
         });
         res.json(data);
+
+        EventCore.emitAsync('usuarios:create', data);
+
     });
 });
 
@@ -67,6 +71,7 @@ router.put('/:id', function (req, res, next) {
                     err: err || false
                 });
                 res.json(resultado);
+                EventCore.emitAsync('usuarios:update', resultado);
             });
         } else {
             return next('not_user');
