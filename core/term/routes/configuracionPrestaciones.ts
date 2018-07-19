@@ -1,5 +1,5 @@
 import * as express from 'express';
-import * as configuracionPrestacion from '../schemas/configuracionPrestaciones';
+import * as configuracionPrestacion from '../schemas/configuracionPrestacion';
 
 let router = express.Router();
 
@@ -20,11 +20,11 @@ router.get('/configuracionPrestaciones/:id*?', function (req, res, next) {
     } else {
         let query;
         query = configuracionPrestacion.configuracionPrestacionModel.find({});
-        if (req.query.tipoPrestacion) {
-            query.where('tipoPrestacion.conceptId').equals(req.query.tipoPrestacion);
+        if (req.query.snomed) {
+            query.where('snomed.conceptId').equals(req.query.snomed);
         }
         if (req.query.organizacion) {
-            query.where('organizacionesSips._id').equals(req.query.organizaciones);
+            query.where('organizaciones._id').equals(req.query.organizaciones);
         }
         query.exec(function (err, data) {
             if (err) {

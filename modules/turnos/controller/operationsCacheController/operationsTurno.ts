@@ -35,7 +35,6 @@ let transaction;
 export async function processTurnos(agenda: any, idAgendaCreada: any, idEfector: any, poolAgendas) {
     debug('4) Inicia Guardado de turnos');
     let turnos;
-    // poolTurnos = await new sql.ConnectionPool(config).connect();
     for (let x = 0; x < agenda.bloques.length; x++) {
         turnos = agenda.bloques[x].turnos;
         for (let i = 0; i < turnos.length; i++) {
@@ -43,7 +42,6 @@ export async function processTurnos(agenda: any, idAgendaCreada: any, idEfector:
                 // let resultado = await existeTurnoSips(turnos[i], transaction);
                 // if (resultado.recordset && resultado.recordset.length <= 0) {
                 await grabaTurnoSips(turnos[i], idAgendaCreada, idEfector, 0, poolAgendas);
-                // }
             }
         }
     }
@@ -53,7 +51,6 @@ export async function processTurnos(agenda: any, idAgendaCreada: any, idEfector:
                 // let resultado = await existeTurnoSips(turnos[i], transaction);
                 // if (resultado.recordset && resultado.recordset.length <= 0) {
                 await grabaTurnoSips(agenda.sobreturnos[y], idAgendaCreada, idEfector, 1, poolAgendas);
-                // }
             }
         }
     }

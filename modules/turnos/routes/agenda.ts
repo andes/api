@@ -52,12 +52,18 @@ router.get('/agenda/candidatas', async function (req, res, next) {
 
         // turno a reasignar
         let turno = resultado.bloques[indiceBloque].turnos[indiceTurno];
-
+        let estado = [];
+        if (turno.tipoTurno && (turno.tipoTurno === 'programado' || turno.tipoTurno === 'delDia')) {
+            estado = [{ estado: 'publicada' }];
+        } else {
+            estado = [{ estado: 'disponible' }, { estado: 'publicada' }];
+        }
         let match = {
             'organizacion._id': { '$eq': mongoose.Types.ObjectId(Auth.getOrganization(req)) }, // Que sean agendas de la misma organizacion
             'horaInicio': { '$gte': horaAgendaOrig },
             'nominalizada': true,
-            '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
+            // '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
+            '$or': estado,
             'tipoPrestaciones._id': turno.tipoPrestacion ? mongoose.Types.ObjectId(turno.tipoPrestacion.id) : '', // Que tengan incluída la prestación del turno
             '_id': { '$ne': mongoose.Types.ObjectId(req.query.idAgenda) }, // Que no sea la agenda original
         };
@@ -258,7 +264,7 @@ router.post('/agenda', function (req, res, next) {
             return next(err);
         }
         // Al crear una nueva agenda la cacheo para Sips
-        operations.cacheTurnosSips(data).catch(error => { return next(error); });
+        operations.cacheTurnos(data).catch(error => { return next(error); });
         // Fin de insert cache
         res.json(data);
     });
@@ -361,7 +367,7 @@ router.put('/agenda/:id', function (req, res, next) {
             return next(err);
         }
         // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
-        operations.cacheTurnosSips(data).catch(error => { return next(error); });
+        operations.cacheTurnos(data).catch(error => { return next(error); });
         // Fin de insert cache
         res.json(data);
     });
@@ -419,7 +425,6 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                         }
                     });
                 }
-
                 // Fin de insert cache
                 return res.json(data[0]);
             });
@@ -526,7 +531,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 });
 
             }
-            operations.cacheTurnosSips(data).catch(error => { return next(error); });
+            operations.cacheTurnos(data).catch(error => { return next(error); });
             // Fin de insert cache
             return res.json(data);
         });
