@@ -12,6 +12,10 @@ import * as mongoose from 'mongoose';
 import { prestacionesAFacturarModel } from '../schemas/prestacionesAFacturar';
 let router = express.Router();
 
+router.get('/prueba', async function (req, res, next) {
+    await facturacionCtrl.getPrestacionesAfacturar();
+});
+
 router.get('/facturacion/turnos', async function (req, res, next) {
     try {
         let result = await facturacionCtrl.getTurnosFacturacionPendiente();
@@ -37,7 +41,7 @@ router.get('/efector/:id', async function (req, res, next) {
 
 router.get('/configuracionPrestacion/:id', async function (req, res, next) {
     try {
-        configuracionPrestaciones.findOne({ 'tipoPrestacion.conceptId': req.params.id }, function (err, result: any) {
+        configuracionPrestaciones.findOne({ 'snomed.conceptId': req.params.id }, function (err, result: any) {
             if (err) {
                 return next(err);
             }
@@ -94,8 +98,18 @@ router.get('/cambioEstadoAgenda/:id', function (req, res, next) {
     }
 });
 
-router.get('/prueba', (req, res, next) => {
+router.get('/prestacionPorTurno/:id', (req, res, next) => {
+    try {
+        prestacion.find({
+            'solicitud.turno': mongoose.Types.ObjectId(req.params.id)
+        }).exec(function (err, data: any) {
+            console.log(data)
 
+            res.json(data[0]);
+        });
+    } catch (error) {
+        res.end(error);
+    }
 })
 
 

@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 
 var configuracionPrestacionesSchema = new mongoose.Schema({
     id: Object,
-    tipoPrestacion: Object,
+    snomed: Object,
     nomencladorRecuperoFinanciero: String,
     nomencladorSUMAR : {
         codigo : String,
@@ -10,4 +10,4 @@ var configuracionPrestacionesSchema = new mongoose.Schema({
     }
 });
 
-export let configuracionPrestaciones = mongoose.model('configuracionPrestacion', configuracionPrestacionesSchema, 'configuracionPrestacion');
+export let configuracionPrestaciones = mongoose.model('configuracionPrestaciones', configuracionPrestacionesSchema, 'configFacturacionAutomatica');

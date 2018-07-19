@@ -17,7 +17,7 @@ import { prestacionesAFacturarModel } from '../schemas/prestacionesAFacturar';
 const MongoClient = require('mongodb').MongoClient;
 let async = require('async');
 
-async function getPrestacionesAfacturar() {
+export async function getPrestacionesAfacturar() {
     let arrayConceptId = [];
     return new Promise((resolve, reject) => {
         prestacionesAFacturarModel.find({ 'activo': true }).exec((err, data: any) => {
