@@ -1,42 +1,17 @@
 import * as pacienteCtr from '../../../core/mpi/controller/paciente';
 import * as mongoose from 'mongoose';
-import {
-    CDA
-} from './class/CDA';
-import {
-    Patient
-} from './class/Patient';
-import {
-    Organization
-} from './class/Organization';
-import {
-    Author
-} from './class/Author';
-import {
-    Body,
-    Component,
-    ImageComponent
-} from './class/Body';
-import {
-    CDABuilder
-} from './builder/CdaBuilder';
-
+import { CDA } from './class/CDA';
+import { Patient } from './class/Patient';
+import { Organization } from './class/Organization';
+import { Author } from './class/Author';
+import { Body, Component, ImageComponent } from './class/Body';
+import { CDABuilder } from './builder/CdaBuilder';
 import * as base64_stream from 'base64-stream';
-import {
-    makeFs
-} from '../schemas/CDAFiles';
+import { makeFs } from '../schemas/CDAFiles';
 import * as Stream from 'stream';
-import {
-    create
-} from 'domain';
 import * as moment from 'moment';
-
-import {
-    CDA as CDAConfig
-} from '../../../config.private';
-import {
-    configuracionPrestacionModel
-} from './../../../core/term/schemas/configuracionPrestacion';
+import { CDA as CDAConfig } from '../../../config.private';
+import { configuracionPrestacionModel } from './../../../core/term/schemas/configuracionPrestacion';
 
 /**
  * Crea un objeto paciente desde los datos
@@ -432,14 +407,13 @@ export async function CDAExists(id, fecha, orgId) {
  * listado de CDA por paciente y tipo de prestación
  */
 
-export function searchByPatient(pacienteId, prestacion, {
-    limit,
-    skip
-}): Promise<any[]> {
+export function searchByPatient(pacienteId, prestacion, { limit, skip }): Promise<any[]> {
     return new Promise(async (resolve, reject) => {
+
+        let ids = Array.isArray(pacienteId) ?  pacienteId : [ mongoose.Types.ObjectId(pacienteId) ];
         let CDAFiles = makeFs();
         let conditions: any = {
-            'metadata.paciente': mongoose.Types.ObjectId(pacienteId),
+            'metadata.paciente': { $in: ids },
             'metadata.cdaId': { $exists: false }
         };
         if (prestacion) {

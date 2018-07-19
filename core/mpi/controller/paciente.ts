@@ -1,13 +1,10 @@
 import * as config from '../../../config';
-import * as configPrivate from '../../../config.private';
 import * as moment from 'moment';
-import * as mongoose from 'mongoose';
 import { paciente, pacienteMpi } from '../schemas/paciente';
 import { ElasticSync } from '../../../utils/elasticSync';
 import { Logger } from '../../../utils/logService';
 import { Matching } from '@andes/match';
 import { Auth } from './../../../auth/auth.class';
-import * as agenda from '../../../modules/turnos/schemas/agenda';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
 

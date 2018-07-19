@@ -2,17 +2,10 @@ import * as express from 'express';
 import { model as Organizaciones } from '../../../core/tm/schemas/organizacion';
 import { model as Cie10 } from '../../../core/term/schemas/cie10';
 import { makeFs } from '../schemas/CDAFiles';
-
 import * as pacienteCtr from '../../../core/mpi/controller/paciente';
 import * as cdaCtr from '../controller/CDAPatient';
-
-import * as stream from 'stream';
-import * as base64 from 'base64-stream';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
-
-
-
 import { Auth } from '../../../auth/auth.class';
 
 let path = require('path');
@@ -290,14 +283,16 @@ router.get('/paciente/:id', async (req: any, res, next) => {
     if (!Auth.check(req, 'cda:list')) {
         return next(403);
     }
-    let CDAFiles = makeFs();
     let pacienteID = req.params.id;
     let prestacion = req.query.prestacion;
-    // let limit = req.query.limit ? req.query.limit : 10;
-    // let skip = req.query.skip ? req.query.skip : 0;
+    let { paciente } = await pacienteCtr.buscarPaciente(pacienteID);
 
-    let list = await cdaCtr.searchByPatient(pacienteID, prestacion, { skip: 0, limit: 100 });
-    res.json(list);
+    if (paciente) {
+        let list = await cdaCtr.searchByPatient(paciente.vinculos, prestacion, { skip: 0, limit: 100 });
+        return res.json(list);
+    } else {
+        return next({message: 'no existe el paciente'});
+    }
 });
 
 /**
