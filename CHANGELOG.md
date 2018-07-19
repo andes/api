@@ -32,6 +32,15 @@
 
 #### Added
 * Estadisticas del módulo de RUP 
+
+## [3.3.0] - 2018-07-12
+
+#### Added
+* Permite generar CDA's para mostrar el histórico de los pacientes
+* Integración con Prestaciones 2.0 de Hospital Castro Rendon
+
+#### Changed
+* Mejora en la integración de Sips al cargar los diagnósticos
   
 
 

@@ -14,13 +14,14 @@ export class ComponentBuilder extends BaseBuilder {
             this.createNode(section, 'id', component.Id());
         }
 
+        if (component.code()) {
+            this.createNode(section, 'code', component.code());
+        }
+
         if (component.title()) {
             this.createNode(section, 'title', null , component.title());
         }
 
-        if (component.code()) {
-            this.createNode(section, 'code', component.code());
-        }
 
         if (component.teplatesId().length > 0) {
             component.teplatesId().forEach(item => {
@@ -63,7 +64,7 @@ export class ImageComponentBuilder extends ComponentBuilder {
 
         let obsAttr = {
             classCode: 'OBS',
-            moodCode: 'ENV',
+            moodCode: 'ENN',
             ID: component.identifier
         };
 
