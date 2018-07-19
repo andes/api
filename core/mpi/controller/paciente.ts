@@ -18,6 +18,7 @@ import { toArray } from '../../../utils/utils';
 let to_json = require('xmljson').to_json;
 import * as https from 'https';
  import * as sisaController from '../../../modules/fuentesAutenticas/controller/sisaController'
+import { puco } from '../../../modules/obraSocial/schemas/puco';
 /**
  * Crea un paciente y lo sincroniza con elastic
  *
@@ -684,7 +685,7 @@ var thingSchema = new mongoose.Schema({
     id: Object,
 
 });
-export let puco = mongoose.model('puco', thingSchema, 'puco');
+// export let puco = mongoose.model('puco', thingSchema, 'puco');
 export async function mapeoPuco(dni) {
     return new Promise((resolve, reject) => {
         let respuesta;

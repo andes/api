@@ -17,7 +17,7 @@ let router = express.Router();
 let async = require('async');
 
 router.get('/prestaciones/huds/:idPaciente', function (req, res, next) {
-
+    console.log(req.query)
     // verificamos que sea un ObjectId válido
     if (!mongoose.Types.ObjectId.isValid(req.params.idPaciente)) {
         return res.status(404).send('Turno no encontrado');
@@ -33,7 +33,7 @@ router.get('/prestaciones/huds/:idPaciente', function (req, res, next) {
     let conceptos = (req.query.conceptIds) ? req.query.conceptIds : null;
 
     return Prestacion.find(query, (err, prestaciones) => {
-
+console.log(prestaciones)
         if (err) {
             return next(err);
         }
