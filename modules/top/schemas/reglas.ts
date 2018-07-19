@@ -15,4 +15,5 @@ let reglasSchema = new mongoose.Schema({
     auditable: Boolean,
 });
 
-export let reglas = mongoose.model('reglas', reglasSchema, 'reglas');
+let model = mongoose.model('reglas', reglasSchema, 'reglas');
+export = model;
