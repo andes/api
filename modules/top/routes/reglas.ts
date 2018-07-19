@@ -1,72 +1,48 @@
-
 import * as express from 'express';
-import * as reglas from '../schemas/reglas';
-import * as mongoose from 'mongoose';
+import { reglas } from '../schemas/reglas';
 import { Auth } from './../../../auth/auth.class';
-import { Logger } from '../../../utils/logService';
-import * as moment from 'moment';
-import { toArray } from '../../../utils/utils';
+import * as mongoose from 'mongoose';
 
-let router = express.Router();
+const router = express.Router();
 
-router.get('/reglas/:id?', function (req, res, next) {
+router.post('/', function (req, res, next) {
+    const body = req.body;
 
-    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+    let newRegla = new reglas({
+        origen: {
+            organizacion: body.origen.organizacion, //   organizacion: { nombre: String, id: mongoose.Types.ObjectId}
+            tipoPrestacion: body.origen.tipoPrestacion      //   tipoPrestacion: { nombre: String, id: mongoose.Types.ObjectId}
+        },
+        destino: {
+            organizacion: body.destino.organizacion,
+            tipoPrestacion: body.destino.tipoPrestacion,
+            profesionales: body.destino.arrProfesionales //   profesionales: [{ nombre: String, apellido: String, id: mongoose.Types.ObjectId}]
+        },
+        auditable: body.auditable
+    });
 
-        reglas.findById(req.params.id, function (err, data) {
+    // Auth.audit(newRegla, req);
+    newRegla.save((err) => {
+        if (err) { return next(err); }
+        // TODO: Log this
+        res.json(newRegla);
+    });
+});
+
+router.get('/reglas/:idDestino?', function (req, res, next) {
+    if (req.query.idDestino) {
+        let query = {
+            'destino.organizacion.id': new mongoose.Types.ObjectId(req.query.idDestino),
+        };
+        reglas.find(query, function (err, data) {
             if (err) {
                 return next(err);
             }
             res.json(data);
         });
     } else {
-        let query;
-        query = reglas.find({});
-
-        if (req.query.organizacionDestino) {
-            query.where('destino.organizacion').equals(req.query.organizacionDestino);
-        }
-
-        if (req.query.prestacionDestino) {
-            query.where('destino.prestacion').equals(req.query.prestacionDestino);
-        }
-
-        // query.sort({ 'horaInicio': 1 });
-
-        query.exec(function (err, data) {
-            if (err) {
-                return next(err);
-            }
-            res.json(data);
-        });
+        res.json({});
     }
-});
-
-router.post('/regla', function (req, res, next) {
-    let data = new reglas(req.body);
-    Auth.audit(data, req);
-    data.save((err) => {
-        // Logger.log(req, 'citas', 'insert', {
-        //     accion: 'Crear Agenda',
-        //     ruta: req.url,
-        //     method: req.method,
-        //     data: data,
-        //     err: err || false
-        // });
-        if (err) {
-            return next(err);
-        }
-        res.json(data);
-    });
-});
-
-router.put('/regla/:_id', function (req, res, next) {
-    reglas.findByIdAndUpdate(req.params._id, req.body, { new: true }, function (err, data) {
-        if (err) {
-            return next(err);
-        }
-        res.json(data);
-    });
 });
 
 export = router;
