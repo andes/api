@@ -6,19 +6,20 @@ let reglasSchema = new mongoose.Schema({
             nombre: String,
             id: { type: mongoose.Schema.Types.ObjectId, ref: 'organizacion' }
         },
-        tipoPrestacion: {
-            nombre: String,
-            id: { type: mongoose.Schema.Types.ObjectId }
-        }
+        prestaciones: [{
+            term: String,
+            conceptId: String,
+            auditable: Boolean
+        }],
     },
     destino: {
         organizacion: {
             nombre: String,
             id: { type: mongoose.Schema.Types.ObjectId, ref: 'organizacion' }
         },
-        tipoPrestacion: {
-            nombre: String,
-            id: { type: mongoose.Schema.Types.ObjectId }
+        prestacion: {
+            term: String,
+            conceptId: String
         },
         profesionales: [
             {
@@ -27,8 +28,7 @@ let reglasSchema = new mongoose.Schema({
                 apellido: String
             }
         ]
-    },
-    auditable: Boolean,
+    }
 });
 
 let model = mongoose.model('reglas', reglasSchema, 'reglas');

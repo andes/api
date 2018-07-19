@@ -1,5 +1,5 @@
 import * as express from 'express';
-import { reglas } from '../schemas/reglas';
+import * as reglas from '../schemas/reglas';
 import { Auth } from './../../../auth/auth.class';
 import * as mongoose from 'mongoose';
 
@@ -30,19 +30,19 @@ router.post('/', function (req, res, next) {
 });
 
 router.get('/reglas/:idDestino?', function (req, res, next) {
+    let query = reglas.find({});
     if (req.query.idDestino) {
-        let query = {
-            'destino.organizacion.id': new mongoose.Types.ObjectId(req.query.idDestino),
-        };
-        reglas.find(query, function (err, data) {
-            if (err) {
-                return next(err);
-            }
-            res.json(data);
-        });
-    } else {
-        res.json({});
+        query.where('destino.organizacion.id').equals(new mongoose.Types.ObjectId(req.query.idDestino));
     }
+    if (req.query.prestacionDestino) {
+        query.where('destino.prestacion.conceptId').equals(req.query.prestacionDestino);
+    }
+    query.exec(function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        res.json(data);
+    });
 });
 
 export = router;
