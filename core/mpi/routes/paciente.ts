@@ -334,8 +334,8 @@ router.get('/pacientes/auditoria/', function (req, res, next) {
 });
 
 router.get('/pacientes/auditoria/vinculados/', function (req, res, next) {
-    let filtro = {'identificadores.0': {$exists: true}};
-    filtro['activo'] = req.query.activo === 'true' ? true : false;
+    let filtro = {'identificadores.entidad': 'ANDES'};
+    // filtro['activo'] = req.query.activo === 'true' ? true : false;
     let query = paciente.find(filtro);
     query.exec(function (err, data) {
         if (err) {
@@ -345,6 +345,23 @@ router.get('/pacientes/auditoria/vinculados/', function (req, res, next) {
     });
 
 });
+
+router.get('/pacientes/auditoria/pacientesValidados/', function (req, res, next) {
+    // if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
+    //     return next(403);
+    // }
+    // Logger de la consulta a ejecutar
+    // Logger.log(req, 'mpi', 'query', {
+    //     elasticSearch: req.query
+    // });
+
+    controller.matchingAuditoria(req.query).then(result => {
+        res.send(result);
+    }).catch(error => {
+        return next(error);
+    });
+});
+
 
 
 /**
