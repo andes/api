@@ -14,6 +14,7 @@ import * as moment from 'moment';
 
 
 import { Auth } from '../../../auth/auth.class';
+import { EventCore } from '@andes/event-bus';
 
 let path = require('path');
 let router = express.Router();
@@ -117,6 +118,8 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
         let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
 
         res.json({ cda: uniqueId, paciente: paciente._id, date: metadata.fecha, idPrestacion: metadata.extras.id });
+
+        EventCore.emitAsync('cda:cda:create', obj);
 
     } catch (e) {
         return next(e);

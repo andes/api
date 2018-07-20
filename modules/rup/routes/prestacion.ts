@@ -221,7 +221,7 @@ router.patch('/prestaciones/:id', function (req, res, next) {
             }
 
             if (req.body.estado.tipo === 'validada') {
-                EventCore.emitAsync('rup:prestacion:validated', data);
+                EventCore.emitAsync('rup:prestacion:validate', data);
             }
 
             // Actualizar conceptos frecuentes por profesional y tipo de prestacion
