@@ -1,199 +1,17 @@
 import * as express from 'express';
 import * as mongoose from 'mongoose';
-import {
-    Matching
-} from '@andes/match';
-import {
-    pacienteMpi,
-    paciente
-} from '../schemas/paciente';
-import {
-    log
-} from '../../log/schemas/log';
+import { Matching } from '@andes/match';
+import { pacienteMpi, paciente } from '../schemas/paciente';
+import { log } from '../../log/schemas/log';
 import * as controller from '../controller/paciente';
-import {
-    Auth
-} from './../../../auth/auth.class';
-import {
-    Logger
-} from '../../../utils/logService';
-import {
-    ElasticSync
-} from '../../../utils/elasticSync';
+import { Auth } from './../../../auth/auth.class';
+import { Logger } from '../../../utils/logService';
+import { ElasticSync } from '../../../utils/elasticSync';
 import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
 
-
 let logD = debug('paciente-controller');
 let router = express.Router();
-
-/**
- * @swagger
- * definition:
- *   paciente:
- *     properties:
- *       documento:
- *          type: string
- *       cuil:
- *          type: string
- *       activo:
- *          type: boolean
- *       estado:
- *          type: string
- *          enum:
- *              - temporal
- *              - identificado
- *              - validado
- *              - recienNacido
- *              - extranjero
- *       nombre:
- *          type: string
- *       apellido:
- *          type: string
- *       alias:
- *          type: string
- *       contacto:
- *          type: array
- *          items:
- *              type: object
- *              properties:
- *                  tipo:
- *                      type: string
- *                      enum:
- *                          - Teléfono Fijo
- *                          - Teléfono Celular
- *                          - Email
- *                  valor:
- *                      type: string
- *                  ranking:
- *                      type: number
- *                      format: float
- *                  ultimaActualizacion:
- *                      type: string
- *                      format: date
- *                  activo:
- *                      type: boolean
- *       direccion:
- *          type: array
- *          items:
- *              $ref: '#/definitions/direccion'
- *       sexo:
- *          type: string
- *          enum:
- *              - femenino
- *              - masculino
- *              - otro
- *       genero:
- *          type: string
- *          enum:
- *              - femenino
- *              - masculino
- *              - otro
- *       fechaNacimiento:
- *          type: string
- *          format: date
- *       fechaFallecimiento:
- *          type: string
- *          format: date
- *       estadoCivil:
- *          type: string
- *          enum:
- *              - casado
- *              - separado
- *              - divorciado
- *              - viudo
- *              - soltero
- *              - otro
- *       foto:
- *          type: string
- *       relaciones:
- *          type: array
- *          items:
- *              type: object
- *              properties:
- *                  relacion:
- *                      type: string
- *                      enum:
- *                          - padre
- *                          - madre
- *                          - hijo
- *                          - tutor
- *                  nombre:
- *                      type: string
- *                  apellido:
- *                      type: string
- *                  documento:
- *                      type: string
- *       financiador:
- *          type: array
- *          items:
- *              type: object
- *              properties:
- *                  id:
- *                      type: string
- *                  nombre:
- *                      type: string
- *                  activo:
- *                      type: boolean
- *                  fechaAlta:
- *                      type: string
- *                      format: date
- *                  fechaBaja:
- *                      type: string
- *                      format: date
- *                  ranking:
- *                      type: number
- *       claveBloking:
- *          type: array
- *          items:
- *              type: string
- *       entidadesValidadoras:
- *          type: array
- *          items:
- *              type: string
- */
-
-
-/* Consultas de estado de pacientes para el panel de información */
-router.get('/pacientes/counts/', function (req, res, next) {
-    /* Este get es público ya que muestra sólamente la cantidad de pacientes en MPI */
-    let filtro;
-    switch (req.query.consulta) {
-        case 'validados':
-            filtro = {
-                estado: 'validado'
-            };
-            break;
-        case 'temporales':
-            filtro = {
-                estado: 'temporal'
-            };
-            break;
-        case 'fallecidos':
-            filtro = {
-                fechaFallecimiento: {
-                    $exists: true
-                }
-            };
-            break;
-    }
-    let query = paciente.find(filtro).count();
-    query.exec(function (err, data) {
-        if (err) {
-            return next(err);
-        }
-
-        let queryMPI = pacienteMpi.find(filtro).count();
-        queryMPI.exec(function (err1, data1) {
-            if (err1) {
-                return next(err1);
-            }
-            let total = data + data1;
-            res.json(total);
-        });
-
-    });
-});
 
 /* Consultas de estado de pacientes para el panel de información */
 router.get('/pacientes/counts/', function (req, res, next) {
@@ -284,19 +102,6 @@ router.get('/pacientes/dashboard/', async function (req, res, next) {
     result.logs = await toArray(log.aggregate(logAggregate).cursor({ batchSize: 1000 }).exec());
     res.json(result);
 
-    // paciente.aggregate(estadoAggregate).cursor({batchSize: 1000}).exec().on('data', function(doc) {
-    //     result.paciente.push(doc);
-    // }).on('end', function () {
-    //     pacienteMpi.aggregate(estadoAggregate).cursor({batchSize: 1000}).exec().on('data', function(doc) {
-    //         result.pacienteMpi.push(doc);
-    //     }).on('end', function () {
-    //         log.aggregate(logAggregate).cursor({batchSize: 1000}).exec().on('data', function(doc) {
-    //             result.logs.push(doc);
-    //         }).on('end', function () {
-    //             res.json(result);
-    //         });
-    //     });
-    // });
 });
 
 
@@ -363,88 +168,6 @@ router.get('/pacientes/auditoria/pacientesValidados/', function (req, res, next)
 });
 
 
-
-/**
- * @swagger
- * /pacientes:
- *   get:
- *     tags:
- *       - Paciente
- *     description: Retorna un arreglo de objetos Paciente
- *     summary: Buscar pacientes
- *     produces:
- *       - application/json
- *     parameters:
- *       - name: nombre
- *         in: query
- *         description: El nombre del paciente
- *         required: false
- *         type: string
- *       - name: apellido
- *         in: query
- *         description: El apellido del paciente
- *         required: false
- *         type: string
- *       - name: documento
- *         in: query
- *         description: El documento del paciente
- *         required: false
- *         type: string
- *       - name: fechaNacimiento
- *         in: query
- *         description: El documento del paciente
- *         required: false
- *         type: string
- *         format: date
- *       - name: estado
- *         in: query
- *         description: El estado del paciente
- *         required: false
- *         type: string
- *         enum:
- *              - temporal
- *              - identificado
- *              - validado
- *              - recienNacido
- *              - extranjero
- *       - name: sexo
- *         in: query
- *         description:
- *         required: false
- *         type: string
- *         enum:
- *              - femenino
- *              - masculino
- *              - otro
- *     responses:
- *       200:
- *         description: un arreglo de objetos paciente
- *         schema:
- *           $ref: '#/definitions/paciente'
- *       400:
- *         description: Error- Agregar parámetro de búsqueda
- *
- * /pacientes/{id}:
- *   get:
- *     tags:
- *       - Paciente
- *     description: Retorna un objeto Paciente
- *     summary: Buscar paciente por ID
- *     produces:
- *       - application/json
- *     parameters:
- *       - name: id
- *         in: path
- *         description: _Id del paciente
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: un arreglo con un paciente
- *         schema:
- *           $ref: '#/definitions/paciente'
- */
-
 // Simple mongodb query by ObjectId --> better performance
 router.get('/pacientes/:id', function (req, res, next) {
     // busca en pacienteAndes y en pacienteMpi
@@ -469,69 +192,6 @@ router.get('/pacientes/:id', function (req, res, next) {
 
 });
 
-/**
- * @swagger
- * /pacientes:
- *   get:
- *     tags:
- *       - Paciente
- *     description: Retorna un arreglo de objetos Paciente
- *     summary: Buscar pacientes usando ElasticSearch
- *     produces:
- *       - application/json
- *     parameters:
- *       - name: type
- *         description: tipo de búsqueda
- *         in: body
- *         required: true
- *         type: string
- *         enum:
- *              - simplequery
- *              - multimatch
- *              - suggest
- *       - name: cadenaInput
- *         description: pámetro requerido para multimatch
- *         in: body
- *         type: string
- *       - name: claveBlocking
- *         description: pámetro requerido para suggest
- *         in: body
- *         type: string
- *       - name: percentage
- *         description: pámetro requerido para suggest
- *         in: body
- *         type: boolean
- *       - name: documento
- *         description: pámetro requerido para suggest y simplequery
- *         in: body
- *         type: string
- *       - name: nombre
- *         description: pámetro requerido para suggest y simplequery
- *         in: body
- *         type: string
- *       - name: apellido
- *         description: pámetro requerido para suggest y simplequery
- *         in: body
- *         type: string
- *       - name: sexo
- *         description: pámetro requerido para suggest y simplequery
- *         in: body
- *         type: string
- *       - name: fechaNacimiento
- *         description: pámetro requerido para suggest
- *         in: body
- *         type: Date
- *       - name: escaneado
- *         description: pámetro requerido para suggest
- *         in: body
- *         type: boolean
- *     responses:
- *       200:
- *         description: un arreglo de objetos paciente
- *       400:
- *         description: Error- Agregar parámetro de búsqueda
- *
- */
 // Search using elastic search
 router.get('/pacientes', function (req, res, next) {
     if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
@@ -609,31 +269,6 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
     });
 });
 
-/**
- * @swagger
- * /pacientes/mpi/{id}:
- *   delete:
- *     tags:
- *       - Paciente
- *     description: Eliminar un paciente del core de MPI
- *     summary: Eliminar un paciente del core de MPI
- *     consumes:
- *       - application/json
- *     produces:
- *       - application/json
- *     parameters:
- *       - name: id
- *         in: path
- *         description: Id de un paciente
- *         required: true
- *         type: string
- *
- *     responses:
- *       200:
- *         description: Un objeto paciente
- *         schema:
- *           $ref: '#/definitions/paciente'
- */
 router.delete('/pacientes/mpi/:id', function (req, res, next) {
     if (!Auth.check(req, 'mpi:paciente:deleteMpi')) {
         return next(403);
@@ -655,33 +290,6 @@ router.delete('/pacientes/mpi/:id', function (req, res, next) {
     });
 });
 
-/**
- * @swagger
- * /pacientes:
- *   post:
- *     tags:
- *       - Paciente
- *     description: Cargar un paciente
- *     summary: Cargar un paciente
- *     consumes:
- *       - application/json
- *     produces:
- *       - application/json
- *     parameters:
- *       - name: organizacion
- *         description: objeto paciente
- *         in: body
- *         required: true
- *         schema:
- *           $ref: '#/definitions/paciente'
- *     responses:
- *       200:
- *         description: Un objeto paciente
- *         schema:
- *           $ref: '#/definitions/paciente'
- *       409:
- *         description: Un código de error con un array de mensajes de error
- */
 router.post('/pacientes', function (req, res, next) {
     if (!Auth.check(req, 'mpi:paciente:postAndes')) {
         return next(403);
@@ -713,37 +321,6 @@ router.post('/pacientes', function (req, res, next) {
         }));
     }
 });
-
-/**
- * @swagger
- * /pacientes:
- *   put:
- *     tags:
- *       - Paciente
- *     description: Actualizar un paciente
- *     summary: Actualizar un paciente
- *     consumes:
- *       - application/json
- *     produces:
- *       - application/json
- *     parameters:
- *       - name: id
- *         in: path
- *         description: _Id del paciente
- *         required: true
- *         type: string
- *       - name: paciente
- *         description: objeto paciente
- *         in: body
- *         required: true
- *         schema:
- *           $ref: '#/definitions/paciente'
- *     responses:
- *       200:
- *         description: Un objeto paciente
- *         schema:
- *           $ref: '#/definitions/paciente'
- */
 
 router.put('/pacientes/:id', function (req, res, next) {
     if (!Auth.check(req, 'mpi:paciente:putAndes')) {
@@ -816,31 +393,6 @@ router.put('/pacientes/:id', function (req, res, next) {
     });
 });
 
-/**
- * @swagger
- * /pacientes/{id}:
- *   delete:
- *     tags:
- *       - Paciente
- *     description: Eliminar un paciente
- *     summary: Eliminar un paciente
- *     consumes:
- *       - application/json
- *     produces:
- *       - application/json
- *     parameters:
- *       - name: id
- *         in: path
- *         description: Id de un paciente
- *         required: true
- *         type: string
- *
- *     responses:
- *       200:
- *         description: Un objeto paciente
- *         schema:
- *           $ref: '#/definitions/paciente'
- */
 router.delete('/pacientes/:id', function (req, res, next) {
     if (!Auth.check(req, 'mpi:paciente:deleteAndes')) {
         return next(403);
@@ -859,34 +411,6 @@ router.delete('/pacientes/:id', function (req, res, next) {
         return next(error);
     });
 });
-
-/**
- * @swagger
- * /pacientes/{id}:
- *   patch:
- *     tags:
- *       - Paciente
- *     description: Modificar ciertos datos de un paciente
- *     summary: Modificar ciertos datos de un paciente
- *     consumes:
- *       - application/json
- *     produces:
- *       - application/json
- *     parameters:
- *       - name: id
- *         in: path
- *         description: Id de un paciente
- *         required: true
- *         type: string
- *
- *     responses:
- *       200:
- *         description: Un objeto paciente
- *         schema:
- *           $ref: '#/definitions/paciente'
- */
-
-
 
 router.patch('/pacientes/:id', function (req, res, next) {
     if (!Auth.check(req, 'mpi:paciente:patchAndes')) {

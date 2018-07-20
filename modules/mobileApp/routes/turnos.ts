@@ -1,15 +1,9 @@
-import { pacienteApp } from '../schemas/pacienteApp';
-import { recordatorio } from '../schemas/recordatorio';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
-import * as moment from 'moment';
 import * as agenda from '../../turnos/schemas/agenda';
-import { paciente } from '../../../core/mpi/schemas/paciente';
 import * as agendaCtrl from '../../turnos/controller/agenda';
 import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
-import { INotification, PushClient } from '../controller/PushClient';
-import * as authController from '../controller/AuthController';
 import * as recordatorioController from '../controller/RecordatorioController';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import * as controllerPaciente from '../../../core/mpi/controller/paciente';
@@ -44,7 +38,12 @@ router.get('/turnos', async function (req: any, res, next) {
 
     let pacienteId = req.user.pacientes[0].id;
 
-    matchTurno['bloques.turnos.paciente.id'] = mongoose.Types.ObjectId(pacienteId);
+    let { paciente } = await controllerPaciente.buscarPaciente(pacienteId);
+    if (!paciente) {
+        return next({ message: 'no existe el paciente' });
+    }
+
+    matchTurno['bloques.turnos.paciente.id'] = { $in: paciente.vinculos };
 
     // matchTurno['estado'] = 'publicada';
 

@@ -49,7 +49,7 @@ router.get('/prestaciones/huds/:idPaciente', function (req, res, next) {
     });
 });
 
-router.get('/prestaciones/:id*?', function (req, res, next) {
+router.get('/prestaciones/:id*?',  async function (req, res, next) {
 
     if (req.params.id) {
         let query = Prestacion.findById(req.params.id);
@@ -89,7 +89,10 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             query.where('solicitud.profesional.id').equals(req.query.idProfesional);
         }
         if (req.query.idPaciente) {
-            query.where('paciente.id').equals(req.query.idPaciente);
+            let { paciente } = await buscarPaciente(req.query.idPaciente);
+            if (paciente) {
+                query.where('paciente.id').in(paciente.vinculos);
+            }
         }
         if (req.query.idPrestacionOrigen) {
             query.where('solicitud.prestacionOrigen').equals(req.query.idPrestacionOrigen);
