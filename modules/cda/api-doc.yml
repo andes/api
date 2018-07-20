@@ -64,51 +64,8 @@ paths:
           description: Devuelve un json con el ID del CDA generado, y el ID del paciente 
           schema:
             $ref: "#/definitions/CdaResponse"
-  /modules/cda/{id}:
-    get:
-      tags:
-        - "cda"
-      description: Consulta un cda de acuerdo a su id.
-      summary: Consulta un cda de acuerdo a su id.
-      security:
-        - JWT: []
-      consumes:
-        - application/json
-      produces:
-        - application/xml
-      parameters:
-        - name: id
-          in: path
-          description: Identificación del CDA
-          required: true
-          type: string
-      responses:
-        '200':
-          description: Devuelve el xml del CDA  
-  /modules/cda/{id}/{fileName}:
-    get:
-      tags:
-        - "cda"
-      description: Devuelve el archivo adjunto del cda.
-      summary: Devuelve el archivo adjunto del cda.
-      security:
-        - JWT: []
-      consumes:
-        - application/json
-      parameters:
-        - name: id
-          in: path
-          description: identificación del cda
-          required: true
-          type: string
-        - name: fileName
-          in: path
-          description: archivo adjunto del cda
-          required: true
-          type: string
-      responses:
-        '200':
-          description: Devuelve el archivo adjunto del cda     
+        '401':
+          description: Autorización invalida.
   /modules/cda/:
     post:
       tags:
@@ -139,3 +96,125 @@ paths:
           description: Devuelve ID del CDA generado 
           schema:
             $ref: "#/definitions/CdaResponse"
+  /modules/cda/style/cda.xsl:
+    get:
+      tags:
+        - "cda"
+      description: Devuelve el archivo de estilo para renderizar HTML desde el browser.
+      summary: Devuelve el archivo de estilo para renderizar HTML desde el browser.
+      security:
+        - JWT: []
+      consumes:
+        - application/json
+      produces:
+        - application/xsl
+      responses:
+        '200':
+          description: Devuelve el archivo de estilo para renderizar HTML desde el browser.     
+  /modules/cda/files/{fileName}:
+    get:
+      tags:
+        - "cda"
+      description: Devuelve los archivos almacenados por los CDAs. ** VER
+      summary: Devuelve los archivos almacenados por los CDAs.
+      security:
+        - JWT: []
+      consumes:
+        - application/json
+      parameters:
+        - name: fileName
+          in: path
+          description: archivo adjunto del cda, ejemplo "5b509201a5ba891f65d23a62.pdf"
+          required: true
+          type: string
+      responses:
+        '200':
+          description:  Devuelve los archivos almacenados por los CDAs
+  /modules/cda/{id}:
+    get:
+      tags:
+        - "cda"
+      description: Consulta un cda de acuerdo a su id.
+      summary: Consulta un cda de acuerdo a su id.
+      security:
+        - JWT: []
+      consumes:
+        - application/json
+      produces:
+        - application/xml
+      parameters:
+        - name: id
+          in: path
+          description: Identificación del CDA
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Devuelve el xml del CDA
+  /modules/cda/tojson/{id}:
+    get:
+      tags:
+        - "cda"
+      description:  Devuelve el CDA parseado a json según un ID
+      summary: Devuelve el CDA parseado a json según un ID.
+      security:
+        - JWT: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: id
+          in: path
+          description: Identificación del CDA
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Devuelve el json del CDA 
+  /modules/cda/paciente/{id}:
+    get:
+      tags:
+        - "cda"
+      description:  Devuelve un listado con los CDA de un paciente dado su ID (solo los xml)
+      summary: Devuelve un listado con los CDA de un paciente (solo los xml)
+      security:
+        - JWT: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: id
+          in: path
+          description: Identificación del paciente
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Devuelve un listado con los CDA de un paciente 
+  /modules/cda/{id}/{fileName}:
+    get:
+      tags:
+        - "cda"
+      description: Devuelve el archivo adjunto del cda.
+      summary: Devuelve el archivo adjunto del cda.
+      security:
+        - JWT: []
+      consumes:
+        - application/json
+      parameters:
+        - name: id
+          in: path
+          description: identificación del cda
+          required: true
+          type: string
+        - name: fileName
+          in: path
+          description: archivo adjunto del cda
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Devuelve el archivo adjunto del cda     
+  

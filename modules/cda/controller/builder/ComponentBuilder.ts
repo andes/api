@@ -19,7 +19,7 @@ export class ComponentBuilder extends BaseBuilder {
         }
 
         if (component.title()) {
-            this.createNode(section, 'title', null , component.title());
+            this.createNode(section, 'title', null, component.title());
         }
 
 
@@ -64,7 +64,7 @@ export class ImageComponentBuilder extends ComponentBuilder {
 
         let obsAttr = {
             classCode: 'OBS',
-            moodCode: 'ENN',
+            moodCode: 'EVN',
             ID: component.identifier
         };
 
@@ -85,7 +85,7 @@ export class ImageComponentBuilder extends ComponentBuilder {
                 mediaType: component.type()
             };
             let value = obsTag.ele('value', valueAttr);
-            value.ele('reference', {value: component.file() });
+            value.ele('reference', { value: component.file() });
         }
 
         return section;

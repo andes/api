@@ -135,7 +135,7 @@ export async function matchCode(snomed) {
             return null;
         }
     } else {
-        return null;
+        return null; .840.1.113883.6.90
     }
 }
 
@@ -322,6 +322,13 @@ export function generateCDA(uniqueId, confidentiality, patient, date, author, or
     let code = prestacion.loinc;
     cda.code(code);
 
+    cda.type({
+        codeSystem: '2.16.840.1.113883.6.96',
+        code: prestacion.snomed.conceptId,
+        codeSystemName: 'snomed-CT',
+        displayName: prestacion.snomed.term
+    });
+
     // [TODO] Desde donde inferir el titulo
     cda.title(code.displayName);
 
@@ -345,11 +352,15 @@ export function generateCDA(uniqueId, confidentiality, patient, date, author, or
         patientCDA.setId(buildID(patient.id));
     }
     cda.patient(patientCDA);
-    let orgCDA = new Organization();
     // mover a config.private en algún momento
-    orgCDA.id(buildID('59380153db8e90fe4602ec02'));
-    orgCDA.name('SUBSECRETARIA DE SALUD');
-    cda.custodian(orgCDA);
+    let custodianCDA = new Organization();
+    custodianCDA.id(buildID('59380153db8e90fe4602ec02'));
+    custodianCDA.name('SUBSECRETARIA DE SALUD');
+    cda.custodian(custodianCDA);
+
+    let orgCDA = new Organization();
+    orgCDA.id(buildID(organization._id));
+    orgCDA.name(organization.nombre);
 
     if (author) {
         let authorCDA = new Author();
@@ -552,7 +563,6 @@ export function validateMiddleware(req, res, next) {
     if (Object.keys(errors).length > 0) {
         return next(errors);
     }
-    console.log("cda paciente");
     return next();
 }
 
@@ -582,7 +592,9 @@ export function validateSchemaCDA(xmlRaw) {
                 schemaXML = libxmljs.parseXml(xsd, {
                     baseUrl: path.join(__dirname, 'schema') + '/'
                 });
+
                 return resolve(schemaXML);
+
             });
         });
     }
@@ -592,6 +604,7 @@ export function validateSchemaCDA(xmlRaw) {
         xmlDoc.validate(xsdDoc);
 
         if (xmlDoc.validationErrors.length) {
+            console.log(xmlDoc.validationErrors);
             return Promise.reject(xmlDoc.validationErrors);
         }
         return Promise.resolve(xmlDoc);
@@ -614,6 +627,7 @@ export function checkAndExtract(xmlDom) {
         } else {
             data[key] = value;
         }
+
     }
 
     function checkArg(root, params) {
@@ -642,6 +656,7 @@ export function checkAndExtract(xmlDom) {
 
             if (param.match) {
                 passed = passed && text === param.match;
+
             }
 
             passed = passed && (!param.require || text.length > 0);
@@ -713,12 +728,18 @@ export function checkAndExtract(xmlDom) {
         match: CDAConfig.rootOID
     },
     {
-        key: `//x:ClinicalDocument/x:custodian/x:assignedCustodian/x:representedCustodianOrganization/x:id/@extension`,
+        key: `//x:ClinicalDocument/x:documentationOf/x:serviceEvent/x:code/@code`,
+        as: 'prestacion',
+        require: true
+    },
+
+    {
+        key: `//x:ClinicalDocument/x:author/x:assignedAuthor/x:representedOrganization/x:id/@extension`,
         as: 'organizacion.id',
         require: true
     },
     {
-        key: `//x:ClinicalDocument/x:custodian/x:assignedCustodian/x:representedCustodianOrganization/x:name`,
+        key: `//x:ClinicalDocument/x:author/x:assignedAuthor/x:representedOrganization/x:name`,
         as: 'organizacion.name',
         require: true
     },
@@ -748,6 +769,7 @@ export function checkAndExtract(xmlDom) {
 
     ];
     let metadata: any = checkArg(_root, _params);
+    console.log("metadata: ", metadata)
     if (metadata.adjunto && metadata.adjunto.indexOf('/') >= 0) {
         return null;
     }

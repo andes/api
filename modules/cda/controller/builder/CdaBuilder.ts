@@ -9,6 +9,7 @@ import { BaseBuilder } from './BaseBuilder';
 import { Patient } from '../class/Patient';
 import { Author } from '../class/Author';
 import { Organization } from '../class/Organization';
+import { CDA as CDAConfig } from '../../../../config.private';
 
 export class CDABuilder extends BaseBuilder {
 
@@ -70,6 +71,9 @@ export class CDABuilder extends BaseBuilder {
             efTime.ele('high', { value: this.fromDate(date) });
         }
 
+        if (cda.type()) {
+            this.createNode(serviceEvent, 'code', cda.type());
+        }
 
         if (date) {
             xml.com('Fecha de la prestación');
@@ -84,17 +88,24 @@ export class CDABuilder extends BaseBuilder {
 
         if (cda.author()) {
             let doctor = cda.author() as Author;
+
+            if (doctor.documento()) {
+                this.createNode(assignedEntity, 'id', {
+                    root: CDAConfig.dniOID,
+                    extension: doctor.documento()
+                });
+            }
             let assignedPerson = assignedEntity.ele('assignedPerson');
             let nameNode = assignedPerson.ele('name');
             this.createNode(nameNode, 'given', null, doctor.firstname());
             this.createNode(nameNode, 'family', null, doctor.lastname());
-        }
 
-        if (cda.custodian()) {
-            let org = cda.custodian() as Organization;
-            let representedOrganization = assignedEntity.ele('representedOrganization');
-            this.createNode(representedOrganization, 'id', org.id());
-            this.createNode(representedOrganization, 'name', null, org.name());
+            if (doctor.organization()) {
+                let org = doctor.organization() as Organization;
+                let representedOrganization = assignedEntity.ele('representedOrganization');
+                this.createNode(representedOrganization, 'id', org.id());
+                this.createNode(representedOrganization, 'name', null, org.name());
+            }
         }
 
         let body: Body = cda.body() as Body;

@@ -1,5 +1,6 @@
 import * as express from 'express';
 import { model as Organizaciones } from '../../../core/tm/schemas/organizacion';
+import { paciente as Paciente } from '../../../core/mpi/schemas/paciente';
 import { model as Cie10 } from '../../../core/term/schemas/cie10';
 import { makeFs } from '../schemas/CDAFiles';
 
@@ -134,6 +135,7 @@ router.post('/', async (req: any, res, next) => {
     let cdaStream: any = cdaCtr.base64toStream(cda64);
     let cdaXml: String = await cdaCtr.streamToString(cdaStream.stream);
 
+
     if (cdaXml.length > 0) {
         cdaCtr.validateSchemaCDA(cdaXml).then(async (dom) => {
 
@@ -158,25 +160,28 @@ router.post('/', async (req: any, res, next) => {
                 let organizacion = await Organizaciones.findById(orgId);
                 let dataProfesional = req.body.profesional;
 
-                let prestacion = await cdaCtr.matchCodeByLoinc(cdaData.loinc);
+                let prestacion = await cdaCtr.matchCode(cdaData.prestacion);
                 if (!prestacion) {
-                    return next({ error: 'loinc_invalido' });
+                    // Es obligatorio que posea prestación
+                    return next({ error: 'prestacion_invalida' });
                 }
-                let paciente = await cdaCtr.findOrCreate(req, cdaData.paciente, orgId);
+
+                let pacientec = await cdaCtr.findOrCreate(req, cdaData.paciente, orgId);
 
                 let fileData, adjuntos;
+                console.log("asdasd", cdaData)
                 if (cdaData.adjunto && adjunto64) {
                     let fileObj: any = cdaCtr.base64toStream(adjunto64);
                     fileObj.metadata = {
                         cdaId: uniqueId,
-                        paciente: mongoose.Types.ObjectId(paciente.id)
+                        paciente: mongoose.Types.ObjectId(pacientec.id)
                     };
                     fileObj.filename = cdaData.adjunto;
                     fileData = await cdaCtr.storeFile(fileObj);
                     adjuntos = [{ path: fileData.data, id: fileData.id }];
                 }
                 let metadata = {
-                    paciente: paciente._id,
+                    paciente: pacientec._id,
                     prestacion: prestacion,
                     organizacion: organizacion,
                     profesional: dataProfesional,
@@ -189,7 +194,7 @@ router.post('/', async (req: any, res, next) => {
                 };
                 let obj = await cdaCtr.storeCDA(uniqueId, cdaXml, metadata);
 
-                res.json({ cda: uniqueId, paciente: paciente._id });
+                res.json({ cda: uniqueId, paciente: pacientec._id });
 
             } else {
                 return next({ error: 'cda_format_error' });
@@ -241,6 +246,29 @@ router.get('/files/:name', async (req: any, res, next) => {
  * Devuelve el XML de un CDA según un ID
  */
 
+router.get('/paciente/:id?', async (req: any, res, next) => {
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+        if (!Auth.check(req, 'cda:list')) {
+            return next(403);
+        }
+        let CDAFiles = makeFs();
+        let pacienteID = req.params.id;
+        let prestacion = req.query.prestacion;
+        // let limit = req.query.limit ? req.query.limit : 10;
+        // let skip = req.query.skip ? req.query.skip : 0;
+
+        let list = await cdaCtr.searchByPatient(pacienteID, prestacion, { skip: 0, limit: 100 });
+        res.json(list);
+    } else {
+        let query;
+        query = Paciente.find({
+            documento: req.query.documento
+        });
+        console.log("aca", req.query.documento);
+    }
+
+});
+
 router.get('/:id', async (req: any, res, next) => {
     // if (!Auth.check(req, 'cda:get')) {
     //     return next(403);
@@ -285,19 +313,9 @@ router.get('/tojson/:id', async (req: any, res, next) => {
  * Listado de los CDAs de un paciente
  * API demostrativa, falta analizar como se va a buscar en el repositorio
  */
-router.get('/paciente/:id', async (req: any, res, next) => {
-    if (!Auth.check(req, 'cda:list')) {
-        return next(403);
-    }
-    let CDAFiles = makeFs();
-    let pacienteID = req.params.id;
-    let prestacion = req.query.prestacion;
-    // let limit = req.query.limit ? req.query.limit : 10;
-    // let skip = req.query.skip ? req.query.skip : 0;
 
-    let list = await cdaCtr.searchByPatient(pacienteID, prestacion, { skip: 0, limit: 100 });
-    res.json(list);
-});
+
+
 
 /**
  * Devuelve los archivos almacenados por los CDAs
@@ -327,7 +345,6 @@ router.get('/:id/:name', async (req: any, res, next) => {
         stream1.pipe(res);
     }).catch(next);
 });
-
 
 
 export = router;

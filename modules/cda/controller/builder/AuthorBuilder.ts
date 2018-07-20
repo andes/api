@@ -10,14 +10,14 @@ import { CDA as CDAConfig } from '../../../../config.private';
 export class AuthorBuilder extends BaseBuilder {
     private completed = true;
 
-    constructor (completed = true) {
+    constructor(completed = true) {
         super();
         this.completed = completed;
     }
 
     public build(doctor: Author) {
         let author = builder.create('author');
-        this.createNode(author, 'time', { value: this.fromDate(new Date()) } );
+        this.createNode(author, 'time', { value: this.fromDate(new Date()) });
 
         let assignedAuthor = author.ele('assignedAuthor');
         if (doctor.id()) {
