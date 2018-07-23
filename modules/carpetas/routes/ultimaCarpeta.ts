@@ -13,8 +13,12 @@ router.get('/ultimaCarpeta', function (req: any, res, next) {
             if (err) {
                 return next(err);
             }
-            data.ultimaCarpeta = data.ultimaCarpeta + 1;
-            res.json(data.ultimaCarpeta);
+            if (data) {
+                data.ultimaCarpeta = data.ultimaCarpeta + 1;
+                res.json(data.ultimaCarpeta);
+            } else {
+                res.json(0);
+            }
         });
     }
 });
@@ -26,15 +30,19 @@ router.post('/incrementarCuenta', function (req: any, res, next) {
             if (err) {
                 return next(err);
             }
-            let update = {
-                ultimaCarpeta: data.ultimaCarpeta + 1
-            };
-            ultimaCarpeta.update({ idEfector: idOrganizacion }, { $set: update }, { new: true }, function (errUpdate, dataUpdate) {
-                if (err) {
-                    return next(errUpdate);
-                }
-                res.json(dataUpdate);
-            });
+            if (data) {
+                let update = {
+                    ultimaCarpeta: data.ultimaCarpeta + 1
+                };
+                ultimaCarpeta.update({ idEfector: idOrganizacion }, { $set: update }, { new: true }, function (errUpdate, dataUpdate) {
+                    if (err) {
+                        return next(errUpdate);
+                    }
+                    res.json(dataUpdate);
+                });
+            } else {
+                res.json();
+            }
         });
     }
 });
