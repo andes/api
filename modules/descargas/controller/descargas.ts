@@ -76,6 +76,7 @@ export class Documento {
             let nroCarpeta = paciente.carpetaEfectores.find(x => x.organizacion.id === idOrg);
 
             let profesionalSolicitud = prestacion.solicitud.profesional.apellido + ', ' + prestacion.solicitud.profesional.nombre;
+            let profesionalValidacion = prestacion.updatedBy ? prestacion.updatedBy.nombreCompleto : prestacion.createdBy.nombreCompleto;
 
             header = header
                 .replace('<!--paciente-->', nombreCompleto)
@@ -105,7 +106,12 @@ export class Documento {
             footer = footer
                 .replace('<!--profesionalFirmante1-->', profesionalSolicitud)
                 .replace('<!--usuario-->', Auth.getUserName(req))
-                .replace(/(<!--fechaActual-->)/g, moment().format('DD/MM/YYYY HH:mm') + ' hs');
+                .replace(/(<!--fechaActual-->)/g, moment().format('DD/MM/YYYY HH:mm') + ' hs')
+                .replace('<!--profesionalValidacion-->', profesionalValidacion)
+                .replace('<!--fechaValidacion-->', moment(fechaValidacion).format('DD/MM/YYYY HH:mm') + ' hs')
+                .replace('<!--organizacionNombreSolicitud-->', prestacion.solicitud.organizacion.nombre)
+                .replace('<!--orgacionacionDireccionSolicitud-->', organizacion.direccion.valor)
+                .replace('<!--fechaSolicitud-->', moment(prestacion.solicitud.fecha).format('DD/MM/YYYY'));
             // .replace('<!--profesionalFirmante2-->', '');
 
             html = header + html + footer;
