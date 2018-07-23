@@ -15,7 +15,7 @@ async function createToken() {
     let organizacion = {
         id: app.organizacion,
         nombre: app.nombre
-    }
+    };
     let permisos = app.permisos;
     let nombre = app.nombre;
 

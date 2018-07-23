@@ -216,6 +216,41 @@ export function buscarPaciente(id): Promise<{ db: String, paciente: any }> {
     });
 }
 
+
+
+export function buscarPacByDocYSexo(documento, sexo): Promise<{ db: String, paciente: any }[]> {
+    return new Promise((resolve, reject) => {
+        let query = {
+            documento,
+            sexo
+        };
+        let lista = [];
+        Promise.all([
+            paciente.find(query, function (err, data) {
+                if (err) {
+                    reject(err);
+                } else {
+                    if (data) {
+
+                        lista = [...lista, ...data];
+                    }
+                }
+            }),
+            pacienteMpi.find(query, function (err2, dataMpi) {
+                if (err2) {
+                    reject(err2);
+                } else if (dataMpi) {
+
+                    lista = [...lista, ...dataMpi];
+                }
+            })
+        ]).then(() => {
+            resolve(lista);
+        });
+    });
+}
+
+
 /**
  * Busca un paciente en MPI y luego en andes con cierta condición.
  * @param condition

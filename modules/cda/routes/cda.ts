@@ -245,8 +245,29 @@ router.get('/files/:name', async (req: any, res, next) => {
 /**
  * Devuelve el XML de un CDA según un ID
  */
+router.get('/paciente/', async (req: any, res, next) => {
+    if (!Auth.check(req, 'cda:list')) {
+        return next(403);
+    }
+    let query;
+    let lista = [];
+    let list = [];
+    pacienteCtr.buscarPacByDocYSexo(req.query.documento, req.query.sexo).then(async resultado => {
+        for (let i = 0; i < resultado.length; i++) {
+            let pac: any = resultado[i];
+            let pacienteID = pac._id;
+            list = await cdaCtr.searchByPatient(pacienteID, null, { skip: 0, limit: 100 });
+            //   lista = [...list];
+            lista.push(list);
 
-router.get('/paciente/:id?', async (req: any, res, next) => {
+        }
+        res.json(lista);
+    }).catch(() => {
+        return res.send({ error: 'paciente_error' });
+    });
+});
+
+router.get('/paciente/:id', async (req: any, res, next) => {
     if (mongoose.Types.ObjectId.isValid(req.params.id)) {
         if (!Auth.check(req, 'cda:list')) {
             return next(403);
@@ -254,20 +275,13 @@ router.get('/paciente/:id?', async (req: any, res, next) => {
         let CDAFiles = makeFs();
         let pacienteID = req.params.id;
         let prestacion = req.query.prestacion;
-        // let limit = req.query.limit ? req.query.limit : 10;
-        // let skip = req.query.skip ? req.query.skip : 0;
-
         let list = await cdaCtr.searchByPatient(pacienteID, prestacion, { skip: 0, limit: 100 });
+
         res.json(list);
-    } else {
-        let query;
-        query = Paciente.find({
-            documento: req.query.documento
-        });
-        console.log("aca", req.query.documento);
     }
 
 });
+
 
 router.get('/:id', async (req: any, res, next) => {
     // if (!Auth.check(req, 'cda:get')) {

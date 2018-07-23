@@ -135,7 +135,7 @@ export async function matchCode(snomed) {
             return null;
         }
     } else {
-        return null; .840.1.113883.6.90
+        return null;
     }
 }
 
