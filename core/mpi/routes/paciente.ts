@@ -9,6 +9,7 @@ import { Logger } from '../../../utils/logService';
 import { ElasticSync } from '../../../utils/elasticSync';
 import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
+import { EventCore } from '@andes/event-bus';
 
 
 let logD = debug('paciente-controller');
@@ -520,11 +521,7 @@ router.delete('/pacientes/mpi/:id', function (req, res, next) {
         return next(403);
     }
 
-    let query = {
-        _id: new mongoose.Types.ObjectId(req.params.id)
-    };
-
-    pacienteMpi.findById(query, function (err, patientFound) {
+    pacienteMpi.findById(req.params.id, (err, patientFound) => {
         if (err) {
             return next(err);
         }
@@ -533,6 +530,7 @@ router.delete('/pacientes/mpi/:id', function (req, res, next) {
         let connElastic = new ElasticSync();
         connElastic.delete(patientFound._id.toString()).then(() => {
             res.json(patientFound);
+            EventCore.emitAsync('mpi:patient:delete', patientFound);
         }).catch(error => {
             return next(error);
         });
@@ -837,7 +835,9 @@ router.patch('/pacientes/:id', function (req, res, next) {
                 if (errPatch) {
                     return next(errPatch);
                 }
-                return res.json(pacienteAndes);
+                res.json(pacienteAndes);
+                EventCore.emitAsync('mpi:patient:update', pacienteAndes);
+                return;
             });
         }
     }).catch((err) => {

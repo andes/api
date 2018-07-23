@@ -416,16 +416,13 @@ export function matching(data) {
 
 export function deletePacienteAndes(objectId) {
     return new Promise((resolve, reject) => {
-        let connElastic = new ElasticSync();
-        let query = {
-            _id: objectId
-        };
-        paciente.findById(query, function (err, patientFound) {
+        paciente.findById(objectId, function (err, patientFound) {
             if (err) {
-                reject(err);
+                return reject(err);
             }
             patientFound.remove();
-            resolve(patientFound);
+            EventCore.emitAsync('mpi:patient:delete', patientFound);
+            return resolve(patientFound);
         });
     });
 }
