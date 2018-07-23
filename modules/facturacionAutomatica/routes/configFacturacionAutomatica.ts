@@ -1,5 +1,5 @@
 import { snomed } from './../../../config.private';
-import { model } from './../schemas/configFacturacionAutomatica';
+import * as facturacionAutomaticaModel from './../schemas/configFacturacionAutomatica';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 
@@ -14,7 +14,7 @@ let router = express.Router();
 router.get('/configFacturacionAutomatica/', async function (req, res, next) {
     if (req.query.conceptId) {
         let query;
-        query = model.find({});
+        query = facturacionAutomaticaModel.find({});
         query.where('snomed.conceptId').equals(req.query.conceptId);
         query.exec((err, data) => {
             if (err) {
