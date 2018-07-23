@@ -21,7 +21,10 @@ let connection = {
     user: configPrivate.conSql.auth.user,
     password: configPrivate.conSql.auth.password,
     server: configPrivate.conSql.serverSql.server,
-    database: configPrivate.conSql.serverSql.database
+    database: configPrivate.conSql.serverSql.database,
+    options: {
+        encrypt: true // Use this if you're on Windows Azure
+    }
 };
 
 pool = sql.connect(connection, (err) => {
@@ -86,11 +89,9 @@ function donwloadFileHeller(idProtocolo, year) {
 
 export async function importarDatos(paciente) {
     try {
-
         let laboratorios: any;
         laboratorios = await operations.getEncabezados(paciente.documento);
         for (let lab of laboratorios.recordset) {
-
 
             // Si ya lo pase no hacemos nada
             let existe = await cdaCtr.findByMetadata({
@@ -121,6 +122,7 @@ export async function importarDatos(paciente) {
                     apellido: '' // Nombre y Apellido viene junto en los registros de laboratorio de SQL
                 };
                 let snomed = '4241000179101'; // informe de laboratorio (elemento de registro)
+                let prestacion = await cdaCtr.matchCode(snomed);
                 let cie10Laboratorio = {
                     codigo: 'Z01.7', // Código CIE-10: Examen de Laboratorio
                     nombre: 'Examen de laboratorio'
@@ -149,10 +151,10 @@ export async function importarDatos(paciente) {
                 });
                 // }
 
-                let cda = cdaCtr.generateCDA(uniqueId, (hiv ? 'R' : 'N') , paciente, fecha, profesional, organizacion, snomed, cie10Laboratorio, texto, fileData);
+                let cda = cdaCtr.generateCDA(uniqueId, (hiv ? 'R' : 'N') , paciente, fecha, profesional, organizacion, prestacion, cie10Laboratorio, texto, fileData);
                 let metadata = {
                     paciente: mongoose.Types.ObjectId(paciente.id),
-                    prestacion: snomed,
+                    prestacion: prestacion,
                     fecha: fecha.toDate(),
                     adjuntos: [{ path: fileData.data, id: fileData.id }],
                     extras: {

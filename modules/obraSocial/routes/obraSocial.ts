@@ -1,47 +1,24 @@
-import * as mongoose from 'mongoose';
 import * as express from 'express';
-import { osPaciente } from '../schemas/osPaciente';
-import * as configPrivate from '../../../config.private';
-import * as https from 'https';
-import { obraSocial } from '../schemas/obraSocial';
-let to_json = require('xmljson').to_json;
+import { puco } from '../schemas/puco';
 
 let router = express.Router();
 
-router.get('/puco/:documento?', async function (req, res, next) {
-    if (req.params.documento) {
-        try {
-            let respuesta: any = await getOs(req.params.documento);
-            if (respuesta) {
-                res.json({ nombre: respuesta.nombre, codigo: respuesta.codigoPuco });
-            } else {
-                // default: sumar
-                res.json({ nombre: 'Sumar', codigo: '499' });
-            }
-        } catch (e) {
-            return next(e);
-        }
-    } else {
-        // default: sumar
-        res.json({ nombre: 'Sumar', codigo: '499' });
-    }
-});
 /**
  * Obtiene los datos de la obra social asociada a un paciente
  *
- * @param {any} doc
+ * @param {any} dni
  * @returns
  */
-async function getOs(doc) {
-    let osPac: any = await osPaciente.find({ documento: doc }).exec();  // obtiene el código de obra social asociado al paciente
-    if (osPac && osPac.length > 0) {
-        // TODO: aqui deberíamos aplicar la priorización de obras sociales
-        let codigo: string = osPac[0].codigoPuco;
-        let result = await obraSocial.find({ codigoPuco: parseInt(codigo, 10) }).exec(); // obtiene la información de la obra social
-        return result[0];
+router.get('/puco/', async function (req, res, next) {
+    if (req.query.dni) {
+        puco.find({ dni: Number.parseInt(req.query.dni) }, function (err, data) {
+            if (err) {
+                return next(err);
+            }
+            res.json(data);
+        });
     } else {
-        return null;
+        res.status(400).json({ msg: 'Parámetros incorrectos' });
     }
-}
-
+});
 module.exports = router;

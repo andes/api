@@ -6,6 +6,7 @@ export class Patient {
     private birthTime: String;
     private gender: String;
     private id: IID;
+    private documento: String;
 
     constructor () {
 
@@ -35,6 +36,10 @@ export class Patient {
         return this.id;
     }
 
+    getDocumento() {
+        return this.documento;
+    }
+
 
     /**
      * Setters
@@ -62,6 +67,11 @@ export class Patient {
 
     setId(id: IID) {
         this.id = id;
+        return this;
+    }
+
+    setDocumento(dni: String) {
+        this.documento = dni;
         return this;
     }
 }

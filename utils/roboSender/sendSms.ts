@@ -1,6 +1,6 @@
 import { SMSendpoints } from '../../config.private';
 import * as debug from 'debug';
-
+import * as utils from '../utils';
 let log = debug('sendSMS');
 let soap = require('soap');
 let libxmljs = require('libxmljs');
@@ -40,9 +40,10 @@ export function sendSms(smsOptions: SmsOptions) {
                     }
 
                     if (carrier) {
+                        let mensaje = utils.removeDiacritics(smsOptions.mensaje);
                         argsNumero = {
                             destino: argsOperador.telefono,
-                            mensaje: smsOptions.mensaje,
+                            mensaje: mensaje,
                             operador: carrier,
                             aplicacion: '',
                             mobilein: '1'
