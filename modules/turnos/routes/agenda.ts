@@ -281,7 +281,7 @@ router.post('/agenda/clonar', function (req, res, next) {
                 if (clon) {
                     data._id = mongoose.Types.ObjectId();
                     data.isNew = true;
-                    let nueva = new agenda(data.toObject());
+                    let nueva: any = new agenda(data.toObject());
                     nueva['horaInicio'] = agendaCtrl.combinarFechas(clon, new Date(data['horaInicio']));
                     nueva['horaFin'] = agendaCtrl.combinarFechas(clon, new Date(data['horaFin']));
                     nueva['updatedBy'] = undefined;
@@ -291,7 +291,7 @@ router.post('/agenda/clonar', function (req, res, next) {
                     let newFinBloque: any;
                     let newIniTurno: any;
                     // nueva['bloques'] = data['bloques'];
-                    nueva['bloques'].forEach((bloque, index) => {
+                    nueva['bloques'].forEach((bloque) => {
                         bloque.horaInicio = agendaCtrl.combinarFechas(clon, bloque.horaInicio);
                         bloque.horaFin = agendaCtrl.combinarFechas(clon, bloque.horaFin);
                         if (bloque.pacienteSimultaneos) {
@@ -306,21 +306,25 @@ router.post('/agenda/clonar', function (req, res, next) {
                             bloque.restantesProfesional = bloque.reservadoProfesional;
                         }
                         bloque._id = mongoose.Types.ObjectId();
-                        bloque.turnos.forEach((turno, index1) => {
-                            turno.horaInicio = agendaCtrl.combinarFechas(clon, turno.horaInicio);
-                            turno.estado = 'disponible';
-                            turno.asistencia = undefined;
-                            turno.paciente = null;
-                            turno.tipoPrestacion = null;
-                            turno.idPrestacionPaciente = null;
-                            turno.nota = null;
-                            turno._id = mongoose.Types.ObjectId();
-                            turno.tipoTurno = undefined;
-                            turno.updatedAt = undefined;
-                            turno.updatedBy = undefined;
-                            turno.diagnostico = { codificaciones: [] };
-                            turno.reasignado = undefined;
-                        });
+                        if (!nueva.dinamica) {
+                            bloque.turnos.forEach((turno, index1) => {
+                                turno.horaInicio = agendaCtrl.combinarFechas(clon, turno.horaInicio);
+                                turno.estado = 'disponible';
+                                turno.asistencia = undefined;
+                                turno.paciente = null;
+                                turno.tipoPrestacion = null;
+                                turno.idPrestacionPaciente = null;
+                                turno.nota = null;
+                                turno._id = mongoose.Types.ObjectId();
+                                turno.tipoTurno = undefined;
+                                turno.updatedAt = undefined;
+                                turno.updatedBy = undefined;
+                                turno.diagnostico = { codificaciones: [] };
+                                turno.reasignado = undefined;
+                            });
+                        } else {
+                            bloque.turnos = [];
+                        }
                     });
                     nueva['estado'] = 'planificacion';
                     nueva['sobreturnos'] = [];
