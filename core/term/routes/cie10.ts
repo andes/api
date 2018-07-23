@@ -21,11 +21,18 @@ router.get('/cie10', function (req, res, next) {
         // agregamos la palabra al término de búsqueda
         termino = termino + expWord;
     });
-
     conditions['$or'].push({ 'codigo': RegExp('^.*' + termino + '.*$', 'i') });
     conditions['$or'].push({ 'nombre': RegExp('^.*' + termino + '.*$', 'i') });
     conditions['$or'].push({ 'sinonimo': RegExp('^.*' + termino + '.*$', 'i') });
     query = cie10.model.find(conditions);
+    // filtramos desde que codigo retornamos.
+    if (req.query.codigoDesde) {
+        query.where('codigo').gte(req.query.codigoDesde);
+    }
+    // filtramos hasta que codigo retornamos.
+    if (req.query.codigoHasta) {
+        query.where('codigo').lte(req.query.codigoHasta);
+    }
     let skip = parseInt(req.query.skip || 0, 10);
     let limit = Math.min(parseInt(req.query.limit || defaultLimit, 15), maxLimit);
     query.skip(skip);
