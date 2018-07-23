@@ -13,6 +13,7 @@ import { esPrimerPaciente } from '../controller/agenda';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import * as debug from 'debug';
+import { EventCore } from '@andes/event-bus';
 
 let router = express.Router();
 let dbgTurno = debug('dbgTurno');
@@ -29,6 +30,7 @@ router.get('/turno/:id*?', async function (req, res, next) {
 
 
 /**
+ * DAR UN TURNO
  * Espera un objeto como este:
  * // Datos del Turno
     let datosTurno = {
@@ -211,6 +213,8 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
                                     operations.cacheTurnos(doc2).catch(error => { return next(error); });
                                     // Fin de insert cache
                                     res.json(data);
+
+                                    EventCore.emitAsync('citas:turno:asignar', turno);
                                 }
                             });
                         });
@@ -256,10 +260,16 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', function (req, res, next) {
                 return next(error);
             }
             res.json(data2);
+
+            let turno = data2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
+            EventCore.emitAsync('citas:turno:update', turno);
         });
     });
 });
 
+/**
+ * se marca como reasginado un turno suspendido
+ */
 router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, res, next) {
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
     let continues = ValidateDarTurno.checkTurno(req.body.turno);

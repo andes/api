@@ -16,6 +16,7 @@ export function darAsistencia(req, data, tid = null) {
     turno.asistencia = 'asistio';
     turno.updatedAt = new Date();
     turno.updatedBy = req.user.usuario || req.user;
+    return turno;
     // crearPrestacionVacia(turno, req);
 }
 
@@ -25,6 +26,7 @@ export function sacarAsistencia(req, data, tid = null) {
     turno.asistencia = undefined;
     turno.updatedAt = new Date();
     turno.updatedBy = req.user.usuario || req.user;
+    return turno;
 }
 // Turno
 export function marcarNoAsistio(req, data, tid = null) {
@@ -32,6 +34,7 @@ export function marcarNoAsistio(req, data, tid = null) {
     turno.asistencia = 'noAsistio';
     turno.updatedAt = new Date();
     turno.updatedBy = req.user.usuario || req.user;
+    return turno;
 }
 
 // Turno
@@ -376,6 +379,7 @@ export function agregarSobreturno(req, data) {
         sobreturno.updatedAt = new Date();
         sobreturno.updatedBy = usuario;
         data.sobreturnos.push(sobreturno);
+        return data.sobreturnos[data.sobreturnos.length - 1]; // Para poder trackear el id del sobreturno
     }
 }
 
