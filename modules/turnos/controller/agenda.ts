@@ -1,14 +1,31 @@
-import { SnomedCIE10Mapping } from './../../../core/term/controller/mapping';
+import {
+    SnomedCIE10Mapping
+} from './../../../core/term/controller/mapping';
 import * as cie10 from './../../../core/term/schemas/cie10';
 import * as agendaModel from '../../turnos/schemas/agenda';
 import * as moment from 'moment';
-import { Auth } from '../../../auth/auth.class';
-import { userScheduler } from '../../../config.private';
-import { Logger } from '../../../utils/logService';
-import { model as Prestacion } from '../../rup/schemas/prestacion';
+import {
+    Auth
+} from '../../../auth/auth.class';
+import {
+    userScheduler
+} from '../../../config.private';
+import {
+    Logger
+} from '../../../utils/logService';
+import {
+    model as Prestacion
+} from '../../rup/schemas/prestacion';
 import * as request from 'request';
 import * as mongoose from 'mongoose';
-import { toArray } from '../../../utils/utils';
+import {
+    toArray
+} from '../../../utils/utils';
+import {
+    EventCore
+} from '@andes/event-bus';
+import * as turnosController from '../../../modules/turnos/controller/turnosController';
+import * as agendaController from '../../../modules/turnos/controller/agenda';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -158,7 +175,9 @@ export function codificarTurno(req, data, tid) {
     return new Promise((resolve, reject) => {
         let turno = getTurno(req, data[0], tid);
 
-        let query = Prestacion.find({ $where: 'this.estados[this.estados.length - 1].tipo ==  "validada"' });
+        let query = Prestacion.find({
+            $where: 'this.estados[this.estados.length - 1].tipo ==  "validada"'
+        });
         query.where('solicitud.turno').equals(tid);
         query.exec(function (err, data1) {
             if (err) {
@@ -184,7 +203,9 @@ export function codificarTurno(req, data, tid) {
 
                         if (target) {
                             // Buscar en cie10 los primeros 5 digitos
-                            cie10.model.findOne({ codigo: (target as String).substring(0, 5) }).then(cie => {
+                            cie10.model.findOne({
+                                codigo: (target as String).substring(0, 5)
+                            }).then(cie => {
                                 if (cie != null) {
                                     if (registro.esDiagnosticoPrincipal) {
                                         codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del array
@@ -306,7 +327,7 @@ export function guardarNotaTurno(req, data, tid = null) {
 }
 
 // Turno
-export function darTurnoDoble(req, data, tid = null) {   // NUEVO
+export function darTurnoDoble(req, data, tid = null) { // NUEVO
     let position = getPosition(req, data, tid); // Obtiene la posición actual del turno seleccionado
     let agenda = data;
     let turnoAnterior;
@@ -488,7 +509,10 @@ export function getPosition(req, agenda, idTurno = null) {
     idTurno = idTurno || req.body.idTurno;
     let index = -1;
     let turnos;
-    let position = { indexBloque: -1, indexTurno: -1 };
+    let position = {
+        indexBloque: -1,
+        indexTurno: -1
+    };
     // Loop en los bloques
     for (let x = 0; x < agenda.bloques.length; x++) {
         // Si existe este bloque...
@@ -598,7 +622,7 @@ export function getBloque(agenda, turno) {
 }
 
 export function esPrimerPaciente(agenda: any, idPaciente: string, opciones: any[]) {
-    return new Promise<any>((resolve, reject) => {
+    return new Promise < any > ((resolve, reject) => {
         let prestacionActual = 'Exámen médico del adulto';
         let profesionalesActuales = ['58f9eae202e4a0f31fcbd846'];
 
@@ -626,7 +650,10 @@ export function esPrimerPaciente(agenda: any, idPaciente: string, opciones: any[
                 });
             });
         });
-        resolve({ profesional: primerProfesional, tipoPrestacion: primerPrestacion });
+        resolve({
+            profesional: primerProfesional,
+            tipoPrestacion: primerPrestacion
+        });
     });
 
 }
@@ -639,7 +666,10 @@ function esFeriado(fecha) {
         let dia = moment(fecha).date(); // de 1 a 31
         let url = 'http://nolaborables.com.ar/api/v2/feriados/' + anio;
 
-        request({ url: url, json: true }, (err, response, body) => {
+        request({
+            url: url,
+            json: true
+        }, (err, response, body) => {
             if (err) {
                 reject(err);
             }
@@ -672,11 +702,14 @@ export async function actualizarTiposDeTurno() {
 
     while ((await esFeriado(fechaActualizar) && !esDomingo) || (moment(fechaActualizar).day().toString() === '6')) {
         switch (moment(fechaActualizar).day().toString()) {
-            case '0': this.esDomingo = true;
+            case '0':
+                this.esDomingo = true;
                 break;
-            case '6': fechaActualizar = moment(fechaActualizar).add(2, 'days');
+            case '6':
+                fechaActualizar = moment(fechaActualizar).add(2, 'days');
                 break;
-            default: fechaActualizar = moment(fechaActualizar).add(1, 'days');
+            default:
+                fechaActualizar = moment(fechaActualizar).add(1, 'days');
                 break;
         }
     }
@@ -738,7 +771,13 @@ export function actualizarEstadoAgendas() {
     let fechaActualizar = moment(new Date());
     // actualiza los agendas en estado pausada, disponible o publicada que se hayan ejecutado el día anterior
     let condicion = {
-        '$or': [{ estado: 'disponible' }, { estado: 'publicada' }, { estado: 'pausada' }],
+        '$or': [{
+            estado: 'disponible'
+        }, {
+            estado: 'publicada'
+        }, {
+            estado: 'pausada'
+        }],
         'horaInicio': {
             $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
         }
@@ -751,8 +790,8 @@ export function actualizarEstadoAgendas() {
             let turnos = agenda.bloques[j].turnos;
             // Verifico si al hay al menos un turno asignado sin asistencia
             if (turnos.filter((turno) => {
-                return (turno.estado === 'asignado' && !(turno.asistencia));
-            }).length > 0) {
+                    return (turno.estado === 'asignado' && !(turno.asistencia));
+                }).length > 0) {
                 todosAsistencia = false;
             }
         }
@@ -790,7 +829,11 @@ export function actualizarTurnosDelDia() {
     let fechaActualizar = moment();
 
     let condicion = {
-        '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
+        '$or': [{
+            estado: 'disponible'
+        }, {
+            estado: 'publicada'
+        }],
         'horaInicio': {
             $gte: (moment(fechaActualizar).startOf('day').toDate() as any),
             $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
@@ -844,6 +887,28 @@ export function saveAgenda(nuevaAgenda) {
         });
     });
 }
+
+
+// Actualiza el paciente dentro del turno, si se realizo un update del paciente (Eventos entre módulos)
+EventCore.on('mpi:patient:update', async function (pacienteModified) {
+    let req = {
+        query: {
+            estado: 'asignado',
+            pacienteId: pacienteModified.id,
+            horaInicio: moment(new Date()).startOf('day').toDate() as any
+        }
+    };
+    let turnos: any = await turnosController.getTurno(req);
+    if (turnos.length > 0) {
+        turnos.forEach(element => {
+            try {
+                agendaController.updatePaciente(pacienteModified, element);
+            } catch (error) {
+                return error;
+            }
+        });
+    }
+});
 
 /**
  * Actualiza el paciente embebido en el turno.
@@ -901,69 +966,89 @@ export function getConsultaDiagnostico(params) {
     return new Promise(async (resolve, reject) => {
         let pipeline = [];
         pipeline = [{
-            $match: {
-                $and: [
-                    { 'horaInicio': { '$gte': new Date(params.horaInicio) } },
-                    { 'horaFin': { '$lte': new Date(params.horaFin) } },
-                    { 'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) } },
-                    { 'bloques.turnos.estado': 'asignado' }
+                $match: {
+                    $and: [{
+                            'horaInicio': {
+                                '$gte': new Date(params.horaInicio)
+                            }
+                        },
+                        {
+                            'horaFin': {
+                                '$lte': new Date(params.horaFin)
+                            }
+                        },
+                        {
+                            'organizacion._id': {
+                                '$eq': mongoose.Types.ObjectId(params.organizacion)
+                            }
+                        },
+                        {
+                            'bloques.turnos.estado': 'asignado'
+                        }
 
-                ]
-            }
-        },
-        {
-            $unwind: '$bloques'
-        },
-        {
-            $project: {
-                bloqueTurnos: { $concatArrays: ['$sobreturnos', '$bloques.turnos'] }
-            }
-        },
-        {
-            $unwind: '$bloqueTurnos'
-        },
-        {
-            $project: {
-                estado: '$bloqueTurnos.estado',
-                paciente: '$bloqueTurnos.paciente',
-                tipoPrestacion: '$bloqueTurnos.tipoPrestacion',
-                diagnosticoCodificaciones: '$bloqueTurnos.diagnostico.codificaciones',
-                codificacionesAuditoria: '$bloqueTurnos.diagnosticoCodificaciones.codificacionesAuditoria',
-            }
-        },
-        {
-            $match: {
-                'estado': 'asignado'
-            }
-        },
+                    ]
+                }
+            },
+            {
+                $unwind: '$bloques'
+            },
+            {
+                $project: {
+                    bloqueTurnos: {
+                        $concatArrays: ['$sobreturnos', '$bloques.turnos']
+                    }
+                }
+            },
+            {
+                $unwind: '$bloqueTurnos'
+            },
+            {
+                $project: {
+                    estado: '$bloqueTurnos.estado',
+                    paciente: '$bloqueTurnos.paciente',
+                    tipoPrestacion: '$bloqueTurnos.tipoPrestacion',
+                    diagnosticoCodificaciones: '$bloqueTurnos.diagnostico.codificaciones',
+                    codificacionesAuditoria: '$bloqueTurnos.diagnosticoCodificaciones.codificacionesAuditoria',
+                }
+            },
+            {
+                $match: {
+                    'estado': 'asignado'
+                }
+            },
 
-        {
-            $unwind: { path: '$diagnosticoCodificaciones', preserveNullAndEmptyArrays: true }
-        },
+            {
+                $unwind: {
+                    path: '$diagnosticoCodificaciones',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
 
-        {
-            $project: {
-                estado: '$estado',
-                nombrePaciente: '$paciente.nombre',
-                apellidoPaciente: '$paciente.apellido',
-                documentoPaciente: '$paciente.documento',
-                tipoPrestacion: '$tipoPrestacion.conceptId',
-                descripcionPrestacion: '$tipoPrestacion.term',
-                auditoriaCodigo: '$diagnosticoCodificaciones.codificacionAuditoria.codigo',
-                auditoriaNombre: '$diagnosticoCodificaciones.codificacionAuditoria.nombre',
-                codProfesionalCie10Codigo: '$diagnosticoCodificaciones.codificacionProfesional.cie10.codigo',
-                codrofesionalCie10Nombre: '$diagnosticoCodificaciones.codificacionProfesional.cie10.nombre',
-                codProfesionalSnomedCodigo: '$diagnosticoCodificaciones.codificacionProfesional.snomed.conceptId',
-                codProfesionalSnomedNombre: '$diagnosticoCodificaciones.codificacionProfesional.snomed.term',
-            }
-        },
+            {
+                $project: {
+                    estado: '$estado',
+                    nombrePaciente: '$paciente.nombre',
+                    apellidoPaciente: '$paciente.apellido',
+                    documentoPaciente: '$paciente.documento',
+                    tipoPrestacion: '$tipoPrestacion.conceptId',
+                    descripcionPrestacion: '$tipoPrestacion.term',
+                    auditoriaCodigo: '$diagnosticoCodificaciones.codificacionAuditoria.codigo',
+                    auditoriaNombre: '$diagnosticoCodificaciones.codificacionAuditoria.nombre',
+                    codProfesionalCie10Codigo: '$diagnosticoCodificaciones.codificacionProfesional.cie10.codigo',
+                    codrofesionalCie10Nombre: '$diagnosticoCodificaciones.codificacionProfesional.cie10.nombre',
+                    codProfesionalSnomedCodigo: '$diagnosticoCodificaciones.codificacionProfesional.snomed.conceptId',
+                    codProfesionalSnomedNombre: '$diagnosticoCodificaciones.codificacionProfesional.snomed.term',
+                }
+            },
         ];
 
         let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
 
         function removeDuplicates(arr) {
             let unique_array = [];
-            let arrMap = arr.map(m => { return m._id; });
+            let arrMap = arr.map(m => {
+                return m._id;
+            });
             for (let i = 0; i < arr.length; i++) {
                 if (arrMap.lastIndexOf(arr[i]._id) === i) {
                     unique_array.push(arr[i]);
@@ -984,14 +1069,26 @@ export function getCantidadConsultaXPrestacion(params) {
 
     return new Promise(async (resolve, reject) => {
         let pipeline = [];
-        pipeline = [
-            {
+        pipeline = [{
                 $match: {
-                    $and: [
-                        { 'horaInicio': { '$gte': new Date(params.horaInicio) } },
-                        { 'horaFin': { '$lte': new Date(params.horaFin) } },
-                        { 'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) } },
-                        { 'bloques.turnos.estado': 'asignado' }
+                    $and: [{
+                            'horaInicio': {
+                                '$gte': new Date(params.horaInicio)
+                            }
+                        },
+                        {
+                            'horaFin': {
+                                '$lte': new Date(params.horaFin)
+                            }
+                        },
+                        {
+                            'organizacion._id': {
+                                '$eq': mongoose.Types.ObjectId(params.organizacion)
+                            }
+                        },
+                        {
+                            'bloques.turnos.estado': 'asignado'
+                        }
                     ]
                 }
             },
@@ -1001,7 +1098,9 @@ export function getCantidadConsultaXPrestacion(params) {
             {
                 $project: {
                     idBloque: '$bloques._id',
-                    bloqueTurnos: { $concatArrays: ['$sobreturnos', '$bloques.turnos'] }
+                    bloqueTurnos: {
+                        $concatArrays: ['$sobreturnos', '$bloques.turnos']
+                    }
                 }
             },
 
@@ -1024,11 +1123,15 @@ export function getCantidadConsultaXPrestacion(params) {
             {
                 $group: {
                     _id: '$tipoPrestacion.term',
-                    nombrePrestacion: { $first: '$tipoPrestacion.term' },
+                    nombrePrestacion: {
+                        $first: '$tipoPrestacion.term'
+                    },
                     conceptId: {
                         $first: '$tipoPrestacion.conceptId'
                     },
-                    total: { $sum: 1 },
+                    total: {
+                        $sum: 1
+                    },
                 }
 
 
@@ -1042,7 +1145,9 @@ export function getCantidadConsultaXPrestacion(params) {
 
         function removeDuplicates(arr) {
             let unique_array = [];
-            let arrMap = arr.map(m => { return m._id; });
+            let arrMap = arr.map(m => {
+                return m._id;
+            });
             for (let i = 0; i < arr.length; i++) {
                 if (arrMap.lastIndexOf(arr[i]._id) === i) {
                     unique_array.push(arr[i]);
@@ -1055,4 +1160,3 @@ export function getCantidadConsultaXPrestacion(params) {
 
     });
 }
-

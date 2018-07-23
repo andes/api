@@ -9,6 +9,7 @@ import { Logger } from '../../../utils/logService';
 import { ElasticSync } from '../../../utils/elasticSync';
 import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
+import { EventCore } from '@andes/event-bus';
 
 
 let logD = debug('paciente-controller');
@@ -790,7 +791,7 @@ router.patch('/pacientes/:id', function (req, res, next) {
                     try { // Actualizamos los turnos activos del paciente
                         let repetida = await controller.checkCarpeta(req, resultado.paciente);
                         if (!repetida) {
-                            controller.updateTurnosPaciente(resultado.paciente);
+                            // controller.updateTurnosPaciente(resultado.paciente);
                             controller.updateCarpetaEfectores(req, resultado.paciente);
                         } else {
                             return next('El numero de carpeta ya existe');
@@ -801,7 +802,8 @@ router.patch('/pacientes/:id', function (req, res, next) {
                     resultado.paciente.markModified('contacto');
                     resultado.paciente.contacto = req.body.contacto;
                     try {
-                        controller.updateTurnosPaciente(resultado.paciente);
+                        // EventCore.emitAsync('mpi:patient:update', resultado.paciente);
+                        // controller.updateTurnosPaciente(resultado.paciente);
                     } catch (error) { return next(error); }
                     break;
                 case 'linkIdentificadores':
