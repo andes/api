@@ -788,7 +788,7 @@ router.patch('/pacientes/:id', function (req, res, next) {
                     try { // Actualizamos los turnos activos del paciente
                         let repetida = await controller.checkCarpeta(req, resultado.paciente);
                         if (!repetida) {
-                            controller.updateTurnosPaciente(resultado.paciente);
+                            // controller.updateTurnosPaciente(resultado.paciente);
                             controller.updateCarpetaEfectores(req, resultado.paciente);
                         } else {
                             return next('El numero de carpeta ya existe');
@@ -799,7 +799,8 @@ router.patch('/pacientes/:id', function (req, res, next) {
                     resultado.paciente.markModified('contacto');
                     resultado.paciente.contacto = req.body.contacto;
                     try {
-                        controller.updateTurnosPaciente(resultado.paciente);
+                        // EventCore.emitAsync('mpi:patient:update', resultado.paciente);
+                        // controller.updateTurnosPaciente(resultado.paciente);
                     } catch (error) { return next(error); }
                     break;
                 case 'linkIdentificadores':

@@ -5,8 +5,6 @@ import { ElasticSync } from '../../../utils/elasticSync';
 import { Logger } from '../../../utils/logService';
 import { Matching } from '@andes/match';
 import { Auth } from './../../../auth/auth.class';
-import * as agendaController from '../../../modules/turnos/controller/agenda';
-import * as turnosController from '../../../modules/turnos/controller/turnosController';
 import { EventCore } from '@andes/event-bus';
 
 /**
@@ -58,9 +56,6 @@ export function updatePaciente(pacienteObj, data, req) {
             if (err2) {
                 return reject(err2);
             }
-            try {
-                updateTurnosPaciente(pacienteObj);  // Claro ejemplo de lo que no hay que hacer más!!
-            } catch (error) { return error; }       // Para esto se podría emitir un evento entre módulos!!!
             let connElastic = new ElasticSync();
             connElastic.sync(pacienteObj).then(updated => {
                 if (updated) {
@@ -71,9 +66,7 @@ export function updatePaciente(pacienteObj, data, req) {
                 } else {
                     Logger.log(req, 'mpi', 'insert', pacienteObj);
                 }
-                // Código para emitir eventos
                 EventCore.emitAsync('mpi:patient:update', pacienteObj);
-                //
                 resolve(pacienteObj);
             }).catch(error => {
                 return reject(error);
@@ -82,31 +75,7 @@ export function updatePaciente(pacienteObj, data, req) {
         });
     });
 }
-/**
- * Busca los turnos futuros asignados al paciente y actualiza los datos.
- *
- * @param {any} pacienteModified paciente modificado
- * @returns
- */
-export async function updateTurnosPaciente(pacienteModified) {
-    let req = {
-        query: {
-            estado: 'asignado',
-            pacienteId: pacienteModified.id,
-            horaInicio: moment(new Date()).startOf('day').toDate() as any
-        }
-    };
-    let turnos: any = await turnosController.getTurno(req);
-    if (turnos.length > 0) {
-        turnos.forEach(element => {
-            try {
-                agendaController.updatePaciente(pacienteModified, element);
-            } catch (error) {
-                return error;
-            }
-        });
-    }
-}
+
 
 export function updatePacienteMpi(pacMpi, pacAndes, req) {
     return new Promise((resolve, reject) => {
