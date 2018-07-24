@@ -230,15 +230,26 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', function (req, res, next) {
         if (err) {
             return next(err);
         }
-        let indexBloque = (data as any).bloques.findIndex(bloq => {
-            return (bloq.id === req.params.idBloque);
-        });
-        let indexTurno = (data as any).bloques[indexBloque].turnos.findIndex(t => {
-            return (t.id === req.params.idTurno);
-        });
+        let etiquetaAvisoSuspension;
+        let indexBloque;
+        let indexTurno;
+
+        if (req.params.idBloque !== '-1') {
+            indexBloque = (data as any).bloques.findIndex(bloq => {
+                return (bloq.id === req.params.idBloque);
+            });
+            indexTurno = (data as any).bloques[indexBloque].turnos.findIndex(t => {
+                return (t.id === req.params.idTurno);
+            });
+            etiquetaAvisoSuspension = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.avisoSuspension';
+        } else {
+            indexTurno = (data as any).sobreturnos.findIndex(sobreturno => Object.is(req.params.idTurno, String(sobreturno._id)));
+            etiquetaAvisoSuspension = 'sobreturnos.' + indexTurno + '.avisoSuspension';
+        }
+
         let update = {};
         if (req.body.avisoSuspension) {
-            let etiquetaAvisoSuspension: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.avisoSuspension';
+            etiquetaAvisoSuspension = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.avisoSuspension';
             update[etiquetaAvisoSuspension] = req.body.avisoSuspension;
         }
         if (req.body.motivoConsulta) {

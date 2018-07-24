@@ -1,6 +1,7 @@
 import * as ws from 'ws';
 import { Server } from 'http';
 import * as debug from 'debug';
+import { Connections } from './connections';
 
 export class Websockets {
     /**
@@ -20,7 +21,7 @@ export class Websockets {
 
         io.on('connection', (socket) => {
 
-           // console.log('user connected', socket.id);
+            // console.log('user connected', socket.id);
 
             socket.on('disconnect', function () {
                 if (io.dataRooms !== undefined) {

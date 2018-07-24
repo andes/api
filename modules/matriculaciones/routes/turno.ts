@@ -1,12 +1,12 @@
 import * as express from 'express';
 import * as turno from '../schemas/turno';
- import{ profesional } from '../../../core/tm/schemas/profesional';
+import { profesional } from '../../../core/tm/schemas/profesional';
 import { turnoSolicitado } from '../schemas/turnoSolicitado';
 import { Auth } from '../../../auth/auth.class';
 let router = express.Router();
 
 
-router.post('/turnos/save/:turnoId', function(request, response, errorHandler) {
+router.post('/turnos/save/:turnoId', function (request, response, errorHandler) {
 
     turno.findByIdAndUpdate(request.params.turnoId, request.body, { new: true }, (err, res) => {
         if (err) {
@@ -20,51 +20,51 @@ router.post('/turnos/save/:turnoId', function(request, response, errorHandler) {
 });
 
 
-router.post('/turnos/:tipo/:profesionalId/', function(request, response, errorHandler) {
+router.post('/turnos/:tipo/:profesionalId/', function (request, response, errorHandler) {
 
     // Convert date to user datetime.
-    let  fechaTurno = new Date(request.body.turno.fecha);
+    let fechaTurno = new Date(request.body.turno.fecha);
     if (request.body.sobreTurno) {
-            profesional.findById(request.params.profesionalId, function(error, datos) {
-        let nTurno = new turno({
-            fecha: fechaTurno,
-            tipo: request.body.turno.tipo,
-            profesional: datos
-        });
+        profesional.findById(request.params.profesionalId, function (error, datos) {
+            let nTurno = new turno({
+                fecha: fechaTurno,
+                tipo: request.body.turno.tipo,
+                profesional: datos
+            });
 
-        nTurno.save((err) => {
-            if (err) {
-                errorHandler(err);
-            }
+            nTurno.save((err) => {
+                if (err) {
+                    errorHandler(err);
+                }
 
-            response.json(nTurno);
+                response.json(nTurno);
+            });
         });
-    });
     } else {
 
-    turnoSolicitado.findById(request.params.profesionalId, function(error, datos) {
-        let nTurno = new turno({
-            fecha: fechaTurno,
-            tipo: request.body.turno.tipo,
-            profesional: datos
-        });
+        turnoSolicitado.findById(request.params.profesionalId, function (error, datos) {
+            let nTurno = new turno({
+                fecha: fechaTurno,
+                tipo: request.body.turno.tipo,
+                profesional: datos
+            });
 
-        nTurno.save((err) => {
-            if (err) {
-                errorHandler(err);
-            }
+            nTurno.save((err) => {
+                if (err) {
+                    errorHandler(err);
+                }
 
-            response.json(nTurno);
+                response.json(nTurno);
+            });
         });
-    });
-}
+    }
 });
 
 
 /**
  * Listado de Turnos
  */
-router.get('/turnos/proximos/?', Auth.authenticate() , function(request: any, response, errorHandler) {
+router.get('/turnos/proximos/?', Auth.authenticate(), function (request: any, response, errorHandler) {
     if (!Auth.check(request, 'matriculaciones:turnos:*')) {
         return errorHandler(403);
     }
@@ -85,7 +85,7 @@ router.get('/turnos/proximos/?', Auth.authenticate() , function(request: any, re
 
     } else {
         let hoy = new Date();
-       let fechaActualMargen = hoy.setMinutes(hoy.getMinutes() - 30);
+        let fechaActualMargen = hoy.setMinutes(hoy.getMinutes() - 30);
         fechaConsulta = fechaActualMargen;
     }
 
@@ -94,7 +94,7 @@ router.get('/turnos/proximos/?', Auth.authenticate() , function(request: any, re
 
     };
 
-    if (request.query.nombre || request.query.apellido || request.query.documento ) {
+    if (request.query.nombre || request.query.apellido || request.query.documento) {
 
         let busquedaProfesional = {};
 
@@ -111,20 +111,20 @@ router.get('/turnos/proximos/?', Auth.authenticate() , function(request: any, re
         }
 
 
-        turnoSolicitado.find(busquedaProfesional).select('_id').exec(function(errProf, profesionales) {
+        turnoSolicitado.find(busquedaProfesional).select('_id').exec(function (errProf, profesionales) {
 
             if (errProf) {
                 return errorHandler(errProf);
             }
 
-            let profesionalesIds = profesionales.map(function(item, idx) {
+            let profesionalesIds = profesionales.map(function (item, idx) {
                 return item._id;
             });
 
             busquedaTurno['profesional'] = { $in: profesionalesIds };
 
             turno.find(busquedaTurno).populate('profesional')
-                .sort({fecha: 1, hora: 1})
+                .sort({ fecha: 1, hora: 1 })
                 .skip(offset)
                 .limit(chunkSize)
                 .exec((errTurno, data) => {
@@ -134,7 +134,7 @@ router.get('/turnos/proximos/?', Auth.authenticate() , function(request: any, re
                         return errorHandler(errTurno);
                     }
 
-                    turno.count(busquedaTurno).populate('profesional').exec(function(error, count) {
+                    turno.count(busquedaTurno).populate('profesional').exec(function (error, count) {
                         responseData.totalPages = Math.ceil(count / chunkSize) !== 0 ? Math.ceil(count / chunkSize) : 1;
 
                         if (error) {
@@ -143,20 +143,20 @@ router.get('/turnos/proximos/?', Auth.authenticate() , function(request: any, re
 
                         response.status(201).json(responseData);
                     });
-            });
+                });
         });
 
     } else {
 
         turno.find(busquedaTurno).populate('profesional')
-            .sort({fecha: 1, hora: 1})
+            .sort({ fecha: 1, hora: 1 })
             .skip(offset)
             .limit(chunkSize)
             .exec((error, data) => {
 
                 responseData.data = data;
 
-                turno.count(busquedaTurno).populate('profesional').exec(function(err, count) {
+                turno.count(busquedaTurno).populate('profesional').exec(function (err, count) {
                     responseData.totalPages = Math.floor(count / chunkSize);
 
                     if (error) {
@@ -164,7 +164,7 @@ router.get('/turnos/proximos/?', Auth.authenticate() , function(request: any, re
                     }
                     response.status(201).json(responseData);
                 });
-        });
+            });
     }
 });
 
@@ -172,7 +172,7 @@ router.get('/turnos/proximos/?', Auth.authenticate() , function(request: any, re
 /**
  * Devuelve los turnos del tipo y mes pasados por parametro.
  */
-router.get('/turnos/:tipo/?', function(request, response, errorHandler) {
+router.get('/turnos/:tipo/?', function (request, response, errorHandler) {
 
     let matchObj = {
         tipo: request.params.tipo
@@ -197,8 +197,8 @@ router.get('/turnos/:tipo/?', function(request, response, errorHandler) {
                 $project: {
                     tipo: true,
                     fecha: true,
-                    anio: {  $year: '$fecha' },
-                    mes: { $month: '$fecha'},
+                    anio: { $year: '$fecha' },
+                    mes: { $month: '$fecha' },
                     dia: { $dayOfMonth: '$fecha' }
                     // hora: { $hour: '$fecha' },
                     // minutos: { $minute: '$fecha'}
@@ -213,11 +213,11 @@ router.get('/turnos/:tipo/?', function(request, response, errorHandler) {
                         // anio: { $year: '$fecha' },
                         // mes: { $month: '$fecha' },
                         // dia: { $dayOfMonth: '$fecha' },
-                        fechaStr: { $concat: [{ $substr: ['$dia', 0 , -1] }, '/', { $substr: ['$mes', 0 , -1] }, '/', { $substr: ['$anio', 0 , -1] }] }
+                        fechaStr: { $concat: [{ $substr: ['$dia', 0, -1] }, '/', { $substr: ['$mes', 0, -1] }, '/', { $substr: ['$anio', 0, -1] }] }
                         // hora: { $hour: '$fecha' },
                         // minutos: { $minute: '$fecha'}
                     },
-                    count: { $sum: 1}
+                    count: { $sum: 1 }
                 }
             }], (error, datos) => {
 
@@ -226,7 +226,7 @@ router.get('/turnos/:tipo/?', function(request, response, errorHandler) {
                 }
 
                 response.status(201).json(datos);
-        });
+            });
 
     } else {
 
@@ -238,7 +238,7 @@ router.get('/turnos/:tipo/?', function(request, response, errorHandler) {
                     anio: { $year: '$fecha' },
                     mes: { $month: '$fecha' },
                     dia: { $dayOfMonth: '$fecha' },
-                    horaTimeOffset: { $subtract: [ '$fecha', 3 * 60 * 60 * 1000 ] },
+                    horaTimeOffset: { $subtract: ['$fecha', 3 * 60 * 60 * 1000] },
                     minutos: { $minute: '$fecha' }
                 }
             }, {
@@ -252,7 +252,7 @@ router.get('/turnos/:tipo/?', function(request, response, errorHandler) {
                         anio: { $year: '$fecha' },
                         dia: { $dayOfMonth: '$fecha' },
                         hora: { $hour: '$horaTimeOffset' },
-                        minutos: { $minute: '$fecha'}
+                        minutos: { $minute: '$fecha' }
                         // dateDifference: { $hour: '$dateDifference'}
                     },
                     count: { $sum: 1 }
@@ -264,7 +264,7 @@ router.get('/turnos/:tipo/?', function(request, response, errorHandler) {
                 }
 
                 response.status(201).json(datos);
-        });
+            });
     }
 });
 
@@ -293,14 +293,14 @@ router.get('/turnos/:id*?', Auth.authenticate(), function (req, res, errorHandle
             opciones['fecha'] = req.query.fecha;
         }
 
-        turno.find(opciones).populate('profesional').sort({fecha: 1, hora: 1}).exec((error, data) => {
+        turno.find(opciones).populate('profesional').sort({ fecha: 1, hora: 1 }).exec((error, data) => {
             if (error) {
                 return errorHandler(error);
             }
 
             res.json(data);
         });
-   }
+    }
 });
 
 

@@ -7,7 +7,7 @@ RUN apk update && apk upgrade && apk add --no-cache git
 
 WORKDIR /usr/src/api
 
-COPY package.json  ./
+COPY package.json package-lock.json  ./
 
 RUN npm install
 

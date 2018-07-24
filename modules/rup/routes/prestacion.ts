@@ -94,6 +94,9 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         if (req.query.idPrestacionOrigen) {
             query.where('solicitud.prestacionOrigen').equals(req.query.idPrestacionOrigen);
         }
+        if (req.query.conceptId) {
+            query.where('solicitud.tipoPrestacion.conceptId').equals(req.query.conceptId);
+        }
         if (req.query.turnos) {
             query.where('solicitud.turno').in(req.query.turnos);
         }
@@ -227,6 +230,7 @@ router.patch('/prestaciones/:id', function (req, res, next) {
                     organizacion: prestacion.solicitud.organizacion,
                     frecuentes: req.body.registros
                 };
+
                 frecuentescrl.actualizarFrecuentes(dto)
                     .then((resultadoFrec: any) => {
                         Logger.log(req, 'rup', 'update', {

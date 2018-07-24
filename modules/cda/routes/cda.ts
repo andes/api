@@ -85,7 +85,7 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
 
         let paciente = await cdaCtr.findOrCreate(req, dataPaciente, organizacion._id);
         if (!paciente) {
-            return next({ error: 'paciente_inexistente'});
+            return next({ error: 'paciente_inexistente' });
         }
         let uniqueId = String(new mongoose.Types.ObjectId());
 
@@ -243,9 +243,9 @@ router.get('/files/:name', async (req: any, res, next) => {
  */
 
 router.get('/:id', async (req: any, res, next) => {
-    // if (!Auth.check(req, 'cda:get')) {
-    //     return next(403);
-    // }
+    if (!Auth.check(req, 'cda:get')) {
+        return next(403);
+    }
 
     let _base64 = req.params.id;
     let CDAFiles = makeFs();
