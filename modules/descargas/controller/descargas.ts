@@ -46,7 +46,7 @@ export class Documento {
         });
     }
 
-    private static async generarHTMLv2(req) {
+    private static async generarHTML(req) {
 
         let prestacion: any = await this.getPrestacionData(req.body.idPrestacion);
         let paciente: any = await Paciente.buscarPaciente(prestacion.paciente.id);
@@ -79,7 +79,6 @@ export class Documento {
                 .replace('<!--datosRapidosPaciente-->', datosRapidosPaciente)
                 .replace('<!--fechaNacimiento-->', moment(fechaNacimiento).format('DD/MM/YYYY'))
                 .replace('<!--nroCarpeta-->', (typeof nroCarpeta !== 'undefined' ? nroCarpeta : 'sin nro de carpeta'))
-                // .replace('<!--obraSocial-->', paciente.financiador[0] || '')
                 .replace('<!--organizacionNombreSolicitud-->', prestacion.solicitud.organizacion.nombre)
                 .replace('<!--orgacionacionDireccionSolicitud-->', organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre)
                 .replace('<!--fechaSolicitud-->', moment(prestacion.solicitud.fecha).format('DD/MM/YYYY'))
@@ -108,27 +107,29 @@ export class Documento {
                 .replace('<!--organizacionNombreSolicitud-->', prestacion.solicitud.organizacion.nombre)
                 .replace('<!--orgacionacionDireccionSolicitud-->', organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre)
                 .replace('<!--fechaSolicitud-->', moment(prestacion.solicitud.fecha).format('DD/MM/YYYY'));
-            // .replace('<!--profesionalFirmante2-->', '');
 
             html = header + html + footer;
 
             // Se cargan logos
-            let logoEfector = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-efector.png'));
+            let nombreLogo = prestacion.solicitud.organizacion.nombre.toLocaleLowerCase().replace(/-|\./g, '').replace(/ {2,}| /g, '*');
+            try {
+                let logoEfector;
+                logoEfector = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/efectores/' + nombreLogo + '.png'));
+                html = html
+                    .replace('<!--logoOrganizacion-->', `<img class="logo-efector" src="data:image/png;base64,${logoEfector.toString('base64')}">`);
+            } catch (fileError) {
+                html = html
+                    .replace('<!--logoOrganizacion-->', `<b class="no-logo-efector">${prestacion.solicitud.organizacion.nombre}</b>`);
+            }
             let logoAdicional = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-adicional.png'));
             let logoAndes = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-andes-h.png'));
             let logoPDP = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-pdp.png'));
             let logoPDP2 = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/logo-pdp-h.png'));
 
-            // Firmas
-            // let firma1 = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/firmas/firma-1.png'));
-            // let firma2 = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/img/firmas/firma-2.png'));
-
+            // Firmas|
             html = html
-                .replace('<!--logoOrganizacion-->', `<img class="logo-efector" src="data:image/png;base64,${logoEfector.toString('base64')}">`)
                 .replace('<!--logoAdicional-->', `<img class="logo-adicional" src="data:image/png;base64,${logoAdicional.toString('base64')}">`)
                 .replace('<!--logoAndes-->', `<img class="logo-andes" src="data:image/png;base64,${logoAndes.toString('base64')}">`)
-                // .replace('<!--firma1-->', `<img class="logo-andes" src="data:image/png;base64,${firma1.toString('base64')}">`)
-                // .replace('<!--firma2-->', `<img class="logo-andes" src="data:image/png;base64,${firma2.toString('base64')}">`)
                 .replace('<!--logoPDP-->', `<img class="logo-pdp" src="data:image/png;base64,${logoPDP.toString('base64')}">`)
                 .replace('<!--logoPDP2-->', `<img class="logo-pdp-h" src="data:image/png;base64,${logoPDP2.toString('base64')}">`);
 
@@ -138,7 +139,7 @@ export class Documento {
         }
     }
 
-    private static generarCSSv2() {
+    private static generarCSS() {
         // Se agregan los estilos CSS
         let scssFile = path.join(__dirname, '../../../templates/rup/informes/sass/main.scss');
 
@@ -160,7 +161,7 @@ export class Documento {
      * @param next ExpressJS next
      * @param options html-pdf/PhantonJS rendering options
      */
-    static descargarV2(req, res, next, options = null) {
+    static descargar(req, res, next, options = null) {
 
         return new Promise((resolve, reject) => {
 
@@ -194,8 +195,8 @@ export class Documento {
                         this.options = phantomPDFOptions;
                     }
 
-                    this.generarHTMLv2(req).then(htmlPDF => {
-                        htmlPDF = htmlPDF + this.generarCSSv2();
+                    this.generarHTML(req).then(htmlPDF => {
+                        htmlPDF = htmlPDF + this.generarCSS();
                         pdf.create(htmlPDF, this.options).toFile((err2, file): any => {
 
                             if (err2) {

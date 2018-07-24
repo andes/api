@@ -10,7 +10,7 @@ let router = express.Router();
  * que van a ser parte del archivo
  */
 router.post('/:tipo', (req: any, res, next) => {
-    Documento.descargarV2(req, res, next).then(archivo => {
+    Documento.descargar(req, res, next).then(archivo => {
         res.download((archivo as string), (err) => {
             if (err) {
                 next(err);
