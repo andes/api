@@ -1,9 +1,7 @@
-import * as express from 'express';
-import * as mongoose from 'mongoose';
+import * as express from 'express'; 
 import * as moment from 'moment';
 
-import { farmaciasLocalidades, farmaciasTurnos } from '../schemas/farmacias';
-import * as farmaciaController from '../controller/FarmaciasTurnosDownloader';
+import { farmaciasLocalidades, farmaciasTurnos } from '../schemas/farmacias'; 
 
 let router = express.Router();
 
