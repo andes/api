@@ -85,7 +85,7 @@ export class Documento {
                 .replace('<!--nroCarpeta-->', (typeof nroCarpeta !== 'undefined' ? nroCarpeta : 'sin nro de carpeta'))
                 // .replace('<!--obraSocial-->', paciente.financiador[0] || '')
                 .replace('<!--organizacionNombreSolicitud-->', prestacion.solicitud.organizacion.nombre)
-                .replace('<!--orgacionacionDireccionSolicitud-->', organizacion.direccion.valor)
+                .replace('<!--orgacionacionDireccionSolicitud-->', organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre)
                 .replace('<!--fechaSolicitud-->', moment(prestacion.solicitud.fecha).format('DD/MM/YYYY'))
                 .replace('<!--profesionalSolicitud-->', profesionalSolicitud);
 
@@ -110,7 +110,7 @@ export class Documento {
                 .replace('<!--profesionalValidacion-->', profesionalValidacion)
                 .replace('<!--fechaValidacion-->', moment(fechaValidacion).format('DD/MM/YYYY HH:mm') + ' hs')
                 .replace('<!--organizacionNombreSolicitud-->', prestacion.solicitud.organizacion.nombre)
-                .replace('<!--orgacionacionDireccionSolicitud-->', organizacion.direccion.valor)
+                .replace('<!--orgacionacionDireccionSolicitud-->', organizacion.direccion.valor + ', ' + organizacion.direccion.ubicacion.localidad.nombre)
                 .replace('<!--fechaSolicitud-->', moment(prestacion.solicitud.fecha).format('DD/MM/YYYY'));
             // .replace('<!--profesionalFirmante2-->', '');
 
