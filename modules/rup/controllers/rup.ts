@@ -57,7 +57,7 @@ export function buscarEnHuds(prestaciones, conceptos) {
             // verificamos si el registro de la prestacion tiene alguno de
             // los conceptos en su array de registros
             let resultado = matchConcepts(registro, conceptos);
-
+            console.log("resultado",resultado)
             if (resultado) {
                 // agregamos el resultado a a devolver
                 data.push({

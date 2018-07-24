@@ -33,7 +33,7 @@ router.get('/prestaciones/huds/:idPaciente', function (req, res, next) {
     let conceptos = (req.query.conceptIds) ? req.query.conceptIds : null;
 
     return Prestacion.find(query, (err, prestaciones) => {
-console.log(prestaciones)
+        console.log(prestaciones)
         if (err) {
             return next(err);
         }
@@ -44,7 +44,7 @@ console.log(prestaciones)
 
         // ejecutamos busqueda recursiva
         let data = buscarEnHuds(prestaciones, conceptos);
-
+console.log("aca final",data)
         res.json(data);
     });
 });

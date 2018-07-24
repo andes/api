@@ -24,6 +24,7 @@ router.get('/formularioTerapeutico/:id?', async function (req, res, next) {
         let filtrados;
         let opciones = {};
         let proyeccion = {};
+        console.log(req.query)
         if (req.query.padre) {
             let arr = await formularioCtrl.getPadres(req.query.padre, []);
             res.json(arr);
@@ -78,6 +79,7 @@ router.get('/formularioTerapeutico/:id?', async function (req, res, next) {
                     out = [];
                     data.forEach(function (nodo, indiceNodo) {
                         out.push(nodo);
+                        console.log(nodo)
                     });
                 } else {
                     let idpadre = req.query.idpadre;
