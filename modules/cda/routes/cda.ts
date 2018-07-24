@@ -169,7 +169,6 @@ router.post('/', async (req: any, res, next) => {
                 let pacientec = await cdaCtr.findOrCreate(req, cdaData.paciente, orgId);
 
                 let fileData, adjuntos;
-                console.log("asdasd", cdaData)
                 if (cdaData.adjunto && adjunto64) {
                     let fileObj: any = cdaCtr.base64toStream(adjunto64);
                     fileObj.metadata = {
@@ -243,8 +242,9 @@ router.get('/files/:name', async (req: any, res, next) => {
 });
 
 /**
- * Devuelve el XML de un CDA según un ID
+ * Listado de los CDAs de un paciente dado su documento y su sexo.
  */
+
 router.get('/paciente/', async (req: any, res, next) => {
     if (!Auth.check(req, 'cda:list')) {
         return next(403);
@@ -257,15 +257,18 @@ router.get('/paciente/', async (req: any, res, next) => {
             let pac: any = resultado[i];
             let pacienteID = pac._id;
             list = await cdaCtr.searchByPatient(pacienteID, null, { skip: 0, limit: 100 });
-            //   lista = [...list];
             lista.push(list);
-
         }
         res.json(lista);
     }).catch(() => {
         return res.send({ error: 'paciente_error' });
     });
 });
+
+/**
+ * Listado de los CDAs de un paciente
+ * API demostrativa, falta analizar como se va a buscar en el repositorio
+ */
 
 router.get('/paciente/:id', async (req: any, res, next) => {
     if (mongoose.Types.ObjectId.isValid(req.params.id)) {
@@ -283,6 +286,9 @@ router.get('/paciente/:id', async (req: any, res, next) => {
 });
 
 
+/**
+ * Devuelve el XML de un CDA según un ID
+ */
 router.get('/:id', async (req: any, res, next) => {
     // if (!Auth.check(req, 'cda:get')) {
     //     return next(403);
@@ -323,10 +329,6 @@ router.get('/tojson/:id', async (req: any, res, next) => {
     });
 });
 
-/**
- * Listado de los CDAs de un paciente
- * API demostrativa, falta analizar como se va a buscar en el repositorio
- */
 
 
 

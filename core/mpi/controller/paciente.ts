@@ -215,38 +215,31 @@ export function buscarPaciente(id): Promise<{ db: String, paciente: any }> {
         });
     });
 }
-
-
-
+/**
+ * Busca un paciente en ambas DBs (Andes y MPI) segun su documento, sexo y estado validado
+ * devuelve los datos del paciente
+ *
+ * @export
+ * @param {any} id
+ * @returns
+ */
 export function buscarPacByDocYSexo(documento, sexo): Promise<{ db: String, paciente: any }[]> {
+
     return new Promise((resolve, reject) => {
         let query = {
             documento,
-            sexo
+            sexo,
+            'estado': 'validado' // Analizar
         };
-        let lista = [];
         Promise.all([
-            paciente.find(query, function (err, data) {
-                if (err) {
-                    reject(err);
-                } else {
-                    if (data) {
-
-                        lista = [...lista, ...data];
-                    }
-                }
-            }),
-            pacienteMpi.find(query, function (err2, dataMpi) {
-                if (err2) {
-                    reject(err2);
-                } else if (dataMpi) {
-
-                    lista = [...lista, ...dataMpi];
-                }
-            })
-        ]).then(() => {
+            paciente.find(query),
+            pacienteMpi.find(query)
+        ]).then(values => {
+            let lista = [];
+            lista = [...values[0], ...values[1]];
             resolve(lista);
         });
+
     });
 }
 
