@@ -50,4 +50,3 @@ definitions:
         type: string
         description: ID del Paciente
         example: "5b4f4b22043bdc5c23995767"
-      

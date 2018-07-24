@@ -110,7 +110,11 @@ paths:
         - application/xsl
       responses:
         '200':
-          description: Devuelve el archivo de estilo para renderizar HTML desde el browser.     
+          description: Devuelve el archivo de estilo para renderizar HTML desde el browser.
+        '401':
+          description: No Autenticado
+        '403':
+          description: El token de acceso no tiene el alcance requerido    
   /modules/cda/files/{fileName}:
     get:
       tags:
@@ -130,6 +134,65 @@ paths:
       responses:
         '200':
           description:  Devuelve los archivos almacenados por los CDAs
+        '401':
+          description: No Autenticado
+        '403':
+          description: El token de acceso no tiene el alcance requerido 
+  /modules/cda/paciente/:
+    get:
+      tags:
+        - "cda"
+      description:  Devuelve un listado con los CDA de un paciente validado dado su documento y sexo (solo los xml). Ejemplo .../cda/paciente?documento=12345678&sexo=femenino
+      summary: Devuelve un listado con los CDA de un paciente validado dado su documento y sexo (solo los xml)
+      security:
+        - JWT: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: documento
+          in: query
+          description: documento del paciente.
+          required: true
+          type: string
+        - name: sexo
+          in: query
+          description: sexo del paciente. Los formatos permitidos son 'femenino', 'masculino', 'otro'
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Devuelve un listado con los CDA de un paciente
+        '401':
+          description: No Autenticado
+        '403':
+          description: El token de acceso no tiene el alcance requerido 
+  /modules/cda/paciente/{id}:
+    get:
+      tags:
+        - "cda"
+      description:  Devuelve un listado con los CDA de un paciente dado su ID (solo los xml)
+      summary: Devuelve un listado con los CDA de un paciente (solo los xml)
+      security:
+        - JWT: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: id
+          in: path
+          description: Identificación del paciente
+          required: true
+          type: string
+      responses:
+        '200':
+          description: Devuelve un listado con los CDA de un paciente
+        '401':
+          description: No Autenticado
+        '403':
+          description: El token de acceso no tiene el alcance requerido 
   /modules/cda/{id}:
     get:
       tags:
@@ -151,6 +214,10 @@ paths:
       responses:
         '200':
           description: Devuelve el xml del CDA
+        '401':
+          description: No Autenticado
+        '403':
+          description: El token de acceso no tiene el alcance requerido 
   /modules/cda/tojson/{id}:
     get:
       tags:
@@ -172,27 +239,10 @@ paths:
       responses:
         '200':
           description: Devuelve el json del CDA 
-  /modules/cda/paciente/{id}:
-    get:
-      tags:
-        - "cda"
-      description:  Devuelve un listado con los CDA de un paciente dado su ID (solo los xml)
-      summary: Devuelve un listado con los CDA de un paciente (solo los xml)
-      security:
-        - JWT: []
-      consumes:
-        - application/json
-      produces:
-        - application/json
-      parameters:
-        - name: id
-          in: path
-          description: Identificación del paciente
-          required: true
-          type: string
-      responses:
-        '200':
-          description: Devuelve un listado con los CDA de un paciente 
+        '401':
+          description: No Autenticado
+        '403':
+          description: El token de acceso no tiene el alcance requerido 
   /modules/cda/{id}/{fileName}:
     get:
       tags:
@@ -216,5 +266,9 @@ paths:
           type: string
       responses:
         '200':
-          description: Devuelve el archivo adjunto del cda     
-  
+          description: Devuelve el archivo adjunto del cda
+        '401':
+          description: No Autenticado
+        '403':
+          description: El token de acceso no tiene el alcance requerido      
+   
