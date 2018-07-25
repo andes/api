@@ -7,7 +7,12 @@ export let tipoPrestacionSchema = new mongoose.Schema({
     semanticTag: {
         type: String,
         enum: ['procedimiento', 'solicitud', 'hallazgo', 'trastorno', 'antecedenteFamiliar', 'régimen/tratamiento']
-    }
+    },
+    noNominalizada: {
+        type: Boolean,
+        required: true,
+        default: false
+    },
 });
 
 /* Se definen los campos virtuals */
