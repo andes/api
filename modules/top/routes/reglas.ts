@@ -15,10 +15,17 @@ router.post('/reglas', function (req, res, next) {
     res.json(data.resultados);
 });
 
-router.get('/reglas/:idDestino?', function (req, res, next) {
+router.get('/reglas', function (req, res, next) {
     let query = reglas.find({});
-    if (req.query.idDestino) {
-        query.where('destino.organizacion.id').equals(new mongoose.Types.ObjectId(req.query.idDestino));
+    if (req.query.organizacionOrigen) {
+        query.where('origen.organizacion.id').equals(new mongoose.Types.ObjectId(req.query.organizacionOrigen));
+    }
+    if (req.query.prestacionOrigen) {
+        query.where('destino.prestacion.conceptId').equals(req.query.prestacionDestino);
+    }
+
+    if (req.query.organizacionDestino) {
+        query.where('destino.organizacion.id').equals(new mongoose.Types.ObjectId(req.query.organizacionDestino));
     }
     if (req.query.prestacionDestino) {
         query.where('destino.prestacion.conceptId').equals(req.query.prestacionDestino);
