@@ -34,7 +34,7 @@ router.get('/puco/', async function (req, res, next) {
                 if (err) {
                     return next(err);
                 }
-                res.json([{ dni: rta[0].dni, transmite: rta[0].transmite, nombre: rta[0].nombre, financiador: data[0].nombre, version: rta[0].version }]);
+                res.json([{ tipoDocumento: rta[0].tipoDocumento, dni: rta[0].dni, transmite: rta[0].transmite, nombre: rta[0].nombre, codigoFinanciador: rta[0].codigoFinanciador, financiador: data[0].nombre, version: rta[0].version }]);
             });
         } else {
             res.json();
