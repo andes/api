@@ -21,7 +21,7 @@ router.get('/reglas', function (req, res, next) {
         query.where('origen.organizacion.id').equals(new mongoose.Types.ObjectId(req.query.organizacionOrigen));
     }
     if (req.query.prestacionOrigen) {
-        query.where('destino.prestacion.conceptId').equals(req.query.prestacionDestino);
+        query.where('destino.prestaciones.conceptId').equals(req.query.prestacionDestino);
     }
 
     if (req.query.organizacionDestino) {
