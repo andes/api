@@ -75,7 +75,21 @@ export let schema = new mongoose.Schema({
         prestacionOrigen: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'prestacion'
-        }
+        },
+
+        organizacionOrigen: {
+            id: mongoose.Schema.Types.ObjectId,
+            nombre: String
+        },
+
+        profesionalOrigen: {
+            // requerido, validar en middleware
+            id: mongoose.Schema.Types.ObjectId,
+            nombre: String,
+            apellido: String,
+            documento: String
+        },
+
     },
 
     // Datos de la ejecución (i.e. realización)
@@ -119,12 +133,12 @@ schema.pre('save', function (next) {
         return next(err);
     }
 
-    if (!prestacion.solicitud.organizacion.id) {
+    if (!prestacion.solicitud.organizacionOrigen.id) {
         let err = new Error('Debe seleccionar la organizacion desde la cual se solicita');
         return next(err);
     }
 
-    if (!prestacion.solicitud.profesional.id) {
+    if (!prestacion.solicitud.profesionalOrigen.id) {
         let err = new Error('Debe seleccionar el profesional que solicita');
         return next(err);
     }
@@ -134,7 +148,7 @@ schema.pre('save', function (next) {
             return next(err);
         }
 
-        if (!prestacion.ejecucion.organizacion.id && !prestacion.solicitud.organizacion.id) {
+        if (!prestacion.ejecucion.organizacionOrigen.id && !prestacion.solicitud.organizacionOrigen.id) {
             let err = new Error('Debe seleccionar la organizacion desde la cual se solicita');
             return next(err);
         }
