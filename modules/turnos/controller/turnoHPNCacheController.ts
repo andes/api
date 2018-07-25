@@ -93,7 +93,7 @@ async function save(idAgendaAndes, sobreturno, datosPaciente, idTipoPrestacion, 
         .input('idPrioridad', sql.Int, idPrioridad)
         .input('idTipoPrestacion', sql.Int, idTipoPrestacion)
         .input('idEstado', sql.Int, idEstado)
-        .input('idHistoria', sql.Int, idPaciente)
+        .input('idHistoria', sql.Int, idHistoria)
         .input('idPaciente', sql.Int, idPaciente)
         .input('idProgramacion', sql.Int, idProgramacion)
         .input('andesId', sql.VarChar(50), andesId)
