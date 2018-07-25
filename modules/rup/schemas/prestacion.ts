@@ -36,8 +36,16 @@ export let schema = new mongoose.Schema({
             default: 'ambulatorio'
         },
 
-        // Tipo de Prestación a ejecutarse
+        // Tipo de Prestación a ejecutarse (destino)
         tipoPrestacion: {
+            id: mongoose.Schema.Types.ObjectId,
+            conceptId: String,
+            term: String,
+            fsn: String,
+            semanticTag: SemanticTag,
+            refsetIds: [String]
+        },
+        tipoPrestacionOrigen: {
             id: mongoose.Schema.Types.ObjectId,
             conceptId: String,
             term: String,
@@ -55,15 +63,28 @@ export let schema = new mongoose.Schema({
         // Registros de la solicitud ... para los planes o prestaciones futuras
         registros: [registro.schema],
 
-        // Organización desde la que se solicita la Prestación.
+        // Organización Destino.
         organizacion: {
             // requirido, validar en middleware
             id: mongoose.Schema.Types.ObjectId,
             nombre: String
         },
 
-        // Profesional que solicita la Prestación
+        organizacionOrigen: {
+            id: mongoose.Schema.Types.ObjectId,
+            nombre: String
+        },
+
+        // Profesional Destino
         profesional: {
+            // requerido, validar en middleware
+            id: mongoose.Schema.Types.ObjectId,
+            nombre: String,
+            apellido: String,
+            documento: String
+        },
+
+        profesionalOrigen: {
             // requerido, validar en middleware
             id: mongoose.Schema.Types.ObjectId,
             nombre: String,
@@ -77,18 +98,7 @@ export let schema = new mongoose.Schema({
             ref: 'prestacion'
         },
 
-        organizacionOrigen: {
-            id: mongoose.Schema.Types.ObjectId,
-            nombre: String
-        },
 
-        profesionalOrigen: {
-            // requerido, validar en middleware
-            id: mongoose.Schema.Types.ObjectId,
-            nombre: String,
-            apellido: String,
-            documento: String
-        },
 
     },
 
