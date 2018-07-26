@@ -46,10 +46,11 @@ export function getTurno(req) {
                     'bloques': { $push: { '_id': '$_id.bloqueId', 'turnos': '$turnos' } }
                 }
             }];
-            if (req.params && mongoose.Types.ObjectId.isValid(req.params.id)) {
+            if (req.query && mongoose.Types.ObjectId.isValid(req.query.id)) {
+                // console.log('entra aca');
                 let matchId = {
                     '$match': {
-                        'bloques.turnos._id': mongoose.Types.ObjectId(req.params.id),
+                        'bloques.turnos._id': mongoose.Types.ObjectId(req.query.id),
                     }
                 };
                 pipelineTurno[0] = matchId;
