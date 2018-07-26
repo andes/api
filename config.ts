@@ -160,7 +160,7 @@ export const modules = {
     configFacturacionAutomatica: {
         active: true,
         path: './modules/facturacionAutomatica/routes',
-        route: '/modules/configFacturacionAutomatica',
+        route: '/modules/facturacionAutomatica',
         middleware: appMiddleware
     },
 };

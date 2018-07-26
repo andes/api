@@ -1,7 +1,5 @@
-import { snomed } from './../../../config.private';
-import * as facturacionAutomaticaModel from './../schemas/configFacturacionAutomatica';
 import * as express from 'express';
-import * as mongoose from 'mongoose';
+import * as facturacionAutomaticaModel from './../schemas/configFacturacionAutomatica';
 
 let router = express.Router();
 
@@ -26,4 +24,4 @@ router.get('/configFacturacionAutomatica/', async function (req, res, next) {
         res.status(400).json({ msg: 'Parámetros incorrectos' });
     }
 });
-module.exports = router;
+export = router;
