@@ -3,16 +3,20 @@ import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
 import { pacienteSchema } from '../../mpi/schemas/paciente';
 
 let schema = new mongoose.Schema({
-    idpadre: String,
+    idpadre:  {
+        type: mongoose.Schema.Types.ObjectId,
+    },
     descripcion: String,
     nivelComplejidad: String,
     especialidades: [String],
     requisitos: String,
-    carroEmergencia: Boolean,
+    carroEmergencia: String,
     recomendaciones: String,
     indicaciones: String,
     comentario: String,
-    conceptId: String
+    conceptId: String,
+    borrado: Boolean,
+    concepto: Object
     // padre: {
     //     nombre: String,
     //     conceptId: String,
