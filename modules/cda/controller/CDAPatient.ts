@@ -469,13 +469,14 @@ export function searchByPatient(pacienteId, prestacion, {
             list = list.map(item => {
                 let data = item.metadata;
                 data.cda_id = item._id;
-                data.adjuntos = data.adjuntos ? data.adjuntos.map(item2 => item2.path) : null;
                 if (data.adjuntos) {
-                    data.adjuntos.forEach((file: string) => {
+                    data.adjuntos = data.adjuntos.map(item2 => item2.path).map(file => {
                         if (!file.startsWith('files/')) {
-                            file = data.cda_id + '/' + file;
+                            return data.cda_id + '/' + file;
                         }
+                        return file;
                     });
+
                 }
 
                 return item.metadata;
