@@ -104,7 +104,9 @@ export class CDABuilder extends BaseBuilder {
             }
             let assignedPerson = assignedEntity.ele('assignedPerson');
             let nameNode = assignedPerson.ele('name');
+            xml.com('Nombre del profesional');
             this.createNode(nameNode, 'given', null, doctor.firstname());
+            xml.com('Apellido del profesional');
             this.createNode(nameNode, 'family', null, doctor.lastname());
 
             if (doctor.organization()) {

@@ -25,7 +25,7 @@ export class Swagger {
                     version: '2.6.0',
                     description: 'Documentación del proyecto ANDES',
                 },
-                host: '/',
+                host: 'd-testing.hospitalneuquen.org.ar',
                 basePath: '/api',
                 schemes: ['https'],
                 consumes: ['application/json'],
