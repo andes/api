@@ -21,15 +21,22 @@ export class CDABuilder extends BaseBuilder {
             .att('xmlns:voc', 'urn:hl7-org:v3/voc');
 
         xml.instructionBefore('xml-stylesheet', 'type="text/xsl" href="style/cda.xsl"');
-
+        xml.com('** CDA Header ** ');
+        this.createNode(xml, 'realmCode', cda.realmCode());
         this.createNode(xml, 'typeId', cda.typeId());
-        xml.com('CDA ID');
+        xml.com(' Identificador único del documento ');
         this.createNode(xml, 'id', cda.id());
+        xml.com(' Clasificación del documento ');
         this.createNode(xml, 'code', cda.code());
+        xml.com(' Título ');
         this.createNode(xml, 'title', null, cda.title());
+        xml.com(' Fecha de Creación del documento ');
         this.createNode(xml, 'effectiveTime', { value: this.fromDate(cda.effectiveTime()) });
+        xml.com(' Código de Confidencialidad ');
         this.createNode(xml, 'confidentialityCode', cda.confidentialityCode());
+        xml.com(' Código de Lenguaje: español de Argentina ');
         this.createNode(xml, 'languageCode', cda.languageCode());
+        xml.com(' Versión del documento ');
         this.createNode(xml, 'versionNumber', { value: cda.versionNumber() });
 
         if (cda.setId()) {
@@ -50,14 +57,14 @@ export class CDABuilder extends BaseBuilder {
         }
 
         if (cda.author()) {
-            xml.com('Datos del Doctor');
+            xml.com('Datos del Autor del Informe ');
             let authorBuilder = new AuthorBuilder();
             let template = authorBuilder.build(cda.author() as Author);
             xml.importDocument(template);
         }
 
         if (cda.custodian()) {
-            xml.com('Datos de la organización');
+            xml.com('Datos de la custodia');
             let orgBuilder = new OrganizationBuilder();
             let template = orgBuilder.build(cda.custodian() as Organization);
             xml.importDocument(template);
@@ -65,18 +72,18 @@ export class CDABuilder extends BaseBuilder {
 
         let date = cda.date() as Date;
         let serviceEvent = xml.ele('documentationOf').ele('serviceEvent', { classCode: 'PCPR' });
+        if (cda.type()) {
+            xml.com('Datos de la prestación Snomed');
+            this.createNode(serviceEvent, 'code', cda.type());
+        }
         if (date) {
             let efTime = serviceEvent.ele('effectiveTime', { value: this.fromDate(date) });
             efTime.ele('low', { value: this.fromDate(date) });
             efTime.ele('high', { value: this.fromDate(date) });
         }
 
-        if (cda.type()) {
-            this.createNode(serviceEvent, 'code', cda.type());
-        }
 
         if (date) {
-            xml.com('Fecha de la prestación');
             let elem = xml.ele('componentOf').ele('encompassingEncounter');
             elem.ele('effectiveTime').ele('low', { value: this.fromDate(date) });
         }
@@ -110,6 +117,7 @@ export class CDABuilder extends BaseBuilder {
 
         let body: Body = cda.body() as Body;
         if (body) {
+            xml.com(' Cuerpo de CDA ');
             let mainComponent = xml.ele('component').ele('structuredBody');
             body.component().forEach(item => {
                 let builderComponent = item.builderFactory();

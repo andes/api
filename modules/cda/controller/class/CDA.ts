@@ -11,6 +11,7 @@ export class CDA {
     private _id: IID;
     private _code: ICode;
     private _title: String;
+    private _realmCode: ILanguageCode;
 
     private _confidentialityCode: IConfidentialityCode;
     private _languageCode: ILanguageCode;
@@ -46,6 +47,10 @@ export class CDA {
         this._languageCode = {
             code: 'es-AR'
         };
+
+        this._realmCode = {
+            code: 'AR'
+        };
     }
 
     /* Tipo de prestación */
@@ -79,6 +84,9 @@ export class CDA {
 
     languageCode(languageCode: ILanguageCode = null) {
         return languageCode != null ? (this._languageCode = languageCode, this) : this._languageCode;
+    }
+    realmCode(realmCode: ILanguageCode = null) {
+        return realmCode != null ? (this._realmCode = realmCode, this) : this._realmCode;
     }
 
     setId(setId: ISetId = null) {
