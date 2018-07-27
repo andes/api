@@ -72,8 +72,8 @@ export class CDABuilder extends BaseBuilder {
 
         let date = cda.date() as Date;
         let serviceEvent = xml.ele('documentationOf').ele('serviceEvent', { classCode: 'PCPR' });
+        serviceEvent.com('Datos de la prestación Snomed ');
         if (cda.type()) {
-            xml.com('Datos de la prestación Snomed');
             this.createNode(serviceEvent, 'code', cda.type());
         }
         if (date) {
@@ -104,9 +104,7 @@ export class CDABuilder extends BaseBuilder {
             }
             let assignedPerson = assignedEntity.ele('assignedPerson');
             let nameNode = assignedPerson.ele('name');
-            xml.com('Nombre del profesional');
             this.createNode(nameNode, 'given', null, doctor.firstname());
-            xml.com('Apellido del profesional');
             this.createNode(nameNode, 'family', null, doctor.lastname());
 
             if (doctor.organization()) {

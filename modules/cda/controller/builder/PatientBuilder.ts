@@ -24,7 +24,9 @@ export class PatientBuilder extends BaseBuilder {
         let patientNode = recordTarget.ele('patient');
 
         let nameNode = patientNode.ele('name');
+        nameNode.com('Nombre del paciente');
         this.createNode(nameNode, 'given', null, patient.getFirstname());
+        nameNode.com('Apellido del paciente');
         this.createNode(nameNode, 'family', null, patient.getLastname());
 
 
@@ -38,7 +40,7 @@ export class PatientBuilder extends BaseBuilder {
         }
 
         if (patient.getBirthtime()) {
-            this.createNode(patientNode, 'birthTime', { value: this.fromDate(patient.getBirthtime()) } );
+            this.createNode(patientNode, 'birthTime', { value: this.fromDate(patient.getBirthtime()) });
         }
         return recordTarget;
     }

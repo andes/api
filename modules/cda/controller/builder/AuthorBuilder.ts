@@ -44,7 +44,9 @@ export class AuthorBuilder extends BaseBuilder {
 
         let assignedPerson = assignedAuthor.ele('assignedPerson');
         let nameNode = assignedPerson.ele('name');
+        nameNode.com('Nombre del profesional');
         this.createNode(nameNode, 'given', null, doctor.firstname());
+        nameNode.com('Apellido del profesional');
         this.createNode(nameNode, 'family', null, doctor.lastname());
 
         if (this.completed) {
