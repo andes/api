@@ -42,6 +42,12 @@
 #### Changed
 * Mejora en la integración de Sips al cargar los diagnósticos
   
+## [3.3.1] - 2018-07-19
+
+#### Changed
+* Se corrige error al generar CDA, aparecian campos privados de mongoose.
+* Se corrige la ruta de Swagger para que sea accesible con la Vapp.
+* Documentación para swagger.
 
 
 
