@@ -7,7 +7,15 @@ let reglasSchema = new mongoose.Schema({
             nombre: String,
             id: { type: mongoose.Schema.Types.ObjectId, ref: 'organizacion' }
         },
-        prestaciones: [SnomedConcept],
+        prestaciones: [
+            {
+                prestacion: SnomedConcept,
+                auditable: {
+                    type: Boolean,
+                    default: false
+                }
+            }
+        ],
     },
     destino: {
         organizacion: {
