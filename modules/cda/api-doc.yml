@@ -3,8 +3,7 @@ paths:
     post:
       tags:
         - "cda"
-      description: Generador de CDA
-      summary: Generador de CDA
+      description: Genera un CDA.
       security:
         - JWT: []
       consumes:
@@ -12,53 +11,80 @@ paths:
       produces:
         - application/json
       parameters:
-        - name: id
+        - name: body
           in: body
-          description: Identificador único de la prestación
-          required: true
-          type: string
-          example: "1"
-        - name: tipoPrestacion
-          in: body
-          description: Tipo de prestación (código Snomed)
-          required: true
-          type: string
-          example: "308251003"
-        - name: fecha
-          in: body
-          description: Fecha de la prestación
-          required: true
-          type: string
-          format: date-time
-          example: "2017-10-10 12:12:12"
-        - name: texto
-          in: body
-          description: Resumen de la prestación
-          required: true
-          type: string
-          example: "prueba"
-        - name: cie10
-          in: body
-          description: Código CIE10 de la prestación
-          required: false
-          type: string
-        - name: paciente
-          in: body
-          description: Datos requeridos del paciente
-          required: true
           schema:
-            $ref: '#/definitions/Paciente'
-        - name: profesional
-          in: body
-          description: Datos requeridos del profesional
-          required: true
-          schema:
-            $ref: '#/definitions/Profesional'
-        - name: file
-          in: body
-          description: Archivo adjunto en Base64
-          required: false
-          example: 'data:application/pdf;base64,AEFCSADE2D2D2..'
+            type: object
+            required:
+              - id
+              - tipoPrestacion
+              - fecha
+              - texto
+              - paciente
+              - profesional
+            properties:
+              id:
+                description: Identificador único de la prestación
+                type: string
+                example: "25"
+              tipoPrestacion:
+                description: Tipo de prestación (código Snomed)
+                type: string
+                example: "308251003"
+              fecha:
+                 description: Fecha de la prestación
+                 type: string
+                 format: date-time
+                 example: "2017-10-10 12:12:12"
+              texto:
+                 description:  Resumen de la prestación
+                 type: string
+                 example: "prueba"
+              cie10:
+                 description: Código CIE10 de la prestación
+                 type: string
+              paciente:
+                type: object
+                properties:
+                  nombre:
+                    type: "string"
+                    example: "Nahir"
+                  apellido:
+                    type: "string"
+                    example: "Saddi"
+                  sexo:
+                    type: "string"
+                    example: "femenino"
+                    enum:
+                      - "femenino"
+                      - "masculino"
+                  documento:
+                    type: "string"
+                    example: "37893455"
+                  fechaNacimiento: 
+                    type: "string"
+                    format: date-time
+                    example: "2017-10-10 12:12:12" 
+              profesional:
+                  type: object
+                  properties:
+                    nombre:
+                      type: "string"
+                      example: "Huds"
+                    apellido:
+                      type: "string"
+                      example: "Doct1or"
+                    documento:
+                      type: "string"
+                      example: "34344567"
+                    matricula:
+                      type: "string"
+                      example: "255"
+                      required: false
+              file:
+                  type: string
+                  description: Archivo adjunto en Base64
+                  example: 'data:application/pdf;base64,AEFCSADE2D2D2'
       responses:
         '200':
           description: Devuelve un json con el ID del CDA generado, y el ID del paciente 
@@ -66,12 +92,13 @@ paths:
             $ref: "#/definitions/CdaResponse"
         '401':
           description: Autorización invalida.
+        '500':
+          description: Error interno.
   /modules/cda/:
     post:
       tags:
         - "cda"
       description: Almacena un CDA de una organización externa.
-      summary: Almacena un CDA de una organización externa.
       security:
         - JWT: []
       consumes:
@@ -79,18 +106,21 @@ paths:
       produces:
         - application/json
       parameters:
-        - name: cda
+        - name: body
           in: body
-          description: Archivo XML en Base64
-          required: true
-          type: string
-          example: 'data:application/xml;base64,AEFCSADE2D2D2...'
-        - name: adjunto
-          in: body
-          description: Archivo adjunto en Base64
-          required: false
-          type: string
-          example: 'data:application/pdf;base64,AEFCSADE2D2D2...'
+          schema:
+            type: object
+            required:
+              - cda
+            properties:
+              cda:
+                type: string
+                description: Archivo XML en Base64
+                example: 'data:application/xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIj8+Cj'
+              adjunto:
+                type: string
+                description: Archivo adjunto en Base64
+                example: 'data:application/pdf;base64,JVBERi0xLjUNJeLjz9'
       responses:
         '200':
           description: Devuelve ID del CDA generado 

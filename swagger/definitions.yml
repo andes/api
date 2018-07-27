@@ -1,44 +1,6 @@
 tags:
   - name: cda
-    description: Modulo generador de CDA
-definitions:
-  Paciente:
-    type: "object"
-    properties:
-      nombre:
-        type: "string"
-        example: "Nahir"
-      apellido:
-        type: "string"
-        example: "Saddi"
-      sexo:
-        type: "string"
-        example: "femenino"
-        enum:
-          - "femenino"
-          - "masculino"
-      documento:
-        type: "string"
-        example: "37893455"
-      fechaNacimiento: 
-        type: "string"
-        format: date-time  
-  Profesional:
-    type: "object"
-    properties:
-      nombre:
-        type: "string"
-        example: "Huds"
-      apellido:
-        type: "string"
-        example: "Doct1or"
-      documento:
-        type: "string"
-        example: "34344567"
-      matricula:
-        type: "string"
-        example: "255"
-        required: false
+definitions: 
   CdaResponse:
     type: "object"
     properties:
