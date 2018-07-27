@@ -53,7 +53,7 @@ header {
         .contenedor-principal-data {
             display: inline-block;
             margin-top: 0.25cm;
-            margin-bottom: 0.5cm;
+            margin-bottom: 0.25cm;
             width: 50%;
             &:nth-of-type(2) {
                 // display: inline-block;
@@ -68,13 +68,15 @@ header {
     display: block;
     &.horizontal {
         float: right;
+        margin-bottom: .25cm;
         hr {
             margin: 0 0;
         }
     }
     &.vertical {
-        margin-bottom: 20px;
+        margin-bottom: .25cm;
     }
+    font-size: .25cm;
 }
 
 .contenedor-bloque-texto {
@@ -89,7 +91,7 @@ header {
     }
 }
 
-// Tipografia
+// Tipografía
 h1,
 h2,
 h3,
@@ -166,22 +168,18 @@ main {
             line-height: 3mm;
         }
     }
-    .contenedor-informe {
-        // margin: 1cm 0;
-        // height: auto;
+    .tipo-prestacion {
+        font-size: .35cm;
+        display: block; // height: .5cm;
+        width: 5.75cm;
+        font-weight: 900;
     }
-    .cabezal-conceptos {
-        display: inline-block;
-        height: 8mm; // margin-top: 0.5cm;
-        // margin-bottom: 0.5cm;
-        width: 100%;
-        >h3 {
-            display: inline;
-            width: auto;
-        } // .contenedor-concepto-fecha {
-        //     text-align: right;
-        //     margin-bottom: 1cm;
-        // }
+    .contenedor-informe {
+        .cabezal-conceptos {
+            display: inline-block; // height: 8mm; // margin-top: 0.5cm;
+            margin-right: 0.25cm;
+            width: 100%;
+        }
     }
 }
 
