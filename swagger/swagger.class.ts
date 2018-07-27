@@ -21,9 +21,8 @@ export class Swagger {
         let swagger = swaggerJSDoc({
             swaggerDefinition: {
                 info: {
-                    title: 'ANDES API',
-                    version: '2.6.0',
-                    description: 'Documentación del proyecto ANDES',
+                    title: 'Swagger Andes',
+                    description: 'Este es un servidor de muestra del servidor de Andes. Puede solicitar su token a info@andes.gob.ar',
                 },
                 host: 'd-testing.hospitalneuquen.org.ar',
                 basePath: '/api',
