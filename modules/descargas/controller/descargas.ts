@@ -181,7 +181,7 @@ export class Documento {
                 .replace('<!--datosRapidosPaciente-->', datosRapidosPaciente)
                 .replace('<!--fechaNacimiento-->', moment(fechaNacimiento).format('DD/MM/YYYY'))
                 .replace('<!--nroCarpeta-->', (typeof nroCarpeta !== 'undefined' ? nroCarpeta : 'sin nro de carpeta'))
-                .replace('<!--organizacionNombreSolicitud-->', prestacion.solicitud.organizacion.nombre)
+                .replace(/(<!--organizacionNombreSolicitud-->)/g, prestacion.solicitud.organizacion.nombre.replace(' - ', '<br>'))
                 .replace('<!--orgacionacionDireccionSolicitud-->', orgacionacionDireccionSolicitud)
                 .replace('<!--fechaSolicitud-->', moment(prestacion.solicitud.fecha).format('DD/MM/YYYY'))
                 .replace('<!--profesionalSolicitud-->', profesionalSolicitud);
