@@ -15,6 +15,7 @@ moment.locale('es');
 export class Documento {
 
 
+
     private static locale = 'es-ES';
     private static timeZone = 'America/Argentina/Buenos_Aires';
 
@@ -83,6 +84,41 @@ export class Documento {
         return st === 'procedimiento' || st === 'hallazgo' || st === 'trastorno';
     }
 
+
+    private static esHallazgo(st) {
+        return st === 'hallazgo' || st === 'situacion' || st === 'trastorno';
+    }
+
+    private static esProcedimiento(st) {
+        return (st === 'procedimiento' || st === 'entidad observable' || st === 'régimen/tratamiento' || st === 'elemento de registro');
+    }
+
+    static generarRegistroPlanHTML(plan: any, template: string): any {
+        return template
+            .replace('<!--plan-->', plan.concepto.term)
+            .replace('<!--motivo-->', plan.valor.solicitudPrestacion.motivo)
+            .replace('<!--indicaciones-->', plan.valor.solicitudPrestacion.indicaciones)
+            .replace('<!--organizacionDestino-->', (plan.valor.solicitudPrestacion.organizacionDestino ? plan.valor.solicitudPrestacion.organizacionDestino.nombre : ''))
+            .replace('<!--profesionalesDestino-->', plan.valor.solicitudPrestacion.profesionalesDestino.map(y => y.nombreCompleto).join(' '));
+
+    }
+
+    static generarRegistroProcedimientoHTML(proc: any, template: string): any {
+        return template
+            .replace('<!--concepto-->', proc.concepto.term)
+            .replace('<!--valor-->', proc.valor)
+            .replace('<!--esDiagnosticoPrincipal-->', proc.esDiagnosticoPrincipal === true ? 'Motivo principal de consulta' : '');
+
+    }
+
+    static generarRegistroHallazgoHTML(hallazgo: any, template: string): any {
+        return template
+            .replace('<!--concepto-->', hallazgo.concepto.term)
+            .replace('<!--evolucion-->', hallazgo.valor.evolucion)
+            .replace('<!--esDiagnosticoPrincipal-->', hallazgo.esDiagnosticoPrincipal === true ? 'Motivo principal de consulta' : '');
+
+    }
+
     private static async generarHTML(req) {
 
         // Prestación
@@ -105,38 +141,37 @@ export class Documento {
             let tipoPrestacion;
             let tituloInforme;
 
-            // Override título "Fecha Ejecución"?
-            tituloFechaEjecucion = config.informe.fechaEjecucionOverride ? config.informe.fechaEjecucionOverride : 'Fecha Ejecución';
+            if (config.informe) {
+                // Override título "Fecha Ejecución"?
+                tituloFechaEjecucion = config.informe.fechaEjecucionOverride ? config.informe.fechaEjecucionOverride : 'Fecha Ejecución';
+            }
 
             // Vemos si el tipo de prestación tiene registros que son hijos directos (TP: Ecografía; Hijo: Ecografía obstétrica)
             let hijos = await snomed.getChildren(prestacion.solicitud.tipoPrestacion.conceptId, { all: true });
             let motivoPrincipalDeConsulta;
             let tituloRegistro;
+            let contenidoInforme;
 
             // Override título del primer registro?
-            if (config.informe.tipoPrestacionTituloOverride) {
+            if (config.informe && config.informe.tipoPrestacionTituloOverride) {
                 tituloRegistro = hijos.find(x => prestacion.ejecucion.registros.find(y => y.concepto.conceptId === x.conceptId));
 
                 tituloInforme = config.informe.registroTituloOverride;
                 tipoPrestacion = prestacion.ejecucion.registros[0].nombre;
                 prestacion.ejecucion.registros[0].concepto.term = tituloInforme;
-
-                // let registroIndex = prestacion.ejecucion.registros.findIndex(x => x.concepto.conceptId === tituloRegistro.conceptId);
-                // if (registroIndex > -1) {
-                //     prestacion.ejecucion.registros[registroIndex].concepto.term = tituloInforme;
-                // }
+                tituloInforme = tituloInforme[0].toUpperCase() + tituloInforme.slice(1);
+                contenidoInforme = prestacion.ejecucion.registros.find(x => this.registroHTML(x.concepto.term, x.valor)).valor;
 
             } else {
                 // Si tiene un hijo directo, usamos su nombre como título de la consulta
                 tipoPrestacion = prestacion.solicitud.tipoPrestacion.term[0].toUpperCase() + prestacion.solicitud.tipoPrestacion.term.slice(1);
             }
 
-            tituloInforme = tituloInforme[0].toUpperCase() + tituloInforme.slice(1);
             tipoPrestacion = tipoPrestacion[0].toUpperCase() + tipoPrestacion.slice(1);
 
 
             // Existe configuración de Motivo Principal de Consulta?
-            if (config.informe.motivoPrincipalDeConsultaOverride) {
+            if (config.informe && config.informe.motivoPrincipalDeConsultaOverride) {
                 if (prestacion.ejecucion.registros.length > 1) {
                     let existeConcepto = prestacion.ejecucion.registros.find(x => this.existeSemanticTagMPC(x.concepto.semanticTag) && x.esDiagnosticoPrincipal);
 
@@ -151,11 +186,39 @@ export class Documento {
             }
 
 
+            let registros = '';
+            if (!config.informe) {
+
+                let hallazgos, procedimientos, planes = [];
+
+                hallazgos = prestacion.ejecucion.registros.filter(x => this.esHallazgo(x.concepto.semanticTag));
+                procedimientos = prestacion.ejecucion.registros.filter(x => this.esProcedimiento(x.concepto.semanticTag));
+                planes = prestacion.ejecucion.registros.filter(x => x.esSolicitud === true);
+
+                let hallazgoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/hallazgo.html'), 'utf8');
+                hallazgos = hallazgos.length > 0 ? hallazgos.map(x => {
+                    if (this.esHallazgo(x.concepto.semanticTag)) {
+                        return this.generarRegistroHallazgoHTML(x, hallazgoTemplate);
+                    }
+                }) : [];
+
+                let procedimientoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/procedimiento.html'), 'utf8');
+                procedimientos = procedimientos.length > 0 ? procedimientos.map(x => {
+                    if (this.esProcedimiento(x.concepto.semanticTag) && x.esSolicitud === false) {
+                        return this.generarRegistroProcedimientoHTML(x, procedimientoTemplate);
+                    }
+                }) : [];
+
+                let planTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/plan.html'), 'utf8');
+                planes = planes.length > 0 ? planes.map(x => {
+                    if (x.esSolicitud) {
+                        return this.generarRegistroPlanHTML(x, planTemplate);
+                    }
+                }) : [];
 
 
-            // let contenidoInforme = prestacion.ejecucion.registros[0].valor;
-            let contenidoInforme = prestacion.ejecucion.registros.find(x => this.registroHTML(x.concepto.term, x.valor)).valor;
-
+                registros = [...hallazgos, ...procedimientos, ...planes].join('');
+            }
             // Se leen header y footer (si se le pasa un encoding, devuelve un string)
             let html = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/informe.html'), 'utf8');
 
@@ -196,8 +259,9 @@ export class Documento {
                 .replace('<!--tituloFechaEjecucion-->', tituloFechaEjecucion)
                 .replace('<!--fechaEjecucion-->', moment(fechaEjecucion).format('DD/MM/YYYY HH:mm') + ' hs')
                 .replace('<!--fechaValidacion-->', moment(fechaValidacion).format('DD/MM/YYYY HH:mm') + ' hs')
-                .replace('<!--tituloInforme-->', tituloInforme)
-                .replace('<!--contenidoInforme-->', contenidoInforme);
+                .replace('<!--tituloInforme-->', tituloInforme ? tituloInforme : '')
+                .replace('<!--contenidoInforme-->', contenidoInforme ? contenidoInforme : '')
+                .replace('<!--registros-->', registros.length ? registros : '');
 
             // FOOTER
             html = html
@@ -215,7 +279,6 @@ export class Documento {
                     .replace('<!--motivoPrincipalDeConsulta-->', motivoPrincipalDeConsulta);
 
             }
-
 
             // Se carga logo del efector, si no existe se muestra el nombre del efector como texto
             let nombreLogo = prestacion.solicitud.organizacion.nombre.toLocaleLowerCase().replace(/-|\./g, '').replace(/ {2,}| /g, '-');
@@ -243,8 +306,6 @@ export class Documento {
                 .replace('<!--logoPDP2-->', `<img class="logo-pdp-h" src="data:image/png;base64,${logoPDP2.toString('base64')}">`);
 
             return html;
-        } else {
-            return 'ERROR';
         }
     }
 

@@ -167,6 +167,9 @@ main {
         p {
             line-height: 3mm;
         }
+        small {
+            font-size: 0.25cm;
+        }
     }
     .tipo-prestacion {
         font-size: .35cm;
@@ -181,6 +184,7 @@ main {
             width: 100%;
         }
     }
+    .registros {}
 }
 
 // Footer
