@@ -17,7 +17,8 @@ export async function saveTurnos(idAgendaAndes, bloque, idTipoPrestacion, pool, 
             }
             await saveTurno(idAgendaAndes, turno, datosPaciente, bloque.duracionTurno, idTipoPrestacion, pool, transaction);
         }
-        if (turno.estado === constantes.EstadoTurnosAndes.suspendido || turno.estado === constantes.EstadoTurnosAndes.disponible) {
+        if (turno.estado === constantes.EstadoTurnosAndes.suspendido ||
+            (turno.estado === constantes.EstadoTurnosAndes.disponible && await (getIdTurnoHPN(turno._id, pool)))) {
             await updateTurno(turno._id, turno.estado, pool, transaction);
         }
     }
@@ -92,7 +93,7 @@ async function save(idAgendaAndes, sobreturno, datosPaciente, idTipoPrestacion, 
         .input('idPrioridad', sql.Int, idPrioridad)
         .input('idTipoPrestacion', sql.Int, idTipoPrestacion)
         .input('idEstado', sql.Int, idEstado)
-        .input('idHistoria', sql.Int, idPaciente)
+        .input('idHistoria', sql.Int, idHistoria)
         .input('idPaciente', sql.Int, idPaciente)
         .input('idProgramacion', sql.Int, idProgramacion)
         .input('andesId', sql.VarChar(50), andesId)
@@ -148,7 +149,7 @@ async function saveTurno(idAgendaAndes, turno: any, datosPaciente, duracion, idT
         .input('idPrioridad', sql.Int, idPrioridad)
         .input('idTipoPrestacion', sql.Int, idTipoPrestacion)
         .input('idEstado', sql.Int, idEstado)
-        .input('idHistoria', sql.Int, idPaciente)
+        .input('idHistoria', sql.Int, idHistoria)
         .input('idPaciente', sql.Int, idPaciente)
         .input('idProgramacion', sql.Int, idProgramacion)
         .input('andesId', sql.VarChar(50), andesId)
