@@ -1,9 +1,9 @@
-ARG NODE_VERSION=8.9-alpine
+ARG NODE_VERSION=8.10-alpine
 FROM node:${NODE_VERSION}
 
 ENV node_env=development
 
-#RUN npm install -g typescript nodemon
+RUN apk update && apk upgrade && apk add --no-cache git
 
 WORKDIR /usr/src/api
 

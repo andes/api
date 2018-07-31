@@ -14,7 +14,7 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
         if (req.query.term) {
             query = tipoPrestacion.find({ term: { '$regex': utils.makePattern(req.query.term) } });
         } else {
-            //temporal, ya que con utils.makePattern no funciona bien en el turnero
+            // temporal, ya que con utils.makePattern no funciona bien en el turnero
             if (req.query.termTurnero) {
                 query = tipoPrestacion.find({ term: RegExp('^.*' + req.query.termTurnero + '.*$', 'i') });
             } else {

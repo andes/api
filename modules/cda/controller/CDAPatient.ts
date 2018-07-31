@@ -1,25 +1,48 @@
 import * as pacienteCtr from '../../../core/mpi/controller/paciente';
 import * as mongoose from 'mongoose';
-import { CDA } from './class/CDA';
-import { Patient } from './class/Patient';
-import { Organization } from './class/Organization';
-import { Author } from './class/Author';
-import { Body, Component, ImageComponent } from './class/Body';
-import { CDABuilder } from './builder/CdaBuilder';
+import {
+    CDA
+} from './class/CDA';
+import {
+    Patient
+} from './class/Patient';
+import {
+    Organization
+} from './class/Organization';
+import {
+    Author
+} from './class/Author';
+import {
+    Body,
+    Component,
+    ImageComponent
+} from './class/Body';
+import {
+    CDABuilder
+} from './builder/CdaBuilder';
 
 import * as base64_stream from 'base64-stream';
-import { makeFs } from '../schemas/CDAFiles';
+import {
+    makeFs
+} from '../schemas/CDAFiles';
 import * as Stream from 'stream';
-import { create } from 'domain';
+import {
+    create
+} from 'domain';
 import * as moment from 'moment';
 
-import { CDA as CDAConfig } from '../../../config.private';
+import {
+    CDA as CDAConfig
+} from '../../../config.private';
+import {
+    configuracionPrestacionModel
+} from './../../../core/term/schemas/configuracionPrestacion';
 
 /**
  * Crea un objeto paciente desde los datos
  */
 
-function dataToPac (dataPaciente, identificador) {
+function dataToPac(dataPaciente, identificador) {
     return {
         apellido: dataPaciente.apellido,
         nombre: dataPaciente.nombre,
@@ -80,11 +103,15 @@ export async function findOrCreate(req, dataPaciente, organizacion) {
                 entidad: organizacion,
                 valor: dataPaciente.id
             });
-            await pacienteCtr.updatePaciente(paciente, {identificadores: paciente.identificadores} , req);
+            await pacienteCtr.updatePaciente(paciente, {
+                identificadores: paciente.identificadores
+            }, req);
         }
         return paciente;
     } else {
-        return await pacienteCtr.createPaciente(dataToPac(dataPaciente, organizacion), req);
+         // No creamos más el paciente en MPI
+         // return await pacienteCtr.createPaciente(dataToPac(dataPaciente, organizacion), req);
+         return null;
     }
 }
 
@@ -95,23 +122,34 @@ let rootOID = CDAConfig.rootOID;
  * Match desde snomed a un código LOINC para indentificar el CDA
  * @param snomed ConceptId
  */
-let snomedCodes = ['4241000179101'];
-function matchCode(snomed) {
-    switch (snomed) {
-        case '4241000179101':
-            return {
-                code: '26436-6',
-                codeSystem: '2.16.840.1.113883.6.1',
-                codeSystemName: 'LOINC',
-                displayName: 'Laboratory studies'
-            };
-        default:
-            return {
-                code: '34133-9',
-                codeSystem: '2.16.840.1.113883.6.1',
-                codeSystemName: 'LOINC',
-                displayName: 'Summarization of episode note'
-            };
+
+export async function matchCode(snomed) {
+    let prestacion: any;
+    if (!isNaN(snomed)) {
+        prestacion = await configuracionPrestacionModel.findOne({
+            'snomed.conceptId': snomed
+        }, {snomed: 1, loinc: 1});
+        if (prestacion) {
+            return prestacion;
+        } else {
+            return null;
+        }
+    } else {
+        return null;
+    }
+}
+
+/**
+ * Match desde snomed a un código LOINC para indentificar el CDA
+ * @param snomed ConceptId
+ */
+
+export async function matchCodeByLoinc(loinc) {
+    let prestacion: any = await configuracionPrestacionModel.find({
+        'loinc.code': loinc
+    });
+    if (prestacion.length > 0) {
+        return prestacion[0];
     }
 }
 
@@ -119,7 +157,7 @@ function matchCode(snomed) {
  * Creamos la estructura ICode en base a un CIE10
  * @param cie10
  */
-function icd10Code (cie10) {
+function icd10Code(cie10) {
     return {
         codeSystem: '2.16.840.1.113883.6.90',
         code: cie10.codigo,
@@ -132,16 +170,16 @@ function icd10Code (cie10) {
  * Crea la estructura IID a partir de un ID
  * @param id
  */
-function buildID (id) {
+function buildID(id, oid = rootOID) {
     return {
-        root: rootOID,
+        root: oid,
         extension: id
     };
 }
 
 let base64RegExp = /data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,(.*)/;
 
-export function base64toStream (base64) {
+export function base64toStream(base64) {
     let match = base64.match(base64RegExp);
     let mime = match[1];
     let data = match[2];
@@ -159,17 +197,39 @@ export function base64toStream (base64) {
     };
 }
 
-export function storeFile ({extension, mimeType, stream, metadata }) {
+export function streamToString(stream): Promise<String> {
+    return new Promise((resolve, reject) => {
+        const chunks = [];
+        stream.on('data', (chunk) => {
+            chunks.push(chunk.toString());
+        });
+        stream.on('end', () => {
+            resolve(chunks.join(''));
+        });
+    });
+}
+
+/**
+ * Guarda un archivo para ser almacenado en un CDA
+ */
+
+export function storeFile({
+    extension,
+    mimeType,
+    stream,
+    metadata,
+    filename = null
+}) {
     return new Promise((resolve, reject) => {
         let CDAFiles = makeFs();
         let uniqueId = String(new mongoose.Types.ObjectId());
 
         CDAFiles.write({
-                _id: uniqueId,
-                filename:  uniqueId + '.' + extension,
-                contentType: mimeType,
-                metadata
-            },
+            _id: uniqueId,
+            filename: filename ? filename : uniqueId + '.' + extension,
+            contentType: mimeType,
+            metadata
+        },
             stream,
             (error, createdFile) => {
                 if (error) {
@@ -177,7 +237,7 @@ export function storeFile ({extension, mimeType, stream, metadata }) {
                 }
                 return resolve({
                     id: createdFile._id,
-                    data: 'files/' + createdFile.filename,
+                    data: createdFile.filename,
                     mime: mimeType,
                     is64: false
                 });
@@ -186,26 +246,30 @@ export function storeFile ({extension, mimeType, stream, metadata }) {
     });
 }
 
-export function storePdfFile (pdf) {
-    return new Promise(( resolve, reject) => {
+/**
+ * Solo PDF
+ */
+
+export function storePdfFile(pdf) {
+    return new Promise((resolve, reject) => {
         let uniqueId = String(new mongoose.Types.ObjectId());
         let input = new Stream.PassThrough();
         let mime = 'application/pdf';
         let CDAFiles = makeFs();
         CDAFiles.write({
             _id: uniqueId,
-            filename:  uniqueId + '.pdf',
+            filename: uniqueId + '.pdf',
             contentType: mime
         },
-        input.pipe(pdf),
-        (error, createdFile) => {
-            resolve({
-                id: createdFile._id,
-                data: 'files/' + createdFile.filename,
-                mime: mime
-            });
-        }
-    );
+            input.pipe(pdf),
+            (error, createdFile) => {
+                resolve({
+                    id: createdFile._id,
+                    data: 'files/' + createdFile.filename,
+                    mime: mime
+                });
+            }
+        );
     });
 }
 
@@ -215,18 +279,18 @@ export function storePdfFile (pdf) {
  * @param cdaXml  XML en texto plano
  * @param metadata Datos extras para almacenar con el archivo.
  */
-export function storeCDA (objectID, cdaXml, metadata) {
+export function storeCDA(objectID, cdaXml, metadata) {
     return new Promise((resolve, reject) => {
 
         let input = new Stream.PassThrough();
         let CDAFiles = makeFs();
 
         CDAFiles.write({
-                _id: objectID,
-                filename:  objectID + '.xml',
-                contentType: 'application/xml',
-                metadata
-            },
+            _id: objectID,
+            filename: objectID + '.xml',
+            contentType: 'application/xml',
+            metadata
+        },
             input,
             (error, createdFile) => {
                 resolve(createdFile);
@@ -249,12 +313,13 @@ export function storeCDA (objectID, cdaXml, metadata) {
  * @param {string} text Texto descriptivo
  * @param {string} base64  Archivo para adjutar al CDA en base64
  */
-export function generateCDA(uniqueId, confidentiality, patient, date, author, organization, snomed, cie10, text, file) {
+export function generateCDA(uniqueId, confidentiality, patient, date, author, organization, prestacion, cie10, text, file) {
 
     let cda = new CDA();
     cda.id(buildID(uniqueId));
 
-    let code = matchCode(snomed);
+    // let code = await matchCode(snomed);
+    let code = prestacion.loinc;
     cda.code(code);
 
     // [TODO] Desde donde inferir el titulo
@@ -269,11 +334,13 @@ export function generateCDA(uniqueId, confidentiality, patient, date, author, or
 
     cda.versionNumber(1);
     cda.date(date);
-    // [TODO] Falta definir el tema del DNI
+
     let patientCDA = new Patient();
     patientCDA.setFirstname(patient.nombre).setLastname(patient.apellido);
     patientCDA.setBirthtime(patient.fechaNacimiento);
     patientCDA.setGender(patient.sexo);
+    patientCDA.setDocumento(patient.documento);
+
     if (patient.id) {
         patientCDA.setId(buildID(patient.id));
     }
@@ -288,6 +355,8 @@ export function generateCDA(uniqueId, confidentiality, patient, date, author, or
         let authorCDA = new Author();
         authorCDA.firstname(author.nombre);
         authorCDA.lastname(author.apellido);
+        authorCDA.documento(author.documento);
+        authorCDA.matricula(author.matricula);
         authorCDA.organization(orgCDA);
         if (author._id) {
             authorCDA.id(buildID(author._id));
@@ -297,15 +366,19 @@ export function generateCDA(uniqueId, confidentiality, patient, date, author, or
 
     let body = new Body();
 
+    let textComponent = new Component();
     if (text) {
-        let textComponent = new Component();
-        textComponent.title('Resumen de la consulta');
         textComponent.text(text);
         if (cie10) {
             textComponent.code(icd10Code(cie10));
         }
-        body.addComponent(textComponent);
+    } else {
+        textComponent.text('Sin datos');
+        if (cie10) {
+            textComponent.code(icd10Code(cie10));
+        }
     }
+    body.addComponent(textComponent);
 
     // [TODO] Archivo en base64 o aparte
     if (file) {
@@ -334,9 +407,24 @@ export function generateCDA(uniqueId, confidentiality, patient, date, author, or
  * Listado de CDA por metadata
  * @param conds
  */
-export function findByMetadata (conds) {
+export function findByMetadata(conds) {
     let CDAFiles = makeFs();
     return CDAFiles.find(conds);
+}
+
+/**
+ * Chequea si un CDA existe!
+ * @param id
+ * @param fecha
+ * @param orgId
+ */
+export async function CDAExists(id, fecha, orgId) {
+    let existe = await findByMetadata({
+        'metadata.extras.id': id,
+        'metadata.fecha': fecha,
+        'metadata.extras.organizacion': mongoose.Types.ObjectId(orgId),
+    });
+    return existe.length > 0;
 }
 
 
@@ -344,29 +432,46 @@ export function findByMetadata (conds) {
  * listado de CDA por paciente y tipo de prestación
  */
 
-export function searchByPatient (pacienteId, prestacion, { limit, skip  }): Promise<any[]> {
+export function searchByPatient(pacienteId, prestacion, {
+    limit,
+    skip
+}): Promise<any[]> {
     return new Promise(async (resolve, reject) => {
         let CDAFiles = makeFs();
-        let conditions: any = { 'metadata.paciente':  mongoose.Types.ObjectId(pacienteId) };
+        let conditions: any = {
+            'metadata.paciente': mongoose.Types.ObjectId(pacienteId),
+            'metadata.cdaId': { $exists: false }
+        };
         if (prestacion) {
-            conditions['metadata.prestacion'] = prestacion;
+            conditions['metadata.prestacion.snomed.conceptId'] = prestacion;
         }
         if (limit === null) {
-            limit = 10;
+            limit = 100;
         }
         if (skip === null) {
             skip = 0;
         }
         try {
-            let list = await CDAFiles.find(conditions).sort({'metadata.fecha': -1}).limit(limit).skip(skip);
+            let list = await CDAFiles.find(conditions).sort({
+                'metadata.fecha': -1
+            }).limit(limit).skip(skip);
             list = list.map(item => {
                 let data = item.metadata;
                 data.cda_id = item._id;
-                data.adjuntos = data.adjuntos.map(item2 => item2.path);
+                if (data.adjuntos) {
+                    data.adjuntos = data.adjuntos.map(item2 => item2.path).map(file => {
+                        if (!file.startsWith('files/')) {
+                            return data.cda_id + '/' + file;
+                        }
+                        return file;
+                    });
+
+                }
+
                 return item.metadata;
             });
 
-            return resolve (list);
+            return resolve(list);
         } catch (e) {
             return reject(e);
         }
@@ -377,10 +482,10 @@ export function searchByPatient (pacienteId, prestacion, { limit, skip  }): Prom
 /**
  * Levante el XML a partir de un ID cd CDA
  */
-export async function loadCDA (cdaID) {
+export async function loadCDA(cdaID) {
     return new Promise(async (resolve, reject) => {
         let CDAFiles = makeFs();
-        var stream1  = CDAFiles.readById(cdaID, function (err, buffer) {
+        var stream1 = CDAFiles.readById(cdaID, function (err, buffer) {
             let xml = buffer.toString('utf8');
             return resolve(xml);
         });
@@ -401,11 +506,6 @@ export function validateMiddleware(req, res, next) {
     let cie10Code = req.body.cie10;
     let file = req.body.file;
     let texto = req.body.texto;
-    let snomed = req.body.prestacion;
-
-    if (snomedCodes.indexOf(snomed) < 0) {
-        errors.prestacion = 'not_valid_value';
-    }
 
     if (!moment(req.body.fecha).isValid()) {
         errors.fecha = 'invalid_format';
@@ -445,9 +545,212 @@ export function validateMiddleware(req, res, next) {
         errors.paciente.fechaNacimiento = 'invalid_date';
     }
 
+    if (!dataPaciente.sexo || ['masculino', 'femenino'].indexOf(dataPaciente.sexo) < 0) {
+        errors.paciente = errors.paciente || {};
+        errors.paciente.sexo = 'invalid_gender';
+    }
 
     if (Object.keys(errors).length > 0) {
         return next(errors);
     }
     return next();
+}
+
+/**
+ * Valida contra el archivo de esquemas de CDA CDA.xsd
+ */
+
+export function validateSchemaCDA(xmlRaw) {
+    const libxmljs = require('libxmljs');
+    let schemaXML = null;
+    function loadSchema() {
+        return new Promise((resolve, reject) => {
+            if (schemaXML) {
+                return resolve(schemaXML);
+            }
+
+            const path = require('path');
+            const fs = require('fs');
+
+            let filePath = path.join(__dirname, './schema/CDA.xsd');
+            fs.readFile(filePath, {
+                encoding: 'utf8'
+            }, function (err, xsd) {
+                if (err) {
+                    return reject(err);
+                }
+                schemaXML = libxmljs.parseXml(xsd, {
+                    baseUrl: path.join(__dirname, 'schema') + '/'
+                });
+                return resolve(schemaXML);
+            });
+        });
+    }
+
+    return loadSchema().then(xsdDoc => {
+        let xmlDoc = libxmljs.parseXml(xmlRaw);
+        xmlDoc.validate(xsdDoc);
+
+        if (xmlDoc.validationErrors.length) {
+            return Promise.reject(xmlDoc.validationErrors);
+        }
+        return Promise.resolve(xmlDoc);
+    });
+
+}
+
+/**
+ * Valida ciertos parametros del CDA y extrae otros
+ */
+
+export function checkAndExtract(xmlDom) {
+    function nestedObject(data, keys, value) {
+        let key = keys[0];
+        if (keys.length > 1) {
+            if (!data[key]) {
+                data[key] = {};
+            }
+            nestedObject(data[key], keys.slice(1), value);
+        } else {
+            data[key] = value;
+        }
+    }
+
+    function checkArg(root, params) {
+        let passed = true;
+        let data = {};
+        for (let param of params) {
+
+            let text = '';
+            if (param.many) {
+                let items = root.find(param.key, {
+                    x: 'urn:hl7-org:v3'
+                });
+                for (let i of items) {
+                    text += i.text ? i.text() : i.value();
+                    text += ' ';
+                }
+                text.trim();
+            } else {
+                let item = root.get(param.key, {
+                    x: 'urn:hl7-org:v3'
+                });
+                if (item) {
+                    text = item.text ? item.text() : item.value();
+                }
+            }
+
+            if (param.match) {
+                passed = passed && text === param.match;
+            }
+
+            passed = passed && (!param.require || text.length > 0);
+
+            if (param.as) {
+                nestedObject(data, param.as.split('.'), text);
+            }
+        }
+        return passed ? data : null;
+    }
+    let _root = xmlDom.root();
+    let _params = [{
+        key: '//x:ClinicalDocument/x:id/@root',
+        match: CDAConfig.rootOID
+    },
+    {
+        key: '//x:ClinicalDocument/x:id/@extension',
+        as: 'id'
+    },
+    {
+        key: '//x:ClinicalDocument/x:typeId/@root',
+        match: '2.16.840.1.113883.1.3'
+    },
+    {
+        key: '//x:ClinicalDocument/x:typeId/@extension',
+        match: 'POCD_HD000040'
+    },
+    {
+        key: '//x:ClinicalDocument/x:code/@code',
+        as: 'loinc',
+        require: true
+    },
+    {
+        key: '//x:ClinicalDocument/x:effectiveTime/@value',
+        as: 'fecha',
+        require: true
+    },
+
+    {
+        key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:id[@root='${CDAConfig.dniOID}']/@extension`,
+        as: 'paciente.documento',
+        require: true
+    },
+    {
+        key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:name/x:given`,
+        many: true,
+        as: 'paciente.nombre',
+        require: true
+    },
+    {
+        key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:name/x:family`,
+        many: true,
+        as: 'paciente.apellido',
+        require: true
+    },
+    {
+        key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:administrativeGenderCode/@code`,
+        as: 'paciente.sexo',
+        require: true
+    },
+    {
+        key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:birthTime/@value`,
+        as: 'paciente.fechaNacimiento',
+        require: true
+    },
+
+    {
+        key: `//x:ClinicalDocument/x:custodian/x:assignedCustodian/x:representedCustodianOrganization/x:id/@root`,
+        match: CDAConfig.rootOID
+    },
+    {
+        key: `//x:ClinicalDocument/x:custodian/x:assignedCustodian/x:representedCustodianOrganization/x:id/@extension`,
+        as: 'organizacion.id',
+        require: true
+    },
+    {
+        key: `//x:ClinicalDocument/x:custodian/x:assignedCustodian/x:representedCustodianOrganization/x:name`,
+        as: 'organizacion.name',
+        require: true
+    },
+
+    {
+        key: `//x:ClinicalDocument/x:author/x:assignedAuthor/x:id[@root='${CDAConfig.dniOID}']/@extension`,
+        as: 'profesional.documento',
+        require: true
+    },
+    {
+        key: `//x:ClinicalDocument/x:author/x:assignedAuthor/x:assignedPerson/x:name/x:given`,
+        many: true,
+        as: 'profesional.nombre',
+        require: true
+    },
+    {
+        key: `//x:ClinicalDocument/x:author/x:assignedAuthor/x:assignedPerson/x:name/x:family`,
+        many: true,
+        as: 'profesional.apellido'
+    },
+
+    {
+        key: `//x:ClinicalDocument/x:component/x:structuredBody/x:component/x:section/x:entry/x:observationMedia/x:value/x:reference/@value`,
+        as: 'adjunto'
+    },
+
+
+    ];
+    let metadata: any = checkArg(_root, _params);
+    if (metadata.adjunto && metadata.adjunto.indexOf('/') >= 0) {
+        return null;
+    }
+
+    return metadata;
 }

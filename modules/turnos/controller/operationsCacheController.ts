@@ -14,7 +14,7 @@ import * as turnoCtrl from './turnoCacheController';
 
 // Sección de operaciones sobre MONGODB
 /**
- * Obtiene las agendas con estado exportadaSips o Codificada
+ * Obtiene las agendas con estado exportada o Codificada
  *
  * @export
  * @returns
@@ -23,7 +23,7 @@ export function getAgendasDeMongoExportadas() {
     return new Promise<Array<any>>(function (resolve, reject) {
         agendasCache.find({
             $or: [{
-                estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportadaSIPS
+                estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportada
             }, {
                 estadoIntegracion: constantes.EstadoExportacionAgendaCache.codificada
             }]
@@ -102,7 +102,7 @@ export function checkCodificacion(agenda, pool) {
                         turno: turno[z]
                     };
 
-                    await turnoCtrl.updateTurno(datosTurno);
+                    await turnoCtrl.updateTurnoAgendaMongo(datosTurno);
                     await markAgendaAsProcessed(agenda);
 
                     // resolve();
@@ -331,7 +331,7 @@ function markAgendaAsProcessed(agenda) {
         let estadoIntegracion;
         switch (agenda.estadoIntegracion) {
             case 'pendiente':
-                estadoIntegracion = constantes.EstadoExportacionAgendaCache.exportadaSIPS;
+                estadoIntegracion = constantes.EstadoExportacionAgendaCache.exportada;
                 break;
             default:
                 estadoIntegracion = constantes.EstadoExportacionAgendaCache.codificada;

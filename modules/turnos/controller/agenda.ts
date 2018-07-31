@@ -1,15 +1,14 @@
 import { SnomedCIE10Mapping } from './../../../core/term/controller/mapping';
 import * as cie10 from './../../../core/term/schemas/cie10';
-import { log } from './../../../core/log/schemas/log';
 import * as agendaModel from '../../turnos/schemas/agenda';
 import * as moment from 'moment';
 import { Auth } from '../../../auth/auth.class';
 import { userScheduler } from '../../../config.private';
 import { Logger } from '../../../utils/logService';
-import { load } from 'google-maps';
 import { model as Prestacion } from '../../rup/schemas/prestacion';
-import * as http from 'http';
 import * as request from 'request';
+import * as mongoose from 'mongoose';
+import { toArray } from '../../../utils/utils';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -172,7 +171,6 @@ export function codificarTurno(req, data, tid) {
             // let promises = [];
             if (arrPrestacion.length > 0 && arrPrestacion[0].ejecucion) {
                 let prestaciones = arrPrestacion[0].ejecucion.registros.filter(f => {
-
                     return f.concepto.semanticTag !== 'elemento de registro';
                 });
                 prestaciones.forEach(registro => {
@@ -278,6 +276,15 @@ export function codificarTurno(req, data, tid) {
                                 },
                                 primeraVez: registro.esPrimeraVez
                             });
+                            if (prestaciones.length === codificaciones.length) {
+                                // console.log('codificaciones ', codificaciones);
+                                turno.diagnostico = {
+                                    ilegible: false,
+                                    codificaciones: codificaciones.filter(cod => Object.keys(cod).length > 0)
+                                };
+                                turno.asistencia = 'asistio';
+                                resolve(data);
+                            }
                         }
                     }).catch(error => {
                         reject(error);
@@ -683,8 +690,7 @@ export async function actualizarTiposDeTurno() {
     };
 
     let cursor = agendaModel.find(condicion).cursor();
-
-    cursor.eachAsync(doc => {
+    return cursor.eachAsync(doc => {
         let agenda: any = doc;
         for (let j = 0; j < agenda.bloques.length; j++) {
             let cantAccesoDirecto = agenda.bloques[j].accesoDirectoDelDia + agenda.bloques[j].accesoDirectoProgramado;
@@ -702,7 +708,7 @@ export async function actualizarTiposDeTurno() {
         }
 
         Auth.audit(agenda, (userScheduler as any));
-        saveAgenda(agenda).then((nuevaAgenda) => {
+        return saveAgenda(agenda).then(() => {
             Logger.log(userScheduler, 'citas', 'actualizarTiposDeTurno', {
                 idAgenda: agenda._id,
                 organizacion: agenda.organizacion,
@@ -711,12 +717,11 @@ export async function actualizarTiposDeTurno() {
                 updatedBy: agenda.updatedBy
 
             });
-        }).catch(error => {
-            return (error);
+            return Promise.resolve();
+        }).catch(() => {
+            return Promise.resolve();
         });
-
     });
-    return 'Agendas actualizadas';
 
 }
 
@@ -739,8 +744,7 @@ export function actualizarEstadoAgendas() {
         }
     };
     let cursor = agendaModel.find(condicion).cursor();
-
-    cursor.eachAsync(doc => {
+    return cursor.eachAsync(doc => {
         let agenda: any = doc;
         let todosAsistencia = true;
         for (let j = 0; j < agenda.bloques.length; j++) {
@@ -760,7 +764,7 @@ export function actualizarEstadoAgendas() {
         }
 
         Auth.audit(agenda, (userScheduler as any));
-        saveAgenda(agenda).then((nuevaAgenda) => {
+        return saveAgenda(agenda).then((nuevaAgenda) => {
             Logger.log(userScheduler, 'citas', 'actualizarEstadoAgendas', {
                 idAgenda: agenda._id,
                 organizacion: agenda.organizacion,
@@ -769,12 +773,11 @@ export function actualizarEstadoAgendas() {
                 updatedBy: agenda.updatedBy
 
             });
-        }).catch(error => {
-            return (error);
+            return Promise.resolve();
+        }).catch(() => {
+            return Promise.resolve();
         });
-
     });
-    return 'Agendas actualizadas';
 }
 
 /**
@@ -794,8 +797,7 @@ export function actualizarTurnosDelDia() {
         }
     };
     let cursor = agendaModel.find(condicion).cursor();
-
-    cursor.eachAsync(doc => {
+    return cursor.eachAsync(doc => {
         let agenda: any = doc;
         for (let j = 0; j < agenda.bloques.length; j++) {
             if (agenda.bloques[j].restantesProgramados > 0) {
@@ -805,7 +807,7 @@ export function actualizarTurnosDelDia() {
         }
 
         Auth.audit(agenda, (userScheduler as any));
-        saveAgenda(agenda).then((nuevaAgenda) => {
+        return saveAgenda(agenda).then(() => {
             Logger.log(userScheduler, 'citas', 'actualizarTurnosDelDia', {
                 idAgenda: agenda._id,
                 organizacion: agenda.organizacion,
@@ -814,13 +816,12 @@ export function actualizarTurnosDelDia() {
                 updatedBy: agenda.updatedBy
 
             });
-        }).catch(error => {
-            return (error);
+            return Promise.resolve();
+        }).catch(() => {
+            return Promise.resolve();
         });
 
     });
-    return 'Agendas actualizadas';
-
 }
 
 /**
@@ -892,3 +893,166 @@ export function updatePaciente(pacienteModified, turno) {
         }
     });
 }
+
+
+
+export function getConsultaDiagnostico(params) {
+
+    return new Promise(async (resolve, reject) => {
+        let pipeline = [];
+        pipeline = [{
+            $match: {
+                $and: [
+                    { 'horaInicio': { '$gte': new Date(params.horaInicio) } },
+                    { 'horaFin': { '$lte': new Date(params.horaFin) } },
+                    { 'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) } },
+                    { 'bloques.turnos.estado': 'asignado' }
+
+                ]
+            }
+        },
+        {
+            $unwind: '$bloques'
+        },
+        {
+            $project: {
+                bloqueTurnos: { $concatArrays: ['$sobreturnos', '$bloques.turnos'] }
+            }
+        },
+        {
+            $unwind: '$bloqueTurnos'
+        },
+        {
+            $project: {
+                estado: '$bloqueTurnos.estado',
+                paciente: '$bloqueTurnos.paciente',
+                tipoPrestacion: '$bloqueTurnos.tipoPrestacion',
+                diagnosticoCodificaciones: '$bloqueTurnos.diagnostico.codificaciones',
+                codificacionesAuditoria: '$bloqueTurnos.diagnosticoCodificaciones.codificacionesAuditoria',
+            }
+        },
+        {
+            $match: {
+                'estado': 'asignado'
+            }
+        },
+
+        {
+            $unwind: { path: '$diagnosticoCodificaciones', preserveNullAndEmptyArrays: true }
+        },
+
+        {
+            $project: {
+                estado: '$estado',
+                nombrePaciente: '$paciente.nombre',
+                apellidoPaciente: '$paciente.apellido',
+                documentoPaciente: '$paciente.documento',
+                tipoPrestacion: '$tipoPrestacion.conceptId',
+                descripcionPrestacion: '$tipoPrestacion.term',
+                auditoriaCodigo: '$diagnosticoCodificaciones.codificacionAuditoria.codigo',
+                auditoriaNombre: '$diagnosticoCodificaciones.codificacionAuditoria.nombre',
+                codProfesionalCie10Codigo: '$diagnosticoCodificaciones.codificacionProfesional.cie10.codigo',
+                codrofesionalCie10Nombre: '$diagnosticoCodificaciones.codificacionProfesional.cie10.nombre',
+                codProfesionalSnomedCodigo: '$diagnosticoCodificaciones.codificacionProfesional.snomed.conceptId',
+                codProfesionalSnomedNombre: '$diagnosticoCodificaciones.codificacionProfesional.snomed.term',
+            }
+        },
+        ];
+
+        let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
+
+        function removeDuplicates(arr) {
+            let unique_array = [];
+            let arrMap = arr.map(m => { return m._id; });
+            for (let i = 0; i < arr.length; i++) {
+                if (arrMap.lastIndexOf(arr[i]._id) === i) {
+                    unique_array.push(arr[i]);
+                }
+            }
+            return unique_array;
+        }
+        data = removeDuplicates(data);
+        resolve(data);
+
+
+    });
+}
+
+
+
+export function getCantidadConsultaXPrestacion(params) {
+
+    return new Promise(async (resolve, reject) => {
+        let pipeline = [];
+        pipeline = [
+            {
+                $match: {
+                    $and: [
+                        { 'horaInicio': { '$gte': new Date(params.horaInicio) } },
+                        { 'horaFin': { '$lte': new Date(params.horaFin) } },
+                        { 'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) } },
+                        { 'bloques.turnos.estado': 'asignado' }
+                    ]
+                }
+            },
+            {
+                $unwind: '$bloques'
+            },
+            {
+                $project: {
+                    idBloque: '$bloques._id',
+                    bloqueTurnos: { $concatArrays: ['$sobreturnos', '$bloques.turnos'] }
+                }
+            },
+
+
+            {
+                $unwind: '$bloqueTurnos'
+            },
+            {
+                $project: {
+                    hora: '$bloqueTurnos.horaInicio',
+                    estado: '$bloqueTurnos.estado',
+                    tipoPrestacion: '$bloqueTurnos.tipoPrestacion'
+                }
+            },
+            {
+                $match: {
+                    'estado': 'asignado'
+                }
+            },
+            {
+                $group: {
+                    _id: '$tipoPrestacion.term',
+                    nombrePrestacion: { $first: '$tipoPrestacion.term' },
+                    conceptId: {
+                        $first: '$tipoPrestacion.conceptId'
+                    },
+                    total: { $sum: 1 },
+                }
+
+
+            }
+
+        ];
+
+
+
+        let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
+
+        function removeDuplicates(arr) {
+            let unique_array = [];
+            let arrMap = arr.map(m => { return m._id; });
+            for (let i = 0; i < arr.length; i++) {
+                if (arrMap.lastIndexOf(arr[i]._id) === i) {
+                    unique_array.push(arr[i]);
+                }
+            }
+            return unique_array;
+        }
+        data = removeDuplicates(data);
+        resolve(data);
+
+    });
+}
+

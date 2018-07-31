@@ -5,7 +5,7 @@ var router = express.Router();
 
 router.get('/entidadesFormadoras/:id*?', function (req, res, next) {
 
- if (req.params.id) {
+    if (req.params.id) {
         entidadFormadora.findById(req.params.id, function (err, data) {
             if (err) {
                 return next(err);
@@ -16,14 +16,14 @@ router.get('/entidadesFormadoras/:id*?', function (req, res, next) {
 
     } else {
 
-        entidadFormadora.find({}).sort({codigoSISA: 1}).exec((error, data) => {
+        entidadFormadora.find({ 'habilitado': true }).sort({ codigoSISA: 1 }).exec((error, data) => {
             if (error) {
                 return next(error);
             }
 
             res.json(data);
         });
-   }
+    }
 
 });
 

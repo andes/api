@@ -15,26 +15,29 @@ const logger = debug('mpiCorrector');
  * @export
  * @returns {Any}
  */
-export async function mpiCorrector() {
+export async function mpiCorrector(done) {
     let condicion = {
         reportarError: true
     };
     try {
         let pacientesReportados = await pacienteModel.pacienteMpi.find(condicion);
         let promArray = [];
-        pacientesReportados.forEach((doc: any) => {
-            if (doc) {
-                consultarSisa(doc);
-            }
-        });
+        let doc: any;
+        logger('llamada mpiCorrector ', pacientesReportados.length);
+        for (doc of pacientesReportados) {
+            logger('llamada con ', doc.documento);
+            await consultarSisa(doc);
+        }
     } catch (err) {
         logger('Error', err);
     }
     logger('Proceso finalizado');
+    done();
 }
 
 async function consultarSisa(pacienteMpi: any) {
     try {
+        logger('Inicia Consulta Sisa', pacienteMpi.documento);
         // realiza la consulta con sisa y devuelve los resultados del matcheo
         let resultado = await matchSisa(pacienteMpi);
 
@@ -44,15 +47,21 @@ async function consultarSisa(pacienteMpi: any) {
             let pacienteSisa = resultado['matcheos'].datosPaciente; // paciente con los datos de Sisa originales
             if (match >= 95) {
                 // Solo lo validamos con sisa si entra por aquí
-                actualizarPaciente(pacienteMpi, pacienteSisa);
+                await actualizarPaciente(pacienteMpi, pacienteSisa);
+                return true;
             } else {
                 // POST/PUT en una collection pacienteRejected para un control a posteriori
-                nuevoPacienteRejected(pacienteMpi);
+                // nuevoPacienteRejected(pacienteMpi);
+                let data = {
+                    reportarError: 'false',
+                };
+                await controllerPaciente.updatePaciente(pacienteMpi, data, userScheduler);
             }
         }
+        return false;
     } catch (err) {
         logger('Error', err);
-        return err;
+        return false;
     }
 }
 
@@ -99,13 +108,10 @@ function actualizarPaciente(pacienteMpi: any, pacienteSisa: any) {
     let data = {
         nombre: pacienteSisa.nombre,
         apellido: pacienteSisa.apellido,
-        reportarError: 'false',
+        reportarError: false,
         entidadesValidadoras: pacienteMpi.entidadesValidadoras
     };
     // PUT de paciente en MPI
-    controllerPaciente.updatePaciente(pacienteMpi, data, userScheduler).catch(err => {
-        logger('Error', err);
-        return err;
-    });
+    return controllerPaciente.updatePaciente(pacienteMpi, data, userScheduler);
 }
 

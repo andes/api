@@ -1,9 +1,8 @@
 import { Matching } from '@andes/match';
-import { model as Prestacion } from '../../../modules/rup/schemas/prestacion';
 import { Auth } from './../../../auth/auth.class';
 import * as mongoose from 'mongoose';
 import * as configuraciones from './../../../config.private';
-
+import { Connections } from '../../../connections';
 /**
  *  Sobre este script:
  *  - Antes de ejecutarlo hay que descomentar las líneas bajo el texto "IMPORTANTE"
@@ -20,51 +19,45 @@ import * as configuraciones from './../../../config.private';
  *          Si no hay registros se completa con solicitud.profesional
  */
 
-let conn = mongoose.connect(configuraciones.hosts.mongoDB_main.host, {
-    auth: configuraciones.hosts.mongoDB_main.auth,
-    server: configuraciones.hosts.mongoDB_main.server
-}).connection;
+let Prestacion = require('../../../modules/rup/schemas/prestacion').model;
 
+Connections.initialize();
 // Ya está abierta?
-conn.once('open', () => {
 
-    // console.log('Conectado.');
+// console.log('Conectado.');
 
-    // Instanciamos un cursor
-    let cursor = Prestacion.findOne().cursor();
+// Instanciamos un cursor
+let cursor = Prestacion.findOne().cursor();
 
-    cursor.on('close', function () { // Si no encuentra nada, termina el script.
-        // console.log('Fin.');
-        conn.close();
-    });
+cursor.on('close', function () { // Si no encuentra nada, termina el script.
+    process.exit();
+});
 
-    cursor.on('data', async (prestacion: any) => {
+cursor.on('data', async (prestacion: any) => {
 
-        // No hay Organización destino?
-        // if (typeof prestacion.solicitud.organizacionDestino === 'undefined') {
-        if (prestacion.ejecucion.registros && prestacion.ejecucion.registros.createdBy) {
-            prestacion.solicitud.organizacionDestino = prestacion.ejecucion.registros.createdBy.organizacion;
-        } else {
-            prestacion.solicitud.organizacionDestino = prestacion.createdBy.organizacion;
-        }
-        // }
+    // No hay Organización destino?
+    // if (typeof prestacion.solicitud.organizacionDestino === 'undefined') {
+    if (prestacion.ejecucion.registros && prestacion.ejecucion.registros.createdBy) {
+        prestacion.solicitud.organizacionDestino = prestacion.ejecucion.registros.createdBy.organizacion;
+    } else {
+        prestacion.solicitud.organizacionDestino = prestacion.createdBy.organizacion;
+    }
+    // }
 
-        // No hay Profesional(es) destino?
-        // if (typeof prestacion.solicitud.profesionalesDestino === 'undefined') {
-        if (prestacion.solicitud.registros.valor && prestacion.solicitud.registros.valor.solicituPrestacion && prestacion.solicitud.registros.valor.solicituPrestacion.profesionales) {
-            prestacion.solicitud.profesionalesDestino = prestacion.solicitud.registros.valor.solicituPrestacion.profesionales;
-        } else {
-            prestacion.solicitud.profesionalesDestino = [prestacion.solicitud.profesional];
-        }
-        // }
+    // No hay Profesional(es) destino?
+    // if (typeof prestacion.solicitud.profesionalesDestino === 'undefined') {
+    if (prestacion.solicitud.registros.valor && prestacion.solicitud.registros.valor.solicituPrestacion && prestacion.solicitud.registros.valor.solicituPrestacion.profesionales) {
+        prestacion.solicitud.profesionalesDestino = prestacion.solicitud.registros.valor.solicituPrestacion.profesionales;
+    } else {
+        prestacion.solicitud.profesionalesDestino = [prestacion.solicitud.profesional];
+    }
+    // }
 
-        // console.log('organizacionDestino:   ', prestacion.solicitud.organizacionDestino.nombre);
-        // console.log('profesionalesDestino:  ', prestacion.solicitud.profesionalesDestino[0].nombre + ' ' + prestacion.solicitud.profesionalesDestino[0].apellido);
+    // console.log('organizacionDestino:   ', prestacion.solicitud.organizacionDestino.nombre);
+    // console.log('profesionalesDestino:  ', prestacion.solicitud.profesionalesDestino[0].nombre + ' ' + prestacion.solicitud.profesionalesDestino[0].apellido);
 
-        // ** IMPORTANTE ** Descomentar las siguientes 2 líneas para habilitar la ejecución de este script
-        // Auth.audit(prestacion, (configuraciones.userUpdater as any));
-        // await prestacion.save();
-
-    });
+    // ** IMPORTANTE ** Descomentar las siguientes 2 líneas para habilitar la ejecución de este script
+    // Auth.audit(prestacion, (configuraciones.userUpdater as any));
+    // await prestacion.save();
 
 });
