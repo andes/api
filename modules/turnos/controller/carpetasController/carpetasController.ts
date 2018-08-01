@@ -3,7 +3,7 @@ import * as utils from './utils';
 import * as config from './config';
 import * as sql from 'mssql';
 import { model as Organizaciones } from '../../../../core/tm/schemas/organizacion';
-import * as carpetaPaciente from '../../schemas/carpetaPaciente';
+import * as carpetaPaciente from '../../../carpetas/schemas/carpetaPaciente';
 import * as configPrivate from '../../../../config.private';
 import { LoggerJobs } from '../../../../utils/loggerJobs';
 
