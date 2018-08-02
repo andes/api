@@ -239,22 +239,36 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', function (req, res, next) {
         if (err) {
             return next(err);
         }
-        let indexBloque = (data as any).bloques.findIndex(bloq => {
-            return (bloq.id === req.params.idBloque);
-        });
-        let indexTurno = (data as any).bloques[indexBloque].turnos.findIndex(t => {
-            return (t.id === req.params.idTurno);
-        });
         let update = {};
-        if (req.body.avisoSuspension) {
-            let etiquetaAvisoSuspension: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.avisoSuspension';
-            update[etiquetaAvisoSuspension] = req.body.avisoSuspension;
-        }
-        if (req.body.motivoConsulta) {
-            let etiquetaMotivoConsulta: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.motivoConsulta';
-            update[etiquetaMotivoConsulta] = req.body.motivoConsulta;
+        if (req.params.idBloque !== '-1') {
+            let indexBloque = (data as any).bloques.findIndex(bloq => {
+                return (bloq.id === req.params.idBloque);
+            });
+            let indexTurno = (data as any).bloques[indexBloque].turnos.findIndex(t => {
+                return (t.id === req.params.idTurno);
+            });
+            if (req.body.avisoSuspension) {
+                let etiquetaAvisoSuspension: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.avisoSuspension';
+                update[etiquetaAvisoSuspension] = req.body.avisoSuspension;
+            }
+            if (req.body.motivoConsulta) {
+                let etiquetaMotivoConsulta: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.motivoConsulta';
+                update[etiquetaMotivoConsulta] = req.body.motivoConsulta;
+            }
 
+        } else {
+            let indexTurno = (data as any).sobreturnos.findIndex(sobreturno => Object.is(req.params.idTurno, String(sobreturno._id)));
+
+            if (req.body.avisoSuspension) {
+                let etiquetaAvisoSuspension: string = 'sobreturnos.' + indexTurno + '.avisoSuspension';
+                update[etiquetaAvisoSuspension] = req.body.avisoSuspension;
+            }
+            if (req.body.motivoConsulta) {
+                let etiquetaMotivoConsulta: string = 'sobreturnos.' + indexTurno + '.motivoConsulta';
+                update[etiquetaMotivoConsulta] = req.body.motivoConsulta;
+            }
         }
+
         let query = {
             _id: req.params.idAgenda,
         };
