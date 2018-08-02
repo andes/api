@@ -183,6 +183,7 @@ export function getHistorialPaciente(req) {
                             'agenda_id': {
                                 '$first': '$_id'
                             },
+                            'bloque_id': { '$first': '$bloques._id' },
                             'organizacion': {
                                 '$first': '$organizacion'
                             },
@@ -264,10 +265,10 @@ export function getHistorialPaciente(req) {
                     turno = elem.turno;
                     turno.id = turno._id;
                     turno.agenda_id = elem.agenda_id;
-                    turno.bloque_id = (elem.bloque) ? elem.bloque_id : null;
+                    turno.bloque_id = (elem.bloque_id) ? elem.bloque_id : null;
                     turno.organizacion = elem.organizacion;
                     turno.profesionales = elem.profesionales;
-                    turno.paciente = elem.paciente;
+                    turno.paciente = elem.turno.paciente;
                     turnos.push(turno);
                 });
                 resolve(turnos);
