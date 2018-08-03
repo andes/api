@@ -163,6 +163,12 @@ export const modules = {
         route: '/modules/top',
         middleware: appMiddleware
     },
+    carpetas: {
+        active: true,
+        path: './modules/carpetas/routes',
+        route: '/modules/carpetas',
+        middleware: appMiddleware
+    }
 };
 
 // Cotas de consumo de APIs
