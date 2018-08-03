@@ -1,4 +1,4 @@
-import * as farmacias from './../modules/mobileApp/controller/FarmaciasTurnosDownloader';
+import * as farmacias from '../apps/mobile-app/controller/FarmaciasTurnosDownloader';
 import * as moment from 'moment';
 
 function run(done) {

@@ -1,5 +1,5 @@
 import * as express from 'express';
-import * as vacunasCtr from '../../mobileApp/controller/VacunasController';
+import * as vacunasCtr from '../../../apps/mobile-app/controller/VacunasController';
 import * as controller from './../../../core/mpi/controller/paciente';
 
 let router = express.Router();

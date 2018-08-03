@@ -1,18 +1,11 @@
-import { pacienteApp } from '../schemas/pacienteApp';
-import { recordatorio } from '../schemas/recordatorio';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
-import * as moment from 'moment';
-import * as agenda from '../../turnos/schemas/agenda';
-import { paciente } from '../../../core/mpi/schemas/paciente';
-import * as agendaCtrl from '../../turnos/controller/agenda';
+import * as agenda from '../../../modules/turnos/schemas/agenda';
+import * as agendaCtrl from '../../../modules/turnos/controller/agenda';
 import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
-import { INotification, PushClient } from '../controller/PushClient';
-import * as authController from '../controller/AuthController';
 import * as recordatorioController from '../controller/RecordatorioController';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
-import * as controllerPaciente from '../../../core/mpi/controller/paciente';
 import { toArray } from '../../../utils/utils';
 
 // let async = require('async');

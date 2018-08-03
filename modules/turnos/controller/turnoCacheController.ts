@@ -3,7 +3,7 @@ import { Logger } from '../../../utils/logService';
 import { ValidateDarTurno } from './../../../utils/validateDarTurno';
 import * as agenda from '../schemas/agenda';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
-import { NotificationService } from '../../mobileApp/controller/NotificationService';
+import { NotificationService } from '../../../apps/mobile-app/controller/NotificationService';
 import { agendasCache } from '../../legacy/schemas/agendasCache';
 
 /* Esta función es la misma que tiene el put de turno.ts - TODO: Ver como unificar*/

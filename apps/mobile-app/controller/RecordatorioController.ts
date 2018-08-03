@@ -1,5 +1,5 @@
 import { recordatorio } from '../schemas/recordatorio';
-import * as agendaModel from '../../turnos/schemas/agenda';
+import * as agendaModel from '../../../modules/turnos/schemas/agenda';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import { profesional } from '../../../core/tm/schemas/profesional';

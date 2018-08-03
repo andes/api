@@ -1,14 +1,8 @@
-import { pacienteApp } from '../schemas/pacienteApp';
-import { LoggerPaciente } from '../../../utils/loggerPaciente';
-import * as authController from '../controller/AuthController';
 import * as express from 'express';
-import * as mongoose from 'mongoose';
 import { Auth } from './../../../auth/auth.class';
-import { ElasticSync } from '../../../utils/elasticSync';
-import { Logger } from '../../../utils/logService';
 import * as debug from 'debug';
 import * as controllerPaciente from '../../../core/mpi/controller/paciente';
-import * as cdaCtr from '../../cda/controller/CDAPatient';
+import * as cdaCtr from '../../../modules/cda/controller/CDAPatient';
 import { xmlToJson } from '../../../utils/utils';
 
 let log = debug('mobileApp:paciente');

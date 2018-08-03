@@ -2,7 +2,7 @@ import * as labsImport from '../modules/cda/controller/import-labs';
 import { pacienteMpi as PacienteMPI} from '../core/mpi/schemas/paciente';
 import { log } from '../core/log/schemas/log';
 import * as debug from 'debug';
-import { pacienteApp as PacienteApp } from '../modules/mobileApp/schemas/pacienteApp';
+import { pacienteApp as PacienteApp } from '../apps/mobile-app/schemas/pacienteApp';
 
 /**
  * Es proceso esta hecho para ejecutarse manual.

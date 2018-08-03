@@ -7,8 +7,8 @@ import * as express from 'express';
 import * as authController from '../controller/AuthController';
 import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
-import * as agenda from '../../turnos/schemas/agenda';
-import * as labsImport from '../../cda/controller/import-labs';
+import * as agenda from '../../../modules/turnos/schemas/agenda';
+import * as labsImport from '../../../modules/cda/controller/import-labs';
 
 let router = express.Router();
 

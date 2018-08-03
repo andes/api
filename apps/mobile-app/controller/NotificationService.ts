@@ -1,6 +1,6 @@
 import { INotification, PushClient } from './PushClient';
 import { pacienteApp } from '../schemas/pacienteApp';
-import * as agenda from '../../turnos/schemas/agenda';
+import * as agenda from '../../../modules/turnos/schemas/agenda';
 import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import * as debug from 'debug';

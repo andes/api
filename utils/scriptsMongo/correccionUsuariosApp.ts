@@ -1,8 +1,8 @@
 import { paciente } from './../../core/mpi/schemas/paciente';
 import * as pacienteCTR from './../../core/mpi/controller/paciente';
 import { Matching } from '@andes/match';
-import { pacienteApp } from './../../modules/mobileApp/schemas/pacienteApp';
-import * as authController from './../../modules/mobileApp/controller/AuthController';
+import { pacienteApp } from './../../apps/mobile-app/schemas/pacienteApp';
+import * as authController from './../../apps/mobile-app/controller/AuthController';
 import * as mongoose from 'mongoose';
 import * as configuraciones from './../../config.private';
 

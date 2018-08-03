@@ -1,14 +1,8 @@
 import { pacienteApp } from '../schemas/pacienteApp';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
-import * as moment from 'moment';
-import * as agenda from '../../turnos/schemas/agenda';
-import { paciente } from '../../../core/mpi/schemas/paciente';
-import * as agendaCtrl from '../../turnos/controller/agenda';
-import { Auth } from './../../../auth/auth.class';
-import { Logger } from '../../../utils/logService';
-import { INotification, PushClient } from '../controller/PushClient';
-import { deviceSchema, deviceModel } from '../schemas/device';
+import { deviceModel } from '../schemas/device';
+
 let router = express.Router();
 
 /**
@@ -33,14 +27,19 @@ router.post('/devices/register', function (req: any, res, next) {
             app_version: req.body.app_version,
             session_id: token
         };
-        let device = new deviceModel(device_data);
-        user.devices.push(device);
-        return user.save((errSave, u) => {
-            if (errSave) {
-                return next(errSave);
-            }
-            res.json(device);
-        });
+        let device = user.devices.find((item) => item.device_id === req.body.device_id);
+        if (!device) {
+            device = new deviceModel(device_data);
+            user.devices.push(device);
+            return user.save((errSave, u) => {
+                if (errSave) {
+                    return next(errSave);
+                }
+                return res.json(device);
+            });
+        } else {
+            return res.json(device);
+        }
     });
 });
 

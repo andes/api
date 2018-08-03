@@ -1,4 +1,4 @@
-import * as recordatorioCtrl from './../modules/mobileApp/controller/RecordatorioController';
+import * as recordatorioCtrl from '../apps/mobile-app/controller/RecordatorioController';
 
 function run() {
     recordatorioCtrl.buscarTurnosARecordar(1).then(() => {

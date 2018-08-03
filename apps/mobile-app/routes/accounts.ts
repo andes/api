@@ -3,7 +3,7 @@ import * as express from 'express';
 import * as mongoose from 'mongoose';
 import * as authController from '../controller/AuthController';
 import * as controllerPaciente from '../../../core/mpi/controller/paciente';
-import * as labsImport from '../../cda/controller/import-labs';
+import * as labsImport from '../../../modules/cda/controller/import-labs';
 
 let router = express.Router();
 

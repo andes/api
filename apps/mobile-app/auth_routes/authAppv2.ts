@@ -5,7 +5,7 @@ import * as express from 'express';
 import * as authController from '../controller/AuthController';
 import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
-import * as agenda from '../../turnos/schemas/agenda';
+import * as agenda from '../../../modules/turnos/schemas/agenda';
 import * as moment from 'moment';
 
 let router = express.Router();

@@ -5,7 +5,7 @@ import * as agenda from '../schemas/agenda';
 import { Logger } from '../../../utils/logService';
 import { paciente } from '../../../core/mpi/schemas/paciente';
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
-import { NotificationService } from '../../mobileApp/controller/NotificationService';
+import { NotificationService } from '../../../apps/mobile-app/controller/NotificationService';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import * as operations from './../../legacy/controller/operations';
 import * as turnosController from '../controller/turnosController';
