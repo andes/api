@@ -1,6 +1,7 @@
 import * as mongoose from 'mongoose';
 import * as express from 'express';
 import { EventCore } from '@andes/event-bus';
+import { FhirCore } from '@andes/fhir';
 import { WebHook, WebHookLog } from '../schemas/webhookSchema';
 
 const request = require('request');
@@ -21,6 +22,7 @@ EventCore.on(/.*/, async function (body) {
     let subscriptions = await WebHook.find({
         event
     });
+
     subscriptions.forEach((sub: any) => {
         if (!filterData(sub.filter, body)) {
             return null;
