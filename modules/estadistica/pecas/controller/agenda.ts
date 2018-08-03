@@ -1,3 +1,4 @@
+import { ObjectID } from 'bson';
 import fs = require('fs');
 import async = require('async');
 import * as agendaModel from '../../../turnos/schemas/agenda';
@@ -67,6 +68,7 @@ export async function consultaPecas(start, end) {
                 }
             }],
     };
+    // console.log('match ', JSON.stringify(match));
     try {
         let agendas = agendaModel.aggregate([
             { $match: match },
@@ -95,9 +97,14 @@ export async function consultaPecas(start, end) {
 
 // castea cada turno asignado y lo inserta en la tabla Sql
 async function auxiliar(a: any, b: any, t: any) {
+    // console.log('a => ', a);
     let turno: any = {};
+    turno.sobreturno = (b !== null) ? 'NO' : 'SI';
+    // console.log('b => ', b);
+
+    turno.tipoTurno = t.tipoTurno ? t.tipoTurno : 'Sin datos';
+    turno.estadoTurno = t.estado;
     let turnoConPaciente = t.estado === 'asignado' && t.paciente && t.asistencia;
-    // if (t.estado === 'asignado' && t.paciente && t.asistencia) {
     let efector = await getEfector(a.organizacion._id) as any;
     let idEfector = efector ? efector.codigo : null;
     let tipoEfector = efector ? efector.tipoEfector : null;
@@ -293,7 +300,7 @@ async function auxiliar(a: any, b: any, t: any) {
         let queryInsert = 'INSERT INTO dbo.Pecas_consolidado_1' +
             '(idEfector, Efector, TipoEfector, DescTipoEfector, IdZona, Zona, SubZona, idEfectorSuperior, EfectorSuperior, AreaPrograma, ' +
             'idAgenda, FechaAgenda, HoraAgenda, estadoAgenda, turnosProgramados, turnosProfesional, turnosLlaves, turnosDelDia, ' +
-            'idTurno, FechaConsulta, HoraTurno, Periodo, Tipodeconsulta, Principal, ConsC2, ConsObst, tipoPrestacion, ' +
+            'idTurno, estadoTurno, tipoTurno, sobreturno, FechaConsulta, HoraTurno, Periodo, Tipodeconsulta, Principal, ConsC2, ConsObst, tipoPrestacion, ' +
             'DNI, Apellido, Nombres, HC, CodSexo, Sexo, FechaNacimiento, Edad, UniEdad, CodRangoEdad, RangoEdad, IdObraSocial, ObraSocial, IdPaciente, telefono, ' +
             'IdBarrio, Barrio, IdLocalidad, Localidad, IdDpto, Departamento, IdPcia, Provincia, IdNacionalidad, Nacionalidad, ' +
             'Calle, Altura, Piso, Depto, Manzana, Longitud, Latitud, ' +
@@ -307,7 +314,7 @@ async function auxiliar(a: any, b: any, t: any) {
             '\',' + turno.IdZona + ',\'' + turno.Zona + '\',\'' + turno.SubZona + '\',' + turno.idEfectorSuperior + ',\'' + turno.EfectorSuperior + '\',\'' + turno.AreaPrograma +
             '\',\'' + turno.idAgenda + '\',\'' + turno.FechaAgenda + '\',\'' + turno.HoraAgenda + '\',\'' + turno.estadoAgenda +
             '\',' + turno.accesoDirectoProgramado + ',' + turno.reservadoProfesional + ',' + turno.reservadoGestion + ',' + turno.accesoDirectoDelDia +
-            ',\'' + turno.idTurno + '\',\'' + turno.FechaConsulta + '\',\'' + turno.HoraTurno + '\',' + turno.Periodo + ',\'' + turno.Tipodeconsulta + '\',\'' + turno.Principal +
+            ',\'' + turno.idTurno + '\',\'' + turno.estadoTurno + '\',\'' + turno.tipoTurno + '\',\'' + turno.sobreturno + '\',\'' + turno.FechaConsulta + '\',\'' + turno.HoraTurno + '\',' + turno.Periodo + ',\'' + turno.Tipodeconsulta + '\',\'' + turno.Principal +
             '\',\'' + turno.ConsC2 + '\',\'' + turno.ConsObst + '\',\'' + turno.tipoPrestacion +
             // DATOS PACIENTE
             '\',' + turno.DNI + ',\'' + turno.Apellido + '\',\'' + turno.Nombres + '\',\'' + turno.HC + '\',\'' + turno.codSexo +
