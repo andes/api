@@ -6,10 +6,10 @@ let request = require('request');
 let cheerio = require('cheerio');
 let moment = require('moment');
 
-import { farmaciasLocalidades, farmaciasTurnos } from '../schemas/farmacias';
+import { FarmaciasLocalidades, FarmaciasTurnos } from '../schemas/farmacias';
 
 export async function findAddress(localidad, farmacia) {
-    let data: any = await farmaciasTurnos.find({
+    let data: any = await FarmaciasTurnos.find({
         nombre: farmacia.nombre,
         direccion: farmacia.direccion,
         fecha: {$exists: false}
@@ -23,7 +23,7 @@ export async function findAddress(localidad, farmacia) {
     } else {
         let geo: any =  await geocodeFarmacia(farmacia, localidad);
 
-        let t = new farmaciasTurnos({
+        let t = new FarmaciasTurnos({
             nombre: farmacia.nombre,
             direccion: farmacia.direccion,
             telefono: farmacia.telefono ? farmacia.telefono : '',
@@ -85,12 +85,12 @@ export function geocodeFarmacia(farmacia, localidad) {
 export function donwloadData(desde, hasta) {
     return getLocalidades().then( async (data: any) => {
         let localidades = data.localidades;
-        await farmaciasLocalidades.remove({});
+        await FarmaciasLocalidades.remove({});
 
-        await farmaciasTurnos.remove({ fecha: {$exists: true} });
+        await FarmaciasTurnos.remove({ fecha: {$exists: true} });
 
         for (let item of localidades) {
-            let f = await (new farmaciasLocalidades({
+            let f = await (new FarmaciasLocalidades({
                 localidadId: item.id,
                 nombre: String(item.nombre)
             })).save();
@@ -105,7 +105,7 @@ export function donwloadData(desde, hasta) {
                         direccion: turno.direccion
                     });
 
-                    let t = new farmaciasTurnos({
+                    let t = new FarmaciasTurnos({
                         nombre: turno.nombre,
                         direccion: turno.direccion,
                         telefono: turno.telefono ? turno.telefono : '',

@@ -1,9 +1,7 @@
 import * as express from 'express';
-import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 
-import { farmaciasLocalidades, farmaciasTurnos } from '../schemas/farmacias';
-import * as farmaciaController from '../controller/FarmaciasTurnosDownloader';
+import { FarmaciasLocalidades, FarmaciasTurnos } from '../schemas/farmacias';
 
 let router = express.Router();
 
@@ -13,7 +11,7 @@ let router = express.Router();
 
 router.get('/farmacias/localidades', function (req: any, res, next) {
 
-    farmaciasLocalidades.find({}).then(data => {
+    FarmaciasLocalidades.find({}).then(data => {
         return res.json(data);
     }).catch(err => {
         next(err);
@@ -38,7 +36,7 @@ router.get('/farmacias/turnos', function (req, res, next) {
         query.localidad = localidad;
     }
 
-    farmaciasTurnos.find(query).sort({ 'fecha': 1 }).then(data => {
+    FarmaciasTurnos.find(query).sort({ 'fecha': 1 }).then(data => {
         return res.json(data);
     }).catch(err => {
         next(err);

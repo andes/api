@@ -3,7 +3,7 @@ import * as agendaModel from '../../../modules/turnos/schemas/agenda';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import { profesional } from '../../../core/tm/schemas/profesional';
-import { pacienteApp } from '../schemas/pacienteApp';
+import { PacienteApp } from '../schemas/pacienteApp';
 import { NotificationService } from './NotificationService';
 import { sendSms, ISms } from '../../../utils/roboSender';
 
@@ -183,7 +183,7 @@ export function enviarAgendaNotificacion() {
         recordatiorios.forEach((item) => {
             Promise.all([
                 profesional.findById(item.dataAgenda.profesionalId),
-                pacienteApp.findOne({ profesionalId: mongoose.Types.ObjectId(item.dataAgenda.profesionalId) })
+                PacienteApp.findOne({ profesionalId: mongoose.Types.ObjectId(item.dataAgenda.profesionalId) })
             ]).then(datos => {
                 if (datos[0] && datos[1]) {
                     let notificacion = {

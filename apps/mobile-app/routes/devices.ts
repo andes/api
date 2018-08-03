@@ -1,7 +1,7 @@
-import { pacienteApp } from '../schemas/pacienteApp';
+import { PacienteApp } from '../schemas/pacienteApp';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
-import { deviceModel } from '../schemas/device';
+import { DeviceModel } from '../schemas/device';
 
 let router = express.Router();
 
@@ -16,7 +16,7 @@ let router = express.Router();
 router.post('/devices/register', function (req: any, res, next) {
     let token: string = req.headers.authorization.substring(4);
     let user_id = req.user.account_id;
-    pacienteApp.findById(user_id, function (errFind, user: any) {
+    PacienteApp.findById(user_id, function (errFind, user: any) {
         if (errFind) {
             return res.status(422).send({ message: 'user_invalid' });
         }
@@ -29,7 +29,7 @@ router.post('/devices/register', function (req: any, res, next) {
         };
         let device = user.devices.find((item) => item.device_id === req.body.device_id);
         if (!device) {
-            device = new deviceModel(device_data);
+            device = new DeviceModel(device_data);
             user.devices.push(device);
             return user.save((errSave, u) => {
                 if (errSave) {
@@ -44,7 +44,7 @@ router.post('/devices/register', function (req: any, res, next) {
 });
 
 /**
- * Update device specification of pacienteApp
+ * Update device specification of PacienteApp
  * @param device {Object} {
  *      @param id {ObjectId}
  *      @param device_id {String}
@@ -56,7 +56,7 @@ router.post('/devices/register', function (req: any, res, next) {
 router.post('/devices/update', function (req: any, res, next) {
     let token: string = req.headers.authorization.substring(4);
     let user_id = req.user.account_id;
-    pacienteApp.findById(user_id, function (errFind, user: any) {
+    PacienteApp.findById(user_id, function (errFind, user: any) {
         if (errFind) {
             return res.status(422).send({ message: 'user_invalid' });
         }
@@ -87,7 +87,7 @@ router.post('/devices/delete', function (req: any, res, next) {
     let token: string = req.headers.authorization.substring(4);
     let user_id = req.user.account_id;
 
-    pacienteApp.findById(user_id, function (errFind, user: any) {
+    PacienteApp.findById(user_id, function (errFind, user: any) {
         if (errFind) {
             return res.status(422).send({ message: 'user_invalid' });
         }

@@ -1,10 +1,8 @@
 import * as mongoose from 'mongoose';
 import * as bcrypt from 'bcrypt-nodejs';
+import { DeviceSchema } from './device';
 
-import { pacienteSchema } from '../../../core/mpi/schemas/paciente';
-import { deviceSchema } from './device';
-
-export let pacienteAppSchema = new mongoose.Schema({
+export let PacienteAppSchema = new mongoose.Schema({
 
     nombre: {
         type: String,
@@ -67,12 +65,12 @@ export let pacienteAppSchema = new mongoose.Schema({
         codigo: String,
         fechaExpiracion: Date
     },
-    devices: [deviceSchema]
+    devices: [DeviceSchema]
     }, {
         timestamps: true
     });
 
-pacienteAppSchema.pre('save', function (next) {
+PacienteAppSchema.pre('save', function (next) {
 
     let user: any = this;
     let SALT_FACTOR = 5;
@@ -106,7 +104,7 @@ pacienteAppSchema.pre('save', function (next) {
 
 });
 
-pacienteAppSchema.methods.comparePassword = function (passwordAttempt, cb) {
+PacienteAppSchema.methods.comparePassword = function (passwordAttempt, cb) {
 
     bcrypt.compare(passwordAttempt, this.password, function (err, isMatch) {
 
@@ -118,4 +116,4 @@ pacienteAppSchema.methods.comparePassword = function (passwordAttempt, cb) {
     });
 };
 
-export let pacienteApp = mongoose.model('pacienteApp', pacienteAppSchema, 'pacienteApp');
+export let PacienteApp = mongoose.model('pacienteApp', PacienteAppSchema, 'pacienteApp');

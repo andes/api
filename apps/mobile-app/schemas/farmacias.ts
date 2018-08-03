@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-export let farmaciasTurnosSchema = new mongoose.Schema({
+export let FarmaciasTurnosSchema = new mongoose.Schema({
     nombre: {
         type: String
     },
@@ -20,7 +20,7 @@ export let farmaciasTurnosSchema = new mongoose.Schema({
     longitud: {type: Number, required: false}
 });
 
-export let farmaciasLocalidadesSchema = new mongoose.Schema({
+export let FarmaciasLocalidadesSchema = new mongoose.Schema({
     nombre: {
         type: String,
         required: true
@@ -31,5 +31,5 @@ export let farmaciasLocalidadesSchema = new mongoose.Schema({
     }
 });
 
-export let farmaciasLocalidades = mongoose.model('farmaciasLocalidades', farmaciasLocalidadesSchema, 'farmaciasLocalidades');
-export let farmaciasTurnos = mongoose.model('farmaciasTurnos', farmaciasTurnosSchema, 'farmaciasTurnos');
+export let FarmaciasLocalidades = mongoose.model('farmaciasLocalidades', FarmaciasLocalidadesSchema, 'farmaciasLocalidades');
+export let FarmaciasTurnos = mongoose.model('farmaciasTurnos', FarmaciasTurnosSchema, 'farmaciasTurnos');

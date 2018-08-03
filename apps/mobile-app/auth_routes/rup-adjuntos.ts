@@ -1,16 +1,10 @@
 import * as mongoose from 'mongoose';
 import * as express from 'express';
 import * as moment from 'moment';
-// import * as async from 'async';
 import { Auth } from './../../../auth/auth.class';
 import { model as Prestacion } from '../../../modules/rup/schemas/prestacion';
 import { model as PrestacionAdjunto } from '../../../modules/rup/schemas/prestacion-adjuntos';
-
-import { buscarPaciente } from '../../../core/mpi/controller/paciente';
-
 import { NotificationService } from '../controller/NotificationService';
-import * as passportJWT from 'passport-jwt';
-
 import { storeFile } from '../../../modules/rup/controllers/rupStore';
 
 let router = express.Router();

@@ -1,12 +1,7 @@
-import * as jwt from 'jsonwebtoken';
-import { pacienteApp } from '../schemas/pacienteApp';
-import { paciente, pacienteMpi } from '../../../core/mpi/schemas/paciente';
+import { PacienteApp } from '../schemas/pacienteApp';
 import * as express from 'express';
 import * as authController from '../controller/AuthController';
-import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
-import * as agenda from '../../../modules/turnos/schemas/agenda';
-import * as moment from 'moment';
 
 let router = express.Router();
 // let emailRegex = /^[a-z0-9]+(\.[_a-z0-9]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,15})$/;
@@ -31,7 +26,7 @@ function getAccount(code, email) {
         return Promise.reject('email invalido');
     }
 
-    return pacienteApp.findOne({ codigoVerificacion: code }).then((datosUsuario: any) => {
+    return PacienteApp.findOne({ codigoVerificacion: code }).then((datosUsuario: any) => {
         if (!datosUsuario) {
             return Promise.reject('no existe la cuenta');
         }
@@ -42,7 +37,7 @@ function getAccount(code, email) {
             } else if (!datosUsuario.email) {
                 // el usuario puede elegir el email. Cuando se envia el codigo de forma automatia
                 // chequemos que el emial que eligio el usuario no exista
-                return pacienteApp.findOne({email: email}).then(existsEmail => {
+                return PacienteApp.findOne({email: email}).then(existsEmail => {
                     if (!existsEmail) {
                         datosUsuario.email = email;
                         return Promise.resolve(datosUsuario);

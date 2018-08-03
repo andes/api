@@ -1,5 +1,5 @@
-import { INotification, PushClient } from './PushClient';
-import { pacienteApp } from '../schemas/pacienteApp';
+import { PushClient } from './PushClient';
+import { PacienteApp } from '../schemas/pacienteApp';
 import * as agenda from '../../../modules/turnos/schemas/agenda';
 import * as moment from 'moment';
 import * as mongoose from 'mongoose';
@@ -67,7 +67,7 @@ export class NotificationService {
      */
 
     private static sendByPaciente(pacienteId, notification) {
-        pacienteApp.find({ 'pacientes.id': pacienteId }, function (err, docs: any[]) {
+        PacienteApp.find({ 'pacientes.id': pacienteId }, function (err, docs: any[]) {
             docs.forEach(user => {
                 let devices = user.devices.map(item => item.device_id);
                 new PushClient().send(devices, notification);
@@ -82,7 +82,7 @@ export class NotificationService {
      */
     private static sendByProfesional (id, notification) {
         id = new mongoose.Types.ObjectId(id);
-        pacienteApp.find({ profesionalId: id }, function (err, docs: any[]) {
+        PacienteApp.find({ profesionalId: id }, function (err, docs: any[]) {
             docs.forEach(user => {
                 let devices = user.devices.map(item => item.device_id);
                 new PushClient().send(devices, notification);

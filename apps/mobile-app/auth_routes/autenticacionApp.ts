@@ -1,13 +1,8 @@
-import * as jwt from 'jsonwebtoken';
-import { pacienteApp } from '../schemas/pacienteApp';
-import { paciente, pacienteMpi } from '../../../core/mpi/schemas/paciente';
+import { PacienteApp } from '../schemas/pacienteApp';
 import { buscarPaciente } from '../../../core/mpi/controller/paciente';
-
 import * as express from 'express';
 import * as authController from '../controller/AuthController';
-import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
-import * as agenda from '../../../modules/turnos/schemas/agenda';
 import * as labsImport from '../../../modules/cda/controller/import-labs';
 
 let router = express.Router();
@@ -31,7 +26,7 @@ router.post('/login', function (req, res, next) {
         return res.status(422).send({ error: 'Debe ingresar una clave' });
     }
 
-    return pacienteApp.findOne({ email }, (err, user: any) => {
+    return PacienteApp.findOne({ email }, (err, user: any) => {
 
         if (!user) {
             return res.status(422).send({ error: 'Cuenta inexistente' });
@@ -86,7 +81,7 @@ router.post('/olvide-password', function (req, res, next) {
         return res.status(422).send({ error: 'Se debe ingresar una dirección de e-Mail' });
     }
 
-    return pacienteApp.findOne({ email: req.body.email }, function (err, datosUsuario: any) {
+    return PacienteApp.findOne({ email: req.body.email }, function (err, datosUsuario: any) {
         if (err) {
             return next(err);
         }
@@ -142,7 +137,7 @@ router.post('/reestablecer-password', function (req, res, next) {
         return res.status(422).send({ error: 'Debe re ingresar el nuevo password.' });
     }
 
-    return pacienteApp.findOne({ email: req.body.email }, function (err, datosUsuario: any) {
+    return PacienteApp.findOne({ email: req.body.email }, function (err, datosUsuario: any) {
         if (err) {
             return next(err);
         }

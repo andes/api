@@ -1,26 +1,18 @@
-import * as jwt from 'jsonwebtoken';
-import { pacienteApp as PacienteApp } from '../schemas/pacienteApp';
+import { PacienteApp } from '../schemas/pacienteApp';
 import { Client } from 'elasticsearch';
 import { Matching } from '@andes/match';
-import * as express from 'express';
 import * as config from '../../../config';
 import * as configPrivate from '../../../config.private';
 import * as moment from 'moment';
-import * as constantes from '../../../core/tm/schemas/constantes';
 import * as mongoose from 'mongoose';
 import * as debug from 'debug';
 import * as controller from './../../../core/mpi/controller/paciente';
 
 import { sendEmail, IEmail, ISms, sendSms } from '../../../utils/roboSender';
 
-let handlebars = require('handlebars');
-import * as fs from 'fs';
-
 let log = debug('AuthController');
 
 export const expirationOffset = 1000 * 60 * 60 * 24;
-
-const TEMPLATE_PATH = './templates/emails/';
 
 export function verificarCodigo(codigoIngresado, codigo) {
     if (codigoIngresado === codigo) {

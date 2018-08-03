@@ -1,5 +1,4 @@
-import * as mongoose from 'mongoose';
-import { vacunas } from '../schemas/vacunas';
+import { Vacunas } from '../schemas/vacunas';
 import { Matching } from '@andes/match';
 
 const weights = {
@@ -9,10 +8,9 @@ const weights = {
     birthDate: 0.2
 };
 
-
 export function getCount (paciente) {
     return new Promise((resolve, reject) => {
-        vacunas.find({ 'documento' : paciente.documento }).count().exec( (err, count)  => {
+        Vacunas.find({ 'documento' : paciente.documento }).count().exec( (err, count)  => {
             if (err) {
                 return reject(err);
             }
@@ -30,7 +28,7 @@ export function getVacunas (paciente) {
 
     return new Promise((resolve, reject) => {
 
-        vacunas.find(conditions).sort(sort).exec( (err, resultados)  => {
+        Vacunas.find(conditions).sort(sort).exec( (err, resultados)  => {
             if (!resultados || err) {
                 return reject(err);
             }
