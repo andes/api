@@ -1,5 +1,5 @@
 import * as express from 'express';
-import * as vacunasCtr from '../../../apps/mobile-app/controller/VacunasController';
+import { Controllers as MobileController } from '../../../apps/mobile-app';
 import * as controller from './../../../core/mpi/controller/paciente';
 
 let router = express.Router();
@@ -9,7 +9,7 @@ router.get('/huds/vacunas', (req, res) => {
 
     controller.buscarPaciente(pacienteId).then(async data => {
         const pacienteMPI = data.paciente;
-        let resultados = await vacunasCtr.getVacunas(pacienteMPI);
+        let resultados = await MobileController.VacunasController.getVacunas(pacienteMPI);
         res.json(resultados);
     });
 });

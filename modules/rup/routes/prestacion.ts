@@ -8,7 +8,6 @@ import { model as PrestacionAdjunto } from '../schemas/prestacion-adjuntos';
 
 import { buscarPaciente } from '../../../core/mpi/controller/paciente';
 import * as frecuentescrl from '../controllers/frecuentesProfesional';
-import { NotificationService } from '../../../apps/mobile-app/controller/NotificationService';
 
 import { iterate, convertToObjectId, buscarEnHuds, matchConcepts } from '../controllers/rup';
 import { Logger } from '../../../utils/logService';

@@ -5,7 +5,8 @@ import * as agenda from '../schemas/agenda';
 import { Logger } from '../../../utils/logService';
 import { paciente } from '../../../core/mpi/schemas/paciente';
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
-import { NotificationService } from '../../../apps/mobile-app/controller/NotificationService';
+import { Controllers as MobileController } from '../../../apps/mobile-app';
+
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import * as operations from './../../legacy/controller/operations';
 import * as turnosController from '../controller/turnosController';
@@ -316,7 +317,7 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, 
                         let turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
                         LoggerPaciente.logTurno(req, 'turnos:reasignar', req.body.turno.paciente, turno, req.params.idBloque, req.params.idAgenda);
 
-                        NotificationService.notificarReasignar(req.params);
+                        MobileController.NotificationService.notificarReasignar(req.params);
                     }
 
                 });
