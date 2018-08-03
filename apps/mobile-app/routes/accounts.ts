@@ -4,8 +4,10 @@ import * as mongoose from 'mongoose';
 import * as authController from '../controller/AuthController';
 import * as controllerPaciente from '../../../core/mpi/controller/paciente';
 import * as labsImport from '../../../modules/cda/controller/import-labs';
+import { Auth } from './../../../auth/auth.class';
 
 let router = express.Router();
+router.use(Auth.authenticate());
 
 /**
  * Edita los datos basico de la cuenta

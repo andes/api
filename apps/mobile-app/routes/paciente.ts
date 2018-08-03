@@ -5,10 +5,8 @@ import * as controllerPaciente from '../../../core/mpi/controller/paciente';
 import * as cdaCtr from '../../../modules/cda/controller/CDAPatient';
 import { xmlToJson } from '../../../utils/utils';
 
-let log = debug('mobileApp:paciente');
-
 let router = express.Router();
-
+router.use(Auth.authenticate());
 /**
  * Get paciente
  *

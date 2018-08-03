@@ -1,18 +1,17 @@
 import * as express from 'express';
 import * as controller from './../../../core/mpi/controller/paciente';
 import * as vacunasCtr from '../controller/VacunasController';
+import { Auth } from '../../../auth/auth.class';
 
 let router = express.Router();
+router.use(Auth.authenticate());
 
 /**
  * Obtenemos las vacunas del Paciente App
  */
 
 router.get('/vacunas', function (req: any, res, next) {
-    let conditions = {};
-
     const pacienteId = req.user.pacientes[0].id;
-
     // primero buscar paciente
     controller.buscarPaciente(pacienteId).then(async data => {
         const pacienteMPI = data.paciente;

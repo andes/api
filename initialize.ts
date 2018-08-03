@@ -51,6 +51,9 @@ export function initAPI(app: Express) {
         }
     }
 
+    // [TODO] Terminar de definir donde va esto.
+    app.use('/api/modules/mobileApp', require('./apps/mobile-app').Router);
+
     // Error handler
     app.use(function (err: any, req, res, next) {
         if (err) {

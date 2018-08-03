@@ -11,6 +11,7 @@ import { toArray } from '../../../utils/utils';
 // let async = require('async');
 
 let router = express.Router();
+router.use(Auth.authenticate());
 
 // Envía el sms al paciente recordando el turno con 24 Hs de antelación
 router.post('/turnos/smsRecordatorioTurno', function (req, res, next) {

@@ -85,18 +85,18 @@ export const modules = {
         route: '/modules/auditorias',
         middleware: appMiddleware
     },
-    turnos_mobile_auth: {
-        active: true,
-        path: './modules/mobileApp/auth_routes',
-        route: '/modules/mobileApp',
-        middleware: null
-    },
-    turnos_mobile: {
-        active: true,
-        path: './modules/mobileApp/routes',
-        route: '/modules/mobileApp',
-        middleware: mobileMiddleware
-    },
+    // turnos_mobile_auth: {
+    //     active: true,
+    //     path: './modules/mobileApp/auth_routes',
+    //     route: '/modules/mobileApp',
+    //     middleware: null
+    // },
+    // turnos_mobile: {
+    //     active: true,
+    //     path: './modules/mobileApp/routes',
+    //     route: '/modules/mobileApp',
+    //     middleware: mobileMiddleware
+    // },
     turnero: {
         active: true,
         path: './modules/turnero/routes',

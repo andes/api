@@ -1,10 +1,11 @@
-import { PacienteApp } from '../schemas/pacienteApp';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import { DeviceModel } from '../schemas/device';
+import { Auth } from './../../../auth/auth.class';
+import { PacienteApp } from '../schemas/pacienteApp';
 
 let router = express.Router();
-
+router.use(Auth.authenticate());
 /**
  * register new device for pacienteApp
  *
