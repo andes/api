@@ -22,12 +22,12 @@ export async function getPrestacionesAfacturar() {
     return new Promise((resolve, reject) => {
         prestacionesAFacturarModel.find({ 'activo': true }).exec((err, data: any) => {
             data.forEach(unaPrestacion => {
-                arrayConceptId.push(unaPrestacion.conceptId)
+                arrayConceptId.push(unaPrestacion.conceptId);
             });
-            console.log(arrayConceptId)
+            console.log(arrayConceptId);
             resolve(arrayConceptId);
         });
-    })
+    });
 }
 
 
@@ -35,7 +35,6 @@ export async function getTurnosFacturacionPendiente() {
     let hoyDesde = moment(new Date()).startOf('day').format();
     let hoyHasta = moment(new Date()).endOf('day').format();
     let prestaciones = await getPrestacionesAfacturar();
-    console.log("aca prestacionnes", prestaciones)
     let match = {
         $match: {
             $and: [{ 'bloques.turnos.estadoFacturacion': { $eq: 'sinFacturar' } },

@@ -10,6 +10,7 @@ import { Auth } from './../../../auth/auth.class';
 import { toArray } from '../../../utils/utils';
 import * as mongoose from 'mongoose';
 import { prestacionesAFacturarModel } from '../schemas/prestacionesAFacturar';
+import { getPrestacionesAfacturar } from '../controllers/facturacionCtrl';
 let router = express.Router();
 
 router.get('/prueba', async function (req, res, next) {
@@ -67,6 +68,7 @@ router.post('/cambioEstado/:id', function (req, res, next) {
                 if (err2) {
                     return next(err2);
                 }
+                console.log(result);
                 res.json(result);
             });
         });
@@ -103,14 +105,14 @@ router.get('/prestacionPorTurno/:id', (req, res, next) => {
         prestacion.find({
             'solicitud.turno': mongoose.Types.ObjectId(req.params.id)
         }).exec(function (err, data: any) {
-            console.log(data)
+            console.log(data);
 
             res.json(data[0]);
         });
     } catch (error) {
         res.end(error);
     }
-})
+});
 
 
 
@@ -136,17 +138,23 @@ router.post('/cambioEstadoPrestaciones/:id', function (req, res, next) {
 });
 
 
-router.get('/sinTurno/:conceptId', async function (req, res, next) {
+router.get('/sinTurno', async function (req, res, next) {
     try {
-        let prestaciones = await toArray(prestacion.aggregate({
+        let prestaciones = await getPrestacionesAfacturar();
+        let match = {
             $match: {
-                'solicitud.tipoPrestacion.conceptId': req.params.conceptId,
+                'solicitud.tipoPrestacion.conceptId':  { $in: prestaciones },
                 'solicitud.turno': { $exists: false },
                 'estadoFacturacion': 'sinFacturar'
             }
-        }).cursor({ batchSize: 1000 }).exec());
+        };
 
-        res.json(prestaciones);
+        let data = await toArray(prestacion.aggregate([
+            match,
+        ]).cursor({})
+            .exec());
+
+        res.json(data);
     } catch (error) {
         res.end(error);
     }
@@ -159,7 +167,7 @@ router.get('/prestacionesConTurno/:id', async function (req, res, next) {
     }).exec(function (err, data: any) {
         res.json(data);
 
-    })
+    });
 
 });
 
