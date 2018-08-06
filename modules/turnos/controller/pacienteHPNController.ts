@@ -58,8 +58,8 @@ export async function savePaciente(paciente: any, transaction) {
         .input('fechaNacimiento', sql.DateTime, fechaNacimiento)
         .query(query).then(result => {
             return {
-                idHistoria: hcNumero,
-                idPaciente: result.recordset[0].idHistoria
+                idHistoria: result.recordset[0].codigo,
+                idPaciente: result.recordset[0].idPaciente
             };
         }).catch(err => {
             throw err;
@@ -68,8 +68,10 @@ export async function savePaciente(paciente: any, transaction) {
 
 export async function getDatosPaciente(tipoDocumento, documento, pool) {
     // Agregar indice a HC_Documento de Historias_Clinicas
-    let query = 'SELECT h.Codigo as idPaciente, h.HC_Numero as idHistoria ' +
+    // idPaciente = Codigo "id" de la tabla Historias_Clinicas y idHistoria es el Número de carpeta.
+    let query = 'SELECT h.Codigo as idHistoria, p.id as idPaciente ' +
                 'FROM Historias_Clinicas h ' +
+                'inner join Pacientes p on p.legacy_idHistoriaClinica=h.codigo ' +
                 'WHERE HC_Tipo_de_documento = @tipoDocumento ' +
                 'AND h.HC_Documento = @documento';
     let result = await pool.request()
