@@ -219,7 +219,8 @@ var Patient = module.exports = {
                 activo: true,
                 valor: unaDireccion.line,
                 codigoPostal: unaDireccion.postalCode,
-                // TODO find para traer los objetos pais, provincia, localidad
+                // TODO: En un MATETIME ver si la información de pais, provincia, localidad
+                // se delega en el insert o update. Y este decoder sólo guarda la info tal cual viene.
                 ubicacion: {
                     pais: unaDireccion.country,
                     provincia: unaDireccion.state,
