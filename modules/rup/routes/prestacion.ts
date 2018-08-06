@@ -271,6 +271,12 @@ router.patch('/prestaciones/:id', function (req, res, next) {
                     }
                 }
                 break;
+            case 'informeIngreso':
+                if (req.body.informeIngreso) {
+                    data.ejecucion.registros[0].valor.informeIngreso = req.body.informeIngreso;
+                    data.ejecucion.registros[0].markModified("valor");
+                }
+                break;
             case 'asignarTurno':
                 if (req.body.idTurno) {
                     data.solicitud.turno = req.body.idTurno;
@@ -285,7 +291,6 @@ router.patch('/prestaciones/:id', function (req, res, next) {
             if (error) {
                 return next(error);
             }
-
             // Actualizar conceptos frecuentes por profesional y tipo de prestacion
             if (req.body.registrarFrecuentes && req.body.registros) {
 
