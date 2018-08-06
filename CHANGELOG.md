@@ -49,5 +49,22 @@
 * Se corrige la ruta de Swagger para que sea accesible con la Vapp.
 * Documentación para swagger.
 
+## [3.4.0] - 2018-08-06
+
+#### Changed
+* Modificación en visualización de punto de inicio de turnos: la información de los datos de los turnos de un paciente se agrupan en tres pestañas: historial de turnos, listado de turnos a futuro, carpeta del paciente (donde se puede realizar la edición de la carpeta).
+
+#### Added
+* Historial de turnos asignados a un paciente con fecha anterior a la fecha actual.
+* Verificación de asistencia a través del concepto snomed (https://github.com/andes/app/pull/628)
+* Controles para el login de profesionales (https://github.com/andes/api/pull/379)
+* Job para ingresar la información del consolidado de PECAS (https://github.com/andes/api/pull/374) 
+* Job para importar los números de carpetas de sistemas Legacy, SIPS central.(https://github.com/andes/api/pull/364)
+
+#### Fixed
+* Procedimientos repetidos en resultados del buscador de RUP (https://github.com/andes/app/pull/616)
+
+
+
 
 
