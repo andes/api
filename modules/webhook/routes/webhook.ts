@@ -25,8 +25,9 @@ EventCore.on(/.*/, async function (body) {
         event
     });
 
-    let value = Fhir.Patient.encode(body); 
-    console.log('salida: ', value);
+    // Ejemplo de uso del paquete FHIR: Luego borrar
+    // let value = Fhir.Patient.encode(body);
+    // console.log('Resultado: ', value);
 
     subscriptions.forEach((sub: any) => {
         if (!filterData(sub.filter, body)) {
