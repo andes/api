@@ -16,7 +16,8 @@
         ],
         "baseUrl": ".",
         "paths": {
-            "@andes/event-bus/*": [ "./packages/event-bus/*" ]
+            "@andes/event-bus/*": [ "./packages/event-bus/*" ],
+            "@andes/mongoose-plugin-audit/*": [ "./packages/mongoose-plugin-audit/*" ]
         }
     }
 }

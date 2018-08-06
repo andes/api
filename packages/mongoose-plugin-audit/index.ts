@@ -1,7 +1,7 @@
-let mongoose = require('mongoose');
+import  * as mongoose from 'mongoose';
 
 // Plugin para configurar auditoría
-function AuditPlugin (schema) {
+export function AuditPlugin (schema) {
     schema.add({
         createdAt: Date,
         createdBy: mongoose.Schema.Types.Mixed,
@@ -47,8 +47,4 @@ function AuditPlugin (schema) {
         }
         next();
     });
-};
-
-module.exports = exports = {
-    AuditPlugin
-};
+}
