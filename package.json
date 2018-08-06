@@ -5,7 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "@andes/event-bus": "file:packages/event-bus",
-    "@andes/fhir": "file:packages/fhir/andes-fhir-1.0.0.tgz",
+    "@andes/fhir": "file:packages/fhir",
     "@andes/match": "^1.1.9",
     "@andes/mongoose-plugin-audit": "file:packages/mongoose-plugin-audit",
     "@types/async": "^2.0.49",

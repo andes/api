@@ -19,6 +19,3 @@ node_modules
 typings
 typings/*
 .vscode
-
-# Exclude javascript from packages
-!/packages/**

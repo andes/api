@@ -1,22 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 const Emitter = require('pattern-emitter');
-
 class EventBus extends Emitter {
-
-    /**
-     * Emite un evento de forma asincrónica
-     * @param {string} event Nombre del evento a emitir
-     * @param {any}  params listado de paramentros relacionados con el evento
-     */
-    
-    emitAsync () {
+    emitAsync() {
         process.nextTick(() => {
             this.emit.apply(this, arguments);
         });
     }
-
 }
-
-module.exports = exports = {
-    EventBus,
-    EventCore: new EventBus()
-};
+exports.EventBus = EventBus;
+exports.EventCore = new EventBus();
+//# sourceMappingURL=index.js.map

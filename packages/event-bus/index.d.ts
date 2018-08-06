@@ -1,4 +1,4 @@
-export as namespace event_bus;
+export as namespace andes_event_bus;
 
 export interface EventBus {
     /**
