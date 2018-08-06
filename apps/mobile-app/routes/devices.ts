@@ -6,6 +6,23 @@ import { PacienteApp } from '../schemas/pacienteApp';
 
 let router = express.Router();
 router.use(Auth.authenticate());
+
+
+router.use((req: any, res, next) => {
+    req.token = req.headers.authorization.substring(4);
+    let user_id = req.user.account_id;
+
+    PacienteApp.findById(user_id, (errFind, user: any) => {
+        if (errFind) {
+            return res.status(422).send({ message: 'user_invalid' });
+        }
+
+        req.account = user;
+        return next();
+    });
+
+});
+
 /**
  * register new device for pacienteApp
  *
@@ -15,33 +32,25 @@ router.use(Auth.authenticate());
  */
 
 router.post('/devices/register', function (req: any, res, next) {
-    let token: string = req.headers.authorization.substring(4);
-    let user_id = req.user.account_id;
-    PacienteApp.findById(user_id, function (errFind, user: any) {
-        if (errFind) {
-            return res.status(422).send({ message: 'user_invalid' });
-        }
-
-        let device_data = {
-            device_id: req.body.device_id,
-            device_type: req.body.device_type,
-            app_version: req.body.app_version,
-            session_id: token
-        };
-        let device = user.devices.find((item) => item.device_id === req.body.device_id);
-        if (!device) {
-            device = new DeviceModel(device_data);
-            user.devices.push(device);
-            return user.save((errSave, u) => {
-                if (errSave) {
-                    return next(errSave);
-                }
-                return res.json(device);
-            });
-        } else {
+    let device_data = {
+        device_id: req.body.device_id,
+        device_type: req.body.device_type,
+        app_version: req.body.app_version,
+        session_id: req.token
+    };
+    let device = req.account.devices.find((item) => item.device_id === req.body.device_id);
+    if (!device) {
+        device = new DeviceModel(device_data);
+        req.account.devices.push(device);
+        return req.account.save((errSave, u) => {
+            if (errSave) {
+                return next(errSave);
+            }
             return res.json(device);
-        }
-    });
+        });
+    } else {
+        return res.json(device);
+    }
 });
 
 /**

@@ -27,9 +27,10 @@ let connection = {
     }
 };
 
-pool = sql.connect(connection, (err) => {
-    logger('MSSSQL connection error');
-});
+// [TODO] Sacar de global
+// pool = sql.connect(connection, (err) => {
+//     logger('MSSSQL connection error');
+// });
 
 
 function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }

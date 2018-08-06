@@ -19,11 +19,11 @@ router.post('/login', function (req, res, next) {
     let password = req.body.password;
 
     if (!email) {
-        return res.status(422).send({ error: 'Se debe ingresar una dirección de e-mail' });
+        return res.status(422).send({ message: 'Se debe ingresar una dirección de e-mail' });
     }
 
     if (!password) {
-        return res.status(422).send({ error: 'Debe ingresar una clave' });
+        return res.status(422).send({ message: 'Debe ingresar una clave' });
     }
 
     return PacienteApp.findOne({ email }, (err, user: any) => {
