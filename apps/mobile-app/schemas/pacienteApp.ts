@@ -2,6 +2,24 @@ import * as mongoose from 'mongoose';
 import * as bcrypt from 'bcrypt-nodejs';
 import { DeviceSchema } from './device';
 
+export interface IPacienteApp extends mongoose.Document {
+    nombre: String;
+    apellido: String;
+    email: String;
+    documento: String;
+    sexo: String;
+    genero: String;
+    fechaNacimiento: String;
+    pacientes: any[];
+    devices: any[];
+    permisos: any[];
+    profesionalId: mongoose.Types.ObjectId;
+    activacionApp: Boolean;
+
+    comparePassword(password: String, cb: (err: any, isMatch: Boolean) => void);
+
+  }
+
 export let PacienteAppSchema = new mongoose.Schema({
 
     nombre: {
@@ -116,4 +134,4 @@ PacienteAppSchema.methods.comparePassword = function (passwordAttempt, cb) {
     });
 };
 
-export let PacienteApp = mongoose.model('pacienteApp', PacienteAppSchema, 'pacienteApp');
+export let PacienteApp: mongoose.Model<IPacienteApp> = mongoose.model<IPacienteApp>('pacienteApp', PacienteAppSchema, 'pacienteApp');

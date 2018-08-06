@@ -32,7 +32,7 @@ router.post('/login', function (req, res, next) {
             return res.status(422).send({ error: 'Cuenta inexistente' });
         }
 
-        return user.comparePassword(password, (errPassword, isMatch) => {
+        return user.comparePassword(password, async (errPassword, isMatch) => {
             if (errPassword) {
                 return next(errPassword);
             }
@@ -46,7 +46,7 @@ router.post('/login', function (req, res, next) {
                     } else {
                         user.password = req.body.new_password;
                         user.activacionApp = true;
-                        user.save();
+                        await user.save();
                     }
 
                 }
@@ -58,11 +58,13 @@ router.post('/login', function (req, res, next) {
                 });
 
                 // Hack momentaneo. Descargamos los laboratorios a demanda.
-                buscarPaciente(user.pacientes[0].id).then((resultado) => {
-                    if (resultado.paciente) {
-                        labsImport.importarDatos(resultado.paciente);
-                    }
-                });
+                if (user.pacientes.length > 0) {
+                    buscarPaciente(user.pacientes[0].id).then((resultado) => {
+                        if (resultado.paciente) {
+                            labsImport.importarDatos(resultado.paciente);
+                        }
+                    });
+                }
 
                 return;
             } else {
