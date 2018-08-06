@@ -1,10 +1,7 @@
 import * as mongoose from 'mongoose';
 import * as express from 'express';
 import { EventCore } from '@andes/event-bus';
-import * as Fhir from '@andes/fhir';
 import { WebHook, WebHookLog } from '../schemas/webhookSchema';
-
-// let fhir = require('@andes/fhir');
 
 const request = require('request');
 
