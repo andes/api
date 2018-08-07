@@ -13,6 +13,7 @@ let router = express.Router();
  */
 
 router.get('/puco/', async function (req, res, next) {
+
     if (req.query.dni) {
         let padron;
         let rta;
@@ -20,7 +21,9 @@ router.get('/puco/', async function (req, res, next) {
         if (req.query.periodo) {
             let date = new Date(req.query.periodo);
             let primerDia = new Date(date.getFullYear(), date.getMonth(), 1);
+            primerDia.setHours(0);
             let ultimoDia = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+            ultimoDia.setHours(23); ultimoDia.setMinutes(59);
             padron = { $gte: primerDia, $lt: ultimoDia };
         } else {
             padron = await periodoPadronesPuco.find({}).sort({ $natural: 1 }).limit(1);   // ultimo padron
@@ -30,14 +33,15 @@ router.get('/puco/', async function (req, res, next) {
         rta = await puco.find({ dni: Number.parseInt(req.query.dni), version: padron }).exec();
 
         if (rta.length > 0) {
-            obraSocial.find({ codigoPuco: rta[0].codigoFinanciador }, function (err, data) {
-                if (err) {
-                    return next(err);
-                }
-                res.json([{ tipoDocumento: rta[0].tipoDocumento, dni: rta[0].dni, transmite: rta[0].transmite, nombre: rta[0].nombre, codigoFinanciador: rta[0].codigoFinanciador, financiador: data[0].nombre, version: rta[0].version }]);
-            });
+            let resultOS = [];
+            let unaOS;
+            for (let i = 0; i < rta.length; i++) {
+                unaOS = await obraSocial.find({ codigoPuco: rta[i].codigoOS }).exec();
+                resultOS[i] = { tipoDocumento: rta[i].tipoDoc, dni: rta[i].dni, transmite: rta[i].transmite, nombre: rta[i].nombre, codigoFinanciador: rta[i].codigoOS, financiador: unaOS[0].nombre, version: rta[i].version };
+            }
+            res.json(resultOS);
         } else {
-            res.json();
+            res.json([]);
         }
     } else {
         res.status(400).json({ msg: 'Parámetros incorrectos' });
