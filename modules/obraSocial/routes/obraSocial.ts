@@ -21,13 +21,14 @@ router.get('/puco/', async function (req, res, next) {
         if (req.query.periodo) {
             let date = new Date(req.query.periodo);
             let primerDia = new Date(date.getFullYear(), date.getMonth(), 1);
-            primerDia.setHours(0);
+            primerDia.setHours(-3);
             let ultimoDia = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-            ultimoDia.setHours(23); ultimoDia.setMinutes(59);
+            ultimoDia.setHours(20); ultimoDia.setMinutes(59);   // adaptacion por desfasaje 3hs de registros en mongodb
             padron = { $gte: primerDia, $lt: ultimoDia };
         } else {
             padron = await periodoPadronesPuco.find({}).sort({ $natural: 1 }).limit(1);   // ultimo padron
-            padron = padron[0].version;
+            padron = new Date(padron[0].version);
+            padron.setHours(-3);    // adaptacion por desfasaje 3hs de registros en mongodb
         }
 
         rta = await puco.find({ dni: Number.parseInt(req.query.dni), version: padron }).exec();
