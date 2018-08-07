@@ -64,43 +64,52 @@ export function quitarTurnoDoble(req, data, tid = null) {
 // Turno
 export function liberarTurno(req, data, turno) {
     let position = getPosition(req, data, turno._id);
-    turno.estado = 'disponible';
-    turno.paciente = null;
-    turno.tipoPrestacion = null;
-    turno.nota = null;
-    turno.confirmedAt = null;
-    turno.updatedAt = new Date();
-    turno.updatedBy = req.user.usuario || req.user;
+    if (!data.dinamica) {
+        turno.estado = 'disponible';
+        turno.paciente = null;
+        turno.tipoPrestacion = null;
+        turno.nota = null;
+        turno.confirmedAt = null;
+        turno.updatedAt = new Date();
+        turno.updatedBy = req.user.usuario || req.user;
 
-    let cant = 1;
+        let cant = 1;
 
-    let turnoDoble = getTurnoSiguiente(req, data, turno._id);
-    if (turnoDoble) {
-        cant = cant + 1;
-        turnoDoble.estado = 'disponible';
-        turnoDoble.updatedAt = new Date();
-        turnoDoble.updatedBy = req.user.usuario || req.user;
-    }
+        let turnoDoble = getTurnoSiguiente(req, data, turno._id);
+        if (turnoDoble) {
+            cant = cant + 1;
+            turnoDoble.estado = 'disponible';
+            turnoDoble.updatedAt = new Date();
+            turnoDoble.updatedBy = req.user.usuario || req.user;
+        }
 
-    switch (turno.tipoTurno) {
-        case ('delDia'):
-            data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia + cant;
-            data.bloques[position.indexBloque].restantesProgramados = 0;
-            data.bloques[position.indexBloque].restantesProfesional = 0;
-            data.bloques[position.indexBloque].restantesGestion = 0;
-            break;
-        case ('programado'):
-            data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
-            break;
-        case ('profesional'):
-            data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional + cant;
-            break;
-        case ('gestion'):
-            data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion + cant;
-            break;
-    }
-    if (turno.tipoTurno) {
-        turno.tipoTurno = undefined;
+        switch (turno.tipoTurno) {
+            case ('delDia'):
+                data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia + cant;
+                data.bloques[position.indexBloque].restantesProgramados = 0;
+                data.bloques[position.indexBloque].restantesProfesional = 0;
+                data.bloques[position.indexBloque].restantesGestion = 0;
+                break;
+            case ('programado'):
+                data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
+                break;
+            case ('profesional'):
+                data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional + cant;
+                break;
+            case ('gestion'):
+                data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion + cant;
+                break;
+        }
+        if (turno.tipoTurno) {
+            turno.tipoTurno = undefined;
+        }
+    } else {
+        if (data.cupo > -1) {
+            data.cupo++;
+        }
+        let newTurnos = data.bloques[position.indexBloque].turnos;
+        newTurnos.splice(position.indexTurno, 1);
+        data.bloques[position.indexBloque].turnos = newTurnos;
     }
 }
 
@@ -858,32 +867,39 @@ export function updatePaciente(pacienteModified, turno) {
             return next(err);
         }
         let bloques: any = data.bloques;
-        let indiceTurno = 0;
-        let i = 0;
-        let j = 0;
-        let band = true;
-        while (i < bloques.length && band) {
-            j = 0;
-            while (j < bloques[i].turnos.length && band) {
-                if (bloques[i].turnos[j]._id.toString() === turno._id.toString()) {
-                    indiceTurno = j;
-                    band = false;
-                }
-                j++;
-            }
-            if (!band) {
-                bloques[i].turnos[indiceTurno].paciente.nombre = pacienteModified.nombre;
-                bloques[i].turnos[indiceTurno].paciente.apellido = pacienteModified.apellido;
-                bloques[i].turnos[indiceTurno].paciente.documento = pacienteModified.documento;
+        let indiceTurno = -1;
+
+        for (let bloque of bloques) {
+            indiceTurno = bloque.turnos.findIndex(elem => elem._id.toString() === turno._id.toString());
+
+            if (indiceTurno > 0) { // encontro el turno en este bloque?
+                bloque.turnos[indiceTurno].paciente.nombre = pacienteModified.nombre;
+                bloque.turnos[indiceTurno].paciente.apellido = pacienteModified.apellido;
+                bloque.turnos[indiceTurno].paciente.documento = pacienteModified.documento;
                 if (pacienteModified.contacto && pacienteModified.contacto[0]) {
-                    bloques[i].turnos[indiceTurno].paciente.telefono = pacienteModified.contacto[0].valor;
+                    bloque.turnos[indiceTurno].paciente.telefono = pacienteModified.contacto[0].valor;
                 }
-                bloques[i].turnos[indiceTurno].paciente.carpetaEfectores = pacienteModified.carpetaEfectores;
-                bloques[i].turnos[indiceTurno].paciente.fechaNacimiento = pacienteModified.fechaNacimiento;
+                bloque.turnos[indiceTurno].paciente.carpetaEfectores = pacienteModified.carpetaEfectores;
+                bloque.turnos[indiceTurno].paciente.fechaNacimiento = pacienteModified.fechaNacimiento;
             }
-            i++;
         }
-        if (!band) {
+
+        if (indiceTurno < 0) { // no se encontro el turno en los bloques de turnos?
+            indiceTurno = data.sobreturnos.findIndex(elem => elem._id.toString() === turno._id.toString());
+
+            if (indiceTurno > 0) { // esta el turno entre los sobreturnos?
+                data.sobreturnos[indiceTurno].paciente.nombre = pacienteModified.nombre;
+                data.sobreturnos[indiceTurno].paciente.apellido = pacienteModified.apellido;
+                data.sobreturnos[indiceTurno].paciente.documento = pacienteModified.documento;
+                if (pacienteModified.contacto && pacienteModified.contacto[0]) {
+                    data.sobreturnos[indiceTurno].paciente.telefono = pacienteModified.contacto[0].valor;
+                }
+                data.sobreturnos[indiceTurno].paciente.carpetaEfectores = pacienteModified.carpetaEfectores;
+                data.sobreturnos[indiceTurno].paciente.fechaNacimiento = pacienteModified.fechaNacimiento;
+            }
+        }
+
+        if (indiceTurno > 0) {
             try {
                 Auth.audit(data, (userScheduler as any));
                 saveAgenda(data);

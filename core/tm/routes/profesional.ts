@@ -279,7 +279,7 @@ router.get('/profesionales/:id*?', Auth.authenticate(), function (req, res, next
             sort({
                 apellido: 1,
                 nombre: 1
-            });
+            }).skip(skip).limit(limit);
     } else {
         query = profesional.find(opciones).skip(skip).limit(limit);
     }

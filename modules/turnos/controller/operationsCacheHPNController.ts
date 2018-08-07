@@ -34,8 +34,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
                             await saveAgendaProfesional(idAgendaHPN, idProfesional);
                             await saveAgendaTipoPrestacion(idAgendaHPN, idTipoPrestacion);
                         }
-
-                        await saveBloques(idAgendaHPN, agenda.bloques, idTipoPrestacion);
+                        await saveBloques(idAgendaHPN, agenda, idTipoPrestacion);
                         await setEstadoAgendaToIntegrada(agenda._id);
                         transaction.commit(async err2 => {
                             resolve2();
@@ -112,7 +111,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
 
     async function saveAgenda(_agenda, idTipoPrestacion) {
         let idAgendaHPN;
-        let idUbicacion = turnoCtrl.getUbicacion(idTipoPrestacion); // checkar datos en produccion
+        let idUbicacion = turnoCtrl.getUbicacion(idTipoPrestacion);
         let fechaHora = _agenda.horaInicio;
         let fechaHoraFinalizacion = _agenda.horaFin;
         let duracionTurnos = _agenda.bloques[0].duracionTurno;
@@ -167,9 +166,16 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
         return idAgendaHPN;
     }
 
-    async function saveBloques(idAgendaAndes, bloques: Array<any>, idTipoPrestacion) {
+
+    async function saveBloques(idAgendaAndes, _agenda: any, idTipoPrestacion) {
+        let bloques = _agenda.bloques;
         for (let bloque of bloques) {
             await turnoCtrl.saveTurnos(idAgendaAndes, bloque, idTipoPrestacion, pool, transaction);
+        }
+        if (_agenda.sobreturnos) {
+            for (let sobreturno of _agenda.sobreturnos) {
+                await turnoCtrl.saveSobreturno(idAgendaAndes, sobreturno, idTipoPrestacion, pool, transaction);
+            }
         }
     }
 
@@ -225,12 +231,6 @@ export function getAgendasDeMongoExportadas() {
 export async function getIdTipoPrestacion(_agenda) {
     let idTipoPrestacion = null;
     let prestacionesIntegrada: any = null;
-
-    // Esta parte no se hace más ya que estaba hardcodeado
-    // -----------------------------------------------------
-    // let datosOrganizacion = constantes.prestacionesIntegradasPorEfector.find(elem => { return elem.organizacion === _agenda.organizacion._id.toString(); } );
-    // -----------------------------------------------------
-
 
     // Primero filtramos por el conceptId de la agenda que (según requerimientos era siempre 1) por eso verificamos _agenda.tipoPrestaciones[0]
     let configuracionesPrestacion: any = await configuracionPrestacionModel.findOne({ 'snomed.conceptId': _agenda.tipoPrestaciones[0].conceptId });

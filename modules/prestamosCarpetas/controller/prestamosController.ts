@@ -444,7 +444,7 @@ export async function getHistorial(req) {
         'numero': nroCarpeta
     };
 
-    return await prestamo.find(filter);
+    return await prestamo.find(filter).sort('-createdAt');
 }
 
 export async function solicitudManualCarpeta(req) {
