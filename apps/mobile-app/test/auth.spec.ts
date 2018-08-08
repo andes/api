@@ -8,7 +8,7 @@ import { Auth } from '../../../auth/auth.class';
 const request = require('supertest');
 let app = express();
 
-describe('MobileApp - Login', () => {
+describe('MobileApp - login', () => {
     beforeAll((done) => {
         // [TODO] Change this to a promises style
         initAPI(app).then(() => {
@@ -20,7 +20,7 @@ describe('MobileApp - Login', () => {
         await PacienteApp.remove({ email: 'user@andes.gob.ar' });
     });
 
-    test('login sin campoes debe devolver codigo 422', async () => {
+    test('login sin campos debe devolver codigo 422', async () => {
         const response = await request(app).post('/api/modules/mobileApp/login');
         expect(response.statusCode).toBe(422);
     });

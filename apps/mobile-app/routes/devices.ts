@@ -32,6 +32,9 @@ router.use((req: any, res, next) => {
  */
 
 router.post('/devices/register', function (req: any, res, next) {
+    if (!req.body.device_id || !req.body.device_type || !req.body.app_version) {
+        return next({ message: 'invalid_format' });
+    }
     let device_data = {
         device_id: req.body.device_id,
         device_type: req.body.device_type,
@@ -64,28 +67,23 @@ router.post('/devices/register', function (req: any, res, next) {
  */
 
 router.post('/devices/update', function (req: any, res, next) {
-    let token: string = req.headers.authorization.substring(4);
-    let user_id = req.user.account_id;
-    PacienteApp.findById(user_id, function (errFind, user: any) {
-        if (errFind) {
-            return res.status(422).send({ message: 'user_invalid' });
-        }
-
-        let device_data = req.body.device;
-        let device = user.devices.id(device_data.id);
-        if (device) {
-            device.app_version = device_data.app_version;
-            device.device_id = device_data.device_id;
-            device.device_type = device_data.device_type;
-            device.session_id = token;
-        }
-        return user.save((errSave, u) => {
+    let device_data = req.body.device;
+    let device = req.account.devices.id(device_data.id);
+    if (device) {
+        device.app_version = device_data.app_version;
+        device.device_id = device_data.device_id;
+        device.device_type = device_data.device_type;
+        device.session_id = req.token;
+        return req.account.save((errSave) => {
             if (errSave) {
                 return next(errSave);
             }
-            res.json(device);
+            return res.json(device);
         });
-    });
+    } else {
+        return next({ message: 'no_device' });
+    }
+
 });
 
 /**
@@ -94,24 +92,14 @@ router.post('/devices/update', function (req: any, res, next) {
  */
 
 router.post('/devices/delete', function (req: any, res, next) {
-    let token: string = req.headers.authorization.substring(4);
-    let user_id = req.user.account_id;
-
-    PacienteApp.findById(user_id, function (errFind, user: any) {
-        if (errFind) {
-            return res.status(422).send({ message: 'user_invalid' });
+    req.account.devices.pull({ '_id': new mongoose.Types.ObjectId(req.body.id) });
+    return req.account.save((errSave, u) => {
+        if (errSave) {
+            return next(errSave);
         }
 
-        user.devices.pull({ '_id': new mongoose.Types.ObjectId(req.body.id) });
-        return user.save((errSave, u) => {
-            if (errSave) {
-                return next(errSave);
-            }
-
-            res.json({ message: 'OK' });
-        });
+        res.json({ message: 'OK' });
     });
-
 });
 
 export = router;
