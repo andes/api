@@ -24,7 +24,6 @@ export async function getPrestacionesAfacturar() {
             data.forEach(unaPrestacion => {
                 arrayConceptId.push(unaPrestacion.conceptId);
             });
-            console.log(arrayConceptId);
             resolve(arrayConceptId);
         });
     });
