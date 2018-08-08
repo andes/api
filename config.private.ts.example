@@ -219,3 +219,12 @@ export const conSqlPecas = {
         database: ''
     }
 };
+
+export const sqlCarpetasJob = {
+    user: '',
+    password: '',
+    server: '',
+    database: '',
+    requestTimeout: '',
+    stream: '',
+};

@@ -221,7 +221,7 @@ export async function cacheTurnos(unaAgenda) {
                 if (err) {
                     reject(err);
                 }
-                if (data.length > 0) {
+                if (data && data.length > 0) {
                     resolve(true);
                 } else {
                     resolve(false);

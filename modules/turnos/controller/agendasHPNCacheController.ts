@@ -5,7 +5,6 @@ import * as sql from 'mssql';
 const MongoClient = require('mongodb').MongoClient;
 let async = require('async');
 let pool;
-let transaction;
 
 let connection = {
     user: configPrivate.conSqlHPN.auth.user,
@@ -18,7 +17,6 @@ let connection = {
 export async function integracion() {
     return new Promise<Array<any>>(async function (resolve, reject) {
         try {
-            let promisesArray: any = [];
             let agendasMongoPendientes = await operationsHPNCache.getAgendasDeMongoPendientes();
             for (let agenda of agendasMongoPendientes) {
                 pool = await new sql.ConnectionPool(connection).connect();

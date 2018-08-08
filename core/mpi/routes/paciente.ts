@@ -729,7 +729,6 @@ router.delete('/pacientes/:id', function (req, res, next) {
     if (!Auth.check(req, 'mpi:paciente:deleteAndes')) {
         return next(403);
     }
-    let connElastic = new ElasticSync();
     let ObjectId = mongoose.Types.ObjectId;
     let objectId = new ObjectId(req.params.id);
     controller.deletePacienteAndes(objectId).then((patientFound: any) => {
