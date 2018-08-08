@@ -13,7 +13,7 @@ export function initAPI(app: Express) {
     Auth.initialize(app);
 
     // Inicializa Mongoose
-    Connections.initialize();
+    let p = Connections.initialize();
 
     // Configura Express
     app.use(bodyParser.json({ limit: '150mb' }));
@@ -84,4 +84,6 @@ export function initAPI(app: Express) {
             });
         }
     });
+
+    return p;
 }

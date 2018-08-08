@@ -28,7 +28,7 @@ export class Connections {
 
         // Conecta y configura conexiones
         // 1. PRINCIPAL
-        mongoose.connect(configPrivate.hosts.mongoDB_main.host, configPrivate.hosts.mongoDB_main.options );
+        let mainConnect = mongoose.connect(configPrivate.hosts.mongoDB_main.host, configPrivate.hosts.mongoDB_main.options );
         this.main = mongoose.connection;
         // 2. MPI
         this.mpi = mongoose.createConnection(configPrivate.hosts.mongoDB_mpi.host, configPrivate.hosts.mongoDB_mpi.options);
@@ -40,6 +40,8 @@ export class Connections {
         this.configEvents('main', this.main);
         this.configEvents('mpi', this.mpi);
         this.configEvents('snomed', this.snomed);
+
+        return Promise.all([mainConnect, this.mpi, this.snomed]);
     }
 
     private static configEvents(name: string, connection: mongoose.Connection) {

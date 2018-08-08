@@ -11,8 +11,9 @@ let app = express();
 describe('MobileApp - Login', () => {
     beforeAll((done) => {
         // [TODO] Change this to a promises style
-        initAPI(app);
-        setTimeout(done, 3000);
+        initAPI(app).then(() => {
+            done();
+        });
     });
 
     beforeEach(async () => {
