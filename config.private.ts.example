@@ -60,6 +60,14 @@ export const hosts = {
             reconnectTries: Number.MAX_VALUE, // Never stop trying to reconnect
             reconnectInterval: 500,
         }
+    },
+
+    mongoDB_puco: {
+        host: getEnv('MONGO_PUCO', 'mongodb://localhost:27017/padrones'),
+        options: {
+            reconnectTries: Number.MAX_VALUE, // Never stop trying to reconnect
+            reconnectInterval: 1500,
+        }
     }
 };
 // Mongoose config
@@ -95,6 +103,15 @@ export const sintys = {
     port: getEnv('SINTYS_PORT', 443, 'n'),
     path: getEnv('SINTYS_PATH', '')
 };
+// Configuración para PUCO 
+export const puco = {
+  database: 'puco',
+  auth: {
+      user: '',
+      password: ''
+  }
+};
+
 
 export const snomed = {
     dbName: getEnv('SNOMED_DB', 'es-edition'),
