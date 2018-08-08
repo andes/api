@@ -149,7 +149,7 @@ export const modules = {
         active: true,
         path: './modules/sugerencias/routes',
         route: '/modules/sugerencias',
-        middleware: null
+        middleware: appMiddleware
     },
     prestamosCarpetas: {
         active: true,
