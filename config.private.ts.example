@@ -103,7 +103,7 @@ export const sintys = {
     port: getEnv('SINTYS_PORT', 443, 'n'),
     path: getEnv('SINTYS_PATH', '')
 };
-// Configuración para PUCO 
+// Configuración para PUCO
 export const puco = {
   database: 'puco',
   auth: {
