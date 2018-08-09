@@ -13,19 +13,6 @@ import { toArray } from '../../../utils/utils';
 let router = express.Router();
 router.use(Auth.authenticate());
 
-// Envía el sms al paciente recordando el turno con 24 Hs de antelación
-router.post('/turnos/smsRecordatorioTurno', function (req, res, next) {
-
-    recordatorioController.enviarTurnoRecordatorio();
-    res.json({});
-});
-
-router.get('/turnos/recordatorioTurno', function (req, res, next) {
-
-    recordatorioController.buscarTurnosARecordar(1);
-    res.json({});
-});
-
 /**
  * Get turnos del Paciente App
  */
