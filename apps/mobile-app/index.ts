@@ -9,6 +9,10 @@ import * as NotificationService from './controller/NotificationService';
  * el requiredir viene trayendo problemas cada tanto. Porque quedan archivos .js huerfanos que los detecta igual.
  * Para seguir usandolo sería bueno compilar con typescript en otro directorio.
  * Es un detalle menor.
+ *
+ * Tambien esta este issue de Jest para dejar de usar require-dir
+ * https://github.com/aseemk/requireDir/issues/53
+ *
  */
 
 export let Router = express.Router();
