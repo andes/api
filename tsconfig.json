@@ -12,12 +12,13 @@
         "allowUnusedLabels": false,  
         "typeRoots": [
             "node_modules/@types",
-            "./packages/",
+            "./packages/*",
         ],
         "baseUrl": ".",
         "paths": {
             "@andes/event-bus/*": [ "./packages/event-bus/*" ],
-            "@andes/mongoose-plugin-audit/*": [ "./packages/mongoose-plugin-audit/*" ]
+            "@andes/mongoose-plugin-audit/*": [ "./packages/mongoose-plugin-audit/*" ],
+            "@andes/fhir/*": [ "./packages/fhir/*" ]
         }
     }
 }
