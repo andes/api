@@ -64,6 +64,15 @@
 #### Fixed
 * Procedimientos repetidos en resultados del buscador de RUP (https://github.com/andes/app/pull/616)
 
+## [3.5.0] - 2018-08-09
+
+#### Added
+* Se agrega visualizador de padrón de PUCO e Incluir Salud para conocer si un paciente tiene alguna cobertura social. La búsqueda se realiza por dni.
+* Se agrega la posibilidad de crear agendas dinámicas para las prestaciones que requieran agregar pacientes a demanda
+
+#### Fixed
+* Se agrega la posibilidad de visualizar las agendas con citación por segmento, al dar un turno autocitado
+
 
 
 
