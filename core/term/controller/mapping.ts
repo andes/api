@@ -75,7 +75,7 @@ export class SnomedCIE10Mapping {
             this.setContexto(contexto);
         }
         return new Promise((resolve, reject) => {
-            SnomedMapping.find({ conceptId: conceptId }).sort('mapGroup mapPriority').then((mapping) => {
+            SnomedMapping.find({ conceptId }).sort('mapGroup mapPriority').then((mapping) => {
                 /**
                  * Chequeamos regla a regla cual es la primera que se cumple
                  */

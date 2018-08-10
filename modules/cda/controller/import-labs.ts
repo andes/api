@@ -154,7 +154,7 @@ export async function importarDatos(paciente) {
                 let cda = cdaCtr.generateCDA(uniqueId, (hiv ? 'R' : 'N') , paciente, fecha, profesional, organizacion, prestacion, cie10Laboratorio, texto, fileData);
                 let metadata = {
                     paciente: mongoose.Types.ObjectId(paciente.id),
-                    prestacion: prestacion,
+                    prestacion,
                     fecha: fecha.toDate(),
                     adjuntos: [{ path: fileData.data, id: fileData.id }],
                     extras: {

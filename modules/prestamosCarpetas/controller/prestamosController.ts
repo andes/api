@@ -399,7 +399,7 @@ async function createCarpeta(datosCarpeta, estadoPrestamoCarpeta) {
         datosDevolucion: (datosCarpeta.datosDevolucion ?
             datosCarpeta.datosDevolucion :
             { observaciones: '', estado: 'Normal' }),
-        datosSolicitudManual: datosSolicitudManual
+        datosSolicitudManual
     });
 }
 

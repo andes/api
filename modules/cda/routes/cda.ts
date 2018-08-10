@@ -103,11 +103,11 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
 
         let metadata = {
             paciente: paciente._id,
-            prestacion: prestacion,
+            prestacion,
             profesional: dataProfesional,
-            organizacion: organizacion,
-            adjuntos: adjuntos,
-            fecha: fecha,
+            organizacion,
+            adjuntos,
+            fecha,
             extras: {
                 id: idPrestacion,
                 organizacion: organizacion._id
@@ -177,11 +177,11 @@ router.post('/', async (req: any, res, next) => {
                 }
                 let metadata = {
                     paciente: paciente._id,
-                    prestacion: prestacion,
-                    organizacion: organizacion,
+                    prestacion,
+                    organizacion,
                     profesional: dataProfesional,
                     fecha: cdaData.fecha,
-                    adjuntos: adjuntos,
+                    adjuntos,
                     extras: {
                         id: cdaData.id,
                         organizacion: mongoose.Types.ObjectId(orgId)

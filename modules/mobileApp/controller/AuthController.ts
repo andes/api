@@ -280,11 +280,11 @@ export function matchPaciente(data) {
         let body = {
             size: 100,
             from: 0,
-            query: query
+            query
         };
         connElastic.search({
             index: 'andes',
-            body: body
+            body
         }).then((searchResult) => {
 
             // Asigno los valores para el suggest

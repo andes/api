@@ -287,10 +287,10 @@ export class Auth {
                 documento: user.usuario
             },
             // roles: [permisos.roles],
-            profesional: profesional,
-            organizacion: organizacion,
-            permisos: permisos,
-            account_id: account_id,
+            profesional,
+            organizacion,
+            permisos,
+            account_id,
             type: 'user-token'
         };
         return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: this.expiresIn });
@@ -312,10 +312,10 @@ export class Auth {
         let token: AppToken = {
             id: mongoose.Types.ObjectId(),
             app: {
-                nombre: nombre
+                nombre
             },
-            organizacion: organizacion,
-            permisos: permisos,
+            organizacion,
+            permisos,
             account_id: null,
             type: 'app-token'
         };
@@ -343,10 +343,10 @@ export class Auth {
                 nombre,
                 email,
             },
-            permisos: permisos,
-            pacientes: pacientes,
+            permisos,
+            pacientes,
             organizacion: null,
-            account_id: account_id,
+            account_id,
             type: 'paciente-token'
         };
         return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: this.expiresIn });

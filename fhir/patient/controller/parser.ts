@@ -214,8 +214,8 @@ export function FHIRAPaciente(pacienteFhir: PacienteFHIR) {
             nombre: pacienteFhir.name[0].given.join().replace(',', ' '),
             apellido: pacienteFhir.name[0].family.join().replace(',', ' '),
             fechaNacimiento: pacienteFhir.birthDate,
-            genero: genero,
-            sexo: sexo,
+            genero,
+            sexo,
             estado: 'temporal'
         };
         let contactos = pacienteFhir.telecom ? pacienteFhir.telecom.map(unContacto => {

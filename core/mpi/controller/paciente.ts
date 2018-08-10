@@ -308,7 +308,7 @@ export function matching(data) {
     let body = {
         size: 100,
         from: 0,
-        query: query
+        query
     };
 
     return new Promise((resolve, reject) => {
@@ -612,7 +612,7 @@ export async function matchPaciente(dataPaciente) {
         let body = {
             size: 100,
             from: 0,
-            query: query
+            query
         };
 
         let searchResult = await connElastic.search(body);

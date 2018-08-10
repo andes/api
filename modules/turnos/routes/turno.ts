@@ -70,7 +70,7 @@ router.patch('/turno/agenda/:idAgenda', async function (req, res, next) {
         let turno = {
             horaInicio: moment(new Date(), 'YYYY-MM-DD HH:mm:ss'),
             estado: 'asignado',
-            tipoTurno: tipoTurno,
+            tipoTurno,
             nota: req.body.nota,
             motivoConsulta: req.body.motivoConsulta,
             paciente: req.body.paciente,

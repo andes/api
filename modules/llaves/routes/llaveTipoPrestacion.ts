@@ -147,7 +147,7 @@ router.patch('/tipoPrestacion/:id', function (req, res, next) {
                 accion: 'Actualizar configuración de TipoPrestacion',
                 ruta: req.url,
                 method: req.method,
-                data: data,
+                data,
                 err: errOnPatch || false
             });
 
@@ -169,7 +169,7 @@ router.delete('/tipoPrestacion/:id', function (req, res, next) {
             accion: 'Eliminar Configuración de TipoPrestacion',
             ruta: req.url,
             method: req.method,
-            data: data,
+            data,
             err: err || false
         });
 

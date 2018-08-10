@@ -42,7 +42,7 @@ function getAccount(code, email) {
             } else if (!datosUsuario.email) {
                 // el usuario puede elegir el email. Cuando se envia el codigo de forma automatia
                 // chequemos que el emial que eligio el usuario no exista
-                return pacienteApp.findOne({email: email}).then(existsEmail => {
+                return pacienteApp.findOne({email}).then(existsEmail => {
                     if (!existsEmail) {
                         datosUsuario.email = email;
                         return Promise.resolve(datosUsuario);
@@ -134,8 +134,8 @@ router.post('/v2/registrar', function (req, res, next) {
             authController.habilitarCuenta(datosUsuario, password).then((user: any) => {
                 let token = Auth.generatePacienteToken(String(user._id), user.nombre + ' ' + user.apellido, user.email, user.pacientes, user.permisos);
                 res.status(200).json({
-                    token: token,
-                    user: user
+                    token,
+                    user
                 });
 
             }).catch((er) => {

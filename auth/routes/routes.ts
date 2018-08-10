@@ -140,7 +140,7 @@ router.post('/login', function (req, res, next) {
                 }),
             authUsers.findOneAndUpdate(
                 { usuario: req.body.usuario },
-                { password: sha1Hash(req.body.password), nombre: nombre, apellido: apellido },
+                { password: sha1Hash(req.body.password), nombre, apellido },
             )
         ]).then((data: any[]) => {
             // Verifica que el usuario sea valido y que tenga permisos asignados
@@ -177,7 +177,7 @@ router.post('/login', function (req, res, next) {
         Promise.all([
             authUsers.findOne({
                 usuario: req.body.usuario,
-                password: password
+                password
             }),
             profesional.findOne({
                 documento: req.body.usuario

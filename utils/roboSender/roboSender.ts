@@ -39,7 +39,7 @@ export function roboSender() {
                                 to: env.email,
                                 subject: env.subject,
                                 text: env.message,
-                                html: html,
+                                html,
                                 attachments: ''
                             };
                             log('Enviando email a', env.email);

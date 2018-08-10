@@ -86,6 +86,7 @@
         "no-unused-expression": true,
         "no-var-keyword": true,
         "prefer-object-spread": true,
-        "import-spacing": true
+        "import-spacing": true,
+        "object-literal-shorthand": true
     }
 }

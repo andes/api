@@ -93,7 +93,7 @@ export function getServicioAnses(paciente) {
                 }
             });
         } else {
-            resolve({ paciente: paciente, matcheos: { entidad: 'Anses', matcheo: 0, datosPaciente: {} } });
+            resolve({ paciente, matcheos: { entidad: 'Anses', matcheo: 0, datosPaciente: {} } });
         }
     });
 }

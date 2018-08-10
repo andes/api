@@ -88,8 +88,8 @@ export class ValidatePatient {
         }
 
         return {
-            valid: valid,
-            errors: errors
+            valid,
+            errors
         };
     }
 

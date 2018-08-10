@@ -30,7 +30,7 @@ export function postPrestaciones(documento) {
             method: 'POST',
             json: true,
             body: {
-                documento: documento
+                documento
             }
         }, function (error, response, body) {
             if (error) {

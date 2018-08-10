@@ -58,8 +58,8 @@ router.post('/login', function (req, res, next) {
 
                 let token = Auth.generatePacienteToken(String(user.id), user.nombre + ' ' + user.apellido, user.email, user.pacientes, user.permisos);
                 res.status(200).json({
-                    token: token,
-                    user: user
+                    token,
+                    user
                 });
 
                 // Hack momentaneo. Descargamos los laboratorios a demanda.

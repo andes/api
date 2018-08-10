@@ -157,7 +157,7 @@ export async function getConceptByExpression(expression) {
             let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
             return {
                 fsn: item.fullySpecifiedName,
-                term: term,
+                term,
                 conceptId: item.conceptId,
                 semanticTag: item.semtag
             };

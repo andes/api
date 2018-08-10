@@ -134,7 +134,7 @@ router.patch('/prestacionPaciente/:id', function (req, res, next) {
                 accion: 'Actualizar auditoría de prestacionPaciente',
                 ruta: req.url,
                 method: req.method,
-                data: data,
+                data,
                 err: errOnPatch || false
             });
             if (errOnPatch) {
@@ -151,7 +151,7 @@ router.delete('/prestacionPaciente/:id', function (req, res, next) {
             accion: 'Eliminar Aditoría de prestacionPaciente',
             ruta: req.url,
             method: req.method,
-            data: data,
+            data,
             err: err || false
         });
         if (err) {

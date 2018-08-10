@@ -15,7 +15,7 @@ router.get('/anses', async function (req, res, next) {
             let resultado = await getServicioAnses(paciente);
             res.json(resultado);
             Logger.log(req, 'fa_anses', 'validar', {
-                resultado: resultado
+                resultado
             });
         } catch (err) {
             Logger.log(req, 'fa_anses', 'error', {

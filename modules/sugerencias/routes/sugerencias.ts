@@ -19,7 +19,7 @@ router.post('/', function (req, res, next) {
             to: configPrivate.enviarMail.auth.user,
             subject: body.subject,
             text: body.texto,
-            html: html,
+            html,
             attachments: body.screenshot
         };
         SendEmail.sendMail(data).then(

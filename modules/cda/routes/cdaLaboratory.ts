@@ -86,7 +86,7 @@ router.post('/laboratorios', async (req: any, res, next) => {
                 let metadata = {
                     paciente: paciente.id,
                     prestacion: snomed,
-                    fecha: fecha,
+                    fecha,
                     adjuntos: [ { path: fileData.data, id: fileData.id } ]
                 };
                 let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);

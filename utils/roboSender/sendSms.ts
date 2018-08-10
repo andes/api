@@ -43,7 +43,7 @@ export function sendSms(smsOptions: SmsOptions) {
                         let mensaje = utils.removeDiacritics(smsOptions.mensaje);
                         argsNumero = {
                             destino: argsOperador.telefono,
-                            mensaje: mensaje,
+                            mensaje,
                             operador: carrier,
                             aplicacion: '',
                             mobilein: '1'

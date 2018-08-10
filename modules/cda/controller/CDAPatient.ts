@@ -266,7 +266,7 @@ export function storePdfFile(pdf) {
                 resolve({
                     id: createdFile._id,
                     data: 'files/' + createdFile.filename,
-                    mime: mime
+                    mime
                 });
             }
         );

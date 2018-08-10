@@ -53,14 +53,14 @@ router.get('/([\$])match', function (req, res, next) {
     let body = {
         size: 3000,
         from: 0,
-        query: query
+        query
     };
 
     // Verificamos que se esté buscando por algún parametro: Identifier, Given or Family
     if (query) {
         connElastic.search({
             index: 'andes',
-            body: body
+            body
         })
             .then((searchResult) => {
                 let idPacientes: Array<any> = ((searchResult.hits || {}).hits || [])

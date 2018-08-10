@@ -648,7 +648,7 @@ function esFeriado(fecha) {
         let dia = moment(fecha).date(); // de 1 a 31
         let url = 'http://nolaborables.com.ar/api/v2/feriados/' + anio;
 
-        request({ url: url, json: true }, (err, response, body) => {
+        request({ url, json: true }, (err, response, body) => {
             if (err) {
                 reject(err);
             }

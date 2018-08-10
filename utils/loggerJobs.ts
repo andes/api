@@ -4,7 +4,7 @@ export class LoggerJobs {
 
     public static log(job, msg, callback?): any {
         let newLogJobs = new logJobs({
-            job: job,
+            job,
             error: msg,
             createdAt: new Date(),
         });

@@ -44,7 +44,7 @@ export function getServicioRenaper(paciente) {
                 }
             });
         } else {
-            resolve({ paciente: paciente, matcheos: { entidad: 'Renaper', matcheo: 0, datosPaciente: {} } });
+            resolve({ paciente, matcheos: { entidad: 'Renaper', matcheo: 0, datosPaciente: {} } });
         }
     });
 }

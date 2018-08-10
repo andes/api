@@ -69,7 +69,7 @@ router.get('/prestaciones/huds/:idPaciente', async function (req, res, next) {
                     let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
                     return {
                         fsn: item.fullySpecifiedName,
-                        term: term,
+                        term,
                         conceptId: item.conceptId,
                         semanticTag: item.semtag
                     };

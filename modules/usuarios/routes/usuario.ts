@@ -31,7 +31,7 @@ router.post('/alta', function (req, res, next) {
             accion: 'Crear Usuario',
             ruta: req.url,
             method: req.method,
-            data: data,
+            data,
             err: err || false
         });
         res.json(data);

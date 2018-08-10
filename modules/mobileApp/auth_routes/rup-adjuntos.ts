@@ -81,7 +81,7 @@ router.get('/prestaciones-adjuntar', Auth.optionalAuth(), async (req: any, res, 
     if (req.query.id) {
         let _id = new mongoose.Types.ObjectId(req.query.id);
         find = PrestacionAdjunto.find({
-            _id: _id,
+            _id,
             estado,
             createdAt: { $gt: moment().subtract(30, 'minutes').toDate() }
         }, { prestacion: 1, paciente: 1, valor: 1 });

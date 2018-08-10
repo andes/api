@@ -9,7 +9,7 @@ export class LoggerPaciente {
             paciente: (paciente && paciente.id) ? paciente.id : null, // Un turno puede tener o no tener paciente
             createdAt: new Date(),
             dataTurno: {
-                turno: turno,
+                turno,
                 idBloque: bloque,
                 idAgenda: agenda
             },
@@ -26,8 +26,8 @@ export class LoggerPaciente {
             paciente: paciente.id,
             operacion: op,
             notificacion: {
-                texto: texto,
-                medios: medios
+                texto,
+                medios
             },
             createdAt: new Date(),
             createdBy: req.user.usuario || req.user

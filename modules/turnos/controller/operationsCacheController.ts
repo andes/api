@@ -340,7 +340,7 @@ function markAgendaAsProcessed(agenda) {
             _id: agenda._id
         }, {
                 $set: {
-                    estadoIntegracion: estadoIntegracion
+                    estadoIntegracion
                 }
             }).exec());
     });

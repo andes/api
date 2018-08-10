@@ -34,11 +34,11 @@ export function exists(patient: any) {
         let body = {
             size: 100,
             from: 0,
-            query: query
+            query
         };
         connElastic.search({
                 index: 'andes',
-                body: body
+                body
             })
             .then((searchResult) => {
                 let weights = config.mpi.weightsDefault;

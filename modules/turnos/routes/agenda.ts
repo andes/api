@@ -255,7 +255,7 @@ router.post('/agenda', function (req, res, next) {
             accion: 'Crear Agenda',
             ruta: req.url,
             method: req.method,
-            data: data,
+            data,
             err: err || false
         });
         // Fin de operaciones de cache
@@ -363,7 +363,7 @@ router.put('/agenda/:id', function (req, res, next) {
             accion: 'Editar Agenda en estado Planificación',
             ruta: req.url,
             method: req.method,
-            data: data,
+            data,
             err: err || false
         });
         if (err) {
@@ -395,7 +395,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                                     accion: req.body.op,
                                     ruta: req.url,
                                     method: req.method,
-                                    data: data,
+                                    data,
                                     err: error || false
                                 });
                                 if (error) {
@@ -518,7 +518,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                         accion: req.body.op,
                         ruta: req.url,
                         method: req.method,
-                        data: data,
+                        data,
                         err: error || false
                     });
                     if (error) {
