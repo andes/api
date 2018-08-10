@@ -64,43 +64,52 @@ export function quitarTurnoDoble(req, data, tid = null) {
 // Turno
 export function liberarTurno(req, data, turno) {
     let position = getPosition(req, data, turno._id);
-    turno.estado = 'disponible';
-    turno.paciente = null;
-    turno.tipoPrestacion = null;
-    turno.nota = null;
-    turno.confirmedAt = null;
-    turno.updatedAt = new Date();
-    turno.updatedBy = req.user.usuario || req.user;
+    if (!data.dinamica) {
+        turno.estado = 'disponible';
+        turno.paciente = null;
+        turno.tipoPrestacion = null;
+        turno.nota = null;
+        turno.confirmedAt = null;
+        turno.updatedAt = new Date();
+        turno.updatedBy = req.user.usuario || req.user;
 
-    let cant = 1;
+        let cant = 1;
 
-    let turnoDoble = getTurnoSiguiente(req, data, turno._id);
-    if (turnoDoble) {
-        cant = cant + 1;
-        turnoDoble.estado = 'disponible';
-        turnoDoble.updatedAt = new Date();
-        turnoDoble.updatedBy = req.user.usuario || req.user;
-    }
+        let turnoDoble = getTurnoSiguiente(req, data, turno._id);
+        if (turnoDoble) {
+            cant = cant + 1;
+            turnoDoble.estado = 'disponible';
+            turnoDoble.updatedAt = new Date();
+            turnoDoble.updatedBy = req.user.usuario || req.user;
+        }
 
-    switch (turno.tipoTurno) {
-        case ('delDia'):
-            data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia + cant;
-            data.bloques[position.indexBloque].restantesProgramados = 0;
-            data.bloques[position.indexBloque].restantesProfesional = 0;
-            data.bloques[position.indexBloque].restantesGestion = 0;
-            break;
-        case ('programado'):
-            data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
-            break;
-        case ('profesional'):
-            data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional + cant;
-            break;
-        case ('gestion'):
-            data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion + cant;
-            break;
-    }
-    if (turno.tipoTurno) {
-        turno.tipoTurno = undefined;
+        switch (turno.tipoTurno) {
+            case ('delDia'):
+                data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia + cant;
+                data.bloques[position.indexBloque].restantesProgramados = 0;
+                data.bloques[position.indexBloque].restantesProfesional = 0;
+                data.bloques[position.indexBloque].restantesGestion = 0;
+                break;
+            case ('programado'):
+                data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
+                break;
+            case ('profesional'):
+                data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional + cant;
+                break;
+            case ('gestion'):
+                data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion + cant;
+                break;
+        }
+        if (turno.tipoTurno) {
+            turno.tipoTurno = undefined;
+        }
+    } else {
+        if (data.cupo > -1) {
+            data.cupo++;
+        }
+        let newTurnos = data.bloques[position.indexBloque].turnos;
+        newTurnos.splice(position.indexTurno, 1);
+        data.bloques[position.indexBloque].turnos = newTurnos;
     }
 }
 

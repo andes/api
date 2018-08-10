@@ -6,5 +6,5 @@ let obraSocialSchema = new mongoose.Schema({
     nombre: String
 });
 
-export let obraSocial = mongoose.model('obraSocial', obraSocialSchema, 'obraSocial');
+export let obraSocial: any = mongoose.model('obraSocial', obraSocialSchema, 'obraSocial');
 
