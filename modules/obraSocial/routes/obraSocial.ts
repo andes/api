@@ -31,7 +31,7 @@ router.get('/puco/', async function (req, res, next) {
             padron.setHours(-3);    // adaptacion por desfasaje 3hs de registros en mongodb
         }
 
-        rta = await puco.find({ dni: Number.parseInt(req.query.dni), version: padron }).exec();
+        rta = await puco.find({ dni: Number.parseInt(req.query.dni, 2), version: padron }).exec();
 
         if (rta.length > 0) {
             let resultOS = [];
