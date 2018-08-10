@@ -16,7 +16,9 @@ const constantes = {
     },
 
     EstadoTurnosAndes: {
-        asignado: 'asignado'
+        asignado: 'asignado',
+        suspendido: 'suspendido',
+        disponible: 'disponible'
     },
 
     EstadoTurnosSips: {
@@ -35,8 +37,9 @@ const constantes = {
 
     EstadoExportacionAgendaCache: {
         pendiente: 'pendiente',
-        exportadaSIPS: 'exportada a Sips',
-        codificada: 'codificada'
+        exportada: 'exportada',
+        codificada: 'codificada',
+        error: 'error'
     },
 
     Especialidades: {

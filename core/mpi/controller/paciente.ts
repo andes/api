@@ -92,7 +92,7 @@ export async function updateTurnosPaciente(pacienteModified) {
             horaInicio: moment(new Date()).startOf('day').toDate() as any
         }
     };
-    let turnos: any = await turnosController.getTurno(req);
+    let turnos: any = await turnosController.getHistorialPaciente(req);
     if (turnos.length > 0) {
         turnos.forEach(element => {
             try {
@@ -281,7 +281,8 @@ export function matching(data) {
                     multi_match: {
                         query: data.cadenaInput,
                         type: 'cross_fields',
-                        fields: ['documento^5', 'nombre', 'apellido^3'],
+                        fields: ['documento', 'apellido^5', 'nombre^4'],
+                        operator: 'and'
                     }
                 };
             }

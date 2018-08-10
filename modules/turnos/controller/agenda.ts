@@ -1,14 +1,11 @@
 import { SnomedCIE10Mapping } from './../../../core/term/controller/mapping';
 import * as cie10 from './../../../core/term/schemas/cie10';
-import { log } from './../../../core/log/schemas/log';
 import * as agendaModel from '../../turnos/schemas/agenda';
 import * as moment from 'moment';
 import { Auth } from '../../../auth/auth.class';
 import { userScheduler } from '../../../config.private';
 import { Logger } from '../../../utils/logService';
-import { load } from 'google-maps';
 import { model as Prestacion } from '../../rup/schemas/prestacion';
-import * as http from 'http';
 import * as request from 'request';
 import * as mongoose from 'mongoose';
 import { toArray } from '../../../utils/utils';
@@ -279,6 +276,15 @@ export function codificarTurno(req, data, tid) {
                                 },
                                 primeraVez: registro.esPrimeraVez
                             });
+                            if (prestaciones.length === codificaciones.length) {
+                                // console.log('codificaciones ', codificaciones);
+                                turno.diagnostico = {
+                                    ilegible: false,
+                                    codificaciones: codificaciones.filter(cod => Object.keys(cod).length > 0)
+                                };
+                                turno.asistencia = 'asistio';
+                                resolve(data);
+                            }
                         }
                     }).catch(error => {
                         reject(error);
@@ -684,8 +690,7 @@ export async function actualizarTiposDeTurno() {
     };
 
     let cursor = agendaModel.find(condicion).cursor();
-
-    cursor.eachAsync(doc => {
+    return cursor.eachAsync(doc => {
         let agenda: any = doc;
         for (let j = 0; j < agenda.bloques.length; j++) {
             let cantAccesoDirecto = agenda.bloques[j].accesoDirectoDelDia + agenda.bloques[j].accesoDirectoProgramado;
@@ -703,7 +708,7 @@ export async function actualizarTiposDeTurno() {
         }
 
         Auth.audit(agenda, (userScheduler as any));
-        saveAgenda(agenda).then((nuevaAgenda) => {
+        return saveAgenda(agenda).then(() => {
             Logger.log(userScheduler, 'citas', 'actualizarTiposDeTurno', {
                 idAgenda: agenda._id,
                 organizacion: agenda.organizacion,
@@ -712,12 +717,11 @@ export async function actualizarTiposDeTurno() {
                 updatedBy: agenda.updatedBy
 
             });
-        }).catch(error => {
-            return (error);
+            return Promise.resolve();
+        }).catch(() => {
+            return Promise.resolve();
         });
-
     });
-    return 'Agendas actualizadas';
 
 }
 
@@ -740,8 +744,7 @@ export function actualizarEstadoAgendas() {
         }
     };
     let cursor = agendaModel.find(condicion).cursor();
-
-    cursor.eachAsync(doc => {
+    return cursor.eachAsync(doc => {
         let agenda: any = doc;
         let todosAsistencia = true;
         for (let j = 0; j < agenda.bloques.length; j++) {
@@ -761,7 +764,7 @@ export function actualizarEstadoAgendas() {
         }
 
         Auth.audit(agenda, (userScheduler as any));
-        saveAgenda(agenda).then((nuevaAgenda) => {
+        return saveAgenda(agenda).then((nuevaAgenda) => {
             Logger.log(userScheduler, 'citas', 'actualizarEstadoAgendas', {
                 idAgenda: agenda._id,
                 organizacion: agenda.organizacion,
@@ -770,12 +773,11 @@ export function actualizarEstadoAgendas() {
                 updatedBy: agenda.updatedBy
 
             });
-        }).catch(error => {
-            return (error);
+            return Promise.resolve();
+        }).catch(() => {
+            return Promise.resolve();
         });
-
     });
-    return 'Agendas actualizadas';
 }
 
 /**
@@ -795,8 +797,7 @@ export function actualizarTurnosDelDia() {
         }
     };
     let cursor = agendaModel.find(condicion).cursor();
-
-    cursor.eachAsync(doc => {
+    return cursor.eachAsync(doc => {
         let agenda: any = doc;
         for (let j = 0; j < agenda.bloques.length; j++) {
             if (agenda.bloques[j].restantesProgramados > 0) {
@@ -806,7 +807,7 @@ export function actualizarTurnosDelDia() {
         }
 
         Auth.audit(agenda, (userScheduler as any));
-        saveAgenda(agenda).then((nuevaAgenda) => {
+        return saveAgenda(agenda).then(() => {
             Logger.log(userScheduler, 'citas', 'actualizarTurnosDelDia', {
                 idAgenda: agenda._id,
                 organizacion: agenda.organizacion,
@@ -815,13 +816,12 @@ export function actualizarTurnosDelDia() {
                 updatedBy: agenda.updatedBy
 
             });
-        }).catch(error => {
-            return (error);
+            return Promise.resolve();
+        }).catch(() => {
+            return Promise.resolve();
         });
 
     });
-    return 'Agendas actualizadas';
-
 }
 
 /**
@@ -858,32 +858,39 @@ export function updatePaciente(pacienteModified, turno) {
             return next(err);
         }
         let bloques: any = data.bloques;
-        let indiceTurno = 0;
-        let i = 0;
-        let j = 0;
-        let band = true;
-        while (i < bloques.length && band) {
-            j = 0;
-            while (j < bloques[i].turnos.length && band) {
-                if (bloques[i].turnos[j]._id.toString() === turno._id.toString()) {
-                    indiceTurno = j;
-                    band = false;
-                }
-                j++;
-            }
-            if (!band) {
-                bloques[i].turnos[indiceTurno].paciente.nombre = pacienteModified.nombre;
-                bloques[i].turnos[indiceTurno].paciente.apellido = pacienteModified.apellido;
-                bloques[i].turnos[indiceTurno].paciente.documento = pacienteModified.documento;
+        let indiceTurno = -1;
+
+        for (let bloque of bloques) {
+            indiceTurno = bloque.turnos.findIndex(elem => elem._id.toString() === turno._id.toString());
+
+            if (indiceTurno > 0) { // encontro el turno en este bloque?
+                bloque.turnos[indiceTurno].paciente.nombre = pacienteModified.nombre;
+                bloque.turnos[indiceTurno].paciente.apellido = pacienteModified.apellido;
+                bloque.turnos[indiceTurno].paciente.documento = pacienteModified.documento;
                 if (pacienteModified.contacto && pacienteModified.contacto[0]) {
-                    bloques[i].turnos[indiceTurno].paciente.telefono = pacienteModified.contacto[0].valor;
+                    bloque.turnos[indiceTurno].paciente.telefono = pacienteModified.contacto[0].valor;
                 }
-                bloques[i].turnos[indiceTurno].paciente.carpetaEfectores = pacienteModified.carpetaEfectores;
-                bloques[i].turnos[indiceTurno].paciente.fechaNacimiento = pacienteModified.fechaNacimiento;
+                bloque.turnos[indiceTurno].paciente.carpetaEfectores = pacienteModified.carpetaEfectores;
+                bloque.turnos[indiceTurno].paciente.fechaNacimiento = pacienteModified.fechaNacimiento;
             }
-            i++;
         }
-        if (!band) {
+
+        if (indiceTurno < 0) { // no se encontro el turno en los bloques de turnos?
+            indiceTurno = data.sobreturnos.findIndex(elem => elem._id.toString() === turno._id.toString());
+
+            if (indiceTurno > 0) { // esta el turno entre los sobreturnos?
+                data.sobreturnos[indiceTurno].paciente.nombre = pacienteModified.nombre;
+                data.sobreturnos[indiceTurno].paciente.apellido = pacienteModified.apellido;
+                data.sobreturnos[indiceTurno].paciente.documento = pacienteModified.documento;
+                if (pacienteModified.contacto && pacienteModified.contacto[0]) {
+                    data.sobreturnos[indiceTurno].paciente.telefono = pacienteModified.contacto[0].valor;
+                }
+                data.sobreturnos[indiceTurno].paciente.carpetaEfectores = pacienteModified.carpetaEfectores;
+                data.sobreturnos[indiceTurno].paciente.fechaNacimiento = pacienteModified.fechaNacimiento;
+            }
+        }
+
+        if (indiceTurno > 0) {
             try {
                 Auth.audit(data, (userScheduler as any));
                 saveAgenda(data);

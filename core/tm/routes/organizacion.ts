@@ -19,80 +19,80 @@ let router = express.Router();
 router.get('/organizaciones/georef/:id?', async function (req, res, next) {
     if (req.params.id) {
         OrganizacionModel.findById(req.params.id, (err, data: any) => {
-                if (err) {
-                    return next(err);
-                }
-                let dir = data.direccion.valor;
-                let localidad = data.direccion.ubicacion.localidad.nombre;
-                let provincia = data.direccion.ubicacion.provincia.nombre;
-                // let pais = organizacion.direccion.ubicacion.pais;
-                let pathGoogleApi = '';
-                let jsonGoogle = '';
-                pathGoogleApi = '/maps/api/geocode/json?address=' + dir + ',+' + localidad + ',+' + provincia + ',+AR&key=' + configPrivate.geoKey;
+            if (err) {
+                return next(err);
+            }
+            let dir = data.direccion.valor;
+            let localidad = data.direccion.ubicacion.localidad.nombre;
+            let provincia = data.direccion.ubicacion.provincia.nombre;
+            // let pais = organizacion.direccion.ubicacion.pais;
+            let pathGoogleApi = '';
+            let jsonGoogle = '';
+            pathGoogleApi = '/maps/api/geocode/json?address=' + dir + ',+' + localidad + ',+' + provincia + ',+AR&key=' + configPrivate.geoKey;
 
-                pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
-                pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
-                pathGoogleApi = pathGoogleApi.replace(/é/gi, 'e');
-                pathGoogleApi = pathGoogleApi.replace(/í/gi, 'i');
-                pathGoogleApi = pathGoogleApi.replace(/ó/gi, 'o');
-                pathGoogleApi = pathGoogleApi.replace(/ú/gi, 'u');
-                pathGoogleApi = pathGoogleApi.replace(/ü/gi, 'u');
-                pathGoogleApi = pathGoogleApi.replace(/ñ/gi, 'n');
+            pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
+            pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
+            pathGoogleApi = pathGoogleApi.replace(/é/gi, 'e');
+            pathGoogleApi = pathGoogleApi.replace(/í/gi, 'i');
+            pathGoogleApi = pathGoogleApi.replace(/ó/gi, 'o');
+            pathGoogleApi = pathGoogleApi.replace(/ú/gi, 'u');
+            pathGoogleApi = pathGoogleApi.replace(/ü/gi, 'u');
+            pathGoogleApi = pathGoogleApi.replace(/ñ/gi, 'n');
 
-                let optionsgetmsg = {
-                    host: 'maps.googleapis.com',
-                    port: 443,
-                    path: pathGoogleApi,
-                    method: 'GET',
-                    rejectUnauthorized: false
-                };
+            let optionsgetmsg = {
+                host: 'maps.googleapis.com',
+                port: 443,
+                path: pathGoogleApi,
+                method: 'GET',
+                rejectUnauthorized: false
+            };
 
-                if (dir !== '' && localidad !== '' && provincia !== '') {
-                    let reqGet = https.request(optionsgetmsg, function (res2) {
-                        res2
-                            .on('data', function (d, error) {
-                                jsonGoogle = jsonGoogle + d.toString();
-                            });
-
-                        res2.on('end', function () {
-                            let salida = JSON.parse(jsonGoogle);
-                            if (salida.status === 'OK') {
-                                res.json(salida.results[0].geometry.location);
-                            } else {
-                                res.json('');
-                            }
+            if (dir !== '' && localidad !== '' && provincia !== '') {
+                let reqGet = https.request(optionsgetmsg, function (res2) {
+                    res2
+                        .on('data', function (d, error) {
+                            jsonGoogle = jsonGoogle + d.toString();
                         });
+
+                    res2.on('end', function () {
+                        let salida = JSON.parse(jsonGoogle);
+                        if (salida.status === 'OK') {
+                            res.json(salida.results[0].geometry.location);
+                        } else {
+                            res.json('');
+                        }
                     });
-                    req.on('error', (e) => {
-                        return next(e);
-                    });
-                    reqGet.end();
-                } else {
-                    return next('Datos de dirección incompletos');
-                }
-            });
+                });
+                req.on('error', (e) => {
+                    return next(e);
+                });
+                reqGet.end();
+            } else {
+                return next('Datos de dirección incompletos');
+            }
+        });
 
     } else {
         let query = OrganizacionModel.aggregate([
-                {
-                    '$match': {
-                        'direccion.geoReferencia': {
-                            $exists: true
-                        }
-                    }
-                }, {
-                    '$project': {
-                        '_id': 0,
-                        'nombre': '$nombre',
-                        'lat': {
-                            $arrayElemAt: ['$direccion.geoReferencia', 0]
-                        },
-                        'lng': {
-                            $arrayElemAt: ['$direccion.geoReferencia', 1]
-                        }
+            {
+                '$match': {
+                    'direccion.geoReferencia': {
+                        $exists: true
                     }
                 }
-            ])
+            }, {
+                '$project': {
+                    '_id': 0,
+                    'nombre': '$nombre',
+                    'lat': {
+                        $arrayElemAt: ['$direccion.geoReferencia', 0]
+                    },
+                    'lng': {
+                        $arrayElemAt: ['$direccion.geoReferencia', 1]
+                    }
+                }
+            }
+        ])
             .cursor({})
             .exec();
 
@@ -237,11 +237,11 @@ router.get('/organizaciones/georef/:id?', async function (req, res, next) {
 router.get('/organizaciones/:id*?', function (req, res, next) {
     if (req.params.id) {
         OrganizacionModel.findById(req.params.id, (err, data) => {
-                if (err) {
-                    return next(err);
-                }
-                res.json(data);
-            });
+            if (err) {
+                return next(err);
+            }
+            res.json(data);
+        });
     } else {
         let query;
         let act: Boolean = true;
@@ -275,7 +275,7 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
             };
         }
         if (req.query.ids) {
-            filtros['_id'] = {$in : req.query.ids};
+            filtros['_id'] = { $in: req.query.ids };
         }
 
         let skip: number = parseInt(req.query.skip || 0, 10);
@@ -394,8 +394,8 @@ router.put('/organizaciones/:id', Auth.authenticate(), function (req, res, next)
             return next(err);
         }
 
-            res.json(data);
-        });
+        res.json(data);
+    });
 });
 
 /**
@@ -432,8 +432,8 @@ router.delete('/organizaciones/:id', Auth.authenticate(), function (req, res, ne
             return next(err);
         }
 
-            res.json(data);
-        });
+        res.json(data);
+    });
 });
 
 

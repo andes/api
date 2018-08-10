@@ -32,8 +32,8 @@ export function updateTurnoAgendaMongo(datosTurno: any) {
                 let query = {
                     _id: datosTurno.idAgenda,
                 };
-                delete datosTurno._id;
-                delete datosTurno.turno._id;
+                // delete datosTurno._id;
+                // delete datosTurno.turno._id;
                 update[etiquetaTurno] = datosTurno.turno;
                 // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
                 (agenda as any).findOneAndUpdate(query, { $set: update }, { upsert: true, new: true }, function actualizarAgenda(err2, doc2) {
@@ -78,8 +78,8 @@ export function updateTurnoAgendaCache(datosTurno: any, agendaCacheada) {
                 let query = {
                     _id: agendaCacheada._id,
                 };
-                delete datosTurno._id;
-                delete datosTurno.turno._id;
+                // delete datosTurno._id;
+                // delete datosTurno.turno._id;
                 update[etiquetaTurno] = datosTurno.turno;
                 // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
                 (agendasCache as any).findOneAndUpdate(query, { $set: update }, { upsert: true, new: true }, function actualizarAgenda(err2, doc2) {

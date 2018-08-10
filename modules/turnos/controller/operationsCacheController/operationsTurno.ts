@@ -33,31 +33,28 @@ let transaction;
  * @returns
  */
 export async function processTurnos(agenda: any, idAgendaCreada: any, idEfector: any, poolAgendas) {
-    debug('inicia 4');
+    debug('4) Inicia Guardado de turnos');
     let turnos;
-    // poolTurnos = await new sql.ConnectionPool(config).connect();
     for (let x = 0; x < agenda.bloques.length; x++) {
         turnos = agenda.bloques[x].turnos;
         for (let i = 0; i < turnos.length; i++) {
-            if (turnos[i].estado === 'asignado' && turnos[i].paciente && turnos[i].paciente.documento) {
+            if (turnos[i].estado === 'asignado' && turnos[i].paciente) {
                 // let resultado = await existeTurnoSips(turnos[i], transaction);
                 // if (resultado.recordset && resultado.recordset.length <= 0) {
                 await grabaTurnoSips(turnos[i], idAgendaCreada, idEfector, 0, poolAgendas);
-                // }
             }
         }
     }
     if (agenda.sobreturnos) {
         for (let y = 0; y < agenda.sobreturnos.length; y++) {
-            if (agenda.sobreturnos[y].estado === 'asignado' && agenda.sobreturnos[y].paciente && agenda.sobreturnos[y].paciente.documento) {
+            if (agenda.sobreturnos[y].estado === 'asignado' && agenda.sobreturnos[y].paciente) {
                 // let resultado = await existeTurnoSips(turnos[i], transaction);
                 // if (resultado.recordset && resultado.recordset.length <= 0) {
                 await grabaTurnoSips(agenda.sobreturnos[y], idAgendaCreada, idEfector, 1, poolAgendas);
-                // }
             }
         }
     }
-    debug(' 4 - turnos grabados');
+    debug('4) FIN turnos grabados');
 
 }
 
@@ -71,11 +68,14 @@ export async function existeTurnoSips(turno: any, poolAgendas) {
 async function grabaTurnoSips(turno, idAgendaSips, idEfector, sobreturno, poolAgendas) {
     let pacienteEncontrado = await pacientes.buscarPaciente(turno.paciente.id);
     let paciente = pacienteEncontrado.paciente;
-    let idObraSocial = await getIdObraSocialSips(paciente.documento, poolAgendas);
+    let idObraSocial = 499; // Ya que no me deja integrar sin id de obra social
+    if (paciente.documento) {
+        idObraSocial = await getIdObraSocialSips(paciente.documento, poolAgendas);
+    }
     let pacienteId = await pacienteOps.insertarPacienteEnSips(paciente, idEfector, poolAgendas);
     let fechaTurno = moment(turno.horaInicio).format('YYYYMMDD');
     let horaTurno = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
-    if (typeof pacienteId === 'number' && typeof idObraSocial === 'number') {
+    if (typeof pacienteId === 'number') {
         let resultado = await existeTurnoSips(turno, poolAgendas);
         let query;
         if (resultado && resultado.recordset && resultado.recordset.length > 0) {
@@ -84,12 +84,11 @@ async function grabaTurnoSips(turno, idAgendaSips, idEfector, sobreturno, poolAg
             query = 'INSERT INTO dbo.CON_Turno ( idAgenda , idTurnoEstado , idUsuario ,  idPaciente , fecha , hora , sobreturno , idTipoTurno , idObraSocial , idTurnoAcompaniante, objectId ) VALUES  ( ' + idAgendaSips + ' , 1 , ' + constantes.idUsuarioSips + ' ,' + pacienteId + ', \'' + fechaTurno + '\' ,\'' + horaTurno + '\' , ' + sobreturno + ', 0 ,' + idObraSocial + ' , 0, \'' + turno._id + '\')';
             query += ' select SCOPE_IDENTITY() as id';
         }
-        debug('Q:', query);
         let res = await new sql.Request(poolAgendas).query(query);
-        debug('--------grabado turno sips-------->>>>>>', res);
+        debug('Turno guardado', res);
     } else {
         // Si tenemos un error en la consulta por obra social o por IdPaciente tenemos que sacar la agenda de la coleccion
-        throw new Error('Error grabaTurnoSips');
+        debug('Error al guardar turno', turno);
     }
 }
 
@@ -237,16 +236,38 @@ export async function checkAsistenciaTurno(agenda: any, poolAgendas) {
     for (let x = 0; x < agenda.bloques.length; x++) {
         turnos = agenda.bloques[x].turnos;
         for (let i = 0; i < turnos.length; i++) {
-            if (turnos[i].asistencia === 'asistio') {
-
-                let idTurno: any = await getEstadoTurnoSips(turnos[i]._id, poolAgendas);
-                let fechaAsistencia = moment(turnos[i].updatedAt).format('YYYYMMDD');
-                let query = 'INSERT INTO dbo.CON_TurnoAsistencia ( idTurno , idUsuario , fechaAsistencia ) VALUES  ( ' +
-                    idTurno.idTurno + ' , ' + constantes.idUsuarioSips + ' , \'' + fechaAsistencia + '\' )';
-                await executeQuery(query, poolAgendas);
+            if (turnos[i].asistencia === 'asistio' && turnos[i].estado === 'asignado') {
+                let turno: any = await getEstadoTurnoSips(turnos[i]._id, poolAgendas);
+                if (turno) {
+                    let fechaAsistencia = moment(turnos[i].updatedAt).format('YYYYMMDD');
+                    let query = 'INSERT INTO dbo.CON_TurnoAsistencia ( idTurno , idUsuario , fechaAsistencia ) VALUES  ( ' +
+                        turno.idTurno + ' , ' + constantes.idUsuarioSips + ' , \'' + fechaAsistencia + '\' )';
+                    await executeQuery(query, poolAgendas);
+                } else {
+                    debug('No existe turno', agenda._id, turnos[i]._id);
+                }
             }
         }
     }
+
+    if (agenda.sobreturnos) {
+        for (let i = 0; i < agenda.sobreturnos.length; i++) {
+            let turnoAgenda = agenda.sobreturnos[i];
+
+            if (turnoAgenda.asistencia === 'asistio' && turnoAgenda.estado === 'asignado') {
+                let turno: any = await getEstadoTurnoSips(turnoAgenda._id, poolAgendas);
+                if (turno) {
+                    let fechaAsistencia = moment(turnoAgenda.updatedAt).format('YYYYMMDD');
+                    let query = 'INSERT INTO dbo.CON_TurnoAsistencia ( idTurno , idUsuario , fechaAsistencia ) VALUES  ( ' +
+                        turno.idTurno + ' , ' + constantes.idUsuarioSips + ' , \'' + fechaAsistencia + '\' )';
+                    await executeQuery(query, poolAgendas);
+                } else {
+                    debug('No existe turno', agenda._id, turnoAgenda._id);
+                }
+            }
+        }
+    }
+
 }
 
 
@@ -285,7 +306,7 @@ async function getIdObraSocialSips(documentoPaciente, poolAgendas) {
 
         return ((result.recordset && result.recordset.length > 0) ? result.recordset[0].idOS : idSumar);
     } catch (err) {
-        return (err);
+        return (idSumar);
     }
 }
 
@@ -297,7 +318,7 @@ async function executeQuery(query: any, poolAgendas) {
             return result.recordset[0].id;
         }
     } catch (err) {
-        debug('executeQUERY----------____>', err);
+        debug('executeQUERY----------____>', query);
         return (err);
     }
 }

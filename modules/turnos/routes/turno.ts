@@ -26,6 +26,15 @@ router.get('/turno/:id*?', async function (req, res, next) {
     }
 
 });
+router.get('/historial', async function (req, res, next) {
+    try {
+        let resultado = await turnosController.getHistorialPaciente(req);
+        res.json(resultado);
+    } catch (err) {
+        return next(err);
+    }
+
+});
 
 
 /**
@@ -208,7 +217,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req
 
                                     // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
                                     // Donde doc2 es el documeto Agenda actualizado
-                                    operations.cacheTurnosSips(doc2);
+                                    operations.cacheTurnos(doc2).catch(error => { return next(error); });
                                     // Fin de insert cache
                                     res.json(data);
                                 }
@@ -308,7 +317,7 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', function (req, 
                     }
                     // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
                     // Donde doc2 es el documeto de la Agenda actualizado
-                    operations.cacheTurnosSips(doc2);
+                    operations.cacheTurnos(doc2).catch(error => { return next(error); });
                     // Fin de insert cache
                     res.json(data);
 

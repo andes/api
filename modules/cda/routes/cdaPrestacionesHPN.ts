@@ -109,6 +109,8 @@ router.post('/prestaciones', async (req: any, res, next) => {
                                 break;
                             }
                     }
+                    let prestacion = await cdaCtr.matchCode(snomed);
+
                     let uniqueId = String(new mongoose.Types.ObjectId());
                     let response = await prestaciones.downloadFile(p.Id);
                     let fileData: any = await cdaCtr.storeFile({
@@ -120,7 +122,7 @@ router.post('/prestaciones', async (req: any, res, next) => {
                             paciente: mongoose.Types.ObjectId(paciente.id)
                         }
                     });
-                    let cda = await cdaCtr.generateCDA(uniqueId, 'N', paciente, p.fecha, profesional, organizacion, snomed, cie10, texto, fileData);
+                    let cda = await cdaCtr.generateCDA(uniqueId, 'N', paciente, p.fecha, profesional, organizacion, prestacion, cie10, texto, fileData);
                     let metadata = {
                         paciente: paciente.id,
                         prestacion: snomed,
