@@ -160,6 +160,19 @@ router.post('/prestaciones', function (req, res, next) {
     });
 });
 
+router.put('/prestaciones/:id', function (req, res, next) {
+    let prestacionActualizada = new Prestacion(req.body);
+    Auth.audit(prestacionActualizada, req);
+
+    Prestacion.findByIdAndUpdate(prestacionActualizada.id, prestacionActualizada, { new: false }, function (err, data) {
+        if (err) {
+            return next(err);
+        }
+        res.json(data);
+    });
+
+});
+
 router.patch('/prestaciones/:id', function (req, res, next) {
     Prestacion.findById(req.params.id, (err, data: any) => {
         if (err) {
