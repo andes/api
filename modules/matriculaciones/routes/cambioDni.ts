@@ -2,7 +2,7 @@ import * as express from 'express';
 import * as cambioDni from '../schemas/cambioDni';
 import * as utils from '../../../utils/utils';
 import { Auth } from '../../../auth/auth.class';
-var router = express.Router();
+let router = express.Router();
 
 router.get('/cambioDni', function (req, res, next) {
 
@@ -32,7 +32,7 @@ router.post('/cambioDni', function (req, res, next) {
     });
 } else {
 
-    var newCambio = new cambioDni(req.body);
+    let newCambio = new cambioDni(req.body);
     newCambio.save((err) => {
         if (err) {
             return next(err);

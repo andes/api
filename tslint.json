@@ -83,6 +83,7 @@
         "align": [true, "parameters", "statements", "members"],
         "space-before-function-paren": [true, {"anonymous": "always", "named": "never", "asyncArrow": "always"}],
         "no-implicit-dependencies": [true, "dev"],
-        "no-unused-expression": true
+        "no-unused-expression": true,
+        "no-var-keyword": true
     }
 }

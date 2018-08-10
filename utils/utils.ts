@@ -6,7 +6,7 @@
  * @returns {RegExp}
  */
 export function makePattern(search_string: string): RegExp {
-    var accented = {
+    let accented = {
         A: '[Aa\xaa\xc0-\xc5\xe0-\xe5\u0100-\u0105\u01cd\u01ce\u0200-\u0203\u0226\u0227\u1d2c\u1d43\u1e00\u1e01\u1e9a\u1ea0-\u1ea3\u2090\u2100\u2101\u213b\u249c\u24b6\u24d0\u3371-\u3374\u3380-\u3384\u3388\u3389\u33a9-\u33af\u33c2\u33ca\u33df\u33ff\uff21\uff41]',
         B: '[Bb\u1d2e\u1d47\u1e02-\u1e07\u212c\u249d\u24b7\u24d1\u3374\u3385-\u3387\u33c3\u33c8\u33d4\u33dd\uff22\uff42]',
         C: '[Cc\xc7\xe7\u0106-\u010d\u1d9c\u2100\u2102\u2103\u2105\u2106\u212d\u216d\u217d\u249e\u24b8\u24d2\u3376\u3388\u3389\u339d\u33a0\u33a4\u33c4-\u33c7\uff23\uff43]',
@@ -39,24 +39,24 @@ export function makePattern(search_string: string): RegExp {
     search_string = search_string.replace(/([|()[{.+*?^$\\])/g, '\\$1');
 
     // split into words
-    var words = search_string.split(/\s+/);
+    let words = search_string.split(/\s+/);
 
     // sort by length
-    var length_comp = function (a, b) {
+    let length_comp = function (a, b) {
         return b.length - a.length;
     };
     words.sort(length_comp);
 
     // replace characters by their compositors
-    var accent_replacer = function (chr) {
+    let accent_replacer = function (chr) {
         return accented[chr.toUpperCase()] || chr;
     };
-    for (var i = 0; i < words.length; i++) {
+    for (let i = 0; i < words.length; i++) {
         words[i] = words[i].replace(/\S/g, accent_replacer);
     }
 
     // join as alternatives
-    var regexp = words.join('|');
+    let regexp = words.join('|');
     return new RegExp(regexp, 'g');
 }
 
@@ -179,8 +179,8 @@ export function xmlToJson(xmlString) {
             // do attributes
             if (xml.attributes.length > 0) {
                 obj['@attributes'] = {};
-                for (var j = 0; j < xml.attributes.length; j++) {
-                    var attribute = xml.attributes.item(j);
+                for (let j = 0; j < xml.attributes.length; j++) {
+                    let attribute = xml.attributes.item(j);
                     obj['@attributes'][attribute.nodeName] = attribute.nodeValue;
                 }
             }
@@ -190,14 +190,14 @@ export function xmlToJson(xmlString) {
 
         // do children
         if (xml.hasChildNodes()) {
-            for (var i = 0; i < xml.childNodes.length; i++) {
-                var item = xml.childNodes.item(i);
-                var nodeName = item.nodeName;
+            for (let i = 0; i < xml.childNodes.length; i++) {
+                let item = xml.childNodes.item(i);
+                let nodeName = item.nodeName;
                 if (typeof (obj[nodeName]) === 'undefined') {
                     obj[nodeName] = _xmlToJson(item);
                 } else {
                     if (typeof (obj[nodeName].push) === 'undefined') {
-                        var old = obj[nodeName];
+                        let old = obj[nodeName];
                         obj[nodeName] = [];
                         obj[nodeName].push(old);
                     }

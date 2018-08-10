@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as profesion from '../schemas/profesion_model';
 
-var router = express.Router();
+let router = express.Router();
 
 router.get('/profesiones/:id*?', function (req, res, next) {
 

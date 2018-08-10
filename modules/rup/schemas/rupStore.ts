@@ -7,7 +7,7 @@ let  gridfs = require('mongoose-gridfs');
  */
 
 export function makeFs() {
-  var CDAFilesSchema = gridfs({
+  let CDAFilesSchema = gridfs({
       collection: 'RupStore',
       model: 'RupStore',
       mongooseConnection: mongoose.connection

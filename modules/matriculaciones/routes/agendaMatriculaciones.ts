@@ -2,7 +2,7 @@ import * as express from 'express';
 import * as agenda from '../schemas/agendaMatriculaciones';
 import * as utils from '../../../utils/utils';
 import { Auth } from '../../../auth/auth.class';
-var router = express.Router();
+let router = express.Router();
 
 router.get('/agendaMatriculaciones/', function (req, res, next) {
 
@@ -34,7 +34,7 @@ router.post('/agendaMatriculaciones', Auth.authenticate(), function (req, res, n
                 res.status(201).json(data);
             });
         } else {
-            var newAgenda = new agenda(req.body);
+            let newAgenda = new agenda(req.body);
             newAgenda.save((errSave) => {
                 if (errSave) {
                     return next(errSave);

@@ -27,8 +27,8 @@ export class Websockets {
                     io.dataRooms.forEach(element => {
                         if (io.sockets.adapter.rooms[element.pantalla] === undefined) {
 
-                            var pantallasTotal = io.dataRooms;
-                            var index = pantallasTotal.findIndex(obj => obj.pantalla === element.pantalla);
+                            let pantallasTotal = io.dataRooms;
+                            let index = pantallasTotal.findIndex(obj => obj.pantalla === element.pantalla);
                             if (index !== -1) {
                                 io.dataRooms.splice(index, 1);
                             }

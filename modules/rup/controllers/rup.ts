@@ -8,7 +8,7 @@ import * as mongoose from 'mongoose';
  * @param {any} func Nombre de la función callback a ejecutar cuando llega a un nodo hoja
  */
 export function iterate(obj, func) {
-    for (var property in obj) {
+    for (let property in obj) {
         if (obj.hasOwnProperty(property)) {
             if (Array.isArray(obj[property])) {
                 iterate(obj[property], func);

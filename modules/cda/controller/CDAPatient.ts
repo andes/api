@@ -485,7 +485,7 @@ export function searchByPatient(pacienteId, prestacion, {
 export async function loadCDA(cdaID) {
     return new Promise(async (resolve, reject) => {
         let CDAFiles = makeFs();
-        var stream1 = CDAFiles.readById(cdaID, function (err, buffer) {
+        let stream1 = CDAFiles.readById(cdaID, function (err, buffer) {
             let xml = buffer.toString('utf8');
             return resolve(xml);
         });

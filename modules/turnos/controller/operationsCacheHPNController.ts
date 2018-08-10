@@ -194,7 +194,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
 }
 
 export async function getAgendasDeMongoPendientes() {
-    var ObjectId = require('mongoose').Types.ObjectId;
+    let ObjectId = require('mongoose').Types.ObjectId;
     return await agendasCache.find({
         estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente,
         'organizacion._id': new ObjectId(constantes.idOrganizacionHPN)

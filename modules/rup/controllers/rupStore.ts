@@ -6,9 +6,9 @@ import * as stream from 'stream';
 let base64RegExp = /data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,(.*)/;
 
 export function storeFile(base64, metadata) {
-    var match = base64.match(base64RegExp);
-    var mime = match[1];
-    var data = match[2];
+    let match = base64.match(base64RegExp);
+    let mime = match[1];
+    let data = match[2];
 
     return new Promise((resolve, reject) => {
         let uniqueId = String(new mongoose.Types.ObjectId());

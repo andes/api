@@ -31,7 +31,7 @@ router.get('/file/:id', async (req: any, res, next) => {
     let _base64 = req.params.id;
     let CDAFiles = makeFs();
     let contexto = await CDAFiles.findById(_base64);
-    var stream1  = CDAFiles.readById(_base64, function (err, buffer) {
+    let stream1  = CDAFiles.readById(_base64, function (err, buffer) {
         res.contentType(contexto.contentType);
         res.end(buffer);
     });

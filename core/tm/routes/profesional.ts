@@ -88,7 +88,7 @@ router.get('/profesionales/firma/:id*?', Auth.authenticate(), (req: any, res, ne
                 if (file[0] == null) {
                     res.send(null);
                 } else {
-                    var stream1 = fotoProf.readById(file[0].id, function (err2, buffer) {
+                    let stream1 = fotoProf.readById(file[0].id, function (err2, buffer) {
                         if (err2) {
                             return next(err2);
                         }
@@ -115,7 +115,7 @@ router.get('/profesionales/firma/:id*?', Auth.authenticate(), (req: any, res, ne
                 if (file[0] == null) {
                     res.send(null);
                 } else {
-                    var stream1 = fotoAdmin.readById(file[0].id, function (err2, buffer) {
+                    let stream1 = fotoAdmin.readById(file[0].id, function (err2, buffer) {
                         if (err2) {
                             return next(err2);
                         }

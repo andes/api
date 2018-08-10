@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-var entidadFormadoraSchema = new mongoose.Schema({
+let entidadFormadoraSchema = new mongoose.Schema({
     nombre: String,
     codigoSISA: Number
 });
@@ -8,6 +8,6 @@ var entidadFormadoraSchema = new mongoose.Schema({
 // Virtuals
 
 
-var entidadFormadora = mongoose.model('entidadFormadora', entidadFormadoraSchema, 'entidadFormadora');
+let entidadFormadora = mongoose.model('entidadFormadora', entidadFormadoraSchema, 'entidadFormadora');
 
 export = entidadFormadora;

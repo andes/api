@@ -3,7 +3,7 @@ import * as NumeracionMatriculas from './../schemas/numeracionMatriculas';
 import * as SIISA from './../../../core/tm/schemas/siisa';
 
 
-var router = express.Router();
+let router = express.Router();
 
 // router.get('/numeraciones/codigo', (request, response, errorHandler) => {
 //     console.log(request.params.codigo)
@@ -22,7 +22,7 @@ var router = express.Router();
 // })
 
 router.get('/numeraciones/:id*?', function (req, res, next) {
-    var resultado;
+    let resultado;
     if (req.query.especialidad || req.query.profesion) {
         if (req.query.profesion) {
             NumeracionMatriculas.find({ 'profesion._id': req.query.profesion }, function (err, data) {
@@ -51,7 +51,7 @@ router.get('/numeraciones/:id*?', function (req, res, next) {
             data: null
         };
 
-        var busquedaNumeracion = {};
+        let busquedaNumeracion = {};
         if (req.query.codigo) {
             busquedaNumeracion['profesion._id'] = req.query.codigo;
         }
@@ -101,7 +101,7 @@ router.get('/numeracionesRestart', (req, resp, errorHandler) => {
                 return errorHandler(err);
             }
             profs.forEach((prof, i) => {
-                var numeracion = new NumeracionMatriculas({
+                let numeracion = new NumeracionMatriculas({
                     profesion: prof,
                     proximoNumero: 1
                 });

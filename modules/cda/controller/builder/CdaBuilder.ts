@@ -14,7 +14,7 @@ export class CDABuilder extends BaseBuilder {
 
     public build(cda: CDA) {
 
-        var xml = builder.create('ClinicalDocument')
+        let xml = builder.create('ClinicalDocument')
             .att('xmlns', 'urn:hl7-org:v3')
             .att('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
             .att('xmlns:voc', 'urn:hl7-org:v3/voc');

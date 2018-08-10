@@ -874,7 +874,7 @@ async function actualizarEstadoTurnoSips(idAgendaSips, turno) {
                 }
 
                 /*TODO: hacer enum con los estados */
-                var horaInicio = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
+                let horaInicio = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
 
                 if ((estadoTurnoMongo === constantes.EstadoTurnosSips.suspendido || turno.estado === 'turnoDoble') && !await existeTurnoBloqueoSips(idAgendaSips, horaInicio)) {
                     await grabarTurnoBloqueo(idAgendaSips, turno);
@@ -916,8 +916,8 @@ async function grabarTurnoBloqueo(idAgendaSips, turno) {
     return new Promise(async function (resolve, reject) {
         try {
             const motivoBloqueo = getMotivoTurnoBloqueoSips(turno);
-            var fechaBloqueo = moment(turno.horaInicio).format('YYYYMMDD');
-            var horaBloqueo = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
+            let fechaBloqueo = moment(turno.horaInicio).format('YYYYMMDD');
+            let horaBloqueo = moment(turno.horaInicio).utcOffset('-03:00').format('HH:mm');
 
             let queryTurnoBloqueo = 'INSERT dbo.CON_TurnoBloqueo (idAgenda ' +
                 ', fechaTurno ' +

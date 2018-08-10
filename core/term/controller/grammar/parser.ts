@@ -23,7 +23,7 @@ export let parseExpression = function (expression) {
     parser.trace = new apglib.trace();
 
     // Parser expresssion
-    var inputCharacterCodes = apglib.utils.stringToChars(expression);
+    let inputCharacterCodes = apglib.utils.stringToChars(expression);
     let result = parser.parse(grammarObj, 'expressionConstraint', inputCharacterCodes);
 
     // Create AST
@@ -138,7 +138,7 @@ export class QueryBuilder {
 
 
     readSimpleExpressionConstraint (nodes) {
-        var condition: any = {
+        let condition: any = {
             condition: nodes.opData,
             criteria: false,
             memberOf: false,
@@ -146,13 +146,13 @@ export class QueryBuilder {
         };
         nodes.children.forEach((child) => {
             if (child.opData === 'constraintOperator') {
-                var constraintOperator = child;
+                let constraintOperator = child;
                 if (constraintOperator.children.length) {
                     condition.criteria = constraintOperator.children[0].opData;
                 }
             } else if (child.opData === 'focusConcept') {
-                var focusConcept = child;
-                var focusChildren = focusConcept.children;
+                let focusConcept = child;
+                let focusChildren = focusConcept.children;
                 if (focusChildren.length) {
                     focusChildren.forEach((loopFocusChild) => {
                         if (loopFocusChild.opData === 'conceptReference') {
@@ -190,7 +190,7 @@ export class QueryBuilder {
                 queryPart.push({inferredAncestors: node.condition.conceptId});
             }
         } else if (node.condition.criteria === 'descendantOrSelfOf') {
-            var or = {$or: []};
+            let or = {$or: []};
             or['$or'].push({conceptId: node.condition.conceptId});
             if (this.form === 'stated') {
                 or['$or'].push({statedAncestors: node.condition.conceptId});
@@ -218,23 +218,23 @@ export class QueryBuilder {
     }
 
     exclusionExpressionConstraint (node, value, queryPart) {
-        var children = node.children;
+        let children = node.children;
         if (children.length !== 3) {
             exitWithError('Problem with exclusionExpressionConstraint: ' + node.content);
         }
         // var excl = {$and:[]};
-        var excl = queryPart;
+        let excl = queryPart;
         this.resolve(children[0], excl);
 
-        var nor = [];
+        let nor = [];
         this.resolve(children[2], nor);
 
-        var not = { $nor: nor };
+        let not = { $nor: nor };
         queryPart.push(not);
     }
 
     disjunctionExpressionConstraint (node, value, queryPart) {
-        var or = {$or: []};
+        let or = {$or: []};
         node.children.forEach((child) => {
             if (child.opData === 'subExpressionConstraint') {
                 this.resolve(child, or['$or']);
@@ -244,7 +244,7 @@ export class QueryBuilder {
     }
 
     conjunctionExpressionConstraint (node, value, queryPart) {
-        var and = {$and: []};
+        let and = {$and: []};
         node.children.forEach((child) => {
             if (child.opData === 'subExpressionConstraint') {
                 this.resolve(child, and['$and']);
@@ -254,7 +254,7 @@ export class QueryBuilder {
     }
 
     refinedExpressionConstraint (node, value, queryPart) {
-        var children = node.children;
+        let children = node.children;
         if (children.length !== 2) {
             exitWithError('Problem with refinedExpressionConstraint: ' + node.content);
         }
@@ -265,17 +265,17 @@ export class QueryBuilder {
     }
 
     refinement (node, value, queryPart) {
-        var children = node.children;
+        let children = node.children;
         if (children.length === 1) {
             this.resolve(children[0], queryPart);
         } else {
             if (children[1].opData === 'conjunctionRefinementSet') {
-                var and = { $and: [] };
+                let and = { $and: [] };
                 this.resolve(children[0], and['$and']);
                 this.resolve(children[1], and['$and']);
                 queryPart.push(and);
             } else if (children[1].opData === 'disjunctionRefinementSet') {
-                var or = { $or: [] };
+                let or = { $or: [] };
                 this.resolve(children[0], or['$or']);
                 this.resolve(children[1], or['$or']);
                 queryPart.push(or);
@@ -284,7 +284,7 @@ export class QueryBuilder {
     }
 
     disjunctionRefinementSet (node, value, queryPart) {
-        var or = { $or: [] };
+        let or = { $or: [] };
         node.children.forEach((child) => {
             if (child.opData === 'subRefinement') {
                 this.resolve(child, or['$or']);
@@ -294,7 +294,7 @@ export class QueryBuilder {
     }
 
     conjunctionRefinementSet (node, value, queryPart) {
-        var and = { $and: [] };
+        let and = { $and: [] };
         node.children.forEach((child) => {
             if (child.opData === 'subRefinement') {
                 this.resolve(child, and['$and']);
@@ -312,17 +312,17 @@ export class QueryBuilder {
     }
 
     attributeSet (node, value, queryPart) {
-        var children = node.children;
+        let children = node.children;
         if (children.length === 1) {
             this.resolve(children[0], queryPart);
         } else {
             if (children[1].opData === 'conjunctionAttributeSet') {
-                var and = {$and: []};
+                let and = {$and: []};
                 this.resolve(children[0], and['$and']);
                 this.resolve(children[1], and['$and']);
                 queryPart.push(and);
             } else if (children[1].opData === 'disjunctionAttributeSet') {
-                var or = {$or: []};
+                let or = {$or: []};
                 this.resolve(children[0], or['$or']);
                 this.resolve(children[1], or['$or']);
                 queryPart.push(or);
@@ -331,7 +331,7 @@ export class QueryBuilder {
     }
 
     conjunctionAttributeSet (node, value, queryPart) {
-        var and = {$and: []};
+        let and = {$and: []};
         node.children.forEach((child) => {
             if (child.opData === 'subAttributeSet') {
                 this.resolve(child, and['$and']);
@@ -341,7 +341,7 @@ export class QueryBuilder {
     }
 
     disjunctionAttributeSet (node, value, queryPart) {
-        var or = { $or: [] };
+        let or = { $or: [] };
         node.children.forEach((child) => {
             if (child.opData === 'subAttributeSet') {
                 this.resolve(child, or['$or']);
@@ -362,7 +362,7 @@ export class QueryBuilder {
 
     attributeGroup (node, value, queryPart) {
         // TODO: Implement cardinality
-        var or = { $or: [] };
+        let or = { $or: [] };
         node.children.forEach((child) => {
             if (child.opData === 'attributeSet') {
                 this.resolve(child, or['$or']);
@@ -372,10 +372,10 @@ export class QueryBuilder {
     }
 
     attribute (node, ast, queryPart) {
-        var elemMatch = {};
-        var condition = this.readAttribute(node);
+        let elemMatch = {};
+        let condition = this.readAttribute(node);
         // Process attribute name
-        var attributeNameResults = false;
+        let attributeNameResults = false;
         if (condition.cardinality) {
             exitWithError('Unsupported condition: cardinality');
         }
@@ -406,7 +406,7 @@ export class QueryBuilder {
         // TODO: update for nested definitions in attributes
         if (condition.targetNode) {
             if (condition.targetNode.opData === 'simpleExpressionConstraint') {
-                var targetExp = this.readSimpleExpressionConstraint(condition.targetNode);
+                let targetExp = this.readSimpleExpressionConstraint(condition.targetNode);
 
                 if (targetExp.memberOf) {
                     elemMatch['targetMemberships'] = targetExp.conceptId;

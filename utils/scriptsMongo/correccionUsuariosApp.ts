@@ -7,7 +7,7 @@ import * as mongoose from 'mongoose';
 import * as configuraciones from './../../config.private';
 
 mongoose.connect(configuraciones.hosts.mongoDB_main.host,  configuraciones.hosts.mongoDB_main.options);
-var conn = mongoose.connection;
+let conn = mongoose.connection;
 
 // conn.once('open', function () {
 //     console.log('test');
