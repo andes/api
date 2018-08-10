@@ -255,13 +255,13 @@ async function buscarAgendasSobreturnos(organizacionId, tipoPrestacion, espacioF
     let pipelineCarpeta = [{
         $match: matchCarpeta
     },
-    {
+                           {
         $unwind: '$sobreturnos'
     },
-    {
+                           {
         $match: matchCarpeta
     },
-    {
+                           {
         $group: {
             _id: { id: '$_id' },
             profesionales: { $push: '$profesionales' },
@@ -306,16 +306,16 @@ async function buscarAgendasTurnos(organizacionId, tipoPrestacion, espacioFisico
     let pipelineCarpeta = [{
         $match: matchCarpeta
     },
-    {
+                           {
         $unwind: '$bloques'
     },
-    {
+                           {
         $unwind: '$bloques.turnos'
     },
-    {
+                           {
         $match: matchCarpeta
     },
-    {
+                           {
         $group: {
             _id: { id: '$_id' },
             profesionales: { $push: '$profesionales' },

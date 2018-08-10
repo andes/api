@@ -6,7 +6,7 @@ import { Auth } from '../../../auth/auth.class';
 let router = express.Router();
 
 
-router.post('/turnos/save/:turnoId', function(request, response, errorHandler) {
+router.post('/turnos/save/:turnoId', function (request, response, errorHandler) {
 
     turno.findByIdAndUpdate(request.params.turnoId, request.body, { new: true }, (err, res) => {
         if (err) {
@@ -20,12 +20,12 @@ router.post('/turnos/save/:turnoId', function(request, response, errorHandler) {
 });
 
 
-router.post('/turnos/:tipo/:profesionalId/', function(request, response, errorHandler) {
+router.post('/turnos/:tipo/:profesionalId/', function (request, response, errorHandler) {
 
     // Convert date to user datetime.
     let  fechaTurno = new Date(request.body.turno.fecha);
     if (request.body.sobreTurno) {
-            profesional.findById(request.params.profesionalId, function(error, datos) {
+            profesional.findById(request.params.profesionalId, function (error, datos) {
         let nTurno = new turno({
             fecha: fechaTurno,
             tipo: request.body.turno.tipo,
@@ -42,7 +42,7 @@ router.post('/turnos/:tipo/:profesionalId/', function(request, response, errorHa
     });
     } else {
 
-    turnoSolicitado.findById(request.params.profesionalId, function(error, datos) {
+    turnoSolicitado.findById(request.params.profesionalId, function (error, datos) {
         let nTurno = new turno({
             fecha: fechaTurno,
             tipo: request.body.turno.tipo,
@@ -64,7 +64,7 @@ router.post('/turnos/:tipo/:profesionalId/', function(request, response, errorHa
 /**
  * Listado de Turnos
  */
-router.get('/turnos/proximos/?', Auth.authenticate() , function(request: any, response, errorHandler) {
+router.get('/turnos/proximos/?', Auth.authenticate() , function (request: any, response, errorHandler) {
     if (!Auth.check(request, 'matriculaciones:turnos:*')) {
         return errorHandler(403);
     }
@@ -111,13 +111,13 @@ router.get('/turnos/proximos/?', Auth.authenticate() , function(request: any, re
         }
 
 
-        turnoSolicitado.find(busquedaProfesional).select('_id').exec(function(errProf, profesionales) {
+        turnoSolicitado.find(busquedaProfesional).select('_id').exec(function (errProf, profesionales) {
 
             if (errProf) {
                 return errorHandler(errProf);
             }
 
-            let profesionalesIds = profesionales.map(function(item, idx) {
+            let profesionalesIds = profesionales.map(function (item, idx) {
                 return item._id;
             });
 
@@ -134,7 +134,7 @@ router.get('/turnos/proximos/?', Auth.authenticate() , function(request: any, re
                         return errorHandler(errTurno);
                     }
 
-                    turno.count(busquedaTurno).populate('profesional').exec(function(error, count) {
+                    turno.count(busquedaTurno).populate('profesional').exec(function (error, count) {
                         responseData.totalPages = Math.ceil(count / chunkSize) !== 0 ? Math.ceil(count / chunkSize) : 1;
 
                         if (error) {
@@ -156,7 +156,7 @@ router.get('/turnos/proximos/?', Auth.authenticate() , function(request: any, re
 
                 responseData.data = data;
 
-                turno.count(busquedaTurno).populate('profesional').exec(function(err, count) {
+                turno.count(busquedaTurno).populate('profesional').exec(function (err, count) {
                     responseData.totalPages = Math.floor(count / chunkSize);
 
                     if (error) {
@@ -172,7 +172,7 @@ router.get('/turnos/proximos/?', Auth.authenticate() , function(request: any, re
 /**
  * Devuelve los turnos del tipo y mes pasados por parametro.
  */
-router.get('/turnos/:tipo/?', function(request, response, errorHandler) {
+router.get('/turnos/:tipo/?', function (request, response, errorHandler) {
 
     let matchObj = {
         tipo: request.params.tipo
@@ -203,9 +203,11 @@ router.get('/turnos/:tipo/?', function(request, response, errorHandler) {
                     // hora: { $hour: '$fecha' },
                     // minutos: { $minute: '$fecha'}
                 }
-            }, {
+            },
+             {
                 $match: matchObj
-            }, {
+            },
+             {
                 $group: {
                     _id: {
                         // tipo: '$tipo',

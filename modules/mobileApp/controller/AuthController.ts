@@ -201,7 +201,7 @@ export function createUserFromProfesional(profesional) {
  * @param pacienteData {pacienteSchema}
  */
 export function createUserFromPaciente(pacienteData, contacto) {
-    return new Promise(async(resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         let passw = generarCodigoVerificacion();
 
         let dataPacienteApp: any = {

@@ -5,7 +5,7 @@ import * as stream from 'stream';
 
 let base64RegExp = /data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,(.*)/;
 
-export function storeFile (base64, metadata) {
+export function storeFile(base64, metadata) {
     var match = base64.match(base64RegExp);
     var mime = match[1];
     var data = match[2];
@@ -31,7 +31,7 @@ export function storeFile (base64, metadata) {
     });
 }
 
-export function readFile (id) {
+export function readFile(id) {
     return new Promise(async (resolve, reject) => {
         try {
             let RupFiles = makeFs();

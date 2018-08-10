@@ -46,7 +46,7 @@ let connection = {
 /* Dado un paciente, se genera todos los CDA de laboratorio que tenga en SIL Nivel Central
 hacemos esto para luego llamarlo con algún robot en lugar de modificar el software SIL. */
 
-router.post('/laboratorios', async(req: any, res, next) => {
+router.post('/laboratorios', async (req: any, res, next) => {
     if (!Auth.check(req, 'cdaLaboratorio:post')) {
        return next(403);
     }

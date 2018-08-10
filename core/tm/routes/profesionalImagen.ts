@@ -22,7 +22,7 @@ router.post('/profesionales/file', async (req: any, res, next) => {
             contentType: 'image/jpeg',
         },
         input.pipe(decoder),
-        function(error, createdFile) {
+        function (error, createdFile) {
           res.json(createdFile);
     });
     input.end(_base64);

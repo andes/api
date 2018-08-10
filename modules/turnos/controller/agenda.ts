@@ -929,18 +929,18 @@ export function getConsultaDiagnostico(params) {
                 ]
             }
         },
-        {
+                    {
             $unwind: '$bloques'
         },
-        {
+                    {
             $project: {
                 bloqueTurnos: { $concatArrays: ['$sobreturnos', '$bloques.turnos'] }
             }
         },
-        {
+                    {
             $unwind: '$bloqueTurnos'
         },
-        {
+                    {
             $project: {
                 estado: '$bloqueTurnos.estado',
                 paciente: '$bloqueTurnos.paciente',
@@ -949,17 +949,17 @@ export function getConsultaDiagnostico(params) {
                 codificacionesAuditoria: '$bloqueTurnos.diagnosticoCodificaciones.codificacionesAuditoria',
             }
         },
-        {
+                    {
             $match: {
                 estado: 'asignado'
             }
         },
 
-        {
+                    {
             $unwind: { path: '$diagnosticoCodificaciones', preserveNullAndEmptyArrays: true }
         },
 
-        {
+                    {
             $project: {
                 estado: '$estado',
                 nombrePaciente: '$paciente.nombre',

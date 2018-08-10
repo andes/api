@@ -99,11 +99,11 @@ export let profesionalSchema = new mongoose.Schema({
 
 
 // Virtuals
-profesionalSchema.virtual('nombreCompleto').get(function() {
+profesionalSchema.virtual('nombreCompleto').get(function () {
     return this.apellido + ', ' + this.nombre;
 
 });
-profesionalSchema.virtual('fallecido').get(function() {
+profesionalSchema.virtual('fallecido').get(function () {
     return this.fechaFallecimiento;
 });
 export let profesional = mongoose.model('profesional', profesionalSchema, 'profesional');

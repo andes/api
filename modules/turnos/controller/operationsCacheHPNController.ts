@@ -216,7 +216,7 @@ export function getAgendasDeMongoExportadas() {
         agendasCache.find({
             $or: [{
                 estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportada
-            }, {
+            },    {
                 estadoIntegracion: constantes.EstadoExportacionAgendaCache.codificada
             }]
         }).exec(function (err, data) {

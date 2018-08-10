@@ -10,7 +10,7 @@ const weights = {
 };
 
 
-export function getCount (paciente) {
+export function getCount(paciente) {
     return new Promise((resolve, reject) => {
         vacunas.find({ documento : paciente.documento }).count().exec( (err, count)  => {
             if (err) {
@@ -23,7 +23,7 @@ export function getCount (paciente) {
     });
 }
 
-export function getVacunas (paciente) {
+export function getVacunas(paciente) {
     let conditions = {};
     conditions['documento'] = paciente.documento;
     const sort = { fechaAplicacion: -1 };

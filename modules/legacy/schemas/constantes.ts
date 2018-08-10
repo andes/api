@@ -56,12 +56,12 @@ const constantes = {
                 id: 705,
                 conceptId: '268565007'
             },
-            {
+                           {
                 nombre: 'Medicina General',
                 id: 705,
                 conceptId: '391000013108'
             },
-            {
+                           {
                 nombre: 'examenPediatrico',
                 id: 901,
                 conceptId: '243788004'

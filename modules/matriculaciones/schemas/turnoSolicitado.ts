@@ -134,18 +134,18 @@ export let turnoSolicitadoSchema = new mongoose.Schema({
 
 
 // Virtuals
-turnoSolicitadoSchema.virtual('nombreCompleto').get(function() {
+turnoSolicitadoSchema.virtual('nombreCompleto').get(function () {
     return this.apellido + ', ' + this.nombre;
 
 });
 
-turnoSolicitadoSchema.virtual('edad').get(function() {
+turnoSolicitadoSchema.virtual('edad').get(function () {
     let ageDifMs = Date.now() - this.fechaNacimiento.getTime();
     let ageDate = new Date(ageDifMs);
     return Math.abs(ageDate.getUTCFullYear() - 1970);
 });
 
-turnoSolicitadoSchema.virtual('fallecido').get(function() {
+turnoSolicitadoSchema.virtual('fallecido').get(function () {
     return this.fechaFallecimiento;
 });
 

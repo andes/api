@@ -163,7 +163,7 @@ router.post('/v2/registrar', function (req, res, next) {
  *
  */
 
-router.post('/check-update', function(req, res, next) {
+router.post('/check-update', function (req, res, next) {
     let app_version = req.body.app_version;
     // Por el momento devolvemos que todo esta bien
     return res.json({status: 'ok'});

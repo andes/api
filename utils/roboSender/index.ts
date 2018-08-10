@@ -22,7 +22,7 @@ export interface IEmail {
     plainText: string;
 }
 
-export function sendSms (data: ISms, options: any = {}) {
+export function sendSms(data: ISms, options: any = {}) {
     let obj = new roboModel({
         message: data.message,
         phone: data.phone,
@@ -38,7 +38,7 @@ export function sendSms (data: ISms, options: any = {}) {
     return obj.save();
 }
 
-export function sendEmail (data: IEmail, options: any = {}) {
+export function sendEmail(data: IEmail, options: any = {}) {
     let obj = new roboModel({
         message: data.plainText,
         phone: null,
@@ -59,7 +59,7 @@ export function sendEmail (data: IEmail, options: any = {}) {
     return obj.save();
 }
 
-export function removeSend (id) {
+export function removeSend(id) {
     return new Promise ((resolve, reject) => {
         roboModel.findById(id, (err, doc: any) => {
             if (doc) {

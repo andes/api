@@ -112,7 +112,7 @@ function makePrimaryMatch(filtros) {
     return match;
 }
 
-function makeSecondaryMatch (filtros) {
+function makeSecondaryMatch(filtros) {
     let match: any = {};
 
     if (filtros.edad) {
@@ -144,7 +144,7 @@ function makeSecondaryMatch (filtros) {
     return match;
 }
 
-function makeFacet (filtros) {
+function makeFacet(filtros) {
     let facet: any = {};
 
     if (!filtros.edad) {
@@ -205,7 +205,7 @@ export async function estadisticas(filtros) {
                             then: { $dateFromString: { dateString: '$turno.paciente.fechaNacimiento' } },
                             else:  '$turno.paciente.fechaNacimiento'
                         } }
-                    ]}, (365 * 24 * 60 * 60 * 1000)]
+                    ]},       (365 * 24 * 60 * 60 * 1000)]
                 }
             }
         },

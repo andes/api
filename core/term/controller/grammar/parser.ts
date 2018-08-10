@@ -32,7 +32,7 @@ export let parseExpression = function (expression) {
     return ast;
 };
 
-function exitWithError (e) {
+function exitWithError(e) {
     return e;
 }
 

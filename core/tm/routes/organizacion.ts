@@ -82,7 +82,8 @@ router.get('/organizaciones/georef/:id?', async function (req, res, next) {
                             $exists: true
                         }
                     }
-                }, {
+                },
+                {
                     $project: {
                         _id: 0,
                         nombre: '$nombre',
