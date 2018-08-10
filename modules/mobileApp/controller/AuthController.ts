@@ -398,7 +398,7 @@ export function updateAccount(account, data) {
                 resolve(account);
             });
 
-        }).catch((err) => reject(err));
+        }).catch(reject);
 
     });
 }

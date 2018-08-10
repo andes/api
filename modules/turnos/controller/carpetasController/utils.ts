@@ -21,7 +21,7 @@ export function migrar(q_objeto, q_limites, page_size, addNuevoObjeto, connectio
                 .query(q_objeto)
                 .then(objetos => {
                     if (objetos.recordset && objetos.recordset.length) {
-                        let nuevosObjetos = objetos.recordset.map(o => addNuevoObjeto(o));
+                        let nuevosObjetos = objetos.recordset.map(addNuevoObjeto);
                         return Promise.all(nuevosObjetos).then(res =>
                             navegar(pool, offset + 1)
                         );
