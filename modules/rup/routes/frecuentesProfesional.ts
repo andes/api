@@ -94,7 +94,7 @@ router.put('/frecuentesProfesional/:id*?', function (req, res, next) {
         }
 
          // si no existe agregamos el nuevo frecuente
-         if (typeof resultado === null || !resultado) {
+        if (typeof resultado === null || !resultado) {
             let frecuente = new profesionalMeta(req.body);
 
             frecuente.save(function (err2) {

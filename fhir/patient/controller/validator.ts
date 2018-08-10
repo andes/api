@@ -54,12 +54,12 @@ export function validate(pacienteFhir: PacienteFHIR): boolean {
         if (pacienteFhir.identifier.length > 0) {
             pacienteFhir.identifier.forEach(anIdentifier => {
                 respuesta = respuesta && Object.keys(anIdentifier).every(identifierFields);
-                    if (anIdentifier.assigner) {
-                        respuesta = respuesta && typeof anIdentifier.assigner === 'string';
-                    }
-                    if (anIdentifier.value) {
-                        respuesta = respuesta && typeof anIdentifier.value === 'string';
-                    }
+                if (anIdentifier.assigner) {
+                    respuesta = respuesta && typeof anIdentifier.assigner === 'string';
+                }
+                if (anIdentifier.value) {
+                    respuesta = respuesta && typeof anIdentifier.value === 'string';
+                }
             });
 
         }

@@ -445,14 +445,14 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 let turno;
                 switch (req.body.op) {
                     case 'darAsistencia': agendaCtrl.darAsistencia(req, data, turnos[y]);
-                        break;
+                                          break;
                     // Agregar operacion para marcar que noAsistio
                     case 'sacarAsistencia': agendaCtrl.sacarAsistencia(req, data, turnos[y]);
-                        break;
+                                            break;
                     case 'noAsistio': agendaCtrl.marcarNoAsistio(req, data, turnos[y]);
-                        break;
+                                      break;
                     case 'quitarTurnoDoble': agendaCtrl.quitarTurnoDoble(req, data, turnos[y]);
-                        break;
+                                             break;
                     case 'liberarTurno':
                         turno = agendaCtrl.getTurno(req, data, turnos[y]);
                         // LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, bloqueId, agendaId);
@@ -471,22 +471,29 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                         }
                         agendaCtrl.suspenderTurno(req, data, turno);
                         break;
-                    case 'codificarTurno': agendaCtrl.codificarTurno(req, data, turnos[y]).catch((err2) => {
-                        return next(err2);
-                    });
+                    case 'codificarTurno':
+                        agendaCtrl.codificarTurno(req, data, turnos[y]).catch((err2) => {
+                            return next(err2);
+                         });
                         break;
-                    case 'guardarNotaTurno': agendaCtrl.guardarNotaTurno(req, data, req.body.idTurno);
+                    case 'guardarNotaTurno':
+                        agendaCtrl.guardarNotaTurno(req, data, req.body.idTurno);
                         break;
-                    case 'darTurnoDoble': agendaCtrl.darTurnoDoble(req, data, turnos[y]);
+                    case 'darTurnoDoble':
+                        agendaCtrl.darTurnoDoble(req, data, turnos[y]);
                         break;
-                    case 'notaAgenda': agendaCtrl.guardarNotaAgenda(req, data);
+                    case 'notaAgenda':
+                        agendaCtrl.guardarNotaAgenda(req, data);
                         break;
-                    case 'editarAgenda': agendaCtrl.editarAgenda(req, data);
+                    case 'editarAgenda':
+                        agendaCtrl.editarAgenda(req, data);
                         break;
-                    case 'agregarSobreturno': agendaCtrl.agregarSobreturno(req, data);
+                    case 'agregarSobreturno':
+                        agendaCtrl.agregarSobreturno(req, data);
                         break;
                     case 'disponible':
-                    case 'publicada': agendaCtrl.actualizarEstado(req, data);
+                    case 'publicada':
+                        agendaCtrl.actualizarEstado(req, data);
                         break;
                     case 'pausada':
                     case 'prePausada':

@@ -402,8 +402,8 @@ router.put('/organizaciones/:id', Auth.authenticate(), function (req, res, next)
             return next(err);
         }
 
-            res.json(data);
-        });
+        res.json(data);
+    });
 });
 
 /**
@@ -440,7 +440,7 @@ router.delete('/organizaciones/:id', Auth.authenticate(), function (req, res, ne
             return next(err);
         }
 
-            res.json(data);
+        res.json(data);
         });
 });
 

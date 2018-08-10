@@ -8,18 +8,18 @@ import { SnomedConcept } from '../../rup/schemas/snomed-concept';
 
 let pacienteSchema = new mongoose.Schema({
     id: mongoose.Schema.Types.ObjectId,
-            nombre: String,
-            apellido: String,
-            alias: String,
-            documento: String,
-            fechaNacimiento: Date,
-            telefono: String,
-            sexo: String,
-            carpetaEfectores: [{
-                organizacion: nombreSchema,
-                nroCarpeta: String
-            }],
-            obraSocial: { type: obraSocialSchema }
+    nombre: String,
+    apellido: String,
+    alias: String,
+    documento: String,
+    fechaNacimiento: Date,
+    telefono: String,
+    sexo: String,
+    carpetaEfectores: [{
+        organizacion: nombreSchema,
+        nroCarpeta: String
+    }],
+    obraSocial: { type: obraSocialSchema }
 });
 
 

@@ -13,7 +13,7 @@ router.get('/sintys', async function (req, res, next) {
         let paciente = req.query;
         try {
             let pacienteSintys = await matchSintys(paciente);
-             res.json(pacienteSintys);
+            res.json(pacienteSintys);
             Logger.log(req, 'fa_sintys', 'validar', {
                 resultado: pacienteSintys
             });

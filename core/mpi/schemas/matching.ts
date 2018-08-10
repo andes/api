@@ -34,7 +34,7 @@ let matchingSchema = new mongoose.Schema({
             ultimaActualizacion: Date,
             activo: Boolean
         }],
-       sexo: {
+        sexo: {
             type: String,
             enum: ['femenino', 'masculino', 'otro', '']
         },
@@ -81,7 +81,7 @@ let matchingSchema = new mongoose.Schema({
             ultimaActualizacion: Date,
             activo: Boolean
         }],
-       sexo: {
+        sexo: {
             type: String,
             enum: ['femenino', 'masculino', 'otro', '']
         },

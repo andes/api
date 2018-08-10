@@ -1,6 +1,6 @@
 import * as express from 'express';
 import * as turno from '../schemas/turno';
- import{ profesional } from '../../../core/tm/schemas/profesional';
+import { profesional } from '../../../core/tm/schemas/profesional';
 import { turnoSolicitado } from '../schemas/turnoSolicitado';
 import { Auth } from '../../../auth/auth.class';
 let router = express.Router();
@@ -85,7 +85,7 @@ router.get('/turnos/proximos/?', Auth.authenticate() , function(request: any, re
 
     } else {
         let hoy = new Date();
-       let fechaActualMargen = hoy.setMinutes(hoy.getMinutes() - 30);
+        let fechaActualMargen = hoy.setMinutes(hoy.getMinutes() - 30);
         fechaConsulta = fechaActualMargen;
     }
 

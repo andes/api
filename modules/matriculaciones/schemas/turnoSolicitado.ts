@@ -98,8 +98,8 @@ export let turnoSolicitadoSchema = new mongoose.Schema({
          observacion: String,
          certificacion: {
            fecha: { type: Date, required: false },
-             modalidad: { type: ObjSIISASchema, required: false },
-             establecimiento: { type: ObjSIISASchema, required: false },
+           modalidad: { type: ObjSIISASchema, required: false },
+           establecimiento: { type: ObjSIISASchema, required: false },
          },
          matriculacion: [matriculacionSchema]
      }],
@@ -108,20 +108,20 @@ export let turnoSolicitadoSchema = new mongoose.Schema({
     //     enum: ['matriculación', 'rrhh', 'colegio de psicólogos']
     // },
     sanciones: [{
-         numero: {type: Number, required: false},
-         sancion: {
+        numero: {type: Number, required: false},
+        sancion: {
             id: Number,
             nombre: String,
         },
         motivo: {type: String, required: false},
         normaLegal: {type: String, required: false},
-         fecha: {type: Date, required: false},
-         vencimiento: {type: Date, required: false}
+        fecha: {type: Date, required: false},
+        vencimiento: {type: Date, required: false}
      }],
-     notas: { type: String, required: false },
-     rematriculado: { type: Boolean, default: false },
-     agenteMatriculador: { type: String, required: false },
-     OtrosDatos:  [{
+    notas: { type: String, required: false },
+    rematriculado: { type: Boolean, default: false },
+    agenteMatriculador: { type: String, required: false },
+    OtrosDatos:  [{
         matriculaProvincial: { type: Number, required: false },
         folio: { type: String, required: false },
         libro: { type: String, required: false },

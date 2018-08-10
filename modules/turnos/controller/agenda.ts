@@ -681,11 +681,14 @@ export async function actualizarTiposDeTurno() {
 
     while ((await esFeriado(fechaActualizar) && !esDomingo) || (moment(fechaActualizar).day().toString() === '6')) {
         switch (moment(fechaActualizar).day().toString()) {
-            case '0': this.esDomingo = true;
+            case '0':
+                this.esDomingo = true;
                 break;
-            case '6': fechaActualizar = moment(fechaActualizar).add(2, 'days');
+            case '6':
+                fechaActualizar = moment(fechaActualizar).add(2, 'days');
                 break;
-            default: fechaActualizar = moment(fechaActualizar).add(1, 'days');
+            default:
+                fechaActualizar = moment(fechaActualizar).add(1, 'days');
                 break;
         }
     }
