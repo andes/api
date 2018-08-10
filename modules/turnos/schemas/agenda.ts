@@ -121,7 +121,6 @@ schema.virtual('turnosRestantesProfesional').get(function () {
 });
 
 
-
 schema.virtual('estadosAgendas').get(function () {
     return this.schema.path('estado').enumValues;
 });

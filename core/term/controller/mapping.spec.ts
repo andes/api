@@ -80,5 +80,4 @@ describe('Snomed-CIE10 Mapping', function () {
     });
 
 
-
 });

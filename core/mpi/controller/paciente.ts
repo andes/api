@@ -545,7 +545,6 @@ export function checkCarpeta(req, data) {
 /* Hasta acá funciones del PATCH */
 
 
-
 /**
  * Busca paciente similares en MPI o ANDES. Vía mongo.
  *

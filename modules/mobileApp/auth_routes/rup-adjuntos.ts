@@ -154,6 +154,4 @@ router.patch('/prestaciones-adjuntar/:id', Auth.optionalAuth(), async (req: any,
 });
 
 
-
-
 export = router;

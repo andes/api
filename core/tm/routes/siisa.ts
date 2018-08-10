@@ -38,7 +38,6 @@ router.get('/siisa/entidadesformadoras', function(req, resp, errorHandler) {
 });
 
 
-
 /**
  * Profesiones
  */
@@ -72,7 +71,6 @@ router.post('/siisa/profesion', function(req, resp, errorHandler) {
         });
     });
 });
-
 
 
 /**

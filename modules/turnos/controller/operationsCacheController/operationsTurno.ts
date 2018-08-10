@@ -157,7 +157,6 @@ async function existeTurnoBloqueoSips(idAgendaSips, horaInicio, poolAgendas) {
 }
 
 
-
 async function grabarTurnoBloqueo(idAgendaSips, turno, poolAgendas) {
     try {
         const motivoBloqueo = getMotivoTurnoBloqueoSips(turno);
@@ -269,7 +268,6 @@ export async function checkAsistenciaTurno(agenda: any, poolAgendas) {
     }
 
 }
-
 
 
 /**

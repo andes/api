@@ -85,7 +85,6 @@ router.get('/numeraciones/:id*?', function (req, res, next) {
             });
 
 
-
     }
 });
 
@@ -173,7 +172,6 @@ router.put('/numeraciones', function (request, response, errorHandler) {
     });
 
 });
-
 
 
 export = router;

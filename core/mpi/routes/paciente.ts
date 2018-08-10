@@ -739,7 +739,6 @@ router.delete('/pacientes/:id', function (req, res, next) {
 });
 
 
-
 /**
  * @swagger
  * /pacientes/{id}:
@@ -765,7 +764,6 @@ router.delete('/pacientes/:id', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/paciente'
  */
-
 
 
 router.patch('/pacientes/:id', function (req, res, next) {
@@ -880,7 +878,6 @@ router.patch('/pacientes/mpi/:id', function (req, res, next) {
             return next(err);
         });
 });
-
 
 
 // Comentado hasta incorporar esta funcionalidad

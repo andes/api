@@ -44,4 +44,3 @@ router.get('/paciente', function (req, res, next) {
 
 export = router;
 
-

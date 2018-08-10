@@ -129,9 +129,6 @@ router.patch('/turno/agenda/:idAgenda', async function (req, res, next) {
 });
 
 
-
-
-
 /**
  * Espera un objeto como este:
  * // Datos del Turno

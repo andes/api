@@ -911,7 +911,6 @@ export function updatePaciente(pacienteModified, turno) {
 }
 
 
-
 export function getConsultaDiagnostico(params) {
 
     return new Promise(async (resolve, reject) => {
@@ -995,7 +994,6 @@ export function getConsultaDiagnostico(params) {
 }
 
 
-
 export function getCantidadConsultaXPrestacion(params) {
 
     return new Promise(async (resolve, reject) => {
@@ -1051,7 +1049,6 @@ export function getCantidadConsultaXPrestacion(params) {
             }
 
         ];
-
 
 
         let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());

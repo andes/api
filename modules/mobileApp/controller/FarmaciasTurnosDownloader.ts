@@ -196,7 +196,6 @@ export function getTurnos(data, localidad, desde, hasta) {
                     let hijos = $('#download-container').children().slice(2);
 
 
-
                     let datos = {};
                     let fecha = null;
                     let farmacias = [];

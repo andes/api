@@ -12,7 +12,6 @@ import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 
 
-
 import { Auth } from '../../../auth/auth.class';
 
 let path = require('path');
@@ -328,7 +327,6 @@ router.get('/:id/:name', async (req: any, res, next) => {
         stream1.pipe(res);
     }).catch(next);
 });
-
 
 
 export = router;

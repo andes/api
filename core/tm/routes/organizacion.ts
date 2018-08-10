@@ -14,8 +14,6 @@ let GeoJSON = require('geojson');
 let router = express.Router();
 
 
-
-
 router.get('/organizaciones/georef/:id?', async function (req, res, next) {
     if (req.params.id) {
         organizacion

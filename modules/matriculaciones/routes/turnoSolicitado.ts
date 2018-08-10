@@ -36,11 +36,9 @@ router.post('/turnoSolicitados', function (req, res, next) {
                             });
 
 
-
                      });
 
                 }
-
 
 
 });

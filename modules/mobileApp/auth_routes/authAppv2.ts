@@ -62,7 +62,6 @@ function getAccount(code, email) {
 }
 
 
-
 /**
  * Chequeo del código de verificacion sea correcto
  *

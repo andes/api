@@ -7,5 +7,4 @@ var profesionSchema = new mongoose.Schema({
 });
 
 
-
 export = profesionSchema;

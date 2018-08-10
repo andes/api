@@ -6,7 +6,6 @@ import { configuracionPantalla } from '../schemas/configuracionPantalla';
 let router = express.Router();
 
 
-
 router.get('/busquedaConfiguracion/:id*?', function (req: any, res, next) {
     let opciones = {};
     let query;
@@ -35,7 +34,6 @@ router.get('/busquedaConfiguracion/:id*?', function (req: any, res, next) {
 
 
 });
-
 
 
 router.post('/insertConfiguracion', function (req: any, res, next) {
@@ -67,7 +65,6 @@ router.post('/insertConfiguracion', function (req: any, res, next) {
                     });
                 }
             });
-
 
 
     }

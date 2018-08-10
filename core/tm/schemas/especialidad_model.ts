@@ -5,4 +5,3 @@ let especialidad_model = mongoose.model('especialidad_model', especialidadSchema
 
 export = especialidad_model;
 
-

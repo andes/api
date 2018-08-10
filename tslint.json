@@ -78,6 +78,7 @@
             "check-preblock"
         ],
         "object-literal-key-quotes": [true, "as-needed"],
-        "no-unnecessary-callback-wrapper": true
+        "no-unnecessary-callback-wrapper": true,
+        "no-consecutive-blank-lines": [true, 2]
     }
 }

@@ -84,10 +84,6 @@ router.get('/prestaciones/huds/:idPaciente', async function (req, res, next) {
     });
 
 
-
-
-
-
 });
 
 router.get('/prestaciones/:id*?', function (req, res, next) {

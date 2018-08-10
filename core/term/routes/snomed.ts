@@ -159,5 +159,4 @@ router.get('/snomed/map', function (req, res, next) {
 });
 
 
-
 export = router;

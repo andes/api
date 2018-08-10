@@ -12,7 +12,6 @@ import * as base64 from 'base64-stream';
 let router = express.Router();
 
 
-
 router.post('/profesionales/file', async (req: any, res, next) => {
     let _base64 = req.body.base64;
     let decoder = base64.decode();

@@ -22,10 +22,3 @@ router.get('/tiposEstablecimiento/:id*?', function (req, res, next) {
 });
 export = router;
 
-
-
-
-
-
-
-

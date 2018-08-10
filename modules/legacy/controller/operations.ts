@@ -17,7 +17,6 @@ import {
 import { configuracionPrestacionModel } from '../../../core/term/schemas/configuracionPrestacion';
 
 
-
 // Funciones privadas
 function traeProfesionalPorId(id) {
     return new Promise((resolve, reject) => {
