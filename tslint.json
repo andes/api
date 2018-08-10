@@ -81,6 +81,7 @@
         "no-unnecessary-callback-wrapper": true,
         "no-consecutive-blank-lines": [true, 2],
         "align": [true, "parameters", "statements", "members"],
-        "space-before-function-paren": [true, {"anonymous": "always", "named": "never", "asyncArrow": "always"}]
+        "space-before-function-paren": [true, {"anonymous": "always", "named": "never", "asyncArrow": "always"}],
+        "no-implicit-dependencies": [true, "dev"]
     }
 }

@@ -6,7 +6,6 @@ import * as profesionalSchema from '../../../core/tm/schemas/profesional';
 import * as constantes from './constantes';
 import * as mongoose from 'mongoose';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
-import { Number, Object } from 'core-js/library/web/timers';
 
 let schema = new mongoose.Schema({
     paciente: {

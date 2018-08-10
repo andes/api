@@ -203,11 +203,9 @@ router.get('/turnos/:tipo/?', function (request, response, errorHandler) {
                     // hora: { $hour: '$fecha' },
                     // minutos: { $minute: '$fecha'}
                 }
-            },
-             {
+            }, {
                 $match: matchObj
-            },
-             {
+            }, {
                 $group: {
                     _id: {
                         // tipo: '$tipo',

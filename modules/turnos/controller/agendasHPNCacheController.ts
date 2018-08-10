@@ -2,8 +2,6 @@ import * as operationsHPNCache from './operationsCacheHPNController';
 import * as configPrivate from '../../../config.private';
 import * as sql from 'mssql';
 
-const MongoClient = require('mongodb').MongoClient;
-let async = require('async');
 let pool;
 
 let connection = {

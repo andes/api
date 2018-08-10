@@ -9,7 +9,6 @@ import * as constantes from '../schemas/constantes';
 import { toArray } from '../../../utils/utils';
 import { paciente } from '../../../core/mpi/schemas/paciente';
 import { ObjectId, ObjectID } from 'bson';
-import { Object } from 'core-js/library/web/timers';
 
 export async function getCarpetasSolicitud(req) {
     return new Promise(async (resolve, reject) => {

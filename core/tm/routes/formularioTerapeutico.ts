@@ -6,7 +6,6 @@ import * as mongoose from 'mongoose';
 import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
 import * as utils from '../../../utils/utils';
-import { log } from 'core-js/library/web/timers';
 import * as formularioCtrl from '../controller/formularioTerapeutico';
 
 let router = express.Router();
