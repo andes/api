@@ -163,7 +163,7 @@ export function checkAppAccounts(pacienteData) {
  * @param profesional {profesionalSchema}
  */
 export function getAccountByProfesional(id) {
-    return PacienteApp.findOne({ 'profesionalId': mongoose.Types.ObjectId(id) });
+    return PacienteApp.findOne({ profesionalId: mongoose.Types.ObjectId(id) });
 }
 
 

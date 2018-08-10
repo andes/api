@@ -13,8 +13,8 @@ function run() {
     let logger = debug('cdaSipsJob');
 
     log.find({
-        'modulo': 'scheduler',
-        'operacion': 'cda'
+        modulo: 'scheduler',
+        operacion: 'cda'
     }).sort({ fecha: -1 }).limit(1).then((docs) => {
         let skip = 0;
         let limit = 4;

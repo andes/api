@@ -90,7 +90,7 @@ router.get('/localidades/:id*?', function (req, res, next) {
             query.where('provincia._id').equals(mongoose.Types.ObjectId(req.query.provincia));
         }
 
-        query.sort({ 'nombre': 1 }).exec((err, data) => {
+        query.sort({ nombre: 1 }).exec((err, data) => {
             if (err) {
                 return next(err);
             }

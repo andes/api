@@ -78,7 +78,7 @@ router.get('/elementosRUP/:id*?', function (req, res, next) {
     }
 
     // query.populate('requeridos.elementoRUP');
-    query.sort({ 'nombre': 1 }).exec(function (err, data) {
+    query.sort({ nombre: 1 }).exec(function (err, data) {
         if (err) {
             return next(err);
         }

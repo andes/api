@@ -32,13 +32,13 @@ router.get('/farmacias/turnos', function (req, res, next) {
     let desde = moment(req.query.desde, 'YYYY-MM-DD').toDate();
     let hasta = moment(req.query.hasta, 'YYYY-MM-DD').toDate();
     let query: any = {
-        fecha: { '$gte': desde, '$lte': hasta }
+        fecha: { $gte: desde, $lte: hasta }
     };
     if (localidad) {
         query.localidad = localidad;
     }
 
-    farmaciasTurnos.find(query).sort({ 'fecha': 1 }).then(data => {
+    farmaciasTurnos.find(query).sort({ fecha: 1 }).then(data => {
         return res.json(data);
     }).catch(err => {
         next(err);

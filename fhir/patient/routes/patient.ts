@@ -46,7 +46,7 @@ router.get('/([\$])match', function (req, res, next) {
                 query: consulta,
                 type: 'cross_fields',
                 fields: ['documento^5', 'apellido^5', 'nombre^3'],
-                'minimum_should_match': '100%',
+                minimum_should_match: '100%',
             },
         };
     }

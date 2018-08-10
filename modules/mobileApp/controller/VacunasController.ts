@@ -12,7 +12,7 @@ const weights = {
 
 export function getCount (paciente) {
     return new Promise((resolve, reject) => {
-        vacunas.find({ 'documento' : paciente.documento }).count().exec( (err, count)  => {
+        vacunas.find({ documento : paciente.documento }).count().exec( (err, count)  => {
             if (err) {
                 return reject(err);
             }

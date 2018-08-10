@@ -72,7 +72,7 @@ router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
     let orgId = mongoose.Types.ObjectId(req.body.organizacion);
     Promise.all([
         authUsers.findOne({
-            'usuario': username,
+            usuario: username,
             'organizaciones._id': orgId
         }),
         authOrganizaciones.model.findOne({ _id: orgId }, { nombre: 1 })

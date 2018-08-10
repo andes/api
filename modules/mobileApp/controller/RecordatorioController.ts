@@ -35,10 +35,10 @@ export function buscarTurnosARecordar(dayOffset) {
         let pipeline = [];
 
         pipeline = [
-            { '$match': matchTurno },
-            { '$unwind': '$bloques' },
-            { '$unwind': '$bloques.turnos' },
-            { '$match': matchTurno }
+            { $match: matchTurno },
+            { $unwind: '$bloques' },
+            { $unwind: '$bloques.turnos' },
+            { $match: matchTurno }
         ];
         let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
 
@@ -93,7 +93,7 @@ export function guardarRecordatorioTurno(turnos: any[], callback) {
 
 
 export function enviarTurnoRecordatorio() {
-    recordatorio.find({ 'estadoEnvio': false }, function (err, elems) {
+    recordatorio.find({ estadoEnvio: false }, function (err, elems) {
 
         elems.forEach((turno: any, index) => {
 
@@ -123,8 +123,8 @@ export function agendaRecordatorioQuery(dayOffset) {
         let startDay = moment(new Date()).add(dayOffset, 'days').startOf('day').toDate() as any;
         let endDay = moment(new Date()).add(dayOffset, 'days').endOf('day').toDate() as any;
         let match = {
-            'estado': { $in: ['disponible', 'publicada'] },
-            'horaInicio': {
+            estado: { $in: ['disponible', 'publicada'] },
+            horaInicio: {
                 $gte: startDay,
                 $lte: endDay
             }
@@ -132,17 +132,17 @@ export function agendaRecordatorioQuery(dayOffset) {
 
         let pipeline = [
             { $match: match },
-            { '$unwind': { 'path': '$profesionales', 'preserveNullAndEmptyArrays': true } },
-            { '$unwind': { 'path': '$avisos', 'preserveNullAndEmptyArrays': true } },
+            { $unwind: { path: '$profesionales', preserveNullAndEmptyArrays: true } },
+            { $unwind: { path: '$avisos', preserveNullAndEmptyArrays: true } },
             {
-                '$match': {
-                    'avisos': { '$exists': false }
+                $match: {
+                    avisos: { $exists: false }
                 }
             },
             {
-                '$group': {
-                    '_id': { 'profesional': '$profesionales._id' },
-                    'agenda': { '$push': '$$ROOT' }
+                $group: {
+                    _id: { profesional: '$profesionales._id' },
+                    agenda: { $push: '$$ROOT' }
                 }
             }
         ];

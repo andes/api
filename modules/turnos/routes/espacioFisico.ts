@@ -22,7 +22,7 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
         let nombres = [];
 
         if (req.query.nombre) {
-            nombres.push({ 'nombre': RegExp('^.*' + req.query.nombre + '.*$', 'i') });
+            nombres.push({ nombre: RegExp('^.*' + req.query.nombre + '.*$', 'i') });
             nombres.push({ 'sector.nombre': RegExp('^.*' + req.query.nombre + '.*$', 'i') });
             nombres.push({ 'servicio.nombre': RegExp('^.*' + req.query.nombre + '.*$', 'i') });
             nombres.push({ 'edificio.descripcion': RegExp('^.*' + req.query.nombre + '.*$', 'i') });

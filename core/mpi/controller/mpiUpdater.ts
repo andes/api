@@ -28,7 +28,7 @@ let log = debug('mpiUpdater');
 async function existeEnMpi(pacienteBuscado: any) {
     let condicion = {
         // Usamos el documento ya que son pacientes validados
-        'documento': pacienteBuscado.documento
+        documento: pacienteBuscado.documento
     };
     let weights = config.mpi.weightsUpdater;
     let data = await controller.searchSimilar(pacienteBuscado, 'mpi', condicion);
@@ -89,7 +89,7 @@ export function updatingMpi() {
 
     /*La condición de búsqueda es que sea un paciente validado por fuente auténtica*/
     let condicion = {
-        'estado': 'validado',
+        estado: 'validado',
     };
     let cursorPacientes = paciente.find(condicion).cursor();
     return cursorPacientes.eachAsync((pacAndes: any) => {

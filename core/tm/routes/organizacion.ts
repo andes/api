@@ -79,19 +79,19 @@ router.get('/organizaciones/georef/:id?', async function (req, res, next) {
             .model
             .aggregate([
                 {
-                    '$match': {
+                    $match: {
                         'direccion.geoReferencia': {
                             $exists: true
                         }
                     }
                 }, {
-                    '$project': {
-                        '_id': 0,
-                        'nombre': '$nombre',
-                        'lat': {
+                    $project: {
+                        _id: 0,
+                        nombre: '$nombre',
+                        lat: {
                             $arrayElemAt: ['$direccion.geoReferencia', 0]
                         },
-                        'lng': {
+                        lng: {
                             $arrayElemAt: ['$direccion.geoReferencia', 1]
                         }
                     }
@@ -252,24 +252,24 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
         let query;
         let act: Boolean = true;
         let filtros = {
-            'activo': act
+            activo: act
         };
 
         if (req.query.nombre) {
             filtros['nombre'] = {
-                '$regex': utils.makePattern(req.query.nombre)
+                $regex: utils.makePattern(req.query.nombre)
             };
         }
 
         if (req.query.cuie) {
             filtros['codigo.cuie'] = {
-                '$regex': utils.makePattern(req.query.cuie)
+                $regex: utils.makePattern(req.query.cuie)
             };
         }
 
         if (req.query.sisa) {
             filtros['codigo.sisa'] = {
-                '$regex': utils.makePattern(req.query.sisa)
+                $regex: utils.makePattern(req.query.sisa)
             };
         }
         if (req.query.activo) {
@@ -277,7 +277,7 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
         }
         if (req.query.tipoEstablecimiento) {
             filtros['tipoEstablecimiento.nombre'] = {
-                '$regex': utils.makePattern(req.query.tipoEstablecimiento)
+                $regex: utils.makePattern(req.query.tipoEstablecimiento)
             };
         }
         if (req.query.ids) {

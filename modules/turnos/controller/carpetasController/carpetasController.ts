@@ -52,17 +52,17 @@ const findUpdateCarpeta = async (paciente) => {
 
             if (carpeta._id) {
                 // logger('actualizo', documentoPaciente);
-                carpetaPaciente.update({ '_id': carpeta._id }, {
+                carpetaPaciente.update({ _id: carpeta._id }, {
                     $set:
-                        { 'carpetaEfectores': carpeta.carpetaEfectores }
+                        { carpetaEfectores: carpeta.carpetaEfectores }
                 }).exec();
             }
         } else {
             // El dni no existe en la colección carpetaPaciente
             // Se guarda el documento en la colección carpetaPaciente
             let nuevo = new carpetaPaciente({
-                'documento': documentoPaciente,
-                'carpetaEfectores': [carpetaNueva]
+                documento: documentoPaciente,
+                carpetaEfectores: [carpetaNueva]
             });
             nuevo.save();
         }
@@ -75,7 +75,7 @@ const findUpdateCarpeta = async (paciente) => {
 
 export async function migrar() {
     try {
-        let efectores: any = await Organizaciones.find({ 'integracionActiva': true }).exec();
+        let efectores: any = await Organizaciones.find({ integracionActiva: true }).exec();
         if (efectores && efectores.length > 0) {
 
             logger('Efectores---->', efectores);

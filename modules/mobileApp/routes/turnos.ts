@@ -53,59 +53,59 @@ router.get('/turnos', async function (req: any, res, next) {
     }
 
     if (req.query.asistencia) {
-        matchTurno['bloques.turnos.asistencia'] = { '$exists': req.query.asistencia };
+        matchTurno['bloques.turnos.asistencia'] = { $exists: req.query.asistencia };
     }
 
     // TODO: probar la siguiente condición
     if (req.query.codificado) {
-        matchTurno['bloques.turnos.diagnosticos.0'] = { '$exists': true };
+        matchTurno['bloques.turnos.diagnosticos.0'] = { $exists: true };
     }
 
     if (req.query.horaInicio) {
-        matchTurno['bloques.turnos.horaInicio'] = { '$gte': new Date(req.query.horaInicio) };
+        matchTurno['bloques.turnos.horaInicio'] = { $gte: new Date(req.query.horaInicio) };
     }
 
     if (req.query.horaFinal) {
-        matchTurno['bloques.turnos.horaInicio'] = { '$lt': new Date(req.query.horaFinal) };
+        matchTurno['bloques.turnos.horaInicio'] = { $lt: new Date(req.query.horaFinal) };
     }
 
     if (req.query.tiposTurno) {
-        matchTurno['bloques.turnos.tipoTurno'] = { '$in': req.query.tiposTurno };
+        matchTurno['bloques.turnos.tipoTurno'] = { $in: req.query.tiposTurno };
     }
 
-    pipelineTurno.push({ '$match': matchTurno });
-    pipelineTurno.push({ '$unwind': '$bloques' });
-    pipelineTurno.push({ '$unwind': '$bloques.turnos' });
-    pipelineTurno.push({ '$match': matchTurno });
+    pipelineTurno.push({ $match: matchTurno });
+    pipelineTurno.push({ $unwind: '$bloques' });
+    pipelineTurno.push({ $unwind: '$bloques.turnos' });
+    pipelineTurno.push({ $match: matchTurno });
     pipelineTurno.push({
-        '$group': {
-            '_id': { 'id': '$_id', 'bloqueId': '$bloques._id' },
-            'agenda_id': { $first: '$_id' },
-            'agenda_estado': { $first: '$estado' },
-            'turnos': { $push: '$bloques.turnos' },
-            'profesionales': { $first: '$profesionales' },
-            'espacioFisico': { $first: '$espacioFisico' },
-            'organizacion': { $first: '$organizacion' },
-            'duracionTurno': { $first: '$bloques.duracionTurno' }
+        $group: {
+            _id: { id: '$_id', bloqueId: '$bloques._id' },
+            agenda_id: { $first: '$_id' },
+            agenda_estado: { $first: '$estado' },
+            turnos: { $push: '$bloques.turnos' },
+            profesionales: { $first: '$profesionales' },
+            espacioFisico: { $first: '$espacioFisico' },
+            organizacion: { $first: '$organizacion' },
+            duracionTurno: { $first: '$bloques.duracionTurno' }
         }
     });
     pipelineTurno.push({
-        '$group': {
-            '_id': '$_id.id',
-            'agenda_id': { $first: '$agenda_id' },
-            'bloque_id': { $first: '$_id.bloqueId' },
-            'agenda_estado': { $first: '$agenda_estado' },
-            'bloques': { $push: { '_id': '$_id.bloqueId', 'turnos': '$turnos' } },
-            'profesionales': { $first: '$profesionales' },
-            'espacioFisico': { $first: '$espacioFisico' },
-            'organizacion': { $first: '$organizacion' },
-            'duracionTurno': { $first: '$duracionTurno' }
+        $group: {
+            _id: '$_id.id',
+            agenda_id: { $first: '$agenda_id' },
+            bloque_id: { $first: '$_id.bloqueId' },
+            agenda_estado: { $first: '$agenda_estado' },
+            bloques: { $push: { _id: '$_id.bloqueId', turnos: '$turnos' } },
+            profesionales: { $first: '$profesionales' },
+            espacioFisico: { $first: '$espacioFisico' },
+            organizacion: { $first: '$organizacion' },
+            duracionTurno: { $first: '$duracionTurno' }
         }
     });
 
-    pipelineTurno.push({ '$unwind': '$bloques' });
-    pipelineTurno.push({ '$unwind': '$bloques.turnos' });
-    pipelineTurno.push({ '$sort': { 'bloques.turnos.horaInicio': 1 } });
+    pipelineTurno.push({ $unwind: '$bloques' });
+    pipelineTurno.push({ $unwind: '$bloques.turnos' });
+    pipelineTurno.push({ $sort: { 'bloques.turnos.horaInicio': 1 } });
 
     let data2 = await toArray(agenda.aggregate(pipelineTurno).cursor({}).exec());
 

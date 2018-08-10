@@ -197,11 +197,11 @@ router.get('/pacientes/dashboard/', async function (req, res, next) {
 
     let estadoAggregate = [{
         $group: {
-            '_id': {
-                'estado': '$estado'
+            _id: {
+                estado: '$estado'
             },
-            'count': {
-                '$sum': 1
+            count: {
+                $sum: 1
             }
         }
     }];
@@ -209,12 +209,12 @@ router.get('/pacientes/dashboard/', async function (req, res, next) {
     let logAggregate = [
         {
             $group: {
-                '_id': {
-                    'operacion': '$operacion',
-                    'modulo': '$modulo'
+                _id: {
+                    operacion: '$operacion',
+                    modulo: '$modulo'
                 },
-                'count': {
-                    '$sum': 1
+                count: {
+                    $sum: 1
                 }
             }
         },
@@ -572,7 +572,7 @@ router.post('/pacientes', function (req, res, next) {
     }
     if (req.body.documento) {
         let condicion = {
-            'documento': req.body.documento
+            documento: req.body.documento
         };
         controller.searchSimilar(req.body, 'andes', condicion).then((data) => {
             logD('Encontrados', data.map(item => item.value));

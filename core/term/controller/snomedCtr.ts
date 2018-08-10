@@ -65,9 +65,9 @@ export function getChilds(sctid, { all = false, completed = true, leaf = false }
     let query;
     if (all) {
         query = {
-            '$or': [
-                { 'inferredAncestors': sctid },
-                { 'statedAncestors': sctid }
+            $or: [
+                { inferredAncestors: sctid },
+                { statedAncestors: sctid }
             ]
         };
     } else {
@@ -142,8 +142,8 @@ export async function contextFilter(options) {
 
     if (options.childOf) {
         conditions['$or'] = [
-            { 'inferredAncestors': options.childOf },
-            { 'statedAncestors': options.childOf }
+            { inferredAncestors: options.childOf },
+            { statedAncestors: options.childOf }
         ];
     }
 

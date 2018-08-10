@@ -78,7 +78,7 @@ export function getServicioAnses(paciente) {
                             }
                             if (matchPorcentaje >= 85) {
                                 // La idea de este registro es usar sólo el cuil
-                                resolve({ 'cuil': pacienteAnses.cuil });
+                                resolve({ cuil: pacienteAnses.cuil });
                                 // resolve({'entidad': 'Anses', 'matcheo': matchPorcentaje, 'pacienteConsultado': paciente, 'pacienteAnses': pacienteAnses });
                             } else {
                                 resolve('Matcheo insuficiente: ' + matchPorcentaje);
@@ -93,7 +93,7 @@ export function getServicioAnses(paciente) {
                 }
             });
         } else {
-            resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Anses', 'matcheo': 0, 'datosPaciente': {} } });
+            resolve({ paciente: paciente, matcheos: { entidad: 'Anses', matcheo: 0, datosPaciente: {} } });
         }
     });
 }
@@ -114,16 +114,16 @@ function consultaAnses(sesion, tipo, filtro) {
                 }
                 try {
                     rst = await solicitarServicio(sesion, tipo, filtro);
-                    datosAnses.push({ 'codigo': rst.codigo });
-                    datosAnses.push({ 'datos': rst.array });
+                    datosAnses.push({ codigo: rst.codigo });
+                    datosAnses.push({ datos: rst.array });
                 } catch (error) {
                     reject(error);
                 }
                 if (tipo === 'Documento' && rst.codigo === 0) {
                     try {
                         resultadoCuil = await solicitarServicio(sesion, 'Cuil', rst.array[1]);
-                        let datosAdicionales = [{ 'sexo': resultadoCuil.array[3] }, { 'Localidad': resultadoCuil.array[5] }, { 'Calle': resultadoCuil.array[6] }, { 'altura': resultadoCuil.array[7] }];
-                        datosAnses.push({ 'adicionales': datosAdicionales });
+                        let datosAdicionales = [{ sexo: resultadoCuil.array[3] }, { Localidad: resultadoCuil.array[5] }, { Calle: resultadoCuil.array[6] }, { altura: resultadoCuil.array[7] }];
+                        datosAnses.push({ adicionales: datosAdicionales });
                     } catch (error) {
                         reject(error);
                     }

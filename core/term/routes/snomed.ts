@@ -74,7 +74,7 @@ router.get('/snomed', function (req, res, next) {
                 let expWord = '^' + utils.removeDiacritics(word) + '.*';
 
                 // agregamos la palabra a la condicion
-                conditions['$and'].push({ 'words': { '$regex': expWord } });
+                conditions['$and'].push({ words: { $regex: expWord } });
             });
         } else {
             // Busca por conceptId

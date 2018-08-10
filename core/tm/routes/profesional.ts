@@ -46,7 +46,7 @@ router.get('/profesionales/foto/:id*?', Auth.authenticate(), (req: any, res, nex
             'metadata.idProfesional': id
         }, {}, {
                 sort: {
-                    '_id': -1
+                    _id: -1
                 }
             }, function (err, file) {
                 if (file[0] == null) {
@@ -82,7 +82,7 @@ router.get('/profesionales/firma/:id*?', Auth.authenticate(), (req: any, res, ne
             'metadata.idProfesional': id
         }, {}, {
                 sort: {
-                    '_id': -1
+                    _id: -1
                 }
             }, function (err, file) {
                 if (file[0] == null) {
@@ -109,7 +109,7 @@ router.get('/profesionales/firma/:id*?', Auth.authenticate(), (req: any, res, ne
             'metadata.idProfesional': idAdmin
         }, {}, {
                 sort: {
-                    '_id': -1
+                    _id: -1
                 }
             }, function (err, file) {
                 if (file[0] == null) {
@@ -190,13 +190,13 @@ router.get('/profesionales/:id*?', Auth.authenticate(), function (req, res, next
     } else {
         if (req.query.nombre) {
             opciones['nombre'] = {
-                '$regex': utils.makePattern(req.query.nombre)
+                $regex: utils.makePattern(req.query.nombre)
             };
         }
 
         if (req.query.apellido) {
             opciones['apellido'] = {
-                '$regex': utils.makePattern(req.query.apellido)
+                $regex: utils.makePattern(req.query.apellido)
             };
         }
         if (req.query.estado) {
@@ -224,10 +224,10 @@ router.get('/profesionales/:id*?', Auth.authenticate(), function (req, res, next
 
         if (req.query.nombreCompleto) {
             opciones['nombre'] = {
-                '$regex': utils.makePattern(req.query.nombreCompleto)
+                $regex: utils.makePattern(req.query.nombreCompleto)
             };
             opciones['apellido'] = {
-                '$regex': utils.makePattern(req.query.nombreCompleto)
+                $regex: utils.makePattern(req.query.nombreCompleto)
             };
         }
 
@@ -236,7 +236,7 @@ router.get('/profesionales/:id*?', Auth.authenticate(), function (req, res, next
         }
 
         if (req.query.bajaMatricula) {
-            opciones['formacionGrado.matriculacion.baja.motivo'] = { '$nin': [null] };
+            opciones['formacionGrado.matriculacion.baja.motivo'] = { $nin: [null] };
         }
 
         if (req.query.rematriculado) {
@@ -261,7 +261,7 @@ router.get('/profesionales/:id*?', Auth.authenticate(), function (req, res, next
 
         if (req.query.especialidad) {
             opciones['especialidad.nombre'] = {
-                '$regex': utils.makePattern(req.query.especialidad)
+                $regex: utils.makePattern(req.query.especialidad)
             };
         }
     }
@@ -273,7 +273,7 @@ router.get('/profesionales/:id*?', Auth.authenticate(), function (req, res, next
     if (req.query.nombreCompleto) {
         query = profesional.find({
             apellido: {
-                '$regex': utils.makePattern(req.query.nombreCompleto)
+                $regex: utils.makePattern(req.query.nombreCompleto)
             }
         }).
             sort({
@@ -594,10 +594,10 @@ router.get('/resumen/:id*?', function (req, res, next) {
 
         if (req.query.nombreCompleto) {
             opciones['nombre'] = {
-                '$regex': utils.makePattern(req.query.nombreCompleto)
+                $regex: utils.makePattern(req.query.nombreCompleto)
             };
             opciones['apellido'] = {
-                '$regex': utils.makePattern(req.query.nombreCompleto)
+                $regex: utils.makePattern(req.query.nombreCompleto)
             };
         }
 
@@ -615,7 +615,7 @@ router.get('/resumen/:id*?', function (req, res, next) {
 
         if (req.query.especialidad) {
             opciones['especialidad.nombre'] = {
-                '$regex': utils.makePattern(req.query.especialidad)
+                $regex: utils.makePattern(req.query.especialidad)
             };
         }
     }
@@ -627,7 +627,7 @@ router.get('/resumen/:id*?', function (req, res, next) {
     if (req.query.nombreCompleto) {
         query = profesional.find({
             apellido: {
-                '$regex': utils.makePattern(req.query.nombreCompleto)
+                $regex: utils.makePattern(req.query.nombreCompleto)
             }
         }).
             sort({

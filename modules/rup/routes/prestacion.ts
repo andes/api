@@ -42,7 +42,7 @@ router.get('/prestaciones/huds/:idPaciente', async function (req, res, next) {
 
     let query = {
         'paciente.id': req.params.idPaciente,
-        '$where': 'this.estados[this.estados.length - 1].tipo ==  \"' + estado + '\"'
+        $where: 'this.estados[this.estados.length - 1].tipo ==  \"' + estado + '\"'
     };
 
     if (req.query.idPrestacion) {

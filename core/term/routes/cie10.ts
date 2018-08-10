@@ -22,9 +22,9 @@ router.get('/cie10', function (req, res, next) {
         termino = termino + expWord;
     });
 
-    conditions['$or'].push({ 'codigo': RegExp('^.*' + termino + '.*$', 'i') });
-    conditions['$or'].push({ 'nombre': RegExp('^.*' + termino + '.*$', 'i') });
-    conditions['$or'].push({ 'sinonimo': RegExp('^.*' + termino + '.*$', 'i') });
+    conditions['$or'].push({ codigo: RegExp('^.*' + termino + '.*$', 'i') });
+    conditions['$or'].push({ nombre: RegExp('^.*' + termino + '.*$', 'i') });
+    conditions['$or'].push({ sinonimo: RegExp('^.*' + termino + '.*$', 'i') });
     query = cie10.model.find(conditions);
     let skip = parseInt(req.query.skip || 0, 10);
     let limit = Math.min(parseInt(req.query.limit || defaultLimit, 15), maxLimit);

@@ -691,8 +691,8 @@ export async function actualizarTiposDeTurno() {
     }
     // actualiza los turnos restantes de las agendas 2 dias antes de su horaInicio.
     let condicion = {
-        'estado': 'publicada',
-        'horaInicio': {
+        estado: 'publicada',
+        horaInicio: {
             $gte: (moment(fechaActualizar).startOf('day').toDate() as any),
             $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
         }
@@ -747,8 +747,8 @@ export function actualizarEstadoAgendas() {
     let fechaActualizar = moment(new Date());
     // actualiza los agendas en estado pausada, disponible o publicada que se hayan ejecutado el día anterior
     let condicion = {
-        '$or': [{ estado: 'disponible' }, { estado: 'publicada' }, { estado: 'pausada' }],
-        'horaInicio': {
+        $or: [{ estado: 'disponible' }, { estado: 'publicada' }, { estado: 'pausada' }],
+        horaInicio: {
             $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
         }
     };
@@ -799,8 +799,8 @@ export function actualizarTurnosDelDia() {
     let fechaActualizar = moment();
 
     let condicion = {
-        '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
-        'horaInicio': {
+        $or: [{ estado: 'disponible' }, { estado: 'publicada' }],
+        horaInicio: {
             $gte: (moment(fechaActualizar).startOf('day').toDate() as any),
             $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
         }
@@ -919,9 +919,9 @@ export function getConsultaDiagnostico(params) {
         pipeline = [{
             $match: {
                 $and: [
-                    { 'horaInicio': { '$gte': new Date(params.horaInicio) } },
-                    { 'horaFin': { '$lte': new Date(params.horaFin) } },
-                    { 'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) } },
+                    { horaInicio: { $gte: new Date(params.horaInicio) } },
+                    { horaFin: { $lte: new Date(params.horaFin) } },
+                    { 'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) } },
                     { 'bloques.turnos.estado': 'asignado' }
 
                 ]
@@ -949,7 +949,7 @@ export function getConsultaDiagnostico(params) {
         },
         {
             $match: {
-                'estado': 'asignado'
+                estado: 'asignado'
             }
         },
 
@@ -1004,9 +1004,9 @@ export function getCantidadConsultaXPrestacion(params) {
             {
                 $match: {
                     $and: [
-                        { 'horaInicio': { '$gte': new Date(params.horaInicio) } },
-                        { 'horaFin': { '$lte': new Date(params.horaFin) } },
-                        { 'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) } },
+                        { horaInicio: { $gte: new Date(params.horaInicio) } },
+                        { horaFin: { $lte: new Date(params.horaFin) } },
+                        { 'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) } },
                         { 'bloques.turnos.estado': 'asignado' }
                     ]
                 }
@@ -1034,7 +1034,7 @@ export function getCantidadConsultaXPrestacion(params) {
             },
             {
                 $match: {
-                    'estado': 'asignado'
+                    estado: 'asignado'
                 }
             },
             {

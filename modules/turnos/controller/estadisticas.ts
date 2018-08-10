@@ -9,12 +9,12 @@ const turnoAsignadoMatch = {
     $match: {
         'turno.paciente.nombre': { $exists: true },
         'turno.estado': 'asignado',
-        'estado': { $ne:  'suspendida' }
+        estado: { $ne:  'suspendida' }
     }
 };
 
 const facets = {
-    'edad': [
+    edad: [
         turnoAsignadoMatch,
         {
             $bucket: {
@@ -22,13 +22,13 @@ const facets = {
                 boundaries: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
                 default: 0,
                 output: {
-                    'count': { $sum: 1 }
+                    count: { $sum: 1 }
                 }
             }
         }
     ],
 
-    'sexo': [
+    sexo: [
         turnoAsignadoMatch,
         {
             $group: {
@@ -38,7 +38,7 @@ const facets = {
         }
     ],
 
-    'profesionales': [
+    profesionales: [
         turnoAsignadoMatch,
         { $unwind: '$profesionales' },
         {
@@ -52,7 +52,7 @@ const facets = {
     ],
 
 
-    'administrativo': [
+    administrativo: [
         turnoAsignadoMatch,
         {
             $group: {
@@ -64,7 +64,7 @@ const facets = {
         }
     ],
 
-    'prestacion': [
+    prestacion: [
         turnoAsignadoMatch,
         {
             $group: {
@@ -75,7 +75,7 @@ const facets = {
         }
     ],
 
-    'estadoTurno': [
+    estadoTurno: [
         { $match: { 'turno.estado': { $ne: 'turnoDoble' } } },
         {
             $addFields: {

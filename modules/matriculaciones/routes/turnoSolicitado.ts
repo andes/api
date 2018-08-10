@@ -25,7 +25,7 @@ router.post('/turnoSolicitados', function (req, res, next) {
                         res.json(data);
                      });
                 } else {
-                    turnoSolicitado.findOne({ 'documento': req.body.documento }, function (err, person) {
+                    turnoSolicitado.findOne({ documento: req.body.documento }, function (err, person) {
 
                             let newProfesional = new turnoSolicitado(req.body);
                             newProfesional.save((err2) => {
@@ -47,7 +47,7 @@ router.post('/turnoSolicitados', function (req, res, next) {
 
 router.get('/turnoSolicitados/traePDni/:dni*?', (req: any, res, next) => {
     let dni = req.params.dni;
-    turnoSolicitado.find({ '_id' : dni}, function (err, data) {
+    turnoSolicitado.find({ _id : dni}, function (err, data) {
         if (err) {
             return next(err);
         }

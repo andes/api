@@ -182,27 +182,27 @@ export class QueryBuilder {
                 exitWithError('Unsupported condition: combined memberOf and hierarchy criteria');
             }
         } else if (node.condition.criteria === 'self') {
-            queryPart.push({'conceptId': node.condition.conceptId});
+            queryPart.push({conceptId: node.condition.conceptId});
         } else if (node.condition.criteria === 'descendantOf') {
             if (this.form === 'stated') {
-                queryPart.push({'statedAncestors': node.condition.conceptId});
+                queryPart.push({statedAncestors: node.condition.conceptId});
             } else {
-                queryPart.push({'inferredAncestors': node.condition.conceptId});
+                queryPart.push({inferredAncestors: node.condition.conceptId});
             }
         } else if (node.condition.criteria === 'descendantOrSelfOf') {
             var or = {$or: []};
-            or['$or'].push({'conceptId': node.condition.conceptId});
+            or['$or'].push({conceptId: node.condition.conceptId});
             if (this.form === 'stated') {
-                or['$or'].push({'statedAncestors': node.condition.conceptId});
+                or['$or'].push({statedAncestors: node.condition.conceptId});
             } else {
-                or['$or'].push({'inferredAncestors': node.condition.conceptId});
+                or['$or'].push({inferredAncestors: node.condition.conceptId});
             }
             queryPart.push(or);
         } else if (node.condition.criteria === 'ancestorOf') {
             // Not supported right now
             exitWithError('Unsupported condition: ' + node. condition.criteria);
         } else if (node.condition.criteria === 'ancestorOrSelfOf') {
-            queryPart.push({'conceptId': node.condition.conceptId});
+            queryPart.push({conceptId: node.condition.conceptId});
             // Not supported right now
             exitWithError('Unsupported condition: ' + node.condition.criteria);
         }
@@ -387,7 +387,7 @@ export class QueryBuilder {
                 if (condition.attributeOperator === 'descendantOrSelfOf') {
                     elemMatch['$or'] = [];
                     elemMatch['$or'].push({'type.conceptId' : condition.conceptId});
-                    elemMatch['$or'].push({'typeInferredAncestors' : condition.conceptId});
+                    elemMatch['$or'].push({typeInferredAncestors : condition.conceptId});
                 } else if (condition.attributeOperator === 'descendantOf') {
                     elemMatch['typeInferredAncestors'] = condition.conceptId;
                 } else {
@@ -413,7 +413,7 @@ export class QueryBuilder {
                 } else if (targetExp.criteria === 'descendantOrSelfOf') {
                     elemMatch['$or'] = [];
                     elemMatch['$or'].push({'destination.conceptId' : targetExp.conceptId});
-                    elemMatch['$or'].push({'targetInferredAncestors' : targetExp.conceptId});
+                    elemMatch['$or'].push({targetInferredAncestors : targetExp.conceptId});
                 } else if (targetExp.criteria === 'descendantOf') {
                     elemMatch['targetInferredAncestors'] = targetExp.conceptId;
                 } else {
@@ -425,7 +425,7 @@ export class QueryBuilder {
         }
         if (Object.keys(elemMatch).length > 0) {
             elemMatch['active'] = true;
-            queryPart.push({relationships: {'$elemMatch': elemMatch}});
+            queryPart.push({relationships: {$elemMatch: elemMatch}});
         }
     }
 }

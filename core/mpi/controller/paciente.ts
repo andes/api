@@ -525,7 +525,7 @@ export function checkCarpeta(req, data) {
             let query = {
                 carpetaEfectores: {
                     $elemMatch: {
-                        'nroCarpeta': req.body.carpetaEfectores[indiceCarpeta].nroCarpeta,
+                        nroCarpeta: req.body.carpetaEfectores[indiceCarpeta].nroCarpeta,
                         'organizacion._id': req.body.carpetaEfectores[indiceCarpeta].organizacion._id
                     }
                 }

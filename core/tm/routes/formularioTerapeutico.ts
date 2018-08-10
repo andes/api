@@ -40,7 +40,7 @@ router.get('/formularioTerapeutico/:id?', async function (req, res, next) {
                         let expWord = '^' + utils.removeDiacritics(word) + '.*';
                         // agregamos la palabra a la condicion
                         // opciones['$and'].push({ 'subcapitulos.medicamentos.concepto.words': { '$regex': expWord } });
-                        opciones['$and'].push({ 'concepto.words': { '$regex': '(?i)' + expWord } });
+                        opciones['$and'].push({ 'concepto.words': { $regex: '(?i)' + expWord } });
                     });
                 }
             }

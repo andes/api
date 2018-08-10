@@ -23,7 +23,7 @@ router.post('/agendaMatriculaciones', Auth.authenticate(), function (req, res, n
 
     agenda.find({}, {}, {
         sort: {
-            '_id': -1
+            _id: -1
         }
     }, function (err, resultado) {
         if (resultado[0] !== undefined) {

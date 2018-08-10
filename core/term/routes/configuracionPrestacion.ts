@@ -49,7 +49,7 @@ router.put('/configuracionPrestaciones', function (req, res, next) {
     if (req.body.idTipoPrestacion && req.body.idOrganizacion) {
         // busca por especialidad
         configuracionPrestacion.configuracionPrestacionModel.update(
-            { '_id': req.body.idTipoPrestacion }, { $pull: { 'organizaciones': { '_id': req.body.idOrganizacion } } }, function (err, data) {
+            { _id: req.body.idTipoPrestacion }, { $pull: { organizaciones: { _id: req.body.idOrganizacion } } }, function (err, data) {
                 if (err) {
                     return next(err);
                 }
@@ -81,9 +81,9 @@ router.post('/configuracionPrestaciones', async function (req, res, next) {
             } else {
                 let newOrganizacion = [{
                     _id: new mongoose.Types.ObjectId(req.body.organizacion.id),
-                    'idEspecialidad': req.body.prestacionLegacy.idEspecialidad,
-                    'nombreEspecialidad': req.body.prestacionLegacy.nombreEspecialidad,
-                    'codigo': req.body.prestacionLegacy.codigo
+                    idEspecialidad: req.body.prestacionLegacy.idEspecialidad,
+                    nombreEspecialidad: req.body.prestacionLegacy.nombreEspecialidad,
+                    codigo: req.body.prestacionLegacy.codigo
                 }];
                 configuracionPrestacion.configuracionPrestacionModel.update({ 'snomed.conceptId': idSnomed }, { $push: { organizaciones: newOrganizacion } }, function (err, resultado) {
                     if (err) {
@@ -96,12 +96,12 @@ router.post('/configuracionPrestaciones', async function (req, res, next) {
         } else {
             // Se crea el objeto ConfiguracionPrestacion completo
             let newConfigPres = {
-                'snomed': req.body.conceptSnomed,
-                'organizaciones': [{
-                    '_id': new mongoose.Types.ObjectId(req.body.organizacion.id),
-                    'idEspecialidad': req.body.prestacionLegacy.idEspecialidad,
-                    'nombreEspecialidad': req.body.prestacionLegacy.nombreEspecialidad,
-                    'codigo': req.body.prestacionLegacy.codigo
+                snomed: req.body.conceptSnomed,
+                organizaciones: [{
+                    _id: new mongoose.Types.ObjectId(req.body.organizacion.id),
+                    idEspecialidad: req.body.prestacionLegacy.idEspecialidad,
+                    nombreEspecialidad: req.body.prestacionLegacy.nombreEspecialidad,
+                    codigo: req.body.prestacionLegacy.codigo
                 }]
             };
             configuracionPrestacion.configuracionPrestacionModel.create(newConfigPres), function (err, data) {

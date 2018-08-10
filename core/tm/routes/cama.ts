@@ -11,7 +11,7 @@ let router = express.Router();
 
 router.get('/camas/:idCama', Auth.authenticate(), function (req, res, next) {
     cama.model.findById({
-        '_id': req.params.idCama
+        _id: req.params.idCama
     }, function (err, data: any) {
         if (err) {
             return next(err);
@@ -39,7 +39,7 @@ router.get('/camas', Auth.authenticate(), function (req, res, next) {
     if (req.query.habitacion) {
         query.where('habitacion').equals(req.query.habitacion);
     }
-    query.sort({ 'numero': 1, 'habitacion': 1 });
+    query.sort({ numero: 1, habitacion: 1 });
     query.exec({}, (err, data) => {
         if (err) {
             return next(err);

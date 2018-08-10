@@ -76,6 +76,7 @@
             "check-separator",
             "check-type",
             "check-preblock"
-        ]
+        ],
+        "object-literal-key-quotes": [true, "as-needed"]
     }
 }

@@ -159,16 +159,16 @@ async function findCarpetas(organizacionId, nrosCarpetas) {
     let sort = {};
     let group = {};
 
-    match['organizacion._id'] = { '$eq': organizacionId };
-    match['numero'] = { '$in': nrosCarpetas };
+    match['organizacion._id'] = { $eq: organizacionId };
+    match['numero'] = { $in: nrosCarpetas };
     sort['createdAt'] = -1;
     group['_id'] = '$numero';
-    group['estado'] = { '$first': '$estado' };
-    group['fecha'] = { '$first': '$createdAt' };
+    group['estado'] = { $first: '$estado' };
+    group['fecha'] = { $first: '$createdAt' };
 
-    pipeline.push({ '$match': match });
-    pipeline.push({ '$sort': sort });
-    pipeline.push({ '$group': group });
+    pipeline.push({ $match: match });
+    pipeline.push({ $sort: sort });
+    pipeline.push({ $group: group });
 
     return await toArray(prestamo.aggregate(pipeline).cursor({}).exec());
 }
@@ -199,20 +199,20 @@ async function findCarpetasPrestamo(organizacionId, horaInicio, horaFin, tipoPre
     if (profesional) {
         match['datosPrestamo.turno.profesionales._id'] = new ObjectId(profesional);
     }
-    match['organizacion._id'] = { '$eq': organizacionId };
+    match['organizacion._id'] = { $eq: organizacionId };
 
     sort['createdAt'] = -1;
     group['_id'] = '$numero';
-    group['estado'] = { '$first': '$estado' };
-    group['fecha'] = { '$first': '$createdAt' };
-    group['paciente'] = { '$first': '$paciente' };
-    group['datosPrestamo'] = { '$first': '$datosPrestamo' };
-    group['datosDevolucion'] = { '$first': '$datosDevolucion' };
-    group['datosSolicitudManual'] = { '$first': '$datosSolicitudManual' };
+    group['estado'] = { $first: '$estado' };
+    group['fecha'] = { $first: '$createdAt' };
+    group['paciente'] = { $first: '$paciente' };
+    group['datosPrestamo'] = { $first: '$datosPrestamo' };
+    group['datosDevolucion'] = { $first: '$datosDevolucion' };
+    group['datosSolicitudManual'] = { $first: '$datosSolicitudManual' };
 
-    pipeline.push({ '$match': match });
-    pipeline.push({ '$sort': sort });
-    pipeline.push({ '$group': group });
+    pipeline.push({ $match: match });
+    pipeline.push({ $sort: sort });
+    pipeline.push({ $group: group });
 
     let result: any = await toArray(prestamo.aggregate(pipeline).cursor({}).exec());
 
@@ -248,9 +248,9 @@ async function buscarAgendasSobreturnos(organizacionId, tipoPrestacion, espacioF
         }
     }
 
-    matchCarpeta['sobreturnos.estado'] = { '$eq': 'asignado' };
+    matchCarpeta['sobreturnos.estado'] = { $eq: 'asignado' };
     matchCarpeta['sobreturnos.paciente.carpetaEfectores.organizacion._id'] = organizacionId;
-    matchCarpeta['sobreturnos.paciente.carpetaEfectores.nroCarpeta'] = { '$ne': '' };
+    matchCarpeta['sobreturnos.paciente.carpetaEfectores.nroCarpeta'] = { $ne: '' };
 
     let pipelineCarpeta = [{
         $match: matchCarpeta
@@ -263,11 +263,11 @@ async function buscarAgendasSobreturnos(organizacionId, tipoPrestacion, espacioF
     },
     {
         $group: {
-            '_id': { 'id': '$_id' },
-            'profesionales': { $push: '$profesionales' },
-            'espacioFisico': { $push: '$espacioFisico' },
-            'tipoPrestacion': { $push: '$sobreturnos.tipoPrestacion' },
-            'turnos': { $push: '$sobreturnos' }
+            _id: { id: '$_id' },
+            profesionales: { $push: '$profesionales' },
+            espacioFisico: { $push: '$espacioFisico' },
+            tipoPrestacion: { $push: '$sobreturnos.tipoPrestacion' },
+            turnos: { $push: '$sobreturnos' }
         }
     }];
 
@@ -299,9 +299,9 @@ async function buscarAgendasTurnos(organizacionId, tipoPrestacion, espacioFisico
         }
     }
 
-    matchCarpeta['bloques.turnos.estado'] = { '$eq': 'asignado' };
+    matchCarpeta['bloques.turnos.estado'] = { $eq: 'asignado' };
     matchCarpeta['bloques.turnos.paciente.carpetaEfectores.organizacion._id'] = organizacionId;
-    matchCarpeta['bloques.turnos.paciente.carpetaEfectores.nroCarpeta'] = { '$ne': '' };
+    matchCarpeta['bloques.turnos.paciente.carpetaEfectores.nroCarpeta'] = { $ne: '' };
 
     let pipelineCarpeta = [{
         $match: matchCarpeta
@@ -317,11 +317,11 @@ async function buscarAgendasTurnos(organizacionId, tipoPrestacion, espacioFisico
     },
     {
         $group: {
-            '_id': { 'id': '$_id' },
-            'profesionales': { $push: '$profesionales' },
-            'espacioFisico': { $push: '$espacioFisico' },
-            'tipoPrestacion': { $push: '$bloques.turnos.tipoPrestacion' },
-            'turnos': { $push: '$bloques.turnos' }
+            _id: { id: '$_id' },
+            profesionales: { $push: '$profesionales' },
+            espacioFisico: { $push: '$espacioFisico' },
+            tipoPrestacion: { $push: '$bloques.turnos.tipoPrestacion' },
+            turnos: { $push: '$bloques.turnos' }
         }
     }];
 
@@ -441,7 +441,7 @@ export async function getHistorial(req) {
 
     let filter: any = {
         'organizacion._id': organizacionId,
-        'numero': nroCarpeta
+        numero: nroCarpeta
     };
 
     return await prestamo.find(filter).sort('-createdAt');

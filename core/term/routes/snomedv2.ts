@@ -116,7 +116,7 @@ router.get('/snomed/search', async function (req, res, next) {
             word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08');
             let expWord = '^' + utils.removeDiacritics(word) + '.*';
             // agregamos la palabra a la condicion
-            conditions['$and'].push({ 'words': { '$regex': expWord } });
+            conditions['$and'].push({ words: { $regex: expWord } });
         });
     } else {
         // Busca por conceptId
@@ -129,7 +129,7 @@ router.get('/snomed/search', async function (req, res, next) {
     let leaf = req.query.leaf;
     if (attributes || leaf) {
         lookUp = {
-            '$lookup': {
+            $lookup: {
                 from: configPrivate.snomed.dbVersion,
                 localField: 'conceptId',
                 foreignField: 'conceptId',
@@ -189,7 +189,7 @@ router.get('/snomed/search', async function (req, res, next) {
                 fsn: 1,
                 semanticTag: 1,
                 refsetIds: 1,
-                aEq: { '$eq': ['$fsn', '$term'] }
+                aEq: { $eq: ['$fsn', '$term'] }
             }
         },
         { $match: { aEq: false } }

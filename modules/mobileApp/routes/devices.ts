@@ -93,7 +93,7 @@ router.post('/devices/delete', function (req: any, res, next) {
             return res.status(422).send({ message: 'user_invalid' });
         }
 
-        user.devices.pull({ '_id': new mongoose.Types.ObjectId(req.body.id) });
+        user.devices.pull({ _id: new mongoose.Types.ObjectId(req.body.id) });
         return user.save((errSave, u) => {
             if (errSave) {
                 return next(errSave);

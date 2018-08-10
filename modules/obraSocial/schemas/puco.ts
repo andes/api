@@ -11,6 +11,6 @@ let pucoSchema = new mongoose.Schema({
     version: Date
 });
 
-pucoSchema.index({ 'dni': 1, 'version': 1 });
+pucoSchema.index({ dni: 1, version: 1 });
 export let puco = Connections.puco.model(configPrivate.puco.database, pucoSchema, configPrivate.puco.database);
 

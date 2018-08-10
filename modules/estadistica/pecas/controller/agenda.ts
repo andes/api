@@ -38,19 +38,19 @@ export async function consultaPecas(start, end) {
     }
     const query_limit = 10000000000;
     let match = {
-        '$and': [
+        $and: [
             // { updatedAt: { $gt: new Date('2018-07-02T00:00:00.000-03:00') } },
             // { updatedAt: { $lt: new Date('2018-07-02T23:00:00.000-03:00') } }
             { updatedAt: { $gt: new Date(start) } },
             { updatedAt: { $lt: new Date(end) } }
         ],
-        'bloques': {
+        bloques: {
             $ne: null
         },
         'bloques.turnos': {
             $ne: null
         },
-        '$or': [
+        $or: [
             {
                 estado: {
                     $ne: 'planificacion'
@@ -381,7 +381,7 @@ async function eliminaTurnoPecas(turno: any) {
 function getEfector(idOrganizacion: any) {
     return new Promise((resolve, reject) => {
         organizacion.findOne({
-            '_id': mongoose.Types.ObjectId(idOrganizacion)
+            _id: mongoose.Types.ObjectId(idOrganizacion)
         }).exec(function (err, data) {
             if (err) {
                 reject(err);
@@ -407,7 +407,7 @@ function getEfector(idOrganizacion: any) {
 function getCapitulo(codigoCIE10: string) {
     return new Promise((resolve, reject) => {
         cie10.model.findOne({
-            'codigo': String(codigoCIE10)
+            codigo: String(codigoCIE10)
         }).exec(function (err, data) {
             if (err) {
                 reject(err);

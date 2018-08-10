@@ -5,7 +5,7 @@ let router = express.Router();
 
 router.get('/prestacionesLegacy', function (req, res, next) {
     if (req.query.codigo) {
-        prestacionLegacy.find({ 'codigo': req.query.codigo }, function (err, data) {
+        prestacionLegacy.find({ codigo: req.query.codigo }, function (err, data) {
             if (err) {
                 return next(err);
             }
@@ -23,7 +23,7 @@ router.get('/prestacionesLegacy', function (req, res, next) {
 
 router.get('/prestacionesLegacy/:id?', function (req, res, next) {
     if (req.params.id) {
-        prestacionLegacy.find({ '_id': req.params.id }, function (err, data) {
+        prestacionLegacy.find({ _id: req.params.id }, function (err, data) {
             if (err) {
                 return next(err);
             }

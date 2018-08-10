@@ -19,7 +19,7 @@ router.get('/especialidadFT/:id?', function (req, res, next) {
         let query;
         query = especialidad.find({});
 
-        query.sort({ 'descripcion': 1 });
+        query.sort({ descripcion: 1 });
 
         query.exec(function (err, data) {
             if (err) {

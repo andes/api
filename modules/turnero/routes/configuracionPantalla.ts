@@ -49,10 +49,10 @@ router.post('/insertConfiguracion', function (req: any, res, next) {
         });
     } else {
         configuracionPantalla.find({
-            'nombrePantalla': req.body.nombrePantalla
+            nombrePantalla: req.body.nombrePantalla
         }, {}, {
                 sort: {
-                    '_id': -1
+                    _id: -1
                 }
             }, function (err1, file) {
                 if (file.length > 0) {

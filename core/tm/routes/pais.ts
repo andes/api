@@ -72,7 +72,7 @@ router.get('/paises/:id*?', function (req, res, next) {
         if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
-        query.sort({ 'nombre': 1 }).exec((err, data) => {
+        query.sort({ nombre: 1 }).exec((err, data) => {
             if (err) {return next(err); }
             res.json(data);
         });

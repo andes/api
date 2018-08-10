@@ -85,7 +85,7 @@ router.patch('/turno/agenda/:idAgenda', async function (req, res, next) {
         // seteamos el cupo en -1 cuando la agenda no tiene límite de cupos
         if ((agendaRes as any).cupo > -1) {
             let nuevoCupo = ((agendaRes as any).cupo > 0) ? (agendaRes as any).cupo - 1 : 0;
-            update = { 'bloques.0.turnos': turnos, 'cupo': nuevoCupo };
+            update = { 'bloques.0.turnos': turnos, cupo: nuevoCupo };
             query = {
                 _id: req.params.idAgenda,
                 cupo: { $gt: 0 }

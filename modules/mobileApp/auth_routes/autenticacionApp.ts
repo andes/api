@@ -92,11 +92,11 @@ router.post('/olvide-password', function (req, res, next) {
         }
 
         if (!datosUsuario) {
-            return res.status(422).send({ 'error': 'El e-mail ingresado no existe' });
+            return res.status(422).send({ error: 'El e-mail ingresado no existe' });
         }
 
         if (!datosUsuario.activacionApp) {
-            return res.status(422).send({ 'error': 'El e-mail ingresado no existe' });
+            return res.status(422).send({ error: 'El e-mail ingresado no existe' });
         }
 
         datosUsuario.restablecerPassword.codigo = authController.generarCodigoVerificacion();
@@ -148,7 +148,7 @@ router.post('/reestablecer-password', function (req, res, next) {
         }
 
         if (!datosUsuario) {
-            return res.status(422).send({ 'error': 'El e-mail ingresado no existe' });
+            return res.status(422).send({ error: 'El e-mail ingresado no existe' });
         }
 
         const codigo = req.body.codigo;
@@ -157,13 +157,13 @@ router.post('/reestablecer-password', function (req, res, next) {
 
         if (datosUsuario.restablecerPassword) {
             if (datosUsuario.restablecerPassword.codigo !== codigo) {
-                return res.status(422).send({ 'error': 'El codigo ingresado no existe.' });
+                return res.status(422).send({ error: 'El codigo ingresado no existe.' });
             }
 
             const hoy = new Date();
             const codigoExpiracion = new Date(datosUsuario.restablecerPassword.fechaExpiracion);
             if (codigoExpiracion < hoy) {
-                return res.status(422).send({ 'error': 'El código de seguridad generado ha vencido. Por favor genere uno nuevo.' });
+                return res.status(422).send({ error: 'El código de seguridad generado ha vencido. Por favor genere uno nuevo.' });
             }
 
         }

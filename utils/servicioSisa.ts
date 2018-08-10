@@ -195,13 +195,13 @@ export function matchSisa(paciente) {
                                             // Logger.log(req, 'auditoria', 'busqueda:sisa', {
                                             //     resultado: resultado
                                             // });
-                                            resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sisa', 'matcheo': matchPorcentaje, 'datosPaciente': pacienteSisa } });
+                                            resolve({ paciente: paciente, matcheos: { entidad: 'Sisa', matcheo: matchPorcentaje, datosPaciente: pacienteSisa } });
                                         } else {
-                                            resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sisa', 'matcheo': 0, 'datosPaciente': null } });
+                                            resolve({ paciente: paciente, matcheos: { entidad: 'Sisa', matcheo: 0, datosPaciente: null } });
                                         }
                                         break;
                                     default:
-                                        resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sisa', 'matcheo': 0, 'datosPaciente': null } });
+                                        resolve({ paciente: paciente, matcheos: { entidad: 'Sisa', matcheo: 0, datosPaciente: null } });
                                         break;
                                 }
 
@@ -209,7 +209,7 @@ export function matchSisa(paciente) {
                             }
 
                         }
-                        resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sisa', 'matcheo': 0, 'datosPaciente': null } });
+                        resolve({ paciente: paciente, matcheos: { entidad: 'Sisa', matcheo: 0, datosPaciente: null } });
 
 
                     })
@@ -218,10 +218,10 @@ export function matchSisa(paciente) {
                     });
 
             } else {
-                resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sisa', 'matcheo': 0, 'datosPaciente': null } });
+                resolve({ paciente: paciente, matcheos: { entidad: 'Sisa', matcheo: 0, datosPaciente: null } });
             }
         } else {
-            resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sisa', 'matcheo': 0, 'datosPaciente': null } });
+            resolve({ paciente: paciente, matcheos: { entidad: 'Sisa', matcheo: 0, datosPaciente: null } });
         }
     });
 }

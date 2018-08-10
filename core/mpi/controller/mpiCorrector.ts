@@ -78,8 +78,8 @@ function nuevoPacienteRejected(pacienteAndes: any) {
             pacienteMatch = pac;
         }
         pacienteMatch['porcentajeMatch'] = [{
-            'entidad': 'Sisa',
-            'match': pacienteAndes.matchSisa
+            entidad: 'Sisa',
+            match: pacienteAndes.matchSisa
         }];
         pacienteMatch.save()
             .catch(err => {

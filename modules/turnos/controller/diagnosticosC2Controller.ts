@@ -112,9 +112,9 @@ export function getDiagnosticos(params) {
                 'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria': { $exists: true, $ne: {} },
                 'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
                 'bloques.turnos.diagnostico.codificaciones.0.primeraVez': true,
-                'horaInicio': { '$gte': new Date(params.horaInicio) },
-                'horaFin': { '$lte': new Date(params.horaFin) },
-                'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) }
+                horaInicio: { $gte: new Date(params.horaInicio) },
+                horaFin: { $lte: new Date(params.horaFin) },
+                'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) }
             }
         },
         {
@@ -149,9 +149,9 @@ export function getDiagnosticos(params) {
                 'sobreturnos.diagnostico.codificaciones.0.codificacionAuditoria': { $exists: true, $ne: {} },
                 'sobreturnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
                 'sobreturnos.diagnostico.codificaciones.0.primeraVez': true,
-                'horaInicio': { '$gte': new Date(params.horaInicio) },
-                'horaFin': { '$lte': new Date(params.horaFin) },
-                'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) }
+                horaInicio: { $gte: new Date(params.horaInicio) },
+                horaFin: { $lte: new Date(params.horaFin) },
+                'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) }
             }
         },
         {
@@ -269,9 +269,9 @@ export function getDiagnosticos(params) {
 
                 promises.push(new Promise((resolve1, reject1) => {
                     agendaModel.find({
-                        'horaInicio': { '$gte': new Date(params.horaInicio) },
-                        'horaFin': { '$lte': new Date(params.horaFin) },
-                        'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) },
+                        horaInicio: { $gte: new Date(params.horaInicio) },
+                        horaFin: { $lte: new Date(params.horaFin) },
+                        'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) },
                         $or: [{
                             'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria.codigo': {
                                 $eq: elem.codigo

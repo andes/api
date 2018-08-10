@@ -130,20 +130,20 @@ export function matchSintys(paciente) {
                                 pacienteSintys = formatearDatosSintys(JSON.parse(resultado[1])[0]);
                                 matchPorcentaje = match.matchPersonas(paciente, pacienteSintys, weights, 'Levenshtein') * 100;
                                 paciente['matchSintys'] = matchPorcentaje;
-                                resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sintys', 'matcheo': matchPorcentaje, 'datosPaciente': pacienteSintys } });
+                                resolve({ paciente: paciente, matcheos: { entidad: 'Sintys', matcheo: matchPorcentaje, datosPaciente: pacienteSintys } });
                             }
                         }
-                        resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sintys', 'matcheo': 0, 'datosPaciente': pacienteSintys } });
+                        resolve({ paciente: paciente, matcheos: { entidad: 'Sintys', matcheo: 0, datosPaciente: pacienteSintys } });
                     })
                     .catch((err) => {
                         reject(err);
                     });
 
             } else {
-                resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sintys', 'matcheo': 0, 'datosPaciente': pacienteSintys } });
+                resolve({ paciente: paciente, matcheos: { entidad: 'Sintys', matcheo: 0, datosPaciente: pacienteSintys } });
             }
         } else {
-            resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Sintys', 'matcheo': 0, 'datosPaciente': pacienteSintys } });
+            resolve({ paciente: paciente, matcheos: { entidad: 'Sintys', matcheo: 0, datosPaciente: pacienteSintys } });
         }
     });
 

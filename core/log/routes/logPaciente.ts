@@ -29,7 +29,7 @@ router.get('/paciente', function (req, res, next) {
             model: 'paciente',
         });
 
-        query.sort({ 'createdAt': -1 });
+        query.sort({ createdAt: -1 });
 
         query.exec(function (err, data) {
             if (err) {
