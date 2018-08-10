@@ -211,19 +211,19 @@ export function getDiagnosticos(params) {
                     hiv: 0,
                     bronquiolitis: 0
                 };
-                let sumaMenor6m = Object.assign({}, suma);
-                let suma711m = Object.assign({}, suma);
-                let suma1 = Object.assign({}, suma);
-                let suma24 = Object.assign({}, suma);
-                let suma59 = Object.assign({}, suma);
-                let suma1014 = Object.assign({}, suma);
-                let suma1519 = Object.assign({}, suma);
-                let suma2024 = Object.assign({}, suma);
-                let suma2534 = Object.assign({}, suma);
-                let suma3544 = Object.assign({}, suma);
-                let suma4564 = Object.assign({}, suma);
-                let suma6574 = Object.assign({}, suma);
-                let sumaMayor75 = Object.assign({}, suma);
+                let sumaMenor6m = {...suma};
+                let suma711m = {...suma};
+                let suma1 = {...suma};
+                let suma24 = {...suma};
+                let suma59 = {...suma};
+                let suma1014 = {...suma};
+                let suma1519 = {...suma};
+                let suma2024 = {...suma};
+                let suma2534 = {...suma};
+                let suma3544 = {...suma};
+                let suma4564 = {...suma};
+                let suma6574 = {...suma};
+                let sumaMayor75 = {...suma};
 
                 let sumaMasculino = {
                     default: 0,
@@ -237,7 +237,7 @@ export function getDiagnosticos(params) {
                     hiv: 0,
                     bronquiolitis: 0
                 };
-                let sumaFemenino = Object.assign({}, sumaMasculino);
+                let sumaFemenino = {...sumaMasculino};
 
                 let sumaOtro = {
                     default: 0,
@@ -575,7 +575,7 @@ export function getDiagnosticos(params) {
                             pacientes: pacientes.default
                         };
                         // Se asigna de esta manera para que sea otro objeto y no un puntero al mismo objeto
-                        let r1 = Object.assign({}, r2);
+                        let r1 = {...r2};
                         switch (elem.codigo) {
                             case 'A05.1':
                                 let sumaR = suma1.default + suma24.default + suma59.default + suma1014.default + suma1519.default + suma2024.default + suma2534.default + suma3544.default
@@ -632,7 +632,7 @@ export function getDiagnosticos(params) {
                                 }
                                 if (sumaResto > 0) {
                                     // Se asigna de esta manera para que sea otro objeto y no un puntero al mismo objeto
-                                    let r3 = Object.assign({}, r2);
+                                    let r3 = {...r2};
                                     r2.reporteC2 = 'Tuberculosis';
                                     resultados.push(r2);
                                     r3.reporteC2 = 'Meningitis bacteriana sin especificar agente';
