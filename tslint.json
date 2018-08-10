@@ -82,6 +82,7 @@
         "no-consecutive-blank-lines": [true, 2],
         "align": [true, "parameters", "statements", "members"],
         "space-before-function-paren": [true, {"anonymous": "always", "named": "never", "asyncArrow": "always"}],
-        "no-implicit-dependencies": [true, "dev"]
+        "no-implicit-dependencies": [true, "dev"],
+        "no-unused-expression": true
     }
 }

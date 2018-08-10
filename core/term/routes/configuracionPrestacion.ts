@@ -104,12 +104,12 @@ router.post('/configuracionPrestaciones', async function (req, res, next) {
                     codigo: req.body.prestacionLegacy.codigo
                 }]
             };
-            configuracionPrestacion.configuracionPrestacionModel.create(newConfigPres), function (err, data) {
+            configuracionPrestacion.configuracionPrestacionModel.create(newConfigPres, function (err, data) {
                 if (err) {
                     return next(err);
                 }
                 res.json(data);
-            };
+            });
         }
     } else {
         res.status(404).send('Error, parámetros incorrectos.');

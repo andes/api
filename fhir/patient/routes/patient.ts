@@ -33,14 +33,13 @@ router.get('/([\$])match', function (req, res, next) {
         host: configPrivate.hosts.elastic_main,
     });
     let query;
-    let consulta;
-    req.query.identifier ? consulta = req.query.identifier : null;
-    req.query.family ? consulta ? consulta = consulta + ' ' + req.query.family : consulta = req.query.family : null;
-    req.query.given ? consulta ? consulta = consulta + ' ' + req.query.given : consulta = req.query.given : null;
 
-    if (!consulta) {
-        query = null;
-    } else {
+    let consulta = '';
+    consulta += req.query.identifier ? ' ' + req.query.identifier : '';
+    consulta += req.query.family ? ' ' + req.query.family : '';
+    consulta += req.query.given ? ' ' + req.query.given : '';
+
+    if (consulta.length > 0) {
         query = {
             multi_match: {
                 query: consulta,
