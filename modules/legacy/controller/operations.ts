@@ -201,6 +201,9 @@ async function codigoPucoPorDni(dni) {
     let obraSocial: any = await sisaController.postPuco(dni);
     if (obraSocial.puco.resultado === 'OK') {
         idObraSocial = await mapeoObraSocial(obraSocial.puco.rnos);
+        if (idObraSocial === 0) {
+            idObraSocial = 499;
+        }
     } else {
         idObraSocial = 499;
 

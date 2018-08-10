@@ -602,7 +602,9 @@ router.post('/pacientes', function (req, res, next) {
 });
 
 router.post('/exportPacientesSips', function (req, res, next) {
-    console.log("aca")
+    // if (!Auth.check(req, 'mpi:paciente:postAndes')) {
+    //     return next(403);
+    // }
     controller.insertSips();
 });
 

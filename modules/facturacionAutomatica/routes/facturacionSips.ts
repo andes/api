@@ -4,7 +4,7 @@ import * as organizacion from '../../../core/tm/schemas/organizacion';
 import * as agendaSchema from '../../turnos/schemas/agenda';
 import * as agenda from '../../turnos/controller/agenda';
 import * as configPrivate from '../../../config.private';
-import { configuracionPrestaciones } from '../schemas/configuracionPrestacion';
+import * as facturacionAutomaticaModel from './../schemas/configFacturacionAutomatica';
 import { model as prestacion } from '../../rup/schemas/prestacion';
 import { Auth } from './../../../auth/auth.class';
 import { toArray } from '../../../utils/utils';
@@ -42,7 +42,7 @@ router.get('/efector/:id', async function (req, res, next) {
 
 router.get('/configuracionPrestacion/:id', async function (req, res, next) {
     try {
-        configuracionPrestaciones.findOne({ 'snomed.conceptId': req.params.id }, function (err, result: any) {
+        facturacionAutomaticaModel.findOne({ 'snomed.conceptId': req.params.id }, function (err, result: any) {
             if (err) {
                 return next(err);
             }
@@ -117,6 +117,7 @@ router.get('/prestacionPorTurno/:id', (req, res, next) => {
 
 
 router.post('/cambioEstadoPrestaciones/:id', function (req, res, next) {
+    console.log(req.params);
     try {
         prestacion.find({
             '_id': mongoose.Types.ObjectId(req.params.id)
@@ -141,6 +142,7 @@ router.post('/cambioEstadoPrestaciones/:id', function (req, res, next) {
 router.get('/sinTurno', async function (req, res, next) {
     try {
         let prestaciones = await getPrestacionesAfacturar();
+        console.log(prestaciones);
         let match = {
             $match: {
                 'solicitud.tipoPrestacion.conceptId':  { $in: prestaciones },

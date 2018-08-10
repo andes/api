@@ -700,7 +700,7 @@ export async function mapeoPuco(dni) {
 
 export async function insertSips() {
     let pacientes = await pacientesDelDia();
-    console.log(pacientes)
+
     for (var index = 0; index < pacientes.length; index++) {
         let existeEnSips = await getPacienteSips(pacientes[index].documento);
         
@@ -816,13 +816,13 @@ export async function pacientesDelDia() {
     // let end = moment(req.query.fechaHasta).endOf('day').toDate();
 
     //PACIENTES ANDES
-    let pacientesAndes = await toArray(paciente.aggregate({
+    let pacientesAndes = await toArray(paciente.aggregate([{
         $match: {
             'createdAt': {
                 $gte: new Date(hoyDesde), $lte: new Date(hoyHasta)
             }
         }
-    }).cursor({ batchSize: 1000 }).exec());
+    }]).cursor({ batchSize: 1000 }).exec());
 
 
     pacientesAndes.forEach(element => {
@@ -830,13 +830,13 @@ export async function pacientesDelDia() {
     });
 
     //PACIENTES MPI
-    let pacientesMpi = await toArray(pacienteMpi.aggregate({
+    let pacientesMpi = await toArray(pacienteMpi.aggregate([{
         $match: {
             'createdAt': {
                 $gte: new Date(hoyDesde), $lte: new Date(hoyHasta)
             }
         }
-    }).cursor({ batchSize: 1000 }).exec());
+    }]).cursor({ batchSize: 1000 }).exec());
 
     pacientesMpi.forEach(element => {
         pacientesTotal.push(element);
@@ -877,7 +877,7 @@ function beneficiarioFactory(paciente, efector) {
         sexo: (paciente.sexo === "masculino" ? 'M' : paciente.sexo === "femenino" ? 'F' : 'I'),
         fechaNacimiento: moment(paciente.fechaNacimiento).format('YYYY-MM-DD'),
         pais: "ARGENTINA",
-        indigena: "N",
+        indigena: 'N',
         idTribu: 0,
         idLengua: 0,
         anioMayorNivel: 0,
@@ -893,18 +893,18 @@ function beneficiarioFactory(paciente, efector) {
 
 async function insertBeneficiario(paciente) {
 
-    let query = "INSERT INTO [dbo].[PN_beneficiarios] (estado_envio ,clave_beneficiario ,tipo_transaccion ,apellido_benef ,nombre_benef ,clase_documento_benef ,tipo_documento ,numero_doc ,id_categoria ,sexo ,fecha_nacimiento_benef ,provincia_nac ,localidad_nac ,pais_nac ,indigena ,id_tribu ,id_lengua ,alfabeta ,estudios ,anio_mayor_nivel ,tipo_doc_madre ,nro_doc_madre ,apellido_madre ,nombre_madre ,alfabeta_madre ,estudios_madre ,anio_mayor_nivel_madre ,tipo_doc_padre ,nro_doc_padre ,apellido_padre ,nombre_padre ,alfabeta_padre ,estudios_padre ,anio_mayor_nivel_padre ,tipo_doc_tutor ,nro_doc_tutor ,apellido_tutor ,nombre_tutor ,alfabeta_tutor ,estudios_tutor ,anio_mayor_nivel_tutor ,fecha_diagnostico_embarazo ,semanas_embarazo ,fecha_probable_parto ,fecha_efectiva_parto ,cuie_ea ,cuie_ah ,menor_convive_con_adulto ,calle ,numero_calle ,piso ,dpto ,manzana ,entre_calle_1 ,entre_calle_2 ,telefono ,departamento ,localidad ,municipio ,barrio ,cod_pos ,observaciones ,fecha_inscripcion ,fecha_carga ,usuario_carga ,activo ,fum ,tipo_ficha ,responsable ,discv ,disca ,discmo ,discme ,otradisc ," +
-        "rcv) VALUES(" +
-        "'" + paciente.estado_enviado + "'," + "'" + paciente.clave_beneficiario + "'," + "'" + paciente.tipo_transaccion + "'," + "'" + paciente.apellido + "'," + "'" + paciente.nombre + "'," + "" + "'P','" +
-        paciente.tipo_documento + "'," + "'" + paciente.numero_doc + "'," + "'" + paciente.id_categoria + "'," + "'" + paciente.sexo + "'," + "'" + paciente.fechaNacimiento + "'," + "" +
-        null + "," + null + "," + "'" + paciente.pais + "'," + "'" + paciente.indigena + "'," + "" + paciente.idTribu + "," + "" + paciente.idLengua + "," + "" + null + "," + "" + null + "," + "" + paciente.anioMayorNivel + "," + "" + null + "," + "" + null + "," + "" +
-        null + "," + "" + null + "," + "" + null + "," + "" + null + "," + "" + 0 + "," + "" + paciente.anioMayorNivelMadre + "," + "" + null + "," +
-        "" + null + "," + "" + null + "," + "" + null + "," + "" + null + "," + "" + null + "," + "" + null + "," + "" + null + "," + "" + null + "," + "" + null + "," +
-        "" + null + "," + "" + null + "," + "" + null + "," + "" + null + "," + "" + null + "," + "" + null + "," + "" + null + "," + "'" + paciente.cuie_ah + "'," +
-        "'" + paciente.cuie_ea + "'," + null + "," + "" + null + "," + "" + null + "," + "" + null + "," + "" + null + "," + "" + null + "," + "" + null + "," +
-        "" + null + "," + "" + null + "," + "" + null + "," + "" + null + "," + "" + null + "," + "" + null + "," + "" + null + "," + "" + null + "," + "" + null + "," +
-        "" + 0 + "," + "'" + paciente.fecha_inscripcion + "'," + "" + null + "," + "'" + paciente.fecha_carga + "'," + "" + null + "," + "" + null + "," + "" + null + "," +
-        "" + null + "," + "" + null + "," + "" + null + "," + "" + null + "," + "" + null + "" + ")";
+    let query = 'INSERT INTO [dbo].[PN_beneficiarios] (estado_envio ,clave_beneficiario ,tipo_transaccion ,apellido_benef ,nombre_benef ,clase_documento_benef ,tipo_documento ,numero_doc ,id_categoria ,sexo ,fecha_nacimiento_benef ,provincia_nac ,localidad_nac ,pais_nac ,indigena ,id_tribu ,id_lengua ,alfabeta ,estudios ,anio_mayor_nivel ,tipo_doc_madre ,nro_doc_madre ,apellido_madre ,nombre_madre ,alfabeta_madre ,estudios_madre ,anio_mayor_nivel_madre ,tipo_doc_padre ,nro_doc_padre ,apellido_padre ,nombre_padre ,alfabeta_padre ,estudios_padre ,anio_mayor_nivel_padre ,tipo_doc_tutor ,nro_doc_tutor ,apellido_tutor ,nombre_tutor ,alfabeta_tutor ,estudios_tutor ,anio_mayor_nivel_tutor ,fecha_diagnostico_embarazo ,semanas_embarazo ,fecha_probable_parto ,fecha_efectiva_parto ,cuie_ea ,cuie_ah ,menor_convive_con_adulto ,calle ,numero_calle ,piso ,dpto ,manzana ,entre_calle_1 ,entre_calle_2 ,telefono ,departamento ,localidad ,municipio ,barrio ,cod_pos ,observaciones ,fecha_inscripcion ,fecha_carga ,usuario_carga ,activo ,fum ,tipo_ficha ,responsable ,discv ,disca ,discmo ,discme ,otradisc ,' +
+        'rcv) VALUES(' +
+        '\'' + paciente.estado_enviado + '\',' + '\'' + paciente.clave_beneficiario + '\',' + '\'' + paciente.tipo_transaccion + '\',' + '\'' + paciente.apellido + '\',' + '\'' + paciente.nombre + '\',' + '' + '\'P\',\'' +
+        paciente.tipo_documento + '\',' + '\'' + paciente.numero_doc + '\',' + '\'' + paciente.id_categoria + '\',' + '\'' + paciente.sexo + '\',' + '\'' + paciente.fechaNacimiento + '\',' + '' +
+        null + ',' + null + ',' + '\'' + paciente.pais + '\',' + '\'' + paciente.indigena + '\',' + '' + paciente.idTribu + ',' + '' + paciente.idLengua + ',' + '' + null + ',' + '' + null + ',' + '' + paciente.anioMayorNivel + ',' + '' + null + ',' + '' + null + ',' + '' +
+        null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + 0 + ',' + '' + paciente.anioMayorNivelMadre + ',' + '' + null + ',' +
+        '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' +
+        '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '\'' + paciente.cuie_ah + '\',' +
+        '\'' + paciente.cuie_ea + '\',' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' +
+        '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' +
+        '' + 0 + ',' + '\'' + paciente.fecha_inscripcion + '\',' + '' + null + ',' + '\'' + paciente.fecha_carga + '\',' + '' + null + ',' + '' + null + ',' + '' + null + ',' +
+        '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + '' + ')';
     let idComprobante = await executeQueryBeneficiario(query);
 
     return idComprobante;
