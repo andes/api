@@ -85,6 +85,7 @@
         "no-implicit-dependencies": [true, "dev"],
         "no-unused-expression": true,
         "no-var-keyword": true,
-        "prefer-object-spread": true
+        "prefer-object-spread": true,
+        "import-spacing": true
     }
 }

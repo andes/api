@@ -1,7 +1,7 @@
 import { AppToken } from './schemas/app-token.interface';
 import { UserToken } from './schemas/user-token.interface';
 import { PacienteToken } from './schemas/paciente-token.interface';
-import { authApps }  from './schemas/authApps';
+import { authApps } from './schemas/authApps';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import * as passport from 'passport';

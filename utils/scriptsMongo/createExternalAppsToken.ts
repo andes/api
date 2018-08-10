@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 import * as configuraciones from './../../config.private';
-import { authApps }  from './../../auth/schemas/authApps';
+import { authApps } from './../../auth/schemas/authApps';
 import * as AuthClass from './../../auth/auth.class';
 import * as Connections from './../../connections';
 
