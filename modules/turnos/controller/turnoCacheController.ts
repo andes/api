@@ -1,9 +1,5 @@
-import * as mongoose from 'mongoose';
-import { Logger } from '../../../utils/logService';
 import { ValidateDarTurno } from './../../../utils/validateDarTurno';
 import * as agenda from '../schemas/agenda';
-import { LoggerPaciente } from '../../../utils/loggerPaciente';
-import { NotificationService } from '../../mobileApp/controller/NotificationService';
 import { agendasCache } from '../../legacy/schemas/agendasCache';
 
 /* Esta función es la misma que tiene el put de turno.ts - TODO: Ver como unificar*/
@@ -27,7 +23,6 @@ export function updateTurnoAgendaMongo(datosTurno: any) {
                 } else {
                     etiquetaTurno = 'bloques.' + posBloque + '.turnos.' + posTurno;
                 }
-                let usuario = datosTurno.idUsuarioSips;
                 let update: any = {};
                 let query = {
                     _id: datosTurno.idAgenda,
@@ -73,7 +68,6 @@ export function updateTurnoAgendaCache(datosTurno: any, agendaCacheada) {
                 } else {
                     etiquetaTurno = 'bloques.' + posBloque + '.turnos.' + posTurno;
                 }
-                let usuario = datosTurno.idUsuarioSips;
                 let update: any = {};
                 let query = {
                     _id: agendaCacheada._id,

@@ -17,7 +17,7 @@ function run() {
         operacion: 'cda'
     }).sort({ fecha: -1 }).limit(1).then((docs) => {
         let skip = 0;
-        let limit = 4;
+        // let limit = 4;
 
         // if (docs.length) {
         //     let l: any = docs[0];

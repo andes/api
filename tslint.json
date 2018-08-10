@@ -87,6 +87,7 @@
         "no-var-keyword": true,
         "prefer-object-spread": true,
         "import-spacing": true,
-        "object-literal-shorthand": true
+        "object-literal-shorthand": true,
+        "no-unused-variable": [true, {"ignore-pattern": "^_"}]
     }
 }

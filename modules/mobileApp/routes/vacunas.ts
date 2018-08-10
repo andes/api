@@ -9,10 +9,7 @@ let router = express.Router();
  */
 
 router.get('/vacunas', function (req: any, res, next) {
-    let conditions = {};
-
     const pacienteId = req.user.pacientes[0].id;
-
     // primero buscar paciente
     controller.buscarPaciente(pacienteId).then(async data => {
         const pacienteMPI = data.paciente;

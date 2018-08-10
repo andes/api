@@ -3,7 +3,7 @@ import * as mongoose from 'mongoose';
 import { defaultLimit, maxLimit } from './../../../config';
 import { elementoRUP } from '../schemas/elementoRUP';
 import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
-import { textIndexModel, snomedModel, textIndexSchema } from '../../../core/term/schemas/snomed';
+import { snomedModel } from '../../../core/term/schemas/snomed';
 
 let router = express.Router();
 

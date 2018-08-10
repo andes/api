@@ -1,8 +1,4 @@
-// Imports
-import * as mongoose from 'mongoose';
-import {
-    agendasCache
-} from '../../legacy/schemas/agendasCache';
+import { agendasCache } from '../../legacy/schemas/agendasCache';
 import * as sql from 'mssql';
 import * as moment from 'moment';
 import * as pacientes from './../../../core/mpi/controller/paciente';
@@ -73,7 +69,6 @@ export function checkCodificacion(agenda, pool) {
 
             for (let z = 0; z < turno.length; z++) {
                 let idTurno = await existeTurnoSips(turno[z]);
-                let cloneTurno: any = [];
 
                 if (idTurno) {
                     let idConsulta = await existeConsultaTurno(idTurno);
@@ -157,7 +152,6 @@ async function codificacionCie10(idConsulta: any, turno: any) {
         let codCie10: any = [];
         let codificaCie10: any = {};
         codCie10 = await getConsultaDiagnostico(idConsulta);
-        let diagnosticos = [];
         turno.diagnostico.codificaciones = [];
         for (let i = 0; i < codCie10.length; i++) {
             codificaCie10 = await getCodificacionCie10(codCie10[i].CODCIE10);
@@ -394,10 +388,9 @@ export async function guardarCacheASips(agendasMongo, index, pool) {
     return new Promise(async function (resolve, reject) {
         let agenda = agendasMongo[index];
         let transaccion = await new sql.Transaction(pool);
-        await transaccion.begin(async err => {
-            let rolledBack = false;
-            transaccion.on('rollback', aborted => {
-                rolledBack = true;
+        await transaccion.begin(async (_err) => {
+            transaccion.on('rollback', (_aborted) => {
+                //
             });
             try {
                 // CON_Agenda de SIPS soporta solo un profesional NOT NULL.
@@ -717,7 +710,7 @@ async function grabaAgendaSips(agendaSips: any, datosSips: any, pool) {
 
 
     let multiprofesional = 0;
-    let dniProfesional = agendaSips.profesionales[0].documento;
+    // let dniProfesional = agendaSips.profesionales[0].documento;
 
     let listaIdProfesionales = [];
     listaIdProfesionales = await getProfesional(agendaSips.profesionales, pool);

@@ -1,7 +1,5 @@
 import * as express from 'express';
 import * as organizacionCache from '../schemas/organizacionCache';
-import * as servicioSisa from '../../../utils/servicioSisa';
-import * as configPrivate from '../../../config.private';
 
 let router = express.Router();
 

@@ -1,13 +1,11 @@
 import * as express from 'express';
-import { textIndexModel, snomedModel, textIndexSchema } from '../schemas/snomed';
+import { textIndexModel, snomedModel } from '../schemas/snomed';
 import * as utils from '../../../utils/utils';
 import * as snomedCtr from '../controller/snomedCtr';
 import * as configPrivate from './../../../config.private';
-import * as debug from 'debug';
 import { makeMongoQuery } from '../controller/grammar/parser';
 import { toArray } from '../../../utils/utils';
 
-let log = debug('SNOMED');
 let router = express.Router();
 
 
@@ -46,7 +44,6 @@ router.get('/snomed/concepts/:sctid/descriptions', async function (req, res, nex
 router.get('/snomed/concepts/:sctid/parents', async function (req, res, next) {
     let sctid = req.params.sctid;
     try {
-        let result = [];
         let concept: any = await snomedCtr.getConcept(sctid);
         let relationships = snomedCtr.filterRelationships(concept, { parent: true });
         return res.json(relationships);
@@ -69,7 +66,6 @@ router.get('/snomed/concepts/:sctid/childs', async function (req, res, next) {
     let all = req.query.all || false;
     let leaf = req.query.leaf || false;
     try {
-        let result = [];
         let childs: any = await snomedCtr.getChilds(sctid, { all, leaf });
         return res.json(childs);
 

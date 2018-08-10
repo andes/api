@@ -1,10 +1,4 @@
-import { defaultLimit, maxLimit } from './../../../config';
-import * as mongoose from 'mongoose';
 import * as express from 'express';
-import * as utils from '../../../utils/utils';
-import * as config from '../../../config';
-import { Auth } from './../../../auth/auth.class';
-import * as fs from 'fs';
 import { turnoSolicitado } from '../schemas/turnoSolicitado';
 
 // import{ profesional } from '../../../core/tm/schemas/profesional'

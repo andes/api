@@ -1,4 +1,3 @@
-import { paciente } from './../../../core/mpi/schemas/paciente';
 import { PacienteFHIR } from './../../interfaces/IPacienteFHIR';
 
 function pacienteFHIRFields(elem: string) {
@@ -29,9 +28,11 @@ function photoFields(elem: string) {
     return elem.match('contentType|language|data|url|size|hash|title|creation') != null;
 }
 
+/*
 function contactFields(elem: string) {
     return elem.match('relationship|name|telecom|address|gender|organization|period') != null;
 }
+*/
 
 function validName(aName) {
     return Object.keys(aName).every(nameFields) && ('resourceType' in aName) && aName.resourceType === 'HumanName'

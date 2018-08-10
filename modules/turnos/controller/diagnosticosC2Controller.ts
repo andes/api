@@ -1,10 +1,9 @@
-import { log } from './../../../core/log/schemas/log';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import * as agendaModel from '../schemas/agenda';
 import { toArray } from '../../../utils/utils';
-import { Auth } from './../../../auth/auth.class';
 
+/*
 function getAge(dateString) {
     let today = new Date();
     let birthDate = new Date(dateString);
@@ -15,6 +14,7 @@ function getAge(dateString) {
     }
     return age;
 }
+*/
 
 function calculoEdad(dateString) {
     let edad: any;
@@ -24,7 +24,6 @@ function calculoEdad(dateString) {
     let difAnios: any;
     let difDias: any;
     let difMeses: any;
-    let difD: any;
     let difHs: any;
     let difMn: any;
 

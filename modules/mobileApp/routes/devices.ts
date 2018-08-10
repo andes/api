@@ -1,14 +1,7 @@
 import { pacienteApp } from '../schemas/pacienteApp';
 import * as express from 'express';
 import * as mongoose from 'mongoose';
-import * as moment from 'moment';
-import * as agenda from '../../turnos/schemas/agenda';
-import { paciente } from '../../../core/mpi/schemas/paciente';
-import * as agendaCtrl from '../../turnos/controller/agenda';
-import { Auth } from './../../../auth/auth.class';
-import { Logger } from '../../../utils/logService';
-import { INotification, PushClient } from '../controller/PushClient';
-import { deviceSchema, deviceModel } from '../schemas/device';
+import { deviceModel } from '../schemas/device';
 let router = express.Router();
 
 /**
@@ -85,7 +78,7 @@ router.post('/devices/update', function (req: any, res, next) {
  */
 
 router.post('/devices/delete', function (req: any, res, next) {
-    let token: string = req.headers.authorization.substring(4);
+    // let token: string = req.headers.authorization.substring(4);
     let user_id = req.user.account_id;
 
     pacienteApp.findById(user_id, function (errFind, user: any) {

@@ -1,10 +1,7 @@
 import { toArray } from './../../../utils/utils';
 import * as express from 'express';
 import * as formularioTerapeutico from '../schemas/formularioTerapeutico';
-import * as snomed from '../../term/schemas/snomed';
 import * as mongoose from 'mongoose';
-import { Auth } from './../../../auth/auth.class';
-import { Logger } from '../../../utils/logService';
 import * as utils from '../../../utils/utils';
 import * as formularioCtrl from '../controller/formularioTerapeutico';
 
@@ -20,9 +17,7 @@ router.get('/formularioTerapeutico/:id?', async function (req, res, next) {
         });
     } else {
         let query;
-        let filtrados;
         let opciones = {};
-        let proyeccion = {};
         if (req.query.padre) {
             let arr = await formularioCtrl.getPadres(req.query.padre, []);
             res.json(arr);

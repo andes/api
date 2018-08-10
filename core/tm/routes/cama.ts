@@ -1,7 +1,6 @@
 import * as express from 'express';
 import * as cama from '../schemas/camas';
 import { Auth } from './../../../auth/auth.class';
-import * as mongoose from 'mongoose';
 
 let router = express.Router();
 
@@ -233,6 +232,8 @@ router.patch('/camas/cambiaEstado/:idCama', Auth.authenticate(), function (req, 
     });
 });
 
+/*
+[REVISAR]
 function validaCama(camas, nuevaCama) {
     let result = false;
     camas.forEach(_cama => {
@@ -244,6 +245,7 @@ function validaCama(camas, nuevaCama) {
     });
     return result;
 }
+*/
 
 
 export = router;

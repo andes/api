@@ -1,25 +1,11 @@
-// Imports
-import * as mongoose from 'mongoose';
-import {
-    agendasCache
-} from '../../../legacy/schemas/agendasCache';
-import {
-    Matching
-} from '@andes/match';
+import { Matching } from '@andes/match';
 import * as sql from 'mssql';
 import * as moment from 'moment';
 import * as config from '../../../../config';
-import * as pacientes from './../../../../core/mpi/controller/paciente';
 import * as constantes from '../../../legacy/schemas/constantes';
-import * as logger from './../../../../utils/loggerAgendaSipsCache';
-import * as agendaSchema from '../../schemas/agenda';
-import * as turnoCtrl from './../turnoCacheController';
 import * as dbg from 'debug';
 
 const debug = dbg('integracion');
-
-
-let transaction;
 
 export async function verificarPaciente(pacienteSips: any, poolAgendas: any) {
     try {

@@ -1,7 +1,4 @@
-import { IID, ICode, IConfidentialityCode, ILanguageCode, ISetId } from '../class/interfaces';
-import { CDA } from '../class/CDA';
 import * as builder from 'xmlbuilder';
-import { Patient } from '../class/Patient';
 import { Component, ImageComponent } from '../class/Body';
 import { BaseBuilder } from './BaseBuilder';
 

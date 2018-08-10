@@ -1,7 +1,6 @@
 import * as config from '../config';
 import * as configPrivate from '../config.private';
 import { Matching } from '@andes/match';
-import * as moment from 'moment';
 
 let soap = require('soap');
 let url = configPrivate.anses.url;
@@ -55,7 +54,6 @@ export function getServicioAnses(paciente) {
                             } else {
                                 fecha = '';
                             }
-                            let acreditado = registro[3];
                             let sex = '';
 
                             if (registrosAdicionales) {

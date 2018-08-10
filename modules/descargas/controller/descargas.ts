@@ -6,7 +6,7 @@ import { Auth } from '../../../auth/auth.class';
 
 export class Documento {
 
-    private static locale = 'es-ES';
+    // private static locale = 'es-ES';
     private static timeZone = 'America/Argentina/Buenos_Aires';
 
     /**

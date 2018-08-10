@@ -1,20 +1,6 @@
 import * as configPrivate from '../../../config.private';
-import * as config from '../../../config';
-import * as moment from 'moment';
-import {
-    Matching
-} from '@andes/match';
-import * as mongoose from 'mongoose';
-import * as debug from 'debug';
-
 import * as http from 'http';
-
 let request = require('request');
-let soap = require('soap');
-let libxmljs = require('libxmljs');
-let logger = debug('ecografias');
-let cota = 0.95;
-
 
 /**
  * Obtiene todas las prestaciones de un paciente por Documento

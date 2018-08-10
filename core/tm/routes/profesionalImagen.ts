@@ -1,11 +1,5 @@
-import { defaultLimit, maxLimit } from './../../../config';
-import * as mongoose from 'mongoose';
 import * as express from 'express';
-import * as utils from '../../../utils/utils';
-import * as config from '../../../config';
-import * as fs from 'fs';
 import { makeFs } from '../schemas/imagenes';
-
 import * as stream from 'stream';
 import * as base64 from 'base64-stream';
 
@@ -31,7 +25,7 @@ router.get('/file/:id', async (req: any, res, next) => {
     let _base64 = req.params.id;
     let CDAFiles = makeFs();
     let contexto = await CDAFiles.findById(_base64);
-    let stream1  = CDAFiles.readById(_base64, function (err, buffer) {
+    CDAFiles.readById(_base64, function (err, buffer) {
         res.contentType(contexto.contentType);
         res.end(buffer);
     });

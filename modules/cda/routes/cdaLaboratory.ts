@@ -1,27 +1,13 @@
 import * as express from 'express';
-import * as stream from 'stream';
-import * as base64 from 'base64-stream';
 import * as mongoose from 'mongoose';
-import * as moment from 'moment';
 import * as sql from 'mssql';
-
 import * as configPrivate from '../../../config.private';
-import { model as Organizaciones } from '../../../core/tm/schemas/organizacion';
-import { model as Cie10 } from '../../../core/term/schemas/cie10';
-import { makeFs } from '../schemas/CDAFiles';
-import * as pacienteCtr from '../../../core/mpi/controller/paciente';
 import * as cdaCtr from '../controller/CDAPatient';
 import * as operations from '../../legacy/controller/operations';
 import * as pdfGenerator from '../../../utils/pdfGenerator';
-
 import { Auth } from '../../../auth/auth.class';
-import * as labsImport from '../controller/import-labs';
 
-import { paciente as Paciente, pacienteMpi as PacienteMPI} from '../../../core/mpi/schemas/paciente';
-
-let path = require('path');
 let router = express.Router();
-let pool;
 let connection = {
     user: configPrivate.conSql.auth.user,
     password: configPrivate.conSql.auth.password,
@@ -52,7 +38,7 @@ router.post('/laboratorios', async (req: any, res, next) => {
     }
     try {
         let unPaciente = req.body.paciente;
-        pool = await sql.connect(connection);
+        await sql.connect(connection);
         let counter = 0;
         let list = [];
         let laboratoriosValidados: any[];
@@ -89,9 +75,9 @@ router.post('/laboratorios', async (req: any, res, next) => {
                     fecha,
                     adjuntos: [ { path: fileData.data, id: fileData.id } ]
                 };
-                let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
+                await cdaCtr.storeCDA(uniqueId, cda, metadata);
                 // Marcamos el protocolo (encabezado) como generado, asignando el uniqueId
-                let update = await operations.setMarkProtocol(reg.idProtocolo, unPaciente.documento, uniqueId);
+                await operations.setMarkProtocol(reg.idProtocolo, unPaciente.documento, uniqueId);
                 counter = counter + 1;
                 list.push({cda: uniqueId, protocolo: reg.idProtocolo});
             } else {

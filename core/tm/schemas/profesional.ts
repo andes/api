@@ -1,13 +1,8 @@
 import * as mongoose from 'mongoose';
-import * as ubicacionSchema from './ubicacion';
 import * as constantes from './constantes';
 import * as direccionSchema from './direccion';
 import * as contactoSchema from './contacto';
-import * as especialidadSchema from './especialidad';
-import * as paisSchema from './pais';
-import * as profesionSchema from './profesion';
 import { ObjSIISASchema } from './siisa';
-import * as moment from 'moment';
 
 let matriculacionSchema = new mongoose.Schema({
     matriculaNumero: { type: Number, required: false },

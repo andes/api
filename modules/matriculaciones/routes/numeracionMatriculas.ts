@@ -22,7 +22,6 @@ let router = express.Router();
 // })
 
 router.get('/numeraciones/:id*?', function (req, res, next) {
-    let resultado;
     if (req.query.especialidad || req.query.profesion) {
         if (req.query.profesion) {
             NumeracionMatriculas.find({ 'profesion._id': req.query.profesion }, function (err, data) {

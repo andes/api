@@ -3,9 +3,6 @@ import * as mongoose from 'mongoose';
 import * as constantes from '../../../core/tm/schemas/constantes';
 // import * as direccionSchema from '../../../core/tm/schemas/direccion';
 import * as contactoSchema from '../../../core/tm/schemas/contacto';
-import * as especialidadSchema from '../../../core/tm/schemas/especialidad';
-import * as paisSchema from '../../../core/tm/schemas/pais';
-import * as profesionSchema from '../../../core/tm/schemas/profesion';
 import { ObjSIISASchema } from '../../../core/tm/schemas/siisa';
 
 let matriculacionSchema = new mongoose.Schema({

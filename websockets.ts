@@ -1,6 +1,4 @@
-import * as ws from 'ws';
 import { Server } from 'http';
-import * as debug from 'debug';
 
 export class Websockets {
     /**

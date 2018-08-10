@@ -1,20 +1,12 @@
-import * as config from '../config';
 import * as configPrivate from '../config.private';
-import { Matching } from '@andes/match';
-import * as moment from 'moment';
 
 let soap = require('soap');
 let url = configPrivate.renaper.url;
 let serv = configPrivate.renaper.serv;
-let datosRenaper = [];
 let login = configPrivate.renaper;
 
 export function getServicioRenaper(paciente) {
-    let match = new Matching();
-    let weights = config.mpi.weightsFaAnses;
-    let matchPorcentaje = 0;
     let resultado: any;
-    let fecha: any;
     return new Promise((resolve, reject) => {
         if (paciente) {
             soap.createClient(url, function (err, client) {
@@ -50,17 +42,15 @@ export function getServicioRenaper(paciente) {
 }
 
 function consultaRenaper(sesion, tipo, filtro) {
-    let resultado: any;
     let rst: any;
-    datosRenaper = [];
     return new Promise((resolve, reject) => {
         if (sesion.return) {
-            soap.createClient(url, function (err, client) {
+            soap.createClient(url, function (_err, client) {
                 let args = {
                     IdSesion: sesion.return['$value'],
                     Base: 'PecasAutorizacion'
                 };
-                client.FijarBaseDeSesion(args, async function (err2, result) {
+                client.FijarBaseDeSesion(args, async function (err2, _result) {
                     if (err2) {
                         reject(err2);
                     }

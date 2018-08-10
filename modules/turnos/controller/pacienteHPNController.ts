@@ -1,5 +1,4 @@
 import * as sql from 'mssql';
-import * as moment from 'moment';
 
 export async function savePaciente(paciente: any, transaction) {
     let fechaCreacion = new Date();

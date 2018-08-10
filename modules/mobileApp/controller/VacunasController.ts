@@ -1,4 +1,3 @@
-import * as mongoose from 'mongoose';
 import { vacunas } from '../schemas/vacunas';
 import { Matching } from '@andes/match';
 

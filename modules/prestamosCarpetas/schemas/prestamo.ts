@@ -1,8 +1,6 @@
-import { pacienteSchema } from '../../../core/mpi/schemas/paciente';
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 import { espacioFisicoSchema } from '../../../modules/turnos/schemas/espacioFisico';
 import * as nombreApellidoSchema from '../../../core/tm/schemas/nombreApellido';
-import * as profesionalSchema from '../../../core/tm/schemas/profesional';
 import * as constantes from './constantes';
 import * as mongoose from 'mongoose';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';

@@ -452,11 +452,8 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
         }
 
         let connElastic = new ElasticSync();
-        let pacienteOriginal = null;
         if (patientFound) {
-
             let data = req.body;
-
             controller.updatePacienteMpi(patientFound, data, req).then((p) => {
                 res.json(p);
             }).catch(next);

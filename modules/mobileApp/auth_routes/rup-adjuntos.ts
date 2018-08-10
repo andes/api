@@ -6,10 +6,8 @@ import { Auth } from './../../../auth/auth.class';
 import { model as Prestacion } from '../../rup/schemas/prestacion';
 import { model as PrestacionAdjunto } from '../../rup/schemas/prestacion-adjuntos';
 
-import { buscarPaciente } from '../../../core/mpi/controller/paciente';
 
 import { NotificationService } from '../../mobileApp/controller/NotificationService';
-import * as passportJWT from 'passport-jwt';
 
 import { storeFile } from '../../rup/controllers/rupStore';
 

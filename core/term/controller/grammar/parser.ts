@@ -7,8 +7,6 @@
 
 let apglib = require('apg-lib');
 let grammar = require('./grammar');
-let id = apglib.ids;
-
 
 /**
  * Make AST from SNOMED Expression string
@@ -24,7 +22,7 @@ export let parseExpression = function (expression) {
 
     // Parser expresssion
     let inputCharacterCodes = apglib.utils.stringToChars(expression);
-    let result = parser.parse(grammarObj, 'expressionConstraint', inputCharacterCodes);
+    parser.parse(grammarObj, 'expressionConstraint', inputCharacterCodes);
 
     // Create AST
     parser.ast.translate();
@@ -375,7 +373,7 @@ export class QueryBuilder {
         let elemMatch = {};
         let condition = this.readAttribute(node);
         // Process attribute name
-        let attributeNameResults = false;
+        // let attributeNameResults = false;
         if (condition.cardinality) {
             exitWithError('Unsupported condition: cardinality');
         }

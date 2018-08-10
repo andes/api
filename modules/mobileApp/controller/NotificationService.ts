@@ -1,4 +1,4 @@
-import { INotification, PushClient } from './PushClient';
+import { PushClient } from './PushClient';
 import { pacienteApp } from '../schemas/pacienteApp';
 import * as agenda from '../../turnos/schemas/agenda';
 import * as moment from 'moment';

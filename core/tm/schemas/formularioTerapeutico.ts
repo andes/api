@@ -1,6 +1,4 @@
 import * as mongoose from 'mongoose';
-import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
-import { pacienteSchema } from '../../mpi/schemas/paciente';
 
 let schema = new mongoose.Schema({
     idpadre: String,

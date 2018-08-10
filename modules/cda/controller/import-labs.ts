@@ -10,13 +10,9 @@ import * as debug from 'debug';
 
 import * as http from 'http';
 
-let request = require('request');
-let soap = require('soap');
-let libxmljs = require('libxmljs');
 let logger = debug('laboratorios');
 let cota = 0.95;
 
-let pool;
 let connection = {
     user: configPrivate.conSql.auth.user,
     password: configPrivate.conSql.auth.password,
@@ -27,7 +23,7 @@ let connection = {
     }
 };
 
-pool = sql.connect(connection, (err) => {
+sql.connect(connection, (err) => {
     logger('MSSSQL connection error');
 });
 
@@ -162,7 +158,7 @@ export async function importarDatos(paciente) {
                         idProtocolo: lab.idProtocolo
                     }
                 };
-                let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
+                await cdaCtr.storeCDA(uniqueId, cda, metadata);
                 await sleep(200);
             } else {
                 // Ver que hacer si no matchea

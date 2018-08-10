@@ -1,22 +1,10 @@
 import * as pacienteCtr from '../../../core/mpi/controller/paciente';
 import * as mongoose from 'mongoose';
-import {
-    CDA
-} from './class/CDA';
-import {
-    Patient
-} from './class/Patient';
-import {
-    Organization
-} from './class/Organization';
-import {
-    Author
-} from './class/Author';
-import {
-    Body,
-    Component,
-    ImageComponent
-} from './class/Body';
+import { CDA } from './class/CDA';
+import { Patient } from './class/Patient';
+import { Organization } from './class/Organization';
+import { Author } from './class/Author';
+import { Body, Component, ImageComponent } from './class/Body';
 import {
     CDABuilder
 } from './builder/CdaBuilder';
@@ -26,9 +14,6 @@ import {
     makeFs
 } from '../schemas/CDAFiles';
 import * as Stream from 'stream';
-import {
-    create
-} from 'domain';
 import * as moment from 'moment';
 
 import {
@@ -37,27 +22,6 @@ import {
 import {
     configuracionPrestacionModel
 } from './../../../core/term/schemas/configuracionPrestacion';
-
-/**
- * Crea un objeto paciente desde los datos
- */
-
-function dataToPac(dataPaciente, identificador) {
-    return {
-        apellido: dataPaciente.apellido,
-        nombre: dataPaciente.nombre,
-        fechaNacimiento: dataPaciente.fechaNacimiento,
-        documento: dataPaciente.documento,
-        sexo: dataPaciente.sexo,
-        genero: dataPaciente.sexo,
-        activo: true,
-        estado: 'temporal',
-        identificadores: [{
-            entidad: identificador,
-            valor: dataPaciente.id
-        }]
-    };
-}
 
 /**
  * Matcheamos los datos del paciente.
@@ -485,7 +449,7 @@ export function searchByPatient(pacienteId, prestacion, {
 export async function loadCDA(cdaID) {
     return new Promise(async (resolve, reject) => {
         let CDAFiles = makeFs();
-        let stream1 = CDAFiles.readById(cdaID, function (err, buffer) {
+        CDAFiles.readById(cdaID, function (err, buffer) {
             let xml = buffer.toString('utf8');
             return resolve(xml);
         });
@@ -503,9 +467,7 @@ export function validateMiddleware(req, res, next) {
     };
     let dataPaciente = req.body.paciente;
     let dataProfesional = req.body.profesional;
-    let cie10Code = req.body.cie10;
     let file = req.body.file;
-    let texto = req.body.texto;
 
     if (!moment(req.body.fecha).isValid()) {
         errors.fecha = 'invalid_format';

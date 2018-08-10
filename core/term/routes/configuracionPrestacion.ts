@@ -1,8 +1,6 @@
 import * as express from 'express';
 import * as configuracionPrestacion from '../schemas/configuracionPrestacion';
 import * as mongoose from 'mongoose';
-import { Organization } from '../../../modules/cda/controller/class/Organization';
-import { tipoPrestacionSchema } from '../../tm/schemas/tipoPrestacion';
 
 let router = express.Router();
 

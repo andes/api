@@ -1,13 +1,10 @@
 // Imports
-import {
-    agendasCache
-} from '../../../legacy/schemas/agendasCache';
+import { agendasCache } from '../../../legacy/schemas/agendasCache';
 import { configuracionPrestacionModel } from './../../../../core/term/schemas/configuracionPrestacion';
 import * as sql from 'mssql';
 import * as moment from 'moment';
 import * as constantes from '../../../legacy/schemas/constantes';
 import * as logger from './../../../../utils/loggerAgendaSipsCache';
-import * as agendaSchema from '../../schemas/agenda';
 import * as turnoCtrl from './../turnoCacheController';
 import * as turnoOps from './operationsTurno';
 import * as configPrivate from '../../../../config.private';
@@ -174,8 +171,8 @@ export async function checkCodificacion(agendaCacheada) {
     }
 }
 
-async function codificaOdontologia(connection, idConsulta: any, turno: any, prestaciones) {
-    let idNomenclador: any = [];
+// [REVISAR] variable _idConsulta no se usa
+async function codificaOdontologia(connection, _idConsulta: any, turno: any, prestaciones) {
     let codificacionOdonto: any = {};
     let repetido = [];
     try {
@@ -412,7 +409,7 @@ async function getConsultaDiagnostico(connection, idConsulta) {
         return (err);
     }
 }
-
+/* [REVISAR]
 async function getConsultaOdontologia(connection, idConsulta) {
     try {
         let result = await new sql.Request(connection)
@@ -423,6 +420,7 @@ async function getConsultaOdontologia(connection, idConsulta) {
         return (err);
     }
 }
+*/
 
 async function getCodificacionOdonto(connection, idNomenclador) {
     try {
@@ -578,6 +576,8 @@ async function getEstadoAgenda(connection, idAgenda: any) {
     }
 }
 
+/*
+[REVISAR]
 async function existeConsultaTurno(connection, idTurno) {
     try {
         let result = await new sql.Request(connection)
@@ -594,6 +594,7 @@ async function existeConsultaTurno(connection, idTurno) {
         return (err);
     }
 }
+*/
 
 // Set de funciones locales no publicas
 /**
@@ -603,6 +604,7 @@ async function existeConsultaTurno(connection, idTurno) {
  * @param {any} [dniProfesional]
  * @returns
  */
+/* [REVISAR]
 function getDatosSips(connection, codigoSisa, dniProfesional) {
     let result1 = new sql.Request(connection)
         .input('codigoSisa', sql.VarChar(50), codigoSisa)
@@ -614,6 +616,7 @@ function getDatosSips(connection, codigoSisa, dniProfesional) {
 
     return ([result1, result2]); // devuelvo un arreglo de promesas para que se ejecuten en paralelo y las capturo con un promise.all
 }
+*/
 
 /**
  * Realiza la actualización de una agenda en sips
@@ -766,6 +769,7 @@ function arrayIdProfesionales(connection, profMongo) {
  * @param idTurno
  * @returns Promise
  */
+/* [REVISAR]
 function getPacienteAgenda(agenda, idTurno) {
     return new Promise(function (resolve, reject) {
         let turno;
@@ -790,6 +794,7 @@ function getPacienteAgenda(agenda, idTurno) {
         });
     });
 }
+*/
 
 async function executeQuery(connection, query: any) {
     try {

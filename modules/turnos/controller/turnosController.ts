@@ -1,10 +1,6 @@
-import * as config from '../../../config';
-import * as configPrivate from '../../../config.private';
-import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import * as agenda from '../../../modules/turnos/schemas/agenda';
 import { toArray } from '../../../utils/utils';
-
 
 export function getTurno(req) {
     return new Promise(async (resolve, reject) => {

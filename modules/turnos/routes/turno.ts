@@ -47,12 +47,10 @@ router.patch('/turno/agenda/:idAgenda', async function (req, res, next) {
     let continues = ValidateDarTurno.checkTurno(req.body);
 
     if (continues.valid) {
-        let pacienteRes;
-        let tipoPrestacionRes;
         let agendaRes;
         try {
-            pacienteRes = await getPaciente(req.body.paciente.id);
-            tipoPrestacionRes = await getTipoPrestacion(req.body.tipoPrestacion._id);
+            await getPaciente(req.body.paciente.id);
+            await getTipoPrestacion(req.body.tipoPrestacion._id);
             agendaRes = await getAgenda(req.params.idAgenda);
         } catch (err) {
             return next(err);
@@ -147,12 +145,10 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async functio
     let continues = ValidateDarTurno.checkTurno(req.body);
 
     if (continues.valid) {
-        let pacienteRes;
-        let tipoPrestacionRes;
         let agendaRes;
         try {
-            pacienteRes = await getPaciente(req.body.paciente.id);
-            tipoPrestacionRes = await getTipoPrestacion(req.body.tipoPrestacion._id);
+            await getPaciente(req.body.paciente.id);
+            await getTipoPrestacion(req.body.tipoPrestacion._id);
             agendaRes = await getAgenda(req.params.idAgenda);
         } catch (err) {
             return next(err);
@@ -252,7 +248,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async functio
         let etiquetaReasignado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.reasignado';
         let etiquetaUpdateAt: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedAt';
         let etiquetaUpdateBy: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedBy';
-        let etiquetaPrimeraVez: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.primeraVez';
+        // let etiquetaPrimeraVez: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.primeraVez';
 
         update[etiquetaEstado] = 'asignado';
         update[etiquetaPrestacion] = req.body.tipoPrestacion;

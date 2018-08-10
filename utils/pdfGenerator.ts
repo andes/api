@@ -1,5 +1,4 @@
 let pdfkit = require('pdfkit');
-let fs = require('fs');
 let moment = require('moment');
 
 export function informeLaboratorio(paciente, organizacion, protocolo, detalles): any {
@@ -27,7 +26,6 @@ export function informeLaboratorio(paciente, organizacion, protocolo, detalles):
             doc.moveDown();
 
             let posFinHeader = doc.y;
-            let boxMargin = 30;
 
             doc.moveDown();
             doc.fontSize(10)

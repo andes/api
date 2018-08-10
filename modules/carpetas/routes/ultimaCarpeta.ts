@@ -1,6 +1,5 @@
 import * as express from 'express';
 import * as ultimaCarpeta from '../schemas/ultimaCarpeta';
-import { mongooseDebugMode } from '../../../config.private';
 import * as mongoose from 'mongoose';
 
 let router = express.Router();

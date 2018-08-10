@@ -1,6 +1,5 @@
 import * as express from 'express';
 import * as agenda from '../schemas/agendaMatriculaciones';
-import * as utils from '../../../utils/utils';
 import { Auth } from '../../../auth/auth.class';
 let router = express.Router();
 

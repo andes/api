@@ -1,8 +1,6 @@
 import { userScheduler } from '../../../config.private';
 import * as pacienteModel from '../schemas/paciente';
-import { pacienteRejected } from '../schemas/pacienteRejected';
 import { matchSisa } from '../../../utils/servicioSisa';
-import { Auth } from '../../../auth/auth.class';
 import * as controllerPaciente from './paciente';
 import * as debug from 'debug';
 
@@ -21,7 +19,6 @@ export async function mpiCorrector(done) {
     };
     try {
         let pacientesReportados = await pacienteModel.pacienteMpi.find(condicion);
-        let promArray = [];
         let doc: any;
         logger('llamada mpiCorrector ', pacientesReportados.length);
         for (doc of pacientesReportados) {
@@ -65,6 +62,8 @@ async function consultarSisa(pacienteMpi: any) {
     }
 }
 
+/*
+[REVISAR]
 function nuevoPacienteRejected(pacienteAndes: any) {
     let pacienteMatch = new pacienteRejected();
     pacienteMatch.id = pacienteAndes._id;
@@ -100,6 +99,7 @@ function nuevoPacienteRejected(pacienteAndes: any) {
     });
 }
 
+*/
 function actualizarPaciente(pacienteMpi: any, pacienteSisa: any) {
     if (!pacienteMpi.entidadesValidadoras.includes('Sisa')) {
         // Para que no vuelva a insertar la entidad si ya se registro por ella.

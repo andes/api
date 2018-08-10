@@ -1,16 +1,11 @@
-import * as config from '../../../config';
 import {
     userScheduler
 } from '../../../config.private';
-import * as mongoose from 'mongoose';
 import * as controller from './paciente';
 import {
     paciente,
     pacienteMpi
 } from '../schemas/paciente';
-import {
-    Matching
-} from '@andes/match';
 
 import * as debug from 'debug';
 import * as servicioAnses from './../../../utils/servicioAnses';
@@ -30,7 +25,6 @@ async function existeEnMpi(pacienteBuscado: any) {
         // Usamos el documento ya que son pacientes validados
         documento: pacienteBuscado.documento
     };
-    let weights = config.mpi.weightsUpdater;
     let data = await controller.searchSimilar(pacienteBuscado, 'mpi', condicion);
     if (data.length) {
         let match = data[0];
@@ -84,7 +78,6 @@ async function existeEnMpi(pacienteBuscado: any) {
  */
 export function updatingMpi() {
     /*Definicion de variables y operaciones*/
-    let counter = 0;
     log('MPIUpdater start');
 
     /*La condición de búsqueda es que sea un paciente validado por fuente auténtica*/
@@ -103,7 +96,6 @@ export function updatingMpi() {
                     };
                     log('Paciente validado en ANDES ', pacAndes._id, pacAndes.apellido);
                     let resultado = await existeEnMpi(pacAndes);
-                    let objectId = new mongoose.Types.ObjectId(resultado[1]._id);
                     log('Existe en MPI', resultado[0], resultado[1].nombre + ' ' + resultado[1].apellido);
                     /*Si NO hubo matching al 100% lo tengo que insertar en MPI */
                     if (resultado[0] !== 'merge') {

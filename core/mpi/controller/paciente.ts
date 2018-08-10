@@ -1,13 +1,10 @@
 import * as config from '../../../config';
-import * as configPrivate from '../../../config.private';
 import * as moment from 'moment';
-import * as mongoose from 'mongoose';
 import { paciente, pacienteMpi } from '../schemas/paciente';
 import { ElasticSync } from '../../../utils/elasticSync';
 import { Logger } from '../../../utils/logService';
 import { Matching } from '@andes/match';
 import { Auth } from './../../../auth/auth.class';
-import * as agenda from '../../../modules/turnos/schemas/agenda';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
 
@@ -149,7 +146,6 @@ export function updatePacienteMpi(pacMpi, pacAndes, req) {
 export function postPacienteMpi(newPatientMpi, req) {
     return new Promise((resolve, reject) => {
         try {
-            let match = new Matching();
             if (req) {
                 // para verificación en audito mongoose
                 newPatientMpi.esPacienteMpi = true;
@@ -412,7 +408,6 @@ export function matching(data) {
 
 export function deletePacienteAndes(objectId) {
     return new Promise((resolve, reject) => {
-        let connElastic = new ElasticSync();
         let query = {
             _id: objectId
         };

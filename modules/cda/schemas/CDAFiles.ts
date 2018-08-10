@@ -1,4 +1,3 @@
-import { Connections } from '../../../connections';
 import * as mongoose from 'mongoose';
 let  gridfs = require('mongoose-gridfs');
 

@@ -1,7 +1,5 @@
 import * as express from 'express';
 import * as cambioDni from '../schemas/cambioDni';
-import * as utils from '../../../utils/utils';
-import { Auth } from '../../../auth/auth.class';
 let router = express.Router();
 
 router.get('/cambioDni', function (req, res, next) {

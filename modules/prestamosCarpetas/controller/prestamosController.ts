@@ -1,4 +1,3 @@
-import * as mongoose from 'mongoose';
 // import * as auth from './../../../auth/auth.class';
 import { Auth } from './../../../auth/auth.class';
 import * as agenda from '../../../modules/turnos/schemas/agenda';
@@ -7,8 +6,7 @@ import * as prestamo from '../../../modules/prestamosCarpetas/schemas/prestamo';
 import * as solicitudCarpetaManualSchema from '../../../modules/prestamosCarpetas/schemas/solicitudCarpetaManual';
 import * as constantes from '../schemas/constantes';
 import { toArray } from '../../../utils/utils';
-import { paciente } from '../../../core/mpi/schemas/paciente';
-import { ObjectId, ObjectID } from 'bson';
+import { ObjectId } from 'bson';
 
 export async function getCarpetasSolicitud(req) {
     return new Promise(async (resolve, reject) => {
@@ -19,7 +17,6 @@ export async function getCarpetasSolicitud(req) {
         let profesionalId = body.idProfesional;
         let horaInicio = body.fechaDesde;
         let horaFin = body.fechaHasta;
-        let estado = body.estado;
         let solicitudesManuales = await getSolicitudCarpetaManual(organizacionId);
         let agendas = await buscarAgendasTurnos(new ObjectId(organizacionId), tipoPrestacionId, espacioFisicoId, profesionalId, horaInicio, horaFin);
         let agendasSobreturno = await buscarAgendasSobreturnos(new ObjectId(organizacionId), tipoPrestacionId, espacioFisicoId, profesionalId, horaInicio, horaFin);
@@ -40,7 +37,6 @@ export async function getCarpetasPrestamo(req) {
         let profesionalId = body.idProfesional;
         let horaInicio = body.fechaDesde;
         let horaFin = body.fechaHasta;
-        let estado = body.estado;
         let carpetas = await findCarpetasPrestamo(new ObjectId(organizacionId), horaInicio, horaFin, tipoPrestacionId, espacioFisicoId, profesionalId);
 
         resolve(carpetas);
@@ -83,7 +79,6 @@ function getNrosCarpetas(agendas, agendasSobreturno, solicitudesManuales) {
 
 async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carpetas, solicitudesManuales) {
     let registrosSolicitudCarpetas = [];
-    let resBusquedaCarpeta;
     let mostrarPrestamos = req.body.mostrarPrestamos;
 
     agendas.forEach(unaAgenda => {
@@ -363,7 +358,6 @@ export async function devolverCarpetas(req) {
 
 async function createCarpeta(datosCarpeta, estadoPrestamoCarpeta) {
     let pacienteSeleccionado;
-    let carpetaEfectores = '';
     let datosSolicitudManual;
     if (datosCarpeta.datosPrestamo) {
         if (datosCarpeta.datosPrestamo.agendaId) {
@@ -371,7 +365,6 @@ async function createCarpeta(datosCarpeta, estadoPrestamoCarpeta) {
             let turnoId = datosCarpeta.datosPrestamo.turno.id;
             let data = await agenda.findById(agendaId);
             let turno = agendaCtrl.getTurno(null, data, turnoId);
-            carpetaEfectores = turno.paciente.carpetaEfectores;
             pacienteSeleccionado = turno.paciente;
         } else {
             if (datosCarpeta.datosSolicitudManual) {
@@ -424,7 +417,7 @@ async function savePrestamosCarpetas(req, nuevosPrestamos) {
     });
 
 }
-
+/*
 function getNroCarpeta(organizacionId, carpetas) {
     for (let i = 0; i < carpetas.length; i++) {
         if (String(carpetas[i].organizacion._id) === organizacionId) {
@@ -433,6 +426,7 @@ function getNroCarpeta(organizacionId, carpetas) {
     }
     return;
 }
+*/
 
 export async function getHistorial(req) {
     let nroCarpeta = req.body.numero;
@@ -488,7 +482,7 @@ function getSolicitudCarpetaManual(unaOrganizacion, idSolicitud = null, estadoSo
 }
 
 function cambiarEstadoSolicitudManual(req, idSolicitud, idOrganizacion) {
-    let solicitudManual = getSolicitudCarpetaManual(idOrganizacion.id, String(idSolicitud)).then(solicitud => {
+    getSolicitudCarpetaManual(idOrganizacion.id, String(idSolicitud)).then(solicitud => {
         (solicitud as any).estado = constantes.EstadoSolicitudCarpeta.Aprobada;
         Auth.audit((solicitud as any), req);
 

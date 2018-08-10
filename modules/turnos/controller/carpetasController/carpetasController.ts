@@ -1,4 +1,3 @@
-import * as mongoose from 'mongoose';
 import * as utils from './utils';
 import * as config from './config';
 import * as sql from 'mssql';
@@ -10,7 +9,6 @@ import { LoggerJobs } from '../../../../utils/loggerJobs';
 import * as debug from 'debug';
 let logger = debug('carpetasJob');
 
-let db;
 let organizacion;
 const connection = {
     user: configPrivate.conSql.auth.user,

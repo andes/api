@@ -38,12 +38,9 @@ router.patch('/matching/:id', function (req, res, next) {
     if (!Auth.check(req, 'mpi:matching:patch')) {
         return next(403);
     }
-    paciente.findById(req.params.id, function (err, data) {
+    paciente.findById(req.params.id, function (_err, data) {
         if (req.body.op === 'validarSisa') {
-            let pacienteOriginal;
-            let pacienteAux;
-            pacienteOriginal = data;
-            pacienteAux = data;
+            let pacienteAux = data;
             let pacientesRes = [];
             servicioSisa.matchSisa(pacienteAux)
                 .then(resultado => {

@@ -1,16 +1,8 @@
-//  Imports
-import * as mongoose from 'mongoose';
-import {
-    agendasCache
-} from '../../legacy/schemas/agendasCache';
+import { agendasCache } from '../../legacy/schemas/agendasCache';
 import * as sql from 'mssql';
-import * as moment from 'moment';
 import * as constantes from '../../legacy/schemas/constantes';
 import * as logger from './../../../utils/loggerAgendaHPNCache';
-import * as agendaSchema from '../schemas/agenda';
-import * as pacienteHPN from './pacienteHPNController';
 import * as turnoCtrl from './turnoHPNCacheController';
-import { resolve } from 'path';
 import { configuracionPrestacionModel } from '../../../core/term/schemas/configuracionPrestacion';
 
 export async function saveAgendaToPrestaciones(agenda, pool) {
@@ -18,10 +10,10 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
     return new Promise(async function (resolve2, reject) {
         let idProfesional = agenda.profesionales ? await getIdProfesionalPrestaciones(agenda.profesionales[0].documento) : null;
         if (idProfesional) {
-            transaction.begin(async err => {
-                let rolledBack = false;
+            transaction.begin(async _err => {
+                // let rolledBack = false;
                 transaction.on('rollback', aborted => {
-                    rolledBack = true;
+                    // rolledBack = true;
                 });
                 try {
                     let idAgendaHPN = await getIdAgendaHPN(agenda.id);
@@ -178,7 +170,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
             }
         }
     }
-
+    /* [REVISAR]
     function executeQuery(query: any) {
         query += ' select SCOPE_IDENTITY() as id';
         return new Promise((resolve2: any, reject: any) => {
@@ -191,6 +183,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
                 });
         });
     }
+    */
 }
 
 export async function getAgendasDeMongoPendientes() {

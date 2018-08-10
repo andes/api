@@ -4,15 +4,10 @@ import * as moment from 'moment';
 // import * as async from 'async';
 import { Auth } from './../../../auth/auth.class';
 import { model as Prestacion } from '../schemas/prestacion';
-import { model as PrestacionAdjunto } from '../schemas/prestacion-adjuntos';
-
-import { buscarPaciente } from '../../../core/mpi/controller/paciente';
 import * as frecuentescrl from '../controllers/frecuentesProfesional';
-import { NotificationService } from '../../mobileApp/controller/NotificationService';
 
-import { iterate, convertToObjectId, buscarEnHuds, matchConcepts } from '../controllers/rup';
+import { buscarEnHuds } from '../controllers/rup';
 import { Logger } from '../../../utils/logService';
-import * as snomedCtr from '../../../core/term/controller/snomedCtr';
 import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
 import { snomedModel } from '../../../core/term/schemas/snomed';
 

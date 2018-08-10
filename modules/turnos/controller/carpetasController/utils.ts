@@ -1,18 +1,17 @@
-import * as config from '../../../../config.private';
-import * as sql from 'mssql';
+// import * as config from '../../../../config.private';
 import * as debug from 'debug';
 import { LoggerJobs } from '../../../../utils/loggerJobs';
 const logger = debug('carpetasJob');
 
-export function migrar(q_objeto, q_limites, page_size, addNuevoObjeto, connectionPool) {
+export function migrar(q_objeto, _q_limites, page_size, addNuevoObjeto, connectionPool) {
     let max;
-    const connection = {
-        user: config.sqlCarpetasJob.user,
-        password: config.sqlCarpetasJob.password,
-        server: config.sqlCarpetasJob.server,
-        database: config.sqlCarpetasJob.database,
-        requestTimeout: config.sqlCarpetasJob.requestTimeout
-    };
+    // const connection = {
+    //     user: config.sqlCarpetasJob.user,
+    //     password: config.sqlCarpetasJob.password,
+    //     server: config.sqlCarpetasJob.server,
+    //     database: config.sqlCarpetasJob.database,
+    //     requestTimeout: config.sqlCarpetasJob.requestTimeout
+    // };
 
     async function navegar(pool, index) {
         if (index < max) {

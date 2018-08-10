@@ -1,6 +1,4 @@
-import * as config from '../../../config';
 import * as express from 'express';
-import * as path from 'path';
 import { Documento } from './../controller/descargas';
 
 let router = express.Router();

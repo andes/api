@@ -1,4 +1,3 @@
-import { IID, ICode, IConfidentialityCode, ILanguageCode, ISetId } from '../class/interfaces';
 import { CDA } from '../class/CDA';
 import { Body } from '../class/Body';
 import * as builder from 'xmlbuilder';

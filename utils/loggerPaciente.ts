@@ -1,4 +1,3 @@
-import { log } from './../core/log/schemas/log';
 import { logPaciente } from '../core/log/schemas/logPaciente';
 
 export class LoggerPaciente {

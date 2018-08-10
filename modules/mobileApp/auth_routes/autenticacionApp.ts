@@ -1,13 +1,9 @@
-import * as jwt from 'jsonwebtoken';
 import { pacienteApp } from '../schemas/pacienteApp';
-import { paciente, pacienteMpi } from '../../../core/mpi/schemas/paciente';
 import { buscarPaciente } from '../../../core/mpi/controller/paciente';
 
 import * as express from 'express';
 import * as authController from '../controller/AuthController';
-import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
-import * as agenda from '../../turnos/schemas/agenda';
 import * as labsImport from '../../cda/controller/import-labs';
 
 let router = express.Router();
@@ -153,7 +149,6 @@ router.post('/reestablecer-password', function (req, res, next) {
 
         const codigo = req.body.codigo;
         const password = req.body.password;
-        const password2 = req.body.password2;
 
         if (datosUsuario.restablecerPassword) {
             if (datosUsuario.restablecerPassword.codigo !== codigo) {

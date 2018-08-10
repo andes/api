@@ -1,29 +1,16 @@
-import { log } from './../../../core/log/schemas/log';
-import { PacienteFHIR } from './../../interfaces/IPacienteFHIR';
 import * as express from 'express';
-import * as mongoose from 'mongoose';
-import * as config from '../../../config';
 import * as configPrivate from '../../../config.private';
-import * as moment from 'moment';
-import * as utils from '../../../utils/utils';
 import * as parser from '../controller/parser';
 import * as validator from '../controller/validator';
 import * as checkPatientExist from '../../../utils/checkPatientExist';
 import * as codes from '../controller/errorCodes';
-import {
-    Matching
-} from '@andes/match';
-import {
-    Client
-} from 'elasticsearch';
-import {
-    Auth
-} from './../../../auth/auth.class';
-let router = express.Router();
+import { Matching } from '@andes/match';
+import { Client } from 'elasticsearch';
+import { Auth } from './../../../auth/auth.class';
+import { paciente } from '../../../core/mpi/schemas/paciente';
+
 // Schemas
-import {
-    paciente
-} from '../../../core/mpi/schemas/paciente';
+let router = express.Router();
 
 router.get('/([\$])match', function (req, res, next) {
     if (!Auth.check(req, 'fhir:pacient:match')) {
@@ -69,7 +56,7 @@ router.get('/([\$])match', function (req, res, next) {
                         elem['id'] = hit._id;
                         return elem.id;
                     });
-                let pacienteFhir = parser.pacientesAFHIR(idPacientes).then(datosFhir => {
+                parser.pacientesAFHIR(idPacientes).then(datosFhir => {
                     res.send(datosFhir);
                 });
             })

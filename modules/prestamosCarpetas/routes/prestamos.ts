@@ -1,11 +1,7 @@
 import * as express from 'express';
-import * as solicitudManualCarpeta from '../schemas/solicitudCarpetaManual';
-import * as debug from 'debug';
 import * as prestamosController from '../controller/prestamosController';
-import { ObjectId } from 'bson';
 
 let router = express.Router();
-let dbg = debug('prestamo');
 
 router.post('/prestamosHC/getCarpetasSolicitud', async function (req, res, next) {
     try {

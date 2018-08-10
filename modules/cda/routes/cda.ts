@@ -3,11 +3,8 @@ import { model as Organizaciones } from '../../../core/tm/schemas/organizacion';
 import { model as Cie10 } from '../../../core/term/schemas/cie10';
 import { makeFs } from '../schemas/CDAFiles';
 
-import * as pacienteCtr from '../../../core/mpi/controller/paciente';
 import * as cdaCtr from '../controller/CDAPatient';
 
-import * as stream from 'stream';
-import * as base64 from 'base64-stream';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 
@@ -113,8 +110,7 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
                 organizacion: organizacion._id
             }
         };
-        let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
-
+        await cdaCtr.storeCDA(uniqueId, cda, metadata);
         res.json({ cda: uniqueId, paciente: paciente._id, date: metadata.fecha, idPrestacion: metadata.extras.id });
 
     } catch (e) {
@@ -187,8 +183,7 @@ router.post('/', async (req: any, res, next) => {
                         organizacion: mongoose.Types.ObjectId(orgId)
                     }
                 };
-                let obj = await cdaCtr.storeCDA(uniqueId, cdaXml, metadata);
-
+                await cdaCtr.storeCDA(uniqueId, cdaXml, metadata);
                 res.json({ cda: uniqueId, paciente: paciente._id });
 
             } else {
@@ -250,7 +245,7 @@ router.get('/:id', async (req: any, res, next) => {
     let CDAFiles = makeFs();
 
     let contexto = await CDAFiles.findById(_base64);
-    let stream1 = CDAFiles.readById(_base64, function (err, buffer) {
+    CDAFiles.readById(_base64, function (err, buffer) {
         res.contentType(contexto.contentType);
         res.end(buffer);
     });
@@ -267,7 +262,6 @@ router.get('/tojson/:id', async (req: any, res, next) => {
     }
 
     let _base64 = req.params.id;
-    let CDAFiles = makeFs();
     let contexto = await cdaCtr.loadCDA(_base64);
     // Limpiamos xml previo al parsing
     contexto = contexto.toString().replace(new RegExp('<br>', 'g'), ' ');
@@ -289,11 +283,9 @@ router.get('/paciente/:id', async (req: any, res, next) => {
     if (!Auth.check(req, 'cda:list')) {
         return next(403);
     }
-    let CDAFiles = makeFs();
+
     let pacienteID = req.params.id;
     let prestacion = req.query.prestacion;
-    // let limit = req.query.limit ? req.query.limit : 10;
-    // let skip = req.query.skip ? req.query.skip : 0;
 
     let list = await cdaCtr.searchByPatient(pacienteID, prestacion, { skip: 0, limit: 100 });
     res.json(list);

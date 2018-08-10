@@ -274,7 +274,6 @@ router.post('/agenda', function (req, res, next) {
 router.post('/agenda/clonar', function (req, res, next) {
     let idagenda = req.body.idAgenda;
     let clones = req.body.clones;
-    let cloncitos = [];
     let listaSaveAgenda = [];
 
     if (idagenda) {
@@ -293,9 +292,6 @@ router.post('/agenda/clonar', function (req, res, next) {
                     nueva['updatedBy'] = undefined;
                     nueva['updatedAt'] = undefined;
                     nueva['nota'] = null;
-                    let newIniBloque: any;
-                    let newFinBloque: any;
-                    let newIniTurno: any;
                     // nueva['bloques'] = data['bloques'];
                     nueva['bloques'].forEach((bloque) => {
                         bloque.horaInicio = agendaCtrl.combinarFechas(clon, bloque.horaInicio);

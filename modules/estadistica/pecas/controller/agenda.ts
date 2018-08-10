@@ -4,7 +4,6 @@ import * as agendaModel from '../../../turnos/schemas/agenda';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import { model as organizacion } from '../../../../core/tm/schemas/organizacion';
-import * as cie10 from './../../../../core/term/schemas/cie10';
 import * as sql from 'mssql';
 import * as configPrivate from '../../../../config.private';
 
@@ -19,8 +18,6 @@ let config = {
 };
 const type = 'PECAS-' + (new Date()).toISOString();
 const outputFile = type + '.json';
-
-let total = 0;
 
 /**
  * Actualiza la tabla pecas_consolidado de la BD Andes
@@ -404,6 +401,8 @@ function getEfector(idOrganizacion: any) {
     });
 }
 
+/*
+[REVISAR]
 function getCapitulo(codigoCIE10: string) {
     return new Promise((resolve, reject) => {
         cie10.model.findOne({
@@ -421,6 +420,7 @@ function getCapitulo(codigoCIE10: string) {
         });
     });
 }
+*/
 
 function calcularEdad(fechaNacimiento) {
     let edad: any;
@@ -482,9 +482,9 @@ async function executeQuery(query: any) {
     } catch (err) {
         // console.log('err ', err);
         // console.log('query ', query);
-        let jsonWrite = fs.appendFileSync(outputFile, query + '\r', {
+        fs.appendFileSync(outputFile, query + '\r', {
             encoding: 'utf8'
         });
-        return (err);
+        return err;
     }
 }

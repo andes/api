@@ -1,4 +1,3 @@
-import { tipoPrestacion } from './../../../core/tm/schemas/tipoPrestacion';
 import * as mongoose from 'mongoose';
 
 /**

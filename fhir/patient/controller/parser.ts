@@ -1,13 +1,4 @@
-import {
-    paciente
-} from './../../../core/mpi/schemas/paciente';
-import {
-    log
-} from './../../../core/log/schemas/log';
 // Schemas
-import {
-    pacienteMpi
-} from '../../../core/mpi/schemas/paciente';
 import {
     PacienteFHIR
 } from '../../interfaces/IPacienteFHIR';

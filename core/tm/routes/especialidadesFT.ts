@@ -1,7 +1,6 @@
 import * as express from 'express';
 import * as especialidad from '../schemas/especialidadesFT';
 import * as mongoose from 'mongoose';
-import * as moment from 'moment';
 
 let router = express.Router();
 

@@ -1,10 +1,10 @@
-import { textIndexModel, snomedModel } from '../schemas/snomed';
+import { snomedModel } from '../schemas/snomed';
 import { makeMongoQuery } from './grammar/parser';
 
 // ID del atributo que genera una relación padre-hijo
 const IsASct = '116680003';
 const StatedSct = '900000000000010007';
-const InferredSct = '900000000000011006';
+// const InferredSct = '900000000000011006';
 
 /**
  * Obtiene un objeto concepto a partir del conceptId

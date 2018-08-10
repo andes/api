@@ -32,8 +32,7 @@ export async function findAddress(localidad, farmacia) {
             longitud: geo.lng
         });
 
-        let saved = await t.save();
-
+        await t.save();
         return geo;
 
     }
@@ -90,7 +89,7 @@ export function donwloadData(desde, hasta) {
         await farmaciasTurnos.remove({ fecha: {$exists: true} });
 
         for (let item of localidades) {
-            let f = await (new farmaciasLocalidades({
+            await (new farmaciasLocalidades({
                 localidadId: item.id,
                 nombre: String(item.nombre)
             })).save();
@@ -194,9 +193,6 @@ export function getTurnos(data, localidad, desde, hasta) {
                 if (!error) {
                     let $ = cheerio.load(html);
                     let hijos = $('#download-container').children().slice(2);
-
-
-                    let datos = {};
                     let fecha = null;
                     let farmacias = [];
                     $(hijos).each(function (i, elem) {

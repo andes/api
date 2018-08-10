@@ -1,5 +1,4 @@
 import * as mongoose from 'mongoose';
-import * as moment from 'moment';
 import * as constantes from '../schemas/constantes';
 import {
     agendasCache
@@ -9,11 +8,6 @@ import {
 } from './../../../core/tm/schemas/profesional';
 import * as organizacion from './../../../core/tm/schemas/organizacion';
 import * as sql from 'mssql';
-import * as cdaCtr from '../../cda/controller/CDAPatient';
-import {
-    ObjectID,
-    ObjectId
-} from 'bson';
 import { configuracionPrestacionModel } from '../../../core/term/schemas/configuracionPrestacion';
 
 
@@ -169,10 +163,6 @@ export async function cacheTurnos(unaAgenda) {
             horaFin: unaAgenda.horaFin,
             estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente,
         });
-
-        let query = {
-            id: unaAgenda.id
-        };
 
         agendasCache.find({
             id: agenda.id
