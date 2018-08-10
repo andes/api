@@ -170,7 +170,7 @@ export const userScheduler = {
             apellido: 'Scheduler'
         },
         organizacion: {
-            'nombre': 'Ejemplo'
+            nombre: 'Ejemplo'
         }
     },
     ip: '0.0.0.0',
