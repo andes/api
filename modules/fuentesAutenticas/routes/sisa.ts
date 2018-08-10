@@ -69,12 +69,12 @@ router.get('/puco/:documento', async function (req, res, next) {
             } else {
                 // TODO: consultar BD mongo
                 // default: sumar
-                res.json({ nombre: 'Sumar', codigo: '123' });
+                res.json({ nombre: 'Sumar', codigo: '499' });
             }
         } catch (e) {
             // TODO: consultar BD mongo
             // default: sumar
-            res.json({ nombre: 'Sumar', codigo: '123' });
+            res.json({ nombre: 'Sumar', codigo: '499' });
         }
     }
 });
@@ -82,7 +82,7 @@ router.get('/puco/:documento', async function (req, res, next) {
 
 
 
-function postPuco(documento) {
+export function postPuco(documento) {
     let xml = '';
     let pathSisa = 'https://sisa.msal.gov.ar/sisa/services/rest/puco/' + documento;
     let optionsgetmsg = {

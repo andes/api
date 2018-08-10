@@ -53,7 +53,7 @@ export const modules = {
         active: true,
         path: './core/mpi/routes',
         route: '/core/mpi',
-        middleware: appMiddleware
+        middleware: appMiddleware,
     },
     auditoria: {
         active: true,
@@ -107,7 +107,7 @@ export const modules = {
         active: true,
         path: './modules/fuentesAutenticas/routes',
         route: '/modules/fuentesAutenticas',
-        middleware: appMiddleware
+        middleware: null
     },
     usuarios: {
         active: true,
@@ -162,7 +162,13 @@ export const modules = {
         path: './modules/carpetas/routes',
         route: '/modules/carpetas',
         middleware: appMiddleware
-    }
+    },
+    facturacionAutomatica: {
+        active: true,
+        path: './modules/facturacionAutomatica/routes',
+        route: '/modules/facturacionAutomatica',
+        // middleware: appMiddleware
+    },
 };
 
 // Cotas de consumo de APIs

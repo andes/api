@@ -75,9 +75,15 @@ export let schema = new mongoose.Schema({
         prestacionOrigen: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'prestacion'
-        }
+        
     },
 
+
+    },
+    estadoFacturacion: {
+        type: String,
+        enum: ['facturado', 'sinFacturar']
+    },
     // Datos de la ejecución (i.e. realización)
     ejecucion: {
         // Fecha de ejecución

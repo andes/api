@@ -14,6 +14,8 @@ import {
     ObjectID,
     ObjectId
 } from 'bson';
+let to_json = require('xmljson').to_json;
+import * as sisaController from '../../../modules/fuentesAutenticas/controller/sisaController';
 import { configuracionPrestacionModel } from '../../../core/term/schemas/configuracionPrestacion';
 
 
@@ -107,7 +109,6 @@ export function organizacionBySisaCode(code): any {
     });
 }
 
-
 export function getEncabezados(documento): any {
     return new Promise(async function (resolve, reject) {
         try {
@@ -137,6 +138,268 @@ export async function getDetalles(idProtocolo, idEfector) {
     });
 }
 
+export async function pacienteSipsFactory(paciente: any, idEfectorSips: any) {
+    return {
+        idEfector: idEfectorSips,
+        nombre: paciente.nombre,
+        apellido: paciente.apellido,
+        numeroDocumento: paciente.documento,
+        idSexo: (paciente.sexo === 'masculino' ? 3 : paciente.sexo === 'femenino' ? 2 : 1),
+        fechaNacimiento: moment(paciente.fechaNacimiento).format('YYYYMMDD'),
+        idEstado: mapeoEstado(paciente.estado),
+        /* Estado Validado en SIPS*/
+        idMotivoNI: 0,
+        idPais: 54,
+        idProvincia: 139,
+        idNivelInstruccion: 0,
+        idSituacionLaboral: 0,
+        idProfesion: 0,
+        idOcupacion: 0,
+        calle: '',
+        numero: 0,
+        piso: '',
+        departamento: '',
+        manzana: '',
+        idBarrio: -1,
+        idLocalidad: 52,
+        idDepartamento: 557,
+        idProvinciaDomicilio: 139,
+        referencia: '',
+        informacionContacto: '',
+        cronico: 0,
+        idObraSocial: await codigoPucoPorDni(paciente.documento),
+        idUsuario: '1486739', // ID USUARIO POR DEFECTO
+        fechaAlta: moment().format('YYYYMMDD HH:mm:ss'),
+        fechaDefuncion: '19000101',
+        fechaUltimaActualizacion: moment().format('YYYYMMDD HH:mm:ss'),
+        idEstadoCivil: 0,
+        idEtnia: 0,
+        idPoblacion: 0,
+        idIdioma: 0,
+        otroBarrio: '',
+        camino: '',
+        campo: '',
+        esUrbano: 1,
+        lote: '',
+        parcela: '',
+        edificio: '',
+        activo: 1,
+        fechaAltaObraSocial: '19000101',
+        numeroAfiliado: null,
+        numeroExtranjero: '',
+        telefonoFijo: 0,
+        telefonoCelular: 0,
+        email: '',
+        latitud: 0,
+        longitud: 0,
+        objectId: paciente._id
+    };
+}
+
+async function codigoPucoPorDni(dni) {
+    let idObraSocial;
+    let obraSocial: any = await sisaController.postPuco(dni);
+    if (obraSocial.puco.resultado === 'OK') {
+        idObraSocial = await mapeoObraSocial(obraSocial.puco.rnos);
+        if (idObraSocial === 0) {
+            idObraSocial = 499;
+        }
+    } else {
+        idObraSocial = 499;
+
+    }
+
+
+    return idObraSocial;
+
+}
+
+
+function mapeoEstado(estado) {
+    let res;
+    if (estado === 'temporal') {
+        res = 2;
+    }
+    if (estado === 'validado') {
+        res = 3;
+    }
+    return res;
+
+}
+
+
+export async function mapeoObraSocial(codigoObraSocial) {
+    let query = 'SELECT idObraSocial, cod_puco FROM dbo.Sys_ObraSocial WHERE cod_PUCO = ' + codigoObraSocial + ';';
+    let result = await new sql.Request().query(query);
+    return result.recordset[0] ? result.recordset[0].idObraSocial : 0;
+}
+
+export async function insertaPacienteSips(paciente: any) {
+    return new Promise(async function (resolve, reject) {
+        try {
+            let idPacienteGrabadoSips;
+            let idPaciente = await existepaciente(paciente);
+
+            if (idPaciente === 0) {
+
+                let query = 'INSERT INTO dbo.Sys_Paciente ' +
+                    ' ( idEfector ,' +
+                    ' apellido , ' +
+                    ' nombre, ' +
+                    ' numeroDocumento, ' +
+                    ' idSexo, ' +
+                    ' fechaNacimiento, ' +
+                    ' idEstado, ' +
+                    ' idMotivoNI, ' +
+                    ' idPais, ' +
+                    ' idProvincia, ' +
+                    ' idNivelInstruccion, ' +
+                    ' idSituacionLaboral, ' +
+                    ' idProfesion, ' +
+                    ' idOcupacion, ' +
+                    ' calle, ' +
+                    ' numero, ' +
+                    ' piso, ' +
+                    ' departamento, ' +
+                    ' manzana, ' +
+                    ' idBarrio, ' +
+                    ' idLocalidad, ' +
+                    ' idDepartamento, ' +
+                    ' idProvinciaDomicilio, ' +
+                    ' referencia, ' +
+                    ' informacionContacto, ' +
+                    ' cronico, ' +
+                    ' idObraSocial, ' +
+                    ' idUsuario, ' +
+                    ' fechaAlta, ' +
+                    ' fechaDefuncion, ' +
+                    ' fechaUltimaActualizacion, ' +
+                    ' idEstadoCivil, ' +
+                    ' idEtnia, ' +
+                    ' idPoblacion, ' +
+                    ' idIdioma, ' +
+                    ' otroBarrio, ' +
+                    ' camino, ' +
+                    ' campo, ' +
+                    ' esUrbano, ' +
+                    ' lote, ' +
+                    ' parcela, ' +
+                    ' edificio, ' +
+                    ' activo, ' +
+                    ' fechaAltaObraSocial, ' +
+                    ' numeroAfiliado, ' +
+                    ' numeroExtranjero, ' +
+                    ' telefonoFijo, ' +
+                    ' telefonoCelular, ' +
+                    ' email, ' +
+                    ' latitud, ' +
+                    ' longitud, ' +
+                    ' objectId ) ' +
+                    ' VALUES( ' +
+                    paciente.idEfector + ', ' +
+                    '\'' + paciente.apellido + '\',' +
+                    '\'' + paciente.nombre + '\', ' +
+                    paciente.numeroDocumento + ', ' +
+                    paciente.idSexo + ', ' +
+                    '\'' + paciente.fechaNacimiento + '\',' +
+                    paciente.idEstado + ', ' +
+                    paciente.idMotivoNI + ', ' +
+                    paciente.idPais + ', ' +
+                    paciente.idProvincia + ', ' +
+                    paciente.idNivelInstruccion + ', ' +
+                    paciente.idSituacionLaboral + ', ' +
+                    paciente.idProfesion + ', ' +
+                    paciente.idOcupacion + ', ' +
+                    '\'' + paciente.calle + '\', ' +
+                    paciente.numero + ', ' +
+                    '\'' + paciente.piso + '\', ' +
+                    '\'' + paciente.departamento + '\', ' +
+                    '\'' + paciente.manzana + '\', ' +
+                    paciente.idBarrio + ', ' +
+                    paciente.idLocalidad + ', ' +
+                    paciente.idDepartamento + ', ' +
+                    paciente.idProvinciaDomicilio + ', ' +
+                    '\'' + paciente.referencia + '\', ' +
+                    '\'' + paciente.informacionContacto + '\', ' +
+                    paciente.cronico + ', ' +
+                    paciente.idObraSocial + ', ' +
+                    paciente.idUsuario + ', ' +
+                    '\'' + paciente.fechaAlta + '\', ' +
+                    '\'' + paciente.fechaDefuncion + '\', ' +
+                    '\'' + paciente.fechaUltimaActualizacion + '\', ' +
+                    paciente.idEstadoCivil + ', ' +
+                    paciente.idEtnia + ', ' +
+                    paciente.idPoblacion + ', ' +
+                    paciente.idIdioma + ', ' +
+                    '\'' + paciente.otroBarrio + '\', ' +
+                    '\'' + paciente.camino + '\', ' +
+                    '\'' + paciente.campo + '\', ' +
+                    paciente.esUrbano + ', ' +
+                    '\'' + paciente.lote + '\', ' +
+                    '\'' + paciente.parcela + '\', ' +
+                    '\'' + paciente.edificio + '\', ' +
+                    paciente.activo + ', ' +
+                    '\'' + paciente.fechaAltaObraSocial + '\', ' +
+                    '\'' + paciente.numeroAfiliado + '\', ' +
+                    '\'' + paciente.numeroExtranjero + '\', ' +
+                    '\'' + paciente.telefonoFijo + '\', ' +
+                    '\'' + paciente.telefonoCelular + '\', ' +
+                    '\'' + paciente.email + '\', ' +
+                    '\'' + paciente.latitud + '\', ' +
+                    '\'' + paciente.longitud + '\', ' +
+                    '\'' + paciente.objectId + '\' ' +
+                    ') ';
+
+                idPacienteGrabadoSips = await executeQuery(query);
+            } else {
+                idPacienteGrabadoSips = idPaciente;
+            }
+
+            resolve(idPacienteGrabadoSips);
+        } catch (ex) {
+            reject(ex);
+        }
+    });
+}
+
+
+function existepaciente(paciente) {
+    let idpaciente;
+    return new Promise((resolve: any, reject: any) => {
+        (async function () {
+            try {
+                let query = 'SELECT idPaciente FROM dbo.Sys_Paciente WHERE objectId = @objectId';
+                let result = await new sql.Request()
+                    .input('objectId', sql.VarChar(50), paciente.objectId)
+                    .query(query);
+
+                if (typeof result[0] !== 'undefined') {
+                    idpaciente = result[0].idPaciente;
+                    resolve(idpaciente);
+                } else {
+                    idpaciente = 0;
+                    resolve(idpaciente);
+                }
+
+            } catch (err) {
+                reject(err);
+            }
+        })();
+    });
+}
+
+function executeQuery(query: any) {
+    query += ' select SCOPE_IDENTITY() as id';
+    return new Promise((resolve: any, reject: any) => {
+        return new sql.Request()
+            .query(query)
+            .then(result => {
+                resolve(result.recordset[0].id);
+            }).catch(err => {
+                reject(err);
+            });
+    });
+}
 
 export async function cacheTurnos(unaAgenda) {
     // Armo el DTO para guardar en la cache de agendas
@@ -230,4 +493,6 @@ export async function cacheTurnos(unaAgenda) {
         });
     }
 }
+
+
 

@@ -52,7 +52,7 @@ router.get('/prestaciones/huds/:idPaciente', async function (req, res, next) {
     let conceptos: any = [];
 
     return Prestacion.find(query, (err, prestaciones) => {
-
+        console.log(prestaciones);
         if (err) {
             return next(err);
         }

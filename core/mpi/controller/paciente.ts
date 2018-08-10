@@ -1,4 +1,6 @@
 import * as config from '../../../config';
+import * as sql from 'mssql';
+// import * as operationsSumar from './../../../modules/facturacionAutomatica/controllers/operationsCtrl/operationsSumar';
 import * as configPrivate from '../../../config.private';
 import * as moment from 'moment';
 import * as mongoose from 'mongoose';
@@ -10,13 +12,29 @@ import { Auth } from './../../../auth/auth.class';
 import * as agenda from '../../../modules/turnos/schemas/agenda';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
-
+import * as operacionesLegacy from './../../../modules/legacy/controller/operations';
+import * as organizacion from '../../../core/tm/schemas/organizacion';
+import { toArray } from '../../../utils/utils';
+let to_json = require('xmljson').to_json;
+import * as https from 'https';
+ import * as sisaController from '../../../modules/fuentesAutenticas/controller/sisaController'
+import { puco } from '../../../modules/obraSocial/schemas/puco';
 /**
  * Crea un paciente y lo sincroniza con elastic
  *
  * @param data Datos del paciente
  * @param req  request de express para poder auditar
  */
+
+
+let poolAgendas;
+let configSql = {
+    user: configPrivate.conSql.auth.user,
+    password: configPrivate.conSql.auth.password,
+    server: configPrivate.conSql.serverSql.server,
+    database: configPrivate.conSql.serverSql.database,
+    requestTimeout: 45000
+};
 export function createPaciente(data, req) {
     return new Promise((resolve, reject) => {
         let newPatient = new paciente(data);
@@ -661,4 +679,257 @@ export async function matchPaciente(dataPaciente) {
         return [];
     }
 }
+
+// TEMPORAL HASTA QUE HAGAMOS EL MERGE
+var thingSchema = new mongoose.Schema({
+    id: Object,
+
+});
+// export let puco = mongoose.model('puco', thingSchema, 'puco');
+export async function mapeoPuco(dni) {
+    return new Promise((resolve, reject) => {
+        let respuesta;
+        puco.find({
+            'dni': dni
+        }, {}, function (err, data: any) {
+            resolve(data)
+        });
+    });
+}
+
+
+export async function insertSips() {
+    let pacientes = await pacientesDelDia();
+
+    for (var index = 0; index < pacientes.length; index++) {
+        let existeEnSips = await getPacienteSips(pacientes[index].documento);
+        
+
+        // let existeEnPuco: any = await operacionesLegacy.postPuco(pacientes[index].documento)
+        let esBeneficiario = await getBeneficiario(pacientes[index].documento);
+        let edad = moment().diff(pacientes[index].fechaNacimiento, 'years');
+        let efector = await mapeoEfector(pacientes[index].createdBy.organizacion.id);
+        if (existeEnSips.length > 0) {
+            if (existeEnSips[0].activo === false) {
+
+                await updateEstadoSips(existeEnSips[0].idPaciente);
+            }
+
+        }
+
+
+        if (existeEnSips.length === 0) {
+            //FALTA EL EFECTOR(busqueda por id)
+            let pacienteSips = await operacionesLegacy.pacienteSipsFactory(pacientes[index], efector.idEfector);
+            let idPacienteSips = await operacionesLegacy.insertaPacienteSips(pacienteSips);
+            console.log(idPacienteSips)
+        }
+        let existeEnPuco: any = await sisaController.postPuco(pacientes[index].documento);
+        if (existeEnPuco.puco.resultado === 'REGISTRO_NO_ENCONTRADO' && edad <= 64) {
+            if (esBeneficiario.length === 0) {
+                // FALTA EL EFECTOR
+                let benef = beneficiarioFactory(pacientes[index], efector.cuie);
+                await insertBeneficiario(benef);
+            }
+        } 
+
+    }
+
+    // console.log("aca paciente nuevo ", paciente)
+
+}
+
+
+
+
+export async function mapeoEfector(idEfector) {
+    let efectorMongo: any = await mapeoEfectorMongo(idEfector);
+
+    poolAgendas = await new sql.ConnectionPool(configSql).connect();
+    let query = 'SELECT * FROM dbo.Sys_efector WHERE cuie = @codigo';
+    let resultado = await new sql.Request(poolAgendas)
+        .input('codigo', sql.VarChar(50), efectorMongo.codigo.cuie)
+        .query(query);
+    poolAgendas.close();
+
+    return resultado.recordset[0];
+}
+
+/* Se trae el efector de mongo por ObjectId*/
+async function mapeoEfectorMongo(idEfector: any) {
+    return new Promise((resolve, reject) => {
+        organizacion.model.findById(idEfector).then(efector => {
+            resolve(efector);
+        });
+    });
+}
+
+
+
+export async function getPacienteSips(documento) {
+
+    poolAgendas = await new sql.ConnectionPool(configSql).connect();
+    let query = 'SELECT * FROM dbo.Sys_Paciente WHERE numeroDocumento = @documento';
+    let resultado = await new sql.Request(poolAgendas)
+        .input('documento', sql.VarChar(50), documento)
+        .query(query);
+    poolAgendas.close();
+    resultado = resultado.recordset;
+
+    return resultado;
+}
+
+export async function getBeneficiario(documento) {
+
+    poolAgendas = await new sql.ConnectionPool(configSql).connect();
+    let query = 'SELECT * FROM dbo.PN_beneficiarios  WHERE numero_doc = @documento';
+    let resultado = await new sql.Request(poolAgendas)
+        .input('documento', sql.VarChar(50), documento)
+        .query(query);
+    poolAgendas.close();
+    resultado = resultado.recordset;
+
+    return resultado;
+}
+
+export async function updateEstadoSips(id) {
+    poolAgendas = await new sql.ConnectionPool(configSql).connect();
+    let query = 'UPDATE  [dbo].[Sys_Paciente] SET activo = 1 where idPaciente = @id';
+    let resultado = await new sql.Request(poolAgendas)
+        .input('id', sql.VarChar(50), id)
+        .query(query);
+    poolAgendas.close();
+    resultado = resultado.recordset;
+
+    return resultado;
+}
+
+export async function pacientesDelDia() {
+    // busca los pacientes del dia en mpi y andes para validarlos con sips y pn beneficiarios
+    // TODO: DEBEMOS BUSCAR LOS PACIENTES DIA VENCIDO 
+
+
+    let hoyDesde = moment(new Date()).startOf('day').format();
+    let hoyHasta = moment(new Date()).endOf('day').format();
+    let pacientesTotal = [];
+    // let start = moment(req.query.fechaDesde).startOf('day').toDate();
+    // let end = moment(req.query.fechaHasta).endOf('day').toDate();
+
+    //PACIENTES ANDES
+    let pacientesAndes = await toArray(paciente.aggregate([{
+        $match: {
+            'createdAt': {
+                $gte: new Date(hoyDesde), $lte: new Date(hoyHasta)
+            }
+        }
+    }]).cursor({ batchSize: 1000 }).exec());
+
+
+    pacientesAndes.forEach(element => {
+        pacientesTotal.push(element)
+    });
+
+    //PACIENTES MPI
+    let pacientesMpi = await toArray(pacienteMpi.aggregate([{
+        $match: {
+            'createdAt': {
+                $gte: new Date(hoyDesde), $lte: new Date(hoyHasta)
+            }
+        }
+    }]).cursor({ batchSize: 1000 }).exec());
+
+    pacientesMpi.forEach(element => {
+        pacientesTotal.push(element);
+    });
+
+    return pacientesTotal;
+}
+
+function beneficiarioFactory(paciente, efector) {
+    let tipoCategoria;
+    let edad = moment().diff(paciente.fechaNacimiento, 'years');
+    if ((edad >= 0) && (edad <= 10)) {
+        tipoCategoria = 4;
+    }
+    else if ((edad > 10) && (edad <= 19)) {
+        tipoCategoria = 5;
+    }
+    else if ((edad > 19) && (edad <= 64)) {
+
+        if (paciente.idSexo === 2) {
+            tipoCategoria = 6;
+        }
+        else {
+            tipoCategoria = 7;
+        }
+    }
+    let beneficiario = {
+        id: null,
+        estado_enviado: 'n',
+        clave_beneficiario: 2101300000000000, // falta sumar id
+        tipo_transaccion: "A",
+        apellido: paciente.apellido,
+        nombre: paciente.nombre,
+        clase_doc: null,
+        tipo_documento: "DNI",
+        numero_doc: paciente.documento,
+        id_categoria: tipoCategoria,
+        sexo: (paciente.sexo === "masculino" ? 'M' : paciente.sexo === "femenino" ? 'F' : 'I'),
+        fechaNacimiento: moment(paciente.fechaNacimiento).format('YYYY-MM-DD'),
+        pais: "ARGENTINA",
+        indigena: 'N',
+        idTribu: 0,
+        idLengua: 0,
+        anioMayorNivel: 0,
+        anioMayorNivelMadre: 0,
+        cuie_ea: efector,
+        cuie_ah: efector,
+        fecha_carga: moment(new Date()).format('YYYY-MM-DD'),
+        fecha_inscripcion: moment(new Date()).format('YYYY-MM-DD'),
+
+    };
+    return beneficiario;
+}
+
+async function insertBeneficiario(paciente) {
+
+    let query = 'INSERT INTO [dbo].[PN_beneficiarios] (estado_envio ,clave_beneficiario ,tipo_transaccion ,apellido_benef ,nombre_benef ,clase_documento_benef ,tipo_documento ,numero_doc ,id_categoria ,sexo ,fecha_nacimiento_benef ,provincia_nac ,localidad_nac ,pais_nac ,indigena ,id_tribu ,id_lengua ,alfabeta ,estudios ,anio_mayor_nivel ,tipo_doc_madre ,nro_doc_madre ,apellido_madre ,nombre_madre ,alfabeta_madre ,estudios_madre ,anio_mayor_nivel_madre ,tipo_doc_padre ,nro_doc_padre ,apellido_padre ,nombre_padre ,alfabeta_padre ,estudios_padre ,anio_mayor_nivel_padre ,tipo_doc_tutor ,nro_doc_tutor ,apellido_tutor ,nombre_tutor ,alfabeta_tutor ,estudios_tutor ,anio_mayor_nivel_tutor ,fecha_diagnostico_embarazo ,semanas_embarazo ,fecha_probable_parto ,fecha_efectiva_parto ,cuie_ea ,cuie_ah ,menor_convive_con_adulto ,calle ,numero_calle ,piso ,dpto ,manzana ,entre_calle_1 ,entre_calle_2 ,telefono ,departamento ,localidad ,municipio ,barrio ,cod_pos ,observaciones ,fecha_inscripcion ,fecha_carga ,usuario_carga ,activo ,fum ,tipo_ficha ,responsable ,discv ,disca ,discmo ,discme ,otradisc ,' +
+        'rcv) VALUES(' +
+        '\'' + paciente.estado_enviado + '\',' + '\'' + paciente.clave_beneficiario + '\',' + '\'' + paciente.tipo_transaccion + '\',' + '\'' + paciente.apellido + '\',' + '\'' + paciente.nombre + '\',' + '' + '\'P\',\'' +
+        paciente.tipo_documento + '\',' + '\'' + paciente.numero_doc + '\',' + '\'' + paciente.id_categoria + '\',' + '\'' + paciente.sexo + '\',' + '\'' + paciente.fechaNacimiento + '\',' + '' +
+        null + ',' + null + ',' + '\'' + paciente.pais + '\',' + '\'' + paciente.indigena + '\',' + '' + paciente.idTribu + ',' + '' + paciente.idLengua + ',' + '' + null + ',' + '' + null + ',' + '' + paciente.anioMayorNivel + ',' + '' + null + ',' + '' + null + ',' + '' +
+        null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + 0 + ',' + '' + paciente.anioMayorNivelMadre + ',' + '' + null + ',' +
+        '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' +
+        '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '\'' + paciente.cuie_ah + '\',' +
+        '\'' + paciente.cuie_ea + '\',' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' +
+        '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' +
+        '' + 0 + ',' + '\'' + paciente.fecha_inscripcion + '\',' + '' + null + ',' + '\'' + paciente.fecha_carga + '\',' + '' + null + ',' + '' + null + ',' + '' + null + ',' +
+        '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + '' + ')';
+    let idComprobante = await executeQueryBeneficiario(query);
+
+    return idComprobante;
+}
+
+async function executeQueryBeneficiario(query: any) {
+    try {
+        let id;
+        query += ' select SCOPE_IDENTITY() as id';
+        poolAgendas = await new sql.ConnectionPool(configSql).connect();
+        let result = await new sql.Request(poolAgendas).query(query);
+        if (result && result.recordset) {
+            id = result.recordset[0].id;
+        }
+        let queryUpdate = 'UPDATE  [dbo].[PN_beneficiarios] SET clave_beneficiario = ' + (2101300000000000 + parseInt(id)) + ' where id_beneficiarios = ' + id + '  ';
+
+        let resultUpdate = await new sql.Request(poolAgendas).query(queryUpdate);
+        if (resultUpdate && resultUpdate.recordset) {
+            return resultUpdate.recordset[0].clave_beneficiario;
+        }
+
+    } catch (err) {
+        return (err);
+    }
+}
+
+
 
