@@ -4,7 +4,7 @@ import { periodoPadronesProfe } from '../schemas/periodoPadronesProfe';
 
 let router = express.Router();
 
-router.get('/profe/', async function (req, res, next) {
+router.get('/profe/', async (req, res, next) => {
     if (req.query.dni) {
         let padron;
 
@@ -18,7 +18,7 @@ router.get('/profe/', async function (req, res, next) {
             padron = padron[0].version;
         }
 
-        profe.find({ dni: Number.parseInt(req.query.dni, 2), version: padron }, function (err, data) {
+        profe.find({ dni: Number.parseInt(req.query.dni, 2), version: padron }, (err, data) => {
             if (err) {
                 return next(err);
             }

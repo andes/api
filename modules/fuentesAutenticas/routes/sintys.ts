@@ -5,7 +5,7 @@ import { Logger } from '../../../utils/logService';
 
 let router = express.Router();
 
-router.get('/sintys', async function (req, res, next) {
+router.get('/sintys', async (req, res, next) => {
     if (!Auth.check(req, 'fa:get:sintys')) {
         return next(403);
     }

@@ -7,10 +7,10 @@ import { profesionalMeta } from './../schemas/profesionalMeta';
 
 let router = express.Router();
 
-router.get('/frecuentesProfesional/:id', function (req, res, next) {
+router.get('/frecuentesProfesional/:id', (req, res, next) => {
     if (req.params.id) {
         let query = profesionalMeta.find({ 'profesional.id': req.params.id });
-        query.exec(function (err, data: any) {
+        query.exec((err, data: any) => {
 
             if (err) {
                 return next(err);
@@ -31,7 +31,7 @@ router.get('/frecuentesProfesional/:id', function (req, res, next) {
     }
 });
 
-router.get('/frecuentesProfesional', function (req, res, next) {
+router.get('/frecuentesProfesional', (req, res, next) => {
 
     let query = {
         // profesional
@@ -60,7 +60,7 @@ router.get('/frecuentesProfesional', function (req, res, next) {
     });
 });
 
-router.post('/frecuentesProfesional', function (req, res, next) {
+router.post('/frecuentesProfesional', (req, res, next) => {
 
     if (!req.body) {
         return next(400);
@@ -70,7 +70,7 @@ router.post('/frecuentesProfesional', function (req, res, next) {
 
     // Auth.audit(req.body, req);
 
-    data.save(function (err) {
+    data.save((err) => {
         if (err) {
             return next(err);
         }
@@ -78,7 +78,7 @@ router.post('/frecuentesProfesional', function (req, res, next) {
     });
 });
 
-router.put('/frecuentesProfesional/:id*?', function (req, res, next) {
+router.put('/frecuentesProfesional/:id*?', (req, res, next) => {
     let query = {
         // profesional
         ...(req.params.id) && { 'profesional.id': req.params.id },
@@ -97,7 +97,7 @@ router.put('/frecuentesProfesional/:id*?', function (req, res, next) {
         if (typeof resultado === null || !resultado) {
             let frecuente = new profesionalMeta(req.body);
 
-            frecuente.save(function (err2) {
+            frecuente.save((err2) => {
                 if (err2) {
                     // return res.json(err2);
                     return next(err2);

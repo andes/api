@@ -12,7 +12,7 @@ let grammar = require('./grammar');
  * Make AST from SNOMED Expression string
  */
 
-export let parseExpression = function (expression) {
+export let parseExpression = (expression) => {
     // Set basic APG Grammar
 
     let grammarObj = new grammar();
@@ -433,7 +433,7 @@ export class QueryBuilder {
  * All in-one function to convert expression to mongo query
  */
 
-export let makeMongoQuery =  function (expression) {
+export let makeMongoQuery = (expression) => {
     let ast = parseExpression(expression);
     let builder = new QueryBuilder(ast, );
     return builder.exec();

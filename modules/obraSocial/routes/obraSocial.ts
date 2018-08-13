@@ -12,7 +12,7 @@ let router = express.Router();
  * @returns
  */
 
-router.get('/puco/', async function (req, res, next) {
+router.get('/puco/', async (req, res, next) => {
 
     if (req.query.dni) {
         let padron;

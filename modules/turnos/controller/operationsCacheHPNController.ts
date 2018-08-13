@@ -7,7 +7,7 @@ import { configuracionPrestacionModel } from '../../../core/term/schemas/configu
 
 export async function saveAgendaToPrestaciones(agenda, pool) {
     let transaction = await new sql.Transaction(pool);
-    return new Promise(async function (resolve2, reject) {
+    return new Promise(async (resolve2, reject) => {
         let idProfesional = agenda.profesionales ? await getIdProfesionalPrestaciones(agenda.profesionales[0].documento) : null;
         if (idProfesional) {
             transaction.begin(async _err => {
@@ -205,14 +205,14 @@ async function setEstadoAgendaToIntegrada(idAgenda) {
 }
 
 export function getAgendasDeMongoExportadas() {
-    return new Promise<Array<any>>(function (resolve2, reject) {
+    return new Promise<Array<any>>((resolve2, reject) => {
         agendasCache.find({
             $or: [{
                 estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportada
             },    {
                 estadoIntegracion: constantes.EstadoExportacionAgendaCache.codificada
             }]
-        }).exec(function (err, data) {
+        }).exec((err, data) => {
             if (err) {
                 reject(err);
             }

@@ -51,7 +51,7 @@ export function buscarTurnosARecordar(dayOffset) {
             turnos.push(turno);
         });
 
-        guardarRecordatorioTurno(turnos, function (ret) {
+        guardarRecordatorioTurno(turnos, (ret) => {
             resolve();
         });
 
@@ -61,8 +61,8 @@ export function buscarTurnosARecordar(dayOffset) {
 
 export function guardarRecordatorioTurno(turnos: any[], callback) {
 
-    async.forEach(turnos, function (turno, done) {
-        recordatorio.findOne({ idTurno: turno._id }, function (err, objFound) {
+    async.forEach(turnos, (turno, done) => {
+        recordatorio.findOne({ idTurno: turno._id }, (err, objFound) => {
 
             if (objFound) {
                 log('__ El recordatorio existe __');
@@ -77,7 +77,7 @@ export function guardarRecordatorioTurno(turnos: any[], callback) {
                 estadoEnvio: false,
             });
 
-            recordatorioTurno.save(function (_err, user: any) {
+            recordatorioTurno.save((_err, user: any) => {
 
                 if (_err) {
                     return done(_err);
@@ -93,7 +93,7 @@ export function guardarRecordatorioTurno(turnos: any[], callback) {
 
 
 export function enviarTurnoRecordatorio() {
-    recordatorio.find({ estadoEnvio: false }, function (err, elems) {
+    recordatorio.find({ estadoEnvio: false }, (err, elems) => {
 
         elems.forEach((turno: any, index) => {
 
@@ -179,7 +179,7 @@ export function recordarAgenda() {
 }
 
 export function enviarAgendaNotificacion() {
-    recordatorio.find({ tipoRecordatorio: 'agenda', estadoEnvio: false }, function (err, recordatiorios: any) {
+    recordatorio.find({ tipoRecordatorio: 'agenda', estadoEnvio: false }, (err, recordatiorios: any) => {
         recordatiorios.forEach((item) => {
             Promise.all([
                 profesional.findById(item.dataAgenda.profesionalId),

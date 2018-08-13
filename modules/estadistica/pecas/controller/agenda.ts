@@ -379,7 +379,7 @@ function getEfector(idOrganizacion: any) {
     return new Promise((resolve, reject) => {
         organizacion.findOne({
             _id: mongoose.Types.ObjectId(idOrganizacion)
-        }).exec(function (err, data) {
+        }).exec((err, data) => {
             if (err) {
                 reject(err);
             }

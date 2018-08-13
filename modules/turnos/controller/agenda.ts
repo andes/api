@@ -169,7 +169,7 @@ export function codificarTurno(req, data, tid) {
 
         let query = Prestacion.find({ $where: 'this.estados[this.estados.length - 1].tipo ==  "validada"' });
         query.where('solicitud.turno').equals(tid);
-        query.exec(function (err, data1) {
+        query.exec((err, data1) => {
             if (err) {
                 return ({
                     err: 'No se encontro prestacion para el turno'
@@ -865,7 +865,7 @@ export function saveAgenda(nuevaAgenda) {
  * @param {any} turno
  */
 export function updatePaciente(pacienteModified, turno) {
-    agendaModel.findById(turno.agenda_id, function (err, data, next) {
+    agendaModel.findById(turno.agenda_id, (err, data, next) => {
         if (err) {
             return next(err);
         }

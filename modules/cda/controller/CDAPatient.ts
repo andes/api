@@ -449,7 +449,7 @@ export function searchByPatient(pacienteId, prestacion, {
 export async function loadCDA(cdaID) {
     return new Promise(async (resolve, reject) => {
         let CDAFiles = makeFs();
-        CDAFiles.readById(cdaID, function (err, buffer) {
+        CDAFiles.readById(cdaID, (err, buffer) => {
             let xml = buffer.toString('utf8');
             return resolve(xml);
         });
@@ -462,7 +462,7 @@ export async function loadCDA(cdaID) {
 
 export function validateMiddleware(req, res, next) {
     let errors: any = {};
-    let validString = function (value) {
+    let validString = (value) => {
         return value && value.length > 0;
     };
     let dataPaciente = req.body.paciente;
@@ -537,7 +537,7 @@ export function validateSchemaCDA(xmlRaw) {
             let filePath = path.join(__dirname, './schema/CDA.xsd');
             fs.readFile(filePath, {
                 encoding: 'utf8'
-            }, function (err, xsd) {
+            }, (err, xsd) => {
                 if (err) {
                     return reject(err);
                 }

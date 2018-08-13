@@ -78,14 +78,14 @@ class Scheduler {
         let _self = this;
         jobs.forEach((job: any) => {
             _self.runningProccess[job.action] = [];
-            schedule.scheduleJob(job.when, function () {
+            schedule.scheduleJob(job.when, () => {
                 let concurrent = !!job.concurrent;
                 if (concurrent || _self.runningProccess[job.action].length === 0) {
                     log(`${job.action}  start`);
 
                     let child: any = spawn('node', ['jobs/manual.js', job.action], { env: process.env });
 
-                    child.on('close', function (code, signal) {
+                    child.on('close', (code, signal) => {
                         log(`${job.action} finish`);
                         _self.removeJob(job, child);
                     });

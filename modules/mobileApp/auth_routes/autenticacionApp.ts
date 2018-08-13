@@ -15,7 +15,7 @@ let router = express.Router();
  * @param password {string} password del usuario
  */
 
-router.post('/login', function (req, res, next) {
+router.post('/login', (req, res, next) => {
     let email = req.body.email;
     let password = req.body.password;
 
@@ -77,12 +77,12 @@ router.post('/login', function (req, res, next) {
  * Genera el código para poder cambiar el password y luego enviar por mail o SMS
  * @param email {string} email del usuario
  */
-router.post('/olvide-password', function (req, res, next) {
+router.post('/olvide-password', (req, res, next) => {
     if (!req.body.email) {
         return res.status(422).send({ error: 'Se debe ingresar una dirección de e-Mail' });
     }
 
-    return pacienteApp.findOne({ email: req.body.email }, function (err, datosUsuario: any) {
+    return pacienteApp.findOne({ email: req.body.email }, (err, datosUsuario: any) => {
         if (err) {
             return next(err);
         }
@@ -98,7 +98,7 @@ router.post('/olvide-password', function (req, res, next) {
         datosUsuario.restablecerPassword.codigo = authController.generarCodigoVerificacion();
         datosUsuario.restablecerPassword.fechaExpiracion = new Date(Date.now() + authController.expirationOffset);
 
-        datosUsuario.save(function (errSave, user) {
+        datosUsuario.save((errSave, user) => {
             if (errSave) {
                 return next(errSave);
             }
@@ -121,7 +121,7 @@ router.post('/olvide-password', function (req, res, next) {
  * @param {string} password2 Nueva clave andes
  */
 
-router.post('/reestablecer-password', function (req, res, next) {
+router.post('/reestablecer-password', (req, res, next) => {
     if (!req.body.email) {
         return res.status(422).send({ error: 'Se debe ingresar una dirección de e-Mail' });
     }
@@ -138,7 +138,7 @@ router.post('/reestablecer-password', function (req, res, next) {
         return res.status(422).send({ error: 'Debe re ingresar el nuevo password.' });
     }
 
-    return pacienteApp.findOne({ email: req.body.email }, function (err, datosUsuario: any) {
+    return pacienteApp.findOne({ email: req.body.email }, (err, datosUsuario: any) => {
         if (err) {
             return next(err);
         }
@@ -169,7 +169,7 @@ router.post('/reestablecer-password', function (req, res, next) {
 
         datosUsuario.restablecerPassword = {};
 
-        datosUsuario.save(function (errSave, user) {
+        datosUsuario.save((errSave, user) => {
             if (errSave) {
                 return next(errSave);
             }

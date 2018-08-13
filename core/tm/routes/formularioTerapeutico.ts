@@ -7,9 +7,9 @@ import * as formularioCtrl from '../controller/formularioTerapeutico';
 
 let router = express.Router();
 
-router.get('/formularioTerapeutico/:id?', async function (req, res, next) {
+router.get('/formularioTerapeutico/:id?', async (req, res, next) => {
     if (mongoose.Types.ObjectId.isValid(req.params.id)) {
-        formularioTerapeutico.findById(req.params.id, function (err, data) {
+        formularioTerapeutico.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -28,7 +28,7 @@ router.get('/formularioTerapeutico/:id?', async function (req, res, next) {
 
                     opciones['$and'] = [];
                     let words = String(req.query.nombreMedicamento).split(' ');
-                    words.forEach(function (word) {
+                    words.forEach((word) => {
                         // normalizamos cada una de las palabras como hace SNOMED para poder buscar palabra a palabra
                         word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08');
                         let expWord = '^' + utils.removeDiacritics(word) + '.*';
@@ -70,7 +70,7 @@ router.get('/formularioTerapeutico/:id?', async function (req, res, next) {
                         ]
                     ).cursor({}).exec());
                     out = [];
-                    data.forEach(function (nodo, indiceNodo) {
+                    data.forEach((nodo, indiceNodo) => {
                         out.push(nodo);
                     });
                 } else {
@@ -90,7 +90,7 @@ router.get('/formularioTerapeutico/:id?', async function (req, res, next) {
                         ]
                     ).cursor({}).exec());
                     out = [];
-                    data.forEach(function (nodo, indiceNodo) {
+                    data.forEach((nodo, indiceNodo) => {
                         out.push(nodo);
                     });
                 }
@@ -101,7 +101,7 @@ router.get('/formularioTerapeutico/:id?', async function (req, res, next) {
                     res.status(400).send('Debe ingresar al menos un parámetro');
                     return next(400);
                 }
-                query.exec(function (err, data) {
+                query.exec((err, data) => {
                     if (err) {
                         return next(err);
                     }

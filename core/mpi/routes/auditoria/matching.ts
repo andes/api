@@ -5,12 +5,12 @@ import { Auth } from '../../../../auth/auth.class';
 
 let router = express.Router();
 
-router.get('/matching/:id*?', function (req, res, next) {
+router.get('/matching/:id*?', (req, res, next) => {
     if (!Auth.check(req, 'mpi:matching:get')) {
         return next(403);
     }
     if (req.params.id) {
-        paciente.findById(req.params.id, function (err, data) {
+        paciente.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -34,11 +34,11 @@ router.get('/matching/:id*?', function (req, res, next) {
     }
 });
 
-router.patch('/matching/:id', function (req, res, next) {
+router.patch('/matching/:id', (req, res, next) => {
     if (!Auth.check(req, 'mpi:matching:patch')) {
         return next(403);
     }
-    paciente.findById(req.params.id, function (_err, data) {
+    paciente.findById(req.params.id, (_err, data) => {
         if (req.body.op === 'validarSisa') {
             let pacienteAux = data;
             let pacientesRes = [];
@@ -48,7 +48,7 @@ router.patch('/matching/:id', function (req, res, next) {
                     let arrPacValidados;
                     arrPacValidados = pacientesRes;
                     let arrPacientesSisa = [];
-                    arrPacValidados.forEach(function (pacVal) {
+                    arrPacValidados.forEach((pacVal) => {
                         let datoPac;
                         datoPac = pacVal.matcheos.datosPaciente;
                         if (datoPac) {
@@ -64,11 +64,11 @@ router.patch('/matching/:id', function (req, res, next) {
     });
 });
 
-router.put('/matching/:id', function (req, res, next) {
+router.put('/matching/:id', (req, res, next) => {
     if (!Auth.check(req, 'mpi:matching:put')) {
         return next(403);
     }
-    paciente.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
+    paciente.findByIdAndUpdate(req.params.id, req.body, { new: true }, (err, data) => {
         if (err) {
             return next(err);
         }

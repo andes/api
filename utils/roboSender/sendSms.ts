@@ -18,7 +18,7 @@ export function sendSms(smsOptions: SmsOptions) {
         };
         let argsNumero = {};
         createClient(SMSendpoints.urlOperador).then((clientOperador: any) => {
-            clientOperador.recuperarOperador(argsOperador, function (errOperador, result, raw) {
+            clientOperador.recuperarOperador(argsOperador, (errOperador, result, raw) => {
                 // Server down?
                 if (clientOperador.lastResponse) {
                     try {
@@ -50,7 +50,7 @@ export function sendSms(smsOptions: SmsOptions) {
                         };
 
                         createClient(SMSendpoints.urlNumero).then((clientEnvio: any) => {
-                            clientEnvio.envioSMSOperador(argsNumero, function (errEnvio, resultEnvio, _raw) {
+                            clientEnvio.envioSMSOperador(argsNumero, (errEnvio, resultEnvio, _raw) => {
                                 try {
                                     if (errEnvio) {
                                         return reject(errEnvio);
@@ -109,7 +109,7 @@ function createClient(url) {
             }
         };
 
-        soap.createClient(url, opciones, function (errCreate, client) {
+        soap.createClient(url, opciones, (errCreate, client) => {
             if (errCreate) {
                 reject(errCreate);
             } else {

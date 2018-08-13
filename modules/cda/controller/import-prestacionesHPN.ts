@@ -18,7 +18,7 @@ export function postPrestaciones(documento) {
             body: {
                 documento
             }
-        }, function (error, response, body) {
+        }, (error, response, body) => {
             if (error) {
                 reject(error);
             }
@@ -40,7 +40,7 @@ export function postPrestaciones(documento) {
 export function downloadFile(id) {
     return new Promise((resolve, reject) => {
         let url = configPrivate.wsSalud.hostHPN + configPrivate.wsSalud.hpnWS + 'Informe?idEstudio=' + id;
-        http.get(url , function (response) {
+        http.get(url , (response) => {
             if (response.statusCode === 200) {
                 return resolve(response);
             } else {

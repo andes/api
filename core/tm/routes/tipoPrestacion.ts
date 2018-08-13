@@ -4,7 +4,7 @@ import { tipoPrestacion } from '../schemas/tipoPrestacion';
 
 let router = express.Router();
 
-router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
+router.get('/tiposPrestaciones/:id*?', (req, res, next) => {
     let query;
     // Búsqueda por un sólo ID
     if (req.params.id) {
@@ -35,7 +35,7 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
     }
 
     // Consultar
-    query.sort({ term: 1 }).exec(function (err, data) {
+    query.sort({ term: 1 }).exec((err, data) => {
         if (err) {
             return next(err);
         }

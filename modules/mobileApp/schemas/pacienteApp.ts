@@ -84,13 +84,13 @@ pacienteAppSchema.pre('save', function (next) {
         return next();
     }
 
-    bcrypt.genSalt(SALT_FACTOR, function (errGen, salt) {
+    bcrypt.genSalt(SALT_FACTOR, (errGen, salt) => {
 
         if (errGen) {
             return next(errGen);
         }
 
-        bcrypt.hash(user.password, salt, null, function (errCrypt, hash) {
+        bcrypt.hash(user.password, salt, null, (errCrypt, hash) => {
 
             if (errCrypt) {
                 return next(errCrypt);
@@ -107,7 +107,7 @@ pacienteAppSchema.pre('save', function (next) {
 
 pacienteAppSchema.methods.comparePassword = function (passwordAttempt, cb) {
 
-    bcrypt.compare(passwordAttempt, this.password, function (err, isMatch) {
+    bcrypt.compare(passwordAttempt, this.password, (err, isMatch) => {
 
         if (err) {
             return cb(err);

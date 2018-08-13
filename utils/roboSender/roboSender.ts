@@ -91,7 +91,7 @@ function changeState(env, newState) {
         env.tries += 1;
         env.updatedAt = new Date();
 
-        env.save(function (err, datos) {
+        env.save((err, datos)  => {
             if (err) {
                 return reject();
             }

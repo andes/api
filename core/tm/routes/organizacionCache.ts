@@ -3,7 +3,7 @@ import * as organizacionCache from '../schemas/organizacionCache';
 
 let router = express.Router();
 
-router.get('/organizacionesCache', function (req, res, next) {
+router.get('/organizacionesCache', (req, res, next) => {
 
     let query;
 
@@ -14,7 +14,7 @@ router.get('/organizacionesCache', function (req, res, next) {
         domicilio: 1,
         telefono: 1
     });
-    query.exec(function (err, data) {
+    query.exec((err, data) => {
         if (err) {
             return next(err);
         }

@@ -55,10 +55,10 @@ let router = express.Router();
  *         schema:
  *           $ref: '#/definitions/pais'
  */
-router.get('/paises/:id*?', function (req, res, next) {
+router.get('/paises/:id*?', (req, res, next) => {
 
     if (req.params.id) {
-        pais.findById(req.params.id, function (err, data) {
+        pais.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }

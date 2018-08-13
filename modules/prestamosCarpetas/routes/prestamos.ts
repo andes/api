@@ -3,7 +3,7 @@ import * as prestamosController from '../controller/prestamosController';
 
 let router = express.Router();
 
-router.post('/prestamosHC/getCarpetasSolicitud', async function (req, res, next) {
+router.post('/prestamosHC/getCarpetasSolicitud', async (req, res, next) => {
     try {
         let resultado = await prestamosController.getCarpetasSolicitud(req);
         res.json(resultado);
@@ -12,7 +12,7 @@ router.post('/prestamosHC/getCarpetasSolicitud', async function (req, res, next)
     }
 });
 
-router.post('/prestamosHC/getCarpetasPrestamo', async function (req, res, next) {
+router.post('/prestamosHC/getCarpetasPrestamo', async (req, res, next) => {
     try {
         let resultado = await prestamosController.getCarpetasPrestamo(req);
         res.json(resultado);
@@ -21,7 +21,7 @@ router.post('/prestamosHC/getCarpetasPrestamo', async function (req, res, next) 
     }
 });
 
-router.post('/prestamosHC/prestarCarpeta', async function (req, res, next) {
+router.post('/prestamosHC/prestarCarpeta', async (req, res, next) => {
     try {
         let resultado = await prestamosController.prestarCarpeta(req);
         res.json(resultado);
@@ -30,7 +30,7 @@ router.post('/prestamosHC/prestarCarpeta', async function (req, res, next) {
     }
 });
 
-router.post('/prestamosHC/prestarCarpetas', async function (req, res, next) {
+router.post('/prestamosHC/prestarCarpetas', async (req, res, next) => {
     try {
         let resultado = await prestamosController.prestarCarpetas(req);
         res.json(resultado);
@@ -39,7 +39,7 @@ router.post('/prestamosHC/prestarCarpetas', async function (req, res, next) {
     }
 });
 
-router.post('/prestamosHC/devolverCarpeta', async function (req, res, next) {
+router.post('/prestamosHC/devolverCarpeta', async (req, res, next) => {
     try {
         let resultado = await prestamosController.devolverCarpeta(req);
         res.json(resultado);
@@ -48,7 +48,7 @@ router.post('/prestamosHC/devolverCarpeta', async function (req, res, next) {
     }
 });
 
-router.post('/prestamosHC/devolverCarpetas', async function (req, res, next) {
+router.post('/prestamosHC/devolverCarpetas', async (req, res, next) => {
     try {
         let resultado = await prestamosController.devolverCarpetas(req);
         res.json(resultado);
@@ -57,7 +57,7 @@ router.post('/prestamosHC/devolverCarpetas', async function (req, res, next) {
     }
 });
 
-router.post('/prestamosHC/historial', async function (req, res, next) {
+router.post('/prestamosHC/historial', async (req, res, next) => {
     try {
         let resultado = await prestamosController.getHistorial(req);
         res.json(resultado);
@@ -66,7 +66,7 @@ router.post('/prestamosHC/historial', async function (req, res, next) {
     }
 });
 
-router.post('/prestamosHC/solicitudManualCarpeta', async function (req, res, next) {
+router.post('/prestamosHC/solicitudManualCarpeta', async (req, res, next) => {
     try {
         let resultado = await prestamosController.solicitudManualCarpeta(req);
         res.json(resultado);

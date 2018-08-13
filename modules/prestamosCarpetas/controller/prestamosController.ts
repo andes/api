@@ -210,7 +210,7 @@ async function findCarpetasPrestamo(organizacionId, horaInicio, horaFin, tipoPre
 
     let result: any = await toArray(prestamo.aggregate(pipeline).cursor({}).exec());
 
-    result = result.filter(function (el) {
+    result = result.filter((el) => {
         return el.estado === constantes.EstadosPrestamosCarpeta.Prestada;
     });
 
@@ -398,7 +398,7 @@ async function createCarpeta(datosCarpeta, estadoPrestamoCarpeta) {
 
 async function savePrestamoCarpeta(req, nuevoPrestamo) {
     Auth.audit(nuevoPrestamo, req);
-    let _prestamoGuardado = await nuevoPrestamo.save(function (err2, prestamoGuardado: any) {
+    let _prestamoGuardado = await nuevoPrestamo.save((err2, prestamoGuardado: any) => {
         if (err2) {
             throw err2;
         }
@@ -409,7 +409,7 @@ async function savePrestamoCarpeta(req, nuevoPrestamo) {
 async function savePrestamosCarpetas(req, nuevosPrestamos) {
     nuevosPrestamos.forEach(async _prestamo => {
         Auth.audit(_prestamo, req);
-        await _prestamo.save(function (err2, prestamoGuardado: any) {
+        await _prestamo.save((err2, prestamoGuardado: any) => {
             if (err2) {
                 throw err2;
             }
@@ -453,7 +453,7 @@ export async function solicitudManualCarpeta(req) {
 
     Auth.audit(solicitud, req);
 
-    await solicitud.save(function (err, solicitudGuardada: any) {
+    await solicitud.save((err, solicitudGuardada: any) => {
         if (err) {
             throw err;
         }
@@ -472,7 +472,7 @@ function getSolicitudCarpetaManual(unaOrganizacion, idSolicitud = null, estadoSo
             query.where('estado').equals((estadoSolicitud ? estadoSolicitud : constantes.EstadoSolicitudCarpeta.Pendiente));
         }
 
-        query.exec(function (err, data) {
+        query.exec((err, data) => {
             if (err) {
                 throw err;
             }
@@ -486,7 +486,7 @@ function cambiarEstadoSolicitudManual(req, idSolicitud, idOrganizacion) {
         (solicitud as any).estado = constantes.EstadoSolicitudCarpeta.Aprobada;
         Auth.audit((solicitud as any), req);
 
-        (solicitud as any).save(function (err, solicitudGuardada: any) {
+        (solicitud as any).save((err, solicitudGuardada: any) => {
             if (err) {
                 throw err;
             }

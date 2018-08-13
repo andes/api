@@ -6,11 +6,11 @@ let router = express.Router();
 router.get('/store/:id', (req, res, next) => {
     readFile(req.params.id).then((data: any)  => {
         res.contentType(data.file.contentType);
-        data.stream.on('data', function (data2) {
+        data.stream.on('data', (data2) => {
             res.write(data2);
         });
 
-        data.stream.on('end', function () {
+        data.stream.on('end', () => {
             res.end();
         });
     }).catch(next);

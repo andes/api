@@ -28,14 +28,14 @@ router.get('/profesionales/foto/:id*?', Auth.authenticate(), (req: any, res, nex
                 sort: {
                     _id: -1
                 }
-            }, function (err, file) {
+            }, (err, file) => {
                 if (file[0] == null) {
                     res.setHeader('Content-Type', 'image/jpeg');
                     // input.pipe(decoder).pipe(res);
                     // input.end(img);
                     res.end(img);
                 } else {
-                    fotoProf.readById(file[0].id, function (err2, buffer) {
+                    fotoProf.readById(file[0].id, (err2, buffer) => {
                         if (err2) {
                             return next(err2);
                         }
@@ -64,11 +64,11 @@ router.get('/profesionales/firma/:id*?', Auth.authenticate(), (req: any, res, ne
                 sort: {
                     _id: -1
                 }
-            }, function (err, file) {
+            }, (err, file) => {
                 if (file[0] == null) {
                     res.send(null);
                 } else {
-                    fotoProf.readById(file[0].id, function (err2, buffer) {
+                    fotoProf.readById(file[0].id, (err2, buffer) => {
                         if (err2) {
                             return next(err2);
                         }
@@ -91,11 +91,11 @@ router.get('/profesionales/firma/:id*?', Auth.authenticate(), (req: any, res, ne
                 sort: {
                     _id: -1
                 }
-            }, function (err, file) {
+            }, (err, file) => {
                 if (file[0] == null) {
                     res.send(null);
                 } else {
-                    fotoAdmin.readById(file[0].id, function (err2, buffer) {
+                    fotoAdmin.readById(file[0].id, (err2, buffer) => {
                         if (err2) {
                             return next(err2);
                         }
@@ -154,14 +154,14 @@ router.get('/profesionales/matricula/:id', (req, resp, errHandler) => {
 
     });
 });
-router.get('/profesionales/:id*?', Auth.authenticate(), function (req, res, next) {
+router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
     // if (!Auth.check(req, 'matriculaciones:profesionales:getProfesional')) {
     //     return next(403);
     // }
     let opciones = {};
     let query;
     if (req.params.id) {
-        profesional.findById(req.params.id, function (err, data) {
+        profesional.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -264,7 +264,7 @@ router.get('/profesionales/:id*?', Auth.authenticate(), function (req, res, next
         query = profesional.find(opciones).skip(skip).limit(limit);
     }
 
-    query.exec(function (err, data) {
+    query.exec((err, data) => {
         if (err) {
             return next(err);
         }
@@ -273,7 +273,7 @@ router.get('/profesionales/:id*?', Auth.authenticate(), function (req, res, next
 });
 
 
-router.post('/profesionales', Auth.authenticate(), function (req, res, next) {
+router.post('/profesionales', Auth.authenticate(), (req, res, next) => {
     if (!Auth.check(req, 'matriculaciones:profesionales:postProfesional')) {
         return next(403);
     }
@@ -287,9 +287,9 @@ router.post('/profesionales', Auth.authenticate(), function (req, res, next) {
         // remove la foto vieja antes de insertar la nueva
         fotoProf.find({
             'metadata.idProfesional': req.body.imagen.idProfesional
-        }, function (err, file) {
+        }, (err, file) => {
             file.forEach(recorre => {
-                fotoProf.unlinkById(recorre._id, function (error, unlinkedAttachment) { });
+                fotoProf.unlinkById(recorre._id, (error, unlinkedAttachment) => { });
             });
         });
         // inserta en la bd en files y chucks
@@ -301,7 +301,7 @@ router.post('/profesionales', Auth.authenticate(), function (req, res, next) {
             }
         },
             input.pipe(decoder),
-            function (error, createdFile) {
+            (error, createdFile) => {
                 res.json(createdFile);
             });
 
@@ -317,9 +317,9 @@ router.post('/profesionales', Auth.authenticate(), function (req, res, next) {
         // remove la firma vieja antes de insertar la nueva
         firmaProf.find({
             'metadata.idProfesional': req.body.firma.idProfesional
-        }, function (err, file) {
+        }, (err, file) => {
             file.forEach(recorre => {
-                firmaProf.unlinkById(recorre._id, function (error, unlinkedAttachment) { });
+                firmaProf.unlinkById(recorre._id, (error, unlinkedAttachment) => { });
             });
         });
         // inserta en la bd en files y chucks
@@ -331,7 +331,7 @@ router.post('/profesionales', Auth.authenticate(), function (req, res, next) {
             }
         },
             input.pipe(decoder),
-            function (error, createdFile) {
+            (error, createdFile) => {
                 res.json(createdFile);
             });
         input.end(_base64);
@@ -346,9 +346,9 @@ router.post('/profesionales', Auth.authenticate(), function (req, res, next) {
         // remove la firma vieja antes de insertar la nueva
         firmaAdmin.find({
             'metadata.idProfesional': req.body.firmaAdmin.idProfesional
-        }, function (err, file) {
+        }, (err, file) => {
             file.forEach(recorre => {
-                firmaAdmin.unlinkById(recorre._id, function (error, unlinkedAttachment) { });
+                firmaAdmin.unlinkById(recorre._id, (error, unlinkedAttachment) => { });
             });
         });
         // inserta en la bd en files y chucks
@@ -361,7 +361,7 @@ router.post('/profesionales', Auth.authenticate(), function (req, res, next) {
             }
         },
             input.pipe(decoder),
-            function (error, createdFile) {
+            (error, createdFile) => {
                 res.json(createdFile);
             });
         input.end(_base64);
@@ -371,7 +371,7 @@ router.post('/profesionales', Auth.authenticate(), function (req, res, next) {
         // console.log(req.body.profesional);
         // profesional.findOne({
         //     'documento': req.body.profesional.documento
-        // }, function (err, person) {
+        // }, (err, person) => {
         //     if (person) {
         //         res.json(null);
         //     } else {
@@ -388,7 +388,7 @@ router.post('/profesionales', Auth.authenticate(), function (req, res, next) {
 
 });
 
-router.post('/profesionales/sms', function (req, res, next) {
+router.post('/profesionales/sms', (req, res, next) => {
     let smsOptions = {
         telefono: req.body.telefono,
         mensaje: req.body.mensaje
@@ -400,7 +400,7 @@ router.post('/profesionales/sms', function (req, res, next) {
 
 });
 
-router.post('/profesionales/sendMail', function (req, res, next) {
+router.post('/profesionales/sendMail', (req, res, next) => {
     'use strict';
     const config_private = require('../../../config.private');
     const nodemailer = require('nodemailer');
@@ -452,13 +452,13 @@ router.post('/profesionales/sendMail', function (req, res, next) {
 
 });
 
-router.put('/profesionales/actualizar', Auth.authenticate(), function (req, res, next) {
+router.put('/profesionales/actualizar', Auth.authenticate(), (req, res, next) => {
     if (!Auth.check(req, 'matriculaciones:profesionales:putProfesional')) {
         return next(403);
     }
     profesional.findByIdAndUpdate(req.body.id, req.body, {
         new: true
-    }, function (err, data) {
+    }, (err, data) => {
         if (err) {
             return next(err);
         }
@@ -493,11 +493,11 @@ router.put('/profesionales/actualizar', Auth.authenticate(), function (req, res,
  *         schema:
  *           $ref: '#/definitions/profesional'
  */
-router.delete('/profesionales/:id', Auth.authenticate(), function (req, res, next) {
+router.delete('/profesionales/:id', Auth.authenticate(), (req, res, next) => {
     if (!Auth.check(req, 'matriculaciones:profesionales:deleteProfesional')) {
         return next(403);
     }
-    profesional.findByIdAndRemove(req.params.id, function (err, data) {
+    profesional.findByIdAndRemove(req.params.id, (err, data) => {
         if (err) {
             return next(err);
         }
@@ -505,8 +505,8 @@ router.delete('/profesionales/:id', Auth.authenticate(), function (req, res, nex
     });
 });
 
-router.patch('/profesionales/:id?', function (req, res, next) {
-    profesional.findById(req.params.id, function (err, resultado: any) {
+router.patch('/profesionales/:id?', (req, res, next) => {
+    profesional.findById(req.params.id, (err, resultado: any) => {
         if (resultado) {
             switch (req.body.op) {
                 case 'updateNotas':
@@ -551,12 +551,12 @@ router.patch('/profesionales/:id?', function (req, res, next) {
     });
 });
 
-router.get('/resumen/:id*?', function (req, res, next) {
+router.get('/resumen/:id*?', (req, res, next) => {
 
     let opciones = {};
     let query;
     if (req.params.id) {
-        profesional.findById(req.params.id, function (err, data) {
+        profesional.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -619,7 +619,7 @@ router.get('/resumen/:id*?', function (req, res, next) {
     }
 
     let select = [];
-    query.exec(function (err, data) {
+    query.exec((err, data) => {
         if (err) {
             return next(err);
         }

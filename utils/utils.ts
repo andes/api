@@ -42,13 +42,13 @@ export function makePattern(search_string: string): RegExp {
     let words = search_string.split(/\s+/);
 
     // sort by length
-    let length_comp = function (a, b) {
+    let length_comp = (a, b) => {
         return b.length - a.length;
     };
     words.sort(length_comp);
 
     // replace characters by their compositors
-    let accent_replacer = function (chr) {
+    let accent_replacer = (chr) => {
         return accented[chr.toUpperCase()] || chr;
     };
     for (let i = 0; i < words.length; i++) {

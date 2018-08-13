@@ -7,7 +7,7 @@ let router = express.Router();
 
 
 /* Obtengo los pacientes que tienen la misma clave de blocking */
-router.get('/bloques/pacientes/:idTipoBloque/:idBloque', function (req, res, next) {
+router.get('/bloques/pacientes/:idTipoBloque/:idBloque', (req, res, next) => {
     if (!Auth.check(req, 'mpi:bloque:get')) {
         return next(403);
     }

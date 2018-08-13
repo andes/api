@@ -3,7 +3,7 @@ import * as procemiento from '../schemas/procedimientoQuirurgico';
 let router = express.Router();
 
 
-router.get('/procemientosQuirurgicos', function (req, res, next) {
+router.get('/procemientosQuirurgicos', (req, res, next) => {
     let query;
     query = procemiento.model.find({});
 

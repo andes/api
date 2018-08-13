@@ -25,7 +25,7 @@ let async = require('async');
  *
  */
 
-router.get('/prestaciones/huds/:idPaciente', async function (req, res, next) {
+router.get('/prestaciones/huds/:idPaciente', async (req, res, next) => {
 
     // verificamos que sea un ObjectId válido
     if (!mongoose.Types.ObjectId.isValid(req.params.idPaciente)) {
@@ -81,11 +81,11 @@ router.get('/prestaciones/huds/:idPaciente', async function (req, res, next) {
 
 });
 
-router.get('/prestaciones/:id*?', function (req, res, next) {
+router.get('/prestaciones/:id*?', (req, res, next) => {
 
     if (req.params.id) {
         let query = Prestacion.findById(req.params.id);
-        query.exec(function (err, data) {
+        query.exec((err, data) => {
             if (err) {
                 return next(err);
             }
@@ -169,7 +169,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             query.limit(parseInt(req.query.limit, 10));
         }
 
-        query.exec(function (err, data) {
+        query.exec((err, data) => {
             if (err) {
                 return next(err);
             }
@@ -181,7 +181,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
     }
 });
 
-router.post('/prestaciones', function (req, res, next) {
+router.post('/prestaciones', (req, res, next) => {
     let data = new Prestacion(req.body);
     Auth.audit(data, req);
     data.save((err) => {
@@ -192,7 +192,7 @@ router.post('/prestaciones', function (req, res, next) {
     });
 });
 
-router.patch('/prestaciones/:id', function (req, res, next) {
+router.patch('/prestaciones/:id', (req, res, next) => {
     Prestacion.findById(req.params.id, (err, data: any) => {
         if (err) {
             return next(err);
@@ -245,7 +245,7 @@ router.patch('/prestaciones/:id', function (req, res, next) {
         }
 
         Auth.audit(data, req);
-        data.save(function (error, prestacion) {
+        data.save((error, prestacion) => {
             if (error) {
                 return next(error);
             }
@@ -281,11 +281,11 @@ router.patch('/prestaciones/:id', function (req, res, next) {
 
                 let solicitadas = [];
 
-                async.each(req.body.planes, function (plan, callback) {
+                async.each(req.body.planes, (plan, callback) => {
                     let nuevoPlan = new Prestacion(plan);
 
                     Auth.audit(nuevoPlan, req);
-                    nuevoPlan.save(function (errorPlan, nuevaPrestacion) {
+                    nuevoPlan.save((errorPlan, nuevaPrestacion) => {
                         if (errorPlan) { return callback(errorPlan); }
 
                         solicitadas.push(nuevaPrestacion);
@@ -293,7 +293,7 @@ router.patch('/prestaciones/:id', function (req, res, next) {
                         callback();
 
                     });
-                }, function (err2) {
+                }, (err2) => {
                     if (err2) {
                         return next(err2);
                     }

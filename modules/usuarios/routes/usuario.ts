@@ -18,7 +18,7 @@ const isReachable = require('is-reachable');
  * @method POST
  */
 
-router.post('/alta', function (req, res, next) {
+router.post('/alta', (req, res, next) => {
     if (!Auth.check(req, 'usuarios:post')) {
         return next(403);
     }
@@ -44,7 +44,7 @@ router.post('/alta', function (req, res, next) {
  * @method PUT
  */
 
-router.put('/:id', function (req, res, next) {
+router.put('/:id', (req, res, next) => {
     if (!Auth.check(req, 'usuarios:put')) {
         return next(403);
     }
@@ -83,7 +83,7 @@ router.put('/:id', function (req, res, next) {
  * @param {number} dni Numero de documento
  */
 
-router.get('/:dni', function (req, res, next) {
+router.get('/:dni', (req, res, next) => {
     if (!Auth.check(req, 'usuarios:get')) {
         return next(403);
     }
@@ -103,7 +103,7 @@ router.get('/:dni', function (req, res, next) {
  * @method GET
  */
 
-router.get('/ldap/:id', function (req, res, next) {
+router.get('/ldap/:id', (req, res, next) => {
     if (!Auth.check(req, 'usuarios:ldap')) {
         return next(403);
     }
@@ -116,7 +116,7 @@ router.get('/ldap/:id', function (req, res, next) {
             let ldap = ldapjs.createClient({
                 url: `ldap://${configPrivate.hosts.ldap}`
             });
-            ldap.bind('', '', function (err) {
+            ldap.bind('', '', (err) => {
                 if (err) {
                     return next(ldapjs.InvalidCredentialsError ? 403 : err);
                 }
@@ -126,14 +126,14 @@ router.get('/ldap/:id', function (req, res, next) {
                     filter: '(uid=' + req.params.id + ')',
                     paged: false,
                     sizeLimit: 1
-                }, function (err2, searchResult) {
+                }, (err2, searchResult) => {
                     if (err2) {
                         return next(err2);
                     }
-                    searchResult.on('searchEntry', function (entry) {
+                    searchResult.on('searchEntry', (entry) => {
                         res.send(entry.object);
                     });
-                    searchResult.on('error', function (err3) {
+                    searchResult.on('error', (err3) => {
                         return next('Usuario inexistente');
                     });
                 });
@@ -148,7 +148,7 @@ router.get('/ldap/:id', function (req, res, next) {
  *
  */
 
-router.get('', function (req, res, next) {
+router.get('', (req, res, next) => {
     let organizaciones = Auth.getPermissions(req, 'usuarios:get:organizacion:?');
     if (!organizaciones.length) {
         return next(403);

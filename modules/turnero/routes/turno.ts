@@ -6,11 +6,11 @@ import { turno } from '../schemas/turno';
 let router = express.Router();
 
 
-router.get('/busqueda/:id*?', function (req: any, res, next) {
+router.get('/busqueda/:id*?', (req: any, res, next) => {
     let opciones = {};
     let query;
     if (req.params.id) {
-        turno.findById(req.params.id, function (err, data) {
+        turno.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -25,7 +25,7 @@ router.get('/busqueda/:id*?', function (req: any, res, next) {
         }
 
 
-        query.exec(function (err, data) {
+        query.exec((err, data) => {
             if (err) {
                 return next(err);
             }
@@ -38,7 +38,7 @@ router.get('/busqueda/:id*?', function (req: any, res, next) {
 });
 
 
-router.post('/insert', function (req: any, res, next) {
+router.post('/insert', (req: any, res, next) => {
     let newTurno = new turno(req.body);
     newTurno.save((err) => {
         if (err) {

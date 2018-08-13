@@ -9,9 +9,9 @@ let router = express.Router();
  * @param {any} id
  * @returns
  */
-router.get('/periodoPadronesProfe/:id*?', function (req, res, next) {
+router.get('/periodoPadronesProfe/:id*?', (req, res, next) => {
     if (req.params.id) {
-        periodoPadronesProfe.findById(req.params.id, function (err, data) {
+        periodoPadronesProfe.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -19,14 +19,14 @@ router.get('/periodoPadronesProfe/:id*?', function (req, res, next) {
         });
     } else {
         if (req.query.desde) {
-            periodoPadronesProfe.find({ version: { $gte: req.query.desde } }, function (err, data) {
+            periodoPadronesProfe.find({ version: { $gte: req.query.desde } }, (err, data) => {
                 if (err) {
                     return next(err);
                 }
                 res.json(data);
             });
         } else {
-            periodoPadronesProfe.find({}, function (err, data) {
+            periodoPadronesProfe.find({}, (err, data) => {
                 if (err) {
                     return next(err);
                 }

@@ -20,7 +20,7 @@ export class Websockets {
 
            // console.log('user connected', socket.id);
 
-            socket.on('disconnect', function () {
+            socket.on('disconnect', () => {
                 if (io.dataRooms !== undefined) {
                     io.dataRooms.forEach(element => {
                         if (io.sockets.adapter.rooms[element.pantalla] === undefined) {
@@ -34,7 +34,7 @@ export class Websockets {
                     });
                 }
             });
-            socket.on('room', function (room) {
+            socket.on('room', (room) => {
                 let existe = false;
                 socket.join(room.pantalla);
                 // console.log(socket.dataRooms)

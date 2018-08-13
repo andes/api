@@ -64,7 +64,7 @@ function getAccount(code, email) {
  * @param {string} code Código de verificación enviado al celular.
  */
 
-router.post('/v2/check', function (req, res, next) {
+router.post('/v2/check', (req, res, next) => {
     let email = req.body.email;
     let code = req.body.code;
     if (!email || !code) {
@@ -85,7 +85,7 @@ router.post('/v2/check', function (req, res, next) {
  * @param {object} paciente Datos del scaneo del DNI
  */
 
-router.post('/v2/verificar', function (req, res, next) {
+router.post('/v2/verificar', (req, res, next) => {
     let email = req.body.email;
     let code = req.body.code;
     let mpiData = req.body.paciente;
@@ -113,7 +113,7 @@ router.post('/v2/verificar', function (req, res, next) {
  * @param {object} paciente Datos del scaneo del DNI
  */
 
-router.post('/v2/registrar', function (req, res, next) {
+router.post('/v2/registrar', (req, res, next) => {
     let email = req.body.email;
     let code = req.body.code;
     let password = req.body.password;
@@ -158,7 +158,7 @@ router.post('/v2/registrar', function (req, res, next) {
  *
  */
 
-router.post('/check-update', function (req, res, next) {
+router.post('/check-update', (req, res, next) => {
     // let app_version = req.body.app_version;
     // Por el momento devolvemos que todo esta bien
     return res.json({status: 'ok'});

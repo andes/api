@@ -19,7 +19,7 @@ function checkMap(paciente, contexto, concept, expect, done) {
 describe('Snomed-CIE10 Mapping', function () {
     this.timeout(5000);
 
-    before(function (done) {
+    before((done) => {
         Connections.initialize();
         done();
     });

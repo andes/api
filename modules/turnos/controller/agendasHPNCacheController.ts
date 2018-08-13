@@ -13,7 +13,7 @@ let connection = {
 };
 
 export async function integracion() {
-    return new Promise<Array<any>>(async function (resolve, reject) {
+    return new Promise<Array<any>>(async (resolve, reject) => {
         try {
             let agendasMongoPendientes = await operationsHPNCache.getAgendasDeMongoPendientes();
             for (let agenda of agendasMongoPendientes) {

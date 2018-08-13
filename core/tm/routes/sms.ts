@@ -3,7 +3,7 @@ import { sendSms, SmsOptions } from '../../../utils/roboSender/sendSms';
 
 let router = express.Router();
 
-router.get('/sms', async function (req, res, next) {
+router.get('/sms', async (req, res, next) => {
     let smsOptions: SmsOptions = {
         telefono: req.query.telefono,
         mensaje: req.query.mensaje

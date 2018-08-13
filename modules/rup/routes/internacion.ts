@@ -6,7 +6,7 @@ import * as camasController from './../controllers/cama';
 
 let router = express.Router();
 
-router.get('/internaciones/ultima/:idPaciente', function (req, res, next) {
+router.get('/internaciones/ultima/:idPaciente', (req, res, next) => {
     // buscamos la ultima interncion del paciente
     internacionesController.buscarUltimaInternacion(req.params.idPaciente, req.query.estado).then(
         internacion => {
@@ -32,7 +32,7 @@ router.get('/internaciones/ultima/:idPaciente', function (req, res, next) {
         });
 });
 
-router.get('/internaciones/pases/:idInternacion', function (req, res, next) {
+router.get('/internaciones/pases/:idInternacion', (req, res, next) => {
     // buscamos los estados de la cama por donde "estuvo la internacion"
     camasController.buscarPasesCamaXInternacion(mongoose.Types.ObjectId(req.params.idInternacion)).then(
         camas => {

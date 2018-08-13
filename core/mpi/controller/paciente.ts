@@ -50,7 +50,7 @@ export function updatePaciente(pacienteObj, data, req) {
             // pacienteObj.markModified;
             Auth.audit(pacienteObj, req);
         }
-        pacienteObj.save(function (err2) {
+        pacienteObj.save((err2) => {
             if (err2) {
                 return reject(err2);
             }
@@ -111,7 +111,7 @@ export function updatePacienteMpi(pacMpi, pacAndes, req) {
             pacMpi.esPacienteMpi = true;
             Auth.audit(pacMpi, req);
         }
-        pacMpi.save(function (err2) {
+        pacMpi.save((err2) => {
             if (err2) {
                 return reject(err2);
             }
@@ -182,7 +182,7 @@ export function postPacienteMpi(newPatientMpi, req) {
  */
 export function buscarPaciente(id): Promise<{ db: String, paciente: any }> {
     return new Promise((resolve, reject) => {
-        paciente.findById(id, function (err, data) {
+        paciente.findById(id, (err, data) => {
             if (err) {
                 reject(err);
             } else {
@@ -193,7 +193,7 @@ export function buscarPaciente(id): Promise<{ db: String, paciente: any }> {
                     };
                     resolve(resultado);
                 } else {
-                    pacienteMpi.findById(id, function (err2, dataMpi) {
+                    pacienteMpi.findById(id, (err2, dataMpi) => {
                         if (err2) {
                             reject(err2);
                         } else if (dataMpi) {
@@ -219,7 +219,7 @@ export function buscarPaciente(id): Promise<{ db: String, paciente: any }> {
 
 export function buscarPacienteWithcondition(condition): Promise<{ db: String, paciente: any }> {
     return new Promise((resolve, reject) => {
-        pacienteMpi.findOne(condition, function (err, data) {
+        pacienteMpi.findOne(condition, (err, data) => {
             if (err) {
                 reject(err);
             } else {
@@ -230,7 +230,7 @@ export function buscarPacienteWithcondition(condition): Promise<{ db: String, pa
                     };
                     resolve(resultado);
                 } else {
-                    paciente.findOne(condition, function (err2, dataMpi) {
+                    paciente.findOne(condition, (err2, dataMpi) => {
                         if (err2) {
                             reject(err2);
                         } else if (dataMpi) {
@@ -326,7 +326,7 @@ export function matching(data) {
                     let listaPacientesMin = [];
 
                     ((searchResult.hits || {}).hits || [])
-                        .filter(function (hit) {
+                        .filter((hit) => {
                             let paciente2 = hit._source;
                             let pacDto = {
                                 documento: data.documento ? data.documento.toString() : '',
@@ -364,7 +364,7 @@ export function matching(data) {
                         });
 
                     // if (devolverPorcentaje) {
-                    let sortMatching = function (a, b) {
+                    let sortMatching = (a, b) => {
                         return b.match - a.match;
                     };
 
@@ -411,7 +411,7 @@ export function deletePacienteAndes(objectId) {
         let query = {
             _id: objectId
         };
-        paciente.findById(query, function (err, patientFound) {
+        paciente.findById(query, (err, patientFound) => {
             if (err) {
                 reject(err);
             }
@@ -489,7 +489,7 @@ export function updateRelacion(req, data) {
 
 export function deleteRelacion(req, data) {
     if (data && data.relaciones) {
-        data.relaciones.find(function (value, index, array) {
+        data.relaciones.find((value, index, array) => {
             if (value && value.referencia && req.body.dto && req.body.dto.referencia) {
                 if (value.referencia.toString() === req.body.dto.referencia.toString()) {
                     array.splice(index, 1);
@@ -525,7 +525,7 @@ export function checkCarpeta(req, data) {
                     }
                 }
             };
-            paciente.find(query, function (err, res) {
+            paciente.find(query, (err, res) => {
                 if (err) {
                     reject(err);
                 }
@@ -573,7 +573,7 @@ export function searchSimilar(objective, where: string, conditions, _weights = n
                     });
                 }
 
-                let sortMatching = function (a, b) {
+                let sortMatching = (a, b) => {
                     return b.value - a.value;
                 };
 
@@ -644,7 +644,7 @@ export async function matchPaciente(dataPaciente) {
 
         }
 
-        let sortMatching = function (a, b) {
+        let sortMatching = (a, b) => {
             return b.value - a.value;
         };
 

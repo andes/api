@@ -65,10 +65,10 @@ let router = express.Router();
  *         schema:
  *           $ref: '#/definitions/barrio'
  */
-router.get('/barrios/:id*?', function (req, res, next) {
+router.get('/barrios/:id*?', (req, res, next) => {
 
     if (req.params.id) {
-        barrio.findById(req.params.id, function (err, data) {
+        barrio.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }

@@ -16,7 +16,7 @@ let router = express.Router();
  *
  */
 
-router.put('/account', function (req: any, res, next) {
+router.put('/account', (req: any, res, next) => {
     let id = req.user.account_id;
     PacienteApp.findById(mongoose.Types.ObjectId(id), (err, account: any) => {
         if (!account) {
@@ -37,7 +37,7 @@ router.put('/account', function (req: any, res, next) {
  * @param id {string} ID del paciente a crear
  */
 
-router.post('/create/:id', function (req: any, res, next) {
+router.post('/create/:id', (req: any, res, next) => {
 
     let pacienteId = req.params.id;
     let contacto = req.body;
@@ -67,7 +67,7 @@ router.post('/create/:id', function (req: any, res, next) {
  * @param id {string} ID del paciente a chequear
  */
 
-router.get('/check/:id', function (req: any, res, next) {
+router.get('/check/:id', (req: any, res, next) => {
     let pacienteId = req.params.id;
     if (!mongoose.Types.ObjectId.isValid(pacienteId)) {
         return res.status(422).send({ error: 'ObjectID Inválido' });

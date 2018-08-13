@@ -53,7 +53,7 @@ function matchPaciente(pacMpi, pacLab) {
 
 function downloadFile(url) {
     return new Promise((resolve, reject) => {
-        http.get(url, function (response) {
+        http.get(url, (response) => {
             if (response.statusCode === 200) {
                 return resolve(response);
             } else {

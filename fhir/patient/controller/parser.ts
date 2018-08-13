@@ -10,7 +10,7 @@ export function pacientesAFHIR(ids: any[]) {
     return new Promise((resolve: any, reject: any) => {
         let pacientesFHIR = [];
         let promises = [];
-        ids.forEach(function (id) {
+        ids.forEach((id) => {
             promises.push(
                 controller.buscarPaciente(id)
                     .then((result: any) => {
@@ -156,8 +156,8 @@ function buscarLocalidad(localidadStr) {
 
 function castearDirecciones(direcciones) {
     let resultado = [];
-    return new Promise(function (resolve, reject) {
-        direcciones.forEach(async function (unaAddress) {
+    return new Promise((resolve, reject) => {
+        direcciones.forEach(async (unaAddress) => {
             let direc = {
                 codigoPostal: unaAddress.postalCode,
                 valor: unaAddress.line[0]

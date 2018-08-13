@@ -5,7 +5,7 @@ import * as config from '../../../config.private';
 
 let router = express.Router();
 
-router.get('/permisos', Auth.authenticate(), function (req, res, next) {
+router.get('/permisos', Auth.authenticate(), (req, res, next) => {
     res.send(permisos);
 });
 
@@ -25,7 +25,7 @@ function makeString(item, parent) {
     }
 }
 if (config.enablePermisosDoc) {
-    router.get('/permisos/doc', function (req, res) {
+    router.get('/permisos/doc', (req, res) => {
         let rs = [];
         permisos.forEach((i) => {
             rs = [...rs, ...makeString(i, '')];

@@ -67,7 +67,7 @@ export class ElasticSync {
                 type: this.TYPE,
                 id,
                 body: data
-            }, function (error, response) {
+            }, (error, response) => {
                 if (error) {
                     reject(error);
                 }
@@ -116,7 +116,7 @@ export class ElasticSync {
                 type: this.TYPE,
                 refresh: true,
                 id
-            }, function (error, response) {
+            }, (error, response) => {
                 if (error) {
                     reject(error);
                 }

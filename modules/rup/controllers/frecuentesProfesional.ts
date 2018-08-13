@@ -20,7 +20,7 @@ export function actualizarFrecuentes(data) {
             if (typeof resultado === null || !resultado) {
                 let frecuente = new profesionalMeta(data);
 
-                frecuente.save(function (err2) {
+                frecuente.save((err2) => {
                     if (err2) {
                         return reject(err2);
                     }

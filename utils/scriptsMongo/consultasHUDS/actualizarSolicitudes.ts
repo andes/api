@@ -26,7 +26,7 @@ Connections.initialize();
     // Instanciamos un cursor
 let cursor = Prestacion.findOne().cursor();
 
-cursor.on('close', function () { // Si no encuentra nada, termina el script.
+cursor.on('close', () => { // Si no encuentra nada, termina el script.
     process.exit();
 });
 

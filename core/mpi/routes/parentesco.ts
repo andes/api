@@ -58,12 +58,12 @@ let router = express.Router();
  *         schema:
  *           $ref: '#/definitions/parentesco'
  */
-router.get('/parentescos/:id*?', function (req, res, next) {
+router.get('/parentescos/:id*?', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:parentesco')) {
         return next(403);
     }
     if (req.params.id) {
-        parentesco.modelParentesco.findById(req.params.id, function (err, data) {
+        parentesco.modelParentesco.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }

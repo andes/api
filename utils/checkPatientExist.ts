@@ -44,7 +44,7 @@ export function exists(patient: any) {
                 let weights = config.mpi.weightsDefault;
                 let porcentajeMatchMax = config.mpi.cotaMatchMax;
                 ((searchResult.hits || {}).hits || [])
-                .filter(function (hit) {
+                .filter((hit) => {
                     let pacienteElastic = hit._source;
                     let pacDto = {
                         documento: patient.documento ? patient.documento.toString() : '',

@@ -12,7 +12,7 @@ import { paciente } from '../../../core/mpi/schemas/paciente';
 // Schemas
 let router = express.Router();
 
-router.get('/([\$])match', function (req, res, next) {
+router.get('/([\$])match', (req, res, next) => {
     if (!Auth.check(req, 'fhir:pacient:match')) {
         return next(codes.status.unauthorized);
     }
@@ -69,7 +69,7 @@ router.get('/([\$])match', function (req, res, next) {
 
 });
 
-router.post('/', async function (req, res, next) {
+router.post('/', async (req, res, next) => {
     // Recibimos un paciente en formato FHIR y llamamos a la función de validación de formato FHIR
     try {
         if (!Auth.check(req, 'fhir:patient:post')) {
@@ -106,7 +106,7 @@ router.post('/', async function (req, res, next) {
                         type: 'paciente',
                         id: newPatient._id.toString(),
                         body: nuevoPac
-                    }, function (error, response) {
+                    }, (error, response) => {
                         if (error) {
                             return next(codes.status.error);
                         }

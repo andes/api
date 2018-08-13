@@ -11,7 +11,7 @@ import {
 
 let router = express.Router();
 
-router.get('/renaper', async function (req, res, next) {
+router.get('/renaper', async (req, res, next) => {
     if (!Auth.check(req, 'fa:get:renaper')) {
         return next(403);
     }

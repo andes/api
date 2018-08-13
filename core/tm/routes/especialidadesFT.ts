@@ -4,11 +4,11 @@ import * as mongoose from 'mongoose';
 
 let router = express.Router();
 
-router.get('/especialidadFT/:id?', function (req, res, next) {
+router.get('/especialidadFT/:id?', (req, res, next) => {
 
     if (mongoose.Types.ObjectId.isValid(req.params.id)) {
 
-        especialidad.findById(req.params.id, function (err, data) {
+        especialidad.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -20,7 +20,7 @@ router.get('/especialidadFT/:id?', function (req, res, next) {
 
         query.sort({ descripcion: 1 });
 
-        query.exec(function (err, data) {
+        query.exec((err, data) => {
             if (err) {
                 return next(err);
             }

@@ -3,10 +3,10 @@ import * as modalidadesCertificacion from '../schemas/modalidadesCertificacion';
 
 let router = express.Router();
 
-router.get('/modalidadesCertificacion/:id*?', function (req, res, next) {
+router.get('/modalidadesCertificacion/:id*?', (req, res, next) => {
 
  if (req.params.id) {
-    modalidadesCertificacion.findById(req.params.id, function (err, data) {
+    modalidadesCertificacion.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }

@@ -8,7 +8,7 @@ let router = express.Router();
  * Obtenemos las vacunas del Paciente App
  */
 
-router.get('/vacunas', function (req: any, res, next) {
+router.get('/vacunas', (req: any, res, next) => {
     const pacienteId = req.user.pacientes[0].id;
     // primero buscar paciente
     controller.buscarPaciente(pacienteId).then(async data => {
@@ -23,7 +23,7 @@ router.get('/vacunas', function (req: any, res, next) {
  * Cantidad de vacunas de un paciente
  */
 
-router.get('/vacunas/count', async function (req: any, res, next) {
+router.get('/vacunas/count', async (req: any, res, next) => {
     const pacienteId = req.user.pacientes[0].id;
     // primero buscar paciente
     controller.buscarPaciente(pacienteId).then(async data => {

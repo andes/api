@@ -13,7 +13,7 @@ let router = express.Router();
  * Devuelve un concepto Entero
  */
 
-router.get('/snomed/concepts/:sctid', async function (req, res, next) {
+router.get('/snomed/concepts/:sctid', async (req, res, next) => {
     let sctid = req.params.sctid;
     try {
         let concept = await snomedCtr.getConcept(sctid);
@@ -27,7 +27,7 @@ router.get('/snomed/concepts/:sctid', async function (req, res, next) {
  * Devuelve las descripciones de un concepto
  */
 
-router.get('/snomed/concepts/:sctid/descriptions', async function (req, res, next) {
+router.get('/snomed/concepts/:sctid/descriptions', async (req, res, next) => {
     let sctid = req.params.sctid;
     try {
         let concept: any = await snomedCtr.getConcept(sctid);
@@ -41,7 +41,7 @@ router.get('/snomed/concepts/:sctid/descriptions', async function (req, res, nex
  * Devuelve los padres de un concepto
  */
 
-router.get('/snomed/concepts/:sctid/parents', async function (req, res, next) {
+router.get('/snomed/concepts/:sctid/parents', async (req, res, next) => {
     let sctid = req.params.sctid;
     try {
         let concept: any = await snomedCtr.getConcept(sctid);
@@ -61,7 +61,7 @@ router.get('/snomed/concepts/:sctid/parents', async function (req, res, next) {
  * @param {Boolean} leaf Devulve solo los descencientes hojas
  */
 
-router.get('/snomed/concepts/:sctid/childs', async function (req, res, next) {
+router.get('/snomed/concepts/:sctid/childs', async (req, res, next) => {
     let sctid = req.params.sctid;
     let all = req.query.all || false;
     let leaf = req.query.leaf || false;
@@ -79,7 +79,7 @@ router.get('/snomed/concepts/:sctid/childs', async function (req, res, next) {
  * Filtro por texto, reference set, semanticTag, Atributos, Hojas.
  * Skip y limit
  */
-router.get('/snomed/search', async function (req, res, next) {
+router.get('/snomed/search', async (req, res, next) => {
     if (!req.query.search && !req.query.refsetId && req.query.search !== '') {
         return next('Debe ingresar un parámetro de búsqueda');
     }
@@ -107,7 +107,7 @@ router.get('/snomed/search', async function (req, res, next) {
         // Busca por palabras
         conditions['$and'] = [];
         let words = search.split(' ');
-        words.forEach(function (word) {
+        words.forEach((word) => {
             // normalizamos cada una de las palabras como hace SNOMED para poder buscar palabra a palabra
             word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08');
             let expWord = '^' + utils.removeDiacritics(word) + '.*';
@@ -196,7 +196,7 @@ router.get('/snomed/search', async function (req, res, next) {
 
 });
 
-router.get('/snomed/expression', async function (req, res, next) {
+router.get('/snomed/expression', async (req, res, next) => {
     let expression = req.query.expression;
     let query = makeMongoQuery(expression);
     snomedModel.find(query, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docs: any[]) => {

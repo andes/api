@@ -13,13 +13,13 @@ import { toArray } from '../../../utils/utils';
 let router = express.Router();
 
 // Envía el sms al paciente recordando el turno con 24 Hs de antelación
-router.post('/turnos/smsRecordatorioTurno', function (req, res, next) {
+router.post('/turnos/smsRecordatorioTurno', (req, res, next) => {
 
     recordatorioController.enviarTurnoRecordatorio();
     res.json({});
 });
 
-router.get('/turnos/recordatorioTurno', function (req, res, next) {
+router.get('/turnos/recordatorioTurno', (req, res, next) => {
 
     recordatorioController.buscarTurnosARecordar(1);
     res.json({});
@@ -29,7 +29,7 @@ router.get('/turnos/recordatorioTurno', function (req, res, next) {
  * Get turnos del Paciente App
  */
 
-router.get('/turnos', async function (req: any, res, next) {
+router.get('/turnos', async (req: any, res, next) => {
     let pipelineTurno = [];
     let turnos = [];
     let turno;
@@ -123,7 +123,7 @@ router.get('/turnos', async function (req: any, res, next) {
         if (turno.reasignado && turno.reasignado.anterior) {
             let promise = new Promise((resolve, reject) => {
                 let datos = turno.reasignado.anterior;
-                agenda.findById(datos.idAgenda, function (err, ag: any) {
+                agenda.findById(datos.idAgenda, (err, ag: any) => {
                     if (err) {
                         resolve();
                     }
@@ -169,7 +169,7 @@ router.get('/turnos', async function (req: any, res, next) {
  * @param  agenda_id {string} id de la agenda
  */
 
-router.post('/turnos/cancelar', function (req: any, res, next) {
+router.post('/turnos/cancelar', (req: any, res, next) => {
     /* Por el momento usamos el primer paciente */
     let pacienteId = req.user.pacientes[0].id;
 
@@ -181,7 +181,7 @@ router.post('/turnos/cancelar', function (req: any, res, next) {
         return next('ObjectID Inválido');
     }
 
-    agenda.findById(agendaId, function (err, agendaObj) {
+    agenda.findById(agendaId, (err, agendaObj) => {
         if (err) {
             return res.status(422).send({ message: 'agenda_id_invalid' });
         }
@@ -193,7 +193,7 @@ router.post('/turnos/cancelar', function (req: any, res, next) {
                 agendaCtrl.liberarTurno(req, agendaObj, turno);
 
                 Auth.audit(agendaObj, req);
-                return agendaObj.save(function (error) {
+                return agendaObj.save((error) => {
                     Logger.log(req, 'citas', 'update', {
                         accion: 'liberarTurno',
                         ruta: req.url,
@@ -225,7 +225,7 @@ router.post('/turnos/cancelar', function (req: any, res, next) {
  * @param bloque_id {string} id del bloque
  */
 
-router.post('/turnos/confirmar', function (req: any, res, next) {
+router.post('/turnos/confirmar', (req: any, res, next) => {
     /* Por el momento usamos el primer paciente */
     let pacienteId = req.user.pacientes[0].id;
 
@@ -237,7 +237,7 @@ router.post('/turnos/confirmar', function (req: any, res, next) {
         return next('ObjectID Inválido');
     }
 
-    agenda.findById(agendaId, function (err, agendaObj) {
+    agenda.findById(agendaId, (err, agendaObj) => {
         if (err) {
             return res.status(422).send({ message: 'agenda_id_invalid' });
         }
@@ -251,7 +251,7 @@ router.post('/turnos/confirmar', function (req: any, res, next) {
                     turno.confirmedAt = new Date();
 
                     Auth.audit(agendaObj, req);
-                    return agendaObj.save(function (error) {
+                    return agendaObj.save((error) => {
                         Logger.log(req, 'citas', 'update', {
                             accion: 'confirmar',
                             ruta: req.url,
@@ -288,7 +288,7 @@ router.post('/turnos/confirmar', function (req: any, res, next) {
  * @param agenda_id {string} id de la agenda
  * @param bloque_id {string} id del bloque
  */
-router.post('/turnos/asistencia', function (req: any, res, next) {
+router.post('/turnos/asistencia', (req: any, res, next) => {
     /* Por el momento usamos el primer paciente */
     let pacienteId = req.user.pacientes[0].id;
 
@@ -300,7 +300,7 @@ router.post('/turnos/asistencia', function (req: any, res, next) {
         return next('ObjectID Inválido');
     }
 
-    agenda.findById(agendaId, function (err, agendaObj) {
+    agenda.findById(agendaId, (err, agendaObj) => {
         if (err) {
             return res.status(422).send({ message: 'agenda_id_invalid' });
         }
@@ -314,7 +314,7 @@ router.post('/turnos/asistencia', function (req: any, res, next) {
                     turno.asistencia = 'asistio';
 
                     Auth.audit(agendaObj, req);
-                    return agendaObj.save(function (error) {
+                    return agendaObj.save((error) => {
                         Logger.log(req, 'citas', 'update', {
                             accion: 'asistencia',
                             ruta: req.url,

@@ -5,9 +5,9 @@ import { defaultLimit, maxLimit } from './../../../config';
 
 let router = express.Router();
 
-router.get('/espacioFisico/:_id*?', function (req, res, next) {
+router.get('/espacioFisico/:_id*?', (req, res, next) => {
     if (req.params._id) {
-        espacioFisico.findById(req.params._id, function (err, data) {
+        espacioFisico.findById(req.params._id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -84,9 +84,9 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
     }
 });
 
-router.get('/espacioFisico/:idOrganizacion', function (req, res, next) {
+router.get('/espacioFisico/:idOrganizacion', (req, res, next) => {
 
-    espacioFisico.find(req.params.idOrganizacion, function (err, data) {
+    espacioFisico.find(req.params.idOrganizacion, (err, data) => {
         if (err) {
             return next(err);
         }
@@ -95,7 +95,7 @@ router.get('/espacioFisico/:idOrganizacion', function (req, res, next) {
 
 });
 
-router.post('/espacioFisico', function (req, res, next) {
+router.post('/espacioFisico', (req, res, next) => {
     let newEspacioFisico = new espacioFisico(req.body);
     newEspacioFisico.save((err) => {
         if (err) {
@@ -105,8 +105,8 @@ router.post('/espacioFisico', function (req, res, next) {
     });
 });
 
-router.put('/espacioFisico/:id', function (req, res, next) {
-    espacioFisico.findByIdAndUpdate(req.params.id, req.body, function (err, data) {
+router.put('/espacioFisico/:id', (req, res, next) => {
+    espacioFisico.findByIdAndUpdate(req.params.id, req.body, (err, data) => {
         if (err) {
             return next(err);
         }
@@ -114,8 +114,8 @@ router.put('/espacioFisico/:id', function (req, res, next) {
     });
 });
 
-router.delete('/espacioFisico/:id', function (req, res, next) {
-    espacioFisico.findByIdAndRemove(req.params.id, function (err, data) {
+router.delete('/espacioFisico/:id', (req, res, next) => {
+    espacioFisico.findByIdAndRemove(req.params.id, (err, data) => {
         if (err) {
             return next(err);
         }

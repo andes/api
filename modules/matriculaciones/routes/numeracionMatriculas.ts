@@ -21,10 +21,10 @@ let router = express.Router();
 //     });
 // })
 
-router.get('/numeraciones/:id*?', function (req, res, next) {
+router.get('/numeraciones/:id*?', (req, res, next) => {
     if (req.query.especialidad || req.query.profesion) {
         if (req.query.profesion) {
-            NumeracionMatriculas.find({ 'profesion._id': req.query.profesion }, function (err, data) {
+            NumeracionMatriculas.find({ 'profesion._id': req.query.profesion }, (err, data) => {
                 if (err) {
                     next(err);
                 }
@@ -32,7 +32,7 @@ router.get('/numeraciones/:id*?', function (req, res, next) {
             });
         }
         if (req.query.especialidad) {
-            NumeracionMatriculas.find({ 'especialidad._id': req.query.especialidad }, function (err, data) {
+            NumeracionMatriculas.find({ 'especialidad._id': req.query.especialidad }, (err, data) => {
                 if (err) {
                     next(err);
                 }
@@ -61,7 +61,7 @@ router.get('/numeraciones/:id*?', function (req, res, next) {
         NumeracionMatriculas.find(busquedaNumeracion)
             .skip(offset)
             .limit(chunkSize)
-            .exec(function (error, data) {
+            .exec((error, data) => {
 
                 if (error) {
                     return next(error);
@@ -122,7 +122,7 @@ router.get('/numeracionesRestart', (req, resp, errorHandler) => {
 /**
  *
  */
-router.post('/numeraciones', function (request, response, errorHandler) {
+router.post('/numeraciones', (request, response, errorHandler) => {
     let opciones = {};
     let query;
 
@@ -138,7 +138,7 @@ router.post('/numeraciones', function (request, response, errorHandler) {
     query = NumeracionMatriculas.find(opciones);
 
 
-    query.exec(function (err, data) {
+    query.exec((err, data) => {
         if (data.length > 0) {
             response.send(null);
         } else {
@@ -160,7 +160,7 @@ router.post('/numeraciones', function (request, response, errorHandler) {
 });
 
 
-router.put('/numeraciones', function (request, response, errorHandler) {
+router.put('/numeraciones', (request, response, errorHandler) => {
     NumeracionMatriculas.findByIdAndUpdate(request.body.id, request.body, (error, numeracion) => {
 
         if (error) {

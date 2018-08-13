@@ -14,7 +14,7 @@ import { configuracionPrestacionModel } from '../../../core/term/schemas/configu
 // Funciones privadas
 function traeProfesionalPorId(id) {
     return new Promise((resolve, reject) => {
-        profesional.findById(mongoose.Types.ObjectId(id), function (err, unProfesional) {
+        profesional.findById(mongoose.Types.ObjectId(id), (err, unProfesional) => {
             if (err) {
                 return reject(err);
             }
@@ -41,7 +41,7 @@ function profesionalCompleto(lstProfesionales): any {
 /** Dado un id de Organización devuelve el objeto completo */
 function organizacionCompleto(idOrganizacion): any {
     return new Promise((resolve, reject) => {
-        organizacion.model.findById(mongoose.Types.ObjectId(idOrganizacion), function (err, unaOrganizacion) {
+        organizacion.model.findById(mongoose.Types.ObjectId(idOrganizacion), (err, unaOrganizacion) => {
             if (err) {
                 return reject(err);
             }
@@ -52,7 +52,7 @@ function organizacionCompleto(idOrganizacion): any {
 
 // Funciones públicas
 export function noExistCDA(protocol, dniPaciente) {
-    return new Promise(async function (resolve, reject) {
+    return new Promise(async (resolve, reject) => {
         try {
             let query = 'select * from LAB_ResultadoEncabezado where idProtocolo = ' + protocol + ' and numeroDocumento =  ' + dniPaciente;
             let result = await new sql.Request().query(query);
@@ -68,7 +68,7 @@ export function noExistCDA(protocol, dniPaciente) {
 }
 
 export function setMarkProtocol(protocol, documento, idCda) {
-    return new Promise(async function (resolve, reject) {
+    return new Promise(async (resolve, reject) => {
         try {
             let query = 'UPDATE LAB_ResultadoEncabezado set cda = ' + '\'' + idCda + '\'' + ' where idProtocolo = ' + protocol + ' and numeroDocumento = ' + documento;
             let result = await new sql.Request().query(query);
@@ -83,7 +83,7 @@ export function organizacionBySisaCode(code): any {
     return new Promise((resolve, reject) => {
         organizacion.model.findOne({
             'codigo.sisa': code
-        }, function (err, doc: any) {
+        }, (err, doc: any) => {
             if (err) {
                 return reject(err);
             }
@@ -102,7 +102,7 @@ export function organizacionBySisaCode(code): any {
 
 
 export function getEncabezados(documento): any {
-    return new Promise(async function (resolve, reject) {
+    return new Promise(async (resolve, reject) => {
         try {
             let query = 'select efector.codigoSisa as efectorCodSisa, efector.nombre as efector, encabezado.idEfector as idEfector, encabezado.apellido, encabezado.nombre, encabezado.fechaNacimiento, encabezado.sexo, ' +
                 'encabezado.numeroDocumento, encabezado.fecha, encabezado.idProtocolo, encabezado.solicitante from LAB_ResultadoEncabezado as encabezado ' +
@@ -118,7 +118,7 @@ export function getEncabezados(documento): any {
 
 
 export async function getDetalles(idProtocolo, idEfector) {
-    return new Promise(async function (resolve, reject) {
+    return new Promise(async (resolve, reject) => {
         try {
             let query = 'select grupo, item, resultado, valorReferencia, observaciones, hiv, profesional_val ' +
                 ' from LAB_ResultadoDetalle as detalle where esTitulo = \'No\' and detalle.idProtocolo = ' + idProtocolo + ' and detalle.idEfector = ' + idEfector;
@@ -189,7 +189,7 @@ export async function cacheTurnos(unaAgenda) {
                         }
                     }).exec();
             } else {
-                agenda.save(function (err2, agendaGuardada: any) {
+                agenda.save((err2, agendaGuardada: any) => {
                     if (err2) {
                         return err2;
                     }
@@ -202,11 +202,11 @@ export async function cacheTurnos(unaAgenda) {
     }
 
     async function integrarAgenda(_agenda) {
-        return new Promise(function (resolve, reject) {
+        return new Promise((resolve, reject) => {
             configuracionPrestacionModel.find({
                 'snomed.conceptId': { $eq: _agenda.tipoPrestaciones[0].conceptId },
                 'organizaciones._id': { $eq: _agenda.organizacion._id }
-            }).exec(function (err, data: any) {
+            }).exec((err, data: any) => {
                 if (err) {
                     reject(err);
                 }

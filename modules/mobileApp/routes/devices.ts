@@ -12,10 +12,10 @@ let router = express.Router();
  * @param app_version {String}
  */
 
-router.post('/devices/register', function (req: any, res, next) {
+router.post('/devices/register', (req: any, res, next) => {
     let token: string = req.headers.authorization.substring(4);
     let user_id = req.user.account_id;
-    pacienteApp.findById(user_id, function (errFind, user: any) {
+    pacienteApp.findById(user_id, (errFind, user: any) => {
         if (errFind) {
             return res.status(422).send({ message: 'user_invalid' });
         }
@@ -47,10 +47,10 @@ router.post('/devices/register', function (req: any, res, next) {
  * }
  */
 
-router.post('/devices/update', function (req: any, res, next) {
+router.post('/devices/update', (req: any, res, next) => {
     let token: string = req.headers.authorization.substring(4);
     let user_id = req.user.account_id;
-    pacienteApp.findById(user_id, function (errFind, user: any) {
+    pacienteApp.findById(user_id, (errFind, user: any) => {
         if (errFind) {
             return res.status(422).send({ message: 'user_invalid' });
         }
@@ -77,11 +77,11 @@ router.post('/devices/update', function (req: any, res, next) {
  * @param id {ObjectId}
  */
 
-router.post('/devices/delete', function (req: any, res, next) {
+router.post('/devices/delete', (req: any, res, next) => {
     // let token: string = req.headers.authorization.substring(4);
     let user_id = req.user.account_id;
 
-    pacienteApp.findById(user_id, function (errFind, user: any) {
+    pacienteApp.findById(user_id, (errFind, user: any) => {
         if (errFind) {
             return res.status(422).send({ message: 'user_invalid' });
         }

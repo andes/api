@@ -4,7 +4,7 @@ import * as mongoose from 'mongoose';
 
 let router = express.Router();
 
-router.get('/configuracionPrestaciones/:id*?', function (req, res, next) {
+router.get('/configuracionPrestaciones/:id*?', (req, res, next) => {
     // Agregar seguridad!!
     // if (!Auth.check(req, 'string')) {
     //     return next(403);
@@ -12,7 +12,7 @@ router.get('/configuracionPrestaciones/:id*?', function (req, res, next) {
 
     if (req.params.id) {
         configuracionPrestacion.configuracionPrestacionModel.findById(req.params.id
-            , function (err, data) {
+            , (err, data) => {
                 if (err) {
                     return next(err);
                 }
@@ -26,7 +26,7 @@ router.get('/configuracionPrestaciones/:id*?', function (req, res, next) {
         if (req.query.organizacion) {
             query = configuracionPrestacion.configuracionPrestacionModel.find({ 'organizaciones._id': req.query.organizacion });
         }
-        query.exec(function (err, data) {
+        query.exec((err, data) => {
             if (err) {
                 return next(err);
             }
@@ -43,11 +43,11 @@ Elimina un 'mapeo' (Elemento del arreglo 'organizaciones') de tipoPrestacion - E
 @param {any} codigoEspecialidad (int)
 */
 
-router.put('/configuracionPrestaciones', function (req, res, next) {
+router.put('/configuracionPrestaciones', (req, res, next) => {
     if (req.body.idTipoPrestacion && req.body.idOrganizacion) {
         // busca por especialidad
         configuracionPrestacion.configuracionPrestacionModel.update(
-            { _id: req.body.idTipoPrestacion }, { $pull: { organizaciones: { _id: req.body.idOrganizacion } } }, function (err, data) {
+            { _id: req.body.idTipoPrestacion }, { $pull: { organizaciones: { _id: req.body.idOrganizacion } } }, (err, data) => {
                 if (err) {
                     return next(err);
                 }
@@ -65,7 +65,7 @@ Inserta un 'mapeo' de tipoPrestacion - Especialidad - Organicación.
 @param {any} conceptSnomed
 @param {any} prestacionLegacy
 */
-router.post('/configuracionPrestaciones', async function (req, res, next) {
+router.post('/configuracionPrestaciones', async (req, res, next) => {
     if (req.body.organizacion && req.body.conceptSnomed && req.body.prestacionLegacy) {
         let idSnomed = req.body.conceptSnomed.conceptId;
         let existeTipoPrestacion = await configuracionPrestacion.configuracionPrestacionModel.findOne({ 'snomed.conceptId': idSnomed });
@@ -83,7 +83,7 @@ router.post('/configuracionPrestaciones', async function (req, res, next) {
                     nombreEspecialidad: req.body.prestacionLegacy.nombreEspecialidad,
                     codigo: req.body.prestacionLegacy.codigo
                 }];
-                configuracionPrestacion.configuracionPrestacionModel.update({ 'snomed.conceptId': idSnomed }, { $push: { organizaciones: newOrganizacion } }, function (err, resultado) {
+                configuracionPrestacion.configuracionPrestacionModel.update({ 'snomed.conceptId': idSnomed }, { $push: { organizaciones: newOrganizacion } }, (err, resultado) => {
                     if (err) {
                         return next(err);
                     } else {
@@ -102,7 +102,7 @@ router.post('/configuracionPrestaciones', async function (req, res, next) {
                     codigo: req.body.prestacionLegacy.codigo
                 }]
             };
-            configuracionPrestacion.configuracionPrestacionModel.create(newConfigPres, function (err, data) {
+            configuracionPrestacion.configuracionPrestacionModel.create(newConfigPres, (err, data) => {
                 if (err) {
                     return next(err);
                 }

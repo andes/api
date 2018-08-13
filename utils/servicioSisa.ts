@@ -32,19 +32,19 @@ export function getSisaCiudadano(nroDocumento, usuario, clave, sexo?: string) {
 
     // Realizar GET request
     return new Promise((resolve, reject) => {
-        let reqGet = https.request(optionsgetmsg, function (res) {
-            res.on('data', function (d) {
+        let reqGet = https.request(optionsgetmsg, (res) => {
+            res.on('data', (d) => {
                 // console.info('GET de Sisa ' + nroDocumento + ':\n');
                 if (d.toString()) {
                     xml = xml + d.toString();
                 }
             });
 
-            res.on('end', function () {
+            res.on('end', () => {
 
                 if (xml) {
                     // Se parsea el xml obtenido a JSON
-                    to_json(xml, function (error, data) {
+                    to_json(xml, (error, data) => {
                         if (error) {
                             resolve([500, {}]);
                         } else {
@@ -59,7 +59,7 @@ export function getSisaCiudadano(nroDocumento, usuario, clave, sexo?: string) {
 
         });
         reqGet.end();
-        reqGet.on('error', function (e) {
+        reqGet.on('error', (e) => {
             reject(e);
         });
 

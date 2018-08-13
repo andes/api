@@ -5,7 +5,7 @@ import { defaultLimit, maxLimit } from './../../../config';
 
 let router = express.Router();
 
-router.get('/cie10', function (req, res, next) {
+router.get('/cie10', (req, res, next) => {
     let query;
     let conditions = {};
     let termino: String = '';
@@ -13,7 +13,7 @@ router.get('/cie10', function (req, res, next) {
     conditions['$or'] = [];
     // separamos todas las palabras y eliminamos caracteres extraños
     let words = String(req.query.nombre).split(' ');
-    words.forEach(function (word) {
+    words.forEach((word) => {
         // normalizamos cada una de las palabras como hace SNOMED para poder buscar palabra a palabra
         word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08');
         let expWord = utils.removeDiacritics(word) + '.*';
@@ -30,7 +30,7 @@ router.get('/cie10', function (req, res, next) {
     let limit = Math.min(parseInt(req.query.limit || defaultLimit, 15), maxLimit);
     query.skip(skip);
     query.limit(limit);
-    query.exec(function (err, data) {
+    query.exec((err, data) => {
         if (err) {
             return next(err);
         }

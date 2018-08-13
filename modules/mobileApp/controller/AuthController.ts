@@ -123,7 +123,7 @@ export function createUniqueCode() {
 
 export function checkAppAccounts(pacienteData) {
     return new Promise((resolve, reject) => {
-        PacienteApp.find({ 'pacientes.id': pacienteData.id }, function (err, docs: any[]) {
+        PacienteApp.find({ 'pacientes.id': pacienteData.id }, (err, docs: any[]) => {
             if (docs.length > 0) {
                 return resolve({ message: 'account_assigned', account: docs[0] });
             } else {
@@ -203,7 +203,7 @@ export function createUserFromPaciente(pacienteData, contacto) {
             return reject({ error: 'email_not_found' });
         }
 
-        PacienteApp.findOne({ email: dataPacienteApp.email }, function (err, existingUser) {
+        PacienteApp.findOne({ email: dataPacienteApp.email }, (err, existingUser) => {
 
             if (err) {
                 return reject({ error: 'unknow_error' });
@@ -215,7 +215,7 @@ export function createUserFromPaciente(pacienteData, contacto) {
 
             let user = new PacienteApp(dataPacienteApp);
 
-            user.save(function (errSave, userSaved: any) {
+            user.save((errSave, userSaved: any) => {
 
                 if (errSave) {
                     return reject(errSave);
@@ -275,7 +275,7 @@ export function matchPaciente(data) {
             // let devolverPorcentaje = data.percentage;
 
             let _results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
-                .filter(function (hit) {
+                .filter((hit) => {
                     let pacienteElastic = hit._source;
                     let pacDto = {
                         documento: data.documento ? data.documento.toString() : '',
@@ -303,7 +303,7 @@ export function matchPaciente(data) {
                     }
                 });
 
-            let sortMatching = function (a, b) {
+            let sortMatching = (a, b) => {
                 return b.match - a.match;
             };
 
@@ -354,7 +354,7 @@ export function updateAccount(account, data) {
         if (data.email) {
             account.email = data.email;
             promise = new Promise((resolveEmail, rejectEmail) => {
-                PacienteApp.findOne({ email: data.email }, function (err, acts) {
+                PacienteApp.findOne({ email: data.email }, (err, acts) => {
                     if (!acts) {
                         resolveEmail();
                     } else {
@@ -366,7 +366,7 @@ export function updateAccount(account, data) {
 
         Promise.all([promise, promise_password]).then(() => {
 
-            account.save(function (err) {
+            account.save((err) => {
                 if (err) {
                     return reject(err);
                 }
@@ -414,7 +414,7 @@ export function habilitarCuenta(userAccount, password) {
         userAccount.expirationTime = null;
         userAccount.password = password;
 
-        userAccount.save(function (errSave, user) {
+        userAccount.save((errSave, user) => {
             if (errSave) {
                 return reject(errSave);
             }

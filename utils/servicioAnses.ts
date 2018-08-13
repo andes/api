@@ -18,13 +18,13 @@ export function getServicioAnses(paciente) {
     return new Promise((resolve, reject) => {
         let band = (paciente.entidadesValidadoras) ? (paciente.entidadesValidadoras.indexOf('anses') < 0) : true;
         if (paciente && paciente.documento && band) {
-            soap.createClient(url, function (err, client) {
+            soap.createClient(url, (err, client) => {
                 if (err) {
                     return reject(err);
                 }
                 if (client) {
                     let pacAndes: any;
-                    client.LoginPecas(login, async function (err2, result) {
+                    client.LoginPecas(login, async (err2, result) => {
                         if (err2) {
                             reject(err2);
                         }
@@ -101,12 +101,12 @@ function consultaAnses(sesion, tipo, filtro) {
     let rst: any;
     datosAnses = [];
     return new Promise((resolve, reject) => {
-        soap.createClient(serv2, function (err, client) {
+        soap.createClient(serv2, (err, client) => {
             let args = {
                 IdSesion: sesion.return['$value'],
                 Base: 'PecasAutorizacion'
             };
-            client.FijarBaseDeSesion(args, async function (err2, result) {
+            client.FijarBaseDeSesion(args, async (err2, result) => {
                 if (err2) {
                     reject(err2);
                 }
@@ -136,7 +136,7 @@ function consultaAnses(sesion, tipo, filtro) {
 
 function solicitarServicio(sesion, tipo, filtro) {
     return new Promise((resolve, reject) => {
-        soap.createClient(serv, function (err3, client2) {
+        soap.createClient(serv, (err3, client2) => {
             if (err3) {
                 reject(err3);
             }
@@ -152,7 +152,7 @@ function solicitarServicio(sesion, tipo, filtro) {
                 CuerpoEncriptado: false
             };
             if (client2) {
-                client2.Solicitar_Servicio(args2, function (err4, result2) {
+                client2.Solicitar_Servicio(args2, (err4, result2) => {
                     if (err4) {
                         reject(err4);
                     }

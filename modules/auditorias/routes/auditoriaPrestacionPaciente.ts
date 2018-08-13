@@ -11,9 +11,9 @@ import { Logger } from '../../../utils/logService';
 
 let router = express.Router();
 
-router.get('/prestacionPaciente/:id*?', function (req, res, next) {
+router.get('/prestacionPaciente/:id*?', (req, res, next) => {
     if (req.params.id) {
-        auditoria.findById(req.params.id, function (err, data) {
+        auditoria.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -74,7 +74,7 @@ router.get('/prestacionPaciente/:id*?', function (req, res, next) {
     }
 });
 
-router.post('/auditoria', function (req, res, next) {
+router.post('/auditoria', (req, res, next) => {
     let insertAuditoria = new auditoria(req.body);
 
     // Debe ir antes del save, y ser una instancia del modelo
@@ -94,7 +94,7 @@ router.post('/auditoria', function (req, res, next) {
     });
 });
 
-router.put('/prestacionPaciente/:id', function (req, res, next) {
+router.put('/prestacionPaciente/:id', (req, res, next) => {
 
     let updateAuditoria = new auditoria(req.body);
 
@@ -119,7 +119,7 @@ router.put('/prestacionPaciente/:id', function (req, res, next) {
 });
 
 // [A] 2017-05-08: Los patch de ANDES son una mentira
-router.patch('/prestacionPaciente/:id', function (req, res, next) {
+router.patch('/prestacionPaciente/:id', (req, res, next) => {
 
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         return next('ObjectID Inválido');
@@ -129,7 +129,7 @@ router.patch('/prestacionPaciente/:id', function (req, res, next) {
         Auth.audit(data, req);
         // Patch
         data.set(req.body.key, req.body.value);
-        data.save(function (errOnPatch) {
+        data.save((errOnPatch) => {
             Logger.log(req, 'auditoria', 'update', {
                 accion: 'Actualizar auditoría de prestacionPaciente',
                 ruta: req.url,
@@ -145,8 +145,8 @@ router.patch('/prestacionPaciente/:id', function (req, res, next) {
     });
 });
 
-router.delete('/prestacionPaciente/:id', function (req, res, next) {
-    auditoria.findByIdAndRemove(req.params.id, function (err, data) {
+router.delete('/prestacionPaciente/:id', (req, res, next) => {
+    auditoria.findByIdAndRemove(req.params.id, (err, data) => {
         Logger.log(req, 'auditoria', 'delete', {
             accion: 'Eliminar Aditoría de prestacionPaciente',
             ruta: req.url,

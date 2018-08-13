@@ -22,19 +22,19 @@ export function getPersonaSintys(nroDocumento: string) {
     };
     // Realizar GET request
     return new Promise((resolve, reject) => {
-        let reqGet = https.request(optionsgetmsg, function (res) {
-            res.on('data', function (d) {
+        let reqGet = https.request(optionsgetmsg, (res) => {
+            res.on('data', (d) => {
                 if (d.toString()) {
                     xml = xml + d.toString();
                 }
             });
 
-            res.on('end', function () {
+            res.on('end', () => {
 
                 if (xml) {
                     // Se parsea el xml obtenido a JSON
                     // console.log('el xml obtenido',xml);
-                    to_json(xml, function (error, data) {
+                    to_json(xml, (error, data) => {
                         if (error) {
                             resolve([500, {}]);
                         } else {
@@ -49,7 +49,7 @@ export function getPersonaSintys(nroDocumento: string) {
 
         });
         reqGet.end();
-        reqGet.on('error', function (e) {
+        reqGet.on('error', (e) => {
             reject(e);
         });
 

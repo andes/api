@@ -89,10 +89,10 @@ let router = express.Router();
  *         schema:
  *           $ref: '#/definitions/especialidad'
  */
-router.get('/especialidades/:id*?', function (req, res, next) {
+router.get('/especialidades/:id*?', (req, res, next) => {
     if (req.params.id) {
 
-        especialidad.findById(req.params.id, function (err, data) {
+        especialidad.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -139,7 +139,7 @@ router.get('/especialidades/:id*?', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/especialidad'
  */
-router.post('/especialidades', Auth.authenticate(), function (req, res, next) {
+router.post('/especialidades', Auth.authenticate(), (req, res, next) => {
     if (!Auth.check(req, 'tm:especialidad:postEspecialidad')) {
         return next(403);
     }
@@ -182,11 +182,11 @@ router.post('/especialidades', Auth.authenticate(), function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/especialidad'
  */
-router.put('/especialidades/:id', Auth.authenticate(), function (req, res, next) {
+router.put('/especialidades/:id', Auth.authenticate(), (req, res, next) => {
     if (!Auth.check(req, 'tm:especialidad:putEspecialidad')) {
         return next(403);
     }
-    especialidad.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
+    especialidad.findByIdAndUpdate(req.params.id, req.body, { new: true }, (err, data) => {
         if (err) {
             return next(err);
         }
@@ -219,11 +219,11 @@ router.put('/especialidades/:id', Auth.authenticate(), function (req, res, next)
  *         schema:
  *           $ref: '#/definitions/especialidad'
  */
-router.delete('/especialidades/:id', Auth.authenticate(), function (req, res, next) {
+router.delete('/especialidades/:id', Auth.authenticate(), (req, res, next) => {
     if (!Auth.check(req, 'tm:especialidad:deleteEspecialidad')) {
         return next(403);
     }
-    especialidad.findByIdAndRemove(req.params.id, function (err, data) {
+    especialidad.findByIdAndRemove(req.params.id, (err, data) => {
         if (err) {
             return next(err);
         }

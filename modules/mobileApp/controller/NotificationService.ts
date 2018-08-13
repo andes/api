@@ -40,7 +40,7 @@ export class NotificationService {
 
     private static findTurno(datosTurno) {
         return new Promise((resolve, reject) => {
-            agenda.findById(datosTurno.idAgenda, function (err, ag: any) {
+            agenda.findById(datosTurno.idAgenda, (err, ag: any) => {
                 if (err) {
                     reject();
                 }
@@ -67,7 +67,7 @@ export class NotificationService {
      */
 
     private static sendByPaciente(pacienteId, notification) {
-        pacienteApp.find({ 'pacientes.id': pacienteId }, function (err, docs: any[]) {
+        pacienteApp.find({ 'pacientes.id': pacienteId }, (err, docs: any[]) => {
             docs.forEach(user => {
                 let devices = user.devices.map(item => item.device_id);
                 new PushClient().send(devices, notification);
@@ -82,7 +82,7 @@ export class NotificationService {
      */
     private static sendByProfesional (id, notification) {
         id = new mongoose.Types.ObjectId(id);
-        pacienteApp.find({ profesionalId: id }, function (err, docs: any[]) {
+        pacienteApp.find({ profesionalId: id }, (err, docs: any[]) => {
             docs.forEach(user => {
                 let devices = user.devices.map(item => item.device_id);
                 new PushClient().send(devices, notification);

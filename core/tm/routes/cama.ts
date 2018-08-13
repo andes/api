@@ -8,10 +8,10 @@ let router = express.Router();
  * Busca la cama por su id.
  */
 
-router.get('/camas/:idCama', Auth.authenticate(), function (req, res, next) {
+router.get('/camas/:idCama', Auth.authenticate(), (req, res, next) => {
     cama.model.findById({
         _id: req.params.idCama
-    }, function (err, data: any) {
+    }, (err, data: any) => {
         if (err) {
             return next(err);
         }
@@ -24,7 +24,7 @@ router.get('/camas/:idCama', Auth.authenticate(), function (req, res, next) {
 //  * pueden filtrar por estado o habitacion.
 //  */
 
-router.get('/camas', Auth.authenticate(), function (req, res, next) {
+router.get('/camas', Auth.authenticate(), (req, res, next) => {
 
     let query;
     query = cama.model.find({});
@@ -70,7 +70,7 @@ router.post('/camas', Auth.authenticate(), (req, res, next) => {
 
 router.put('/camas/:id', Auth.authenticate(), (req, res, next) => {
 
-    cama.model.findById(req.params.id, function (err3, data: any) {
+    cama.model.findById(req.params.id, (err3, data: any) => {
         if (err3) {
             return next(404);
         }
@@ -102,10 +102,10 @@ router.put('/camas/:id', Auth.authenticate(), (req, res, next) => {
 });
 
 
-router.patch('/camas/:idCama', Auth.authenticate(), function (req, res, next) {
+router.patch('/camas/:idCama', Auth.authenticate(), (req, res, next) => {
     cama.model.findById({
         _id: req.params.idCama,
-    }, function (err, data: any) {
+    }, (err, data: any) => {
         if (err) {
             return next(err);
         }
@@ -163,10 +163,10 @@ router.patch('/camas/:idCama', Auth.authenticate(), function (req, res, next) {
     });
 });
 
-router.patch('/camas/cambiaEstado/:idCama', Auth.authenticate(), function (req, res, next) {
+router.patch('/camas/cambiaEstado/:idCama', Auth.authenticate(), (req, res, next) => {
     cama.model.findById({
         _id: req.params.idCama,
-    }, function (err, _cama: any) {
+    }, (err, _cama: any) => {
         if (err) {
             return next(err);
         }

@@ -3,10 +3,10 @@ import * as entidadFormadora from '../schemas/entidadFormadora';
 
 let router = express.Router();
 
-router.get('/entidadesFormadoras/:id*?', function (req, res, next) {
+router.get('/entidadesFormadoras/:id*?', (req, res, next) => {
 
  if (req.params.id) {
-        entidadFormadora.findById(req.params.id, function (err, data) {
+        entidadFormadora.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }

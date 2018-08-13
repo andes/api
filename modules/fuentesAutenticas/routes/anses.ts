@@ -5,7 +5,7 @@ import { Logger } from '../../../utils/logService';
 
 let router = express.Router();
 
-router.get('/anses', async function (req, res, next) {
+router.get('/anses', async (req, res, next) => {
     if (!Auth.check(req, 'fa:get:anses')) {
         return next(403);
     }

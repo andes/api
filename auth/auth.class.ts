@@ -59,7 +59,7 @@ export class Auth {
                     passportJWT.ExtractJwt.fromUrlQueryParameter('token')
                 ])
             },
-            function (jwt_payload, done) {
+            (jwt_payload, done) => {
                 done(null, jwt_payload);
             }
         ));
@@ -93,7 +93,7 @@ export class Auth {
      */
 
     static optionalAuth() {
-        return function (req, res, next) {
+        return (req, res, next) => {
             try {
                 let extractor = passportJWT.ExtractJwt.fromAuthHeaderWithScheme('jwt');
                 let token = extractor(req);
@@ -118,7 +118,7 @@ export class Auth {
      * @memberOf Auth
      */
     static deniedPatients() {
-        return function (req, res, next) {
+        return (req, res, next) => {
             if (req.user.type !== 'paciente-token') {
                 next();
             } else {
@@ -134,7 +134,7 @@ export class Auth {
      * @memberOf Auth
      */
     static appTokenProtected() {
-        return function (req, res, next) {
+        return (req, res, next) => {
             if (req.user.type === 'app-token') {
                 authApps.findOne({organizacion:  mongoose.Types.ObjectId(req.user.organizacion)}).then((app: any) => {
                     let token: string = req.headers.authorization.substring(4);

@@ -521,7 +521,7 @@ export function getDiagnosticos(params) {
                             ag.bloques.forEach(bloque => {
                                 bloque.turnos.forEach(turno => {
                                     let codigos = turno.diagnostico.codificaciones;
-                                    codigos.forEach(function (codigo) {
+                                    codigos.forEach((codigo) => {
                                         if (codigo.codificacionAuditoria && codigo.codificacionAuditoria.c2 === true && codigo.primeraVez === true) {
                                             if (elem.codigo === codigo.codificacionAuditoria.codigo) {
                                                 calcularContadores(turno.paciente);
@@ -535,7 +535,7 @@ export function getDiagnosticos(params) {
                             ag.sobreturnos.forEach(sobreturno => {
                                 if (sobreturno.diagnostico.codificaciones.length > 0) {
                                     let codigos = sobreturno.diagnostico.codificaciones;
-                                    codigos.forEach(function (codigo) {
+                                    codigos.forEach((codigo) => {
                                         if (codigo.codificacionAuditoria && codigo.codificacionAuditoria.c2 === true && codigo.primeraVez === true) {
                                             if (elem.codigo === codigo.codificacionAuditoria.codigo) {
                                                 calcularContadores(sobreturno.paciente);
@@ -897,7 +897,7 @@ export function getDiagnosticos(params) {
 
         Promise.all(promises).then(() => {
 
-            let sortResultados = function (a, b) {
+            let sortResultados = (a, b) => {
                 if (a.codigo < b.codigo) {
                     return -1;
                 }

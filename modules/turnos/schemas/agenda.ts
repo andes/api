@@ -70,8 +70,8 @@ let schema = new mongoose.Schema({
 schema.virtual('turnosDisponibles').get(function () {
     let turnosDisponibles = 0;
     let hrFn = this.horaFin;
-    this.bloques.forEach(function (bloque) {
-        bloque.turnos.forEach(function (turno) {
+    this.bloques.forEach((bloque) => {
+        bloque.turnos.forEach((turno) => {
             if (turno.estado === 'disponible' && hrFn >= new Date()) {
                 turnosDisponibles++;
             }
@@ -82,7 +82,7 @@ schema.virtual('turnosDisponibles').get(function () {
 
 schema.virtual('turnosRestantesDelDia').get(function () {
     let restantesDelDia = 0;
-    this.bloques.forEach(function (bloque) {
+    this.bloques.forEach((bloque) => {
         if (bloque.restantesDelDia > 0) {
             restantesDelDia += bloque.restantesDelDia;
         }
@@ -92,7 +92,7 @@ schema.virtual('turnosRestantesDelDia').get(function () {
 
 schema.virtual('turnosRestantesProgramados').get(function () {
     let restantesProgramados = 0;
-    this.bloques.forEach(function (bloque) {
+    this.bloques.forEach((bloque) => {
         if (bloque.restantesProgramados > 0) {
             restantesProgramados += bloque.restantesProgramados;
         }
@@ -102,7 +102,7 @@ schema.virtual('turnosRestantesProgramados').get(function () {
 
 schema.virtual('turnosRestantesGestion').get(function () {
     let restantesGestion = 0;
-    this.bloques.forEach(function (bloque) {
+    this.bloques.forEach((bloque) => {
         if (bloque.restantesGestion > 0) {
             restantesGestion += bloque.restantesGestion;
         }
@@ -112,7 +112,7 @@ schema.virtual('turnosRestantesGestion').get(function () {
 
 schema.virtual('turnosRestantesProfesional').get(function () {
     let restantesProfesional = 0;
-    this.bloques.forEach(function (bloque) {
+    this.bloques.forEach((bloque) => {
         if (bloque.restantesProfesional > 0) {
             restantesProfesional += bloque.restantesProfesional;
         }

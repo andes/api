@@ -64,11 +64,11 @@ export function geocodeFarmacia(farmacia, localidad) {
             method: 'GET',
             rejectUnauthorized: false
         };
-        let reqGet = https.request(optionsgetmsg, function (res2) {
-            res2.on('data', function (d, error) {
+        let reqGet = https.request(optionsgetmsg, (res2) => {
+            res2.on('data', (d, error) => {
                 jsonGoogle = jsonGoogle + d.toString();
             });
-            res2.on('end', function () {
+            res2.on('end', () => {
                 let salida = JSON.parse(jsonGoogle);
                 if (salida.status === 'OK') {
                     return resolve(salida.results[0].geometry.location);
@@ -130,12 +130,12 @@ export function donwloadData(desde, hasta) {
 export function getLocalidades() {
 
     return new Promise((resolve, reject) => {
-        request(farmaciasEndpoints.localidades, function (error, response, html) {
+        request(farmaciasEndpoints.localidades, (error, response, html) => {
             if (!error) {
                 let localidades = [];
                 let $ = cheerio.load(html);
                 let options = $('#ctl00_ContentPlaceHolder1_CboLocalidad').children('option');
-                options.each(function (i, elem) {
+                options.each((i, elem) => {
                     let id = $(elem).attr('value');
                     let nombre = $(elem).text();
                     localidades.push({
@@ -189,13 +189,13 @@ export function getTurnos(data, localidad, desde, hasta) {
                 }
         },
 
-            function (error, response, html) {
+            (error, response, html) => {
                 if (!error) {
                     let $ = cheerio.load(html);
                     let hijos = $('#download-container').children().slice(2);
                     let fecha = null;
                     let farmacias = [];
-                    $(hijos).each(function (i, elem) {
+                    $(hijos).each((i, elem) => {
                         if (elem.name === 'br') {
                             // continue;
                         } else {

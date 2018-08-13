@@ -142,7 +142,7 @@ let router = express.Router();
 
 
 /* Consultas de estado de pacientes para el panel de información */
-router.get('/pacientes/counts/', function (req, res, next) {
+router.get('/pacientes/counts/', (req, res, next) => {
     /* Este get es público ya que muestra sólamente la cantidad de pacientes en MPI */
     let filtro;
     switch (req.query.consulta) {
@@ -165,13 +165,13 @@ router.get('/pacientes/counts/', function (req, res, next) {
             break;
     }
     let query = paciente.find(filtro).count();
-    query.exec(function (err, data) {
+    query.exec((err, data) => {
         if (err) {
             return next(err);
         }
 
         let queryMPI = pacienteMpi.find(filtro).count();
-        queryMPI.exec(function (err1, data1) {
+        queryMPI.exec((err1, data1) => {
             if (err1) {
                 return next(err1);
             }
@@ -182,7 +182,7 @@ router.get('/pacientes/counts/', function (req, res, next) {
     });
 });
 
-router.get('/pacientes/dashboard/', async function (req, res, next) {
+router.get('/pacientes/dashboard/', async (req, res, next) => {
     /**
      * Se requiere autorización para acceder al dashboard de MPI
      */
@@ -327,7 +327,7 @@ router.get('/pacientes/dashboard/', async function (req, res, next) {
  */
 
 // Simple mongodb query by ObjectId --> better performance
-router.get('/pacientes/:id', function (req, res, next) {
+router.get('/pacientes/:id', (req, res, next) => {
     // busca en pacienteAndes y en pacienteMpi
     if (!Auth.check(req, 'mpi:paciente:getbyId')) {
         return next(403);
@@ -414,7 +414,7 @@ router.get('/pacientes/:id', function (req, res, next) {
  *
  */
 // Search using elastic search
-router.get('/pacientes', function (req, res, next) {
+router.get('/pacientes', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
         return next(403);
     }
@@ -430,7 +430,7 @@ router.get('/pacientes', function (req, res, next) {
     });
 });
 
-router.put('/pacientes/mpi/:id', function (req, res, next) {
+router.put('/pacientes/mpi/:id', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:putMpi')) {
         return next(403);
     }
@@ -446,7 +446,7 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
 
     let match = new Matching();
 
-    pacienteMpi.findById(query, function (err, patientFound: any) {
+    pacienteMpi.findById(query, (err, patientFound: any) => {
         if (err) {
             return next(404);
         }
@@ -512,7 +512,7 @@ router.put('/pacientes/mpi/:id', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/paciente'
  */
-router.delete('/pacientes/mpi/:id', function (req, res, next) {
+router.delete('/pacientes/mpi/:id', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:deleteMpi')) {
         return next(403);
     }
@@ -521,7 +521,7 @@ router.delete('/pacientes/mpi/:id', function (req, res, next) {
         _id: new mongoose.Types.ObjectId(req.params.id)
     };
 
-    pacienteMpi.findById(query, function (err, patientFound) {
+    pacienteMpi.findById(query, (err, patientFound) => {
         if (err) {
             return next(err);
         }
@@ -563,7 +563,7 @@ router.delete('/pacientes/mpi/:id', function (req, res, next) {
  *       409:
  *         description: Un código de error con un array de mensajes de error
  */
-router.post('/pacientes', function (req, res, next) {
+router.post('/pacientes', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:postAndes')) {
         return next(403);
     }
@@ -626,7 +626,7 @@ router.post('/pacientes', function (req, res, next) {
  *           $ref: '#/definitions/paciente'
  */
 
-router.put('/pacientes/:id', function (req, res, next) {
+router.put('/pacientes/:id', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:putAndes')) {
         return next(403);
     }
@@ -638,7 +638,7 @@ router.put('/pacientes/:id', function (req, res, next) {
         _id: objectId
     };
 
-    paciente.findById(query, function (err, patientFound: any) {
+    paciente.findById(query, (err, patientFound: any) => {
         if (err) {
             return next(404);
         }
@@ -660,7 +660,7 @@ router.put('/pacientes/:id', function (req, res, next) {
                 req.body._id = req.body.id;
                 let newPatient = new paciente(req.body);
                 // verifico si el paciente ya está en MPI
-                pacienteMpi.findById(query, function (err3, patientFountMpi: any) {
+                pacienteMpi.findById(query, (err3, patientFountMpi: any) => {
                     if (err3) {
                         return next(404);
                     }
@@ -722,7 +722,7 @@ router.put('/pacientes/:id', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/paciente'
  */
-router.delete('/pacientes/:id', function (req, res, next) {
+router.delete('/pacientes/:id', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:deleteAndes')) {
         return next(403);
     }
@@ -763,7 +763,7 @@ router.delete('/pacientes/:id', function (req, res, next) {
  */
 
 
-router.patch('/pacientes/:id', function (req, res, next) {
+router.patch('/pacientes/:id', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:patchAndes')) {
         return next(403);
     }
@@ -828,7 +828,7 @@ router.patch('/pacientes/:id', function (req, res, next) {
                 pacienteAndes = resultado.paciente;
             }
             Auth.audit(pacienteAndes, req);
-            pacienteAndes.save(function (errPatch) {
+            pacienteAndes.save((errPatch) => {
                 if (errPatch) {
                     return next(errPatch);
                 }
@@ -841,7 +841,7 @@ router.patch('/pacientes/:id', function (req, res, next) {
 });
 
 // Patch específico para actualizar masivamente MPI (NINGUN USUARIO DEBERIA TENER PERMISOS PARA ESTO)
-router.patch('/pacientes/mpi/:id', function (req, res, next) {
+router.patch('/pacientes/mpi/:id', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:patchMpi')) {
         return next(403);
     }
@@ -857,7 +857,7 @@ router.patch('/pacientes/mpi/:id', function (req, res, next) {
             if (resultado.db === 'mpi') {
                 pacMpi = new pacienteMpi(resultado.paciente);
                 Auth.audit(pacMpi, req);
-                pacMpi.save(function (errPatch) {
+                pacMpi.save((errPatch) => {
                     if (errPatch) {
                         return next(errPatch);
                     }

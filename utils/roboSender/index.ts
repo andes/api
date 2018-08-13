@@ -65,7 +65,7 @@ export function removeSend(id) {
             if (doc) {
                 doc.status = 'canceled';
                 doc.updatedAt = new Date();
-                doc.save(function (_err) {
+                doc.save((_err) => {
                     if (_err) {
                         return reject(err);
                     }

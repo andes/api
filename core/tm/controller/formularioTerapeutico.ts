@@ -4,7 +4,7 @@ import * as mongoose from 'mongoose';
 export function getAncestro(hijo) {
     return new Promise((resolve, reject) => {
         let query = formularioTerapeutico.find({ _id: { $eq: mongoose.Types.ObjectId(hijo) } });
-        query.exec(function (err, data) {
+        query.exec((err, data) => {
             if (err) {
                 reject('No se encontro el elemento en el Formulario Terapeutico');
             }

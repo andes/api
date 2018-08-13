@@ -6,11 +6,11 @@ import { configuracionPantalla } from '../schemas/configuracionPantalla';
 let router = express.Router();
 
 
-router.get('/busquedaConfiguracion/:id*?', function (req: any, res, next) {
+router.get('/busquedaConfiguracion/:id*?', (req: any, res, next) => {
     let opciones = {};
     let query;
     if (req.params.id) {
-        configuracionPantalla.findById(req.params.id, function (err, data) {
+        configuracionPantalla.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -23,7 +23,7 @@ router.get('/busquedaConfiguracion/:id*?', function (req: any, res, next) {
         query = configuracionPantalla.find(opciones);
 
 
-        query.exec(function (err, data) {
+        query.exec((err, data) => {
             if (err) {
                 return next(err);
             }
@@ -36,10 +36,10 @@ router.get('/busquedaConfiguracion/:id*?', function (req: any, res, next) {
 });
 
 
-router.post('/insertConfiguracion', function (req: any, res, next) {
+router.post('/insertConfiguracion', (req: any, res, next) => {
 
     if (req.body.id) {
-        configuracionPantalla.findByIdAndUpdate(req.body._id, req.body, { new: true }, function (err, data) {
+        configuracionPantalla.findByIdAndUpdate(req.body._id, req.body, { new: true }, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -52,7 +52,7 @@ router.post('/insertConfiguracion', function (req: any, res, next) {
                 sort: {
                     _id: -1
                 }
-            }, function (err1, file) {
+            }, (err1, file) => {
                 if (file.length > 0) {
                     res.send(null);
                 } else {

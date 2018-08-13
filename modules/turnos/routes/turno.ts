@@ -14,7 +14,7 @@ import * as debug from 'debug';
 let router = express.Router();
 let dbgTurno = debug('dbgTurno');
 
-router.get('/turno/:id*?', async function (req, res, next) {
+router.get('/turno/:id*?', async (req, res, next) => {
     try {
         let resultado = await turnosController.getTurno(req);
         res.json(resultado);
@@ -23,7 +23,7 @@ router.get('/turno/:id*?', async function (req, res, next) {
     }
 
 });
-router.get('/historial', async function (req, res, next) {
+router.get('/historial', async (req, res, next) => {
     try {
         let resultado = await turnosController.getHistorialPaciente(req);
         res.json(resultado);
@@ -43,7 +43,7 @@ function getAgenda(idAgenda) {
     return agenda.findById(idAgenda).exec();
 }
 
-router.patch('/turno/agenda/:idAgenda', async function (req, res, next) {
+router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
     let continues = ValidateDarTurno.checkTurno(req.body);
 
     if (continues.valid) {
@@ -140,7 +140,7 @@ router.patch('/turno/agenda/:idAgenda', async function (req, res, next) {
         motivoConsulta: String
     };
  */
-router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async function (req, res, next) {
+router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res, next) => {
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
     let continues = ValidateDarTurno.checkTurno(req.body);
 
@@ -310,7 +310,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async functio
 });
 
 
-router.patch('/turno/:idTurno/:idBloque/:idAgenda', async function (req, res, next) {
+router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
     let agendaRes;
     try {
         agendaRes = await getAgenda(req.params.idAgenda);
@@ -338,7 +338,7 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', async function (req, res, ne
     };
     dbgTurno('query --->', query);
 
-    agenda.update(query, { $set: update }, function (error, data) {
+    agenda.update(query, { $set: update }, (error, data) => {
         if (error) {
             return next(error);
         }
@@ -346,7 +346,7 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', async function (req, res, ne
     });
 });
 
-router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async function (req, res, next) {
+router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res, next) => {
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
     let continues = ValidateDarTurno.checkTurno(req.body.turno);
 

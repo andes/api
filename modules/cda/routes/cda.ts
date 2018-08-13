@@ -245,7 +245,7 @@ router.get('/:id', async (req: any, res, next) => {
     let CDAFiles = makeFs();
 
     let contexto = await CDAFiles.findById(_base64);
-    CDAFiles.readById(_base64, function (err, buffer) {
+    CDAFiles.readById(_base64, (err, buffer) => {
         res.contentType(contexto.contentType);
         res.end(buffer);
     });
@@ -266,7 +266,7 @@ router.get('/tojson/:id', async (req: any, res, next) => {
     // Limpiamos xml previo al parsing
     contexto = contexto.toString().replace(new RegExp('<br>', 'g'), ' ');
     contexto = contexto.toString().replace(new RegExp('[\$]', 'g'), '');
-    to_json(contexto, function (error, data) {
+    to_json(contexto, (error, data) => {
         if (error) {
             return next(error);
         } else {

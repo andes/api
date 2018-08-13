@@ -16,7 +16,7 @@ router.post('/profesionales/file', async (req: any, res, next) => {
             contentType: 'image/jpeg',
         },
         input.pipe(decoder),
-        function (error, createdFile) {
+        (error, createdFile) => {
           res.json(createdFile);
     });
     input.end(_base64);
@@ -25,7 +25,7 @@ router.get('/file/:id', async (req: any, res, next) => {
     let _base64 = req.params.id;
     let CDAFiles = makeFs();
     let contexto = await CDAFiles.findById(_base64);
-    CDAFiles.readById(_base64, function (err, buffer) {
+    CDAFiles.readById(_base64, (err, buffer) => {
         res.contentType(contexto.contentType);
         res.end(buffer);
     });

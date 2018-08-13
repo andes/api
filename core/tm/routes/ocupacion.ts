@@ -4,7 +4,7 @@ import { ocupacion } from '../schemas/ocupacion';
 
 let router = express.Router();
 
-router.get('/ocupacion', function (req, res, next) {
+router.get('/ocupacion', (req, res, next) => {
 
     ocupacion.find({}, (err, data) => {
         if (err) {

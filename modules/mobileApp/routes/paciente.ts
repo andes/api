@@ -13,7 +13,7 @@ let router = express.Router();
  * Chequea que el paciente este asociado a la cuenta
  */
 
-router.get('/paciente/:id', function (req: any, res, next) {
+router.get('/paciente/:id', (req: any, res, next) => {
     let idPaciente = req.params.id;
     let pacientes = req.user.pacientes;
     let index = pacientes.findIndex(item => item.id === idPaciente);
@@ -43,7 +43,7 @@ router.get('/paciente/:id', function (req: any, res, next) {
  *
  */
 
-router.put('/paciente/:id', function (req: any, res, next) {
+router.put('/paciente/:id', (req: any, res, next) => {
     let idPaciente = req.params.id;
     let pacientes = req.user.pacientes;
     let index = pacientes.findIndex(item => item.id === idPaciente);
@@ -82,7 +82,7 @@ router.put('/paciente/:id', function (req: any, res, next) {
  * [No esta en uso]
  */
 
-router.patch('/pacientes/:id', function (req, res, next) {
+router.patch('/pacientes/:id', (req, res, next) => {
     let idPaciente = req.params.id;
     let pacientes = (req as any).user.pacientes;
     let index = pacientes.findIndex(item => item.id === idPaciente);
@@ -101,7 +101,7 @@ router.patch('/pacientes/:id', function (req, res, next) {
 
                 Auth.audit(resultado.paciente, req);
 
-                resultado.paciente.save(function (errPatch) {
+                resultado.paciente.save((errPatch) => {
                     if (errPatch) {
                         return next(errPatch);
                     }

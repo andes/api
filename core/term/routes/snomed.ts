@@ -47,7 +47,7 @@ let router = express.Router();
  *         default: 0
  */
 
-router.get('/snomed', function (req, res, next) {
+router.get('/snomed', (req, res, next) => {
     if (!req.query.search && !req.query.refsetId && req.query.search !== '') {
         return next('Debe ingresar un parámetro de búsqueda');
     }
@@ -68,7 +68,7 @@ router.get('/snomed', function (req, res, next) {
             // Busca por palabras
             conditions['$and'] = [];
             let words = req.query.search.split(' ');
-            words.forEach(function (word) {
+            words.forEach((word) => {
                 // normalizamos cada una de las palabras como hace SNOMED para poder buscar palabra a palabra
                 word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08');
                 let expWord = '^' + utils.removeDiacritics(word) + '.*';
@@ -97,7 +97,7 @@ router.get('/snomed', function (req, res, next) {
     // limitamos resultados
     query.limit(10000);
     query.sort({ term: 1 });
-    query.exec(function (err, data) {
+    query.exec((err, data) => {
         if (err) {
             return next(err);
         }
@@ -135,7 +135,7 @@ router.get('/snomed', function (req, res, next) {
  * @param {String[]} secondaryConcepts  Listado de concepto secundario para mejorar el mapeo.
  */
 
-router.get('/snomed/map', function (req, res, next) {
+router.get('/snomed/map', (req, res, next) => {
     if (!req.query.conceptId) {
         return next('Debe ingresar un concepto principal');
     }

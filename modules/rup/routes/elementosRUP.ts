@@ -11,7 +11,7 @@ let router = express.Router();
  * Devueve los grupos sugeridos en la busqueda guiada por prestación.
  */
 
-router.get('/elementosRUP/:id/guiada', function (req, res, next) {
+router.get('/elementosRUP/:id/guiada', (req, res, next) => {
     let prestacion = req.params.id;
     elementoRUP.findOne({
         'conceptos.conceptId': prestacion
@@ -43,7 +43,7 @@ router.get('/elementosRUP/:id/guiada', function (req, res, next) {
 });
 
 
-router.get('/elementosRUP/:id*?', function (req, res, next) {
+router.get('/elementosRUP/:id*?', (req, res, next) => {
     let query: mongoose.DocumentQuery<any, mongoose.Document>;
     if (req.params.id) {
         query = elementoRUP.findById(req.params.id);
@@ -78,7 +78,7 @@ router.get('/elementosRUP/:id*?', function (req, res, next) {
     }
 
     // query.populate('requeridos.elementoRUP');
-    query.sort({ nombre: 1 }).exec(function (err, data) {
+    query.sort({ nombre: 1 }).exec((err, data) => {
         if (err) {
             return next(err);
         }

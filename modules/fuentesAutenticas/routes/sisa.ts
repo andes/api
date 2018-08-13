@@ -7,7 +7,7 @@ import * as configPrivate from '../../../config.private';
 let to_json = require('xmljson').to_json;
 let router = express.Router();
 
-router.get('/sisa', async function (req, res, next) {
+router.get('/sisa', async (req, res, next) => {
     if (!Auth.check(req, 'fa:get:sisa')) {
         return next(403);
     }
@@ -56,7 +56,7 @@ router.get('/sisa', async function (req, res, next) {
  *           $ref: '#/definitions/paciente'
  */
 
-router.get('/puco/:documento', async function (req, res, next) {
+router.get('/puco/:documento', async (req, res, next) => {
     // if (!Auth.check(req, 'fa:get:puco')) {
     //     return next(403);
     // }
@@ -95,20 +95,20 @@ function postPuco(documento) {
     // Realizar POST request
     return new Promise((resolve, reject) => {
         let reqPost = https.request(optionsgetmsg);
-        reqPost.on('error', function (e) {
+        reqPost.on('error', (e) => {
             reject(e);
         });
         reqPost.write(JSON.stringify({ usuario: 'hhfernandez', clave: 'develop666' }));
         reqPost.end();
-        reqPost.on('response', function (response) {
+        reqPost.on('response', (response) => {
             response.setEncoding('utf8');
-            response.on('data', function (chunk) {
+            response.on('data', (chunk) => {
                 if (chunk.toString()) {
                     xml = xml + chunk.toString();
                 }
                 if (xml) {
                     // Se parsea el xml obtenido a JSON
-                    to_json(xml, function (error, data) {
+                    to_json(xml, (error, data) => {
                         if (error) {
                             reject();
                         } else {

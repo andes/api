@@ -16,7 +16,7 @@ async function createToken() {
 
     let token = AuthClass.Auth.generateAppToken(nombre, organizacion, permisos);
     app.token = token;
-    app.save().then( function () {
+    app.save().then( () => {
         process.exit();
     });
 }
