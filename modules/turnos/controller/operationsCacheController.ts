@@ -308,8 +308,7 @@ async function creaConsultorioSips(agenda: any, idEfector: any) {
 
 function getCodificacionCie10(codcie10) {
     return new Promise((resolve, reject) => {
-        let transaction;
-        return new sql.Request(transaction)
+        return new sql.Request()
             .input('codcie10', sql.Int, codcie10)
             .query('SELECT * FROM dbo.Sys_CIE10 WHERE id = @codcie10')
             .then(result => {
@@ -629,16 +628,15 @@ function existeConsultaTurno(idTurno) {
 // Set de funciones locales no publicas
 function getDatosSips(codigoSisa?, dniProfesional?) {
     return new Promise((resolve: any, reject: any) => {
-        let transaction;
         (async () => {
             try {
                 const result: any[] = [];
 
-                result[0] = await new sql.Request(transaction)
+                result[0] = await new sql.Request()
                     .input('codigoSisa', sql.VarChar(50), codigoSisa)
                     .query('select idEfector from dbo.Sys_Efector WHERE codigoSisa = @codigoSisa');
 
-                result[1] = await new sql.Request(transaction)
+                result[1] = await new sql.Request()
                     .input('dniProfesional', sql.Int, dniProfesional)
                     .query('SELECT idProfesional FROM dbo.Sys_Profesional WHERE numeroDocumento = @dniProfesional and activo = 1');
 
@@ -675,8 +673,7 @@ function processAgenda(agenda: any, datosSips, pool) {
  */
 function existeAgendaSips(agendaMongo: any) {
     return new Promise((resolve, reject) => {
-        let transaction;
-        return new sql.Request(transaction)
+        return new sql.Request()
             .input('idAgendaMongo', sql.VarChar(50), agendaMongo.id)
             .query('SELECT idAgenda FROM dbo.CON_Agenda WHERE objectId = @idAgendaMongo GROUP BY idAgenda')
             .then(result => {
@@ -890,14 +887,13 @@ async function actualizarEstadoTurnoSips(idAgendaSips, turno) {
 
 async function existeTurnoBloqueoSips(idAgendaSips, horaInicio) {
     return new Promise(async (resolve, reject) => {
-        let transaction;
         const query = 'SELECT COUNT(b.idTurnoBloqueo) as count FROM CON_TurnoBloqueo b ' +
             'JOIN CON_TURNO t on t.idAgenda = b.idAgenda ' +
             'WHERE b.idAgenda = ' + idAgendaSips +
             ' AND b.horaTurno = \'' + horaInicio + '\'';
 
         try {
-            const result = await new sql.Request(transaction).query(query);
+            const result = await new sql.Request().query(query);
             resolve(result[0].count > 0);
         } catch (err) {
             reject(err);
@@ -1003,11 +999,10 @@ function getEstadoTurnosCitasSips(estadoTurnoCitas, updated) {
 /* Devuelve el estado del turno en Con_Turno de SIPS */
 function getEstadoTurnoSips(objectId: any) {
     return new Promise((resolve: any, reject: any) => {
-        let transaction;
         (async () => {
             try {
                 const query = 'SELECT idAgenda, idTurno, idTurnoEstado FROM dbo.CON_Turno WHERE objectId = @objectId';
-                const result = await new sql.Request(transaction)
+                const result = await new sql.Request()
                     .input('objectId', sql.VarChar(50), objectId)
                     .query(query);
 
