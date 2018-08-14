@@ -73,6 +73,17 @@
 #### Fixed
 * Se agrega la posibilidad de visualizar las agendas con citación por segmento, al dar un turno autocitado
 
+## [3.5.1] - 2018-08-14
+
+#### Fixed
+* Snomed - Buscar palabras con la letra ñ (https://github.com/andes/api/pull/394)
+* Tabla maestras - optimizacion de busqueda de profesionales (https://github.com/andes/api/pull/393)
+* RUP - Archivos adjuntos no se persistían desde la app mobile (https://github.com/andes/app/pull/687)
+* Búsqueda de profesionales en filtro gestor de agendas 
+* Renaper - agrega control a la fecha de nacimiento. 
+* Renaper - validación de pacientes temporales previamente cargados.
+
+
 
 
 
