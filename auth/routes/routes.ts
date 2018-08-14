@@ -135,9 +135,9 @@ router.post('/login', (req, res, next) => {
             profesional.findOne({
                 documento: req.body.usuario
             }, {
-                    matriculas: true,
-                    especialidad: true
-                }),
+                matriculas: true,
+                especialidad: true
+            }),
             authUsers.findOneAndUpdate(
                 { usuario: req.body.usuario },
                 { password: sha1Hash(req.body.password), nombre, apellido },
@@ -182,9 +182,9 @@ router.post('/login', (req, res, next) => {
             profesional.findOne({
                 documento: req.body.usuario
             }, {
-                    matriculas: true,
-                    especialidad: true
-                }),
+                matriculas: true,
+                especialidad: true
+            }),
         ]).then((data: any[]) => {
             const user = data[0];
             const prof = data[1];

@@ -18,12 +18,12 @@ export function getTurno(req) {
                              { $unwind: '$bloques' },
                              { $unwind: '$bloques.turnos' },
             // Filtra los elementos que matchean
-                             {
+            {
                 $match: {
                     estado: 'publicada'
                 }
             },
-                             {
+            {
                 $group: {
                     _id: { id: '$_id', bloqueId: '$bloques._id' },
                     agenda_id: { $first: '$_id' },
@@ -32,7 +32,7 @@ export function getTurno(req) {
                     turnos: { $push: '$bloques.turnos' }
                 }
             },
-                             {
+            {
                 $group: {
                     _id: '$_id.id',
                     agenda_id: { $first: '$agenda_id' },

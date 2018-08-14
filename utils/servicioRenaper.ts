@@ -15,22 +15,22 @@ export function getServicioRenaper(paciente) {
                 }
                 if (client) {
                     if (paciente.documento && paciente.sexo) {
-                    client.LoginPecas(login, async (err2, result) => {
-                        if (err2) {
-                            reject(err2);
-                        }
-                        let tipoConsulta = 'WS_RENAPER_documento';
-                        let filtro = 'documento=' + paciente.documento + ';sexo=' + paciente.sexo;
-                        try {
-                            resultado = await consultaRenaper(result, tipoConsulta, filtro);
-                        } catch (error) {
-                            reject(error);
-                        }
-                        resolve(resultado);
-                    });
-                } else {
-                    resolve(null);
-                }
+                        client.LoginPecas(login, async (err2, result) => {
+                            if (err2) {
+                                reject(err2);
+                            }
+                            let tipoConsulta = 'WS_RENAPER_documento';
+                            let filtro = 'documento=' + paciente.documento + ';sexo=' + paciente.sexo;
+                            try {
+                                resultado = await consultaRenaper(result, tipoConsulta, filtro);
+                            } catch (error) {
+                                reject(error);
+                            }
+                            resolve(resultado);
+                        });
+                    } else {
+                        resolve(null);
+                    }
                 } else {
                     resolve(null);
                 }

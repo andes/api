@@ -198,10 +198,10 @@ async function setEstadoAgendaToIntegrada(idAgenda) {
     return await agendasCache.update({
         _id: idAgenda
     }, {
-            $set: {
-                estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportada
-            }
-        }).exec();
+        $set: {
+            estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportada
+        }
+    }).exec();
 }
 
 export function getAgendasDeMongoExportadas() {

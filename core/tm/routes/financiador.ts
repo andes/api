@@ -56,25 +56,25 @@ let router = express.Router();
  */
 router.get('/financiadores/:id*?', (req, res, next) => {
 
-   if (req.params.id) {
-       financiador.findById(req.params.id, (err, data) => {
-       if (err) {
-           return next(err);
-       }
+    if (req.params.id) {
+        financiador.findById(req.params.id, (err, data) => {
+            if (err) {
+                return next(err);
+            }
 
-       res.json(data);
-   });
-   } else {
-       let query;
-       query = financiador.find({});
-       if (req.query.nombre) {
+            res.json(data);
+        });
+    } else {
+        let query;
+        query = financiador.find({});
+        if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
-       }
-       query.exec((err, data) => {
-           if (err) {return next(err); }
-           res.json(data);
-       });
-   }
+        }
+        query.exec((err, data) => {
+            if (err) {return next(err); }
+            res.json(data);
+        });
+    }
 });
 
 export = router;

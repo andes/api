@@ -249,21 +249,21 @@ async function buscarAgendasSobreturnos(organizacionId, tipoPrestacion, espacioF
     let pipelineCarpeta = [{
         $match: matchCarpeta
     },
-                           {
-        $unwind: '$sobreturnos'
-    },
-                           {
-        $match: matchCarpeta
-    },
-                           {
-        $group: {
-            _id: { id: '$_id' },
-            profesionales: { $push: '$profesionales' },
-            espacioFisico: { $push: '$espacioFisico' },
-            tipoPrestacion: { $push: '$sobreturnos.tipoPrestacion' },
-            turnos: { $push: '$sobreturnos' }
-        }
-    }];
+        {
+            $unwind: '$sobreturnos'
+        },
+        {
+            $match: matchCarpeta
+        },
+        {
+            $group: {
+                _id: { id: '$_id' },
+                profesionales: { $push: '$profesionales' },
+                espacioFisico: { $push: '$espacioFisico' },
+                tipoPrestacion: { $push: '$sobreturnos.tipoPrestacion' },
+                turnos: { $push: '$sobreturnos' }
+            }
+        }];
 
     return await toArray(agenda.aggregate(pipelineCarpeta).cursor({}).exec());
 }
@@ -300,24 +300,24 @@ async function buscarAgendasTurnos(organizacionId, tipoPrestacion, espacioFisico
     let pipelineCarpeta = [{
         $match: matchCarpeta
     },
-                           {
-        $unwind: '$bloques'
-    },
-                           {
-        $unwind: '$bloques.turnos'
-    },
-                           {
-        $match: matchCarpeta
-    },
-                           {
-        $group: {
-            _id: { id: '$_id' },
-            profesionales: { $push: '$profesionales' },
-            espacioFisico: { $push: '$espacioFisico' },
-            tipoPrestacion: { $push: '$bloques.turnos.tipoPrestacion' },
-            turnos: { $push: '$bloques.turnos' }
-        }
-    }];
+        {
+            $unwind: '$bloques'
+        },
+        {
+            $unwind: '$bloques.turnos'
+        },
+        {
+            $match: matchCarpeta
+        },
+        {
+            $group: {
+                _id: { id: '$_id' },
+                profesionales: { $push: '$profesionales' },
+                espacioFisico: { $push: '$espacioFisico' },
+                tipoPrestacion: { $push: '$bloques.turnos.tipoPrestacion' },
+                turnos: { $push: '$bloques.turnos' }
+            }
+        }];
 
     return await toArray(agenda.aggregate(pipelineCarpeta).cursor({}).exec());
 }

@@ -440,15 +440,19 @@ router.patch('/agenda/:id*?', (req, res, next) => {
             for (let y = 0; y < turnos.length; y++) {
                 let turno;
                 switch (req.body.op) {
-                    case 'darAsistencia': agendaCtrl.darAsistencia(req, data, turnos[y]);
-                                          break;
+                    case 'darAsistencia':
+                        agendaCtrl.darAsistencia(req, data, turnos[y]);
+                        break;
                     // Agregar operacion para marcar que noAsistio
-                    case 'sacarAsistencia': agendaCtrl.sacarAsistencia(req, data, turnos[y]);
-                                            break;
-                    case 'noAsistio': agendaCtrl.marcarNoAsistio(req, data, turnos[y]);
-                                      break;
-                    case 'quitarTurnoDoble': agendaCtrl.quitarTurnoDoble(req, data, turnos[y]);
-                                             break;
+                    case 'sacarAsistencia':
+                        agendaCtrl.sacarAsistencia(req, data, turnos[y]);
+                        break;
+                    case 'noAsistio':
+                        agendaCtrl.marcarNoAsistio(req, data, turnos[y]);
+                        break;
+                    case 'quitarTurnoDoble':
+                        agendaCtrl.quitarTurnoDoble(req, data, turnos[y]);
+                        break;
                     case 'liberarTurno':
                         turno = agendaCtrl.getTurno(req, data, turnos[y]);
                         // LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, bloqueId, agendaId);

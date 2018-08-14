@@ -34,7 +34,7 @@ hacemos esto para luego llamarlo con algún robot en lugar de modificar el softw
 
 router.post('/laboratorios', async (req: any, res, next) => {
     if (!Auth.check(req, 'cdaLaboratorio:post')) {
-       return next(403);
+        return next(403);
     }
     try {
         let unPaciente = req.body.paciente;

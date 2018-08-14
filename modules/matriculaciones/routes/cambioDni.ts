@@ -5,14 +5,14 @@ let router = express.Router();
 router.get('/cambioDni', (req, res, next) => {
 
     cambioDni.find((err, data) => {
-            if (err) {
-                next(err);
-            }
+        if (err) {
+            next(err);
+        }
 
-            res.status(201).json(data);
-        });
-
+        res.status(201).json(data);
     });
+
+});
 
 
 router.post('/cambioDni', (req, res, next) => {
@@ -20,25 +20,25 @@ router.post('/cambioDni', (req, res, next) => {
     //     return next(403);
     // }
     if (req.body.id) {
-    cambioDni.findByIdAndUpdate(req.body.id, req.body, {
-        new: true
-    }, (err, data) => {
-        if (err) {
-            return next(err);
-        }
-        res.json(data);
-    });
-} else {
+        cambioDni.findByIdAndUpdate(req.body.id, req.body, {
+            new: true
+        }, (err, data) => {
+            if (err) {
+                return next(err);
+            }
+            res.json(data);
+        });
+    } else {
 
-    let newCambio = new cambioDni(req.body);
-    newCambio.save((err) => {
-        if (err) {
-            return next(err);
-        }
-        res.status(201).json(newCambio);
-    });
+        let newCambio = new cambioDni(req.body);
+        newCambio.save((err) => {
+            if (err) {
+                return next(err);
+            }
+            res.status(201).json(newCambio);
+        });
 
-}
+    }
 
 });
 

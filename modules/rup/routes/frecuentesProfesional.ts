@@ -112,13 +112,13 @@ router.put('/frecuentesProfesional/:id*?', (req, res, next) => {
                 req.body.frecuentes.forEach(frecuente => {
                     // frecuente.conceptos.forEach(concepto => {
 
-                        let indexConcepto = resultado.frecuentes.findIndex(x => x.concepto.conceptId === frecuente.concepto.conceptId);
+                    let indexConcepto = resultado.frecuentes.findIndex(x => x.concepto.conceptId === frecuente.concepto.conceptId);
 
-                        if (indexConcepto === -1) {
-                            resultado.frecuentes.push(frecuente);
-                        } else {
-                            resultado.frecuentes[indexConcepto].frecuencia = parseInt(resultado.frecuentes[indexConcepto].frecuencia, 0) + 1;
-                        }
+                    if (indexConcepto === -1) {
+                        resultado.frecuentes.push(frecuente);
+                    } else {
+                        resultado.frecuentes[indexConcepto].frecuencia = parseInt(resultado.frecuentes[indexConcepto].frecuencia, 0) + 1;
+                    }
                     // });
                 });
             }

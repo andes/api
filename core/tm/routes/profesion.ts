@@ -23,7 +23,7 @@ router.get('/profesiones/:id*?', (req, res, next) => {
 
             res.json(data);
         });
-   }
+    }
 });
 
 export = router;

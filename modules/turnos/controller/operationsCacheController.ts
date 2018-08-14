@@ -333,10 +333,10 @@ function markAgendaAsProcessed(agenda) {
         resolve(agendasCache.update({
             _id: agenda._id
         }, {
-                $set: {
-                    estadoIntegracion
-                }
-            }).exec());
+            $set: {
+                estadoIntegracion
+            }
+        }).exec());
     });
 }
 

@@ -174,20 +174,20 @@ export async function cacheTurnos(unaAgenda) {
                 agendasCache.update({
                     id: agenda.id
                 }, {
-                        $set: {
-                            tipoPrestaciones: unaAgenda.tipoPrestaciones,
-                            espacioFisico: unaAgenda.espacioFisico,
-                            organizacion: organizacionAgenda,
-                            profesionales: profesionalesAgenda,
-                            bloques: unaAgenda.bloques,
-                            estado: unaAgenda.estado,
-                            horaInicio: unaAgenda.horaInicio,
-                            horaFin: unaAgenda.horaFin,
-                            estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente,
-                            sobreturnos: unaAgenda.sobreturnos
+                    $set: {
+                        tipoPrestaciones: unaAgenda.tipoPrestaciones,
+                        espacioFisico: unaAgenda.espacioFisico,
+                        organizacion: organizacionAgenda,
+                        profesionales: profesionalesAgenda,
+                        bloques: unaAgenda.bloques,
+                        estado: unaAgenda.estado,
+                        horaInicio: unaAgenda.horaInicio,
+                        horaFin: unaAgenda.horaFin,
+                        estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente,
+                        sobreturnos: unaAgenda.sobreturnos
 
-                        }
-                    }).exec();
+                    }
+                }).exec();
             } else {
                 agenda.save((err2, agendaGuardada: any) => {
                     if (err2) {

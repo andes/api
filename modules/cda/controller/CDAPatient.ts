@@ -10,18 +10,12 @@ import {
 } from './builder/CdaBuilder';
 
 import * as base64_stream from 'base64-stream';
-import {
-    makeFs
-} from '../schemas/CDAFiles';
+import { makeFs } from '../schemas/CDAFiles';
 import * as Stream from 'stream';
 import * as moment from 'moment';
 
-import {
-    CDA as CDAConfig
-} from '../../../config.private';
-import {
-    configuracionPrestacionModel
-} from './../../../core/term/schemas/configuracionPrestacion';
+import { CDA as CDAConfig } from '../../../config.private';
+import { configuracionPrestacionModel } from './../../../core/term/schemas/configuracionPrestacion';
 
 /**
  * Matcheamos los datos del paciente.
@@ -75,7 +69,7 @@ export async function findOrCreate(req, dataPaciente, organizacion) {
     } else {
          // No creamos más el paciente en MPI
          // return await pacienteCtr.createPaciente(dataToPac(dataPaciente, organizacion), req);
-         return null;
+        return null;
     }
 }
 
@@ -619,93 +613,93 @@ export function checkAndExtract(xmlDom) {
         key: '//x:ClinicalDocument/x:id/@root',
         match: CDAConfig.rootOID
     },
-                   {
-        key: '//x:ClinicalDocument/x:id/@extension',
-        as: 'id'
-    },
-                   {
-        key: '//x:ClinicalDocument/x:typeId/@root',
-        match: '2.16.840.1.113883.1.3'
-    },
-                   {
-        key: '//x:ClinicalDocument/x:typeId/@extension',
-        match: 'POCD_HD000040'
-    },
-                   {
-        key: '//x:ClinicalDocument/x:code/@code',
-        as: 'loinc',
-        require: true
-    },
-                   {
-        key: '//x:ClinicalDocument/x:effectiveTime/@value',
-        as: 'fecha',
-        require: true
-    },
+        {
+            key: '//x:ClinicalDocument/x:id/@extension',
+            as: 'id'
+        },
+        {
+            key: '//x:ClinicalDocument/x:typeId/@root',
+            match: '2.16.840.1.113883.1.3'
+        },
+        {
+            key: '//x:ClinicalDocument/x:typeId/@extension',
+            match: 'POCD_HD000040'
+        },
+        {
+            key: '//x:ClinicalDocument/x:code/@code',
+            as: 'loinc',
+            require: true
+        },
+        {
+            key: '//x:ClinicalDocument/x:effectiveTime/@value',
+            as: 'fecha',
+            require: true
+        },
 
-                   {
-        key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:id[@root='${CDAConfig.dniOID}']/@extension`,
-        as: 'paciente.documento',
-        require: true
-    },
-                   {
-        key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:name/x:given`,
-        many: true,
-        as: 'paciente.nombre',
-        require: true
-    },
-                   {
-        key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:name/x:family`,
-        many: true,
-        as: 'paciente.apellido',
-        require: true
-    },
-                   {
-        key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:administrativeGenderCode/@code`,
-        as: 'paciente.sexo',
-        require: true
-    },
-                   {
-        key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:birthTime/@value`,
-        as: 'paciente.fechaNacimiento',
-        require: true
-    },
+        {
+            key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:id[@root='${CDAConfig.dniOID}']/@extension`,
+            as: 'paciente.documento',
+            require: true
+        },
+        {
+            key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:name/x:given`,
+            many: true,
+            as: 'paciente.nombre',
+            require: true
+        },
+        {
+            key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:name/x:family`,
+            many: true,
+            as: 'paciente.apellido',
+            require: true
+        },
+        {
+            key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:administrativeGenderCode/@code`,
+            as: 'paciente.sexo',
+            require: true
+        },
+        {
+            key: `//x:ClinicalDocument/x:recordTarget/x:patientRole/x:patient/x:birthTime/@value`,
+            as: 'paciente.fechaNacimiento',
+            require: true
+        },
 
-                   {
-        key: `//x:ClinicalDocument/x:custodian/x:assignedCustodian/x:representedCustodianOrganization/x:id/@root`,
-        match: CDAConfig.rootOID
-    },
-                   {
-        key: `//x:ClinicalDocument/x:custodian/x:assignedCustodian/x:representedCustodianOrganization/x:id/@extension`,
-        as: 'organizacion.id',
-        require: true
-    },
-                   {
-        key: `//x:ClinicalDocument/x:custodian/x:assignedCustodian/x:representedCustodianOrganization/x:name`,
-        as: 'organizacion.name',
-        require: true
-    },
+        {
+            key: `//x:ClinicalDocument/x:custodian/x:assignedCustodian/x:representedCustodianOrganization/x:id/@root`,
+            match: CDAConfig.rootOID
+        },
+        {
+            key: `//x:ClinicalDocument/x:custodian/x:assignedCustodian/x:representedCustodianOrganization/x:id/@extension`,
+            as: 'organizacion.id',
+            require: true
+        },
+        {
+            key: `//x:ClinicalDocument/x:custodian/x:assignedCustodian/x:representedCustodianOrganization/x:name`,
+            as: 'organizacion.name',
+            require: true
+        },
 
-                   {
-        key: `//x:ClinicalDocument/x:author/x:assignedAuthor/x:id[@root='${CDAConfig.dniOID}']/@extension`,
-        as: 'profesional.documento',
-        require: true
-    },
-                   {
-        key: `//x:ClinicalDocument/x:author/x:assignedAuthor/x:assignedPerson/x:name/x:given`,
-        many: true,
-        as: 'profesional.nombre',
-        require: true
-    },
-                   {
-        key: `//x:ClinicalDocument/x:author/x:assignedAuthor/x:assignedPerson/x:name/x:family`,
-        many: true,
-        as: 'profesional.apellido'
-    },
+        {
+            key: `//x:ClinicalDocument/x:author/x:assignedAuthor/x:id[@root='${CDAConfig.dniOID}']/@extension`,
+            as: 'profesional.documento',
+            require: true
+        },
+        {
+            key: `//x:ClinicalDocument/x:author/x:assignedAuthor/x:assignedPerson/x:name/x:given`,
+            many: true,
+            as: 'profesional.nombre',
+            require: true
+        },
+        {
+            key: `//x:ClinicalDocument/x:author/x:assignedAuthor/x:assignedPerson/x:name/x:family`,
+            many: true,
+            as: 'profesional.apellido'
+        },
 
-                   {
-        key: `//x:ClinicalDocument/x:component/x:structuredBody/x:component/x:section/x:entry/x:observationMedia/x:value/x:reference/@value`,
-        as: 'adjunto'
-    },
+        {
+            key: `//x:ClinicalDocument/x:component/x:structuredBody/x:component/x:section/x:entry/x:observationMedia/x:value/x:reference/@value`,
+            as: 'adjunto'
+        },
 
 
     ];

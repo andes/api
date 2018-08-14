@@ -116,16 +116,16 @@ export function getDiagnosticos(params) {
                 'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) }
             }
         },
-                    {
+        {
             $unwind: '$bloques'
         },
-                    {
+        {
             $unwind: '$bloques.turnos'
         },
-                    {
+        {
             $unwind: '$bloques.turnos.diagnostico.codificaciones'
         },
-                    {
+        {
             $group: {
                 _id: '$bloques.turnos.diagnostico.codificaciones.codificacionAuditoria.nombre',
                 codigo: {
@@ -153,13 +153,13 @@ export function getDiagnosticos(params) {
                 'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) }
             }
         },
-                     {
+        {
             $unwind: '$sobreturnos'
         },
-                     {
+        {
             $unwind: '$sobreturnos.diagnostico.codificaciones'
         },
-                     {
+        {
             $group: {
                 _id: '$sobreturnos.diagnostico.codificaciones.codificacionAuditoria.nombre',
                 codigo: {

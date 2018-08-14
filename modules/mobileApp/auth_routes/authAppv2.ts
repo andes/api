@@ -126,16 +126,16 @@ router.post('/v2/registrar', (req, res, next) => {
     getAccount(codeTostring(code), email).then((datosUsuario) => {
         // [TODO] 02/10 se decide sacar el matching por un cierto tiempo
         // authController.verificarCuenta(datosUsuario, mpiData).then(() => {
-            authController.habilitarCuenta(datosUsuario, password).then((user: any) => {
-                let token = Auth.generatePacienteToken(String(user._id), user.nombre + ' ' + user.apellido, user.email, user.pacientes, user.permisos);
-                res.status(200).json({
-                    token,
-                    user
-                });
-
-            }).catch((er) => {
-                return next(er);
+        authController.habilitarCuenta(datosUsuario, password).then((user: any) => {
+            let token = Auth.generatePacienteToken(String(user._id), user.nombre + ' ' + user.apellido, user.email, user.pacientes, user.permisos);
+            res.status(200).json({
+                token,
+                user
             });
+
+        }).catch((er) => {
+            return next(er);
+        });
         /*
         }).catch(() => {
             return next('No hay matching');

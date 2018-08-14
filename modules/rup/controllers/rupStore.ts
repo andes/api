@@ -17,11 +17,11 @@ export function storeFile(base64, metadata) {
         let RupFiles = makeFs();
 
         RupFiles.write({
-                _id: uniqueId,
-                filename:  uniqueId + '.' + mime.split('/')[1],
-                contentType: mime,
-                metadata
-            },
+            _id: uniqueId,
+            filename:  uniqueId + '.' + mime.split('/')[1],
+            contentType: mime,
+            metadata
+        },
             input.pipe(decoder64),
             (error, createdFile) => {
                 resolve(createdFile);

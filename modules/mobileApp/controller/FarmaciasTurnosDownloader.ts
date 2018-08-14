@@ -178,15 +178,15 @@ export function getTurnos(data, localidad, desde, hasta) {
 
         request.post(url, {
             form:
-                {
-                    __VIEWSTATE: data.__VIEWSTATE,
-                    __VIEWSTATEGENERATOR: data.__VIEWSTATEGENERATOR,
-                    __EVENTVALIDATION: data.__EVENTVALIDATION,
-                    ctl00$ContentPlaceHolder1$CboLocalidad: localidad,
-                    ctl00$ContentPlaceHolder1$TxtDesde: desde.format('DD/MM/YYYY'),
-                    ctl00$ContentPlaceHolder1$TxtHasta: hasta.format('DD/MM/YYYY'),
-                    ctl00$ContentPlaceHolder1$BtnConsultar: 'Consultar'
-                }
+            {
+                __VIEWSTATE: data.__VIEWSTATE,
+                __VIEWSTATEGENERATOR: data.__VIEWSTATEGENERATOR,
+                __EVENTVALIDATION: data.__EVENTVALIDATION,
+                ctl00$ContentPlaceHolder1$CboLocalidad: localidad,
+                ctl00$ContentPlaceHolder1$TxtDesde: desde.format('DD/MM/YYYY'),
+                ctl00$ContentPlaceHolder1$TxtHasta: hasta.format('DD/MM/YYYY'),
+                ctl00$ContentPlaceHolder1$BtnConsultar: 'Consultar'
+            }
         },
 
             (error, response, html) => {

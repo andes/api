@@ -11,14 +11,16 @@ router.post('/profesionales/file', async (req: any, res, next) => {
     let decoder = base64.decode();
     let input = new stream.PassThrough();
     let CDAFiles = makeFs();
-    CDAFiles.write({
+    CDAFiles.write(
+        {
             filename:  'hola.png' ,
             contentType: 'image/jpeg',
         },
         input.pipe(decoder),
         (error, createdFile) => {
-          res.json(createdFile);
-    });
+            res.json(createdFile);
+        }
+    );
     input.end(_base64);
 });
 router.get('/file/:id', async (req: any, res, next) => {

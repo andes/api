@@ -87,19 +87,19 @@ export let turnoSolicitadoSchema = new mongoose.Schema({
         matriculacion: [matriculacionSchema]
     }],
     formacionPosgrado: [{
-         profesion: { type: ObjSIISASchema, required: false },
-         institucionFormadora: { type: ObjSIISASchema, required: false },
-         especialidad: { type: ObjSIISASchema, required: false },
-         fechaIngreso: { type: Date, required: false },
-         fechaEgreso: { type: Date, required: false },
-         observacion: String,
-         certificacion: {
-           fecha: { type: Date, required: false },
-           modalidad: { type: ObjSIISASchema, required: false },
-           establecimiento: { type: ObjSIISASchema, required: false },
-         },
-         matriculacion: [matriculacionSchema]
-     }],
+        profesion: { type: ObjSIISASchema, required: false },
+        institucionFormadora: { type: ObjSIISASchema, required: false },
+        especialidad: { type: ObjSIISASchema, required: false },
+        fechaIngreso: { type: Date, required: false },
+        fechaEgreso: { type: Date, required: false },
+        observacion: String,
+        certificacion: {
+            fecha: { type: Date, required: false },
+            modalidad: { type: ObjSIISASchema, required: false },
+            establecimiento: { type: ObjSIISASchema, required: false },
+        },
+        matriculacion: [matriculacionSchema]
+    }],
     // origen: {
     //     type: String,
     //     enum: ['matriculación', 'rrhh', 'colegio de psicólogos']
@@ -114,7 +114,7 @@ export let turnoSolicitadoSchema = new mongoose.Schema({
         normaLegal: {type: String, required: false},
         fecha: {type: Date, required: false},
         vencimiento: {type: Date, required: false}
-     }],
+    }],
     notas: { type: String, required: false },
     rematriculado: { type: Boolean, default: false },
     agenteMatriculador: { type: String, required: false },

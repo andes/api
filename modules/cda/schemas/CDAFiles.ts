@@ -6,13 +6,13 @@ let  gridfs = require('mongoose-gridfs');
  */
 
 export function makeFs() {
-  let CDAFilesSchema = gridfs({
-      collection: 'CDAFiles',
-      model: 'CDAFiles',
-      mongooseConnection: mongoose.connection
-  });
+    let CDAFilesSchema = gridfs({
+        collection: 'CDAFiles',
+        model: 'CDAFiles',
+        mongooseConnection: mongoose.connection
+    });
 
     // obtain a model
-  return CDAFilesSchema.model;
+    return CDAFilesSchema.model;
 
 }

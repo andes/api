@@ -37,44 +37,41 @@ export function exists(patient: any) {
             query
         };
         connElastic.search({
-                index: 'andes',
-                body
-            })
-            .then((searchResult) => {
-                let weights = config.mpi.weightsDefault;
-                let porcentajeMatchMax = config.mpi.cotaMatchMax;
-                ((searchResult.hits || {}).hits || [])
-                .filter((hit) => {
-                    let pacienteElastic = hit._source;
-                    let pacDto = {
-                        documento: patient.documento ? patient.documento.toString() : '',
-                        nombre: patient.nombre ? patient.nombre.toUpperCase() : '',
-                        apellido: patient.apellido ? patient.apellido.toUpperCase() : '',
-                        fechaNacimiento: patient.fechaNacimiento ? moment(new Date(patient.fechaNacimiento)).format('YYYY-MM-DD') : null,
-                        sexo: patient.sexo ? patient.sexo : ''
-                    };
-                    let pacElasticDto = {
-                        documento: pacienteElastic.documento ? pacienteElastic.documento.toString() : '',
-                        nombre: pacienteElastic.nombre ? pacienteElastic.nombre.toUpperCase() : '',
-                        apellido: pacienteElastic.apellido ? pacienteElastic.apellido.toUpperCase() : '',
-                        fechaNacimiento: pacienteElastic.fechaNacimiento ? moment(pacienteElastic.fechaNacimiento).format('YYYY-MM-DD') : null,
-                        sexo: pacienteElastic.sexo ? pacienteElastic.sexo : ''
-                    };
-                    let valorMatching = match.matchPersonas(pacDto, pacElasticDto, weights, 'Levenshtein');
-                    pacienteElastic['id'] = hit._id;
+            index: 'andes',
+            body
+        }).then((searchResult) => {
+            let weights = config.mpi.weightsDefault;
+            let porcentajeMatchMax = config.mpi.cotaMatchMax;
+            ((searchResult.hits || {}).hits || []).filter((hit) => {
+                let pacienteElastic = hit._source;
+                let pacDto = {
+                    documento: patient.documento ? patient.documento.toString() : '',
+                    nombre: patient.nombre ? patient.nombre.toUpperCase() : '',
+                    apellido: patient.apellido ? patient.apellido.toUpperCase() : '',
+                    fechaNacimiento: patient.fechaNacimiento ? moment(new Date(patient.fechaNacimiento)).format('YYYY-MM-DD') : null,
+                    sexo: patient.sexo ? patient.sexo : ''
+                };
+                let pacElasticDto = {
+                    documento: pacienteElastic.documento ? pacienteElastic.documento.toString() : '',
+                    nombre: pacienteElastic.nombre ? pacienteElastic.nombre.toUpperCase() : '',
+                    apellido: pacienteElastic.apellido ? pacienteElastic.apellido.toUpperCase() : '',
+                    fechaNacimiento: pacienteElastic.fechaNacimiento ? moment(pacienteElastic.fechaNacimiento).format('YYYY-MM-DD') : null,
+                    sexo: pacienteElastic.sexo ? pacienteElastic.sexo : ''
+                };
+                let valorMatching = match.matchPersonas(pacDto, pacElasticDto, weights, 'Levenshtein');
+                pacienteElastic['id'] = hit._id;
 
-                    if (valorMatching >= porcentajeMatchMax) {
+                if (valorMatching >= porcentajeMatchMax) {
                         // Existe con un % de matcheo alto
-                        resolve(pacienteElastic['id']);
-                    } else {
+                    resolve(pacienteElastic['id']);
+                } else {
                         // No existe el paciente y devolvemos '0' para indicar que hay que hacer insert
-                        resolve(0);
-                    }
-                });
-            })
-            .catch((error) => {
-                reject(error);
+                    resolve(0);
+                }
             });
+        }).catch((error) => {
+            reject(error);
+        });
 
     });
 }

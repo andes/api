@@ -5,7 +5,7 @@ let router = express.Router();
 
 router.get('/entidadesFormadoras/:id*?', (req, res, next) => {
 
- if (req.params.id) {
+    if (req.params.id) {
         entidadFormadora.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
@@ -23,7 +23,7 @@ router.get('/entidadesFormadoras/:id*?', (req, res, next) => {
 
             res.json(data);
         });
-   }
+    }
 
 });
 

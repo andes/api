@@ -390,10 +390,10 @@ async function markAgendaAsProcessed(agenda, error = null) {
         return agendasCache.update({
             _id: agenda._id
         }, {
-                $set: {
-                    estadoIntegracion
-                }
-            });
+            $set: {
+                estadoIntegracion
+            }
+        });
     } catch (err) {
         return err;
     }

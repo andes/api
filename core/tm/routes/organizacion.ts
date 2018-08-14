@@ -442,7 +442,7 @@ router.delete('/organizaciones/:id', Auth.authenticate(), (req, res, next) => {
         }
 
         res.json(data);
-        });
+    });
 });
 
 

@@ -49,22 +49,22 @@ router.post('/insertConfiguracion', (req: any, res, next) => {
         configuracionPantalla.find({
             nombrePantalla: req.body.nombrePantalla
         }, {}, {
-                sort: {
-                    _id: -1
-                }
-            }, (err1, file) => {
-                if (file.length > 0) {
-                    res.send(null);
-                } else {
-                    let newTurno = new configuracionPantalla(req.body);
-                    newTurno.save((err2) => {
-                        if (err2) {
-                            return next(err2);
-                        }
-                        res.json(newTurno);
-                    });
-                }
-            });
+            sort: {
+                _id: -1
+            }
+        }, (err1, file) => {
+            if (file.length > 0) {
+                res.send(null);
+            } else {
+                let newTurno = new configuracionPantalla(req.body);
+                newTurno.save((err2) => {
+                    if (err2) {
+                        return next(err2);
+                    }
+                    res.json(newTurno);
+                });
+            }
+        });
 
 
     }

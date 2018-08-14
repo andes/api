@@ -25,39 +25,39 @@ router.post('/turnos/:tipo/:profesionalId/', (request, response, errorHandler) =
     // Convert date to user datetime.
     let  fechaTurno = new Date(request.body.turno.fecha);
     if (request.body.sobreTurno) {
-            profesional.findById(request.params.profesionalId, (error, datos) => {
-        let nTurno = new turno({
-            fecha: fechaTurno,
-            tipo: request.body.turno.tipo,
-            profesional: datos
-        });
+        profesional.findById(request.params.profesionalId, (error, datos) => {
+            let nTurno = new turno({
+                fecha: fechaTurno,
+                tipo: request.body.turno.tipo,
+                profesional: datos
+            });
 
-        nTurno.save((err) => {
-            if (err) {
-                errorHandler(err);
-            }
+            nTurno.save((err) => {
+                if (err) {
+                    errorHandler(err);
+                }
 
-            response.json(nTurno);
+                response.json(nTurno);
+            });
         });
-    });
     } else {
 
-    turnoSolicitado.findById(request.params.profesionalId, (error, datos) => {
-        let nTurno = new turno({
-            fecha: fechaTurno,
-            tipo: request.body.turno.tipo,
-            profesional: datos
-        });
+        turnoSolicitado.findById(request.params.profesionalId, (error, datos) => {
+            let nTurno = new turno({
+                fecha: fechaTurno,
+                tipo: request.body.turno.tipo,
+                profesional: datos
+            });
 
-        nTurno.save((err) => {
-            if (err) {
-                errorHandler(err);
-            }
+            nTurno.save((err) => {
+                if (err) {
+                    errorHandler(err);
+                }
 
-            response.json(nTurno);
+                response.json(nTurno);
+            });
         });
-    });
-}
+    }
 });
 
 
@@ -143,7 +143,7 @@ router.get('/turnos/proximos/?', Auth.authenticate() , (request: any, response, 
 
                         response.status(201).json(responseData);
                     });
-            });
+                });
         });
 
     } else {
@@ -164,7 +164,7 @@ router.get('/turnos/proximos/?', Auth.authenticate() , (request: any, response, 
                     }
                     response.status(201).json(responseData);
                 });
-        });
+            });
     }
 });
 
@@ -221,11 +221,11 @@ router.get('/turnos/:tipo/?', (request, response, errorHandler) => {
                 }
             }], (error, datos) => {
 
-                if (error) {
-                    return errorHandler(error);
-                }
+            if (error) {
+                return errorHandler(error);
+            }
 
-                response.status(201).json(datos);
+            response.status(201).json(datos);
         });
 
     } else {
@@ -259,11 +259,11 @@ router.get('/turnos/:tipo/?', (request, response, errorHandler) => {
                 }
             }], (error, datos) => {
 
-                if (error) {
-                    return errorHandler(error);
-                }
+            if (error) {
+                return errorHandler(error);
+            }
 
-                response.status(201).json(datos);
+            response.status(201).json(datos);
         });
     }
 });
@@ -300,7 +300,7 @@ router.get('/turnos/:id*?', Auth.authenticate(), (req, res, errorHandler) => {
 
             res.json(data);
         });
-   }
+    }
 });
 
 
