@@ -251,11 +251,17 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
     const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
 
     if (req.query.nombreCompleto) {
-        query = profesional.find({
+        const filter = [{
             apellido: {
-                $regex: utils.makePattern(req.query.nombreCompleto)
+                $regex: utils.makePattern(req.query.nombreCompleto, { startWith: true })
             }
-        }).
+        }, {
+            nombre: {
+                $regex: utils.makePattern(req.query.nombreCompleto, { startWith: true })
+            }
+        }];
+        const q = req.query.nombreCompleto.indexOf(' ') >= 0 ?  { $and: filter } : { $or: filter };
+        query = profesional.find(q).
             sort({
                 apellido: 1,
                 nombre: 1
