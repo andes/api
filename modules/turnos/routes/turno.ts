@@ -43,16 +43,13 @@ function getAgenda(idAgenda) {
     return agenda.findById(idAgenda).exec();
 }
 
+// Patch que inserta un turno en una agenda dinámica
 router.patch('/turno/agenda/:idAgenda', async function (req, res, next) {
     let continues = ValidateDarTurno.checkTurno(req.body);
 
     if (continues.valid) {
-        let pacienteRes;
-        let tipoPrestacionRes;
         let agendaRes;
         try {
-            pacienteRes = await getPaciente(req.body.paciente.id);
-            tipoPrestacionRes = await getTipoPrestacion(req.body.tipoPrestacion._id);
             agendaRes = await getAgenda(req.params.idAgenda);
         } catch (err) {
             return next(err);
@@ -68,7 +65,8 @@ router.patch('/turno/agenda/:idAgenda', async function (req, res, next) {
         usuario.organizacion = (req as any).user.organizacion;
         let tipoTurno = (esHoy ? 'delDia' : 'programado');
         let turno = {
-            horaInicio: moment(new Date(), 'YYYY-MM-DD HH:mm:ss'),
+            // horaInicio: moment(new Date(), 'YYYY-MM-DD HH:mm:ss'),
+            horaInicio: (agendaRes as any).horaInicio,
             estado: 'asignado',
             tipoTurno: tipoTurno,
             nota: req.body.nota,
