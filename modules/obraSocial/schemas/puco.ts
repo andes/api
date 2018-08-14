@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 import * as configPrivate from './../../../config.private';
 import { Connections } from './../../../connections';
 
-let pucoSchema = new mongoose.Schema({
+const pucoSchema = new mongoose.Schema({
     tipoDoc: String,
     dni: Number,
     codigoOS: Number,

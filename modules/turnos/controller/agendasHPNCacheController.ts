@@ -4,7 +4,7 @@ import * as sql from 'mssql';
 
 let pool;
 
-let connection = {
+const connection = {
     user: configPrivate.conSqlHPN.auth.user,
     password: configPrivate.conSqlHPN.auth.password,
     server: configPrivate.conSqlHPN.serverSql.server,
@@ -15,8 +15,8 @@ let connection = {
 export async function integracion() {
     return new Promise<Array<any>>(async (resolve, reject) => {
         try {
-            let agendasMongoPendientes = await operationsHPNCache.getAgendasDeMongoPendientes();
-            for (let agenda of agendasMongoPendientes) {
+            const agendasMongoPendientes = await operationsHPNCache.getAgendasDeMongoPendientes();
+            for (const agenda of agendasMongoPendientes) {
                 pool = await new sql.ConnectionPool(connection).connect();
                 await operationsHPNCache.saveAgendaToPrestaciones(agenda, pool);
                 pool.close();

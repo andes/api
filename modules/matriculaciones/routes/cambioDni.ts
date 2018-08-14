@@ -1,6 +1,6 @@
 import * as express from 'express';
 import * as cambioDni from '../schemas/cambioDni';
-let router = express.Router();
+const router = express.Router();
 
 router.get('/cambioDni', (req, res, next) => {
 
@@ -30,7 +30,7 @@ router.post('/cambioDni', (req, res, next) => {
         });
     } else {
 
-        let newCambio = new cambioDni(req.body);
+        const newCambio = new cambioDni(req.body);
         newCambio.save((err) => {
             if (err) {
                 return next(err);

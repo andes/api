@@ -9,9 +9,9 @@ import * as mongoose from 'mongoose';
 import * as authMobile from '../../modules/mobileApp/controller/AuthController';
 
 const isReachable = require('is-reachable');
-let sha1Hash = require('sha1');
-let shiroTrie = require('shiro-trie');
-let router = express.Router();
+const sha1Hash = require('sha1');
+const shiroTrie = require('shiro-trie');
+const router = express.Router();
 
 /**
  * Obtiene el user de la session
@@ -38,9 +38,9 @@ router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
         if (err) {
             return next(err);
         }
-        let organizaciones = user.organizaciones.map((item) => {
+        const organizaciones = user.organizaciones.map((item) => {
             if ((req as any).query.admin) {
-                let shiro = shiroTrie.new();
+                const shiro = shiroTrie.new();
                 shiro.add(item.permisos);
 
                 if (shiro.check('usuarios:set')) {
@@ -68,8 +68,8 @@ router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
  */
 
 router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
-    let username = (req as any).user.usuario.username;
-    let orgId = mongoose.Types.ObjectId(req.body.organizacion);
+    const username = (req as any).user.usuario.username;
+    const orgId = mongoose.Types.ObjectId(req.body.organizacion);
     Promise.all([
         authUsers.findOne({
             usuario: username,
@@ -78,11 +78,11 @@ router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
         authOrganizaciones.model.findOne({ _id: orgId }, { nombre: 1 })
     ]).then((data: any[]) => {
         if (data[0] && data[1]) {
-            let user = data[0];
-            let org = data[1];
-            let oldToken: string = String(req.headers.authorization).substring(4);
-            let nuevosPermisos = user.organizaciones.find(item => String(item._id) === String(org._id));
-            let refreshToken = Auth.refreshToken(oldToken, user, nuevosPermisos.permisos, org);
+            const user = data[0];
+            const org = data[1];
+            const oldToken: string = String(req.headers.authorization).substring(4);
+            const nuevosPermisos = user.organizaciones.find(item => String(item._id) === String(org._id));
+            const refreshToken = Auth.refreshToken(oldToken, user, nuevosPermisos.permisos, org);
             res.send({
                 token: refreshToken
             });
@@ -93,7 +93,7 @@ router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
 });
 
 // Función interna que chequea si la cuenta mobile existe
-let checkMobile = (profesionalId) => {
+const checkMobile = (profesionalId) => {
     return new Promise((resolve, reject) => {
         authMobile.getAccountByProfesional(profesionalId).then((account) => {
             if (!account) {
@@ -123,7 +123,7 @@ let checkMobile = (profesionalId) => {
 
 router.post('/login', (req, res, next) => {
     // Función interna que genera token
-    let login = (nombre: string, apellido: string) => {
+    const login = (nombre: string, apellido: string) => {
         Promise.all([
             // organizacion.model.findById(req.body.organizacion, {
             //     nombre: true
@@ -173,7 +173,7 @@ router.post('/login', (req, res, next) => {
         });
     };
 
-    let loginCache = (password: string) => {
+    const loginCache = (password: string) => {
         Promise.all([
             authUsers.findOne({
                 usuario: req.body.usuario,
@@ -224,18 +224,18 @@ router.post('/login', (req, res, next) => {
         // Access de prueba
         login(req.body.usuario, req.body.usuario);
     } else {
-        let server = configPrivate.hosts.ldap + configPrivate.ports.ldapPort;
+        const server = configPrivate.hosts.ldap + configPrivate.ports.ldapPort;
         /* Verifico que el servicio de ldap esté activo */
         isReachable(server).then(reachable => {
             if (!reachable) {
                 /* Login by cache */
-                let passwordSha1 = sha1Hash(req.body.password);
+                const passwordSha1 = sha1Hash(req.body.password);
                 loginCache(passwordSha1);
 
             } else {
                 // Conecta a LDAP
-                let dn = 'uid=' + req.body.usuario + ',' + configPrivate.auth.ldapOU;
-                let ldap = ldapjs.createClient({
+                const dn = 'uid=' + req.body.usuario + ',' + configPrivate.auth.ldapOU;
+                const ldap = ldapjs.createClient({
                     url: `ldap://${configPrivate.hosts.ldap}`
                 });
                 ldap.bind(dn, req.body.password, (err) => {

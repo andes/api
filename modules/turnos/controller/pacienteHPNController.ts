@@ -1,20 +1,20 @@
 import * as sql from 'mssql';
 
 export async function savePaciente(paciente: any, transaction) {
-    let fechaCreacion = new Date();
-    let fechaUltimoAcceso = fechaCreacion;
-    let fechaActualizacion = fechaCreacion;
-    let hcTipo = 1;
-    let hcNumero = 'PDR' + paciente.documento;
-    let tipoDocumento = 'DNI';
-    let nroDocumento = paciente.documento;
-    let apellido = paciente.apellido;
-    let nombre = paciente.nombre;
-    let estadoCivil =  (paciente.estadoCivil ? paciente.estadoCivil : null);
-    let fechaNacimiento = (paciente.fechaNacimiento ? paciente.fechaNacimiento : null);
-    let sexo = paciente.sexo;
+    const fechaCreacion = new Date();
+    const fechaUltimoAcceso = fechaCreacion;
+    const fechaActualizacion = fechaCreacion;
+    const hcTipo = 1;
+    const hcNumero = 'PDR' + paciente.documento;
+    const tipoDocumento = 'DNI';
+    const nroDocumento = paciente.documento;
+    const apellido = paciente.apellido;
+    const nombre = paciente.nombre;
+    const estadoCivil =  (paciente.estadoCivil ? paciente.estadoCivil : null);
+    const fechaNacimiento = (paciente.fechaNacimiento ? paciente.fechaNacimiento : null);
+    const sexo = paciente.sexo;
 
-    let query = 'INSERT INTO dbo.Historias_Clinicas ' +
+    const query = 'INSERT INTO dbo.Historias_Clinicas ' +
         '(HC_Fecha_de_creacion ' +
         ',HC_Fecha_de_ultimo_acceso ' +
         ',HC_Fecha_Actualizacion ' +
@@ -68,12 +68,12 @@ export async function savePaciente(paciente: any, transaction) {
 export async function getDatosPaciente(tipoDocumento, documento, pool) {
     // Agregar indice a HC_Documento de Historias_Clinicas
     // idPaciente = Codigo "id" de la tabla Historias_Clinicas y idHistoria es el Número de carpeta.
-    let query = 'SELECT h.Codigo as idHistoria, p.id as idPaciente ' +
+    const query = 'SELECT h.Codigo as idHistoria, p.id as idPaciente ' +
                 'FROM Historias_Clinicas h ' +
                 'inner join Pacientes p on p.legacy_idHistoriaClinica=h.codigo ' +
                 'WHERE HC_Tipo_de_documento = @tipoDocumento ' +
                 'AND h.HC_Documento = @documento';
-    let result = await pool.request()
+    const result = await pool.request()
         .input('documento', sql.VarChar(50), documento)
         .input('tipoDocumento', sql.VarChar(50), tipoDocumento)
         .query(query)

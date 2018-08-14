@@ -2,7 +2,7 @@ import { model as cama } from '../../../core/tm/schemas/camas';
 import { toArray } from '../../../utils/utils';
 
 export function buscarCamaInternacion(idInternacion, estado) {
-    let query = cama.aggregate([
+    const query = cama.aggregate([
         {
             $project: {
                 ultimoEstado: { $arrayElemAt: ['$estados', -1] }, organizacion: 1, sector: 1,
@@ -25,7 +25,7 @@ export function buscarPasesCamaXInternacion(idInternacion) {
         { $match: { 'estados.idInternacion': idInternacion } },
         { $sort: { 'estados.fecha': 1 } }];
 
-    let query = cama.aggregate(pipelineEstado);
+    const query = cama.aggregate(pipelineEstado);
 
     return toArray(query.cursor({}).exec());
 }

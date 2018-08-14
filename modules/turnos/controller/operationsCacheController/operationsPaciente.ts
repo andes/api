@@ -10,9 +10,9 @@ const debug = dbg('integracion');
 export async function verificarPaciente(pacienteSips: any, poolAgendas: any) {
     try {
         let idPacienteSips;
-        let idPaciente = await existePacienteSips(pacienteSips, poolAgendas);
+        const idPaciente = await existePacienteSips(pacienteSips, poolAgendas);
         if (idPaciente === 0) {
-            let query = 'INSERT INTO dbo.Sys_Paciente ' +
+            const query = 'INSERT INTO dbo.Sys_Paciente ' +
                 ' ( idEfector ,' +
                 ' apellido , ' +
                 ' nombre, ' +
@@ -153,7 +153,7 @@ export async function insertarPacienteEnSips(paciente: any, idEfectorSips: any, 
             if (idPaciente) {
                 return idPaciente;
             } else {
-                let pacienteSips = {
+                const pacienteSips = {
                     idEfector: idEfectorSips,
                     nombre: paciente.nombre,
                     apellido: paciente.apellido,
@@ -209,7 +209,7 @@ export async function insertarPacienteEnSips(paciente: any, idEfectorSips: any, 
                     objectId: paciente._id
                 };
 
-                let idPacienteSips = await verificarPaciente(pacienteSips, poolAgendas);
+                const idPacienteSips = await verificarPaciente(pacienteSips, poolAgendas);
                 return idPacienteSips;
             }
         }
@@ -221,38 +221,38 @@ export async function insertarPacienteEnSips(paciente: any, idEfectorSips: any, 
 }
 
 function matchPaciente(pacMpi, pacSips) {
-    let weights = config.mpi.weightsDefault;
+    const weights = config.mpi.weightsDefault;
 
-    let pacAndes = {
+    const pacAndes = {
         documento: pacMpi.documento ? pacMpi.documento.toString() : '',
         nombre: pacMpi.nombre ? pacMpi.nombre : '',
         apellido: pacMpi.apellido ? pacMpi.apellido : '',
         fechaNacimiento: pacMpi.fechaNacimiento ? moment(new Date(pacMpi.fechaNacimiento)).format('YYYY-MM-DD') : '',
         sexo: pacMpi.sexo ? pacMpi.sexo : ''
     };
-    let pac = {
+    const pac = {
         documento: pacSips.numeroDocumento ? pacSips.numeroDocumento.toString() : '',
         nombre: pacSips.nombre ? pacSips.nombre : '',
         apellido: pacSips.apellido ? pacSips.apellido : '',
         fechaNacimiento: pacSips.fechaNacimiento ? moment(pacSips.fechaNacimiento, 'DD/MM/YYYY').format('YYYY-MM-DD') : '',
         sexo: (pacSips.idSexo === 2 ? 'femenino' : (pacSips.idSexo === 3 ? 'masculino' : ''))
     };
-    let match = new Matching();
+    const match = new Matching();
     return match.matchPersonas(pacAndes, pac, weights, config.algoritmo);
 }
 
 async function buscarPacientePorDocumentoEnSips(paciente, poolAgendas) {
     let idPacienteSips = 0;
     try {
-        let query = 'SELECT * FROM dbo.Sys_Paciente WHERE numeroDocumento = @documento';
-        let result = await new sql.Request(poolAgendas)
+        const query = 'SELECT * FROM dbo.Sys_Paciente WHERE numeroDocumento = @documento';
+        const result = await new sql.Request(poolAgendas)
             .input('documento', sql.VarChar(50), paciente.documento)
             .query(query);
 
         if (result.recordset && result.recordset.length) {
             // Se realiza un matcheo con todos los paciente encontrados en sips
-            let pacientesSips = result.recordset;
-            let pacienteEncontrado = pacientesSips.find(pac => {
+            const pacientesSips = result.recordset;
+            const pacienteEncontrado = pacientesSips.find(pac => {
                 if (matchPaciente(paciente, pac) >= 0.95) {
                     return pac;
                 }
@@ -273,8 +273,8 @@ async function buscarPacientePorDocumentoEnSips(paciente, poolAgendas) {
 async function existePacienteSips(pacienteSips, poolAgendas) {
     let idPacienteSips;
     try {
-        let query = 'SELECT idPaciente FROM dbo.Sys_Paciente WHERE objectId = @objectId';
-        let result = await new sql.Request(poolAgendas)
+        const query = 'SELECT idPaciente FROM dbo.Sys_Paciente WHERE objectId = @objectId';
+        const result = await new sql.Request(poolAgendas)
             .input('objectId', sql.VarChar(50), pacienteSips.objectId)
             .query(query);
 
@@ -294,7 +294,7 @@ async function existePacienteSips(pacienteSips, poolAgendas) {
 async function executeQuery(query: any, poolAgendas) {
     try {
         query += ' select SCOPE_IDENTITY() as id';
-        let result = await new sql.Request(poolAgendas).query(query);
+        const result = await new sql.Request(poolAgendas).query(query);
         if (result.recordset) {
             return result.recordset[0].id;
         }

@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as busquedasAgenda from '../schemas/busquedasAgenda';
 
-let router = express.Router();
+const router = express.Router();
 
 router.get('/busquedasAgenda/:_id*?', (req, res, next) => {
     if (req.params._id) {
@@ -26,7 +26,7 @@ router.get('/busquedasAgenda/:_id*?', (req, res, next) => {
 });
 
 router.post('/busquedasAgenda', (req, res, next) => {
-    let newBusquedasAgenda = new busquedasAgenda(req.body);
+    const newBusquedasAgenda = new busquedasAgenda(req.body);
     newBusquedasAgenda.save((err) => {
         if (err) {
             return next(err);

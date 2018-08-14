@@ -3,7 +3,7 @@ import * as especialidad from '../schemas/especialidad_model';
 import { defaultLimit, maxLimit } from './../../../config';
 import { Auth } from '../../../auth/auth.class';
 
-let router = express.Router();
+const router = express.Router();
 
 /**
  * @swagger
@@ -100,9 +100,9 @@ router.get('/especialidades/:id*?', (req, res, next) => {
             res.json(data);
         });
     } else {
-        let radix = 10;
-        let skip: number = parseInt(req.query.skip || 0, radix);
-        let limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
+        const radix = 10;
+        const skip: number = parseInt(req.query.skip || 0, radix);
+        const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
         let query;
         query = especialidad.find({}).skip(skip).limit(limit); // Trae todos
         if (req.query.codigoSisa) { query.where('codigo.sisa').equals(RegExp('^.*' + req.query.codigoSisa + '.*$', 'i')); }
@@ -143,7 +143,7 @@ router.post('/especialidades', Auth.authenticate(), (req, res, next) => {
     if (!Auth.check(req, 'tm:especialidad:postEspecialidad')) {
         return next(403);
     }
-    let newEspecialidad = new especialidad(req.body);
+    const newEspecialidad = new especialidad(req.body);
     newEspecialidad.save((err) => {
         if (err) {
             return next(err);

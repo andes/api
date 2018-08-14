@@ -1,17 +1,17 @@
 import * as express from 'express';
 import * as SIISA from '../schemas/siisa';
 
-let router = express.Router();
+const router = express.Router();
 
 /**
  * Entidades Formadoras
  */
 router.post('/siisa/entidadesformadoras', (req, resp, errorHandler) => {
-    let total = req.body.length;
-    let saved = [];
+    const total = req.body.length;
+    const saved = [];
 
     req.body.forEach(element => {
-        let siisa = new SIISA.EntidadFormadora(element);
+        const siisa = new SIISA.EntidadFormadora(element);
 
         siisa.save((error) => {
             if (error) {
@@ -52,11 +52,11 @@ router.get('/siisa/profesion', (req, resp, errorHandler) => {
 });
 
 router.post('/siisa/profesion', (req, resp, errorHandler) => {
-    let total = req.body.length;
-    let saved = [];
+    const total = req.body.length;
+    const saved = [];
 
     req.body.forEach(element => {
-        let siisa_p = new SIISA.Profesion(element);
+        const siisa_p = new SIISA.Profesion(element);
 
         siisa_p.save((error) => {
             if (error) {
@@ -78,11 +78,11 @@ router.post('/siisa/profesion', (req, resp, errorHandler) => {
  */
 
 router.post('/siisa/paises', (req, resp, errorHandler) => {
-    let total = req.body.length;
-    let saved = [];
+    const total = req.body.length;
+    const saved = [];
 
     req.body.forEach(element => {
-        let siisa_pais = new SIISA.Pais(element);
+        const siisa_pais = new SIISA.Pais(element);
 
         siisa_pais.save((error) => {
             if (error) {

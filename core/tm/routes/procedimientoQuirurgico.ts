@@ -1,6 +1,6 @@
 import * as express from 'express';
 import * as procemiento from '../schemas/procedimientoQuirurgico';
-let router = express.Router();
+const router = express.Router();
 
 
 router.get('/procemientosQuirurgicos', (req, res, next) => {

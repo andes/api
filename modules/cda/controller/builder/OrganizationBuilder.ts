@@ -4,7 +4,7 @@ import { BaseBuilder } from './BaseBuilder';
 export class OrganizationBuilder extends BaseBuilder {
 
     public build(org: Organization) {
-        let custodian = builder.create('custodian')
+        const custodian = builder.create('custodian')
                                .ele('assignedCustodian')
                                .ele('representedCustodianOrganization');
         this.createNode(custodian, 'id', org.id());

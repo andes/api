@@ -32,12 +32,12 @@ import { configuracionPrestacionModel } from './../../../core/term/schemas/confi
 export async function findOrCreate(req, dataPaciente, organizacion) {
     if (dataPaciente.id) {
 
-        let identificador = {
+        const identificador = {
             entidad: String(organizacion),
             valor: dataPaciente.id
         };
         try {
-            let query = await pacienteCtr.buscarPacienteWithcondition({
+            const query = await pacienteCtr.buscarPacienteWithcondition({
                 identificadores: identificador
             });
             if (query) {
@@ -47,15 +47,15 @@ export async function findOrCreate(req, dataPaciente, organizacion) {
             // nothing to do here
         }
     }
-    let pacientes = await pacienteCtr.matchPaciente(dataPaciente);
+    const pacientes = await pacienteCtr.matchPaciente(dataPaciente);
     if (pacientes.length > 0 && pacientes[0].value >= 0.95) {
-        let realPac = await pacienteCtr.buscarPaciente(pacientes[0].paciente.id);
-        let paciente = realPac.paciente;
+        const realPac = await pacienteCtr.buscarPaciente(pacientes[0].paciente.id);
+        const paciente = realPac.paciente;
 
         if (!paciente.identificadores) {
             paciente.identificadores = [];
         }
-        let index = paciente.identificadores.findIndex(item => item.entidad === String(organizacion));
+        const index = paciente.identificadores.findIndex(item => item.entidad === String(organizacion));
         if (index < 0) {
             paciente.identificadores.push({
                 entidad: organizacion,
@@ -74,7 +74,7 @@ export async function findOrCreate(req, dataPaciente, organizacion) {
 }
 
 // Root id principal de ANDES
-let rootOID = CDAConfig.rootOID;
+const rootOID = CDAConfig.rootOID;
 
 /**
  * Match desde snomed a un código LOINC para indentificar el CDA
@@ -103,7 +103,7 @@ export async function matchCode(snomed) {
  */
 
 export async function matchCodeByLoinc(loinc) {
-    let prestacion: any = await configuracionPrestacionModel.find({
+    const prestacion: any = await configuracionPrestacionModel.find({
         'loinc.code': loinc
     });
     if (prestacion.length > 0) {
@@ -135,16 +135,16 @@ function buildID(id, oid = rootOID) {
     };
 }
 
-let base64RegExp = /data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,(.*)/;
+const base64RegExp = /data:([a-zA-Z0-9]+\/[a-zA-Z0-9-.+]+).*,(.*)/;
 
 export function base64toStream(base64) {
-    let match = base64.match(base64RegExp);
-    let mime = match[1];
-    let data = match[2];
-    let extension = mime.split('/')[1];
+    const match = base64.match(base64RegExp);
+    const mime = match[1];
+    const data = match[2];
+    const extension = mime.split('/')[1];
 
-    let streamInput = new Stream.PassThrough();
-    let decoder = base64_stream.decode();
+    const streamInput = new Stream.PassThrough();
+    const decoder = base64_stream.decode();
 
     streamInput.pipe(decoder);
     streamInput.end(data);
@@ -179,8 +179,8 @@ export function storeFile({
     filename = null
 }) {
     return new Promise((resolve, reject) => {
-        let CDAFiles = makeFs();
-        let uniqueId = String(new mongoose.Types.ObjectId());
+        const CDAFiles = makeFs();
+        const uniqueId = String(new mongoose.Types.ObjectId());
 
         CDAFiles.write({
             _id: uniqueId,
@@ -210,10 +210,10 @@ export function storeFile({
 
 export function storePdfFile(pdf) {
     return new Promise((resolve, reject) => {
-        let uniqueId = String(new mongoose.Types.ObjectId());
-        let input = new Stream.PassThrough();
-        let mime = 'application/pdf';
-        let CDAFiles = makeFs();
+        const uniqueId = String(new mongoose.Types.ObjectId());
+        const input = new Stream.PassThrough();
+        const mime = 'application/pdf';
+        const CDAFiles = makeFs();
         CDAFiles.write({
             _id: uniqueId,
             filename: uniqueId + '.pdf',
@@ -240,8 +240,8 @@ export function storePdfFile(pdf) {
 export function storeCDA(objectID, cdaXml, metadata) {
     return new Promise((resolve, reject) => {
 
-        let input = new Stream.PassThrough();
-        let CDAFiles = makeFs();
+        const input = new Stream.PassThrough();
+        const CDAFiles = makeFs();
 
         CDAFiles.write({
             _id: objectID,
@@ -273,11 +273,11 @@ export function storeCDA(objectID, cdaXml, metadata) {
  */
 export function generateCDA(uniqueId, confidentiality, patient, date, author, organization, prestacion, cie10, text, file) {
 
-    let cda = new CDA();
+    const cda = new CDA();
     cda.id(buildID(uniqueId));
 
     // let code = await matchCode(snomed);
-    let code = prestacion.loinc;
+    const code = prestacion.loinc;
     cda.code(code);
 
     // [TODO] Desde donde inferir el titulo
@@ -293,7 +293,7 @@ export function generateCDA(uniqueId, confidentiality, patient, date, author, or
     cda.versionNumber(1);
     cda.date(date);
 
-    let patientCDA = new Patient();
+    const patientCDA = new Patient();
     patientCDA.setFirstname(patient.nombre).setLastname(patient.apellido);
     patientCDA.setBirthtime(patient.fechaNacimiento);
     patientCDA.setGender(patient.sexo);
@@ -303,14 +303,14 @@ export function generateCDA(uniqueId, confidentiality, patient, date, author, or
         patientCDA.setId(buildID(patient.id));
     }
     cda.patient(patientCDA);
-    let orgCDA = new Organization();
+    const orgCDA = new Organization();
     orgCDA.id(buildID(organization._id));
     orgCDA.name(organization.nombre);
 
     cda.custodian(orgCDA);
 
     if (author) {
-        let authorCDA = new Author();
+        const authorCDA = new Author();
         authorCDA.firstname(author.nombre);
         authorCDA.lastname(author.apellido);
         authorCDA.documento(author.documento);
@@ -322,9 +322,9 @@ export function generateCDA(uniqueId, confidentiality, patient, date, author, or
         cda.author(authorCDA);
     }
 
-    let body = new Body();
+    const body = new Body();
 
-    let textComponent = new Component();
+    const textComponent = new Component();
     if (text) {
         textComponent.text(text);
         if (cie10) {
@@ -345,7 +345,7 @@ export function generateCDA(uniqueId, confidentiality, patient, date, author, or
         // var mime = match[1];
         // var data = match[2];
 
-        let imagecomponent = new ImageComponent();
+        const imagecomponent = new ImageComponent();
         imagecomponent.title('Archivo adjunto');
         imagecomponent.file(file.data);
         imagecomponent.type(file.mime);
@@ -356,7 +356,7 @@ export function generateCDA(uniqueId, confidentiality, patient, date, author, or
 
     cda.body(body);
 
-    let builder = new CDABuilder();
+    const builder = new CDABuilder();
     return builder.build(cda);
 
 }
@@ -366,7 +366,7 @@ export function generateCDA(uniqueId, confidentiality, patient, date, author, or
  * @param conds
  */
 export function findByMetadata(conds) {
-    let CDAFiles = makeFs();
+    const CDAFiles = makeFs();
     return CDAFiles.find(conds);
 }
 
@@ -377,7 +377,7 @@ export function findByMetadata(conds) {
  * @param orgId
  */
 export async function CDAExists(id, fecha, orgId) {
-    let existe = await findByMetadata({
+    const existe = await findByMetadata({
         'metadata.extras.id': id,
         'metadata.fecha': fecha,
         'metadata.extras.organizacion': mongoose.Types.ObjectId(orgId),
@@ -395,8 +395,8 @@ export function searchByPatient(pacienteId, prestacion, {
     skip
 }): Promise<any[]> {
     return new Promise(async (resolve, reject) => {
-        let CDAFiles = makeFs();
-        let conditions: any = {
+        const CDAFiles = makeFs();
+        const conditions: any = {
             'metadata.paciente': mongoose.Types.ObjectId(pacienteId),
             'metadata.cdaId': { $exists: false }
         };
@@ -414,7 +414,7 @@ export function searchByPatient(pacienteId, prestacion, {
                 'metadata.fecha': -1
             }).limit(limit).skip(skip);
             list = list.map(item => {
-                let data = item.metadata;
+                const data = item.metadata;
                 data.cda_id = item._id;
                 if (data.adjuntos) {
                     data.adjuntos = data.adjuntos.map(item2 => item2.path).map(file => {
@@ -442,9 +442,9 @@ export function searchByPatient(pacienteId, prestacion, {
  */
 export async function loadCDA(cdaID) {
     return new Promise(async (resolve, reject) => {
-        let CDAFiles = makeFs();
+        const CDAFiles = makeFs();
         CDAFiles.readById(cdaID, (err, buffer) => {
-            let xml = buffer.toString('utf8');
+            const xml = buffer.toString('utf8');
             return resolve(xml);
         });
     });
@@ -455,13 +455,13 @@ export async function loadCDA(cdaID) {
  */
 
 export function validateMiddleware(req, res, next) {
-    let errors: any = {};
-    let validString = (value) => {
+    const errors: any = {};
+    const validString = (value) => {
         return value && value.length > 0;
     };
-    let dataPaciente = req.body.paciente;
-    let dataProfesional = req.body.profesional;
-    let file = req.body.file;
+    const dataPaciente = req.body.paciente;
+    const dataProfesional = req.body.profesional;
+    const file = req.body.file;
 
     if (!moment(req.body.fecha).isValid()) {
         errors.fecha = 'invalid_format';
@@ -528,7 +528,7 @@ export function validateSchemaCDA(xmlRaw) {
             const path = require('path');
             const fs = require('fs');
 
-            let filePath = path.join(__dirname, './schema/CDA.xsd');
+            const filePath = path.join(__dirname, './schema/CDA.xsd');
             fs.readFile(filePath, {
                 encoding: 'utf8'
             }, (err, xsd) => {
@@ -544,7 +544,7 @@ export function validateSchemaCDA(xmlRaw) {
     }
 
     return loadSchema().then(xsdDoc => {
-        let xmlDoc = libxmljs.parseXml(xmlRaw);
+        const xmlDoc = libxmljs.parseXml(xmlRaw);
         xmlDoc.validate(xsdDoc);
 
         if (xmlDoc.validationErrors.length) {
@@ -561,7 +561,7 @@ export function validateSchemaCDA(xmlRaw) {
 
 export function checkAndExtract(xmlDom) {
     function nestedObject(data, keys, value) {
-        let key = keys[0];
+        const key = keys[0];
         if (keys.length > 1) {
             if (!data[key]) {
                 data[key] = {};
@@ -574,21 +574,21 @@ export function checkAndExtract(xmlDom) {
 
     function checkArg(root, params) {
         let passed = true;
-        let data = {};
-        for (let param of params) {
+        const data = {};
+        for (const param of params) {
 
             let text = '';
             if (param.many) {
-                let items = root.find(param.key, {
+                const items = root.find(param.key, {
                     x: 'urn:hl7-org:v3'
                 });
-                for (let i of items) {
+                for (const i of items) {
                     text += i.text ? i.text() : i.value();
                     text += ' ';
                 }
                 text.trim();
             } else {
-                let item = root.get(param.key, {
+                const item = root.get(param.key, {
                     x: 'urn:hl7-org:v3'
                 });
                 if (item) {
@@ -608,8 +608,8 @@ export function checkAndExtract(xmlDom) {
         }
         return passed ? data : null;
     }
-    let _root = xmlDom.root();
-    let _params = [{
+    const _root = xmlDom.root();
+    const _params = [{
         key: '//x:ClinicalDocument/x:id/@root',
         match: CDAConfig.rootOID
     },
@@ -703,7 +703,7 @@ export function checkAndExtract(xmlDom) {
 
 
     ];
-    let metadata: any = checkArg(_root, _params);
+    const metadata: any = checkArg(_root, _params);
     if (metadata.adjunto && metadata.adjunto.indexOf('/') >= 0) {
         return null;
     }

@@ -8,7 +8,7 @@ import * as sql from 'mssql';
 import * as configPrivate from '../../../../config.private';
 
 let poolTurnos;
-let config = {
+const config = {
     user: configPrivate.conSqlPecas.auth.user,
     password: configPrivate.conSqlPecas.auth.password,
     server: configPrivate.conSqlPecas.serverSql.server,
@@ -34,7 +34,7 @@ export async function consultaPecas(start, end) {
         return (ex);
     }
     const query_limit = 10000000000;
-    let match = {
+    const match = {
         $and: [
             // { updatedAt: { $gt: new Date('2018-07-02T00:00:00.000-03:00') } },
             // { updatedAt: { $lt: new Date('2018-07-02T23:00:00.000-03:00') } }
@@ -65,7 +65,7 @@ export async function consultaPecas(start, end) {
             }],
     };
     try {
-        let agendas = agendaModel.aggregate([
+        const agendas = agendaModel.aggregate([
             { $match: match },
             { $limit: query_limit }
         ]).cursor({ batchSize: 10000000000 }).exec();
@@ -92,12 +92,12 @@ export async function consultaPecas(start, end) {
 
 // castea cada turno asignado y lo inserta en la tabla Sql
 async function auxiliar(a: any, b: any, t: any) {
-    let turno: any = {};
-    let turnoConPaciente = t.estado === 'asignado' && t.paciente && t.asistencia;
+    const turno: any = {};
+    const turnoConPaciente = t.estado === 'asignado' && t.paciente && t.asistencia;
     // if (t.estado === 'asignado' && t.paciente && t.asistencia) {
-    let efector = await getEfector(a.organizacion._id) as any;
-    let idEfector = efector ? efector.codigo : null;
-    let tipoEfector = efector ? efector.tipoEfector : null;
+    const efector = await getEfector(a.organizacion._id) as any;
+    const idEfector = efector ? efector.codigo : null;
+    const tipoEfector = efector ? efector.tipoEfector : null;
     turno.tipoPrestacion = (turnoConPaciente && t.tipoPrestacion && t.tipoPrestacion.term) ? t.tipoPrestacion.term : null;
     turno.idEfector = parseInt(idEfector, 10);
     turno.Organizacion = a.organizacion.nombre;
@@ -117,7 +117,7 @@ async function auxiliar(a: any, b: any, t: any) {
     turno.Apellido = turnoConPaciente ? t.paciente.apellido : null;
     turno.Apellido = turnoConPaciente ? turno.Apellido.toString().replace('\'', '\'\'') : null;
     turno.Nombres = turnoConPaciente ? t.paciente.nombre : null;
-    let carpetas = turnoConPaciente ? t.paciente.carpetaEfectores.filter(x => String(x.organizacion._id) === String(a.organizacion._id)) : [];
+    const carpetas = turnoConPaciente ? t.paciente.carpetaEfectores.filter(x => String(x.organizacion._id) === String(a.organizacion._id)) : [];
     if (Array(carpetas).length > 0) {
         turno.HC = carpetas[0] ? (carpetas[0] as any).nroCarpeta : null;
     } else {
@@ -126,7 +126,7 @@ async function auxiliar(a: any, b: any, t: any) {
     turno.codSexo = turnoConPaciente ? String(t.paciente.sexo) === 'femenino' ? String(2) : String(1) : null;
     turno.Sexo = turnoConPaciente ? t.paciente.sexo : null;
     turno.FechaNacimiento = (turnoConPaciente && t.paciente.fechaNacimiento ? moment(t.paciente.fechaNacimiento).format('YYYYMMDD') : '');
-    let objectoEdad = (t.paciente && turno.FechaNacimiento) ? calcularEdad(t.paciente.fechaNacimiento) : null;
+    const objectoEdad = (t.paciente && turno.FechaNacimiento) ? calcularEdad(t.paciente.fechaNacimiento) : null;
 
     turno.Edad = t.paciente && turno.fechaNacimiento ? objectoEdad.valor : null;
     turno.uniEdad = t.paciente && turno.fechaNacimiento ? objectoEdad.unidad : null;
@@ -287,7 +287,7 @@ async function auxiliar(a: any, b: any, t: any) {
         // Chequear si el turno existe en sql PECAS y depeniendo de eso hacer un insert o  un update
 
         // se verifica si existe el turno en sqñ
-        let queryInsert = 'INSERT INTO dbo.Pecas_consolidado_1' +
+        const queryInsert = 'INSERT INTO dbo.Pecas_consolidado_1' +
             '(idEfector, Efector, TipoEfector, DescTipoEfector, IdZona, Zona, SubZona, idEfectorSuperior, EfectorSuperior, AreaPrograma, ' +
             'idAgenda, FechaAgenda, HoraAgenda, estadoAgenda, turnosProgramados, turnosProfesional, turnosLlaves, turnosDelDia, ' +
             'idTurno, FechaConsulta, HoraTurno, Periodo, Tipodeconsulta, Principal, ConsC2, ConsObst, tipoPrestacion, ' +
@@ -325,9 +325,9 @@ async function auxiliar(a: any, b: any, t: any) {
             '\',\'' + turno.conceptId3 + '\',\'' + turno.term3 + '\',' + turno.primeraVez3 +
             ',\'' + turno.Profesional + '\',\'' + turno.TipoProfesional + '\',' + turno.CodigoEspecialidad + ',\'' + turno.Especialidad +
             '\',' + turno.CodigoServicio + ',\'' + turno.Servicio + '\',\'' + turno.codifica + '\') ';
-        let rta = await existeTurnoPecas(turno.idTurno);
+        const rta = await existeTurnoPecas(turno.idTurno);
         if (rta.recordset.length > 0 && rta.recordset[0].idTurno) {
-            let queryDel = await eliminaTurnoPecas(turno.idTurno);
+            const queryDel = await eliminaTurnoPecas(turno.idTurno);
             if (queryDel.rowsAffected[0] > 0) {
                 await executeQuery(queryInsert);
             }
@@ -362,14 +362,14 @@ async function auxiliar(a: any, b: any, t: any) {
 // }
 
 async function existeTurnoPecas(turno: any) {
-    let result = await new sql.Request(poolTurnos)
+    const result = await new sql.Request(poolTurnos)
         .input('idTurno', sql.VarChar(50), turno)
         .query('SELECT idTurno FROM dbo.Pecas_consolidado_1 WHERE idTurno = @idTurno');
     return result;
 }
 
 async function eliminaTurnoPecas(turno: any) {
-    let result = await new sql.Request(poolTurnos)
+    const result = await new sql.Request(poolTurnos)
         .input('idTurno', sql.VarChar(50), turno)
         .query('DELETE FROM dbo.Pecas_consolidado_1 WHERE idTurno = @idTurno');
     return result;
@@ -384,8 +384,8 @@ function getEfector(idOrganizacion: any) {
                 reject(err);
             }
             if ((data as any).codigo) {
-                let codigoSips = (data as any).codigo as any;
-                let efector = {
+                const codigoSips = (data as any).codigo as any;
+                const efector = {
                     codigo: codigoSips.sips ? codigoSips.sips : null,
                     tipoEfector: (data as any).tipoEstablecimiento.nombre
                 };
@@ -424,11 +424,11 @@ function getCapitulo(codigoCIE10: string) {
 
 function calcularEdad(fechaNacimiento) {
     let edad: any;
-    let fechaActual: Date = new Date();
-    let fechaAct = moment(fechaActual, 'YYYY-MM-DD HH:mm:ss');
-    let difDias = fechaAct.diff(fechaNacimiento, 'd'); // Diferencia en días
-    let difAnios = Math.floor(difDias / 365.25);
-    let difMeses = Math.floor(difDias / 30.4375);
+    const fechaActual: Date = new Date();
+    const fechaAct = moment(fechaActual, 'YYYY-MM-DD HH:mm:ss');
+    const difDias = fechaAct.diff(fechaNacimiento, 'd'); // Diferencia en días
+    const difAnios = Math.floor(difDias / 365.25);
+    const difMeses = Math.floor(difDias / 30.4375);
 
     if (difAnios !== 0) {
         edad = {
@@ -475,7 +475,7 @@ function calcularEdad(fechaNacimiento) {
 async function executeQuery(query: any) {
     try {
         query += ' select SCOPE_IDENTITY() as id';
-        let result = await new sql.Request(poolTurnos).query(query);
+        const result = await new sql.Request(poolTurnos).query(query);
         if (result && result.recordset) {
             return result.recordset[0].id;
         }

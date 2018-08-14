@@ -4,7 +4,7 @@ import * as config from '../config';
 import * as configPrivate from '../config.private';
 // Services
 // import { Logger } from '../utils/logService';
-let to_json = require('xmljson').to_json;
+const to_json = require('xmljson').to_json;
 
 
 export function getSisaCiudadano(nroDocumento, usuario, clave, sexo?: string) {
@@ -22,7 +22,7 @@ export function getSisaCiudadano(nroDocumento, usuario, clave, sexo?: string) {
         pathSisa = configPrivate.sisa.url + 'nrodoc=' + nroDocumento + '&sexo=' + sexo + '&usuario=' + usuario + '&clave=' + clave;
     }
 
-    let optionsgetmsg = {
+    const optionsgetmsg = {
         host: configPrivate.sisa.host,
         port: configPrivate.sisa.port,
         path: pathSisa,
@@ -32,7 +32,7 @@ export function getSisaCiudadano(nroDocumento, usuario, clave, sexo?: string) {
 
     // Realizar GET request
     return new Promise((resolve, reject) => {
-        let reqGet = https.request(optionsgetmsg, (res) => {
+        const reqGet = https.request(optionsgetmsg, (res) => {
             res.on('data', (d) => {
                 // console.info('GET de Sisa ' + nroDocumento + ':\n');
                 if (d.toString()) {
@@ -123,7 +123,7 @@ export function formatearDatosSisa(datosSisa) {
     }
     if (datosSisa.fechaNacimiento) {
         fecha = datosSisa.fechaNacimiento.split('-');
-        let fechaNac = new Date(fecha[2].substr(0, 4), fecha[1] - 1, fecha[0]);
+        const fechaNac = new Date(fecha[2].substr(0, 4), fecha[1] - 1, fecha[0]);
         ciudadano.fechaNacimiento = fechaNac.toJSON();
     }
 
@@ -137,7 +137,7 @@ export function formatearDatosSisa(datosSisa) {
     if (datosSisa.fallecido !== 'NO') {
         if (datosSisa.fechaFallecimiento) {
             fecha = datosSisa.fechaFallecimiento.split('-');
-            let fechaFac = new Date(fecha[2].substr(0, 4), fecha[1], fecha[0]);
+            const fechaFac = new Date(fecha[2].substr(0, 4), fecha[1], fecha[0]);
             ciudadano.fechaFallecimiento = fechaFac.toJSON();
         }
     }
@@ -150,7 +150,7 @@ export function getPacienteSisa(nroDocumento, sexo?: string) {
         this.getSisaCiudadano(nroDocumento, configPrivate.sisa.username, configPrivate.sisa.password)
             .then((resultado) => {
                 if (resultado) {
-                    let dato = this.formatearDatosSisa(resultado[1].Ciudadano);
+                    const dato = this.formatearDatosSisa(resultado[1].Ciudadano);
                     resolve(dato);
                 }
                 resolve(null);
@@ -167,12 +167,12 @@ export function matchSisa(paciente) {
     // Verifica si el paciente tiene un documento valido y realiza la búsqueda a través de Sisa
     let matchPorcentaje = 0;
     let pacienteSisa = {};
-    let weights = config.mpi.weightsDefault;
-    let match = new Matching();
+    const weights = config.mpi.weightsDefault;
+    const match = new Matching();
     paciente['matchSisa'] = 0;
     // Se buscan los datos en sisa y se obtiene el paciente
     return new Promise((resolve, reject) => {
-        let band = (paciente.entidadesValidadoras) ? (paciente.entidadesValidadoras.indexOf('sisa') < 0) : true;
+        const band = (paciente.entidadesValidadoras) ? (paciente.entidadesValidadoras.indexOf('sisa') < 0) : true;
         if (paciente.documento && band) {
             if (paciente.documento.length >= 7) {
                 let sexo = null;

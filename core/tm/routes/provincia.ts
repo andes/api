@@ -3,7 +3,7 @@ import * as express from 'express';
 import * as provincia from '../schemas/provincia_model';
 // import * as utils from '../../../utils/utils';
 
-let router = express.Router();
+const router = express.Router();
 /**
  * @swagger
  * definition:

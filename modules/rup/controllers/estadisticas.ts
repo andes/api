@@ -3,7 +3,7 @@ import { toArray } from '../../../utils/utils';
 import * as mongoose from 'mongoose';
 
 export async function dashboard(org, prestaciones, desde, hasta) {
-    let pipeline = [
+    const pipeline = [
         {
             $match: {
                 'solicitud.organizacion.id': mongoose.Types.ObjectId(org),
@@ -99,7 +99,7 @@ export async function dashboard(org, prestaciones, desde, hasta) {
         }
     ];
 
-    let aggr = Prestacion.aggregate(pipeline);
-    let data = await toArray(aggr.cursor({}).exec());
+    const aggr = Prestacion.aggregate(pipeline);
+    const data = await toArray(aggr.cursor({}).exec());
     return data[0];
 }

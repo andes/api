@@ -3,7 +3,7 @@ import { pacienteMpi } from '../../schemas/paciente';
 import { paciente } from '../../schemas/paciente';
 import { Auth } from '../../../../auth/auth.class';
 
-let router = express.Router();
+const router = express.Router();
 
 
 /* Obtengo los pacientes que tienen la misma clave de blocking */
@@ -11,10 +11,10 @@ router.get('/bloques/pacientes/:idTipoBloque/:idBloque', (req, res, next) => {
     if (!Auth.check(req, 'mpi:bloque:get')) {
         return next(403);
     }
-    let redix = 10;
-    let idTipoBloque: number = parseInt(req.params.idTipoBloque, redix);
-    let filtro = 'claveBlocking.' + idTipoBloque;
-    let query = {activo: true};
+    const redix = 10;
+    const idTipoBloque: number = parseInt(req.params.idTipoBloque, redix);
+    const filtro = 'claveBlocking.' + idTipoBloque;
+    const query = {activo: true};
     let lista = [];
 
     query[filtro] = {

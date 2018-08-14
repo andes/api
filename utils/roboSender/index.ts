@@ -23,7 +23,7 @@ export interface IEmail {
 }
 
 export function sendSms(data: ISms, options: any = {}) {
-    let obj = new roboModel({
+    const obj = new roboModel({
         message: data.message,
         phone: data.phone,
         from: options.from ? options.from : 'undefined',
@@ -39,7 +39,7 @@ export function sendSms(data: ISms, options: any = {}) {
 }
 
 export function sendEmail(data: IEmail, options: any = {}) {
-    let obj = new roboModel({
+    const obj = new roboModel({
         message: data.plainText,
         phone: null,
 

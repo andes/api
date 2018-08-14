@@ -5,7 +5,7 @@ import * as constantes from './constantes';
 import * as mongoose from 'mongoose';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 
-let schema = new mongoose.Schema({
+const schema = new mongoose.Schema({
     paciente: {
         type: {
             id: mongoose.Schema.Types.ObjectId,
@@ -62,6 +62,6 @@ let schema = new mongoose.Schema({
 schema.plugin(require('../../../mongoose/audit'));
 
 // Exportar modelo
-let model = mongoose.model('prestamo', schema, 'prestamo');
+const model = mongoose.model('prestamo', schema, 'prestamo');
 
 export = model;

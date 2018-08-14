@@ -15,12 +15,12 @@ export function migrar(q_objeto, _q_limites, page_size, addNuevoObjeto, connecti
 
     async function navegar(pool, index) {
         if (index < max) {
-            let offset = index + page_size;
+            const offset = index + page_size;
             return pool.request()
                 .query(q_objeto)
                 .then(objetos => {
                     if (objetos.recordset && objetos.recordset.length) {
-                        let nuevosObjetos = objetos.recordset.map(addNuevoObjeto);
+                        const nuevosObjetos = objetos.recordset.map(addNuevoObjeto);
                         return Promise.all(nuevosObjetos).then(res =>
                             navegar(pool, offset + 1)
                         );
@@ -36,7 +36,7 @@ export function migrar(q_objeto, _q_limites, page_size, addNuevoObjeto, connecti
             logger('RunQuery...');
             if (connectionPool.pool.max) {
                 logger(connectionPool.pool.min + ' - ' + connectionPool.pool.max);
-                let min = connectionPool.pool.min;
+                const min = connectionPool.pool.min;
                 max = connectionPool.pool.max;
                 return navegar(connectionPool, min);
             }

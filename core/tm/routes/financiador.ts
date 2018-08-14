@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as financiador from '../schemas/financiador';
 
-let router = express.Router();
+const router = express.Router();
 /**
  * @swagger
  * definition:

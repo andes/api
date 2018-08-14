@@ -1,6 +1,6 @@
 import { enviarMail } from '../../config.private';
 import * as fs from 'fs';
-let handlebars = require('handlebars');
+const handlebars = require('handlebars');
 const path = require('path');
 const nodemailer = require('nodemailer');
 
@@ -15,14 +15,14 @@ export interface MailOptions {
 
 export function sendMail(options: MailOptions) {
     return new Promise((resolve, reject) => {
-        let transporter = nodemailer.createTransport({
+        const transporter = nodemailer.createTransport({
             host: enviarMail.host,
             port: enviarMail.port,
             secure: enviarMail.secure,
             auth: enviarMail.auth,
         });
 
-        let mailOptions = {
+        const mailOptions = {
             from: options.from,
             to: options.to,
             subject: options.subject,
@@ -53,8 +53,8 @@ export function renderHTML(templateName: string, extras: any): Promise<string> {
                 return reject(err);
             }
             try {
-                let template = handlebars.compile(html);
-                let htmlToSend = template(extras);
+                const template = handlebars.compile(html);
+                const htmlToSend = template(extras);
                 return resolve(htmlToSend);
             } catch (exp) {
                 return reject(exp);

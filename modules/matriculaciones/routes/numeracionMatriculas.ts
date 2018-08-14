@@ -3,7 +3,7 @@ import * as NumeracionMatriculas from './../schemas/numeracionMatriculas';
 import * as SIISA from './../../../core/tm/schemas/siisa';
 
 
-let router = express.Router();
+const router = express.Router();
 
 // router.get('/numeraciones/codigo', (request, response, errorHandler) => {
 //     console.log(request.params.codigo)
@@ -42,15 +42,15 @@ router.get('/numeraciones/:id*?', (req, res, next) => {
         }
     } else {
 
-        let offset = req.query.offset ? parseInt(req.query.offset, 10) : 0;
-        let chunkSize = parseInt(req.query.size, 10);
+        const offset = req.query.offset ? parseInt(req.query.offset, 10) : 0;
+        const chunkSize = parseInt(req.query.size, 10);
 
-        let responseData = {
+        const responseData = {
             totalPages: null,
             data: null
         };
 
-        let busquedaNumeracion = {};
+        const busquedaNumeracion = {};
         if (req.query.codigo) {
             busquedaNumeracion['profesion._id'] = req.query.codigo;
         }
@@ -100,7 +100,7 @@ router.get('/numeracionesRestart', (req, resp, errorHandler) => {
                 return errorHandler(err);
             }
             profs.forEach((prof, i) => {
-                let numeracion = new NumeracionMatriculas({
+                const numeracion = new NumeracionMatriculas({
                     profesion: prof,
                     proximoNumero: 1
                 });
@@ -123,7 +123,7 @@ router.get('/numeracionesRestart', (req, resp, errorHandler) => {
  *
  */
 router.post('/numeraciones', (request, response, errorHandler) => {
-    let opciones = {};
+    const opciones = {};
     let query;
 
     if (request.body.profesion) {

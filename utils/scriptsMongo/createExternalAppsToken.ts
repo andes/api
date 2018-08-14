@@ -8,13 +8,13 @@ Connections.Connections.initialize();
 createToken();
 
 async function createToken() {
-    let id = process.argv[2];
-    let app: any = await authApps.findById(id);
-    let organizacion = app.organizacion;
-    let permisos = app.permisos;
-    let nombre = app.nombre;
+    const id = process.argv[2];
+    const app: any = await authApps.findById(id);
+    const organizacion = app.organizacion;
+    const permisos = app.permisos;
+    const nombre = app.nombre;
 
-    let token = AuthClass.Auth.generateAppToken(nombre, organizacion, permisos);
+    const token = AuthClass.Auth.generateAppToken(nombre, organizacion, permisos);
     app.token = token;
     app.save().then( () => {
         process.exit();

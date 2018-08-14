@@ -6,7 +6,7 @@ import { Connections } from './connections';
 import * as HttpStatus from 'http-status-codes';
 import { Express } from 'express';
 
-let requireDir = require('require-dir');
+const requireDir = require('require-dir');
 
 export function initAPI(app: Express) {
     // Inicializa la autenticación con Passport/JWT
@@ -38,10 +38,10 @@ export function initAPI(app: Express) {
     Swagger.initialize(app);
 
     // Carga los módulos y rutas
-    for (let m in config.modules) {
+    for (const m in config.modules) {
         if (config.modules[m].active) {
-            let routes = requireDir(config.modules[m].path);
-            for (let route in routes) {
+            const routes = requireDir(config.modules[m].path);
+            for (const route in routes) {
                 if (config.modules[m].middleware) {
                     app.use('/api' + config.modules[m].route, config.modules[m].middleware, routes[route]);
                 } else {

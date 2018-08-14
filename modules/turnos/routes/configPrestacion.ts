@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as configPrestacion from '../schemas/configPrestacion';
 
-let router = express.Router();
+const router = express.Router();
 
 router.get('/configPrestacion/:id*?', (req, res, next) => {
     if (req.params.id) {
@@ -29,7 +29,7 @@ router.get('/configPrestacion/:id*?', (req, res, next) => {
 router.post('/configPrestacion', (req, res, next) => {
     // var newEspecialidad = new especialidad(req.body)
     // aca deberia setear todo en false
-    let newEspecialidad = new configPrestacion(req.body);
+    const newEspecialidad = new configPrestacion(req.body);
     newEspecialidad.save((err) => {
         if (err) {
             return next(err);

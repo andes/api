@@ -6,7 +6,7 @@ import * as authController from '../controller/AuthController';
 import { Auth } from '../../../auth/auth.class';
 import * as labsImport from '../../cda/controller/import-labs';
 
-let router = express.Router();
+const router = express.Router();
 
 /**
  * Login a la app mobile
@@ -16,8 +16,8 @@ let router = express.Router();
  */
 
 router.post('/login', (req, res, next) => {
-    let email = req.body.email;
-    let password = req.body.password;
+    const email = req.body.email;
+    const password = req.body.password;
 
     if (!email) {
         return res.status(422).send({ error: 'Se debe ingresar una dirección de e-mail' });
@@ -52,7 +52,7 @@ router.post('/login', (req, res, next) => {
 
                 }
 
-                let token = Auth.generatePacienteToken(String(user.id), user.nombre + ' ' + user.apellido, user.email, user.pacientes, user.permisos);
+                const token = Auth.generatePacienteToken(String(user.id), user.nombre + ' ' + user.apellido, user.email, user.pacientes, user.permisos);
                 res.status(200).json({
                     token,
                     user

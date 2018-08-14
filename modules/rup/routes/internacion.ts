@@ -4,7 +4,7 @@ import * as express from 'express';
 import * as internacionesController from './../controllers/internacion';
 import * as camasController from './../controllers/cama';
 
-let router = express.Router();
+const router = express.Router();
 
 router.get('/internaciones/ultima/:idPaciente', (req, res, next) => {
     // buscamos la ultima interncion del paciente
@@ -12,7 +12,7 @@ router.get('/internaciones/ultima/:idPaciente', (req, res, next) => {
         internacion => {
             let salida = { ultimaInternacion: null, cama: null };
             if (internacion && internacion.length > 0) {
-                let ultimaInternacion = internacion[0];
+                const ultimaInternacion = internacion[0];
                 // Ahora buscamos si se encuentra asociada la internacion a una cama
                 camasController.buscarCamaInternacion(mongoose.Types.ObjectId(ultimaInternacion.id), 'ocupada').then(
                     camas => {

@@ -1,7 +1,7 @@
 import { readFile, storeFile } from '../controllers/rupStore';
 
 import * as express from 'express';
-let router = express.Router();
+const router = express.Router();
 
 router.get('/store/:id', (req, res, next) => {
     readFile(req.params.id).then((data: any)  => {
@@ -17,8 +17,8 @@ router.get('/store/:id', (req, res, next) => {
 });
 
 router.post('/store', (req, res, next) => {
-    let file = req.body.file;
-    let metadata = req.body.metadata;
+    const file = req.body.file;
+    const metadata = req.body.metadata;
     storeFile(file, metadata).then((data) => {
         res.json(data);
     }).catch(next);

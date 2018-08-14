@@ -2,7 +2,7 @@ import * as express from 'express';
 import * as localidad from '../schemas/localidad';
 import * as mongoose from 'mongoose';
 
-let router = express.Router();
+const router = express.Router();
 
 /**
  * @swagger

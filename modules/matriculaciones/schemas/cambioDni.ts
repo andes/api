@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
 import { ObjSIISASchema } from '../../../core/tm/schemas/siisa';
 
-let cambioDniSchema = new mongoose.Schema({
+const cambioDniSchema = new mongoose.Schema({
     apellido: { type: String, required: true },
     nombre: { type: String, required: true },
     idProfesional: { type: String, required: false },
@@ -16,6 +16,6 @@ let cambioDniSchema = new mongoose.Schema({
 // Virtuals
 
 
-let cambioDni = mongoose.model('solicitudCambioDni', cambioDniSchema, 'solicitudCambioDni');
+const cambioDni = mongoose.model('solicitudCambioDni', cambioDniSchema, 'solicitudCambioDni');
 
 export = cambioDni;

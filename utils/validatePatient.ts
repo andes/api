@@ -1,13 +1,13 @@
 export class ValidatePatient {
 
     public static checkPatient(patient: any): any {
-        let errors = [];
+        const errors = [];
         let valid = true;
-        let estadoCivil = ['casado', 'separado', 'soltero', 'divorciado', 'viudo', 'otro'];
-        let sexo = ['femenino', 'masculino', 'otro'];
-        let estado = ['temporal', 'validado', 'recienNacido', 'extranjero'];
-        let tipoContacto = ['fijo', 'celular', 'email'];
-        let relaciones = ['padre', 'madre', 'hijo', 'hermano', 'tutor'];
+        const estadoCivil = ['casado', 'separado', 'soltero', 'divorciado', 'viudo', 'otro'];
+        const sexo = ['femenino', 'masculino', 'otro'];
+        const estado = ['temporal', 'validado', 'recienNacido', 'extranjero'];
+        const tipoContacto = ['fijo', 'celular', 'email'];
+        const relaciones = ['padre', 'madre', 'hijo', 'hermano', 'tutor'];
 
         if (!patient.apellido) {
             valid = false;

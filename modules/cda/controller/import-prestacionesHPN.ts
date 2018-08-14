@@ -1,6 +1,6 @@
 import * as configPrivate from '../../../config.private';
 import * as http from 'http';
-let request = require('request');
+const request = require('request');
 
 /**
  * Obtiene todas las prestaciones de un paciente por Documento
@@ -23,8 +23,8 @@ export function postPrestaciones(documento) {
                 reject(error);
             }
             if (body.d) {
-                let prestaciones = body.d;
-                let prestacionesValidadas = prestaciones.filter(p => p.Estado === 'Validada');
+                const prestaciones = body.d;
+                const prestacionesValidadas = prestaciones.filter(p => p.Estado === 'Validada');
                 if (prestacionesValidadas) {
                     resolve(prestacionesValidadas);
                 } else {
@@ -39,7 +39,7 @@ export function postPrestaciones(documento) {
 
 export function downloadFile(id) {
     return new Promise((resolve, reject) => {
-        let url = configPrivate.wsSalud.hostHPN + configPrivate.wsSalud.hpnWS + 'Informe?idEstudio=' + id;
+        const url = configPrivate.wsSalud.hostHPN + configPrivate.wsSalud.hpnWS + 'Informe?idEstudio=' + id;
         http.get(url , (response) => {
             if (response.statusCode === 200) {
                 return resolve(response);

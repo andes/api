@@ -10,7 +10,7 @@ import { toArray } from '../../../utils/utils';
 
 // let async = require('async');
 
-let router = express.Router();
+const router = express.Router();
 
 // Envía el sms al paciente recordando el turno con 24 Hs de antelación
 router.post('/turnos/smsRecordatorioTurno', (req, res, next) => {
@@ -30,12 +30,12 @@ router.get('/turnos/recordatorioTurno', (req, res, next) => {
  */
 
 router.get('/turnos', async (req: any, res, next) => {
-    let pipelineTurno = [];
-    let turnos = [];
+    const pipelineTurno = [];
+    const turnos = [];
     let turno;
-    let matchTurno = {};
+    const matchTurno = {};
 
-    let pacienteId = req.user.pacientes[0].id;
+    const pacienteId = req.user.pacientes[0].id;
 
     matchTurno['bloques.turnos.paciente.id'] = mongoose.Types.ObjectId(pacienteId);
 
@@ -100,9 +100,9 @@ router.get('/turnos', async (req: any, res, next) => {
     pipelineTurno.push({ $unwind: '$bloques.turnos' });
     pipelineTurno.push({ $sort: { 'bloques.turnos.horaInicio': 1 } });
 
-    let data2 = await toArray(agenda.aggregate(pipelineTurno).cursor({}).exec());
+    const data2 = await toArray(agenda.aggregate(pipelineTurno).cursor({}).exec());
 
-    let promisesStack = [];
+    const promisesStack = [];
     data2.forEach(elem => {
         turno = elem.bloques.turnos;
         turno.paciente = elem.bloques.turnos.paciente;
@@ -118,18 +118,18 @@ router.get('/turnos', async (req: any, res, next) => {
         delete turno.updatedAt;
 
         /* Busco el turno anterior cuando fue reasignado */
-        let reasignado = turno.reasignado && turno.reasignado.siguiente;
+        const reasignado = turno.reasignado && turno.reasignado.siguiente;
 
         if (turno.reasignado && turno.reasignado.anterior) {
-            let promise = new Promise((resolve, reject) => {
-                let datos = turno.reasignado.anterior;
+            const promise = new Promise((resolve, reject) => {
+                const datos = turno.reasignado.anterior;
                 agenda.findById(datos.idAgenda, (err, ag: any) => {
                     if (err) {
                         resolve();
                     }
-                    let bloque = ag.bloques.id(datos.idBloque);
+                    const bloque = ag.bloques.id(datos.idBloque);
                     if (bloque) {
-                        let t = bloque.turnos.id(datos.idTurno);
+                        const t = bloque.turnos.id(datos.idTurno);
                         turno.reasignado_anterior = t;
                         // turno.confirmadoAt = turno.reasignado.confirmadoAt;
                         delete turno['reasignado'];
@@ -171,11 +171,11 @@ router.get('/turnos', async (req: any, res, next) => {
 
 router.post('/turnos/cancelar', (req: any, res, next) => {
     /* Por el momento usamos el primer paciente */
-    let pacienteId = req.user.pacientes[0].id;
+    const pacienteId = req.user.pacientes[0].id;
 
-    let turnoId = req.body.turno_id;
-    let agendaId = req.body.agenda_id;
-    let bloqueId = req.body.bloque_id;
+    const turnoId = req.body.turno_id;
+    const agendaId = req.body.agenda_id;
+    const bloqueId = req.body.bloque_id;
 
     if (!mongoose.Types.ObjectId.isValid(agendaId)) {
         return next('ObjectID Inválido');
@@ -185,7 +185,7 @@ router.post('/turnos/cancelar', (req: any, res, next) => {
         if (err) {
             return res.status(422).send({ message: 'agenda_id_invalid' });
         }
-        let turno = agendaCtrl.getTurno(req, agendaObj, turnoId);
+        const turno = agendaCtrl.getTurno(req, agendaObj, turnoId);
         if (turno) {
             if (String(turno.paciente.id) === pacienteId) {
                 LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, bloqueId, agendaId);
@@ -227,11 +227,11 @@ router.post('/turnos/cancelar', (req: any, res, next) => {
 
 router.post('/turnos/confirmar', (req: any, res, next) => {
     /* Por el momento usamos el primer paciente */
-    let pacienteId = req.user.pacientes[0].id;
+    const pacienteId = req.user.pacientes[0].id;
 
-    let turnoId = req.body.turno_id;
-    let agendaId = req.body.agenda_id;
-    let bloqueId = req.body.bloque_id;
+    const turnoId = req.body.turno_id;
+    const agendaId = req.body.agenda_id;
+    const bloqueId = req.body.bloque_id;
 
     if (!mongoose.Types.ObjectId.isValid(agendaId)) {
         return next('ObjectID Inválido');
@@ -241,7 +241,7 @@ router.post('/turnos/confirmar', (req: any, res, next) => {
         if (err) {
             return res.status(422).send({ message: 'agenda_id_invalid' });
         }
-        let turno = agendaCtrl.getTurno(req, agendaObj, turnoId);
+        const turno = agendaCtrl.getTurno(req, agendaObj, turnoId);
         if (turno) {
             if (String(turno.paciente.id) === pacienteId) {
 
@@ -290,11 +290,11 @@ router.post('/turnos/confirmar', (req: any, res, next) => {
  */
 router.post('/turnos/asistencia', (req: any, res, next) => {
     /* Por el momento usamos el primer paciente */
-    let pacienteId = req.user.pacientes[0].id;
+    const pacienteId = req.user.pacientes[0].id;
 
-    let turnoId = req.body.turno_id;
-    let agendaId = req.body.agenda_id;
-    let bloqueId = req.body.bloque_id;
+    const turnoId = req.body.turno_id;
+    const agendaId = req.body.agenda_id;
+    const bloqueId = req.body.bloque_id;
 
     if (!mongoose.Types.ObjectId.isValid(agendaId)) {
         return next('ObjectID Inválido');
@@ -304,7 +304,7 @@ router.post('/turnos/asistencia', (req: any, res, next) => {
         if (err) {
             return res.status(422).send({ message: 'agenda_id_invalid' });
         }
-        let turno = agendaCtrl.getTurno(req, agendaObj, turnoId);
+        const turno = agendaCtrl.getTurno(req, agendaObj, turnoId);
         if (turno) {
             if (String(turno.paciente.id) === pacienteId) {
 

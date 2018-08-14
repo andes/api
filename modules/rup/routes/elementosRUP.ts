@@ -5,14 +5,14 @@ import { elementoRUP } from '../schemas/elementoRUP';
 import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
 import { snomedModel } from '../../../core/term/schemas/snomed';
 
-let router = express.Router();
+const router = express.Router();
 
 /**
  * Devueve los grupos sugeridos en la busqueda guiada por prestación.
  */
 
 router.get('/elementosRUP/:id/guiada', (req, res, next) => {
-    let prestacion = req.params.id;
+    const prestacion = req.params.id;
     elementoRUP.findOne({
         'conceptos.conceptId': prestacion
     }).then(async (elemento: any) => {
@@ -20,9 +20,9 @@ router.get('/elementosRUP/:id/guiada', (req, res, next) => {
         if (elemento && elemento.busqueda_guiada && elemento.busqueda_guiada.length > 0) {
 
             let flag = false;
-            for (let guia of elemento.busqueda_guiada) {
+            for (const guia of elemento.busqueda_guiada) {
                 if (!guia.conceptIds.length) {
-                    let q = makeMongoQuery(guia.query);
+                    const q = makeMongoQuery(guia.query);
                     flag = true;
                     guia.conceptIds = await snomedModel.find(q, { conceptId: 1 }).then((docs: any[]) => {
                         return docs.map(item => item.conceptId);
@@ -50,11 +50,11 @@ router.get('/elementosRUP/:id*?', (req, res, next) => {
     } else {
         query = elementoRUP.find({}); // Trae todos
         if (req.query.skip) {
-            let skip: number = parseInt(req.query.skip || 0, 10);
+            const skip: number = parseInt(req.query.skip || 0, 10);
             query = query.skip(skip);
         }
         if (req.query.limit) {
-            let limit: number = Math.min(parseInt(req.query.limit || defaultLimit, 10), maxLimit);
+            const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, 10), maxLimit);
             query = query.limit(limit);
         }
         if (req.query.nombre) {
@@ -64,11 +64,11 @@ router.get('/elementosRUP/:id*?', (req, res, next) => {
             query.where('key').equals(RegExp('^.*' + req.query.key + '.*$', 'i'));
         }
         if (req.query.excluir) {
-            let ids = req.query.excluir.split(',');
+            const ids = req.query.excluir.split(',');
             query.where('_id').nin(ids);
         }
         if (req.query.incluir) {
-            let idsIn = req.query.incluir.split(',');
+            const idsIn = req.query.incluir.split(',');
             query.where('_id').in(idsIn);
         }
         if (req.query.granularidad) {

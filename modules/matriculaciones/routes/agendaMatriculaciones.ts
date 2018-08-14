@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as agenda from '../schemas/agendaMatriculaciones';
 import { Auth } from '../../../auth/auth.class';
-let router = express.Router();
+const router = express.Router();
 
 router.get('/agendaMatriculaciones/', (req, res, next) => {
 
@@ -33,7 +33,7 @@ router.post('/agendaMatriculaciones', Auth.authenticate(), (req, res, next) => {
                 res.status(201).json(data);
             });
         } else {
-            let newAgenda = new agenda(req.body);
+            const newAgenda = new agenda(req.body);
             newAgenda.save((errSave) => {
                 if (errSave) {
                     return next(errSave);

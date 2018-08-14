@@ -2,7 +2,7 @@ import { jobs } from '../config.private';
 import * as debug from 'debug';
 import { spawn, ChildProcess } from 'child_process';
 
-let schedule = require('node-schedule');
+const schedule = require('node-schedule');
 const log = debug('jobs');
 const defaultTimeout = 1000 * 60 * 10; // default 10 minutes
 
@@ -48,8 +48,8 @@ class Scheduler {
      * @param child
      */
     static preventDeadLock(job, child: ChildProcess) {
-        let timer = job.timeout || defaultTimeout;
-        let id = setTimeout(() => {
+        const timer = job.timeout || defaultTimeout;
+        const id = setTimeout(() => {
             log('stoping', job.action, 'timeout');
             child.kill();
         }, timer);
@@ -75,15 +75,15 @@ class Scheduler {
 
         log('initialize');
 
-        let _self = this;
+        const _self = this;
         jobs.forEach((job: any) => {
             _self.runningProccess[job.action] = [];
             schedule.scheduleJob(job.when, () => {
-                let concurrent = !!job.concurrent;
+                const concurrent = !!job.concurrent;
                 if (concurrent || _self.runningProccess[job.action].length === 0) {
                     log(`${job.action}  start`);
 
-                    let child: any = spawn('node', ['jobs/manual.js', job.action], { env: process.env });
+                    const child: any = spawn('node', ['jobs/manual.js', job.action], { env: process.env });
 
                     child.on('close', (code, signal) => {
                         log(`${job.action} finish`);

@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as pais from '../schemas/pais_model';
 
-let router = express.Router();
+const router = express.Router();
 
 /**
  * @swagger

@@ -25,10 +25,10 @@ function traeProfesionalPorId(id) {
 /** Dada una lista de profesionales, devuelve una lista de profesionales completa */
 function profesionalCompleto(lstProfesionales): any {
     return new Promise((resolve, reject) => {
-        let listaProf = [];
+        const listaProf = [];
         let counter = 0;
         lstProfesionales.forEach(async prof => {
-            let pro = await traeProfesionalPorId(prof.id);
+            const pro = await traeProfesionalPorId(prof.id);
             counter++;
             listaProf.push(pro);
             // Esto es una mersada pero no me doy cuenta como hacerlo mejor
@@ -54,8 +54,8 @@ function organizacionCompleto(idOrganizacion): any {
 export function noExistCDA(protocol, dniPaciente) {
     return new Promise(async (resolve, reject) => {
         try {
-            let query = 'select * from LAB_ResultadoEncabezado where idProtocolo = ' + protocol + ' and numeroDocumento =  ' + dniPaciente;
-            let result = await new sql.Request().query(query);
+            const query = 'select * from LAB_ResultadoEncabezado where idProtocolo = ' + protocol + ' and numeroDocumento =  ' + dniPaciente;
+            const result = await new sql.Request().query(query);
             if (result[0].cda) {
                 return resolve(null); // Si ya tiene el cda no hacer nada
             } else {
@@ -70,8 +70,8 @@ export function noExistCDA(protocol, dniPaciente) {
 export function setMarkProtocol(protocol, documento, idCda) {
     return new Promise(async (resolve, reject) => {
         try {
-            let query = 'UPDATE LAB_ResultadoEncabezado set cda = ' + '\'' + idCda + '\'' + ' where idProtocolo = ' + protocol + ' and numeroDocumento = ' + documento;
-            let result = await new sql.Request().query(query);
+            const query = 'UPDATE LAB_ResultadoEncabezado set cda = ' + '\'' + idCda + '\'' + ' where idProtocolo = ' + protocol + ' and numeroDocumento = ' + documento;
+            const result = await new sql.Request().query(query);
             resolve(result);
         } catch (ex) {
             reject(null);
@@ -88,7 +88,7 @@ export function organizacionBySisaCode(code): any {
                 return reject(err);
             }
             if (doc) {
-                let org = {
+                const org = {
                     _id: doc.id,
                     nombre: doc.nombre,
                 };
@@ -104,11 +104,11 @@ export function organizacionBySisaCode(code): any {
 export function getEncabezados(documento): any {
     return new Promise(async (resolve, reject) => {
         try {
-            let query = 'select efector.codigoSisa as efectorCodSisa, efector.nombre as efector, encabezado.idEfector as idEfector, encabezado.apellido, encabezado.nombre, encabezado.fechaNacimiento, encabezado.sexo, ' +
+            const query = 'select efector.codigoSisa as efectorCodSisa, efector.nombre as efector, encabezado.idEfector as idEfector, encabezado.apellido, encabezado.nombre, encabezado.fechaNacimiento, encabezado.sexo, ' +
                 'encabezado.numeroDocumento, encabezado.fecha, encabezado.idProtocolo, encabezado.solicitante from LAB_ResultadoEncabezado as encabezado ' +
                 'inner join Sys_Efector as efector on encabezado.idEfector = efector.idEfector ' +
                 'where encabezado.numeroDocumento = ' + documento;
-            let result = await new sql.Request().query(query);
+            const result = await new sql.Request().query(query);
             resolve(result);
         } catch (err) {
             reject(err);
@@ -120,9 +120,9 @@ export function getEncabezados(documento): any {
 export async function getDetalles(idProtocolo, idEfector) {
     return new Promise(async (resolve, reject) => {
         try {
-            let query = 'select grupo, item, resultado, valorReferencia, observaciones, hiv, profesional_val ' +
+            const query = 'select grupo, item, resultado, valorReferencia, observaciones, hiv, profesional_val ' +
                 ' from LAB_ResultadoDetalle as detalle where esTitulo = \'No\' and detalle.idProtocolo = ' + idProtocolo + ' and detalle.idEfector = ' + idEfector;
-            let result = await new sql.Request().query(query);
+            const result = await new sql.Request().query(query);
             resolve(result);
         } catch (err) {
             reject(err);
@@ -151,7 +151,7 @@ export async function cacheTurnos(unaAgenda) {
         if (unaAgenda.profesionales && unaAgenda.profesionales.length > 0) {
             profesionalesAgenda = await profesionalCompleto(unaAgenda.profesionales);
         }
-        let agenda = new agendasCache({
+        const agenda = new agendasCache({
             id: unaAgenda.id,
             tipoPrestaciones: unaAgenda.tipoPrestaciones,
             espacioFisico: unaAgenda.espacioFisico,

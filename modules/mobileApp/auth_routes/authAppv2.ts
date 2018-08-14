@@ -3,9 +3,9 @@ import * as express from 'express';
 import * as authController from '../controller/AuthController';
 import { Auth } from '../../../auth/auth.class';
 
-let router = express.Router();
+const router = express.Router();
 // let emailRegex = /^[a-z0-9]+(\.[_a-z0-9]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,15})$/;
-let emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,15}$/;
+const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,15}$/;
 
 function codeTostring(code) {
     let c = String(code);
@@ -65,8 +65,8 @@ function getAccount(code, email) {
  */
 
 router.post('/v2/check', (req, res, next) => {
-    let email = req.body.email;
-    let code = req.body.code;
+    const email = req.body.email;
+    const code = req.body.code;
     if (!email || !code) {
         return next('faltan datos');
     }
@@ -86,9 +86,9 @@ router.post('/v2/check', (req, res, next) => {
  */
 
 router.post('/v2/verificar', (req, res, next) => {
-    let email = req.body.email;
-    let code = req.body.code;
-    let mpiData = req.body.paciente;
+    const email = req.body.email;
+    const code = req.body.code;
+    const mpiData = req.body.paciente;
     if (!email || !code) {
         return next('faltan datos');
     }
@@ -114,9 +114,9 @@ router.post('/v2/verificar', (req, res, next) => {
  */
 
 router.post('/v2/registrar', (req, res, next) => {
-    let email = req.body.email;
-    let code = req.body.code;
-    let password = req.body.password;
+    const email = req.body.email;
+    const code = req.body.code;
+    const password = req.body.password;
     // let mpiData = req.body.paciente;
 
     if (!email || !code || !password) {
@@ -127,7 +127,7 @@ router.post('/v2/registrar', (req, res, next) => {
         // [TODO] 02/10 se decide sacar el matching por un cierto tiempo
         // authController.verificarCuenta(datosUsuario, mpiData).then(() => {
         authController.habilitarCuenta(datosUsuario, password).then((user: any) => {
-            let token = Auth.generatePacienteToken(String(user._id), user.nombre + ' ' + user.apellido, user.email, user.pacientes, user.permisos);
+            const token = Auth.generatePacienteToken(String(user._id), user.nombre + ' ' + user.apellido, user.email, user.pacientes, user.permisos);
             res.status(200).json({
                 token,
                 user

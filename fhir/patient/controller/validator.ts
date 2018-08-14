@@ -47,7 +47,7 @@ function areStrings(elem: string) {
 export function validate(pacienteFhir: PacienteFHIR): boolean {
     // Esta función valida un objeto paciente FHIR y devuelve si es sintácticamente correcto o no.
     let respuesta = true;
-    let fieldVerified = Object.keys(pacienteFhir).every(pacienteFHIRFields);
+    const fieldVerified = Object.keys(pacienteFhir).every(pacienteFHIRFields);
     // Verificamos que las key esten contenidas en los conjuntos mínimos pacienteFHIRField
     if (fieldVerified) {
         respuesta = ('resourceType' in pacienteFhir) && pacienteFhir.resourceType === 'Patient';

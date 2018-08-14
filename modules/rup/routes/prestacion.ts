@@ -11,8 +11,8 @@ import { Logger } from '../../../utils/logService';
 import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
 import { snomedModel } from '../../../core/term/schemas/snomed';
 
-let router = express.Router();
-let async = require('async');
+const router = express.Router();
+const async = require('async');
 
 
 /***
@@ -35,7 +35,7 @@ router.get('/prestaciones/huds/:idPaciente', async (req, res, next) => {
     // por defecto traemos todas las validadas, si no vemos el estado que viene en la request
     const estado = (req.query.estado) ? req.query.estado : 'validada';
 
-    let query = {
+    const query = {
         'paciente.id': req.params.idPaciente,
         $where: 'this.estados[this.estados.length - 1].tipo ==  \"' + estado + '\"'
     };
@@ -57,11 +57,11 @@ router.get('/prestaciones/huds/:idPaciente', async (req, res, next) => {
         }
 
         if (req.query.expresion) {
-            let querySnomed = makeMongoQuery(req.query.expresion);
+            const querySnomed = makeMongoQuery(req.query.expresion);
             snomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docs: any[]) => {
 
                 conceptos = docs.map((item) => {
-                    let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
+                    const term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
                     return {
                         fsn: item.fullySpecifiedName,
                         term,
@@ -71,7 +71,7 @@ router.get('/prestaciones/huds/:idPaciente', async (req, res, next) => {
                 });
 
                 // ejecutamos busqueda recursiva
-                let data = buscarEnHuds(prestaciones, conceptos);
+                const data = buscarEnHuds(prestaciones, conceptos);
 
                 res.json(data);
             });
@@ -84,7 +84,7 @@ router.get('/prestaciones/huds/:idPaciente', async (req, res, next) => {
 router.get('/prestaciones/:id*?', (req, res, next) => {
 
     if (req.params.id) {
-        let query = Prestacion.findById(req.params.id);
+        const query = Prestacion.findById(req.params.id);
         query.exec((err, data) => {
             if (err) {
                 return next(err);
@@ -97,7 +97,7 @@ router.get('/prestaciones/:id*?', (req, res, next) => {
     } else {
         let query;
         if (req.query.estado) {
-            let estados = (typeof req.query.estado === 'string') ? [req.query.estado] : req.query.estado;
+            const estados = (typeof req.query.estado === 'string') ? [req.query.estado] : req.query.estado;
             query = Prestacion.find({
                 // $where: 'this.estados[this.estados.length - 1].tipo ==  \"' + req.query.estado + '\"',
                 $where: estados.map(x => 'this.estados[this.estados.length - 1].tipo ==  \"' + x + '"').join(' || '),
@@ -182,7 +182,7 @@ router.get('/prestaciones/:id*?', (req, res, next) => {
 });
 
 router.post('/prestaciones', (req, res, next) => {
-    let data = new Prestacion(req.body);
+    const data = new Prestacion(req.body);
     Auth.audit(data, req);
     data.save((err) => {
         if (err) {
@@ -253,7 +253,7 @@ router.patch('/prestaciones/:id', (req, res, next) => {
             // Actualizar conceptos frecuentes por profesional y tipo de prestacion
             if (req.body.registrarFrecuentes && req.body.registros) {
 
-                let dto = {
+                const dto = {
                     profesional: Auth.getProfesional(req),
                     tipoPrestacion: prestacion.solicitud.tipoPrestacion,
                     organizacion: prestacion.solicitud.organizacion,
@@ -279,10 +279,10 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 // creamos una variable falsa para cuando retorne hacer el get
                 // de todas estas prestaciones
 
-                let solicitadas = [];
+                const solicitadas = [];
 
                 async.each(req.body.planes, (plan, callback) => {
-                    let nuevoPlan = new Prestacion(plan);
+                    const nuevoPlan = new Prestacion(plan);
 
                     Auth.audit(nuevoPlan, req);
                     nuevoPlan.save((errorPlan, nuevaPrestacion) => {
@@ -301,7 +301,7 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                     // como el objeto de mongoose es un inmutable, no puedo agregar directamente una propiedad
                     // para poder retornar el nuevo objeto con los planes solicitados, primero
                     // debemos clonarlo con JSON.parse(JSON.stringify());
-                    let convertedJSON = JSON.parse(JSON.stringify(prestacion));
+                    const convertedJSON = JSON.parse(JSON.stringify(prestacion));
                     convertedJSON.solicitadas = solicitadas;
                     res.json(convertedJSON);
                 });

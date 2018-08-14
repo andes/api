@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as barrio from '../schemas/barrio';
 
-let router = express.Router();
+const router = express.Router();
 /**
  * @swagger
  * definition:

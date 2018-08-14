@@ -10,10 +10,10 @@ import * as debug from 'debug';
 
 import * as http from 'http';
 
-let logger = debug('laboratorios');
-let cota = 0.95;
+const logger = debug('laboratorios');
+const cota = 0.95;
 
-let connection = {
+const connection = {
     user: configPrivate.conSql.auth.user,
     password: configPrivate.conSql.auth.password,
     server: configPrivate.conSql.serverSql.server,
@@ -31,23 +31,23 @@ sql.connect(connection, (err) => {
 function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
 function matchPaciente(pacMpi, pacLab) {
-    let weights = config.mpi.weightsDefault;
+    const weights = config.mpi.weightsDefault;
 
-    let pacDto = {
+    const pacDto = {
         documento: pacMpi.documento ? pacMpi.documento.toString() : '',
         nombre: pacMpi.nombre ? pacMpi.nombre : '',
         apellido: pacMpi.apellido ? pacMpi.apellido : '',
         fechaNacimiento: pacMpi.fechaNacimiento ? moment(new Date(pacMpi.fechaNacimiento)).format('YYYY-MM-DD') : '',
         sexo: pacMpi.sexo ? pacMpi.sexo : ''
     };
-    let pacElastic = {
+    const pacElastic = {
         documento: pacLab.numeroDocumento ? pacLab.numeroDocumento.toString() : '',
         nombre: pacLab.nombre ? pacLab.nombre : '',
         apellido: pacLab.apellido ? pacLab.apellido : '',
         fechaNacimiento: pacLab.fechaNacimiento ? moment(pacLab.fechaNacimiento, 'DD/MM/YYYY').format('YYYY-MM-DD') : '',
         sexo: (pacLab.sexo === 'F' ? 'femenino' : (pacLab.sexo === 'M' ? 'masculino' : ''))
     };
-    let match = new Matching();
+    const match = new Matching();
     return match.matchPersonas(pacElastic, pacDto, weights, config.algoritmo);
 }
 
@@ -67,10 +67,10 @@ function donwloadFileHeller(idProtocolo, year) {
     return new Promise((resolve, reject) => {
         http.get(configPrivate.wsSalud.hellerWS + 'idPet=' + idProtocolo + '&year='  + year, (response) => {
             return response.on('data', (buffer) => {
-                let resp = buffer.toString();
+                const resp = buffer.toString();
 
-                let regexp = /10.1.104.37\/resultados_omg\/([0-9\-\_]*).pdf/;
-                let match = resp.match(regexp);
+                const regexp = /10.1.104.37\/resultados_omg\/([0-9\-\_]*).pdf/;
+                const match = resp.match(regexp);
                 if (match && match[1]) {
                     return downloadFile(configPrivate.wsSalud.hellerFS + match[1] + '.pdf').then((_resp) => {
                         return resolve(_resp);
@@ -87,10 +87,10 @@ export async function importarDatos(paciente) {
     try {
         let laboratorios: any;
         laboratorios = await operations.getEncabezados(paciente.documento);
-        for (let lab of laboratorios.recordset) {
+        for (const lab of laboratorios.recordset) {
 
             // Si ya lo pase no hacemos nada
-            let existe = await cdaCtr.findByMetadata({
+            const existe = await cdaCtr.findByMetadata({
                 'metadata.extras.idEfector': lab.idEfector,
                 'metadata.extras.idProtocolo': lab.idProtocolo
             });
@@ -98,8 +98,8 @@ export async function importarDatos(paciente) {
                 continue;
             }
 
-            let details: any = await operations.getDetalles(lab.idProtocolo, lab.idEfector);
-            let organizacion = await operations.organizacionBySisaCode(lab.efectorCodSisa);
+            const details: any = await operations.getDetalles(lab.idProtocolo, lab.idEfector);
+            const organizacion = await operations.organizacionBySisaCode(lab.efectorCodSisa);
 
             let validado = true;
             let hiv = false;
@@ -109,22 +109,22 @@ export async function importarDatos(paciente) {
                 hiv = hiv || /hiv|vih/i.test(detail.item);
             });
 
-            let value = matchPaciente(paciente, lab);
+            const value = matchPaciente(paciente, lab);
             if (value >= cota && validado && details.recordset) {
-                let fecha = moment(lab.fecha, 'DD/MM/YYYY');
+                const fecha = moment(lab.fecha, 'DD/MM/YYYY');
 
-                let profesional = {
+                const profesional = {
                     nombre: lab.solicitante,
                     apellido: '' // Nombre y Apellido viene junto en los registros de laboratorio de SQL
                 };
-                let snomed = '4241000179101'; // informe de laboratorio (elemento de registro)
-                let prestacion = await cdaCtr.matchCode(snomed);
-                let cie10Laboratorio = {
+                const snomed = '4241000179101'; // informe de laboratorio (elemento de registro)
+                const prestacion = await cdaCtr.matchCode(snomed);
+                const cie10Laboratorio = {
                     codigo: 'Z01.7', // Código CIE-10: Examen de Laboratorio
                     nombre: 'Examen de laboratorio'
                 };
-                let texto = 'Exámen de Laboratorio';
-                let uniqueId = String(new mongoose.Types.ObjectId());
+                const texto = 'Exámen de Laboratorio';
+                const uniqueId = String(new mongoose.Types.ObjectId());
 
                 let pdfUrl;
                 let response;
@@ -136,7 +136,7 @@ export async function importarDatos(paciente) {
                 }
 
 
-                let fileData: any = await cdaCtr.storeFile({
+                const fileData: any = await cdaCtr.storeFile({
                     stream: response,
                     mimeType: 'application/pdf',
                     extension: 'pdf',
@@ -147,8 +147,8 @@ export async function importarDatos(paciente) {
                 });
                 // }
 
-                let cda = cdaCtr.generateCDA(uniqueId, (hiv ? 'R' : 'N') , paciente, fecha, profesional, organizacion, prestacion, cie10Laboratorio, texto, fileData);
-                let metadata = {
+                const cda = cdaCtr.generateCDA(uniqueId, (hiv ? 'R' : 'N') , paciente, fecha, profesional, organizacion, prestacion, cie10Laboratorio, texto, fileData);
+                const metadata = {
                     paciente: mongoose.Types.ObjectId(paciente.id),
                     prestacion,
                     fecha: fecha.toDate(),

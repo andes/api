@@ -2,16 +2,16 @@ import * as express from 'express';
 import { profe } from '../schemas/profe';
 import { periodoPadronesProfe } from '../schemas/periodoPadronesProfe';
 
-let router = express.Router();
+const router = express.Router();
 
 router.get('/profe/', async (req, res, next) => {
     if (req.query.dni) {
         let padron;
 
         if (req.query.periodo) {
-            let date = new Date(req.query.periodo);
-            let primerDia = new Date(date.getFullYear(), date.getMonth(), 1);
-            let ultimoDia = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+            const date = new Date(req.query.periodo);
+            const primerDia = new Date(date.getFullYear(), date.getMonth(), 1);
+            const ultimoDia = new Date(date.getFullYear(), date.getMonth() + 1, 0);
             padron = { $gte: primerDia, $lt: ultimoDia };
         } else {
             padron = await periodoPadronesProfe.find({}).sort({ $natural: 1 }).limit(1);  // ultimo padron

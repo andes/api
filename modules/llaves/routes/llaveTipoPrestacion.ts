@@ -8,7 +8,7 @@ import { Logger } from '../../../utils/logService';
  * Configuración de Tipo Prestación, incluye llaves
  */
 
-let router = express.Router();
+const router = express.Router();
 
 router.get('/tipoPrestacion/:id*?', (req, res, next) => {
     if (req.params.id) {
@@ -82,7 +82,7 @@ router.get('/tipoPrestacion/:id*?', (req, res, next) => {
 });
 
 router.post('/tipoPrestacion', (req, res, next) => {
-    let insertLlaveTipoPrestacion = new llaveTipoPrestacion(req.body);
+    const insertLlaveTipoPrestacion = new llaveTipoPrestacion(req.body);
 
     // Debe ir antes del save, y ser una instancia del modelo
     Auth.audit(insertLlaveTipoPrestacion, req);
@@ -103,7 +103,7 @@ router.post('/tipoPrestacion', (req, res, next) => {
 
 router.put('/tipoPrestacion/:id', (req, res, next) => {
 
-    let updateLlaveTipoPrestacion = new llaveTipoPrestacion(req.body);
+    const updateLlaveTipoPrestacion = new llaveTipoPrestacion(req.body);
 
     Auth.audit(updateLlaveTipoPrestacion, req);
 

@@ -5,7 +5,7 @@ import { BaseBuilder } from './BaseBuilder';
 export class ComponentBuilder extends BaseBuilder {
 
     public build(component: Component) {
-        let section = builder.create('component').ele('section');
+        const section = builder.create('component').ele('section');
 
         if (component.Id()) {
             this.createNode(section, 'id', component.Id());
@@ -26,7 +26,7 @@ export class ComponentBuilder extends BaseBuilder {
             });
         }
 
-        let text = component.text();
+        const text = component.text();
         if (text) {
             if ((text as String).indexOf('<') >= 0) {
                 section.ele('text').raw(text);
@@ -54,12 +54,12 @@ export class ComponentBuilder extends BaseBuilder {
  */
 export class ImageComponentBuilder extends ComponentBuilder {
     public build(component: ImageComponent) {
-        let section = super.build(component);
+        const section = super.build(component);
         section.ele('text').ele('renderMultiMedia', { referencedObject: component.identifier });
 
-        let entry = section.ele('entry');
+        const entry = section.ele('entry');
 
-        let obsAttr = {
+        const obsAttr = {
             classCode: 'OBS',
             moodCode: 'ENN',
             ID: component.identifier
@@ -67,8 +67,8 @@ export class ImageComponentBuilder extends ComponentBuilder {
 
         // If data is in base64
         if (component.isB64()) {
-            let obsTag = entry.ele('observationMedia', obsAttr);
-            let valueAttr = {
+            const obsTag = entry.ele('observationMedia', obsAttr);
+            const valueAttr = {
                 representation: 'B64',
                 mediaType: component.type()
             };
@@ -76,12 +76,12 @@ export class ImageComponentBuilder extends ComponentBuilder {
             obsTag.ele('value', valueAttr, component.file());
         } else {
             // if data is reference to a file
-            let obsTag = entry.ele('observationMedia', obsAttr);
-            let valueAttr = {
+            const obsTag = entry.ele('observationMedia', obsAttr);
+            const valueAttr = {
                 'xsi:type': 'ED',
                 mediaType: component.type()
             };
-            let value = obsTag.ele('value', valueAttr);
+            const value = obsTag.ele('value', valueAttr);
             value.ele('reference', {value: component.file() });
         }
 

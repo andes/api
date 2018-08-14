@@ -11,9 +11,9 @@ import * as moment from 'moment';
 
 import { Auth } from '../../../auth/auth.class';
 
-let path = require('path');
-let router = express.Router();
-let to_json = require('xmljson').to_json;
+const path = require('path');
+const router = express.Router();
+const to_json = require('xmljson').to_json;
 /**
  * Genera un CDA con los datos provisto
  */
@@ -48,29 +48,29 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
     }
 
     try {
-        let idPrestacion = req.body.id;
-        let fecha = moment(req.body.fecha).toDate();
-        let orgId = req.user.organizacion.id ? req.user.organizacion.id : req.user.organizacion;
+        const idPrestacion = req.body.id;
+        const fecha = moment(req.body.fecha).toDate();
+        const orgId = req.user.organizacion.id ? req.user.organizacion.id : req.user.organizacion;
 
-        let yaExiste = await cdaCtr.CDAExists(idPrestacion, fecha, orgId);
+        const yaExiste = await cdaCtr.CDAExists(idPrestacion, fecha, orgId);
         if (yaExiste) {
             return next({ error: 'prestacion_existente' });
         }
 
-        let dataPaciente = req.body.paciente;
-        let dataProfesional = req.body.profesional;
+        const dataPaciente = req.body.paciente;
+        const dataProfesional = req.body.profesional;
 
         // Devuelve un Loinc asociado al código SNOMED
-        let prestacion = await cdaCtr.matchCode(req.body.prestacionSnomed);
+        const prestacion = await cdaCtr.matchCode(req.body.prestacionSnomed);
         if (!prestacion) {
             // Es obligatorio que posea prestación
             return next({ error: 'prestacion_invalida' });
         }
-        let cie10Code = req.body.cie10;
-        let file = req.body.file;
-        let texto = req.body.texto;
+        const cie10Code = req.body.cie10;
+        const file = req.body.file;
+        const texto = req.body.texto;
         // Terminar de decidir esto
-        let organizacion = await Organizaciones.findById(orgId);
+        const organizacion = await Organizaciones.findById(orgId);
         let cie10 = null;
         if (cie10Code) {
             cie10 = await Cie10.findOne({ codigo: cie10Code });
@@ -79,15 +79,15 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
             }
         }
 
-        let paciente = await cdaCtr.findOrCreate(req, dataPaciente, organizacion._id);
+        const paciente = await cdaCtr.findOrCreate(req, dataPaciente, organizacion._id);
         if (!paciente) {
             return next({ error: 'paciente_inexistente'});
         }
-        let uniqueId = String(new mongoose.Types.ObjectId());
+        const uniqueId = String(new mongoose.Types.ObjectId());
 
         let fileData, adjuntos;
         if (file) {
-            let fileObj: any = cdaCtr.base64toStream(file);
+            const fileObj: any = cdaCtr.base64toStream(file);
             fileObj.metadata = {
                 cdaId: mongoose.Types.ObjectId(uniqueId),
                 paciente: mongoose.Types.ObjectId(paciente.id)
@@ -96,9 +96,9 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
             adjuntos = [{ path: fileData.data, id: fileData.id }];
         }
 
-        let cda = cdaCtr.generateCDA(uniqueId, 'N', paciente, fecha, dataProfesional, organizacion, prestacion, cie10, texto, fileData);
+        const cda = cdaCtr.generateCDA(uniqueId, 'N', paciente, fecha, dataProfesional, organizacion, prestacion, cie10, texto, fileData);
 
-        let metadata = {
+        const metadata = {
             paciente: paciente._id,
             prestacion,
             profesional: dataProfesional,
@@ -123,20 +123,20 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
  */
 
 router.post('/', async (req: any, res, next) => {
-    let orgId = req.user.organizacion.id ? req.user.organizacion.id : req.user.organizacion;
-    let cda64 = req.body.cda;
-    let adjunto64 = req.body.adjunto;
+    const orgId = req.user.organizacion.id ? req.user.organizacion.id : req.user.organizacion;
+    const cda64 = req.body.cda;
+    const adjunto64 = req.body.adjunto;
 
-    let cdaStream: any = cdaCtr.base64toStream(cda64);
-    let cdaXml: String = await cdaCtr.streamToString(cdaStream.stream);
+    const cdaStream: any = cdaCtr.base64toStream(cda64);
+    const cdaXml: String = await cdaCtr.streamToString(cdaStream.stream);
 
     if (cdaXml.length > 0) {
         cdaCtr.validateSchemaCDA(cdaXml).then(async (dom) => {
 
-            let cdaData: any = cdaCtr.checkAndExtract(dom);
+            const cdaData: any = cdaCtr.checkAndExtract(dom);
 
             if (cdaData) {
-                let uniqueId = new mongoose.Types.ObjectId();
+                const uniqueId = new mongoose.Types.ObjectId();
 
                 if (cdaData.organizacion.id !== orgId) {
                     return next({ error: 'wrong_organization' });
@@ -146,23 +146,23 @@ router.post('/', async (req: any, res, next) => {
                 cdaData.paciente.fechaNacimiento = moment(cdaData.paciente.fechaNacimiento, 'YYYYMMDDhhmmss');
                 cdaData.paciente.sexo = cdaData.paciente.sexo === 'M' ? 'masculino' : 'femenino';
 
-                let yaExiste = await cdaCtr.CDAExists(cdaData.id, cdaData.fecha, orgId);
+                const yaExiste = await cdaCtr.CDAExists(cdaData.id, cdaData.fecha, orgId);
                 if (yaExiste) {
                     return next({ error: 'prestacion_existente' });
                 }
 
-                let organizacion = await Organizaciones.findById(orgId);
-                let dataProfesional = req.body.profesional;
+                const organizacion = await Organizaciones.findById(orgId);
+                const dataProfesional = req.body.profesional;
 
-                let prestacion = await cdaCtr.matchCodeByLoinc(cdaData.loinc);
+                const prestacion = await cdaCtr.matchCodeByLoinc(cdaData.loinc);
                 if (!prestacion) {
                     return next({ error: 'loinc_invalido' });
                 }
-                let paciente = await cdaCtr.findOrCreate(req, cdaData.paciente, orgId);
+                const paciente = await cdaCtr.findOrCreate(req, cdaData.paciente, orgId);
 
                 let fileData, adjuntos;
                 if (cdaData.adjunto && adjunto64) {
-                    let fileObj: any = cdaCtr.base64toStream(adjunto64);
+                    const fileObj: any = cdaCtr.base64toStream(adjunto64);
                     fileObj.metadata = {
                         cdaId: uniqueId,
                         paciente: mongoose.Types.ObjectId(paciente.id)
@@ -171,7 +171,7 @@ router.post('/', async (req: any, res, next) => {
                     fileData = await cdaCtr.storeFile(fileObj);
                     adjuntos = [{ path: fileData.data, id: fileData.id }];
                 }
-                let metadata = {
+                const metadata = {
                     paciente: paciente._id,
                     prestacion,
                     organizacion,
@@ -202,7 +202,7 @@ router.post('/', async (req: any, res, next) => {
  */
 
 router.get('/style/cda.xsl', (req, res, next) => {
-    let name = path.join(__dirname, '../controller/cda.xsl');
+    const name = path.join(__dirname, '../controller/cda.xsl');
     res.sendFile(name);
 });
 
@@ -218,15 +218,15 @@ router.get('/files/:name', async (req: any, res, next) => {
         return next(403);
     }
 
-    let name = req.params.name;
-    let CDAFiles = makeFs();
+    const name = req.params.name;
+    const CDAFiles = makeFs();
 
     CDAFiles.findOne({ filename: name }).then(async file => {
         if (req.user.type === 'paciente-token' && String(file.metadata.paciente) !== String(req.user.pacientes[0].id)) {
             return next(403);
         }
 
-        let stream1 = await CDAFiles.readById(file._id);
+        const stream1 = await CDAFiles.readById(file._id);
         res.contentType(file.contentType);
         stream1.pipe(res);
     }).catch(next);
@@ -241,10 +241,10 @@ router.get('/:id', async (req: any, res, next) => {
     //     return next(403);
     // }
 
-    let _base64 = req.params.id;
-    let CDAFiles = makeFs();
+    const _base64 = req.params.id;
+    const CDAFiles = makeFs();
 
-    let contexto = await CDAFiles.findById(_base64);
+    const contexto = await CDAFiles.findById(_base64);
     CDAFiles.readById(_base64, (err, buffer) => {
         res.contentType(contexto.contentType);
         res.end(buffer);
@@ -261,7 +261,7 @@ router.get('/tojson/:id', async (req: any, res, next) => {
         return next(403);
     }
 
-    let _base64 = req.params.id;
+    const _base64 = req.params.id;
     let contexto = await cdaCtr.loadCDA(_base64);
     // Limpiamos xml previo al parsing
     contexto = contexto.toString().replace(new RegExp('<br>', 'g'), ' ');
@@ -284,10 +284,10 @@ router.get('/paciente/:id', async (req: any, res, next) => {
         return next(403);
     }
 
-    let pacienteID = req.params.id;
-    let prestacion = req.query.prestacion;
+    const pacienteID = req.params.id;
+    const prestacion = req.query.prestacion;
 
-    let list = await cdaCtr.searchByPatient(pacienteID, prestacion, { skip: 0, limit: 100 });
+    const list = await cdaCtr.searchByPatient(pacienteID, prestacion, { skip: 0, limit: 100 });
     res.json(list);
 });
 
@@ -301,11 +301,11 @@ router.get('/:id/:name', async (req: any, res, next) => {
     if (req.user.type === 'user-token' && !Auth.check(req, 'cda:get')) {
         return next(403);
     }
-    let id = mongoose.Types.ObjectId(req.params.id);
-    let name = req.params.name;
-    let CDAFiles = makeFs();
+    const id = mongoose.Types.ObjectId(req.params.id);
+    const name = req.params.name;
+    const CDAFiles = makeFs();
 
-    let query = {
+    const query = {
         filename: name,
         'metadata.cdaId': id
     };
@@ -314,7 +314,7 @@ router.get('/:id/:name', async (req: any, res, next) => {
             return next(403);
         }
 
-        let stream1 = await CDAFiles.readById(file._id);
+        const stream1 = await CDAFiles.readById(file._id);
         res.contentType(file.contentType);
         stream1.pipe(res);
     }).catch(next);

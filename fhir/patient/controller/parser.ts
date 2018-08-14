@@ -8,19 +8,19 @@ import * as localidad from '../../../core/tm/schemas/localidad';
 
 export function pacientesAFHIR(ids: any[]) {
     return new Promise((resolve: any, reject: any) => {
-        let pacientesFHIR = [];
-        let promises = [];
+        const pacientesFHIR = [];
+        const promises = [];
         ids.forEach((id) => {
             promises.push(
                 controller.buscarPaciente(id)
                     .then((result: any) => {
-                        let data = result.paciente;
+                        const data = result.paciente;
                         if (data) {
-                            let identificadores = data.documento ? [{ assigner: 'DU', value: data.documento }] : [];
+                            const identificadores = data.documento ? [{ assigner: 'DU', value: data.documento }] : [];
                             identificadores.push({assigner: 'andes', value: id });
                             // Parsea contactos
-                            let contactos = data.contacto ? data.contacto.map(unContacto => {
-                                let cont = {
+                            const contactos = data.contacto ? data.contacto.map(unContacto => {
+                                const cont = {
                                     resourceType: 'ContactPoint',
                                     value: unContacto.valor,
                                     rank: unContacto.ranking,
@@ -39,8 +39,8 @@ export function pacientesAFHIR(ids: any[]) {
                                 return cont;
                             }) : [];
                             // Parsea direcciones
-                            let direcciones = data.direccion ? data.direccion.map(unaDireccion => {
-                                let direc = {
+                            const direcciones = data.direccion ? data.direccion.map(unaDireccion => {
+                                const direc = {
                                     resourceType: 'Address',
                                     postalCode: unaDireccion.codigoPostal ? unaDireccion.codigoPostal : '',
                                     line: [unaDireccion.valor],
@@ -51,8 +51,8 @@ export function pacientesAFHIR(ids: any[]) {
                                 return direc;
                             }) : [];
                             // Parsea relaciones
-                            let relaciones = data.relaciones ? data.relaciones.map(unaRelacion => {
-                                let relacion = {
+                            const relaciones = data.relaciones ? data.relaciones.map(unaRelacion => {
+                                const relacion = {
                                     relationship: [{
                                         text: unaRelacion.relacion.nombre
                                     }], // The kind of relationship
@@ -76,7 +76,7 @@ export function pacientesAFHIR(ids: any[]) {
                                     genero = 'other';
                                     break;
                             }
-                            let pacienteFHIR = {
+                            const pacienteFHIR = {
                                 resourceType: 'Patient',
                                 identifier: identificadores,
                                 active: data.activo, // Whether this patient's record is in active use
@@ -142,7 +142,7 @@ export function pacientesAFHIR(ids: any[]) {
 function buscarLocalidad(localidadStr) {
     return new Promise((resolve, reject) => {
 
-        let query = localidad.find({});
+        const query = localidad.find({});
         query.where('nombre').equals(localidadStr);
 
         query.exec((err, data) => {
@@ -155,15 +155,15 @@ function buscarLocalidad(localidadStr) {
 }
 
 function castearDirecciones(direcciones) {
-    let resultado = [];
+    const resultado = [];
     return new Promise((resolve, reject) => {
         direcciones.forEach(async (unaAddress) => {
-            let direc = {
+            const direc = {
                 codigoPostal: unaAddress.postalCode,
                 valor: unaAddress.line[0]
             };
             if (unaAddress.city) {
-                let localidadEncontrada = await buscarLocalidad(unaAddress.city);
+                const localidadEncontrada = await buscarLocalidad(unaAddress.city);
                 direc['ubicacion'] = {
                     localidad: {
                         _id: localidadEncontrada[0]._id,
@@ -200,7 +200,7 @@ export function FHIRAPaciente(pacienteFhir: PacienteFHIR) {
                 sexo = 'otro';
                 break;
         }
-        let pacienteMPI = {
+        const pacienteMPI = {
             documento: pacienteFhir.identifier[0].value,
             nombre: pacienteFhir.name[0].given.join().replace(',', ' '),
             apellido: pacienteFhir.name[0].family.join().replace(',', ' '),
@@ -209,8 +209,8 @@ export function FHIRAPaciente(pacienteFhir: PacienteFHIR) {
             sexo,
             estado: 'temporal'
         };
-        let contactos = pacienteFhir.telecom ? pacienteFhir.telecom.map(unContacto => {
-            let cont = {
+        const contactos = pacienteFhir.telecom ? pacienteFhir.telecom.map(unContacto => {
+            const cont = {
                 valor: unContacto.value,
                 ranking: unContacto.rank
             };
@@ -226,8 +226,8 @@ export function FHIRAPaciente(pacienteFhir: PacienteFHIR) {
         }) : [];
 
 
-        let relaciones = pacienteFhir.contact ? pacienteFhir.contact.map(aContact => {
-            let relacion = {
+        const relaciones = pacienteFhir.contact ? pacienteFhir.contact.map(aContact => {
+            const relacion = {
                 relacion : { nombre: aContact.relationship[0].text},
                 nombre: aContact.name.given.join().replace(',', ' '),
                 apellido: aContact.name.family

@@ -3,11 +3,11 @@ import * as express from 'express';
 import { configuracionPantalla } from '../schemas/configuracionPantalla';
 
 
-let router = express.Router();
+const router = express.Router();
 
 
 router.get('/busquedaConfiguracion/:id*?', (req: any, res, next) => {
-    let opciones = {};
+    const opciones = {};
     let query;
     if (req.params.id) {
         configuracionPantalla.findById(req.params.id, (err, data) => {
@@ -56,7 +56,7 @@ router.post('/insertConfiguracion', (req: any, res, next) => {
             if (file.length > 0) {
                 res.send(null);
             } else {
-                let newTurno = new configuracionPantalla(req.body);
+                const newTurno = new configuracionPantalla(req.body);
                 newTurno.save((err2) => {
                     if (err2) {
                         return next(err2);

@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as entidadFormadora from '../schemas/entidadFormadora';
 
-let router = express.Router();
+const router = express.Router();
 
 router.get('/entidadesFormadoras/:id*?', (req, res, next) => {
 

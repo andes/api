@@ -6,7 +6,7 @@
  * @returns {RegExp}
  */
 export function makePattern(search_string: string): RegExp {
-    let accented = {
+    const accented = {
         A: '[Aa\xaa\xc0-\xc5\xe0-\xe5\u0100-\u0105\u01cd\u01ce\u0200-\u0203\u0226\u0227\u1d2c\u1d43\u1e00\u1e01\u1e9a\u1ea0-\u1ea3\u2090\u2100\u2101\u213b\u249c\u24b6\u24d0\u3371-\u3374\u3380-\u3384\u3388\u3389\u33a9-\u33af\u33c2\u33ca\u33df\u33ff\uff21\uff41]',
         B: '[Bb\u1d2e\u1d47\u1e02-\u1e07\u212c\u249d\u24b7\u24d1\u3374\u3385-\u3387\u33c3\u33c8\u33d4\u33dd\uff22\uff42]',
         C: '[Cc\xc7\xe7\u0106-\u010d\u1d9c\u2100\u2102\u2103\u2105\u2106\u212d\u216d\u217d\u249e\u24b8\u24d2\u3376\u3388\u3389\u339d\u33a0\u33a4\u33c4-\u33c7\uff23\uff43]',
@@ -39,16 +39,16 @@ export function makePattern(search_string: string): RegExp {
     search_string = search_string.replace(/([|()[{.+*?^$\\])/g, '\\$1');
 
     // split into words
-    let words = search_string.split(/\s+/);
+    const words = search_string.split(/\s+/);
 
     // sort by length
-    let length_comp = (a, b) => {
+    const length_comp = (a, b) => {
         return b.length - a.length;
     };
     words.sort(length_comp);
 
     // replace characters by their compositors
-    let accent_replacer = (chr) => {
+    const accent_replacer = (chr) => {
         return accented[chr.toUpperCase()] || chr;
     };
     for (let i = 0; i < words.length; i++) {
@@ -56,7 +56,7 @@ export function makePattern(search_string: string): RegExp {
     }
 
     // join as alternatives
-    let regexp = words.join('|');
+    const regexp = words.join('|');
     return new RegExp(regexp, 'g');
 }
 
@@ -68,7 +68,7 @@ export function makePattern(search_string: string): RegExp {
  * @returns {string}
  */
 export function removeDiacritics(str: string): string {
-    let defaultDiacriticsRemovalMap = [
+    const defaultDiacriticsRemovalMap = [
         { base: 'a', letters: /[\u00E1\u00E2\u00E3\u00E4\u00E5\u0101\u0103\u0105\u01CE\u01FB\u00C0\u00C4]/g },
         { base: 'ae', letters: /[\u00E6\u01FD]/g },
         { base: 'c', letters: /[\u00E7\u0107\u0109\u010B\u010D]/g },
@@ -154,7 +154,7 @@ export function removeDiacritics(str: string): string {
 */
 
 export let toArray = (stream): Promise<any[]> => {
-    let array = [];
+    const array = [];
     return new Promise((resolve, reject) => {
         stream.on('data', (doc) => {
             array.push(doc);
@@ -180,7 +180,7 @@ export function xmlToJson(xmlString) {
             if (xml.attributes.length > 0) {
                 obj['@attributes'] = {};
                 for (let j = 0; j < xml.attributes.length; j++) {
-                    let attribute = xml.attributes.item(j);
+                    const attribute = xml.attributes.item(j);
                     obj['@attributes'][attribute.nodeName] = attribute.nodeValue;
                 }
             }
@@ -191,13 +191,13 @@ export function xmlToJson(xmlString) {
         // do children
         if (xml.hasChildNodes()) {
             for (let i = 0; i < xml.childNodes.length; i++) {
-                let item = xml.childNodes.item(i);
-                let nodeName = item.nodeName;
+                const item = xml.childNodes.item(i);
+                const nodeName = item.nodeName;
                 if (typeof (obj[nodeName]) === 'undefined') {
                     obj[nodeName] = _xmlToJson(item);
                 } else {
                     if (typeof (obj[nodeName].push) === 'undefined') {
-                        let old = obj[nodeName];
+                        const old = obj[nodeName];
                         obj[nodeName] = [];
                         obj[nodeName].push(old);
                     }
@@ -209,7 +209,7 @@ export function xmlToJson(xmlString) {
     }
 
 
-    let DOMParser = require('xmldom').DOMParser;
-    let parser = new DOMParser();
+    const DOMParser = require('xmldom').DOMParser;
+    const parser = new DOMParser();
     return _xmlToJson(parser.parseFromString(xmlString, 'application/xml'));
 }

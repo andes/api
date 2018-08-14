@@ -10,7 +10,7 @@ export class ValidateDarTurno {
      * @memberOf ValidateDarTurno
      */
     public static checkTurno(data: any): any {
-        let errors = [];
+        const errors = [];
         let valid = true;
 
         if (!data.tipoPrestacion) {

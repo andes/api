@@ -48,10 +48,10 @@ export class Documento {
         html += this.generarCSS();
 
         // Se cargan logos
-        let path = require('path');
-        let logoAndes = fs.readFileSync(path.join(__dirname, '../../../templates/andes/logo-andes.png'));
-        let logotipoAndes = fs.readFileSync(path.join(__dirname, '../../../templates/andes/logotipo-andes-blue.png'));
-        let logoPDP = fs.readFileSync(path.join(__dirname, '../../../templates/andes/logo-pdp.png'));
+        const path = require('path');
+        const logoAndes = fs.readFileSync(path.join(__dirname, '../../../templates/andes/logo-andes.png'));
+        const logotipoAndes = fs.readFileSync(path.join(__dirname, '../../../templates/andes/logotipo-andes-blue.png'));
+        const logoPDP = fs.readFileSync(path.join(__dirname, '../../../templates/andes/logo-pdp.png'));
 
         // Se reemplazan ciertos <!--placeholders--> por logos de ANDES y Dirección de Protección de Datos Personales
         html = html.replace('<!--logoAndes-->', `<img src="data:image/png;base64,${logoAndes.toString('base64')}" style="float: left;">`);
@@ -78,7 +78,7 @@ export class Documento {
         let css = '<style>\n\n';
 
         // SCSS => CSS
-        let path = require('path');
+        const path = require('path');
         css += scss.renderSync({
             file: path.join(__dirname, '../../../templates/rup/prestacionValidacion-print.scss'),
             includePaths: [
@@ -107,7 +107,7 @@ export class Documento {
             this.options = options;
         }
 
-        let html = this.generarHTML(req);
+        const html = this.generarHTML(req);
 
         pdf.create(html, this.options).toFile((err2, file) => {
 

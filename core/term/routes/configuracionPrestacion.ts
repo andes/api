@@ -2,7 +2,7 @@ import * as express from 'express';
 import * as configuracionPrestacion from '../schemas/configuracionPrestacion';
 import * as mongoose from 'mongoose';
 
-let router = express.Router();
+const router = express.Router();
 
 router.get('/configuracionPrestaciones/:id*?', (req, res, next) => {
     // Agregar seguridad!!
@@ -67,17 +67,17 @@ Inserta un 'mapeo' de tipoPrestacion - Especialidad - Organicación.
 */
 router.post('/configuracionPrestaciones', async (req, res, next) => {
     if (req.body.organizacion && req.body.conceptSnomed && req.body.prestacionLegacy) {
-        let idSnomed = req.body.conceptSnomed.conceptId;
-        let existeTipoPrestacion = await configuracionPrestacion.configuracionPrestacionModel.findOne({ 'snomed.conceptId': idSnomed });
+        const idSnomed = req.body.conceptSnomed.conceptId;
+        const existeTipoPrestacion = await configuracionPrestacion.configuracionPrestacionModel.findOne({ 'snomed.conceptId': idSnomed });
 
         if (existeTipoPrestacion) {
-            let existeOrganizacion = await configuracionPrestacion.configuracionPrestacionModel.findOne(
+            const existeOrganizacion = await configuracionPrestacion.configuracionPrestacionModel.findOne(
                 { 'snomed.conceptId': idSnomed, 'organizaciones._id': req.body.organizacion.id });
 
             if (existeOrganizacion) {
                 return next('Este concepto ya se encuentra mapeado');
             } else {
-                let newOrganizacion = [{
+                const newOrganizacion = [{
                     _id: new mongoose.Types.ObjectId(req.body.organizacion.id),
                     idEspecialidad: req.body.prestacionLegacy.idEspecialidad,
                     nombreEspecialidad: req.body.prestacionLegacy.nombreEspecialidad,
@@ -93,7 +93,7 @@ router.post('/configuracionPrestaciones', async (req, res, next) => {
             }
         } else {
             // Se crea el objeto ConfiguracionPrestacion completo
-            let newConfigPres = {
+            const newConfigPres = {
                 snomed: req.body.conceptSnomed,
                 organizaciones: [{
                     _id: new mongoose.Types.ObjectId(req.body.organizacion.id),

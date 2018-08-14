@@ -3,16 +3,16 @@ import { Auth } from '../../../auth/auth.class';
 import { matchSintys } from '../../../utils/servicioSintys';
 import { Logger } from '../../../utils/logService';
 
-let router = express.Router();
+const router = express.Router();
 
 router.get('/sintys', async (req, res, next) => {
     if (!Auth.check(req, 'fa:get:sintys')) {
         return next(403);
     }
     if (req.query) {
-        let paciente = req.query;
+        const paciente = req.query;
         try {
-            let pacienteSintys = await matchSintys(paciente);
+            const pacienteSintys = await matchSintys(paciente);
             res.json(pacienteSintys);
             Logger.log(req, 'fa_sintys', 'validar', {
                 resultado: pacienteSintys

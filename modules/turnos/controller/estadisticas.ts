@@ -93,7 +93,7 @@ const facets = {
 };
 
 function makePrimaryMatch(filtros) {
-    let match: any = {
+    const match: any = {
         estado: { $nin: ['planificacion', /* 'suspendida' */ , 'pausada', 'borrada'] }
     };
 
@@ -113,10 +113,10 @@ function makePrimaryMatch(filtros) {
 }
 
 function makeSecondaryMatch(filtros) {
-    let match: any = {};
+    const match: any = {};
 
     if (filtros.edad) {
-        let ages = filtros.edad.split('-');
+        const ages = filtros.edad.split('-');
         match['turno.paciente.edad'] = {
             $gte: parseInt(ages[0], 10)
         };
@@ -145,7 +145,7 @@ function makeSecondaryMatch(filtros) {
 }
 
 function makeFacet(filtros) {
-    let facet: any = {};
+    const facet: any = {};
 
     if (!filtros.edad) {
         facet['edad'] = facets['edad'];
@@ -173,7 +173,7 @@ function makeFacet(filtros) {
 }
 
 export async function estadisticas(filtros) {
-    let pipeline = [
+    const pipeline = [
         /* Filtros iniciales */
         {
             $match: makePrimaryMatch(filtros)
@@ -215,6 +215,6 @@ export async function estadisticas(filtros) {
         }
     ];
 
-    let agr = AgendarModel.aggregate(pipeline).cursor({ batchSize: 1000 }).exec();
+    const agr = AgendarModel.aggregate(pipeline).cursor({ batchSize: 1000 }).exec();
     return await toArray(agr);
 }

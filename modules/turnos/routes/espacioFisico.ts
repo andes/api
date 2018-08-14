@@ -3,7 +3,7 @@ import * as mongoose from 'mongoose';
 import { espacioFisico } from '../schemas/espacioFisico';
 import { defaultLimit, maxLimit } from './../../../config';
 
-let router = express.Router();
+const router = express.Router();
 
 router.get('/espacioFisico/:_id*?', (req, res, next) => {
     if (req.params._id) {
@@ -15,11 +15,11 @@ router.get('/espacioFisico/:_id*?', (req, res, next) => {
         });
     } else {
         // Trae todos
-        let radix = 10;
-        let skip: number = parseInt(req.query.skip || 0, radix);
-        let limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
-        let query = espacioFisico.find({}).skip(skip).limit(limit);
-        let nombres = [];
+        const radix = 10;
+        const skip: number = parseInt(req.query.skip || 0, radix);
+        const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
+        const query = espacioFisico.find({}).skip(skip).limit(limit);
+        const nombres = [];
 
         if (req.query.nombre) {
             nombres.push({ nombre: RegExp('^.*' + req.query.nombre + '.*$', 'i') });
@@ -96,7 +96,7 @@ router.get('/espacioFisico/:idOrganizacion', (req, res, next) => {
 });
 
 router.post('/espacioFisico', (req, res, next) => {
-    let newEspacioFisico = new espacioFisico(req.body);
+    const newEspacioFisico = new espacioFisico(req.body);
     newEspacioFisico.save((err) => {
         if (err) {
             return next(err);

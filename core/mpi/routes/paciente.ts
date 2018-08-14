@@ -11,8 +11,8 @@ import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
 
 
-let logD = debug('paciente-controller');
-let router = express.Router();
+const logD = debug('paciente-controller');
+const router = express.Router();
 
 /**
  * @swagger
@@ -164,18 +164,18 @@ router.get('/pacientes/counts/', (req, res, next) => {
             };
             break;
     }
-    let query = paciente.find(filtro).count();
+    const query = paciente.find(filtro).count();
     query.exec((err, data) => {
         if (err) {
             return next(err);
         }
 
-        let queryMPI = pacienteMpi.find(filtro).count();
+        const queryMPI = pacienteMpi.find(filtro).count();
         queryMPI.exec((err1, data1) => {
             if (err1) {
                 return next(err1);
             }
-            let total = data + data1;
+            const total = data + data1;
             res.json(total);
         });
 
@@ -189,13 +189,13 @@ router.get('/pacientes/dashboard/', async (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:dashboard')) {
         return next(403);
     }
-    let result = {
+    const result = {
         paciente: [],
         pacienteMpi: [],
         logs: []
     };
 
-    let estadoAggregate = [{
+    const estadoAggregate = [{
         $group: {
             _id: {
                 estado: '$estado'
@@ -206,7 +206,7 @@ router.get('/pacientes/dashboard/', async (req, res, next) => {
         }
     }];
 
-    let logAggregate = [
+    const logAggregate = [
         {
             $group: {
                 _id: {
@@ -438,29 +438,29 @@ router.put('/pacientes/mpi/:id', (req, res, next) => {
         return next(404);
 
     }
-    let ObjectId = mongoose.Types.ObjectId;
-    let objectId = new ObjectId(req.params.id);
-    let query = {
+    const ObjectId = mongoose.Types.ObjectId;
+    const objectId = new ObjectId(req.params.id);
+    const query = {
         _id: objectId
     };
 
-    let match = new Matching();
+    const match = new Matching();
 
     pacienteMpi.findById(query, (err, patientFound: any) => {
         if (err) {
             return next(404);
         }
 
-        let connElastic = new ElasticSync();
+        const connElastic = new ElasticSync();
         if (patientFound) {
-            let data = req.body;
+            const data = req.body;
             controller.updatePacienteMpi(patientFound, data, req).then((p) => {
                 res.json(p);
             }).catch(next);
 
         } else {
-            let newPatient = new pacienteMpi(req.body);
-            let claves = match.crearClavesBlocking(newPatient);
+            const newPatient = new pacienteMpi(req.body);
+            const claves = match.crearClavesBlocking(newPatient);
             newPatient['claveBlocking'] = claves;
             newPatient['apellido'] = newPatient['apellido'].toUpperCase();
             newPatient['nombre'] = newPatient['nombre'].toUpperCase();
@@ -470,7 +470,7 @@ router.put('/pacientes/mpi/:id', (req, res, next) => {
                 if (err2) {
                     return next(err2);
                 }
-                let nuevoPac = JSON.parse(JSON.stringify(newPatient));
+                const nuevoPac = JSON.parse(JSON.stringify(newPatient));
                 delete nuevoPac._id;
 
                 connElastic.create(newPatient._id.toString(), nuevoPac).then(() => {
@@ -517,7 +517,7 @@ router.delete('/pacientes/mpi/:id', (req, res, next) => {
         return next(403);
     }
 
-    let query = {
+    const query = {
         _id: new mongoose.Types.ObjectId(req.params.id)
     };
 
@@ -527,7 +527,7 @@ router.delete('/pacientes/mpi/:id', (req, res, next) => {
         }
         patientFound.remove();
 
-        let connElastic = new ElasticSync();
+        const connElastic = new ElasticSync();
         connElastic.delete(patientFound._id.toString()).then(() => {
             res.json(patientFound);
         }).catch(error => {
@@ -568,7 +568,7 @@ router.post('/pacientes', (req, res, next) => {
         return next(403);
     }
     if (req.body.documento) {
-        let condicion = {
+        const condicion = {
             documento: req.body.documento
         };
         controller.searchSimilar(req.body, 'andes', condicion).then((data) => {
@@ -633,8 +633,8 @@ router.put('/pacientes/:id', (req, res, next) => {
     if (!(mongoose.Types.ObjectId.isValid(req.params.id))) {
         return next(404);
     }
-    let objectId = new mongoose.Types.ObjectId(req.params.id);
-    let query = {
+    const objectId = new mongoose.Types.ObjectId(req.params.id);
+    const query = {
         _id: objectId
     };
 
@@ -644,7 +644,7 @@ router.put('/pacientes/:id', (req, res, next) => {
         }
         // let pacienteOriginal = null;
         if (patientFound) {
-            let data = req.body;
+            const data = req.body;
             if (patientFound.estado === 'validado' && !patientFound.isScan) {
                 delete data.documento;
                 delete data.estado;
@@ -658,7 +658,7 @@ router.put('/pacientes/:id', (req, res, next) => {
         } else {
             try {
                 req.body._id = req.body.id;
-                let newPatient = new paciente(req.body);
+                const newPatient = new paciente(req.body);
                 // verifico si el paciente ya está en MPI
                 pacienteMpi.findById(query, (err3, patientFountMpi: any) => {
                     if (err3) {
@@ -671,10 +671,10 @@ router.put('/pacientes/:id', (req, res, next) => {
                         if (err2) {
                             return next(err2);
                         }
-                        let nuevoPac = JSON.parse(JSON.stringify(newPatient));
+                        const nuevoPac = JSON.parse(JSON.stringify(newPatient));
                         // delete nuevoPac._id;
                         // delete nuevoPac.relaciones;
-                        let connElastic = new ElasticSync();
+                        const connElastic = new ElasticSync();
                         connElastic.sync(newPatient).then(updated => {
                             if (updated) {
                                 Logger.log(req, 'mpi', 'update', {
@@ -726,8 +726,8 @@ router.delete('/pacientes/:id', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:deleteAndes')) {
         return next(403);
     }
-    let ObjectId = mongoose.Types.ObjectId;
-    let objectId = new ObjectId(req.params.id);
+    const ObjectId = mongoose.Types.ObjectId;
+    const objectId = new ObjectId(req.params.id);
     controller.deletePacienteAndes(objectId).then((patientFound: any) => {
         Auth.audit(patientFound, req);
     }).catch((error) => {
@@ -783,7 +783,7 @@ router.patch('/pacientes/:id', (req, res, next) => {
                     break;
                 case 'updateCarpetaEfectores':
                     try { // Actualizamos los turnos activos del paciente
-                        let repetida = await controller.checkCarpeta(req, resultado.paciente);
+                        const repetida = await controller.checkCarpeta(req, resultado.paciente);
                         if (!repetida) {
                             controller.updateTurnosPaciente(resultado.paciente);
                             controller.updateCarpetaEfectores(req, resultado.paciente);

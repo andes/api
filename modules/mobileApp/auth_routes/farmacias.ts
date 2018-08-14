@@ -3,7 +3,7 @@ import * as moment from 'moment';
 
 import { farmaciasLocalidades, farmaciasTurnos } from '../schemas/farmacias';
 
-let router = express.Router();
+const router = express.Router();
 
 /**
  * Obtiene las localidade disponible para la farmacia
@@ -25,10 +25,10 @@ router.get('/farmacias/localidades', (req: any, res, next) => {
  */
 
 router.get('/farmacias/turnos', (req, res, next) => {
-    let localidad = req.query.localidad;
-    let desde = moment(req.query.desde, 'YYYY-MM-DD').toDate();
-    let hasta = moment(req.query.hasta, 'YYYY-MM-DD').toDate();
-    let query: any = {
+    const localidad = req.query.localidad;
+    const desde = moment(req.query.desde, 'YYYY-MM-DD').toDate();
+    const hasta = moment(req.query.hasta, 'YYYY-MM-DD').toDate();
+    const query: any = {
         fecha: { $gte: desde, $lte: hasta }
     };
     if (localidad) {

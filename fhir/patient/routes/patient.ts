@@ -10,13 +10,13 @@ import { Auth } from './../../../auth/auth.class';
 import { paciente } from '../../../core/mpi/schemas/paciente';
 
 // Schemas
-let router = express.Router();
+const router = express.Router();
 
 router.get('/([\$])match', (req, res, next) => {
     if (!Auth.check(req, 'fhir:pacient:match')) {
         return next(codes.status.unauthorized);
     }
-    let connElastic = new Client({
+    const connElastic = new Client({
         host: configPrivate.hosts.elastic_main,
     });
     let query;
@@ -37,7 +37,7 @@ router.get('/([\$])match', (req, res, next) => {
         };
     }
     // Configuramos la cantidad de resultados que quiero que se devuelva y la query correspondiente
-    let body = {
+    const body = {
         size: 3000,
         from: 0,
         query
@@ -50,9 +50,9 @@ router.get('/([\$])match', (req, res, next) => {
             body
         })
             .then((searchResult) => {
-                let idPacientes: Array<any> = ((searchResult.hits || {}).hits || [])
+                const idPacientes: Array<any> = ((searchResult.hits || {}).hits || [])
                     .map((hit) => {
-                        let elem = hit._source;
+                        const elem = hit._source;
                         elem['id'] = hit._id;
                         return elem.id;
                     });
@@ -76,30 +76,30 @@ router.post('/', async (req, res, next) => {
             return next(codes.status.unauthorized);
         }
 
-        let pacienteFhir = req.body;
-        let fhirValid = validator.validate(pacienteFhir);
-        let connElastic = new Client({
+        const pacienteFhir = req.body;
+        const fhirValid = validator.validate(pacienteFhir);
+        const connElastic = new Client({
             host: configPrivate.hosts.elastic_main,
         });
 
         if (fhirValid) {
             // Convierte un paciente FHIR en el esquema de pacientes
-            let pac = await parser.FHIRAPaciente(pacienteFhir);
+            const pac = await parser.FHIRAPaciente(pacienteFhir);
             // Genero clave de Blocking para el paciente
-            let match = new Matching();
+            const match = new Matching();
             pac['claveBlocking'] = match.crearClavesBlocking(pac);
             // Verificamos si el paciente existe en elastic search
-            let existe = await checkPatientExist.exists(pac);
+            const existe = await checkPatientExist.exists(pac);
             if (existe === 0) {
                 // Insertamos el paciente en la BASE ANDES LOCAL
-                let newPatient = new paciente(pac);
+                const newPatient = new paciente(pac);
                 Auth.audit(newPatient, req);
                 newPatient.save((err) => {
                     if (err) {
                         return next(codes.status.error);
                     }
                     // Quitamos el _id del objeto paciente para guardarlo en elasticSearch
-                    let nuevoPac = JSON.parse(JSON.stringify(newPatient));
+                    const nuevoPac = JSON.parse(JSON.stringify(newPatient));
                     delete nuevoPac._id;
                     connElastic.create({
                         index: 'andes',

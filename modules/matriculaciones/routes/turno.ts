@@ -3,7 +3,7 @@ import * as turno from '../schemas/turno';
 import { profesional } from '../../../core/tm/schemas/profesional';
 import { turnoSolicitado } from '../schemas/turnoSolicitado';
 import { Auth } from '../../../auth/auth.class';
-let router = express.Router();
+const router = express.Router();
 
 
 router.post('/turnos/save/:turnoId', (request, response, errorHandler) => {
@@ -23,10 +23,10 @@ router.post('/turnos/save/:turnoId', (request, response, errorHandler) => {
 router.post('/turnos/:tipo/:profesionalId/', (request, response, errorHandler) => {
 
     // Convert date to user datetime.
-    let  fechaTurno = new Date(request.body.turno.fecha);
+    const  fechaTurno = new Date(request.body.turno.fecha);
     if (request.body.sobreTurno) {
         profesional.findById(request.params.profesionalId, (error, datos) => {
-            let nTurno = new turno({
+            const nTurno = new turno({
                 fecha: fechaTurno,
                 tipo: request.body.turno.tipo,
                 profesional: datos
@@ -43,7 +43,7 @@ router.post('/turnos/:tipo/:profesionalId/', (request, response, errorHandler) =
     } else {
 
         turnoSolicitado.findById(request.params.profesionalId, (error, datos) => {
-            let nTurno = new turno({
+            const nTurno = new turno({
                 fecha: fechaTurno,
                 tipo: request.body.turno.tipo,
                 profesional: datos
@@ -68,10 +68,10 @@ router.get('/turnos/proximos/?', Auth.authenticate() , (request: any, response, 
     if (!Auth.check(request, 'matriculaciones:turnos:*')) {
         return errorHandler(403);
     }
-    let offset = parseInt(request.query.offset, 0);
-    let chunkSize = parseInt(request.query.size, 0);
+    const offset = parseInt(request.query.offset, 0);
+    const chunkSize = parseInt(request.query.size, 0);
 
-    let responseData = {
+    const responseData = {
         totalPages: null,
         data: null
     };
@@ -84,19 +84,19 @@ router.get('/turnos/proximos/?', Auth.authenticate() , (request: any, response, 
         fechaConsulta.setMilliseconds(0);
 
     } else {
-        let hoy = new Date();
-        let fechaActualMargen = hoy.setMinutes(hoy.getMinutes() - 30);
+        const hoy = new Date();
+        const fechaActualMargen = hoy.setMinutes(hoy.getMinutes() - 30);
         fechaConsulta = fechaActualMargen;
     }
 
-    let busquedaTurno = {
+    const busquedaTurno = {
         fecha: { $gte: fechaConsulta }
 
     };
 
     if (request.query.nombre || request.query.apellido || request.query.documento ) {
 
-        let busquedaProfesional = {};
+        const busquedaProfesional = {};
 
         if (request.query.nombre) {
             busquedaProfesional['nombre'] = new RegExp(request.query.nombre, 'i');
@@ -117,7 +117,7 @@ router.get('/turnos/proximos/?', Auth.authenticate() , (request: any, response, 
                 return errorHandler(errProf);
             }
 
-            let profesionalesIds = profesionales.map((item, idx) => {
+            const profesionalesIds = profesionales.map((item, idx) => {
                 return item._id;
             });
 
@@ -174,7 +174,7 @@ router.get('/turnos/proximos/?', Auth.authenticate() , (request: any, response, 
  */
 router.get('/turnos/:tipo/?', (request, response, errorHandler) => {
 
-    let matchObj = {
+    const matchObj = {
         tipo: request.params.tipo
     };
 
@@ -287,7 +287,7 @@ router.get('/turnos/:id*?', Auth.authenticate(), (req, res, errorHandler) => {
         });
 
     } else {
-        let opciones = {};
+        const opciones = {};
 
         if (req.query.fecha) {
             opciones['fecha'] = req.query.fecha;

@@ -5,7 +5,7 @@ import * as constantes from '../../../core/tm/schemas/constantes';
 import * as contactoSchema from '../../../core/tm/schemas/contacto';
 import { ObjSIISASchema } from '../../../core/tm/schemas/siisa';
 
-let matriculacionSchema = new mongoose.Schema({
+const matriculacionSchema = new mongoose.Schema({
     matriculaNumero: { type: Number, required: false },
     libro: { type: String, required: false },
     folio: { type: String, required: false },
@@ -14,21 +14,21 @@ let matriculacionSchema = new mongoose.Schema({
     revalidacionNumero: Number
 });
 
-let nombreSchema = new mongoose.Schema({
+const nombreSchema = new mongoose.Schema({
     nombre: {
         type: String,
         required: false
     }
 });
 
-let ubicacionSchema = new mongoose.Schema({
+const ubicacionSchema = new mongoose.Schema({
     barrio: nombreSchema,
     localidad: nombreSchema,
     provincia: nombreSchema,
     pais: nombreSchema
 });
 
-let direccionSchema = new mongoose.Schema({
+const direccionSchema = new mongoose.Schema({
     tipo: {
         type: String,
         required: false
@@ -137,8 +137,8 @@ turnoSolicitadoSchema.virtual('nombreCompleto').get(function () {
 });
 
 turnoSolicitadoSchema.virtual('edad').get(function () {
-    let ageDifMs = Date.now() - this.fechaNacimiento.getTime();
-    let ageDate = new Date(ageDifMs);
+    const ageDifMs = Date.now() - this.fechaNacimiento.getTime();
+    const ageDate = new Date(ageDifMs);
     return Math.abs(ageDate.getUTCFullYear() - 1970);
 });
 

@@ -3,7 +3,7 @@ import { paciente } from '../../schemas/paciente';
 import * as servicioSisa from '../../../../utils/servicioSisa';
 import { Auth } from '../../../../auth/auth.class';
 
-let router = express.Router();
+const router = express.Router();
 
 router.get('/matching/:id*?', (req, res, next) => {
     if (!Auth.check(req, 'mpi:matching:get')) {
@@ -40,14 +40,14 @@ router.patch('/matching/:id', (req, res, next) => {
     }
     paciente.findById(req.params.id, (_err, data) => {
         if (req.body.op === 'validarSisa') {
-            let pacienteAux = data;
-            let pacientesRes = [];
+            const pacienteAux = data;
+            const pacientesRes = [];
             servicioSisa.matchSisa(pacienteAux)
                 .then(resultado => {
                     pacientesRes.push(resultado);
                     let arrPacValidados;
                     arrPacValidados = pacientesRes;
-                    let arrPacientesSisa = [];
+                    const arrPacientesSisa = [];
                     arrPacValidados.forEach((pacVal) => {
                         let datoPac;
                         datoPac = pacVal.matcheos.datosPaciente;

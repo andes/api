@@ -2,7 +2,7 @@ import * as express from 'express';
 import * as especialidad from '../schemas/especialidadesFT';
 import * as mongoose from 'mongoose';
 
-let router = express.Router();
+const router = express.Router();
 
 router.get('/especialidadFT/:id?', (req, res, next) => {
 

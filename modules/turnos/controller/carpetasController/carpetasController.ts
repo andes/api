@@ -7,7 +7,7 @@ import * as configPrivate from '../../../../config.private';
 import { LoggerJobs } from '../../../../utils/loggerJobs';
 
 import * as debug from 'debug';
-let logger = debug('carpetasJob');
+const logger = debug('carpetasJob');
 
 let organizacion;
 const connection = {
@@ -17,9 +17,9 @@ const connection = {
     database: configPrivate.conSql.serverSql.database
 };
 const findUpdateCarpeta = async (paciente) => {
-    let documentoPaciente = paciente['numeroDocumento'];
-    let condicion = { documento: documentoPaciente };
-    let carpetaNueva = {
+    const documentoPaciente = paciente['numeroDocumento'];
+    const condicion = { documento: documentoPaciente };
+    const carpetaNueva = {
         organizacion: {
             _id: organizacion._id,
             nombre: organizacion.nombre
@@ -29,11 +29,11 @@ const findUpdateCarpeta = async (paciente) => {
     };
     // buscamos en carpetaPaciente los pacientes con documentoPaciente
     try {
-        let lista = await carpetaPaciente.find(condicion).exec();
+        const lista = await carpetaPaciente.find(condicion).exec();
         if (lista && lista.length) {
-            let carpeta: any = lista[0];
+            const carpeta: any = lista[0];
 
-            let carpetas = carpeta.carpetaEfectores.filter(c => {
+            const carpetas = carpeta.carpetaEfectores.filter(c => {
                 // logger('c.organizacion: ', c.organizacion._id, 'organizacion._id: ', organizacion._id);
                 return (String(c.organizacion._id) === String(organizacion._id));
             });
@@ -58,7 +58,7 @@ const findUpdateCarpeta = async (paciente) => {
         } else {
             // El dni no existe en la colección carpetaPaciente
             // Se guarda el documento en la colección carpetaPaciente
-            let nuevo = new carpetaPaciente({
+            const nuevo = new carpetaPaciente({
                 documento: documentoPaciente,
                 carpetaEfectores: [carpetaNueva]
             });
@@ -73,12 +73,12 @@ const findUpdateCarpeta = async (paciente) => {
 
 export async function migrar() {
     try {
-        let efectores: any = await Organizaciones.find({ integracionActiva: true }).exec();
+        const efectores: any = await Organizaciones.find({ integracionActiva: true }).exec();
         if (efectores && efectores.length > 0) {
 
             logger('Efectores---->', efectores);
             // ejecutamos la migracion para cada efector en paralelo.
-            for (let efector of efectores) {
+            for (const efector of efectores) {
                 await migrarEfector(efector);
             }
 
@@ -93,9 +93,9 @@ export async function migrar() {
     async function migrarEfector(element: any) {
 
         logger('Migrando carpetas de pacientes en:  ', element.nombre);
-        let idSips = await getIdSips(element);
+        const idSips = await getIdSips(element);
         logger('codigo ', element.codigo.sisa);
-        let q_limites = `select MIN(PAC.idPaciente) as min, COUNT(PAC.idPaciente) as max from dbo.sys_paciente as PAC inner
+        const q_limites = `select MIN(PAC.idPaciente) as min, COUNT(PAC.idPaciente) as max from dbo.sys_paciente as PAC inner
                             join dbo.Sys_RelHistoriaClinicaEfector AS rhe ON rhe.idPaciente = pac.idPaciente
                             WHERE PAC.activo = 1` + ' AND rhe.idEfector=' + idSips;
         logger('Se actualizarán las carpetas de los pacientes desde SIPS de ', element.nombre);
@@ -103,9 +103,9 @@ export async function migrar() {
         if (idSips) {
             try {
                 // let consulta = config.consultaPacienteSipsHC + ' AND efector.idEfector=' + element.codigo.idSips + ' AND PAC.idPaciente between @offset and @limit';
-                let consulta = config.consultaCarpetaPacienteSips + ' AND rhe.idEfector=' + idSips.idEfector;
+                const consulta = config.consultaCarpetaPacienteSips + ' AND rhe.idEfector=' + idSips.idEfector;
                 logger('EFECTOR', idSips, organizacion.nombre);
-                let connectionPool = await sql.connect(connection);
+                const connectionPool = await sql.connect(connection);
                 sql.on('error', err => {
                     logger('Error SQL---->', err);
                 });
@@ -130,7 +130,7 @@ export async function migrar() {
                 logger('Error SQL---->', err);
             });
 
-            let querySips = `select idEfector from dbo.sys_Efector as efector WHERE codigoSisa=` + `'` + String(efector.codigo.sisa) + `'`;
+            const querySips = `select idEfector from dbo.sys_Efector as efector WHERE codigoSisa=` + `'` + String(efector.codigo.sisa) + `'`;
             let resultado = await connectionPool.request()
                 .query(querySips);
             resultado = resultado.recordset[0];

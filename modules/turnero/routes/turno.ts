@@ -3,11 +3,11 @@ import * as express from 'express';
 import { turno } from '../schemas/turno';
 
 
-let router = express.Router();
+const router = express.Router();
 
 
 router.get('/busqueda/:id*?', (req: any, res, next) => {
-    let opciones = {};
+    const opciones = {};
     let query;
     if (req.params.id) {
         turno.findById(req.params.id, (err, data) => {
@@ -39,7 +39,7 @@ router.get('/busqueda/:id*?', (req: any, res, next) => {
 
 
 router.post('/insert', (req: any, res, next) => {
-    let newTurno = new turno(req.body);
+    const newTurno = new turno(req.body);
     newTurno.save((err) => {
         if (err) {
             return next(err);

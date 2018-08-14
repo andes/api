@@ -5,7 +5,7 @@ import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import * as obraSocialSchema from '../../obraSocial/schemas/obraSocial';
 import { SnomedConcept } from '../../rup/schemas/snomed-concept';
 
-let pacienteSchema = new mongoose.Schema({
+const pacienteSchema = new mongoose.Schema({
     id: mongoose.Schema.Types.ObjectId,
     nombre: String,
     apellido: String,
@@ -22,7 +22,7 @@ let pacienteSchema = new mongoose.Schema({
 });
 
 
-let turnoSchema = new mongoose.Schema({
+const turnoSchema = new mongoose.Schema({
     horaInicio: Date,
     asistencia: {
         type: String,

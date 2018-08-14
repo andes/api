@@ -3,7 +3,7 @@ import * as express from 'express';
 import * as configPrivate from '../../../config.private';
 import * as ldapjs from 'ldapjs';
 // Routes
-let router = express.Router();
+const router = express.Router();
 // Services
 import { Logger } from '../../../utils/logService';
 // Schemas
@@ -22,7 +22,7 @@ router.post('/alta', (req, res, next) => {
     if (!Auth.check(req, 'usuarios:post')) {
         return next(403);
     }
-    let data = new authUsers(req.body);
+    const data = new authUsers(req.body);
     data.save((err) => {
         if (err) {
             return next(err);
@@ -107,13 +107,13 @@ router.get('/ldap/:id', (req, res, next) => {
     if (!Auth.check(req, 'usuarios:ldap')) {
         return next(403);
     }
-    let server = configPrivate.hosts.ldap + configPrivate.ports.ldapPort;
+    const server = configPrivate.hosts.ldap + configPrivate.ports.ldapPort;
     isReachable(server).then(reachable => {
         if (!reachable) {
             return next('Error de Conexión con el servidor de LDAP');
         } else {
-            let dn = 'uid=' + req.params.id + ',' + configPrivate.auth.ldapOU;
-            let ldap = ldapjs.createClient({
+            const dn = 'uid=' + req.params.id + ',' + configPrivate.auth.ldapOU;
+            const ldap = ldapjs.createClient({
                 url: `ldap://${configPrivate.hosts.ldap}`
             });
             ldap.bind('', '', (err) => {
@@ -149,7 +149,7 @@ router.get('/ldap/:id', (req, res, next) => {
  */
 
 router.get('', (req, res, next) => {
-    let organizaciones = Auth.getPermissions(req, 'usuarios:get:organizacion:?');
+    const organizaciones = Auth.getPermissions(req, 'usuarios:get:organizacion:?');
     if (!organizaciones.length) {
         return next(403);
     }

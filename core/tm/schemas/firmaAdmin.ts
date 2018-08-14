@@ -1,9 +1,9 @@
 
 import * as mongoose from 'mongoose';
-let gridfs = require('mongoose-gridfs');
+const gridfs = require('mongoose-gridfs');
 
 export function makeFsFirmaAdmin() {
-    let ProfesionalesFirmaAdminSchema = gridfs({
+    const ProfesionalesFirmaAdminSchema = gridfs({
         collection: 'ProfesionalesFirmaAdmin',
         model: 'ProfesionalesFirmaAdmin',
         mongooseConnection: mongoose.connection

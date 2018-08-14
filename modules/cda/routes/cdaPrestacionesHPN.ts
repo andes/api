@@ -4,7 +4,7 @@ import * as cdaCtr from '../controller/CDAPatient';
 import * as prestaciones from '../controller/import-prestacionesHPN';
 import * as operations from '../../legacy/controller/operations';
 
-let router = express.Router();
+const router = express.Router();
 
 
 /* Dado un paciente, se genera todos los CDA de prestaciones realizadas */
@@ -14,26 +14,26 @@ router.post('/prestaciones', async (req: any, res, next) => {
     //    return next(403);
     // }
     try {
-        let unPaciente = req.body.paciente;
+        const unPaciente = req.body.paciente;
         let counter = 0;
-        let list = [];
+        const list = [];
         let prestacionesValidadas: any;
         // Como no viene en los ws del HPN hardcodeamos el código SISA correspondiente
-        let organizacion = await operations.organizacionBySisaCode('10580352167033');
+        const organizacion = await operations.organizacionBySisaCode('10580352167033');
         // llamar a ws HPN y traer las ecogrfias validadas
         prestacionesValidadas = await prestaciones.postPrestaciones(unPaciente.documento);
         if (prestacionesValidadas) {
             prestacionesValidadas.forEach(async p => {
 
                 // Si ya lo pase no hacemos nada
-                let existe = await cdaCtr.findByMetadata({
+                const existe = await cdaCtr.findByMetadata({
                     'metadata.extras.idPrestacion': p.Id,
                     'metadata.extras.idEfector': organizacion._id
                 });
 
                 if (existe.length <= 0) {
-                    let paciente = await cdaCtr.findOrCreate(req, unPaciente, organizacion);
-                    let profData = p.OrigenMedico ? p.OrigenMedico.split(',') : null;
+                    const paciente = await cdaCtr.findOrCreate(req, unPaciente, organizacion);
+                    const profData = p.OrigenMedico ? p.OrigenMedico.split(',') : null;
                     let profesional;
                     if (profData) {
                         profesional = {
@@ -74,11 +74,11 @@ router.post('/prestaciones', async (req: any, res, next) => {
                                 break;
                             }
                     }
-                    let prestacion = await cdaCtr.matchCode(snomed);
+                    const prestacion = await cdaCtr.matchCode(snomed);
 
-                    let uniqueId = String(new mongoose.Types.ObjectId());
-                    let response = await prestaciones.downloadFile(p.Id);
-                    let fileData: any = await cdaCtr.storeFile({
+                    const uniqueId = String(new mongoose.Types.ObjectId());
+                    const response = await prestaciones.downloadFile(p.Id);
+                    const fileData: any = await cdaCtr.storeFile({
                         stream: response,
                         mimeType: 'application/pdf',
                         extension: 'pdf',
@@ -87,8 +87,8 @@ router.post('/prestaciones', async (req: any, res, next) => {
                             paciente: mongoose.Types.ObjectId(paciente.id)
                         }
                     });
-                    let cda = await cdaCtr.generateCDA(uniqueId, 'N', paciente, p.fecha, profesional, organizacion, prestacion, cie10, texto, fileData);
-                    let metadata = {
+                    const cda = await cdaCtr.generateCDA(uniqueId, 'N', paciente, p.fecha, profesional, organizacion, prestacion, cie10, texto, fileData);
+                    const metadata = {
                         paciente: paciente.id,
                         prestacion: snomed,
                         fecha: p.fecha,

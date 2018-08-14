@@ -1,7 +1,7 @@
 import * as express from 'express';
 import { periodoPadronesProfe } from '../schemas/periodoPadronesProfe';
 
-let router = express.Router();
+const router = express.Router();
 
 /**
  * Obtiene los datos del programa Incluir Salud asociada a un paciente

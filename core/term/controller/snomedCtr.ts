@@ -29,8 +29,8 @@ export function getConcept(sctid) {
  * @param {conceptMoldel} concept Concepto completo
  */
 export function filterRelationships(concept, { parent = true }) {
-    let result = [];
-    let relationships = concept.relationships;
+    const result = [];
+    const relationships = concept.relationships;
     relationships.forEach((rel) => {
         if (rel.active === true && (parent && rel.type.conceptId === IsASct) && (!parent && rel.type.conceptId !== IsASct)) {
             result.push({
@@ -46,7 +46,7 @@ export function filterRelationships(concept, { parent = true }) {
 
 
 function checkType(concept, sctid) {
-    for (let rel of concept.relationships) {
+    for (const rel of concept.relationships) {
         if (rel.destination.conceptId === sctid && rel.type.conceptId === IsASct) {
             return rel.characteristicType.conceptId === StatedSct ? 'stated' : 'inferred';
         }
@@ -86,7 +86,7 @@ export function getChilds(sctid, { all = false, completed = true, leaf = false }
         query['isLeafStated'] = true;
     }
     return snomedModel.find(query).then((concepts: any[]) => {
-        let result = [];
+        const result = [];
         concepts.forEach((cpt) => {
             if (cpt.active === true) {
                 if (completed) {
@@ -108,12 +108,12 @@ export function getChilds(sctid, { all = false, completed = true, leaf = false }
 // "characteristicType.conceptId": "900000000000010007"
 
 export async function contextFilter(options) {
-    let conditions = {};
+    const conditions = {};
     if (options.attributes) {
-        let attributes = options.attributes;
-        let conds = [];
-        for (let elem of attributes) {
-            let filters = {
+        const attributes = options.attributes;
+        const conds = [];
+        for (const elem of attributes) {
+            const filters = {
                 active: true
             };
             if (elem.sctid) {
@@ -151,10 +151,10 @@ export async function contextFilter(options) {
 }
 
 export async function getConceptByExpression(expression) {
-    let query = makeMongoQuery(expression);
+    const query = makeMongoQuery(expression);
     snomedModel.find(query, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docs: any[]) => {
         return docs.map((item) => {
-            let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
+            const term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
             return {
                 fsn: item.fullySpecifiedName,
                 term,

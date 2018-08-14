@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as tipoEstablecimiento from '../schemas/tipoEstablecimiento_model';
 
-let router = express.Router();
+const router = express.Router();
 
 router.get('/tiposEstablecimiento/:id*?', (req, res, next) => {
     if (req.params.id) {

@@ -4,13 +4,13 @@ import * as smsTools from './sendSms';
 import { roboModel } from './roboSchema';
 
 import * as debug from 'debug';
-let log = debug('roboSender');
+const log = debug('roboSender');
 
 export function roboSender() {
     log('Running roboSender');
     return new Promise((resolve, reject) => {
 
-        let condition = {
+        const condition = {
             status: 'pending',
             scheduledAt: { $lte: new Date() }
         };
@@ -34,7 +34,7 @@ export function roboSender() {
                                 html = env.message;
                             }
 
-                            let mailOptions: mailTools.MailOptions = {
+                            const mailOptions: mailTools.MailOptions = {
                                 from: configPrivate.enviarMail.host,
                                 to: env.email,
                                 subject: env.subject,
@@ -47,7 +47,7 @@ export function roboSender() {
                         }
 
                         if (env.phone) {
-                            let smsOptions: smsTools.SmsOptions = {
+                            const smsOptions: smsTools.SmsOptions = {
                                 telefono: env.phone,
                                 mensaje: env.message
                             };

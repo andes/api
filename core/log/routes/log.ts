@@ -3,13 +3,13 @@ import { Logger } from '../../../utils/logService';
 import { log } from '../schemas/log';
 import { Auth } from '../../../auth/auth.class';
 
-let router = express.Router();
+const router = express.Router();
 
 router.post('/operaciones/:module/:op', (req, res, next) => {
     if (!Auth.check(req, 'log:post')) {
         return next(403);
     }
-    let resultado = Logger.log(req, req.params.module, req.params.op, req.body.data, (err) => {
+    const resultado = Logger.log(req, req.params.module, req.params.op, req.body.data, (err) => {
         if (err) {
             return next(err);
         }

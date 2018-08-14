@@ -1,7 +1,7 @@
 import * as express from 'express';
 import { Documento } from './../controller/descargas';
 
-let router = express.Router();
+const router = express.Router();
 
 
 router.post('/pdf', (req: any, res, next) => {

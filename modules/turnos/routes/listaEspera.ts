@@ -7,12 +7,12 @@ import { defaultLimit, maxLimit } from './../../../config';
 import * as moment from 'moment';
 import { Logger } from '../../../utils/logService';
 
-let async = require('async');
-let router = express.Router();
+const async = require('async');
+const router = express.Router();
 
 router.get('/listaEspera/:id*?', (req, res, next) => {
     let query;
-    let opciones = {};
+    const opciones = {};
 
     if (req.params.id) {
         listaEspera.findById(req.params._id, (err, data) => {
@@ -39,9 +39,9 @@ router.get('/listaEspera/:id*?', (req, res, next) => {
         }
 
     }
-    let radix = 10;
-    let skip: number = parseInt(req.query.skip || 0, radix);
-    let limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
+    const radix = 10;
+    const skip: number = parseInt(req.query.skip || 0, radix);
+    const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
     query = listaEspera.find(opciones).skip(skip).limit(limit);
     query.exec((err, data) => {
         if (err) { return next(err); }
@@ -52,7 +52,7 @@ router.get('/listaEspera/:id*?', (req, res, next) => {
 
 router.post('/listaEspera', (req, res, next) => {
 
-    let newItem = new listaEspera(req.body);
+    const newItem = new listaEspera(req.body);
     newItem.save((err) => {
         if (err) {
             return next(err);
@@ -91,7 +91,7 @@ router.post('/listaEspera/IdAgenda/:_id', (req, res, next) => {
         }
 
         async.each(listaEsperaPaciente, (listaEsperaData, callback)  => {
-            let newItem = new listaEspera(listaEsperaData);
+            const newItem = new listaEspera(listaEsperaData);
 
             newItem.save((err1, item) => {
                 callback();
@@ -115,11 +115,11 @@ router.delete('/listaEspera/:_id', (req, res, next)  => {
 });
 
 function listaEsperaSuspensionAgenda(req, data, next) {
-    let listaEsperaArray = [];
+    const listaEsperaArray = [];
 
     if (req.body.pacientes.length > 0) {
         for (let i = 0; i < req.body.pacientes.length; i++) {
-            let newListaEspera = {};
+            const newListaEspera = {};
             newListaEspera['fecha'] = moment().format();
             newListaEspera['estado'] = 'Agenda Suspendida';
             newListaEspera['tipoPrestacion'] = req.body.pacientes[i].tipoPrestacion;
@@ -129,7 +129,7 @@ function listaEsperaSuspensionAgenda(req, data, next) {
             listaEsperaArray.push(newListaEspera);
         }
     } else {
-        let newListaEspera = {};
+        const newListaEspera = {};
         newListaEspera['fecha'] = moment().format();
         newListaEspera['estado'] = 'Turno Cancelado';
         newListaEspera['tipoPrestacion'] = req.body.pacientes.tipoPrestacion;

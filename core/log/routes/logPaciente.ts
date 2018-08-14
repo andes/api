@@ -2,7 +2,7 @@ import * as express from 'express';
 import { logPaciente } from '../schemas/logPaciente';
 import * as mongoose from 'mongoose';
 
-let router = express.Router();
+const router = express.Router();
 
 router.get('/paciente', (req, res, next) => {
     let query;

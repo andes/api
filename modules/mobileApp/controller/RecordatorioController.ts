@@ -10,10 +10,10 @@ import { sendSms, ISms } from '../../../utils/roboSender';
 import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
 
-let log = debug('RecordatorioController');
+const log = debug('RecordatorioController');
 
-let async = require('async');
-let agendasRemainderDays = 1;
+const async = require('async');
+const agendasRemainderDays = 1;
 
 /**
  *
@@ -24,10 +24,10 @@ let agendasRemainderDays = 1;
 export function buscarTurnosARecordar(dayOffset) {
     return new Promise(async (resolve, reject) => {
 
-        let startDay = moment.utc().add(dayOffset, 'days').startOf('day').toDate();
-        let endDay = moment.utc().add(dayOffset, 'days').endOf('day').toDate();
+        const startDay = moment.utc().add(dayOffset, 'days').startOf('day').toDate();
+        const endDay = moment.utc().add(dayOffset, 'days').endOf('day').toDate();
 
-        let matchTurno = {};
+        const matchTurno = {};
         matchTurno['estado'] = { $in: ['disponible', 'publicada'] };
         matchTurno['bloques.turnos.horaInicio'] = { $gte: startDay, $lte: endDay };
         matchTurno['bloques.turnos.estado'] = 'asignado';
@@ -40,11 +40,11 @@ export function buscarTurnosARecordar(dayOffset) {
             { $unwind: '$bloques.turnos' },
             { $match: matchTurno }
         ];
-        let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
+        const data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
 
-        let turnos = [];
+        const turnos = [];
         data.forEach((elem: any) => {
-            let turno = elem.bloques.turnos;
+            const turno = elem.bloques.turnos;
             turno.id = elem.bloques.turnos._id;
             turno.paciente = elem.bloques.turnos.paciente;
             turno.tipoRecordatorio = 'turno';
@@ -69,7 +69,7 @@ export function guardarRecordatorioTurno(turnos: any[], callback) {
                 return done();
             }
 
-            let recordatorioTurno = new recordatorio({
+            const recordatorioTurno = new recordatorio({
                 idTurno: turno._id,
                 fechaTurno: turno.horaInicio,
                 paciente: turno.paciente,
@@ -97,7 +97,7 @@ export function enviarTurnoRecordatorio() {
 
         elems.forEach((turno: any, index) => {
 
-            let smsOptions: ISms = {
+            const smsOptions: ISms = {
                 phone: turno.paciente.telefono,
                 message: 'Sr ' + turno.paciente.apellido + ' le recordamos que tiene un turno para el día: ' + moment(turno.fechaTurno).format('DD/MM/YYYY')
             };
@@ -120,9 +120,9 @@ export function enviarTurnoRecordatorio() {
 
 export function agendaRecordatorioQuery(dayOffset) {
     return new Promise(async (resolve, reject) => {
-        let startDay = moment(new Date()).add(dayOffset, 'days').startOf('day').toDate() as any;
-        let endDay = moment(new Date()).add(dayOffset, 'days').endOf('day').toDate() as any;
-        let match = {
+        const startDay = moment(new Date()).add(dayOffset, 'days').startOf('day').toDate() as any;
+        const endDay = moment(new Date()).add(dayOffset, 'days').endOf('day').toDate() as any;
+        const match = {
             estado: { $in: ['disponible', 'publicada'] },
             horaInicio: {
                 $gte: startDay,
@@ -130,7 +130,7 @@ export function agendaRecordatorioQuery(dayOffset) {
             }
         };
 
-        let pipeline = [
+        const pipeline = [
             { $match: match },
             { $unwind: { path: '$profesionales', preserveNullAndEmptyArrays: true } },
             { $unwind: { path: '$avisos', preserveNullAndEmptyArrays: true } },
@@ -147,20 +147,20 @@ export function agendaRecordatorioQuery(dayOffset) {
             }
         ];
 
-        let query = agendaModel.aggregate(pipeline).cursor({}).exec();
-        let data = await toArray(query);
+        const query = agendaModel.aggregate(pipeline).cursor({}).exec();
+        const data = await toArray(query);
         return resolve(data);
     });
 }
 
 export function recordarAgenda() {
     return agendaRecordatorioQuery(agendasRemainderDays).then((data: any[]) => {
-        let stack = [];
+        const stack = [];
         data.forEach(item => {
-            let profId = item._id.profesional;
-            let date = moment(new Date()).add(agendasRemainderDays, 'days').startOf('day').toDate() as any;
+            const profId = item._id.profesional;
+            const date = moment(new Date()).add(agendasRemainderDays, 'days').startOf('day').toDate() as any;
 
-            let recordatorioAgenda = new recordatorio({
+            const recordatorioAgenda = new recordatorio({
                 tipoRecordatorio: 'agenda',
                 estadoEnvio: false,
                 dataAgenda: {
@@ -186,7 +186,7 @@ export function enviarAgendaNotificacion() {
                 pacienteApp.findOne({ profesionalId: mongoose.Types.ObjectId(item.dataAgenda.profesionalId) })
             ]).then(datos => {
                 if (datos[0] && datos[1]) {
-                    let notificacion = {
+                    const notificacion = {
                         body: 'Te recordamos que tienes agendas sin confirmar.'
                     };
                     NotificationService.sendNotification(datos[1], notificacion);

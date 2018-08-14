@@ -9,7 +9,7 @@ import * as debug from 'debug';
 import * as controller from './../../../core/mpi/controller/paciente';
 import { sendEmail, IEmail, ISms, sendSms } from '../../../utils/roboSender';
 
-let log = debug('AuthController');
+const log = debug('AuthController');
 
 export const expirationOffset = 1000 * 60 * 60 * 24;
 
@@ -23,12 +23,12 @@ export function verificarCodigo(codigoIngresado, codigo) {
 
 export function enviarCodigoCambioPassword(user) {
     log('Enviando mail...');
-    let replacements = {
+    const replacements = {
         username: user.apellido + ', ' + user.nombre,
         codigo: user.restablecerPassword.codigo
     };
 
-    let mailOptions: IEmail = {
+    const mailOptions: IEmail = {
         email: user.email,
         subject: 'ANDES - Restablecer contraseña',
         template: 'emails/reset-password.html',
@@ -39,7 +39,7 @@ export function enviarCodigoCambioPassword(user) {
     // enviamos email
     sendEmail(mailOptions);
 
-    let sms: ISms = {
+    const sms: ISms = {
         message: 'Su código de verificación para restaurar su password es: ' + user.restablecerPassword.codigo,
         phone: user.telefono
     };
@@ -49,12 +49,12 @@ export function enviarCodigoCambioPassword(user) {
 }
 
 export function enviarCodigoVerificacion(user, password) {
-    let replacements = {
+    const replacements = {
         username: user.apellido + ', ' + user.nombre,
         codigo: password
     };
 
-    let mailOptions: IEmail = {
+    const mailOptions: IEmail = {
         email: user.email,
         subject: 'ANDES :: Código de activación',
         template: 'emails/active-app-code.html',
@@ -79,7 +79,7 @@ export function enviarCodigoVerificacion(user, password) {
 
 export function listadoCodigos() {
     return PacienteApp.find({ codigoVerificacion: { $ne: null } }, {codigoVerificacion: 1, _id: 0}).then(listado => {
-        let numeros = listado.map((item: any) => item.codigoVerificacion);
+        const numeros = listado.map((item: any) => item.codigoVerificacion);
         return Promise.resolve(numeros);
     }).catch(() => Promise.reject([]));
 }
@@ -90,8 +90,8 @@ export function listadoCodigos() {
  */
 export function generarCodigoVerificacion(onlyNumber = true) {
     let codigo = '';
-    let length = 6;
-    let caracteres = onlyNumber ? '0123456789' : 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const length = 6;
+    const caracteres = onlyNumber ? '0123456789' : 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     for (let i = 0; i < length; i++) {
         codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
     }
@@ -147,7 +147,7 @@ export function getAccountByProfesional(id) {
  * @param profesional {profesionalSchema}
  */
 export function createUserFromProfesional(profesional) {
-    let dataPacienteApp: any = {
+    const dataPacienteApp: any = {
         profesionalId: profesional.id,
         nombre: profesional.nombre,
         apellido: profesional.apellido,
@@ -164,7 +164,7 @@ export function createUserFromProfesional(profesional) {
         pacientes: []
     };
 
-    let user = new PacienteApp(dataPacienteApp);
+    const user = new PacienteApp(dataPacienteApp);
 
     return user.save();
 
@@ -177,9 +177,9 @@ export function createUserFromProfesional(profesional) {
  */
 export function createUserFromPaciente(pacienteData, contacto) {
     return new Promise(async (resolve, reject) => {
-        let passw = generarCodigoVerificacion();
+        const passw = generarCodigoVerificacion();
 
-        let dataPacienteApp: any = {
+        const dataPacienteApp: any = {
             nombre: pacienteData.nombre,
             apellido: pacienteData.apellido,
             email: contacto.email,
@@ -213,7 +213,7 @@ export function createUserFromPaciente(pacienteData, contacto) {
                 return reject({ error: 'email_exists' });
             }
 
-            let user = new PacienteApp(dataPacienteApp);
+            const user = new PacienteApp(dataPacienteApp);
 
             user.save((errSave, userSaved: any) => {
 
@@ -238,21 +238,21 @@ export function createUserFromPaciente(pacienteData, contacto) {
 export function matchPaciente(data) {
     return new Promise((resolve, reject) => {
 
-        let connElastic = new Client({
+        const connElastic = new Client({
             host: configPrivate.hosts.elastic_main,
         });
 
-        let campo = 'documento';
-        let condicionMatch = {};
+        const campo = 'documento';
+        const condicionMatch = {};
         condicionMatch[campo] = {
             query: data.documento,
             minimum_should_match: 3,
             fuzziness: 2
         };
-        let query = {
+        const query = {
             match: condicionMatch
         };
-        let body = {
+        const body = {
             size: 100,
             from: 0,
             query
@@ -263,36 +263,36 @@ export function matchPaciente(data) {
         }).then((searchResult) => {
 
             // Asigno los valores para el suggest
-            let weights = config.mpi.weightsDefault;
+            const weights = config.mpi.weightsDefault;
 
             // if (req.query.escaneado) {
             //     weights = config.mpi.weightsScan;
             // }
 
 
-            let listaPacientesMax = [];
+            const listaPacientesMax = [];
 
             // let devolverPorcentaje = data.percentage;
 
-            let _results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
+            const _results: Array<any> = ((searchResult.hits || {}).hits || []) // extract results from elastic response
                 .filter((hit) => {
-                    let pacienteElastic = hit._source;
-                    let pacDto = {
+                    const pacienteElastic = hit._source;
+                    const pacDto = {
                         documento: data.documento ? data.documento.toString() : '',
                         nombre: data.nombre ? data.nombre : '',
                         apellido: data.apellido ? data.apellido : '',
                         fechaNacimiento: data.fechaNacimiento ? moment(data.fechaNacimiento).format('YYYY-MM-DD') : '',
                         sexo: data.genero ? data.genero.toLowerCase() : ''
                     };
-                    let pacElastic = {
+                    const pacElastic = {
                         documento: pacienteElastic.documento ? pacienteElastic.documento.toString() : '',
                         nombre: pacienteElastic.nombre ? pacienteElastic.nombre : '',
                         apellido: pacienteElastic.apellido ? pacienteElastic.apellido : '',
                         fechaNacimiento: pacienteElastic.fechaNacimiento ? moment(pacienteElastic.fechaNacimiento).format('YYYY-MM-DD') : '',
                         sexo: pacienteElastic.sexo ? pacienteElastic.sexo : ''
                     };
-                    let match = new Matching();
-                    let valorMatching = match.matchPersonas(pacElastic, pacDto, weights, 'Levenshtein');
+                    const match = new Matching();
+                    const valorMatching = match.matchPersonas(pacElastic, pacDto, weights, 'Levenshtein');
                     pacienteElastic['id'] = hit._id;
                     if (valorMatching >= config.mpi.cotaAppMobile) {
                         listaPacientesMax.push({
@@ -303,7 +303,7 @@ export function matchPaciente(data) {
                     }
                 });
 
-            let sortMatching = (a, b) => {
+            const sortMatching = (a, b) => {
                 return b.match - a.match;
             };
 
@@ -385,11 +385,11 @@ export function updateAccount(account, data) {
  */
 export function verificarCuenta(userAccount, mpiData) {
     return new Promise((resolve, reject) => {
-        let pacienteId = userAccount.pacientes[0].id;
+        const pacienteId = userAccount.pacientes[0].id;
         controller.buscarPaciente(pacienteId).then((pac => {
 
-            let match = new Matching();
-            let resultadoMatching = match.matchPersonas(mpiData, pac.paciente, config.mpi.weightsScan, 'Levenshtein');
+            const match = new Matching();
+            const resultadoMatching = match.matchPersonas(mpiData, pac.paciente, config.mpi.weightsScan, 'Levenshtein');
 
             // no cumple con el numero del matching
             if (resultadoMatching >= config.mpi.cotaMatchMax) {

@@ -1,7 +1,7 @@
 import * as express from 'express';
 import { prestacionLegacy } from '../schemas/prestacionLegacy';
 
-let router = express.Router();
+const router = express.Router();
 
 router.get('/prestacionesLegacy', (req, res, next) => {
     if (req.query.codigo) {

@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-let schema = new mongoose.Schema({
+const schema = new mongoose.Schema({
     idpadre: String,
     descripcion: String,
     nivelComplejidad: String,
@@ -44,6 +44,6 @@ let schema = new mongoose.Schema({
 schema.plugin(require('../../../mongoose/audit'));
 
 // Exportar modelo
-let model = mongoose.model('formularioTerapeutico', schema, 'formularioTerapeutico');
+const model = mongoose.model('formularioTerapeutico', schema, 'formularioTerapeutico');
 
 export = model;

@@ -10,19 +10,19 @@ import { ObjectId } from 'bson';
 
 export async function getCarpetasSolicitud(req) {
     return new Promise(async (resolve, reject) => {
-        let body = req.body;
-        let organizacionId = body.organizacion;
-        let tipoPrestacionId = body.idTipoPrestacion;
-        let espacioFisicoId = body.idEspacioFisico;
-        let profesionalId = body.idProfesional;
-        let horaInicio = body.fechaDesde;
-        let horaFin = body.fechaHasta;
-        let solicitudesManuales = await getSolicitudCarpetaManual(organizacionId);
-        let agendas = await buscarAgendasTurnos(new ObjectId(organizacionId), tipoPrestacionId, espacioFisicoId, profesionalId, horaInicio, horaFin);
-        let agendasSobreturno = await buscarAgendasSobreturnos(new ObjectId(organizacionId), tipoPrestacionId, espacioFisicoId, profesionalId, horaInicio, horaFin);
-        let nrosCarpetas = getNrosCarpetas(agendas, agendasSobreturno, solicitudesManuales);
-        let carpetas = await findCarpetas(new ObjectId(organizacionId), nrosCarpetas);
-        let prestamosCarpetas = await getRegistrosSolicitudCarpetas(req, organizacionId, [agendas, agendasSobreturno], carpetas, solicitudesManuales);
+        const body = req.body;
+        const organizacionId = body.organizacion;
+        const tipoPrestacionId = body.idTipoPrestacion;
+        const espacioFisicoId = body.idEspacioFisico;
+        const profesionalId = body.idProfesional;
+        const horaInicio = body.fechaDesde;
+        const horaFin = body.fechaHasta;
+        const solicitudesManuales = await getSolicitudCarpetaManual(organizacionId);
+        const agendas = await buscarAgendasTurnos(new ObjectId(organizacionId), tipoPrestacionId, espacioFisicoId, profesionalId, horaInicio, horaFin);
+        const agendasSobreturno = await buscarAgendasSobreturnos(new ObjectId(organizacionId), tipoPrestacionId, espacioFisicoId, profesionalId, horaInicio, horaFin);
+        const nrosCarpetas = getNrosCarpetas(agendas, agendasSobreturno, solicitudesManuales);
+        const carpetas = await findCarpetas(new ObjectId(organizacionId), nrosCarpetas);
+        const prestamosCarpetas = await getRegistrosSolicitudCarpetas(req, organizacionId, [agendas, agendasSobreturno], carpetas, solicitudesManuales);
 
         resolve(prestamosCarpetas);
     });
@@ -30,21 +30,21 @@ export async function getCarpetasSolicitud(req) {
 
 export async function getCarpetasPrestamo(req) {
     return new Promise(async (resolve, reject) => {
-        let body = req.body;
-        let organizacionId = body.organizacion;
-        let tipoPrestacionId = body.idTipoPrestacion;
-        let espacioFisicoId = body.idEspacioFisico;
-        let profesionalId = body.idProfesional;
-        let horaInicio = body.fechaDesde;
-        let horaFin = body.fechaHasta;
-        let carpetas = await findCarpetasPrestamo(new ObjectId(organizacionId), horaInicio, horaFin, tipoPrestacionId, espacioFisicoId, profesionalId);
+        const body = req.body;
+        const organizacionId = body.organizacion;
+        const tipoPrestacionId = body.idTipoPrestacion;
+        const espacioFisicoId = body.idEspacioFisico;
+        const profesionalId = body.idProfesional;
+        const horaInicio = body.fechaDesde;
+        const horaFin = body.fechaHasta;
+        const carpetas = await findCarpetasPrestamo(new ObjectId(organizacionId), horaInicio, horaFin, tipoPrestacionId, espacioFisicoId, profesionalId);
 
         resolve(carpetas);
     });
 }
 
 function getNrosCarpetas(agendas, agendasSobreturno, solicitudesManuales) {
-    let nroCarpetas = [];
+    const nroCarpetas = [];
     if (agendas) {
         agendas.forEach(_agenda => {
             _agenda.turnos.forEach(unTurno => {
@@ -78,8 +78,8 @@ function getNrosCarpetas(agendas, agendasSobreturno, solicitudesManuales) {
 }
 
 async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carpetas, solicitudesManuales) {
-    let registrosSolicitudCarpetas = [];
-    let mostrarPrestamos = req.body.mostrarPrestamos;
+    const registrosSolicitudCarpetas = [];
+    const mostrarPrestamos = req.body.mostrarPrestamos;
 
     agendas.forEach(unaAgenda => {
         unaAgenda.forEach(_agenda => {
@@ -148,10 +148,10 @@ async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carp
 }
 
 async function findCarpetas(organizacionId, nrosCarpetas) {
-    let pipeline = [];
-    let match = {};
-    let sort = {};
-    let group = {};
+    const pipeline = [];
+    const match = {};
+    const sort = {};
+    const group = {};
 
     match['organizacion._id'] = { $eq: organizacionId };
     match['numero'] = { $in: nrosCarpetas };
@@ -168,10 +168,10 @@ async function findCarpetas(organizacionId, nrosCarpetas) {
 }
 
 async function findCarpetasPrestamo(organizacionId, horaInicio, horaFin, tipoPrestacion, espacioFisico, profesional) {
-    let pipeline = [];
-    let match = {};
-    let sort = {};
-    let group = {};
+    const pipeline = [];
+    const match = {};
+    const sort = {};
+    const group = {};
 
     if (horaInicio || horaFin) {
         match['createdAt'] = {};
@@ -219,7 +219,7 @@ async function findCarpetasPrestamo(organizacionId, horaInicio, horaFin, tipoPre
 
 async function buscarAgendasSobreturnos(organizacionId, tipoPrestacion, espacioFisico, profesional, horaInicio, horaFin) {
 
-    let matchCarpeta = {};
+    const matchCarpeta = {};
     if (tipoPrestacion) {
         matchCarpeta['sobreturnos.tipoPrestacion._id'] = new ObjectId(tipoPrestacion);
     }
@@ -246,7 +246,7 @@ async function buscarAgendasSobreturnos(organizacionId, tipoPrestacion, espacioF
     matchCarpeta['sobreturnos.paciente.carpetaEfectores.organizacion._id'] = organizacionId;
     matchCarpeta['sobreturnos.paciente.carpetaEfectores.nroCarpeta'] = { $ne: '' };
 
-    let pipelineCarpeta = [{
+    const pipelineCarpeta = [{
         $match: matchCarpeta
     },
         {
@@ -270,7 +270,7 @@ async function buscarAgendasSobreturnos(organizacionId, tipoPrestacion, espacioF
 
 async function buscarAgendasTurnos(organizacionId, tipoPrestacion, espacioFisico, profesional, horaInicio, horaFin) {
 
-    let matchCarpeta = {};
+    const matchCarpeta = {};
     if (tipoPrestacion) {
         matchCarpeta['bloques.turnos.tipoPrestacion._id'] = new ObjectId(tipoPrestacion);
     }
@@ -297,7 +297,7 @@ async function buscarAgendasTurnos(organizacionId, tipoPrestacion, espacioFisico
     matchCarpeta['bloques.turnos.paciente.carpetaEfectores.organizacion._id'] = organizacionId;
     matchCarpeta['bloques.turnos.paciente.carpetaEfectores.nroCarpeta'] = { $ne: '' };
 
-    let pipelineCarpeta = [{
+    const pipelineCarpeta = [{
         $match: matchCarpeta
     },
         {
@@ -323,7 +323,7 @@ async function buscarAgendasTurnos(organizacionId, tipoPrestacion, espacioFisico
 }
 
 export async function prestarCarpeta(req) {
-    let prestamoCarpeta: any = await createCarpeta(req.body, constantes.EstadosPrestamosCarpeta.Prestada);
+    const prestamoCarpeta: any = await createCarpeta(req.body, constantes.EstadosPrestamosCarpeta.Prestada);
     if (prestamoCarpeta.datosSolicitudManual.idSolicitud) {
         cambiarEstadoSolicitudManual(req, prestamoCarpeta.datosSolicitudManual.idSolicitud, prestamoCarpeta.organizacion);
     }
@@ -331,8 +331,8 @@ export async function prestarCarpeta(req) {
 }
 
 export async function prestarCarpetas(req) {
-    let datosCarpetas = req.body;
-    let prestamosCarpetas = [];
+    const datosCarpetas = req.body;
+    const prestamosCarpetas = [];
 
     for (let i = 0; i < datosCarpetas.length; i++) {
         prestamosCarpetas.push(await createCarpeta(datosCarpetas[i], constantes.EstadosPrestamosCarpeta.Prestada));
@@ -341,13 +341,13 @@ export async function prestarCarpetas(req) {
 }
 
 export async function devolverCarpeta(req) {
-    let prestamoCarpeta: any = await createCarpeta(req.body, constantes.EstadosPrestamosCarpeta.EnArchivo);
+    const prestamoCarpeta: any = await createCarpeta(req.body, constantes.EstadosPrestamosCarpeta.EnArchivo);
     return await savePrestamoCarpeta(req, prestamoCarpeta);
 }
 
 export async function devolverCarpetas(req) {
-    let datosCarpetas = req.body;
-    let prestamosCarpetas = [];
+    const datosCarpetas = req.body;
+    const prestamosCarpetas = [];
 
     for (let i = 0; i < datosCarpetas.length; i++) {
         prestamosCarpetas.push(await createCarpeta(datosCarpetas[i], constantes.EstadosPrestamosCarpeta.EnArchivo));
@@ -361,10 +361,10 @@ async function createCarpeta(datosCarpeta, estadoPrestamoCarpeta) {
     let datosSolicitudManual;
     if (datosCarpeta.datosPrestamo) {
         if (datosCarpeta.datosPrestamo.agendaId) {
-            let agendaId = datosCarpeta.datosPrestamo.agendaId;
-            let turnoId = datosCarpeta.datosPrestamo.turno.id;
-            let data = await agenda.findById(agendaId);
-            let turno = agendaCtrl.getTurno(null, data, turnoId);
+            const agendaId = datosCarpeta.datosPrestamo.agendaId;
+            const turnoId = datosCarpeta.datosPrestamo.turno.id;
+            const data = await agenda.findById(agendaId);
+            const turno = agendaCtrl.getTurno(null, data, turnoId);
             pacienteSeleccionado = turno.paciente;
         } else {
             if (datosCarpeta.datosSolicitudManual) {
@@ -398,7 +398,7 @@ async function createCarpeta(datosCarpeta, estadoPrestamoCarpeta) {
 
 async function savePrestamoCarpeta(req, nuevoPrestamo) {
     Auth.audit(nuevoPrestamo, req);
-    let _prestamoGuardado = await nuevoPrestamo.save((err2, prestamoGuardado: any) => {
+    const _prestamoGuardado = await nuevoPrestamo.save((err2, prestamoGuardado: any) => {
         if (err2) {
             throw err2;
         }
@@ -429,10 +429,10 @@ function getNroCarpeta(organizacionId, carpetas) {
 */
 
 export async function getHistorial(req) {
-    let nroCarpeta = req.body.numero;
-    let organizacionId = req.body.organizacion._id;
+    const nroCarpeta = req.body.numero;
+    const organizacionId = req.body.organizacion._id;
 
-    let filter: any = {
+    const filter: any = {
         'organizacion._id': organizacionId,
         numero: nroCarpeta
     };
@@ -441,8 +441,8 @@ export async function getHistorial(req) {
 }
 
 export async function solicitudManualCarpeta(req) {
-    let body = req.body;
-    let solicitud = new solicitudCarpetaManualSchema({
+    const body = req.body;
+    const solicitud = new solicitudCarpetaManualSchema({
         fecha: body.fecha,
         paciente: body.paciente,
         numero: body.numero,

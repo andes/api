@@ -5,11 +5,11 @@
 import * as express from 'express';
 import { profesionalMeta } from './../schemas/profesionalMeta';
 
-let router = express.Router();
+const router = express.Router();
 
 router.get('/frecuentesProfesional/:id', (req, res, next) => {
     if (req.params.id) {
-        let query = profesionalMeta.find({ 'profesional.id': req.params.id });
+        const query = profesionalMeta.find({ 'profesional.id': req.params.id });
         query.exec((err, data: any) => {
 
             if (err) {
@@ -33,7 +33,7 @@ router.get('/frecuentesProfesional/:id', (req, res, next) => {
 
 router.get('/frecuentesProfesional', (req, res, next) => {
 
-    let query = {
+    const query = {
         // profesional
         ...(req.query.idProfesional) && { 'profesional.id': req.query.idProfesional },
         // organizacion
@@ -66,7 +66,7 @@ router.post('/frecuentesProfesional', (req, res, next) => {
         return next(400);
     }
 
-    let data = new profesionalMeta(req.body);
+    const data = new profesionalMeta(req.body);
 
     // Auth.audit(req.body, req);
 
@@ -79,7 +79,7 @@ router.post('/frecuentesProfesional', (req, res, next) => {
 });
 
 router.put('/frecuentesProfesional/:id*?', (req, res, next) => {
-    let query = {
+    const query = {
         // profesional
         ...(req.params.id) && { 'profesional.id': req.params.id },
         // organizacion
@@ -95,7 +95,7 @@ router.put('/frecuentesProfesional/:id*?', (req, res, next) => {
 
          // si no existe agregamos el nuevo frecuente
         if (typeof resultado === null || !resultado) {
-            let frecuente = new profesionalMeta(req.body);
+            const frecuente = new profesionalMeta(req.body);
 
             frecuente.save((err2) => {
                 if (err2) {
@@ -112,7 +112,7 @@ router.put('/frecuentesProfesional/:id*?', (req, res, next) => {
                 req.body.frecuentes.forEach(frecuente => {
                     // frecuente.conceptos.forEach(concepto => {
 
-                    let indexConcepto = resultado.frecuentes.findIndex(x => x.concepto.conceptId === frecuente.concepto.conceptId);
+                    const indexConcepto = resultado.frecuentes.findIndex(x => x.concepto.conceptId === frecuente.concepto.conceptId);
 
                     if (indexConcepto === -1) {
                         resultado.frecuentes.push(frecuente);

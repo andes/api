@@ -7,7 +7,7 @@ import * as mongoose from 'mongoose';
  * @param {any} func Nombre de la función callback a ejecutar cuando llega a un nodo hoja
  */
 export function iterate(obj, func) {
-    for (let property in obj) {
+    for (const property in obj) {
         if (obj.hasOwnProperty(property)) {
             if (Array.isArray(obj[property])) {
                 iterate(obj[property], func);
@@ -48,7 +48,7 @@ export function convertToObjectId(obj, property: string) {
  */
 export function buscarEnHuds(prestaciones, conceptos) {
 
-    let data = [];
+    const data = [];
     // recorremos prestaciones
     prestaciones.forEach((prestacion: any) => {
         // recorremos los registros de cada prestacion
@@ -56,7 +56,7 @@ export function buscarEnHuds(prestaciones, conceptos) {
 
             // verificamos si el registro de la prestacion tiene alguno de
             // los conceptos en su array de registros
-            let resultado = matchConcepts(registro, conceptos);
+            const resultado = matchConcepts(registro, conceptos);
             if (resultado) {
                 // agregamos el resultado a a devolver
                 data.push({

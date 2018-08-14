@@ -4,7 +4,7 @@ import * as utils from '../../../utils/utils';
 import * as cie10 from '../schemas/cie10';
 import { SnomedCIE10Mapping } from './../controller/mapping';
 
-let router = express.Router();
+const router = express.Router();
 
 /**
  * @swagger
@@ -51,7 +51,7 @@ router.get('/snomed', (req, res, next) => {
     if (!req.query.search && !req.query.refsetId && req.query.search !== '') {
         return next('Debe ingresar un parámetro de búsqueda');
     }
-    let conditions = {
+    const conditions = {
         languageCode: 'spanish',
         conceptActive: true,
         active: true
@@ -67,11 +67,11 @@ router.get('/snomed', (req, res, next) => {
         if (isNaN(req.query.search)) {
             // Busca por palabras
             conditions['$and'] = [];
-            let words = req.query.search.split(' ');
+            const words = req.query.search.split(' ');
             words.forEach((word) => {
                 // normalizamos cada una de las palabras como hace SNOMED para poder buscar palabra a palabra
                 word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08');
-                let expWord = '^' + utils.removeDiacritics(word) + '.*';
+                const expWord = '^' + utils.removeDiacritics(word) + '.*';
 
                 // agregamos la palabra a la condicion
                 conditions['$and'].push({ words: { $regex: expWord } });
@@ -86,7 +86,7 @@ router.get('/snomed', (req, res, next) => {
         }
     }
     // preparamos query
-    let query = textIndexModel.find(conditions, {
+    const query = textIndexModel.find(conditions, {
         conceptId: 1,
         term: 1,
         fsn: 1,
@@ -115,7 +115,7 @@ router.get('/snomed', (req, res, next) => {
                 return 0;
             });
         }
-        let skip: number = parseInt(req.query.skip || 0, 10);
+        const skip: number = parseInt(req.query.skip || 0, 10);
         res.json(data.slice(skip, req.query.limit || 500));
     });
 });
@@ -140,11 +140,11 @@ router.get('/snomed/map', (req, res, next) => {
         return next('Debe ingresar un concepto principal');
     }
 
-    let conceptId = req.query.conceptId;
-    let paciente = req.query.paciente;
-    let contexto = req.query.secondaryConcepts;
+    const conceptId = req.query.conceptId;
+    const paciente = req.query.paciente;
+    const contexto = req.query.secondaryConcepts;
 
-    let map = new SnomedCIE10Mapping(paciente, contexto);
+    const map = new SnomedCIE10Mapping(paciente, contexto);
 
     map.transform(conceptId).then(target => {
         cie10.model.findOne({ codigo: target }).then(cie => {

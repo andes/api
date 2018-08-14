@@ -2,7 +2,7 @@ import * as express from 'express';
 import * as cama from '../schemas/camas';
 import { Auth } from './../../../auth/auth.class';
 
-let router = express.Router();
+const router = express.Router();
 
 /**
  * Busca la cama por su id.
@@ -53,7 +53,7 @@ router.get('/camas', Auth.authenticate(), (req, res, next) => {
  */
 
 router.post('/camas', Auth.authenticate(), (req, res, next) => {
-    let newCama = new cama.model(req.body);
+    const newCama = new cama.model(req.body);
     // agregamos audit a la cama
     Auth.audit(newCama, req);
     newCama.save((err) => {
@@ -170,7 +170,7 @@ router.patch('/camas/cambiaEstado/:idCama', Auth.authenticate(), (req, res, next
         if (err) {
             return next(err);
         }
-        let ultimoEstado = _cama.estados[_cama.estados.length - 1];
+        const ultimoEstado = _cama.estados[_cama.estados.length - 1];
         if (req.body.estado === 'reparacion') {
             // validamos que la cama no este ya en reparacion
             if (ultimoEstado.estado === 'reparacion') {

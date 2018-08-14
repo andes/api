@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as modalidadesCertificacion from '../schemas/modalidadesCertificacion';
 
-let router = express.Router();
+const router = express.Router();
 
 router.get('/modalidadesCertificacion/:id*?', (req, res, next) => {
 

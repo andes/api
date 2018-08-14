@@ -9,7 +9,7 @@ import { Logger } from '../../../utils/logService';
  * Auditoría de Prestaciones de Pacientes (collection prestacionPaciente)
  */
 
-let router = express.Router();
+const router = express.Router();
 
 router.get('/prestacionPaciente/:id*?', (req, res, next) => {
     if (req.params.id) {
@@ -75,7 +75,7 @@ router.get('/prestacionPaciente/:id*?', (req, res, next) => {
 });
 
 router.post('/auditoria', (req, res, next) => {
-    let insertAuditoria = new auditoria(req.body);
+    const insertAuditoria = new auditoria(req.body);
 
     // Debe ir antes del save, y ser una instancia del modelo
     Auth.audit(insertAuditoria, req);
@@ -96,7 +96,7 @@ router.post('/auditoria', (req, res, next) => {
 
 router.put('/prestacionPaciente/:id', (req, res, next) => {
 
-    let updateAuditoria = new auditoria(req.body);
+    const updateAuditoria = new auditoria(req.body);
 
     Auth.audit(updateAuditoria, req);
 

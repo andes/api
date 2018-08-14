@@ -10,8 +10,8 @@ import { defaultLimit, maxLimit } from './../../../config';
 import * as configPrivate from '../../../config.private';
 import { Auth } from '../../../auth/auth.class';
 
-let GeoJSON = require('geojson');
-let router = express.Router();
+const GeoJSON = require('geojson');
+const router = express.Router();
 
 
 router.get('/organizaciones/georef/:id?', async (req, res, next) => {
@@ -22,9 +22,9 @@ router.get('/organizaciones/georef/:id?', async (req, res, next) => {
                 if (err) {
                     return next(err);
                 }
-                let dir = data.direccion.valor;
-                let localidad = data.direccion.ubicacion.localidad.nombre;
-                let provincia = data.direccion.ubicacion.provincia.nombre;
+                const dir = data.direccion.valor;
+                const localidad = data.direccion.ubicacion.localidad.nombre;
+                const provincia = data.direccion.ubicacion.provincia.nombre;
                 // let pais = organizacion.direccion.ubicacion.pais;
                 let pathGoogleApi = '';
                 let jsonGoogle = '';
@@ -39,7 +39,7 @@ router.get('/organizaciones/georef/:id?', async (req, res, next) => {
                 pathGoogleApi = pathGoogleApi.replace(/ü/gi, 'u');
                 pathGoogleApi = pathGoogleApi.replace(/ñ/gi, 'n');
 
-                let optionsgetmsg = {
+                const optionsgetmsg = {
                     host: 'maps.googleapis.com',
                     port: 443,
                     path: pathGoogleApi,
@@ -48,14 +48,14 @@ router.get('/organizaciones/georef/:id?', async (req, res, next) => {
                 };
 
                 if (dir !== '' && localidad !== '' && provincia !== '') {
-                    let reqGet = https.request(optionsgetmsg, (res2) => {
+                    const reqGet = https.request(optionsgetmsg, (res2) => {
                         res2
                             .on('data', (d, error) => {
                                 jsonGoogle = jsonGoogle + d.toString();
                             });
 
                         res2.on('end', () => {
-                            let salida = JSON.parse(jsonGoogle);
+                            const salida = JSON.parse(jsonGoogle);
                             if (salida.status === 'OK') {
                                 res.json(salida.results[0].geometry.location);
                             } else {
@@ -73,7 +73,7 @@ router.get('/organizaciones/georef/:id?', async (req, res, next) => {
             });
 
     } else {
-        let query = organizacion
+        const query = organizacion
             .model
             .aggregate([
                 {
@@ -99,8 +99,8 @@ router.get('/organizaciones/georef/:id?', async (req, res, next) => {
             .cursor({})
             .exec();
 
-        let data = await toArray(query);
-        let geoJsonData = GeoJSON.parse(data, {
+        const data = await toArray(query);
+        const geoJsonData = GeoJSON.parse(data, {
             Point: [
                 'lat', 'lng'
             ],
@@ -249,8 +249,8 @@ router.get('/organizaciones/:id*?', (req, res, next) => {
             });
     } else {
         let query;
-        let act: Boolean = true;
-        let filtros = {
+        const act: Boolean = true;
+        const filtros = {
             activo: act
         };
 
@@ -283,8 +283,8 @@ router.get('/organizaciones/:id*?', (req, res, next) => {
             filtros['_id'] = {$in : req.query.ids};
         }
 
-        let skip: number = parseInt(req.query.skip || 0, 10);
-        let limit: number = Math.min(parseInt(req.query.limit || defaultLimit, 10), maxLimit);
+        const skip: number = parseInt(req.query.skip || 0, 10);
+        const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, 10), maxLimit);
 
         query = organizacion
             .model
@@ -355,7 +355,7 @@ router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
     if (!Auth.check(req, 'tm:especialidad:postEspecialidad')) {
         return next(403);
     }
-    let newOrganization = new organizacion.model(req.body);
+    const newOrganization = new organizacion.model(req.body);
     newOrganization.save((err) => {
         if (err) {
             return next(err);

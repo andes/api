@@ -4,7 +4,7 @@ import { turnoSolicitado } from '../schemas/turnoSolicitado';
 // import{ profesional } from '../../../core/tm/schemas/profesional'
 
 
-let router = express.Router();
+const router = express.Router();
 
 router.post('/turnoSolicitados', (req, res, next) => {
 
@@ -21,7 +21,7 @@ router.post('/turnoSolicitados', (req, res, next) => {
     } else {
         turnoSolicitado.findOne({ documento: req.body.documento }, (err, person) => {
 
-            let newProfesional = new turnoSolicitado(req.body);
+            const newProfesional = new turnoSolicitado(req.body);
             newProfesional.save((err2) => {
                 if (err2) {
                     next(err2);
@@ -38,7 +38,7 @@ router.post('/turnoSolicitados', (req, res, next) => {
 });
 
 router.get('/turnoSolicitados/traePDni/:dni*?', (req: any, res, next) => {
-    let dni = req.params.dni;
+    const dni = req.params.dni;
     turnoSolicitado.find({ _id: dni }, (err, data) => {
         if (err) {
             return next(err);

@@ -5,17 +5,17 @@ import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import * as debug from 'debug';
 
-let log = debug('NotificationService');
+const log = debug('NotificationService');
 
 export class NotificationService {
 
     public static notificarReasignar(datosTurno) {
         this.findTurno(datosTurno).then((turno: any) => {
-            let idPaciente = turno.paciente.id;
+            const idPaciente = turno.paciente.id;
             moment.locale('es');
-            let date = moment(turno.horaInicio).format('DD [de] MMMM');
-            let body = 'Su turno del ' + date + ' fue reasignado. Haz click para más información.';
-            let notificacion = { body, extraData: { action: 'reasignar' } };
+            const date = moment(turno.horaInicio).format('DD [de] MMMM');
+            const body = 'Su turno del ' + date + ' fue reasignado. Haz click para más información.';
+            const notificacion = { body, extraData: { action: 'reasignar' } };
 
             this.sendByPaciente(idPaciente, notificacion);
 
@@ -26,7 +26,7 @@ export class NotificationService {
      * Envia una notificacion de adjunto
      */
     public static solicitudAdjuntos (profesionalId, adjuntoId) {
-        let notificacion = {
+        const notificacion = {
             body: 'Haz click para adjuntar la foto solicitada',
             extraData: {
                 action: 'rup-adjuntar',
@@ -44,9 +44,9 @@ export class NotificationService {
                 if (err) {
                     reject();
                 }
-                let bloque = ag.bloques.id(datosTurno.idBloque);
+                const bloque = ag.bloques.id(datosTurno.idBloque);
                 if (bloque) {
-                    let t = bloque.turnos.id(datosTurno.idTurno);
+                    const t = bloque.turnos.id(datosTurno.idTurno);
                     resolve(t);
                 } else {
                     reject();
@@ -56,7 +56,7 @@ export class NotificationService {
     }
 
     public static sendNotification(account, notification) {
-        let devices = account.devices.map(item => item.device_id);
+        const devices = account.devices.map(item => item.device_id);
         new PushClient().send(devices, notification);
     }
 
@@ -69,7 +69,7 @@ export class NotificationService {
     private static sendByPaciente(pacienteId, notification) {
         pacienteApp.find({ 'pacientes.id': pacienteId }, (err, docs: any[]) => {
             docs.forEach(user => {
-                let devices = user.devices.map(item => item.device_id);
+                const devices = user.devices.map(item => item.device_id);
                 new PushClient().send(devices, notification);
             });
         });
@@ -84,7 +84,7 @@ export class NotificationService {
         id = new mongoose.Types.ObjectId(id);
         pacienteApp.find({ profesionalId: id }, (err, docs: any[]) => {
             docs.forEach(user => {
-                let devices = user.devices.map(item => item.device_id);
+                const devices = user.devices.map(item => item.device_id);
                 new PushClient().send(devices, notification);
             });
         });

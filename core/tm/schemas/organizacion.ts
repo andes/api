@@ -5,7 +5,7 @@ import * as contactoSchema from './contacto';
 import * as tipoEstablecimientoSchema from './tipoEstablecimiento';
 import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
 
-let codigoSchema = new mongoose.Schema({
+const codigoSchema = new mongoose.Schema({
     sisa: {
         type: String,
         required: true
@@ -15,7 +15,7 @@ let codigoSchema = new mongoose.Schema({
     sips: String
 });
 
-let _schema = new mongoose.Schema({
+const _schema = new mongoose.Schema({
     codigo: { type: codigoSchema },
     nombre: String,
     tipoEstablecimiento: { type: tipoEstablecimientoSchema },

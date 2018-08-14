@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
 import * as ubicacionSchema from '../../tm/schemas/ubicacion';
 
-let matchingSchema = new mongoose.Schema({
+const matchingSchema = new mongoose.Schema({
     pacienteOriginal: {
         idPaciente: Number,
         documento: String,
@@ -100,6 +100,6 @@ let matchingSchema = new mongoose.Schema({
     matchNumber: Number
 });
 
-let matching = mongoose.model('matching', matchingSchema, 'matching');
+const matching = mongoose.model('matching', matchingSchema, 'matching');
 
 export = matching;

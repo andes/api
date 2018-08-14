@@ -2,7 +2,7 @@ import * as express from 'express';
 import { ocupacion } from '../schemas/ocupacion';
 
 
-let router = express.Router();
+const router = express.Router();
 
 router.get('/ocupacion', (req, res, next) => {
 

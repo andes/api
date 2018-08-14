@@ -14,7 +14,7 @@ import { toArray } from '../../../utils/utils';
 
 import * as AgendasEstadisticas from '../controller/estadisticas';
 
-let router = express.Router();
+const router = express.Router();
 
 // devuelve los 10 ultimos turnos del paciente
 router.get('/agenda/paciente/:idPaciente', (req, res, next) => {
@@ -41,23 +41,23 @@ router.get('/agenda/candidatas', async (req, res, next) => {
             return next(err);
         }
 
-        let resultado = data as any;
-        let horaAgendaOrig = new Date();
+        const resultado = data as any;
+        const horaAgendaOrig = new Date();
         horaAgendaOrig.setHours(0, 0, 0, 0);
 
-        let indiceBloque = resultado.bloques.findIndex(y => Object.is(req.query.idBloque, String(y._id)));
-        let indiceTurno = resultado.bloques[indiceBloque].turnos.findIndex(y => Object.is(req.query.idTurno, String(y._id)));
-        let bloque = resultado.bloques[indiceBloque];
+        const indiceBloque = resultado.bloques.findIndex(y => Object.is(req.query.idBloque, String(y._id)));
+        const indiceTurno = resultado.bloques[indiceBloque].turnos.findIndex(y => Object.is(req.query.idTurno, String(y._id)));
+        const bloque = resultado.bloques[indiceBloque];
 
         // turno a reasignar
-        let turno = resultado.bloques[indiceBloque].turnos[indiceTurno];
+        const turno = resultado.bloques[indiceBloque].turnos[indiceTurno];
         let estado = [];
         if (turno.tipoTurno && (turno.tipoTurno === 'programado' || turno.tipoTurno === 'delDia')) {
             estado = [{ estado: 'publicada' }];
         } else {
             estado = [{ estado: 'disponible' }, { estado: 'publicada' }];
         }
-        let match = {
+        const match = {
             'organizacion._id': { $eq: mongoose.Types.ObjectId(Auth.getOrganization(req)) }, // Que sean agendas de la misma organizacion
             horaInicio: { $gte: horaAgendaOrig },
             nominalizada: true,
@@ -71,14 +71,14 @@ router.get('/agenda/candidatas', async (req, res, next) => {
             match['bloques.duracionTurno'] = bloque.duracionTurno;
         }
         try {
-            let data1 = await toArray(agenda.aggregate([{ $match: match }]).cursor({}).exec());
+            const data1 = await toArray(agenda.aggregate([{ $match: match }]).cursor({}).exec());
 
-            let out = [];
+            const out = [];
             // Verifico que existe un turno disponible o ya reasignado para el mismo tipo de prestación del turno
             data1.forEach((a, indiceA) => {
                 a.bloques.forEach((b, indiceB) => {
                     b.turnos.forEach((t, indiceT) => {
-                        let horaIni = moment(t.horaInicio).format('HH:mm');
+                        const horaIni = moment(t.horaInicio).format('HH:mm');
                         if (
                             b.tipoPrestaciones.findIndex(x => String(x._id) === String(turno.tipoPrestacion.id)) >= 0
                             &&  // mismo tipo de prestacion
@@ -96,7 +96,7 @@ router.get('/agenda/candidatas', async (req, res, next) => {
                 });
             });
 
-            let sortCandidatas = (a, b) => {
+            const sortCandidatas = (a, b) => {
                 return a.horaInicio - b.horaInicio;
             };
 
@@ -107,8 +107,8 @@ router.get('/agenda/candidatas', async (req, res, next) => {
 });
 
 router.get('/agenda/consultaDiagnostico', async (req, res, next) => {
-    let organizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
-    let params = req.query;
+    const organizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
+    const params = req.query;
     params['organizacion'] = organizacion;
     agendaCtrl.getConsultaDiagnostico(params).then((resultado) => {
         res.json(resultado);
@@ -117,8 +117,8 @@ router.get('/agenda/consultaDiagnostico', async (req, res, next) => {
 });
 
 router.get('/agenda/cantidadConsultaXPrestacion', async (req, res, next) => {
-    let organizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
-    let params = req.query;
+    const organizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
+    const params = req.query;
     params['organizacion'] = organizacion;
     agendaCtrl.getCantidadConsultaXPrestacion(params).then((resultado) => {
         res.json(resultado);
@@ -127,11 +127,11 @@ router.get('/agenda/cantidadConsultaXPrestacion', async (req, res, next) => {
 });
 
 router.get('/agenda/diagnosticos', async (req, res, next) => {
-    let organizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
-    let params = req.query;
+    const organizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
+    const params = req.query;
     params['organizacion'] = organizacion;
     try {
-        let resultado = await diagnosticosCtrl.getDiagnosticos(params);
+        const resultado = await diagnosticosCtrl.getDiagnosticos(params);
         res.json(resultado);
     } catch (err) { return next(err); }
 });
@@ -224,7 +224,7 @@ router.get('/agenda/:id?', (req, res, next) => {
 
         // Si rango es true  se buscan las agendas que se solapen con la actual en algún punto
         if (req.query.rango) {
-            let variable: any[] = [];
+            const variable: any[] = [];
             variable.push({ horaInicio: { $lte: req.query.desde }, horaFin: { $gt: req.query.desde } });
             variable.push({ horaInicio: { $lte: req.query.hasta }, horaFin: { $gt: req.query.hasta } });
             variable.push({ horaInicio: { $gt: req.query.desde, $lte: req.query.hasta } });
@@ -248,7 +248,7 @@ router.get('/agenda/:id?', (req, res, next) => {
 });
 
 router.post('/agenda', (req, res, next) => {
-    let data = new agenda(req.body);
+    const data = new agenda(req.body);
     Auth.audit(data, req);
     data.save((err) => {
         Logger.log(req, 'citas', 'insert', {
@@ -272,9 +272,9 @@ router.post('/agenda', (req, res, next) => {
 
 // Este post recibe el id de la agenda a clonar y un array con las fechas en las cuales se va a clonar
 router.post('/agenda/clonar', (req, res, next) => {
-    let idagenda = req.body.idAgenda;
-    let clones = req.body.clones;
-    let listaSaveAgenda = [];
+    const idagenda = req.body.idAgenda;
+    const clones = req.body.clones;
+    const listaSaveAgenda = [];
 
     if (idagenda) {
         agenda.findById(idagenda, (err, data) => {
@@ -286,7 +286,7 @@ router.post('/agenda/clonar', (req, res, next) => {
                 if (clon) {
                     data._id = mongoose.Types.ObjectId();
                     data.isNew = true;
-                    let nueva: any = new agenda(data.toObject());
+                    const nueva: any = new agenda(data.toObject());
                     nueva['horaInicio'] = agendaCtrl.combinarFechas(clon, new Date(data['horaInicio']));
                     nueva['horaFin'] = agendaCtrl.combinarFechas(clon, new Date(data['horaFin']));
                     nueva['updatedBy'] = undefined;
@@ -376,7 +376,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
 
     // Hubo que agregar un control por si no se tiene el idagenda (en los casos en que el patch se haga desde RUP)
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-        let t = req.body.turnos;
+        const t = req.body.turnos;
         if (t.length > 0) {
             agenda.find({ 'bloques.turnos._id': mongoose.Types.ObjectId(t[0]) }, (err, data) => {
                 if (err) {
@@ -435,7 +435,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                 return next(err);
             }
             // Loopear los turnos, si viene vacío, es porque viene un id solo
-            let turnos = req.body.turnos || [''];
+            const turnos = req.body.turnos || [''];
 
             for (let y = 0; y < turnos.length; y++) {
                 let turno;
@@ -557,7 +557,7 @@ router.get('/integracionCitasHPN', async (req, res, next) => {
 });
 
 router.get('/estadistica', async (req, res, next) => {
-    let stats = await AgendasEstadisticas.estadisticas(req.query);
+    const stats = await AgendasEstadisticas.estadisticas(req.query);
     return res.json(stats);
 });
 

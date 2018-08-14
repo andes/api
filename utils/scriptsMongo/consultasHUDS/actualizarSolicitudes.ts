@@ -16,7 +16,7 @@ import { Connections } from '../../../connections';
  *          Si no hay registros se completa con solicitud.profesional
  */
 
-let Prestacion = require('../../../modules/rup/schemas/prestacion').model;
+const Prestacion = require('../../../modules/rup/schemas/prestacion').model;
 
 Connections.initialize();
 // Ya está abierta?
@@ -24,7 +24,7 @@ Connections.initialize();
     // console.log('Conectado.');
 
     // Instanciamos un cursor
-let cursor = Prestacion.findOne().cursor();
+const cursor = Prestacion.findOne().cursor();
 
 cursor.on('close', () => { // Si no encuentra nada, termina el script.
     process.exit();

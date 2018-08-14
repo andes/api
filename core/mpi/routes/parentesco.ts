@@ -2,7 +2,7 @@ import * as express from 'express';
 import * as parentesco from '../schemas/parentesco';
 import { Auth } from '../../../auth/auth.class';
 
-let router = express.Router();
+const router = express.Router();
 
 /**
  * @swagger

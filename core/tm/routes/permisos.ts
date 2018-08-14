@@ -3,7 +3,7 @@ import permisos from '../../../auth/permisos';
 import { Auth } from '../../../auth/auth.class';
 import * as config from '../../../config.private';
 
-let router = express.Router();
+const router = express.Router();
 
 router.get('/permisos', Auth.authenticate(), (req, res, next) => {
     res.send(permisos);

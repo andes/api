@@ -2,7 +2,7 @@ import * as utils from '../../../utils/utils';
 import * as express from 'express';
 import { tipoPrestacion } from '../schemas/tipoPrestacion';
 
-let router = express.Router();
+const router = express.Router();
 
 router.get('/tiposPrestaciones/:id*?', (req, res, next) => {
     let query;
@@ -23,7 +23,7 @@ router.get('/tiposPrestaciones/:id*?', (req, res, next) => {
             }
         }
         if (req.query.limit) {
-            let limit: number = Number(req.query.limit);
+            const limit: number = Number(req.query.limit);
             query = query.limit(limit);
         }
 

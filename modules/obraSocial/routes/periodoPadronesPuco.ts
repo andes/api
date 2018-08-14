@@ -1,7 +1,7 @@
 import * as express from 'express';
 import { periodoPadronesPuco } from '../schemas/periodoPadronesPuco';
 
-let router = express.Router();
+const router = express.Router();
 
 /**
  * Obtiene los datos de la obra social asociada a un paciente

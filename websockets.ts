@@ -11,8 +11,8 @@ export class Websockets {
      */
     static initialize(server: Server) {
         //     const wss = new ws.Server({ server });
-        let socketIO = require('socket.io');
-        let io = socketIO(server);
+        const socketIO = require('socket.io');
+        const io = socketIO(server);
         // const roomTotal = []
 
 
@@ -25,8 +25,8 @@ export class Websockets {
                     io.dataRooms.forEach(element => {
                         if (io.sockets.adapter.rooms[element.pantalla] === undefined) {
 
-                            let pantallasTotal = io.dataRooms;
-                            let index = pantallasTotal.findIndex(obj => obj.pantalla === element.pantalla);
+                            const pantallasTotal = io.dataRooms;
+                            const index = pantallasTotal.findIndex(obj => obj.pantalla === element.pantalla);
                             if (index !== -1) {
                                 io.dataRooms.splice(index, 1);
                             }
