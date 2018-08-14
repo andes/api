@@ -238,7 +238,7 @@ router.get('/turnos/:tipo/?', (request, response, errorHandler) => {
                     anio: { $year: '$fecha' },
                     mes: { $month: '$fecha' },
                     dia: { $dayOfMonth: '$fecha' },
-                    horaTimeOffset: { $subtract: [ '$fecha', 3 * 60 * 60 * 1000 ] },
+                    horaTimeOffset: { $subtract: ['$fecha', 3 * 60 * 60 * 1000] },
                     minutos: { $minute: '$fecha' }
                 }
             }, {

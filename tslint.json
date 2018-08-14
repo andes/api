@@ -90,6 +90,7 @@
         "object-literal-shorthand": true,
         "no-unused-variable": [true, {"ignore-pattern": "^_"}],
         "only-arrow-functions": [true, "allow-declarations", "allow-named-functions"],
-        "ter-indent": [true, 4, { "SwitchCase": 1}]
+        "ter-indent": [true, 4, { "SwitchCase": 1}],
+        "array-bracket-spacing": [true, { "singleValue": false, "objectsInArrays": false, "arraysInArrays": false }]
     }
 }

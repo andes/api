@@ -201,7 +201,7 @@ export async function estadisticas(filtros) {
                     $divide: [{ $subtract: [
                         '$turno.horaInicio',
                         { $cond:  {
-                            if: {  $eq: [{$type: '$turno.paciente.fechaNacimiento' }, 'string' ]   },
+                            if: {  $eq: [{$type: '$turno.paciente.fechaNacimiento' }, 'string']   },
                             then: { $dateFromString: { dateString: '$turno.paciente.fechaNacimiento' } },
                             else:  '$turno.paciente.fechaNacimiento'
                         } }

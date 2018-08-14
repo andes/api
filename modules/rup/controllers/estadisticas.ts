@@ -84,7 +84,7 @@ export async function dashboard(org, prestaciones, desde, hasta) {
                                 $reduce: {
                                     input: '$relacionado',
                                     initialValue: [],
-                                    in: { $concatArrays: [ '$$value', '$$this' ] }
+                                    in: { $concatArrays: ['$$value', '$$this'] }
                                 }
                             }
                         }
