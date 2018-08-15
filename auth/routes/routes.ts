@@ -144,21 +144,27 @@ router.post('/login', function (req, res, next) {
             )
         ]).then((data: any[]) => {
             // Verifica que el usuario sea valido y que tenga permisos asignados
-            if (!data[0] || data[0].length === 0) {
+            const user = data[0];
+            const prof = data[1];
+            if (!user || user.length === 0) {
                 return next(403);
             }
             if (req.body.mobile) {
-                checkMobile(data[1]._id).then((account: any) => {
-                    // Crea el token con los datos de sesión
-                    res.json({
-                        token: Auth.generateUserToken(data[0], null, [], data[1], account._id),
-                        user: account
+                if (prof && prof._id) {
+                    checkMobile(prof._id).then((account: any) => {
+                        // Crea el token con los datos de sesión
+                        return res.json({
+                            token: Auth.generateUserToken(user, null, [], prof, account._id),
+                            user: account
+                        });
+                    }).catch((e) => {
+                        return next(403);
                     });
-
-                });
+                } else {
+                    return next(403);
+                }
             } else {
                 // Crea el token con los datos de sesión
-
                 res.json({
                     token: Auth.generateUserToken(data[0], null, [], data[1])
                 });
@@ -180,26 +186,31 @@ router.post('/login', function (req, res, next) {
                     especialidad: true
                 }),
         ]).then((data: any[]) => {
+            const user = data[0];
+            const prof = data[1];
             // Verifica que el usuario sea valido y que tenga permisos asignados
-            if (!data[0] || data[0].length === 0) {
+            if (!user || user.length === 0) {
                 return next(403);
             }
-            let nombre = data[0].nombre;
-            let apellido = data[0].apellido;
-            let profesional2 = data[1];
             // Crea el token con los datos de sesión
             if (req.body.mobile) {
-                checkMobile(profesional2._id).then((account: any) => {
-                    // Crea el token con los datos de sesión
-                    res.json({
-                        token: Auth.generateUserToken(data[0], null, [], profesional2, account._id),
-                        user: account
+                if (prof && prof._id) {
+                    checkMobile(prof._id).then((account: any) => {
+                        // Crea el token con los datos de sesión
+                        return res.json({
+                            token: Auth.generateUserToken(user, null, [], prof, account._id),
+                            user: account
+                        });
+                    }).catch(() => {
+                        return next(403);
                     });
-                });
+                } else {
+                    return next(403);
+                }
             } else {
                 // Crea el token con los datos de sesión
                 res.json({
-                    token: Auth.generateUserToken(data[0], null, [], profesional2)
+                    token: Auth.generateUserToken(data[0], null, [], prof)
                 });
             }
         });

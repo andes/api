@@ -70,7 +70,7 @@ router.get('/snomed', function (req, res, next) {
             let words = req.query.search.split(' ');
             words.forEach(function (word) {
                 // normalizamos cada una de las palabras como hace SNOMED para poder buscar palabra a palabra
-                word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08');
+                word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08').replace('ñ', 'n');
                 let expWord = '^' + utils.removeDiacritics(word) + '.*';
 
                 // agregamos la palabra a la condicion

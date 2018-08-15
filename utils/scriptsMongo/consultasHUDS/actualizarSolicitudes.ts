@@ -1,7 +1,3 @@
-import { Matching } from '@andes/match';
-import { Auth } from './../../../auth/auth.class';
-import * as mongoose from 'mongoose';
-import * as configuraciones from './../../../config.private';
 import { Connections } from '../../../connections';
 /**
  *  Sobre este script:

@@ -1,4 +1,5 @@
 import { textIndexModel, snomedModel } from '../schemas/snomed';
+import { makeMongoQuery } from './grammar/parser';
 
 // ID del atributo que genera una relación padre-hijo
 const IsASct = '116680003';
@@ -157,4 +158,19 @@ export async function contextFilter(options) {
     }
 
     return snomedModel.find(conditions);
+}
+
+export async function getConceptByExpression(expression) {
+    let query = makeMongoQuery(expression);
+    snomedModel.find(query, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docs: any[]) => {
+        return docs.map((item) => {
+            let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
+            return {
+                fsn: item.fullySpecifiedName,
+                term: term,
+                conceptId: item.conceptId,
+                semanticTag: item.semtag
+            };
+        });
+    });
 }

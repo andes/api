@@ -92,6 +92,17 @@ export let schema = new mongoose.Schema({
             id: mongoose.Schema.Types.ObjectId,
             nombre: String
         },
+
+        /**
+         *  DESTINO DE SOLICITUD
+         *      a.  Organización: Si no existe se completa con una copia de ejecucion.registros.createdBy.organizacion.
+         *          Si no hay registros se completa con createdBy.organizacion
+         *      
+         *      b.  Profesionales: Si no existe se completa con una copia de solicitud.registros.valor.solicituPrestacion.profesionales.
+         *          Si no hay registros se completa con solicitud.profesional
+         * 
+         */
+
         // Registros de la ejecución
         registros: [registro.schema],
     },
