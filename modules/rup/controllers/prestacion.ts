@@ -1,6 +1,5 @@
 import { model as Prestacion } from '../../rup/schemas/prestacion';
 import * as mongoose from 'mongoose';
-import { ObjectId } from 'bson';
 import { Auth } from '../../../auth/auth.class';
 
 /**
@@ -21,15 +20,15 @@ export function liberarRefTurno(tid, req) {
         }
         if (data1 && data1.solicitud) {
             data1.solicitud.turno = undefined;
-        }
-        Auth.audit(data1, req);
+            Auth.audit(data1, req);
 
-        data1.save(function (error) {
-            if (error) {
-                // console.log('error ', error);
-                return (error);
-            }
-        });
-        return (data1);
+            data1.save(function (error) {
+                if (error) {
+                    return (error);
+                }
+            });
+            return (data1);
+        }
+
     });
 }

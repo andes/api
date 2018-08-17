@@ -84,7 +84,16 @@
 * Renaper - validación de pacientes temporales previamente cargados.
 
 
-
+## [3.6.0] - 2018-08-17
+#### Added
+* RUP- Registro de consulta de niño sano por edades.
+* RUP- Visualización de relaciones.
+* Wizard steps: se muestra la nueva opción de creación de agendas dinámicas.
+#### Fixed
+* Inconsistencia en cambio de estados de agendas durante la auditoría
+* Integracion con Sistemas Legacy - Hospital Neuquen: verifica los tipos de documentos extranjeros
+* Elimina la eeferencia de solicitud al liberar el turno asignado
+* Verificación de pacientes sin obra social en la dación del turno
 
 
 
