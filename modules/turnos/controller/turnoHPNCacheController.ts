@@ -167,7 +167,7 @@ async function updateTurno(id, estado, pool, transaction) {
         idEstado = 50; // Prestación ha sido liberada
     }
     let query = 'UPDATE dbo.Prestaciones_Worklist SET ' +
-        'idEstado=' + idEstado + ' where andesId=' + '\'' + id + '\'';
+        'idEstado=' + idEstado + ' where andesId=\'' + id + '\'' ;
     return await new sql.Request(transaction)
         .query(query)
         .catch(err => {
