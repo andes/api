@@ -10,7 +10,13 @@ export async function saveTurnos(idAgendaAndes, bloque, idTipoPrestacion, pool, 
             (!await (getIdTurnoHPN(turno._id, pool)))) {
             let result = await pacientes.buscarPaciente(turno.paciente.id);
             let paciente = result.paciente;
-            let datosPaciente = paciente.documento ? await pacienteCtrl.getDatosPaciente('DNI', paciente.documento, pool) : null;
+            let doc;
+            if (paciente.documento) {
+                doc = paciente.documento;
+            } else {
+                doc = paciente._id;
+            }
+            let datosPaciente =  await pacienteCtrl.getDatosPaciente('DNI', doc, pool);
             if (!datosPaciente) {
                 datosPaciente = await pacienteCtrl.savePaciente(paciente, transaction);
             }
@@ -28,8 +34,13 @@ export async function saveSobreturno(idAgendaAndes, sobreturno, idTipoPrestacion
         (!await (getIdTurnoHPN(sobreturno._id, pool)))) {
         let result = await pacientes.buscarPaciente(sobreturno.paciente.id);
         let paciente = result.paciente;
-
-        let datosPaciente = paciente.documento ? await pacienteCtrl.getDatosPaciente('DNI', paciente.documento, pool) : null;
+        let doc;
+        if (paciente.documento) {
+            doc = paciente.documento;
+        } else {
+            doc = paciente._id;
+        }
+        let datosPaciente =  await pacienteCtrl.getDatosPaciente('DNI', doc, pool);
         if (!datosPaciente) {
             datosPaciente = await pacienteCtrl.savePaciente(paciente, transaction);
         }
