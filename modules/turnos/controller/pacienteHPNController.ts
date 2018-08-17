@@ -6,7 +6,7 @@ export async function savePaciente(paciente: any, transaction) {
     let fechaUltimoAcceso = fechaCreacion;
     let fechaActualizacion = fechaCreacion;
     let hcTipo = 1;
-    let hcNumero = 'PDR' + paciente.documento;
+    let hcNumero = (paciente.documento) ? 'PDR' + paciente.documento : 'PDR' + paciente._id;
     let tipoDocumento = 'DNI';
     let nroDocumento = (paciente.documento) ? paciente.documento : paciente._id;
     let apellido = paciente.apellido;
