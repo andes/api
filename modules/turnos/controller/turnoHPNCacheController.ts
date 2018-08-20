@@ -10,13 +10,9 @@ export async function saveTurnos(idAgendaAndes, bloque, idTipoPrestacion, pool, 
             (!await (getIdTurnoHPN(turno._id, pool)))) {
             let result = await pacientes.buscarPaciente(turno.paciente.id);
             let paciente = result.paciente;
-            let doc;
-            if (paciente.documento) {
-                doc = paciente.documento;
-            } else {
-                doc = paciente._id;
-            }
-            let datosPaciente =  await pacienteCtrl.getDatosPaciente('DNI', doc, pool);
+
+            let datosPaciente = await pacienteCtrl.getDatosPaciente('DNI', paciente, pool);
+
             if (!datosPaciente) {
                 datosPaciente = await pacienteCtrl.savePaciente(paciente, transaction);
             }
@@ -34,13 +30,8 @@ export async function saveSobreturno(idAgendaAndes, sobreturno, idTipoPrestacion
         (!await (getIdTurnoHPN(sobreturno._id, pool)))) {
         let result = await pacientes.buscarPaciente(sobreturno.paciente.id);
         let paciente = result.paciente;
-        let doc;
-        if (paciente.documento) {
-            doc = paciente.documento;
-        } else {
-            doc = paciente._id;
-        }
-        let datosPaciente =  await pacienteCtrl.getDatosPaciente('DNI', doc, pool);
+
+        let datosPaciente = await pacienteCtrl.getDatosPaciente('DNI', paciente, pool);
         if (!datosPaciente) {
             datosPaciente = await pacienteCtrl.savePaciente(paciente, transaction);
         }
@@ -177,7 +168,7 @@ async function updateTurno(id, estado, pool, transaction) {
         idEstado = 50; // Prestación ha sido liberada
     }
     let query = 'UPDATE dbo.Prestaciones_Worklist SET ' +
-        'idEstado=' + idEstado + ' where andesId=\'' + id + '\'' ;
+        'idEstado=' + idEstado + ' where andesId=\'' + id + '\'';
     return await new sql.Request(transaction)
         .query(query)
         .catch(err => {
