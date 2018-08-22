@@ -11,10 +11,11 @@ export async function saveTurnos(idAgendaAndes, bloque, idTipoPrestacion, pool, 
             let result = await pacientes.buscarPaciente(turno.paciente.id);
             let paciente = result.paciente;
 
-            let datosPaciente = await pacienteCtrl.getDatosPaciente('DNI', paciente, pool);
+            let datosPaciente = await pacienteCtrl.getDatosPaciente('DNI', paciente, transaction);
 
             if (!datosPaciente) {
-                datosPaciente = await pacienteCtrl.savePaciente(paciente, transaction);
+                await pacienteCtrl.savePaciente(paciente, transaction);
+                datosPaciente = await pacienteCtrl.getDatosPaciente('DNI', paciente, transaction);
             }
             await saveTurno(idAgendaAndes, turno, datosPaciente, bloque.duracionTurno, idTipoPrestacion, pool, transaction);
         }
