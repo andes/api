@@ -166,8 +166,13 @@ async function updateTurno(id, estado, pool, transaction) {
     if (estado === constantes.EstadoTurnosAndes.disponible) {
         idEstado = 50; // Prestación ha sido liberada
     }
+<<<<<<< HEAD
     const query = 'UPDATE dbo.Prestaciones_Worklist SET ' +
         'idEstado=' + idEstado + ' where andesId=' + '\'' + id + '\'';
+=======
+    let query = 'UPDATE dbo.Prestaciones_Worklist SET ' +
+        'idEstado=' + idEstado + ' where andesId=\'' + id + '\'' ;
+>>>>>>> 0e0fe52dbb6df89f91456bb0c3cdb591a46a8a8a
     return await new sql.Request(transaction)
         .query(query)
         .catch(err => {

@@ -653,13 +653,12 @@ async function updateAgendaSips(connection, agenda, datosSips: any) {
 }
 
 async function grabaAgendaSips(connection, agendaSips: any, datosSips: any) {
-
     const objectId = agendaSips.id.toString();
     const estado = getEstadoAgendaSips(agendaSips.estado);
     const fecha = moment(agendaSips.horaInicio).format('YYYYMMDD');
     const horaInicio = moment(agendaSips.horaInicio).utcOffset('-03:00').format('HH:mm');
     const horaFin = moment(agendaSips.horaFin).utcOffset('-03:00').format('HH:mm');
-    const duracionTurno = agendaSips.bloques[0].duracionTurno;
+    const duracionTurno = agendaSips.bloques[0].duracionTurno  <= 0 ? 20 : agendaSips.bloques[0].duracionTurno;
 
     const maximoSobreTurnos = 100;
     const porcentajeTurnosDia = 0;

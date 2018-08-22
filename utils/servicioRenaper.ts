@@ -94,7 +94,7 @@ function solicitarServicio(sesion, tipo, filtro) {
                     }
                     const codigoResultado = result2.return.CodResultado['$value'];
                     if (result2.return.Resultado['$value']) {
-                        const resultado = Buffer.from(result2.return.Resultado['$value'], 'base64').toString('ascii');
+                        const resultado = Buffer.from(result2.return.Resultado['$value'], 'base64').toString('utf8');
                         // convertimos a JSON el resultado
                         const resArray = JSON.parse(resultado);
                         resolve({ codigo: codigoResultado, datos: resArray });

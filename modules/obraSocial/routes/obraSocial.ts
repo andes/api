@@ -27,8 +27,10 @@ router.get('/puco/', async (req, res, next) => {
             padron = { $gte: primerDia, $lt: ultimoDia };
         } else {
             padron = await periodoPadronesPuco.find({}).sort({ $natural: 1 }).limit(1);   // ultimo padron
-            padron = new Date(padron[0].version);
-            padron.setHours(-3);    // adaptacion por desfasaje 3hs de registros en mongodb
+            if (padron && padron[0]) {
+                padron = new Date(padron[0].version);
+                padron.setHours(-3);    // adaptacion por desfasaje 3hs de registros en mongodb
+            }
         }
 
         rta = await puco.find({ dni: Number.parseInt(req.query.dni, 2), version: padron }).exec();
@@ -45,7 +47,7 @@ router.get('/puco/', async (req, res, next) => {
             res.json([]);
         }
     } else {
-        res.status(400).json({ msg: 'Parámetros incorrectos' });
+        res.json({ msg: 'Parámetros incorrectos' });
     }
 });
 

@@ -9,7 +9,8 @@ const connection = {
     password: configPrivate.conSqlHPN.auth.password,
     server: configPrivate.conSqlHPN.serverSql.server,
     database: configPrivate.conSqlHPN.serverSql.database,
-    port: configPrivate.conSqlHPN.serverSql.port // solo para test! BORRAR
+    port: configPrivate.conSqlHPN.serverSql.port,
+    requestTimeout: 30000
 };
 
 export async function integracion() {
