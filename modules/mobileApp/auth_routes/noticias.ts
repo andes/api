@@ -2,7 +2,6 @@ import * as moment from 'moment';
 import * as express from 'express';
 import * as Twitter from 'twitter';
 import { TwitterConfig } from '../../../config.private';
-import { ESRCH } from 'constants';
 
 let router = express.Router();
 

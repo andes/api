@@ -1,7 +1,7 @@
-import * as express from 'express'; 
+import * as express from 'express';
 import * as moment from 'moment';
 
-import { farmaciasLocalidades, farmaciasTurnos } from '../schemas/farmacias'; 
+import { farmaciasLocalidades, farmaciasTurnos } from '../schemas/farmacias';
 
 let router = express.Router();
 

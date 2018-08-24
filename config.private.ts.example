@@ -237,6 +237,15 @@ export const conSqlPecas = {
     }
 };
 
+export const sqlCarpetasJob = {
+    user: '',
+    password: '',
+    server: '',
+    database: '',
+    requestTimeout: '',
+    stream: ''
+};
+
 export const TwitterConfig = new {
   consumer_key: '',
   consumer_secret: '',
