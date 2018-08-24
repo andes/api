@@ -2,6 +2,7 @@ import * as moment from 'moment';
 import * as express from 'express';
 import * as Twitter from 'twitter';
 import { TwitterConfig } from '../../../config.private';
+import { ESRCH } from 'constants';
 
 let router = express.Router();
 
@@ -9,7 +10,7 @@ router.get('/noticias/:name', (req, res) => {
     let feedName = req.params.name;
     if (feedName === 'puntosaludable') {
         let client = new Twitter(TwitterConfig);
-        let params = { screen_name: 'SaludableMsNqn', count: 200, tweet_mode: 'extended' };
+        let params = { screen_name: 'PSaludableNqn', count: 200, tweet_mode: 'extended' };
         client.get('statuses/user_timeline', params, function (error, tweets) {
             if (!error) {
                 let feeds = [];
@@ -32,6 +33,9 @@ router.get('/noticias/:name', (req, res) => {
                     }
                 });
                 res.json(feeds);
+            } else {
+                // Para que no de error, entra acá cuando por ejemplo cambian el screen_name
+                res.json(null);
             }
         });
     } else {
