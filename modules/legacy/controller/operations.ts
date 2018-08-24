@@ -10,11 +10,15 @@ import {
 import * as organizacion from './../../../core/tm/schemas/organizacion';
 import * as sql from 'mssql';
 import * as cdaCtr from '../../cda/controller/CDAPatient';
+import {
+    ObjectID,
+    ObjectId
+} from 'bson';
+import { configuracionPrestacionModel } from '../../../core/term/schemas/configuracionPrestacion';
 
 
 
 // Funciones privadas
-
 function traeProfesionalPorId(id) {
     return new Promise((resolve, reject) => {
         profesional.findById(mongoose.Types.ObjectId(id), function (err, unProfesional) {
@@ -54,7 +58,6 @@ function organizacionCompleto(idOrganizacion): any {
 }
 
 // Funciones públicas
-
 export function noExistCDA(protocol, dniPaciente) {
     return new Promise(async function (resolve, reject) {
         try {
@@ -135,11 +138,18 @@ export async function getDetalles(idProtocolo, idEfector) {
 }
 
 
-export async function cacheTurnosSips(unaAgenda) {
+export async function cacheTurnos(unaAgenda) {
     // Armo el DTO para guardar en la cache de agendas
+    // if ((unaAgenda.estado !== 'planificacion') && (unaAgenda.nominalizada) && (unaAgenda.tipoPrestaciones[0].term.includes('odonto')) || integraPrestacionesHPN(unaAgenda)) {
+    let integrar;
+    try {
+        integrar = await integrarAgenda(unaAgenda);
 
-    if ((unaAgenda.estado !== 'planificacion') && (unaAgenda.nominalizada) &&
-        ((unaAgenda.organizacion._id).equals('57fcf037326e73143fb48c3a')) && (unaAgenda.tipoPrestaciones[0].term.includes('odonto'))) {
+    } catch (error) {
+        return error;
+    }
+
+    if (unaAgenda.estado !== 'planificacion' && integrar) {
         let organizacionAgenda;
         if (unaAgenda.organizacion) {
             organizacionAgenda = await organizacionCompleto(unaAgenda.organizacion.id);
@@ -165,7 +175,9 @@ export async function cacheTurnosSips(unaAgenda) {
             id: unaAgenda.id
         };
 
-        agendasCache.find({ id: agenda.id }, function getAgenda(err, data) {
+        agendasCache.find({
+            id: agenda.id
+        }, function getAgenda(err, data) {
             if (err) {
                 return (err);
             }
@@ -182,7 +194,9 @@ export async function cacheTurnosSips(unaAgenda) {
                             estado: unaAgenda.estado,
                             horaInicio: unaAgenda.horaInicio,
                             horaFin: unaAgenda.horaFin,
-                            estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente
+                            estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente,
+                            sobreturnos: unaAgenda.sobreturnos
+
                         }
                     }).exec();
             } else {
@@ -194,5 +208,26 @@ export async function cacheTurnosSips(unaAgenda) {
                 });
             }
         });
+    } else {
+        return true;
+    }
+
+    async function integrarAgenda(_agenda) {
+        return new Promise(function (resolve, reject) {
+            configuracionPrestacionModel.find({
+                'snomed.conceptId': { $eq: _agenda.tipoPrestaciones[0].conceptId },
+                'organizaciones._id': { $eq: _agenda.organizacion._id }
+            }).exec(function (err, data: any) {
+                if (err) {
+                    reject(err);
+                }
+                if (data && data.length > 0) {
+                    resolve(true);
+                } else {
+                    resolve(false);
+                }
+            });
+        });
     }
 }
+

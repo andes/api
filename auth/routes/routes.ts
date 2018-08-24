@@ -27,7 +27,13 @@ router.get('/sesion', Auth.authenticate(), function (req, res) {
  * @get /api/auth/organizaciones
  */
 router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
-    let username = (req as any).user.usuario.username;
+    let username;
+    if (req.query.user) {
+        username = req.query.user;
+    } else {
+        username = (req as any).user.usuario.username;
+    }
+
     authUsers.findOne({ usuario: username }, (err, user: any) => {
         if (err) {
             return next(err);
@@ -36,6 +42,7 @@ router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
             if ((req as any).query.admin) {
                 let shiro = shiroTrie.new();
                 shiro.add(item.permisos);
+
                 if (shiro.check('usuarios:set')) {
                     return mongoose.Types.ObjectId(item._id);
                 } else {
@@ -73,7 +80,7 @@ router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
         if (data[0] && data[1]) {
             let user = data[0];
             let org = data[1];
-            let oldToken: string = req.headers.authorization.substring(4);
+            let oldToken: string = String(req.headers.authorization).substring(4);
             let nuevosPermisos = user.organizaciones.find(item => String(item._id) === String(org._id));
             let refreshToken = Auth.refreshToken(oldToken, user, nuevosPermisos.permisos, org);
             res.send({
@@ -137,21 +144,27 @@ router.post('/login', function (req, res, next) {
             )
         ]).then((data: any[]) => {
             // Verifica que el usuario sea valido y que tenga permisos asignados
-            if (!data[0] || data[0].length === 0) {
+            const user = data[0];
+            const prof = data[1];
+            if (!user || user.length === 0) {
                 return next(403);
             }
             if (req.body.mobile) {
-                checkMobile(data[1]._id).then((account: any) => {
-                    // Crea el token con los datos de sesión
-                    res.json({
-                        token: Auth.generateUserToken(data[0], null, [], data[1], account._id),
-                        user: account
+                if (prof && prof._id) {
+                    checkMobile(prof._id).then((account: any) => {
+                        // Crea el token con los datos de sesión
+                        return res.json({
+                            token: Auth.generateUserToken(user, null, [], prof, account._id),
+                            user: account
+                        });
+                    }).catch((e) => {
+                        return next(403);
                     });
-
-                });
+                } else {
+                    return next(403);
+                }
             } else {
                 // Crea el token con los datos de sesión
-
                 res.json({
                     token: Auth.generateUserToken(data[0], null, [], data[1])
                 });
@@ -173,26 +186,31 @@ router.post('/login', function (req, res, next) {
                     especialidad: true
                 }),
         ]).then((data: any[]) => {
+            const user = data[0];
+            const prof = data[1];
             // Verifica que el usuario sea valido y que tenga permisos asignados
-            if (!data[0] || data[0].length === 0) {
+            if (!user || user.length === 0) {
                 return next(403);
             }
-            let nombre = data[0].nombre;
-            let apellido = data[0].apellido;
-            let profesional2 = data[1];
             // Crea el token con los datos de sesión
             if (req.body.mobile) {
-                checkMobile(profesional2._id).then((account: any) => {
-                    // Crea el token con los datos de sesión
-                    res.json({
-                        token: Auth.generateUserToken(data[0], null, [], profesional2, account._id),
-                        user: account
+                if (prof && prof._id) {
+                    checkMobile(prof._id).then((account: any) => {
+                        // Crea el token con los datos de sesión
+                        return res.json({
+                            token: Auth.generateUserToken(user, null, [], prof, account._id),
+                            user: account
+                        });
+                    }).catch(() => {
+                        return next(403);
                     });
-                });
+                } else {
+                    return next(403);
+                }
             } else {
                 // Crea el token con los datos de sesión
                 res.json({
-                    token: Auth.generateUserToken(data[0], null, [], profesional2)
+                    token: Auth.generateUserToken(data[0], null, [], prof)
                 });
             }
         });

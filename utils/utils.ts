@@ -3,9 +3,11 @@
  *
  * @export
  * @param {string} search_string Search string
+ * @param {object} options Opciones de configuracion
+ * @param {boolean} options.startWith La palabra debe comenzar con la expression dada
  * @returns {RegExp}
  */
-export function makePattern(search_string: string): RegExp {
+export function makePattern(search_string: string, options?: any ): RegExp {
     var accented = {
         'A': '[Aa\xaa\xc0-\xc5\xe0-\xe5\u0100-\u0105\u01cd\u01ce\u0200-\u0203\u0226\u0227\u1d2c\u1d43\u1e00\u1e01\u1e9a\u1ea0-\u1ea3\u2090\u2100\u2101\u213b\u249c\u24b6\u24d0\u3371-\u3374\u3380-\u3384\u3388\u3389\u33a9-\u33af\u33c2\u33ca\u33df\u33ff\uff21\uff41]',
         'B': '[Bb\u1d2e\u1d47\u1e02-\u1e07\u212c\u249d\u24b7\u24d1\u3374\u3385-\u3387\u33c3\u33c8\u33d4\u33dd\uff22\uff42]',
@@ -36,7 +38,7 @@ export function makePattern(search_string: string): RegExp {
     };
 
     // escape meta characters
-    search_string = search_string.replace(/([|()[{.+*?^$\\])/g, '\\$1');
+    search_string = search_string.trim().replace(/([|()[{.+*?^$\\])/g, '\\$1');
 
     // split into words
     var words = search_string.split(/\s+/);
@@ -57,6 +59,9 @@ export function makePattern(search_string: string): RegExp {
 
     // join as alternatives
     var regexp = words.join('|');
+    if (options && options.startWith) {
+        regexp = `(^(${regexp})|(\ (${regexp})))`;
+    }
     return new RegExp(regexp, 'g');
 }
 
@@ -82,7 +87,8 @@ export function removeDiacritics(str: string): string {
         { 'base': 'j', 'letters': /[\u0135]/g },
         { 'base': 'k', 'letters': /[\u0137\u0138]/g },
         { 'base': 'l', 'letters': /[\u013A\u013C\u013E\u0140\u0142]/g },
-        { 'base': 'n', 'letters': /[\u00F1\u0144\u0146\u0148\u0149\u014B]/g },
+        { 'base': 'n', 'letters': /[\u0144\u0146\u0148\u0149\u014B]/g },
+        { 'base': 'ñ', 'letters': /[\u00F1]/g },
         { 'base': 'o', 'letters': /[\u00F2\u00F3\u00F4\u00F5\u00F6\u014D\u014F\u0151\u01A1\u01D2\u01FF]/g },
         { 'base': 'oe', 'letters': /[\u0153]/g },
         { 'base': 'r', 'letters': /[\u0155\u0157\u0159]/g },
@@ -104,7 +110,8 @@ export function removeDiacritics(str: string): string {
         { 'base': 'J', 'letters': /[\u0134]/g },
         { 'base': 'K', 'letters': /[\u0136]/g },
         { 'base': 'L', 'letters': /[\u0139\u013B\u013D\u013F\u0141]/g },
-        { 'base': 'N', 'letters': /[\u00D1\u0143\u0145\u0147\u0149\u014A]/g },
+        { 'base': 'N', 'letters': /[\u0143\u0145\u0147\u0149\u014A]/g },
+        { 'base': 'Ñ', 'letters': /[\u00D1]/g },
         { 'base': 'O', 'letters': /[\u00D2\u00D3\u00D4\u00D5\u00D6\u014C\u014E\u0150\u01A0\u01D1]/g },
         { 'base': 'OE', 'letters': /[\u0152]/g },
         { 'base': 'R', 'letters': /[\u0154\u0156\u0158]/g },
@@ -147,9 +154,9 @@ export function removeDiacritics(str: string): string {
     return str;
 }
 
- /*
- * Converts mongo cursor to array
- */
+/*
+* Converts mongo cursor to array
+*/
 
 export let toArray = (stream): Promise<any[]> => {
     let array = [];
@@ -191,10 +198,10 @@ export function xmlToJson(xmlString) {
             for (var i = 0; i < xml.childNodes.length; i++) {
                 var item = xml.childNodes.item(i);
                 var nodeName = item.nodeName;
-                if (typeof(obj[nodeName]) === 'undefined') {
+                if (typeof (obj[nodeName]) === 'undefined') {
                     obj[nodeName] = _xmlToJson(item);
                 } else {
-                    if (typeof(obj[nodeName].push) === 'undefined') {
+                    if (typeof (obj[nodeName].push) === 'undefined') {
                         var old = obj[nodeName];
                         obj[nodeName] = [];
                         obj[nodeName].push(old);

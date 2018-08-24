@@ -57,8 +57,13 @@ let schema = new mongoose.Schema({
     nominalizada: {
         type: Boolean,
         default: true
-    }
-
+    },
+    // Una agenda dinamica no tiene turnos predefinidos, estos se van agregando como en una estructura FIFO.
+    dinamica: {
+        type: Boolean,
+        default: false
+    },
+    cupo: Number
 }, { versionKey: false });
 
 // Defino Virtuals
@@ -125,7 +130,8 @@ schema.virtual('estadosAgendas').get(function () {
 // Validaciones
 schema.pre('save', function (next) {
     // Intercalar
-    if (!/true|false/i.test(this.intercalar)) {
+    let agenda: any = this;
+    if (!/true|false/i.test(agenda.intercalar)) {
         return next(new Error('invalido'));
         // TODO: loopear bloques y definir si horaInicio/Fin son required
         // TODO: si pacientesSimultaneos, tiene que haber cantidadSimultaneos (> 0)

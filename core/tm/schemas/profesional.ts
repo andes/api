@@ -8,7 +8,7 @@ import * as paisSchema from './pais';
 import * as profesionSchema from './profesion';
 import { ObjSIISASchema } from './siisa';
 import * as moment from 'moment';
-mongoose.plugin(schema => { schema.options.usePushEach = true });
+mongoose.plugin(schema => { schema.options.usePushEach = true; });
 let matriculacionSchema = new mongoose.Schema({
     matriculaNumero: { type: Number, required: false },
     libro: { type: String, required: false },

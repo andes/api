@@ -17,7 +17,7 @@ router.post('/turnoSolicitados', function (req, res, next) {
     // // // if (!Auth.check(req, 'matriculaciones:profesional:postProfesional')) {
     // // //     return next(403);
     // // // }
-    console.log(req.body)
+    console.log(req.body);
                 if (req.body.id) {
                     turnoSolicitado.findByIdAndUpdate(req.body.id, req.body, { new: true }, function (err, data) {
                          if (err) {

@@ -2,17 +2,10 @@
  * Schema definido en profesionalMeta.ts
  */
 
-import { log } from './../../../core/log/schemas/log';
 import * as express from 'express';
-import * as moment from 'moment';
-import * as mongoose from 'mongoose';
-// import * as async from 'async';
-import { Auth } from './../../../auth/auth.class';
-import { profesional } from './../../../core/tm/schemas/profesional';
 import { profesionalMeta } from './../schemas/profesionalMeta';
 
 let router = express.Router();
-let async = require('async');
 
 router.get('/frecuentesProfesional/:id', function (req, res, next) {
     if (req.params.id) {

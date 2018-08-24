@@ -97,6 +97,12 @@ export const modules = {
         route: '/modules/mobileApp',
         middleware: mobileMiddleware
     },
+    turnero: {
+        active: true,
+        path: './modules/turnero/routes',
+        route: '/modules/turnero',
+        middleware: null
+    },
     fuentesAutenticas: {
         active: true,
         path: './modules/fuentesAutenticas/routes',
@@ -133,10 +139,28 @@ export const modules = {
         route: '/modules/descargas',
         middleware: appMiddleware
     },
-    arancelamiento: {
+    obraSocial: {
         active: true,
-        path: './modules/arancelamiento/routes',
-        route: '/modules/arancelamiento',
+        path: './modules/obraSocial/routes',
+        route: '/modules/obraSocial',
+        middleware: appMiddleware
+    },
+    sugerencias: {
+        active: true,
+        path: './modules/sugerencias/routes',
+        route: '/modules/sugerencias',
+        middleware: appMiddleware
+    },
+    prestamosCarpetas: {
+        active: true,
+        path: './modules/prestamosCarpetas/routes',
+        route: '/modules/prestamosCarpetas',
+        middleware: appMiddleware
+    },
+    carpetas: {
+        active: true,
+        path: './modules/carpetas/routes',
+        route: '/modules/carpetas',
         middleware: appMiddleware
     }
 };
@@ -175,5 +199,11 @@ export const mpi = {
         name: 0.3,
         gender: 0.1,
         birthDate: 0.3
+    },
+    weightsFaAnses: {
+        identity: 0.1,
+        name: 0.45,
+        gender: 0.3,
+        birthDate: 0.15
     }
 };

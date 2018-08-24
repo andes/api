@@ -11,9 +11,11 @@ let router = express.Router();
  * /snomed:
  *   get:
  *     tags:
- *       - Terminología
+ *       - "snomed"
  *     description: Una info
  *     summary: Búsqueda de conceptos de SNOMED
+ *     security:
+ *       - JWT: []
  *     consumes:
  *       - application/json
  *     produces:
@@ -44,6 +46,7 @@ let router = express.Router();
  *         type: integer
  *         default: 0
  */
+
 router.get('/snomed', function (req, res, next) {
     if (!req.query.search && !req.query.refsetId && req.query.search !== '') {
         return next('Debe ingresar un parámetro de búsqueda');
@@ -67,7 +70,7 @@ router.get('/snomed', function (req, res, next) {
             let words = req.query.search.split(' ');
             words.forEach(function (word) {
                 // normalizamos cada una de las palabras como hace SNOMED para poder buscar palabra a palabra
-                word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08');
+                word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08').replace('ñ', 'n');
                 let expWord = '^' + utils.removeDiacritics(word) + '.*';
 
                 // agregamos la palabra a la condicion

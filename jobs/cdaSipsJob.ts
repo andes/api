@@ -1,12 +1,13 @@
 import * as labsImport from '../modules/cda/controller/import-labs';
-import { paciente as Paciente, pacienteMpi as PacienteMPI} from '../core/mpi/schemas/paciente';
-import * as moment from 'moment';
-import { Logger } from '../utils/logService';
+import { pacienteMpi as PacienteMPI} from '../core/mpi/schemas/paciente';
 import { log } from '../core/log/schemas/log';
-import * as config from '../config.private';
 import * as debug from 'debug';
-import * as mongoose from 'mongoose';
 import { pacienteApp as PacienteApp } from '../modules/mobileApp/schemas/pacienteApp';
+
+/**
+ * Es proceso esta hecho para ejecutarse manual.
+ */
+
 
 function run() {
     let logger = debug('cdaSipsJob');
@@ -18,25 +19,27 @@ function run() {
         let skip = 0;
         let limit = 4;
 
-        if (docs.length) {
-            let l: any = docs[0];
-            if (l.datosOperacion.status === 'end') {
-                return;
-            }
-            skip = l.datosOperacion.skip + limit;
-        }
+        // if (docs.length) {
+        //     let l: any = docs[0];
+        //     if (l.datosOperacion.status === 'end') {
+        //         return;
+        //     }
+        //     skip = l.datosOperacion.skip + limit;
+        // }
 
         PacienteApp.find({
             activacionApp: true
         }).then((cuentas) => {
+            // let ids = [ mongoose.Types.ObjectId('586e6e8627d3107fde116357') ];
             let ids = [];
             cuentas.forEach((c: any) => {
                 if (c.pacientes && c.pacientes[0] && c.pacientes[0].id) {
                     ids.push(c.pacientes[0].id);
                 }
             });
+            // let _stream = Paciente.find({ estado: 'validado' }, {nombre: 1, apellido: 1, fechaNacimiento: 1, documento: 1, sexo: 1});
 
-            let _stream = PacienteMPI.find({ _id:  { $in: ids }}, {nombre: 1, apellido: 1, fechaNacimiento: 1, documento: 1, sexo: 1}).skip(skip).limit(limit);
+            let _stream = PacienteMPI.find({ _id:  { $in: ids }}, {nombre: 1, apellido: 1, fechaNacimiento: 1, documento: 1, sexo: 1}); // .skip(skip).limit(limit);
             _stream.then( async (pacientes: any[]) => {
 
                 logger('Start with skip=' + skip);
@@ -48,11 +51,11 @@ function run() {
                 }
                 logger('Stop  with skip=' + skip);
 
-                if (pacientes.length) {
-                    Logger.log(config.userScheduler, 'scheduler', 'cda', { limit, skip });
-                } else {
-                    Logger.log(config.userScheduler, 'scheduler', 'cda', { limit, skip, status: 'end' });
-                }
+                // if (pacientes.length) {
+                //     Logger.log(config.userScheduler, 'scheduler', 'cda', { limit, skip });
+                // } else {
+                //     Logger.log(config.userScheduler, 'scheduler', 'cda', { limit, skip, status: 'end' });
+                // }
 
 
             });

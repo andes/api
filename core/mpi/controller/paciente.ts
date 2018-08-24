@@ -92,7 +92,7 @@ export async function updateTurnosPaciente(pacienteModified) {
             horaInicio: moment(new Date()).startOf('day').toDate() as any
         }
     };
-    let turnos: any = await turnosController.getTurno(req);
+    let turnos: any = await turnosController.getHistorialPaciente(req);
     if (turnos.length > 0) {
         turnos.forEach(element => {
             try {
@@ -281,7 +281,8 @@ export function matching(data) {
                     multi_match: {
                         query: data.cadenaInput,
                         type: 'cross_fields',
-                        fields: ['documento^5', 'nombre', 'apellido^3'],
+                        fields: ['documento', 'apellido^5', 'nombre^4'],
+                        operator: 'and'
                     }
                 };
             }
@@ -510,6 +511,35 @@ export function updateFotoMobile(req, data) {
 export function updateScan(req, data) {
     data.markModified('scan');
     data.scan = req.body.scan;
+}
+
+export function updateCuil(req, data) {
+    data.markModified('cuil');
+    data.cuil = req.body.cuil;
+}
+
+export function checkCarpeta(req, data) {
+    return new Promise((resolve, reject) => {
+        let indiceCarpeta = req.body.carpetaEfectores.findIndex(x => x.organizacion._id === req.user.organizacion.id);
+        if (indiceCarpeta > -1) {
+            let query = {
+                carpetaEfectores: {
+                    $elemMatch: {
+                        'nroCarpeta': req.body.carpetaEfectores[indiceCarpeta].nroCarpeta,
+                        'organizacion._id': req.body.carpetaEfectores[indiceCarpeta].organizacion._id
+                    }
+                }
+            };
+            paciente.find(query, function (err, res) {
+                if (err) {
+                    reject(err);
+                }
+                resolve((res && res.length > 0));
+            });
+        } else {
+            resolve(false);
+        }
+    });
 }
 
 /* Hasta acá funciones del PATCH */

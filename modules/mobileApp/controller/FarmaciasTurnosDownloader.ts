@@ -1,4 +1,6 @@
 import { farmaciasEndpoints } from '../../../config.private';
+import * as https from 'https';
+import * as configPrivate from '../../../config.private';
 
 let request = require('request');
 let cheerio = require('cheerio');
@@ -6,46 +8,123 @@ let moment = require('moment');
 
 import { farmaciasLocalidades, farmaciasTurnos } from '../schemas/farmacias';
 
-export function donwloadData(desde, hasta) {
-    getLocalidades().then((data: any) => {
-        let localidades = data.localidades;
-        farmaciasLocalidades.remove({}, function (err) {
+export async function findAddress(localidad, farmacia) {
+    let data: any = await farmaciasTurnos.find({
+        nombre: farmacia.nombre,
+        direccion: farmacia.direccion,
+        fecha: {$exists: false}
+    }).limit(1);
 
-            localidades.forEach(item => {
+    if (data.length) {
+        return Promise.resolve({
+            lat: data[0].latitud,
+            lng: data[0].longitud
+        });
+    } else {
+        let geo: any =  await geocodeFarmacia(farmacia, localidad);
 
-                let f = new farmaciasLocalidades({
-                    localidadId: item.id,
-                    nombre: item.nombre
-                }).save();
-
-                let desdeD = moment(desde, 'YYYY-MM-DD').toDate();
-                let hastaD = moment(hasta, 'YYYY-MM-DD').toDate();
-                farmaciasTurnos.remove({ fecha: { '$gte': desdeD, '$lte': hastaD } }, function () {
-
-                    getTurnos(data, item.id, desde, hasta).then((_data: any[]) => {
-                        _data.forEach(turno => {
-                            try {
-                                let t = new farmaciasTurnos({
-                                    nombre: turno.nombre,
-                                    direccion: turno.direccion,
-                                    telefono: turno.telefono ? turno.telefono : '',
-                                    fecha: moment(turno.fecha, 'YYYY-MM-DD').toDate(),
-                                    localidad: item.id
-                                });
-                                t.save();
-                            } catch (e) {
-
-                            }
-
-                        });
-                    });
-                });
-
-
-            });
-
+        let t = new farmaciasTurnos({
+            nombre: farmacia.nombre,
+            direccion: farmacia.direccion,
+            telefono: farmacia.telefono ? farmacia.telefono : '',
+            localidad: String(localidad.id),
+            latitud: geo.lat,
+            longitud: geo.lng
         });
 
+        let saved = await t.save();
+
+        return geo;
+
+    }
+
+}
+
+export function geocodeFarmacia(farmacia, localidad) {
+    return new Promise((resolve, reject) => {
+
+        let address = farmacia.direccion + ',' + localidad.nombre;
+        let pathGoogleApi = '';
+        let jsonGoogle = '';
+
+        pathGoogleApi = '/maps/api/geocode/json?address=' + address + ', ' + 'AR' + '&key=' + configPrivate.geoKey;
+
+        pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
+        pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
+        pathGoogleApi = pathGoogleApi.replace(/é/gi, 'e');
+        pathGoogleApi = pathGoogleApi.replace(/í/gi, 'i');
+        pathGoogleApi = pathGoogleApi.replace(/ó/gi, 'o');
+        pathGoogleApi = pathGoogleApi.replace(/ú/gi, 'u');
+        pathGoogleApi = pathGoogleApi.replace(/ü/gi, 'u');
+        pathGoogleApi = pathGoogleApi.replace(/ñ/gi, 'n');
+
+        let optionsgetmsg = {
+            host: 'maps.googleapis.com',
+            port: 443,
+            path: pathGoogleApi,
+            method: 'GET',
+            rejectUnauthorized: false
+        };
+        let reqGet = https.request(optionsgetmsg, function (res2) {
+            res2.on('data', function (d, error) {
+                jsonGoogle = jsonGoogle + d.toString();
+            });
+            res2.on('end', function () {
+                let salida = JSON.parse(jsonGoogle);
+                if (salida.status === 'OK') {
+                    return resolve(salida.results[0].geometry.location);
+                } else {
+                    return resolve({});
+                }
+            });
+        });
+        reqGet.end();
+    });
+}
+
+export function donwloadData(desde, hasta) {
+    return getLocalidades().then( async (data: any) => {
+        let localidades = data.localidades;
+        await farmaciasLocalidades.remove({});
+
+        await farmaciasTurnos.remove({ fecha: {$exists: true} });
+
+        for (let item of localidades) {
+            let f = await (new farmaciasLocalidades({
+                localidadId: item.id,
+                nombre: String(item.nombre)
+            })).save();
+
+            let _data: any = await getTurnos(data, item.id, desde, hasta);
+
+            for (let turno of _data) {
+                try {
+
+                    let geocode: any = await findAddress(item, {
+                        nombre: turno.nombre,
+                        direccion: turno.direccion
+                    });
+
+                    let t = new farmaciasTurnos({
+                        nombre: turno.nombre,
+                        direccion: turno.direccion,
+                        telefono: turno.telefono ? turno.telefono : '',
+                        fecha: moment(turno.fecha, 'YYYY-MM-DD').toDate(),
+                        localidad: String(item.id),
+                        latitud: geocode.lat,
+                        longitud: geocode.lng
+                    });
+
+                    await t.save();
+
+
+                } catch (e) {
+
+                }
+
+            }
+        }
+        return Promise.resolve();
     }).catch(() => false);
 }
 
@@ -109,43 +188,43 @@ export function getTurnos(data, localidad, desde, hasta) {
                     ctl00$ContentPlaceHolder1$TxtHasta: hasta.format('DD/MM/YYYY'),
                     ctl00$ContentPlaceHolder1$BtnConsultar: 'Consultar'
                 }
-            },
+        },
 
-        function (error, response, html) {
-            if (!error) {
-                let $ = cheerio.load(html);
-                let hijos = $('#download-container').children().slice(2);
+            function (error, response, html) {
+                if (!error) {
+                    let $ = cheerio.load(html);
+                    let hijos = $('#download-container').children().slice(2);
 
 
 
-                let datos = {};
-                let fecha = null;
-                let farmacias = [];
-                $(hijos).each(function (i, elem) {
-                    if (elem.name === 'br') {
-                        // continue;
-                    } else {
-                        if ($(elem).attr('class') && $(elem).attr('class').indexOf('title-turno') > -1) {
-                            fecha = moment($(elem).text().substr(-10, 10), 'DD/MM/YYYY').format('YYYY-MM-DD');
-                        } else if (elem.name === 'div') {
-                            let $els = $(elem).children();
-                            let nombre = $($els[0]).text();
-                            let direccion = $($els[1]).text();
-                            let phone = $($els[2]).text();
-                            farmacias.push({
-                                fecha,
-                                nombre,
-                                direccion,
-                                telefono: phone
-                            });
+                    let datos = {};
+                    let fecha = null;
+                    let farmacias = [];
+                    $(hijos).each(function (i, elem) {
+                        if (elem.name === 'br') {
+                            // continue;
+                        } else {
+                            if ($(elem).attr('class') && $(elem).attr('class').indexOf('title-turno') > -1) {
+                                fecha = moment($(elem).text().substr(-10, 10), 'DD/MM/YYYY').format('YYYY-MM-DD');
+                            } else if (elem.name === 'div') {
+                                let $els = $(elem).children();
+                                let nombre = $($els[0]).text();
+                                let direccion = $($els[1]).text();
+                                let phone = $($els[2]).text();
+                                farmacias.push({
+                                    fecha,
+                                    nombre,
+                                    direccion,
+                                    telefono: phone
+                                });
+                            }
                         }
-                    }
 
-                });
-                resolve(farmacias);
-            } else {
-                reject(error);
-            }
-        });
+                    });
+                    resolve(farmacias);
+                } else {
+                    reject(error);
+                }
+            });
     });
 }

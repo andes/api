@@ -1,13 +1,14 @@
 import { SnomedCIE10Mapping } from './../../../core/term/controller/mapping';
 import * as cie10 from './../../../core/term/schemas/cie10';
-import { log } from './../../../core/log/schemas/log';
 import * as agendaModel from '../../turnos/schemas/agenda';
 import * as moment from 'moment';
 import { Auth } from '../../../auth/auth.class';
 import { userScheduler } from '../../../config.private';
 import { Logger } from '../../../utils/logService';
-import { load } from 'google-maps';
 import { model as Prestacion } from '../../rup/schemas/prestacion';
+import * as request from 'request';
+import * as mongoose from 'mongoose';
+import { toArray } from '../../../utils/utils';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -63,43 +64,52 @@ export function quitarTurnoDoble(req, data, tid = null) {
 // Turno
 export function liberarTurno(req, data, turno) {
     let position = getPosition(req, data, turno._id);
-    turno.estado = 'disponible';
-    turno.paciente = null;
-    turno.tipoPrestacion = null;
-    turno.nota = null;
-    turno.confirmedAt = null;
-    turno.updatedAt = new Date();
-    turno.updatedBy = req.user.usuario || req.user;
+    if (!data.dinamica) {
+        turno.estado = 'disponible';
+        turno.paciente = null;
+        turno.tipoPrestacion = null;
+        turno.nota = null;
+        turno.confirmedAt = null;
+        turno.updatedAt = new Date();
+        turno.updatedBy = req.user.usuario || req.user;
 
-    let cant = 1;
+        let cant = 1;
 
-    let turnoDoble = getTurnoSiguiente(req, data, turno._id);
-    if (turnoDoble) {
-        cant = cant + 1;
-        turnoDoble.estado = 'disponible';
-        turnoDoble.updatedAt = new Date();
-        turnoDoble.updatedBy = req.user.usuario || req.user;
-    }
+        let turnoDoble = getTurnoSiguiente(req, data, turno._id);
+        if (turnoDoble) {
+            cant = cant + 1;
+            turnoDoble.estado = 'disponible';
+            turnoDoble.updatedAt = new Date();
+            turnoDoble.updatedBy = req.user.usuario || req.user;
+        }
 
-    switch (turno.tipoTurno) {
-        case ('delDia'):
-            data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia + cant;
-            data.bloques[position.indexBloque].restantesProgramados = 0;
-            data.bloques[position.indexBloque].restantesProfesional = 0;
-            data.bloques[position.indexBloque].restantesGestion = 0;
-            break;
-        case ('programado'):
-            data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
-            break;
-        case ('profesional'):
-            data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional + cant;
-            break;
-        case ('gestion'):
-            data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion + cant;
-            break;
-    }
-    if (turno.tipoTurno) {
-        turno.tipoTurno = undefined;
+        switch (turno.tipoTurno) {
+            case ('delDia'):
+                data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia + cant;
+                data.bloques[position.indexBloque].restantesProgramados = 0;
+                data.bloques[position.indexBloque].restantesProfesional = 0;
+                data.bloques[position.indexBloque].restantesGestion = 0;
+                break;
+            case ('programado'):
+                data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
+                break;
+            case ('profesional'):
+                data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional + cant;
+                break;
+            case ('gestion'):
+                data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion + cant;
+                break;
+        }
+        if (turno.tipoTurno) {
+            turno.tipoTurno = undefined;
+        }
+    } else {
+        if (data.cupo > -1) {
+            data.cupo++;
+        }
+        let newTurnos = data.bloques[position.indexBloque].turnos;
+        newTurnos.splice(position.indexTurno, 1);
+        data.bloques[position.indexBloque].turnos = newTurnos;
     }
 }
 
@@ -167,10 +177,10 @@ export function codificarTurno(req, data, tid) {
             }
             let arrPrestacion = data1 as any;
             let codificaciones = [];
-            let promises = [];
+            // let promises = [];
             if (arrPrestacion.length > 0 && arrPrestacion[0].ejecucion) {
                 let prestaciones = arrPrestacion[0].ejecucion.registros.filter(f => {
-                    return f.concepto.semanticTag === 'hallazgo' || f.concepto.semanticTag === 'trastorno' || f.concepto.semanticTag === 'situacion';
+                    return f.concepto.semanticTag !== 'elemento de registro';
                 });
                 prestaciones.forEach(registro => {
                     let parametros = {
@@ -180,39 +190,101 @@ export function codificarTurno(req, data, tid) {
                     };
                     let map = new SnomedCIE10Mapping(parametros.paciente, parametros.secondaryConcepts);
                     map.transform(parametros.conceptId).then(target => {
-                        // Buscar en cie10 los primeros 5 digitos
-                        cie10.model.findOne({ codigo: (target as String).substring(0, 5) }).then(cie => {
-                            if (cie != null) {
-                                if (registro.esDiagnosticoPrincipal) {
-                                    codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del array
-                                        codificacionProfesional: {
-                                            causa: (cie as any).causa,
-                                            subcausa: (cie as any).subcausa,
-                                            codigo: (cie as any).codigo,
-                                            nombre: (cie as any).nombre,
-                                            sinonimo: (cie as any).sinonimo,
-                                            c2: (cie as any).c2,
-                                        },
-                                        primeraVez: registro.esPrimeraVez,
-                                    });
 
+                        if (target) {
+                            // Buscar en cie10 los primeros 5 digitos
+                            cie10.model.findOne({ codigo: (target as String).substring(0, 5) }).then(cie => {
+                                if (cie != null) {
+                                    if (registro.esDiagnosticoPrincipal) {
+                                        codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del array
+                                            codificacionProfesional: {
+                                                snomed: {
+                                                    conceptId: registro.concepto.conceptId,
+                                                    term: registro.concepto.term,
+                                                    fsn: registro.concepto.fsn,
+                                                    semanticTag: registro.concepto.semanticTag,
+                                                    refsetIds: registro.concepto.refsetIds
+                                                },
+                                                cie10: {
+                                                    causa: (cie as any).causa,
+                                                    subcausa: (cie as any).subcausa,
+                                                    codigo: (cie as any).codigo,
+                                                    nombre: (cie as any).nombre,
+                                                    sinonimo: (cie as any).sinonimo,
+                                                    c2: (cie as any).c2,
+                                                }
+                                            },
+                                            primeraVez: registro.esPrimeraVez,
+                                        });
+
+                                    } else {
+                                        codificaciones.push({
+                                            codificacionProfesional: {
+                                                snomed: {
+                                                    conceptId: registro.concepto.conceptId,
+                                                    term: registro.concepto.term,
+                                                    fsn: registro.concepto.fsn,
+                                                    semanticTag: registro.concepto.semanticTag,
+                                                    refsetIds: registro.concepto.refsetIds
+                                                },
+                                                cie10: {
+                                                    causa: (cie as any).causa,
+                                                    subcausa: (cie as any).subcausa,
+                                                    codigo: (cie as any).codigo,
+                                                    nombre: (cie as any).nombre,
+                                                    sinonimo: (cie as any).sinonimo,
+                                                    c2: (cie as any).c2,
+                                                }
+                                            },
+                                            primeraVez: registro.esPrimeraVez
+                                        });
+                                    }
                                 } else {
                                     codificaciones.push({
                                         codificacionProfesional: {
-                                            causa: (cie as any).causa,
-                                            subcausa: (cie as any).subcausa,
-                                            codigo: (cie as any).codigo,
-                                            nombre: (cie as any).nombre,
-                                            sinonimo: (cie as any).sinonimo,
-                                            c2: (cie as any).c2,
+                                            snomed: {
+                                                conceptId: registro.concepto.conceptId,
+                                                term: registro.concepto.term,
+                                                fsn: registro.concepto.fsn,
+                                                semanticTag: registro.concepto.semanticTag,
+                                                refsetIds: registro.concepto.refsetIds
+                                            },
+                                            cie10: {
+                                                codigo: 'Mapeo no disponible'
+                                            }
                                         },
-                                        // primeraVez: registro.esPrimeraVez
+                                        primeraVez: registro.esPrimeraVez
                                     });
                                 }
-                            } else {
-                                // Todo: En el caso en q no mapea, logearlo
-                                codificaciones.push({});
-                            }
+                                if (prestaciones.length === codificaciones.length) {
+                                    // console.log('codificaciones ', codificaciones);
+                                    turno.diagnostico = {
+                                        ilegible: false,
+                                        codificaciones: codificaciones.filter(cod => Object.keys(cod).length > 0)
+                                    };
+                                    turno.asistencia = 'asistio';
+                                    resolve(data);
+                                }
+
+                            }).catch(err1 => {
+                                reject(err1);
+                            });
+                        } else {
+                            codificaciones.push({
+                                codificacionProfesional: {
+                                    snomed: {
+                                        conceptId: registro.concepto.conceptId,
+                                        term: registro.concepto.term,
+                                        fsn: registro.concepto.fsn,
+                                        semanticTag: registro.concepto.semanticTag,
+                                        refsetIds: registro.concepto.refsetIds
+                                    },
+                                    cie10: {
+                                        codigo: 'Mapeo no disponible'
+                                    }
+                                },
+                                primeraVez: registro.esPrimeraVez
+                            });
                             if (prestaciones.length === codificaciones.length) {
                                 // console.log('codificaciones ', codificaciones);
                                 turno.diagnostico = {
@@ -222,11 +294,7 @@ export function codificarTurno(req, data, tid) {
                                 turno.asistencia = 'asistio';
                                 resolve(data);
                             }
-
-                        }).catch(err1 => {
-                            reject(err1);
-                        });
-
+                        }
                     }).catch(error => {
                         reject(error);
                     });
@@ -340,6 +408,23 @@ export function actualizarEstado(req, data) {
                 }
             });
         }
+        // Si se esta publicando una agenda de hoy o mañana se pasan los turnos igual q en job
+        let tomorrow = moment(new Date()).add(1, 'days');
+        if (moment(data.horaInicio).isSame(hoy, 'day') || moment(data.horaInicio).isSame(tomorrow, 'day')) {
+            for (let j = 0; j < data.bloques.length; j++) {
+                let cantAccesoDirecto = data.bloques[j].accesoDirectoDelDia + data.bloques[j].accesoDirectoProgramado;
+                if (cantAccesoDirecto > 0) {
+                    data.bloques[j].restantesProgramados = data.bloques[j].restantesProgramados + data.bloques[j].restantesGestion + data.bloques[j].restantesProfesional;
+                    data.bloques[j].restantesGestion = 0;
+                    data.bloques[j].restantesProfesional = 0;
+                } else {
+                    if (data.bloques[j].reservadoProfesional > 0) {
+                        data.bloques[j].restantesGestion = data.bloques[j].restantesGestion + data.bloques[j].restantesProfesional;
+                        data.bloques[j].restantesProfesional = 0;
+                    }
+                }
+            }
+        }
     }
 
     // Si se pasa a borrada
@@ -366,6 +451,13 @@ export function actualizarEstado(req, data) {
 
                 });
             });
+            data.sobreturnos.forEach(sobreturno => {
+                if (sobreturno.estado !== 'turnoDoble') {
+                    sobreturno.estado = 'suspendido';
+                }
+                sobreturno.motivoSuspension = 'agendaSuspendida';
+                sobreturno.avisoSuspension = 'no enviado';
+            });
         }
 
     }
@@ -375,23 +467,28 @@ export function actualizarEstado(req, data) {
 export function getTurno(req, data, idTurno = null) {
     let turno;
     idTurno = String(idTurno) || req.body.idTurno;
-    // Loop en los bloques
-    for (let x = 0; x < data.bloques.length; x++) {
-        // Si existe este bloque...
-        if (data.bloques[x] != null) {
-            // Buscamos y asignamos el turno con id que coincida (si no coincide "asigna" null)
-            turno = (data as any).bloques[x].turnos.id(idTurno);
 
-            // Si encontró el turno dentro de alguno de los bloques, lo devuelve
-            if (turno !== null) {
-                return turno;
+    // Loop en los bloques
+    if (data && data.bloques) {
+        for (let x = 0; x < data.bloques.length; x++) {
+            // Si existe este bloque...
+            if (data.bloques[x] != null) {
+                // Buscamos y asignamos el turno con id que coincida (si no coincide "asigna" null)
+                turno = (data as any).bloques[x].turnos.id(idTurno);
+
+                // Si encontró el turno dentro de alguno de los bloques, lo devuelve
+                if (turno !== null) {
+                    return turno;
+                }
             }
         }
     }
     // sobreturnos
-    turno = data.sobreturnos.id(idTurno);
-    if (turno !== null) {
-        return turno;
+    if (data && data.sobreturnos) {
+        turno = data.sobreturnos.id(idTurno);
+        if (turno !== null) {
+            return turno;
+        }
     }
     return false;
 }
@@ -543,6 +640,31 @@ export function esPrimerPaciente(agenda: any, idPaciente: string, opciones: any[
 
 }
 
+function esFeriado(fecha) {
+    return new Promise((resolve, reject) => {
+
+        let anio = moment(fecha).year();
+        let mes = moment(fecha).month(); // de 0 a 11
+        let dia = moment(fecha).date(); // de 1 a 31
+        let url = 'http://nolaborables.com.ar/api/v2/feriados/' + anio;
+
+        request({ url: url, json: true }, (err, response, body) => {
+            if (err) {
+                reject(err);
+            }
+            if (body) {
+                let feriados = body.filter(item => {
+                    return ((item.mes).toString() === (mes + 1).toString() && (item.dia).toString() === (dia).toString());
+                });
+                if (feriados.length > 0) {
+                    resolve(true);
+                } else {
+                    resolve(false);
+                }
+            }
+        });
+    });
+}
 
 /**
  * Actualiza las cantidades de turnos restantes de la agenda antes de su fecha de inicio,
@@ -551,11 +673,22 @@ export function esPrimerPaciente(agenda: any, idPaciente: string, opciones: any[
  * @export actualizarTiposDeTurno()
  * @returns resultado
  */
-export function actualizarTiposDeTurno() {
+export async function actualizarTiposDeTurno() {
     let hsActualizar = 48;
     let cantDias = hsActualizar / 24;
     let fechaActualizar = moment(new Date()).add(cantDias, 'days');
+    let esDomingo = false;
 
+    while ((await esFeriado(fechaActualizar) && !esDomingo) || (moment(fechaActualizar).day().toString() === '6')) {
+        switch (moment(fechaActualizar).day().toString()) {
+            case '0': this.esDomingo = true;
+                break;
+            case '6': fechaActualizar = moment(fechaActualizar).add(2, 'days');
+                break;
+            default: fechaActualizar = moment(fechaActualizar).add(1, 'days');
+                break;
+        }
+    }
     // actualiza los turnos restantes de las agendas 2 dias antes de su horaInicio.
     let condicion = {
         'estado': 'publicada',
@@ -564,9 +697,9 @@ export function actualizarTiposDeTurno() {
             $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
         }
     };
-    let cursor = agendaModel.find(condicion).cursor();
 
-    cursor.eachAsync(doc => {
+    let cursor = agendaModel.find(condicion).cursor();
+    return cursor.eachAsync(doc => {
         let agenda: any = doc;
         for (let j = 0; j < agenda.bloques.length; j++) {
             let cantAccesoDirecto = agenda.bloques[j].accesoDirectoDelDia + agenda.bloques[j].accesoDirectoProgramado;
@@ -584,7 +717,7 @@ export function actualizarTiposDeTurno() {
         }
 
         Auth.audit(agenda, (userScheduler as any));
-        saveAgenda(agenda).then((nuevaAgenda) => {
+        return saveAgenda(agenda).then(() => {
             Logger.log(userScheduler, 'citas', 'actualizarTiposDeTurno', {
                 idAgenda: agenda._id,
                 organizacion: agenda.organizacion,
@@ -593,12 +726,11 @@ export function actualizarTiposDeTurno() {
                 updatedBy: agenda.updatedBy
 
             });
-        }).catch(error => {
-            return (error);
+            return Promise.resolve();
+        }).catch(() => {
+            return Promise.resolve();
         });
-
     });
-    return 'Agendas actualizadas';
 
 }
 
@@ -613,16 +745,15 @@ export function actualizarTiposDeTurno() {
 export function actualizarEstadoAgendas() {
     // let fechaActualizar = moment(new Date()).subtract(1, 'days');
     let fechaActualizar = moment(new Date());
-    // actualiza los agendas en estado disponible o publicada que se hayan ejecutado el día anterior
+    // actualiza los agendas en estado pausada, disponible o publicada que se hayan ejecutado el día anterior
     let condicion = {
-        '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
+        '$or': [{ estado: 'disponible' }, { estado: 'publicada' }, { estado: 'pausada' }],
         'horaInicio': {
             $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
         }
     };
     let cursor = agendaModel.find(condicion).cursor();
-
-    cursor.eachAsync(doc => {
+    return cursor.eachAsync(doc => {
         let agenda: any = doc;
         let todosAsistencia = true;
         for (let j = 0; j < agenda.bloques.length; j++) {
@@ -642,7 +773,7 @@ export function actualizarEstadoAgendas() {
         }
 
         Auth.audit(agenda, (userScheduler as any));
-        saveAgenda(agenda).then((nuevaAgenda) => {
+        return saveAgenda(agenda).then((nuevaAgenda) => {
             Logger.log(userScheduler, 'citas', 'actualizarEstadoAgendas', {
                 idAgenda: agenda._id,
                 organizacion: agenda.organizacion,
@@ -651,12 +782,11 @@ export function actualizarEstadoAgendas() {
                 updatedBy: agenda.updatedBy
 
             });
-        }).catch(error => {
-            return (error);
+            return Promise.resolve();
+        }).catch(() => {
+            return Promise.resolve();
         });
-
     });
-    return 'Agendas actualizadas';
 }
 
 /**
@@ -676,8 +806,7 @@ export function actualizarTurnosDelDia() {
         }
     };
     let cursor = agendaModel.find(condicion).cursor();
-
-    cursor.eachAsync(doc => {
+    return cursor.eachAsync(doc => {
         let agenda: any = doc;
         for (let j = 0; j < agenda.bloques.length; j++) {
             if (agenda.bloques[j].restantesProgramados > 0) {
@@ -687,7 +816,7 @@ export function actualizarTurnosDelDia() {
         }
 
         Auth.audit(agenda, (userScheduler as any));
-        saveAgenda(agenda).then((nuevaAgenda) => {
+        return saveAgenda(agenda).then(() => {
             Logger.log(userScheduler, 'citas', 'actualizarTurnosDelDia', {
                 idAgenda: agenda._id,
                 organizacion: agenda.organizacion,
@@ -696,13 +825,12 @@ export function actualizarTurnosDelDia() {
                 updatedBy: agenda.updatedBy
 
             });
-        }).catch(error => {
-            return (error);
+            return Promise.resolve();
+        }).catch(() => {
+            return Promise.resolve();
         });
 
     });
-    return 'Agendas actualizadas';
-
 }
 
 /**
@@ -739,32 +867,39 @@ export function updatePaciente(pacienteModified, turno) {
             return next(err);
         }
         let bloques: any = data.bloques;
-        let indiceTurno = 0;
-        let i = 0;
-        let j = 0;
-        let band = true;
-        while (i < bloques.length && band) {
-            j = 0;
-            while (j < bloques[i].turnos.length && band) {
-                if (bloques[i].turnos[j]._id.toString() === turno._id.toString()) {
-                    indiceTurno = j;
-                    band = false;
-                }
-                j++;
-            }
-            if (!band) {
-                bloques[i].turnos[indiceTurno].paciente.nombre = pacienteModified.nombre;
-                bloques[i].turnos[indiceTurno].paciente.apellido = pacienteModified.apellido;
-                bloques[i].turnos[indiceTurno].paciente.documento = pacienteModified.documento;
+        let indiceTurno = -1;
+
+        for (let bloque of bloques) {
+            indiceTurno = bloque.turnos.findIndex(elem => elem._id.toString() === turno._id.toString());
+
+            if (indiceTurno > 0) { // encontro el turno en este bloque?
+                bloque.turnos[indiceTurno].paciente.nombre = pacienteModified.nombre;
+                bloque.turnos[indiceTurno].paciente.apellido = pacienteModified.apellido;
+                bloque.turnos[indiceTurno].paciente.documento = pacienteModified.documento;
                 if (pacienteModified.contacto && pacienteModified.contacto[0]) {
-                    bloques[i].turnos[indiceTurno].paciente.telefono = pacienteModified.contacto[0].valor;
+                    bloque.turnos[indiceTurno].paciente.telefono = pacienteModified.contacto[0].valor;
                 }
-                bloques[i].turnos[indiceTurno].paciente.carpetaEfectores = pacienteModified.carpetaEfectores;
-                bloques[i].turnos[indiceTurno].paciente.fechaNacimiento = pacienteModified.fechaNacimiento;
+                bloque.turnos[indiceTurno].paciente.carpetaEfectores = pacienteModified.carpetaEfectores;
+                bloque.turnos[indiceTurno].paciente.fechaNacimiento = pacienteModified.fechaNacimiento;
             }
-            i++;
         }
-        if (!band) {
+
+        if (indiceTurno < 0) { // no se encontro el turno en los bloques de turnos?
+            indiceTurno = data.sobreturnos.findIndex(elem => elem._id.toString() === turno._id.toString());
+
+            if (indiceTurno > 0) { // esta el turno entre los sobreturnos?
+                data.sobreturnos[indiceTurno].paciente.nombre = pacienteModified.nombre;
+                data.sobreturnos[indiceTurno].paciente.apellido = pacienteModified.apellido;
+                data.sobreturnos[indiceTurno].paciente.documento = pacienteModified.documento;
+                if (pacienteModified.contacto && pacienteModified.contacto[0]) {
+                    data.sobreturnos[indiceTurno].paciente.telefono = pacienteModified.contacto[0].valor;
+                }
+                data.sobreturnos[indiceTurno].paciente.carpetaEfectores = pacienteModified.carpetaEfectores;
+                data.sobreturnos[indiceTurno].paciente.fechaNacimiento = pacienteModified.fechaNacimiento;
+            }
+        }
+
+        if (indiceTurno > 0) {
             try {
                 Auth.audit(data, (userScheduler as any));
                 saveAgenda(data);
@@ -774,3 +909,166 @@ export function updatePaciente(pacienteModified, turno) {
         }
     });
 }
+
+
+
+export function getConsultaDiagnostico(params) {
+
+    return new Promise(async (resolve, reject) => {
+        let pipeline = [];
+        pipeline = [{
+            $match: {
+                $and: [
+                    { 'horaInicio': { '$gte': new Date(params.horaInicio) } },
+                    { 'horaFin': { '$lte': new Date(params.horaFin) } },
+                    { 'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) } },
+                    { 'bloques.turnos.estado': 'asignado' }
+
+                ]
+            }
+        },
+        {
+            $unwind: '$bloques'
+        },
+        {
+            $project: {
+                bloqueTurnos: { $concatArrays: ['$sobreturnos', '$bloques.turnos'] }
+            }
+        },
+        {
+            $unwind: '$bloqueTurnos'
+        },
+        {
+            $project: {
+                estado: '$bloqueTurnos.estado',
+                paciente: '$bloqueTurnos.paciente',
+                tipoPrestacion: '$bloqueTurnos.tipoPrestacion',
+                diagnosticoCodificaciones: '$bloqueTurnos.diagnostico.codificaciones',
+                codificacionesAuditoria: '$bloqueTurnos.diagnosticoCodificaciones.codificacionesAuditoria',
+            }
+        },
+        {
+            $match: {
+                'estado': 'asignado'
+            }
+        },
+
+        {
+            $unwind: { path: '$diagnosticoCodificaciones', preserveNullAndEmptyArrays: true }
+        },
+
+        {
+            $project: {
+                estado: '$estado',
+                nombrePaciente: '$paciente.nombre',
+                apellidoPaciente: '$paciente.apellido',
+                documentoPaciente: '$paciente.documento',
+                tipoPrestacion: '$tipoPrestacion.conceptId',
+                descripcionPrestacion: '$tipoPrestacion.term',
+                auditoriaCodigo: '$diagnosticoCodificaciones.codificacionAuditoria.codigo',
+                auditoriaNombre: '$diagnosticoCodificaciones.codificacionAuditoria.nombre',
+                codProfesionalCie10Codigo: '$diagnosticoCodificaciones.codificacionProfesional.cie10.codigo',
+                codrofesionalCie10Nombre: '$diagnosticoCodificaciones.codificacionProfesional.cie10.nombre',
+                codProfesionalSnomedCodigo: '$diagnosticoCodificaciones.codificacionProfesional.snomed.conceptId',
+                codProfesionalSnomedNombre: '$diagnosticoCodificaciones.codificacionProfesional.snomed.term',
+            }
+        },
+        ];
+
+        let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
+
+        function removeDuplicates(arr) {
+            let unique_array = [];
+            let arrMap = arr.map(m => { return m._id; });
+            for (let i = 0; i < arr.length; i++) {
+                if (arrMap.lastIndexOf(arr[i]._id) === i) {
+                    unique_array.push(arr[i]);
+                }
+            }
+            return unique_array;
+        }
+        data = removeDuplicates(data);
+        resolve(data);
+
+
+    });
+}
+
+
+
+export function getCantidadConsultaXPrestacion(params) {
+
+    return new Promise(async (resolve, reject) => {
+        let pipeline = [];
+        pipeline = [
+            {
+                $match: {
+                    $and: [
+                        { 'horaInicio': { '$gte': new Date(params.horaInicio) } },
+                        { 'horaFin': { '$lte': new Date(params.horaFin) } },
+                        { 'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) } },
+                        { 'bloques.turnos.estado': 'asignado' }
+                    ]
+                }
+            },
+            {
+                $unwind: '$bloques'
+            },
+            {
+                $project: {
+                    idBloque: '$bloques._id',
+                    bloqueTurnos: { $concatArrays: ['$sobreturnos', '$bloques.turnos'] }
+                }
+            },
+
+
+            {
+                $unwind: '$bloqueTurnos'
+            },
+            {
+                $project: {
+                    hora: '$bloqueTurnos.horaInicio',
+                    estado: '$bloqueTurnos.estado',
+                    tipoPrestacion: '$bloqueTurnos.tipoPrestacion'
+                }
+            },
+            {
+                $match: {
+                    'estado': 'asignado'
+                }
+            },
+            {
+                $group: {
+                    _id: '$tipoPrestacion.term',
+                    nombrePrestacion: { $first: '$tipoPrestacion.term' },
+                    conceptId: {
+                        $first: '$tipoPrestacion.conceptId'
+                    },
+                    total: { $sum: 1 },
+                }
+
+
+            }
+
+        ];
+
+
+
+        let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
+
+        function removeDuplicates(arr) {
+            let unique_array = [];
+            let arrMap = arr.map(m => { return m._id; });
+            for (let i = 0; i < arr.length; i++) {
+                if (arrMap.lastIndexOf(arr[i]._id) === i) {
+                    unique_array.push(arr[i]);
+                }
+            }
+            return unique_array;
+        }
+        data = removeDuplicates(data);
+        resolve(data);
+
+    });
+}
+

@@ -27,10 +27,10 @@ router.post('/turnos/:tipo/:profesionalId/', function (request, response, errorH
     let fechaTurno = new Date(request.body.turno.fecha);
     console.log(request.body.sobreTurno);
     if (request.body.sobreTurno) {
-        console.log("sobreturno renovacion")
-        console.log(request.params.profesionalId)
+        console.log('sobreturno renovacion');
+        console.log(request.params.profesionalId);
         profesional.findById(request.params.profesionalId, function (error, datos) {
-            console.log(datos)
+            console.log(datos);
             let nTurno = new turno({
                 fecha: fechaTurno,
                 tipo: request.body.turno.tipo,
@@ -46,7 +46,7 @@ router.post('/turnos/:tipo/:profesionalId/', function (request, response, errorH
             });
         });
     } else {
-        console.log("no sobreturno")
+        console.log('no sobreturno');
 
         turnoSolicitado.findById(request.params.profesionalId, function (error, datos) {
             let nTurno = new turno({
@@ -117,7 +117,7 @@ router.get('/turnos/proximos/?', Auth.authenticate(), function (request: any, re
         }
 
 
-        turnoSolicitado.find(busquedaProfesional).select('_id').exec(function (errProf, profesionales) {
+        turnoSolicitado.find(busquedaProfesional).select('_id').exec(function(errProf, profesionales) {
 
             if (errProf) {
                 return errorHandler(errProf);
@@ -130,7 +130,7 @@ router.get('/turnos/proximos/?', Auth.authenticate(), function (request: any, re
             busquedaTurno['profesional'] = { $in: profesionalesIds };
 
             turno.find(busquedaTurno).populate('profesional')
-                .sort({ fecha: 1, hora: 1 })
+                .sort({fecha: 1, hora: 1})
                 .skip(offset)
                 .limit(chunkSize)
                 .exec((errTurno, data) => {
@@ -140,7 +140,7 @@ router.get('/turnos/proximos/?', Auth.authenticate(), function (request: any, re
                         return errorHandler(errTurno);
                     }
 
-                    turno.count(busquedaTurno).populate('profesional').exec(function (error, count) {
+                    turno.count(busquedaTurno).populate('profesional').exec(function(error, count) {
                         responseData.totalPages = Math.ceil(count / chunkSize) !== 0 ? Math.ceil(count / chunkSize) : 1;
 
                         if (error) {
@@ -149,20 +149,20 @@ router.get('/turnos/proximos/?', Auth.authenticate(), function (request: any, re
 
                         response.status(201).json(responseData);
                     });
-                });
+            });
         });
 
     } else {
 
         turno.find(busquedaTurno).populate('profesional')
-            .sort({ fecha: 1, hora: 1 })
+            .sort({fecha: 1, hora: 1})
             .skip(offset)
             .limit(chunkSize)
             .exec((error, data) => {
 
                 responseData.data = data;
 
-                turno.count(busquedaTurno).populate('profesional').exec(function (err, count) {
+                turno.count(busquedaTurno).populate('profesional').exec(function(err, count) {
                     responseData.totalPages = Math.floor(count / chunkSize);
 
                     if (error) {
@@ -170,7 +170,7 @@ router.get('/turnos/proximos/?', Auth.authenticate(), function (request: any, re
                     }
                     response.status(201).json(responseData);
                 });
-            });
+        });
     }
 });
 

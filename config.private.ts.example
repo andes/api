@@ -1,8 +1,31 @@
+function getEnv(key, _default, type = 's') {
+    if (!!process.env[key] === false) {
+        return _default;
+    }
+    let value = process.env[key];
+    switch (type) {
+        case 'b':
+            return value.toLowerCase() === 'true';
+        case 'n':
+            return parseInt(value, 10);
+        default:
+            return value;
+    }
+}
+
+// Configuracion servicio RENAPER
+export const renaper = {
+    Usuario: getEnv('RENAPER_USERNAME', ''),
+    password: getEnv('RENAPER_PASSWORD', ''),
+    url: getEnv('RENAPER_URL', ''),
+    serv: getEnv('RENAPER_SRV', '')
+};
+
 // Configuración de Passport
 export const auth = {
-    useLdap: false,
-    jwtKey: 'API_KEY',
-    ldapOU: 'ou=People,o=integrabilidad,o=neuquen',
+    useLdap:  getEnv('LDAP', false),
+    jwtKey:  getEnv('APP_KEY', '5gCYFZPp3dfA2m5UNElVkgRLFcFnBfZp'),
+    ldapOU: getEnv('LDAP_HOST', 'ou=People,o=integrabilidad,o=neuquen')
 };
 
 // True: Expone una ruta de la api que lista todos los permisos disponibles
@@ -10,27 +33,41 @@ export const enablePermisosDoc = false;
 
 // Puerto de LDAP
 export const ports = {
-    ldapPort: ':389'
+    ldapPort: getEnv('LDAP_PORT', ':389')
 };
 
 // Hosts
 export const hosts = {
-    ldap: 'ldap.neuquen.gov.ar',
-    elastic_main: 'localhost:9200',
+    ldap: getEnv('LDAP_HOST', 'ldap.neuquen.gov.ar'),
+    elastic_main: getEnv('ELASTIC_HOST', 'localhost:9200'),
     mongoDB_main: {
-        host: 'localhost:27017/andes',
-        auth: { authdb: 'admin' },
-        server: { reconnectTries: Number.MAX_VALUE }
+        host: getEnv('MONGO_MAIN', 'localhost:27017/andes'), // ?authSource=admin
+        options: {
+            reconnectTries: Number.MAX_VALUE, // Never stop trying to reconnect
+            reconnectInterval: 500,
+        }
     },
     mongoDB_mpi: {
-        host: 'localhost:27017/mpi',
-        auth: { authdb: 'admin' },
-        server: { reconnectTries: Number.MAX_VALUE }
+        host: getEnv('MONGO_MPI', 'localhost:27017/mpi'), // ?authSource=admin
+        options: {
+            reconnectTries: Number.MAX_VALUE, // Never stop trying to reconnect
+            reconnectInterval: 500,
+        }
     },
     mongoDB_snomed: {
-        host: 'mongodb://localhost:27017/es-edition',
-        auth: { authdb: 'admin' },
-        server: { reconnectTries: Number.MAX_VALUE }
+        host: getEnv('MONGO_SNOMED', 'mongodb://localhost:27017/es-edition'), // ?authSource=admin
+        options: {
+            reconnectTries: Number.MAX_VALUE, // Never stop trying to reconnect
+            reconnectInterval: 500,
+        }
+    },
+
+    mongoDB_puco: {
+        host: getEnv('MONGO_PUCO', 'mongodb://localhost:27017/padrones'),
+        options: {
+            reconnectTries: Number.MAX_VALUE, // Never stop trying to reconnect
+            reconnectInterval: 1500,
+        }
     }
 };
 // Mongoose config
@@ -40,47 +77,51 @@ export let mongooseDebugMode = false;
 export let enableSwagger = false;
 
 // Configuración de Google Geocoding
-export const geoKey = 'GOOGLE_MAP_KEY';
+export const geoKey = getEnv('GOOGLE_MAP_KEY', 'GOOGLE_MAP_KEY');
 
 // Configuración servicio SISA
 export const sisa = {
-    username: '',
-    password: '',
-    host: 'sisa.msal.gov.ar',
-    port: 443,
-    url: 'https://sisa.msal.gov.ar/sisa/services/rest/cmdb/obtener?'
+    username: getEnv('SISA_USERNAME', ''),
+    password: getEnv('SISA_PASSWORD', ''),
+    host: getEnv('SISA_HOST', 'sisa.msal.gov.ar'),
+    port: getEnv('SISA_PORT', 443, 'n'),
+    url: getEnv('SISA_URL', 'https://sisa.msal.gov.ar/sisa/services/rest/cmdb/obtener?')
 };
 // Configuración servicio ANSES
 export const anses = {
-    username: '',
-    password: '',
-    url: '',
-    serv: '',
-    serv2: ''
+    Usuario: getEnv('ANSES_USERNAME', ''),
+    password: getEnv('ANSES_PASSWORD', ''),
+    url: getEnv('ANSES_URL', ''),
+    serv: getEnv('ANSES_SERV', ''),
+    serv2: getEnv('ANSES_SERV2', '')
 };
 // Configuración servicio SINTYS
 export const sintys = {
-    username: '',
-    password: '',
-    host: '',
-    port: 443,
-    path: ''
+    username: getEnv('SINTYS_USERNAME', ''),
+    password: getEnv('SINTYS_PASSWORD', ''),
+    host: getEnv('SINTYS_HOST', ''),
+    port: getEnv('SINTYS_PORT', 443, 'n'),
+    path: getEnv('SINTYS_PATH', '')
+};
+// Configuración para PUCO
+export const puco = {
+  database: 'puco',
+  auth: {
+      user: '',
+      password: ''
+  }
 };
 
-// Auth App Mobile
-export const authApp = {
-    secret: ''
-};
 
 export const snomed = {
-    dbName: 'es-edition',
-    dbVersion: 'v20171200'
+    dbName: getEnv('SNOMED_DB', 'es-edition'),
+    dbVersion: getEnv('SNOMED_VERSION', 'v20171200')
 };
 
 // Push Notifications
 export const pushNotificationsSettings = {
     gcm: {
-        id: 'GCM_API_KEY',
+        id: getEnv('GCM_API_KEY', 'GCM_API_KEY'),
         phonegap: true
     },
     apn: {
@@ -94,12 +135,12 @@ export const pushNotificationsSettings = {
 
 // E-mail server settings
 export const enviarMail = {
-    host: '',
-    port: 587,
-    secure: false, // true for 465, false for other ports
+    host: getEnv('EMAIL_HOST', ''),
+    port: getEnv('EMAIL_PORT', 587, 'n'),
+    secure: getEnv('EMAIL_SECURE', false, 'b'),
     auth: {
-        user: '', // generated ethereal user
-        pass: ''  // generated ethereal password
+        user: getEnv('EMAIL_USERNAME', ''),
+        pass: getEnv('EMAIL_PASSWORD', '')
     }
 };
 
@@ -152,12 +193,55 @@ export const conSql = {
     }
 };
 
+export const conSqlHPN = {
+    auth : {
+        user: '',
+        password: ''
+    },
+    serverSql: {
+        server: '',
+        database: '',
+        port: ''
+    },
+    pool: {
+        acquireTimeoutMillis: 15000
+    }
+
+};
+
 export const CDA = {
-    rootOID: ''
+    rootOID: '',
+    dniOID: '',
+    idOID: '',
+    matriculaOID: '',
 };
 
 export const wsSalud = {
    host: '',
+   hostHPN: '',
    getPaciente: '',
-   getResultado: ''
+   getResultado: '',
+   hellerWS: '',
+   hellerFS: '',
+   hpnWS: '',
+};
+
+export const conSqlPecas = {
+    auth: {
+        user: '',
+        password: ''
+    },
+    serverSql: {
+        server: '',
+        database: ''
+    }
+};
+
+export const sqlCarpetasJob = {
+    user: '',
+    password: '',
+    server: '',
+    database: '',
+    requestTimeout: '',
+    stream: '',
 };

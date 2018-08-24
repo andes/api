@@ -21,9 +21,16 @@ let connection = {
     user: configPrivate.conSql.auth.user,
     password: configPrivate.conSql.auth.password,
     server: configPrivate.conSql.serverSql.server,
-    database: configPrivate.conSql.serverSql.database
+    database: configPrivate.conSql.serverSql.database,
+    options: {
+        encrypt: true // Use this if you're on Windows Azure
+    }
 };
-pool = sql.connect(connection);
+
+pool = sql.connect(connection, (err) => {
+    logger('MSSSQL connection error');
+});
+
 
 function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
@@ -60,13 +67,31 @@ function downloadFile(url) {
     });
 }
 
+function donwloadFileHeller(idProtocolo, year) {
+    return new Promise((resolve, reject) => {
+        http.get(configPrivate.wsSalud.hellerWS + 'idPet=' + idProtocolo + '&year='  + year, (response) => {
+            return response.on('data', (buffer) => {
+                let resp = buffer.toString();
+
+                let regexp = /10.1.104.37\/resultados_omg\/([0-9\-\_]*).pdf/;
+                let match = resp.match(regexp);
+                if (match && match[1]) {
+                    return downloadFile(configPrivate.wsSalud.hellerFS + match[1] + '.pdf').then((_resp) => {
+                        return resolve(_resp);
+                    }).catch(reject);
+                } else {
+                    return reject({error: 'heller-error'});
+                }
+            });
+        });
+    });
+}
+
 export async function importarDatos(paciente) {
     try {
-
         let laboratorios: any;
         laboratorios = await operations.getEncabezados(paciente.documento);
         for (let lab of laboratorios.recordset) {
-
 
             // Si ya lo pase no hacemos nada
             let existe = await cdaCtr.findByMetadata({
@@ -90,39 +115,47 @@ export async function importarDatos(paciente) {
 
             let value = matchPaciente(paciente, lab);
             if (value >= cota && validado && details.recordset) {
-
-                let pdfUrl = configPrivate.wsSalud.host + configPrivate.wsSalud.getResultado + '?idProtocolo=' + lab.idProtocolo + '&idEfector=' + lab.idEfector;
-
                 let fecha = moment(lab.fecha, 'DD/MM/YYYY');
+
                 let profesional = {
                     nombre: lab.solicitante,
                     apellido: '' // Nombre y Apellido viene junto en los registros de laboratorio de SQL
                 };
                 let snomed = '4241000179101'; // informe de laboratorio (elemento de registro)
+                let prestacion = await cdaCtr.matchCode(snomed);
                 let cie10Laboratorio = {
                     codigo: 'Z01.7', // Código CIE-10: Examen de Laboratorio
                     nombre: 'Examen de laboratorio'
                 };
                 let texto = 'Exámen de Laboratorio';
                 let uniqueId = String(new mongoose.Types.ObjectId());
-                let response = await downloadFile(pdfUrl);
+
+                let pdfUrl;
+                let response;
+                if (String(lab.idEfector) === '221') {
+                    response = await donwloadFileHeller(lab.idProtocolo, fecha.format('YYYY'));
+                } else {
+                    pdfUrl = configPrivate.wsSalud.host + configPrivate.wsSalud.getResultado + '?idProtocolo=' + lab.idProtocolo + '&idEfector=' + lab.idEfector;
+                    response = await downloadFile(pdfUrl);
+                }
+
 
                 let fileData: any = await cdaCtr.storeFile({
                     stream: response,
                     mimeType: 'application/pdf',
                     extension: 'pdf',
                     metadata: {
-                        cdaId: uniqueId,
+                        cdaId: mongoose.Types.ObjectId(uniqueId),
                         paciente: mongoose.Types.ObjectId(paciente.id)
                     }
                 });
                 // }
 
-                let cda = cdaCtr.generateCDA(uniqueId, (hiv ? 'R' : 'N') , paciente, fecha, profesional, organizacion, snomed, cie10Laboratorio, texto, fileData);
+                let cda = cdaCtr.generateCDA(uniqueId, (hiv ? 'R' : 'N') , paciente, fecha, profesional, organizacion, prestacion, cie10Laboratorio, texto, fileData);
                 let metadata = {
                     paciente: mongoose.Types.ObjectId(paciente.id),
-                    prestacion: snomed,
-                    fecha: fecha,
+                    prestacion: prestacion,
+                    fecha: fecha.toDate(),
                     adjuntos: [{ path: fileData.data, id: fileData.id }],
                     extras: {
                         idEfector: lab.idEfector,
