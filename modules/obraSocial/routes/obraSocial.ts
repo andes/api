@@ -33,7 +33,7 @@ router.get('/puco/', async function (req, res, next) {
             }
         }
 
-        rta = await puco.find({ dni: Number.parseInt(req.query.dni), version: padron }).exec();
+        rta = await puco.find({ dni: Number.parseInt(req.query.dni, 10), version: padron }).exec();
 
         if (rta.length > 0) {
             let resultOS = [];
