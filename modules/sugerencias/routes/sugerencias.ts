@@ -9,6 +9,9 @@ let router = express.Router();
 
 router.post('/', function (req, res, next) {
     let body = req.body;
+    let usuario: any = (req as any).user;
+    req.body['usuario'] = (req as any).user.usuario.username ? (req as any).user.usuario.username : '';
+    req.body['organizacion'] = (req as any).user.organizacion.nombre ? (req as any).user.organizacion.nombre : '';
     // renderizacion del email
     let html_sugerencias = SendEmail.renderHTML('emails/email-sugerencias.html', body).then(function (html) {
         let data = {
