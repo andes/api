@@ -1,8 +1,7 @@
-import { Server } from 'http';
 import * as debug from 'debug';
+import { Server } from 'http';
 import { Auth } from './auth/auth.class';
 import { RedisWebSockets } from './config.private';
-
 import { EventSocket } from '@andes/event-bus';
 
 let log = debug('websocket');
@@ -14,7 +13,7 @@ export class Packet {
     public data: any;
     public user: any;
 
-    constructor (io, socket, event, data) {
+    constructor(io, socket, event, data) {
         this.io = io;
         this.socket = socket;
         this.event = event;
@@ -22,11 +21,11 @@ export class Packet {
         this.user = socket.user;
     }
 
-    broadcast (event, data) {
+    broadcast(event, data) {
         this.socket.emit(event, data);
     }
 
-    toRoom (room, event, data) {
+    toRoom(room, event, data) {
         this.socket.to(room).emit(event, data);
     }
 }
@@ -43,7 +42,7 @@ export class Websockets {
      * @memberOf Auth
      */
 
-    static onAuth (socket, token) {
+    static onAuth(socket, token) {
 
         let user = Auth.validateToken(token);
         if (user) {
@@ -68,11 +67,12 @@ export class Websockets {
             }
             socket.emit('auth', { status: 'ok' });
         } else {
+
             socket.emit('auth', { status: 'error' });
         }
     }
 
-    static onRoom (socket, { name }) {
+    static onRoom(socket, { name }) {
         if (name) {
             switch (name) {
                 case 'turnero':
@@ -87,7 +87,7 @@ export class Websockets {
         }
     }
 
-    static onLeave (socket, { name }) {
+    static onLeave(socket, { name }) {
         if (name) {
             switch (name) {
                 case 'turnero':
@@ -102,11 +102,11 @@ export class Websockets {
         }
     }
 
-    static broadcast (event, data) {
+    static broadcast(event, data) {
         this.io.emit(event, data);
     }
 
-    static toRoom (room, event, data) {
+    static toRoom(room, event, data) {
         this.io.to(room).emit(event, data);
     }
 
@@ -144,10 +144,10 @@ export class Websockets {
                 }
                 next();
 
-              });
+            });
 
-            socket.on('disconnect', function () {
-                // console.log('Disconnected');
+            socket.on('disconnect', () => {
+                log('onDisconnect');
             });
         });
     }
