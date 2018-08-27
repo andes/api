@@ -101,8 +101,7 @@ async function auxiliar(a: any, b: any, t: any) {
     let turno: any = {};
     turno.sobreturno = (b !== null) ? 'NO' : 'SI';
     // console.log('b => ', b);
-
-    turno.tipoTurno = t.tipoTurno ? t.tipoTurno : 'Sin datos';
+    turno.tipoTurno = t.tipoTurno ? (t.tipoTurno === 'profesional' ? 'autocitado' : t.tipoTurno) : 'Sin datos';
     turno.estadoTurno = t.estado;
     let turnoConPaciente = t.estado === 'asignado' && t.paciente && t.asistencia;
     let efector = await getEfector(a.organizacion._id) as any;
@@ -115,6 +114,7 @@ async function auxiliar(a: any, b: any, t: any) {
     turno.FechaAgenda = moment(a.horaInicio).format('YYYYMMDD');
     turno.HoraAgenda = moment(a.horaInicio).format('HH:mm').toString();
     turno.estadoAgenda = a.estado;
+    turno.numeroBloque = a.bloques.indexOf(b);
     turno.accesoDirectoProgramado = (b && b.accesoDirectoProgramado) ? b.accesoDirectoProgramado : null;
     turno.reservadoProfesional = (b && b.reservadoProfesional) ? b.reservadoProfesional : null;
     turno.reservadoGestion = (b && b.reservadoGestion) ? b.reservadoGestion : null;
@@ -299,7 +299,7 @@ async function auxiliar(a: any, b: any, t: any) {
         // se verifica si existe el turno en sqñ
         let queryInsert = 'INSERT INTO dbo.Pecas_consolidado_1' +
             '(idEfector, Efector, TipoEfector, DescTipoEfector, IdZona, Zona, SubZona, idEfectorSuperior, EfectorSuperior, AreaPrograma, ' +
-            'idAgenda, FechaAgenda, HoraAgenda, estadoAgenda, turnosProgramados, turnosProfesional, turnosLlaves, turnosDelDia, ' +
+            'idAgenda, FechaAgenda, HoraAgenda, estadoAgenda, numeroBloque, turnosProgramados, turnosProfesional, turnosLlaves, turnosDelDia, ' +
             'idTurno, estadoTurno, tipoTurno, sobreturno, FechaConsulta, HoraTurno, Periodo, Tipodeconsulta, Principal, ConsC2, ConsObst, tipoPrestacion, ' +
             'DNI, Apellido, Nombres, HC, CodSexo, Sexo, FechaNacimiento, Edad, UniEdad, CodRangoEdad, RangoEdad, IdObraSocial, ObraSocial, IdPaciente, telefono, ' +
             'IdBarrio, Barrio, IdLocalidad, Localidad, IdDpto, Departamento, IdPcia, Provincia, IdNacionalidad, Nacionalidad, ' +
@@ -313,7 +313,7 @@ async function auxiliar(a: any, b: any, t: any) {
             'VALUES  ( ' + turno.idEfector + ',\'' + turno.Organizacion + '\',\'' + turno.TipoEfector + '\',\'' + turno.DescTipoEfector +
             '\',' + turno.IdZona + ',\'' + turno.Zona + '\',\'' + turno.SubZona + '\',' + turno.idEfectorSuperior + ',\'' + turno.EfectorSuperior + '\',\'' + turno.AreaPrograma +
             '\',\'' + turno.idAgenda + '\',\'' + turno.FechaAgenda + '\',\'' + turno.HoraAgenda + '\',\'' + turno.estadoAgenda +
-            '\',' + turno.accesoDirectoProgramado + ',' + turno.reservadoProfesional + ',' + turno.reservadoGestion + ',' + turno.accesoDirectoDelDia +
+            '\',' + turno.numeroBloque + ',' + turno.accesoDirectoProgramado + ',' + turno.reservadoProfesional + ',' + turno.reservadoGestion + ',' + turno.accesoDirectoDelDia +
             ',\'' + turno.idTurno + '\',\'' + turno.estadoTurno + '\',\'' + turno.tipoTurno + '\',\'' + turno.sobreturno + '\',\'' + turno.FechaConsulta + '\',\'' + turno.HoraTurno + '\',' + turno.Periodo + ',\'' + turno.Tipodeconsulta + '\',\'' + turno.Principal +
             '\',\'' + turno.ConsC2 + '\',\'' + turno.ConsObst + '\',\'' + turno.tipoPrestacion +
             // DATOS PACIENTE
@@ -335,6 +335,7 @@ async function auxiliar(a: any, b: any, t: any) {
             '\',\'' + turno.conceptId3 + '\',\'' + turno.term3 + '\',' + turno.primeraVez3 +
             ',\'' + turno.Profesional + '\',\'' + turno.TipoProfesional + '\',' + turno.CodigoEspecialidad + ',\'' + turno.Especialidad +
             '\',' + turno.CodigoServicio + ',\'' + turno.Servicio + '\',\'' + turno.codifica + '\') ';
+        // console.log(queryInsert);
         let rta = await existeTurnoPecas(turno.idTurno);
         if (rta.recordset.length > 0 && rta.recordset[0].idTurno) {
             let queryDel = await eliminaTurnoPecas(turno.idTurno);
@@ -345,7 +346,6 @@ async function auxiliar(a: any, b: any, t: any) {
             await executeQuery(queryInsert);
         }
     } catch (error) {
-        // console.log('error ', error);
         return (error);
     }
 }
