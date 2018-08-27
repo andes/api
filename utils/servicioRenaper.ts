@@ -23,22 +23,22 @@ export function getServicioRenaper(paciente) {
                 }
                 if (client) {
                     if (paciente.documento && paciente.sexo) {
-                    client.LoginPecas(login, async function (err2, result) {
-                        if (err2) {
-                            reject(err2);
-                        }
-                        let tipoConsulta = 'WS_RENAPER_documento';
-                        let filtro = 'documento=' + paciente.documento + ';sexo=' + paciente.sexo;
-                        try {
-                            resultado = await consultaRenaper(result, tipoConsulta, filtro);
-                        } catch (error) {
-                            reject(error);
-                        }
-                        resolve(resultado);
-                    });
-                } else {
-                    resolve(null);
-                }
+                        client.LoginPecas(login, async function (err2, result) {
+                            if (err2) {
+                                reject(err2);
+                            }
+                            let tipoConsulta = 'WS_RENAPER_documento';
+                            let filtro = 'documento=' + paciente.documento + ';sexo=' + paciente.sexo;
+                            try {
+                                resultado = await consultaRenaper(result, tipoConsulta, filtro);
+                            } catch (error) {
+                                reject(error);
+                            }
+                            resolve(resultado);
+                        });
+                    } else {
+                        resolve(null);
+                    }
                 } else {
                     resolve(null);
                 }
@@ -104,7 +104,7 @@ function solicitarServicio(sesion, tipo, filtro) {
                     }
                     let codigoResultado = result2.return.CodResultado['$value'];
                     if (result2.return.Resultado['$value']) {
-                        let resultado = Buffer.from(result2.return.Resultado['$value'], 'base64').toString('ascii');
+                        let resultado = Buffer.from(result2.return.Resultado['$value'], 'base64').toString('utf8');
                         // convertimos a JSON el resultado
                         let resArray = JSON.parse(resultado);
                         resolve({ codigo: codigoResultado, datos: resArray });

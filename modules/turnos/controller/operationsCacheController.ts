@@ -705,7 +705,7 @@ async function grabaAgendaSips(agendaSips: any, datosSips: any, pool) {
     let fecha = moment(agendaSips.horaInicio).format('YYYYMMDD');
     let horaInicio = moment(agendaSips.horaInicio).utcOffset('-03:00').format('HH:mm');
     let horaFin = moment(agendaSips.horaFin).utcOffset('-03:00').format('HH:mm');
-    let duracionTurno = agendaSips.bloques[0].duracionTurno;
+    let duracionTurno = agendaSips.bloques[0].duracionTurno <= 0 ? 20 : agendaSips.bloques[0].duracionTurno;
 
     let maximoSobreTurnos = 100;
     let porcentajeTurnosDia = 0;

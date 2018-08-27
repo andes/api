@@ -11,9 +11,11 @@ export async function saveTurnos(idAgendaAndes, bloque, idTipoPrestacion, pool, 
             let result = await pacientes.buscarPaciente(turno.paciente.id);
             let paciente = result.paciente;
 
-            let datosPaciente = await pacienteCtrl.getDatosPaciente('DNI', paciente.documento, pool);
+            let datosPaciente = await pacienteCtrl.getDatosPaciente('DNI', paciente, transaction);
+
             if (!datosPaciente) {
-                datosPaciente = await pacienteCtrl.savePaciente(paciente, transaction);
+                await pacienteCtrl.savePaciente(paciente, transaction);
+                datosPaciente = await pacienteCtrl.getDatosPaciente('DNI', paciente, transaction);
             }
             await saveTurno(idAgendaAndes, turno, datosPaciente, bloque.duracionTurno, idTipoPrestacion, pool, transaction);
         }
@@ -30,7 +32,7 @@ export async function saveSobreturno(idAgendaAndes, sobreturno, idTipoPrestacion
         let result = await pacientes.buscarPaciente(sobreturno.paciente.id);
         let paciente = result.paciente;
 
-        let datosPaciente = await pacienteCtrl.getDatosPaciente('DNI', paciente.documento, pool);
+        let datosPaciente = await pacienteCtrl.getDatosPaciente('DNI', paciente, pool);
         if (!datosPaciente) {
             datosPaciente = await pacienteCtrl.savePaciente(paciente, transaction);
         }
@@ -167,7 +169,7 @@ async function updateTurno(id, estado, pool, transaction) {
         idEstado = 50; // Prestación ha sido liberada
     }
     let query = 'UPDATE dbo.Prestaciones_Worklist SET ' +
-        'idEstado=' + idEstado + ' where andesId=' + '\'' + id + '\'';
+        'idEstado=' + idEstado + ' where andesId=\'' + id + '\'';
     return await new sql.Request(transaction)
         .query(query)
         .catch(err => {
