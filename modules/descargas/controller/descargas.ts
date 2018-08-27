@@ -9,12 +9,17 @@ import { model as Org } from '../../../core/tm/schemas/organizacion';
 import * as snomed from '../../../core/term/controller/snomedCtr';
 import * as conceptoTurneable from '../../../core/tm/schemas/tipoPrestacion';
 import * as path from 'path';
+import { env } from 'process';
 
 moment.locale('es');
 
+// Muestra mensaje y línea de un error dentro de una promise ;-)
+if (env.NODE_ENV !== 'production') {
+    // tslint:disable-next-line:no-console
+    process.on('unhandledRejection', r => console.log(r));
+}
+
 export class Documento {
-
-
 
     private static locale = 'es-ES';
     private static timeZone = 'America/Argentina/Buenos_Aires';
@@ -93,6 +98,7 @@ export class Documento {
         return (st === 'procedimiento' || st === 'entidad observable' || st === 'régimen/tratamiento' || st === 'elemento de registro');
     }
 
+    // 'plan'
     static generarRegistroPlanHTML(plan: any, template: string): any {
         return template
             .replace('<!--plan-->', plan.concepto.term)
@@ -103,19 +109,21 @@ export class Documento {
 
     }
 
+    // 'procedimiento' || 'entidad observable' || 'régimen/tratamiento' || 'elemento de registro'
     static generarRegistroProcedimientoHTML(proc: any, template: string): any {
         return template
             .replace('<!--concepto-->', proc.concepto.term)
             .replace('<!--valor-->', proc.valor)
-            .replace('<!--esDiagnosticoPrincipal-->', proc.esDiagnosticoPrincipal === true ? 'Motivo principal de consulta' : '');
+            .replace('<!--motivoPrincipalDeConsulta-->', proc.esDiagnosticoPrincipal === true ? 'Motivo principal de consulta' : '');
 
     }
 
+    // 'procedimiento' || 'hallazgo' || 'trastorno'
     static generarRegistroHallazgoHTML(hallazgo: any, template: string): any {
         return template
             .replace('<!--concepto-->', hallazgo.concepto.term)
             .replace('<!--evolucion-->', hallazgo.valor.evolucion)
-            .replace('<!--esDiagnosticoPrincipal-->', hallazgo.esDiagnosticoPrincipal === true ? 'Motivo principal de consulta' : '');
+            .replace('<!--motivoPrincipalDeConsulta-->', hallazgo.esDiagnosticoPrincipal === true ? 'Motivo principal de consulta' : '');
 
     }
 
@@ -129,7 +137,8 @@ export class Documento {
 
         // Configuraciones de informe propios de la prestación
         let config: any = await this.getPrestacionInformeParams(prestacion.solicitud.tipoPrestacion.conceptId);
-        // Coso
+
+        // Se crea un objecto nuevo
         config = JSON.parse(JSON.stringify(config));
 
         // Paciente
@@ -161,6 +170,7 @@ export class Documento {
                 prestacion.ejecucion.registros[0].concepto.term = tituloInforme;
                 tituloInforme = tituloInforme[0].toUpperCase() + tituloInforme.slice(1);
                 contenidoInforme = prestacion.ejecucion.registros.find(x => this.registroHTML(x.concepto.term, x.valor)).valor;
+                contenidoInforme = contenidoInforme.evolucion ? contenidoInforme.evolucion : contenidoInforme;
 
             } else {
                 // Si tiene un hijo directo, usamos su nombre como título de la consulta
@@ -176,7 +186,7 @@ export class Documento {
                     let existeConcepto = prestacion.ejecucion.registros.find(x => this.existeSemanticTagMPC(x.concepto.semanticTag) && x.esDiagnosticoPrincipal);
 
 
-                    if (existeConcepto.esDiagnosticoPrincipal && tituloRegistro.conceptId !== existeConcepto.concepto.conceptId) {
+                    if (existeConcepto.esDiagnosticoPrincipal && tituloRegistro && tituloRegistro.conceptId !== existeConcepto.concepto.conceptId) {
                         motivoPrincipalDeConsulta = existeConcepto;
                         if (motivoPrincipalDeConsulta) {
                             motivoPrincipalDeConsulta = '<b>Motivo Principal de consulta: </b>' + motivoPrincipalDeConsulta.concepto.term;
@@ -219,6 +229,7 @@ export class Documento {
 
                 registros = [...hallazgos, ...procedimientos, ...planes].join('');
             }
+
             // Se leen header y footer (si se le pasa un encoding, devuelve un string)
             let html = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/informe.html'), 'utf8');
 
@@ -231,7 +242,7 @@ export class Documento {
             let idOrg = (Auth.getOrganization(req, 'id') as any);
             let organizacion: any = await this.getOrgById(idOrg);
 
-            let nroCarpeta = paciente.carpetaEfectores.find(x => x.organizacion.id === idOrg);
+            let carpeta = paciente.carpetaEfectores.find(x => x.organizacion.id === idOrg);
 
             let profesionalSolicitud = prestacion.solicitud.profesional.apellido + ', ' + prestacion.solicitud.profesional.nombre;
             let profesionalValidacion = prestacion.updatedBy ? prestacion.updatedBy.nombreCompleto : prestacion.createdBy.nombreCompleto;
@@ -243,7 +254,7 @@ export class Documento {
                 .replace('<!--paciente-->', nombreCompleto)
                 .replace('<!--datosRapidosPaciente-->', datosRapidosPaciente)
                 .replace('<!--fechaNacimiento-->', moment(fechaNacimiento).format('DD/MM/YYYY'))
-                .replace('<!--nroCarpeta-->', (typeof nroCarpeta !== 'undefined' ? nroCarpeta : 'sin nro de carpeta'))
+                .replace('<!--nroCarpeta-->', (carpeta && carpeta.nroCarpeta ? carpeta.nroCarpeta : 'sin número de carpeta'))
                 .replace(/(<!--organizacionNombreSolicitud-->)/g, prestacion.solicitud.organizacion.nombre.replace(' - ', '<br>'))
                 .replace('<!--orgacionacionDireccionSolicitud-->', orgacionacionDireccionSolicitud)
                 .replace('<!--fechaSolicitud-->', moment(prestacion.solicitud.fecha).format('DD/MM/YYYY'))
@@ -306,6 +317,8 @@ export class Documento {
                 .replace('<!--logoPDP2-->', `<img class="logo-pdp-h" src="data:image/png;base64,${logoPDP2.toString('base64')}">`);
 
             return html;
+        } else {
+            return false;
         }
     }
 
