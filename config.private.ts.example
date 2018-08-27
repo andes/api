@@ -246,9 +246,10 @@ export const sqlCarpetasJob = {
     stream: ''
 };
 
-export const TwitterConfig = new {
+export const TwitterConfig = {
   consumer_key: '',
   consumer_secret: '',
   access_token_key: '',
   access_token_secret: ''
 };
+
