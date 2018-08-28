@@ -26,6 +26,8 @@ router.get('/turno/:id*?', async function (req, res, next) {
 router.get('/historial', async function (req, res, next) {
     try {
         let resultado = await turnosController.getHistorialPaciente(req);
+        resultado = resultado.concat(await turnosController.getLiberadosPaciente(req));
+
         res.json(resultado);
     } catch (err) {
         return next(err);
