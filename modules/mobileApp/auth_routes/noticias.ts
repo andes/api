@@ -18,7 +18,7 @@ router.get('/noticias/:name', async (req, res) => {
         };
         let tweets = await client.get('statuses/user_timeline', params);
         if (!tweets) {
-            res.status(422).json({
+            return res.status(422).json({
                 message: 'no_feed'
             });
         }
