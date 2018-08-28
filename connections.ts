@@ -7,6 +7,7 @@ export class Connections {
     static main: mongoose.Connection;
     static mpi: mongoose.Connection;
     static snomed: mongoose.Connection;
+    static puco: mongoose.Connection;
 
     /**
      * Inicializa las conexiones a MongoDB
@@ -28,18 +29,23 @@ export class Connections {
 
         // Conecta y configura conexiones
         // 1. PRINCIPAL
-        mongoose.connect(configPrivate.hosts.mongoDB_main.host, configPrivate.hosts.mongoDB_main.options );
+        mongoose.connect(configPrivate.hosts.mongoDB_main.host, configPrivate.hosts.mongoDB_main.options);
         this.main = mongoose.connection;
+
         // 2. MPI
         this.mpi = mongoose.createConnection(configPrivate.hosts.mongoDB_mpi.host, configPrivate.hosts.mongoDB_mpi.options);
 
         // 3. SNOMED
         this.snomed = mongoose.createConnection(configPrivate.hosts.mongoDB_snomed.host, configPrivate.hosts.mongoDB_snomed.options);
 
-            // Configura eventos
+        // 4. PUCO
+        this.puco = mongoose.createConnection(configPrivate.hosts.mongoDB_puco.host, configPrivate.hosts.mongoDB_puco.options);
+
+        // Configura eventos
         this.configEvents('main', this.main);
         this.configEvents('mpi', this.mpi);
         this.configEvents('snomed', this.snomed);
+        this.configEvents('puco', this.puco);
     }
 
     private static configEvents(name: string, connection: mongoose.Connection) {
