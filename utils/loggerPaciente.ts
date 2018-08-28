@@ -11,7 +11,8 @@ export class LoggerPaciente {
             dataTurno: {
                 turno: turno,
                 idBloque: bloque,
-                idAgenda: agenda
+                idAgenda: agenda._id,
+                profesionales: agenda.profesionales
             },
             createdBy: req.user.usuario || req.user
 
