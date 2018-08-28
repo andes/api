@@ -16,8 +16,6 @@ router.get('/noticias/:name', async (req, res) => {
             count: 200,
             tweet_mode: 'extended'
         };
-        // await client.get('statuses/user_timeline', params), (error, tweets) => {
-        // client.get('statuses/user_timeline', params, function (error, tweets) {
         let tweets = await client.get('statuses/user_timeline', params);
         if (!tweets) {
             res.status(422).json({
