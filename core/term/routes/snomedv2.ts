@@ -70,7 +70,7 @@ router.get('/snomed/concepts/:sctid/childs', async function (req, res, next) {
     let leaf = req.query.leaf || false;
     try {
         let result = [];
-        let childs: any = await snomedCtr.getChilds(sctid, { all, leaf });
+        let childs: any = await snomedCtr.getChildren(sctid, { all, leaf });
         return res.json(childs);
 
     } catch (e) {
@@ -150,7 +150,7 @@ router.get('/snomed/search', async function (req, res, next) {
                     filters['destination.conceptId'] = elem.sctid;
                 } else {
                     filters['destination.conceptId'] = {
-                        $in: await snomedCtr.getChilds(elem.sctid, { all: true, completed: false })
+                        $in: await snomedCtr.getChildren(elem.sctid, { all: true, completed: false })
                     };
                 }
             }
