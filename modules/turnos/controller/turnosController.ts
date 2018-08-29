@@ -8,7 +8,7 @@ export function getTurno(req) {
     return new Promise(async (resolve, reject) => {
         try {
             let pipelineTurno = [];
-            let turnos = [];
+            const turnos = [];
             let turno;
 
             pipelineTurno = [{
@@ -45,7 +45,7 @@ export function getTurno(req) {
                 }
             }];
             if (req.params && mongoose.Types.ObjectId.isValid(req.params.id)) {
-                let matchId = {
+                const matchId = {
                     '$match': {
                         'bloques.turnos._id': mongoose.Types.ObjectId(req.params.id),
                     }
@@ -53,7 +53,7 @@ export function getTurno(req) {
                 pipelineTurno[0] = matchId;
                 pipelineTurno[3] = matchId;
 
-                let data = await toArray(agenda.aggregate(pipelineTurno).cursor({}).exec());
+                const data = await toArray(agenda.aggregate(pipelineTurno).cursor({}).exec());
 
                 if (data && data[0].bloques && data[0].bloques.turnos && data[0].bloques.turnos >= 0) {
                     resolve(data[0].bloques.turnos[0]);
@@ -64,7 +64,7 @@ export function getTurno(req) {
             } else {
                 // Se modifica el pipeline en la posición 0 y 3, que son las posiciones
                 // donde se realiza el match
-                let matchTurno = {};
+                const matchTurno = {};
                 matchTurno['estado'] = 'publicada';
                 if (req.query && req.query.estado) {
                     matchTurno['bloques.turnos.estado'] = req.query.estado;
@@ -112,7 +112,7 @@ export function getTurno(req) {
                         '$match': { 'pacientes_docs': { $ne: [] } }
                     };
                 }
-                let data2 = await toArray(agenda.aggregate(pipelineTurno).cursor({}).exec());
+                const data2 = await toArray(agenda.aggregate(pipelineTurno).cursor({}).exec());
                 data2.forEach(elem => {
                     turno = elem.bloques.turnos;
                     turno.id = turno._id;
@@ -137,7 +137,7 @@ export async function getHistorialPaciente(req) {
     if (req.query && req.query.pacienteId) {
         try {
             let pipelineTurno = [];
-            let turnos = [];
+            const turnos = [];
             let turno;
             pipelineTurno = [
 
@@ -256,7 +256,7 @@ export async function getHistorialPaciente(req) {
 
             ];
             let data2 = await agenda.aggregate(pipelineTurno).exec();
-            let sobreturnos = await agenda.aggregate(pipelineSobreturno).exec();
+            const sobreturnos = await agenda.aggregate(pipelineSobreturno).exec();
             data2 = data2.concat(sobreturnos);
             data2.forEach(elem => {
                 turno = elem.turno;
@@ -281,8 +281,8 @@ export async function getHistorialPaciente(req) {
 export async function getLiberadosPaciente(req) {
     if (req.query && req.query.pacienteId) {
         try {
-            let idPaciente = new mongoose.Types.ObjectId(req.query.pacienteId);
-            let resultado: any = await logPaciente.find(
+            const idPaciente = new mongoose.Types.ObjectId(req.query.pacienteId);
+            const resultado: any = await logPaciente.find(
                 {
                     paciente: idPaciente,
                     operacion: 'turnos:liberar',
@@ -290,7 +290,7 @@ export async function getLiberadosPaciente(req) {
                 })
                 .exec();
             let turno;
-            let turnos = [];
+            const turnos = [];
             resultado.forEach(elem => {
                 turno = elem.dataTurno.turno.toObject();
                 turno.id = elem.dataTurno.turno._id.toString();
