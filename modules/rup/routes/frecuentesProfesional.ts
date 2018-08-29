@@ -3,6 +3,7 @@
  */
 
 import * as express from 'express';
+import * as mongoose from 'mongoose';
 import { profesionalMeta } from './../schemas/profesionalMeta';
 
 const router = express.Router();
@@ -33,31 +34,42 @@ router.get('/frecuentesProfesional/:id', (req, res, next) => {
 
 router.get('/frecuentesProfesional', (req, res, next) => {
 
+
+    if (!req.query.tipoPrestacion) {
+        return next(404);
+    }
+
     const query = {
         // profesional
-        ...(req.query.idProfesional) && { 'profesional.id': req.query.idProfesional },
+        ...(req.query.idProfesional) && { 'profesional.id': mongoose.Types.ObjectId(req.query.idProfesional) },
         // organizacion
-        ...(req.query.idOrganizacion) && { 'organizacion.id': req.query.idOrganizacion },
+        ...(req.query.idOrganizacion) && { 'organizacion.id': mongoose.Types.ObjectId(req.query.idOrganizacion) },
         // tipoPrestacion
         ...(req.query.tipoPrestacion) && { 'tipoPrestacion.conceptId': req.query.tipoPrestacion }
     };
 
-    profesionalMeta.find(query, (err, data: any) => {
 
+    const pipeline = [
+        { $match: query },
+        { $unwind: '$frecuentes' },
+        { $project: { 'frecuentes.concepto': 1, 'frecuentes.frecuencia': 1, _id: 0 } },
+        {
+            $group: {
+                _id: { conceptId: '$frecuentes.concepto.conceptId', term: '$frecuentes.concepto.term', fsn: '$frecuentes.concepto.fsn', semanticTag: '$frecuentes.concepto.semanticTag' },
+                frecuencia: { $sum: '$frecuentes.frecuencia' }
+            }
+        },
+        { $sort: { frecuencia: -1, '_id.conceptId': 1 } },
+        { $project: { _id: 0, concepto: '$_id', frecuencia: 1 } }
+    ];
+    profesionalMeta.aggregate(pipeline, (err, data) => {
         if (err) {
-            return next(err);
+            next(err);
         }
-
-        if (!data) {
-            return next(404);
-        }
-
-        if (data[0] && data[0].frecuentes) {
-            data[0].frecuentes.sort((a, b) => b.frecuencia - a.frecuencia);
-        }
-
         res.json(data);
     });
+
+
 });
 
 router.post('/frecuentesProfesional', (req, res, next) => {
@@ -93,7 +105,7 @@ router.put('/frecuentesProfesional/:id*?', (req, res, next) => {
             return next(err);
         }
 
-         // si no existe agregamos el nuevo frecuente
+        // si no existe agregamos el nuevo frecuente
         if (typeof resultado === null || !resultado) {
             const frecuente = new profesionalMeta(req.body);
 
@@ -123,7 +135,7 @@ router.put('/frecuentesProfesional/:id*?', (req, res, next) => {
                 });
             }
 
-            resultado.save( (err2, data2) => {
+            resultado.save((err2, data2) => {
                 if (err2) {
                     return next(err);
                 }
