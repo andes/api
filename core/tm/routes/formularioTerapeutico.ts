@@ -125,9 +125,9 @@ router.get('/formularioTerapeutico/:id?', async function (req, res, next) {
 });
 
 
-router.post('/formularioTerapeutico', Auth.authenticate(),  function (req, res, next) {
-  req.body.params.descripcion = req.body.params.concepto.term;
-    let newFormTera = new formularioTerapeutico(req.body.params);
+router.post('/formularioTerapeutico', Auth.authenticate(), function (req, res, next) {
+    req.body.descripcion = req.body.concepto.term;
+    let newFormTera = new formularioTerapeutico(req.body);
     Auth.audit(newFormTera, req);
     newFormTera.save((errSave) => {
         if (errSave) {
@@ -138,11 +138,10 @@ router.post('/formularioTerapeutico', Auth.authenticate(),  function (req, res, 
 });
 
 
-router.put('/formularioTerapeutico/:id', function (req, res, next) {
-
-let idPadre = mongoose.Types.ObjectId(req.body.params.idpadre);
-req.body.params.idpadre = idPadre;
-    formularioTerapeutico.findByIdAndUpdate(req.params.id, req.body.params, { new: true }, function (err, data) {
+router.put('/formularioTerapeutico/:id', Auth.authenticate(), function (req, res, next) {
+    let idPadre = mongoose.Types.ObjectId(req.body.idpadre);
+    req.body.idpadre = idPadre;
+    formularioTerapeutico.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
         if (err) {
             return next(err);
         }
