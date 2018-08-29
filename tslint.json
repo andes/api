@@ -140,7 +140,6 @@
             {
                 "checkLoops": false
             }
-        ],
-        "prefer-const": true
+        ]
     }
 }

@@ -18,7 +18,7 @@ router.get('/profe/', async (req, res, next) => {
             padron = padron[0].version;
         }
 
-        profe.find({ dni: Number.parseInt(req.query.dni, 2), version: padron }, (err, data) => {
+        profe.find({ dni: Number.parseInt(req.query.dni, 10), version: padron }, (err, data) => {
             if (err) {
                 return next(err);
             }
