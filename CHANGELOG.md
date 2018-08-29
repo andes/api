@@ -95,5 +95,9 @@
 * Elimina la eeferencia de solicitud al liberar el turno asignado
 * Verificación de pacientes sin obra social en la dación del turno
 
+## [3.6.2] - 2018-08-29
+
+#### Added
+* Agrega rutas para mostrar noticias de Punto Saludable para la app móvil.
 
 
