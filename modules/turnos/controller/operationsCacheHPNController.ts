@@ -37,6 +37,8 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
                 } catch (e) {
                     logger.LoggerAgendaCache.logAgenda(agenda._id, e);
                     transaction.rollback();
+                    // Reintentamos ejecutar la agenda hasta 3 retry, sino le cambiamos el estado a fail para no trabar el resto de las agendas
+                    await agendaRetryAndFail(agenda);
                     reject(e);
                 }
             });
@@ -102,6 +104,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
     }
 
     async function saveAgenda(_agenda, idTipoPrestacion) {
+        const autocitada = (_agenda.reservadoProfesional === _agenda.cantidadTurnos) ? 1 : 0;
         let idAgendaHPN;
         const idUbicacion = turnoCtrl.getUbicacion(idTipoPrestacion);
         const fechaHora = _agenda.horaInicio;
@@ -109,7 +112,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
         const duracionTurnos = _agenda.bloques[0].duracionTurno;
         const permiteTurnosSimultaneos = 0;
         const permiteSobreturnos = 0;
-        const publicada = (_agenda.estado !== constantes.EstadoAgendaAndes.publicada ? 0 : 1);
+        const publicada = (_agenda.estado === constantes.EstadoAgendaAndes.publicada || autocitada === 1) ? 1 : 0;
         const suspendida = (_agenda.estado !== constantes.EstadoAgendaAndes.suspendida ? 0 : 1);
         const andesId = _agenda.id;
 
@@ -226,7 +229,9 @@ export async function getIdTipoPrestacion(_agenda) {
     let prestacionesIntegrada: any = null;
 
     // Primero filtramos por el conceptId de la agenda que (según requerimientos era siempre 1) por eso verificamos _agenda.tipoPrestaciones[0]
-    const configuracionesPrestacion: any = await configuracionPrestacionModel.findOne({ 'snomed.conceptId': _agenda.tipoPrestaciones[0].conceptId });
+    const configuracionesPrestacion: any = await configuracionPrestacionModel.findOne({
+        'snomed.conceptId': _agenda.tipoPrestaciones[0].conceptId
+    });
     if (configuracionesPrestacion) {
         // Verificamos si nuestra organización tiene a esta prestación para integrar y así continuar con el proceso.
         configuracionesPrestacion.organizaciones.forEach(obj => {
@@ -243,4 +248,24 @@ export async function getIdTipoPrestacion(_agenda) {
     } else {
         return null;
     }
+}
+
+async function agendaRetryAndFail(_agenda) {
+    if (!_agenda.retry) {
+        _agenda.retry = 1;
+    } else {
+        if (_agenda.retry > 3) {
+            _agenda.estadoIntegracion = 'fail';
+        } else {
+            _agenda += 1;
+        }
+    }
+    return await agendasCache.update({
+        _id: _agenda._id
+    }, {
+        $set: {
+            retry: _agenda.retry,
+            estadoIntegracion: _agenda.estadoIntegracion
+        }
+    }).exec();
 }
