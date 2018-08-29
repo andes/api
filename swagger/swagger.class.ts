@@ -54,6 +54,6 @@ export class Swagger {
         });
 
         // Incluimos swagger-ui
-        app.use('/docs', express.static(__dirname + '/static'));
+        app.use('/api/docs', express.static(__dirname + '/static'));
     }
 }

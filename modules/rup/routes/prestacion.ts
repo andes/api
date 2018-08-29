@@ -12,11 +12,25 @@ import { NotificationService } from '../../mobileApp/controller/NotificationServ
 
 import { iterate, convertToObjectId, buscarEnHuds, matchConcepts } from '../controllers/rup';
 import { Logger } from '../../../utils/logService';
+import * as snomedCtr from '../../../core/term/controller/snomedCtr';
+import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
+import { snomedModel } from '../../../core/term/schemas/snomed';
 
 let router = express.Router();
 let async = require('async');
 
-router.get('/prestaciones/huds/:idPaciente', function (req, res, next) {
+
+/***
+ *  Buscar un determinado concepto snomed ya sea en una prestación especifica o en la huds completa de un paciente
+ *
+ * @param idPaciente: id mongo del paciente
+ * @param estado: buscar en prestaciones con un estado distinto a validada
+ * @param idPrestacion: buscar concepto/s en una prestacion especifica
+ * @param expresion: expresion snomed que incluye los conceptos que estamos buscando
+ *
+ */
+
+router.get('/prestaciones/huds/:idPaciente', async function (req, res, next) {
 
     // verificamos que sea un ObjectId válido
     if (!mongoose.Types.ObjectId.isValid(req.params.idPaciente)) {
@@ -25,12 +39,17 @@ router.get('/prestaciones/huds/:idPaciente', function (req, res, next) {
 
     // por defecto traemos todas las validadas, si no vemos el estado que viene en la request
     const estado = (req.query.estado) ? req.query.estado : 'validada';
+
     let query = {
         'paciente.id': req.params.idPaciente,
         '$where': 'this.estados[this.estados.length - 1].tipo ==  \"' + estado + '\"'
     };
 
-    let conceptos = (req.query.conceptIds) ? req.query.conceptIds : null;
+    if (req.query.idPrestacion) {
+        query['_id'] = mongoose.Types.ObjectId(req.query.idPrestacion);
+    }
+
+    let conceptos: any = [];
 
     return Prestacion.find(query, (err, prestaciones) => {
 
@@ -42,11 +61,33 @@ router.get('/prestaciones/huds/:idPaciente', function (req, res, next) {
             return res.status(404).send('Paciente no encontrado');
         }
 
-        // ejecutamos busqueda recursiva
-        let data = buscarEnHuds(prestaciones, conceptos);
+        if (req.query.expresion) {
+            let querySnomed = makeMongoQuery(req.query.expresion);
+            snomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docs: any[]) => {
 
-        res.json(data);
+                conceptos = docs.map((item) => {
+                    let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
+                    return {
+                        fsn: item.fullySpecifiedName,
+                        term: term,
+                        conceptId: item.conceptId,
+                        semanticTag: item.semtag
+                    };
+                });
+
+                // ejecutamos busqueda recursiva
+                let data = buscarEnHuds(prestaciones, conceptos);
+
+                res.json(data);
+            });
+        }
     });
+
+
+
+
+
+
 });
 
 router.get('/prestaciones/:id*?', function (req, res, next) {

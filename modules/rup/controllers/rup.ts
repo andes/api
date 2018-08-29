@@ -48,6 +48,7 @@ export function convertToObjectId(obj, property: string) {
  * @returns {any[]} Prestaciones que matcheen con 'conceptos'
  */
 export function buscarEnHuds(prestaciones, conceptos) {
+
     let data = [];
     // recorremos prestaciones
     prestaciones.forEach((prestacion: any) => {
@@ -57,7 +58,6 @@ export function buscarEnHuds(prestaciones, conceptos) {
             // verificamos si el registro de la prestacion tiene alguno de
             // los conceptos en su array de registros
             let resultado = matchConcepts(registro, conceptos);
-
             if (resultado) {
                 // agregamos el resultado a a devolver
                 data.push({
@@ -95,7 +95,7 @@ export function matchConcepts(registro, conceptos) {
         });
     } else {
         // verificamos que el concepto coincida con alguno de los elementos enviados en los conceptos
-        if (registro.concepto && registro.concepto.conceptId && conceptos.indexOf(registro.concepto.conceptId) !== -1) {
+        if (registro.concepto && registro.concepto.conceptId && conceptos.find(c => c.conceptId === registro.concepto.conceptId)) {
             match = registro;
         }
     }
