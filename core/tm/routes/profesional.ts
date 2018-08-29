@@ -670,8 +670,8 @@ router.get('/resumen/:id*?', function (req, res, next) {
 
 
 router.post('/profesionales/vencimientoMatriculaGrado', async (req, res, next) => {
-    // await vencimientoMatriculaGrado();
-    await vencimientoMatriculaPosgrado();
+    let prueba = await Promise.all([ vencimientoMatriculaGrado(), vencimientoMatriculaPosgrado()]);
+    console.log(prueba);
 });
 
 export = router;

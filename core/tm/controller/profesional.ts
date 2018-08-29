@@ -8,7 +8,7 @@ import { sendSms } from '../../../utils/roboSender/sendSms';
  */
 export async function vencimientoMatriculaGrado() {
     let profesionales: any = await profesional.find({ 'formacionGrado.matriculado': true }, (data: any) => { return data; });
-    console.log(profesionales);
+    console.log('grado');
 
     for (let _n = 0; _n < profesionales.length; _n++) {
         if (profesionales[_n].habilitado === true) {
@@ -78,7 +78,7 @@ export async function vencimientoMatriculaGrado() {
                         profesionales[_n].formacionGrado[_i].matriculado = false;
                         profesionales[_n].formacionGrado[_i].papelesVerificados = false;
 
-                        console.log('entre wacho', profesionales[_n]);
+
                         const datosActualizacionGrado = {
                             'descripcion': 'updateEstadoGrado',
                             'data': profesionales[_n].formacionGrado,
@@ -93,13 +93,14 @@ export async function vencimientoMatriculaGrado() {
             }
         }
 
-    }
 
+    }
+    console.log('fin');
 
 }
 
 export async function vencimientoMatriculaPosgrado() {
-    let profesionales: any = await profesional.find((data: any) => { return data; });
+    let profesionales: any = await profesional.find({'formacionPosgrado.matriculado': true}, (data: any) => { return data; });
     console.log('posgrado');
 
 
