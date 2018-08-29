@@ -24,6 +24,7 @@ import {
 import * as stream from 'stream';
 import * as base64 from 'base64-stream';
 import { Auth } from '../../../auth/auth.class';
+import { vencimientoMatriculaGrado, vencimientoMatriculaPosgrado } from '../controller/profesional';
 
 import { sendSms } from '../../../utils/roboSender/sendSms';
 
@@ -665,6 +666,12 @@ router.get('/resumen/:id*?', function (req, res, next) {
         });
         res.json(select);
     });
+});
+
+
+router.post('/profesionales/vencimientoMatriculaGrado', async (req, res, next) => {
+    // await vencimientoMatriculaGrado();
+    await vencimientoMatriculaPosgrado();
 });
 
 export = router;
