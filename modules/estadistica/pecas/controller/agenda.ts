@@ -101,7 +101,7 @@ async function auxiliar(a: any, b: any, t: any) {
     let turno: any = {};
     turno.sobreturno = (b !== null) ? 'NO' : 'SI';
     // console.log('b => ', b);
-    turno.tipoTurno = t.tipoTurno ? (t.tipoTurno === 'profesional' ? 'autocitado' : t.tipoTurno) : 'Sin datos';
+    turno.tipoTurno = t.tipoTurno ? (t.tipoTurno === 'profesional' ? 'autocitado' : (t.tipoTurno === 'gestion' ? 'conllave' : t.tipoTurno)) : 'Sin datos';
     turno.estadoTurno = t.estado;
     let turnoConPaciente = t.estado === 'asignado' && t.paciente && t.asistencia;
     let efector = await getEfector(a.organizacion._id) as any;
