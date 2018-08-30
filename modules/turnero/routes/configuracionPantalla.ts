@@ -1,43 +1,45 @@
 import * as express from 'express';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
-import { turneroPantallaModel } from '../schemas/turneroPantalla';
+import { TurneroPantallaModel } from '../schemas/turneroPantalla';
 import { Auth } from '../../../auth/auth.class';
 import { EventSocket, EventCore } from '@andes/event-bus';
 import { Packet, Websockets } from '../../../websockets';
+import { nextTick } from 'async';
 
 const ObjectId = mongoose.Types.ObjectId;
-let router = express.Router();
+const router = express.Router();
 
-router.get('/pantalla', Auth.authenticate(), async (req: any, res, next) => {
-    let organizacion = Auth.getOrganization(req);
+router.use('/pantalla', Auth.authenticate());
 
-    let opciones = {
-        organizacion:  ObjectId(organizacion)
-    };
-
-    if (req.query.nombre) {
-        opciones['nombre'] = req.query.nombre;
-    }
-
+router.get('/pantalla', async (req: any, res, next) => {
     try {
-        let pantallas = await turneroPantallaModel.find(opciones);
+        let organizacion = Auth.getOrganization(req);
+        let opciones = {
+            organizacion:  ObjectId(organizacion)
+        };
+
+        if (req.query.nombre) {
+            opciones['nombre'] = req.query.nombre;
+        }
+
+        let pantallas = await TurneroPantallaModel.find(opciones);
         return res.json(pantallas);
     } catch (e) {
         return next(e);
     }
 });
 
-router.get('/pantalla/:id', Auth.authenticate(), (req: any, res, next) => {
-    turneroPantallaModel.findById(req.params.id, (err, data) => {
-        if (err) {
-            return next(err);
-        }
-        return res.json(data);
-    });
+router.get('/pantalla/:id', async (req: any, res, next) => {
+    try {
+        const pantalla = await TurneroPantallaModel.findById(req.params.id);
+        return res.json(pantalla);
+    } catch (err) {
+        return next(err);
+    }
 });
 
-export function generarToken() {
+export const generarToken = function () {
     let codigo = '';
     let length = 6;
     let caracteres = '0123456789';
@@ -45,81 +47,81 @@ export function generarToken() {
         codigo += caracteres.charAt(Math.floor(Math.random() * caracteres.length));
     }
     return codigo;
-}
+};
 
-router.post('/pantalla/', Auth.authenticate(), (req: any, res, next) => {
-    let pantallaData = req.body;
-    let organizacion = Auth.getOrganization(req);
+router.post('/pantalla', async (req: any, res, next) => {
+    try {
+        let pantallaData = req.body;
+        let organizacion = Auth.getOrganization(req);
 
-    let pantalla: any = new turneroPantallaModel(pantallaData);
+        let pantalla: any = new TurneroPantallaModel(pantallaData);
 
-    pantalla.organizacion = ObjectId(organizacion);
-    pantalla.token = generarToken();
-    pantalla.expirationTime = moment().add(1, 'hours').toDate();
+        pantalla.organizacion = ObjectId(organizacion);
+        pantalla.token = generarToken();
+        pantalla.expirationTime = moment().add(1, 'hours').toDate();
 
-    pantalla.save((err2) => {
-        if (err2) {
-            return next(err2);
-        }
+        await pantalla.save();
         res.json(pantalla);
         EventCore.emitAsync('turnero-create', { pantalla });
-    });
+        return ;
+    } catch (err) {
+        return next(err);
+    }
 });
 
-router.post('/pantalla/:id/retoken', Auth.authenticate(), (req: any, res, next) => {
-    let id = req.params.id;
-    let organizacion = Auth.getOrganization(req);
-    let query = {
-        _id: ObjectId(id),
-        organizacion:  ObjectId(organizacion)
-    };
-    turneroPantallaModel.find(query, (err, pantallas: any[]) => {
-        if (err) {
-            return next(err);
-        }
-        if (pantallas.length) {
-            let pantalla = pantallas[0];
+router.post('/pantalla/:id/retoken', async (req: any, res, next) => {
+    try {
+        let id = req.params.id;
+        let organizacion = Auth.getOrganization(req);
+        let query = {
+            _id: ObjectId(id),
+            organizacion:  ObjectId(organizacion)
+        };
+        const pantalla = await TurneroPantallaModel.findOne(query);
+        if (pantalla) {
             pantalla.token = generarToken();
             pantalla.expirationTime = moment().add(1, 'hours').toDate();
-            return pantalla.save().then(() => {
-                return res.json(pantalla);
-            });
+            await pantalla.save();
+            return res.json(pantalla);
         }
         return next(422);
-    });
 
+    } catch (err) {
+        return next(err);
+    }
 
 });
 
-router.patch('/pantalla/:id', Auth.authenticate(), (req, res, next) => {
-    let id = req.params.id;
-    let data = req.body;
-    turneroPantallaModel.findByIdAndUpdate(id, data, { new: true }, (err, pantalla: any) => {
-        if (err) {
-            return next(err);
-        }
+router.patch('/pantalla/:id', async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const data = req.body;
+        const pantalla = await TurneroPantallaModel.findByIdAndUpdate(id, data, { new: true });
+
         res.json(pantalla);
         EventCore.emitAsync('turnero-update', { pantalla });
-
-    });
+        return;
+    } catch (err) {
+        return next(err);
+    }
 });
 
-router.delete('/pantalla/:id', Auth.authenticate(), (req: any, res, next) => {
-    turneroPantallaModel.findById(req.params.id, (err, data: any) => {
-        if (err) {
-            return next(err);
-        } else if (data) {
-            data.remove().then(() => {
-                res.json({message: 'OK'});
-                EventCore.emitAsync('turnero-remove', { pantalla: data });
-            });
-        }
-    });
+router.delete('/pantalla/:id', async (req: any, res, next) => {
+    try {
+        const pantalla = await TurneroPantallaModel.findById(req.params.id);
+        await pantalla.remove();
+        res.json({message: 'OK'});
+        EventCore.emitAsync('turnero-remove', { pantalla });
+
+    } catch (err) {
+        return next(err);
+    }
+
 });
 
 router.post('/pantalla/activate', async (req, res, next) => {
     let codigo = req.body.codigo;
-    let pantallas = await turneroPantallaModel.find({
+    let pantallas = await TurneroPantallaModel.find({
         token: codigo,
         expirationTime: { $gt: new Date() },
     });
@@ -153,19 +155,19 @@ EventCore.on(/turnero-(.*)/, function (data) {
  * Respondemos a un evento de proximo turno
  */
 
-EventSocket.on('turnero-proximo-llamado', (paquete: Packet) => {
-    const turno = paquete.data;
-    const espacioFisico =  ObjectId(turno.espacioFisico.id);
-    turneroPantallaModel.find({
-        'espaciosFisicos.id': espacioFisico
-    }).then((pantallas) => {
-        pantallas.forEach((pantalla) => {
-            let id = pantalla.id;
-            paquete.toRoom(`turnero-pantalla-${id}`, 'mostrar-turno', turno);
+EventSocket.on('turnero-proximo-llamado', async (paquete: Packet) => {
+    try {
+        const turno = paquete.data;
+        const espacioFisico =  ObjectId(turno.espacioFisico.id);
+        const pantallas = await TurneroPantallaModel.find({
+            'espaciosFisicos.id': espacioFisico
         });
-    }).catch((e) => {
-
-    });
+        pantallas.forEach((pantalla) => {
+            paquete.toRoom(`turnero-pantalla-${pantalla.id}`, 'mostrar-turno', turno);
+        });
+    } catch (err) {
+        return err;
+    }
 });
 
 module.exports = router;

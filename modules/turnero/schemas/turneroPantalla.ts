@@ -1,15 +1,30 @@
-import * as mongoose from 'mongoose';
+import { model, Model, Types, SchemaTypes, Schema, Document } from 'mongoose';
 
-export let turneroPantallaSchema = new mongoose.Schema({
+export interface IPantalla extends Document {
+    nombre: String;
+    token: String;
+    organizacion: Types.ObjectId;
+    expirationTime: Date;
+    espaciosFisicos: {
+        type: {
+            id: Types.ObjectId;
+            nombre: String;
+        }
+    };
+    playlist?: String;
+}
+
+export const TurneroPantallaSchema = new Schema({
     nombre: String,
     token: { type: String, required: false },
-    organizacion: mongoose.SchemaTypes.ObjectId,
+    organizacion: SchemaTypes.ObjectId,
     expirationTime: Date,
     espaciosFisicos: [{
         _id: false,
-        id: mongoose.SchemaTypes.ObjectId,
+        id: SchemaTypes.ObjectId,
         nombre: String
-    }]
+    }],
+    playlist: { type: String, required: false },
 });
 
-export let turneroPantallaModel = mongoose.model('turneroPantalla', turneroPantallaSchema, 'turneroPantalla');
+export const TurneroPantallaModel: Model<IPantalla> = model('turneroPantallas', TurneroPantallaSchema, 'turneroPantallas');
