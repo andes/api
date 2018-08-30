@@ -23,23 +23,22 @@ export function getServicioRenaper(paciente) {
                 }
                 if (client) {
                     if (paciente.documento && paciente.sexo) {
-                    client.LoginPecas(login, async function (err2, result) {
-                        if (err2) {
-                            reject(err2);
-                        }
-                        let tipoConsulta = 'WS_RENAPER_documento';
-                        let filtro = 'documento=' + paciente.documento + ';sexo=' + paciente.sexo;
-                        try {
-                            resultado = await consultaRenaper(result, tipoConsulta, filtro);
-                        } catch (error) {
-                            reject(error);
-                        }
-                        resolve(resultado);
-
-                    });
-                } else {
-                    resolve(null);
-                }
+                        client.LoginPecas(login, async function (err2, result) {
+                            if (err2) {
+                                reject(err2);
+                            }
+                            let tipoConsulta = 'WS_RENAPER_documento';
+                            let filtro = 'documento=' + paciente.documento + ';sexo=' + paciente.sexo;
+                            try {
+                                resultado = await consultaRenaper(result, tipoConsulta, filtro);
+                            } catch (error) {
+                                reject(error);
+                            }
+                            resolve(resultado);
+                        });
+                    } else {
+                        resolve(null);
+                    }
                 } else {
                     resolve(null);
                 }
@@ -55,23 +54,28 @@ function consultaRenaper(sesion, tipo, filtro) {
     let rst: any;
     datosRenaper = [];
     return new Promise((resolve, reject) => {
-        soap.createClient(url, function (err, client) {
-            let args = {
-                IdSesion: sesion.return['$value'],
-                Base: 'PecasAutorizacion'
-            };
-            client.FijarBaseDeSesion(args, async function (err2, result) {
-                if (err2) {
-                    reject(err2);
-                }
-                try {
-                    rst = await solicitarServicio(sesion, tipo, filtro);
-                } catch (error) {
-                    reject(error);
-                }
-                resolve(rst);
+        if (sesion.return) {
+            soap.createClient(url, function (err, client) {
+                let args = {
+                    IdSesion: sesion.return['$value'],
+                    Base: 'PecasAutorizacion'
+                };
+                client.FijarBaseDeSesion(args, async function (err2, result) {
+                    if (err2) {
+                        reject(err2);
+                    }
+                    try {
+                        rst = await solicitarServicio(sesion, tipo, filtro);
+                    } catch (error) {
+                        reject(error);
+                    }
+                    resolve(rst);
+                });
             });
-        });
+        } else {
+            // Para el caso que falle la creación de la sesión con Pecas por servicio no disponible
+            reject(null);
+        }
     });
 }
 
@@ -98,11 +102,9 @@ function solicitarServicio(sesion, tipo, filtro) {
                     if (err4) {
                         reject(err4);
                     }
-
                     let codigoResultado = result2.return.CodResultado['$value'];
-
                     if (result2.return.Resultado['$value']) {
-                        let resultado = Buffer.from(result2.return.Resultado['$value'], 'base64').toString('ascii');
+                        let resultado = Buffer.from(result2.return.Resultado['$value'], 'base64').toString('utf8');
                         // convertimos a JSON el resultado
                         let resArray = JSON.parse(resultado);
                         resolve({ codigo: codigoResultado, datos: resArray });

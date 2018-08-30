@@ -3,6 +3,4 @@ import * as agendaHPNCtrl from './../modules/turnos/controller/agendasHPNCacheCo
 function run(done) {
     agendaHPNCtrl.integracion().then(done).catch(done);
 }
-
-
 export = run;

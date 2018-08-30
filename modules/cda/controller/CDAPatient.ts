@@ -109,7 +109,9 @@ export async function findOrCreate(req, dataPaciente, organizacion) {
         }
         return paciente;
     } else {
-        return await pacienteCtr.createPaciente(dataToPac(dataPaciente, organizacion), req);
+         // No creamos más el paciente en MPI
+         // return await pacienteCtr.createPaciente(dataToPac(dataPaciente, organizacion), req);
+         return null;
     }
 }
 
@@ -364,15 +366,19 @@ export function generateCDA(uniqueId, confidentiality, patient, date, author, or
 
     let body = new Body();
 
+    let textComponent = new Component();
     if (text) {
-        let textComponent = new Component();
-        textComponent.title('Resumen de la consulta');
         textComponent.text(text);
         if (cie10) {
             textComponent.code(icd10Code(cie10));
         }
-        body.addComponent(textComponent);
+    } else {
+        textComponent.text('Sin datos');
+        if (cie10) {
+            textComponent.code(icd10Code(cie10));
+        }
     }
+    body.addComponent(textComponent);
 
     // [TODO] Archivo en base64 o aparte
     if (file) {
@@ -452,13 +458,14 @@ export function searchByPatient(pacienteId, prestacion, {
             list = list.map(item => {
                 let data = item.metadata;
                 data.cda_id = item._id;
-                data.adjuntos = data.adjuntos ? data.adjuntos.map(item2 => item2.path) : null;
                 if (data.adjuntos) {
-                    data.adjuntos.forEach((file: string) => {
+                    data.adjuntos = data.adjuntos.map(item2 => item2.path).map(file => {
                         if (!file.startsWith('files/')) {
-                            file = data.cda_id + '/' + file;
+                            return data.cda_id + '/' + file;
                         }
+                        return file;
                     });
+
                 }
 
                 return item.metadata;
@@ -737,6 +744,7 @@ export function checkAndExtract(xmlDom) {
         key: `//x:ClinicalDocument/x:component/x:structuredBody/x:component/x:section/x:entry/x:observationMedia/x:value/x:reference/@value`,
         as: 'adjunto'
     },
+
 
     ];
     let metadata: any = checkArg(_root, _params);

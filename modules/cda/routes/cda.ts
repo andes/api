@@ -70,11 +70,9 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
             // Es obligatorio que posea prestación
             return next({ error: 'prestacion_invalida' });
         }
-
         let cie10Code = req.body.cie10;
         let file = req.body.file;
         let texto = req.body.texto;
-
         // Terminar de decidir esto
         let organizacion = await Organizaciones.findById(orgId);
         let cie10 = null;
@@ -86,6 +84,9 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
         }
 
         let paciente = await cdaCtr.findOrCreate(req, dataPaciente, organizacion._id);
+        if (!paciente) {
+            return next({ error: 'paciente_inexistente'});
+        }
         let uniqueId = String(new mongoose.Types.ObjectId());
 
         let fileData, adjuntos;
@@ -236,9 +237,6 @@ router.get('/files/:name', async (req: any, res, next) => {
         stream1.pipe(res);
     }).catch(next);
 });
-
-
-
 
 /**
  * Devuelve el XML de un CDA según un ID
