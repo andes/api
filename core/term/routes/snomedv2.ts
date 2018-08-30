@@ -59,6 +59,7 @@ router.get('/snomed/concepts/:sctid/parents', async (req, res, next) => {
  * @param {String} sctid Concetp ID
  * @param {Boolean} all True para devolver todo el arbol abajo del concept ID
  * @param {Boolean} leaf Devulve solo los descencientes hojas
+ *
  */
 
 router.get('/snomed/concepts/:sctid/childs', async (req, res, next) => {

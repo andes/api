@@ -130,7 +130,6 @@ export class Auth {
     /**
      * Middleware para controlar los apps token.
      * Controla que el token esta almacenado en la DB.
-     *
      * @memberOf Auth
      */
     static appTokenProtected() {
