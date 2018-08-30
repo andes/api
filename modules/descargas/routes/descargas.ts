@@ -1,9 +1,7 @@
-import * as config from '../../../config';
 import * as express from 'express';
-import * as path from 'path';
 import { Documento } from './../controller/descargas';
 
-let router = express.Router();
+const router = express.Router();
 
 /**
  * Se usa POST para generar la descarga porque se envían datos

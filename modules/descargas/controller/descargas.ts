@@ -21,8 +21,8 @@ if (env.NODE_ENV !== 'production') {
 
 export class Documento {
 
-    private static locale = 'es-ES';
-    private static timeZone = 'America/Argentina/Buenos_Aires';
+    // private static locale = 'es-ES';
+    public static timeZone = 'America/Argentina/Buenos_Aires';
 
     /**
      * Opciones default de PDF rendering
@@ -348,7 +348,7 @@ export class Documento {
 
         return new Promise((resolve, reject) => {
 
-            let html = '';
+            // let html = '';
             switch (req.params.tipo) {
                 case 'pdf':
                     // PhantomJS PDF rendering options
@@ -372,11 +372,7 @@ export class Documento {
                         }
                     };
 
-                    if (options !== null) {
-                        this.options = options;
-                    } else {
-                        this.options = phantomPDFOptions;
-                    }
+                    this.options = options || phantomPDFOptions;
 
                     this.generarHTML(req).then(htmlPDF => {
                         htmlPDF = htmlPDF + this.generarCSS();

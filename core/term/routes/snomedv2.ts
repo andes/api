@@ -1,24 +1,22 @@
 import * as express from 'express';
-import { textIndexModel, snomedModel, textIndexSchema } from '../schemas/snomed';
+import { textIndexModel, snomedModel } from '../schemas/snomed';
 import * as utils from '../../../utils/utils';
 import * as snomedCtr from '../controller/snomedCtr';
 import * as configPrivate from './../../../config.private';
-import * as debug from 'debug';
 import { makeMongoQuery } from '../controller/grammar/parser';
 import { toArray } from '../../../utils/utils';
 
-let log = debug('SNOMED');
-let router = express.Router();
+const router = express.Router();
 
 
 /**
  * Devuelve un concepto Entero
  */
 
-router.get('/snomed/concepts/:sctid', async function (req, res, next) {
-    let sctid = req.params.sctid;
+router.get('/snomed/concepts/:sctid', async (req, res, next) => {
+    const sctid = req.params.sctid;
     try {
-        let concept = await snomedCtr.getConcept(sctid);
+        const concept = await snomedCtr.getConcept(sctid);
         return res.json(concept);
     } catch (e) {
         return next(e);
@@ -29,10 +27,10 @@ router.get('/snomed/concepts/:sctid', async function (req, res, next) {
  * Devuelve las descripciones de un concepto
  */
 
-router.get('/snomed/concepts/:sctid/descriptions', async function (req, res, next) {
-    let sctid = req.params.sctid;
+router.get('/snomed/concepts/:sctid/descriptions', async (req, res, next) => {
+    const sctid = req.params.sctid;
     try {
-        let concept: any = await snomedCtr.getConcept(sctid);
+        const concept: any = await snomedCtr.getConcept(sctid);
         return res.send(concept.descriptions);
     } catch (e) {
         return next(e);
@@ -43,12 +41,11 @@ router.get('/snomed/concepts/:sctid/descriptions', async function (req, res, nex
  * Devuelve los padres de un concepto
  */
 
-router.get('/snomed/concepts/:sctid/parents', async function (req, res, next) {
-    let sctid = req.params.sctid;
+router.get('/snomed/concepts/:sctid/parents', async (req, res, next) => {
+    const sctid = req.params.sctid;
     try {
-        let result = [];
-        let concept: any = await snomedCtr.getConcept(sctid);
-        let relationships = snomedCtr.filterRelationships(concept, { parent: true });
+        const concept: any = await snomedCtr.getConcept(sctid);
+        const relationships = snomedCtr.filterRelationships(concept, { parent: true });
         return res.json(relationships);
 
     } catch (e) {
@@ -62,15 +59,15 @@ router.get('/snomed/concepts/:sctid/parents', async function (req, res, next) {
  * @param {String} sctid Concetp ID
  * @param {Boolean} all True para devolver todo el arbol abajo del concept ID
  * @param {Boolean} leaf Devulve solo los descencientes hojas
+ *
  */
 
-router.get('/snomed/concepts/:sctid/childs', async function (req, res, next) {
-    let sctid = req.params.sctid;
-    let all = req.query.all || false;
-    let leaf = req.query.leaf || false;
+router.get('/snomed/concepts/:sctid/childs', async (req, res, next) => {
+    const sctid = req.params.sctid;
+    const all = req.query.all || false;
+    const leaf = req.query.leaf || false;
     try {
-        let result = [];
-        let childs: any = await snomedCtr.getChildren(sctid, { all, leaf });
+        const childs: any = await snomedCtr.getChildren(sctid, { all, leaf });
         return res.json(childs);
 
     } catch (e) {
@@ -83,15 +80,15 @@ router.get('/snomed/concepts/:sctid/childs', async function (req, res, next) {
  * Filtro por texto, reference set, semanticTag, Atributos, Hojas.
  * Skip y limit
  */
-router.get('/snomed/search', async function (req, res, next) {
+router.get('/snomed/search', async (req, res, next) => {
     if (!req.query.search && !req.query.refsetId && req.query.search !== '') {
         return next('Debe ingresar un parámetro de búsqueda');
     }
 
-    let search = req.query.search;
+    const search = req.query.search;
 
     // Filtros básicos
-    let conditions = {
+    const conditions = {
         languageCode: 'spanish',
         conceptActive: true,
         active: true
@@ -110,13 +107,13 @@ router.get('/snomed/search', async function (req, res, next) {
     if (isNaN(search)) {
         // Busca por palabras
         conditions['$and'] = [];
-        let words = search.split(' ');
-        words.forEach(function (word) {
+        const words = search.split(' ');
+        words.forEach((word) => {
             // normalizamos cada una de las palabras como hace SNOMED para poder buscar palabra a palabra
             word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08');
-            let expWord = '^' + utils.removeDiacritics(word) + '.*';
+            const expWord = '^' + utils.removeDiacritics(word) + '.*';
             // agregamos la palabra a la condicion
-            conditions['$and'].push({ 'words': { '$regex': expWord } });
+            conditions['$and'].push({ words: { $regex: expWord } });
         });
     } else {
         // Busca por conceptId
@@ -124,12 +121,12 @@ router.get('/snomed/search', async function (req, res, next) {
     }
 
     let lookUp = null;
-    let secondMatch = { $match: {} };
-    let attributes = req.query.attributes;
-    let leaf = req.query.leaf;
+    const secondMatch = { $match: {} };
+    const attributes = req.query.attributes;
+    const leaf = req.query.leaf;
     if (attributes || leaf) {
         lookUp = {
-            '$lookup': {
+            $lookup: {
                 from: configPrivate.snomed.dbVersion,
                 localField: 'conceptId',
                 foreignField: 'conceptId',
@@ -140,9 +137,9 @@ router.get('/snomed/search', async function (req, res, next) {
 
     // Filtros por atributos
     if (attributes) {
-        let conds = [];
-        for (let elem of attributes) {
-            let filters = {
+        const conds = [];
+        for (const elem of attributes) {
+            const filters = {
                 active: true
             };
             if (elem.sctid) {
@@ -157,7 +154,7 @@ router.get('/snomed/search', async function (req, res, next) {
             if (elem.typeid) {
                 filters['type.conceptId'] = elem.typeid;
             }
-            let cond = {
+            const cond = {
                 'concept.relationships': {
                     $elemMatch: filters
                 }
@@ -173,7 +170,7 @@ router.get('/snomed/search', async function (req, res, next) {
         secondMatch['$match']['concept.isLeafStated'] = true;
     }
 
-    let pipeline = [
+    const pipeline = [
         { $match: conditions },
 
         ...(lookUp ? [lookUp, secondMatch] : []),
@@ -189,26 +186,26 @@ router.get('/snomed/search', async function (req, res, next) {
                 fsn: 1,
                 semanticTag: 1,
                 refsetIds: 1,
-                aEq: { '$eq': ['$fsn', '$term'] }
+                aEq: { $eq: ['$fsn', '$term'] }
             }
         },
         { $match: { aEq: false } }
     ];
 
-    let result = await toArray(textIndexModel.aggregate(pipeline).cursor({}).exec());
+    const result = await toArray(textIndexModel.aggregate(pipeline).cursor({}).exec());
     res.send(result);
 
 });
 
-router.get('/snomed/expression', async function (req, res, next) {
-    let expression = req.query.expression;
-    let query = makeMongoQuery(expression);
+router.get('/snomed/expression', async (req, res, next) => {
+    const expression = req.query.expression;
+    const query = makeMongoQuery(expression);
     snomedModel.find(query, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docs: any[]) => {
-        let response = docs.map((item) => {
-            let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
+        const response = docs.map((item) => {
+            const term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
             return {
                 fsn: item.fullySpecifiedName,
-                term: term,
+                term,
                 conceptId: item.conceptId,
                 semanticTag: item.semtag
             };

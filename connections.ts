@@ -22,7 +22,7 @@ export class Connections {
         mongoose.plugin(schemaDefaults);
 
         // Configura logger de consultas
-        let queryLogger = debug('mongoose');
+        const queryLogger = debug('mongoose');
         if (queryLogger.enabled) {
             mongoose.set('debug', (collection, method, query, arg1, arg2, arg3) => queryLogger('%s.%s(%o) %s %s', collection, method, query, (arg2 || ''), (arg3 || '')));
         }
@@ -49,7 +49,7 @@ export class Connections {
     }
 
     private static configEvents(name: string, connection: mongoose.Connection) {
-        let connectionLog = debug('mongoose:' + name);
+        const connectionLog = debug('mongoose:' + name);
         connection.on('connecting', () => connectionLog('connecting ...'));
         connection.on('error', (error) => connectionLog(`error: ${error}`));
         connection.on('connected', () => connectionLog('connected'));
