@@ -21,13 +21,14 @@ router.get('/configuracionPrestaciones/:id*?', function (req, res, next) {
                 res.json(data);
             });
     } else {
-        let query;
+        let query = configuracionPrestacion.configuracionPrestacionModel.find({});
         if (req.query.snomed) {
-            query = configuracionPrestacion.configuracionPrestacionModel.find({ 'snomed.conceptId': req.query.snomed });
+            query.where({ 'snomed.conceptId': req.query.snomed });
         }
         if (req.query.organizacion) {
-            query = configuracionPrestacion.configuracionPrestacionModel.find({ 'organizaciones._id': req.query.organizacion });
+            query.where({ 'organizaciones._id': req.query.organizacion });
         }
+
         query.exec(function (err, data) {
             if (err) {
                 return next(err);

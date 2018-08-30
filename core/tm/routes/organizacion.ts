@@ -281,7 +281,7 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
             };
         }
         if (req.query.ids) {
-            filtros['_id'] = {$in : req.query.ids};
+            filtros['_id'] = { $in: req.query.ids };
         }
 
         let skip: number = parseInt(req.query.skip || 0, 10);
@@ -289,9 +289,9 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
 
         query = organizacion
             .model
-            .find(filtros)
-            .skip(skip)
-            .limit(limit);
+            .find(filtros);
+        // .skip(skip)
+        // .limit(limit);
         query.exec(function (err, data) {
             if (err) {
                 return next(err);
@@ -404,8 +404,8 @@ router.put('/organizaciones/:id', Auth.authenticate(), function (req, res, next)
             return next(err);
         }
 
-            res.json(data);
-        });
+        res.json(data);
+    });
 });
 
 /**
@@ -442,8 +442,8 @@ router.delete('/organizaciones/:id', Auth.authenticate(), function (req, res, ne
             return next(err);
         }
 
-            res.json(data);
-        });
+        res.json(data);
+    });
 });
 
 
