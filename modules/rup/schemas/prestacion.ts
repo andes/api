@@ -92,6 +92,9 @@ export let schema = new mongoose.Schema({
             documento: String
         },
 
+
+        // TODO: REVISAR TIPOPRESTACION ORIGEN, ES LO MISMO QU ESTO???
+
         // ID de la Prestación desde la que se generó esta Solicitud
         prestacionOrigen: {
             type: mongoose.Schema.Types.ObjectId,
