@@ -61,7 +61,7 @@ function checkType(concept, sctid) {
  * @param {Boolean} all True para devolver hijos, nietos, bisnietos... de un concepto, false solo hijos directos.
  *
  */
-export function getChilds(sctid, { all = false, completed = true, leaf = false }) {
+export function getChildren(sctid, { all = false, completed = true, leaf = false }) {
     let query;
     if (all) {
         query = {
@@ -81,10 +81,12 @@ export function getChilds(sctid, { all = false, completed = true, leaf = false }
             }
         };
     }
+
     if (leaf) {
         query['isLeafInferred'] = true;
         query['isLeafStated'] = true;
     }
+
     return snomedModel.find(query).then((concepts: any[]) => {
         const result = [];
         concepts.forEach((cpt) => {
@@ -121,7 +123,7 @@ export async function contextFilter(options) {
                     filters['destination.conceptId'] = elem.sctid;
                 } else {
                     filters['destination.conceptId'] = {
-                        $in: await getChilds(elem.sctid, { all: true, completed: false })
+                        $in: await getChildren(elem.sctid, { all: true, completed: false })
                     };
                 }
             }

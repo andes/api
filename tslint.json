@@ -109,12 +109,6 @@
         "prefer-object-spread": true,
         "import-spacing": true,
         "object-literal-shorthand": true,
-        "no-unused-variable": [
-            true,
-            {
-                "ignore-pattern": "^_"
-            }
-        ],
         "only-arrow-functions": [
             true,
             "allow-declarations",

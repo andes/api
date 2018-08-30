@@ -85,7 +85,7 @@ export class Auth {
     }
 
     static authenticatePublic() {
-        return  passport.authenticate();
+        return passport.authenticate();
     }
 
     /**
@@ -136,7 +136,7 @@ export class Auth {
     static appTokenProtected() {
         return (req, res, next) => {
             if (req.user.type === 'app-token') {
-                authApps.findOne({organizacion:  mongoose.Types.ObjectId(req.user.organizacion)}).then((app: any) => {
+                authApps.findOne({ organizacion: mongoose.Types.ObjectId(req.user.organizacion) }).then((app: any) => {
                     const token: string = req.headers.authorization.substring(4);
                     if (app.token && app.token === token) {
                         next();
@@ -213,11 +213,11 @@ export class Auth {
      *
      * @memberOf Auth
      */
-    static getOrganization(req: express.Request): string {
+    static getOrganization(req: express.Request, key = 'id'): string {
         if (!(req as any).user || !(req as any).user.organizacion) {
             return null;
         } else {
-            return (req as any).user.organizacion.id;
+            return (req as any).user.organizacion[key];
         }
     }
 
