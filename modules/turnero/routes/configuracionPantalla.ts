@@ -10,9 +10,9 @@ import { nextTick } from 'async';
 const ObjectId = mongoose.Types.ObjectId;
 const router = express.Router();
 
-router.use('/pantalla', Auth.authenticate());
+// router.use('/pantalla', Auth.authenticate());
 
-router.get('/pantalla', async (req: any, res, next) => {
+router.get('/pantalla', Auth.authenticate(), async (req: any, res, next) => {
     try {
         let organizacion = Auth.getOrganization(req);
         let opciones = {
@@ -30,7 +30,7 @@ router.get('/pantalla', async (req: any, res, next) => {
     }
 });
 
-router.get('/pantalla/:id', async (req: any, res, next) => {
+router.get('/pantalla/:id', Auth.authenticate(), async (req: any, res, next) => {
     try {
         const pantalla = await TurneroPantallaModel.findById(req.params.id);
         return res.json(pantalla);
@@ -49,7 +49,7 @@ export const generarToken = function () {
     return codigo;
 };
 
-router.post('/pantalla', async (req: any, res, next) => {
+router.post('/pantalla', Auth.authenticate(), async (req: any, res, next) => {
     try {
         let pantallaData = req.body;
         let organizacion = Auth.getOrganization(req);
@@ -69,7 +69,7 @@ router.post('/pantalla', async (req: any, res, next) => {
     }
 });
 
-router.post('/pantalla/:id/retoken', async (req: any, res, next) => {
+router.post('/pantalla/:id/retoken', Auth.authenticate(), async (req: any, res, next) => {
     try {
         let id = req.params.id;
         let organizacion = Auth.getOrganization(req);
@@ -92,7 +92,7 @@ router.post('/pantalla/:id/retoken', async (req: any, res, next) => {
 
 });
 
-router.patch('/pantalla/:id', async (req, res, next) => {
+router.patch('/pantalla/:id', Auth.authenticate(), async (req, res, next) => {
     try {
         const id = req.params.id;
         const data = req.body;
@@ -106,7 +106,7 @@ router.patch('/pantalla/:id', async (req, res, next) => {
     }
 });
 
-router.delete('/pantalla/:id', async (req: any, res, next) => {
+router.delete('/pantalla/:id', Auth.authenticate(), async (req: any, res, next) => {
     try {
         const pantalla = await TurneroPantallaModel.findById(req.params.id);
         await pantalla.remove();
@@ -149,6 +149,11 @@ router.post('/pantalla/activate', async (req, res, next) => {
 EventCore.on(/turnero-(.*)/, function (data) {
     const event = this.event;
     Websockets.toRoom(`turnero-${data.pantalla.organizacion}`, event, data);
+    switch (event) {
+        case 'turnero-update':
+            Websockets.toRoom(`turnero-pantalla-${data.pantalla.id}`, event, data);
+            break;
+    }
 });
 
 /**
