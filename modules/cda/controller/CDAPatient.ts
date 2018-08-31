@@ -605,7 +605,6 @@ export function validateSchemaCDA(xmlRaw) {
         xmlDoc.validate(xsdDoc);
 
         if (xmlDoc.validationErrors.length) {
-            console.log(xmlDoc.validationErrors);
             return Promise.reject(xmlDoc.validationErrors);
         }
         return Promise.resolve(xmlDoc);
@@ -770,7 +769,6 @@ export function checkAndExtract(xmlDom) {
 
     ];
     let metadata: any = checkArg(_root, _params);
-    console.log("metadata: ", metadata)
     if (metadata.adjunto && metadata.adjunto.indexOf('/') >= 0) {
         return null;
     }

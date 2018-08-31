@@ -150,7 +150,6 @@ router.get('/agenda/:id?', function (req, res, next) {
     } else {
         let query;
         query = agenda.find({});
-        console.log("aca", req.query.estado);
 
 
         query.where('estado').ne('borrada'); // No devuelve agendas borradas
