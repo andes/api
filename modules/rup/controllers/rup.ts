@@ -48,13 +48,21 @@ export function convertToObjectId(obj, property: string) {
  * @returns {any[]} Prestaciones que matcheen con 'conceptos'
  */
 export function buscarEnHuds(prestaciones, conceptos) {
-
     let data = [];
     // recorremos prestaciones
     prestaciones.forEach((prestacion: any) => {
         // recorremos los registros de cada prestacion
         prestacion.ejecucion.registros.forEach(registro => {
 
+            // verificamos que el concepto coincida con alguno de los elementos enviados en los conceptos
+            if (registro.concepto && registro.concepto.conceptId && conceptos.find(c => c.conceptId === registro.concepto.conceptId)) {
+                data.push({
+                    tipoPrestacion: prestacion.solicitud.tipoPrestacion,
+                    fecha: registro.createdAt,
+                    profesional: registro.createdBy,
+                    registro: registro
+                });
+            }
             // verificamos si el registro de la prestacion tiene alguno de
             // los conceptos en su array de registros
             let resultado = matchConcepts(registro, conceptos);
@@ -67,7 +75,6 @@ export function buscarEnHuds(prestaciones, conceptos) {
                     registro: resultado
                 });
             }
-
         });
     });
 
@@ -86,19 +93,18 @@ export function matchConcepts(registro, conceptos) {
     // almacenamos la variable de matcheo para devolver el resultado
     let match = false;
 
-    if (Array.isArray(registro['registros']) && registro['registros'].length > 0) {
-        registro['registros'].forEach((reg: any) => {
-
-            if (matchConcepts(reg, conceptos)) {
-                match = reg;
-            }
-        });
-    } else {
+    if (!Array.isArray(registro['registros']) || registro['registros'].length <= 0) {
         // verificamos que el concepto coincida con alguno de los elementos enviados en los conceptos
         if (registro.concepto && registro.concepto.conceptId && conceptos.find(c => c.conceptId === registro.concepto.conceptId)) {
             match = registro;
         }
+    } else {
+        registro['registros'].forEach((reg: any) => {
+            let encontrado = null;
+            if (encontrado = matchConcepts(reg, conceptos)) {
+                match = encontrado;
+            }
+        });
     }
-
     return match;
 }

@@ -57,6 +57,13 @@ router.get('/prestaciones/huds/:idPaciente', async function (req, res, next) {
             return next(err);
         }
 
+
+
+
+
+
+
+
         if (!prestaciones) {
             return res.status(404).send('Paciente no encontrado');
         }
@@ -82,13 +89,8 @@ router.get('/prestaciones/huds/:idPaciente', async function (req, res, next) {
             });
         }
     });
-
-
-
-
-
-
 });
+
 
 router.get('/prestaciones/:id*?', function (req, res, next) {
 
