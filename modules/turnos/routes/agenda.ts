@@ -6,6 +6,7 @@ import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
 import * as moment from 'moment';
 import * as agendaCtrl from '../controller/agenda';
+import * as prestacionCtrl from '../../rup/controllers/prestacion';
 import * as agendaHPNCacheCtrl from '../controller/agendasHPNCacheController';
 import * as diagnosticosCtrl from '../controller/diagnosticosC2Controller';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
@@ -289,7 +290,7 @@ router.post('/agenda/clonar', function (req, res, next) {
                 if (clon) {
                     data._id = mongoose.Types.ObjectId();
                     data.isNew = true;
-                    let nueva = new agenda(data.toObject());
+                    let nueva: any = new agenda(data.toObject());
                     nueva['horaInicio'] = agendaCtrl.combinarFechas(clon, new Date(data['horaInicio']));
                     nueva['horaFin'] = agendaCtrl.combinarFechas(clon, new Date(data['horaFin']));
                     nueva['updatedBy'] = undefined;
@@ -299,7 +300,7 @@ router.post('/agenda/clonar', function (req, res, next) {
                     let newFinBloque: any;
                     let newIniTurno: any;
                     // nueva['bloques'] = data['bloques'];
-                    nueva['bloques'].forEach((bloque, index) => {
+                    nueva['bloques'].forEach((bloque) => {
                         bloque.horaInicio = agendaCtrl.combinarFechas(clon, bloque.horaInicio);
                         bloque.horaFin = agendaCtrl.combinarFechas(clon, bloque.horaFin);
                         if (bloque.pacienteSimultaneos) {
@@ -314,21 +315,25 @@ router.post('/agenda/clonar', function (req, res, next) {
                             bloque.restantesProfesional = bloque.reservadoProfesional;
                         }
                         bloque._id = mongoose.Types.ObjectId();
-                        bloque.turnos.forEach((turno, index1) => {
-                            turno.horaInicio = agendaCtrl.combinarFechas(clon, turno.horaInicio);
-                            turno.estado = 'disponible';
-                            turno.asistencia = undefined;
-                            turno.paciente = null;
-                            turno.tipoPrestacion = null;
-                            turno.idPrestacionPaciente = null;
-                            turno.nota = null;
-                            turno._id = mongoose.Types.ObjectId();
-                            turno.tipoTurno = undefined;
-                            turno.updatedAt = undefined;
-                            turno.updatedBy = undefined;
-                            turno.diagnostico = { codificaciones: [] };
-                            turno.reasignado = undefined;
-                        });
+                        if (!nueva.dinamica) {
+                            bloque.turnos.forEach((turno, index1) => {
+                                turno.horaInicio = agendaCtrl.combinarFechas(clon, turno.horaInicio);
+                                turno.estado = 'disponible';
+                                turno.asistencia = undefined;
+                                turno.paciente = null;
+                                turno.tipoPrestacion = null;
+                                turno.idPrestacionPaciente = null;
+                                turno.nota = null;
+                                turno._id = mongoose.Types.ObjectId();
+                                turno.tipoTurno = undefined;
+                                turno.updatedAt = undefined;
+                                turno.updatedBy = undefined;
+                                turno.diagnostico = { codificaciones: [] };
+                                turno.reasignado = undefined;
+                            });
+                        } else {
+                            bloque.turnos = [];
+                        }
                     });
                     nueva['estado'] = 'planificacion';
                     nueva['sobreturnos'] = [];
@@ -458,6 +463,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                             LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, agendaCtrl.getBloque(data, turno)._id, data._id);
                         }
                         agendaCtrl.liberarTurno(req, data, turno);
+                        prestacionCtrl.liberarRefTurno(turno._id, req);
                         break;
                     case 'suspenderTurno':
                         turno = agendaCtrl.getTurno(req, data, turnos[y]);
@@ -503,7 +509,6 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 }
 
                 Auth.audit(data, req);
-
                 data.save(function (error) {
 
                     Logger.log(req, 'citas', 'update', {
