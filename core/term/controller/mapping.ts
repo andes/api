@@ -1,5 +1,6 @@
 import * as moment from 'moment';
 import { SnomedMapping } from '../schemas/mapping';
+import * as staticMapping from '../schemas/staticmapping';
 
 /**
  * Mapea un concepto de snomed a CIE10
@@ -76,20 +77,26 @@ export class SnomedCIE10Mapping {
         }
         return new Promise((resolve, reject) => {
             SnomedMapping.find({ conceptId: conceptId }).sort('mapGroup mapPriority').then((mapping) => {
-                /**
-                 * Chequeamos regla a regla cual es la primera que se cumple
-                 */
-                for (let i = 0; i < mapping.length; i++) {
-                    let rules = mapping[i] as any;
-                    let rule = rules.mapRule;
+                if (mapping) {
+                    // Chequeamos regla a regla cual es la primera que se cumple
+                    for (let i = 0; i < mapping.length; i++) {
+                        let rules = mapping[i] as any;
+                        let rule = rules.mapRule;
 
-                    if (this.check(rule)) {
-                        if (rules.mapTarget.length > 0) {
-                            return resolve(rules.mapTarget);
+                        if (this.check(rule)) {
+                            if (rules.mapTarget.length > 0) {
+                                return resolve(rules.mapTarget);
+                            }
                         }
                     }
                 }
-                resolve(null);
+
+                // Chequea si existe un mapeo estático
+                staticMapping.model.findOne({ conceptId: conceptId }).then((staticmap: any) => {
+                    resolve(staticmap ? staticmap.mapTarget : null);
+                }).catch(err2 => {
+                    reject(err2);
+                });
             }).catch((err) => {
                 reject(err);
             });
@@ -123,16 +130,13 @@ export class SnomedCIE10Mapping {
                         } else {
                             result = false;
                         }
-
                     } else {
                         result = result && (this.contexto.indexOf(r.concept) >= 0);
                     }
-
                 }
                 return result;
             }
         }
         return false;
     }
-
 }

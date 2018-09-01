@@ -147,12 +147,15 @@ router.get('/snomed/map', function (req, res, next) {
     let map = new SnomedCIE10Mapping(paciente, contexto);
 
     map.transform(conceptId).then(target => {
-        cie10.model.findOne({ codigo: target }).then(cie => {
-            res.json(cie);
-        }).catch(err => {
-            return next(err);
-        });
-
+        if (target) {
+            cie10.model.findOne({ codigo: target }).then(cie => {
+                res.json(cie);
+            }).catch(err => {
+                return next(err);
+            });
+        } else {
+            res.json(null);
+        }
     }).catch(error => {
         return next(error);
     });
