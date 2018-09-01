@@ -134,7 +134,6 @@ router.get('/snomed', function (req, res, next) {
  * @param {Ipaciente} paciente
  * @param {String[]} secondaryConcepts  Listado de concepto secundario para mejorar el mapeo.
  */
-
 router.get('/snomed/map', function (req, res, next) {
     if (!req.query.conceptId) {
         return next('Debe ingresar un concepto principal');
@@ -146,9 +145,13 @@ router.get('/snomed/map', function (req, res, next) {
 
     let map = new SnomedCIE10Mapping(paciente, contexto);
 
-    map.transform(conceptId).then(target => {
+    map.transform(conceptId).then((target: string) => {
         if (target) {
-            cie10.model.findOne({ codigo: target }).then(cie => {
+            // Como los mapeos oficiles traen códigos tales como H47.019, S91.001?, ...
+            // busca las opciones H47.19, S91.1?, ...
+            let target2 = target.replace('.00', '.');
+            let target3 = target.replace('.0', '.');
+            cie10.model.findOne({ codigo: { $in: [target, target2, target3] } }).then(cie => {
                 res.json(cie);
             }).catch(err => {
                 return next(err);
@@ -160,7 +163,5 @@ router.get('/snomed/map', function (req, res, next) {
         return next(error);
     });
 });
-
-
 
 export = router;
