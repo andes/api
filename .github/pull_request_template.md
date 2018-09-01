@@ -1,17 +1,18 @@
 <!--
 
 PASOS PARA REGISTRAR UN PULL REQUEST
-_________________________________________
+_____________________________________________
 
-1) Escribir el nombre del pull request siguiendo estas reglas:
+1) Escribir el nombre siguiendo estas reglas:
    - Indicar como prefijo el nombre del módulo
-   - Si la funcionalidad a mergear corresponde a una User Story, el nombre debe coincidir con el título de la misma
+   - Si la funcionalidad corresponde a una User Story, el nombre debe coincidir son su título
    - No utilizar la palabra fix ni sus derivados
 
    Ejemplo: CITAS - Reglas de referencia y contrarreferencia para la carga de solicitudes
 
-2) Asignar revisores que sean miembros del equipo responsable de revisar el pull request
-3) Completar las siguientes secciones:
+2) Seleccionar el proyecto al que pertenece (CITAS, RUP, MPI, ...)
+3) Asignar revisores que sean miembros del equipo responsable de revisar el pull request
+4) Completar las siguientes secciones:
 
 -->
 ### Requerimiento

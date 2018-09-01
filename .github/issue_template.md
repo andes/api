@@ -1,9 +1,9 @@
 <!--
 
 PASOS PARA REGISTRAR UN ISSUE
-__________________________________
+_____________________________________________
 
-1) Seleccionar el proyecto al que pertenece el issue (CITAS, RUP, MPI)
+1) Seleccionar el proyecto al que pertenece (CITAS, RUP, MPI, ...)
 2) Seleccionar un label de identificación (bug, feature, enhancement, etc.) 
 3) Asignar revisores que sean miembros del equipo responsable de solucionar el issue
 4) Completar las siguientes secciones:
