@@ -3,11 +3,11 @@ import * as mongoose from 'mongoose';
 import { espacioFisico } from '../schemas/espacioFisico';
 import { defaultLimit, maxLimit } from './../../../config';
 
-let router = express.Router();
+const router = express.Router();
 
-router.get('/espacioFisico/:_id*?', function (req, res, next) {
+router.get('/espacioFisico/:_id*?', (req, res, next) => {
     if (req.params._id) {
-        espacioFisico.findById(req.params._id, function (err, data) {
+        espacioFisico.findById(req.params._id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -15,14 +15,14 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
         });
     } else {
         // Trae todos
-        let radix = 10;
-        let skip: number = parseInt(req.query.skip || 0, radix);
-        let limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
-        let query = espacioFisico.find({}).skip(skip).limit(limit);
-        let nombres = [];
+        const radix = 10;
+        const skip: number = parseInt(req.query.skip || 0, radix);
+        const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
+        const query = espacioFisico.find({}).skip(skip).limit(limit);
+        const nombres = [];
 
         if (req.query.nombre) {
-            nombres.push({ 'nombre': RegExp('^.*' + req.query.nombre + '.*$', 'i') });
+            nombres.push({ nombre: RegExp('^.*' + req.query.nombre + '.*$', 'i') });
             nombres.push({ 'sector.nombre': RegExp('^.*' + req.query.nombre + '.*$', 'i') });
             nombres.push({ 'servicio.nombre': RegExp('^.*' + req.query.nombre + '.*$', 'i') });
             nombres.push({ 'edificio.descripcion': RegExp('^.*' + req.query.nombre + '.*$', 'i') });
@@ -84,9 +84,9 @@ router.get('/espacioFisico/:_id*?', function (req, res, next) {
     }
 });
 
-router.get('/espacioFisico/:idOrganizacion', function (req, res, next) {
+router.get('/espacioFisico/:idOrganizacion', (req, res, next) => {
 
-    espacioFisico.find(req.params.idOrganizacion, function (err, data) {
+    espacioFisico.find(req.params.idOrganizacion, (err, data) => {
         if (err) {
             return next(err);
         }
@@ -95,8 +95,8 @@ router.get('/espacioFisico/:idOrganizacion', function (req, res, next) {
 
 });
 
-router.post('/espacioFisico', function (req, res, next) {
-    let newEspacioFisico = new espacioFisico(req.body);
+router.post('/espacioFisico', (req, res, next) => {
+    const newEspacioFisico = new espacioFisico(req.body);
     newEspacioFisico.save((err) => {
         if (err) {
             return next(err);
@@ -105,8 +105,8 @@ router.post('/espacioFisico', function (req, res, next) {
     });
 });
 
-router.put('/espacioFisico/:id', function (req, res, next) {
-    espacioFisico.findByIdAndUpdate(req.params.id, req.body, function (err, data) {
+router.put('/espacioFisico/:id', (req, res, next) => {
+    espacioFisico.findByIdAndUpdate(req.params.id, req.body, (err, data) => {
         if (err) {
             return next(err);
         }
@@ -114,8 +114,8 @@ router.put('/espacioFisico/:id', function (req, res, next) {
     });
 });
 
-router.delete('/espacioFisico/:id', function (req, res, next) {
-    espacioFisico.findByIdAndRemove(req.params.id, function (err, data) {
+router.delete('/espacioFisico/:id', (req, res, next) => {
+    espacioFisico.findByIdAndRemove(req.params.id, (err, data) => {
         if (err) {
             return next(err);
         }

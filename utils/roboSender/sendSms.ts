@@ -1,9 +1,9 @@
 import { SMSendpoints } from '../../config.private';
 import * as debug from 'debug';
-
-let log = debug('sendSMS');
-let soap = require('soap');
-let libxmljs = require('libxmljs');
+import * as utils from '../utils';
+const log = debug('sendSMS');
+const soap = require('soap');
+const libxmljs = require('libxmljs');
 
 export interface SmsOptions {
     telefono: number;
@@ -13,16 +13,16 @@ export interface SmsOptions {
 export function sendSms(smsOptions: SmsOptions) {
     return new Promise((resolve, reject) => {
         log('Enviando SMS a ', smsOptions.telefono);
-        let argsOperador = {
+        const argsOperador = {
             telefono: smsOptions.telefono
         };
         let argsNumero = {};
         createClient(SMSendpoints.urlOperador).then((clientOperador: any) => {
-            clientOperador.recuperarOperador(argsOperador, function (errOperador, result, raw) {
+            clientOperador.recuperarOperador(argsOperador, (errOperador, result, raw) => {
                 // Server down?
                 if (clientOperador.lastResponse) {
                     try {
-                        let xmlFaultString = getXMLOption(clientOperador.lastResponse, '//faultstring');
+                        const xmlFaultString = getXMLOption(clientOperador.lastResponse, '//faultstring');
                         if (xmlFaultString) {
                             return reject(xmlFaultString);
                         }
@@ -33,28 +33,29 @@ export function sendSms(smsOptions: SmsOptions) {
                 if (result && result.return) {
                     let carrier;
                     try {
-                        let xmlDato = getXMLOption(result.return, '//dato');
+                        const xmlDato = getXMLOption(result.return, '//dato');
                         carrier = operador(xmlDato);
                     } catch (ee) {
                         return reject(ee);
                     }
 
                     if (carrier) {
+                        const mensaje = utils.removeDiacritics(smsOptions.mensaje);
                         argsNumero = {
                             destino: argsOperador.telefono,
-                            mensaje: smsOptions.mensaje,
+                            mensaje,
                             operador: carrier,
                             aplicacion: '',
                             mobilein: '1'
                         };
 
                         createClient(SMSendpoints.urlNumero).then((clientEnvio: any) => {
-                            clientEnvio.envioSMSOperador(argsNumero, function (errEnvio, resultEnvio, _raw) {
+                            clientEnvio.envioSMSOperador(argsNumero, (errEnvio, resultEnvio, _raw) => {
                                 try {
                                     if (errEnvio) {
                                         return reject(errEnvio);
                                     } else {
-                                        let status = getXMLOption(resultEnvio.return, '//status');
+                                        const status = getXMLOption(resultEnvio.return, '//status');
                                         return status === '0' ? resolve(status) : reject(status);
                                     }
                                 } catch (eee) {
@@ -93,22 +94,22 @@ function operador(operadorName) {
 }
 
 function getXMLOption(xml, option) {
-    let xmlDocument = libxmljs.parseXml(xml);
-    let xmlData = xmlDocument.get(option);
+    const xmlDocument = libxmljs.parseXml(xml);
+    const xmlData = xmlDocument.get(option);
     return xmlData.text();
 }
 
 function createClient(url) {
     return new Promise((resolve, reject) => {
 
-        let opciones = {
+        const opciones = {
             ignoredNamespaces: {
                 namespaces: ['ws'],
                 override: true
             }
         };
 
-        soap.createClient(url, opciones, function (errCreate, client) {
+        soap.createClient(url, opciones, (errCreate, client) => {
             if (errCreate) {
                 reject(errCreate);
             } else {

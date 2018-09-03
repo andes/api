@@ -2,22 +2,16 @@
  * Schema definido en profesionalMeta.ts
  */
 
-import { log } from './../../../core/log/schemas/log';
 import * as express from 'express';
-import * as moment from 'moment';
 import * as mongoose from 'mongoose';
-// import * as async from 'async';
-import { Auth } from './../../../auth/auth.class';
-import { profesional } from './../../../core/tm/schemas/profesional';
 import { profesionalMeta } from './../schemas/profesionalMeta';
 
-let router = express.Router();
-let async = require('async');
+const router = express.Router();
 
-router.get('/frecuentesProfesional/:id', function (req, res, next) {
+router.get('/frecuentesProfesional/:id', (req, res, next) => {
     if (req.params.id) {
-        let query = profesionalMeta.find({ 'profesional.id': req.params.id });
-        query.exec(function (err, data: any) {
+        const query = profesionalMeta.find({ 'profesional.id': req.params.id });
+        query.exec((err, data: any) => {
 
             if (err) {
                 return next(err);
@@ -38,46 +32,57 @@ router.get('/frecuentesProfesional/:id', function (req, res, next) {
     }
 });
 
-router.get('/frecuentesProfesional', function (req, res, next) {
+router.get('/frecuentesProfesional', (req, res, next) => {
 
-    let query = {
+
+    if (!req.query.tipoPrestacion) {
+        return next(404);
+    }
+
+    const query = {
         // profesional
-        ...(req.query.idProfesional) && { 'profesional.id': req.query.idProfesional },
+        ...(req.query.idProfesional) && { 'profesional.id': mongoose.Types.ObjectId(req.query.idProfesional) },
         // organizacion
-        ...(req.query.idOrganizacion) && { 'organizacion.id': req.query.idOrganizacion },
+        ...(req.query.idOrganizacion) && { 'organizacion.id': mongoose.Types.ObjectId(req.query.idOrganizacion) },
         // tipoPrestacion
         ...(req.query.tipoPrestacion) && { 'tipoPrestacion.conceptId': req.query.tipoPrestacion }
     };
 
-    profesionalMeta.find(query, (err, data: any) => {
 
+    const pipeline = [
+        { $match: query },
+        { $unwind: '$frecuentes' },
+        { $project: { 'frecuentes.concepto': 1, 'frecuentes.frecuencia': 1, _id: 0 } },
+        {
+            $group: {
+                _id: { conceptId: '$frecuentes.concepto.conceptId', term: '$frecuentes.concepto.term', fsn: '$frecuentes.concepto.fsn', semanticTag: '$frecuentes.concepto.semanticTag' },
+                frecuencia: { $sum: '$frecuentes.frecuencia' }
+            }
+        },
+        { $sort: { frecuencia: -1, '_id.conceptId': 1 } },
+        { $project: { _id: 0, concepto: '$_id', frecuencia: 1 } }
+    ];
+    profesionalMeta.aggregate(pipeline, (err, data) => {
         if (err) {
-            return next(err);
+            next(err);
         }
-
-        if (!data) {
-            return next(404);
-        }
-
-        if (data[0] && data[0].frecuentes) {
-            data[0].frecuentes.sort((a, b) => b.frecuencia - a.frecuencia);
-        }
-
         res.json(data);
     });
+
+
 });
 
-router.post('/frecuentesProfesional', function (req, res, next) {
+router.post('/frecuentesProfesional', (req, res, next) => {
 
     if (!req.body) {
         return next(400);
     }
 
-    let data = new profesionalMeta(req.body);
+    const data = new profesionalMeta(req.body);
 
     // Auth.audit(req.body, req);
 
-    data.save(function (err) {
+    data.save((err) => {
         if (err) {
             return next(err);
         }
@@ -85,8 +90,8 @@ router.post('/frecuentesProfesional', function (req, res, next) {
     });
 });
 
-router.put('/frecuentesProfesional/:id*?', function (req, res, next) {
-    let query = {
+router.put('/frecuentesProfesional/:id*?', (req, res, next) => {
+    const query = {
         // profesional
         ...(req.params.id) && { 'profesional.id': req.params.id },
         // organizacion
@@ -100,11 +105,11 @@ router.put('/frecuentesProfesional/:id*?', function (req, res, next) {
             return next(err);
         }
 
-         // si no existe agregamos el nuevo frecuente
-         if (typeof resultado === null || !resultado) {
-            let frecuente = new profesionalMeta(req.body);
+        // si no existe agregamos el nuevo frecuente
+        if (typeof resultado === null || !resultado) {
+            const frecuente = new profesionalMeta(req.body);
 
-            frecuente.save(function (err2) {
+            frecuente.save((err2) => {
                 if (err2) {
                     // return res.json(err2);
                     return next(err2);
@@ -119,18 +124,18 @@ router.put('/frecuentesProfesional/:id*?', function (req, res, next) {
                 req.body.frecuentes.forEach(frecuente => {
                     // frecuente.conceptos.forEach(concepto => {
 
-                        let indexConcepto = resultado.frecuentes.findIndex(x => x.concepto.conceptId === frecuente.concepto.conceptId);
+                    const indexConcepto = resultado.frecuentes.findIndex(x => x.concepto.conceptId === frecuente.concepto.conceptId);
 
-                        if (indexConcepto === -1) {
-                            resultado.frecuentes.push(frecuente);
-                        } else {
-                            resultado.frecuentes[indexConcepto].frecuencia = parseInt(resultado.frecuentes[indexConcepto].frecuencia, 0) + 1;
-                        }
+                    if (indexConcepto === -1) {
+                        resultado.frecuentes.push(frecuente);
+                    } else {
+                        resultado.frecuentes[indexConcepto].frecuencia = parseInt(resultado.frecuentes[indexConcepto].frecuencia, 0) + 1;
+                    }
                     // });
                 });
             }
 
-            resultado.save( (err2, data2) => {
+            resultado.save((err2, data2) => {
                 if (err2) {
                     return next(err);
                 }

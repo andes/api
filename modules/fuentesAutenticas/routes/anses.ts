@@ -3,19 +3,19 @@ import { Auth } from '../../../auth/auth.class';
 import { getServicioAnses } from '../../../utils/servicioAnses';
 import { Logger } from '../../../utils/logService';
 
-let router = express.Router();
+const router = express.Router();
 
-router.get('/anses', async function (req, res, next) {
+router.get('/anses', async (req, res, next) => {
     if (!Auth.check(req, 'fa:get:anses')) {
         return next(403);
     }
     if (req.query) {
-        let paciente = req.query;
+        const paciente = req.query;
         try {
-            let resultado = await getServicioAnses(paciente);
+            const resultado = await getServicioAnses(paciente);
             res.json(resultado);
             Logger.log(req, 'fa_anses', 'validar', {
-                resultado: resultado
+                resultado
             });
         } catch (err) {
             Logger.log(req, 'fa_anses', 'error', {

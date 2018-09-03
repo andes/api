@@ -6,6 +6,7 @@ import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
 import * as moment from 'moment';
 import * as agendaCtrl from '../controller/agenda';
+import * as prestacionCtrl from '../../rup/controllers/prestacion';
 import * as agendaHPNCacheCtrl from '../controller/agendasHPNCacheController';
 import * as diagnosticosCtrl from '../controller/diagnosticosC2Controller';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
@@ -14,17 +15,17 @@ import { toArray } from '../../../utils/utils';
 
 import * as AgendasEstadisticas from '../controller/estadisticas';
 
-let router = express.Router();
+const router = express.Router();
 
 // devuelve los 10 ultimos turnos del paciente
-router.get('/agenda/paciente/:idPaciente', function (req, res, next) {
+router.get('/agenda/paciente/:idPaciente', (req, res, next) => {
 
     if (req.params.idPaciente) {
         agenda
             .find({ 'bloques.turnos.paciente.id': req.params.idPaciente })
             .limit(10)
             .sort({ horaInicio: -1 })
-            .exec(function (err, data) {
+            .exec((err, data) => {
                 if (err) {
                     return next(err);
                 }
@@ -35,44 +36,50 @@ router.get('/agenda/paciente/:idPaciente', function (req, res, next) {
 });
 
 // devuelve las agendas candidatas para la operacion clonar agenda
-router.get('/agenda/candidatas', async function (req, res, next) {
-    agenda.findById(req.query.idAgenda, async function (err, data) {
+router.get('/agenda/candidatas', async (req, res, next) => {
+    agenda.findById(req.query.idAgenda, async (err, data) => {
         if (err) {
             return next(err);
         }
 
-        let resultado = data as any;
-        let horaAgendaOrig = new Date();
+        const resultado = data as any;
+        const horaAgendaOrig = new Date();
         horaAgendaOrig.setHours(0, 0, 0, 0);
 
-        let indiceBloque = resultado.bloques.findIndex(y => Object.is(req.query.idBloque, String(y._id)));
-        let indiceTurno = resultado.bloques[indiceBloque].turnos.findIndex(y => Object.is(req.query.idTurno, String(y._id)));
-        let bloque = resultado.bloques[indiceBloque];
+        const indiceBloque = resultado.bloques.findIndex(y => Object.is(req.query.idBloque, String(y._id)));
+        const indiceTurno = resultado.bloques[indiceBloque].turnos.findIndex(y => Object.is(req.query.idTurno, String(y._id)));
+        const bloque = resultado.bloques[indiceBloque];
 
         // turno a reasignar
-        let turno = resultado.bloques[indiceBloque].turnos[indiceTurno];
-
-        let match = {
-            'organizacion._id': { '$eq': mongoose.Types.ObjectId(Auth.getOrganization(req)) }, // Que sean agendas de la misma organizacion
-            'horaInicio': { '$gte': horaAgendaOrig },
-            'nominalizada': true,
-            '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
+        const turno = resultado.bloques[indiceBloque].turnos[indiceTurno];
+        let estado = [];
+        if (turno.tipoTurno && (turno.tipoTurno === 'programado' || turno.tipoTurno === 'delDia')) {
+            estado = [{ estado: 'publicada' }];
+        } else {
+            estado = [{ estado: 'disponible' }, { estado: 'publicada' }];
+        }
+        const match = {
+            'organizacion._id': { $eq: mongoose.Types.ObjectId(Auth.getOrganization(req)) }, // Que sean agendas de la misma organizacion
+            horaInicio: { $gte: horaAgendaOrig },
+            nominalizada: true,
+            // '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
+            $or: estado,
             'tipoPrestaciones._id': turno.tipoPrestacion ? mongoose.Types.ObjectId(turno.tipoPrestacion.id) : '', // Que tengan incluída la prestación del turno
-            '_id': { '$ne': mongoose.Types.ObjectId(req.query.idAgenda) }, // Que no sea la agenda original
+            _id: { $ne: mongoose.Types.ObjectId(req.query.idAgenda) }, // Que no sea la agenda original
         };
 
         if (req.query.duracion) {
             match['bloques.duracionTurno'] = bloque.duracionTurno;
         }
         try {
-            let data1 = await toArray(agenda.aggregate([{ $match: match }]).cursor({}).exec());
+            const data1 = await toArray(agenda.aggregate([{ $match: match }]).cursor({}).exec());
 
-            let out = [];
+            const out = [];
             // Verifico que existe un turno disponible o ya reasignado para el mismo tipo de prestación del turno
-            data1.forEach(function (a, indiceA) {
-                a.bloques.forEach(function (b, indiceB) {
-                    b.turnos.forEach(function (t, indiceT) {
-                        let horaIni = moment(t.horaInicio).format('HH:mm');
+            data1.forEach((a, indiceA) => {
+                a.bloques.forEach((b, indiceB) => {
+                    b.turnos.forEach((t, indiceT) => {
+                        const horaIni = moment(t.horaInicio).format('HH:mm');
                         if (
                             b.tipoPrestaciones.findIndex(x => String(x._id) === String(turno.tipoPrestacion.id)) >= 0
                             &&  // mismo tipo de prestacion
@@ -90,7 +97,7 @@ router.get('/agenda/candidatas', async function (req, res, next) {
                 });
             });
 
-            let sortCandidatas = function (a, b) {
+            const sortCandidatas = (a, b) => {
                 return a.horaInicio - b.horaInicio;
             };
 
@@ -100,9 +107,9 @@ router.get('/agenda/candidatas', async function (req, res, next) {
     });
 });
 
-router.get('/agenda/consultaDiagnostico', async function (req, res, next) {
-    let organizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
-    let params = req.query;
+router.get('/agenda/consultaDiagnostico', async (req, res, next) => {
+    const organizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
+    const params = req.query;
     params['organizacion'] = organizacion;
     agendaCtrl.getConsultaDiagnostico(params).then((resultado) => {
         res.json(resultado);
@@ -110,9 +117,9 @@ router.get('/agenda/consultaDiagnostico', async function (req, res, next) {
 
 });
 
-router.get('/agenda/cantidadConsultaXPrestacion', async function (req, res, next) {
-    let organizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
-    let params = req.query;
+router.get('/agenda/cantidadConsultaXPrestacion', async (req, res, next) => {
+    const organizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
+    const params = req.query;
     params['organizacion'] = organizacion;
     agendaCtrl.getCantidadConsultaXPrestacion(params).then((resultado) => {
         res.json(resultado);
@@ -120,21 +127,21 @@ router.get('/agenda/cantidadConsultaXPrestacion', async function (req, res, next
 
 });
 
-router.get('/agenda/diagnosticos', async function (req, res, next) {
-    let organizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
-    let params = req.query;
+router.get('/agenda/diagnosticos', async (req, res, next) => {
+    const organizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
+    const params = req.query;
     params['organizacion'] = organizacion;
     try {
-        let resultado = await diagnosticosCtrl.getDiagnosticos(params);
+        const resultado = await diagnosticosCtrl.getDiagnosticos(params);
         res.json(resultado);
     } catch (err) { return next(err); }
 });
 
-router.get('/agenda/:id?', function (req, res, next) {
+router.get('/agenda/:id?', (req, res, next) => {
 
     if (mongoose.Types.ObjectId.isValid(req.params.id)) {
 
-        agenda.findById(req.params.id, function (err, data) {
+        agenda.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -218,10 +225,10 @@ router.get('/agenda/:id?', function (req, res, next) {
 
         // Si rango es true  se buscan las agendas que se solapen con la actual en algún punto
         if (req.query.rango) {
-            let variable: any[] = [];
-            variable.push({ 'horaInicio': { '$lte': req.query.desde }, 'horaFin': { '$gt': req.query.desde } });
-            variable.push({ 'horaInicio': { '$lte': req.query.hasta }, 'horaFin': { '$gt': req.query.hasta } });
-            variable.push({ 'horaInicio': { '$gt': req.query.desde, '$lte': req.query.hasta } });
+            const variable: any[] = [];
+            variable.push({ horaInicio: { $lte: req.query.desde }, horaFin: { $gt: req.query.desde } });
+            variable.push({ horaInicio: { $lte: req.query.hasta }, horaFin: { $gt: req.query.hasta } });
+            variable.push({ horaInicio: { $gt: req.query.desde, $lte: req.query.hasta } });
             query.or(variable);
         }
 
@@ -230,9 +237,9 @@ router.get('/agenda/:id?', function (req, res, next) {
             return next(400);
         }
 
-        query.sort({ 'horaInicio': 1 });
+        query.sort({ horaInicio: 1 });
 
-        query.exec(function (err, data) {
+        query.exec((err, data) => {
             if (err) {
                 return next(err);
             }
@@ -241,15 +248,15 @@ router.get('/agenda/:id?', function (req, res, next) {
     }
 });
 
-router.post('/agenda', function (req, res, next) {
-    let data = new agenda(req.body);
+router.post('/agenda', (req, res, next) => {
+    const data = new agenda(req.body);
     Auth.audit(data, req);
     data.save((err) => {
         Logger.log(req, 'citas', 'insert', {
             accion: 'Crear Agenda',
             ruta: req.url,
             method: req.method,
-            data: data,
+            data,
             err: err || false
         });
         // Fin de operaciones de cache
@@ -265,14 +272,13 @@ router.post('/agenda', function (req, res, next) {
 
 
 // Este post recibe el id de la agenda a clonar y un array con las fechas en las cuales se va a clonar
-router.post('/agenda/clonar', function (req, res, next) {
-    let idagenda = req.body.idAgenda;
-    let clones = req.body.clones;
-    let cloncitos = [];
-    let listaSaveAgenda = [];
+router.post('/agenda/clonar', (req, res, next) => {
+    const idagenda = req.body.idAgenda;
+    const clones = req.body.clones;
+    const listaSaveAgenda = [];
 
     if (idagenda) {
-        agenda.findById(idagenda, function (err, data) {
+        agenda.findById(idagenda, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -281,17 +287,14 @@ router.post('/agenda/clonar', function (req, res, next) {
                 if (clon) {
                     data._id = mongoose.Types.ObjectId();
                     data.isNew = true;
-                    let nueva = new agenda(data.toObject());
+                    const nueva: any = new agenda(data.toObject());
                     nueva['horaInicio'] = agendaCtrl.combinarFechas(clon, new Date(data['horaInicio']));
                     nueva['horaFin'] = agendaCtrl.combinarFechas(clon, new Date(data['horaFin']));
                     nueva['updatedBy'] = undefined;
                     nueva['updatedAt'] = undefined;
                     nueva['nota'] = null;
-                    let newIniBloque: any;
-                    let newFinBloque: any;
-                    let newIniTurno: any;
                     // nueva['bloques'] = data['bloques'];
-                    nueva['bloques'].forEach((bloque, index) => {
+                    nueva['bloques'].forEach((bloque) => {
                         bloque.horaInicio = agendaCtrl.combinarFechas(clon, bloque.horaInicio);
                         bloque.horaFin = agendaCtrl.combinarFechas(clon, bloque.horaFin);
                         if (bloque.pacienteSimultaneos) {
@@ -306,21 +309,25 @@ router.post('/agenda/clonar', function (req, res, next) {
                             bloque.restantesProfesional = bloque.reservadoProfesional;
                         }
                         bloque._id = mongoose.Types.ObjectId();
-                        bloque.turnos.forEach((turno, index1) => {
-                            turno.horaInicio = agendaCtrl.combinarFechas(clon, turno.horaInicio);
-                            turno.estado = 'disponible';
-                            turno.asistencia = undefined;
-                            turno.paciente = null;
-                            turno.tipoPrestacion = null;
-                            turno.idPrestacionPaciente = null;
-                            turno.nota = null;
-                            turno._id = mongoose.Types.ObjectId();
-                            turno.tipoTurno = undefined;
-                            turno.updatedAt = undefined;
-                            turno.updatedBy = undefined;
-                            turno.diagnostico = { codificaciones: [] };
-                            turno.reasignado = undefined;
-                        });
+                        if (!nueva.dinamica) {
+                            bloque.turnos.forEach((turno, index1) => {
+                                turno.horaInicio = agendaCtrl.combinarFechas(clon, turno.horaInicio);
+                                turno.estado = 'disponible';
+                                turno.asistencia = undefined;
+                                turno.paciente = null;
+                                turno.tipoPrestacion = null;
+                                turno.idPrestacionPaciente = null;
+                                turno.nota = null;
+                                turno._id = mongoose.Types.ObjectId();
+                                turno.tipoTurno = undefined;
+                                turno.updatedAt = undefined;
+                                turno.updatedBy = undefined;
+                                turno.diagnostico = { codificaciones: [] };
+                                turno.reasignado = undefined;
+                            });
+                        } else {
+                            bloque.turnos = [];
+                        }
                     });
                     nueva['estado'] = 'planificacion';
                     nueva['sobreturnos'] = [];
@@ -347,13 +354,13 @@ router.post('/agenda/clonar', function (req, res, next) {
     }
 });
 
-router.put('/agenda/:id', function (req, res, next) {
-    agenda.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
+router.put('/agenda/:id', (req, res, next) => {
+    agenda.findByIdAndUpdate(req.params.id, req.body, { new: true }, (err, data) => {
         Logger.log(req, 'citas', 'update', {
             accion: 'Editar Agenda en estado Planificación',
             ruta: req.url,
             method: req.method,
-            data: data,
+            data,
             err: err || false
         });
         if (err) {
@@ -366,13 +373,13 @@ router.put('/agenda/:id', function (req, res, next) {
     });
 });
 
-router.patch('/agenda/:id*?', function (req, res, next) {
+router.patch('/agenda/:id*?', (req, res, next) => {
 
     // Hubo que agregar un control por si no se tiene el idagenda (en los casos en que el patch se haga desde RUP)
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-        let t = req.body.turnos;
+        const t = req.body.turnos;
         if (t.length > 0) {
-            agenda.find({ 'bloques.turnos._id': mongoose.Types.ObjectId(t[0]) }, function (err, data) {
+            agenda.find({ 'bloques.turnos._id': mongoose.Types.ObjectId(t[0]) }, (err, data) => {
                 if (err) {
                     return next(err);
                 }
@@ -380,12 +387,12 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                     if (req.body.op === 'codificarTurno') {
                         agendaCtrl.codificarTurno(req, data, t[0]).then(() => {
                             Auth.audit(data[0], req);
-                            data[0].save(function (error) {
+                            data[0].save((error) => {
                                 Logger.log(req, 'citas', 'update', {
                                     accion: req.body.op,
                                     ruta: req.url,
                                     method: req.method,
-                                    data: data,
+                                    data,
                                     err: error || false
                                 });
                                 if (error) {
@@ -395,14 +402,14 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                         }).catch(err2 => { return next(err2); });
                     }
                 } else {
-                    agenda.find({ 'sobreturnos._id': mongoose.Types.ObjectId(t[0]) }, function (err2, data2) {
+                    agenda.find({ 'sobreturnos._id': mongoose.Types.ObjectId(t[0]) }, (err2, data2) => {
                         if (err2) {
                             return next(err2);
                         }
                         if (req.body.op === 'codificarTurno') {
                             agendaCtrl.codificarTurno(req, data2, t[0]).then(() => {
                                 Auth.audit(data2[0], req);
-                                data2[0].save(function (error) {
+                                data2[0].save((error) => {
                                     Logger.log(req, 'citas', 'update', {
                                         accion: req.body.op,
                                         ruta: req.url,
@@ -424,24 +431,28 @@ router.patch('/agenda/:id*?', function (req, res, next) {
         }
         // return next('ObjectID Inválido');
     } else {
-        agenda.findById(req.params.id, function (err, data) {
+        agenda.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }
             // Loopear los turnos, si viene vacío, es porque viene un id solo
-            let turnos = req.body.turnos || [''];
+            const turnos = req.body.turnos || [''];
 
             for (let y = 0; y < turnos.length; y++) {
                 let turno;
                 switch (req.body.op) {
-                    case 'darAsistencia': agendaCtrl.darAsistencia(req, data, turnos[y]);
+                    case 'darAsistencia':
+                        agendaCtrl.darAsistencia(req, data, turnos[y]);
                         break;
                     // Agregar operacion para marcar que noAsistio
-                    case 'sacarAsistencia': agendaCtrl.sacarAsistencia(req, data, turnos[y]);
+                    case 'sacarAsistencia':
+                        agendaCtrl.sacarAsistencia(req, data, turnos[y]);
                         break;
-                    case 'noAsistio': agendaCtrl.marcarNoAsistio(req, data, turnos[y]);
+                    case 'noAsistio':
+                        agendaCtrl.marcarNoAsistio(req, data, turnos[y]);
                         break;
-                    case 'quitarTurnoDoble': agendaCtrl.quitarTurnoDoble(req, data, turnos[y]);
+                    case 'quitarTurnoDoble':
+                        agendaCtrl.quitarTurnoDoble(req, data, turnos[y]);
                         break;
                     case 'liberarTurno':
                         turno = agendaCtrl.getTurno(req, data, turnos[y]);
@@ -450,6 +461,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                             LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, agendaCtrl.getBloque(data, turno)._id, data._id);
                         }
                         agendaCtrl.liberarTurno(req, data, turno);
+                        prestacionCtrl.liberarRefTurno(turno._id, req);
                         break;
                     case 'suspenderTurno':
                         turno = agendaCtrl.getTurno(req, data, turnos[y]);
@@ -461,22 +473,29 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                         }
                         agendaCtrl.suspenderTurno(req, data, turno);
                         break;
-                    case 'codificarTurno': agendaCtrl.codificarTurno(req, data, turnos[y]).catch((err2) => {
-                        return next(err2);
-                    });
+                    case 'codificarTurno':
+                        agendaCtrl.codificarTurno(req, data, turnos[y]).catch((err2) => {
+                            return next(err2);
+                        });
                         break;
-                    case 'guardarNotaTurno': agendaCtrl.guardarNotaTurno(req, data, req.body.idTurno);
+                    case 'guardarNotaTurno':
+                        agendaCtrl.guardarNotaTurno(req, data, req.body.idTurno);
                         break;
-                    case 'darTurnoDoble': agendaCtrl.darTurnoDoble(req, data, turnos[y]);
+                    case 'darTurnoDoble':
+                        agendaCtrl.darTurnoDoble(req, data, turnos[y]);
                         break;
-                    case 'notaAgenda': agendaCtrl.guardarNotaAgenda(req, data);
+                    case 'notaAgenda':
+                        agendaCtrl.guardarNotaAgenda(req, data);
                         break;
-                    case 'editarAgenda': agendaCtrl.editarAgenda(req, data);
+                    case 'editarAgenda':
+                        agendaCtrl.editarAgenda(req, data);
                         break;
-                    case 'agregarSobreturno': agendaCtrl.agregarSobreturno(req, data);
+                    case 'agregarSobreturno':
+                        agendaCtrl.agregarSobreturno(req, data);
                         break;
                     case 'disponible':
-                    case 'publicada': agendaCtrl.actualizarEstado(req, data);
+                    case 'publicada':
+                        agendaCtrl.actualizarEstado(req, data);
                         break;
                     case 'pausada':
                     case 'prePausada':
@@ -495,14 +514,13 @@ router.patch('/agenda/:id*?', function (req, res, next) {
                 }
 
                 Auth.audit(data, req);
-
-                data.save(function (error) {
+                data.save((error) => {
 
                     Logger.log(req, 'citas', 'update', {
                         accion: req.body.op,
                         ruta: req.url,
                         method: req.method,
-                        data: data,
+                        data,
                         err: error || false
                     });
                     if (error) {
@@ -531,7 +549,7 @@ router.patch('/agenda/:id*?', function (req, res, next) {
     }
 });
 
-router.get('/integracionCitasHPN', async function (req, res, next) {
+router.get('/integracionCitasHPN', async (req, res, next) => {
     try {
         await agendaHPNCacheCtrl.integracion();
         res.json('OK');
@@ -541,7 +559,7 @@ router.get('/integracionCitasHPN', async function (req, res, next) {
 });
 
 router.get('/estadistica', async (req, res, next) => {
-    let stats = await AgendasEstadisticas.estadisticas(req.query);
+    const stats = await AgendasEstadisticas.estadisticas(req.query);
     return res.json(stats);
 });
 
