@@ -3,7 +3,7 @@ import { toArray } from '../../../utils/utils';
 import * as mongoose from 'mongoose';
 
 export async function dashboard(org, prestaciones, desde, hasta) {
-    let pipeline = [
+    const pipeline = [
         {
             $match: {
                 'solicitud.organizacion.id': mongoose.Types.ObjectId(org),
@@ -16,7 +16,7 @@ export async function dashboard(org, prestaciones, desde, hasta) {
         },
         {
             $addFields: {
-                'lastState': { $arrayElemAt: ['$estados', -1] },
+                lastState: { $arrayElemAt: ['$estados', -1] },
                 'paciente.edad': {
                     $divide: [{
                         $subtract: [
@@ -29,7 +29,8 @@ export async function dashboard(org, prestaciones, desde, hasta) {
                                 }
                             }
                         ]
-                    }, (365 * 24 * 60 * 60 * 1000)]
+                    },
+                        (365 * 24 * 60 * 60 * 1000)]
                 }
             }
         },
@@ -45,7 +46,7 @@ export async function dashboard(org, prestaciones, desde, hasta) {
         },
         {
             $facet: {
-                'pacientes': [
+                pacientes: [
                     {
                         $group: {
                             _id: { conceptid: '$solicitud.tipoPrestacion.conceptId', decada: '$paciente.decada', sexo: '$paciente.sexo' },
@@ -55,17 +56,17 @@ export async function dashboard(org, prestaciones, desde, hasta) {
                     }
                 ],
 
-                'registros': [
+                registros: [
                     {
                         $unwind: '$ejecucion.registros'
                     },
                     {
                         $project: {
-                            '_id': 0,
-                            'id': '$ejecucion.registros._id',
-                            'concepto': '$ejecucion.registros.concepto',
-                            'relacionado': '$ejecucion.registros.relacionadoCon',
-                            'prestacion': '$solicitud.tipoPrestacion',
+                            _id: 0,
+                            id: '$ejecucion.registros._id',
+                            concepto: '$ejecucion.registros.concepto',
+                            relacionado: '$ejecucion.registros.relacionadoCon',
+                            prestacion: '$solicitud.tipoPrestacion',
                         }
                     },
                     {
@@ -84,7 +85,7 @@ export async function dashboard(org, prestaciones, desde, hasta) {
                                 $reduce: {
                                     input: '$relacionado',
                                     initialValue: [],
-                                    in: { '$concatArrays': [ '$$value', '$$this' ] }
+                                    in: { $concatArrays: ['$$value', '$$this'] }
                                 }
                             }
                         }
@@ -99,7 +100,7 @@ export async function dashboard(org, prestaciones, desde, hasta) {
         }
     ];
 
-    let aggr = Prestacion.aggregate(pipeline);
-    let data = await toArray(aggr.cursor({}).exec());
+    const aggr = Prestacion.aggregate(pipeline);
+    const data = await toArray(aggr.cursor({}).exec());
     return data[0];
 }

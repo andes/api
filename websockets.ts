@@ -112,7 +112,7 @@ export class Websockets {
 
     static initialize(server: Server) {
         log('Websocket start');
-        var redis = require('socket.io-redis');
+        let redis = require('socket.io-redis');
         let socketIO = require('socket.io');
         this.io = socketIO(server);
         if (RedisWebSockets.active) {

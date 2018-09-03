@@ -3,15 +3,14 @@ import * as express from 'express';
 import { Turno } from '../schemas/turno';
 
 
-let router = express.Router();
+const router = express.Router();
 
 
-
-router.get('/busqueda/:id*?', function (req: any, res, next) {
-    let opciones = {};
+router.get('/busqueda/:id*?', (req: any, res, next) => {
+    const opciones = {};
     let query;
     if (req.params.id) {
-        Turno.findById(req.params.id, function (err, data) {
+        Turno.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -26,8 +25,7 @@ router.get('/busqueda/:id*?', function (req: any, res, next) {
         }
 
 
-
-        query.exec(function (err, data) {
+        query.exec((err, data) => {
             if (err) {
                 return next(err);
             }
@@ -40,9 +38,8 @@ router.get('/busqueda/:id*?', function (req: any, res, next) {
 });
 
 
-
-router.post('/insert', function (req: any, res, next) {
-    let newTurno = new Turno(req.body);
+router.post('/insert', (req: any, res, next) => {
+    const newTurno = new Turno(req.body);
     newTurno.save((err) => {
         if (err) {
             return next(err);

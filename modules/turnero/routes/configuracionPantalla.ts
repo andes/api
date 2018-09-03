@@ -39,7 +39,7 @@ router.get('/pantalla/:id', Auth.authenticate(), async (req: any, res, next) => 
     }
 });
 
-export const generarToken = function () {
+export const generarToken = () => {
     let codigo = '';
     let length = 6;
     let caracteres = '0123456789';

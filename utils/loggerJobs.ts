@@ -3,8 +3,8 @@ import { logJobs } from '../core/log/schemas/logJobs';
 export class LoggerJobs {
 
     public static log(job, msg, callback?): any {
-        let newLogJobs = new logJobs({
-            job: job,
+        const newLogJobs = new logJobs({
+            job,
             error: msg,
             createdAt: new Date(),
         });

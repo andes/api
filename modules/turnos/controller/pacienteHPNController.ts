@@ -7,21 +7,21 @@ export async function savePaciente(paciente: any, transaction) {
         conDni = false;
         paciente.documento = await createPacienteSinDocumento(transaction);
     }
-    let fechaCreacion = new Date();
-    let fechaUltimoAcceso = fechaCreacion;
-    let fechaActualizacion = fechaCreacion;
-    let hcTipo = conDni ? 1 : 3; // Si no tiene DNI el hcTipo es SN
-    let hcNumero = 'PDR' + paciente.documento;
-    let tipoDocumento = conDni ? 'DNI' : 'SN';
-    let nroDocumento = paciente.documento;
-    let apellido = paciente.apellido;
-    let nombre = paciente.nombre;
-    let estadoCivil = (paciente.estadoCivil ? paciente.estadoCivil : null);
-    let fechaNacimiento = (paciente.fechaNacimiento ? paciente.fechaNacimiento : null);
-    let sexo = paciente.sexo;
-    let andesId = paciente._id;
+    const fechaCreacion = new Date();
+    const fechaUltimoAcceso = fechaCreacion;
+    const fechaActualizacion = fechaCreacion;
+    const hcTipo = conDni ? 1 : 3; // Si no tiene DNI el hcTipo es SN
+    const hcNumero = 'PDR' + paciente.documento;
+    const tipoDocumento = conDni ? 'DNI' : 'SN';
+    const nroDocumento = paciente.documento;
+    const apellido = paciente.apellido;
+    const nombre = paciente.nombre;
+    const estadoCivil = (paciente.estadoCivil ? paciente.estadoCivil : null);
+    const fechaNacimiento = (paciente.fechaNacimiento ? paciente.fechaNacimiento : null);
+    const sexo = paciente.sexo;
+    const andesId = paciente._id;
 
-    let query = 'INSERT INTO dbo.Historias_Clinicas ' +
+    const query = 'INSERT INTO dbo.Historias_Clinicas ' +
         '(HC_Fecha_de_creacion ' +
         ',HC_Fecha_de_ultimo_acceso ' +
         ',HC_Fecha_Actualizacion ' +
@@ -50,7 +50,7 @@ export async function savePaciente(paciente: any, transaction) {
         '@fechaNacimiento, ' +
         '@andesId) ' +
         'SELECT SCOPE_IDENTITY() AS idHistoria';
-        return new sql.Request(transaction)
+    return new sql.Request(transaction)
         .input('fechaCreacion', sql.DateTime, fechaCreacion)
         .input('fechaUltimoAcceso', sql.DateTime, fechaUltimoAcceso)
         .input('fechaActualizacion', sql.DateTime, fechaActualizacion)
@@ -75,15 +75,15 @@ export async function savePaciente(paciente: any, transaction) {
 }
 
 export async function getDatosPaciente(tipoDocumento, paciente, transaction) {
-    let documento = paciente.documento;
-    let andesId = paciente._id;
+    const documento = paciente.documento;
+    const andesId = paciente._id;
 
     if (documento) {
-        let query = 'SELECT h.Codigo as idHistoria, p.id as idPaciente, HC_Tipo, HC_Fecha_Actualizacion ' +
+        const query = 'SELECT h.Codigo as idHistoria, p.id as idPaciente, HC_Tipo, HC_Fecha_Actualizacion ' +
             'FROM Historias_Clinicas h ' + 'inner join Pacientes p on p.legacy_idHistoriaClinica=h.codigo ' +
             'WHERE h.HC_Documento = @documento order by HC_Fecha_Actualizacion desc ';
 
-        let result = await transaction.request()
+        const result = await transaction.request()
             .input('documento', sql.VarChar(50), documento)
             .input('tipoDocumento', sql.VarChar(50), tipoDocumento)
             .query(query)
@@ -91,8 +91,8 @@ export async function getDatosPaciente(tipoDocumento, paciente, transaction) {
                 throw err;
             });
         if (result.recordset.length > 0) {
-            let registros = result.recordset;
-            let reg = registros.find(record => record.HC_TIpo === 1);
+            const registros = result.recordset;
+            const reg = registros.find(record => record.HC_TIpo === 1);
             if (!reg) {
                 return result.recordset[0]; // Sino devuelvo el PDR
             } else {
@@ -103,11 +103,11 @@ export async function getDatosPaciente(tipoDocumento, paciente, transaction) {
         }
     } else {
         // Para el caso de los pacientes que vienen sin DNI desde andes, pero que fueron creados con numero SN
-        let query = 'SELECT h.Codigo as idHistoria, p.id as idPaciente ' +
+        const query = 'SELECT h.Codigo as idHistoria, p.id as idPaciente ' +
             'FROM Historias_Clinicas h ' + 'inner join Pacientes p on p.legacy_idHistoriaClinica=h.codigo ' +
             'WHERE h.andesId = @andesId';
 
-        let result = await transaction.request()
+        const result = await transaction.request()
             .input('andesId', sql.VarChar(50), andesId)
             .query(query)
             .catch(err => {
@@ -118,7 +118,7 @@ export async function getDatosPaciente(tipoDocumento, paciente, transaction) {
 }
 
 export async function createPacienteSinDocumento(transaction) {
-    let result = await new sql.Request(transaction)
+    const result = await new sql.Request(transaction)
         .input('sistema', sql.Int, 6)
         .output('nextKey', sql.Int)
         .execute('hsp_Keys');

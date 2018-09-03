@@ -2,7 +2,7 @@ import * as express from 'express';
 import * as parentesco from '../schemas/parentesco';
 import { Auth } from '../../../auth/auth.class';
 
-let router = express.Router();
+const router = express.Router();
 
 /**
  * @swagger
@@ -58,12 +58,12 @@ let router = express.Router();
  *         schema:
  *           $ref: '#/definitions/parentesco'
  */
-router.get('/parentescos/:id*?', function (req, res, next) {
+router.get('/parentescos/:id*?', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:parentesco')) {
         return next(403);
     }
     if (req.params.id) {
-        parentesco.modelParentesco.findById(req.params.id, function (err, data) {
+        parentesco.modelParentesco.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -77,7 +77,7 @@ router.get('/parentescos/:id*?', function (req, res, next) {
         if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
-        query.sort({ 'nombre': 1 }).exec((err, data) => {
+        query.sort({ nombre: 1 }).exec((err, data) => {
             if (err) { return next(err); }
             res.json(data);
         });

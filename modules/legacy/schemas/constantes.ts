@@ -51,21 +51,22 @@ const constantes = {
     prestacionesIntegradasPorEfector: [
         {
             organizacion: '57e9670e52df311059bc8964',
-            prestaciones: [{
-                nombre: 'clinicaMedica',
-                id: 705,
-                conceptId: '268565007'
-            },
-            {
-                nombre: 'Medicina General',
-                id: 705,
-                conceptId: '391000013108'
-            },
-            {
-                nombre: 'examenPediatrico',
-                id: 901,
-                conceptId: '243788004'
-            }]
+            prestaciones: [
+                {
+                    nombre: 'clinicaMedica',
+                    id: 705,
+                    conceptId: '268565007'
+                },
+                {
+                    nombre: 'Medicina General',
+                    id: 705,
+                    conceptId: '391000013108'
+                },
+                {
+                    nombre: 'examenPediatrico',
+                    id: 901,
+                    conceptId: '243788004'
+                }]
         }
         // {
         //     organizacion: '57fcf037326e73143fb48c3a',

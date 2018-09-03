@@ -16,7 +16,6 @@ export interface SIISAObject extends Document {
 }
 
 
-
 export const TipoDocumento = model<SIISAObject>('SIISATipoDocumento', ObjSIISASchema, 'siisa_tipoDocumento');
 export const Sexo = model<SIISAObject>('SIISASexo', ObjSIISASchema, 'siisa_sexo');
 export const Pais = model<SIISAObject>('SIISAPais', ObjSIISASchema, 'siisa_pais');
