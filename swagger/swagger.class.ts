@@ -24,7 +24,7 @@ export class Swagger {
                     title: 'Swagger Andes',
                     description: 'Este es un servidor de muestra del servidor de Andes. Puede solicitar su token a info@andes.gob.ar',
                 },
-                host: 'd-testing.hospitalneuquen.org.ar',
+                host: '/',
                 basePath: '/api',
                 schemes: ['https'],
                 consumes: ['application/json'],

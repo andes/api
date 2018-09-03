@@ -19,33 +19,6 @@ import { Auth } from '../../../auth/auth.class';
 let path = require('path');
 let router = express.Router();
 let to_json = require('xmljson').to_json;
-/**
- * Genera un CDA con los datos provisto
- */
-
-// {
-//  "id": "asdasdasd"
-// 	"tipoPrestacion": "1234556",
-// 	"fecha": "2017-11-11 12:10:00",
-// 	"texto": "esto es una prueba",
-// 	"cie10": "A.1.1",
-// 	"paciente": {
-//      "id": "ID en la org",
-// 		"nombre": "Mariano Andres",
-// 		"apellido": "Botta",
-// 		"sexo": "masculino",
-// 		"documento": "34934522",
-// 		"fechaNacimiento": "2017-10-10 12:12:12"
-// 	},
-// 	"profesional": {
-// 		"id": "12345567",
-// 		"nombre": "Huds",
-// 		"apellido": "Doct1or",
-//      "documento": "34344567",
-//      "matricula": "255"
-// 	},
-// 	"file": "data:image/jpeg;base64,AEFCSADE2D2D2
-// }
 
 router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) => {
     if (!Auth.check(req, 'cda:post')) {

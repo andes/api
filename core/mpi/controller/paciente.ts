@@ -220,7 +220,8 @@ export function buscarPaciente(id): Promise<{ db: String, paciente: any }> {
  * devuelve los datos del paciente
  *
  * @export
- * @param {any} id
+ * @param {string} documento
+ * @param {string} sexo
  * @returns
  */
 export function buscarPacByDocYSexo(documento, sexo): Promise<{ db: String, paciente: any }[]> {
