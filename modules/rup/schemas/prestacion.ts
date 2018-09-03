@@ -63,7 +63,7 @@ export let schema = new mongoose.Schema({
         // Registros de la solicitud ... para los planes o prestaciones futuras
         registros: [registro.schema],
 
-        // Organización Destino.
+        // Organización Destino de la solicitud.
         organizacion: {
             // requirido, validar en middleware
             id: mongoose.Schema.Types.ObjectId,
@@ -161,7 +161,7 @@ schema.pre('save', function (next) {
             return next(err);
         }
 
-        if (!prestacion.ejecucion.organizacionOrigen.id && !prestacion.solicitud.organizacionOrigen.id) {
+        if (!prestacion.ejecucion.organizacion && !prestacion.solicitud.organizacion.id) {
             let err = new Error('Debe seleccionar la organizacion desde la cual se solicita');
             return next(err);
         }
