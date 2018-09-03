@@ -1,4 +1,3 @@
-import { paciente } from './../../../core/mpi/schemas/paciente';
 import { PacienteFHIR } from './../../interfaces/IPacienteFHIR';
 
 function pacienteFHIRFields(elem: string) {
@@ -29,9 +28,11 @@ function photoFields(elem: string) {
     return elem.match('contentType|language|data|url|size|hash|title|creation') != null;
 }
 
+/*
 function contactFields(elem: string) {
     return elem.match('relationship|name|telecom|address|gender|organization|period') != null;
 }
+*/
 
 function validName(aName) {
     return Object.keys(aName).every(nameFields) && ('resourceType' in aName) && aName.resourceType === 'HumanName'
@@ -46,7 +47,7 @@ function areStrings(elem: string) {
 export function validate(pacienteFhir: PacienteFHIR): boolean {
     // Esta función valida un objeto paciente FHIR y devuelve si es sintácticamente correcto o no.
     let respuesta = true;
-    let fieldVerified = Object.keys(pacienteFhir).every(pacienteFHIRFields);
+    const fieldVerified = Object.keys(pacienteFhir).every(pacienteFHIRFields);
     // Verificamos que las key esten contenidas en los conjuntos mínimos pacienteFHIRField
     if (fieldVerified) {
         respuesta = ('resourceType' in pacienteFhir) && pacienteFhir.resourceType === 'Patient';
@@ -54,12 +55,12 @@ export function validate(pacienteFhir: PacienteFHIR): boolean {
         if (pacienteFhir.identifier.length > 0) {
             pacienteFhir.identifier.forEach(anIdentifier => {
                 respuesta = respuesta && Object.keys(anIdentifier).every(identifierFields);
-                    if (anIdentifier.assigner) {
-                        respuesta = respuesta && typeof anIdentifier.assigner === 'string';
-                    }
-                    if (anIdentifier.value) {
-                        respuesta = respuesta && typeof anIdentifier.value === 'string';
-                    }
+                if (anIdentifier.assigner) {
+                    respuesta = respuesta && typeof anIdentifier.assigner === 'string';
+                }
+                if (anIdentifier.value) {
+                    respuesta = respuesta && typeof anIdentifier.value === 'string';
+                }
             });
 
         }

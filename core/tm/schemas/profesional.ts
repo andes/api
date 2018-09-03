@@ -1,15 +1,10 @@
 import * as mongoose from 'mongoose';
-import * as ubicacionSchema from './ubicacion';
 import * as constantes from './constantes';
 import * as direccionSchema from './direccion';
 import * as contactoSchema from './contacto';
-import * as especialidadSchema from './especialidad';
-import * as paisSchema from './pais';
-import * as profesionSchema from './profesion';
 import { ObjSIISASchema } from './siisa';
-import * as moment from 'moment';
 
-let matriculacionSchema = new mongoose.Schema({
+const matriculacionSchema = new mongoose.Schema({
     matriculaNumero: { type: Number, required: false },
     libro: { type: String, required: false },
     folio: { type: String, required: false },
@@ -57,37 +52,37 @@ export let profesionalSchema = new mongoose.Schema({
 
     }],
     formacionPosgrado: [{
-         profesion: { type: ObjSIISASchema, required: false },
-         institucionFormadora: { type: ObjSIISASchema, required: false },
-         especialidad: { type: ObjSIISASchema, required: false },
-         fechaIngreso: { type: Date, required: false },
-         fechaEgreso: { type: Date, required: false },
-         observacion: String,
-         certificacion: {
-           fecha: { type: Date, required: false },
-             modalidad: { type: ObjSIISASchema, required: false },
-             establecimiento: { type: ObjSIISASchema, required: false },
-         },
-         matriculacion: [matriculacionSchema],
-         matriculado: { type: Boolean, default: false },
-         revalida: { type: Boolean, default: false },
-         papelesVerificados: { type: Boolean, default: false },
-     }],
+        profesion: { type: ObjSIISASchema, required: false },
+        institucionFormadora: { type: ObjSIISASchema, required: false },
+        especialidad: { type: ObjSIISASchema, required: false },
+        fechaIngreso: { type: Date, required: false },
+        fechaEgreso: { type: Date, required: false },
+        observacion: String,
+        certificacion: {
+            fecha: { type: Date, required: false },
+            modalidad: { type: ObjSIISASchema, required: false },
+            establecimiento: { type: ObjSIISASchema, required: false },
+        },
+        matriculacion: [matriculacionSchema],
+        matriculado: { type: Boolean, default: false },
+        revalida: { type: Boolean, default: false },
+        papelesVerificados: { type: Boolean, default: false },
+    }],
     sanciones: [{
-         numero: {type: Number, required: false},
-         sancion: {
+        numero: {type: Number, required: false},
+        sancion: {
             id: Number,
             nombre: String,
         },
         motivo: {type: String, required: false},
         normaLegal: {type: String, required: false},
-         fecha: {type: Date, required: false},
-         vencimiento: {type: Date, required: false}
-     }],
-     notas: { type: String, required: false },
-     rematriculado: { type: Boolean, default: false },
-     agenteMatriculador: { type: String, required: false },
-     OtrosDatos:  [{
+        fecha: {type: Date, required: false},
+        vencimiento: {type: Date, required: false}
+    }],
+    notas: { type: String, required: false },
+    rematriculado: { type: Boolean, default: false },
+    agenteMatriculador: { type: String, required: false },
+    OtrosDatos:  [{
         matriculaProvincial: { type: Number, required: false },
         folio: { type: String, required: false },
         libro: { type: String, required: false },
@@ -99,11 +94,11 @@ export let profesionalSchema = new mongoose.Schema({
 
 
 // Virtuals
-profesionalSchema.virtual('nombreCompleto').get(function() {
+profesionalSchema.virtual('nombreCompleto').get(function () {
     return this.apellido + ', ' + this.nombre;
 
 });
-profesionalSchema.virtual('fallecido').get(function() {
+profesionalSchema.virtual('fallecido').get(function () {
     return this.fechaFallecimiento;
 });
 export let profesional = mongoose.model('profesional', profesionalSchema, 'profesional');
