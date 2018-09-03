@@ -17,7 +17,7 @@ import * as organizacion from '../../../core/tm/schemas/organizacion';
 import { toArray } from '../../../utils/utils';
 let to_json = require('xmljson').to_json;
 import * as https from 'https';
- import * as sisaController from '../../../modules/fuentesAutenticas/controller/sisaController'
+ import * as sisaController from '../../../modules/fuentesAutenticas/controller/sisaController';
 import { puco } from '../../../modules/obraSocial/schemas/puco';
 /**
  * Crea un paciente y lo sincroniza con elastic
@@ -692,7 +692,7 @@ export async function mapeoPuco(dni) {
         puco.find({
             'dni': dni
         }, {}, function (err, data: any) {
-            resolve(data)
+            resolve(data);
         });
     });
 }
@@ -703,8 +703,6 @@ export async function insertSips() {
 
     for (var index = 0; index < pacientes.length; index++) {
         let existeEnSips = await getPacienteSips(pacientes[index].documento);
-        
-
         // let existeEnPuco: any = await operacionesLegacy.postPuco(pacientes[index].documento)
         let esBeneficiario = await getBeneficiario(pacientes[index].documento);
         let edad = moment().diff(pacientes[index].fechaNacimiento, 'years');
@@ -719,10 +717,9 @@ export async function insertSips() {
 
 
         if (existeEnSips.length === 0) {
-            //FALTA EL EFECTOR(busqueda por id)
+            // FALTA EL EFECTOR(busqueda por id)
             let pacienteSips = await operacionesLegacy.pacienteSipsFactory(pacientes[index], efector.idEfector);
             let idPacienteSips = await operacionesLegacy.insertaPacienteSips(pacienteSips);
-            console.log(idPacienteSips)
         }
         let existeEnPuco: any = await sisaController.postPuco(pacientes[index].documento);
         if (existeEnPuco.puco.resultado === 'REGISTRO_NO_ENCONTRADO' && edad <= 64) {
@@ -731,7 +728,7 @@ export async function insertSips() {
                 let benef = beneficiarioFactory(pacientes[index], efector.cuie);
                 await insertBeneficiario(benef);
             }
-        } 
+        }
 
     }
 
@@ -806,7 +803,7 @@ export async function updateEstadoSips(id) {
 
 export async function pacientesDelDia() {
     // busca los pacientes del dia en mpi y andes para validarlos con sips y pn beneficiarios
-    // TODO: DEBEMOS BUSCAR LOS PACIENTES DIA VENCIDO 
+    // TODO: DEBEMOS BUSCAR LOS PACIENTES DIA VENCIDO
 
 
     let hoyDesde = moment(new Date()).startOf('day').format();
@@ -815,7 +812,7 @@ export async function pacientesDelDia() {
     // let start = moment(req.query.fechaDesde).startOf('day').toDate();
     // let end = moment(req.query.fechaHasta).endOf('day').toDate();
 
-    //PACIENTES ANDES
+    // PACIENTES ANDES
     let pacientesAndes = await toArray(paciente.aggregate([{
         $match: {
             'createdAt': {
@@ -826,10 +823,10 @@ export async function pacientesDelDia() {
 
 
     pacientesAndes.forEach(element => {
-        pacientesTotal.push(element)
+        pacientesTotal.push(element);
     });
 
-    //PACIENTES MPI
+    // PACIENTES MPI
     let pacientesMpi = await toArray(pacienteMpi.aggregate([{
         $match: {
             'createdAt': {
@@ -850,16 +847,13 @@ function beneficiarioFactory(paciente, efector) {
     let edad = moment().diff(paciente.fechaNacimiento, 'years');
     if ((edad >= 0) && (edad <= 10)) {
         tipoCategoria = 4;
-    }
-    else if ((edad > 10) && (edad <= 19)) {
+    } else if ((edad > 10) && (edad <= 19)) {
         tipoCategoria = 5;
-    }
-    else if ((edad > 19) && (edad <= 64)) {
+    } else if ((edad > 19) && (edad <= 64)) {
 
         if (paciente.idSexo === 2) {
             tipoCategoria = 6;
-        }
-        else {
+        } else {
             tipoCategoria = 7;
         }
     }
@@ -867,16 +861,16 @@ function beneficiarioFactory(paciente, efector) {
         id: null,
         estado_enviado: 'n',
         clave_beneficiario: 2101300000000000, // falta sumar id
-        tipo_transaccion: "A",
+        tipo_transaccion: 'A',
         apellido: paciente.apellido,
         nombre: paciente.nombre,
         clase_doc: null,
-        tipo_documento: "DNI",
+        tipo_documento: 'DNI',
         numero_doc: paciente.documento,
         id_categoria: tipoCategoria,
-        sexo: (paciente.sexo === "masculino" ? 'M' : paciente.sexo === "femenino" ? 'F' : 'I'),
+        sexo: (paciente.sexo === 'masculino' ? 'M' : paciente.sexo === 'femenino' ? 'F' : 'I'),
         fechaNacimiento: moment(paciente.fechaNacimiento).format('YYYY-MM-DD'),
-        pais: "ARGENTINA",
+        pais: 'ARGENTINA',
         indigena: 'N',
         idTribu: 0,
         idLengua: 0,

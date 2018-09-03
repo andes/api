@@ -68,7 +68,6 @@ router.post('/cambioEstado/:id', function (req, res, next) {
                 if (err2) {
                     return next(err2);
                 }
-                console.log(result);
                 res.json(result);
             });
         });
@@ -105,8 +104,6 @@ router.get('/prestacionPorTurno/:id', (req, res, next) => {
         prestacion.find({
             'solicitud.turno': mongoose.Types.ObjectId(req.params.id)
         }).exec(function (err, data: any) {
-            console.log(data);
-
             res.json(data[0]);
         });
     } catch (error) {
@@ -117,7 +114,6 @@ router.get('/prestacionPorTurno/:id', (req, res, next) => {
 
 
 router.post('/cambioEstadoPrestaciones/:id', function (req, res, next) {
-    console.log(req.params);
     try {
         prestacion.find({
             '_id': mongoose.Types.ObjectId(req.params.id)
@@ -141,22 +137,44 @@ router.post('/cambioEstadoPrestaciones/:id', function (req, res, next) {
 
 router.get('/sinTurno', async function (req, res, next) {
     try {
+
+
         let prestaciones = await getPrestacionesAfacturar();
-        console.log(prestaciones);
-        let match = {
-            $match: {
-                'solicitud.tipoPrestacion.conceptId':  { $in: prestaciones },
-                'solicitud.turno': { $exists: false },
-                'estadoFacturacion': 'sinFacturar'
-            }
-        };
+        const estado =  'validada';
+        prestacion.find({
+            'solicitud.tipoPrestacion.conceptId': { $in: prestaciones },
+            'solicitud.turno': { $exists: false },
+            'estadoFacturacion': 'sinFacturar',
+            '$where': 'this.estados[this.estados.length - 1].tipo ==  \"' + estado + '\"'
+        }, (err, prestaciones) => {
+            res.json(prestaciones);
+        });
+        // let match = [{
+        //     $project: { 'estados.tipo': { $slice: ['validada', -1] } },
+        //     $match: {
+        //         'solicitud.tipoPrestacion.conceptId': { $in: prestaciones },
+        //         'solicitud.turno': { $exists: false },
+        //         'estadoFacturacion': 'sinFacturar',
+        //         // 'estados.tipo':  { $slice: [ 'validada', -1 ] }
+        //     }
+        // }];
+        // console.log(match);
 
-        let data = await toArray(prestacion.aggregate([
-            match,
-        ]).cursor({})
-            .exec());
+        // let data = await toArray(prestacion.aggregate([
 
-        res.json(data);
+        //     { $project: { salida: { $slice: ['estados', -1] } } },
+        //     {
+        //         $match: {
+        //             'solicitud.tipoPrestacion.conceptId': { $in: prestaciones },
+        //             'solicitud.turno': { $exists: false },
+        //             'estadoFacturacion': 'sinFacturar',
+        //             // 'estados.tipo':  { $slice: [ 'validada', -1 ] }
+        //         }
+        //     },
+        // ]).cursor({})
+        //     .exec());
+
+        // res.json(data);
     } catch (error) {
         res.end(error);
     }
