@@ -86,7 +86,7 @@ export class Documento {
      * @param st string semanticTag
      */
     private static existeSemanticTagMPC(st) {
-        return st === 'procedimiento' || st === 'hallazgo' || st === 'trastorno';
+        return st === 'entidad observable' || st === 'regimen/tratamiento' || st === 'procedimiento' || st === 'hallazgo' || st === 'trastorno';
     }
 
 
@@ -185,8 +185,7 @@ export class Documento {
                 if (prestacion.ejecucion.registros.length > 1) {
                     let existeConcepto = prestacion.ejecucion.registros.find(x => this.existeSemanticTagMPC(x.concepto.semanticTag) && x.esDiagnosticoPrincipal);
 
-
-                    if (existeConcepto.esDiagnosticoPrincipal && tituloRegistro && tituloRegistro.conceptId !== existeConcepto.concepto.conceptId) {
+                    if (existeConcepto && existeConcepto.esDiagnosticoPrincipal && tituloRegistro && tituloRegistro.conceptId !== existeConcepto.concepto.conceptId) {
                         motivoPrincipalDeConsulta = existeConcepto;
                         if (motivoPrincipalDeConsulta) {
                             motivoPrincipalDeConsulta = '<b>Motivo Principal de consulta: </b>' + motivoPrincipalDeConsulta.concepto.term;
@@ -236,8 +235,10 @@ export class Documento {
             // let header = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/header.html'), 'utf8');
 
             let nombreCompleto = paciente.apellido + ', ' + paciente.nombre;
-            let fechaNacimiento = paciente.fechaNacimiento;
-            let datosRapidosPaciente = paciente.sexo + ' | ' + moment(fechaNacimiento).fromNow(true) + ' | ' + paciente.documento;
+            let fechaNacimiento = paciente.fechaNacimiento ? moment(paciente.fechaNacimiento).format('DD/MM/YYYY') : 's/d';
+            let hoy = moment();
+            let edad = paciente.fechaNacimiento ? hoy.diff(moment(paciente.fechaNacimiento), 'years') + ' años | ' : '';
+            let datosRapidosPaciente = paciente.sexo + ' | ' + edad + paciente.documento;
 
             let idOrg = (Auth.getOrganization(req, 'id') as any);
             let organizacion: any = await this.getOrgById(idOrg);
@@ -253,7 +254,7 @@ export class Documento {
             html = html
                 .replace('<!--paciente-->', nombreCompleto)
                 .replace('<!--datosRapidosPaciente-->', datosRapidosPaciente)
-                .replace('<!--fechaNacimiento-->', moment(fechaNacimiento).format('DD/MM/YYYY'))
+                .replace('<!--fechaNacimiento-->', fechaNacimiento)
                 .replace('<!--nroCarpeta-->', (carpeta && carpeta.nroCarpeta ? carpeta.nroCarpeta : 'sin número de carpeta'))
                 .replace(/(<!--organizacionNombreSolicitud-->)/g, prestacion.solicitud.organizacion.nombre.replace(' - ', '<br>'))
                 .replace('<!--orgacionacionDireccionSolicitud-->', orgacionacionDireccionSolicitud)
