@@ -126,11 +126,13 @@ export const pushNotificationsSettings = {
     },
     apn: {
         token: {
-            key: './certs/key.p8', // optionally: fs.readFileSync('./certs/key.p8')
-            keyId: 'ABCD',
-            teamId: 'EFGH',
+            key: getEnv('IOS_KEY_FILE', './certs/key.p8'), // optionally: fs.readFileSync('./certs/key.p8')
+            keyId: getEnv('IOS_KEY_ID', ''),
+            teamId: getEnv('IOS_TEAM_ID', ''),
         },
-    }
+        production: getEnv('IOS_ENVIRONMENT', true, 'b')
+    },
+    domainIOS: getEnv('IOS_MOBILE_DOMAIN', '')
 };
 
 // E-mail server settings
