@@ -1,11 +1,11 @@
 import * as express from 'express';
 import * as configPrestacion from '../schemas/configPrestacion';
 
-let router = express.Router();
+const router = express.Router();
 
-router.get('/configPrestacion/:id*?', function (req, res, next) {
+router.get('/configPrestacion/:id*?', (req, res, next) => {
     if (req.params.id) {
-        configPrestacion.findById(req.params.id, function (err, data) {
+        configPrestacion.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -26,10 +26,10 @@ router.get('/configPrestacion/:id*?', function (req, res, next) {
     }
 });
 
-router.post('/configPrestacion', function (req, res, next) {
+router.post('/configPrestacion', (req, res, next) => {
     // var newEspecialidad = new especialidad(req.body)
     // aca deberia setear todo en false
-    let newEspecialidad = new configPrestacion(req.body);
+    const newEspecialidad = new configPrestacion(req.body);
     newEspecialidad.save((err) => {
         if (err) {
             return next(err);
@@ -38,8 +38,8 @@ router.post('/configPrestacion', function (req, res, next) {
     });
 });
 
-router.put('/configPrestacion/:id', function (req, res, next) {
-    configPrestacion.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
+router.put('/configPrestacion/:id', (req, res, next) => {
+    configPrestacion.findByIdAndUpdate(req.params.id, req.body, { new: true }, (err, data) => {
         if (err) {
             return next(err);
         }
