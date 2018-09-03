@@ -11,7 +11,7 @@ let router = express.Router();
  * @returns
  */
 
-router.get('/puco/', async function (req, res, next) {
+router.get('/puco/', async (req, res, next) => {
 
     if (req.query.dni) {
         let padron;
@@ -43,9 +43,13 @@ router.get('/puco/', async function (req, res, next) {
     }
 });
 
-router.get('/puco/padrones/', async function (req, res, next) {
-    let resp = await obtenerVersiones();
-    res.json(resp);
+router.get('/puco/padrones/', async (req, res, next) => {
+    try {
+        let resp = await obtenerVersiones();
+        res.json(resp);
+    } catch (error) {
+        return next(error);
+    }
 });
 
 

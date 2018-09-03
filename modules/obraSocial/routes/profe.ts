@@ -3,7 +3,7 @@ import { profe } from '../schemas/profe';
 
 let router = express.Router();
 
-router.get('/profe/', async function (req, res, next) {
+router.get('/profe/', async (req, res, next) => {
     if (req.query.dni && req.query.periodo) {
         profe.find({ dni: Number.parseInt(req.query.dni), version: req.query.periodo }, function (err, data) {
             if (err) {
@@ -17,9 +17,13 @@ router.get('/profe/', async function (req, res, next) {
 });
 
 
-router.get('/profe/padrones/', async function (req, res, next) {
-    let resp = await obtenerVersiones();
-    res.json(resp);
+router.get('/profe/padrones/', async (req, res, next) => {
+    try {
+        let resp = await obtenerVersiones();
+        res.json(resp);
+    } catch (error) {
+        return next(error);
+    }
 });
 
 
