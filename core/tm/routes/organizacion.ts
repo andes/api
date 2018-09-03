@@ -280,7 +280,7 @@ router.get('/organizaciones/:id*?', (req, res, next) => {
             };
         }
         if (req.query.ids) {
-            filtros['_id'] = {$in : req.query.ids};
+            filtros['_id'] = { $in: req.query.ids };
         }
 
         const skip: number = parseInt(req.query.skip || 0, 10);
@@ -288,9 +288,9 @@ router.get('/organizaciones/:id*?', (req, res, next) => {
 
         query = organizacion
             .model
-            .find(filtros)
-            .skip(skip)
-            .limit(limit);
+            .find(filtros);
+        // .skip(skip)
+        // .limit(limit);
         query.exec((err, data) => {
             if (err) {
                 return next(err);
