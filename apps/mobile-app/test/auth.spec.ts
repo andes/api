@@ -27,7 +27,7 @@ describe('MobileApp - login', () => {
 
     test('login sin password debe devolver codigo 422', async () => {
         const response = await request(app).post('/api/modules/mobileApp/login').send({
-            'email': 'user1@g.com'
+            email: 'user1@g.com'
         });
         expect(response.statusCode).toBe(422);
         expect(response.body.message).toBe('Debe ingresar una clave');
@@ -45,7 +45,7 @@ describe('MobileApp - login', () => {
 
         const generateTokenMock = jest.spyOn(Auth, 'generatePacienteToken');
         const response = await request(app).post('/api/modules/mobileApp/login').send({
-            'email': 'user@andes.gob.ar',
+            email: 'user@andes.gob.ar',
             password: 'asdasd'
         });
         expect(response.statusCode).toBe(200);
@@ -67,7 +67,7 @@ describe('MobileApp - login', () => {
         pac = await pac.save();
 
         const response = await request(app).post('/api/modules/mobileApp/login').send({
-            'email': 'user@andes.gob.ar',
+            email: 'user@andes.gob.ar',
             password: 'asdasdasdasd'
         });
         expect(response.statusCode).toBe(422);
@@ -84,7 +84,7 @@ describe('MobileApp - login', () => {
         pac = await pac.save();
 
         const response = await request(app).post('/api/modules/mobileApp/login').send({
-            'email': 'user@andes.gob.ar',
+            email: 'user@andes.gob.ar',
             password: 'asdasd'
         });
         expect(response.statusCode).toBe(422);
@@ -101,7 +101,7 @@ describe('MobileApp - login', () => {
         pac = await pac.save();
 
         const response = await request(app).post('/api/modules/mobileApp/login').send({
-            'email': 'user@andes.gob.ar',
+            email: 'user@andes.gob.ar',
             password: 'asdasd',
             new_password: '123456'
         });

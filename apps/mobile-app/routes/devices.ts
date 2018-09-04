@@ -31,7 +31,7 @@ router.use((req: any, res, next) => {
  * @param app_version {String}
  */
 
-router.post('/devices/register', function (req: any, res, next) {
+router.post('/devices/register', (req: any, res, next) => {
     if (!req.body.device_id || !req.body.device_type || !req.body.app_version) {
         return next({ message: 'invalid_format' });
     }
@@ -66,7 +66,7 @@ router.post('/devices/register', function (req: any, res, next) {
  * }
  */
 
-router.post('/devices/update', function (req: any, res, next) {
+router.post('/devices/update', (req: any, res, next) => {
     let device_data = req.body.device;
     let device = req.account.devices.id(device_data.id);
     if (device) {
@@ -91,8 +91,8 @@ router.post('/devices/update', function (req: any, res, next) {
  * @param id {ObjectId}
  */
 
-router.post('/devices/delete', function (req: any, res, next) {
-    req.account.devices.pull({ '_id': new mongoose.Types.ObjectId(req.body.id) });
+router.post('/devices/delete', (req: any, res, next) => {
+    req.account.devices.pull({ _id: new mongoose.Types.ObjectId(req.body.id) });
     return req.account.save((errSave, u) => {
         if (errSave) {
             return next(errSave);
