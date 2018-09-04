@@ -1,7 +1,3 @@
-import * as config from '../../../config';
-import * as configPrivate from '../../../config.private';
-import * as moment from 'moment';
-import * as mongoose from 'mongoose';
 import { model as Prestacion } from '../schemas/prestacion';
 
 export function buscarUltimaInternacion(idPaciente, estado) {

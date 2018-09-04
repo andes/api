@@ -5,7 +5,7 @@ import * as authController from '../controller/AuthController';
 import { Auth } from '../../../auth/auth.class';
 import * as labsImport from '../../../modules/cda/controller/import-labs';
 
-let router = express.Router();
+const router = express.Router();
 
 /**
  * Login a la app mobile
@@ -14,9 +14,9 @@ let router = express.Router();
  * @param password {string} password del usuario
  */
 
-router.post('/login', function (req, res, next) {
-    let email = req.body.email;
-    let password = req.body.password;
+router.post('/login', (req, res, next) => {
+    const email = req.body.email;
+    const password = req.body.password;
 
     if (!email) {
         return res.status(422).send({ message: 'Se debe ingresar una dirección de e-mail' });
@@ -51,10 +51,10 @@ router.post('/login', function (req, res, next) {
 
                 }
 
-                let token = Auth.generatePacienteToken(String(user.id), user.nombre + ' ' + user.apellido, user.email, user.pacientes, user.permisos);
+                const token = Auth.generatePacienteToken(String(user.id), user.nombre + ' ' + user.apellido, user.email, user.pacientes, user.permisos);
                 res.status(200).json({
-                    token: token,
-                    user: user
+                    token,
+                    user
                 });
 
                 // Hack momentaneo. Descargamos los laboratorios a demanda.
@@ -78,28 +78,28 @@ router.post('/login', function (req, res, next) {
  * Genera el código para poder cambiar el password y luego enviar por mail o SMS
  * @param email {string} email del usuario
  */
-router.post('/olvide-password', function (req, res, next) {
+router.post('/olvide-password', (req, res, next) => {
     if (!req.body.email) {
         return res.status(422).send({ error: 'Se debe ingresar una dirección de e-Mail' });
     }
 
-    return PacienteApp.findOne({ email: req.body.email }, function (err, datosUsuario: any) {
+    return PacienteApp.findOne({ email: req.body.email }, (err, datosUsuario: any) => {
         if (err) {
             return next(err);
         }
 
         if (!datosUsuario) {
-            return res.status(422).send({ 'error': 'El e-mail ingresado no existe' });
+            return res.status(422).send({ error: 'El e-mail ingresado no existe' });
         }
 
         if (!datosUsuario.activacionApp) {
-            return res.status(422).send({ 'error': 'El e-mail ingresado no existe' });
+            return res.status(422).send({ error: 'El e-mail ingresado no existe' });
         }
 
         datosUsuario.restablecerPassword.codigo = authController.generarCodigoVerificacion();
         datosUsuario.restablecerPassword.fechaExpiracion = new Date(Date.now() + authController.expirationOffset);
 
-        datosUsuario.save(function (errSave, user) {
+        datosUsuario.save((errSave, user) => {
             if (errSave) {
                 return next(errSave);
             }
@@ -122,7 +122,7 @@ router.post('/olvide-password', function (req, res, next) {
  * @param {string} password2 Nueva clave andes
  */
 
-router.post('/reestablecer-password', function (req, res, next) {
+router.post('/reestablecer-password', (req, res, next) => {
     if (!req.body.email) {
         return res.status(422).send({ error: 'Se debe ingresar una dirección de e-Mail' });
     }
@@ -139,28 +139,27 @@ router.post('/reestablecer-password', function (req, res, next) {
         return res.status(422).send({ error: 'Debe re ingresar el nuevo password.' });
     }
 
-    return PacienteApp.findOne({ email: req.body.email }, function (err, datosUsuario: any) {
+    return PacienteApp.findOne({ email: req.body.email }, (err, datosUsuario: any) => {
         if (err) {
             return next(err);
         }
 
         if (!datosUsuario) {
-            return res.status(422).send({ 'error': 'El e-mail ingresado no existe' });
+            return res.status(422).send({ error: 'El e-mail ingresado no existe' });
         }
 
         const codigo = req.body.codigo;
         const password = req.body.password;
-        const password2 = req.body.password2;
 
         if (datosUsuario.restablecerPassword) {
             if (datosUsuario.restablecerPassword.codigo !== codigo) {
-                return res.status(422).send({ 'error': 'El codigo ingresado no existe.' });
+                return res.status(422).send({ error: 'El codigo ingresado no existe.' });
             }
 
             const hoy = new Date();
             const codigoExpiracion = new Date(datosUsuario.restablecerPassword.fechaExpiracion);
             if (codigoExpiracion < hoy) {
-                return res.status(422).send({ 'error': 'El código de seguridad generado ha vencido. Por favor genere uno nuevo.' });
+                return res.status(422).send({ error: 'El código de seguridad generado ha vencido. Por favor genere uno nuevo.' });
             }
 
         }
@@ -171,7 +170,7 @@ router.post('/reestablecer-password', function (req, res, next) {
 
         datosUsuario.restablecerPassword = {};
 
-        datosUsuario.save(function (errSave, user) {
+        datosUsuario.save((errSave, user) => {
             if (errSave) {
                 return next(errSave);
             }

@@ -6,7 +6,7 @@ import { Connections } from './connections';
 import * as HttpStatus from 'http-status-codes';
 import { Express } from 'express';
 
-let requireDir = require('require-dir');
+const requireDir = require('require-dir');
 
 export function initAPI(app: Express) {
     // Inicializa la autenticación con Passport/JWT
@@ -20,7 +20,7 @@ export function initAPI(app: Express) {
     app.use(bodyParser.urlencoded({
         extended: true
     }));
-    app.all('*', function (req, res, next) {
+    app.all('*', (req, res, next) => {
         res.header('Access-Control-Allow-Origin', '*');
         res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
         res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
@@ -38,10 +38,10 @@ export function initAPI(app: Express) {
     Swagger.initialize(app);
 
     // Carga los módulos y rutas
-    for (let m in config.modules) {
+    for (const m in config.modules) {
         if (config.modules[m].active) {
-            let routes = requireDir(config.modules[m].path);
-            for (let route in routes) {
+            const routes = requireDir(config.modules[m].path);
+            for (const route in routes) {
                 if (config.modules[m].middleware) {
                     app.use('/api' + config.modules[m].route, config.modules[m].middleware, routes[route]);
                 } else {
@@ -54,7 +54,7 @@ export function initAPI(app: Express) {
     app.use('/api/modules/mobileApp', require('./apps/mobile-app').Router);
 
     // Error handler
-    app.use(function (err: any, req, res, next) {
+    app.use((err: any, req, res, next) => {
         if (err) {
             // Parse err
             let e: Error;

@@ -10,16 +10,16 @@ import * as mongoose from 'mongoose';
 import { Controllers as MobileController } from '../../apps/mobile-app';
 
 const isReachable = require('is-reachable');
-let sha1Hash = require('sha1');
-let shiroTrie = require('shiro-trie');
-let router = express.Router();
+const sha1Hash = require('sha1');
+const shiroTrie = require('shiro-trie');
+const router = express.Router();
 
 /**
  * Obtiene el user de la session
  * @get /api/auth/sesion
  */
 
-router.get('/sesion', Auth.authenticate(), function (req, res) {
+router.get('/sesion', Auth.authenticate(), (req, res) => {
     res.json((req as any).user);
 });
 
@@ -39,9 +39,9 @@ router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
         if (err) {
             return next(err);
         }
-        let organizaciones = user.organizaciones.map((item) => {
+        const organizaciones = user.organizaciones.map((item) => {
             if ((req as any).query.admin) {
-                let shiro = shiroTrie.new();
+                const shiro = shiroTrie.new();
                 shiro.add(item.permisos);
 
                 if (shiro.check('usuarios:set')) {
@@ -69,21 +69,21 @@ router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
  */
 
 router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
-    let username = (req as any).user.usuario.username;
-    let orgId = mongoose.Types.ObjectId(req.body.organizacion);
+    const username = (req as any).user.usuario.username;
+    const orgId = mongoose.Types.ObjectId(req.body.organizacion);
     Promise.all([
         authUsers.findOne({
-            'usuario': username,
+            usuario: username,
             'organizaciones._id': orgId
         }),
         authOrganizaciones.model.findOne({ _id: orgId }, { nombre: 1 })
     ]).then((data: any[]) => {
         if (data[0] && data[1]) {
-            let user = data[0];
-            let org = data[1];
-            let oldToken: string = String(req.headers.authorization).substring(4);
-            let nuevosPermisos = user.organizaciones.find(item => String(item._id) === String(org._id));
-            let refreshToken = Auth.refreshToken(oldToken, user, nuevosPermisos.permisos, org);
+            const user = data[0];
+            const org = data[1];
+            const oldToken: string = String(req.headers.authorization).substring(4);
+            const nuevosPermisos = user.organizaciones.find(item => String(item._id) === String(org._id));
+            const refreshToken = Auth.refreshToken(oldToken, user, nuevosPermisos.permisos, org);
             res.send({
                 token: refreshToken
             });
@@ -94,7 +94,7 @@ router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
 });
 
 // Función interna que chequea si la cuenta mobile existe
-let checkMobile = function (profesionalId) {
+const checkMobile = (profesionalId) => {
     return new Promise((resolve, reject) => {
         MobileController.AuthController.getAccountByProfesional(profesionalId).then((account) => {
             if (!account) {
@@ -122,9 +122,9 @@ let checkMobile = function (profesionalId) {
  * @post /api/auth/login
  */
 
-router.post('/login', function (req, res, next) {
+router.post('/login', (req, res, next) => {
     // Función interna que genera token
-    let login = function (nombre: string, apellido: string) {
+    const login = (nombre: string, apellido: string) => {
         Promise.all([
             // organizacion.model.findById(req.body.organizacion, {
             //     nombre: true
@@ -136,30 +136,36 @@ router.post('/login', function (req, res, next) {
             profesional.findOne({
                 documento: req.body.usuario
             }, {
-                    matriculas: true,
-                    especialidad: true
-                }),
+                matriculas: true,
+                especialidad: true
+            }),
             authUsers.findOneAndUpdate(
                 { usuario: req.body.usuario },
-                { password: sha1Hash(req.body.password), nombre: nombre, apellido: apellido },
+                { password: sha1Hash(req.body.password), nombre, apellido },
             )
         ]).then((data: any[]) => {
             // Verifica que el usuario sea valido y que tenga permisos asignados
-            if (!data[0] || data[0].length === 0) {
+            const user = data[0];
+            const prof = data[1];
+            if (!user || user.length === 0) {
                 return next(403);
             }
             if (req.body.mobile) {
-                checkMobile(data[1]._id).then((account: any) => {
-                    // Crea el token con los datos de sesión
-                    res.json({
-                        token: Auth.generateUserToken(data[0], null, [], data[1], account._id),
-                        user: account
+                if (prof && prof._id) {
+                    checkMobile(prof._id).then((account: any) => {
+                        // Crea el token con los datos de sesión
+                        return res.json({
+                            token: Auth.generateUserToken(user, null, [], prof, account._id),
+                            user: account
+                        });
+                    }).catch((e) => {
+                        return next(403);
                     });
-
-                });
+                } else {
+                    return next(403);
+                }
             } else {
                 // Crea el token con los datos de sesión
-
                 res.json({
                     token: Auth.generateUserToken(data[0], null, [], data[1])
                 });
@@ -168,39 +174,44 @@ router.post('/login', function (req, res, next) {
         });
     };
 
-    let loginCache = function (password: string) {
+    const loginCache = (password: string) => {
         Promise.all([
             authUsers.findOne({
                 usuario: req.body.usuario,
-                password: password
+                password
             }),
             profesional.findOne({
                 documento: req.body.usuario
             }, {
-                    matriculas: true,
-                    especialidad: true
-                }),
+                matriculas: true,
+                especialidad: true
+            }),
         ]).then((data: any[]) => {
+            const user = data[0];
+            const prof = data[1];
             // Verifica que el usuario sea valido y que tenga permisos asignados
-            if (!data[0] || data[0].length === 0) {
+            if (!user || user.length === 0) {
                 return next(403);
             }
-            let nombre = data[0].nombre;
-            let apellido = data[0].apellido;
-            let profesional2 = data[1];
             // Crea el token con los datos de sesión
             if (req.body.mobile) {
-                checkMobile(profesional2._id).then((account: any) => {
-                    // Crea el token con los datos de sesión
-                    res.json({
-                        token: Auth.generateUserToken(data[0], null, [], profesional2, account._id),
-                        user: account
+                if (prof && prof._id) {
+                    checkMobile(prof._id).then((account: any) => {
+                        // Crea el token con los datos de sesión
+                        return res.json({
+                            token: Auth.generateUserToken(user, null, [], prof, account._id),
+                            user: account
+                        });
+                    }).catch(() => {
+                        return next(403);
                     });
-                });
+                } else {
+                    return next(403);
+                }
             } else {
                 // Crea el token con los datos de sesión
                 res.json({
-                    token: Auth.generateUserToken(data[0], null, [], profesional2)
+                    token: Auth.generateUserToken(data[0], null, [], prof)
                 });
             }
         });
@@ -214,21 +225,21 @@ router.post('/login', function (req, res, next) {
         // Access de prueba
         login(req.body.usuario, req.body.usuario);
     } else {
-        let server = configPrivate.hosts.ldap + configPrivate.ports.ldapPort;
+        const server = configPrivate.hosts.ldap + configPrivate.ports.ldapPort;
         /* Verifico que el servicio de ldap esté activo */
         isReachable(server).then(reachable => {
             if (!reachable) {
                 /* Login by cache */
-                let passwordSha1 = sha1Hash(req.body.password);
+                const passwordSha1 = sha1Hash(req.body.password);
                 loginCache(passwordSha1);
 
             } else {
                 // Conecta a LDAP
-                let dn = 'uid=' + req.body.usuario + ',' + configPrivate.auth.ldapOU;
-                let ldap = ldapjs.createClient({
+                const dn = 'uid=' + req.body.usuario + ',' + configPrivate.auth.ldapOU;
+                const ldap = ldapjs.createClient({
                     url: `ldap://${configPrivate.hosts.ldap}`
                 });
-                ldap.bind(dn, req.body.password, function (err) {
+                ldap.bind(dn, req.body.password, (err) => {
                     if (err) {
                         return next(ldapjs.InvalidCredentialsError ? 403 : err);
                     }
@@ -238,14 +249,14 @@ router.post('/login', function (req, res, next) {
                         filter: '(uid=' + req.body.usuario + ')',
                         paged: false,
                         sizeLimit: 1
-                    }, function (err2, searchResult) {
+                    }, (err2, searchResult) => {
                         if (err2) {
                             return next(err2);
                         }
-                        searchResult.on('searchEntry', function (entry) {
+                        searchResult.on('searchEntry', (entry) => {
                             login(entry.object.givenName, entry.object.sn);
                         });
-                        searchResult.on('error', function (err3) {
+                        searchResult.on('error', (err3) => {
                             return next(err3);
                         });
                     });

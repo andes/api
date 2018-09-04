@@ -8,9 +8,10 @@ const weights = {
     birthDate: 0.2
 };
 
-export function getCount (paciente) {
+
+export function getCount(paciente) {
     return new Promise((resolve, reject) => {
-        Vacunas.find({ 'documento' : paciente.documento }).count().exec( (err, count)  => {
+        Vacunas.find({ documento : paciente.documento }).count().exec( (err, count)  => {
             if (err) {
                 return reject(err);
             }
@@ -21,8 +22,8 @@ export function getCount (paciente) {
     });
 }
 
-export function getVacunas (paciente) {
-    let conditions = {};
+export function getVacunas(paciente) {
+    const conditions = {};
     conditions['documento'] = paciente.documento;
     const sort = { fechaAplicacion: -1 };
 
@@ -35,7 +36,7 @@ export function getVacunas (paciente) {
 
             resultados.forEach( (vacuna: any, index) => {
 
-                let pacienteVacuna = {
+                const pacienteVacuna = {
                     nombre: vacuna.nombre,
                     apellido: vacuna.apellido,
                     documento: vacuna.documento,
@@ -43,8 +44,8 @@ export function getVacunas (paciente) {
                     fechaNacimiento: vacuna.fechaNacimiento
                 };
 
-                let match = new Matching();
-                let resultadoMatching = match.matchPersonas(paciente, pacienteVacuna, weights, 'Levenshtein');
+                const match = new Matching();
+                const resultadoMatching = match.matchPersonas(paciente, pacienteVacuna, weights, 'Levenshtein');
 
                 // no cumple con el numero del matching
                 if (resultadoMatching < 0.90) {

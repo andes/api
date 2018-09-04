@@ -7,7 +7,7 @@ import { model as PrestacionAdjunto } from '../../../modules/rup/schemas/prestac
 import { NotificationService } from '../controller/NotificationService';
 import { storeFile } from '../../../modules/rup/controllers/rupStore';
 
-let router = express.Router();
+const router = express.Router();
 
 // Acciones desde la app de escitorio
 
@@ -21,12 +21,12 @@ let router = express.Router();
 
 router.post('/prestaciones-adjuntar', Auth.authenticate() , (req: any, res, next) => {
 
-    let registro = req.body.registro;
-    let pacienteId = req.body.paciente;
-    let prestacionId = req.body.prestacion;
-    let profesionalId = req.user.profesional.id;
+    const registro = req.body.registro;
+    const pacienteId = req.body.paciente;
+    const prestacionId = req.body.prestacion;
+    const profesionalId = req.user.profesional.id;
 
-    let adjunto = (new PrestacionAdjunto() as any);
+    const adjunto = (new PrestacionAdjunto() as any);
     adjunto.paciente = pacienteId;
     adjunto.prestacion =  prestacionId;
     adjunto.registro = registro;
@@ -50,7 +50,7 @@ router.post('/prestaciones-adjuntar', Auth.authenticate() , (req: any, res, next
  * Borra la solicitud de adjuntar imagen cuando ya esta todo listo
  */
 router.delete('/prestaciones-adjuntar/:id', Auth.authenticate(), (req: any, res, next) => {
-    let id = req.params.id;
+    const id = req.params.id;
 
     PrestacionAdjunto.findById(id).then((doc: any) => {
         doc.remove().then(() => {
@@ -71,16 +71,16 @@ router.delete('/prestaciones-adjuntar/:id', Auth.authenticate(), (req: any, res,
 
 router.get('/prestaciones-adjuntar', Auth.optionalAuth(), async (req: any, res, next) => {
     let find;
-    let estado = req.query.estado || 'pending';
+    const estado = req.query.estado || 'pending';
     if (req.query.id) {
-        let _id = new mongoose.Types.ObjectId(req.query.id);
+        const _id = new mongoose.Types.ObjectId(req.query.id);
         find = PrestacionAdjunto.find({
-            _id: _id,
+            _id,
             estado,
             createdAt: { $gt: moment().subtract(30, 'minutes').toDate() }
         }, { prestacion: 1, paciente: 1, valor: 1 });
     } else if (req.user && req.user.profesional) {
-        let _profesional = new mongoose.Types.ObjectId(req.user.profesional._id);
+        const _profesional = new mongoose.Types.ObjectId(req.user.profesional._id);
         find = PrestacionAdjunto.find({
             profesional: _profesional,
             estado,
@@ -90,10 +90,10 @@ router.get('/prestaciones-adjuntar', Auth.optionalAuth(), async (req: any, res, 
         return next(403);
     }
     find.then( async (docs) => {
-        let pendientes = [];
+        const pendientes = [];
         for (const doc of docs) {
-            let obj = doc.toObject();
-            let prestacion: any = await Prestacion.findById(doc.prestacion);
+            const obj = doc.toObject();
+            const prestacion: any = await Prestacion.findById(doc.prestacion);
             obj.paciente = prestacion.paciente;
             obj.prestacion_nombre = prestacion.solicitud.tipoPrestacion.term;
             obj.fecha = prestacion.solicitud.fecha;
@@ -111,14 +111,14 @@ router.get('/prestaciones-adjuntar', Auth.optionalAuth(), async (req: any, res, 
  */
 
 router.patch('/prestaciones-adjuntar/:id', Auth.optionalAuth(), async (req: any, res, next) => {
-    let id = req.params.id;
-    let value = req.body.valor.documentos;
-    let estado = req.body.estado;
+    const id = req.params.id;
+    const value = req.body.valor.documentos;
+    const estado = req.body.estado;
 
     PrestacionAdjunto.findById(id).then(async (doc: any) => {
 
-        let files = [];
-        for (let file of value) {
+        const files = [];
+        for (const file of value) {
             if (file.ext && file.plain64) {
                 file.plain64 = file.plain64.replace(/\n/gi, '');
                 if (file.ext === 'pdf') {
@@ -126,11 +126,11 @@ router.patch('/prestaciones-adjuntar/:id', Auth.optionalAuth(), async (req: any,
                 } else {
                     file.plain64 = file.plain64.replace('image/*', 'image/' + file.ext);
                 }
-                let metadata = {
+                const metadata = {
                     registro: doc.registro,
                     prestacion: doc.prestacion
                 };
-                let data: any = await storeFile(file.plain64, metadata);
+                const data: any = await storeFile(file.plain64, metadata);
                 files.push({ id: data._id, ext: file.ext });
             } else {
                 files.push(file);
@@ -146,8 +146,6 @@ router.patch('/prestaciones-adjuntar/:id', Auth.optionalAuth(), async (req: any,
         return next(err);
     });
 });
-
-
 
 
 export = router;

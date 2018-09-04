@@ -1,9 +1,5 @@
-import * as mongoose from 'mongoose';
-import { Logger } from '../../../utils/logService';
 import { ValidateDarTurno } from './../../../utils/validateDarTurno';
 import * as agenda from '../schemas/agenda';
-import { LoggerPaciente } from '../../../utils/loggerPaciente';
-import { NotificationService } from '../../../apps/mobile-app/controller/NotificationService';
 import { agendasCache } from '../../legacy/schemas/agendasCache';
 
 /* Esta función es la misma que tiene el put de turno.ts - TODO: Ver como unificar*/
@@ -12,9 +8,9 @@ export function updateTurnoAgendaMongo(datosTurno: any) {
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
     return new Promise((resolve, reject) => {
 
-        let continues = ValidateDarTurno.checkTurno(datosTurno.turno);
-        let posBloque = datosTurno.posBloque;
-        let posTurno = datosTurno.posTurno;
+        const continues = ValidateDarTurno.checkTurno(datosTurno.turno);
+        const posBloque = datosTurno.posBloque;
+        const posTurno = datosTurno.posTurno;
         if (continues.valid) {
             // Se obtiene la agenda que se va a modificar
             agenda.findById(datosTurno.idAgenda, function getAgenda(err, data) {
@@ -27,9 +23,8 @@ export function updateTurnoAgendaMongo(datosTurno: any) {
                 } else {
                     etiquetaTurno = 'bloques.' + posBloque + '.turnos.' + posTurno;
                 }
-                let usuario = datosTurno.idUsuarioSips;
-                let update: any = {};
-                let query = {
+                const update: any = {};
+                const query = {
                     _id: datosTurno.idAgenda,
                 };
                 // delete datosTurno._id;
@@ -58,9 +53,9 @@ export function updateTurnoAgendaCache(datosTurno: any, agendaCacheada) {
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
     return new Promise((resolve, reject) => {
 
-        let continues = ValidateDarTurno.checkTurno(datosTurno.turno);
-        let posBloque = datosTurno.posBloque;
-        let posTurno = datosTurno.posTurno;
+        const continues = ValidateDarTurno.checkTurno(datosTurno.turno);
+        const posBloque = datosTurno.posBloque;
+        const posTurno = datosTurno.posTurno;
         if (continues.valid) {
             // Se obtiene la agenda que se va a modificar
             agendasCache.findById(agendaCacheada._id, function getAgenda(err, data) {
@@ -73,9 +68,8 @@ export function updateTurnoAgendaCache(datosTurno: any, agendaCacheada) {
                 } else {
                     etiquetaTurno = 'bloques.' + posBloque + '.turnos.' + posTurno;
                 }
-                let usuario = datosTurno.idUsuarioSips;
-                let update: any = {};
-                let query = {
+                const update: any = {};
+                const query = {
                     _id: agendaCacheada._id,
                 };
                 // delete datosTurno._id;

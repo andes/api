@@ -1,13 +1,13 @@
 export class ValidatePatient {
 
     public static checkPatient(patient: any): any {
-        var errors = [];
-        var valid = true;
-        var estadoCivil = ['casado', 'separado', 'soltero', 'divorciado', 'viudo', 'otro'];
-        var sexo = ['femenino', 'masculino', 'otro'];
-        var estado = ['temporal', 'validado', 'recienNacido', 'extranjero'];
-        var tipoContacto = ['fijo', 'celular', 'email'];
-        var relaciones = ['padre', 'madre', 'hijo', 'hermano', 'tutor'];
+        const errors = [];
+        let valid = true;
+        const estadoCivil = ['casado', 'separado', 'soltero', 'divorciado', 'viudo', 'otro'];
+        const sexo = ['femenino', 'masculino', 'otro'];
+        const estado = ['temporal', 'validado', 'recienNacido', 'extranjero'];
+        const tipoContacto = ['fijo', 'celular', 'email'];
+        const relaciones = ['padre', 'madre', 'hijo', 'hermano', 'tutor'];
 
         if (!patient.apellido) {
             valid = false;
@@ -88,8 +88,8 @@ export class ValidatePatient {
         }
 
         return {
-            valid: valid,
-            errors: errors
+            valid,
+            errors
         };
     }
 

@@ -5,6 +5,8 @@ ENV node_env=development
 
 RUN apk update && apk upgrade && apk add --no-cache git
 
+RUN npm i -g npm@latest
+
 WORKDIR /usr/src/api
 
 RUN npm i -g npm

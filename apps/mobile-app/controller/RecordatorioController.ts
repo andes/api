@@ -10,10 +10,10 @@ import { sendSms, ISms } from '../../../utils/roboSender';
 import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
 
-let log = debug('RecordatorioController');
+const log = debug('RecordatorioController');
 
-let async = require('async');
-let agendasRemainderDays = 1;
+const async = require('async');
+const agendasRemainderDays = 1;
 
 /**
  *
@@ -24,10 +24,10 @@ let agendasRemainderDays = 1;
 export function buscarTurnosARecordar(dayOffset) {
     return new Promise(async (resolve, reject) => {
 
-        let startDay = moment.utc().add(dayOffset, 'days').startOf('day').toDate();
-        let endDay = moment.utc().add(dayOffset, 'days').endOf('day').toDate();
+        const startDay = moment.utc().add(dayOffset, 'days').startOf('day').toDate();
+        const endDay = moment.utc().add(dayOffset, 'days').endOf('day').toDate();
 
-        let matchTurno = {};
+        const matchTurno = {};
         matchTurno['estado'] = { $in: ['disponible', 'publicada'] };
         matchTurno['bloques.turnos.horaInicio'] = { $gte: startDay, $lte: endDay };
         matchTurno['bloques.turnos.estado'] = 'asignado';
@@ -35,23 +35,23 @@ export function buscarTurnosARecordar(dayOffset) {
         let pipeline = [];
 
         pipeline = [
-            { '$match': matchTurno },
-            { '$unwind': '$bloques' },
-            { '$unwind': '$bloques.turnos' },
-            { '$match': matchTurno }
+            { $match: matchTurno },
+            { $unwind: '$bloques' },
+            { $unwind: '$bloques.turnos' },
+            { $match: matchTurno }
         ];
-        let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
+        const data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
 
-        let turnos = [];
+        const turnos = [];
         data.forEach((elem: any) => {
-            let turno = elem.bloques.turnos;
+            const turno = elem.bloques.turnos;
             turno.id = elem.bloques.turnos._id;
             turno.paciente = elem.bloques.turnos.paciente;
             turno.tipoRecordatorio = 'turno';
             turnos.push(turno);
         });
 
-        guardarRecordatorioTurno(turnos, function (ret) {
+        guardarRecordatorioTurno(turnos, (ret) => {
             resolve();
         });
 
@@ -61,15 +61,15 @@ export function buscarTurnosARecordar(dayOffset) {
 
 export function guardarRecordatorioTurno(turnos: any[], callback) {
 
-    async.forEach(turnos, function (turno, done) {
-        recordatorio.findOne({ idTurno: turno._id }, function (err, objFound) {
+    async.forEach(turnos, (turno, done) => {
+        recordatorio.findOne({ idTurno: turno._id }, (err, objFound) => {
 
             if (objFound) {
                 log('__ El recordatorio existe __');
                 return done();
             }
 
-            let recordatorioTurno = new recordatorio({
+            const recordatorioTurno = new recordatorio({
                 idTurno: turno._id,
                 fechaTurno: turno.horaInicio,
                 paciente: turno.paciente,
@@ -77,7 +77,7 @@ export function guardarRecordatorioTurno(turnos: any[], callback) {
                 estadoEnvio: false,
             });
 
-            recordatorioTurno.save(function (_err, user: any) {
+            recordatorioTurno.save((_err, user: any) => {
 
                 if (_err) {
                     return done(_err);
@@ -93,11 +93,11 @@ export function guardarRecordatorioTurno(turnos: any[], callback) {
 
 
 export function enviarTurnoRecordatorio() {
-    recordatorio.find({ 'estadoEnvio': false }, function (err, elems) {
+    recordatorio.find({ estadoEnvio: false }, (err, elems) => {
 
         elems.forEach((turno: any, index) => {
 
-            let smsOptions: ISms = {
+            const smsOptions: ISms = {
                 phone: turno.paciente.telefono,
                 message: 'Sr ' + turno.paciente.apellido + ' le recordamos que tiene un turno para el día: ' + moment(turno.fechaTurno).format('DD/MM/YYYY')
             };
@@ -120,47 +120,47 @@ export function enviarTurnoRecordatorio() {
 
 export function agendaRecordatorioQuery(dayOffset) {
     return new Promise(async (resolve, reject) => {
-        let startDay = moment(new Date()).add(dayOffset, 'days').startOf('day').toDate() as any;
-        let endDay = moment(new Date()).add(dayOffset, 'days').endOf('day').toDate() as any;
-        let match = {
-            'estado': { $in: ['disponible', 'publicada'] },
-            'horaInicio': {
+        const startDay = moment(new Date()).add(dayOffset, 'days').startOf('day').toDate() as any;
+        const endDay = moment(new Date()).add(dayOffset, 'days').endOf('day').toDate() as any;
+        const match = {
+            estado: { $in: ['disponible', 'publicada'] },
+            horaInicio: {
                 $gte: startDay,
                 $lte: endDay
             }
         };
 
-        let pipeline = [
+        const pipeline = [
             { $match: match },
-            { '$unwind': { 'path': '$profesionales', 'preserveNullAndEmptyArrays': true } },
-            { '$unwind': { 'path': '$avisos', 'preserveNullAndEmptyArrays': true } },
+            { $unwind: { path: '$profesionales', preserveNullAndEmptyArrays: true } },
+            { $unwind: { path: '$avisos', preserveNullAndEmptyArrays: true } },
             {
-                '$match': {
-                    'avisos': { '$exists': false }
+                $match: {
+                    avisos: { $exists: false }
                 }
             },
             {
-                '$group': {
-                    '_id': { 'profesional': '$profesionales._id' },
-                    'agenda': { '$push': '$$ROOT' }
+                $group: {
+                    _id: { profesional: '$profesionales._id' },
+                    agenda: { $push: '$$ROOT' }
                 }
             }
         ];
 
-        let query = agendaModel.aggregate(pipeline).cursor({}).exec();
-        let data = await toArray(query);
+        const query = agendaModel.aggregate(pipeline).cursor({}).exec();
+        const data = await toArray(query);
         return resolve(data);
     });
 }
 
 export function recordarAgenda() {
     return agendaRecordatorioQuery(agendasRemainderDays).then((data: any[]) => {
-        let stack = [];
+        const stack = [];
         data.forEach(item => {
-            let profId = item._id.profesional;
-            let date = moment(new Date()).add(agendasRemainderDays, 'days').startOf('day').toDate() as any;
+            const profId = item._id.profesional;
+            const date = moment(new Date()).add(agendasRemainderDays, 'days').startOf('day').toDate() as any;
 
-            let recordatorioAgenda = new recordatorio({
+            const recordatorioAgenda = new recordatorio({
                 tipoRecordatorio: 'agenda',
                 estadoEnvio: false,
                 dataAgenda: {
@@ -179,14 +179,14 @@ export function recordarAgenda() {
 }
 
 export function enviarAgendaNotificacion() {
-    recordatorio.find({ tipoRecordatorio: 'agenda', estadoEnvio: false }, function (err, recordatiorios: any) {
+    recordatorio.find({ tipoRecordatorio: 'agenda', estadoEnvio: false }, (err, recordatiorios: any) => {
         recordatiorios.forEach((item) => {
             Promise.all([
                 profesional.findById(item.dataAgenda.profesionalId),
                 PacienteApp.findOne({ profesionalId: mongoose.Types.ObjectId(item.dataAgenda.profesionalId) })
             ]).then(datos => {
                 if (datos[0] && datos[1]) {
-                    let notificacion = {
+                    const notificacion = {
                         body: 'Te recordamos que tienes agendas sin confirmar.'
                     };
                     NotificationService.sendNotification(datos[1], notificacion);
@@ -201,5 +201,4 @@ export function enviarAgendaNotificacion() {
         });
     });
 }
-
 

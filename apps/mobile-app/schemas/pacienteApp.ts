@@ -18,7 +18,7 @@ export interface IPacienteApp extends mongoose.Document {
 
     comparePassword(password: String, cb: (err: any, isMatch: Boolean) => void);
 
-  }
+}
 
 export let PacienteAppSchema = new mongoose.Schema({
 
@@ -84,14 +84,14 @@ export let PacienteAppSchema = new mongoose.Schema({
         fechaExpiracion: Date
     },
     devices: [DeviceSchema]
-    }, {
-        timestamps: true
-    });
+}, {
+    timestamps: true
+});
 
 PacienteAppSchema.pre('save', function (next) {
 
-    let user: any = this;
-    let SALT_FACTOR = 5;
+    const user: any = this;
+    const SALT_FACTOR = 5;
 
     if (user.isModified()) {
         user.updatedAt = new Date();
@@ -101,13 +101,13 @@ PacienteAppSchema.pre('save', function (next) {
         return next();
     }
 
-    bcrypt.genSalt(SALT_FACTOR, function (errGen, salt) {
+    bcrypt.genSalt(SALT_FACTOR, (errGen, salt) => {
 
         if (errGen) {
             return next(errGen);
         }
 
-        bcrypt.hash(user.password, salt, null, function (errCrypt, hash) {
+        bcrypt.hash(user.password, salt, null, (errCrypt, hash) => {
 
             if (errCrypt) {
                 return next(errCrypt);
@@ -124,7 +124,7 @@ PacienteAppSchema.pre('save', function (next) {
 
 PacienteAppSchema.methods.comparePassword = function (passwordAttempt, cb) {
 
-    bcrypt.compare(passwordAttempt, this.password, function (err, isMatch) {
+    bcrypt.compare(passwordAttempt, this.password, (err, isMatch) => {
 
         if (err) {
             return cb(err);

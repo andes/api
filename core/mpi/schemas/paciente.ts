@@ -86,7 +86,7 @@ export let pacienteSchema: mongoose.Schema = new mongoose.Schema({
 }, { versionKey: false });
 
 pacienteSchema.pre('save', function (next) {
-    let user: any = this;
+    const user: any = this;
     if (user.isModified('nombre')) {
         user.nombre = user.nombre.toUpperCase();
     }
@@ -94,7 +94,7 @@ pacienteSchema.pre('save', function (next) {
         user.apellido = user.apellido.toUpperCase();
     }
     if (user.isModified('nombre') || user.isModified('apellido') || user.isModified('documento')) {
-        let match = new Matching();
+        const match = new Matching();
         user.claveBlocking = match.crearClavesBlocking(user);
     }
     next();
@@ -108,8 +108,8 @@ pacienteSchema.virtual('nombreCompleto').get(function () {
 pacienteSchema.virtual('edad').get(function () {
     let edad = null;
     if (this.fechaNacimiento) {
-        let birthDate = new Date(this.fechaNacimiento);
-        let currentDate = new Date();
+        const birthDate = new Date(this.fechaNacimiento);
+        const currentDate = new Date();
         let years = (currentDate.getFullYear() - birthDate.getFullYear());
         if (currentDate.getMonth() < birthDate.getMonth() ||
             currentDate.getMonth() === birthDate.getMonth() && currentDate.getDate() < birthDate.getDate()) {
@@ -123,7 +123,7 @@ pacienteSchema.virtual('edadReal').get(function () {
     // Calcula Edad de una persona (Redondea -- 30.5 años = 30 años)
     let edad: Object;
     let fechaNac: any;
-    let fechaActual: Date = new Date();
+    const fechaActual: Date = new Date();
     let fechaAct: any;
     let difAnios: any;
     let difDias: any;
