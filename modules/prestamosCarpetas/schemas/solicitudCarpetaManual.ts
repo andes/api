@@ -7,7 +7,7 @@ import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import * as constantes from './constantes';
 
 
-let solicitudCarpetaManualSchema = new mongoose.Schema({
+const solicitudCarpetaManualSchema = new mongoose.Schema({
     fecha: Date,
     paciente: pacienteSchema,
     numero: String,
@@ -31,5 +31,5 @@ let solicitudCarpetaManualSchema = new mongoose.Schema({
 
 solicitudCarpetaManualSchema.plugin(require('../../../mongoose/audit'));
 
-let solicitudCarpetaManual = mongoose.model('solicitudCarpetaManual', solicitudCarpetaManualSchema, 'solicitudCarpetaManual');
+const solicitudCarpetaManual = mongoose.model('solicitudCarpetaManual', solicitudCarpetaManualSchema, 'solicitudCarpetaManual');
 export = solicitudCarpetaManual;

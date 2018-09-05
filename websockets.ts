@@ -1,7 +1,4 @@
-import * as ws from 'ws';
 import { Server } from 'http';
-import * as debug from 'debug';
-import { Connections } from './connections';
 
 export class Websockets {
     /**
@@ -14,8 +11,8 @@ export class Websockets {
      */
     static initialize(server: Server) {
         //     const wss = new ws.Server({ server });
-        let socketIO = require('socket.io');
-        let io = socketIO(server);
+        const socketIO = require('socket.io');
+        const io = socketIO(server);
         // const roomTotal = []
 
 
@@ -23,13 +20,13 @@ export class Websockets {
 
             // console.log('user connected', socket.id);
 
-            socket.on('disconnect', function () {
+            socket.on('disconnect', () => {
                 if (io.dataRooms !== undefined) {
                     io.dataRooms.forEach(element => {
                         if (io.sockets.adapter.rooms[element.pantalla] === undefined) {
 
-                            var pantallasTotal = io.dataRooms;
-                            var index = pantallasTotal.findIndex(obj => obj.pantalla === element.pantalla);
+                            const pantallasTotal = io.dataRooms;
+                            const index = pantallasTotal.findIndex(obj => obj.pantalla === element.pantalla);
                             if (index !== -1) {
                                 io.dataRooms.splice(index, 1);
                             }
@@ -37,7 +34,7 @@ export class Websockets {
                     });
                 }
             });
-            socket.on('room', function (room) {
+            socket.on('room', (room) => {
                 let existe = false;
                 socket.join(room.pantalla);
                 // console.log(socket.dataRooms)

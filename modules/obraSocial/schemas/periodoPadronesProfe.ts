@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-let periodoPadronesProfeSchema = new mongoose.Schema({
+const periodoPadronesProfeSchema = new mongoose.Schema({
     id: mongoose.Schema.Types.ObjectId,
     version: Date
 });

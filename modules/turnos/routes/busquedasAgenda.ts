@@ -1,11 +1,11 @@
 import * as express from 'express';
 import * as busquedasAgenda from '../schemas/busquedasAgenda';
 
-let router = express.Router();
+const router = express.Router();
 
-router.get('/busquedasAgenda/:_id*?', function (req, res, next) {
+router.get('/busquedasAgenda/:_id*?', (req, res, next) => {
     if (req.params._id) {
-        busquedasAgenda.findById(req.params._id, function (err, data) {
+        busquedasAgenda.findById(req.params._id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -25,8 +25,8 @@ router.get('/busquedasAgenda/:_id*?', function (req, res, next) {
     }
 });
 
-router.post('/busquedasAgenda', function (req, res, next) {
-    let newBusquedasAgenda = new busquedasAgenda(req.body);
+router.post('/busquedasAgenda', (req, res, next) => {
+    const newBusquedasAgenda = new busquedasAgenda(req.body);
     newBusquedasAgenda.save((err) => {
         if (err) {
             return next(err);
@@ -35,8 +35,8 @@ router.post('/busquedasAgenda', function (req, res, next) {
     });
 });
 
-router.put('/busquedasAgenda/:id', function (req, res, next) {
-    busquedasAgenda.findByIdAndUpdate(req.params.id, req.body, function (err, data) {
+router.put('/busquedasAgenda/:id', (req, res, next) => {
+    busquedasAgenda.findByIdAndUpdate(req.params.id, req.body, (err, data) => {
         if (err) {
             return next(err);
         }
@@ -44,8 +44,8 @@ router.put('/busquedasAgenda/:id', function (req, res, next) {
     });
 });
 
-router.delete('/busquedasAgenda/:_id', function (req, res, next) {
-    busquedasAgenda.findByIdAndRemove(req.params._id, function (err, data) {
+router.delete('/busquedasAgenda/:_id', (req, res, next) => {
+    busquedasAgenda.findByIdAndRemove(req.params._id, (err, data) => {
         if (err) { return next(err); }
         res.json(data);
     });

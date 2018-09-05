@@ -1,9 +1,11 @@
-ARG NODE_VERSION=8.10-alpine
+ARG NODE_VERSION=8-alpine
 FROM node:${NODE_VERSION}
 
 ENV node_env=development
 
 RUN apk update && apk upgrade && apk add --no-cache git
+
+RUN npm i -g npm@latest
 
 WORKDIR /usr/src/api
 

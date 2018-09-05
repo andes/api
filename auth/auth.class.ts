@@ -8,7 +8,7 @@ import * as passport from 'passport';
 import * as passportJWT from 'passport-jwt';
 import * as jwt from 'jsonwebtoken';
 import * as configPrivate from '../config.private';
-let shiroTrie = require('shiro-trie');
+const shiroTrie = require('shiro-trie');
 
 export class Auth {
 
@@ -59,7 +59,7 @@ export class Auth {
                     passportJWT.ExtractJwt.fromUrlQueryParameter('token')
                 ])
             },
-            function (jwt_payload, done) {
+            (jwt_payload, done) => {
                 done(null, jwt_payload);
             }
         ));
@@ -93,11 +93,11 @@ export class Auth {
      */
 
     static optionalAuth() {
-        return function (req, res, next) {
+        return (req, res, next) => {
             try {
-                let extractor = passportJWT.ExtractJwt.fromAuthHeaderWithScheme('jwt');
-                let token = extractor(req);
-                let tokenData = jwt.verify(token, configPrivate.auth.jwtKey);
+                const extractor = passportJWT.ExtractJwt.fromAuthHeaderWithScheme('jwt');
+                const token = extractor(req);
+                const tokenData = jwt.verify(token, configPrivate.auth.jwtKey);
                 if (tokenData) {
                     req.user = tokenData;
                 }
@@ -118,7 +118,7 @@ export class Auth {
      * @memberOf Auth
      */
     static deniedPatients() {
-        return function (req, res, next) {
+        return (req, res, next) => {
             if (req.user.type !== 'paciente-token') {
                 next();
             } else {
@@ -130,14 +130,13 @@ export class Auth {
     /**
      * Middleware para controlar los apps token.
      * Controla que el token esta almacenado en la DB.
-     *
      * @memberOf Auth
      */
     static appTokenProtected() {
-        return function (req, res, next) {
+        return (req, res, next) => {
             if (req.user.type === 'app-token') {
                 authApps.findOne({ organizacion: mongoose.Types.ObjectId(req.user.organizacion) }).then((app: any) => {
-                    let token: string = req.headers.authorization.substring(4);
+                    const token: string = req.headers.authorization.substring(4);
                     if (app.token && app.token === token) {
                         next();
                     } else {
@@ -161,7 +160,7 @@ export class Auth {
      */
     static audit(document: mongoose.Document, req: express.Request) {
         // Obtiene el usuario o app que está autenticada
-        let i = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
+        const i = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
         // Copia la organización desde el token
         i.organizacion = (req as any).user.organizacion;
         // El método 'audit' lo define el plugin 'audit'
@@ -251,7 +250,7 @@ export class Auth {
         if (!(req as any).user || !(req as any).user.profesional || !(req as any).user.usuario) {
             return null;
         } else {
-            let profesional = {
+            const profesional = {
                 id: (req as any).user.profesional.id,
                 nombre: (req as any).user.usuario.nombre,
                 apellido: (req as any).user.usuario.apellido,
@@ -277,7 +276,7 @@ export class Auth {
      */
     static generateUserToken(user: any, organizacion: any, permisos: any[], profesional: any, account_id: string = null): any {
         // Crea el token con los datos de sesión
-        let token: UserToken = {
+        const token: UserToken = {
             id: mongoose.Types.ObjectId(),
             usuario: {
                 nombreCompleto: user.nombre + ' ' + user.apellido,
@@ -287,10 +286,10 @@ export class Auth {
                 documento: user.usuario
             },
             // roles: [permisos.roles],
-            profesional: profesional,
-            organizacion: organizacion,
-            permisos: permisos,
-            account_id: account_id,
+            profesional,
+            organizacion,
+            permisos,
+            account_id,
             type: 'user-token'
         };
         return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: this.expiresIn });
@@ -309,13 +308,13 @@ export class Auth {
      */
     static generateAppToken(nombre: string, organizacion: any, permisos: string[]): any {
         // Un token por organización. A futuro distintos permisos en la organización externa deberá modificarse esto!
-        let token: AppToken = {
+        const token: AppToken = {
             id: mongoose.Types.ObjectId(),
             app: {
-                nombre: nombre
+                nombre
             },
-            organizacion: organizacion,
-            permisos: permisos,
+            organizacion,
+            permisos,
             account_id: null,
             type: 'app-token'
         };
@@ -337,16 +336,16 @@ export class Auth {
      */
     static generatePacienteToken(account_id: string, nombre: string, email: string, pacientes: any, permisos: any): any {
         // Crea el token con los datos de sesión
-        let token: PacienteToken = {
+        const token: PacienteToken = {
             id: mongoose.Types.ObjectId(),
             usuario: {
                 nombre,
                 email,
             },
-            permisos: permisos,
-            pacientes: pacientes,
+            permisos,
+            pacientes,
             organizacion: null,
-            account_id: account_id,
+            account_id,
             type: 'paciente-token'
         };
         return jwt.sign(token, configPrivate.auth.jwtKey, { expiresIn: this.expiresIn });
@@ -365,7 +364,7 @@ export class Auth {
      */
     static refreshToken(token: string, user: any, permisos: any[], organizacion: any) {
         try {
-            let tokenData = jwt.verify(token, configPrivate.auth.jwtKey);
+            const tokenData = jwt.verify(token, configPrivate.auth.jwtKey);
             return this.generateUserToken(user, organizacion, permisos, tokenData.profesional, tokenData.account_id);
         } catch (e) {
             return null;
@@ -382,7 +381,7 @@ export class Auth {
      */
     static generateFileToken(): any {
         // Crea el token con los datos de sesión
-        let token = {
+        const token = {
             id: mongoose.Types.ObjectId(),
             type: 'file-token'
         };

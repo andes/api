@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-let profeSchema = new mongoose.Schema({
+const profeSchema = new mongoose.Schema({
     nombre: String,
     tipoDocumento: String,
     dni: Number,

@@ -3,14 +3,14 @@ import { paciente } from '../../schemas/paciente';
 import * as servicioSisa from '../../../../utils/servicioSisa';
 import { Auth } from '../../../../auth/auth.class';
 
-let router = express.Router();
+const router = express.Router();
 
-router.get('/matching/:id*?', function (req, res, next) {
+router.get('/matching/:id*?', (req, res, next) => {
     if (!Auth.check(req, 'mpi:matching:get')) {
         return next(403);
     }
     if (req.params.id) {
-        paciente.findById(req.params.id, function (err, data) {
+        paciente.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -34,24 +34,21 @@ router.get('/matching/:id*?', function (req, res, next) {
     }
 });
 
-router.patch('/matching/:id', function (req, res, next) {
+router.patch('/matching/:id', (req, res, next) => {
     if (!Auth.check(req, 'mpi:matching:patch')) {
         return next(403);
     }
-    paciente.findById(req.params.id, function (err, data) {
+    paciente.findById(req.params.id, (_err, data) => {
         if (req.body.op === 'validarSisa') {
-            let pacienteOriginal;
-            let pacienteAux;
-            pacienteOriginal = data;
-            pacienteAux = data;
-            let pacientesRes = [];
+            const pacienteAux = data;
+            const pacientesRes = [];
             servicioSisa.matchSisa(pacienteAux)
                 .then(resultado => {
                     pacientesRes.push(resultado);
                     let arrPacValidados;
                     arrPacValidados = pacientesRes;
-                    let arrPacientesSisa = [];
-                    arrPacValidados.forEach(function (pacVal) {
+                    const arrPacientesSisa = [];
+                    arrPacValidados.forEach((pacVal) => {
                         let datoPac;
                         datoPac = pacVal.matcheos.datosPaciente;
                         if (datoPac) {
@@ -67,11 +64,11 @@ router.patch('/matching/:id', function (req, res, next) {
     });
 });
 
-router.put('/matching/:id', function (req, res, next) {
+router.put('/matching/:id', (req, res, next) => {
     if (!Auth.check(req, 'mpi:matching:put')) {
         return next(403);
     }
-    paciente.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
+    paciente.findByIdAndUpdate(req.params.id, req.body, { new: true }, (err, data) => {
         if (err) {
             return next(err);
         }
