@@ -11,13 +11,8 @@ let app = express();
 describe('MobileApp - login', () => {
     beforeAll((done) => {
         // [TODO] Change this to a promises style
-        initAPI(app).then(() => {
-            done();
-        });
-    });
-
-    beforeEach(async () => {
-        await PacienteApp.remove({ email: 'user@andes.gob.ar' });
+        initAPI(app);
+        done();
     });
 
     test('login sin campos debe devolver codigo 422', async () => {
@@ -34,14 +29,18 @@ describe('MobileApp - login', () => {
     });
 
     test('login correcto', async () => {
-        let pac = new PacienteApp({
+        let mockAccount = {
             nombre: 'Perez',
             apellido: 'Juan',
             email: 'user@andes.gob.ar',
             password: 'asdasd',
-            activacionApp: true
-        });
-        pac = await pac.save();
+            activacionApp: true,
+            comparePassword: jest.fn().mockResolvedValue(true),
+            pacientes: []
+        };
+
+        const PacienteAppMock = jest.spyOn(PacienteApp, 'findOne');
+        PacienteAppMock.mockResolvedValue(mockAccount);
 
         const generateTokenMock = jest.spyOn(Auth, 'generatePacienteToken');
         const response = await request(app).post('/api/modules/mobileApp/login').send({
@@ -51,54 +50,78 @@ describe('MobileApp - login', () => {
         expect(response.statusCode).toBe(200);
         expect(response.body.token).toBeDefined();
         expect(response.body.user).toBeDefined();
-        expect(response.body.user.email).toBe(pac.email);
+        expect(response.body.user.email).toBe(mockAccount.email);
+        expect(mockAccount.comparePassword).toBeCalledWith('asdasd');
+        expect(PacienteAppMock).toBeCalledWith({ email: mockAccount.email });
         expect(generateTokenMock).toBeCalled();
         generateTokenMock.mockRestore();
+        PacienteAppMock.mockRestore();
     });
 
     test('login con diferente password', async () => {
-        let pac = new PacienteApp({
+        let mockAccount = {
             nombre: 'Perez',
             apellido: 'Juan',
             email: 'user@andes.gob.ar',
             password: 'asdasd',
-            activacionApp: true
-        });
-        pac = await pac.save();
+            activacionApp: true,
+            comparePassword: jest.fn().mockResolvedValue(false),
+            pacientes: []
+        };
+
+        const PacienteAppMock = jest.spyOn(PacienteApp, 'findOne');
+        PacienteAppMock.mockResolvedValue(mockAccount);
 
         const response = await request(app).post('/api/modules/mobileApp/login').send({
             email: 'user@andes.gob.ar',
-            password: 'asdasdasdasd'
+            password: '123456'
         });
         expect(response.statusCode).toBe(422);
+        expect(PacienteAppMock).toBeCalledWith({ email: mockAccount.email });
+        expect(mockAccount.comparePassword).toBeCalledWith('123456');
+
+        PacienteAppMock.mockRestore();
     });
 
     test('primer login sin nueva contraseña devuelve codigo 422', async () => {
-        let pac = new PacienteApp({
+        let mockAccount = {
             nombre: 'Perez',
             apellido: 'Juan',
             email: 'user@andes.gob.ar',
             password: 'asdasd',
-            activacionApp: false
-        });
-        pac = await pac.save();
+            activacionApp: false,
+            comparePassword: jest.fn().mockResolvedValue(true),
+            pacientes: []
+        };
+
+        const PacienteAppMock = jest.spyOn(PacienteApp, 'findOne');
+        PacienteAppMock.mockResolvedValue(mockAccount);
 
         const response = await request(app).post('/api/modules/mobileApp/login').send({
             email: 'user@andes.gob.ar',
             password: 'asdasd'
         });
         expect(response.statusCode).toBe(422);
+        expect(PacienteAppMock).toBeCalledWith({ email: mockAccount.email });
+        expect(mockAccount.comparePassword).toBeCalledWith('asdasd');
+
+        PacienteAppMock.mockRestore();
     });
 
     test('primer login exige cambio de contraseña correcto', async () => {
-        let pac = new PacienteApp({
+        let mockAccount = {
             nombre: 'Perez',
             apellido: 'Juan',
             email: 'user@andes.gob.ar',
             password: 'asdasd',
-            activacionApp: false
-        });
-        pac = await pac.save();
+            activacionApp: false,
+            comparePassword: jest.fn().mockResolvedValue(true),
+            pacientes: [],
+            save: jest.fn().mockResolvedValue(true),
+        };
+
+        const PacienteAppMock = jest.spyOn(PacienteApp, 'findOne');
+        PacienteAppMock.mockResolvedValue(mockAccount);
 
         const response = await request(app).post('/api/modules/mobileApp/login').send({
             email: 'user@andes.gob.ar',
@@ -106,15 +129,16 @@ describe('MobileApp - login', () => {
             new_password: '123456'
         });
         expect(response.statusCode).toBe(200);
+        expect(PacienteAppMock).toBeCalledWith({ email: mockAccount.email });
+        expect(mockAccount.comparePassword).toBeCalledWith('asdasd');
+        expect(mockAccount.save).toBeCalled();
 
-        let pactemp = await PacienteApp.findById(pac._id);
-
-        let isMatch = await pactemp.comparePassword('123456');
-        expect(isMatch).toBe(true);
+        PacienteAppMock.mockRestore();
     });
 
     afterAll((done) => {
-        mongoose.disconnect(done);
+        // mongoose.disconnect(done);
+        done();
     });
 
 });
@@ -128,19 +152,7 @@ let acc;
 describe('MobileApp - reset password', () => {
     beforeAll((done) => {
         initAPI(app);
-        setTimeout(async () => {
-
-            acc = new PacienteApp({
-                nombre: 'Perez',
-                apellido: 'Juan',
-                email: 'user@andes.gob.ar',
-                password: 'asdasd',
-                activacionApp: true
-            });
-            await acc.save();
-
-            done();
-        }, 2000);
+        done();
     });
 
     test('resetear contraseña sin email falla', async () => {
@@ -149,6 +161,20 @@ describe('MobileApp - reset password', () => {
     });
 
     test('resetear contraseña con email correcto', async () => {
+        let mockAccount = {
+            nombre: 'Perez',
+            apellido: 'Juan',
+            email: 'user@andes.gob.ar',
+            password: 'asdasd',
+            activacionApp: true,
+            comparePassword: jest.fn().mockResolvedValue(true),
+            pacientes: [],
+            save: jest.fn().mockResolvedValue(true),
+            restablecerPassword : {}
+        };
+
+        const PacienteAppMock = jest.spyOn(PacienteApp, 'findOne');
+        PacienteAppMock.mockResolvedValue(mockAccount);
 
         const authController = require('../controller/AuthController');
 
@@ -166,18 +192,26 @@ describe('MobileApp - reset password', () => {
 
         expect(generarCodigoVerificacionMock).toBeCalled();
         expect(enviarCodigoCambioPasswordMock).toBeCalled();
+        expect(PacienteAppMock).toBeCalledWith({ email: 'user@andes.gob.ar' });
 
         generarCodigoVerificacionMock.mockRestore();
         enviarCodigoCambioPasswordMock.mockRestore();
+        PacienteAppMock.mockRestore();
     });
 
-    test('token incorrecto al resetear contraseña', async (done) => {
-        await PacienteApp.findOneAndUpdate({ email: 'user@andes.gob.ar'}, { $set: {
-            restablecerPassword: {
+    test('token incorrecto al resetear contraseña', async () => {
+        let mockAccount = {
+            email: 'user@andes.gob.ar',
+            activacionApp: true,
+            pacientes: [],
+            restablecerPassword : {
                 codigo: '123345',
-                fechaExpiracion: new Date(Date.now() + 1000 * 60 * 60)
+                fechaExpiracion: new Date(Date.now() - 1000 * 60 * 60)
             }
-        }});
+        };
+
+        const PacienteAppMock = jest.spyOn(PacienteApp, 'findOne');
+        PacienteAppMock.mockResolvedValue(mockAccount);
 
         const response = await request(app).post('/api/modules/mobileApp/reestablecer-password').send({
             email: 'user@andes.gob.ar',
@@ -186,16 +220,24 @@ describe('MobileApp - reset password', () => {
             password2: 'asdasd'
         });
         expect(response.statusCode).toBe(422);
-        done();
+        expect(PacienteAppMock).toBeCalledWith({ email: 'user@andes.gob.ar' });
+
+        PacienteAppMock.mockRestore();
     });
 
-    test('token expirado al resetear contraseña', async (done) => {
-        await PacienteApp.findOneAndUpdate({ email: 'user@andes.gob.ar'}, { $set: {
-            restablecerPassword: {
+    test('token expirado al resetear contraseña', async () => {
+        let mockAccount = {
+            email: 'user@andes.gob.ar',
+            activacionApp: true,
+            pacientes: [],
+            restablecerPassword : {
                 codigo: '123345',
                 fechaExpiracion: new Date(Date.now() - 1000 * 60 * 60)
             }
-        }});
+        };
+
+        const PacienteAppMock = jest.spyOn(PacienteApp, 'findOne');
+        PacienteAppMock.mockResolvedValue(mockAccount);
 
         const response = await request(app).post('/api/modules/mobileApp/reestablecer-password').send({
             email: 'user@andes.gob.ar',
@@ -204,16 +246,25 @@ describe('MobileApp - reset password', () => {
             password2: 'asdasd'
         });
         expect(response.statusCode).toBe(422);
-        done();
+        expect(PacienteAppMock).toBeCalledWith({ email: 'user@andes.gob.ar' });
+        PacienteAppMock.mockRestore();
     });
 
     test('resetear password correcta', async () => {
-        await PacienteApp.findOneAndUpdate({ email: 'user@andes.gob.ar'}, { $set: {
-            restablecerPassword: {
+        let mockAccount = {
+            email: 'user@andes.gob.ar',
+            activacionApp: true,
+            pacientes: [],
+            password: '',
+            restablecerPassword : {
                 codigo: '123345',
                 fechaExpiracion: new Date(Date.now() + 1000 * 60 * 60)
-            }
-        }});
+            },
+            save: jest.fn().mockResolvedValue(true),
+        };
+
+        const PacienteAppMock = jest.spyOn(PacienteApp, 'findOne');
+        PacienteAppMock.mockResolvedValue(mockAccount);
 
         const response = await request(app).post('/api/modules/mobileApp/reestablecer-password').send({
             email: 'user@andes.gob.ar',
@@ -222,17 +273,16 @@ describe('MobileApp - reset password', () => {
             password2: 'asdasd'
         });
         expect(response.statusCode).toBe(200);
-
-        let pactemp = await PacienteApp.findById(acc._id);
-
-        let isMatch = await pactemp.comparePassword('asdasd');
-        expect(isMatch).toBe(true);
-
+        expect(PacienteAppMock).toBeCalledWith({ email: 'user@andes.gob.ar' });
+        expect(mockAccount.save).toBeCalled();
+        expect(mockAccount.password).toBe('asdasd');
+        PacienteAppMock.mockRestore();
     });
 
     afterAll(async (done) => {
-        await PacienteApp.remove({ email: 'user@andes.gob.ar' });
+        // await PacienteApp.remove({ email: 'user@andes.gob.ar' });
         mongoose.disconnect(done);
+        done();
     });
 
 });

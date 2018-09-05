@@ -8,23 +8,29 @@ import { Auth } from '../../../auth/auth.class';
 const request = require('supertest');
 let app = express();
 
-let account;
+let mockAccount;
 let token;
+let PacienteAppMock;
 
 describe('MobileApp - devices', () => {
     beforeAll((done) => {
-        initAPI(app).then(async () => {
-            account = new PacienteApp({
-                nombre: 'Perez',
-                apellido: 'Juan',
-                email: 'devices@andes.gob.ar',
-                password: 'asdasd',
-                activacionApp: true
-            });
-            await account.save();
-            token = Auth.generatePacienteToken(String(account._id), account.nombre + ' ' + account.apellido, account.email, account.pacientes, account.permisos);
-            done();
+        initAPI(app);
+        mockAccount = new PacienteApp({
+            nombre: 'Perez',
+            apellido: 'Juan',
+            email: 'devices@andes.gob.ar',
+            password: 'asdasd',
+            activacionApp: true,
+            devices: [],
         });
+        // Nos podemos volver detallista y testear que el save falle.
+        mockAccount.save = jest.fn().mockResolvedValue(true);
+
+        PacienteAppMock = jest.spyOn(PacienteApp, 'findById');
+        PacienteAppMock.mockResolvedValue(mockAccount);
+
+        token = Auth.generatePacienteToken(String(mockAccount._id), mockAccount.nombre + ' ' + mockAccount.apellido, mockAccount.email, mockAccount.pacientes, mockAccount.permisos);
+        done();
     });
 
     beforeEach(async () => {
@@ -65,14 +71,7 @@ describe('MobileApp - devices', () => {
     });
 
     test('actualizacion de los datos del dispositivo', async () => {
-        let accout = await PacienteApp.findOneAndUpdate({ email: 'devices@andes.gob.ar'}, { $set: {
-            devices: [{
-                device_id: '123456789',
-                device_type: 'Android',
-                app_version: 1
-            }]
-        }}, { new: true });
-        let newDevice = JSON.parse(JSON.stringify(accout.devices[0]));
+        let newDevice = JSON.parse(JSON.stringify(mockAccount.devices[0]));
         newDevice.id = newDevice._id;
         newDevice.device_id = '999999999';
 
@@ -82,20 +81,11 @@ describe('MobileApp - devices', () => {
 
         expect(response.statusCode).toBe(200);
         expect(response.body.device_id).toBe('999999999');
-
-        let pactemp = await PacienteApp.findById(accout._id);
-        expect(pactemp.devices[0].device_id).toBe('999999999');
+        expect(mockAccount.devices[0].device_id).toBe('999999999');
     });
 
     test('eliminar un dispositivo', async () => {
-        let accout = await PacienteApp.findOneAndUpdate({ email: 'devices@andes.gob.ar'}, { $set: {
-            devices: [{
-                device_id: '123456789',
-                device_type: 'Android',
-                app_version: 1
-            }]
-        }}, { new: true });
-        let newDevice = JSON.parse(JSON.stringify(accout.devices[0]));
+        let newDevice = JSON.parse(JSON.stringify(mockAccount.devices[0]));
         newDevice.id = newDevice._id;
 
         const response = await request(app).post('/api/modules/mobileApp/devices/delete')
@@ -103,14 +93,13 @@ describe('MobileApp - devices', () => {
                                             .send({ id: newDevice._id });
 
         expect(response.statusCode).toBe(200);
-        let pactemp = await PacienteApp.findById(accout._id);
-        expect(pactemp.devices.length).toBe(0);
+        expect(mockAccount.devices.length).toBe(0);
     });
 
 
     afterAll(async (done) => {
-        await PacienteApp.remove({ email: 'devices@andes.gob.ar' });
-        mongoose.disconnect(done);
+        mongoose.disconnect();
+        done();
     });
 
 });

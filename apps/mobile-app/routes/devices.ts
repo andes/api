@@ -8,18 +8,13 @@ const router = express.Router();
 router.use(Auth.authenticate());
 
 
-router.use((req: any, res, next) => {
+router.use(async (req: any, res, next) => {
     req.token = req.headers.authorization.substring(4);
     const user_id = req.user.account_id;
 
-    PacienteApp.findById(user_id, (errFind, user: any) => {
-        if (errFind) {
-            return res.status(422).send({ message: 'user_invalid' });
-        }
-
-        req.account = user;
-        return next();
-    });
+    let user = await PacienteApp.findById(user_id);
+    req.account = user;
+    return next();
 
 });
 
@@ -31,7 +26,7 @@ router.use((req: any, res, next) => {
  * @param app_version {String}
  */
 
-router.post('/devices/register', (req: any, res, next) => {
+router.post('/devices/register', async (req: any, res, next) => {
     if (!req.body.device_id || !req.body.device_type || !req.body.app_version) {
         return next({ message: 'invalid_format' });
     }
@@ -45,12 +40,8 @@ router.post('/devices/register', (req: any, res, next) => {
     if (!device) {
         device = new DeviceModel(device_data);
         req.account.devices.push(device);
-        return req.account.save((errSave, u) => {
-            if (errSave) {
-                return next(errSave);
-            }
-            return res.json(device);
-        });
+        await req.account.save();
+        return res.json(device);
     } else {
         return res.json(device);
     }
@@ -66,7 +57,7 @@ router.post('/devices/register', (req: any, res, next) => {
  * }
  */
 
-router.post('/devices/update', (req: any, res, next) => {
+router.post('/devices/update', async (req: any, res, next) => {
     let device_data = req.body.device;
     let device = req.account.devices.id(device_data.id);
     if (device) {
@@ -74,12 +65,8 @@ router.post('/devices/update', (req: any, res, next) => {
         device.device_id = device_data.device_id;
         device.device_type = device_data.device_type;
         device.session_id = req.token;
-        return req.account.save((errSave) => {
-            if (errSave) {
-                return next(errSave);
-            }
-            return res.json(device);
-        });
+        await req.account.save();
+        return res.json(device);
     } else {
         return next({ message: 'no_device' });
     }
@@ -91,15 +78,10 @@ router.post('/devices/update', (req: any, res, next) => {
  * @param id {ObjectId}
  */
 
-router.post('/devices/delete', (req: any, res, next) => {
+router.post('/devices/delete', async (req: any, res, next) => {
     req.account.devices.pull({ _id: Types.ObjectId(req.body.id) });
-    return req.account.save((errSave, u) => {
-        if (errSave) {
-            return next(errSave);
-        }
-
-        res.json({ message: 'OK' });
-    });
+    await req.account.save();
+    return res.json({ message: 'OK' });
 });
 
 export = router;

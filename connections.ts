@@ -46,8 +46,7 @@ export class Connections {
         this.configEvents('mpi', this.mpi);
         this.configEvents('snomed', this.snomed);
         this.configEvents('puco', this.puco);
-
-        return Promise.all([mainConnect, this.mpi, this.snomed]);
+        return Promise.all([mainConnect, this.mpi, this.snomed, this.puco]);
     }
 
     private static configEvents(name: string, connection: mongoose.Connection) {
