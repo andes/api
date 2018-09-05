@@ -13,14 +13,6 @@ const log = debug('AuthController');
 
 export const expirationOffset = 1000 * 60 * 60 * 24;
 
-export function verificarCodigo(codigoIngresado, codigo) {
-    if (codigoIngresado === codigo) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
 export function enviarCodigoCambioPassword(user) {
     log('Enviando mail...');
     const replacements = {

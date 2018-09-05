@@ -1,9 +1,6 @@
 import * as express from 'express';
 import { PacienteApp } from './schemas/pacienteApp';
 import { DeviceModel } from './schemas/device';
-import * as AuthController from './controller/AuthController';
-import * as VacunasController from './controller/VacunasController';
-import * as NotificationService from './controller/NotificationService';
 
 /**
  * el requiredir viene trayendo problemas cada tanto. Porque quedan archivos .js huerfanos que los detecta igual.
@@ -30,12 +27,7 @@ for (const r of routes) {
     Router.use(require(r));
 }
 
-
-export const Controllers = {
-    AuthController,
-    VacunasController,
-    NotificationService: NotificationService.NotificationService
-};
+export * from './controller';
 
 export const Schemas = {
     PacienteApp,

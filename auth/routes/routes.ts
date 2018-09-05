@@ -7,7 +7,7 @@ import * as authOrganizaciones from './../../core/tm/schemas/organizacion';
 import { profesional } from './../../core/tm/schemas/profesional';
 import * as mongoose from 'mongoose';
 
-import { Controllers as MobileController } from '../../apps/mobile-app';
+import { AuthController } from '../../apps/mobile-app';
 
 const isReachable = require('is-reachable');
 const sha1Hash = require('sha1');
@@ -96,13 +96,13 @@ router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
 // Función interna que chequea si la cuenta mobile existe
 const checkMobile = (profesionalId) => {
     return new Promise((resolve, reject) => {
-        MobileController.AuthController.getAccountByProfesional(profesionalId).then((account) => {
+        AuthController.getAccountByProfesional(profesionalId).then((account) => {
             if (!account) {
                 profesional.findById(profesionalId).then(prof => {
                     if (!prof) {
                         return reject();
                     }
-                    MobileController.AuthController.createUserFromProfesional(prof).then((account2) => {
+                    AuthController.createUserFromProfesional(prof).then((account2) => {
                         resolve(account2);
                     }).catch(reject);
                 });

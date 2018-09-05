@@ -51,6 +51,7 @@ export function initAPI(app: Express) {
         }
     }
     // [TODO] Terminar de definir donde va esto.
+    // se usa require por la dependencia de mongoose y la inicialización de las subconexiones (mpi. puco, snomed)
     app.use('/api/modules/mobileApp', require('./apps/mobile-app').Router);
 
     // Error handler
