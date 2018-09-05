@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
 
 // Plugin para configurar auditoría
-module.exports = function (schema, options) {
+module.exports = (schema, options)  => {
     schema.add({
         createdAt: Date,
         createdBy: mongoose.Schema.Types.Mixed,

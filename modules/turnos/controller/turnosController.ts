@@ -1,62 +1,57 @@
-import * as config from '../../../config';
-import * as configPrivate from '../../../config.private';
-import * as moment from 'moment';
 import * as mongoose from 'mongoose';
 import * as agenda from '../../../modules/turnos/schemas/agenda';
 import { toArray } from '../../../utils/utils';
-
 
 export function getTurno(req) {
     return new Promise(async (resolve, reject) => {
         try {
             let pipelineTurno = [];
-            let turnos = [];
+            const turnos = [];
             let turno;
 
             pipelineTurno = [{
-                '$match': {
-                    'estado': 'publicada'
+                $match: {
+                    estado: 'publicada'
                 }
             },
             // Unwind cada array
-            { '$unwind': '$bloques' },
-            { '$unwind': '$bloques.turnos' },
+                             { $unwind: '$bloques' },
+                             { $unwind: '$bloques.turnos' },
             // Filtra los elementos que matchean
             {
-                '$match': {
-                    'estado': 'publicada'
+                $match: {
+                    estado: 'publicada'
                 }
             },
             {
-                '$group': {
-                    '_id': { 'id': '$_id', 'bloqueId': '$bloques._id' },
-                    'agenda_id': { $first: '$_id' },
-                    'organizacion': { $first: '$organizacion' },
-                    'profesionales': { $first: '$profesionales' },
-                    'turnos': { $push: '$bloques.turnos' }
+                $group: {
+                    _id: { id: '$_id', bloqueId: '$bloques._id' },
+                    agenda_id: { $first: '$_id' },
+                    organizacion: { $first: '$organizacion' },
+                    profesionales: { $first: '$profesionales' },
+                    turnos: { $push: '$bloques.turnos' }
                 }
             },
             {
-                '$group': {
-                    '_id': '$_id.id',
-                    'agenda_id': { $first: '$agenda_id' },
-                    'bloque_id': { $first: '$_id.bloqueId' },
-                    'organizacion': { $first: '$organizacion' },
-                    'profesionales': { $first: '$profesionales' },
-                    'bloques': { $push: { '_id': '$_id.bloqueId', 'turnos': '$turnos' } }
+                $group: {
+                    _id: '$_id.id',
+                    agenda_id: { $first: '$agenda_id' },
+                    bloque_id: { $first: '$_id.bloqueId' },
+                    organizacion: { $first: '$organizacion' },
+                    profesionales: { $first: '$profesionales' },
+                    bloques: { $push: { _id: '$_id.bloqueId', turnos: '$turnos' } }
                 }
             }];
-            if (req.query && mongoose.Types.ObjectId.isValid(req.query.id)) {
-                // console.log('entra aca');
-                let matchId = {
-                    '$match': {
-                        'bloques.turnos._id': mongoose.Types.ObjectId(req.query.id),
+            if (req.params && mongoose.Types.ObjectId.isValid(req.params.id)) {
+                const matchId = {
+                    $match: {
+                        'bloques.turnos._id': mongoose.Types.ObjectId(req.params.id),
                     }
                 };
                 pipelineTurno[0] = matchId;
                 pipelineTurno[3] = matchId;
 
-                let data = await toArray(agenda.aggregate(pipelineTurno).cursor({}).exec());
+                const data = await toArray(agenda.aggregate(pipelineTurno).cursor({}).exec());
 
                 if (data.length > 0 && data[0].bloques && data[0].bloques.turnos && data[0].bloques.turnos >= 0) {
                     resolve(data[0].bloques.turnos[0]);
@@ -67,7 +62,7 @@ export function getTurno(req) {
             } else {
                 // Se modifica el pipeline en la posición 0 y 3, que son las posiciones
                 // donde se realiza el match
-                let matchTurno = {};
+                const matchTurno = {};
                 matchTurno['estado'] = 'publicada';
                 if (req.query && req.query.estado) {
                     matchTurno['bloques.turnos.estado'] = req.query.estado;
@@ -79,43 +74,43 @@ export function getTurno(req) {
                 }
 
                 if (req.query && req.query.asistencia) {
-                    matchTurno['bloques.turnos.asistencia'] = { '$exists': req.query.asistencia };
+                    matchTurno['bloques.turnos.asistencia'] = { $exists: req.query.asistencia };
                 }
 
                 if (req.query && req.query.codificado) {
-                    matchTurno['bloques.turnos.diagnosticos.codificaciones.0'] = { '$exists': true };
+                    matchTurno['bloques.turnos.diagnosticos.codificaciones.0'] = { $exists: true };
                 }
 
                 if (req.query && req.query.horaInicio) {
-                    matchTurno['bloques.turnos.horaInicio'] = { '$gte': req.query.horaInicio };
+                    matchTurno['bloques.turnos.horaInicio'] = { $gte: req.query.horaInicio };
                 }
 
                 if (req.query && req.query.tiposTurno) {
-                    matchTurno['bloques.turnos.tipoTurno'] = { '$in': req.query.tiposTurno };
+                    matchTurno['bloques.turnos.tipoTurno'] = { $in: req.query.tiposTurno };
                 }
 
                 if (req.query && req.query.pacienteId) {
                     matchTurno['bloques.turnos.paciente.id'] = mongoose.Types.ObjectId(req.query.pacienteId);
                 }
 
-                pipelineTurno[0] = { '$match': matchTurno };
-                pipelineTurno[3] = { '$match': matchTurno };
-                pipelineTurno[6] = { '$unwind': '$bloques' };
-                pipelineTurno[7] = { '$unwind': '$bloques.turnos' };
+                pipelineTurno[0] = { $match: matchTurno };
+                pipelineTurno[3] = { $match: matchTurno };
+                pipelineTurno[6] = { $unwind: '$bloques' };
+                pipelineTurno[7] = { $unwind: '$bloques.turnos' };
                 if (req.query && !req.query.pacienteId) {
                     pipelineTurno[8] = {
-                        '$lookup': {
-                            'from': 'paciente',
-                            'localField': 'bloques.turnos.paciente.id',
-                            'foreignField': '_id',
-                            'as': 'pacientes_docs'
+                        $lookup: {
+                            from: 'paciente',
+                            localField: 'bloques.turnos.paciente.id',
+                            foreignField: '_id',
+                            as: 'pacientes_docs'
                         }
                     };
                     pipelineTurno[9] = {
-                        '$match': { 'pacientes_docs': { $ne: [] } }
+                        $match: { pacientes_docs: { $ne: [] } }
                     };
                 }
-                let data2 = await toArray(agenda.aggregate(pipelineTurno).cursor({}).exec());
+                const data2 = await toArray(agenda.aggregate(pipelineTurno).cursor({}).exec());
                 data2.forEach(elem => {
                     turno = elem.bloques.turnos;
                     turno.id = turno._id;
@@ -141,14 +136,14 @@ export function getHistorialPaciente(req) {
         if (req.query && req.query.pacienteId) {
             try {
                 let pipelineTurno = [];
-                let turnos = [];
+                const turnos = [];
                 let turno;
                 pipelineTurno = [
 
                     {
-                        '$match': {
-                            'estado': {
-                                '$in': [
+                        $match: {
+                            estado: {
+                                $in: [
                                     'publicada',
                                     'pendienteAsistencia',
                                     'pendienteAuditoria',
@@ -161,43 +156,43 @@ export function getHistorialPaciente(req) {
                         }
                     },
                     {
-                        '$unwind': {
-                            'path': '$bloques'
+                        $unwind: {
+                            path: '$bloques'
                         }
                     },
                     {
-                        '$unwind': {
-                            'path': '$bloques.turnos'
+                        $unwind: {
+                            path: '$bloques.turnos'
                         }
                     },
                     {
-                        '$match': {
+                        $match: {
                             'bloques.turnos.paciente.id': mongoose.Types.ObjectId(req.query.pacienteId)
                         }
                     },
                     {
-                        '$group': {
-                            '_id': {
-                                'id': '$_id',
-                                'turnoId': '$bloques.turnos._id'
+                        $group: {
+                            _id: {
+                                id: '$_id',
+                                turnoId: '$bloques.turnos._id'
                             },
-                            'agenda_id': {
-                                '$first': '$_id'
+                            agenda_id: {
+                                $first: '$_id'
                             },
-                            'bloque_id': { '$first': '$bloques._id' },
-                            'organizacion': {
-                                '$first': '$organizacion'
+                            bloque_id: { $first: '$bloques._id' },
+                            organizacion: {
+                                $first: '$organizacion'
                             },
-                            'profesionales': {
-                                '$first': '$profesionales'
+                            profesionales: {
+                                $first: '$profesionales'
                             },
-                            'turno': {
-                                '$first': '$bloques.turnos'
+                            turno: {
+                                $first: '$bloques.turnos'
                             }
                         }
                     },
                     {
-                        '$sort': {
+                        $sort: {
                             'turno.horaInicio': -1.0
                         }
                     }
@@ -208,9 +203,9 @@ export function getHistorialPaciente(req) {
                 pipelineSobreturno = [
 
                     {
-                        '$match': {
-                            'estado': {
-                                '$in': [
+                        $match: {
+                            estado: {
+                                $in: [
                                     'publicada',
                                     'pendienteAsistencia',
                                     'pendienteAuditoria',
@@ -223,44 +218,44 @@ export function getHistorialPaciente(req) {
                         }
                     },
                     {
-                        '$unwind': {
-                            'path': '$sobreturnos'
+                        $unwind: {
+                            path: '$sobreturnos'
                         }
                     },
                     {
-                        '$match': {
+                        $match: {
                             'sobreturnos.paciente.id': mongoose.Types.ObjectId(req.query.pacienteId)
                         }
                     },
                     {
-                        '$group': {
-                            '_id': {
-                                'id': '$_id',
-                                'turnoId': '$sobreturnos._id'
+                        $group: {
+                            _id: {
+                                id: '$_id',
+                                turnoId: '$sobreturnos._id'
                             },
-                            'agenda_id': {
-                                '$first': '$_id'
+                            agenda_id: {
+                                $first: '$_id'
                             },
-                            'organizacion': {
-                                '$first': '$organizacion'
+                            organizacion: {
+                                $first: '$organizacion'
                             },
-                            'profesionales': {
-                                '$first': '$profesionales'
+                            profesionales: {
+                                $first: '$profesionales'
                             },
-                            'turno': {
-                                '$first': '$sobreturnos'
+                            turno: {
+                                $first: '$sobreturnos'
                             }
                         }
                     },
                     {
-                        '$sort': {
+                        $sort: {
                             'turno.horaInicio': -1.0
                         }
                     }
 
                 ];
                 let data2 = await agenda.aggregate(pipelineTurno).exec();
-                let sobreturnos = await agenda.aggregate(pipelineSobreturno).exec();
+                const sobreturnos = await agenda.aggregate(pipelineSobreturno).exec();
                 data2 = data2.concat(sobreturnos);
                 data2.forEach(elem => {
                     turno = elem.turno;

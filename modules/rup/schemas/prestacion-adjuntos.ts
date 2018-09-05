@@ -3,7 +3,6 @@
  * Se usa para sincronizar desde la appMobile
  */
 import * as mongoose from 'mongoose';
-import * as registro from './prestacion.registro';
 
 export let schema = new mongoose.Schema({
     paciente: mongoose.Schema.Types.ObjectId,
