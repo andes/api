@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as financiador from '../schemas/financiador';
 
-let router = express.Router();
+const router = express.Router();
 /**
  * @swagger
  * definition:
@@ -54,27 +54,27 @@ let router = express.Router();
  *         schema:
  *           $ref: '#/definitions/financiador'
  */
-router.get('/financiadores/:id*?', function(req, res, next) {
+router.get('/financiadores/:id*?', (req, res, next) => {
 
-   if (req.params.id) {
-       financiador.findById(req.params.id, function (err, data) {
-       if (err) {
-           return next(err);
-       }
+    if (req.params.id) {
+        financiador.findById(req.params.id, (err, data) => {
+            if (err) {
+                return next(err);
+            }
 
-       res.json(data);
-   });
-   } else {
-       let query;
+            res.json(data);
+        });
+    } else {
+        let query;
         query = financiador.find({});
         if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
         query.exec((err, data) => {
-           if (err) {return next(err); }
-           res.json(data);
+            if (err) {return next(err); }
+            res.json(data);
         });
-   }
+    }
 });
 
 export = router;

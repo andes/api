@@ -3,7 +3,7 @@ import * as express from 'express';
 import * as provincia from '../schemas/provincia_model';
 // import * as utils from '../../../utils/utils';
 
-let router = express.Router();
+const router = express.Router();
 /**
  * @swagger
  * definition:
@@ -70,9 +70,9 @@ let router = express.Router();
  *           $ref: '#/definitions/provincia'
  */
 
-router.get('/provincias', function (req, res, next) {
+router.get('/provincias', (req, res, next) => {
     if (req.query.id) {
-        provincia.findById(req.query.id, function (err, data) {
+        provincia.findById(req.query.id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -81,7 +81,7 @@ router.get('/provincias', function (req, res, next) {
         });
     } else {
         let consulta;
-        consulta = provincia.find({}).sort({ 'nombre': 1 });
+        consulta = provincia.find({}).sort({ nombre: 1 });
 
         if (req.query.nombre) {
             consulta.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));

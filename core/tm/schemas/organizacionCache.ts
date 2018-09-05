@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-let organizacionCacheSchema = new mongoose.Schema({
+const organizacionCacheSchema = new mongoose.Schema({
     anioInicioActividades: Number, // 1913
     categoriaDeLaTipologia: String, // Alto riesgo con terapia intensiva especializada
     codIndecDepto: Number, // 35
@@ -48,7 +48,8 @@ let organizacionCacheSchema = new mongoose.Schema({
         numero: Number, // 0299-4490800
         tipo: String, // Conmutador
     },
-    tipologia: String // Establecimiento de salud con internación general
+    tipologia: String, // Establecimiento de salud con internación general
+    integracionActiva: Boolean
 }, { validateBeforeSave: true });
 
 export let organizacionCache = mongoose.model('organizacionCache', organizacionCacheSchema, 'organizacionCache');
