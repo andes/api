@@ -4,6 +4,7 @@ import * as formularioTerapeutico from '../schemas/formularioTerapeutico';
 import * as mongoose from 'mongoose';
 import * as utils from '../../../utils/utils';
 import * as formularioCtrl from '../controller/formularioTerapeutico';
+import { Auth } from './../../../auth/auth.class';
 
 const router = express.Router();
 
@@ -51,7 +52,7 @@ router.get('/formularioTerapeutico/:id?', async (req, res, next) => {
                 opciones['nivelComplejidad'] = req.query.nivel;
             }
 
-            opciones['borrado'] = { '$exists': true };
+            opciones['borrado'] = { $exists: true };
 
             // Parámetro vista de arbol
             if (req.query.tree) { // llevarlo a lado del controlador
@@ -60,7 +61,7 @@ router.get('/formularioTerapeutico/:id?', async (req, res, next) => {
                 if (req.query.root) {
                     data = await toArray(formularioTerapeutico.aggregate(
                         [
-                            { $match: { idpadre: mongoose.Types.ObjectId('5ac6512111764e32b35ad416'), borrado: { '$exists': false } } },
+                            { $match: { idpadre: mongoose.Types.ObjectId('5ac6512111764e32b35ad416'), borrado: { $exists: false } } },
                             {
                                 $graphLookup: {
                                     from: 'formularioTerapeutico',
@@ -80,7 +81,7 @@ router.get('/formularioTerapeutico/:id?', async (req, res, next) => {
                     const idpadre = req.query.idpadre;
                     data = await toArray(formularioTerapeutico.aggregate(
                         [
-                            { $match: { idpadre: mongoose.Types.ObjectId(idpadre), borrado: { '$exists': false } } },
+                            { $match: { idpadre: mongoose.Types.ObjectId(idpadre), borrado: { $exists: false } } },
                             {
                                 $graphLookup: {
                                     from: 'formularioTerapeutico',
@@ -119,7 +120,7 @@ router.get('/formularioTerapeutico/:id?', async (req, res, next) => {
 });
 
 
-router.post('/formularioTerapeutico', Auth.authenticate(), function (req, res, next) {
+router.post('/formularioTerapeutico', Auth.authenticate(), (req, res, next) =>  {
     req.body.descripcion = req.body.concepto.term;
     let newFormTera = new formularioTerapeutico(req.body);
     Auth.audit(newFormTera, req);
@@ -132,10 +133,10 @@ router.post('/formularioTerapeutico', Auth.authenticate(), function (req, res, n
 });
 
 
-router.put('/formularioTerapeutico/:id', Auth.authenticate(), function (req, res, next) {
+router.put('/formularioTerapeutico/:id', Auth.authenticate(), (req, res, next) =>  {
     let idPadre = mongoose.Types.ObjectId(req.body.idpadre);
     req.body.idpadre = idPadre;
-    formularioTerapeutico.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
+    formularioTerapeutico.findByIdAndUpdate(req.params.id, req.body, { new: true }, (err, data) => {
         if (err) {
             return next(err);
         }
