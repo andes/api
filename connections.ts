@@ -27,6 +27,13 @@ export class Connections {
             mongoose.set('debug', (collection, method, query, arg1, arg2, arg3) => queryLogger('%s.%s(%o) %s %s', collection, method, query, (arg2 || ''), (arg3 || '')));
         }
 
+        if (process.env.NODE_ENV === 'testing') {
+            this.mpi = mongoose.createConnection();
+            this.snomed = mongoose.createConnection();
+            this.puco = mongoose.createConnection();
+            return Promise.resolve();
+        }
+
         // Conecta y configura conexiones
         // 1. PRINCIPAL
         let mainConnect = mongoose.connect(configPrivate.hosts.mongoDB_main.host, configPrivate.hosts.mongoDB_main.options );
@@ -46,7 +53,13 @@ export class Connections {
         this.configEvents('mpi', this.mpi);
         this.configEvents('snomed', this.snomed);
         this.configEvents('puco', this.puco);
-        return Promise.all([mainConnect, this.mpi, this.snomed, this.puco]);
+
+        return Promise.all([
+            mainConnect,
+            this.mpi,
+            this.snomed,
+            this.puco
+        ]);
     }
 
     private static configEvents(name: string, connection: mongoose.Connection) {

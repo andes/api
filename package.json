@@ -76,7 +76,8 @@
     "tsc:w": "tsc -w",
     "jobs": "tsc && node jobs/scheduler.js",
     "lint": "tslint --project . --fix",
-    "parse": "apg -i core/term/controller/grammar/Expression-ABNF.txt -o core/term/controller/grammar/grammar.js"
+    "parse": "apg -i core/term/controller/grammar/Expression-ABNF.txt -o core/term/controller/grammar/grammar.js",
+    "test": "jest"
   },
   "repository": {
     "type": "git",

@@ -14,6 +14,7 @@ let PacienteAppMock;
 
 describe('MobileApp - devices', () => {
     beforeAll((done) => {
+        process.env.NODE_ENV = 'testing';
         initAPI(app);
         mockAccount = new PacienteApp({
             nombre: 'Perez',

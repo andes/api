@@ -10,7 +10,7 @@ let app = express();
 
 describe('MobileApp - login', () => {
     beforeAll((done) => {
-        // [TODO] Change this to a promises style
+        process.env.NODE_ENV = 'testing';
         initAPI(app);
         done();
     });
