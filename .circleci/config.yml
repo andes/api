@@ -25,4 +25,4 @@ jobs:
           command: npm run tsc
       - run:
           name: test
-          command: npm jest
+          command: npm test
