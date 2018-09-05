@@ -158,6 +158,17 @@ async function auxiliar(a: any, b: any, t: any) {
     turno.Principal = 0;
     turno.Tipodeconsulta = null;
     turno.ConsC2 = null;
+    turno.estadoTurnoAuditoria = null;
+
+    // Estado turno
+    turno.estadoTurnoAuditoria = turno && turno.estado === 'disponible' ? 'Disponible' : null;
+    turno.estadoTurnoAuditoria = turno && turno.estado === 'suspendido' ? 'Suspendido' : null;
+    turno.estadoTurnoAuditoria = turno && turno.asistencia && (turno.asistencia === 'asistio') && (!turno.diagnostico.codificaciones[0].codificacionAuditoria.codigo && !turno.diagnostico.codificaciones[0].codificacionProfesional.snomed.term) ? 'Asistencia Verificada' : null;
+    turno.estadoTurnoAuditoria = turno.paciente.id && !turno.diagnostico.codificaciones[0].codificacionAuditoria.codigo && turno.diagnostico.codificaciones[0].codificacionProfesional.snomed.term ? 'Registrado por Profesional' : null;
+    turno.estadoTurnoAuditoria = turno.paciente.id && turno.asistencia && (turno.asistencia === 'noAsistio' || turno.asistencia === 'sinDatos' || turno.diagnostico.codificaciones[0].codificacionAuditoria.codigo) ? 'Auditado' : null;
+
+
+    // Asistencia
     turno.asistencia = turnoConPaciente && t.asistencia ? t.asistencia : null;
     turno.reasignado = turnoConPaciente && t.reasignado && t.reasignado.siguiente ? 'SI' : 'NO';
     // Diagnóstico 1 ORIGINAL
@@ -183,7 +194,7 @@ async function auxiliar(a: any, b: any, t: any) {
     if (t.diagnostico.codificaciones.length > 0 && t.diagnostico.codificaciones[0].codificacionAuditoria && t.diagnostico.codificaciones[0].codificacionAuditoria.codigo) {
         turno.Diag1CodigoAuditado = t.diagnostico.codificaciones[0].codificacionAuditoria.codigo;
         turno.Desc1DiagAuditado = t.diagnostico.codificaciones[0].codificacionAuditoria.nombre;
-        turno.ConsC2 = t.diagnostico.codificaciones[0].codificacionAuditoria.c2 ? 'SI' : 'NO';
+        turno.ConsC2 = t.diagnostico.codificaciones[0].codificacionAuditoria.c2 && t.diagnostico.codificaciones[0].primeraVez ? 'SI' : 'NO';
         turno.Tipodeconsulta = t.diagnostico.codificaciones[0].primeraVez ? 'Primera vez' : 'Ulterior';
         turno.Principal = 1;
     }
@@ -297,10 +308,10 @@ async function auxiliar(a: any, b: any, t: any) {
         // Chequear si el turno existe en sql PECAS y depeniendo de eso hacer un insert o  un update
 
         // se verifica si existe el turno en sqñ
-        let queryInsert = 'INSERT INTO dbo.Pecas_consolidado_1' +
+        let queryInsert = 'INSERT INTO dbo.Pecas_consolidado_2' +
             '(idEfector, Efector, TipoEfector, DescTipoEfector, IdZona, Zona, SubZona, idEfectorSuperior, EfectorSuperior, AreaPrograma, ' +
             'idAgenda, FechaAgenda, HoraAgenda, estadoAgenda, numeroBloque, turnosProgramados, turnosProfesional, turnosLlaves, turnosDelDia, ' +
-            'idTurno, estadoTurno, tipoTurno, sobreturno, FechaConsulta, HoraTurno, Periodo, Tipodeconsulta, Principal, ConsC2, ConsObst, tipoPrestacion, ' +
+            'idTurno, estadoTurno, tipoTurno, sobreturno, FechaConsulta, HoraTurno, Periodo, Tipodeconsulta, estadoTurnoAuditoria, Principal, ConsC2, ConsObst, tipoPrestacion, ' +
             'DNI, Apellido, Nombres, HC, CodSexo, Sexo, FechaNacimiento, Edad, UniEdad, CodRangoEdad, RangoEdad, IdObraSocial, ObraSocial, IdPaciente, telefono, ' +
             'IdBarrio, Barrio, IdLocalidad, Localidad, IdDpto, Departamento, IdPcia, Provincia, IdNacionalidad, Nacionalidad, ' +
             'Calle, Altura, Piso, Depto, Manzana, Longitud, Latitud, ' +
@@ -314,7 +325,7 @@ async function auxiliar(a: any, b: any, t: any) {
             '\',' + turno.IdZona + ',\'' + turno.Zona + '\',\'' + turno.SubZona + '\',' + turno.idEfectorSuperior + ',\'' + turno.EfectorSuperior + '\',\'' + turno.AreaPrograma +
             '\',\'' + turno.idAgenda + '\',\'' + turno.FechaAgenda + '\',\'' + turno.HoraAgenda + '\',\'' + turno.estadoAgenda +
             '\',' + turno.numeroBloque + ',' + turno.accesoDirectoProgramado + ',' + turno.reservadoProfesional + ',' + turno.reservadoGestion + ',' + turno.accesoDirectoDelDia +
-            ',\'' + turno.idTurno + '\',\'' + turno.estadoTurno + '\',\'' + turno.tipoTurno + '\',\'' + turno.sobreturno + '\',\'' + turno.FechaConsulta + '\',\'' + turno.HoraTurno + '\',' + turno.Periodo + ',\'' + turno.Tipodeconsulta + '\',\'' + turno.Principal +
+            ',\'' + turno.idTurno + '\',\'' + turno.estadoTurno + '\',\'' + turno.tipoTurno + '\',\'' + turno.sobreturno + '\',\'' + turno.FechaConsulta + '\',\'' + turno.HoraTurno + '\',' + turno.Periodo + ',\'' + turno.Tipodeconsulta + ',\'' + turno.estadoTurnoAuditoria + '\',\'' + turno.Principal +
             '\',\'' + turno.ConsC2 + '\',\'' + turno.ConsObst + '\',\'' + turno.tipoPrestacion +
             // DATOS PACIENTE
             '\',' + turno.DNI + ',\'' + turno.Apellido + '\',\'' + turno.Nombres + '\',\'' + turno.HC + '\',\'' + turno.codSexo +
