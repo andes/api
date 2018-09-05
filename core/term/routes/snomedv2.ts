@@ -213,20 +213,7 @@ router.get('/snomed/expression', async (req, res, next) => {
             let expWord = '^' + utils.removeDiacritics(word) + '.*';
             // agregamos la palabra a la condicion
             conditions.push({ 'descriptions.words': { $regex: expWord } });
-
         });
-
-        // snomedModel.find(query, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docs: any[]) => {
-        //     const response = docs.map((item) => {
-        //         const term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
-        //         return {
-        //             fsn: item.fullySpecifiedName,
-        //             term,
-        //             conceptId: item.conceptId,
-        //             semanticTag: item.semtag
-        //         };
-        //     });
-        // });
 
         let pipeline = [
             {
@@ -258,9 +245,9 @@ router.get('/snomed/expression', async (req, res, next) => {
 
     } else {
 
-        snomedModel.find(query, project).sort({ fullySpecifiedName: 1 }).then((docs: any[]) => {
-            let response = docs.map((item) => {
-                let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
+        snomedModel.find(query, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docs: any[]) => {
+            const response = docs.map((item) => {
+                const term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
                 return {
                     fsn: item.fullySpecifiedName,
                     term,
@@ -272,5 +259,4 @@ router.get('/snomed/expression', async (req, res, next) => {
         }).catch(next);
     }
 });
-
 export = router;
