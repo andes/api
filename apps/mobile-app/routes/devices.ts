@@ -1,16 +1,16 @@
 import * as express from 'express';
-import * as mongoose from 'mongoose';
+import { Types } from 'mongoose';
 import { DeviceModel } from '../schemas/device';
 import { Auth } from './../../../auth/auth.class';
 import { PacienteApp } from '../schemas/pacienteApp';
 
-let router = express.Router();
+const router = express.Router();
 router.use(Auth.authenticate());
 
 
 router.use((req: any, res, next) => {
     req.token = req.headers.authorization.substring(4);
-    let user_id = req.user.account_id;
+    const user_id = req.user.account_id;
 
     PacienteApp.findById(user_id, (errFind, user: any) => {
         if (errFind) {
@@ -92,7 +92,7 @@ router.post('/devices/update', (req: any, res, next) => {
  */
 
 router.post('/devices/delete', (req: any, res, next) => {
-    req.account.devices.pull({ _id: new mongoose.Types.ObjectId(req.body.id) });
+    req.account.devices.pull({ _id: Types.ObjectId(req.body.id) });
     return req.account.save((errSave, u) => {
         if (errSave) {
             return next(errSave);

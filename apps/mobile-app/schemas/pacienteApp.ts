@@ -6,7 +6,9 @@ export interface IPacienteApp extends mongoose.Document {
     nombre: String;
     apellido: String;
     email: String;
+    password: String;
     documento: String;
+    telefono: String;
     sexo: String;
     genero: String;
     fechaNacimiento: String;
@@ -15,8 +17,13 @@ export interface IPacienteApp extends mongoose.Document {
     permisos: any[];
     profesionalId: mongoose.Types.ObjectId;
     activacionApp: Boolean;
+    estadoCodigo: Boolean;
+    restablecerPassword: {
+        fechaExpiracion: Date;
+        codigo: String;
+    };
 
-    comparePassword(password: String, cb: (err: any, isMatch: Boolean) => void);
+    comparePassword(password: String): Promise<Boolean>;
 
 }
 
@@ -123,14 +130,14 @@ PacienteAppSchema.pre('save', function (next) {
 });
 
 PacienteAppSchema.methods.comparePassword = function (passwordAttempt, cb) {
-
-    bcrypt.compare(passwordAttempt, this.password, (err, isMatch) => {
-
-        if (err) {
-            return cb(err);
-        } else {
-            cb(null, isMatch);
-        }
+    return new Promise((resolve, reject) => {
+        bcrypt.compare(passwordAttempt, this.password, (err, isMatch) => {
+            if (err) {
+                return reject(err);
+            } else {
+                return resolve(isMatch);
+            }
+        });
     });
 };
 

@@ -4,13 +4,14 @@ import * as agenda from '../../../modules/turnos/schemas/agenda';
 import * as agendaCtrl from '../../../modules/turnos/controller/agenda';
 import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
-import * as recordatorioController from '../controller/RecordatorioController';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { toArray } from '../../../utils/utils';
 
-// let async = require('async');
+/**
+ * REVISAR ANTES DE PONER DISPONIBLE LA VERSION DE LA APP MOBILE
+ */
 
-let router = express.Router();
+const router = express.Router();
 router.use(Auth.authenticate());
 
 /**

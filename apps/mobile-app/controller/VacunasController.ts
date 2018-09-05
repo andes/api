@@ -9,59 +9,37 @@ const weights = {
 };
 
 
-export function getCount(paciente) {
-    return new Promise((resolve, reject) => {
-        Vacunas.find({ documento : paciente.documento }).count().exec( (err, count)  => {
-            if (err) {
-                return reject(err);
-            }
-
-            resolve(count);
-
-        });
-    });
+export async function getCount(paciente) {
+    const count = await Vacunas.find({ documento : paciente.documento }).count();
+    return count;
 }
 
-export function getVacunas(paciente) {
-    const conditions = {};
-    conditions['documento'] = paciente.documento;
+export async function getVacunas(paciente) {
+    const match = new Matching();
     const sort = { fechaAplicacion: -1 };
+    let resultados = await Vacunas.find({ documento: paciente.documento }).sort(sort);
+    resultados.forEach( (vacuna: any, index) => {
+        const pacienteVacuna = {
+            nombre: vacuna.nombre,
+            apellido: vacuna.apellido,
+            documento: vacuna.documento,
+            sexo: vacuna.sexo,
+            fechaNacimiento: vacuna.fechaNacimiento
+        };
+        const resultadoMatching = match.matchPersonas(paciente, pacienteVacuna, weights, 'Levenshtein');
 
-    return new Promise((resolve, reject) => {
-
-        Vacunas.find(conditions).sort(sort).exec( (err, resultados)  => {
-            if (!resultados || err) {
-                return reject(err);
-            }
-
-            resultados.forEach( (vacuna: any, index) => {
-
-                const pacienteVacuna = {
-                    nombre: vacuna.nombre,
-                    apellido: vacuna.apellido,
-                    documento: vacuna.documento,
-                    sexo: vacuna.sexo,
-                    fechaNacimiento: vacuna.fechaNacimiento
-                };
-
-                const match = new Matching();
-                const resultadoMatching = match.matchPersonas(paciente, pacienteVacuna, weights, 'Levenshtein');
-
-                // no cumple con el numero del matching
-                if (resultadoMatching < 0.90) {
-                    resultados.splice(index, 1);
-                } else {
-                    vacuna.nombre = undefined;
-                    vacuna.apellido = undefined;
-                    vacuna.sexo = undefined;
-                    vacuna.documento = undefined;
-                    vacuna.fechaNacimiento = undefined;
-                }
-
-            });
-
-            return resolve(resultados);
-
-        });
+        // no cumple con el numero del matching
+        if (resultadoMatching < 0.90) {
+            resultados.splice(index, 1);
+        } else {
+            vacuna.nombre = undefined;
+            vacuna.apellido = undefined;
+            vacuna.sexo = undefined;
+            vacuna.documento = undefined;
+            vacuna.fechaNacimiento = undefined;
+        }
     });
+
+    return resultados;
+
 }

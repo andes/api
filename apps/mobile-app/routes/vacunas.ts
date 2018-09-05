@@ -3,21 +3,23 @@ import * as controller from './../../../core/mpi/controller/paciente';
 import * as vacunasCtr from '../controller/VacunasController';
 import { Auth } from '../../../auth/auth.class';
 
-let router = express.Router();
+const router = express.Router();
 router.use(Auth.authenticate());
 
 /**
  * Obtenemos las vacunas del Paciente App
  */
 
-router.get('/vacunas', (req: any, res, next) => {
-    const pacienteId = req.user.pacientes[0].id;
-    // primero buscar paciente
-    controller.buscarPaciente(pacienteId).then(async data => {
-        const pacienteMPI = data.paciente;
+router.get('/vacunas', async (req: any, res, next) => {
+    try {
+        const pacienteId = req.user.pacientes[0].id;
+        const paciente = await controller.buscarPaciente(pacienteId);
+        const pacienteMPI = paciente.paciente;
         const resultados = await vacunasCtr.getVacunas(pacienteMPI);
-        res.json(resultados);
-    });
+        return res.json(resultados);
+    } catch (err) {
+        return next(err);
+    }
 });
 
 
@@ -26,12 +28,14 @@ router.get('/vacunas', (req: any, res, next) => {
  */
 
 router.get('/vacunas/count', async (req: any, res, next) => {
-    const pacienteId = req.user.pacientes[0].id;
-    // primero buscar paciente
-    controller.buscarPaciente(pacienteId).then(async data => {
-        const count = await vacunasCtr.getCount(data.paciente);
+    try {
+        const pacienteId = req.user.pacientes[0].id;
+        let paciente = await controller.buscarPaciente(pacienteId);
+        const count = await vacunasCtr.getCount(paciente.paciente);
         res.json(count);
-    });
+    } catch (err) {
+        return next(err);
+    }
 });
 
 module.exports = router;

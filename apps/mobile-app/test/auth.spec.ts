@@ -109,9 +109,8 @@ describe('MobileApp - login', () => {
 
         let pactemp = await PacienteApp.findById(pac._id);
 
-        pactemp.comparePassword('123456', async (_err, isMatch) => {
-            expect(isMatch).toBe(true);
-        });
+        let isMatch = await pactemp.comparePassword('123456');
+        expect(isMatch).toBe(true);
     });
 
     afterAll((done) => {
@@ -208,7 +207,7 @@ describe('MobileApp - reset password', () => {
         done();
     });
 
-    test('resetear password correcta', async (done) => {
+    test('resetear password correcta', async () => {
         await PacienteApp.findOneAndUpdate({ email: 'user@andes.gob.ar'}, { $set: {
             restablecerPassword: {
                 codigo: '123345',
@@ -226,10 +225,8 @@ describe('MobileApp - reset password', () => {
 
         let pactemp = await PacienteApp.findById(acc._id);
 
-        pactemp.comparePassword('asdasd', async (_err, isMatch) => {
-            expect(isMatch).toBe(true);
-            done();
-        });
+        let isMatch = await pactemp.comparePassword('asdasd');
+        expect(isMatch).toBe(true);
 
     });
 

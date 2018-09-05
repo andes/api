@@ -1,6 +1,6 @@
 import { PacienteApp } from '../schemas/pacienteApp';
 import * as express from 'express';
-import * as mongoose from 'mongoose';
+import { Types } from 'mongoose';
 import * as authController from '../controller/AuthController';
 import * as controllerPaciente from '../../../core/mpi/controller/paciente';
 import * as labsImport from '../../../modules/cda/controller/import-labs';
@@ -15,22 +15,23 @@ router.use(Auth.authenticate());
  * @param email {string} Nuevo email de la cuenta
  * @param telefono {string} Nuevo telefono de la cuenta
  * @param password {string} Nuevo password
+ * @param old_password {string} Password anterior para control
  *
  */
 
-router.put('/account', (req: any, res, next) => {
+router.put('/account', async (req: any, res, next) => {
     const id = req.user.account_id;
-    PacienteApp.findById(mongoose.Types.ObjectId(id), (err, account: any) => {
-        if (!account) {
-            return res.status(422).send({ error: '' });
-        }
+    let account = await PacienteApp.findById(Types.ObjectId(id));
+    if (!account) {
+        return res.status(422).send({ error: '' });
+    }
 
-        return authController.updateAccount(account, req.body).then((acc) => {
-            return res.json({ message: 'OK', account: acc });
-        }).catch((errUpdate) => {
-            return res.status(422).send(errUpdate);
-        });
-    });
+    let error = await authController.updateAccount(account, req.body);
+    if (error) {
+        return res.status(422).send(error);
+    }
+    return res.json({ message: 'OK', account });
+
 });
 
 
@@ -43,7 +44,7 @@ router.post('/create/:id', (req: any, res, next) => {
 
     const pacienteId = req.params.id;
     const contacto = req.body;
-    if (!mongoose.Types.ObjectId.isValid(pacienteId)) {
+    if (!Types.ObjectId.isValid(pacienteId)) {
         return res.status(422).send({ error: 'ObjectID Inválido' });
     }
     return controllerPaciente.buscarPaciente(pacienteId).then((resultado) => {
@@ -71,7 +72,7 @@ router.post('/create/:id', (req: any, res, next) => {
 
 router.get('/check/:id', (req: any, res, next) => {
     const pacienteId = req.params.id;
-    if (!mongoose.Types.ObjectId.isValid(pacienteId)) {
+    if (!Types.ObjectId.isValid(pacienteId)) {
         return res.status(422).send({ error: 'ObjectID Inválido' });
     }
     return controllerPaciente.buscarPaciente(pacienteId).then((resultado) => {
@@ -97,7 +98,7 @@ router.get('/check/:id', (req: any, res, next) => {
 router.post('/v2/reenviar-codigo', (req, res, next) => {
     const pacienteId = req.body.id;
     const contacto = req.body.contacto;
-    if (!mongoose.Types.ObjectId.isValid(pacienteId)) {
+    if (!Types.ObjectId.isValid(pacienteId)) {
         return res.status(422).send({ error: 'ObjectID Inválido' });
     }
 

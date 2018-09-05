@@ -15,31 +15,29 @@ import * as NotificationService from './controller/NotificationService';
  *
  */
 
-export let Router = express.Router();
-let routes = [
-    './auth_routes/autenticacionApp',
-    './auth_routes/authAppv2',
-    './auth_routes/farmacias',
-    './auth_routes/rup-adjuntos',
-
+export const Router = express.Router();
+const routes = [
+    './routes/autenticacionApp',
+    './routes/farmacias',
+    './routes/rup-adjuntos',
     './routes/accounts',
     './routes/devices',
     './routes/paciente',
     './routes/turnos',
     './routes/vacunas'
 ];
-for (let r of routes) {
+for (const r of routes) {
     Router.use(require(r));
 }
 
 
-export let Controllers = {
+export const Controllers = {
     AuthController,
     VacunasController,
     NotificationService: NotificationService.NotificationService
 };
 
-export let Schemas = {
+export const Schemas = {
     PacienteApp,
     DeviceModel
 };

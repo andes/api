@@ -5,7 +5,7 @@ import * as controllerPaciente from '../../../core/mpi/controller/paciente';
 import * as cdaCtr from '../../../modules/cda/controller/CDAPatient';
 import { xmlToJson } from '../../../utils/utils';
 
-let router = express.Router();
+const router = express.Router();
 router.use(Auth.authenticate());
 /**
  * Get paciente
@@ -81,6 +81,7 @@ router.put('/paciente/:id', (req: any, res, next) => {
 /**
  * Actualización de la dirección y la fotoMobile
  * [No esta en uso]
+ * @deprecated
  */
 
 router.patch('/pacientes/:id', (req, res, next) => {

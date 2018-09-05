@@ -1,4 +1,4 @@
-import { PacienteApp } from '../schemas/pacienteApp';
+import { PacienteApp, IPacienteApp } from '../schemas/pacienteApp';
 import { Client } from 'elasticsearch';
 import { Matching } from '@andes/match';
 import * as config from '../../../config';
@@ -325,57 +325,32 @@ export function matchPaciente(data) {
  * @param data {object} password, email, telefono
  */
 
-export function updateAccount(account, data) {
-    return new Promise((resolve, reject) => {
+export async function updateAccount(account: IPacienteApp, data) {
 
-        let promise: any = Promise.resolve();
-        let promise_password: any = Promise.resolve();
-
-        if (data.password) {
-            promise_password = new Promise((resolvePassword, rejectPassword) => {
-                account.comparePassword(data.old_password, (err, isMatch) => {
-                    if (err) {
-                        return rejectPassword({ password: 'wrong_password' });
-                    }
-                    if (isMatch) {
-                        account.password = data.password;
-                        return resolvePassword();
-                    } else {
-                        return rejectPassword({ password: 'wrong_password' });
-                    }
-                });
-            });
+    if (data.password) {
+        let isMatch = await account.comparePassword(data.old_password);
+        if (isMatch) {
+            account.password = data.password;
+        } else {
+            return { email: 'wrong_password' };
         }
+    }
 
-        if (data.telefono) {
-            account.telefono = data.telefono;
+    if (data.telefono) {
+        account.telefono = data.telefono;
+    }
+
+    if (data.email) {
+        account.email = data.email;
+        let pac = await PacienteApp.findOne({ email: data.email });
+        if (!pac) {
+            return { email: 'account_exists' };
         }
+    }
 
-        if (data.email) {
-            account.email = data.email;
-            promise = new Promise((resolveEmail, rejectEmail) => {
-                PacienteApp.findOne({ email: data.email }, (err, acts) => {
-                    if (!acts) {
-                        resolveEmail();
-                    } else {
-                        rejectEmail({ email: 'account_exists' });
-                    }
-                });
-            });
-        }
+    return await account.save();
 
-        Promise.all([promise, promise_password]).then(() => {
 
-            account.save((err) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(account);
-            });
-
-        }).catch(reject);
-
-    });
 }
 
 /**
@@ -405,20 +380,16 @@ export function verificarCuenta(userAccount, mpiData) {
  * Hbilita una cuenta mobile. Y setea las password del usuario
  * @param {pacienteAppSchema} userAccount
  * @param {string} password
+ * @deprecated
  */
 export function habilitarCuenta(userAccount, password) {
-    return new Promise((resolve, reject) => {
-        userAccount.activacionApp = true;
-        userAccount.estadoCodigo = true;
-        userAccount.codigoVerificacion = null;
-        userAccount.expirationTime = null;
-        userAccount.password = password;
 
-        userAccount.save((errSave, user) => {
-            if (errSave) {
-                return reject(errSave);
-            }
-            return resolve(user);
-        });
-    });
+    userAccount.activacionApp = true;
+    userAccount.estadoCodigo = true;
+    userAccount.codigoVerificacion = null;
+    userAccount.expirationTime = null;
+    userAccount.password = password;
+
+    return userAccount.save();
+
 }
