@@ -9,7 +9,7 @@ let router = express.Router();
  * @param {any} conceptId
  * @returns
  */
-router.get('/configFacturacionAutomatica/', async function (req, res, next) {
+router.get('/configFacturacionAutomatica/',  (req, res, next) => {
     if (req.query.conceptId) {
         let query;
         query = facturacionAutomaticaModel.find({});
