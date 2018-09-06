@@ -81,6 +81,57 @@ router.get('/prestaciones/huds/:idPaciente', async (req, res, next) => {
 
 });
 
+router.get('/prestaciones/solicitudes', (req, res, next) => {
+    let query;
+    if (req.query.estados) {
+        const estados = (typeof req.query.estados === 'string') ? [req.query.estados] : req.query.estados;
+        query = Prestacion.find({
+            $where: estados.map(x => 'this.estados[this.estados.length - 1].tipo ==  \"' + x + '"').join(' || '),
+        });
+    } else {
+        query = Prestacion.find({}); // Trae todos
+    }
+
+    // Solicitudes tienen tipoPrestacionOrigen, entonces utilizamos esta propiedad
+    // para filtrarlas de de la colección prestaciones
+    // query.where('solicitud.tipoPrestacionOrigen.conceptId').exists(true); <<<<< cuando salgan de circulación solicitudes viejas la query es esta
+    query.where('estados.0.tipo').equals('pendiente');
+
+
+    if (req.query.idPaciente) {
+        query.where('paciente.id').equals(req.query.idPaciente);
+    }
+
+    if (req.query.solicitudDesde) {
+        query.where('solicitud.fecha').gte(moment(req.query.solicitudDesde).startOf('day').toDate() as any);
+    }
+
+    if (req.query.solicitudHasta) {
+        query.where('solicitud.fecha').lte(moment(req.query.solicitudHasta).endOf('day').toDate() as any);
+    }
+
+    // Ordenar por fecha de solicitud
+    if (req.query.ordenFecha) {
+        query.sort({ 'solicitud.fecha': -1 });
+    } else if (req.query.ordenFechaEjecucion) {
+        query.sort({ 'ejecucion.fecha': -1 });
+    }
+
+    if (req.query.limit) {
+        query.limit(parseInt(req.query.limit, 10));
+    }
+
+    query.exec((err, data) => {
+        if (err) {
+            return next(err);
+        }
+        if (req.params.id && !data) {
+            return next(404);
+        }
+        res.json(data);
+    });
+});
+
 router.get('/prestaciones/:id*?', (req, res, next) => {
 
     if (req.params.id) {
