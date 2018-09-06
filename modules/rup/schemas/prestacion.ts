@@ -4,6 +4,7 @@ import * as registro from './prestacion.registro';
 import * as estado from './prestacion.estado';
 import { auditoriaPrestacionPacienteSchema } from '../../auditorias/schemas/auditoriaPrestacionPaciente';
 import { iterate, convertToObjectId } from '../controllers/rup';
+import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 
 // tslint:disable
 export let schema = new mongoose.Schema({
@@ -144,13 +145,14 @@ schema.pre('save', function (next) {
         let err = new Error('Debe seleccionar el paciente');
         return next(err);
     }
-
-    if (!prestacion.solicitud.organizacionOrigen.id) {
+    // Prestación debe tener organización asignada
+    // Solicitudes deben tener organización origen asignada
+    if (!prestacion.solicitud.organizacion.id && (prestacion.solicitud.tipoPrestacionOrigen.conceptId && prestacion.solicitud.organizacionOrigen.id)) {
         let err = new Error('Debe seleccionar la organizacion desde la cual se solicita');
         return next(err);
     }
-
-    if (!prestacion.solicitud.profesionalOrigen.id) {
+    // Si es prestación debe tener profesional asignado, y si es solicitud debe tener profesional origen asignado.
+    if (!prestacion.solicitud.profesional.id && (prestacion.solicitud.tipoPrestacionOrigen.conceptId && !prestacion.solicitud.profesionalOrigen.id)) {
         let err = new Error('Debe seleccionar el profesional que solicita');
         return next(err);
     }
