@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-var modalidadesCertificacionSchema = new mongoose.Schema({
+const modalidadesCertificacionSchema = new mongoose.Schema({
     nombre: String,
     codigo: Number,
     descripcion: String
@@ -9,6 +9,6 @@ var modalidadesCertificacionSchema = new mongoose.Schema({
 // Virtuals
 
 
-var entidadFormadora = mongoose.model('modalidadesCertificacion', modalidadesCertificacionSchema, 'modalidadesCertificacion');
+const entidadFormadora = mongoose.model('modalidadesCertificacion', modalidadesCertificacionSchema, 'modalidadesCertificacion');
 
 export = entidadFormadora;

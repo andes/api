@@ -9,12 +9,12 @@ const turnoAsignadoMatch = {
     $match: {
         'turno.paciente.nombre': { $exists: true },
         'turno.estado': 'asignado',
-        'estado': { $ne:  'suspendida' }
+        estado: { $ne:  'suspendida' }
     }
 };
 
 const facets = {
-    'edad': [
+    edad: [
         turnoAsignadoMatch,
         {
             $bucket: {
@@ -22,13 +22,13 @@ const facets = {
                 boundaries: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
                 default: 0,
                 output: {
-                    'count': { $sum: 1 }
+                    count: { $sum: 1 }
                 }
             }
         }
     ],
 
-    'sexo': [
+    sexo: [
         turnoAsignadoMatch,
         {
             $group: {
@@ -38,7 +38,7 @@ const facets = {
         }
     ],
 
-    'profesionales': [
+    profesionales: [
         turnoAsignadoMatch,
         { $unwind: '$profesionales' },
         {
@@ -52,7 +52,7 @@ const facets = {
     ],
 
 
-    'administrativo': [
+    administrativo: [
         turnoAsignadoMatch,
         {
             $group: {
@@ -64,7 +64,7 @@ const facets = {
         }
     ],
 
-    'prestacion': [
+    prestacion: [
         turnoAsignadoMatch,
         {
             $group: {
@@ -75,7 +75,7 @@ const facets = {
         }
     ],
 
-    'estadoTurno': [
+    estadoTurno: [
         { $match: { 'turno.estado': { $ne: 'turnoDoble' } } },
         {
             $addFields: {
@@ -93,7 +93,7 @@ const facets = {
 };
 
 function makePrimaryMatch(filtros) {
-    let match: any = {
+    const match: any = {
         estado: { $nin: ['planificacion', /* 'suspendida' */ , 'pausada', 'borrada'] }
     };
 
@@ -112,11 +112,11 @@ function makePrimaryMatch(filtros) {
     return match;
 }
 
-function makeSecondaryMatch (filtros) {
-    let match: any = {};
+function makeSecondaryMatch(filtros) {
+    const match: any = {};
 
     if (filtros.edad) {
-        let ages = filtros.edad.split('-');
+        const ages = filtros.edad.split('-');
         match['turno.paciente.edad'] = {
             $gte: parseInt(ages[0], 10)
         };
@@ -144,8 +144,8 @@ function makeSecondaryMatch (filtros) {
     return match;
 }
 
-function makeFacet (filtros) {
-    let facet: any = {};
+function makeFacet(filtros) {
+    const facet: any = {};
 
     if (!filtros.edad) {
         facet['edad'] = facets['edad'];
@@ -173,7 +173,7 @@ function makeFacet (filtros) {
 }
 
 export async function estadisticas(filtros) {
-    let pipeline = [
+    const pipeline = [
         /* Filtros iniciales */
         {
             $match: makePrimaryMatch(filtros)
@@ -201,11 +201,11 @@ export async function estadisticas(filtros) {
                     $divide: [{ $subtract: [
                         '$turno.horaInicio',
                         { $cond:  {
-                            if: {  $eq: [{$type: '$turno.paciente.fechaNacimiento' }, 'string' ]   },
+                            if: {  $eq: [{$type: '$turno.paciente.fechaNacimiento' }, 'string']   },
                             then: { $dateFromString: { dateString: '$turno.paciente.fechaNacimiento' } },
                             else:  '$turno.paciente.fechaNacimiento'
                         } }
-                    ]}, (365 * 24 * 60 * 60 * 1000)]
+                    ]},       (365 * 24 * 60 * 60 * 1000)]
                 }
             }
         },
@@ -215,6 +215,6 @@ export async function estadisticas(filtros) {
         }
     ];
 
-    let agr = AgendarModel.aggregate(pipeline).cursor({ batchSize: 1000 }).exec();
+    const agr = AgendarModel.aggregate(pipeline).cursor({ batchSize: 1000 }).exec();
     return await toArray(agr);
 }

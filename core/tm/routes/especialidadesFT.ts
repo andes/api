@@ -1,15 +1,14 @@
 import * as express from 'express';
 import * as especialidad from '../schemas/especialidadesFT';
 import * as mongoose from 'mongoose';
-import * as moment from 'moment';
 
-let router = express.Router();
+const router = express.Router();
 
-router.get('/especialidadFT/:id?', function (req, res, next) {
+router.get('/especialidadFT/:id?', (req, res, next) => {
 
     if (mongoose.Types.ObjectId.isValid(req.params.id)) {
 
-        especialidad.findById(req.params.id, function (err, data) {
+        especialidad.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -19,9 +18,9 @@ router.get('/especialidadFT/:id?', function (req, res, next) {
         let query;
         query = especialidad.find({});
 
-        query.sort({ 'descripcion': 1 });
+        query.sort({ descripcion: 1 });
 
-        query.exec(function (err, data) {
+        query.exec((err, data) => {
             if (err) {
                 return next(err);
             }
