@@ -3,7 +3,7 @@ import { puco } from '../schemas/puco';
 import { obraSocial } from '../schemas/obraSocial';
 import { periodoPadronesPuco } from '../schemas/periodoPadronesPuco';
 
-let router = express.Router();
+const router = express.Router();
 
 /**
  * Obtiene los datos de la obra social asociada a un paciente
@@ -12,17 +12,17 @@ let router = express.Router();
  * @returns
  */
 
-router.get('/puco/', async function (req, res, next) {
+router.get('/puco/', async (req, res, next) => {
 
     if (req.query.dni) {
         let padron;
         let rta;
 
         if (req.query.periodo) {
-            let date = new Date(req.query.periodo);
-            let primerDia = new Date(date.getFullYear(), date.getMonth(), 1);
+            const date = new Date(req.query.periodo);
+            const primerDia = new Date(date.getFullYear(), date.getMonth(), 1);
             primerDia.setHours(-3);
-            let ultimoDia = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+            const ultimoDia = new Date(date.getFullYear(), date.getMonth() + 1, 0);
             ultimoDia.setHours(20); ultimoDia.setMinutes(59);   // adaptacion por desfasaje 3hs de registros en mongodb
             padron = { $gte: primerDia, $lt: ultimoDia };
         } else {
@@ -33,10 +33,10 @@ router.get('/puco/', async function (req, res, next) {
             }
         }
 
-        rta = await puco.find({ dni: Number.parseInt(req.query.dni), version: padron }).exec();
+        rta = await puco.find({ dni: Number.parseInt(req.query.dni, 10), version: padron }).exec();
 
         if (rta.length > 0) {
-            let resultOS = [];
+            const resultOS = [];
             let unaOS;
             for (let i = 0; i < rta.length; i++) {
                 unaOS = await obraSocial.find({ codigoPuco: rta[i].codigoOS }).exec();

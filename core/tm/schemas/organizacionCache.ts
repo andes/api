@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-let organizacionCacheSchema = new mongoose.Schema({
+const organizacionCacheSchema = new mongoose.Schema({
     anioInicioActividades: Number, // 1913
     categoriaDeLaTipologia: String, // Alto riesgo con terapia intensiva especializada
     codIndecDepto: Number, // 35

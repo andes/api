@@ -1,5 +1,4 @@
 import * as mongoose from 'mongoose';
-import { pacienteSchema } from '../../../core/mpi/schemas/paciente';
 
 export let recordatorioSchema = new mongoose.Schema({
     idTurno: {
