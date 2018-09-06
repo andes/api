@@ -164,6 +164,12 @@ export const modules = {
         path: './modules/carpetas/routes',
         route: '/modules/carpetas',
         middleware: appMiddleware
+    },
+    laboratorio: {
+        active: true,
+        path: './modules/laboratorio/routes',
+        route: '/modules/laboratorio',
+        middleware: appMiddleware
     }
 };
 
