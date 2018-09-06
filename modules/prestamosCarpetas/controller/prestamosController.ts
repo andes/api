@@ -7,6 +7,7 @@ import * as solicitudCarpetaManualSchema from '../../../modules/prestamosCarpeta
 import * as constantes from '../schemas/constantes';
 import { toArray } from '../../../utils/utils';
 import { ObjectId } from 'bson';
+import { searchByPatient } from '../../cda/controller/CDAPatient';
 
 export async function getCarpetasSolicitud(req) {
     return new Promise(async (resolve, reject) => {
@@ -77,10 +78,34 @@ function getNrosCarpetas(agendas, agendasSobreturno, solicitudesManuales) {
     return nroCarpetas;
 }
 
-async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carpetas, solicitudesManuales) {
-    const registrosSolicitudCarpetas = [];
-    const mostrarPrestamos = req.body.mostrarPrestamos;
+async function armarSolicitudConCDA(_agenda, _turno, unaCarpeta, estadoCarpeta, unaOrganizacion) {
+    let ultimoCDA = await searchByPatient(_turno.paciente.id, '2881000013106', { limit: 1, skip: null });
 
+    return {
+        fecha: _turno.horaInicio,
+        paciente: _turno.paciente,
+        numero: unaCarpeta.nroCarpeta,
+        estado: estadoCarpeta,
+        organizacion: unaOrganizacion,
+        datosPrestamo: {
+            agendaId: _agenda._id.id,
+            observaciones: '',
+            turno: {
+                id: _turno._id,
+                profesionales: _agenda.profesionales[0],
+                espacioFisico: _agenda.espacioFisico[0],
+                tipoPrestacion: _turno.tipoPrestacion
+            }
+        },
+        ultimoCDA: ultimoCDA,
+        tipo: constantes.TipoSolicitud.Automatica
+    };
+}
+
+async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carpetas, solicitudesManuales) {
+    let mostrarPrestamos = req.body.mostrarPrestamos;
+
+    let registrosSolicitudesAutomaticas = [];
     agendas.forEach(unaAgenda => {
         unaAgenda.forEach(_agenda => {
             _agenda.turnos.forEach(_turno => {
@@ -88,50 +113,32 @@ async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carp
                     // Validación de PDR para ignorar números de carpetas autogenerados por HPN.
                     if ((unaCarpeta.nroCarpeta.indexOf('PDR') < 0) && unaCarpeta.organizacion._id.equals(unaOrganizacion)) {
                         let estadoCarpeta = constantes.EstadosPrestamosCarpeta.EnArchivo;
-
-                        for (let i = 0; i < carpetas.length; i++) {
-                            if (carpetas[i]._id === unaCarpeta.nroCarpeta) {
-                                estadoCarpeta = carpetas[i].estado;
-                                break;
+                        carpetas.map(carpeta => {
+                            if (carpeta._id === unaCarpeta.nroCarpeta) {
+                                estadoCarpeta = carpeta.estado;
                             }
-                        }
+                        });
 
                         if (mostrarPrestamos || (estadoCarpeta === constantes.EstadosPrestamosCarpeta.EnArchivo)) {
-                            registrosSolicitudCarpetas.push({
-                                fecha: _turno.horaInicio,
-                                paciente: _turno.paciente,
-                                numero: unaCarpeta.nroCarpeta,
-                                estado: estadoCarpeta,
-                                organizacion: unaOrganizacion,
-                                datosPrestamo: {
-                                    agendaId: _agenda._id.id,
-                                    observaciones: '',
-                                    turno: {
-                                        id: _turno._id,
-                                        profesionales: _agenda.profesionales[0],
-                                        espacioFisico: _agenda.espacioFisico[0],
-                                        tipoPrestacion: _turno.tipoPrestacion
-                                    }
-                                },
-                                tipo: constantes.TipoSolicitud.Automatica
-                            });
+                            registrosSolicitudesAutomaticas.push(armarSolicitudConCDA(_agenda, _turno, unaCarpeta, estadoCarpeta, unaOrganizacion));
                         }
                     }
                 });
             });
         });
     });
+    let registroSolicitudesManuales = [];
     if (solicitudesManuales) {
-        solicitudesManuales.forEach(element => {
+        registroSolicitudesManuales = solicitudesManuales.map(async element => {
             let estadoCarpetaManual = constantes.EstadosPrestamosCarpeta.EnArchivo;
-            for (let i = 0; i < carpetas.length; i++) {
-                if (carpetas[i]._id === element.numero) {
-                    estadoCarpetaManual = carpetas[i].estado;
-                    break;
+            carpetas.map(carpeta => {
+                if (carpeta._id === element.numero) {
+                    estadoCarpetaManual = carpeta.estado;
                 }
-            }
+            });
+            let ultimoCDA = await searchByPatient(element.paciente.id, '2881000013106', { limit: 1, skip: null });
 
-            registrosSolicitudCarpetas.push({
+            return {
                 fecha: element.fecha,
                 paciente: element.paciente,
                 numero: element.numero,
@@ -139,12 +146,12 @@ async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carp
                 organizacion: unaOrganizacion,
                 datosSolicitudManual: element.datosSolicitudManual,
                 tipo: constantes.TipoSolicitud.Manual,
-                idSolicitud: element.id
-            });
+                idSolicitud: element.id,
+                ultimoCDA: ultimoCDA
+            };
         });
     }
-
-    return registrosSolicitudCarpetas;
+    return await Promise.all([...registroSolicitudesManuales, ...registrosSolicitudesAutomaticas]);
 }
 
 async function findCarpetas(organizacionId, nrosCarpetas) {
@@ -249,21 +256,21 @@ async function buscarAgendasSobreturnos(organizacionId, tipoPrestacion, espacioF
     const pipelineCarpeta = [{
         $match: matchCarpeta
     },
-        {
-            $unwind: '$sobreturnos'
-        },
-        {
-            $match: matchCarpeta
-        },
-        {
-            $group: {
-                _id: { id: '$_id' },
-                profesionales: { $push: '$profesionales' },
-                espacioFisico: { $push: '$espacioFisico' },
-                tipoPrestacion: { $push: '$sobreturnos.tipoPrestacion' },
-                turnos: { $push: '$sobreturnos' }
-            }
-        }];
+    {
+        $unwind: '$sobreturnos'
+    },
+    {
+        $match: matchCarpeta
+    },
+    {
+        $group: {
+            _id: { id: '$_id' },
+            profesionales: { $push: '$profesionales' },
+            espacioFisico: { $push: '$espacioFisico' },
+            tipoPrestacion: { $push: '$sobreturnos.tipoPrestacion' },
+            turnos: { $push: '$sobreturnos' }
+        }
+    }];
 
     return await toArray(agenda.aggregate(pipelineCarpeta).cursor({}).exec());
 }
@@ -300,24 +307,24 @@ async function buscarAgendasTurnos(organizacionId, tipoPrestacion, espacioFisico
     const pipelineCarpeta = [{
         $match: matchCarpeta
     },
-        {
-            $unwind: '$bloques'
-        },
-        {
-            $unwind: '$bloques.turnos'
-        },
-        {
-            $match: matchCarpeta
-        },
-        {
-            $group: {
-                _id: { id: '$_id' },
-                profesionales: { $push: '$profesionales' },
-                espacioFisico: { $push: '$espacioFisico' },
-                tipoPrestacion: { $push: '$bloques.turnos.tipoPrestacion' },
-                turnos: { $push: '$bloques.turnos' }
-            }
-        }];
+    {
+        $unwind: '$bloques'
+    },
+    {
+        $unwind: '$bloques.turnos'
+    },
+    {
+        $match: matchCarpeta
+    },
+    {
+        $group: {
+            _id: { id: '$_id' },
+            profesionales: { $push: '$profesionales' },
+            espacioFisico: { $push: '$espacioFisico' },
+            tipoPrestacion: { $push: '$bloques.turnos.tipoPrestacion' },
+            turnos: { $push: '$bloques.turnos' }
+        }
+    }];
 
     return await toArray(agenda.aggregate(pipelineCarpeta).cursor({}).exec());
 }
