@@ -1,13 +1,15 @@
 const Emitter = require('pattern-emitter');
 
-class EventBus extends Emitter {
+export class EventBus extends Emitter {
 
     /**
      * Emite un evento de forma asincrónica
      * @param {string} event Nombre del evento a emitir
      * @param {any}  params listado de paramentros relacionados con el evento
      */
-    
+
+    emitAsync (name: String, ...params: any[]);
+
     emitAsync () {
         process.nextTick(() => {
             this.emit.apply(this, arguments);
@@ -16,8 +18,6 @@ class EventBus extends Emitter {
 
 }
 
-module.exports = exports = {
-    EventBus,
-    EventCore: new EventBus(),
-    EventSocket: new EventBus()
-};
+export const EventCore = new EventBus();
+
+export const EventSocket = new EventBus();

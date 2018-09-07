@@ -14,9 +14,3 @@ export interface EventBus {
 export declare const EventCore: EventBus;
 
 export declare const EventSocket: EventBus;
-/*
-// Ejemplo de submodulo
-export namespace submodulo {
-  export const hola: string;
-}
-*/

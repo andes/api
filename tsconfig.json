@@ -11,7 +11,12 @@
         "noImplicitReturns": true,
         "allowUnusedLabels": false,  
         "typeRoots": [
-            "node_modules/@types"
-        ]
+            "node_modules/@types",
+            "./packages/*",
+        ],
+        "baseUrl": ".",
+        "paths": {
+            "@andes/event-bus/*": [ "./packages/event-bus/*" ]
+        }
     }
 }
