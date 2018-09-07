@@ -95,7 +95,7 @@ router.get('/prestaciones/solicitudes', (req, res, next) => {
     // Solicitudes tienen tipoPrestacionOrigen, entonces utilizamos esta propiedad
     // para filtrarlas de de la colección prestaciones
     // query.where('solicitud.tipoPrestacionOrigen.conceptId').exists(true); <<<<< cuando salgan de circulación solicitudes viejas la query es esta
-    query.where('estados.0.tipo').equals('pendiente');
+    query.where('estados.0.tipo').in(['pendiente', 'auditoria']);
 
 
     if (req.query.idPaciente) {
