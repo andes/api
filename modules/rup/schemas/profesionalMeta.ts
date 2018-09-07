@@ -7,7 +7,6 @@
  */
 
 import * as mongoose from 'mongoose';
-import { profesionalSchema } from './../../../core/tm/schemas/profesional';
 import { SnomedConcept } from './snomed-concept';
 
 export let schema = new mongoose.Schema({

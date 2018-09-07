@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-let schema = new mongoose.Schema({
+const schema = new mongoose.Schema({
     nombre: String,
 });
 // export let ocupacionSchema = schema;

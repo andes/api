@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-let turnoSchena = new mongoose.Schema({
+const turnoSchena = new mongoose.Schema({
     fecha: { type: Date, required: true },
     tipo: {
         type: String,
@@ -14,6 +14,6 @@ let turnoSchena = new mongoose.Schema({
 // Virtuals
 
 
-let turno = mongoose.model('turnoMatriculaciones', turnoSchena, 'turno');
+const turno = mongoose.model('turnoMatriculaciones', turnoSchena, 'turno');
 
 export = turno;

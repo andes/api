@@ -6,7 +6,7 @@ import * as moment from 'moment';
 declare const before;
 
 function checkMap(paciente, contexto, concept, expect, done) {
-    let map = new SnomedCIE10Mapping(paciente, contexto);
+    const map = new SnomedCIE10Mapping(paciente, contexto);
     map.transform(concept).then((cie10) => {
         chai.assert.strictEqual(cie10, expect);
         done();
@@ -19,7 +19,7 @@ function checkMap(paciente, contexto, concept, expect, done) {
 describe('Snomed-CIE10 Mapping', function () {
     this.timeout(5000);
 
-    before(function (done) {
+    before((done) => {
         Connections.initialize();
         done();
     });
@@ -49,7 +49,7 @@ describe('Snomed-CIE10 Mapping', function () {
     });
 
     it('Age context date between 1 and 28 years', (done) => {
-        let paciente = {
+        const paciente = {
             fechaNacimiento: moment().subtract(2, 'y').format(),
             sexo: 'femenino'
         };
@@ -57,7 +57,7 @@ describe('Snomed-CIE10 Mapping', function () {
     });
 
     it('Age context date between 1 and 28 years otherwise', (done) => {
-        let paciente = {
+        const paciente = {
             fechaNacimiento: moment().subtract(2, 'd').format(),
             sexo: 'femenino'
         };
@@ -65,7 +65,7 @@ describe('Snomed-CIE10 Mapping', function () {
     });
 
     it('days unit success', (done) => {
-        let paciente = {
+        const paciente = {
             fechaNacimiento: moment().subtract(2, 'd').format(),
             sexo: 'femenino'
         };
@@ -73,12 +73,11 @@ describe('Snomed-CIE10 Mapping', function () {
     });
 
     it('days unit else rule success', (done) => {
-        let paciente = {
+        const paciente = {
             fechaNacimiento: moment().subtract(50, 'd').format()
         };
         checkMap(paciente, [], '12063002', 'K62.5', done);
     });
-
 
 
 });

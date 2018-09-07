@@ -1,15 +1,14 @@
 import * as express from 'express';
 import * as ultimaCarpeta from '../schemas/ultimaCarpeta';
-import { mongooseDebugMode } from '../../../config.private';
 import * as mongoose from 'mongoose';
 
-let router = express.Router();
+const router = express.Router();
 
-router.get('/ultimaCarpeta', function (req: any, res, next) {
+router.get('/ultimaCarpeta', (req: any, res, next) => {
     if (req.user.organizacion && req.user.organizacion.id) {
 
-        let idOrganizacion = new mongoose.Types.ObjectId(req.user.organizacion.id);
-        ultimaCarpeta.findOne({ idEfector: idOrganizacion }, function (err, data: any) {
+        const idOrganizacion = new mongoose.Types.ObjectId(req.user.organizacion.id);
+        ultimaCarpeta.findOne({ idEfector: idOrganizacion }, (err, data: any) => {
             if (err) {
                 return next(err);
             }
@@ -23,18 +22,18 @@ router.get('/ultimaCarpeta', function (req: any, res, next) {
     }
 });
 
-router.post('/incrementarCuenta', function (req: any, res, next) {
+router.post('/incrementarCuenta', (req: any, res, next) => {
     if (req.user.organizacion && req.user.organizacion.id) {
-        let idOrganizacion = new mongoose.Types.ObjectId(req.user.organizacion.id);
-        ultimaCarpeta.findOne({ idEfector: idOrganizacion }, function (err, data: any) {
+        const idOrganizacion = new mongoose.Types.ObjectId(req.user.organizacion.id);
+        ultimaCarpeta.findOne({ idEfector: idOrganizacion }, (err, data: any) => {
             if (err) {
                 return next(err);
             }
             if (data) {
-                let update = {
+                const update = {
                     ultimaCarpeta: data.ultimaCarpeta + 1
                 };
-                ultimaCarpeta.update({ idEfector: idOrganizacion }, { $set: update }, { new: true }, function (errUpdate, dataUpdate) {
+                ultimaCarpeta.update({ idEfector: idOrganizacion }, { $set: update }, { new: true }, (errUpdate, dataUpdate) => {
                     if (err) {
                         return next(errUpdate);
                     }

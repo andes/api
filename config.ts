@@ -13,9 +13,11 @@ const mobileMiddleware = [
     Auth.authenticate()
 ];
 
+/*
 const publicMiddleware = [
     Auth.authenticatePublic()
 ];
+*/
 
 
 // Habilita/deshabilita módulos de la API
@@ -161,6 +163,12 @@ export const modules = {
         active: true,
         path: './modules/carpetas/routes',
         route: '/modules/carpetas',
+        middleware: appMiddleware
+    },
+    vacunas: {
+        active: true,
+        path: './modules/vacunas/routes',
+        route: '/modules/vacunas',
         middleware: appMiddleware
     }
 };

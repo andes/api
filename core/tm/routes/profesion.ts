@@ -1,12 +1,12 @@
 import * as express from 'express';
 import * as profesion from '../schemas/profesion_model';
 
-var router = express.Router();
+const router = express.Router();
 
-router.get('/profesiones/:id*?', function(req, res, next) {
+router.get('/profesiones/:id*?', (req, res, next) => {
 
     if (req.params.id) {
-        profesion.findById(req.params.id, function (err, data) {
+        profesion.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -23,7 +23,7 @@ router.get('/profesiones/:id*?', function(req, res, next) {
 
             res.json(data);
         });
-   }
+    }
 });
 
 export = router;

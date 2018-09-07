@@ -1,4 +1,3 @@
-import { tipoPrestacion } from './../../../core/tm/schemas/tipoPrestacion';
 import * as mongoose from 'mongoose';
 
 /**
@@ -8,7 +7,7 @@ import * as mongoose from 'mongoose';
  * @param {any} func Nombre de la función callback a ejecutar cuando llega a un nodo hoja
  */
 export function iterate(obj, func) {
-    for (var property in obj) {
+    for (const property in obj) {
         if (obj.hasOwnProperty(property)) {
             if (Array.isArray(obj[property])) {
                 iterate(obj[property], func);
@@ -54,11 +53,11 @@ export function buscarRegistros(prestaciones, filtroPrestaciones, conceptos) {
 
         let registros = [];
         let registrosAux = [];
-        let motivo;
+        let motivoConsulta;
         // recorremos los registros de cada prestacion
         prestacion.ejecucion.registros.forEach(reg => {
             if (filtroPrestaciones.find(fp => fp.conceptId === reg.concepto.conceptId)) {
-                motivo = reg.concepto.term;
+                motivoConsulta = reg.concepto.term;
                 registrosAux = registrosProfundidad(reg, conceptos);
                 registrosAux.forEach(elto => {
                     registros.push(elto);
@@ -68,7 +67,7 @@ export function buscarRegistros(prestaciones, filtroPrestaciones, conceptos) {
         if (registros.length) {
             // se agrega la prestacion y los conceptos matcheados al arreglo a retornar
             data.push({
-                motivo: motivo,
+                motivo: motivoConsulta,
                 fecha: prestacion.createdAt,
                 profesional: prestacion.createdBy,
                 conceptos: registros
@@ -116,26 +115,26 @@ export function buscarEnHuds(prestaciones, conceptos) {
     // recorremos prestaciones
     prestaciones.forEach((prestacion: any) => {
         // recorremos los registros de cada prestacion
-        prestacion.ejecucion.registros.forEach(registro => {
+        prestacion.ejecucion.registros.forEach(unRegistro => {
             // verificamos que el concepto coincida con alguno de los elementos enviados en los conceptos
-            if (registro.concepto && registro.concepto.conceptId && conceptos.find(c => c.conceptId === registro.concepto.conceptId)) {
+            if (unRegistro.concepto && unRegistro.concepto.conceptId && conceptos.find(c => c.conceptId === unRegistro.concepto.conceptId)) {
                 data.push({
                     tipoPrestacion: prestacion.solicitud.tipoPrestacion,
-                    fecha: registro.createdAt,
-                    profesional: registro.createdBy,
-                    registro: registro
+                    fecha: unRegistro.createdAt,
+                    profesional: unRegistro.createdBy,
+                    registro: unRegistro
                 });
             }
             // verificamos si el registro de la prestacion tiene alguno de
             // los conceptos en su array de registros
-            let resultado = matchConcepts(registro, conceptos);
+            let resultado = matchConcepts(unRegistro, conceptos);
 
             if (resultado) {
                 // agregamos el resultado a a devolver
                 data.push({
                     tipoPrestacion: prestacion.solicitud.tipoPrestacion,
-                    fecha: registro.createdAt,
-                    profesional: registro.createdBy,
+                    fecha: unRegistro.createdAt,
+                    profesional: unRegistro.createdBy,
                     registro: resultado
                 });
             }

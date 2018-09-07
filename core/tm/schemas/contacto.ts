@@ -14,10 +14,9 @@
 // });
 // export = schema;
 import * as mongoose from 'mongoose';
-import * as ubicacionSchema from './ubicacion';
 import * as constantes from './constantes';
 
-let schema = new mongoose.Schema({
+const schema = new mongoose.Schema({
     tipo: constantes.CONTACTO,
     valor: String,
     ranking: Number, // Specify preferred order of use (1 = highest)
