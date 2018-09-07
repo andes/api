@@ -4,12 +4,14 @@ import * as moment from 'moment';
 // import * as async from 'async';
 import { Auth } from './../../../auth/auth.class';
 import { model as Prestacion } from '../schemas/prestacion';
+import { buscarPaciente } from '../../../core/mpi/controller/paciente';
 import * as frecuentescrl from '../controllers/frecuentesProfesional';
 
 import { buscarEnHuds } from '../controllers/rup';
 import { Logger } from '../../../utils/logService';
 import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
 import { snomedModel } from '../../../core/term/schemas/snomed';
+import { toArray } from '../../../utils/utils';
 
 const router = express.Router();
 const async = require('async');
@@ -77,9 +79,29 @@ router.get('/prestaciones/huds/:idPaciente', async (req, res, next) => {
             });
         }
     });
-
-
 });
+
+router.get('/prestaciones/laboratorio', async function (req, res, next) {
+    let match = {
+        'solicitud.tipoPrestacion.conceptId': '15220000',
+        'solicitud.registros.nombre': { $ne: 'numeroProtocolo' },
+        'solicitud.fecha': { '$gte': moment(req.query.fechaDesde, 'YYYY-MM-DD').startOf('day').toDate(), '$lte': moment(req.query.fechaHasta, 'YYYY-MM-DD').endOf('day').toDate() }
+    }
+        ;
+    if (req.query.pacienteDni) {
+        match['paciente.documento'] = req.query.pacienteDni;
+    }
+    let query = [
+        {
+            '$match':
+                match
+        }];
+    let data2 = await toArray(Prestacion.aggregate(query).cursor({}).exec());
+    res.json(data2);
+    // let prestaciones = await Prestacion.find({'solicitud.tipoPrestacion.conceptId': '15220000', 'solicitud.registros.nombre': {$ne: 'numeroProtocolo'}});
+    // res.json(prestaciones);
+});
+
 
 router.get('/prestaciones/:id*?', (req, res, next) => {
 
@@ -133,7 +155,25 @@ router.get('/prestaciones/:id*?', (req, res, next) => {
         if (req.query.conceptsIdEjecucion) {
             query.where('ejecucion.registros.concepto.conceptId').in(req.query.conceptsIdEjecucion);
         }
-
+        if (req.query.pacienteDocumento) {
+            query.where('paciente.documento').equals(req.query.pacienteDocumento);
+        }
+        if (req.query.nombrePaciente) {
+            query.where('paciente.nombre').equals(RegExp('^.*' + req.query.nombrePaciente + '.*$', 'i'));
+        }
+        if (req.query.apellidoPaciente) {
+            query.where('paciente.apellido').equals(RegExp('^.*' + req.query.apellidoPaciente + '.*$', 'i'));
+        }
+        if (req.query.origen) {
+            query.where('solicitud.ambitoOrigen').equals(req.query.origen);
+        }
+        console.log(req.query);
+        if (req.query.numProtocoloDesde) {
+            query.where('solicitud.registros.valor').gte(Number(req.query.numProtocoloDesde));
+        }
+        if (req.query.numProtocoloHasta) {
+            query.where('solicitud.registros.valor').lte(Number(req.query.numProtocoloHasta));
+        }
         if (req.query.solicitudDesde) {
             query.where('solicitud.fecha').gte(moment(req.query.solicitudDesde).startOf('day').toDate() as any);
         }
@@ -157,7 +197,9 @@ router.get('/prestaciones/:id*?', (req, res, next) => {
         if (req.query.organizacion) {
             query.where('solicitud.organizacion.id').equals(req.query.organizacion);
         }
-
+        if (req.query.tipoPrestacionSolicititud) {
+            query.where('solicitud.tipoPrestacion.conceptId').equals(req.query.tipoPrestacionSolicititud);
+        }
         // Ordenar por fecha de solicitud
         if (req.query.ordenFecha) {
             query.sort({ 'solicitud.fecha': -1 });
@@ -182,6 +224,7 @@ router.get('/prestaciones/:id*?', (req, res, next) => {
 });
 
 router.post('/prestaciones', (req, res, next) => {
+    console.log(req.body);
     const data = new Prestacion(req.body);
     Auth.audit(data, req);
     data.save((err) => {
