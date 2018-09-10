@@ -159,6 +159,12 @@ export const modules = {
         route: '/modules/prestamosCarpetas',
         middleware: appMiddleware
     },
+    configFacturacionAutomatica: {
+        active: true,
+        path: './modules/facturacionAutomatica/routes',
+        route: '/modules/facturacionAutomatica',
+        middleware: appMiddleware
+    },
     carpetas: {
         active: true,
         path: './modules/carpetas/routes',
@@ -171,6 +177,7 @@ export const modules = {
         route: '/modules/laboratorio',
         middleware: appMiddleware
     }
+
 };
 
 // Cotas de consumo de APIs
