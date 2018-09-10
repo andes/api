@@ -107,7 +107,7 @@ export const modules = {
         active: true,
         path: './modules/fuentesAutenticas/routes',
         route: '/modules/fuentesAutenticas',
-        middleware: null
+        middleware: appMiddleware
     },
     usuarios: {
         active: true,
@@ -167,7 +167,7 @@ export const modules = {
         active: true,
         path: './modules/facturacionAutomatica/routes',
         route: '/modules/facturacionAutomatica',
-        // middleware: appMiddleware
+        middleware: appMiddleware
     },
 };
 
