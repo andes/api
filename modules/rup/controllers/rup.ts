@@ -57,7 +57,7 @@ export function buscarRegistros(prestaciones, filtroPrestaciones, conceptos) {
         // recorremos los registros de cada prestacion
         prestacion.ejecucion.registros.forEach(reg => {
             if (filtroPrestaciones.find(fp => fp.conceptId === reg.concepto.conceptId)) {
-                motivoConsulta = reg.concepto.term;
+                motivoConsulta = { term: reg.concepto.term, conceptId: reg.concepto.conceptId };
                 registrosAux = registrosProfundidad(reg, conceptos);
                 registrosAux.forEach(elto => {
                     registros.push(elto);
