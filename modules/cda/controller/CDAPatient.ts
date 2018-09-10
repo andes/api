@@ -641,10 +641,11 @@ export function checkAndExtract(xmlDom) {
         return passed ? data : null;
     }
     const _root = xmlDom.root();
-    const _params = [{
-        key: '//x:ClinicalDocument/x:id/@root',
-        match: CDAConfig.rootOID
-    },
+    const _params = [
+        {
+            key: '//x:ClinicalDocument/x:id/@root',
+            match: CDAConfig.rootOID
+        },
         {
             key: '//x:ClinicalDocument/x:id/@extension',
             as: 'id'
