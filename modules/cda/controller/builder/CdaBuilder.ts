@@ -1,4 +1,3 @@
-import { IID, ICode, IConfidentialityCode, ILanguageCode, ISetId } from '../class/interfaces';
 import { CDA } from '../class/CDA';
 import { Body } from '../class/Body';
 import * as builder from 'xmlbuilder';
@@ -15,7 +14,7 @@ export class CDABuilder extends BaseBuilder {
 
     public build(cda: CDA) {
 
-        var xml = builder.create('ClinicalDocument')
+        const xml = builder.create('ClinicalDocument')
             .att('xmlns', 'urn:hl7-org:v3')
             .att('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
             .att('xmlns:voc', 'urn:hl7-org:v3/voc');
@@ -51,8 +50,8 @@ export class CDABuilder extends BaseBuilder {
 
         if (cda.patient()) {
             xml.com('Datos del paciente');
-            let patientBuilder = new PatientBuilder();
-            let template = patientBuilder.build(cda.patient() as Patient);
+            const patientBuilder = new PatientBuilder();
+            const template = patientBuilder.build(cda.patient() as Patient);
             xml.importDocument(template);
         }
 
@@ -77,7 +76,7 @@ export class CDABuilder extends BaseBuilder {
             this.createNode(serviceEvent, 'code', cda.type());
         }
         if (date) {
-            let efTime = serviceEvent.ele('effectiveTime', { value: this.fromDate(date) });
+            const efTime = serviceEvent.ele('effectiveTime', { value: this.fromDate(date) });
             efTime.ele('low', { value: this.fromDate(date) });
             efTime.ele('high', { value: this.fromDate(date) });
         }
@@ -89,9 +88,9 @@ export class CDABuilder extends BaseBuilder {
         }
 
 
-        let performer = serviceEvent.ele('performer', { typeCode: 'PRF' });
+        const performer = serviceEvent.ele('performer', { typeCode: 'PRF' });
         performer.ele('functionCode', { code: 'PCP', codeSystem: '2.16.840.1.113883.5.88' });
-        let assignedEntity = performer.ele('assignedEntity');
+        const assignedEntity = performer.ele('assignedEntity');
 
         if (cda.author()) {
             let doctor = cda.author() as Author;
@@ -115,13 +114,13 @@ export class CDABuilder extends BaseBuilder {
             }
         }
 
-        let body: Body = cda.body() as Body;
+        const body: Body = cda.body() as Body;
         if (body) {
             xml.com(' Cuerpo de CDA ');
             let mainComponent = xml.ele('component').ele('structuredBody');
             body.component().forEach(item => {
-                let builderComponent = item.builderFactory();
-                let template = builderComponent.build(item);
+                const builderComponent = item.builderFactory();
+                const template = builderComponent.build(item);
                 mainComponent.importDocument(template);
             });
         }

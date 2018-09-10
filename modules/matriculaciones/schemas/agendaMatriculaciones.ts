@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-var agendaMatriculacionesSchema = new mongoose.Schema({
+const agendaMatriculacionesSchema = new mongoose.Schema({
     diasHabilitados: { type: Array, required: true },
     horarioInicioTurnos: { type: String, required: true },
     horarioFinTurnos: { type: String, required: true },
@@ -11,6 +11,6 @@ var agendaMatriculacionesSchema = new mongoose.Schema({
 // Virtuals
 
 
-var agendaMatriculaciones = mongoose.model('agendaMatriculaciones', agendaMatriculacionesSchema, 'agendaMatriculaciones');
+const agendaMatriculaciones = mongoose.model('agendaMatriculaciones', agendaMatriculacionesSchema, 'agendaMatriculaciones');
 
 export = agendaMatriculaciones;

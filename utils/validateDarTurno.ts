@@ -1,6 +1,3 @@
-import * as express from 'express';
-import { paciente } from '../core/mpi/schemas/paciente';
-
 export class ValidateDarTurno {
 
     /**
@@ -13,7 +10,7 @@ export class ValidateDarTurno {
      * @memberOf ValidateDarTurno
      */
     public static checkTurno(data: any): any {
-        let errors = [];
+        const errors = [];
         let valid = true;
 
         if (!data.tipoPrestacion) {
@@ -37,8 +34,8 @@ export class ValidateDarTurno {
         }
 
         return {
-            valid: valid,
-            errors: errors
+            valid,
+            errors
         };
     }
 
