@@ -97,7 +97,7 @@ async function armarSolicitudConCDA(_agenda, _turno, unaCarpeta, estadoCarpeta, 
                 tipoPrestacion: _turno.tipoPrestacion
             }
         },
-        ultimoCDA: ultimoCDA,
+        ultimoCDA,
         tipo: constantes.TipoSolicitud.Automatica
     };
 }
@@ -147,7 +147,7 @@ async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carp
                 datosSolicitudManual: element.datosSolicitudManual,
                 tipo: constantes.TipoSolicitud.Manual,
                 idSolicitud: element.id,
-                ultimoCDA: ultimoCDA
+                ultimoCDA
             };
         });
     }
@@ -253,24 +253,26 @@ async function buscarAgendasSobreturnos(organizacionId, tipoPrestacion, espacioF
     matchCarpeta['sobreturnos.paciente.carpetaEfectores.organizacion._id'] = organizacionId;
     matchCarpeta['sobreturnos.paciente.carpetaEfectores.nroCarpeta'] = { $ne: '' };
 
-    const pipelineCarpeta = [{
-        $match: matchCarpeta
-    },
-    {
-        $unwind: '$sobreturnos'
-    },
-    {
-        $match: matchCarpeta
-    },
-    {
-        $group: {
-            _id: { id: '$_id' },
-            profesionales: { $push: '$profesionales' },
-            espacioFisico: { $push: '$espacioFisico' },
-            tipoPrestacion: { $push: '$sobreturnos.tipoPrestacion' },
-            turnos: { $push: '$sobreturnos' }
+    const pipelineCarpeta = [
+        {
+            $match: matchCarpeta
+        },
+        {
+            $unwind: '$sobreturnos'
+        },
+        {
+            $match: matchCarpeta
+        },
+        {
+            $group: {
+                _id: { id: '$_id' },
+                profesionales: { $push: '$profesionales' },
+                espacioFisico: { $push: '$espacioFisico' },
+                tipoPrestacion: { $push: '$sobreturnos.tipoPrestacion' },
+                turnos: { $push: '$sobreturnos' }
+            }
         }
-    }];
+    ];
 
     return await toArray(agenda.aggregate(pipelineCarpeta).cursor({}).exec());
 }
@@ -307,24 +309,24 @@ async function buscarAgendasTurnos(organizacionId, tipoPrestacion, espacioFisico
     const pipelineCarpeta = [{
         $match: matchCarpeta
     },
-    {
-        $unwind: '$bloques'
-    },
-    {
-        $unwind: '$bloques.turnos'
-    },
-    {
-        $match: matchCarpeta
-    },
-    {
-        $group: {
-            _id: { id: '$_id' },
-            profesionales: { $push: '$profesionales' },
-            espacioFisico: { $push: '$espacioFisico' },
-            tipoPrestacion: { $push: '$bloques.turnos.tipoPrestacion' },
-            turnos: { $push: '$bloques.turnos' }
-        }
-    }];
+        {
+            $unwind: '$bloques'
+        },
+        {
+            $unwind: '$bloques.turnos'
+        },
+        {
+            $match: matchCarpeta
+        },
+        {
+            $group: {
+                _id: { id: '$_id' },
+                profesionales: { $push: '$profesionales' },
+                espacioFisico: { $push: '$espacioFisico' },
+                tipoPrestacion: { $push: '$bloques.turnos.tipoPrestacion' },
+                turnos: { $push: '$bloques.turnos' }
+            }
+        }];
 
     return await toArray(agenda.aggregate(pipelineCarpeta).cursor({}).exec());
 }
