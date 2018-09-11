@@ -82,7 +82,7 @@ export let profesionalSchema = new mongoose.Schema({
                 fecha: { type: String, required: false }
             },
             notificacionVencimiento: { type: Boolean, required: false },
-            fin: Number,
+            fin: Date,
             revalidacionNumero: Number}],
          matriculado: { type: Boolean, default: false },
          revalida: { type: Boolean, default: false },

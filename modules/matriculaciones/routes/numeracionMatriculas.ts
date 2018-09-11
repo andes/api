@@ -23,7 +23,8 @@ var router = express.Router();
 
 router.get('/numeraciones/:id*?', function (req, res, next) {
     var resultado;
-    if (req.query.especialidad || req.query.profesion) {
+    console.log(req.query);
+    if (req.query.especialidad || req.query.profesion  ) {
         if (req.query.profesion) {
             NumeracionMatriculas.find({ 'profesion._id': req.query.profesion }, function (err, data) {
                 if (err) {
@@ -57,6 +58,11 @@ router.get('/numeraciones/:id*?', function (req, res, next) {
         }
         if (req.query.codigoEspecialidad) {
             busquedaNumeracion['especialidad._id'] = req.query.codigoEspecialidad;
+        }
+
+        if (req.query.codigoSisa) {
+            console.log('aca siii', req.query.codigoSisa);
+            busquedaNumeracion['profesion.codigo'] = req.query.codigoSisa;
         }
 
         NumeracionMatriculas.find(busquedaNumeracion)
