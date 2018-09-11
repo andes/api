@@ -30,7 +30,13 @@ const _schema = new mongoose.Schema({
     },
     fechaAlta: Date,
     fechaBaja: Date,
-    unidadesOrganizativas: [SnomedConcept]
+    unidadesOrganizativas: [SnomedConcept],
+    prefijosLab: {
+        nivel : String,
+        prefijo : String,
+        sisaRefes : String
+    }
+
 });
 const audit = require('../../../mongoose/audit');
 _schema.plugin(audit);
