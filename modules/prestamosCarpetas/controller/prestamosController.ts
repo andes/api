@@ -306,9 +306,10 @@ async function buscarAgendasTurnos(organizacionId, tipoPrestacion, espacioFisico
     matchCarpeta['bloques.turnos.paciente.carpetaEfectores.organizacion._id'] = organizacionId;
     matchCarpeta['bloques.turnos.paciente.carpetaEfectores.nroCarpeta'] = { $ne: '' };
 
-    const pipelineCarpeta = [{
-        $match: matchCarpeta
-    },
+    const pipelineCarpeta = [
+        {
+            $match: matchCarpeta
+        },
         {
             $unwind: '$bloques'
         },
