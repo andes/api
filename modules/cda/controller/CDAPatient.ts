@@ -67,10 +67,27 @@ export async function findOrCreate(req, dataPaciente, organizacion) {
         }
         return paciente;
     } else {
-         // No creamos más el paciente en MPI
-         // return await pacienteCtr.createPaciente(dataToPac(dataPaciente, organizacion), req);
-        return null;
+        // No creamos más el paciente en MPI
+        return await pacienteCtr.createPaciente(dataToPac(dataPaciente, organizacion), req);
+
     }
+}
+
+function dataToPac(dataPaciente, identificador) {
+    return {
+        apellido: dataPaciente.apellido,
+        nombre: dataPaciente.nombre,
+        fechaNacimiento: dataPaciente.fechaNacimiento,
+        documento: dataPaciente.documento,
+        sexo: dataPaciente.sexo,
+        genero: dataPaciente.sexo,
+        activo: true,
+        estado: 'temporal',
+        identificadores: [{
+            entidad: identificador,
+            valor: dataPaciente.id
+        }]
+    };
 }
 
 // Root id principal de ANDES
@@ -86,7 +103,7 @@ export async function matchCode(snomed) {
     if (!isNaN(snomed)) {
         prestacion = await configuracionPrestacionModel.findOne({
             'snomed.conceptId': snomed
-        }, {snomed: 1, loinc: 1});
+        }, { snomed: 1, loinc: 1 });
         if (prestacion) {
             return prestacion;
         } else {
@@ -280,6 +297,13 @@ export function generateCDA(uniqueId, confidentiality, patient, date, author, or
     const code = prestacion.loinc;
     cda.code(code);
 
+    cda.type({
+        codeSystem: '2.16.840.1.113883.6.96',
+        code: prestacion.snomed.conceptId,
+        codeSystemName: 'snomed-CT',
+        displayName: prestacion.snomed.term
+    });
+
     // [TODO] Desde donde inferir el titulo
     cda.title(code.displayName);
 
@@ -303,11 +327,15 @@ export function generateCDA(uniqueId, confidentiality, patient, date, author, or
         patientCDA.setId(buildID(patient.id));
     }
     cda.patient(patientCDA);
-    const orgCDA = new Organization();
+    // mover a config.private en algún momento
+    let custodianCDA = new Organization();
+    custodianCDA.id(buildID('59380153db8e90fe4602ec02'));
+    custodianCDA.name('SUBSECRETARIA DE SALUD');
+    cda.custodian(custodianCDA);
+
+    let orgCDA = new Organization();
     orgCDA.id(buildID(organization._id));
     orgCDA.name(organization.nombre);
-
-    cda.custodian(orgCDA);
 
     if (author) {
         const authorCDA = new Author();
@@ -538,7 +566,9 @@ export function validateSchemaCDA(xmlRaw) {
                 schemaXML = libxmljs.parseXml(xsd, {
                     baseUrl: path.join(__dirname, 'schema') + '/'
                 });
+
                 return resolve(schemaXML);
+
             });
         });
     }
@@ -570,6 +600,7 @@ export function checkAndExtract(xmlDom) {
         } else {
             data[key] = value;
         }
+
     }
 
     function checkArg(root, params) {
@@ -598,6 +629,7 @@ export function checkAndExtract(xmlDom) {
 
             if (param.match) {
                 passed = passed && text === param.match;
+
             }
 
             passed = passed && (!param.require || text.length > 0);
@@ -609,10 +641,11 @@ export function checkAndExtract(xmlDom) {
         return passed ? data : null;
     }
     const _root = xmlDom.root();
-    const _params = [{
-        key: '//x:ClinicalDocument/x:id/@root',
-        match: CDAConfig.rootOID
-    },
+    const _params = [
+        {
+            key: '//x:ClinicalDocument/x:id/@root',
+            match: CDAConfig.rootOID
+        },
         {
             key: '//x:ClinicalDocument/x:id/@extension',
             as: 'id'
@@ -669,12 +702,18 @@ export function checkAndExtract(xmlDom) {
             match: CDAConfig.rootOID
         },
         {
-            key: `//x:ClinicalDocument/x:custodian/x:assignedCustodian/x:representedCustodianOrganization/x:id/@extension`,
+            key: `//x:ClinicalDocument/x:documentationOf/x:serviceEvent/x:code/@code`,
+            as: 'prestacion',
+            require: true
+        },
+
+        {
+            key: `//x:ClinicalDocument/x:author/x:assignedAuthor/x:representedOrganization/x:id/@extension`,
             as: 'organizacion.id',
             require: true
         },
         {
-            key: `//x:ClinicalDocument/x:custodian/x:assignedCustodian/x:representedCustodianOrganization/x:name`,
+            key: `//x:ClinicalDocument/x:author/x:assignedAuthor/x:representedOrganization/x:name`,
             as: 'organizacion.name',
             require: true
         },
