@@ -48,16 +48,18 @@ export function convertToObjectId(obj, property: string) {
  */
 export function buscarRegistros(prestaciones, filtroPrestaciones, conceptos) {
     let data = [];
+
     // recorremos prestaciones
     prestaciones.forEach((prestacion: any) => {
-
         let registros = [];
         let registrosAux = [];
         let motivoConsulta;
-        // recorremos los registros de cada prestacion
+        // recorremos los registros de cada prestacion del paciente.
         prestacion.ejecucion.registros.forEach(reg => {
+            // Si alguna prestación matchea con una de las anteriormente filtradas..
             if (filtroPrestaciones.find(fp => fp.conceptId === reg.concepto.conceptId)) {
                 motivoConsulta = { term: reg.concepto.term, conceptId: reg.concepto.conceptId };
+                // Se recorre la prestacion recursivamente buscando los conceptos de interés
                 registrosAux = registrosProfundidad(reg, conceptos);
                 registrosAux.forEach(elto => {
                     registros.push(elto);
@@ -74,6 +76,7 @@ export function buscarRegistros(prestaciones, filtroPrestaciones, conceptos) {
             });
         }
     });
+
     return data;
 }
 

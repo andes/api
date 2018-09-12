@@ -86,8 +86,6 @@ router.get('/prestaciones/resumenPaciente/:idPaciente', async (req, res, next) =
     if (!mongoose.Types.ObjectId.isValid(req.params.idPaciente)) {
         return res.status(404).send('Turno no encontrado');
     }
-    let conceptos = JSON.parse(req.query.conceptos);
-
     // por defecto traemos todas las validadas, si no vemos el estado que viene en la request
     const estado = (req.query.estado) ? req.query.estado : 'validada';
 
@@ -99,7 +97,10 @@ router.get('/prestaciones/resumenPaciente/:idPaciente', async (req, res, next) =
     if (req.query.idPrestacion) {
         query['_id'] = mongoose.Types.ObjectId(req.query.idPrestacion);
     }
+    // 'filtroPrestaciones' va a contener un primer filtro con todas las consultas relacionadas a 'consultaPrincipal'
     let filtroPrestaciones: any = [];
+    // 'conceptos' será el segundo filtro. Contendrá los conceptos 'hoja' que deseamos encontrar.
+    let conceptos: any = [];
 
     return Prestacion.find(query, (err, prestaciones) => {
 
@@ -110,12 +111,17 @@ router.get('/prestaciones/resumenPaciente/:idPaciente', async (req, res, next) =
             return res.status(404).send('Paciente no encontrado');
         }
 
-        if (req.query.expresion && conceptos) {
+        if (req.query.consultaPrincipal && req.query.expresion) {
+            let consultaPrincipal = req.query.consultaPrincipal;
+            let expresion = JSON.parse(req.query.expresion);
+            let querySnomedConsultaPrincipal = makeMongoQuery(consultaPrincipal);
+            let querySnomedConceptos = makeMongoQuery(expresion);
 
-            let querySnomed = makeMongoQuery(req.query.expresion);
-            snomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docs: any[]) => {
+            // Se realiza el primer filtrado de consultas snomed. Nos quedamos solo con las relacionadas a 'consultaPrincipal'
+            snomedModel.find(querySnomedConsultaPrincipal, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docsCP: any[]) => {
 
-                filtroPrestaciones = docs.map((item) => {
+                // Set de consultas relacionadas con 'consultaPrincipal'
+                filtroPrestaciones = docsCP.map((item) => {
                     let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
                     return {
                         fsn: item.fullySpecifiedName,
@@ -125,9 +131,23 @@ router.get('/prestaciones/resumenPaciente/:idPaciente', async (req, res, next) =
                     };
                 });
 
-                // ejecutamos busqueda recursiva
-                let data = buscarRegistros(prestaciones, filtroPrestaciones, conceptos);
-                res.json(data);
+                // Se realiza el segundo filtro en donde se guardan sólo los conceptos snomed de interés para la búsqueda (Por lo general átomos).
+                snomedModel.find(querySnomedConceptos, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docsConceptos: any[]) => {
+
+                    // Set de consultas relacionadas con 'expresion'
+                    conceptos = docsConceptos.map((item) => {
+                        let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
+                        return {
+                            fsn: item.fullySpecifiedName,
+                            term,
+                            conceptId: item.conceptId,
+                            semanticTag: item.semtag
+                        };
+                    });
+                    // ejecutamos busqueda recursiva
+                    const data = buscarRegistros(prestaciones, filtroPrestaciones, conceptos);
+                    res.json(data);
+                });
             });
         } else {
             return next(404);
