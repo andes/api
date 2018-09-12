@@ -61,8 +61,11 @@ router.get('/numeraciones/:id*?', function (req, res, next) {
         }
 
         if (req.query.codigoSisa) {
-            console.log('aca siii', req.query.codigoSisa);
             busquedaNumeracion['profesion.codigo'] = req.query.codigoSisa;
+        }
+
+        if (req.query.codigoSisaEspecialidad) {
+            busquedaNumeracion['especialidad.codigo'] = req.query.codigoSisaEspecialidad;
         }
 
         NumeracionMatriculas.find(busquedaNumeracion)

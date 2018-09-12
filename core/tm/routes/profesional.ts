@@ -26,10 +26,26 @@ import * as base64 from 'base64-stream';
 import { Auth } from '../../../auth/auth.class';
 
 import { sendSms } from '../../../utils/roboSender/sendSms';
+import { toArray } from '../../../utils/utils';
 
 
 let router = express.Router();
 
+router.get('/profesionales/ultimoPosgrado', async (req, res, next) => {
+    console.log('hola');
+    let query = [{ '$unwind': '$formacionPosgrado' },
+    { '$unwind': '$formacionPosgrado.matriculacion' },
+    {
+        '$sort': { 'formacionPosgrado.matriculacion.matriculaNumero': -1 }
+    }, { '$limit' : 1 }];
+
+
+    let data = await toArray(profesional.aggregate(query).cursor({}).exec());
+
+    let ultimoNumero = data[0].formacionPosgrado.matriculacion.matriculaNumero;
+
+    res.json(ultimoNumero);
+});
 
 router.get('/profesionales/foto/:id*?', Auth.authenticate(), (req: any, res, next) => {
     if (!Auth.check(req, 'matriculaciones:profesionales:getProfesionalFoto')) {
@@ -280,7 +296,7 @@ router.get('/profesionales/:id*?', Auth.authenticate(), function (req, res, next
                 '$regex': utils.makePattern(req.query.nombreCompleto, { startWith: true })
             }
         }];
-        let q = req.query.nombreCompleto.indexOf(' ') >= 0 ?  { $and: filter } : { $or: filter };
+        let q = req.query.nombreCompleto.indexOf(' ') >= 0 ? { $and: filter } : { $or: filter };
         query = profesional.find(q).
             sort({
                 apellido: 1,
@@ -666,5 +682,10 @@ router.get('/resumen/:id*?', function (req, res, next) {
         res.json(select);
     });
 });
+
+
+
+
+
 
 export = router;
