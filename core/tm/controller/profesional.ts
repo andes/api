@@ -33,45 +33,43 @@ export async function vencimientoMatriculaGrado() {
                             numeroCelular = Number(element.valor);
                         }
                     });
-                    if (profesionales[_n].apellido === 'Frassetto') {
-                        // si faltan 5 dias,tiene un celular asignado y no esta notificado envia el mensaje
-                        if (fechaFin.diff(hoy, 'days') <= 5 && notificado === false && tieneCelular) {
-                            const nombreCompleto = profesionales[_n].apellido + ' ' + profesionales[_n].nombre;
-                            const smsParams = {
-                                telefono: numeroCelular,
-                                // tslint:disable-next-line:max-line-length
-                                mensaje: 'Estimado ' + nombreCompleto + ', una de sus matriculas esta por vencer, por favor sacar un turno para realizar la renovacion de la misma.',
-                            };
-                            // this._profesionalService.enviarSms(smsParams).subscribe();
+                        // // si faltan 5 dias,tiene un celular asignado y no esta notificado envia el mensaje
+                        // if (fechaFin.diff(hoy, 'days') <= 5 && notificado === false && tieneCelular) {
+                        //     const nombreCompleto = profesionales[_n].apellido + ' ' + profesionales[_n].nombre;
+                        //     const smsParams = {
+                        //         telefono: numeroCelular,
+                        //         // tslint:disable-next-line:max-line-length
+                        //         mensaje: 'Estimado ' + nombreCompleto + ', una de sus matriculas esta por vencer, por favor sacar un turno para realizar la renovacion de la misma.',
+                        //     };
+                        //     // this._profesionalService.enviarSms(smsParams).subscribe();
 
-                            sendSms(smsParams);
+                        //     sendSms(smsParams);
 
-                            // tslint:disable-next-line:max-line-length
-                            profesionales[_n].formacionGrado[_i].matriculacion[profesionales[_n].formacionGrado[_i].matriculacion.length - 1].notificacionVencimiento = true;
-                            const datosActualizacionGrado = {
-                                'descripcion': 'updateEstadoGrado',
-                                'data': profesionales[_n].formacionGrado,
-                            };
+                        //     // tslint:disable-next-line:max-line-length
+                        //     profesionales[_n].formacionGrado[_i].matriculacion[profesionales[_n].formacionGrado[_i].matriculacion.length - 1].notificacionVencimiento = true;
+                        //     const datosActualizacionGrado = {
+                        //         'descripcion': 'updateEstadoGrado',
+                        //         'data': profesionales[_n].formacionGrado,
+                        //     };
 
-                            actualizar(profesionales[_n].id, datosActualizacionGrado);
+                        //     actualizar(profesionales[_n].id, datosActualizacionGrado);
 
-                        }
+                        // }
 
-                        // si faltan 5 dias,tiene un celular asignado y no esta notificado envia el mail
-                        if (fechaFin.diff(hoy, 'days') <= 5 && notificado === false && tieneEmail) {
-                            // tslint:disable-next-line:max-line-length
-                            profesionales[_n].formacionGrado[_i].matriculacion[profesionales[_n].formacionGrado[_i].matriculacion.length - 1].notificacionVencimiento = true;
+                        // // si faltan 5 dias,tiene un celular asignado y no esta notificado envia el mail
+                        // if (fechaFin.diff(hoy, 'days') <= 5 && notificado === false && tieneEmail) {
+                        //     // tslint:disable-next-line:max-line-length
+                        //     profesionales[_n].formacionGrado[_i].matriculacion[profesionales[_n].formacionGrado[_i].matriculacion.length - 1].notificacionVencimiento = true;
 
-                            // this._profesionalService.enviarMail({ profesional: profesionales[_n] }).subscribe();
-                            enviarMail(profesionales[_n]);
-                            const datosActualizacionGrado = {
-                                'descripcion': 'updateEstadoGrado',
-                                'data': profesionales[_n].formacionGrado,
-                            };
+                        //     // this._profesionalService.enviarMail({ profesional: profesionales[_n] }).subscribe();
+                        //     enviarMail(profesionales[_n]);
+                        //     const datosActualizacionGrado = {
+                        //         'descripcion': 'updateEstadoGrado',
+                        //         'data': profesionales[_n].formacionGrado,
+                        //     };
 
-                            actualizar(profesionales[_n].id, datosActualizacionGrado);
-                        }
-                    }
+                        //     actualizar(profesionales[_n].id, datosActualizacionGrado);
+                        // }
                     // si se vence la matricula o se da de baja cambia estados de la misma
                     // tslint:disable-next-line:max-line-length
                     if (profesionales[_n].formacionGrado[_i].matriculado === true && profesionales[_n].formacionGrado[_i].matriculacion[profesionales[_n].formacionGrado[_i].matriculacion.length - 1].fin <= new Date()) {
@@ -126,39 +124,39 @@ export async function vencimientoMatriculaPosgrado() {
                                 numeroCelular = Number(element.valor);
                             }
                         });
-                        if (profesionales[_n].apellido === 'dddd') {
-                            if (fechaFin.diff(hoy, 'days') <= 5 && notificado === false && tieneCelular) {
-                                const nombreCompleto = profesionales[_n].apellido + ' ' + profesionales[_n].nombre;
-                                const smsParams = {
-                                    telefono: numeroCelular,
-                                    // tslint:disable-next-line:max-line-length
-                                    mensaje: 'Estimado ' + nombreCompleto + ', una de sus matriculas esta por vencer, por favor sacar un turno para realizar la renovacion de la misma.',
-                                };
-                                console.log('entro emnsaje');
-                                sendSms(smsParams);                    // tslint:disable-next-line:max-line-length
-                                profesionales[_n].formacionPosgrado[_i].matriculacion[profesionales[_n].formacionPosgrado[_i].matriculacion.length - 1].notificacionVencimiento = true;
-                                const datosActualizacionFormacionGrado = {
-                                    'descripcion': 'updateEstadoPosGrado',
-                                    'data': profesionales[_n].formacionPosgrado,
-                                };
 
-                                actualizar(profesionales[_n].id, datosActualizacionFormacionGrado);
+                            // if (fechaFin.diff(hoy, 'days') <= 5 && notificado === false && tieneCelular) {
+                            //     const nombreCompleto = profesionales[_n].apellido + ' ' + profesionales[_n].nombre;
+                            //     const smsParams = {
+                            //         telefono: numeroCelular,
+                            //         // tslint:disable-next-line:max-line-length
+                            //         mensaje: 'Estimado ' + nombreCompleto + ', una de sus matriculas esta por vencer, por favor sacar un turno para realizar la renovacion de la misma.',
+                            //     };
+                            //     console.log('entro emnsaje');
+                            //     sendSms(smsParams);                    // tslint:disable-next-line:max-line-length
+                            //     profesionales[_n].formacionPosgrado[_i].matriculacion[profesionales[_n].formacionPosgrado[_i].matriculacion.length - 1].notificacionVencimiento = true;
+                            //     const datosActualizacionFormacionGrado = {
+                            //         'descripcion': 'updateEstadoPosGrado',
+                            //         'data': profesionales[_n].formacionPosgrado,
+                            //     };
+
+                            //     actualizar(profesionales[_n].id, datosActualizacionFormacionGrado);
 
 
-                            }
-                            if (fechaFin.diff(hoy, 'days') <= 5 && notificado === false && tieneEmail) {
-                                // tslint:disable-next-line:max-line-length
-                                profesionales[_n].formacionPosgrado[_i].matriculacion[profesionales[_n].formacionPosgrado[_i].matriculacion.length - 1].notificacionVencimiento = true;
+                            // }
+                            // if (fechaFin.diff(hoy, 'days') <= 5 && notificado === false && tieneEmail) {
+                            //     // tslint:disable-next-line:max-line-length
+                            //     profesionales[_n].formacionPosgrado[_i].matriculacion[profesionales[_n].formacionPosgrado[_i].matriculacion.length - 1].notificacionVencimiento = true;
 
-                                enviarMail(profesionales[_n]);
-                                const datosActualizacionFormacionGrado = {
-                                    'descripcion': 'updateEstadoPosGrado',
-                                    'data': profesionales[_n].formacionPosgrado,
-                                };
-                                actualizar(profesionales[_n].id, datosActualizacionFormacionGrado);
+                            //     enviarMail(profesionales[_n]);
+                            //     const datosActualizacionFormacionGrado = {
+                            //         'descripcion': 'updateEstadoPosGrado',
+                            //         'data': profesionales[_n].formacionPosgrado,
+                            //     };
+                            //     actualizar(profesionales[_n].id, datosActualizacionFormacionGrado);
 
-                            }
-                        }
+                            // }
+
                         // tslint:disable-next-line:max-line-length
                         if (profesionales[_n].formacionPosgrado[_i].matriculado === true && profesionales[_n].formacionPosgrado[_i].matriculacion[profesionales[_n].formacionPosgrado[_i].matriculacion.length - 1].fin.getFullYear() <= new Date().getFullYear()) {
                             profesionales[_n].formacionPosgrado[_i].matriculado = false;
