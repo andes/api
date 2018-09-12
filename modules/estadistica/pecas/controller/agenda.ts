@@ -1,3 +1,4 @@
+import { SemanticTag } from './../../../rup/schemas/semantic-tag';
 import { ObjectID } from 'bson';
 import fs = require('fs');
 import async = require('async');
@@ -30,20 +31,20 @@ let total = 0;
  * @returns resultado
  */
 export async function consultaPecas(start, end) {
-    // console.log('consultaPecas');
     try {
         poolTurnos = await new sql.ConnectionPool(config).connect();
     } catch (ex) {
         // console.log('ex', ex);
         return (ex);
     }
-    let centro = '5a5e3f7e0bd5677324737244';
+    // let centro = '5a5e3f7e0bd5677324737244';
     const query_limit = 10000000000;
+    let orgExcluidas = organizacionesExcluidas();
+
     let match = {
         '$and': [
-            // { updatedAt: { $gt: new Date('2018-07-02T00:00:00.000-03:00') } },
-            // { updatedAt: { $lt: new Date('2018-07-02T23:00:00.000-03:00') } }
-            { 'organizacion._id': {$ne: mongoose.Types.ObjectId(centro) } },
+            // { 'organizacion._id': {$ne: mongoose.Types.ObjectId(centro) } },
+            { '$or': orgExcluidas },
             { updatedAt: { $gt: new Date(start) } },
             { updatedAt: { $lt: new Date(end) } }
         ],
@@ -154,18 +155,49 @@ async function auxiliar(a: any, b: any, t: any) {
     turno.Diag1CodigoAuditado = null;
     turno.Desc1DiagAuditado = null;
     turno.conceptId1 = null;
+    turno.semanticTag1 = null;
+
     turno.term1 = null;
     turno.Principal = 0;
     turno.Tipodeconsulta = null;
     turno.ConsC2 = null;
-    turno.estadoTurnoAuditoria = null;
 
     // Estado turno
-    turno.estadoTurnoAuditoria = turno && turno.estado === 'disponible' ? 'Disponible' : null;
-    turno.estadoTurnoAuditoria = turno && turno.estado === 'suspendido' ? 'Suspendido' : null;
-    turno.estadoTurnoAuditoria = turno && turno.asistencia && (turno.asistencia === 'asistio') && (!turno.diagnostico.codificaciones[0].codificacionAuditoria.codigo && !turno.diagnostico.codificaciones[0].codificacionProfesional.snomed.term) ? 'Asistencia Verificada' : null;
-    turno.estadoTurnoAuditoria = turno && turno.paciente && turno.paciente.id && !turno.diagnostico.codificaciones[0].codificacionAuditoria.codigo && turno.diagnostico.codificaciones[0].codificacionProfesional.snomed.term ? 'Registrado por Profesional' : null;
-    turno.estadoTurnoAuditoria = turno && turno.paciente && turno.paciente.id && turno.asistencia && (turno.asistencia === 'noAsistio' || turno.asistencia === 'sinDatos' || turno.diagnostico.codificaciones[0].codificacionAuditoria.codigo) ? 'Auditado' : null;
+    let estadoAuditoria = null;
+    if (t) {
+        // console.log(t.estado);
+        switch (t.estado) {
+            case 'disponible':
+                estadoAuditoria = 'Disponible';
+                break;
+            case 'suspendido':
+                estadoAuditoria = 'Suspendido';
+                break;
+            case 'asignado':
+                if (t.asistencia) {
+                    estadoAuditoria = 'Asistencia Verificada';
+                }
+                if (t.diagnostico.codificaciones.length > 0) {
+                    if (!(t.diagnostico.codificaciones[0].codificacionAuditoria && t.diagnostico.codificaciones[0].codificacionAuditoria.codigo) && (t.diagnostico.codificaciones[0].codificacionProfesional)) {
+                        estadoAuditoria = 'Registrado por Profesional';
+                    }
+                    if ((t.asistencia === 'noAsistio' || t.asistencia === 'sinDatos' || (t.diagnostico.codificaciones[0].codificacionAuditoria && t.diagnostico.codificaciones[0].codificacionAuditoria.codigo))) {
+                        estadoAuditoria = 'Auditado';
+                    }
+                }
+                break;
+            default:
+                estadoAuditoria = null;
+        }
+
+    }
+    // turno.estadoTurnoAuditoria = turno && turno.estado === 'disponible' ? 'Disponible' : estadoAuditoria;
+    // turno.estadoTurnoAuditoria = turno && turno.estado === 'suspendido' ? 'Suspendido' : estadoAuditoria;
+    // turno.estadoTurnoAuditoria = turno && turno.asistencia && (turno.asistencia === 'asistio') && (!turno.diagnostico.codificaciones[0].codificacionAuditoria.codigo && !turno.diagnostico.codificaciones[0].codificacionProfesional.snomed.term) ? 'Asistencia Verificada' : estadoAuditoria;
+    // turno.estadoTurnoAuditoria = turno && turno.paciente && turno.paciente.id && !turno.diagnostico.codificaciones[0].codificacionAuditoria.codigo && turno.diagnostico.codificaciones[0].codificacionProfesional.snomed.term ? 'Registrado por Profesional' : estadoAuditoria;
+    // turno.estadoTurnoAuditoria = turno && turno.paciente && turno.paciente.id && turno.asistencia && (turno.asistencia === 'noAsistio' || turno.asistencia === 'sinDatos' || turno.diagnostico.codificaciones[0].codificacionAuditoria.codigo) ? 'Auditado' : estadoAuditoria;
+
+    turno.estadoTurnoAuditoria = estadoAuditoria;
 
 
     // Asistencia
@@ -186,6 +218,7 @@ async function auxiliar(a: any, b: any, t: any) {
         if (t.diagnostico.codificaciones[0].codificacionProfesional.snomed && t.diagnostico.codificaciones[0].codificacionProfesional.snomed.conceptId) {
             turno.conceptId1 = t.diagnostico.codificaciones[0].codificacionProfesional.snomed.conceptId;
             turno.term1 = t.diagnostico.codificaciones[0].codificacionProfesional.snomed.term;
+            turno.semanticTag1 = t.diagnostico.codificaciones[0].codificacionProfesional.snomed.semanticTag;
         }
     } else {
         turno.codifica = 'NO PROFESIONAL';
@@ -206,6 +239,7 @@ async function auxiliar(a: any, b: any, t: any) {
     turno.Desc2DiagAuditado = null;
     turno.conceptId2 = null;
     turno.term2 = null;
+    turno.semanticTag2 = null;
     if (t.diagnostico.codificaciones.length > 1 && t.diagnostico.codificaciones[1] && t.diagnostico.codificaciones[1].primeraVez !== undefined) {
         turno.primeraVez2 = (t.diagnostico.codificaciones[1].primeraVez === true) ? 1 : 0;
     } else {
@@ -219,6 +253,7 @@ async function auxiliar(a: any, b: any, t: any) {
         if (t.diagnostico.codificaciones[1].codificacionProfesional.snomed && t.diagnostico.codificaciones[1].codificacionProfesional.snomed.conceptId) {
             turno.conceptId2 = t.diagnostico.codificaciones[1].codificacionProfesional.snomed.conceptId;
             turno.term2 = t.diagnostico.codificaciones[1].codificacionProfesional.snomed.term;
+            turno.semanticTag2 = t.diagnostico.codificaciones[1].codificacionProfesional.snomed.semanticTag;
         }
     }
     // Diagnóstico 2 AUDITADO
@@ -233,6 +268,8 @@ async function auxiliar(a: any, b: any, t: any) {
     turno.Desc3DiagAuditado = null;
     turno.conceptId3 = null;
     turno.term3 = null;
+    turno.semanticTag3 = null;
+
     if (t.diagnostico.codificaciones.length > 2 && t.diagnostico.codificaciones[2] && t.diagnostico.codificaciones[2].primeraVez !== undefined) {
         turno.primeraVez3 = (t.diagnostico.codificaciones[2].primeraVez === true) ? 1 : 0;
     } else {
@@ -246,6 +283,7 @@ async function auxiliar(a: any, b: any, t: any) {
         if (t.diagnostico.codificaciones[2].codificacionProfesional.snomed && t.diagnostico.codificaciones[2].codificacionProfesional.snomed.conceptId) {
             turno.conceptId3 = t.diagnostico.codificaciones[2].codificacionProfesional.snomed.conceptId;
             turno.term3 = t.diagnostico.codificaciones[2].codificacionProfesional.snomed.term;
+            turno.semanticTag3 = t.diagnostico.codificaciones[2].codificacionProfesional.snomed.semanticTag;
         }
     }
     // Diagnóstico 3 AUDITADO
@@ -278,7 +316,7 @@ async function auxiliar(a: any, b: any, t: any) {
     turno.Manzana = null;
     turno.ConsObst = t.tipoPrestacion && t.tipoPrestacion.term.includes('obstetricia') ? 'SI' : 'NO';
     turno.IdObraSocial = (turnoConPaciente && t.paciente.obraSocial && t.paciente.obraSocial.codigo) ? t.paciente.obraSocial.codigo : null;
-    turno.ObraSocial = (turnoConPaciente && t.paciente.obraSocial && t.paciente.obraSocial.nombre) ? t.paciente.obraSocial.nombre : null;
+    turno.ObraSocial = (turnoConPaciente && t.paciente.obraSocial && t.paciente.obraSocial.nombre) ? t.paciente.obraSocial.nombre.toString().replace('\'', '\'\'') : null;
     if (tipoEfector && tipoEfector === 'Centro de Salud') {
         turno.TipoEfector = '1';
     }
@@ -308,7 +346,7 @@ async function auxiliar(a: any, b: any, t: any) {
         // Chequear si el turno existe en sql PECAS y depeniendo de eso hacer un insert o  un update
 
         // se verifica si existe el turno en sqñ
-        let queryInsert = 'INSERT INTO dbo.Pecas_consolidado_2' +
+        let queryInsert = 'INSERT INTO dbo.Pecas_test' +
             '(idEfector, Efector, TipoEfector, DescTipoEfector, IdZona, Zona, SubZona, idEfectorSuperior, EfectorSuperior, AreaPrograma, ' +
             'idAgenda, FechaAgenda, HoraAgenda, estadoAgenda, numeroBloque, turnosProgramados, turnosProfesional, turnosLlaves, turnosDelDia, ' +
             'idTurno, estadoTurno, tipoTurno, sobreturno, FechaConsulta, HoraTurno, Periodo, Tipodeconsulta, estadoTurnoAuditoria, Principal, ConsC2, ConsObst, tipoPrestacion, ' +
@@ -316,16 +354,16 @@ async function auxiliar(a: any, b: any, t: any) {
             'IdBarrio, Barrio, IdLocalidad, Localidad, IdDpto, Departamento, IdPcia, Provincia, IdNacionalidad, Nacionalidad, ' +
             'Calle, Altura, Piso, Depto, Manzana, Longitud, Latitud, ' +
             'Peso, Talla, TAS, TAD, IMC, RCVG, asistencia, reasignado, ' +
-            'Diag1CodigoOriginal, Desc1DiagOriginal, Diag1CodigoAuditado, Desc1DiagAuditado, SnomedConcept1, SnomedTerm1, primeraVez1, ' +
-            'Diag2CodigoOriginal, Desc2DiagOriginal, Diag2CodigoAuditado, Desc2DiagAuditado, SnomedConcept2, SnomedTerm2, primeraVez2, ' +
-            'Diag3CodigoOriginal, Desc3DiagOriginal, Diag3CodigoAuditado, Desc3DiagAuditado, SnomedConcept3, SnomedTerm3, primeraVez3, ' +
+            'Diag1CodigoOriginal, Desc1DiagOriginal, Diag1CodigoAuditado, Desc1DiagAuditado, SemanticTag1, SnomedConcept1, SnomedTerm1, primeraVez1, ' +
+            'Diag2CodigoOriginal, Desc2DiagOriginal, Diag2CodigoAuditado, Desc2DiagAuditado, SemanticTag2, SnomedConcept2, SnomedTerm2, primeraVez2, ' +
+            'Diag3CodigoOriginal, Desc3DiagOriginal, Diag3CodigoAuditado, Desc3DiagAuditado, SemanticTag3, SnomedConcept3, SnomedTerm3, primeraVez3, ' +
             'Profesional, TipoProfesional, CodigoEspecialidad, Especialidad, CodigoServicio, Servicio, ' +
             'codifica) ' +
             'VALUES  ( ' + turno.idEfector + ',\'' + turno.Organizacion + '\',\'' + turno.TipoEfector + '\',\'' + turno.DescTipoEfector +
             '\',' + turno.IdZona + ',\'' + turno.Zona + '\',\'' + turno.SubZona + '\',' + turno.idEfectorSuperior + ',\'' + turno.EfectorSuperior + '\',\'' + turno.AreaPrograma +
             '\',\'' + turno.idAgenda + '\',\'' + turno.FechaAgenda + '\',\'' + turno.HoraAgenda + '\',\'' + turno.estadoAgenda +
             '\',' + turno.numeroBloque + ',' + turno.accesoDirectoProgramado + ',' + turno.reservadoProfesional + ',' + turno.reservadoGestion + ',' + turno.accesoDirectoDelDia +
-            ',\'' + turno.idTurno + '\',\'' + turno.estadoTurno + '\',\'' + turno.tipoTurno + '\',\'' + turno.sobreturno + '\',\'' + turno.FechaConsulta + '\',\'' + turno.HoraTurno + '\',' + turno.Periodo + ',\'' + turno.Tipodeconsulta + ',\'' + turno.estadoTurnoAuditoria + '\',\'' + turno.Principal +
+            ',\'' + turno.idTurno + '\',\'' + turno.estadoTurno + '\',\'' + turno.tipoTurno + '\',\'' + turno.sobreturno + '\',\'' + turno.FechaConsulta + '\',\'' + turno.HoraTurno + '\',' + turno.Periodo + ',\'' + turno.Tipodeconsulta + '\',\'' + turno.estadoTurnoAuditoria + '\',\'' + turno.Principal +
             '\',\'' + turno.ConsC2 + '\',\'' + turno.ConsObst + '\',\'' + turno.tipoPrestacion +
             // DATOS PACIENTE
             '\',' + turno.DNI + ',\'' + turno.Apellido + '\',\'' + turno.Nombres + '\',\'' + turno.HC + '\',\'' + turno.codSexo +
@@ -339,11 +377,11 @@ async function auxiliar(a: any, b: any, t: any) {
             // DATOS CONSULTA
             '\',\'' + turno.asistencia + '\',\'' + turno.reasignado +
             '\',\'' + turno.Diag1CodigoOriginal + '\',\'' + turno.Desc1DiagOriginal + '\',\'' + turno.Diag1CodigoAuditado + '\',\'' + turno.Desc1DiagAuditado +
-            '\',\'' + turno.conceptId1 + '\',\'' + turno.term1 + '\',' + turno.primeraVez1 +
+            '\',\'' + turno.semanticTag1 + '\',\'' + turno.conceptId1 + '\',\'' + turno.term1 + '\',' + turno.primeraVez1 +
             ',\'' + turno.Diag2CodigoOriginal + '\',\'' + turno.Desc2DiagOriginal + '\',\'' + turno.Diag2CodigoAuditado + '\',\'' + turno.Desc2DiagAuditado +
-            '\',\'' + turno.conceptId2 + '\',\'' + turno.term2 + '\',' + turno.primeraVez2 +
+            '\',\'' + turno.semanticTag2 + '\',\'' + turno.conceptId2 + '\',\'' + turno.term2 + '\',' + turno.primeraVez2 +
             ',\'' + turno.Diag3CodigoOriginal + '\',\'' + turno.Desc3DiagOriginal + '\',\'' + turno.Diag3CodigoAuditado + '\',\'' + turno.Desc3DiagAuditado +
-            '\',\'' + turno.conceptId3 + '\',\'' + turno.term3 + '\',' + turno.primeraVez3 +
+            '\',\'' + turno.semanticTag3 + '\',\'' + turno.conceptId3 + '\',\'' + turno.term3 + '\',' + turno.primeraVez3 +
             ',\'' + turno.Profesional + '\',\'' + turno.TipoProfesional + '\',' + turno.CodigoEspecialidad + ',\'' + turno.Especialidad +
             '\',' + turno.CodigoServicio + ',\'' + turno.Servicio + '\',\'' + turno.codifica + '\') ';
         // console.log(queryInsert);
@@ -361,38 +399,17 @@ async function auxiliar(a: any, b: any, t: any) {
     }
 }
 
-// function getEspecialidad(conceptId, idOrganizacion: string) {
-//     return new Promise((resolve, reject) => {
-//         var especialidad = '';
-//         configPrestacion.find({
-//             'tipoPrestacion.conceptId': conceptId,
-//             'organizacionesSips._id': mongoose.Types.ObjectId(idOrganizacion)
-//         }).exec().then(configuraciones => {
-//             if (configuraciones.length > 0) {
-//                 let organizacionesSips = configuraciones[0]['organizacionesSips'];
-//                 if (organizacionesSips && organizacionesSips.length > 0) {
-//                     var datos = organizacionesSips.filter((elem) => String(elem._id) === String(idOrganizacion));
-//                     if (datos && datos.length > 0) {
-//                         especialidad = datos[0].nombreEspecialidad;
-//                     }
-//                 }
-//             }
-//             resolve(especialidad);
-//         });
-//     });
-// }
-
 async function existeTurnoPecas(turno: any) {
     let result = await new sql.Request(poolTurnos)
         .input('idTurno', sql.VarChar(50), turno)
-        .query('SELECT idTurno FROM dbo.Pecas_consolidado_2 WHERE idTurno = @idTurno');
+        .query('SELECT idTurno FROM dbo.Pecas_test WHERE idTurno = @idTurno');
     return result;
 }
 
 async function eliminaTurnoPecas(turno: any) {
     let result = await new sql.Request(poolTurnos)
         .input('idTurno', sql.VarChar(50), turno)
-        .query('DELETE FROM dbo.Pecas_consolidado_2 WHERE idTurno = @idTurno');
+        .query('DELETE FROM dbo.Pecas_test WHERE idTurno = @idTurno');
     return result;
 }
 
@@ -490,6 +507,13 @@ function calcularEdad(fechaNacimiento) {
     return edad;
 }
 
+function organizacionesExcluidas() {
+    let organizaciones = [];
+    const medicoIntegral = '5a5e3f7e0bd5677324737244';
+    organizaciones.push({ 'organizacion._id': { $ne: mongoose.Types.ObjectId(medicoIntegral) } });
+    return organizaciones;
+}
+
 async function executeQuery(query: any) {
     try {
         query += ' select SCOPE_IDENTITY() as id';
@@ -499,10 +523,10 @@ async function executeQuery(query: any) {
         }
     } catch (err) {
         // console.log('err ', err);
-        // console.log('query ', query);
         let jsonWrite = fs.appendFileSync(outputFile, query + '\r', {
             encoding: 'utf8'
         });
         return (err);
     }
 }
+
