@@ -37,11 +37,13 @@ export async function consultaPecas(start, end) {
         // console.log('ex', ex);
         return (ex);
     }
+    let centro = '5a5e3f7e0bd5677324737244';
     const query_limit = 10000000000;
     let match = {
         '$and': [
             // { updatedAt: { $gt: new Date('2018-07-02T00:00:00.000-03:00') } },
             // { updatedAt: { $lt: new Date('2018-07-02T23:00:00.000-03:00') } }
+            { 'organizacion._id': {$ne: mongoose.Types.ObjectId(centro) } },
             { updatedAt: { $gt: new Date(start) } },
             { updatedAt: { $lt: new Date(end) } }
         ],
@@ -68,7 +70,6 @@ export async function consultaPecas(start, end) {
                 }
             }],
     };
-    // console.log('match ', JSON.stringify(match));
     try {
         let agendas = agendaModel.aggregate([
             { $match: match },
@@ -97,7 +98,6 @@ export async function consultaPecas(start, end) {
 
 // castea cada turno asignado y lo inserta en la tabla Sql
 async function auxiliar(a: any, b: any, t: any) {
-    // console.log('a => ', a);
     let turno: any = {};
     turno.sobreturno = (b !== null) ? 'NO' : 'SI';
     // console.log('b => ', b);
@@ -164,8 +164,8 @@ async function auxiliar(a: any, b: any, t: any) {
     turno.estadoTurnoAuditoria = turno && turno.estado === 'disponible' ? 'Disponible' : null;
     turno.estadoTurnoAuditoria = turno && turno.estado === 'suspendido' ? 'Suspendido' : null;
     turno.estadoTurnoAuditoria = turno && turno.asistencia && (turno.asistencia === 'asistio') && (!turno.diagnostico.codificaciones[0].codificacionAuditoria.codigo && !turno.diagnostico.codificaciones[0].codificacionProfesional.snomed.term) ? 'Asistencia Verificada' : null;
-    turno.estadoTurnoAuditoria = turno.paciente.id && !turno.diagnostico.codificaciones[0].codificacionAuditoria.codigo && turno.diagnostico.codificaciones[0].codificacionProfesional.snomed.term ? 'Registrado por Profesional' : null;
-    turno.estadoTurnoAuditoria = turno.paciente.id && turno.asistencia && (turno.asistencia === 'noAsistio' || turno.asistencia === 'sinDatos' || turno.diagnostico.codificaciones[0].codificacionAuditoria.codigo) ? 'Auditado' : null;
+    turno.estadoTurnoAuditoria = turno && turno.paciente && turno.paciente.id && !turno.diagnostico.codificaciones[0].codificacionAuditoria.codigo && turno.diagnostico.codificaciones[0].codificacionProfesional.snomed.term ? 'Registrado por Profesional' : null;
+    turno.estadoTurnoAuditoria = turno && turno.paciente && turno.paciente.id && turno.asistencia && (turno.asistencia === 'noAsistio' || turno.asistencia === 'sinDatos' || turno.diagnostico.codificaciones[0].codificacionAuditoria.codigo) ? 'Auditado' : null;
 
 
     // Asistencia
@@ -385,14 +385,14 @@ async function auxiliar(a: any, b: any, t: any) {
 async function existeTurnoPecas(turno: any) {
     let result = await new sql.Request(poolTurnos)
         .input('idTurno', sql.VarChar(50), turno)
-        .query('SELECT idTurno FROM dbo.Pecas_consolidado_1 WHERE idTurno = @idTurno');
+        .query('SELECT idTurno FROM dbo.Pecas_consolidado_2 WHERE idTurno = @idTurno');
     return result;
 }
 
 async function eliminaTurnoPecas(turno: any) {
     let result = await new sql.Request(poolTurnos)
         .input('idTurno', sql.VarChar(50), turno)
-        .query('DELETE FROM dbo.Pecas_consolidado_1 WHERE idTurno = @idTurno');
+        .query('DELETE FROM dbo.Pecas_consolidado_2 WHERE idTurno = @idTurno');
     return result;
 }
 
