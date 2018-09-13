@@ -121,6 +121,8 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
 
                 LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turnoLog, doc2.bloques[0].id, req.params.idAgenda);
                 res.json(doc2);
+
+                EventCore.emitAsync('citas:turno:asignar', turno);
             }
         });
 
@@ -297,17 +299,18 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                     motivoConsulta: update[etiquetaMotivoConsulta]
                 };
                 Logger.log(req, 'citas', 'asignarTurno', datosOp);
-                const _turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
+                let turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
 
-                LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, _turno, req.params.idBloque, req.params.idAgenda);
+                LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turno, req.params.idBloque, req.params.idAgenda);
+
+                EventCore.emitAsync('citas:turno:asignar', turno);
 
                 // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
                 // Donde doc2 es el documeto Agenda actualizado
                 operations.cacheTurnos(doc2);
                 // Fin de insert cache
                 res.json(agendaRes);
-                let turno = agendaRes.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
-                EventCore.emitAsync('citas:turno:update', turno);
+
             }
 
 
