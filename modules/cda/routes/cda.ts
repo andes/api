@@ -114,7 +114,7 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
         await cdaCtr.storeCDA(uniqueId, cda, metadata);
         res.json({ cda: uniqueId, paciente: paciente._id, date: metadata.fecha, idPrestacion: metadata.extras.id });
 
-        EventCore.emitAsync('cda:cda:create', { cda: uniqueId, paciente: paciente._id });
+        EventCore.emitAsync('cda:create', { cda: uniqueId, paciente: paciente._id });
 
     } catch (e) {
         return next(e);
