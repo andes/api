@@ -11,6 +11,7 @@ export class CDA {
     private _id: IID;
     private _code: ICode;
     private _title: String;
+    private _realmCode: ILanguageCode;
 
     private _confidentialityCode: IConfidentialityCode;
     private _languageCode: ILanguageCode;
@@ -29,7 +30,9 @@ export class CDA {
     private _custodian: Organization;
     private _body: Body;
 
-    constructor () {
+    private _type: ICode;
+
+    constructor() {
         this._effectiveTime = new Date();
         this._templateId = [];
         this._typeId = {
@@ -44,70 +47,82 @@ export class CDA {
         this._languageCode = {
             code: 'es-AR'
         };
+
+        this._realmCode = {
+            code: 'AR'
+        };
     }
 
-    typeId (typeId: IID = null) {
-        return typeId != null ?  (this._typeId = typeId, this) : this._typeId;
+    /* Tipo de prestación */
+    type(type: ICode = null) {
+        return type != null ? (this._type = type, this) : this._type;
     }
 
-    id (id: IID = null) {
-        return id != null ?  (this._id = id, this) : this._id;
+    typeId(typeId: IID = null) {
+        return typeId != null ? (this._typeId = typeId, this) : this._typeId;
     }
 
-    code (code: ICode = null) {
-        return code != null ?  (this._code = code, this) : this._code;
+    id(id: IID = null) {
+        return id != null ? (this._id = id, this) : this._id;
     }
 
-    title (title: String = null) {
-        return title != null ?  (this._title = title, this) : this._title;
+    code(code: ICode = null) {
+        return code != null ? (this._code = code, this) : this._code;
     }
 
-    effectiveTime (effectiveTime: Date = null) {
-        return effectiveTime != null ?  (this._effectiveTime = effectiveTime, this) : this._effectiveTime;
+    title(title: String = null) {
+        return title != null ? (this._title = title, this) : this._title;
     }
 
-    confidentialityCode (confidentialityCode: IConfidentialityCode = null) {
-        return confidentialityCode != null ?  (this._confidentialityCode = confidentialityCode, this) : this._confidentialityCode;
+    effectiveTime(effectiveTime: Date = null) {
+        return effectiveTime != null ? (this._effectiveTime = effectiveTime, this) : this._effectiveTime;
     }
 
-    languageCode (languageCode: ILanguageCode = null) {
-        return languageCode != null ?  (this._languageCode = languageCode, this) : this._languageCode;
+    confidentialityCode(confidentialityCode: IConfidentialityCode = null) {
+        return confidentialityCode != null ? (this._confidentialityCode = confidentialityCode, this) : this._confidentialityCode;
     }
 
-    setId (setId: ISetId = null) {
-        return setId != null ?  (this._setId = setId, this) : this._setId;
+    languageCode(languageCode: ILanguageCode = null) {
+        return languageCode != null ? (this._languageCode = languageCode, this) : this._languageCode;
+    }
+    realmCode(realmCode: ILanguageCode = null) {
+        return realmCode != null ? (this._realmCode = realmCode, this) : this._realmCode;
     }
 
-    versionNumber (versionNumber: Number = null) {
-        return versionNumber != null ?  (this._versionNumber = versionNumber, this) : this._versionNumber;
+    setId(setId: ISetId = null) {
+        return setId != null ? (this._setId = setId, this) : this._setId;
+    }
+
+    versionNumber(versionNumber: Number = null) {
+        return versionNumber != null ? (this._versionNumber = versionNumber, this) : this._versionNumber;
     }
 
 
-    date (date: Date = null) {
-        return date != null ?  (this._date = date, this) : this._date;
+    date(date: Date = null) {
+        return date != null ? (this._date = date, this) : this._date;
     }
 
-    body (body: Body = null) {
-        return body != null ?  (this._body = body, this) : this._body;
+    body(body: Body = null) {
+        return body != null ? (this._body = body, this) : this._body;
     }
 
-    patient (patient: Patient = null) {
-        return patient != null ?  (this._patient = patient, this) : this._patient;
+    patient(patient: Patient = null) {
+        return patient != null ? (this._patient = patient, this) : this._patient;
     }
 
-    author (author: Author = null) {
-        return author != null ?  (this._author = author, this) : this._author;
+    author(author: Author = null) {
+        return author != null ? (this._author = author, this) : this._author;
     }
 
-    custodian (custodian: Organization = null) {
-        return custodian != null ?  (this._custodian = custodian, this) : this._custodian;
+    custodian(custodian: Organization = null) {
+        return custodian != null ? (this._custodian = custodian, this) : this._custodian;
     }
 
     teplatesId() {
         return this._templateId;
     }
 
-    addTemplateId (root: String) {
+    addTemplateId(root: String) {
         this._templateId.push({ root });
     }
 

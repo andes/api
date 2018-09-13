@@ -7,14 +7,14 @@ import { CDA as CDAConfig } from '../../../../config.private';
 export class AuthorBuilder extends BaseBuilder {
     private completed = true;
 
-    constructor (completed = true) {
+    constructor(completed = true) {
         super();
         this.completed = completed;
     }
 
     public build(doctor: Author) {
-        const author = builder.create('author');
-        this.createNode(author, 'time', { value: this.fromDate(new Date()) } );
+        let author = builder.create('author');
+        this.createNode(author, 'time', { value: this.fromDate(new Date()) });
 
         const assignedAuthor = author.ele('assignedAuthor');
         if (doctor.id()) {
@@ -39,9 +39,11 @@ export class AuthorBuilder extends BaseBuilder {
             this.createNode(assignedAuthor, 'id', doctor.id());
         }
 
-        const assignedPerson = assignedAuthor.ele('assignedPerson');
-        const nameNode = assignedPerson.ele('name');
+        let assignedPerson = assignedAuthor.ele('assignedPerson');
+        let nameNode = assignedPerson.ele('name');
+        nameNode.com('Nombre del profesional');
         this.createNode(nameNode, 'given', null, doctor.firstname());
+        nameNode.com('Apellido del profesional');
         this.createNode(nameNode, 'family', null, doctor.lastname());
 
         if (this.completed) {
