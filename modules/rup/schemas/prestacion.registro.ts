@@ -33,10 +33,7 @@ schema.add({
         type: Boolean,
         default: false
     },
-    esPrimeraVez: {
-        type: Boolean,
-        default: false
-    },
+    esPrimeraVez: Boolean,
     // Almacena el valor del átomo, molécula o fórmula.
     // Para el caso de las moléculas, el valor puede ser nulo.
     valor: mongoose.Schema.Types.Mixed,

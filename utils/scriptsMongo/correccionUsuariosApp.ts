@@ -1,13 +1,14 @@
-import { paciente } from './../../core/mpi/schemas/paciente';
-import * as pacienteCTR from './../../core/mpi/controller/paciente';
-import { Matching } from '@andes/match';
-import { pacienteApp } from './../../modules/mobileApp/schemas/pacienteApp';
-import * as authController from './../../modules/mobileApp/controller/AuthController';
-import * as mongoose from 'mongoose';
-import * as configuraciones from './../../config.private';
+// [REVISAR]
+// import { paciente } from './../../core/mpi/schemas/paciente';
+// import * as pacienteCTR from './../../core/mpi/controller/paciente';
+// import { Matching } from '@andes/match';
+// import { pacienteApp } from './../../modules/mobileApp/schemas/pacienteApp';
+// import * as authController from './../../modules/mobileApp/controller/AuthController';
+// import * as mongoose from 'mongoose';
+// import * as configuraciones from './../../config.private';
 
-mongoose.connect(configuraciones.hosts.mongoDB_main.host,  configuraciones.hosts.mongoDB_main.options);
-var conn = mongoose.connection;
+// mongoose.connect(configuraciones.hosts.mongoDB_main.host,  configuraciones.hosts.mongoDB_main.options);
+// let conn = mongoose.connection;
 
 // conn.once('open', function () {
 //     console.log('test');

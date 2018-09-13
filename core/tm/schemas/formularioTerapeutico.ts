@@ -1,20 +1,21 @@
 import * as mongoose from 'mongoose';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
-import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
-import { pacienteSchema } from '../../mpi/schemas/paciente';
-
-let schema = new mongoose.Schema({
-    idpadre: String,
+const schema = new mongoose.Schema({
+    idpadre:  {
+        type: mongoose.Schema.Types.ObjectId,
+    },
     descripcion: String,
     nivelComplejidad: String,
     especialidades: [String],
     requisitos: String,
-    carroEmergencia: Boolean,
+    carroEmergencia: String,
     recomendaciones: String,
     indicaciones: String,
     comentario: String,
-    conceptId: String
+    conceptId: String,
+    borrado: Boolean,
+    concepto: Object
     // padre: {
     //     nombre: String,
     //     conceptId: String,
@@ -48,6 +49,6 @@ let schema = new mongoose.Schema({
 schema.plugin(AuditPlugin);
 
 // Exportar modelo
-let model = mongoose.model('formularioTerapeutico', schema, 'formularioTerapeutico');
+const model = mongoose.model('formularioTerapeutico', schema, 'formularioTerapeutico');
 
 export = model;

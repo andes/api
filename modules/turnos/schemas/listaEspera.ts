@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 
-let listaEsperaSchema = new mongoose.Schema({
+const listaEsperaSchema = new mongoose.Schema({
     paciente: {
         id: mongoose.Schema.Types.ObjectId,
         nombre: String,
@@ -20,6 +20,6 @@ let listaEsperaSchema = new mongoose.Schema({
     estado: String, // Enumerado {solicitud, demandaRechazada}  hay oferta en el mes / no hay
 });
 
-let listaEspera = mongoose.model('listaEspera', listaEsperaSchema, 'listaEspera');
+const listaEspera = mongoose.model('listaEspera', listaEsperaSchema, 'listaEspera');
 
 export = listaEspera;

@@ -2,14 +2,14 @@ import { farmaciasEndpoints } from '../../../config.private';
 import * as https from 'https';
 import * as configPrivate from '../../../config.private';
 
-let request = require('request');
-let cheerio = require('cheerio');
-let moment = require('moment');
+const request = require('request');
+const cheerio = require('cheerio');
+const moment = require('moment');
 
 import { farmaciasLocalidades, farmaciasTurnos } from '../schemas/farmacias';
 
 export async function findAddress(localidad, farmacia) {
-    let data: any = await farmaciasTurnos.find({
+    const data: any = await farmaciasTurnos.find({
         nombre: farmacia.nombre,
         direccion: farmacia.direccion,
         fecha: {$exists: false}
@@ -21,9 +21,9 @@ export async function findAddress(localidad, farmacia) {
             lng: data[0].longitud
         });
     } else {
-        let geo: any =  await geocodeFarmacia(farmacia, localidad);
+        const geo: any =  await geocodeFarmacia(farmacia, localidad);
 
-        let t = new farmaciasTurnos({
+        const t = new farmaciasTurnos({
             nombre: farmacia.nombre,
             direccion: farmacia.direccion,
             telefono: farmacia.telefono ? farmacia.telefono : '',
@@ -32,8 +32,7 @@ export async function findAddress(localidad, farmacia) {
             longitud: geo.lng
         });
 
-        let saved = await t.save();
-
+        await t.save();
         return geo;
 
     }
@@ -43,7 +42,7 @@ export async function findAddress(localidad, farmacia) {
 export function geocodeFarmacia(farmacia, localidad) {
     return new Promise((resolve, reject) => {
 
-        let address = farmacia.direccion + ',' + localidad.nombre;
+        const address = farmacia.direccion + ',' + localidad.nombre;
         let pathGoogleApi = '';
         let jsonGoogle = '';
 
@@ -58,19 +57,19 @@ export function geocodeFarmacia(farmacia, localidad) {
         pathGoogleApi = pathGoogleApi.replace(/ü/gi, 'u');
         pathGoogleApi = pathGoogleApi.replace(/ñ/gi, 'n');
 
-        let optionsgetmsg = {
+        const optionsgetmsg = {
             host: 'maps.googleapis.com',
             port: 443,
             path: pathGoogleApi,
             method: 'GET',
             rejectUnauthorized: false
         };
-        let reqGet = https.request(optionsgetmsg, function (res2) {
-            res2.on('data', function (d, error) {
+        const reqGet = https.request(optionsgetmsg, (res2) => {
+            res2.on('data', (d, error) => {
                 jsonGoogle = jsonGoogle + d.toString();
             });
-            res2.on('end', function () {
-                let salida = JSON.parse(jsonGoogle);
+            res2.on('end', () => {
+                const salida = JSON.parse(jsonGoogle);
                 if (salida.status === 'OK') {
                     return resolve(salida.results[0].geometry.location);
                 } else {
@@ -84,28 +83,28 @@ export function geocodeFarmacia(farmacia, localidad) {
 
 export function donwloadData(desde, hasta) {
     return getLocalidades().then( async (data: any) => {
-        let localidades = data.localidades;
+        const localidades = data.localidades;
         await farmaciasLocalidades.remove({});
 
         await farmaciasTurnos.remove({ fecha: {$exists: true} });
 
-        for (let item of localidades) {
-            let f = await (new farmaciasLocalidades({
+        for (const item of localidades) {
+            await (new farmaciasLocalidades({
                 localidadId: item.id,
                 nombre: String(item.nombre)
             })).save();
 
-            let _data: any = await getTurnos(data, item.id, desde, hasta);
+            const _data: any = await getTurnos(data, item.id, desde, hasta);
 
-            for (let turno of _data) {
+            for (const turno of _data) {
                 try {
 
-                    let geocode: any = await findAddress(item, {
+                    const geocode: any = await findAddress(item, {
                         nombre: turno.nombre,
                         direccion: turno.direccion
                     });
 
-                    let t = new farmaciasTurnos({
+                    const t = new farmaciasTurnos({
                         nombre: turno.nombre,
                         direccion: turno.direccion,
                         telefono: turno.telefono ? turno.telefono : '',
@@ -131,22 +130,22 @@ export function donwloadData(desde, hasta) {
 export function getLocalidades() {
 
     return new Promise((resolve, reject) => {
-        request(farmaciasEndpoints.localidades, function (error, response, html) {
+        request(farmaciasEndpoints.localidades, (error, response, html) => {
             if (!error) {
-                let localidades = [];
-                let $ = cheerio.load(html);
-                let options = $('#ctl00_ContentPlaceHolder1_CboLocalidad').children('option');
-                options.each(function (i, elem) {
-                    let id = $(elem).attr('value');
-                    let nombre = $(elem).text();
+                const localidades = [];
+                const $ = cheerio.load(html);
+                const options = $('#ctl00_ContentPlaceHolder1_CboLocalidad').children('option');
+                options.each((i, elem) => {
+                    const id = $(elem).attr('value');
+                    const nombre = $(elem).text();
                     localidades.push({
                         id,
                         nombre
                     });
                 });
-                let __VIEWSTATE = $('#__VIEWSTATE').val();
-                let __VIEWSTATEGENERATOR = $('#__VIEWSTATEGENERATOR').val();
-                let __EVENTVALIDATION = $('#__EVENTVALIDATION').val();
+                const __VIEWSTATE = $('#__VIEWSTATE').val();
+                const __VIEWSTATEGENERATOR = $('#__VIEWSTATEGENERATOR').val();
+                const __EVENTVALIDATION = $('#__EVENTVALIDATION').val();
 
                 resolve({
                     localidades,
@@ -167,50 +166,46 @@ export function getTurnos(data, localidad, desde, hasta) {
     return new Promise((resolve, reject) => {
         desde = moment(desde, 'YYYY-MM-DD');
         hasta = moment(hasta, 'YYYY-MM-DD');
-        let dd = desde.get('date');
-        let dm = desde.get('month') + 1;
-        let dy = desde.get('year');
+        const dd = desde.get('date');
+        const dm = desde.get('month') + 1;
+        const dy = desde.get('year');
 
-        let hd = hasta.get('date');
-        let hm = hasta.get('month') + 1;
-        let hy = hasta.get('year');
+        const hd = hasta.get('date');
+        const hm = hasta.get('month') + 1;
+        const hy = hasta.get('year');
 
-        let url = farmaciasEndpoints.turnos + '?idLocalidad=' + localidad + '&dd=' + dd + '&dm=' + dm + '&da=' + dy + '&hd=' + hd + '&hm=' + hm + '&ha=' + hy;
+        const url = farmaciasEndpoints.turnos + '?idLocalidad=' + localidad + '&dd=' + dd + '&dm=' + dm + '&da=' + dy + '&hd=' + hd + '&hm=' + hm + '&ha=' + hy;
 
         request.post(url, {
             form:
-                {
-                    __VIEWSTATE: data.__VIEWSTATE,
-                    __VIEWSTATEGENERATOR: data.__VIEWSTATEGENERATOR,
-                    __EVENTVALIDATION: data.__EVENTVALIDATION,
-                    ctl00$ContentPlaceHolder1$CboLocalidad: localidad,
-                    ctl00$ContentPlaceHolder1$TxtDesde: desde.format('DD/MM/YYYY'),
-                    ctl00$ContentPlaceHolder1$TxtHasta: hasta.format('DD/MM/YYYY'),
-                    ctl00$ContentPlaceHolder1$BtnConsultar: 'Consultar'
-                }
+            {
+                __VIEWSTATE: data.__VIEWSTATE,
+                __VIEWSTATEGENERATOR: data.__VIEWSTATEGENERATOR,
+                __EVENTVALIDATION: data.__EVENTVALIDATION,
+                ctl00$ContentPlaceHolder1$CboLocalidad: localidad,
+                ctl00$ContentPlaceHolder1$TxtDesde: desde.format('DD/MM/YYYY'),
+                ctl00$ContentPlaceHolder1$TxtHasta: hasta.format('DD/MM/YYYY'),
+                ctl00$ContentPlaceHolder1$BtnConsultar: 'Consultar'
+            }
         },
 
-            function (error, response, html) {
+            (error, response, html) => {
                 if (!error) {
-                    let $ = cheerio.load(html);
-                    let hijos = $('#download-container').children().slice(2);
-
-
-
-                    let datos = {};
+                    const $ = cheerio.load(html);
+                    const hijos = $('#download-container').children().slice(2);
                     let fecha = null;
-                    let farmacias = [];
-                    $(hijos).each(function (i, elem) {
+                    const farmacias = [];
+                    $(hijos).each((i, elem) => {
                         if (elem.name === 'br') {
                             // continue;
                         } else {
                             if ($(elem).attr('class') && $(elem).attr('class').indexOf('title-turno') > -1) {
                                 fecha = moment($(elem).text().substr(-10, 10), 'DD/MM/YYYY').format('YYYY-MM-DD');
                             } else if (elem.name === 'div') {
-                                let $els = $(elem).children();
-                                let nombre = $($els[0]).text();
-                                let direccion = $($els[1]).text();
-                                let phone = $($els[2]).text();
+                                const $els = $(elem).children();
+                                const nombre = $($els[0]).text();
+                                const direccion = $($els[1]).text();
+                                const phone = $($els[2]).text();
                                 farmacias.push({
                                     fecha,
                                     nombre,

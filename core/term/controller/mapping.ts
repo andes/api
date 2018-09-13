@@ -24,8 +24,8 @@ export class SnomedCIE10Mapping {
         this.paciente = paciente;
 
         if (this.paciente && this.paciente.fechaNacimiento) {
-            let birthDate = moment(this.paciente.fechaNacimiento, 'YYYY-MM-DD HH:mm:ss');
-            let currentDate = moment();
+            const birthDate = moment(this.paciente.fechaNacimiento, 'YYYY-MM-DD HH:mm:ss');
+            const currentDate = moment();
 
             this.edadYear = currentDate.diff(birthDate, 'years');
             this.edadDays = currentDate.diff(birthDate, 'd');
@@ -75,13 +75,13 @@ export class SnomedCIE10Mapping {
             this.setContexto(contexto);
         }
         return new Promise((resolve, reject) => {
-            SnomedMapping.find({ conceptId: conceptId }).sort('mapGroup mapPriority').then((mapping) => {
+            SnomedMapping.find({ conceptId }).sort('mapGroup mapPriority').then((mapping) => {
                 /**
                  * Chequeamos regla a regla cual es la primera que se cumple
                  */
                 for (let i = 0; i < mapping.length; i++) {
-                    let rules = mapping[i] as any;
-                    let rule = rules.mapRule;
+                    const rules = mapping[i] as any;
+                    const rule = rules.mapRule;
 
                     if (this.check(rule)) {
                         if (rules.mapTarget.length > 0) {
@@ -109,15 +109,15 @@ export class SnomedCIE10Mapping {
             } else {
                 let result = true;
                 for (let i = 0; i < predicado.length; i++) {
-                    let r = predicado[i];
+                    const r = predicado[i];
                     if (r.concept === '248152002') {
                         result = result && this.sexo === 'f';
                     } else if (r.concept === '248153007') {
                         result = result && (this.sexo === 'm');
                     } else if (r.concept === '445518008') {
                         if (this.edadYear || this.edadDays) {
-                            let edad = r.value.unit === 'days' ? this.edadDays : this.edadYear;
-                            let value = Number(r.value.number);
+                            const edad = r.value.unit === 'days' ? this.edadDays : this.edadYear;
+                            const value = Number(r.value.number);
 
                             result = result && (r.value.op === '<' ? edad < value : edad >= value);
                         } else {
