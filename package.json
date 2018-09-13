@@ -1,6 +1,6 @@
 {
   "name": "api",
-  "version": "3.7.1",
+  "version": "3.7.2",
   "description": "API para ANDES",
   "main": "index.js",
   "dependencies": {
@@ -76,7 +76,8 @@
     "tsc": "tsc",
     "tsc:w": "tsc -w",
     "jobs": "tsc && node jobs/scheduler.js",
-    "lint": "tslint --project . --fix",
+    "lint": "tslint --project .",
+    "lint:fix": "tslint --project . --fix",
     "parse": "apg -i core/term/controller/grammar/Expression-ABNF.txt -o core/term/controller/grammar/grammar.js"
   },
   "repository": {

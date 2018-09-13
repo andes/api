@@ -117,6 +117,13 @@
 * RUP: Actualización en buscador y corrección de bug de planes/solicitudes
 * RUP: Agrega un wizard que muestra el cambio de planes a solicitudes
 
+## [3.7.2] - 2018-09-13
+
+* PECAS: se mejora el proceso para la actualización de Pecas Consolidado.  Además se agregan campos solicitados de semantic Tag y el estado de auditoria del turno
+* RUP: resuelve incidentes en la validación de prestaciones que utilizaban conceptos de screening
+* CDA: se agrega documentación.  Se realizan cambios en xml, para interoperar con otro efectores.
+* CITAS: resuelve incidentes de bloques desordenados en la creación de agendas
+
 
 
 
