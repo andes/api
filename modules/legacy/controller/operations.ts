@@ -107,7 +107,7 @@ export function getEncabezados(documento): any {
             const query = 'select efector.codigoSisa as efectorCodSisa, efector.nombre as efector, encabezado.idEfector as idEfector, encabezado.apellido, encabezado.nombre, encabezado.fechaNacimiento, encabezado.sexo, ' +
                 'encabezado.numeroDocumento, encabezado.fecha, encabezado.idProtocolo, encabezado.solicitante from LAB_ResultadoEncabezado as encabezado ' +
                 'inner join Sys_Efector as efector on encabezado.idEfector = efector.idEfector ' +
-                'where encabezado.numeroDocumento = ' + documento;
+                'where encabezado.numeroDocumento = ' + documento + ' and efector.codigoSisa<> ' + '\'' + 0 + '\'';
             const result = await new sql.Request().query(query);
             resolve(result);
         } catch (err) {
