@@ -151,6 +151,7 @@ router.get('/agenda/:id?', (req, res, next) => {
         let query;
         query = agenda.find({});
 
+
         query.where('estado').ne('borrada'); // No devuelve agendas borradas
 
         if (req.query.fechaDesde) {
