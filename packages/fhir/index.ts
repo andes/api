@@ -1,4 +1,4 @@
-import  * as Patient from './src/patient';
+import * as Patient from './src/patient';
 
 export {
     Patient

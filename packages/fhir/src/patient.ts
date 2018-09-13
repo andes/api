@@ -162,8 +162,8 @@ export function decode(patient) {
         nombre: patient.name[0].given.join().replace(',', ' '),
         apellido: patient.name[0].family.join().replace(',', ' '),
         fechaNacimiento: patient.birthDate,
-        genero: genero,
-        sexo: sexo,
+        genero,
+        sexo,
         estado: 'temporal' // Todos los pacientes que recibimos por Fhir son considerados temporales en su conversión.
     };
     let contactos = patient.telecom ? patient.telecom.map(unContacto => {
@@ -398,7 +398,4 @@ function validName(aName) {
 function areStrings(elem) {
     return typeof elem === 'string';
 }
-
-
-
 

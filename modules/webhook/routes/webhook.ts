@@ -34,7 +34,7 @@ EventCore.on(/.*/, async function (body) {
             id: new mongoose.Types.ObjectId(),
             subscription: sub._id,
             data: body,
-            event: event
+            event
         };
         request({
             method: sub.method,
@@ -46,7 +46,7 @@ EventCore.on(/.*/, async function (body) {
         }, (error, response, _body) => {
 
             let log = new WebHookLog({
-                event: event,
+                event,
                 url: sub.url,
                 method: sub.method,
                 headers: sub.headers,
