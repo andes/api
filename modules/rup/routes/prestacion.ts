@@ -167,7 +167,6 @@ router.get('/prestaciones/:id*?', (req, res, next) => {
         if (req.query.origen) {
             query.where('solicitud.ambitoOrigen').equals(req.query.origen);
         }
-        console.log(req.query);
         if (req.query.numProtocoloDesde) {
             query.where('solicitud.registros.valor').gte(Number(req.query.numProtocoloDesde));
         }
@@ -181,6 +180,13 @@ router.get('/prestaciones/:id*?', (req, res, next) => {
         if (req.query.solicitudHasta) {
             query.where('solicitud.fecha').lte(moment(req.query.solicitudHasta).endOf('day').toDate() as any);
         }
+        if (req.query.prioridad) {
+            query.where('solicitud.registros.valor.solicitudPrestacion.prioridad.id').equals(req.query.prioridad);
+        }
+        if (req.query.servicio) {
+            query.where('solicitud.registros.valor.solicitudPrestacion.servicio.conceptId').equals(req.query.servicio);
+        }
+
         // Solicitudes generadas desde puntoInicio Ventanilla
         // Solicitudes que no tienen prestacionOrigen ni turno
         // Si tienen prestacionOrigen son generadas por RUP y no se listan
