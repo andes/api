@@ -1,5 +1,3 @@
-import { SemanticTag } from './../../../rup/schemas/semantic-tag';
-import { ObjectID } from 'bson';
 import fs = require('fs');
 import async = require('async');
 import * as agendaModel from '../../../turnos/schemas/agenda';
@@ -30,20 +28,18 @@ let total = 0;
  * @export consultaPecas()
  * @returns resultado
  */
-export async function consultaPecas(start, end) {
+export async function consultaPecas(start, end, done) {
     try {
         poolTurnos = await new sql.ConnectionPool(config).connect();
     } catch (ex) {
         // console.log('ex', ex);
         return (ex);
     }
-    // let centro = '5a5e3f7e0bd5677324737244';
-    const query_limit = 10000000000;
+
     let orgExcluidas = organizacionesExcluidas();
 
     let match = {
         '$and': [
-            // { 'organizacion._id': {$ne: mongoose.Types.ObjectId(centro) } },
             { '$or': orgExcluidas },
             { updatedAt: { $gt: new Date(start) } },
             { updatedAt: { $lt: new Date(end) } }
@@ -74,26 +70,30 @@ export async function consultaPecas(start, end) {
     try {
         let agendas = agendaModel.aggregate([
             { $match: match },
-            { $limit: query_limit }
-        ]).cursor({ batchSize: 10000000000 }).exec();
-        agendas.eachAsync((a, error) => {
+        ]).cursor({ batchSize: 100 }).exec();
+        await agendas.eachAsync(async (a, error) => {
             if (error) {
                 // console.log('error ', error);
                 return (error);
             }
+            const promises = [];
             // Se recorren los turnos dentro de los bloques
-            async.every(a.bloques, (b, indexB) => {
-                async.every((b as any).turnos, async (t: any, indexT) => {
-                    auxiliar(a, b, t);
+            a.bloques.forEach(b => {
+                b.turnos.forEach(t => {
+                    const p = auxiliar(a, b, t);
+                    promises.push(p);
                 });
             });
             // Se recorren los sobreturnos
-            async.every((a as any).sobreturnos, async (t: any, indexT) => {
-                auxiliar(a, null, t);
+            a.sobreturnos.forEach(t => {
+                const p = auxiliar(a, null, t);
+                promises.push(p);
             });
+            return await Promise.all(promises);
         });
+        done();
     } catch (error) {
-        return (error);
+        return (done(error));
     }
 }
 
