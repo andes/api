@@ -9,16 +9,16 @@ import {
     Logger
 } from '../../../utils/logService';
 
-let router = express.Router();
+const router = express.Router();
 
-router.get('/renaper', async function (req, res, next) {
+router.get('/renaper', async (req, res, next) => {
     if (!Auth.check(req, 'fa:get:renaper')) {
         return next(403);
     }
     if (req.query) {
-        let paciente = req.query;
+        const paciente = req.query;
         try {
-            let resultado: any = await getServicioRenaper(paciente);
+            const resultado: any = await getServicioRenaper(paciente);
             // Logueamos la operación de búsqueda en la colección.
             Logger.log(req, 'fa_renaper', 'validar', {
                 data: resultado

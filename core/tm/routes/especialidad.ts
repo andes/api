@@ -3,7 +3,7 @@ import * as especialidad from '../schemas/especialidad_model';
 import { defaultLimit, maxLimit } from './../../../config';
 import { Auth } from '../../../auth/auth.class';
 
-let router = express.Router();
+const router = express.Router();
 
 /**
  * @swagger
@@ -89,10 +89,10 @@ let router = express.Router();
  *         schema:
  *           $ref: '#/definitions/especialidad'
  */
-router.get('/especialidades/:id*?', function (req, res, next) {
+router.get('/especialidades/:id*?', (req, res, next) => {
     if (req.params.id) {
 
-        especialidad.findById(req.params.id, function (err, data) {
+        especialidad.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -100,9 +100,9 @@ router.get('/especialidades/:id*?', function (req, res, next) {
             res.json(data);
         });
     } else {
-        let radix = 10;
-        let skip: number = parseInt(req.query.skip || 0, radix);
-        let limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
+        const radix = 10;
+        const skip: number = parseInt(req.query.skip || 0, radix);
+        const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
         let query;
         query = especialidad.find({}).skip(skip).limit(limit); // Trae todos
         if (req.query.codigoSisa) { query.where('codigo.sisa').equals(RegExp('^.*' + req.query.codigoSisa + '.*$', 'i')); }
@@ -139,11 +139,11 @@ router.get('/especialidades/:id*?', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/especialidad'
  */
-router.post('/especialidades', Auth.authenticate(), function (req, res, next) {
+router.post('/especialidades', Auth.authenticate(), (req, res, next) => {
     if (!Auth.check(req, 'tm:especialidad:postEspecialidad')) {
         return next(403);
     }
-    let newEspecialidad = new especialidad(req.body);
+    const newEspecialidad = new especialidad(req.body);
     newEspecialidad.save((err) => {
         if (err) {
             return next(err);
@@ -182,11 +182,11 @@ router.post('/especialidades', Auth.authenticate(), function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/especialidad'
  */
-router.put('/especialidades/:id', Auth.authenticate(), function (req, res, next) {
+router.put('/especialidades/:id', Auth.authenticate(), (req, res, next) => {
     if (!Auth.check(req, 'tm:especialidad:putEspecialidad')) {
         return next(403);
     }
-    especialidad.findByIdAndUpdate(req.params.id, req.body, { new: true }, function (err, data) {
+    especialidad.findByIdAndUpdate(req.params.id, req.body, { new: true }, (err, data) => {
         if (err) {
             return next(err);
         }
@@ -219,11 +219,11 @@ router.put('/especialidades/:id', Auth.authenticate(), function (req, res, next)
  *         schema:
  *           $ref: '#/definitions/especialidad'
  */
-router.delete('/especialidades/:id', Auth.authenticate(), function (req, res, next) {
+router.delete('/especialidades/:id', Auth.authenticate(), (req, res, next) => {
     if (!Auth.check(req, 'tm:especialidad:deleteEspecialidad')) {
         return next(403);
     }
-    especialidad.findByIdAndRemove(req.params.id, function (err, data) {
+    especialidad.findByIdAndRemove(req.params.id, (err, data) => {
         if (err) {
             return next(err);
         }

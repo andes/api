@@ -1,16 +1,11 @@
-import * as jwt from 'jsonwebtoken';
 import { pacienteApp } from '../schemas/pacienteApp';
-import { paciente, pacienteMpi } from '../../../core/mpi/schemas/paciente';
 import * as express from 'express';
 import * as authController from '../controller/AuthController';
-import * as mongoose from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
-import * as agenda from '../../turnos/schemas/agenda';
-import * as moment from 'moment';
 
-let router = express.Router();
+const router = express.Router();
 // let emailRegex = /^[a-z0-9]+(\.[_a-z0-9]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,15})$/;
-let emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,15}$/;
+const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,15}$/;
 
 function codeTostring(code) {
     let c = String(code);
@@ -42,7 +37,7 @@ function getAccount(code, email) {
             } else if (!datosUsuario.email) {
                 // el usuario puede elegir el email. Cuando se envia el codigo de forma automatia
                 // chequemos que el emial que eligio el usuario no exista
-                return pacienteApp.findOne({email: email}).then(existsEmail => {
+                return pacienteApp.findOne({email}).then(existsEmail => {
                     if (!existsEmail) {
                         datosUsuario.email = email;
                         return Promise.resolve(datosUsuario);
@@ -62,7 +57,6 @@ function getAccount(code, email) {
 }
 
 
-
 /**
  * Chequeo del código de verificacion sea correcto
  *
@@ -70,9 +64,9 @@ function getAccount(code, email) {
  * @param {string} code Código de verificación enviado al celular.
  */
 
-router.post('/v2/check', function (req, res, next) {
-    let email = req.body.email;
-    let code = req.body.code;
+router.post('/v2/check', (req, res, next) => {
+    const email = req.body.email;
+    const code = req.body.code;
     if (!email || !code) {
         return next('faltan datos');
     }
@@ -91,10 +85,10 @@ router.post('/v2/check', function (req, res, next) {
  * @param {object} paciente Datos del scaneo del DNI
  */
 
-router.post('/v2/verificar', function (req, res, next) {
-    let email = req.body.email;
-    let code = req.body.code;
-    let mpiData = req.body.paciente;
+router.post('/v2/verificar', (req, res, next) => {
+    const email = req.body.email;
+    const code = req.body.code;
+    const mpiData = req.body.paciente;
     if (!email || !code) {
         return next('faltan datos');
     }
@@ -119,10 +113,10 @@ router.post('/v2/verificar', function (req, res, next) {
  * @param {object} paciente Datos del scaneo del DNI
  */
 
-router.post('/v2/registrar', function (req, res, next) {
-    let email = req.body.email;
-    let code = req.body.code;
-    let password = req.body.password;
+router.post('/v2/registrar', (req, res, next) => {
+    const email = req.body.email;
+    const code = req.body.code;
+    const password = req.body.password;
     // let mpiData = req.body.paciente;
 
     if (!email || !code || !password) {
@@ -132,16 +126,16 @@ router.post('/v2/registrar', function (req, res, next) {
     getAccount(codeTostring(code), email).then((datosUsuario) => {
         // [TODO] 02/10 se decide sacar el matching por un cierto tiempo
         // authController.verificarCuenta(datosUsuario, mpiData).then(() => {
-            authController.habilitarCuenta(datosUsuario, password).then((user: any) => {
-                let token = Auth.generatePacienteToken(String(user._id), user.nombre + ' ' + user.apellido, user.email, user.pacientes, user.permisos);
-                res.status(200).json({
-                    token: token,
-                    user: user
-                });
-
-            }).catch((er) => {
-                return next(er);
+        authController.habilitarCuenta(datosUsuario, password).then((user: any) => {
+            const token = Auth.generatePacienteToken(String(user._id), user.nombre + ' ' + user.apellido, user.email, user.pacientes, user.permisos);
+            res.status(200).json({
+                token,
+                user
             });
+
+        }).catch((er) => {
+            return next(er);
+        });
         /*
         }).catch(() => {
             return next('No hay matching');
@@ -164,8 +158,8 @@ router.post('/v2/registrar', function (req, res, next) {
  *
  */
 
-router.post('/check-update', function(req, res, next) {
-    let app_version = req.body.app_version;
+router.post('/check-update', (req, res, next) => {
+    // let app_version = req.body.app_version;
     // Por el momento devolvemos que todo esta bien
     return res.json({status: 'ok'});
 

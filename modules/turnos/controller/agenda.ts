@@ -12,7 +12,7 @@ import { toArray } from '../../../utils/utils';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
-    let turno = getTurno(req, data, tid);
+    const turno = getTurno(req, data, tid);
     turno.asistencia = 'asistio';
     turno.updatedAt = new Date();
     turno.updatedBy = req.user.usuario || req.user;
@@ -21,14 +21,14 @@ export function darAsistencia(req, data, tid = null) {
 
 // Turno
 export function sacarAsistencia(req, data, tid = null) {
-    let turno = getTurno(req, data, tid);
+    const turno = getTurno(req, data, tid);
     turno.asistencia = undefined;
     turno.updatedAt = new Date();
     turno.updatedBy = req.user.usuario || req.user;
 }
 // Turno
 export function marcarNoAsistio(req, data, tid = null) {
-    let turno = getTurno(req, data, tid);
+    const turno = getTurno(req, data, tid);
     turno.asistencia = 'noAsistio';
     turno.updatedAt = new Date();
     turno.updatedBy = req.user.usuario || req.user;
@@ -36,12 +36,12 @@ export function marcarNoAsistio(req, data, tid = null) {
 
 // Turno
 export function quitarTurnoDoble(req, data, tid = null) {
-    let turno = getTurno(req, data, tid);
+    const turno = getTurno(req, data, tid);
     turno.estado = 'disponible';
     turno.updatedAt = new Date();
     turno.updatedBy = req.user.usuario || req.user;
-    let turnoOriginal = getTurnoAnterior(req, data, turno._id);
-    let position = getPosition(req, data, turnoOriginal._id);
+    const turnoOriginal = getTurnoAnterior(req, data, turno._id);
+    const position = getPosition(req, data, turnoOriginal._id);
     switch (turnoOriginal.tipoTurno) {
         case ('delDia'):
             data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia + 1;
@@ -63,44 +63,53 @@ export function quitarTurnoDoble(req, data, tid = null) {
 
 // Turno
 export function liberarTurno(req, data, turno) {
-    let position = getPosition(req, data, turno._id);
-    turno.estado = 'disponible';
-    turno.paciente = null;
-    turno.tipoPrestacion = null;
-    turno.nota = null;
-    turno.confirmedAt = null;
-    turno.updatedAt = new Date();
-    turno.updatedBy = req.user.usuario || req.user;
+    const position = getPosition(req, data, turno._id);
+    if (!data.dinamica) {
+        turno.estado = 'disponible';
+        turno.paciente = null;
+        turno.tipoPrestacion = null;
+        turno.nota = null;
+        turno.confirmedAt = null;
+        turno.updatedAt = new Date();
+        turno.updatedBy = req.user.usuario || req.user;
 
-    let cant = 1;
+        let cant = 1;
 
-    let turnoDoble = getTurnoSiguiente(req, data, turno._id);
-    if (turnoDoble) {
-        cant = cant + 1;
-        turnoDoble.estado = 'disponible';
-        turnoDoble.updatedAt = new Date();
-        turnoDoble.updatedBy = req.user.usuario || req.user;
-    }
+        const turnoDoble = getTurnoSiguiente(req, data, turno._id);
+        if (turnoDoble) {
+            cant = cant + 1;
+            turnoDoble.estado = 'disponible';
+            turnoDoble.updatedAt = new Date();
+            turnoDoble.updatedBy = req.user.usuario || req.user;
+        }
 
-    switch (turno.tipoTurno) {
-        case ('delDia'):
-            data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia + cant;
-            data.bloques[position.indexBloque].restantesProgramados = 0;
-            data.bloques[position.indexBloque].restantesProfesional = 0;
-            data.bloques[position.indexBloque].restantesGestion = 0;
-            break;
-        case ('programado'):
-            data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
-            break;
-        case ('profesional'):
-            data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional + cant;
-            break;
-        case ('gestion'):
-            data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion + cant;
-            break;
-    }
-    if (turno.tipoTurno) {
-        turno.tipoTurno = undefined;
+        switch (turno.tipoTurno) {
+            case ('delDia'):
+                data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia + cant;
+                data.bloques[position.indexBloque].restantesProgramados = 0;
+                data.bloques[position.indexBloque].restantesProfesional = 0;
+                data.bloques[position.indexBloque].restantesGestion = 0;
+                break;
+            case ('programado'):
+                data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
+                break;
+            case ('profesional'):
+                data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional + cant;
+                break;
+            case ('gestion'):
+                data.bloques[position.indexBloque].restantesGestion = data.bloques[position.indexBloque].restantesGestion + cant;
+                break;
+        }
+        if (turno.tipoTurno) {
+            turno.tipoTurno = undefined;
+        }
+    } else {
+        if (data.cupo > -1) {
+            data.cupo++;
+        }
+        const newTurnos = data.bloques[position.indexBloque].turnos;
+        newTurnos.splice(position.indexTurno, 1);
+        data.bloques[position.indexBloque].turnos = newTurnos;
     }
 }
 
@@ -119,7 +128,7 @@ export function suspenderTurno(req, data, turno) {
 
     let cant = 1;
     // Se verifica si tiene un turno doble asociado
-    let turnoDoble = getTurnoSiguiente(req, data, turno._id);
+    const turnoDoble = getTurnoSiguiente(req, data, turno._id);
     if (turnoDoble) {
         cant = cant + 1;
         // Se deja el estado turnoDoble para detectar este caso en la reasignacion
@@ -132,7 +141,7 @@ export function suspenderTurno(req, data, turno) {
     // Chequeamos si es sobreturno
     if (!(data.sobreturnos && data.sobreturnos.length > 0)) {
         // El tipo de turno del cual se resta será en el orden : delDia, programado, autocitado, gestion
-        let position = getPosition(req, data, turno._id);
+        const position = getPosition(req, data, turno._id);
         if (!turno.tipoTurno) {
             if (data.bloques[position.indexBloque].restantesDelDia > 0) {
                 data.bloques[position.indexBloque].restantesDelDia = data.bloques[position.indexBloque].restantesDelDia - cant;
@@ -156,30 +165,30 @@ export function suspenderTurno(req, data, turno) {
 // Turno
 export function codificarTurno(req, data, tid) {
     return new Promise((resolve, reject) => {
-        let turno = getTurno(req, data[0], tid);
+        const turno = getTurno(req, data[0], tid);
 
-        let query = Prestacion.find({ $where: 'this.estados[this.estados.length - 1].tipo ==  "validada"' });
+        const query = Prestacion.find({ $where: 'this.estados[this.estados.length - 1].tipo ==  "validada"' });
         query.where('solicitud.turno').equals(tid);
-        query.exec(function (err, data1) {
+        query.exec((err, data1) => {
             if (err) {
                 return ({
                     err: 'No se encontro prestacion para el turno'
                 });
             }
-            let arrPrestacion = data1 as any;
-            let codificaciones = [];
+            const arrPrestacion = data1 as any;
+            const codificaciones = [];
             // let promises = [];
             if (arrPrestacion.length > 0 && arrPrestacion[0].ejecucion) {
-                let prestaciones = arrPrestacion[0].ejecucion.registros.filter(f => {
+                const prestaciones = arrPrestacion[0].ejecucion.registros.filter(f => {
                     return f.concepto.semanticTag !== 'elemento de registro';
                 });
                 prestaciones.forEach(registro => {
-                    let parametros = {
+                    const parametros = {
                         conceptId: registro.concepto.conceptId,
                         paciente: turno.paciente,
                         secondaryConcepts: prestaciones.map(r => r.concepto.conceptId)
                     };
-                    let map = new SnomedCIE10Mapping(parametros.paciente, parametros.secondaryConcepts);
+                    const map = new SnomedCIE10Mapping(parametros.paciente, parametros.secondaryConcepts);
                     map.transform(parametros.conceptId).then(target => {
 
                         if (target) {
@@ -299,7 +308,7 @@ export function codificarTurno(req, data, tid) {
 
 // Turno
 export function guardarNotaTurno(req, data, tid = null) {
-    let turno = getTurno(req, data, tid);
+    const turno = getTurno(req, data, tid);
     turno.nota = req.body.textoNota;
     turno.updatedAt = new Date();
     turno.updatedBy = req.user.usuario || req.user;
@@ -307,15 +316,15 @@ export function guardarNotaTurno(req, data, tid = null) {
 
 // Turno
 export function darTurnoDoble(req, data, tid = null) {   // NUEVO
-    let position = getPosition(req, data, tid); // Obtiene la posición actual del turno seleccionado
-    let agenda = data;
+    const position = getPosition(req, data, tid); // Obtiene la posición actual del turno seleccionado
+    const agenda = data;
     let turnoAnterior;
 
     if ((position.indexBloque > -1) && (position.indexTurno > -1)) {
         turnoAnterior = agenda.bloques[position.indexBloque].turnos[position.indexTurno - 1]; // Obtiene el turno anterior
 
         // Verifico si existen turnos disponibles del tipo correspondiente
-        let countBloques = calcularContadoresTipoTurno(position.indexBloque, position.indexTurno, agenda);
+        const countBloques = calcularContadoresTipoTurno(position.indexBloque, position.indexTurno, agenda);
         if ((countBloques[turnoAnterior.tipoTurno] as number) === 0) {
             return ({
                 err: 'No se puede asignar el turno doble ' + turnoAnterior.tipoTurno
@@ -323,7 +332,7 @@ export function darTurnoDoble(req, data, tid = null) {   // NUEVO
         } else {
             // se controla la disponibilidad de los tipos de turnos
             // el turno doble se otorgara si existe disponibilidad de la cantidad de tipo del turno asociado
-            let turno = getTurno(req, data, tid);
+            const turno = getTurno(req, data, tid);
             turno.estado = 'turnoDoble';
             switch (turnoAnterior.tipoTurno) {
                 case ('delDia'):
@@ -368,9 +377,9 @@ export function editarAgenda(req, data) {
 
 // Agenda
 export function agregarSobreturno(req, data) {
-    let sobreturno = req.body.sobreturno;
+    const sobreturno = req.body.sobreturno;
     if (sobreturno) {
-        let usuario = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
+        const usuario = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
         // Copia la organización desde el token
         usuario.organizacion = (req as any).user.organizacion;
         sobreturno.updatedAt = new Date();
@@ -389,7 +398,7 @@ export function actualizarEstado(req, data) {
 
     // Si se pasa a publicada
     if (req.body.estado === 'publicada') {
-        let hoy = new Date();
+        const hoy = new Date();
         data.estado = 'publicada';
         if (moment(data.horaInicio).isSame(hoy, 'day')) {
             data.bloques.forEach(bloque => {
@@ -400,10 +409,10 @@ export function actualizarEstado(req, data) {
             });
         }
         // Si se esta publicando una agenda de hoy o mañana se pasan los turnos igual q en job
-        let tomorrow = moment(new Date()).add(1, 'days');
+        const tomorrow = moment(new Date()).add(1, 'days');
         if (moment(data.horaInicio).isSame(hoy, 'day') || moment(data.horaInicio).isSame(tomorrow, 'day')) {
             for (let j = 0; j < data.bloques.length; j++) {
-                let cantAccesoDirecto = data.bloques[j].accesoDirectoDelDia + data.bloques[j].accesoDirectoProgramado;
+                const cantAccesoDirecto = data.bloques[j].accesoDirectoDelDia + data.bloques[j].accesoDirectoProgramado;
                 if (cantAccesoDirecto > 0) {
                     data.bloques[j].restantesProgramados = data.bloques[j].restantesProgramados + data.bloques[j].restantesGestion + data.bloques[j].restantesProfesional;
                     data.bloques[j].restantesGestion = 0;
@@ -488,7 +497,7 @@ export function getPosition(req, agenda, idTurno = null) {
     idTurno = idTurno || req.body.idTurno;
     let index = -1;
     let turnos;
-    let position = { indexBloque: -1, indexTurno: -1 };
+    const position = { indexBloque: -1, indexTurno: -1 };
     // Loop en los bloques
     for (let x = 0; x < agenda.bloques.length; x++) {
         // Si existe este bloque...
@@ -503,11 +512,11 @@ export function getPosition(req, agenda, idTurno = null) {
 }
 
 export function agregarAviso(req, agenda) {
-    let profesionalId = req.body.profesionalId;
-    let estado = req.body.estado;
-    let fecha = new Date();
+    const profesionalId = req.body.profesionalId;
+    const estado = req.body.estado;
+    const fecha = new Date();
 
-    let index = agenda.avisos.findIndex(item => String(item.profesionalId) === profesionalId);
+    const index = agenda.avisos.findIndex(item => String(item.profesionalId) === profesionalId);
     if (index < 0) {
         agenda.avisos.push({
             estado,
@@ -521,8 +530,8 @@ export function agregarAviso(req, agenda) {
 }
 
 export function getTurnoSiguiente(req, agenda, idTurno = null) {
-    let position = getPosition(req, agenda, idTurno);
-    let index = position.indexTurno;
+    const position = getPosition(req, agenda, idTurno);
+    const index = position.indexTurno;
     let turnos = [];
     if (position.indexBloque > -1) {
         turnos = agenda.bloques[position.indexBloque].turnos;
@@ -534,8 +543,8 @@ export function getTurnoSiguiente(req, agenda, idTurno = null) {
 }
 
 export function getTurnoAnterior(req, agenda, idTurno = null) {
-    let position = getPosition(req, agenda, idTurno);
-    let index = position.indexTurno;
+    const position = getPosition(req, agenda, idTurno);
+    const index = position.indexTurno;
     let turnos = [];
     if (position.indexBloque > -1) {
         turnos = agenda.bloques[position.indexBloque].turnos;
@@ -586,9 +595,9 @@ export function calcularContadoresTipoTurno(posBloque, posTurno, agenda) {
 
 export function getBloque(agenda, turno) {
     for (let i = 0; i < agenda.bloques.length; i++) {
-        let bloque = agenda.bloques[i];
+        const bloque = agenda.bloques[i];
         for (let j = 0; j < bloque.turnos.length; j++) {
-            let turnoTemp = bloque.turnos[j];
+            const turnoTemp = bloque.turnos[j];
             if (turnoTemp._id === turno._id) {
                 return bloque;
             }
@@ -599,8 +608,8 @@ export function getBloque(agenda, turno) {
 
 export function esPrimerPaciente(agenda: any, idPaciente: string, opciones: any[]) {
     return new Promise<any>((resolve, reject) => {
-        let prestacionActual = 'Exámen médico del adulto';
-        let profesionalesActuales = ['58f9eae202e4a0f31fcbd846'];
+        const prestacionActual = 'Exámen médico del adulto';
+        const profesionalesActuales = ['58f9eae202e4a0f31fcbd846'];
 
         let primerPrestacion = false;
         let primerProfesional = false;
@@ -634,17 +643,17 @@ export function esPrimerPaciente(agenda: any, idPaciente: string, opciones: any[
 function esFeriado(fecha) {
     return new Promise((resolve, reject) => {
 
-        let anio = moment(fecha).year();
-        let mes = moment(fecha).month(); // de 0 a 11
-        let dia = moment(fecha).date(); // de 1 a 31
-        let url = 'http://nolaborables.com.ar/api/v2/feriados/' + anio;
+        const anio = moment(fecha).year();
+        const mes = moment(fecha).month(); // de 0 a 11
+        const dia = moment(fecha).date(); // de 1 a 31
+        const url = 'http://nolaborables.com.ar/api/v2/feriados/' + anio;
 
-        request({ url: url, json: true }, (err, response, body) => {
+        request({ url, json: true }, (err, response, body) => {
             if (err) {
                 reject(err);
             }
             if (body) {
-                let feriados = body.filter(item => {
+                const feriados = body.filter(item => {
                     return ((item.mes).toString() === (mes + 1).toString() && (item.dia).toString() === (dia).toString());
                 });
                 if (feriados.length > 0) {
@@ -665,35 +674,38 @@ function esFeriado(fecha) {
  * @returns resultado
  */
 export async function actualizarTiposDeTurno() {
-    let hsActualizar = 48;
-    let cantDias = hsActualizar / 24;
+    const hsActualizar = 48;
+    const cantDias = hsActualizar / 24;
     let fechaActualizar = moment(new Date()).add(cantDias, 'days');
-    let esDomingo = false;
+    const esDomingo = false;
 
     while ((await esFeriado(fechaActualizar) && !esDomingo) || (moment(fechaActualizar).day().toString() === '6')) {
         switch (moment(fechaActualizar).day().toString()) {
-            case '0': this.esDomingo = true;
+            case '0':
+                this.esDomingo = true;
                 break;
-            case '6': fechaActualizar = moment(fechaActualizar).add(2, 'days');
+            case '6':
+                fechaActualizar = moment(fechaActualizar).add(2, 'days');
                 break;
-            default: fechaActualizar = moment(fechaActualizar).add(1, 'days');
+            default:
+                fechaActualizar = moment(fechaActualizar).add(1, 'days');
                 break;
         }
     }
     // actualiza los turnos restantes de las agendas 2 dias antes de su horaInicio.
-    let condicion = {
-        'estado': 'publicada',
-        'horaInicio': {
+    const condicion = {
+        estado: 'publicada',
+        horaInicio: {
             $gte: (moment(fechaActualizar).startOf('day').toDate() as any),
             $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
         }
     };
 
-    let cursor = agendaModel.find(condicion).cursor();
+    const cursor = agendaModel.find(condicion).cursor();
     return cursor.eachAsync(doc => {
-        let agenda: any = doc;
+        const agenda: any = doc;
         for (let j = 0; j < agenda.bloques.length; j++) {
-            let cantAccesoDirecto = agenda.bloques[j].accesoDirectoDelDia + agenda.bloques[j].accesoDirectoProgramado;
+            const cantAccesoDirecto = agenda.bloques[j].accesoDirectoDelDia + agenda.bloques[j].accesoDirectoProgramado;
 
             if (cantAccesoDirecto > 0) {
                 agenda.bloques[j].restantesProgramados = agenda.bloques[j].restantesProgramados + agenda.bloques[j].restantesGestion + agenda.bloques[j].restantesProfesional;
@@ -735,20 +747,20 @@ export async function actualizarTiposDeTurno() {
  */
 export function actualizarEstadoAgendas() {
     // let fechaActualizar = moment(new Date()).subtract(1, 'days');
-    let fechaActualizar = moment(new Date());
+    const fechaActualizar = moment(new Date());
     // actualiza los agendas en estado pausada, disponible o publicada que se hayan ejecutado el día anterior
-    let condicion = {
-        '$or': [{ estado: 'disponible' }, { estado: 'publicada' }, { estado: 'pausada' }],
-        'horaInicio': {
+    const condicion = {
+        $or: [{ estado: 'disponible' }, { estado: 'publicada' }, { estado: 'pausada' }],
+        horaInicio: {
             $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
         }
     };
-    let cursor = agendaModel.find(condicion).cursor();
+    const cursor = agendaModel.find(condicion).cursor();
     return cursor.eachAsync(doc => {
-        let agenda: any = doc;
+        const agenda: any = doc;
         let todosAsistencia = true;
         for (let j = 0; j < agenda.bloques.length; j++) {
-            let turnos = agenda.bloques[j].turnos;
+            const turnos = agenda.bloques[j].turnos;
             // Verifico si al hay al menos un turno asignado sin asistencia
             if (turnos.filter((turno) => {
                 return (turno.estado === 'asignado' && !(turno.asistencia));
@@ -787,18 +799,18 @@ export function actualizarEstadoAgendas() {
  * @returns resultado
  */
 export function actualizarTurnosDelDia() {
-    let fechaActualizar = moment();
+    const fechaActualizar = moment();
 
-    let condicion = {
-        '$or': [{ estado: 'disponible' }, { estado: 'publicada' }],
-        'horaInicio': {
+    const condicion = {
+        $or: [{ estado: 'disponible' }, { estado: 'publicada' }],
+        horaInicio: {
             $gte: (moment(fechaActualizar).startOf('day').toDate() as any),
             $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
         }
     };
-    let cursor = agendaModel.find(condicion).cursor();
+    const cursor = agendaModel.find(condicion).cursor();
     return cursor.eachAsync(doc => {
-        let agenda: any = doc;
+        const agenda: any = doc;
         for (let j = 0; j < agenda.bloques.length; j++) {
             if (agenda.bloques[j].restantesProgramados > 0) {
                 agenda.bloques[j].restantesDelDia += agenda.bloques[j].restantesProgramados;
@@ -853,14 +865,14 @@ export function saveAgenda(nuevaAgenda) {
  * @param {any} turno
  */
 export function updatePaciente(pacienteModified, turno) {
-    agendaModel.findById(turno.agenda_id, function (err, data, next) {
+    agendaModel.findById(turno.agenda_id, (err, data, next) => {
         if (err) {
             return next(err);
         }
-        let bloques: any = data.bloques;
+        const bloques: any = data.bloques;
         let indiceTurno = -1;
 
-        for (let bloque of bloques) {
+        for (const bloque of bloques) {
             indiceTurno = bloque.turnos.findIndex(elem => elem._id.toString() === turno._id.toString());
 
             if (indiceTurno > 0) { // encontro el turno en este bloque?
@@ -902,7 +914,6 @@ export function updatePaciente(pacienteModified, turno) {
 }
 
 
-
 export function getConsultaDiagnostico(params) {
 
     return new Promise(async (resolve, reject) => {
@@ -910,9 +921,9 @@ export function getConsultaDiagnostico(params) {
         pipeline = [{
             $match: {
                 $and: [
-                    { 'horaInicio': { '$gte': new Date(params.horaInicio) } },
-                    { 'horaFin': { '$lte': new Date(params.horaFin) } },
-                    { 'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) } },
+                    { horaInicio: { $gte: new Date(params.horaInicio) } },
+                    { horaFin: { $lte: new Date(params.horaFin) } },
+                    { 'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) } },
                     { 'bloques.turnos.estado': 'asignado' }
 
                 ]
@@ -940,7 +951,7 @@ export function getConsultaDiagnostico(params) {
         },
         {
             $match: {
-                'estado': 'asignado'
+                estado: 'asignado'
             }
         },
 
@@ -969,8 +980,8 @@ export function getConsultaDiagnostico(params) {
         let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
 
         function removeDuplicates(arr) {
-            let unique_array = [];
-            let arrMap = arr.map(m => { return m._id; });
+            const unique_array = [];
+            const arrMap = arr.map(m => { return m._id; });
             for (let i = 0; i < arr.length; i++) {
                 if (arrMap.lastIndexOf(arr[i]._id) === i) {
                     unique_array.push(arr[i]);
@@ -986,7 +997,6 @@ export function getConsultaDiagnostico(params) {
 }
 
 
-
 export function getCantidadConsultaXPrestacion(params) {
 
     return new Promise(async (resolve, reject) => {
@@ -995,9 +1005,9 @@ export function getCantidadConsultaXPrestacion(params) {
             {
                 $match: {
                     $and: [
-                        { 'horaInicio': { '$gte': new Date(params.horaInicio) } },
-                        { 'horaFin': { '$lte': new Date(params.horaFin) } },
-                        { 'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) } },
+                        { horaInicio: { $gte: new Date(params.horaInicio) } },
+                        { horaFin: { $lte: new Date(params.horaFin) } },
+                        { 'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) } },
                         { 'bloques.turnos.estado': 'asignado' }
                     ]
                 }
@@ -1025,7 +1035,7 @@ export function getCantidadConsultaXPrestacion(params) {
             },
             {
                 $match: {
-                    'estado': 'asignado'
+                    estado: 'asignado'
                 }
             },
             {
@@ -1044,12 +1054,11 @@ export function getCantidadConsultaXPrestacion(params) {
         ];
 
 
-
         let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
 
         function removeDuplicates(arr) {
-            let unique_array = [];
-            let arrMap = arr.map(m => { return m._id; });
+            const unique_array = [];
+            const arrMap = arr.map(m => { return m._id; });
             for (let i = 0; i < arr.length; i++) {
                 if (arrMap.lastIndexOf(arr[i]._id) === i) {
                     unique_array.push(arr[i]);
