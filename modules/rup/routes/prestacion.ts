@@ -91,6 +91,10 @@ router.get('/prestaciones/laboratorio', async function (req, res, next) {
     if (req.query.pacienteDni) {
         match['paciente.documento'] = req.query.pacienteDni;
     }
+    if (!req.query.protocoloIniciado) {
+        match['ejecucion.registros'] = {'$size':0};
+    }
+
     let query = [
         {
             '$match':
@@ -230,7 +234,6 @@ router.get('/prestaciones/:id*?', (req, res, next) => {
 });
 
 router.post('/prestaciones', (req, res, next) => {
-    console.log(req.body);
     const data = new Prestacion(req.body);
     Auth.audit(data, req);
     data.save((err) => {

@@ -15,7 +15,6 @@ let async = require('async');
 
 router.get('/practicas', function (req, res, next) {
 
-    console.log('practicas')
     if (req.params.id) {
         let query = Practica.findById(req.params.id);
         query.exec(function (err, data) {
