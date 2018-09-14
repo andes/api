@@ -1,6 +1,16 @@
-import * as mongoose from 'mongoose';
+import { Document, Schema, Model, model } from 'mongoose';
 
-export let tipoPrestacionSchema = new mongoose.Schema({
+export interface ITipoPrestacion extends Document {
+    nombre?: String;
+    conceptId: String;
+    term: String;
+    fsn: String;
+    semanticTag: 'procedimiento' | 'solicitud' | 'hallazgo' | 'trastorno' | 'antecedenteFamiliar'| 'régimen/tratamiento';
+
+}
+
+
+export let tipoPrestacionSchema = new Schema({
     conceptId: String,
     term: String,
     fsn: String,
@@ -15,5 +25,5 @@ tipoPrestacionSchema.virtual('nombre').get(function () {
     return this.term;
 });
 
-export let tipoPrestacion = mongoose.model('tipoPrestacion', tipoPrestacionSchema, 'conceptoTurneable');
+export let tipoPrestacion: Model<ITipoPrestacion> = model('tipoPrestacion', tipoPrestacionSchema, 'conceptoTurneable');
 
