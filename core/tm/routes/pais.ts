@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as pais from '../schemas/pais_model';
 
-let router = express.Router();
+const router = express.Router();
 
 /**
  * @swagger
@@ -55,10 +55,10 @@ let router = express.Router();
  *         schema:
  *           $ref: '#/definitions/pais'
  */
-router.get('/paises/:id*?', function (req, res, next) {
+router.get('/paises/:id*?', (req, res, next) => {
 
     if (req.params.id) {
-        pais.findById(req.params.id, function (err, data) {
+        pais.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -72,7 +72,7 @@ router.get('/paises/:id*?', function (req, res, next) {
         if (req.query.nombre) {
             query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
         }
-        query.sort({ 'nombre': 1 }).exec((err, data) => {
+        query.sort({ nombre: 1 }).exec((err, data) => {
             if (err) {return next(err); }
             res.json(data);
         });

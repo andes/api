@@ -1,6 +1,5 @@
 import { SemanticTag } from './semantic-tag';
 import * as mongoose from 'mongoose';
-import { SnomedConcept } from './snomed-concept';
 import * as registro from './prestacion.registro';
 import * as estado from './prestacion.estado';
 import { auditoriaPrestacionPacienteSchema } from '../../auditorias/schemas/auditoriaPrestacionPaciente';

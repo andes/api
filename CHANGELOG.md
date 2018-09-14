@@ -73,6 +73,56 @@
 #### Fixed
 * Se agrega la posibilidad de visualizar las agendas con citación por segmento, al dar un turno autocitado
 
+## [3.5.1] - 2018-08-14
+
+#### Fixed
+* Snomed - Buscar palabras con la letra ñ (https://github.com/andes/api/pull/394)
+* Tabla maestras - optimizacion de busqueda de profesionales (https://github.com/andes/api/pull/393)
+* RUP - Archivos adjuntos no se persistían desde la app mobile (https://github.com/andes/app/pull/687)
+* Búsqueda de profesionales en filtro gestor de agendas 
+* Renaper - agrega control a la fecha de nacimiento. 
+* Renaper - validación de pacientes temporales previamente cargados.
+
+
+## [3.6.0] - 2018-08-17
+#### Added
+* RUP- Registro de consulta de niño sano por edades.
+* RUP- Visualización de relaciones.
+* Wizard steps: se muestra la nueva opción de creación de agendas dinámicas.
+#### Fixed
+* Inconsistencia en cambio de estados de agendas durante la auditoría
+* Integracion con Sistemas Legacy - Hospital Neuquen: verifica los tipos de documentos extranjeros
+* Elimina la eeferencia de solicitud al liberar el turno asignado
+* Verificación de pacientes sin obra social en la dación del turno
+
+## [3.6.2] - 2018-08-29
+
+#### Added
+* Agrega rutas para mostrar noticias de Punto Saludable para la app móvil.
+
+## [3.7.0] - 2018-09-03
+
+* CITAS: se resuelven incidentes en el combo de profesionales en la edición de la agenda.
+* CITAS: corrección de los labels, en el combo de espacio físico.
+* RUP: Frecuentes por prestación para consulta de medicina general
+* RUP: Nueva versión de descarga de informes de ecografía (únicamente para ecografía) 
+* RUP: Se quitó la validación pre seteada
+* INTEGRACIÓN: Agregar visualización de mapeos entre prestaciones y especialidades por efectores.
+
+## [3.7.1] - 2018-09-07
+
+* Formulario Terapeutico: permite agregar y eliminar medicamentos de los diferentes nodos
+* CITAS: Visualización de turnos liberados: en el historial de turnos se agregan los turnos liberados de acceso directos.
+* Formulario de arancelamiento: se agrega el código de recupero financiero.
+* RUP: Actualización en buscador y corrección de bug de planes/solicitudes
+* RUP: Agrega un wizard que muestra el cambio de planes a solicitudes
+
+## [3.7.2] - 2018-09-13
+
+* PECAS: se mejora el proceso para la actualización de Pecas Consolidado.  Además se agregan campos solicitados de semantic Tag y el estado de auditoria del turno
+* RUP: resuelve incidentes en la validación de prestaciones que utilizaban conceptos de screening
+* CDA: se agrega documentación.  Se realizan cambios en xml, para interoperar con otro efectores.
+* CITAS: resuelve incidentes de bloques desordenados en la creación de agendas
 
 
 

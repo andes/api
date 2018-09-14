@@ -5,15 +5,17 @@ import * as moment from 'moment';
 import * as sql from 'mssql';
 
 export async function saveTurnos(idAgendaAndes, bloque, idTipoPrestacion, pool, transaction) {
-    for (let turno of bloque.turnos) {
+    for (const turno of bloque.turnos) {
         if (turno.estado === constantes.EstadoTurnosAndes.asignado &&
             (!await (getIdTurnoHPN(turno._id, pool)))) {
-            let result = await pacientes.buscarPaciente(turno.paciente.id);
-            let paciente = result.paciente;
+            const result = await pacientes.buscarPaciente(turno.paciente.id);
+            const paciente = result.paciente;
 
-            let datosPaciente = await pacienteCtrl.getDatosPaciente('DNI', paciente.documento, pool);
+            let datosPaciente = await pacienteCtrl.getDatosPaciente('DNI', paciente, transaction);
+
             if (!datosPaciente) {
-                datosPaciente = await pacienteCtrl.savePaciente(paciente, transaction);
+                await pacienteCtrl.savePaciente(paciente, transaction);
+                datosPaciente = await pacienteCtrl.getDatosPaciente('DNI', paciente, transaction);
             }
             await saveTurno(idAgendaAndes, turno, datosPaciente, bloque.duracionTurno, idTipoPrestacion, pool, transaction);
         }
@@ -27,10 +29,10 @@ export async function saveTurnos(idAgendaAndes, bloque, idTipoPrestacion, pool, 
 export async function saveSobreturno(idAgendaAndes, sobreturno, idTipoPrestacion, pool, transaction) {
     if (sobreturno.estado === constantes.EstadoTurnosAndes.asignado &&
         (!await (getIdTurnoHPN(sobreturno._id, pool)))) {
-        let result = await pacientes.buscarPaciente(sobreturno.paciente.id);
-        let paciente = result.paciente;
+        const result = await pacientes.buscarPaciente(sobreturno.paciente.id);
+        const paciente = result.paciente;
 
-        let datosPaciente = await pacienteCtrl.getDatosPaciente('DNI', paciente.documento, pool);
+        let datosPaciente = await pacienteCtrl.getDatosPaciente('DNI', paciente, pool);
         if (!datosPaciente) {
             datosPaciente = await pacienteCtrl.savePaciente(paciente, transaction);
         }
@@ -39,7 +41,7 @@ export async function saveSobreturno(idAgendaAndes, sobreturno, idTipoPrestacion
 }
 
 async function getIdTurnoHPN(idAndes, pool) {
-    let query = 'SELECT id FROM dbo.Prestaciones_Worklist WHERE andesId = @idAndes';
+    const query = 'SELECT id FROM dbo.Prestaciones_Worklist WHERE andesId = @idAndes';
     let result = await pool.request()
         .input('idAndes', sql.VarChar(50), idAndes)
         .query(query);
@@ -48,19 +50,19 @@ async function getIdTurnoHPN(idAndes, pool) {
 }
 
 async function save(idAgendaAndes, sobreturno, datosPaciente, idTipoPrestacion, pool, transaction) {
-    let idUbicacion = await getUbicacion(idTipoPrestacion);
-    let fechaHora = sobreturno.horaInicio;
-    let fechaHoraFinalizacion = moment(sobreturno.horaInicio).add(15, 'minutes').toDate();
-    let idTipoWorklist = 10; // no
-    let idPrioridad = 20; // Prioridad normmal
-    let idEstado = 10; // HARDCODE
-    let idHistoria = datosPaciente.idHistoria;
-    let idPaciente = datosPaciente.idPaciente;
+    const idUbicacion = await getUbicacion(idTipoPrestacion);
+    const fechaHora = sobreturno.horaInicio;
+    const fechaHoraFinalizacion = moment(sobreturno.horaInicio).add(15, 'minutes').toDate();
+    const idTipoWorklist = 10; // no
+    const idPrioridad = 20; // Prioridad normmal
+    const idEstado = 10; // HARDCODE
+    const idHistoria = datosPaciente.idHistoria;
+    const idPaciente = datosPaciente.idPaciente;
 
-    let idProgramacion = idAgendaAndes;
-    let andesId = sobreturno._id;
+    const idProgramacion = idAgendaAndes;
+    const andesId = sobreturno._id;
 
-    let query = 'INSERT INTO dbo.Prestaciones_Worklist ' +
+    const query = 'INSERT INTO dbo.Prestaciones_Worklist ' +
         '(idUbicacion' +
         ',fechaHora' +
         ',fechaHoraFinalizacion' +
@@ -104,19 +106,19 @@ async function save(idAgendaAndes, sobreturno, datosPaciente, idTipoPrestacion, 
 }
 
 async function saveTurno(idAgendaAndes, turno: any, datosPaciente, duracion, idTipoPrestacion, pool, transaction) {
-    let idUbicacion = await getUbicacion(idTipoPrestacion);
-    let fechaHora = turno.horaInicio;
-    let fechaHoraFinalizacion = moment(turno.horaInicio).add(duracion, 'minutes').toDate();
-    let idTipoWorklist = 10; // no
-    let idPrioridad = 20; // Prioridad normmal
-    let idEstado = 10; // HARDCODE
-    let idHistoria = datosPaciente.idHistoria;
-    let idPaciente = datosPaciente.idPaciente;
+    const idUbicacion = await getUbicacion(idTipoPrestacion);
+    const fechaHora = turno.horaInicio;
+    const fechaHoraFinalizacion = moment(turno.horaInicio).add(duracion, 'minutes').toDate();
+    const idTipoWorklist = 10; // no
+    const idPrioridad = 20; // Prioridad normmal
+    const idEstado = 10; // HARDCODE
+    const idHistoria = datosPaciente.idHistoria;
+    const idPaciente = datosPaciente.idPaciente;
 
-    let idProgramacion = idAgendaAndes;
-    let andesId = turno._id;
+    const idProgramacion = idAgendaAndes;
+    const andesId = turno._id;
 
-    let query = 'INSERT INTO dbo.Prestaciones_Worklist ' +
+    const query = 'INSERT INTO dbo.Prestaciones_Worklist ' +
         '(idUbicacion' +
         ',fechaHora' +
         ',fechaHoraFinalizacion' +
@@ -166,8 +168,8 @@ async function updateTurno(id, estado, pool, transaction) {
     if (estado === constantes.EstadoTurnosAndes.disponible) {
         idEstado = 50; // Prestación ha sido liberada
     }
-    let query = 'UPDATE dbo.Prestaciones_Worklist SET ' +
-        'idEstado=' + idEstado + ' where andesId=' + '\'' + id + '\'';
+    const query = 'UPDATE dbo.Prestaciones_Worklist SET ' +
+        'idEstado=' + idEstado + ' where andesId=\'' + id + '\'';
     return await new sql.Request(transaction)
         .query(query)
         .catch(err => {

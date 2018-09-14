@@ -1,19 +1,10 @@
-import { pacienteApp } from '../schemas/pacienteApp';
-import { LoggerPaciente } from '../../../utils/loggerPaciente';
-import * as authController from '../controller/AuthController';
 import * as express from 'express';
-import * as mongoose from 'mongoose';
 import { Auth } from './../../../auth/auth.class';
-import { ElasticSync } from '../../../utils/elasticSync';
-import { Logger } from '../../../utils/logService';
-import * as debug from 'debug';
 import * as controllerPaciente from '../../../core/mpi/controller/paciente';
 import * as cdaCtr from '../../cda/controller/CDAPatient';
 import { xmlToJson } from '../../../utils/utils';
 
-let log = debug('mobileApp:paciente');
-
-let router = express.Router();
+const router = express.Router();
 
 /**
  * Get paciente
@@ -22,14 +13,14 @@ let router = express.Router();
  * Chequea que el paciente este asociado a la cuenta
  */
 
-router.get('/paciente/:id', function (req: any, res, next) {
-    let idPaciente = req.params.id;
-    let pacientes = req.user.pacientes;
-    let index = pacientes.findIndex(item => item.id === idPaciente);
+router.get('/paciente/:id', (req: any, res, next) => {
+    const idPaciente = req.params.id;
+    const pacientes = req.user.pacientes;
+    const index = pacientes.findIndex(item => item.id === idPaciente);
     if (index >= 0) {
         return controllerPaciente.buscarPaciente(pacientes[index].id).then((resultado) => {
             // [TODO] Projectar datos que se pueden mostrar al paciente
-            let pac = resultado.paciente;
+            const pac = resultado.paciente;
             delete pac.claveBloking;
             delete pac.entidadesValidadoras;
             delete pac.carpetaEfectores;
@@ -52,14 +43,14 @@ router.get('/paciente/:id', function (req: any, res, next) {
  *
  */
 
-router.put('/paciente/:id', function (req: any, res, next) {
-    let idPaciente = req.params.id;
-    let pacientes = req.user.pacientes;
-    let index = pacientes.findIndex(item => item.id === idPaciente);
+router.put('/paciente/:id', (req: any, res, next) => {
+    const idPaciente = req.params.id;
+    const pacientes = req.user.pacientes;
+    const index = pacientes.findIndex(item => item.id === idPaciente);
     if (index >= 0) {
         controllerPaciente.buscarPaciente(pacientes[index].id).then((resultado) => {
-            let paciente = resultado.paciente;
-            let data: any = {};
+            const paciente = resultado.paciente;
+            const data: any = {};
 
             if (req.body.reportarError) {
                 data.reportarError = req.body.reportarError;
@@ -91,10 +82,10 @@ router.put('/paciente/:id', function (req: any, res, next) {
  * [No esta en uso]
  */
 
-router.patch('/pacientes/:id', function (req, res, next) {
-    let idPaciente = req.params.id;
-    let pacientes = (req as any).user.pacientes;
-    let index = pacientes.findIndex(item => item.id === idPaciente);
+router.patch('/pacientes/:id', (req, res, next) => {
+    const idPaciente = req.params.id;
+    const pacientes = (req as any).user.pacientes;
+    const index = pacientes.findIndex(item => item.id === idPaciente);
 
     if (index >= 0) {
         controllerPaciente.buscarPaciente(req.params.id).then((resultado: any) => {
@@ -110,7 +101,7 @@ router.patch('/pacientes/:id', function (req, res, next) {
 
                 Auth.audit(resultado.paciente, req);
 
-                resultado.paciente.save(function (errPatch) {
+                resultado.paciente.save((errPatch) => {
                     if (errPatch) {
                         return next(errPatch);
                     }
@@ -129,16 +120,16 @@ router.patch('/pacientes/:id', function (req, res, next) {
  */
 
 router.get('/laboratorios/(:id)', async (req, res, next) => {
-    let idPaciente = req.params.id;
-    let pacientes = (req as any).user.pacientes;
-    let index = pacientes.findIndex(item => item.id === idPaciente);
+    const idPaciente = req.params.id;
+    const pacientes = (req as any).user.pacientes;
+    const index = pacientes.findIndex(item => item.id === idPaciente);
     if (index >= 0) {
-        let limit = parseInt (req.query.limit || 10, 0);
-        let skip = parseInt (req.query.skip || 0, 0);
-        let cdas: any[] = await cdaCtr.searchByPatient(idPaciente, '4241000179101', { limit, skip });
-        for (let cda of cdas) {
-            let _xml = await cdaCtr.loadCDA(cda.cda_id);
-            let dom: any = xmlToJson(_xml);
+        const limit = parseInt (req.query.limit || 10, 0);
+        const skip = parseInt (req.query.skip || 0, 0);
+        const cdas: any[] = await cdaCtr.searchByPatient(idPaciente, '4241000179101', { limit, skip });
+        for (const cda of cdas) {
+            const _xml = await cdaCtr.loadCDA(cda.cda_id);
+            const dom: any = xmlToJson(_xml);
             cda.confidentialityCode = dom.ClinicalDocument.confidentialityCode['@attributes'].code;
             cda.title = dom.ClinicalDocument.title['#text'];
             cda.organizacion = dom.ClinicalDocument.custodian.assignedCustodian.representedCustodianOrganization.name['#text'];
