@@ -9,8 +9,8 @@ export async function getUltimoNumeroProtocolo(idOrganizacion) {
         {$match: {'solicitud.tipoPrestacion.conceptId':'15220000'}},
         {$unwind: '$solicitud.registros'},
         {$match: {'solicitud.registros.concepto.conceptId':'15220000'}},
-        {$match: {'solicitud.registros.valor.numeroProtocolo': {$exists: true}}},
-        {$sort: {'solicitud.registros.valor.numeroProtocolo.numero':-1}},
+        {$match: {'solicitud.registros.valor.solicitudPrestacion.numeroProtocolo': {$exists: true}}},
+        {$sort:  {'solicitud.registros.valor.solicitudPrestacion.numeroProtocolo.numero':-1}},
         {$group: {
             _id: null,
             first: { $first: "$$ROOT" }

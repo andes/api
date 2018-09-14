@@ -234,6 +234,7 @@ router.get('/prestaciones/:id*?', (req, res, next) => {
 });
 
 router.post('/prestaciones', (req, res, next) => {
+    const prestacion = req.body;
     const data = new Prestacion(req.body);
     Auth.audit(data, req);
     data.save((err) => {
@@ -241,6 +242,20 @@ router.post('/prestaciones', (req, res, next) => {
             return next(err);
         }
         res.json(data);
+    });
+});
+
+router.put('/prestaciones/:id', (req, res, next) => {
+    const prestacion = req.body;
+    let prestacionUpdate : any = {};
+    prestacionUpdate = Object.assign(prestacionUpdate, prestacion);
+    // Auth.audit(data, req);
+    delete prestacionUpdate._id;
+    Prestacion.findOneAndUpdate(prestacion._id, prestacionUpdate, (err, prest) => {
+        if(err) {
+            return next();
+        }
+        res.json(prest);
     });
 });
 
