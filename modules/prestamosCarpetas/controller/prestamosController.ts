@@ -2,7 +2,7 @@
 import { Auth } from './../../../auth/auth.class';
 import * as agenda from '../../../modules/turnos/schemas/agenda';
 import * as agendaCtrl from '../../../modules/turnos/controller/agenda';
-import { Prestamo } from '../../../modules/prestamosCarpetas/schemas/prestamo';
+import { Prestamo, IPrestamo } from '../../../modules/prestamosCarpetas/schemas/prestamo';
 import { SolicitudCarpetaManual } from '../../../modules/prestamosCarpetas/schemas/solicitudCarpetaManual';
 import * as constantes from '../schemas/constantes';
 import { toArray } from '../../../utils/utils';
@@ -10,39 +10,45 @@ import { searchByPatient } from '../../cda/controller/CDAPatient';
 import { Types } from 'mongoose';
 
 const ObjectId = Types.ObjectId;
+
+
 export async function getCarpetasSolicitud(req) {
-    // return new Promise(async (resolve, reject) => {
-        const body = req.body;
-        const organizacionId = body.organizacion;
-        const tipoPrestacionId = body.idTipoPrestacion;
-        const espacioFisicoId = body.idEspacioFisico;
-        const profesionalId = body.idProfesional;
-        const horaInicio = body.fechaDesde;
-        const horaFin = body.fechaHasta;
-        const solicitudesManuales = await getSolicitudCarpetaManual(organizacionId);
-        const agendas = await buscarAgendasTurnos(new ObjectId(organizacionId), tipoPrestacionId, espacioFisicoId, profesionalId, horaInicio, horaFin);
-        const agendasSobreturno = await buscarAgendasSobreturnos(new ObjectId(organizacionId), tipoPrestacionId, espacioFisicoId, profesionalId, horaInicio, horaFin);
-        const nrosCarpetas = getNrosCarpetas(agendas, agendasSobreturno, solicitudesManuales);
-        const carpetas = await findCarpetas(new ObjectId(organizacionId), nrosCarpetas);
-        const prestamosCarpetas = await getRegistrosSolicitudCarpetas(req, organizacionId, [agendas, agendasSobreturno], carpetas, solicitudesManuales);
+    const body = req.body;
+    const organizacionId = body.organizacion;
+    const tipoPrestacionId = body.idTipoPrestacion;
+    const espacioFisicoId = body.idEspacioFisico;
+    const profesionalId = body.idProfesional;
+    const horaInicio = body.fechaDesde;
+    const horaFin = body.fechaHasta;
+
+
+    // [TODO] Paralelizar la busquedas de turnos, sobreturnos y solicitudesManuales
+    const solicitudesManuales = await getSolicitudCarpetaManual(organizacionId);
+    // [TODO] Castear 'organizacionId' a ObjectId en la función interna
+    const agendas = await buscarAgendasTurnos(new ObjectId(organizacionId), tipoPrestacionId, espacioFisicoId, profesionalId, horaInicio, horaFin);
+    const agendasSobreturno = await buscarAgendasSobreturnos(new ObjectId(organizacionId), tipoPrestacionId, espacioFisicoId, profesionalId, horaInicio, horaFin);
+
+
+    const nrosCarpetas = getNrosCarpetas(agendas, agendasSobreturno, solicitudesManuales);
+
+    // [TODO] Castear a ObjectId en la función interna
+    const carpetas = await findCarpetas(new ObjectId(organizacionId), nrosCarpetas);
+    const prestamosCarpetas = await getRegistrosSolicitudCarpetas(req, organizacionId, [agendas, agendasSobreturno], carpetas, solicitudesManuales);
 
     return prestamosCarpetas;
-    // });
 }
 
 export async function getCarpetasPrestamo(req) {
-    // return new Promise(async (resolve, reject) => {
-        const body = req.body;
-        const organizacionId = body.organizacion;
-        const tipoPrestacionId = body.idTipoPrestacion;
-        const espacioFisicoId = body.idEspacioFisico;
-        const profesionalId = body.idProfesional;
-        const horaInicio = body.fechaDesde;
-        const horaFin = body.fechaHasta;
-        const carpetas = await findCarpetasPrestamo(new ObjectId(organizacionId), horaInicio, horaFin, tipoPrestacionId, espacioFisicoId, profesionalId);
+    const body = req.body;
+    const organizacionId = body.organizacion;
+    const tipoPrestacionId = body.idTipoPrestacion;
+    const espacioFisicoId = body.idEspacioFisico;
+    const profesionalId = body.idProfesional;
+    const horaInicio = body.fechaDesde;
+    const horaFin = body.fechaHasta;
+    const carpetas = await findCarpetasPrestamo(new ObjectId(organizacionId), horaInicio, horaFin, tipoPrestacionId, espacioFisicoId, profesionalId);
 
     return carpetas;
-    // });
 }
 
 function getNrosCarpetas(agendas, agendasSobreturno, solicitudesManuales) {
@@ -175,7 +181,7 @@ async function findCarpetas(organizacionId, nrosCarpetas) {
     return await toArray(Prestamo.aggregate(pipeline).cursor({}).exec());
 }
 
-async function findCarpetasPrestamo(organizacionId, horaInicio, horaFin, tipoPrestacion, espacioFisico, profesional) {
+async function findCarpetasPrestamo(organizacionId, horaInicio, horaFin, tipoPrestacion, espacioFisico, profesionalId: string) {
     const pipeline = [];
     const match = {};
     const sort = {};
@@ -198,8 +204,8 @@ async function findCarpetasPrestamo(organizacionId, horaInicio, horaFin, tipoPre
         match['datosPrestamo.turno.espacioFisico._id'] = espacioFisico;
     }
 
-    if (profesional) {
-        match['datosPrestamo.turno.profesionales._id'] = new ObjectId(profesional);
+    if (profesionalId) {
+        match['datosPrestamo.turno.profesionales._id'] = new ObjectId(profesionalId);
     }
     match['organizacion._id'] = { $eq: organizacionId };
 
@@ -233,6 +239,7 @@ async function buscarAgendasSobreturnos(organizacionId, tipoPrestacion, espacioF
     }
 
     if (espacioFisico) {
+        // [TODO] No llega ObjectId ?
         matchCarpeta['espacioFisico.id'] = espacioFisico;
     }
 
@@ -336,14 +343,14 @@ async function buscarAgendasTurnos(organizacionId, tipoPrestacion, espacioFisico
 export async function prestarCarpeta(req) {
     const prestamoCarpeta: any = await createCarpeta(req.body, constantes.EstadosPrestamosCarpeta.Prestada);
     if (prestamoCarpeta.datosSolicitudManual.idSolicitud) {
-        cambiarEstadoSolicitudManual(req, prestamoCarpeta.datosSolicitudManual.idSolicitud, prestamoCarpeta.organizacion);
+        await cambiarEstadoSolicitudManual(req, prestamoCarpeta.datosSolicitudManual.idSolicitud, prestamoCarpeta.organizacion);
     }
     return await savePrestamoCarpeta(req, prestamoCarpeta);
 }
 
 export async function prestarCarpetas(req) {
+    const prestamosCarpetas: IPrestamo[] = [];
     const datosCarpetas = req.body;
-    const prestamosCarpetas = [];
 
     for (let i = 0; i < datosCarpetas.length; i++) {
         prestamosCarpetas.push(await createCarpeta(datosCarpetas[i], constantes.EstadosPrestamosCarpeta.Prestada));
@@ -352,13 +359,13 @@ export async function prestarCarpetas(req) {
 }
 
 export async function devolverCarpeta(req) {
-    const prestamoCarpeta: any = await createCarpeta(req.body, constantes.EstadosPrestamosCarpeta.EnArchivo);
+    const prestamoCarpeta: IPrestamo = await createCarpeta(req.body, constantes.EstadosPrestamosCarpeta.EnArchivo);
     return await savePrestamoCarpeta(req, prestamoCarpeta);
 }
 
 export async function devolverCarpetas(req) {
     const datosCarpetas = req.body;
-    const prestamosCarpetas = [];
+    const prestamosCarpetas: IPrestamo[] = [];
 
     for (let i = 0; i < datosCarpetas.length; i++) {
         prestamosCarpetas.push(await createCarpeta(datosCarpetas[i], constantes.EstadosPrestamosCarpeta.EnArchivo));
@@ -367,7 +374,7 @@ export async function devolverCarpetas(req) {
     return await savePrestamosCarpetas(req, prestamosCarpetas);
 }
 
-async function createCarpeta(datosCarpeta, estadoPrestamoCarpeta) {
+async function createCarpeta(datosCarpeta, estadoPrestamoCarpeta): Promise<IPrestamo> {
     let pacienteSeleccionado;
     let datosSolicitudManual;
     if (datosCarpeta.datosPrestamo) {
@@ -409,22 +416,14 @@ async function createCarpeta(datosCarpeta, estadoPrestamoCarpeta) {
 
 async function savePrestamoCarpeta(req, nuevoPrestamo) {
     Auth.audit(nuevoPrestamo, req);
-    const _prestamoGuardado = await nuevoPrestamo.save((err2, prestamoGuardado: any) => {
-        if (err2) {
-            throw err2;
-        }
-    });
+    const _prestamoGuardado = await nuevoPrestamo.save();
     return _prestamoGuardado;
 }
 
 async function savePrestamosCarpetas(req, nuevosPrestamos) {
     nuevosPrestamos.forEach(async _prestamo => {
         Auth.audit(_prestamo, req);
-        await _prestamo.save((err2, prestamoGuardado: any) => {
-            if (err2) {
-                throw err2;
-            }
-        });
+        await _prestamo.save();
     });
 
 }
@@ -464,43 +463,26 @@ export async function solicitudManualCarpeta(req) {
 
     Auth.audit(solicitud, req);
 
-    await solicitud.save((err, solicitudGuardada: any) => {
-        if (err) {
-            throw err;
-        }
-    });
+    await solicitud.save();
     return solicitud;
 }
 
-function getSolicitudCarpetaManual(unaOrganizacion, idSolicitud = null, estadoSolicitud = null) {
-    return new Promise((resolve, reject) => {
-        let query;
-        if (idSolicitud) {
-            query = SolicitudCarpetaManual.findById(idSolicitud);
-        } else {
-            query = SolicitudCarpetaManual.find({});
-            query.where('organizacion._id').equals(unaOrganizacion);
-            query.where('estado').equals((estadoSolicitud ? estadoSolicitud : constantes.EstadoSolicitudCarpeta.Pendiente));
-        }
+async function getSolicitudCarpetaManual(unaOrganizacion, idSolicitud = null, estadoSolicitud = null) {
+    let query;
+    if (idSolicitud) {
+        query = SolicitudCarpetaManual.findById(idSolicitud);
+    } else {
+        query = SolicitudCarpetaManual.find({});
+        query.where('organizacion._id').equals(unaOrganizacion);
+        query.where('estado').equals((estadoSolicitud ? estadoSolicitud : constantes.EstadoSolicitudCarpeta.Pendiente));
+    }
 
-        query.exec((err, data) => {
-            if (err) {
-                throw err;
-            }
-            return resolve(data);
-        });
-    });
+    return await query;
 }
 
-function cambiarEstadoSolicitudManual(req, idSolicitud, idOrganizacion) {
-    getSolicitudCarpetaManual(idOrganizacion.id, String(idSolicitud)).then(solicitud => {
-        (solicitud as any).estado = constantes.EstadoSolicitudCarpeta.Aprobada;
-        Auth.audit((solicitud as any), req);
-
-        (solicitud as any).save((err, solicitudGuardada: any) => {
-            if (err) {
-                throw err;
-            }
-        });
-    });
+async function cambiarEstadoSolicitudManual(req, idSolicitud, idOrganizacion) {
+    const solicitud = await getSolicitudCarpetaManual(idOrganizacion.id, String(idSolicitud));
+    solicitud.estado = constantes.EstadoSolicitudCarpeta.Aprobada;
+    Auth.audit(solicitud, req);
+    solicitud.save();
 }
