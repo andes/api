@@ -13,13 +13,13 @@ const ObjectId = Types.ObjectId;
 
 
 export async function getCarpetasSolicitud(req) {
-    const body = req.body;
-    const organizacionId = body.organizacion;
-    const tipoPrestacionId = body.idTipoPrestacion;
-    const espacioFisicoId = body.idEspacioFisico;
-    const profesionalId = body.idProfesional;
-    const horaInicio = body.fechaDesde;
-    const horaFin = body.fechaHasta;
+    const query = req.query;
+    const organizacionId = query.organizacion;
+    const tipoPrestacionId = query.idTipoPrestacion;
+    const espacioFisicoId = query.idEspacioFisico;
+    const profesionalId = query.idProfesional;
+    const horaInicio = query.fechaDesde;
+    const horaFin = query.fechaHasta;
 
 
     // [TODO] Paralelizar la busquedas de turnos, sobreturnos y solicitudesManuales
@@ -39,13 +39,13 @@ export async function getCarpetasSolicitud(req) {
 }
 
 export async function getCarpetasPrestamo(req) {
-    const body = req.body;
-    const organizacionId = body.organizacion;
-    const tipoPrestacionId = body.idTipoPrestacion;
-    const espacioFisicoId = body.idEspacioFisico;
-    const profesionalId = body.idProfesional;
-    const horaInicio = body.fechaDesde;
-    const horaFin = body.fechaHasta;
+    const query = req.query;
+    const organizacionId = query.organizacion;
+    const tipoPrestacionId = query.idTipoPrestacion;
+    const espacioFisicoId = query.idEspacioFisico;
+    const profesionalId = query.idProfesional;
+    const horaInicio = query.fechaDesde;
+    const horaFin = query.fechaHasta;
     const carpetas = await findCarpetasPrestamo(new ObjectId(organizacionId), horaInicio, horaFin, tipoPrestacionId, espacioFisicoId, profesionalId);
 
     return carpetas;
@@ -439,8 +439,8 @@ function getNroCarpeta(organizacionId, carpetas) {
 */
 
 export async function getHistorial(req) {
-    const nroCarpeta = req.body.numero;
-    const organizacionId = req.body.organizacion._id;
+    const nroCarpeta = req.query.numero;
+    const organizacionId = req.query.organizacion;
 
     const filter: any = {
         'organizacion._id': organizacionId,

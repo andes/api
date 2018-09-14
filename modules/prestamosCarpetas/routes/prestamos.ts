@@ -3,8 +3,8 @@ import * as prestamosController from '../controller/prestamosController';
 
 const router = express.Router();
 
-// [TODO] Cambiar a get
-router.post('/prestamosHC/getCarpetasSolicitud', async (req, res, next) => {
+
+router.get('/prestamosHC/solicitudes', async (req, res, next) => {
     try {
         const resultado = await prestamosController.getCarpetasSolicitud(req);
         res.json(resultado);
@@ -13,8 +13,7 @@ router.post('/prestamosHC/getCarpetasSolicitud', async (req, res, next) => {
     }
 });
 
-// [TODO] Cambiar a get
-router.post('/prestamosHC/getCarpetasPrestamo', async (req, res, next) => {
+router.get('/prestamosHC/prestamos', async (req, res, next) => {
     try {
         const resultado = await prestamosController.getCarpetasPrestamo(req);
         res.json(resultado);
@@ -23,8 +22,6 @@ router.post('/prestamosHC/getCarpetasPrestamo', async (req, res, next) => {
     }
 });
 
-
-// [TODO] Dejar una sola ruta de prestarCarpeta
 router.post('/prestamosHC/prestarCarpeta', async (req, res, next) => {
     try {
         const resultado = await prestamosController.prestarCarpeta(req);
@@ -64,7 +61,7 @@ router.post('/prestamosHC/devolverCarpetas', async (req, res, next) => {
 });
 
 // [TODO] Cambiar a GET
-router.post('/prestamosHC/historial', async (req, res, next) => {
+router.get('/prestamosHC/historial', async (req, res, next) => {
     try {
         const resultado = await prestamosController.getHistorial(req);
         res.json(resultado);
@@ -73,7 +70,7 @@ router.post('/prestamosHC/historial', async (req, res, next) => {
     }
 });
 
-router.post('/prestamosHC/solicitudManualCarpeta', async (req, res, next) => {
+router.post('/prestamosHC/manual', async (req, res, next) => {
     try {
         const resultado = await prestamosController.solicitudManualCarpeta(req);
         res.json(resultado);
