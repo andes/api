@@ -8,11 +8,7 @@ export let tipoPrestacionSchema = new mongoose.Schema({
         type: String,
         enum: ['procedimiento', 'solicitud', 'hallazgo', 'trastorno', 'antecedenteFamiliar', 'régimen/tratamiento']
     },
-    noNominalizada: {
-        type: Boolean,
-        required: true,
-        default: false
-    },
+    noNominalizada: Boolean
 });
 
 /* Se definen los campos virtuals */
