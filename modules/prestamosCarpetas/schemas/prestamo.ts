@@ -2,13 +2,17 @@ import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 import { espacioFisicoSchema } from '../../../modules/turnos/schemas/espacioFisico';
 import * as nombreApellidoSchema from '../../../core/tm/schemas/nombreApellido';
 import * as constantes from './constantes';
-import * as mongoose from 'mongoose';
+import { Document, Schema, SchemaTypes, model, Model } from 'mongoose';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 
-const schema = new mongoose.Schema({
+export interface IPrestamo extends Document {
+
+}
+
+export const PrestamoSchema = new Schema({
     paciente: {
         type: {
-            id: mongoose.Schema.Types.ObjectId,
+            id: SchemaTypes.ObjectId,
             nombre: String,
             apellido: String,
             alias: String,
@@ -34,9 +38,9 @@ const schema = new mongoose.Schema({
     },
     datosPrestamo: {
         observaciones: String,
-        agendaId: mongoose.Schema.Types.ObjectId,
+        agendaId: SchemaTypes.ObjectId,
         turno: {
-            id: mongoose.Schema.Types.ObjectId,
+            id: SchemaTypes.ObjectId,
             profesionales: [nombreApellidoSchema],
             tipoPrestacion: tipoPrestacionSchema,
             espacioFisico: espacioFisicoSchema
@@ -55,13 +59,12 @@ const schema = new mongoose.Schema({
         profesional: nombreApellidoSchema,
         responsable: nombreApellidoSchema,
         observaciones: String,
-        idSolicitud: mongoose.Schema.Types.ObjectId
+        idSolicitud: SchemaTypes.ObjectId
     }
 });
 
-schema.plugin(require('../../../mongoose/audit'));
+PrestamoSchema.plugin(require('../../../mongoose/audit'));
 
 // Exportar modelo
-const model = mongoose.model('prestamo', schema, 'prestamo');
+export const Prestamo: Model<IPrestamo> = model<IPrestamo>('prestamos', PrestamoSchema, 'prestamos');
 
-export = model;

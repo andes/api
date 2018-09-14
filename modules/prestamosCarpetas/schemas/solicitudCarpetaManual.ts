@@ -6,8 +6,11 @@ import { espacioFisicoSchema } from '../../../modules/turnos/schemas/espacioFisi
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import * as constantes from './constantes';
 
+export interface ISolicitudManual extends Document {
 
-const solicitudCarpetaManualSchema = new mongoose.Schema({
+}
+
+export const SolicitudCarpetaManualSchema = new mongoose.Schema({
     fecha: Date,
     paciente: pacienteSchema,
     numero: String,
@@ -29,7 +32,7 @@ const solicitudCarpetaManualSchema = new mongoose.Schema({
     }
 });
 
-solicitudCarpetaManualSchema.plugin(require('../../../mongoose/audit'));
+SolicitudCarpetaManualSchema.plugin(require('../../../mongoose/audit'));
 
-const solicitudCarpetaManual = mongoose.model('solicitudCarpetaManual', solicitudCarpetaManualSchema, 'solicitudCarpetaManual');
-export = solicitudCarpetaManual;
+export const SolicitudCarpetaManual = mongoose.model('solicitudCarpetaManual', SolicitudCarpetaManualSchema, 'solicitudCarpetaManual');
+

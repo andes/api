@@ -2,15 +2,16 @@
 import { Auth } from './../../../auth/auth.class';
 import * as agenda from '../../../modules/turnos/schemas/agenda';
 import * as agendaCtrl from '../../../modules/turnos/controller/agenda';
-import * as prestamo from '../../../modules/prestamosCarpetas/schemas/prestamo';
-import * as solicitudCarpetaManualSchema from '../../../modules/prestamosCarpetas/schemas/solicitudCarpetaManual';
+import { Prestamo } from '../../../modules/prestamosCarpetas/schemas/prestamo';
+import { SolicitudCarpetaManual } from '../../../modules/prestamosCarpetas/schemas/solicitudCarpetaManual';
 import * as constantes from '../schemas/constantes';
 import { toArray } from '../../../utils/utils';
-import { ObjectId } from 'bson';
 import { searchByPatient } from '../../cda/controller/CDAPatient';
+import { Types } from 'mongoose';
 
+const ObjectId = Types.ObjectId;
 export async function getCarpetasSolicitud(req) {
-    return new Promise(async (resolve, reject) => {
+    // return new Promise(async (resolve, reject) => {
         const body = req.body;
         const organizacionId = body.organizacion;
         const tipoPrestacionId = body.idTipoPrestacion;
@@ -25,12 +26,12 @@ export async function getCarpetasSolicitud(req) {
         const carpetas = await findCarpetas(new ObjectId(organizacionId), nrosCarpetas);
         const prestamosCarpetas = await getRegistrosSolicitudCarpetas(req, organizacionId, [agendas, agendasSobreturno], carpetas, solicitudesManuales);
 
-        resolve(prestamosCarpetas);
-    });
+    return prestamosCarpetas;
+    // });
 }
 
 export async function getCarpetasPrestamo(req) {
-    return new Promise(async (resolve, reject) => {
+    // return new Promise(async (resolve, reject) => {
         const body = req.body;
         const organizacionId = body.organizacion;
         const tipoPrestacionId = body.idTipoPrestacion;
@@ -40,8 +41,8 @@ export async function getCarpetasPrestamo(req) {
         const horaFin = body.fechaHasta;
         const carpetas = await findCarpetasPrestamo(new ObjectId(organizacionId), horaInicio, horaFin, tipoPrestacionId, espacioFisicoId, profesionalId);
 
-        resolve(carpetas);
-    });
+    return carpetas;
+    // });
 }
 
 function getNrosCarpetas(agendas, agendasSobreturno, solicitudesManuales) {
@@ -171,7 +172,7 @@ async function findCarpetas(organizacionId, nrosCarpetas) {
     pipeline.push({ $sort: sort });
     pipeline.push({ $group: group });
 
-    return await toArray(prestamo.aggregate(pipeline).cursor({}).exec());
+    return await toArray(Prestamo.aggregate(pipeline).cursor({}).exec());
 }
 
 async function findCarpetasPrestamo(organizacionId, horaInicio, horaFin, tipoPrestacion, espacioFisico, profesional) {
@@ -215,7 +216,7 @@ async function findCarpetasPrestamo(organizacionId, horaInicio, horaFin, tipoPre
     pipeline.push({ $sort: sort });
     pipeline.push({ $group: group });
 
-    let result: any = await toArray(prestamo.aggregate(pipeline).cursor({}).exec());
+    let result: any = await toArray(Prestamo.aggregate(pipeline).cursor({}).exec());
 
     result = result.filter((el) => {
         return el.estado === constantes.EstadosPrestamosCarpeta.Prestada;
@@ -393,7 +394,7 @@ async function createCarpeta(datosCarpeta, estadoPrestamoCarpeta) {
         }
     }
 
-    return new prestamo({
+    return new Prestamo({
         paciente: (datosCarpeta.paciente ? datosCarpeta.paciente : pacienteSeleccionado),
         organizacion: datosCarpeta.organizacion,
         numero: (datosCarpeta._id ? datosCarpeta._id : datosCarpeta.numero),
@@ -447,12 +448,12 @@ export async function getHistorial(req) {
         numero: nroCarpeta
     };
 
-    return await prestamo.find(filter).sort('-createdAt');
+    return await Prestamo.find(filter).sort('-createdAt');
 }
 
 export async function solicitudManualCarpeta(req) {
     const body = req.body;
-    const solicitud = new solicitudCarpetaManualSchema({
+    const solicitud = new SolicitudCarpetaManual({
         fecha: body.fecha,
         paciente: body.paciente,
         numero: body.numero,
@@ -475,9 +476,9 @@ function getSolicitudCarpetaManual(unaOrganizacion, idSolicitud = null, estadoSo
     return new Promise((resolve, reject) => {
         let query;
         if (idSolicitud) {
-            query = solicitudCarpetaManualSchema.findById(idSolicitud);
+            query = SolicitudCarpetaManual.findById(idSolicitud);
         } else {
-            query = solicitudCarpetaManualSchema.find({});
+            query = SolicitudCarpetaManual.find({});
             query.where('organizacion._id').equals(unaOrganizacion);
             query.where('estado').equals((estadoSolicitud ? estadoSolicitud : constantes.EstadoSolicitudCarpeta.Pendiente));
         }
