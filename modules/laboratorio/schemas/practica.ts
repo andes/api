@@ -51,8 +51,9 @@ export let schema = new mongoose.Schema({
         type: String,
         required: false 
     },
-    resultado : {
-        formato : {
+    resultado: {
+        sinMuestra: Boolean,
+        formato: {
             tipo: {
                 type: String,
                 required: true 

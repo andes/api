@@ -13,13 +13,13 @@ export async function getUltimoNumeroProtocolo(idOrganizacion) {
         {$sort: {'solicitud.registros.valor.numeroProtocolo.numero':-1}},
         {$group: {
             _id: null,
-            first: { $first: "$$ROOT" }}
-        }    
+            first: { $first: "$$ROOT" }
+        }}        
     ];
 
     let resultados = await toArray(prestacion.aggregate(pipeline).cursor({}).exec());
     let ultimoNumero;
-    console.log('resultados[0]',resultados[0])
+
     if (resultados[0] && resultados[0].first.ejecucion.registros.valor && resultados[0].first.ejecucion.registros.valor.numero) {
         ultimoNumero = resultados[0].first.ejecucion.registros.valor.numero;
     } else {
