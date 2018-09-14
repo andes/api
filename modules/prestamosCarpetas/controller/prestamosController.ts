@@ -24,15 +24,14 @@ export async function getCarpetasSolicitud(req) {
 
     // [TODO] Paralelizar la busquedas de turnos, sobreturnos y solicitudesManuales
     const solicitudesManuales = await getSolicitudCarpetaManual(organizacionId);
-    // [TODO] Castear 'organizacionId' a ObjectId en la función interna
-    const agendas = await buscarAgendasTurnos(new ObjectId(organizacionId), tipoPrestacionId, espacioFisicoId, profesionalId, horaInicio, horaFin);
-    const agendasSobreturno = await buscarAgendasSobreturnos(new ObjectId(organizacionId), tipoPrestacionId, espacioFisicoId, profesionalId, horaInicio, horaFin);
+    const agendas = await buscarAgendasTurnos(organizacionId, tipoPrestacionId, espacioFisicoId, profesionalId, horaInicio, horaFin);
+    const agendasSobreturno = await buscarAgendasSobreturnos(organizacionId, tipoPrestacionId, espacioFisicoId, profesionalId, horaInicio, horaFin);
 
 
     const nrosCarpetas = getNrosCarpetas(agendas, agendasSobreturno, solicitudesManuales);
 
     // [TODO] Castear a ObjectId en la función interna
-    const carpetas = await findCarpetas(new ObjectId(organizacionId), nrosCarpetas);
+    const carpetas = await findCarpetas(organizacionId, nrosCarpetas);
     const prestamosCarpetas = await getRegistrosSolicitudCarpetas(req, organizacionId, [agendas, agendasSobreturno], carpetas, solicitudesManuales);
 
     return prestamosCarpetas;
@@ -46,7 +45,7 @@ export async function getCarpetasPrestamo(req) {
     const profesionalId = query.idProfesional;
     const horaInicio = query.fechaDesde;
     const horaFin = query.fechaHasta;
-    const carpetas = await findCarpetasPrestamo(new ObjectId(organizacionId), horaInicio, horaFin, tipoPrestacionId, espacioFisicoId, profesionalId);
+    const carpetas = await findCarpetasPrestamo(organizacionId, horaInicio, horaFin, tipoPrestacionId, espacioFisicoId, profesionalId);
 
     return carpetas;
 }
@@ -167,7 +166,7 @@ async function findCarpetas(organizacionId, nrosCarpetas) {
     const sort = {};
     const group = {};
 
-    match['organizacion._id'] = { $eq: organizacionId };
+    match['organizacion._id'] = { $eq: new ObjectId(organizacionId) };
     match['numero'] = { $in: nrosCarpetas };
     sort['createdAt'] = -1;
     group['_id'] = '$numero';
@@ -181,7 +180,7 @@ async function findCarpetas(organizacionId, nrosCarpetas) {
     return await toArray(Prestamo.aggregate(pipeline).cursor({}).exec());
 }
 
-async function findCarpetasPrestamo(organizacionId, horaInicio, horaFin, tipoPrestacion, espacioFisico, profesionalId: string) {
+async function findCarpetasPrestamo(organizacionId: string, horaInicio: string, horaFin: string, tipoPrestacion: string, espacioFisico: string, profesionalId: string) {
     const pipeline = [];
     const match = {};
     const sort = {};
@@ -231,7 +230,7 @@ async function findCarpetasPrestamo(organizacionId, horaInicio, horaFin, tipoPre
     return result;
 }
 
-async function buscarAgendasSobreturnos(organizacionId, tipoPrestacion, espacioFisico, profesional, horaInicio, horaFin) {
+async function buscarAgendasSobreturnos(organizacionId: string, tipoPrestacion: string, espacioFisico: string, profesional: string, horaInicio: string, horaFin: string) {
 
     const matchCarpeta = {};
     if (tipoPrestacion) {
@@ -258,7 +257,7 @@ async function buscarAgendasSobreturnos(organizacionId, tipoPrestacion, espacioF
     }
 
     matchCarpeta['sobreturnos.estado'] = { $eq: 'asignado' };
-    matchCarpeta['sobreturnos.paciente.carpetaEfectores.organizacion._id'] = organizacionId;
+    matchCarpeta['sobreturnos.paciente.carpetaEfectores.organizacion._id'] = new ObjectId(organizacionId);
     matchCarpeta['sobreturnos.paciente.carpetaEfectores.nroCarpeta'] = { $ne: '' };
 
     const pipelineCarpeta = [
@@ -285,7 +284,7 @@ async function buscarAgendasSobreturnos(organizacionId, tipoPrestacion, espacioF
     return await toArray(agenda.aggregate(pipelineCarpeta).cursor({}).exec());
 }
 
-async function buscarAgendasTurnos(organizacionId, tipoPrestacion, espacioFisico, profesional, horaInicio, horaFin) {
+async function buscarAgendasTurnos(organizacionId: string, tipoPrestacion: string, espacioFisico: string, profesional: string, horaInicio: string, horaFin: string) {
 
     const matchCarpeta = {};
     if (tipoPrestacion) {
@@ -311,7 +310,7 @@ async function buscarAgendasTurnos(organizacionId, tipoPrestacion, espacioFisico
     }
 
     matchCarpeta['bloques.turnos.estado'] = { $eq: 'asignado' };
-    matchCarpeta['bloques.turnos.paciente.carpetaEfectores.organizacion._id'] = organizacionId;
+    matchCarpeta['bloques.turnos.paciente.carpetaEfectores.organizacion._id'] = new ObjectId(organizacionId);
     matchCarpeta['bloques.turnos.paciente.carpetaEfectores.nroCarpeta'] = { $ne: '' };
 
     const pipelineCarpeta = [
@@ -341,7 +340,7 @@ async function buscarAgendasTurnos(organizacionId, tipoPrestacion, espacioFisico
 }
 
 export async function prestarCarpeta(req) {
-    const prestamoCarpeta: any = await createCarpeta(req.body, constantes.EstadosPrestamosCarpeta.Prestada);
+    const prestamoCarpeta = await createCarpeta(req.body, constantes.EstadosPrestamosCarpeta.Prestada);
     if (prestamoCarpeta.datosSolicitudManual.idSolicitud) {
         await cambiarEstadoSolicitudManual(req, prestamoCarpeta.datosSolicitudManual.idSolicitud, prestamoCarpeta.organizacion);
     }
@@ -414,29 +413,19 @@ async function createCarpeta(datosCarpeta, estadoPrestamoCarpeta): Promise<IPres
     });
 }
 
-async function savePrestamoCarpeta(req, nuevoPrestamo) {
+async function savePrestamoCarpeta(req, nuevoPrestamo: IPrestamo) {
     Auth.audit(nuevoPrestamo, req);
     const _prestamoGuardado = await nuevoPrestamo.save();
     return _prestamoGuardado;
 }
 
-async function savePrestamosCarpetas(req, nuevosPrestamos) {
+async function savePrestamosCarpetas(req, nuevosPrestamos: IPrestamo[]) {
     nuevosPrestamos.forEach(async _prestamo => {
         Auth.audit(_prestamo, req);
         await _prestamo.save();
     });
 
 }
-/*
-function getNroCarpeta(organizacionId, carpetas) {
-    for (let i = 0; i < carpetas.length; i++) {
-        if (String(carpetas[i].organizacion._id) === organizacionId) {
-            return carpetas[i].nroCarpeta;
-        }
-    }
-    return;
-}
-*/
 
 export async function getHistorial(req) {
     const nroCarpeta = req.query.numero;
@@ -467,21 +456,21 @@ export async function solicitudManualCarpeta(req) {
     return solicitud;
 }
 
-async function getSolicitudCarpetaManual(unaOrganizacion, idSolicitud = null, estadoSolicitud = null) {
+async function getSolicitudCarpetaManual(organizacionId, idSolicitud = null, estadoSolicitud = null) {
     let query;
     if (idSolicitud) {
         query = SolicitudCarpetaManual.findById(idSolicitud);
     } else {
         query = SolicitudCarpetaManual.find({});
-        query.where('organizacion._id').equals(unaOrganizacion);
+        query.where('organizacion._id').equals(organizacionId);
         query.where('estado').equals((estadoSolicitud ? estadoSolicitud : constantes.EstadoSolicitudCarpeta.Pendiente));
     }
 
     return await query;
 }
 
-async function cambiarEstadoSolicitudManual(req, idSolicitud, idOrganizacion) {
-    const solicitud = await getSolicitudCarpetaManual(idOrganizacion.id, String(idSolicitud));
+async function cambiarEstadoSolicitudManual(req, idSolicitud, organizacion) {
+    const solicitud = await getSolicitudCarpetaManual(organizacion.id, String(idSolicitud));
     solicitud.estado = constantes.EstadoSolicitudCarpeta.Aprobada;
     Auth.audit(solicitud, req);
     solicitud.save();
