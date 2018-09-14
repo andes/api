@@ -22,10 +22,16 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
     }
 
     try {
-        let idPrestacion = req.body.id;
-        let fecha = moment(req.body.fecha).toDate();
+        const idPrestacion = req.body.id;
+
+        const fecha = moment(req.body.fecha).toDate();
+
         let orgId = req.user.organizacion.id ? req.user.organizacion.id : req.user.organizacion;
-        let yaExiste = await cdaCtr.CDAExists(idPrestacion, fecha, orgId);
+        if (Auth.check(req, 'cda:organizacion') && req.body.organizacion) {
+            orgId = req.body.organizacion;
+        }
+
+        const yaExiste = await cdaCtr.CDAExists(idPrestacion, fecha, orgId);
         if (yaExiste) {
             return next({ error: 'prestacion_existente' });
         }
@@ -43,7 +49,7 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
         const file = req.body.file;
         const texto = req.body.texto;
         // Terminar de decidir esto
-        const organizacion = await Organizaciones.findById(orgId);
+        const organizacion = await Organizaciones.findById(orgId, { _id: 1, nombre: 1 });
         let cie10 = null;
         if (cie10Code) {
             cie10 = await Cie10.findOne({ codigo: cie10Code });

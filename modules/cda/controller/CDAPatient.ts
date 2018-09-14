@@ -5,9 +5,7 @@ import { Patient } from './class/Patient';
 import { Organization } from './class/Organization';
 import { Author } from './class/Author';
 import { Body, Component, ImageComponent } from './class/Body';
-import {
-    CDABuilder
-} from './builder/CdaBuilder';
+import { CDABuilder } from './builder/CdaBuilder';
 
 import * as base64_stream from 'base64-stream';
 import { makeFs } from '../schemas/CDAFiles';
@@ -16,6 +14,7 @@ import * as moment from 'moment';
 
 import { CDA as CDAConfig } from '../../../config.private';
 import { configuracionPrestacionModel } from './../../../core/term/schemas/configuracionPrestacion';
+import { Auth } from '../../../auth/auth.class';
 
 /**
  * Matcheamos los datos del paciente.
@@ -31,20 +30,26 @@ import { configuracionPrestacionModel } from './../../../core/term/schemas/confi
  */
 export async function findOrCreate(req, dataPaciente, organizacion) {
     if (dataPaciente.id) {
-
-        const identificador = {
-            entidad: String(organizacion),
-            valor: dataPaciente.id
-        };
-        try {
-            const query = await pacienteCtr.buscarPacienteWithcondition({
-                identificadores: identificador
-            });
-            if (query) {
-                return query.paciente;
+        if (Auth.check(req, 'cda:paciente')) {
+            const realPac = await pacienteCtr.buscarPaciente(dataPaciente.id);
+            if (realPac.paciente) {
+                return realPac.paciente;
             }
-        } catch (e) {
-            // nothing to do here
+        } else {
+            const identificador = {
+                entidad: String(organizacion),
+                valor: dataPaciente.id
+            };
+            try {
+                const query = await pacienteCtr.buscarPacienteWithcondition({
+                    identificadores: identificador
+                });
+                if (query) {
+                    return query.paciente;
+                }
+            } catch (e) {
+                // nothing to do here
+            }
         }
     }
     const pacientes = await pacienteCtr.matchPaciente(dataPaciente);
