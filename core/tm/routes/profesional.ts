@@ -154,7 +154,7 @@ router.get('/profesionales/firma/:id*?', Auth.authenticate(), (req: any, res, ne
 
     }
     if (req.query.firmaAdmin) {
-
+console.log(req.query);
         let idAdmin = req.query.firmaAdmin;
         let fotoAdmin = makeFsFirmaAdmin();
         fotoAdmin.find({
@@ -164,10 +164,13 @@ router.get('/profesionales/firma/:id*?', Auth.authenticate(), (req: any, res, ne
                     '_id': -1
                 }
             }, function (err, file) {
+                console.log(file);
                 if (file[0] == null) {
                     res.send(null);
                 } else {
-                    var stream1 = fotoAdmin.readById(file[0].id, function (err2, buffer) {
+                    console.log(file[0]._id);
+                    var stream1 = fotoAdmin.readById(file[0]._id, function (err2, buffer) {
+                        console.log(buffer);
                         if (err2) {
                             return next(err2);
                         }

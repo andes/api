@@ -284,6 +284,7 @@ export class Auth {
         let token: UserToken = {
             id: mongoose.Types.ObjectId(),
             usuario: {
+                id: user.id,
                 nombreCompleto: user.nombre + ' ' + user.apellido,
                 nombre: user.nombre,
                 apellido: user.apellido,
