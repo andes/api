@@ -1,4 +1,3 @@
-import * as camas from './camas';
 import * as mongoose from 'mongoose';
 import * as edificioSchema from './edificio';
 import * as direccionSchema from './direccion';
@@ -14,7 +13,7 @@ export let mapaSectoresSchema = new mongoose.Schema({
     },
     nombre: String
 });
-mapaSectoresSchema.add({ hijos: [ mapaSectoresSchema ] });
+mapaSectoresSchema.add({ hijos: [mapaSectoresSchema] });
 
 let codigoSchema = new mongoose.Schema({
     sisa: {
@@ -26,7 +25,7 @@ let codigoSchema = new mongoose.Schema({
     sips: String
 });
 
-let _schema = new mongoose.Schema({
+const _schema = new mongoose.Schema({
     codigo: { type: codigoSchema },
     nombre: String,
     tipoEstablecimiento: { type: tipoEstablecimientoSchema },
@@ -42,7 +41,7 @@ let _schema = new mongoose.Schema({
     fechaAlta: Date,
     fechaBaja: Date,
     mapaSectores: [mapaSectoresSchema],
-    unidadesOrganizativas: [ SnomedConcept ]
+    unidadesOrganizativas: [SnomedConcept]
 });
 const audit = require('../../../mongoose/audit');
 _schema.plugin(audit);

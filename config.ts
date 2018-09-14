@@ -13,9 +13,11 @@ const mobileMiddleware = [
     Auth.authenticate()
 ];
 
+/*
 const publicMiddleware = [
     Auth.authenticatePublic()
 ];
+*/
 
 
 // Habilita/deshabilita módulos de la API
@@ -149,12 +151,18 @@ export const modules = {
         active: true,
         path: './modules/sugerencias/routes',
         route: '/modules/sugerencias',
-        middleware: null
+        middleware: appMiddleware
     },
     prestamosCarpetas: {
         active: true,
         path: './modules/prestamosCarpetas/routes',
         route: '/modules/prestamosCarpetas',
+        middleware: appMiddleware
+    },
+    configFacturacionAutomatica: {
+        active: true,
+        path: './modules/facturacionAutomatica/routes',
+        route: '/modules/facturacionAutomatica',
         middleware: appMiddleware
     },
     carpetas: {
@@ -163,6 +171,7 @@ export const modules = {
         route: '/modules/carpetas',
         middleware: appMiddleware
     }
+
 };
 
 // Cotas de consumo de APIs

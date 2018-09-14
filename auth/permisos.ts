@@ -77,6 +77,7 @@ export default [
                     { key: 'solicitud', title: 'Registrar solicitud', type: 'boolean' },
                     { key: 'autocitado', title: 'Registrar Autocitación', type: 'boolean' },
                     { key: 'darTurnos', title: 'Dar turnos desde punto inicio', type: 'boolean' },
+                    { key: 'puedeEditarCarpeta', title: 'Editar número de carpeta', type: 'boolean' }
                 ]
             }
         ]
@@ -193,7 +194,7 @@ export default [
     },
     {
         key: 'matriculaciones',
-        title: 'matriculaciones',
+        title: 'Matriculaciones',
         comment: '',
         child: [
             {
@@ -260,6 +261,8 @@ export default [
             { key: 'get', title: 'Leer CDA', type: 'boolean' },
             { key: 'list', title: 'Listar CDA por paciente', type: 'boolean' },
             { key: 'post', title: 'Generar CDA', type: 'boolean' },
+            { key: 'organizacion', title: 'Seleccionar organización', type: 'boolean' },
+            { key: 'paciente', title: 'Setear paciente', type: 'boolean' },
         ]
     },
     {

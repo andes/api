@@ -8,7 +8,7 @@ export let llaveSchema = new mongoose.Schema({
     },
     sexo: {
         type: String,
-        enum: [ 'femenino', 'masculino', 'otro', '' ]
+        enum: ['femenino', 'masculino', 'otro', '']
     },
     solicitud: {
         requerida: Boolean,

@@ -1,4 +1,3 @@
-import { SemanticTag } from './semantic-tag';
 import * as mongoose from 'mongoose';
 import { SnomedConcept } from './snomed-concept';
 

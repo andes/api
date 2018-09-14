@@ -10,13 +10,11 @@ import { defaultLimit, maxLimit } from './../../../config';
 import * as configPrivate from '../../../config.private';
 import { Auth } from '../../../auth/auth.class';
 
-let GeoJSON = require('geojson');
-let router = express.Router();
+const GeoJSON = require('geojson');
+const router = express.Router();
 
 
-
-
-router.get('/organizaciones/georef/:id?', async function (req, res, next) {
+router.get('/organizaciones/georef/:id?', async (req, res, next) => {
     if (req.params.id) {
         OrganizacionModel.findById(req.params.id, (err, data: any) => {
             if (err) {
@@ -96,8 +94,8 @@ router.get('/organizaciones/georef/:id?', async function (req, res, next) {
             .cursor({})
             .exec();
 
-        let data = await toArray(query);
-        let geoJsonData = GeoJSON.parse(data, {
+        const data = await toArray(query);
+        const geoJsonData = GeoJSON.parse(data, {
             Point: [
                 'lat', 'lng'
             ],
@@ -234,7 +232,7 @@ router.get('/organizaciones/georef/:id?', async function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/organizacion'
  */
-router.get('/organizaciones/:id*?', function (req, res, next) {
+router.get('/organizaciones/:id*?', (req, res, next) => {
     if (req.params.id) {
         OrganizacionModel.findById(req.params.id, (err, data) => {
             if (err) {
@@ -244,26 +242,26 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
         });
     } else {
         let query;
-        let act: Boolean = true;
-        let filtros = {
-            'activo': act
+        const act: Boolean = true;
+        const filtros = {
+            activo: act
         };
 
         if (req.query.nombre) {
             filtros['nombre'] = {
-                '$regex': utils.makePattern(req.query.nombre)
+                $regex: utils.makePattern(req.query.nombre)
             };
         }
 
         if (req.query.cuie) {
             filtros['codigo.cuie'] = {
-                '$regex': utils.makePattern(req.query.cuie)
+                $regex: utils.makePattern(req.query.cuie)
             };
         }
 
         if (req.query.sisa) {
             filtros['codigo.sisa'] = {
-                '$regex': utils.makePattern(req.query.sisa)
+                $regex: utils.makePattern(req.query.sisa)
             };
         }
         if (req.query.activo) {
@@ -271,15 +269,15 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
         }
         if (req.query.tipoEstablecimiento) {
             filtros['tipoEstablecimiento.nombre'] = {
-                '$regex': utils.makePattern(req.query.tipoEstablecimiento)
+                $regex: utils.makePattern(req.query.tipoEstablecimiento)
             };
         }
         if (req.query.ids) {
             filtros['_id'] = { $in: req.query.ids };
         }
 
-        let skip: number = parseInt(req.query.skip || 0, 10);
-        let limit: number = Math.min(parseInt(req.query.limit || defaultLimit, 10), maxLimit);
+        const skip: number = parseInt(req.query.skip || 0, 10);
+        const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, 10), maxLimit);
 
         query = OrganizacionModel.find(filtros).skip(skip).limit(limit);
         query.exec((err, data) => {

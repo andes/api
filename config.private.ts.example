@@ -2,7 +2,7 @@ function getEnv(key, _default, type = 's') {
     if (!!process.env[key] === false) {
         return _default;
     }
-    let value = process.env[key];
+    const value = process.env[key];
     switch (type) {
         case 'b':
             return value.toLowerCase() === 'true';
@@ -23,8 +23,8 @@ export const renaper = {
 
 // Configuración de Passport
 export const auth = {
-    useLdap:  getEnv('LDAP', false),
-    jwtKey:  getEnv('APP_KEY', '5gCYFZPp3dfA2m5UNElVkgRLFcFnBfZp'),
+    useLdap: getEnv('LDAP', false),
+    jwtKey: getEnv('APP_KEY', '5gCYFZPp3dfA2m5UNElVkgRLFcFnBfZp'),
     ldapOU: getEnv('LDAP_HOST', 'ou=People,o=integrabilidad,o=neuquen')
 };
 
@@ -59,6 +59,14 @@ export const hosts = {
         options: {
             reconnectTries: Number.MAX_VALUE, // Never stop trying to reconnect
             reconnectInterval: 500,
+        }
+    },
+
+    mongoDB_puco: {
+        host: getEnv('MONGO_PUCO', 'mongodb://localhost:27017/padrones'),
+        options: {
+            reconnectTries: Number.MAX_VALUE, // Never stop trying to reconnect
+            reconnectInterval: 1500,
         }
     }
 };
@@ -95,6 +103,15 @@ export const sintys = {
     port: getEnv('SINTYS_PORT', 443, 'n'),
     path: getEnv('SINTYS_PATH', '')
 };
+// Configuración para PUCO
+export const puco = {
+    database: 'puco',
+    auth: {
+        user: '',
+        password: ''
+    }
+};
+
 
 export const snomed = {
     dbName: getEnv('SNOMED_DB', 'es-edition'),
@@ -109,11 +126,13 @@ export const pushNotificationsSettings = {
     },
     apn: {
         token: {
-            key: './certs/key.p8', // optionally: fs.readFileSync('./certs/key.p8')
-            keyId: 'ABCD',
-            teamId: 'EFGH',
+            key: getEnv('IOS_KEY_FILE', './certs/key.p8'), // optionally: fs.readFileSync('./certs/key.p8')
+            keyId: getEnv('IOS_KEY_ID', ''),
+            teamId: getEnv('IOS_TEAM_ID', ''),
         },
-    }
+        production: getEnv('IOS_ENVIRONMENT', true, 'b')
+    },
+    domainIOS: getEnv('IOS_MOBILE_DOMAIN', '')
 };
 
 // E-mail server settings
@@ -153,7 +172,7 @@ export const userScheduler = {
             apellido: 'Scheduler'
         },
         organizacion: {
-            'nombre': 'Ejemplo'
+            nombre: 'Ejemplo'
         }
     },
     ip: '0.0.0.0',
@@ -177,7 +196,7 @@ export const conSql = {
 };
 
 export const conSqlHPN = {
-    auth : {
+    auth: {
         user: '',
         password: ''
     },
@@ -200,13 +219,13 @@ export const CDA = {
 };
 
 export const wsSalud = {
-   host: '',
-   hostHPN: '',
-   getPaciente: '',
-   getResultado: '',
-   hellerWS: '',
-   hellerFS: '',
-   hpnWS: '',
+    host: '',
+    hostHPN: '',
+    getPaciente: '',
+    getResultado: '',
+    hellerWS: '',
+    hellerFS: '',
+    hpnWS: '',
 };
 
 export const conSqlPecas = {
@@ -219,3 +238,20 @@ export const conSqlPecas = {
         database: ''
     }
 };
+
+export const sqlCarpetasJob = {
+    user: '',
+    password: '',
+    server: '',
+    database: '',
+    requestTimeout: '',
+    stream: ''
+};
+
+export const TwitterConfig = {
+    consumer_key: '',
+    consumer_secret: '',
+    access_token_key: '',
+    access_token_secret: ''
+};
+

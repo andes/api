@@ -38,7 +38,7 @@ docker build -t andesnqn/api .
 docker run  -p  3002:3002  --rm --name andes_api andesnqn/api 
 ```
 
-### Run container for developtment
+### Run container for development
 
 ```bash
 docker run -v  ${pwd}:/usr/src/api  -p  3002:3002  --rm --name andes_api andesnqn/api 
