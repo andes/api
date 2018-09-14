@@ -24,6 +24,7 @@ import {
 import * as stream from 'stream';
 import * as base64 from 'base64-stream';
 import { Auth } from '../../../auth/auth.class';
+import { vencimientoMatriculaGrado, vencimientoMatriculaPosgrado } from '../controller/profesional';
 
 import { sendSms } from '../../../utils/roboSender/sendSms';
 import { toArray } from '../../../utils/utils';
@@ -37,7 +38,7 @@ router.get('/profesionales/ultimoPosgrado', async (req, res, next) => {
     { '$unwind': '$formacionPosgrado.matriculacion' },
     {
         '$sort': { 'formacionPosgrado.matriculacion.matriculaNumero': -1 }
-    }, { '$limit' : 1 }];
+    }, { '$limit': 1 }];
 
 
     let data = await toArray(profesional.aggregate(query).cursor({}).exec());
@@ -46,6 +47,41 @@ router.get('/profesionales/ultimoPosgrado', async (req, res, next) => {
 
     res.json(ultimoNumero);
 });
+
+router.get('/profesionales/estadisticas', async (req, res, next) => {
+    let estadisticas = {};
+      estadisticas['total'] = await profesional.count({});
+     estadisticas['totalMatriculados'] = await  profesional.count({ rematriculado: false });
+     estadisticas['totalRematriculados'] = await profesional.count({ rematriculado: true });
+//     let estadisticas;
+//  let total =  await  profesional.find({}).count().exec(function (err, data) {
+
+//         console.log(data);
+//       return data;
+
+//     });
+
+    console.log(estadisticas);
+    // let totalMatriculados =   await  profesional.find({ rematriculado: false }).count().exec(function (err, data2) {
+    //     if (err) {
+    //         return next(err);
+    //     }
+    //     return data2;
+    // });
+
+    // let totalRematriculados =  await  profesional.find({ rematriculado: true }).count().exec(function (err, data2) {
+    //     if (err) {
+    //         return next(err);
+    //     }
+    //     return data2;
+    // });
+
+    res.json(estadisticas);
+
+
+
+});
+
 
 router.get('/profesionales/foto/:id*?', Auth.authenticate(), (req: any, res, next) => {
     if (!Auth.check(req, 'matriculaciones:profesionales:getProfesionalFoto')) {
@@ -684,8 +720,9 @@ router.get('/resumen/:id*?', function (req, res, next) {
 });
 
 
-
-
-
+router.post('/profesionales/vencimientoMatriculaGrado', async (req, res, next) => {
+    let prueba = await Promise.all([vencimientoMatriculaGrado(), vencimientoMatriculaPosgrado()]);
+    console.log(prueba);
+});
 
 export = router;

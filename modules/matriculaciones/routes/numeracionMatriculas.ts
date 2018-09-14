@@ -54,10 +54,10 @@ router.get('/numeraciones/:id*?', function (req, res, next) {
 
         var busquedaNumeracion = {};
         if (req.query.codigo) {
-            busquedaNumeracion['profesion._id'] = req.query.codigo;
+            busquedaNumeracion['profesion.codigo'] = req.query.codigo;
         }
         if (req.query.codigoEspecialidad) {
-            busquedaNumeracion['especialidad._id'] = req.query.codigoEspecialidad;
+            busquedaNumeracion['especialidad.codigo'] = req.query.codigoEspecialidad;
         }
 
         if (req.query.codigoSisa) {

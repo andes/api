@@ -38,8 +38,7 @@ export let profesionalSchema = new mongoose.Schema({
     estadoCivil : {
         type: String,
         enum:  ['casado', 'separado', 'divorciado', 'viudo', 'soltero', 'otro'],
-        required: false,
-        default: 'otro'
+        required: false
     },
     contactos: [contactoSchema],
     domicilios: [direccionSchema],

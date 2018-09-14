@@ -181,7 +181,8 @@ router.get('/turnos/proximos/?', Auth.authenticate(), function (request: any, re
 router.get('/turnos/:tipo/?', async function (request, response, errorHandler) {
 
     let matchObj = {
-        tipo: request.params.tipo
+        // comentado para diferenciar los diferentes tipo de turnos y filtrar por lo mismo
+        // tipo: request.params.tipo
     };
 
     if (request.query.anio) {
