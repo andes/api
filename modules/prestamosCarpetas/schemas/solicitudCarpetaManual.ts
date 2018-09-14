@@ -1,16 +1,32 @@
-import * as mongoose from 'mongoose';
+import { Schema, Model, model, Document } from 'mongoose';
 import * as nombreApellidoSchema from '../../../core/tm/schemas/nombreApellido';
 import { pacienteSchema } from '../../../core/mpi/schemas/paciente';
-import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
-import { espacioFisicoSchema } from '../../../modules/turnos/schemas/espacioFisico';
+import { tipoPrestacionSchema, ITipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
+import { espacioFisicoSchema, IEspacioFisico } from '../../../modules/turnos/schemas/espacioFisico';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import * as constantes from './constantes';
 
+// [TODO] acomodar los schemas nombreApellido y nombreSchema
+// [TODO] implementar interface paciente
 export interface ISolicitudManual extends Document {
+    fecha: Date;
+    numero: String;
+    estado: String;
+    paciente: any;
+    organizacion: {
+        nombre: String;
+    };
 
+    datosSolicitudManual: {
+        espacioFisico: IEspacioFisico;
+        prestacion: ITipoPrestacion;
+        profesional: { nombre: String; apellido: String };
+        responsable: { nombre: String; apellido: String };
+        observaciones: String;
+    };
 }
 
-export const SolicitudCarpetaManualSchema = new mongoose.Schema({
+export const SolicitudCarpetaManualSchema = new Schema({
     fecha: Date,
     paciente: pacienteSchema,
     numero: String,
@@ -34,5 +50,5 @@ export const SolicitudCarpetaManualSchema = new mongoose.Schema({
 
 SolicitudCarpetaManualSchema.plugin(require('../../../mongoose/audit'));
 
-export const SolicitudCarpetaManual = mongoose.model('solicitudCarpetaManual', SolicitudCarpetaManualSchema, 'solicitudCarpetaManual');
+export const SolicitudCarpetaManual: Model<ISolicitudManual> = model<ISolicitudManual>('solicitudCarpetaManual', SolicitudCarpetaManualSchema, 'solicitudCarpetaManual');
 
