@@ -6,15 +6,15 @@
 
 
 import { Connections } from './../connections';
-let path = require('path');
+const path = require('path');
 
 Connections.initialize();
 
-let done = () => {
+const done = () => {
     process.exit(0);
 };
 
-let actionName = process.argv[2];
-let action = require(path.join('..', actionName));
+const actionName = process.argv[2];
+const action = require(path.join('..', actionName));
 
 action(done);

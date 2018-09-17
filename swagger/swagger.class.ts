@@ -18,12 +18,11 @@ export class Swagger {
         }
 
         // initialize swagger-jsdoc
-        let swagger = swaggerJSDoc({
+        const swagger = swaggerJSDoc({
             swaggerDefinition: {
                 info: {
-                    title: 'ANDES API',
-                    version: '2.6.0',
-                    description: 'Documentación del proyecto ANDES',
+                    title: 'Swagger Andes',
+                    description: 'Este es un servidor de muestra del servidor de Andes. Puede solicitar su token a info@andes.gob.ar',
                 },
                 host: '/',
                 basePath: '/api',
@@ -43,12 +42,14 @@ export class Swagger {
                 // TODO: verificar la documento de las APIs existentes
                 path.join(__dirname, './definitions.yml'),
                 // path.join(__dirname, '../core/term/routes/**/*.ts'),
-                path.join(__dirname, '../modules/cda/api-doc.yml')
+                path.join(__dirname, '../modules/cda/api-doc.yml'),
+                path.join(__dirname, '../fhir/api-doc.yml')
+                // path.join(__dirname, '../core/mpi/api-doc.yml')
             ],
         });
 
         // serve swagger
-        app.get('/swagger.json', function (req, res) {
+        app.get('/swagger.json', (req, res) => {
             res.setHeader('Content-Type', 'application/json');
             res.send(swagger);
         });
