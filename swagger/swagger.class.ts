@@ -18,31 +18,42 @@ export class Swagger {
         }
 
         // initialize swagger-jsdoc
-        let swagger = swaggerJSDoc({
+        const swagger = swaggerJSDoc({
             swaggerDefinition: {
                 info: {
                     title: 'ANDES API',
-                    version: '2.0.0',
-                    description: 'API para el proyecto ANDES',
+                    version: '2.6.0',
+                    description: 'Documentación del proyecto ANDES',
                 },
                 host: '/',
                 basePath: '/api',
+                schemes: ['https'],
+                consumes: ['application/json'],
+                produces: ['application/json'],
+                securityDefinitions: {
+                    JWT: {
+                        type: 'apiKey',
+                        in: 'header',
+                        name: 'Authorization'
+                    }
+                },
             },
             // path to the API docs
             apis: [
                 // TODO: verificar la documento de las APIs existentes
-                // path.join(__dirname, '../core')
-                path.join(__dirname, '../core/term/routes/**/*.ts')
+                path.join(__dirname, './definitions.yml'),
+                // path.join(__dirname, '../core/term/routes/**/*.ts'),
+                path.join(__dirname, '../modules/cda/api-doc.yml')
             ],
         });
 
         // serve swagger
-        app.get('/swagger.json', function (req, res) {
+        app.get('/swagger.json', (req, res) => {
             res.setHeader('Content-Type', 'application/json');
             res.send(swagger);
         });
 
         // Incluimos swagger-ui
-        app.use('/docs', express.static(__dirname + '/static'));
+        app.use('/api/docs', express.static(__dirname + '/static'));
     }
 }

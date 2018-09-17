@@ -1,32 +1,42 @@
-import { IID, ICode, IConfidentialityCode, ILanguageCode, ISetId } from '../class/interfaces';
-import { CDA } from '../class/CDA';
 import * as builder from 'xmlbuilder';
 import { Patient } from '../class/Patient';
 import { BaseBuilder } from './BaseBuilder';
+
+import { CDA as CDAConfig } from '../../../../config.private';
+
 export class PatientBuilder extends BaseBuilder {
 
     public build(patient: Patient) {
-        let recordTarget = builder.create('recordTarget').ele('patientRole');
+        const recordTarget = builder.create('recordTarget').ele('patientRole');
 
         this.createNode(recordTarget, 'id', patient.getId());
 
-        let patientNode = recordTarget.ele('patient');
+        const dni = patient.getDocumento();
+        if (dni) {
+            this.createNode(recordTarget, 'id', {
+                root: CDAConfig.dniOID,
+                extension: dni
+            });
+        }
 
-        let nameNode = patientNode.ele('name');
+        const patientNode = recordTarget.ele('patient');
+
+        const nameNode = patientNode.ele('name');
         this.createNode(nameNode, 'given', null, patient.getFirstname());
         this.createNode(nameNode, 'family', null, patient.getLastname());
 
-        if (patient.getBirthtime()) {
-            this.createNode(patientNode, 'birthTime', { value: this.fromDate(patient.getBirthtime()) } );
-        }
 
-        let gender = patient.getGender();
+        const gender = patient.getGender();
         if (gender) {
             this.createNode(patientNode, 'administrativeGenderCode', {
-                codeSyatem: '2.16.840.1.113883.5.1',
+                codeSystem: '2.16.840.1.113883.5.1',
                 code: gender.toLowerCase() === 'masculino' ? 'M' : 'F',
                 displayName: gender
             });
+        }
+
+        if (patient.getBirthtime()) {
+            this.createNode(patientNode, 'birthTime', { value: this.fromDate(patient.getBirthtime()) } );
         }
         return recordTarget;
     }

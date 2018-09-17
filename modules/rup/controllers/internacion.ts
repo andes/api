@@ -1,7 +1,3 @@
-import * as config from '../../../config';
-import * as configPrivate from '../../../config.private';
-import * as moment from 'moment';
-import * as mongoose from 'mongoose';
 import { model as Prestacion } from '../schemas/prestacion';
 import * as camasController from './../controllers/cama';
 
@@ -32,8 +28,8 @@ export function PasesParaCenso(dtoCama) {
                 let salida = {
                     cama: dtoCama._id,
                     ultimoEstado: dtoCama.ultimoEstado,
-                    pases: pases,
-                    internacion: internacion
+                    pases,
+                    internacion
                 };
                 resolve(salida);
             });

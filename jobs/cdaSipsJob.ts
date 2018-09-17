@@ -1,22 +1,23 @@
 import * as labsImport from '../modules/cda/controller/import-labs';
-import { paciente as Paciente, pacienteMpi as PacienteMPI} from '../core/mpi/schemas/paciente';
-import * as moment from 'moment';
-import { Logger } from '../utils/logService';
+import { pacienteMpi as PacienteMPI} from '../core/mpi/schemas/paciente';
 import { log } from '../core/log/schemas/log';
-import * as config from '../config.private';
 import * as debug from 'debug';
-import * as mongoose from 'mongoose';
 import { pacienteApp as PacienteApp } from '../modules/mobileApp/schemas/pacienteApp';
 
+/**
+ * Es proceso esta hecho para ejecutarse manual.
+ */
+
+
 function run() {
-    let logger = debug('cdaSipsJob');
+    const logger = debug('cdaSipsJob');
 
     log.find({
-        'modulo': 'scheduler',
-        'operacion': 'cda'
+        modulo: 'scheduler',
+        operacion: 'cda'
     }).sort({ fecha: -1 }).limit(1).then((docs) => {
-        let skip = 0;
-        let limit = 4;
+        const skip = 0;
+        // let limit = 4;
 
         // if (docs.length) {
         //     let l: any = docs[0];
@@ -30,7 +31,7 @@ function run() {
             activacionApp: true
         }).then((cuentas) => {
             // let ids = [ mongoose.Types.ObjectId('586e6e8627d3107fde116357') ];
-            let ids = [];
+            const ids = [];
             cuentas.forEach((c: any) => {
                 if (c.pacientes && c.pacientes[0] && c.pacientes[0].id) {
                     ids.push(c.pacientes[0].id);
@@ -38,12 +39,12 @@ function run() {
             });
             // let _stream = Paciente.find({ estado: 'validado' }, {nombre: 1, apellido: 1, fechaNacimiento: 1, documento: 1, sexo: 1});
 
-            let _stream = PacienteMPI.find({ _id:  { $in: ids }}, {nombre: 1, apellido: 1, fechaNacimiento: 1, documento: 1, sexo: 1}); // .skip(skip).limit(limit);
+            const _stream = PacienteMPI.find({ _id:  { $in: ids }}, {nombre: 1, apellido: 1, fechaNacimiento: 1, documento: 1, sexo: 1}); // .skip(skip).limit(limit);
             _stream.then( async (pacientes: any[]) => {
 
                 logger('Start with skip=' + skip);
-                for (let pac of pacientes) {
-                    let result = await labsImport.importarDatos(pac);
+                for (const pac of pacientes) {
+                    const result = await labsImport.importarDatos(pac);
                     if (!result) {
                         return;
                     }
@@ -60,7 +61,6 @@ function run() {
             });
 
         });
-
 
 
     });

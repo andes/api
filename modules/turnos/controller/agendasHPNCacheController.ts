@@ -2,25 +2,22 @@ import * as operationsHPNCache from './operationsCacheHPNController';
 import * as configPrivate from '../../../config.private';
 import * as sql from 'mssql';
 
-const MongoClient = require('mongodb').MongoClient;
-let async = require('async');
 let pool;
-let transaction;
 
-let connection = {
+const connection = {
     user: configPrivate.conSqlHPN.auth.user,
     password: configPrivate.conSqlHPN.auth.password,
     server: configPrivate.conSqlHPN.serverSql.server,
     database: configPrivate.conSqlHPN.serverSql.database,
-    port: configPrivate.conSqlHPN.serverSql.port // solo para test! BORRAR
+    port: configPrivate.conSqlHPN.serverSql.port,
+    requestTimeout: 30000
 };
 
 export async function integracion() {
-    return new Promise<Array<any>>(async function (resolve, reject) {
+    return new Promise<Array<any>>(async (resolve, reject) => {
         try {
-            let promisesArray: any = [];
-            let agendasMongoPendientes = await operationsHPNCache.getAgendasDeMongoPendientes();
-            for (let agenda of agendasMongoPendientes) {
+            const agendasMongoPendientes = await operationsHPNCache.getAgendasDeMongoPendientes();
+            for (const agenda of agendasMongoPendientes) {
                 pool = await new sql.ConnectionPool(connection).connect();
                 await operationsHPNCache.saveAgendaToPrestaciones(agenda, pool);
                 pool.close();

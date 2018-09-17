@@ -1,4 +1,3 @@
-import { schema } from './../../rup/schemas/prestacion';
 import * as mongoose from 'mongoose';
 import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 import * as cie10 from '../../../core/term/schemas/cie10';
@@ -6,31 +5,31 @@ import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import * as obraSocialSchema from '../../obraSocial/schemas/obraSocial';
 import { SnomedConcept } from '../../rup/schemas/snomed-concept';
 
-let pacienteSchema = new mongoose.Schema({
+const pacienteSchema = new mongoose.Schema({
     id: mongoose.Schema.Types.ObjectId,
-            nombre: String,
-            apellido: String,
-            alias: String,
-            documento: String,
-            fechaNacimiento: Date,
-            telefono: String,
-            sexo: String,
-            carpetaEfectores: [{
-                organizacion: nombreSchema,
-                nroCarpeta: String
-            }],
-            obraSocial: { type: obraSocialSchema }
+    nombre: String,
+    apellido: String,
+    alias: String,
+    documento: String,
+    fechaNacimiento: Date,
+    telefono: String,
+    sexo: String,
+    carpetaEfectores: [{
+        organizacion: nombreSchema,
+        nroCarpeta: String
+    }],
+    obraSocial: { type: obraSocialSchema }
 });
 
 
-let turnoSchema = new mongoose.Schema({
+const turnoSchema = new mongoose.Schema({
     horaInicio: Date,
     asistencia: {
         type: String,
         enum: ['asistio', 'noAsistio', 'sinDatos']
     },
     primeraVez: {
-        type : {
+        type: {
             profesional: Boolean,
             tipoPrestacion: Boolean
         }

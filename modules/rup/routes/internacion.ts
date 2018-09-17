@@ -5,19 +5,19 @@ import * as internacionesController from './../controllers/internacion';
 import * as camasController from './../controllers/cama';
 import { Auth } from './../../../auth/auth.class';
 
-let router = express.Router();
+const router = express.Router();
 
-router.get('/internaciones/ultima/:idPaciente', function (req, res, next) {
+router.get('/internaciones/ultima/:idPaciente', (req, res, next) => {
     // buscamos la ultima interncion del paciente
     internacionesController.buscarUltimaInternacion(req.params.idPaciente, req.query.estado).then(
         internacion => {
             let salida = { ultimaInternacion: null, cama: null };
             if (internacion && internacion.length > 0) {
-                let ultimaInternacion = internacion[0];
+                const ultimaInternacion = internacion[0];
                 // Ahora buscamos si se encuentra asociada la internacion a una cama
                 camasController.buscarCamaInternacion(mongoose.Types.ObjectId(ultimaInternacion.id), 'ocupada').then(
                     camas => {
-                        salida = { ultimaInternacion: ultimaInternacion, cama: null };
+                        salida = { ultimaInternacion, cama: null };
                         if (camas && camas.length > 0) {
                             salida.cama = camas[0];
                         }
@@ -33,7 +33,7 @@ router.get('/internaciones/ultima/:idPaciente', function (req, res, next) {
         });
 });
 
-router.get('/internaciones/pases/:idInternacion', function (req, res, next) {
+router.get('/internaciones/pases/:idInternacion', (req, res, next) => {
     // buscamos los estados de la cama por donde "estuvo la internacion"
     camasController.buscarPasesCamaXInternacion(mongoose.Types.ObjectId(req.params.idInternacion)).then(
         camas => {
@@ -48,8 +48,7 @@ router.get('/internaciones/pases/:idInternacion', function (req, res, next) {
 });
 
 
-
-router.patch('/internaciones/desocuparCama/:idInternacion', function (req, res, next) {
+router.patch('/internaciones/desocuparCama/:idInternacion', (req, res, next) => {
     // buscamos el ultimo estado de la cama por donde "estuvo la internacion"
     camasController.camaXInternacion(mongoose.Types.ObjectId(req.params.idInternacion)).then(
         (unaCama: any) => {
@@ -84,7 +83,7 @@ router.patch('/internaciones/desocuparCama/:idInternacion', function (req, res, 
 });
 
 
-router.get('/internaciones/censo', function (req, res, next) {
+router.get('/internaciones/censo', (req, res, next) => {
     let unidad = req.query.unidad;
     let idOrganizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
     let resultadoFinal;
@@ -92,8 +91,8 @@ router.get('/internaciones/censo', function (req, res, next) {
     censoController.censoDiario(unidad, fecha, idOrganizacion).then(censoDiario => {
         censoController.completarResumenDiario(censoDiario, unidad, fecha, idOrganizacion).then(resumen => {
             resultadoFinal = {
-                censoDiario: censoDiario,
-                resumen: resumen
+                censoDiario,
+                resumen
             };
             res.json(resultadoFinal);
         }).catch(err => {
@@ -104,7 +103,7 @@ router.get('/internaciones/censo', function (req, res, next) {
     });
 });
 
-router.get('/internaciones/censoMensual', function (req, res, next) {
+router.get('/internaciones/censoMensual', (req, res, next) => {
     let unidad = req.query.unidad;
 
     let idOrganizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
@@ -116,7 +115,7 @@ router.get('/internaciones/censoMensual', function (req, res, next) {
     });
 });
 
-router.get('/internaciones/censo/disponibilidad', function (req, res, next) {
+router.get('/internaciones/censo/disponibilidad', (req, res, next) => {
     // conceptId de la unidad organizativa
     let unidad = req.query.unidad; // '310022001';
     let fecha = new Date(req.query.fecha);
