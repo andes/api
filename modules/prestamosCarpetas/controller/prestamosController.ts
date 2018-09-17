@@ -257,12 +257,12 @@ async function buscarAgendasSobreturnos(organizacionId, tipoPrestacion, espacioF
         },
         {
             $group: {
-            _id: { id: '$_id' },
-            profesionales: { $push: '$profesionales' },
-            espacioFisico: { $push: '$espacioFisico' },
-            tipoPrestacion: { $push: '$sobreturnos.tipoPrestacion' },
-            turnos: { $push: '$sobreturnos' }
-        }
+                _id: { id: '$_id' },
+                profesionales: { $push: '$profesionales' },
+                espacioFisico: { $push: '$espacioFisico' },
+                tipoPrestacion: { $push: '$sobreturnos.tipoPrestacion' },
+                turnos: { $push: '$sobreturnos' }
+            }
         }];
 
     return await toArray(agenda.aggregate(pipelineCarpeta).cursor({}).exec());

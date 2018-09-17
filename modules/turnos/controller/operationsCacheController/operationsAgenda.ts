@@ -391,8 +391,8 @@ async function markAgendaAsProcessed(agenda, error = null) {
             _id: agenda._id
         }, {
             $set: {
-                    estadoIntegracion
-                }
+                estadoIntegracion
+            }
         });
     } catch (err) {
         return err;
