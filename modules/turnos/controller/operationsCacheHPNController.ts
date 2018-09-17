@@ -1,41 +1,32 @@
-//  Imports
-import * as mongoose from 'mongoose';
-import {
-    agendasCache
-} from '../../legacy/schemas/agendasCache';
+import { agendasCache } from '../../legacy/schemas/agendasCache';
 import * as sql from 'mssql';
-import * as moment from 'moment';
 import * as constantes from '../../legacy/schemas/constantes';
 import * as logger from './../../../utils/loggerAgendaHPNCache';
-import * as agendaSchema from '../schemas/agenda';
-import * as pacienteHPN from './pacienteHPNController';
 import * as turnoCtrl from './turnoHPNCacheController';
-import { resolve } from 'path';
 import { configuracionPrestacionModel } from '../../../core/term/schemas/configuracionPrestacion';
 
 export async function saveAgendaToPrestaciones(agenda, pool) {
-    let transaction = await new sql.Transaction(pool);
-    return new Promise(async function (resolve2, reject) {
-        let idProfesional = agenda.profesionales ? await getIdProfesionalPrestaciones(agenda.profesionales[0].documento) : null;
+    const transaction = await new sql.Transaction(pool);
+    return new Promise(async (resolve2, reject) => {
+        const idProfesional = agenda.profesionales ? await getIdProfesionalPrestaciones(agenda.profesionales[0].documento) : null;
         if (idProfesional) {
-            transaction.begin(async err => {
-                let rolledBack = false;
+            transaction.begin(async _err => {
+                // let rolledBack = false;
                 transaction.on('rollback', aborted => {
-                    rolledBack = true;
+                    // rolledBack = true;
                 });
                 try {
                     let idAgendaHPN = await getIdAgendaHPN(agenda.id);
                     // Asumimos que la agenda posee un único tipo de prestación,
                     // y que ese id de prestación sera el que mismo para los bloques y turnos
-                    let idTipoPrestacion = await getIdTipoPrestacion(agenda);
+                    const idTipoPrestacion = await getIdTipoPrestacion(agenda);
                     if (idTipoPrestacion) {
                         if (!idAgendaHPN) {
                             idAgendaHPN = await saveAgenda(agenda, idTipoPrestacion);
                             await saveAgendaProfesional(idAgendaHPN, idProfesional);
                             await saveAgendaTipoPrestacion(idAgendaHPN, idTipoPrestacion);
                         }
-
-                        await saveBloques(idAgendaHPN, agenda.bloques, idTipoPrestacion);
+                        await saveBloques(idAgendaHPN, agenda, idTipoPrestacion);
                         await setEstadoAgendaToIntegrada(agenda._id);
                         transaction.commit(async err2 => {
                             resolve2();
@@ -46,6 +37,8 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
                 } catch (e) {
                     logger.LoggerAgendaCache.logAgenda(agenda._id, e);
                     transaction.rollback();
+                    // Reintentamos ejecutar la agenda hasta 3 retry, sino le cambiamos el estado a fail para no trabar el resto de las agendas
+                    await agendaRetryAndFail(agenda);
                     reject(e);
                 }
             });
@@ -55,7 +48,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
     });
 
     async function getIdProfesionalPrestaciones(documento) {
-        let query = 'select TOP(1) medicos.id ' +
+        const query = 'select TOP(1) medicos.id ' +
             'from Medicos ' +
             'where documento = @documento ' +
             'OR EXISTS ( ' +
@@ -73,7 +66,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
     }
 
     async function getIdAgendaHPN(idAndes) {
-        let query = 'SELECT id FROM dbo.Prestaciones_Worklist_Programacion WHERE andesId = @idAndes';
+        const query = 'SELECT id FROM dbo.Prestaciones_Worklist_Programacion WHERE andesId = @idAndes';
         let result = await pool.request()
             .input('idAndes', sql.VarChar(50), idAndes)
             .query(query);
@@ -83,7 +76,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
     }
 
     async function saveAgendaProfesional(idProgramacion, idProfesional) {
-        let query = 'INSERT INTO dbo.Prestaciones_Worklist_Programacion_Profesionales ' +
+        const query = 'INSERT INTO dbo.Prestaciones_Worklist_Programacion_Profesionales ' +
             '(idProgramacion, idProfesional) VALUES (@idProgramacion, @idProfesional)';
 
         return await new sql.Request(transaction)
@@ -97,7 +90,7 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
     }
 
     async function saveAgendaTipoPrestacion(idProgramacion, idTipoPrestacion) {
-        let query = 'INSERT INTO dbo.Prestaciones_Worklist_Programacion_TiposPrestaciones ' +
+        const query = 'INSERT INTO dbo.Prestaciones_Worklist_Programacion_TiposPrestaciones ' +
             '(idProgramacion, idTipoPrestacion) VALUES (@idProgramacion, @idTipoPrestacion)';
 
         return await new sql.Request(transaction)
@@ -111,18 +104,19 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
     }
 
     async function saveAgenda(_agenda, idTipoPrestacion) {
+        const autocitada = (_agenda.reservadoProfesional === _agenda.cantidadTurnos) ? 1 : 0;
         let idAgendaHPN;
-        let idUbicacion = turnoCtrl.getUbicacion(idTipoPrestacion); // checkar datos en produccion
-        let fechaHora = _agenda.horaInicio;
-        let fechaHoraFinalizacion = _agenda.horaFin;
-        let duracionTurnos = _agenda.bloques[0].duracionTurno;
-        let permiteTurnosSimultaneos = 0;
-        let permiteSobreturnos = 0;
-        let publicada = (_agenda.estado !== constantes.EstadoAgendaAndes.publicada ? 0 : 1);
-        let suspendida = (_agenda.estado !== constantes.EstadoAgendaAndes.suspendida ? 0 : 1);
-        let andesId = _agenda.id;
+        const idUbicacion = turnoCtrl.getUbicacion(idTipoPrestacion);
+        const fechaHora = _agenda.horaInicio;
+        const fechaHoraFinalizacion = _agenda.horaFin;
+        const duracionTurnos = _agenda.bloques[0].duracionTurno;
+        const permiteTurnosSimultaneos = 0;
+        const permiteSobreturnos = 0;
+        const publicada = (_agenda.estado === constantes.EstadoAgendaAndes.publicada || autocitada === 1) ? 1 : 0;
+        const suspendida = (_agenda.estado !== constantes.EstadoAgendaAndes.suspendida ? 0 : 1);
+        const andesId = _agenda.id;
 
-        let query = 'INSERT INTO dbo.Prestaciones_Worklist_Programacion ' +
+        const query = 'INSERT INTO dbo.Prestaciones_Worklist_Programacion ' +
             '(idUbicacion ' +
             ',idTipoPrestacion ' +
             ',fechaHora ' +
@@ -149,8 +143,8 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
         await new sql.Request(transaction)
             .input('idUbicacion', sql.Int, idUbicacion)
             .input('idTipoPrestacion', sql.Int, idTipoPrestacion)
-            .input('fechaHora', sql.DateTime, fechaHora)
-            .input('fechaHoraFinalizacion', sql.DateTime, fechaHoraFinalizacion)
+            .input('fechaHora', sql.DateTimeOffset, fechaHora)
+            .input('fechaHoraFinalizacion', sql.DateTimeOffset, fechaHoraFinalizacion)
             .input('duracionTurnos', sql.Int, duracionTurnos)
             .input('permiteTurnosSimultaneos', sql.Bit, permiteTurnosSimultaneos)
             .input('permiteSobreturnos', sql.Bit, permiteSobreturnos)
@@ -167,12 +161,19 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
         return idAgendaHPN;
     }
 
-    async function saveBloques(idAgendaAndes, bloques: Array<any>, idTipoPrestacion) {
-        for (let bloque of bloques) {
+
+    async function saveBloques(idAgendaAndes, _agenda: any, idTipoPrestacion) {
+        const bloques = _agenda.bloques;
+        for (const bloque of bloques) {
             await turnoCtrl.saveTurnos(idAgendaAndes, bloque, idTipoPrestacion, pool, transaction);
         }
+        if (_agenda.sobreturnos) {
+            for (const sobreturno of _agenda.sobreturnos) {
+                await turnoCtrl.saveSobreturno(idAgendaAndes, sobreturno, idTipoPrestacion, pool, transaction);
+            }
+        }
     }
-
+    /* [REVISAR]
     function executeQuery(query: any) {
         query += ' select SCOPE_IDENTITY() as id';
         return new Promise((resolve2: any, reject: any) => {
@@ -185,10 +186,11 @@ export async function saveAgendaToPrestaciones(agenda, pool) {
                 });
         });
     }
+    */
 }
 
 export async function getAgendasDeMongoPendientes() {
-    var ObjectId = require('mongoose').Types.ObjectId;
+    const ObjectId = require('mongoose').Types.ObjectId;
     return await agendasCache.find({
         estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente,
         'organizacion._id': new ObjectId(constantes.idOrganizacionHPN)
@@ -199,21 +201,21 @@ async function setEstadoAgendaToIntegrada(idAgenda) {
     return await agendasCache.update({
         _id: idAgenda
     }, {
-            $set: {
-                estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportada
-            }
-        }).exec();
+        $set: {
+            estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportada
+        }
+    }).exec();
 }
 
 export function getAgendasDeMongoExportadas() {
-    return new Promise<Array<any>>(function (resolve2, reject) {
+    return new Promise<Array<any>>((resolve2, reject) => {
         agendasCache.find({
             $or: [{
                 estadoIntegracion: constantes.EstadoExportacionAgendaCache.exportada
-            }, {
+            },    {
                 estadoIntegracion: constantes.EstadoExportacionAgendaCache.codificada
             }]
-        }).exec(function (err, data) {
+        }).exec((err, data) => {
             if (err) {
                 reject(err);
             }
@@ -227,7 +229,9 @@ export async function getIdTipoPrestacion(_agenda) {
     let prestacionesIntegrada: any = null;
 
     // Primero filtramos por el conceptId de la agenda que (según requerimientos era siempre 1) por eso verificamos _agenda.tipoPrestaciones[0]
-    let configuracionesPrestacion: any = await configuracionPrestacionModel.findOne({ 'snomed.conceptId': _agenda.tipoPrestaciones[0].conceptId });
+    const configuracionesPrestacion: any = await configuracionPrestacionModel.findOne({
+        'snomed.conceptId': _agenda.tipoPrestaciones[0].conceptId
+    });
     if (configuracionesPrestacion) {
         // Verificamos si nuestra organización tiene a esta prestación para integrar y así continuar con el proceso.
         configuracionesPrestacion.organizaciones.forEach(obj => {
@@ -244,4 +248,24 @@ export async function getIdTipoPrestacion(_agenda) {
     } else {
         return null;
     }
+}
+
+async function agendaRetryAndFail(_agenda) {
+    if (!_agenda.retry) {
+        _agenda.retry = 1;
+    } else {
+        if (_agenda.retry > 3) {
+            _agenda.estadoIntegracion = 'fail';
+        } else {
+            _agenda += 1;
+        }
+    }
+    return await agendasCache.update({
+        _id: _agenda._id
+    }, {
+        $set: {
+            retry: _agenda.retry,
+            estadoIntegracion: _agenda.estadoIntegracion
+        }
+    }).exec();
 }

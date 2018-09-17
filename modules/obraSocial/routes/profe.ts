@@ -1,23 +1,19 @@
 import * as express from 'express';
 import { profe } from '../schemas/profe';
 
-let router = express.Router();
+const router = express.Router();
 
-router.get('/profe/', async (req, res, next) => {
+router.get('/profe', async (req, res, next) => {
     if (req.query.dni && req.query.periodo) {
-        profe.find({ dni: Number.parseInt(req.query.dni), version: req.query.periodo }, function (err, data) {
-            if (err) {
-                return next(err);
-            }
-            res.json(data);
-        });
+        let os = await profe.find({ dni: Number.parseInt(req.query.dni, 10), version: req.query.periodo });
+        res.json(os);
     } else {
         res.status(400).json({ msg: 'Parámetros incorrectos' });
     }
 });
 
 
-router.get('/profe/padrones/', async (req, res, next) => {
+router.get('/profe/padrones', async (req, res, next) => {
     try {
         let resp = await obtenerVersiones();
         res.json(resp);
@@ -31,7 +27,7 @@ router.get('/profe/padrones/', async (req, res, next) => {
 async function obtenerVersiones() {
     let versiones = await profe.distinct('version').exec(); // esta consulta obtiene un arreglo de strings
     for (let i = 0; i < versiones.length; i++) {
-        versiones[i] = { 'version': versiones[i] };
+        versiones[i] = { version: versiones[i] };
     }
     versiones.sort((a, b) => compare(a.version, b.version));
     return versiones;

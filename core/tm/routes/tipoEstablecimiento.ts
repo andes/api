@@ -1,11 +1,11 @@
 import * as express from 'express';
 import * as tipoEstablecimiento from '../schemas/tipoEstablecimiento_model';
 
-let router = express.Router();
+const router = express.Router();
 
-router.get('/tiposEstablecimiento/:id*?', function (req, res, next) {
+router.get('/tiposEstablecimiento/:id*?', (req, res, next) => {
     if (req.params.id) {
-        tipoEstablecimiento.findById(req.params.id, function (err, data) {
+        tipoEstablecimiento.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -21,11 +21,4 @@ router.get('/tiposEstablecimiento/:id*?', function (req, res, next) {
     }
 });
 export = router;
-
-
-
-
-
-
-
 

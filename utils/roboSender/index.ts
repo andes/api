@@ -22,8 +22,8 @@ export interface IEmail {
     plainText: string;
 }
 
-export function sendSms (data: ISms, options: any = {}) {
-    let obj = new roboModel({
+export function sendSms(data: ISms, options: any = {}) {
+    const obj = new roboModel({
         message: data.message,
         phone: data.phone,
         from: options.from ? options.from : 'undefined',
@@ -38,8 +38,8 @@ export function sendSms (data: ISms, options: any = {}) {
     return obj.save();
 }
 
-export function sendEmail (data: IEmail, options: any = {}) {
-    let obj = new roboModel({
+export function sendEmail(data: IEmail, options: any = {}) {
+    const obj = new roboModel({
         message: data.plainText,
         phone: null,
 
@@ -59,13 +59,13 @@ export function sendEmail (data: IEmail, options: any = {}) {
     return obj.save();
 }
 
-export function removeSend (id) {
+export function removeSend(id) {
     return new Promise ((resolve, reject) => {
         roboModel.findById(id, (err, doc: any) => {
             if (doc) {
                 doc.status = 'canceled';
                 doc.updatedAt = new Date();
-                doc.save(function (_err) {
+                doc.save((_err) => {
                     if (_err) {
                         return reject(err);
                     }

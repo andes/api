@@ -1,10 +1,9 @@
-import { log } from './../../../core/log/schemas/log';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import * as agendaModel from '../schemas/agenda';
 import { toArray } from '../../../utils/utils';
-import { Auth } from './../../../auth/auth.class';
 
+/*
 function getAge(dateString) {
     let today = new Date();
     let birthDate = new Date(dateString);
@@ -15,16 +14,16 @@ function getAge(dateString) {
     }
     return age;
 }
+*/
 
 function calculoEdad(dateString) {
     let edad: any;
     let fechaNac: any;
-    let fechaActual: Date = new Date();
+    const fechaActual: Date = new Date();
     let fechaAct: any;
     let difAnios: any;
     let difDias: any;
     let difMeses: any;
-    let difD: any;
     let difHs: any;
     let difMn: any;
 
@@ -72,7 +71,7 @@ function sumarCodigos(codigos) {
     function concatArr(pacientes, rta) {
         return rta.concat(pacientes);
     }
-    let respuesta = {
+    const respuesta = {
         codigo: codigos[0].causa,
         nombre: codigos[0].reporteC2,
         reporteC2: codigos[0].reporteC2,
@@ -103,7 +102,7 @@ function sumarCodigos(codigos) {
 }
 export function getDiagnosticos(params) {
     let resultados = [];
-    let promises = [];
+    const promises = [];
     return new Promise(async (resolve, reject) => {
         // Se buscan las agendas que tengan turnos o sobreturnos codificados con algun diagnostico c2
         let pipeline = [];
@@ -112,9 +111,9 @@ export function getDiagnosticos(params) {
                 'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria': { $exists: true, $ne: {} },
                 'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
                 'bloques.turnos.diagnostico.codificaciones.0.primeraVez': true,
-                'horaInicio': { '$gte': new Date(params.horaInicio) },
-                'horaFin': { '$lte': new Date(params.horaFin) },
-                'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) }
+                horaInicio: { $gte: new Date(params.horaInicio) },
+                horaFin: { $lte: new Date(params.horaFin) },
+                'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) }
             }
         },
         {
@@ -148,10 +147,10 @@ export function getDiagnosticos(params) {
             $match: {
                 'sobreturnos.diagnostico.codificaciones.0.codificacionAuditoria': { $exists: true, $ne: {} },
                 'sobreturnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
-                'bloques.turnos.diagnostico.codificaciones.0.primeraVez': true,
-                'horaInicio': { '$gte': new Date(params.horaInicio) },
-                'horaFin': { '$lte': new Date(params.horaFin) },
-                'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) }
+                'sobreturnos.diagnostico.codificaciones.0.primeraVez': true,
+                horaInicio: { $gte: new Date(params.horaInicio) },
+                horaFin: { $lte: new Date(params.horaFin) },
+                'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) }
             }
         },
         {
@@ -178,12 +177,12 @@ export function getDiagnosticos(params) {
             }
         }];
         let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
-        let data1 = await toArray(agendaModel.aggregate(pipeline1).cursor({}).exec());
+        const data1 = await toArray(agendaModel.aggregate(pipeline1).cursor({}).exec());
         data = data.concat(data1);
 
         function removeDuplicates(arr) {
-            let unique_array = [];
-            let arrMap = arr.map(m => { return m._id; });
+            const unique_array = [];
+            const arrMap = arr.map(m => { return m._id; });
             for (let i = 0; i < arr.length; i++) {
                 if (arrMap.lastIndexOf(arr[i]._id) === i) {
                     unique_array.push(arr[i]);
@@ -195,7 +194,7 @@ export function getDiagnosticos(params) {
         data.forEach(elem => {
             if (elem._id != null) {
                 // Se definen variables cuantificadoras
-                let suma = {
+                const suma = {
                     default: 0,
                     botulismo: 0,
                     meningitis: 0,
@@ -211,21 +210,21 @@ export function getDiagnosticos(params) {
                     hiv: 0,
                     bronquiolitis: 0
                 };
-                let sumaMenor6m = Object.assign({}, suma);
-                let suma711m = Object.assign({}, suma);
-                let suma1 = Object.assign({}, suma);
-                let suma24 = Object.assign({}, suma);
-                let suma59 = Object.assign({}, suma);
-                let suma1014 = Object.assign({}, suma);
-                let suma1519 = Object.assign({}, suma);
-                let suma2024 = Object.assign({}, suma);
-                let suma2534 = Object.assign({}, suma);
-                let suma3544 = Object.assign({}, suma);
-                let suma4564 = Object.assign({}, suma);
-                let suma6574 = Object.assign({}, suma);
-                let sumaMayor75 = Object.assign({}, suma);
+                const sumaMenor6m = {...suma};
+                const suma711m = {...suma};
+                const suma1 = {...suma};
+                const suma24 = {...suma};
+                const suma59 = {...suma};
+                const suma1014 = {...suma};
+                const suma1519 = {...suma};
+                const suma2024 = {...suma};
+                const suma2534 = {...suma};
+                const suma3544 = {...suma};
+                const suma4564 = {...suma};
+                const suma6574 = {...suma};
+                const sumaMayor75 = {...suma};
 
-                let sumaMasculino = {
+                const sumaMasculino = {
                     default: 0,
                     botulismo: 0,
                     meningitis: 0,
@@ -237,20 +236,20 @@ export function getDiagnosticos(params) {
                     hiv: 0,
                     bronquiolitis: 0
                 };
-                let sumaFemenino = Object.assign({}, sumaMasculino);
+                const sumaFemenino = {...sumaMasculino};
 
-                let sumaOtro = {
+                const sumaOtro = {
                     default: 0,
                     botulismo: 0,
                     meningitis: 0,
                 };
                 let sumaMeningitis = 0;
-                let otroLactante = 0;
-                let otroMeningitis = 0;
+                const otroLactante = 0;
+                const otroMeningitis = 0;
                 let poliomielitis = 0;
                 let hiv = 0;
                 let bronquiolitis = 0;
-                let pacientes = {
+                const pacientes = {
                     hiv: [],
                     polio: [],
                     bronquiolitis: [],
@@ -269,14 +268,14 @@ export function getDiagnosticos(params) {
 
                 promises.push(new Promise((resolve1, reject1) => {
                     agendaModel.find({
-                        'horaInicio': { '$gte': new Date(params.horaInicio) },
-                        'horaFin': { '$lte': new Date(params.horaFin) },
-                        'organizacion._id': { '$eq': mongoose.Types.ObjectId(params.organizacion) },
+                        horaInicio: { $gte: new Date(params.horaInicio) },
+                        horaFin: { $lte: new Date(params.horaFin) },
+                        'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) },
                         $or: [{
                             'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria.codigo': {
                                 $eq: elem.codigo
                             }
-                        }, {
+                        },    {
                             'sobreturnos.diagnostico.codificaciones.0.codificacionAuditoria.codigo': {
                                 $eq: elem.codigo
                             }
@@ -315,8 +314,8 @@ export function getDiagnosticos(params) {
                         }
 
                         function actualizarContador(paciente, tipo) {
-                            let edad = calculoEdad(paciente.fechaNacimiento);
-                            let sexo = paciente.sexo;
+                            const edad = calculoEdad(paciente.fechaNacimiento);
+                            const sexo = paciente.sexo;
                             switch (elem.causa) {
                                 case 'A51': // Sífilis Temprana
                                     if (sexo === 'femenino') {
@@ -454,9 +453,9 @@ export function getDiagnosticos(params) {
                         }
 
                         function calcularContadores(paciente) {
-                            let edad = calculoEdad(paciente.fechaNacimiento);
+                            const edad = calculoEdad(paciente.fechaNacimiento);
                             // let edad = getAge(paciente.fechaNacimiento);
-                            let sexo = paciente.sexo;
+                            const sexo = paciente.sexo;
                             if ((edad.unidad === 'años' && edad.valor < 5) || (edad.unidad === 'meses') || (edad.unidad === 'días')) {
                                 if (edad.unidad === 'meses' || (edad.unidad === 'días')) {
                                     // actualizarContador(paciente, sumaMenor1);
@@ -502,7 +501,7 @@ export function getDiagnosticos(params) {
                                 actualizarContador(paciente, sumaMayor75);
                             }
 
-                            let codigoExcepcion = (elem.codigo === 'A05.1' && edad.unidad === 'meses') || (elem.codigo === 'A17.0' && ((edad.unidad === 'años' && edad.valor < 5) || (edad.unidad === 'meses') || (edad.unidad === 'días')));
+                            const codigoExcepcion = (elem.codigo === 'A05.1' && edad.unidad === 'meses') || (elem.codigo === 'A17.0' && ((edad.unidad === 'años' && edad.valor < 5) || (edad.unidad === 'meses') || (edad.unidad === 'días')));
 
                             if (!codigoExcepcion && sexo === 'masculino') {
                                 sumaMasculino.default++;
@@ -521,8 +520,8 @@ export function getDiagnosticos(params) {
                             // Se recorren los turnos de la agenda actual
                             ag.bloques.forEach(bloque => {
                                 bloque.turnos.forEach(turno => {
-                                    let codigos = turno.diagnostico.codificaciones;
-                                    codigos.forEach(function (codigo) {
+                                    const codigos = turno.diagnostico.codificaciones;
+                                    codigos.forEach((codigo) => {
                                         if (codigo.codificacionAuditoria && codigo.codificacionAuditoria.c2 === true && codigo.primeraVez === true) {
                                             if (elem.codigo === codigo.codificacionAuditoria.codigo) {
                                                 calcularContadores(turno.paciente);
@@ -535,8 +534,8 @@ export function getDiagnosticos(params) {
                             // Se recorren los sobreturnos de la agenda actual
                             ag.sobreturnos.forEach(sobreturno => {
                                 if (sobreturno.diagnostico.codificaciones.length > 0) {
-                                    let codigos = sobreturno.diagnostico.codificaciones;
-                                    codigos.forEach(function (codigo) {
+                                    const codigos = sobreturno.diagnostico.codificaciones;
+                                    codigos.forEach((codigo) => {
                                         if (codigo.codificacionAuditoria && codigo.codificacionAuditoria.c2 === true && codigo.primeraVez === true) {
                                             if (elem.codigo === codigo.codificacionAuditoria.codigo) {
                                                 calcularContadores(sobreturno.paciente);
@@ -547,9 +546,9 @@ export function getDiagnosticos(params) {
                             });
                         });
 
-                        let sumaTotal = sumaMenor6m.default + suma711m.default + suma1.default + suma24.default + suma59.default + suma1014.default + suma1519.default + suma2024.default + suma2534.default
+                        const sumaTotal = sumaMenor6m.default + suma711m.default + suma1.default + suma24.default + suma59.default + suma1014.default + suma1519.default + suma2024.default + suma2534.default
                             + suma3544.default + suma4564.default + suma6574.default + sumaMayor75.default;
-                        let r2 = {
+                        const r2 = {
                             codigo: elem.codigo,
                             nombre: elem._id,
                             reporteC2: elem.reporteC2,
@@ -575,10 +574,10 @@ export function getDiagnosticos(params) {
                             pacientes: pacientes.default
                         };
                         // Se asigna de esta manera para que sea otro objeto y no un puntero al mismo objeto
-                        let r1 = Object.assign({}, r2);
+                        const r1 = {...r2};
                         switch (elem.codigo) {
                             case 'A05.1':
-                                let sumaR = suma1.default + suma24.default + suma59.default + suma1014.default + suma1519.default + suma2024.default + suma2534.default + suma3544.default
+                                const sumaR = suma1.default + suma24.default + suma59.default + suma1014.default + suma1519.default + suma2024.default + suma2534.default + suma3544.default
                                     + suma4564.default + suma6574.default + sumaMayor75.default;
                                 if (sumaMenor6m.botulismo > 0 || suma711m.botulismo > 0) { // Botulismo en lactantes (< 1 año)
                                     r1.reporteC2 = 'Botulismo del Lactante';
@@ -607,7 +606,7 @@ export function getDiagnosticos(params) {
                                 }
                                 break;
                             case 'A17.0':
-                                let sumaResto = suma59.default + suma1014.default + suma1519.default + suma2024.default + suma2534.default + suma3544.default + suma4564.default + suma6574.default + sumaMayor75.default;
+                                const sumaResto = suma59.default + suma1014.default + suma1519.default + suma2024.default + suma2534.default + suma3544.default + suma4564.default + suma6574.default + sumaMayor75.default;
                                 if (sumaMeningitis > 0) { // Meningitis Tuberculosa en menores de 5 años
                                     r1.reporteC2 = 'Meningitis tuberculosa en menores de 5 años';
                                     r1.sumaMenor6m = sumaMenor6m.meningitis;
@@ -632,7 +631,7 @@ export function getDiagnosticos(params) {
                                 }
                                 if (sumaResto > 0) {
                                     // Se asigna de esta manera para que sea otro objeto y no un puntero al mismo objeto
-                                    let r3 = Object.assign({}, r2);
+                                    const r3 = {...r2};
                                     r2.reporteC2 = 'Tuberculosis';
                                     resultados.push(r2);
                                     r3.reporteC2 = 'Meningitis bacteriana sin especificar agente';
@@ -898,7 +897,7 @@ export function getDiagnosticos(params) {
 
         Promise.all(promises).then(() => {
 
-            let sortResultados = function (a, b) {
+            const sortResultados = (a, b) => {
                 if (a.codigo < b.codigo) {
                     return -1;
                 }
@@ -908,21 +907,21 @@ export function getDiagnosticos(params) {
                 return 0;
             };
             // Se agrupan los códigos correspondientes a Sífilis temprana (causa A51) en sexos
-            let sifilisTempranaFemenino = resultados.filter(resultado => {
+            const sifilisTempranaFemenino = resultados.filter(resultado => {
                 return (resultado.causa === 'A51' && resultado.sumaFemenino > 0);
             });
             if (sifilisTempranaFemenino.length > 0) {
-                let STF = sumarCodigos(sifilisTempranaFemenino);
+                const STF = sumarCodigos(sifilisTempranaFemenino);
                 resultados = resultados.filter(resultado => {
                     return (!(resultado.causa === 'A51' && resultado.sumaFemenino > 0));
                 });
                 resultados.push(STF);
             }
-            let sifilisTempranaMasculino = resultados.filter(resultado => {
+            const sifilisTempranaMasculino = resultados.filter(resultado => {
                 return (resultado.causa === 'A51' && resultado.sumaMasculino > 0);
             });
             if (sifilisTempranaMasculino.length > 0) {
-                let STM = sumarCodigos(sifilisTempranaMasculino);
+                const STM = sumarCodigos(sifilisTempranaMasculino);
                 resultados = resultados.filter(resultado => {
                     return (!(resultado.causa === 'A51' && resultado.sumaMasculino > 0));
                 });
@@ -930,42 +929,42 @@ export function getDiagnosticos(params) {
             }
 
             // Se agrupan los códigos correspondientes a sífilis sin especificar (causa A52 y A53) en sexos
-            let sifilisSEFemenino = resultados.filter(resultado => {
+            const sifilisSEFemenino = resultados.filter(resultado => {
                 return ((resultado.causa === 'A52' || resultado.causa === 'A53') && resultado.sumaFemenino > 0);
             });
             if (sifilisSEFemenino.length > 0) {
-                let SSEF = sumarCodigos(sifilisSEFemenino);
+                const SSEF = sumarCodigos(sifilisSEFemenino);
                 resultados = resultados.filter(resultado => {
                     return (!((resultado.causa === 'A52' || resultado.causa === 'A53') && resultado.sumaFemenino > 0));
                 });
                 resultados.push(SSEF);
             }
-            let sifilisSEMasculino = resultados.filter(resultado => {
+            const sifilisSEMasculino = resultados.filter(resultado => {
                 return ((resultado.causa === 'A52' || resultado.causa === 'A53') && resultado.sumaMasculino > 0);
             });
             if (sifilisSEMasculino.length > 0) {
-                let SSEM = sumarCodigos(sifilisSEMasculino);
+                const SSEM = sumarCodigos(sifilisSEMasculino);
                 resultados = resultados.filter(resultado => {
                     return (!((resultado.causa === 'A52' || resultado.causa === 'A53') && resultado.sumaMasculino > 0));
                 });
                 resultados.push(SSEM);
             }
             // Se agrupan los códigos correspondientes a Secreción Genital Purulenta (codigos A54.0, A54.2 y A54.6) en sexos
-            let secrecionPFemenino = resultados.filter(resultado => {
+            const secrecionPFemenino = resultados.filter(resultado => {
                 return ((resultado.reporteC2 === 'Secreción genital purulenta en mujeres'));
             });
             if (secrecionPFemenino.length > 0) {
-                let SPF = sumarCodigos(secrecionPFemenino);
+                const SPF = sumarCodigos(secrecionPFemenino);
                 resultados = resultados.filter(resultado => {
                     return (!(resultado.reporteC2 === 'Secreción genital purulenta en mujeres' && resultado.sumaFemenino > 0));
                 });
                 resultados.push(SPF);
             }
-            let secrecionPMasculino = resultados.filter(resultado => {
+            const secrecionPMasculino = resultados.filter(resultado => {
                 return ((resultado.reporteC2 === 'Secreción genital purulenta en hombres') && resultado.sumaMasculino > 0);
             });
             if (secrecionPMasculino.length > 0) {
-                let SPM = sumarCodigos(secrecionPMasculino);
+                const SPM = sumarCodigos(secrecionPMasculino);
                 resultados = resultados.filter(resultado => {
                     return (!((resultado.reporteC2 === 'Secreción genital purulenta en hombres') && resultado.sumaMasculino > 0));
                 });
@@ -973,21 +972,21 @@ export function getDiagnosticos(params) {
             }
 
             // Se agrupan los códigos correspondientes a Secreción Genital sin especificar  en sexos
-            let secrecionSEFemenino = resultados.filter(resultado => {
+            const secrecionSEFemenino = resultados.filter(resultado => {
                 return ((resultado.reporteC2 === 'Secreción genital sin especificar en mujeres'));
             });
             if (secrecionSEFemenino.length > 0) {
-                let SSEF = sumarCodigos(secrecionSEFemenino);
+                const SSEF = sumarCodigos(secrecionSEFemenino);
                 resultados = resultados.filter(resultado => {
                     return (!(resultado.reporteC2 === 'Secreción genital sin especificar en mujeres' && resultado.sumaFemenino > 0));
                 });
                 resultados.push(SSEF);
             }
-            let secrecionSEMasculino = resultados.filter(resultado => {
+            const secrecionSEMasculino = resultados.filter(resultado => {
                 return ((resultado.reporteC2 === 'Secreción genital sin especificar en hombres') && resultado.sumaMasculino > 0);
             });
             if (secrecionSEMasculino.length > 0) {
-                let SSEM = sumarCodigos(secrecionSEMasculino);
+                const SSEM = sumarCodigos(secrecionSEMasculino);
                 resultados = resultados.filter(resultado => {
                     return (!((resultado.reporteC2 === 'Secreción genital sin especificar en hombres') && resultado.sumaMasculino > 0));
                 });
@@ -995,11 +994,11 @@ export function getDiagnosticos(params) {
             }
 
             // Se agrupan los códigos correspondientes a poliomielitis
-            let poliomielitis = resultados.filter(resultado => {
+            const poliomielitis = resultados.filter(resultado => {
                 return (resultado.causa === 'A80');
             });
             if (poliomielitis.length > 0) {
-                let P = sumarCodigos(poliomielitis);
+                const P = sumarCodigos(poliomielitis);
                 resultados = resultados.filter(resultado => {
                     return (!(resultado.causa === 'A80'));
                 });
@@ -1007,11 +1006,11 @@ export function getDiagnosticos(params) {
             }
 
             // Se agrupan los códigos correspondientes a hiv
-            let hiv = resultados.filter(resultado => {
+            const hiv = resultados.filter(resultado => {
                 return (resultado.reporteC2 === 'HIV');
             });
             if (hiv.length > 0) {
-                let HIV = sumarCodigos(hiv);
+                const HIV = sumarCodigos(hiv);
                 resultados = resultados.filter(resultado => {
                     return (!(resultado.reporteC2 === 'HIV'));
                 });
@@ -1019,11 +1018,11 @@ export function getDiagnosticos(params) {
             }
 
             // Se agrupan los códigos correspondientes a bronquiolitis
-            let bronquiolitis = resultados.filter(resultado => {
+            const bronquiolitis = resultados.filter(resultado => {
                 return (resultado.reporteC2 === 'Bronquiolitis');
             });
             if (bronquiolitis.length > 0) {
-                let BR = sumarCodigos(bronquiolitis);
+                const BR = sumarCodigos(bronquiolitis);
                 resultados = resultados.filter(resultado => {
                     return (!(resultado.reporteC2 === 'Bronquiolitis'));
                 });

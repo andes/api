@@ -2,7 +2,7 @@ import * as express from 'express';
 import { puco } from '../schemas/puco';
 import { obraSocial } from '../schemas/obraSocial';
 
-let router = express.Router();
+const router = express.Router();
 
 /**
  * Obtiene los datos de la obra social asociada a un paciente
@@ -11,7 +11,7 @@ let router = express.Router();
  * @returns
  */
 
-router.get('/puco/', async (req, res, next) => {
+router.get('/puco', async (req, res, next) => {
 
     if (req.query.dni) {
         let padron;
@@ -24,10 +24,10 @@ router.get('/puco/', async (req, res, next) => {
             padron = padron[0].version; // asigna el ultimo padron actualizado
         }
         // realiza la busqueda por dni y el padron seteado anteriormente
-        rta = await puco.find({ dni: Number.parseInt(req.query.dni), version: padron }).exec();
+        rta = await puco.find({ dni: Number.parseInt(req.query.dni, 10), version: padron }).exec();
 
         if (rta.length > 0) {
-            let resultOS = [];
+            const resultOS = [];
             let unaOS;
             // genera un array con todas las obras sociales para una version de padron dada
             for (let i = 0; i < rta.length; i++) {
@@ -39,11 +39,11 @@ router.get('/puco/', async (req, res, next) => {
             res.json([]);
         }
     } else {
-        res.status(400).json({ msg: 'Parámetros incorrectos' });
+        res.json({ msg: 'Parámetros incorrectos' });
     }
 });
 
-router.get('/puco/padrones/', async (req, res, next) => {
+router.get('/puco/padrones', async (req, res, next) => {
     try {
         let resp = await obtenerVersiones();
         res.json(resp);
@@ -57,7 +57,7 @@ router.get('/puco/padrones/', async (req, res, next) => {
 async function obtenerVersiones() {
     let versiones = await puco.distinct('version').exec();  // esta consulta obtiene un arreglo de strings
     for (let i = 0; i < versiones.length; i++) {
-        versiones[i] = { 'version': versiones[i] };
+        versiones[i] = { version: versiones[i] };
     }
     versiones.sort((a, b) => compare(a.version, b.version));
     return versiones;

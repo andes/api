@@ -2,9 +2,9 @@ import * as utils from '../../../utils/utils';
 import * as express from 'express';
 import { tipoPrestacion } from '../schemas/tipoPrestacion';
 
-let router = express.Router();
+const router = express.Router();
 
-router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
+router.get('/tiposPrestaciones/:id*?', (req, res, next) => {
     let query;
     // Búsqueda por un sólo ID
     if (req.params.id) {
@@ -12,7 +12,7 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
     } else {
         // Búsqueda por tem
         if (req.query.term) {
-            query = tipoPrestacion.find({ term: { '$regex': utils.makePattern(req.query.term) } });
+            query = tipoPrestacion.find({ term: { $regex: utils.makePattern(req.query.term) } });
         } else {
             // temporal, ya que con utils.makePattern no funciona bien en el turnero
             if (req.query.termTurnero) {
@@ -23,7 +23,7 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
             }
         }
         if (req.query.limit) {
-            let limit: number = Number(req.query.limit);
+            const limit: number = Number(req.query.limit);
             query = query.limit(limit);
         }
 
@@ -35,7 +35,7 @@ router.get('/tiposPrestaciones/:id*?', function (req, res, next) {
     }
 
     // Consultar
-    query.sort({ 'term': 1 }).exec(function (err, data) {
+    query.sort({ term: 1 }).exec((err, data) => {
         if (err) {
             return next(err);
         }
