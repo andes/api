@@ -1,6 +1,6 @@
 import * as express from 'express';
-import { puco } from '../schemas/puco';
-import { obraSocial } from '../schemas/obraSocial';
+import { Puco } from '../schemas/puco';
+import { ObraSocial } from '../schemas/obraSocial';
 
 const router = express.Router();
 
@@ -24,14 +24,14 @@ router.get('/puco', async (req, res, next) => {
             padron = padron[0].version; // asigna el ultimo padron actualizado
         }
         // realiza la busqueda por dni y el padron seteado anteriormente
-        rta = await puco.find({ dni: Number.parseInt(req.query.dni, 10), version: padron }).exec();
+        rta = await Puco.find({ dni: Number.parseInt(req.query.dni, 10), version: padron }).exec();
 
         if (rta.length > 0) {
             const resultOS = [];
             let unaOS;
             // genera un array con todas las obras sociales para una version de padron dada
             for (let i = 0; i < rta.length; i++) {
-                unaOS = await obraSocial.find({ codigoPuco: rta[i].codigoOS }).exec();
+                unaOS = await ObraSocial.find({ codigoPuco: rta[i].codigoOS }).exec();
                 resultOS[i] = { tipoDocumento: rta[i].tipoDoc, dni: rta[i].dni, transmite: rta[i].transmite, nombre: rta[i].nombre, codigoFinanciador: rta[i].codigoOS, financiador: unaOS[0].nombre, version: rta[i].version };
             }
             res.json(resultOS);
@@ -55,7 +55,7 @@ router.get('/puco/padrones', async (req, res, next) => {
 
 // obtiene las versiones de todos los padrones cargados
 async function obtenerVersiones() {
-    let versiones = await puco.distinct('version').exec();  // esta consulta obtiene un arreglo de strings
+    let versiones = await Puco.distinct('version').exec();  // esta consulta obtiene un arreglo de strings
     for (let i = 0; i < versiones.length; i++) {
         versiones[i] = { version: versiones[i] };
     }

@@ -1,11 +1,11 @@
 import * as express from 'express';
-import { profe } from '../schemas/profe';
+import { Profe } from '../schemas/profe';
 
 const router = express.Router();
 
 router.get('/profe', async (req, res, next) => {
     if (req.query.dni && req.query.periodo) {
-        let os = await profe.find({ dni: Number.parseInt(req.query.dni, 10), version: req.query.periodo });
+        let os = await Profe.find({ dni: Number.parseInt(req.query.dni, 10), version: req.query.periodo });
         res.json(os);
     } else {
         res.status(400).json({ msg: 'Parámetros incorrectos' });
@@ -25,7 +25,7 @@ router.get('/profe/padrones', async (req, res, next) => {
 
 // obtiene las versiones de todos los padrones cargados
 async function obtenerVersiones() {
-    let versiones = await profe.distinct('version').exec(); // esta consulta obtiene un arreglo de strings
+    let versiones = await Profe.distinct('version').exec(); // esta consulta obtiene un arreglo de strings
     for (let i = 0; i < versiones.length; i++) {
         versiones[i] = { version: versiones[i] };
     }
