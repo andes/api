@@ -92,7 +92,7 @@ router.get('/prestaciones/laboratorio', async function (req, res, next) {
         match['paciente.documento'] = req.query.pacienteDni;
     }
     if (!req.query.protocoloIniciado) {
-        match['ejecucion.registros'] = {'$size':0};
+        match['ejecucion.registros'] = { '$size': 0 };
     }
 
     let query = [
@@ -190,6 +190,9 @@ router.get('/prestaciones/:id*?', (req, res, next) => {
         if (req.query.servicio) {
             query.where('solicitud.registros.valor.solicitudPrestacion.servicio.conceptId').equals(req.query.servicio);
         }
+        if (req.query.area) {
+            query.where('solicitud.registros.valor.solicitudPrestacion.area.id').equals(req.query.area);
+        }
 
         // Solicitudes generadas desde puntoInicio Ventanilla
         // Solicitudes que no tienen prestacionOrigen ni turno
@@ -245,19 +248,7 @@ router.post('/prestaciones', (req, res, next) => {
     });
 });
 
-router.put('/prestaciones/:id', (req, res, next) => {
-    const prestacion = req.body;
-    let prestacionUpdate : any = {};
-    prestacionUpdate = Object.assign(prestacionUpdate, prestacion);
-    // Auth.audit(data, req);
-    delete prestacionUpdate._id;
-    Prestacion.findOneAndUpdate(prestacion._id, prestacionUpdate, (err, prest) => {
-        if(err) {
-            return next();
-        }
-        res.json(prest);
-    });
-});
+
 
 router.patch('/prestaciones/:id', (req, res, next) => {
     Prestacion.findById(req.params.id, (err, data: any) => {
