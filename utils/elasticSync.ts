@@ -15,7 +15,7 @@ export class ElasticSync {
     }
 
     public sync(paciente) {
-        let nuevoPac = JSON.parse(JSON.stringify(paciente));
+        const nuevoPac = JSON.parse(JSON.stringify(paciente));
         delete nuevoPac._id;
         delete nuevoPac.relaciones;
         return this._sync(paciente._id.toString(), nuevoPac);
@@ -26,7 +26,7 @@ export class ElasticSync {
             this.search({
                 q: '_id:' + id
             }).then((body) => {
-                let hits = body.hits.hits;
+                const hits = body.hits.hits;
                 if (hits.length > 0) {
                     this.update(id, data).then(() => {
                         resolve(true);
@@ -67,7 +67,7 @@ export class ElasticSync {
                 type: this.TYPE,
                 id,
                 body: data
-            }, function (error, response) {
+            }, (error, response) => {
                 if (error) {
                     reject(error);
                 }
@@ -116,7 +116,7 @@ export class ElasticSync {
                 type: this.TYPE,
                 refresh: true,
                 id
-            }, function (error, response) {
+            }, (error, response) => {
                 if (error) {
                     reject(error);
                 }

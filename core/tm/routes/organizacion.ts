@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as https from 'https';
 
-import { model as OrganizacionModel } from '../schemas/organizacion';
+import { model as organizacion } from '../schemas/organizacion';
 
 import * as utils from '../../../utils/utils';
 import { toArray } from '../../../utils/utils';
@@ -10,21 +10,20 @@ import { defaultLimit, maxLimit } from './../../../config';
 import * as configPrivate from '../../../config.private';
 import { Auth } from '../../../auth/auth.class';
 
-let GeoJSON = require('geojson');
-let router = express.Router();
+const GeoJSON = require('geojson');
+const router = express.Router();
 
 
-
-
-router.get('/organizaciones/georef/:id?', async function (req, res, next) {
+router.get('/organizaciones/georef/:id?', async (req, res, next) => {
     if (req.params.id) {
-        OrganizacionModel.findById(req.params.id, (err, data: any) => {
+        organizacion
+            .findById(req.params.id, (err, data: any) => {
                 if (err) {
                     return next(err);
                 }
-                let dir = data.direccion.valor;
-                let localidad = data.direccion.ubicacion.localidad.nombre;
-                let provincia = data.direccion.ubicacion.provincia.nombre;
+                const dir = data.direccion.valor;
+                const localidad = data.direccion.ubicacion.localidad.nombre;
+                const provincia = data.direccion.ubicacion.provincia.nombre;
                 // let pais = organizacion.direccion.ubicacion.pais;
                 let pathGoogleApi = '';
                 let jsonGoogle = '';
@@ -39,7 +38,7 @@ router.get('/organizaciones/georef/:id?', async function (req, res, next) {
                 pathGoogleApi = pathGoogleApi.replace(/ü/gi, 'u');
                 pathGoogleApi = pathGoogleApi.replace(/ñ/gi, 'n');
 
-                let optionsgetmsg = {
+                const optionsgetmsg = {
                     host: 'maps.googleapis.com',
                     port: 443,
                     path: pathGoogleApi,
@@ -48,14 +47,14 @@ router.get('/organizaciones/georef/:id?', async function (req, res, next) {
                 };
 
                 if (dir !== '' && localidad !== '' && provincia !== '') {
-                    let reqGet = https.request(optionsgetmsg, function (res2) {
+                    const reqGet = https.request(optionsgetmsg, (res2) => {
                         res2
-                            .on('data', function (d, error) {
+                            .on('data', (d, error) => {
                                 jsonGoogle = jsonGoogle + d.toString();
                             });
 
-                        res2.on('end', function () {
-                            let salida = JSON.parse(jsonGoogle);
+                        res2.on('end', () => {
+                            const salida = JSON.parse(jsonGoogle);
                             if (salida.status === 'OK') {
                                 res.json(salida.results[0].geometry.location);
                             } else {
@@ -73,31 +72,32 @@ router.get('/organizaciones/georef/:id?', async function (req, res, next) {
             });
 
     } else {
-        let query = OrganizacionModel.aggregate([
-                {
-                    '$match': {
-                        'direccion.geoReferencia': {
-                            $exists: true
-                        }
-                    }
-                }, {
-                    '$project': {
-                        '_id': 0,
-                        'nombre': '$nombre',
-                        'lat': {
-                            $arrayElemAt: ['$direccion.geoReferencia', 0]
-                        },
-                        'lng': {
-                            $arrayElemAt: ['$direccion.geoReferencia', 1]
-                        }
+        const query = organizacion.aggregate([
+            {
+                $match: {
+                    'direccion.geoReferencia': {
+                        $exists: true
                     }
                 }
-            ])
+            },
+            {
+                $project: {
+                    _id: 0,
+                    nombre: '$nombre',
+                    lat: {
+                        $arrayElemAt: ['$direccion.geoReferencia', 0]
+                    },
+                    lng: {
+                        $arrayElemAt: ['$direccion.geoReferencia', 1]
+                    }
+                }
+            }
+        ])
             .cursor({})
             .exec();
 
-        let data = await toArray(query);
-        let geoJsonData = GeoJSON.parse(data, {
+        const data = await toArray(query);
+        const geoJsonData = GeoJSON.parse(data, {
             Point: [
                 'lat', 'lng'
             ],
@@ -234,9 +234,10 @@ router.get('/organizaciones/georef/:id?', async function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/organizacion'
  */
-router.get('/organizaciones/:id*?', function (req, res, next) {
+router.get('/organizaciones/:id*?', (req, res, next) => {
     if (req.params.id) {
-        OrganizacionModel.findById(req.params.id, (err, data) => {
+        organizacion
+            .findById(req.params.id, (err, data) => {
                 if (err) {
                     return next(err);
                 }
@@ -244,26 +245,26 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
             });
     } else {
         let query;
-        let act: Boolean = true;
-        let filtros = {
-            'activo': act
+        const act: Boolean = true;
+        const filtros = {
+            activo: act
         };
 
         if (req.query.nombre) {
             filtros['nombre'] = {
-                '$regex': utils.makePattern(req.query.nombre)
+                $regex: utils.makePattern(req.query.nombre)
             };
         }
 
         if (req.query.cuie) {
             filtros['codigo.cuie'] = {
-                '$regex': utils.makePattern(req.query.cuie)
+                $regex: utils.makePattern(req.query.cuie)
             };
         }
 
         if (req.query.sisa) {
             filtros['codigo.sisa'] = {
-                '$regex': utils.makePattern(req.query.sisa)
+                $regex: utils.makePattern(req.query.sisa)
             };
         }
         if (req.query.activo) {
@@ -271,17 +272,20 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
         }
         if (req.query.tipoEstablecimiento) {
             filtros['tipoEstablecimiento.nombre'] = {
-                '$regex': utils.makePattern(req.query.tipoEstablecimiento)
+                $regex: utils.makePattern(req.query.tipoEstablecimiento)
             };
         }
         if (req.query.ids) {
-            filtros['_id'] = {$in : req.query.ids};
+            filtros['_id'] = { $in: req.query.ids };
         }
 
-        let skip: number = parseInt(req.query.skip || 0, 10);
-        let limit: number = Math.min(parseInt(req.query.limit || defaultLimit, 10), maxLimit);
+        const skip: number = parseInt(req.query.skip || 0, 10);
+        const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, 10), maxLimit);
 
-        query = OrganizacionModel.find(filtros).skip(skip).limit(limit);
+        query = organizacion
+            .find(filtros);
+        // .skip(skip)
+        // .limit(limit);
         query.exec((err, data) => {
             if (err) {
                 return next(err);
@@ -342,11 +346,11 @@ router.get('/organizaciones/:id*?', function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/organizacion'
  */
-router.post('/organizaciones', Auth.authenticate(), function (req, res, next) {
-    if (!Auth.check(req, 'tm:organizacion:create')) {
+router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
+    if (!Auth.check(req, 'tm:especialidad:postEspecialidad')) {
         return next(403);
     }
-    let newOrganization = new OrganizacionModel(req.body);
+    const newOrganization = new organizacion(req.body);
     newOrganization.save((err) => {
         if (err) {
             return next(err);
@@ -385,17 +389,17 @@ router.post('/organizaciones', Auth.authenticate(), function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/organizacion'
  */
-router.put('/organizaciones/:id', Auth.authenticate(), function (req, res, next) {
-    if (!Auth.check(req, 'tm:organizacion:edit')) {
+router.put('/organizaciones/:id', Auth.authenticate(), (req, res, next) => {
+    if (!Auth.check(req, 'tm:especialidad:putEspecialidad')) {
         return next(403);
     }
-    OrganizacionModel.findByIdAndUpdate(req.params.id, req.body, function (err, data) {
+    organizacion.findByIdAndUpdate(req.params.id, req.body, (err, data) => {
         if (err) {
             return next(err);
         }
 
-            res.json(data);
-        });
+        res.json(data);
+    });
 });
 
 /**
@@ -423,17 +427,17 @@ router.put('/organizaciones/:id', Auth.authenticate(), function (req, res, next)
  *         schema:
  *           $ref: '#/definitions/organizacion'
  */
-router.delete('/organizaciones/:id', Auth.authenticate(), function (req, res, next) {
-    if (!Auth.check(req, 'tm:organizacion:delete')) {
+router.delete('/organizaciones/:id', Auth.authenticate(), (req, res, next) => {
+    if (!Auth.check(req, 'tm:organizacion:deleteOrganizacion')) {
         return next(403);
     }
-    OrganizacionModel.findByIdAndRemove(req.params._id, function (err, data) {
+    organizacion.findByIdAndRemove(req.params._id, (err, data) => {
         if (err) {
             return next(err);
         }
 
-            res.json(data);
-        });
+        res.json(data);
+    });
 });
 
 

@@ -2,13 +2,13 @@ import * as express from 'express';
 import { logPaciente } from '../schemas/logPaciente';
 import * as mongoose from 'mongoose';
 
-let router = express.Router();
+const router = express.Router();
 
-router.get('/paciente', function (req, res, next) {
+router.get('/paciente', (req, res, next) => {
     let query;
     if (req.params.id) {
         if (mongoose.Types.ObjectId.isValid(req.params.id)) {
-            query = logPaciente.findById(req.params.id, function (err, data) {
+            query = logPaciente.findById(req.params.id, (err, data) => {
                 if (err) {
                     return next(err);
                 }
@@ -29,9 +29,9 @@ router.get('/paciente', function (req, res, next) {
             model: 'paciente',
         });
 
-        query.sort({ 'createdAt': -1 });
+        query.sort({ createdAt: -1 });
 
-        query.exec(function (err, data) {
+        query.exec((err, data) => {
             if (err) {
                 return next(err);
             }
@@ -43,5 +43,4 @@ router.get('/paciente', function (req, res, next) {
 
 
 export = router;
-
 

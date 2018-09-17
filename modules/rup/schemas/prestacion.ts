@@ -1,6 +1,5 @@
 import { SemanticTag } from './semantic-tag';
 import * as mongoose from 'mongoose';
-import { SnomedConcept } from './snomed-concept';
 import * as registro from './prestacion.registro';
 import * as estado from './prestacion.estado';
 import { auditoriaPrestacionPacienteSchema } from '../../auditorias/schemas/auditoriaPrestacionPaciente';
@@ -74,7 +73,7 @@ export let schema = new mongoose.Schema({
         prestacionOrigen: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'prestacion'
-        },
+        }
     },
 
     // Datos de la ejecución (i.e. realización)

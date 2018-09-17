@@ -4,7 +4,7 @@ import { Auth } from './../../../auth/auth.class';
 import * as mongoose from 'mongoose';
 import * as camaController from '../../../modules/rup/controllers/cama';
 
-let router = express.Router();
+const router = express.Router();
 
 
 /**
@@ -13,7 +13,7 @@ let router = express.Router();
 //  */
 
 
-router.get('/camas', Auth.authenticate(), function (req, res, next) {
+router.get('/camas', Auth.authenticate(), (req, res, next) => {
 
     let query;
     query = CamaModel.find({});
@@ -30,7 +30,7 @@ router.get('/camas', Auth.authenticate(), function (req, res, next) {
     if (req.query.sectorId) {
         query.where('sectores._id').equals(req.query.sectorId);
     }
-    query.sort({ 'numero': 1, 'habitacion': 1 });
+    query.sort({ numero: 1, habitacion: 1 });
     query.exec({}, (err, data) => {
         if (err) {
             return next(err);
@@ -44,7 +44,7 @@ router.get('/camas', Auth.authenticate(), function (req, res, next) {
  * trae las camas por fecha y hora.
  */
 
-router.get('/camas/porfecha', Auth.authenticate(), function (req, res, next) {
+router.get('/camas/porfecha', Auth.authenticate(), (req, res, next) => {
     camaController.camasXfecha(new mongoose.Types.ObjectId(req.query.idOrganizacion), new Date(req.query.fecha)).then(
         camas => {
             res.json(camas);
@@ -58,10 +58,10 @@ router.get('/camas/porfecha', Auth.authenticate(), function (req, res, next) {
  * Busca la cama por su id.
  */
 
-router.get('/camas/:idCama', Auth.authenticate(), function (req, res, next) {
+router.get('/camas/:idCama', Auth.authenticate(), (req, res, next) => {
     CamaModel.findById({
-        '_id': req.params.idCama
-    }, function (err, data: any) {
+        _id: req.params.idCama
+    }, (err, data: any) => {
         if (err) {
             return next(err);
         }
@@ -92,7 +92,7 @@ router.post('/camas', Auth.authenticate(), (req, res, next) => {
 
 router.put('/camas/:id', Auth.authenticate(), (req, res, next) => {
 
-    CamaModel.findById(req.params.id, function (err3, data: any) {
+    CamaModel.findById(req.params.id, (err3, data: any) => {
         if (err3) {
             return next(404);
         }
@@ -123,10 +123,10 @@ router.put('/camas/:id', Auth.authenticate(), (req, res, next) => {
 });
 
 
-router.patch('/camas/:idCama', Auth.authenticate(), function (req, res, next) {
+router.patch('/camas/:idCama', Auth.authenticate(), (req, res, next) => {
     CamaModel.findById({
         _id: req.params.idCama,
-    }, function (err, data: any) {
+    }, (err, data: any) => {
         if (err) {
             return next(err);
         }
@@ -184,10 +184,10 @@ router.patch('/camas/:idCama', Auth.authenticate(), function (req, res, next) {
     });
 });
 
-router.patch('/camas/cambiaEstado/:idCama', Auth.authenticate(), function (req, res, next) {
+router.patch('/camas/cambiaEstado/:idCama', Auth.authenticate(), (req, res, next) => {
     CamaModel.findById({
         _id: req.params.idCama,
-    }, function (err, _cama: any) {
+    }, (err, _cama: any) => {
         if (err) {
             return next(err);
         }
@@ -260,6 +260,8 @@ router.patch('/camas/cambiaEstado/:idCama', Auth.authenticate(), function (req, 
     });
 });
 
+/*
+[REVISAR]
 function validaCama(camas, nuevaCama) {
     let result = false;
     camas.forEach(_cama => {
@@ -271,6 +273,7 @@ function validaCama(camas, nuevaCama) {
     });
     return result;
 }
+*/
 
 
 export = router;

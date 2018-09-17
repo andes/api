@@ -9,6 +9,7 @@ export interface INotification {
     badge?: Number;
     icon?: String;
     contentAvailable?: Boolean;
+    alert?: any;
 }
 
 export class PushClient {
@@ -23,7 +24,7 @@ export class PushClient {
     public send(deviceIds, notification: INotification) {
 
         return this.pushServer.send(deviceIds, this.notificationToObject(notification));
-        // .then((results) => console.log(results))
+        // .then((results) => console.log(JSON.stringify(results)))
         // .catch((err) => console.log(JSON.stringify(err)));
     }
 
@@ -32,9 +33,8 @@ export class PushClient {
             title: notification.title || this.defaultTitle,
             body: notification.body,
             custom: notification.extraData,
-            contentAvailable: notification.contentAvailable == null ? false : notification.contentAvailable,
+            contentAvailable: notification.contentAvailable == null ? true : notification.contentAvailable,
             badge: notification.badge || undefined,
-            sound: notification.sound || undefined,
             icon: notification.icon || '',
             priority: 'high',
             collapseKey: '',
@@ -50,12 +50,10 @@ export class PushClient {
             titleLocArgs: '',
             retries: 1,
             encoding: '',
-            alert: {},
             launchImage: '',
             action: '',
-            topic: '',
+            topic: pushNotificationsSettings.domainIOS,
             category: '',
-            mdm: '',
             urlArgs: '',
             truncateAtWordEnd: true,
             mutableContent: 0,
@@ -112,4 +110,3 @@ export class PushClient {
     */
 
 }
-

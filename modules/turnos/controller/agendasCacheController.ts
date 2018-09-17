@@ -1,36 +1,47 @@
 import * as operationsCache from './operationsCacheController/operationsAgenda';
-import * as configPrivate from '../../../config.private';
-import * as sql from 'mssql';
+import * as dbg from 'debug';
 
-const MongoClient = require('mongodb').MongoClient;
-let async = require('async');
-let pool;
-let transaction;
+const debug = dbg('integracion');
 
-let connection = {
-    user: configPrivate.conSql.auth.user,
-    password: configPrivate.conSql.auth.password,
-    server: configPrivate.conSql.serverSql.server,
-    database: configPrivate.conSql.serverSql.database
-};
-
-export async function integracionSips() {
+export async function integracionSips(done) {
     try {
-        let agendasMongoPendientes = await operationsCache.getAgendasDeMongoPendientes();
+        const agendasMongoPendientes = await operationsCache.getAgendasDeMongoPendientes();
+        const total = agendasMongoPendientes.length;
+        let counter = 0;
+        debug('agendas pendientes: ', agendasMongoPendientes);
         agendasMongoPendientes.forEach(async (agenda) => {
             await operationsCache.guardarCacheASips(agenda);
+            counter++;
+            if (total === counter) {
+                done();
+            }
         });
+        if (total === 0) {
+            done();
+        }
     } catch (ex) {
+        // No pudo traer las agendas
+        debug('Error al buscar agendas pendientes: ', ex);
+        done();
         return (ex);
     }
 }
 
-export async function integracionAndes() {
+export async function integracionAndes(done) {
     try {
-        let agendasMongoExportadas = await operationsCache.getAgendasDeMongoExportadas();
+        const agendasMongoExportadas = await operationsCache.getAgendasDeMongoExportadas();
+        let counter = 0;
+        const total = agendasMongoExportadas.length;
         agendasMongoExportadas.forEach(async (agenda) => {
             await operationsCache.checkCodificacion(agenda);
+            counter++;
+            if (counter === total) {
+                done();
+            }
         });
+        if (total === 0) {
+            done();
+        }
     } catch (ex) {
         return (ex);
     }

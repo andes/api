@@ -1,9 +1,7 @@
 import * as mongoose from 'mongoose';
 import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
-import { pacienteSchema } from '../../mpi/schemas/paciente';
 import * as nombreSchema from './nombre';
 import * as estado from './camaEstado';
-import * as unidadOrganizativa from './unidadOrganizativa';
 
 export let schema = new mongoose.Schema({
     organizacion: {

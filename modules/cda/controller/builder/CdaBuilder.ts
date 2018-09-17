@@ -1,4 +1,3 @@
-import { IID, ICode, IConfidentialityCode, ILanguageCode, ISetId } from '../class/interfaces';
 import { CDA } from '../class/CDA';
 import { Body } from '../class/Body';
 import * as builder from 'xmlbuilder';
@@ -14,10 +13,10 @@ export class CDABuilder extends BaseBuilder {
 
     public build(cda: CDA) {
 
-        var xml = builder.create('ClinicalDocument')
-                         .att('xmlns', 'urn:hl7-org:v3')
-                         .att('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
-                         .att('xmlns:voc', 'urn:hl7-org:v3/voc');
+        const xml = builder.create('ClinicalDocument')
+            .att('xmlns', 'urn:hl7-org:v3')
+            .att('xmlns:xsi', 'http://www.w3.org/2001/XMLSchema-instance')
+            .att('xmlns:voc', 'urn:hl7-org:v3/voc');
 
         xml.instructionBefore('xml-stylesheet', 'type="text/xsl" href="style/cda.xsl"');
 
@@ -29,7 +28,7 @@ export class CDABuilder extends BaseBuilder {
         this.createNode(xml, 'effectiveTime', { value: this.fromDate(cda.effectiveTime()) });
         this.createNode(xml, 'confidentialityCode', cda.confidentialityCode());
         this.createNode(xml, 'languageCode', cda.languageCode());
-        this.createNode(xml, 'versionNumber', cda.versionNumber());
+        this.createNode(xml, 'versionNumber', { value: cda.versionNumber() });
 
         if (cda.setId()) {
             this.createNode(xml, 'setId', cda.setId());
@@ -43,68 +42,71 @@ export class CDABuilder extends BaseBuilder {
 
         if (cda.patient()) {
             xml.com('Datos del paciente');
-            let patientBuilder = new PatientBuilder();
-            let template = patientBuilder.build(cda.patient() as Patient);
+            const patientBuilder = new PatientBuilder();
+            const template = patientBuilder.build(cda.patient() as Patient);
             xml.importDocument(template);
         }
 
         if (cda.author()) {
             xml.com('Datos del Doctor');
-            let authorBuilder = new AuthorBuilder();
-            let template = authorBuilder.build(cda.author() as Author);
+            const authorBuilder = new AuthorBuilder();
+            const template = authorBuilder.build(cda.author() as Author);
             xml.importDocument(template);
         }
 
         if (cda.custodian()) {
             xml.com('Datos de la organización');
-            let orgBuilder = new OrganizationBuilder();
-            let template = orgBuilder.build(cda.custodian() as Organization);
+            const orgBuilder = new OrganizationBuilder();
+            const template = orgBuilder.build(cda.custodian() as Organization);
             xml.importDocument(template);
         }
 
-        let date = cda.date() as Date;
+        const date = cda.date() as Date;
+        const serviceEvent = xml.ele('documentationOf').ele('serviceEvent', { classCode: 'PCPR' });
+        if (date) {
+            const efTime = serviceEvent.ele('effectiveTime', { value: this.fromDate(date) });
+            efTime.ele('low', { value: this.fromDate(date) });
+            efTime.ele('high', { value: this.fromDate(date) });
+        }
+
+
         if (date) {
             xml.com('Fecha de la prestación');
-            let elem = xml.ele('componentOf').ele('encompassingEncounter');
-            elem.ele('effectiveTime').ele('low', {value: this.fromDate(date)}, this.fromDate(date));
+            const elem = xml.ele('componentOf').ele('encompassingEncounter');
+            elem.ele('effectiveTime').ele('low', { value: this.fromDate(date) });
         }
 
-        let serviceEvent = xml.ele('documentationOf').ele('serviceEvent', {classCode: 'PCPR'});
-        if (date) {
-            let efTime = serviceEvent.ele('effectiveTime', {value: this.fromDate(date)});
-            efTime.ele('low', {value: this.fromDate(date)} );
-            efTime.ele('high', {value: this.fromDate(date)} );
-        }
-        let performer = serviceEvent.ele('performer', {typeCode: 'PRF'});
-        performer.ele('functionCode', {code: 'PCP', codeSystem: '2.16.840.1.113883.5.88'});
-        let assignedEntity = performer.ele('assignedEntity');
+
+        const performer = serviceEvent.ele('performer', { typeCode: 'PRF' });
+        performer.ele('functionCode', { code: 'PCP', codeSystem: '2.16.840.1.113883.5.88' });
+        const assignedEntity = performer.ele('assignedEntity');
 
         if (cda.author()) {
-            let doctor = cda.author() as Author;
-            let assignedPerson = assignedEntity.ele('assignedPerson');
-            let nameNode = assignedPerson.ele('name');
+            const doctor = cda.author() as Author;
+            const assignedPerson = assignedEntity.ele('assignedPerson');
+            const nameNode = assignedPerson.ele('name');
             this.createNode(nameNode, 'given', null, doctor.firstname());
             this.createNode(nameNode, 'family', null, doctor.lastname());
         }
 
         if (cda.custodian()) {
-            let org = cda.custodian() as Organization;
-            let representedOrganization = assignedEntity.ele('representedOrganization');
+            const org = cda.custodian() as Organization;
+            const representedOrganization = assignedEntity.ele('representedOrganization');
             this.createNode(representedOrganization, 'id', org.id());
             this.createNode(representedOrganization, 'name', null, org.name());
         }
 
-        let body: Body = cda.body() as Body;
+        const body: Body = cda.body() as Body;
         if (body) {
-            let mainComponent = xml.ele('component').ele('structuredBody');
+            const mainComponent = xml.ele('component').ele('structuredBody');
             body.component().forEach(item => {
-                let builderComponent = item.builderFactory();
-                let template = builderComponent.build(item);
+                const builderComponent = item.builderFactory();
+                const template = builderComponent.build(item);
                 mainComponent.importDocument(template);
             });
         }
 
-        return xml.end({ pretty: true});
+        return xml.end({ pretty: true });
     }
 
 }
