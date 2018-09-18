@@ -206,7 +206,7 @@ async function findCarpetasPrestamo(organizacionId: string, horaInicio: string, 
     if (profesionalId) {
         match['datosPrestamo.turno.profesionales._id'] = new ObjectId(profesionalId);
     }
-    match['organizacion._id'] = { $eq: organizacionId };
+    match['organizacion._id'] = { $eq: new ObjectId(organizacionId) };
 
     sort['createdAt'] = -1;
     group['_id'] = '$numero';
@@ -432,7 +432,7 @@ export async function getHistorial(req) {
     const organizacionId = req.query.organizacion;
 
     const filter: any = {
-        'organizacion._id': organizacionId,
+        'organizacion._id': new ObjectId(organizacionId),
         numero: nroCarpeta
     };
 
