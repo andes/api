@@ -252,7 +252,7 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 return next(error);
             }
 
-            if (req.body.estado.tipo === 'validada') {
+            if (req.body.estado && req.body.estado.tipo === 'validada') {
                 EventCore.emitAsync('rup:prestacion:validate', data);
             }
 
@@ -315,8 +315,6 @@ router.patch('/prestaciones/:id', (req, res, next) => {
             } else {
                 res.json(prestacion);
             }
-
-            Auth.audit(data, req);
             /*
             Logger.log(req, 'prestacionPaciente', 'update', {
                 accion: req.body.op,
