@@ -81,30 +81,6 @@ router.get('/prestaciones/huds/:idPaciente', async (req, res, next) => {
     });
 });
 
-router.get('/prestaciones/laboratorio', async function (req, res, next) {
-    let match = {
-        'solicitud.tipoPrestacion.conceptId': '15220000',
-        'solicitud.registros.nombre': { $ne: 'numeroProtocolo' },
-        'solicitud.fecha': { '$gte': moment(req.query.fechaDesde, 'YYYY-MM-DD').startOf('day').toDate(), '$lte': moment(req.query.fechaHasta, 'YYYY-MM-DD').endOf('day').toDate() }
-    }
-        ;
-    if (req.query.pacienteDni) {
-        match['paciente.documento'] = req.query.pacienteDni;
-    }
-    if (!req.query.protocoloIniciado) {
-        match['ejecucion.registros'] = { '$size': 0 };
-    }
-
-    let query = [
-        {
-            '$match':
-                match
-        }];
-    let data2 = await toArray(Prestacion.aggregate(query).cursor({}).exec());
-    res.json(data2);
-    // let prestaciones = await Prestacion.find({'solicitud.tipoPrestacion.conceptId': '15220000', 'solicitud.registros.nombre': {$ne: 'numeroProtocolo'}});
-    // res.json(prestaciones);
-});
 
 
 router.get('/prestaciones/:id*?', (req, res, next) => {
@@ -172,10 +148,10 @@ router.get('/prestaciones/:id*?', (req, res, next) => {
             query.where('solicitud.ambitoOrigen').equals(req.query.origen);
         }
         if (req.query.numProtocoloDesde) {
-            query.where('solicitud.registros.valor').gte(Number(req.query.numProtocoloDesde));
+            query.where('solicitud.registros.valor.solicitudPrestacion.numeroProtocolo.numero').gte(Number(req.query.numProtocoloDesde));
         }
         if (req.query.numProtocoloHasta) {
-            query.where('solicitud.registros.valor').lte(Number(req.query.numProtocoloHasta));
+            query.where('solicitud.registros.valor.solicitudPrestacion.numeroProtocolo.numero').lte(Number(req.query.numProtocoloHasta));
         }
         if (req.query.solicitudDesde) {
             query.where('solicitud.fecha').gte(moment(req.query.solicitudDesde).startOf('day').toDate() as any);
