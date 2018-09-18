@@ -43,6 +43,7 @@ export function getTurno(req) {
                     bloques: { $push: { _id: '$_id.bloqueId', turnos: '$turnos' } }
                 }
             }];
+            // ver llamado, req.query
             if (req.params && mongoose.Types.ObjectId.isValid(req.params.id)) {
                 const matchId = {
                     $match: {

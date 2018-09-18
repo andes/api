@@ -92,7 +92,7 @@ export class SnomedCIE10Mapping {
                 }
 
                 // Chequea si existe un mapeo estático
-                staticMapping.model.findOne({ conceptId: conceptId }).then((staticmap: any) => {
+                staticMapping.model.findOne({ conceptId }).then((staticmap: any) => {
                     resolve(staticmap ? staticmap.mapTarget : null);
                 }).catch(err2 => {
                     reject(err2);
