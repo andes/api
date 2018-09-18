@@ -350,12 +350,14 @@ router.get('/organizaciones/:id*?', (req, res, next) => {
  *         description: Un objeto organizacion
  *         schema:
  *           $ref: '#/definitions/organizacion'
+ * Auth.audit(newPatientMpi, req)
  */
 router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
     if (!Auth.check(req, 'tm:especialidad:postEspecialidad')) {
         return next(403);
     }
     const newOrganization = new organizacion.model(req.body);
+    Auth.audit(newOrganization, req);
     newOrganization.save((err) => {
         if (err) {
             return next(err);
