@@ -7,6 +7,7 @@ import { model as Prestacion } from '../../rup/schemas/prestacion';
 import * as Paciente from '../../../core/mpi/controller/paciente';
 import { model as Org } from '../../../core/tm/schemas/organizacion';
 import * as snomed from '../../../core/term/controller/snomedCtr';
+import * as rup from '../../../modules/rup/schemas/elementoRUP';
 import * as conceptoTurneable from '../../../core/tm/schemas/tipoPrestacion';
 import * as path from 'path';
 import { env } from 'process';
@@ -17,15 +18,17 @@ moment.locale('es');
 if (env.NODE_ENV !== 'production') {
     // tslint:disable-next-line:no-console
     process.on('unhandledRejection', r => console.log(r));
+    // tslint:disable-next-line:no-console
+    process.on('TypeError', r => console.log(r));
 }
 
 export class Documento {
 
     // private static locale = 'es-ES';
-    public static timeZone = 'America/Argentina/Buenos_Aires';
+    // public static timeZone = 'America/Argentina/Buenos_Aires';
 
-    private static headerHTML = fs.readFileSync(path.join(__dirname, '../../../templates/andes/html/header.html'));
-    private static footerHTML = fs.readFileSync(path.join(__dirname, '../../../templates/andes/html/footer.html'));
+    // private static headerHTML = fs.readFileSync(path.join(__dirname, '../../../templates/andes/html/header.html'));
+    // private static footerHTML = fs.readFileSync(path.join(__dirname, '../../../templates/andes/html/footer.html'));
 
     /**
      * Opciones default de PDF rendering
@@ -56,7 +59,22 @@ export class Documento {
         return new Promise((resolve, reject) => {
             conceptoTurneable.tipoPrestacion.findOne({ conceptId: sctid }, (err, ct: any) => {
                 if (err) {
-                    reject(err);
+                    reject(false);
+                }
+                resolve(ct);
+            });
+        });
+    }
+
+    /**
+     *
+     * @param sctid string Snomed concept ID
+     */
+    private static getPrestacionInformeComponent(sctid) {
+        return new Promise((resolve, reject) => {
+            rup.elementoRUP.findOne({ 'conceptos.conceptId': sctid }, (err, ct: any) => {
+                if (err) {
+                    reject(false);
                 }
                 resolve(ct);
             });
@@ -75,7 +93,7 @@ export class Documento {
     }
 
     private static registroHTML(term: string, valor: any) {
-        valor = !valor.evolucion ? valor : valor.evolucion;
+        valor = valor && valor.evolucion ? valor.evolucion : valor;
         return `
             <article class="contenedor-concepto-data">
                 <h3><!--term--></h3>
@@ -101,6 +119,10 @@ export class Documento {
         return (st === 'procedimiento' || st === 'entidad observable' || st === 'régimen/tratamiento' || st === 'elemento de registro');
     }
 
+    // private static getRegistros(registro) {
+    //     return registro.valor === null ? registro.registros.filter()
+    // }
+
     // 'plan'
     static generarRegistroPlanHTML(plan: any, template: string): any {
         return template
@@ -117,7 +139,8 @@ export class Documento {
         return template
             .replace('<!--concepto-->', proc.concepto.term)
             .replace('<!--valor-->', proc.valor)
-            .replace('<!--motivoPrincipalDeConsulta-->', proc.esDiagnosticoPrincipal === true ? 'Motivo principal de consulta' : '');
+            // .replace('<!--valor-->', (proc.valor || this.getRegistros(proc)))
+            .replace('<!--motivoPrincipalDeConsulta-->', proc.esDiagnosticoPrincipal === true ? 'PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL' : '');
 
     }
 
@@ -126,8 +149,84 @@ export class Documento {
         return template
             .replace('<!--concepto-->', hallazgo.concepto.term)
             .replace('<!--evolucion-->', hallazgo.valor.evolucion)
-            .replace('<!--motivoPrincipalDeConsulta-->', hallazgo.esDiagnosticoPrincipal === true ? 'Motivo principal de consulta' : '');
+            .replace('<!--motivoPrincipalDeConsulta-->', hallazgo.esDiagnosticoPrincipal === true ? 'PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL' : '');
 
+    }
+
+    static crearProcedimientos(proc, template) {
+        return proc.length > 0 ? proc.map(x => {
+            if (this.esProcedimiento(x.concepto.semanticTag) && x.esSolicitud === false) {
+                if (x.valor !== null && x.registros.length === 0) {
+                    return this.generarRegistroProcedimientoHTML(x, template);
+                } else {
+
+                }
+            }
+        }) : [];
+    }
+
+    static crearHallazgos(hall, template) {
+        return hall.length > 0 ? hall.map(x => {
+            if (this.esHallazgo(x.concepto.semanticTag)) {
+                return this.generarRegistroHallazgoHTML(x, template);
+            }
+        }) : [];
+    }
+
+    static crearPlanes(plan, template) {
+        return plan.length > 0 ? plan.map(x => {
+            if (x.esSolicitud) {
+                return this.generarRegistroPlanHTML(x, template);
+            }
+        }) : [];
+    }
+
+    static generarRegistro(registro, template) {
+        if (this.esHallazgo(registro.concepto.semanticTag)) {
+            this.generarRegistroHallazgoHTML(registro, template);
+        } else if (this.esProcedimiento(registro.concepto.semanticTag)) {
+            this.generarRegistroProcedimientoHTML(registro, template);
+        }
+    }
+
+    static ucaseFirst(titulo: string) {
+        return titulo[0].toLocaleUpperCase() + titulo.slice(1).toLocaleLowerCase();
+    }
+
+    static informeRegistros: any[] = [];
+    static hallazgoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/hallazgo.html'), 'utf8');
+    static procedimientoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/procedimiento.html'), 'utf8');
+    static planTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/plan.html'), 'utf8');
+
+    static async generarInforme(registros, titulos?) {
+        for (let i = 0; i <= registros.length; i++) {
+            if (registros[i]) {
+                if (registros[i].valor) {
+                    if (registros[i].valor.descripcion) {
+                        this.informeRegistros = [...this.informeRegistros, ({ concepto: { term: registros[i].nombre, semanticTag: registros[i].concepto.semanticTag }, valor: `<div class="nivel-2"><h3>${this.ucaseFirst(registros[i].nombre)}</h3><p>${this.ucaseFirst(registros[i].valor.descripcion)}</p></div>` })];
+                    } else if (registros[i].valor !== null) {
+                        if (registros[i].valor.evolucion) {
+                            this.informeRegistros = [...this.informeRegistros, ({ concepto: { term: registros[i].nombre, semanticTag: registros[i].concepto.semanticTag }, valor: `<div class="nivel-3"><h3>${this.ucaseFirst(registros[i].nombre)}</h3>${registros[i].valor.evolucion}</div>` })];
+                        } else {
+                            let nivel = registros[i].registros.length === 0 ? 3 : 1;
+                            this.informeRegistros = [...this.informeRegistros, ({ concepto: { term: registros[i].nombre, semanticTag: registros[i].concepto.semanticTag }, valor: `<div class="nivel-${nivel}"><h3>${this.ucaseFirst(registros[i].nombre)}</h3>${registros[i].valor}</div>` })];
+                        }
+                    }
+                } else if (registros[i].nombre) {
+                    this.informeRegistros = [...this.informeRegistros, ({ concepto: { term: registros[i].nombre, semanticTag: registros[i].concepto.semanticTag }, valor: `<div class="nivel-1"><h3>${this.ucaseFirst(registros[i].nombre)}</h3>${registros[i].valor ? registros[i].valor : ''}</div>` })];
+                }
+
+                let template = this.esHallazgo(registros[i].concepto.semanticTag) ? this.hallazgoTemplate : this.procedimientoTemplate;
+                let reg = this.generarRegistro(registros[i], template);
+                if (reg) {
+                    this.informeRegistros[i] = reg;
+                }
+
+                if (registros[i].registros.length > 0) {
+                    this.generarInforme(registros[i].registros);
+                }
+            }
+        }
     }
 
     private static async generarHTML(req) {
@@ -141,14 +240,18 @@ export class Documento {
         // Configuraciones de informe propios de la prestación
         let config: any = await this.getPrestacionInformeParams(prestacion.solicitud.tipoPrestacion.conceptId);
 
+        if (!config) {
+            config = await this.getPrestacionInformeComponent(prestacion.solicitud.tipoPrestacion.conceptId);
+        }
+
         // Se crea un objecto nuevo
         config = JSON.parse(JSON.stringify(config));
 
         // Paciente
-        let paciente: any = await Paciente.buscarPaciente(prestacion.paciente.id);
-        paciente = paciente.paciente; // SI, YA SÉ
+        let mpi: any = await Paciente.buscarPaciente(prestacion.paciente.id);
+        let paciente = mpi.paciente;
 
-        if (paciente.id) {
+        if (paciente.id && config) {
 
             let tipoPrestacion;
             let tituloInforme;
@@ -172,8 +275,8 @@ export class Documento {
                 tipoPrestacion = prestacion.ejecucion.registros[0].nombre;
                 prestacion.ejecucion.registros[0].concepto.term = tituloInforme;
                 tituloInforme = tituloInforme[0].toUpperCase() + tituloInforme.slice(1);
-                contenidoInforme = prestacion.ejecucion.registros.find(x => this.registroHTML(x.concepto.term, x.valor)).valor;
-                contenidoInforme = contenidoInforme.evolucion ? contenidoInforme.evolucion : contenidoInforme;
+                // contenidoInforme = prestacion.ejecucion.registros.find(x => this.registroHTML(x.concepto.term, x.valor)).valor;
+                // contenidoInforme = contenidoInforme && contenidoInforme.evolucion ? contenidoInforme.evolucion : contenidoInforme;
 
             } else {
                 // Si tiene un hijo directo, usamos su nombre como título de la consulta
@@ -182,8 +285,7 @@ export class Documento {
 
             tipoPrestacion = tipoPrestacion[0].toUpperCase() + tipoPrestacion.slice(1);
 
-
-            // Existe configuración de Motivo Principal de Consulta?
+            // Existe configuración de PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL?
             if (config.informe && config.informe.motivoPrincipalDeConsultaOverride) {
                 if (prestacion.ejecucion.registros.length > 1) {
                     let existeConcepto = prestacion.ejecucion.registros.find(x => this.existeSemanticTagMPC(x.concepto.semanticTag) && x.esDiagnosticoPrincipal);
@@ -191,51 +293,40 @@ export class Documento {
                     if (existeConcepto && existeConcepto.esDiagnosticoPrincipal && tituloRegistro && tituloRegistro.conceptId !== existeConcepto.concepto.conceptId) {
                         motivoPrincipalDeConsulta = existeConcepto;
                         if (motivoPrincipalDeConsulta) {
-                            motivoPrincipalDeConsulta = '<b>Motivo Principal de consulta: </b>' + motivoPrincipalDeConsulta.concepto.term;
+                            motivoPrincipalDeConsulta = '<b>PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL: </b>' + motivoPrincipalDeConsulta.concepto.term;
                         }
                     }
                 }
             }
 
+            // let registros = '';
+            this.generarInforme(prestacion.ejecucion.registros, config.requeridos);
 
-            let registros = '';
-            if (!config.informe) {
+
+
+            // Si no hay configuración de informe o si se configura "registrosDefault" en true, se genera el informe por defecto (default)
+            if (!config.informe || config.informe.registrosDefault) {
+
+
+                contenidoInforme = this.informeRegistros.filter(x => x !== undefined ? x : null);
+
 
                 let hallazgos, procedimientos, planes = [];
+                // hallazgos = prestacion.ejecucion.registros.filter(x => this.esHallazgo(x.concepto.semanticTag));
+                // procedimientos = prestacion.ejecucion.registros.filter(x => this.esProcedimiento(x.concepto.semanticTag));
+                // planes = prestacion.ejecucion.registros.filter(x => x.esSolicitud === true);
 
-                hallazgos = prestacion.ejecucion.registros.filter(x => this.esHallazgo(x.concepto.semanticTag));
-                procedimientos = prestacion.ejecucion.registros.filter(x => this.esProcedimiento(x.concepto.semanticTag));
-                planes = prestacion.ejecucion.registros.filter(x => x.esSolicitud === true);
-
-                let hallazgoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/hallazgo.html'), 'utf8');
-                hallazgos = hallazgos.length > 0 ? hallazgos.map(x => {
-                    if (this.esHallazgo(x.concepto.semanticTag)) {
-                        return this.generarRegistroHallazgoHTML(x, hallazgoTemplate);
-                    }
-                }) : [];
-
-                let procedimientoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/procedimiento.html'), 'utf8');
-                procedimientos = procedimientos.length > 0 ? procedimientos.map(x => {
-                    if (this.esProcedimiento(x.concepto.semanticTag) && x.esSolicitud === false) {
-                        return this.generarRegistroProcedimientoHTML(x, procedimientoTemplate);
-                    }
-                }) : [];
-
-                let planTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/plan.html'), 'utf8');
-                planes = planes.length > 0 ? planes.map(x => {
-                    if (x.esSolicitud) {
-                        return this.generarRegistroPlanHTML(x, planTemplate);
-                    }
-                }) : [];
+                // hallazgos = this.crearHallazgos(hallazgos, hallazgoTemplate);
+                // procedimientos = this.crearProcedimientos(procedimientos, procedimientoTemplate);
+                // planes = this.crearPlanes(planes, planTemplate);
 
 
-                registros = [...hallazgos, ...procedimientos, ...planes].join('');
+                // registros = [...hallazgos, ...procedimientos, ...planes].join('');
+
             }
 
             // Se leen header y footer (si se le pasa un encoding, devuelve un string)
             let html = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/informe.html'), 'utf8');
-
-            // let header = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/header.html'), 'utf8');
 
             let nombreCompleto = paciente.apellido + ', ' + paciente.nombre;
             let fechaNacimiento = paciente.fechaNacimiento ? moment(paciente.fechaNacimiento).format('DD/MM/YYYY') : 's/d';
@@ -267,6 +358,8 @@ export class Documento {
             let fechaEjecucion = new Date(prestacion.estados.find(x => x.tipo === 'ejecucion').createdAt);
             let fechaValidacion = new Date(prestacion.estados.find(x => x.tipo === 'validada').createdAt);
 
+            // console.log(this.informeRegistros);
+
             // BODY
             html = html
                 .replace('<!--tipoPrestacion-->', tipoPrestacion)
@@ -275,8 +368,8 @@ export class Documento {
                 .replace('<!--fechaEjecucion-->', moment(fechaEjecucion).format('DD/MM/YYYY HH:mm') + ' hs')
                 .replace('<!--fechaValidacion-->', moment(fechaValidacion).format('DD/MM/YYYY HH:mm') + ' hs')
                 .replace('<!--tituloInforme-->', tituloInforme ? tituloInforme : '')
-                .replace('<!--contenidoInforme-->', contenidoInforme ? contenidoInforme : '')
-                .replace('<!--registros-->', registros.length ? registros : '');
+                // .replace('<!--contenidoInforme-->', contenidoInforme ? contenidoInforme : '')
+                .replace('<!--registros-->', contenidoInforme.length ? contenidoInforme.map(x => typeof x.valor === 'string' ? x.valor : JSON.stringify(x.valor)).join('') : '');
 
             // FOOTER
             html = html
@@ -320,6 +413,8 @@ export class Documento {
                 .replace('<!--logoPDP-->', `<img class="logo-pdp" src="data:image/png;base64,${logoPDP.toString('base64')}">`)
                 .replace('<!--logoPDP2-->', `<img class="logo-pdp-h" src="data:image/png;base64,${logoPDP2.toString('base64')}">`);
 
+            console.log(html);
+            // process.exit();
             return html;
         } else {
             return false;
