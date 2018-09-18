@@ -293,8 +293,9 @@ router.get('/tojson/:id', async (req: any, res, next) => {
     contexto = contexto.toString().replace(new RegExp('<br>', 'g'), ' ');
     contexto = contexto.toString().replace(new RegExp('[\$]', 'g'), '');
     contexto = contexto.toString().replace(new RegExp('&#xD', 'g'), '');
+
     /**
-     * ATENCION: FIX para poder visualizar los informes de evolución que traen caracteres raros. 
+     * ATENCION: FIX para poder visualizar los informes de evolución que traen caracteres raros.
      * Obtenemos el texto dentro de los tags <text> del xml, la extraemos tal cual está y la agregamos luego de la ejecución del parser
      * para conservala tal cual la escribieron.
      * PD: Deberemos mejorar esto a futuro!
