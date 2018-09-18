@@ -17,7 +17,8 @@ export let tipoPrestacionSchema = new Schema({
     semanticTag: {
         type: String,
         enum: ['procedimiento', 'solicitud', 'hallazgo', 'trastorno', 'antecedenteFamiliar', 'régimen/tratamiento']
-    }
+    },
+    noNominalizada: Boolean
 });
 
 /* Se definen los campos virtuals */
