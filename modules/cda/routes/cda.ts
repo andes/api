@@ -87,7 +87,6 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
             }
         };
         let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
-        console.log('Todo okkk');
         res.json({ cda: uniqueId, paciente: paciente._id });
 
         EventCore.emitAsync('huds:cda:create', { cda: uniqueId, paciente: paciente._id });
