@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
 
 // tslint:disable
-export let schema = new mongoose.Schema({    
+export let schema = new mongoose.Schema({
     codigo: {
         type: String,
         required: false
@@ -13,155 +13,171 @@ export let schema = new mongoose.Schema({
     },
     nombre: {
         type: String,
-        required: true 
+        required: true
     },
     descripcion: {
         type: String,
-        required: true 
+        required: true
     },
     concepto: SnomedConcept,
     sistema: SnomedConcept,
     tipoLaboratorio: {
         nombre: {
             type: String,
-            required: true 
+            required: true
         },
         nomencladorProvincial: {
             type: String,
-            required: true 
+            required: true
         }
     },
     area: {
         nombre: {
             type: String,
-            required: true 
+            required: true
         },
         conceptoSnomed: SnomedConcept
     },
     categoria: {
         type: String,
-        required: true 
+        required: true
     },
     ordenImpresion: {
         type: Number,
-        required: false 
+        required: false
     },
     unidadMedida: SnomedConcept,
-    diagrama:  {
+    diagrama: {
         type: String,
-        required: false 
+        required: false
     },
     resultado: {
         sinMuestra: Boolean,
         formato: {
             tipo: {
                 type: String,
-                required: true 
+                required: true
             },
             decimales: {
                 type: Number,
-                required: false 
+                required: false
             },
             exponencial: {
                 type: Boolean,
-                required: false 
+                required: false
             },
             multiplicador: {
                 type: Number,
-                required: false 
+                required: false
             }
         },
         valorDefault: {
             type: Object,
-            required: false 
-        }
+            required: false
+        },
+        resultadosAnteriores: [
+            {
+                valor: {
+                    type: Number,
+                    required: false
+                },
+                unidadMedida: SnomedConcept,
+                fechaTomaMuestra: {
+                    type: Date,
+                    required: false,
+                    es_indexed: true
+                }
+
+            }
+        ]
+
     },
-    reactivos : [ 
+    reactivos: [
         {
             fabricante: {
                 type: String,
-                required: false 
+                required: false
             },
-            denominacion:  {
+            denominacion: {
                 type: String,
-                required: false 
+                required: false
             },
-            numeroReferencia:  {
+            numeroReferencia: {
                 type: String,
-                required: false 
+                required: false
             },
-            valoresReferencia : [ 
+            valoresReferencia: [
                 {
-                    sexo :  {
+                    sexo: {
                         type: String,
-                        required: false 
+                        required: false
                     },
                     edadDesde: {
                         type: Number,
-                        required: false 
+                        required: false
                     },
-                    edadHasta : {
+                    edadHasta: {
                         type: Number,
-                        required: false 
+                        required: false
                     },
-                    unidadEdad : {
+                    unidadEdad: {
                         type: Number,
-                        required: false 
+                        required: false
                     },
-                    metodo : {
+                    metodo: {
                         type: Number,
-                        required: false 
+                        required: false
                     },
-                    tipoValor : {
+                    tipoValor: {
                         type: Number,
-                        required: false 
+                        required: false
                     },
-                    valorMinimo : {
+                    valorMinimo: {
                         type: Number,
-                        required: true 
+                        required: true
                     },
-                    valorMaximo : {
+                    valorMaximo: {
                         type: Number,
-                        required: true 
+                        required: true
                     },
-                    observacion : {
+                    observacion: {
                         type: String,
-                        required: false 
+                        required: false
                     }
                 }
             ]
         }
     ],
-    valoresCriticos : {
-        minimo :  {
+    valoresCriticos: {
+        minimo: {
             type: Number,
-            required: true 
+            required: true
         },
-        maximo :  {
+        maximo: {
             type: Number,
-            required: true 
+            required: true
         }
     },
-    etiquetaAdicional :  {
+    etiquetaAdicional: {
         type: Boolean,
-        required: true 
+        required: true
     },
-    recomendaciones : [ {
+    recomendaciones: [{
         type: String,
-        required: true 
+        required: true
     }],
-    factorProduccion : {
-        menor50 :  {
+    factorProduccion: {
+        menor50: {
             type: Number,
-            required: true 
+            required: true
         },
-        de50a100 : {
+        de50a100: {
             type: Number,
-            required: true 
+            required: true
         },
-        mayor100 : {
+        mayor100: {
             type: Number,
-            required: true 
+            required: true
         }
     }
 });

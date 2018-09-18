@@ -2,6 +2,7 @@ import * as mongoose from 'mongoose';
 import * as express from 'express';
 import { model as Organizacion } from '../../../core/tm/schemas/organizacion';
 import { getUltimoNumeroProtocolo } from '../controller/protocolo';
+import { getUltimosResultados } from '../controller/protocolo';
 
 let router = express.Router();
 let async = require('async');
@@ -30,5 +31,17 @@ router.get('/protocolo/numero/', async function (req, res, next) {
     }
 
 });
+
+router.get('/practicas/resultadosAnteriores', async function (req, res, next) {
+    // console.log('/protocolo/numero/')
+    const ObjectId = require('mongoose').Types.ObjectId;
+    let idPaciente = new ObjectId(req.query.idPaciente);
+    let resultadosAnteriores = await getUltimosResultados(idPaciente);
+
+    res.json(resultadosAnteriores);
+
+
+});
+
 
 export = router;

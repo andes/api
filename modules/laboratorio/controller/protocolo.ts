@@ -45,4 +45,39 @@ export async function getUltimoNumeroProtocolo(idOrganizacion) {
         ultimoNumero = 0;
     }
     return parseInt(ultimoNumero);
-}
+};
+
+export async function getUltimosResultados(idPaciente) {
+    let pipeline = [
+        {
+            $match: {
+                $and: [{
+                    'solicitud.tipoPrestacion.conceptId': '15220000',
+                    'paciente.id': { $eq: mongoose.Types.ObjectId(idPaciente) },
+                }]
+            }
+        },
+        {
+            $unwind: '$solicitud'
+        },
+        {
+            $unwind: '$solicitud.registros'
+        },
+        {
+            $unwind: '$solicitud.registros.valor'
+        },
+
+        {
+            $unwind: '$solicitud.registros.valor.solicitudPrestacion'
+        },
+        { $match: { 'solicitud.registros.valor.solicitudPrestacion.practicas': { $exists: true } } },
+        {
+            $project: {
+
+                resultadosAnteriores: '$solicitud.registros.valor.solicitudPrestacion.practicas.resultado.resultadosAnteriores',
+            }
+        }
+    ];
+    let resultados = await toArray(prestacion.aggregate(pipeline).cursor({}).exec());
+    return resultados;
+};
