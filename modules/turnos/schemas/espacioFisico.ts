@@ -1,9 +1,25 @@
-import { SnomedConcept } from './../../rup/schemas/snomed-concept';
-import * as mongoose from 'mongoose';
+import { SnomedConcept, ISnomedConcept } from './../../rup/schemas/snomed-concept';
+import { Document, Schema, Model, model } from 'mongoose';
 import * as edificioSchema from '../../../core/tm/schemas/edificio';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 
-export let espacioFisicoSchema = new mongoose.Schema({
+export interface IEspacioFisico extends Document {
+    nombre: String;
+    detalle: String;
+    descripcion: String;
+    organizacion: { nombre: String; };
+    edificio: { nombre: String; };
+    sector: { nombre: String; };
+    servicio: { nombre: String; };
+    equipamiento: [ISnomedConcept];
+    activo: Boolean;
+    estado: {
+        type: String,
+        enum: ['disponible', 'mantenimiento', 'clausurado', 'baja permanente']
+    };
+}
+
+export let espacioFisicoSchema = new Schema({
     nombre: String,
     detalle: String,
     descripcion: String,
@@ -19,4 +35,4 @@ export let espacioFisicoSchema = new mongoose.Schema({
     }
 });
 
-export let espacioFisico = mongoose.model('espacioFisico', espacioFisicoSchema, 'espacioFisico');
+export let espacioFisico: Model<IEspacioFisico> = model('espacioFisico', espacioFisicoSchema, 'espacioFisico');
