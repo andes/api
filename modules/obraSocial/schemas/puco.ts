@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 import * as configPrivate from './../../../config.private';
 import { Connections } from './../../../connections';
 
-const pucoSchema = new mongoose.Schema({
+const PucoSchema = new mongoose.Schema({
     tipoDoc: String,
     dni: Number,
     codigoOS: Number,
@@ -11,6 +11,6 @@ const pucoSchema = new mongoose.Schema({
     version: Date
 });
 
-pucoSchema.index({ dni: 1, version: 1 });
-export let puco = Connections.puco.model(configPrivate.puco.database, pucoSchema, configPrivate.puco.database);
+PucoSchema.index({ dni: 1, version: 1 });
+export let Puco = Connections.puco.model(configPrivate.puco.database, PucoSchema, configPrivate.puco.database);
 
