@@ -4,6 +4,7 @@ import * as nombreApellidoSchema from '../../../core/tm/schemas/nombreApellido';
 import * as constantes from './constantes';
 import { Document, Schema, Types, SchemaTypes, model, Model } from 'mongoose';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 export interface IPrestamo extends Document {
     paciente: any;
@@ -91,7 +92,7 @@ export const PrestamoSchema = new Schema({
     }
 });
 
-PrestamoSchema.plugin(require('../../../mongoose/audit'));
+PrestamoSchema.plugin(AuditPlugin);
 
 // Exportar modelo
 export const Prestamo: Model<IPrestamo> = model<IPrestamo>('prestamos', PrestamoSchema, 'prestamos');

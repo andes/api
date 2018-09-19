@@ -5,10 +5,7 @@ import * as moment from 'moment';
 import { Auth } from './../../../auth/auth.class';
 import { model as Prestacion } from '../../rup/schemas/prestacion';
 import { model as PrestacionAdjunto } from '../../rup/schemas/prestacion-adjuntos';
-
-
 import { NotificationService } from '../../mobileApp/controller/NotificationService';
-
 import { storeFile } from '../../rup/controllers/rupStore';
 
 const router = express.Router();
