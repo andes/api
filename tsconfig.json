@@ -10,15 +10,15 @@
         "noImplicitAny": false,
         "noImplicitReturns": true,
         "allowUnusedLabels": false,
-        "typeRoots": [
-            "node_modules/@types",
-            "./packages/*",
-        ],
         "baseUrl": ".",
         "paths": {
             "@andes/event-bus/*": ["./packages/event-bus/*"],
             "@andes/mongoose-plugin-audit/*": ["./packages/mongoose-plugin-audit/*"],
             "@andes/fhir/*": ["./packages/fhir/*"]
-        }
+        },
+        "typeRoots": [
+            "node_modules/@types",
+            "./packages/*",
+        ]
     }
 }
