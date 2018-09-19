@@ -124,9 +124,11 @@
 * CDA: se agrega documentación.  Se realizan cambios en xml, para interoperar con otro efectores.
 * CITAS: resuelve incidentes de bloques desordenados en la creación de agendas
 
-## [3.7.3] - 2018-09-17
+## [3.7.3] - 2018-09-19
 
 * PRESTAMOS HC - Cargar el Historico Digitalizado de una Historia Clinica en papel a la HUDS de un paciente.
 * PUCO: se agregan mejoras a la recuperación de obras sociales
+* MAPEO SNOMED-CIE10: Se agrega un mapeo estático para conceptos snomed que no hayan encontrado un correspondencia automática con algún código CIE10.
+* CITAS- RUP : Prestaciones No nominalizadas, permite registrar las actividades que se realizan para la comunidad. También permite registrar un listado de pacientes para marcar la asistencia de los mismos.
 
 
