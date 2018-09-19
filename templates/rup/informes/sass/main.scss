@@ -216,8 +216,10 @@ main {
             margin-left: 0em;
         }
 
-        .nivel-2 {
+        .nivel-2:not(:nth-child(2)) {
             margin-left: 1em;
+            padding-top: 10px;
+            border-top: 1px solid $andes-gris;
         }
 
         .nivel-3 {

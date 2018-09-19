@@ -197,34 +197,42 @@ export class Documento {
     static hallazgoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/hallazgo.html'), 'utf8');
     static procedimientoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/procedimiento.html'), 'utf8');
     static planTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/plan.html'), 'utf8');
+    static nivelPadre = 1;
 
     static async generarInforme(registros, titulos?) {
-        for (let i = 0; i <= registros.length; i++) {
+        for (let i = 0; i < registros.length; i++) {
             if (registros[i]) {
+                registros[i].nombre = registros[i].nombre === 'elemento de registro' ? '' : registros[i].nombre;
                 if (registros[i].valor) {
                     if (registros[i].valor.descripcion) {
-                        this.informeRegistros = [...this.informeRegistros, ({ concepto: { term: registros[i].nombre, semanticTag: registros[i].concepto.semanticTag }, valor: `<div class="nivel-2"><h3>${this.ucaseFirst(registros[i].nombre)}</h3><p>${this.ucaseFirst(registros[i].valor.descripcion)}</p></div>` })];
+                        let nivel = 2;
+                        this.informeRegistros = [...this.informeRegistros, ({ concepto: { term: registros[i].nombre, semanticTag: registros[i].concepto.semanticTag }, valor: `<div class="nivel-${nivel}"><h3>${this.ucaseFirst(registros[i].nombre)}</h3><p>${this.ucaseFirst(registros[i].valor.descripcion)}</p></div>` })];
                     } else if (registros[i].valor !== null) {
+                        registros[i].nombre = registros[i].nombre === 'pautas de alarma' && i === 0 ? ' ' : registros[i].nombre;
                         if (registros[i].valor.evolucion) {
-                            this.informeRegistros = [...this.informeRegistros, ({ concepto: { term: registros[i].nombre, semanticTag: registros[i].concepto.semanticTag }, valor: `<div class="nivel-3"><h3>${this.ucaseFirst(registros[i].nombre)}</h3>${registros[i].valor.evolucion}</div>` })];
+                            this.informeRegistros = [...this.informeRegistros, ({ concepto: { term: registros[i].concepto.term, semanticTag: registros[i].concepto.semanticTag }, valor: `<div class="nivel-3"><h3>${this.ucaseFirst(registros[i].nombre)}</h3>${registros[i].valor.evolucion}</div>` })];
                         } else {
-                            let nivel = registros[i].registros.length === 0 ? 3 : 1;
+                            let nivel = this.nivelPadre;
+                            console.log(nivel, registros[i].concepto.term);
+
                             this.informeRegistros = [...this.informeRegistros, ({ concepto: { term: registros[i].nombre, semanticTag: registros[i].concepto.semanticTag }, valor: `<div class="nivel-${nivel}"><h3>${this.ucaseFirst(registros[i].nombre)}</h3>${registros[i].valor}</div>` })];
                         }
                     }
                 } else if (registros[i].nombre) {
-                    this.informeRegistros = [...this.informeRegistros, ({ concepto: { term: registros[i].nombre, semanticTag: registros[i].concepto.semanticTag }, valor: `<div class="nivel-1"><h3>${this.ucaseFirst(registros[i].nombre)}</h3>${registros[i].valor ? registros[i].valor : ''}</div>` })];
+                    let nivel = (i === 0 && registros[i].registros.length > 0) ? 1 : 2;
+                    this.informeRegistros = [...this.informeRegistros, ({ concepto: { term: registros[i].nombre, semanticTag: registros[i].concepto.semanticTag }, valor: `<div class="nivel-${nivel}"><h3>${this.ucaseFirst(registros[i].nombre)}</h3>${registros[i].valor ? registros[i].valor : ''}</div>` })];
                 }
 
+            }
+            if (registros[i] && registros[i].registros && registros[i].registros.length > 0) {
                 let template = this.esHallazgo(registros[i].concepto.semanticTag) ? this.hallazgoTemplate : this.procedimientoTemplate;
                 let reg = this.generarRegistro(registros[i], template);
                 if (reg) {
                     this.informeRegistros[i] = reg;
                 }
 
-                if (registros[i].registros.length > 0) {
-                    this.generarInforme(registros[i].registros);
-                }
+                this.nivelPadre++;
+                this.generarInforme(registros[i].registros);
             }
         }
     }
@@ -306,10 +314,7 @@ export class Documento {
 
             // Si no hay configuración de informe o si se configura "registrosDefault" en true, se genera el informe por defecto (default)
             if (!config.informe || config.informe.registrosDefault) {
-
-
                 contenidoInforme = this.informeRegistros.filter(x => x !== undefined ? x : null);
-
 
                 let hallazgos, procedimientos, planes = [];
                 // hallazgos = prestacion.ejecucion.registros.filter(x => this.esHallazgo(x.concepto.semanticTag));
@@ -413,8 +418,10 @@ export class Documento {
                 .replace('<!--logoPDP-->', `<img class="logo-pdp" src="data:image/png;base64,${logoPDP.toString('base64')}">`)
                 .replace('<!--logoPDP2-->', `<img class="logo-pdp-h" src="data:image/png;base64,${logoPDP2.toString('base64')}">`);
 
-            console.log(html);
-            // process.exit();
+            // Limpio el informe
+            this.informeRegistros = [];
+            this.nivelPadre = 1;
+
             return html;
         } else {
             return false;
