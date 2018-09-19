@@ -151,6 +151,7 @@ router.get('/agenda/:id?', (req, res, next) => {
         let query;
         query = agenda.find({});
 
+
         query.where('estado').ne('borrada'); // No devuelve agendas borradas
 
         if (req.query.fechaDesde) {
@@ -458,7 +459,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                         turno = agendaCtrl.getTurno(req, data, turnos[y]);
                         // LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, bloqueId, agendaId);
                         if (turno.paciente.id) {
-                            LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, agendaCtrl.getBloque(data, turno)._id, data._id);
+                            LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, agendaCtrl.getBloque(data, turno)._id, data);
                         }
                         agendaCtrl.liberarTurno(req, data, turno);
                         prestacionCtrl.liberarRefTurno(turno._id, req);

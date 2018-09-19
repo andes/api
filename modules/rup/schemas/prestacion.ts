@@ -19,7 +19,11 @@ export let schema = new mongoose.Schema({
         sexo: String,
         fechaNacimiento: Date
     },
-
+    noNominalizada: {
+        type: Boolean,
+        required: true,
+        default: false
+    },
     // Datos de la Solicitud
     solicitud: {
 
@@ -43,7 +47,8 @@ export let schema = new mongoose.Schema({
             term: String,
             fsn: String,
             semanticTag: SemanticTag,
-            refsetIds: [String]
+            refsetIds: [String],
+            noNominalizada: Boolean
         },
         tipoPrestacionOrigen: {
             id: mongoose.Schema.Types.ObjectId,
@@ -99,9 +104,7 @@ export let schema = new mongoose.Schema({
         prestacionOrigen: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'prestacion'
-        },
-
-
+        }
 
     },
 
@@ -141,7 +144,7 @@ export let schema = new mongoose.Schema({
 schema.pre('save', function (next) {
     let prestacion: any = this;
 
-    if (!prestacion.paciente.id) {
+    if (!prestacion.solicitud.tipoPrestacion.noNominalizada && !prestacion.paciente.id) {
         let err = new Error('Debe seleccionar el paciente');
         return next(err);
     }

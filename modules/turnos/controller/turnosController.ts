@@ -1,6 +1,7 @@
 import * as mongoose from 'mongoose';
 import * as agenda from '../../../modules/turnos/schemas/agenda';
 import { toArray } from '../../../utils/utils';
+import { logPaciente } from '../../../core/log/schemas/logPaciente';
 
 export function getTurno(req) {
     return new Promise(async (resolve, reject) => {
@@ -15,8 +16,8 @@ export function getTurno(req) {
                 }
             },
             // Unwind cada array
-                             { $unwind: '$bloques' },
-                             { $unwind: '$bloques.turnos' },
+            { $unwind: '$bloques' },
+            { $unwind: '$bloques.turnos' },
             // Filtra los elementos que matchean
             {
                 $match: {
@@ -42,6 +43,7 @@ export function getTurno(req) {
                     bloques: { $push: { _id: '$_id.bloqueId', turnos: '$turnos' } }
                 }
             }];
+            // ver llamado, req.query
             if (req.params && mongoose.Types.ObjectId.isValid(req.params.id)) {
                 const matchId = {
                     $match: {
@@ -131,149 +133,179 @@ export function getTurno(req) {
 }
 
 
-export function getHistorialPaciente(req) {
-    return new Promise(async (resolve, reject) => {
-        if (req.query && req.query.pacienteId) {
-            try {
-                let pipelineTurno = [];
-                const turnos = [];
-                let turno;
-                pipelineTurno = [
+export async function getHistorialPaciente(req) {
+    if (req.query && req.query.pacienteId) {
+        try {
+            let pipelineTurno = [];
+            const turnos = [];
+            let turno;
+            pipelineTurno = [
 
-                    {
-                        $match: {
-                            estado: {
-                                $in: [
-                                    'publicada',
-                                    'pendienteAsistencia',
-                                    'pendienteAuditoria',
-                                    'auditada',
-                                    'disponible',
-                                    'pausada'
-                                ]
-                            },
-                            'bloques.turnos.paciente.id': mongoose.Types.ObjectId(req.query.pacienteId)
-                        }
-                    },
-                    {
-                        $unwind: {
-                            path: '$bloques'
-                        }
-                    },
-                    {
-                        $unwind: {
-                            path: '$bloques.turnos'
-                        }
-                    },
-                    {
-                        $match: {
-                            'bloques.turnos.paciente.id': mongoose.Types.ObjectId(req.query.pacienteId)
-                        }
-                    },
-                    {
-                        $group: {
-                            _id: {
-                                id: '$_id',
-                                turnoId: '$bloques.turnos._id'
-                            },
-                            agenda_id: {
-                                $first: '$_id'
-                            },
-                            bloque_id: { $first: '$bloques._id' },
-                            organizacion: {
-                                $first: '$organizacion'
-                            },
-                            profesionales: {
-                                $first: '$profesionales'
-                            },
-                            turno: {
-                                $first: '$bloques.turnos'
-                            }
-                        }
-                    },
-                    {
-                        $sort: {
-                            'turno.horaInicio': -1.0
+                {
+                    $match: {
+                        estado: {
+                            $in: [
+                                'publicada',
+                                'pendienteAsistencia',
+                                'pendienteAuditoria',
+                                'auditada',
+                                'disponible',
+                                'pausada'
+                            ]
+                        },
+                        'bloques.turnos.paciente.id': mongoose.Types.ObjectId(req.query.pacienteId)
+                    }
+                },
+                {
+                    $unwind: {
+                        path: '$bloques'
+                    }
+                },
+                {
+                    $unwind: {
+                        path: '$bloques.turnos'
+                    }
+                },
+                {
+                    $match: {
+                        'bloques.turnos.paciente.id': mongoose.Types.ObjectId(req.query.pacienteId)
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            id: '$_id',
+                            turnoId: '$bloques.turnos._id'
+                        },
+                        agenda_id: {
+                            $first: '$_id'
+                        },
+                        bloque_id: { $first: '$bloques._id' },
+                        organizacion: {
+                            $first: '$organizacion'
+                        },
+                        profesionales: {
+                            $first: '$profesionales'
+                        },
+                        turno: {
+                            $first: '$bloques.turnos'
                         }
                     }
+                },
+                {
+                    $sort: {
+                        'turno.horaInicio': -1.0
+                    }
+                }
 
-                ];
+            ];
 
-                let pipelineSobreturno = [];
-                pipelineSobreturno = [
+            let pipelineSobreturno = [];
+            pipelineSobreturno = [
 
-                    {
-                        $match: {
-                            estado: {
-                                $in: [
-                                    'publicada',
-                                    'pendienteAsistencia',
-                                    'pendienteAuditoria',
-                                    'auditada',
-                                    'disponible',
-                                    'pausada'
-                                ]
-                            },
-                            'sobreturnos.paciente.id': mongoose.Types.ObjectId(req.query.pacienteId)
-                        }
-                    },
-                    {
-                        $unwind: {
-                            path: '$sobreturnos'
-                        }
-                    },
-                    {
-                        $match: {
-                            'sobreturnos.paciente.id': mongoose.Types.ObjectId(req.query.pacienteId)
-                        }
-                    },
-                    {
-                        $group: {
-                            _id: {
-                                id: '$_id',
-                                turnoId: '$sobreturnos._id'
-                            },
-                            agenda_id: {
-                                $first: '$_id'
-                            },
-                            organizacion: {
-                                $first: '$organizacion'
-                            },
-                            profesionales: {
-                                $first: '$profesionales'
-                            },
-                            turno: {
-                                $first: '$sobreturnos'
-                            }
-                        }
-                    },
-                    {
-                        $sort: {
-                            'turno.horaInicio': -1.0
+                {
+                    $match: {
+                        estado: {
+                            $in: [
+                                'publicada',
+                                'pendienteAsistencia',
+                                'pendienteAuditoria',
+                                'auditada',
+                                'disponible',
+                                'pausada'
+                            ]
+                        },
+                        'sobreturnos.paciente.id': mongoose.Types.ObjectId(req.query.pacienteId)
+                    }
+                },
+                {
+                    $unwind: {
+                        path: '$sobreturnos'
+                    }
+                },
+                {
+                    $match: {
+                        'sobreturnos.paciente.id': mongoose.Types.ObjectId(req.query.pacienteId)
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            id: '$_id',
+                            turnoId: '$sobreturnos._id'
+                        },
+                        agenda_id: {
+                            $first: '$_id'
+                        },
+                        organizacion: {
+                            $first: '$organizacion'
+                        },
+                        profesionales: {
+                            $first: '$profesionales'
+                        },
+                        turno: {
+                            $first: '$sobreturnos'
                         }
                     }
+                },
+                {
+                    $sort: {
+                        'turno.horaInicio': -1.0
+                    }
+                }
 
-                ];
-                let data2 = await agenda.aggregate(pipelineTurno).exec();
-                const sobreturnos = await agenda.aggregate(pipelineSobreturno).exec();
-                data2 = data2.concat(sobreturnos);
-                data2.forEach(elem => {
-                    turno = elem.turno;
-                    turno.id = turno._id;
-                    turno.agenda_id = elem.agenda_id;
-                    turno.bloque_id = (elem.bloque_id) ? elem.bloque_id : null;
-                    turno.organizacion = elem.organizacion;
-                    turno.profesionales = elem.profesionales;
-                    turno.paciente = elem.turno.paciente;
-                    turnos.push(turno);
-                });
-                resolve(turnos);
-            } catch (error) {
-                reject(error);
-            }
-        } else {
-            reject('Datos insuficientes');
+            ];
+            let data2 = await agenda.aggregate(pipelineTurno).exec();
+            const sobreturnos = await agenda.aggregate(pipelineSobreturno).exec();
+            data2 = data2.concat(sobreturnos);
+            data2.forEach(elem => {
+                turno = elem.turno;
+                turno.id = turno._id;
+                turno.agenda_id = elem.agenda_id;
+                turno.bloque_id = (elem.bloque_id) ? elem.bloque_id : null;
+                turno.organizacion = elem.organizacion;
+                turno.profesionales = elem.profesionales;
+                turno.paciente = elem.turno.paciente;
+                turnos.push(turno);
+            });
+            return (turnos);
+        } catch (error) {
+            return (error);
         }
-    });
+    } else {
+        return ('Datos insuficientes');
+    }
 
+}
+
+export async function getLiberadosPaciente(req) {
+    if (req.query && req.query.pacienteId) {
+        try {
+            const idPaciente = new mongoose.Types.ObjectId(req.query.pacienteId);
+            const resultado: any = await logPaciente.find(
+                {
+                    paciente: idPaciente,
+                    operacion: 'turnos:liberar',
+                    'dataTurno.turno.updatedBy.organizacion._id': req.user.organizacion._id
+                })
+                .exec();
+            let turno;
+            const turnos = [];
+            resultado.forEach(elem => {
+                turno = elem.dataTurno.turno.toObject();
+                turno.id = elem.dataTurno.turno._id.toString();
+                turno.agenda_id = elem.dataTurno.idAgenda.toString();
+                turno.bloque_id = elem.dataTurno.idBloque.toString();
+                turno.organizacion = elem.dataTurno.turno.updatedBy.organizacion;
+                turno.profesionales = elem.dataTurno.profesionales;
+                turno.estado = 'liberado';
+                turnos.push(turno);
+            });
+            return turnos;
+        } catch (error) {
+            return (error);
+        }
+    } else {
+        return ('Datos insuficientes');
+    }
 }
