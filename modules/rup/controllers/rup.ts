@@ -39,8 +39,8 @@ export function convertToObjectId(obj, property: string) {
 }
 
 /**
- * Devuelve prestaciones en las que contengan alguno de los conceptos
- * enviados por parametro dentro de su array de registros
+ * Dado un conjunto de prestaciones, devuelve un array con aquellas que contengan, en su arreglo de registros,
+ *  alguno de los conceptos enviados por parametro
  *
  * @param {any} prestaciones Array de prestaciones a recorrer y buscar
  * @param {any[]} conceptos Array con conceptos mas específicos a filtrar dentro de los registros
@@ -89,7 +89,6 @@ export function buscarRegistros(prestaciones, filtroPrestaciones, conceptos) {
  * @returns {any} Array con todos los conceptos que matchearon
  */
 export function registrosProfundidad(registro, conceptos) {
-    // almacenamos la variable de matcheo para devolver el resultado
     let data = [];
 
     if (registro.registros && registro.registros.length) {
@@ -100,6 +99,7 @@ export function registrosProfundidad(registro, conceptos) {
             });
         });
     }
+    // En caso de que 'conceptos' sea un array de conceptos snomed
     if (registro.concepto && registro.concepto.conceptId && conceptos.find(c => c.conceptId === registro.concepto.conceptId)) {
         data.push({
             nombre: registro.nombre,
@@ -128,8 +128,7 @@ export function buscarEnHuds(prestaciones, conceptos) {
                     registro: unRegistro
                 });
             }
-            // verificamos si el registro de la prestacion tiene alguno de
-            // los conceptos en su array de registros
+            // verificamos si el registro de la prestacion tiene alguno de los conceptos en su array de registros
             let resultado = matchConcepts(unRegistro, conceptos);
 
             if (resultado) {
