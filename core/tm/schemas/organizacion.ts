@@ -3,6 +3,7 @@ import * as edificioSchema from './edificio';
 import * as direccionSchema from './direccion';
 import * as contactoSchema from './contacto';
 import * as tipoEstablecimientoSchema from './tipoEstablecimiento';
+
 import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
@@ -35,5 +36,6 @@ const _schema = new mongoose.Schema({
 });
 
 _schema.plugin(AuditPlugin);
+
 export let schema = _schema;
 export let model = mongoose.model('organizacion', _schema, 'organizacion');
