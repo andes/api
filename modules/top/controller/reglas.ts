@@ -8,19 +8,20 @@ import * as reglas from '../schemas/reglas';
  */
 export function guardarReglas(listaReglas) {
     let listaSave = [];
-    let resultados = [];
+    let listaResultados = [];
     listaReglas.forEach((regla) => {
-        listaSave.push(saveUpdate(regla, resultados));
+        listaSave.push(saveUpdate(regla, listaResultados));
     });
     return ({
-        lista: listaSave, resultados: resultados
+        lista: listaSave,
+        resultados: listaResultados
     });
 }
 
 function saveUpdate(regla, resultados) {
     if (regla._id) { // Si ya existe la regla la modifica
         return new Promise((resolve, reject) => {
-            reglas.findByIdAndUpdate(regla._id, regla, { upsert: true }, function (err, data) {
+            reglas.findByIdAndUpdate(regla._id, regla, { upsert: true }, (err, data) => {
                 if (err) {
                     reject(err);
                 }

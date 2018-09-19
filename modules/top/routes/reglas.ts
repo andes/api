@@ -6,7 +6,7 @@ import * as reglasCtrl from '../controller/reglas';
 
 const router = express.Router();
 
-router.post('/reglas', function (req, res, next) {
+router.post('/reglas', (req, res, next) => {
     let ArrReglas = req.body.reglas;
     let data = reglasCtrl.guardarReglas(ArrReglas);
     Promise.all(data.lista).then(resultado => {
@@ -15,7 +15,7 @@ router.post('/reglas', function (req, res, next) {
     res.json(data.resultados);
 });
 
-router.get('/reglas', function (req, res, next) {
+router.get('/reglas', (req, res, next) => {
     let query = reglas.find({});
     if (req.query.organizacionOrigen) {
         query.where('origen.organizacion.id').equals(new mongoose.Types.ObjectId(req.query.organizacionOrigen));
@@ -30,7 +30,7 @@ router.get('/reglas', function (req, res, next) {
     if (req.query.prestacionDestino) {
         query.where('destino.prestacion.conceptId').equals(req.query.prestacionDestino);
     }
-    query.exec(function (err, data) {
+    query.exec((err, data) => {
         if (err) {
             return next(err);
         }
