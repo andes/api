@@ -15,16 +15,12 @@ export async function getUltimoNumeroProtocolo(idOrganizacion) {
             }
         },
         {
-            $unwind: '$solicitud'
-        },
-        {
             $unwind: '$solicitud.registros'
         },
         { $match: { 'solicitud.registros.valor.solicitudPrestacion.numeroProtocolo': { $exists: true } } },
         { $sort: { 'solicitud.registros.valor.solicitudPrestacion.numeroProtocolo.numero': -1 } },
         {
             $project: {
-
                 solicitudPrestacion: '$solicitud.registros.valor.solicitudPrestacion',
             }
         },
@@ -47,37 +43,41 @@ export async function getUltimoNumeroProtocolo(idOrganizacion) {
     return parseInt(ultimoNumero);
 };
 
-export async function getUltimosResultados(idPaciente) {
+export async function getResultadosAnteriores(idPaciente, conceptIdPractica) {
     let pipeline = [
         {
             $match: {
                 $and: [{
                     'solicitud.tipoPrestacion.conceptId': '15220000',
-                    'paciente.id': { $eq: mongoose.Types.ObjectId(idPaciente) },
+                    'paciente.id': idPaciente,
+                    'ejecucion.registros.valor.concepto.conceptId': conceptIdPractica,
+                    'ejecucion.registros.valor.resultado.validado': true
                 }]
             }
         },
-        {
-            $unwind: '$solicitud'
+        { $unwind: '$ejecucion.registros' },
+        { $unwind: '$ejecucion.registros.valor' },
+        {   
+            $match: {
+                'ejecucion.registros.valor.concepto.conceptId': conceptIdPractica,
+                'ejecucion.registros.valor.resultado.validado': true
+            }
         },
-        {
-            $unwind: '$solicitud.registros'
-        },
-        {
-            $unwind: '$solicitud.registros.valor'
-        },
-
-        {
-            $unwind: '$solicitud.registros.valor.solicitudPrestacion'
-        },
-        { $match: { 'solicitud.registros.valor.solicitudPrestacion.practicas': { $exists: true } } },
         {
             $project: {
-
-                resultadosAnteriores: '$solicitud.registros.valor.solicitudPrestacion.practicas.resultado.resultadosAnteriores',
+                resultadoAnterior: '$ejecucion.registros.valor.resultado',
+                fecha: '$ejecucion.fecha',
+                unidadMedida: '$ejecucion.registros.valor.unidadMedida.term'
             }
         }
     ];
-    let resultados = await toArray(prestacion.aggregate(pipeline).cursor({}).exec());
-    return resultados;
+
+    let res = await toArray(prestacion.aggregate(pipeline).cursor({}).exec());
+    let resultadosAnteriores = [];
+    res.forEach(r => {
+        r.resultadoAnterior.fecha = r.fecha;
+        r.resultadoAnterior.unidadMedida = r.unidadMedida;
+        resultadosAnteriores.push(r.resultadoAnterior);
+    });
+    return resultadosAnteriores;
 };
