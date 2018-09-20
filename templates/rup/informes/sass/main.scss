@@ -216,12 +216,20 @@ main {
 
         .nivel-1 {
             margin-left: 0em;
+
+            &:not(:first-child) {
+                padding-top: 10px;
+                border-top: 1px solid $andes-gris;
+            }
         }
 
-        .nivel-2:not(:nth-child(2)) {
+        .nivel-2:not(:first-child) {
             margin-left: 1em;
-            padding-top: 10px;
-            border-top: 1px solid $andes-gris;
+
+            h3 {
+                font-size: 0.65em;
+                ;
+            }
         }
 
         .nivel-3 {
