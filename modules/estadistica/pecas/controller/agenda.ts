@@ -4,12 +4,11 @@ import * as agendaModel from '../../../turnos/schemas/agenda';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import { model as organizacion } from '../../../../core/tm/schemas/organizacion';
-import * as cie10 from './../../../../core/term/schemas/cie10';
 import * as sql from 'mssql';
 import * as configPrivate from '../../../../config.private';
 
 let poolTurnos;
-let config = {
+const config = {
     user: configPrivate.conSqlPecas.auth.user,
     password: configPrivate.conSqlPecas.auth.password,
     server: configPrivate.conSqlPecas.serverSql.server,
@@ -20,37 +19,35 @@ let config = {
 const type = 'PECAS-' + (new Date()).toISOString();
 const outputFile = type + '.json';
 
-let total = 0;
-
 /**
  * Actualiza la tabla pecas_consolidado de la BD Andes
  *
  * @export consultaPecas()
  * @returns resultado
  */
-export async function consultaPecas(start, end) {
-    // console.log('consultaPecas');
+export async function consultaPecas(start, end, done) {
     try {
         poolTurnos = await new sql.ConnectionPool(config).connect();
     } catch (ex) {
         // console.log('ex', ex);
         return (ex);
     }
-    const query_limit = 10000000000;
+
+    let orgExcluidas = organizacionesExcluidas();
+
     let match = {
-        '$and': [
-            // { updatedAt: { $gt: new Date('2018-07-02T00:00:00.000-03:00') } },
-            // { updatedAt: { $lt: new Date('2018-07-02T23:00:00.000-03:00') } }
+        $and: [
+            { $or: orgExcluidas },
             { updatedAt: { $gt: new Date(start) } },
             { updatedAt: { $lt: new Date(end) } }
         ],
-        'bloques': {
+        bloques: {
             $ne: null
         },
         'bloques.turnos': {
             $ne: null
         },
-        '$or': [
+        $or: [
             {
                 estado: {
                     $ne: 'planificacion'
@@ -68,36 +65,43 @@ export async function consultaPecas(start, end) {
             }],
     };
     try {
-        let agendas = agendaModel.aggregate([
+        const agendas = agendaModel.aggregate([
             { $match: match },
-            { $limit: query_limit }
-        ]).cursor({ batchSize: 10000000000 }).exec();
-        agendas.eachAsync((a, error) => {
+        ]).cursor({ batchSize: 100 }).exec();
+        await agendas.eachAsync(async (a, error) => {
             if (error) {
                 // console.log('error ', error);
                 return (error);
             }
+            const promises = [];
             // Se recorren los turnos dentro de los bloques
-            async.every(a.bloques, (b, indexB) => {
-                async.every((b as any).turnos, async (t: any, indexT) => {
-                    auxiliar(a, b, t);
+            a.bloques.forEach(b => {
+                b.turnos.forEach(t => {
+                    const p = auxiliar(a, b, t);
+                    promises.push(p);
                 });
             });
             // Se recorren los sobreturnos
-            async.every((a as any).sobreturnos, async (t: any, indexT) => {
-                auxiliar(a, null, t);
+            a.sobreturnos.forEach(t => {
+                const p = auxiliar(a, null, t);
+                promises.push(p);
             });
+            return await Promise.all(promises);
         });
+        done();
     } catch (error) {
-        return (error);
+        return (done(error));
     }
 }
 
 // castea cada turno asignado y lo inserta en la tabla Sql
 async function auxiliar(a: any, b: any, t: any) {
     let turno: any = {};
+    turno.sobreturno = (b !== null) ? 'NO' : 'SI';
+    // console.log('b => ', b);
+    turno.tipoTurno = t.tipoTurno ? (t.tipoTurno === 'profesional' ? 'autocitado' : (t.tipoTurno === 'gestion' ? 'conllave' : t.tipoTurno)) : 'Sin datos';
+    turno.estadoTurno = t.estado;
     let turnoConPaciente = t.estado === 'asignado' && t.paciente && t.asistencia;
-    // if (t.estado === 'asignado' && t.paciente && t.asistencia) {
     let efector = await getEfector(a.organizacion._id) as any;
     let idEfector = efector ? efector.codigo : null;
     let tipoEfector = efector ? efector.tipoEfector : null;
@@ -108,6 +112,7 @@ async function auxiliar(a: any, b: any, t: any) {
     turno.FechaAgenda = moment(a.horaInicio).format('YYYYMMDD');
     turno.HoraAgenda = moment(a.horaInicio).format('HH:mm').toString();
     turno.estadoAgenda = a.estado;
+    turno.numeroBloque = a.bloques.indexOf(b);
     turno.accesoDirectoProgramado = (b && b.accesoDirectoProgramado) ? b.accesoDirectoProgramado : null;
     turno.reservadoProfesional = (b && b.reservadoProfesional) ? b.reservadoProfesional : null;
     turno.reservadoGestion = (b && b.reservadoGestion) ? b.reservadoGestion : null;
@@ -120,7 +125,7 @@ async function auxiliar(a: any, b: any, t: any) {
     turno.Apellido = turnoConPaciente ? t.paciente.apellido : null;
     turno.Apellido = turnoConPaciente ? turno.Apellido.toString().replace('\'', '\'\'') : null;
     turno.Nombres = turnoConPaciente ? t.paciente.nombre : null;
-    let carpetas = turnoConPaciente ? t.paciente.carpetaEfectores.filter(x => String(x.organizacion._id) === String(a.organizacion._id)) : [];
+    const carpetas = turnoConPaciente ? t.paciente.carpetaEfectores.filter(x => String(x.organizacion._id) === String(a.organizacion._id)) : [];
     if (Array(carpetas).length > 0) {
         turno.HC = carpetas[0] ? (carpetas[0] as any).nroCarpeta : null;
     } else {
@@ -129,7 +134,7 @@ async function auxiliar(a: any, b: any, t: any) {
     turno.codSexo = turnoConPaciente ? String(t.paciente.sexo) === 'femenino' ? String(2) : String(1) : null;
     turno.Sexo = turnoConPaciente ? t.paciente.sexo : null;
     turno.FechaNacimiento = (turnoConPaciente && t.paciente.fechaNacimiento ? moment(t.paciente.fechaNacimiento).format('YYYYMMDD') : '');
-    let objectoEdad = (t.paciente && turno.FechaNacimiento) ? calcularEdad(t.paciente.fechaNacimiento) : null;
+    const objectoEdad = (t.paciente && turno.FechaNacimiento) ? calcularEdad(t.paciente.fechaNacimiento) : null;
 
     turno.Edad = t.paciente && turno.fechaNacimiento ? objectoEdad.valor : null;
     turno.uniEdad = t.paciente && turno.fechaNacimiento ? objectoEdad.unidad : null;
@@ -147,10 +152,47 @@ async function auxiliar(a: any, b: any, t: any) {
     turno.Diag1CodigoAuditado = null;
     turno.Desc1DiagAuditado = null;
     turno.conceptId1 = null;
+    turno.semanticTag1 = null;
+
     turno.term1 = null;
     turno.Principal = 0;
     turno.Tipodeconsulta = null;
     turno.ConsC2 = null;
+
+    // Estado turno
+    let estadoAuditoria = null;
+    if (t) {
+        // console.log(t.estado);
+        switch (t.estado) {
+            case 'disponible':
+                estadoAuditoria = 'Disponible';
+                break;
+            case 'suspendido':
+                estadoAuditoria = 'Suspendido';
+                break;
+            case 'asignado':
+                if (t.asistencia) {
+                    estadoAuditoria = 'Asistencia Verificada';
+                }
+                if (t.diagnostico.codificaciones.length > 0) {
+                    if (!(t.diagnostico.codificaciones[0].codificacionAuditoria && t.diagnostico.codificaciones[0].codificacionAuditoria.codigo) && (t.diagnostico.codificaciones[0].codificacionProfesional)) {
+                        estadoAuditoria = 'Registrado por Profesional';
+                    }
+                    if ((t.asistencia === 'noAsistio' || t.asistencia === 'sinDatos' || (t.diagnostico.codificaciones[0].codificacionAuditoria && t.diagnostico.codificaciones[0].codificacionAuditoria.codigo))) {
+                        estadoAuditoria = 'Auditado';
+                    }
+                }
+                break;
+            default:
+                estadoAuditoria = null;
+        }
+
+    }
+
+    turno.estadoTurnoAuditoria = estadoAuditoria;
+
+
+    // Asistencia
     turno.asistencia = turnoConPaciente && t.asistencia ? t.asistencia : null;
     turno.reasignado = turnoConPaciente && t.reasignado && t.reasignado.siguiente ? 'SI' : 'NO';
     // Diagnóstico 1 ORIGINAL
@@ -168,6 +210,7 @@ async function auxiliar(a: any, b: any, t: any) {
         if (t.diagnostico.codificaciones[0].codificacionProfesional.snomed && t.diagnostico.codificaciones[0].codificacionProfesional.snomed.conceptId) {
             turno.conceptId1 = t.diagnostico.codificaciones[0].codificacionProfesional.snomed.conceptId;
             turno.term1 = t.diagnostico.codificaciones[0].codificacionProfesional.snomed.term;
+            turno.semanticTag1 = t.diagnostico.codificaciones[0].codificacionProfesional.snomed.semanticTag;
         }
     } else {
         turno.codifica = 'NO PROFESIONAL';
@@ -176,7 +219,7 @@ async function auxiliar(a: any, b: any, t: any) {
     if (t.diagnostico.codificaciones.length > 0 && t.diagnostico.codificaciones[0].codificacionAuditoria && t.diagnostico.codificaciones[0].codificacionAuditoria.codigo) {
         turno.Diag1CodigoAuditado = t.diagnostico.codificaciones[0].codificacionAuditoria.codigo;
         turno.Desc1DiagAuditado = t.diagnostico.codificaciones[0].codificacionAuditoria.nombre;
-        turno.ConsC2 = t.diagnostico.codificaciones[0].codificacionAuditoria.c2 ? 'SI' : 'NO';
+        turno.ConsC2 = t.diagnostico.codificaciones[0].codificacionAuditoria.c2 && t.diagnostico.codificaciones[0].primeraVez ? 'SI' : 'NO';
         turno.Tipodeconsulta = t.diagnostico.codificaciones[0].primeraVez ? 'Primera vez' : 'Ulterior';
         turno.Principal = 1;
     }
@@ -188,6 +231,7 @@ async function auxiliar(a: any, b: any, t: any) {
     turno.Desc2DiagAuditado = null;
     turno.conceptId2 = null;
     turno.term2 = null;
+    turno.semanticTag2 = null;
     if (t.diagnostico.codificaciones.length > 1 && t.diagnostico.codificaciones[1] && t.diagnostico.codificaciones[1].primeraVez !== undefined) {
         turno.primeraVez2 = (t.diagnostico.codificaciones[1].primeraVez === true) ? 1 : 0;
     } else {
@@ -201,6 +245,7 @@ async function auxiliar(a: any, b: any, t: any) {
         if (t.diagnostico.codificaciones[1].codificacionProfesional.snomed && t.diagnostico.codificaciones[1].codificacionProfesional.snomed.conceptId) {
             turno.conceptId2 = t.diagnostico.codificaciones[1].codificacionProfesional.snomed.conceptId;
             turno.term2 = t.diagnostico.codificaciones[1].codificacionProfesional.snomed.term;
+            turno.semanticTag2 = t.diagnostico.codificaciones[1].codificacionProfesional.snomed.semanticTag;
         }
     }
     // Diagnóstico 2 AUDITADO
@@ -215,6 +260,8 @@ async function auxiliar(a: any, b: any, t: any) {
     turno.Desc3DiagAuditado = null;
     turno.conceptId3 = null;
     turno.term3 = null;
+    turno.semanticTag3 = null;
+
     if (t.diagnostico.codificaciones.length > 2 && t.diagnostico.codificaciones[2] && t.diagnostico.codificaciones[2].primeraVez !== undefined) {
         turno.primeraVez3 = (t.diagnostico.codificaciones[2].primeraVez === true) ? 1 : 0;
     } else {
@@ -228,6 +275,7 @@ async function auxiliar(a: any, b: any, t: any) {
         if (t.diagnostico.codificaciones[2].codificacionProfesional.snomed && t.diagnostico.codificaciones[2].codificacionProfesional.snomed.conceptId) {
             turno.conceptId3 = t.diagnostico.codificaciones[2].codificacionProfesional.snomed.conceptId;
             turno.term3 = t.diagnostico.codificaciones[2].codificacionProfesional.snomed.term;
+            turno.semanticTag3 = t.diagnostico.codificaciones[2].codificacionProfesional.snomed.semanticTag;
         }
     }
     // Diagnóstico 3 AUDITADO
@@ -260,7 +308,7 @@ async function auxiliar(a: any, b: any, t: any) {
     turno.Manzana = null;
     turno.ConsObst = t.tipoPrestacion && t.tipoPrestacion.term.includes('obstetricia') ? 'SI' : 'NO';
     turno.IdObraSocial = (turnoConPaciente && t.paciente.obraSocial && t.paciente.obraSocial.codigo) ? t.paciente.obraSocial.codigo : null;
-    turno.ObraSocial = (turnoConPaciente && t.paciente.obraSocial && t.paciente.obraSocial.nombre) ? t.paciente.obraSocial.nombre : null;
+    turno.ObraSocial = (turnoConPaciente && t.paciente.obraSocial && t.paciente.obraSocial.nombre) ? t.paciente.obraSocial.nombre.toString().replace('\'', '\'\'') : null;
     if (tipoEfector && tipoEfector === 'Centro de Salud') {
         turno.TipoEfector = '1';
     }
@@ -289,25 +337,25 @@ async function auxiliar(a: any, b: any, t: any) {
     try {
         // Chequear si el turno existe en sql PECAS y depeniendo de eso hacer un insert o  un update
 
-        // se verifica si existe el turno en sqñ
-        let queryInsert = 'INSERT INTO dbo.Pecas_consolidado_1' +
+        // se verifica si existe el turno en sql
+        let queryInsert = 'INSERT INTO dbo.Pecas_test' +
             '(idEfector, Efector, TipoEfector, DescTipoEfector, IdZona, Zona, SubZona, idEfectorSuperior, EfectorSuperior, AreaPrograma, ' +
-            'idAgenda, FechaAgenda, HoraAgenda, estadoAgenda, turnosProgramados, turnosProfesional, turnosLlaves, turnosDelDia, ' +
-            'idTurno, FechaConsulta, HoraTurno, Periodo, Tipodeconsulta, Principal, ConsC2, ConsObst, tipoPrestacion, ' +
+            'idAgenda, FechaAgenda, HoraAgenda, estadoAgenda, numeroBloque, turnosProgramados, turnosProfesional, turnosLlaves, turnosDelDia, ' +
+            'idTurno, estadoTurno, tipoTurno, sobreturno, FechaConsulta, HoraTurno, Periodo, Tipodeconsulta, estadoTurnoAuditoria, Principal, ConsC2, ConsObst, tipoPrestacion, ' +
             'DNI, Apellido, Nombres, HC, CodSexo, Sexo, FechaNacimiento, Edad, UniEdad, CodRangoEdad, RangoEdad, IdObraSocial, ObraSocial, IdPaciente, telefono, ' +
             'IdBarrio, Barrio, IdLocalidad, Localidad, IdDpto, Departamento, IdPcia, Provincia, IdNacionalidad, Nacionalidad, ' +
             'Calle, Altura, Piso, Depto, Manzana, Longitud, Latitud, ' +
             'Peso, Talla, TAS, TAD, IMC, RCVG, asistencia, reasignado, ' +
-            'Diag1CodigoOriginal, Desc1DiagOriginal, Diag1CodigoAuditado, Desc1DiagAuditado, SnomedConcept1, SnomedTerm1, primeraVez1, ' +
-            'Diag2CodigoOriginal, Desc2DiagOriginal, Diag2CodigoAuditado, Desc2DiagAuditado, SnomedConcept2, SnomedTerm2, primeraVez2, ' +
-            'Diag3CodigoOriginal, Desc3DiagOriginal, Diag3CodigoAuditado, Desc3DiagAuditado, SnomedConcept3, SnomedTerm3, primeraVez3, ' +
+            'Diag1CodigoOriginal, Desc1DiagOriginal, Diag1CodigoAuditado, Desc1DiagAuditado, SemanticTag1, SnomedConcept1, SnomedTerm1, primeraVez1, ' +
+            'Diag2CodigoOriginal, Desc2DiagOriginal, Diag2CodigoAuditado, Desc2DiagAuditado, SemanticTag2, SnomedConcept2, SnomedTerm2, primeraVez2, ' +
+            'Diag3CodigoOriginal, Desc3DiagOriginal, Diag3CodigoAuditado, Desc3DiagAuditado, SemanticTag3, SnomedConcept3, SnomedTerm3, primeraVez3, ' +
             'Profesional, TipoProfesional, CodigoEspecialidad, Especialidad, CodigoServicio, Servicio, ' +
             'codifica) ' +
             'VALUES  ( ' + turno.idEfector + ',\'' + turno.Organizacion + '\',\'' + turno.TipoEfector + '\',\'' + turno.DescTipoEfector +
             '\',' + turno.IdZona + ',\'' + turno.Zona + '\',\'' + turno.SubZona + '\',' + turno.idEfectorSuperior + ',\'' + turno.EfectorSuperior + '\',\'' + turno.AreaPrograma +
             '\',\'' + turno.idAgenda + '\',\'' + turno.FechaAgenda + '\',\'' + turno.HoraAgenda + '\',\'' + turno.estadoAgenda +
-            '\',' + turno.accesoDirectoProgramado + ',' + turno.reservadoProfesional + ',' + turno.reservadoGestion + ',' + turno.accesoDirectoDelDia +
-            ',\'' + turno.idTurno + '\',\'' + turno.FechaConsulta + '\',\'' + turno.HoraTurno + '\',' + turno.Periodo + ',\'' + turno.Tipodeconsulta + '\',\'' + turno.Principal +
+            '\',' + turno.numeroBloque + ',' + turno.accesoDirectoProgramado + ',' + turno.reservadoProfesional + ',' + turno.reservadoGestion + ',' + turno.accesoDirectoDelDia +
+            ',\'' + turno.idTurno + '\',\'' + turno.estadoTurno + '\',\'' + turno.tipoTurno + '\',\'' + turno.sobreturno + '\',\'' + turno.FechaConsulta + '\',\'' + turno.HoraTurno + '\',' + turno.Periodo + ',\'' + turno.Tipodeconsulta + '\',\'' + turno.estadoTurnoAuditoria + '\',\'' + turno.Principal +
             '\',\'' + turno.ConsC2 + '\',\'' + turno.ConsObst + '\',\'' + turno.tipoPrestacion +
             // DATOS PACIENTE
             '\',' + turno.DNI + ',\'' + turno.Apellido + '\',\'' + turno.Nombres + '\',\'' + turno.HC + '\',\'' + turno.codSexo +
@@ -321,16 +369,17 @@ async function auxiliar(a: any, b: any, t: any) {
             // DATOS CONSULTA
             '\',\'' + turno.asistencia + '\',\'' + turno.reasignado +
             '\',\'' + turno.Diag1CodigoOriginal + '\',\'' + turno.Desc1DiagOriginal + '\',\'' + turno.Diag1CodigoAuditado + '\',\'' + turno.Desc1DiagAuditado +
-            '\',\'' + turno.conceptId1 + '\',\'' + turno.term1 + '\',' + turno.primeraVez1 +
+            '\',\'' + turno.semanticTag1 + '\',\'' + turno.conceptId1 + '\',\'' + turno.term1 + '\',' + turno.primeraVez1 +
             ',\'' + turno.Diag2CodigoOriginal + '\',\'' + turno.Desc2DiagOriginal + '\',\'' + turno.Diag2CodigoAuditado + '\',\'' + turno.Desc2DiagAuditado +
-            '\',\'' + turno.conceptId2 + '\',\'' + turno.term2 + '\',' + turno.primeraVez2 +
+            '\',\'' + turno.semanticTag2 + '\',\'' + turno.conceptId2 + '\',\'' + turno.term2 + '\',' + turno.primeraVez2 +
             ',\'' + turno.Diag3CodigoOriginal + '\',\'' + turno.Desc3DiagOriginal + '\',\'' + turno.Diag3CodigoAuditado + '\',\'' + turno.Desc3DiagAuditado +
-            '\',\'' + turno.conceptId3 + '\',\'' + turno.term3 + '\',' + turno.primeraVez3 +
+            '\',\'' + turno.semanticTag3 + '\',\'' + turno.conceptId3 + '\',\'' + turno.term3 + '\',' + turno.primeraVez3 +
             ',\'' + turno.Profesional + '\',\'' + turno.TipoProfesional + '\',' + turno.CodigoEspecialidad + ',\'' + turno.Especialidad +
             '\',' + turno.CodigoServicio + ',\'' + turno.Servicio + '\',\'' + turno.codifica + '\') ';
+        // console.log(queryInsert);
         let rta = await existeTurnoPecas(turno.idTurno);
         if (rta.recordset.length > 0 && rta.recordset[0].idTurno) {
-            let queryDel = await eliminaTurnoPecas(turno.idTurno);
+            const queryDel = await eliminaTurnoPecas(turno.idTurno);
             if (queryDel.rowsAffected[0] > 0) {
                 await executeQuery(queryInsert);
             }
@@ -338,57 +387,35 @@ async function auxiliar(a: any, b: any, t: any) {
             await executeQuery(queryInsert);
         }
     } catch (error) {
-        // console.log('error ', error);
         return (error);
     }
 }
 
-// function getEspecialidad(conceptId, idOrganizacion: string) {
-//     return new Promise((resolve, reject) => {
-//         var especialidad = '';
-//         configPrestacion.find({
-//             'tipoPrestacion.conceptId': conceptId,
-//             'organizacionesSips._id': mongoose.Types.ObjectId(idOrganizacion)
-//         }).exec().then(configuraciones => {
-//             if (configuraciones.length > 0) {
-//                 let organizacionesSips = configuraciones[0]['organizacionesSips'];
-//                 if (organizacionesSips && organizacionesSips.length > 0) {
-//                     var datos = organizacionesSips.filter((elem) => String(elem._id) === String(idOrganizacion));
-//                     if (datos && datos.length > 0) {
-//                         especialidad = datos[0].nombreEspecialidad;
-//                     }
-//                 }
-//             }
-//             resolve(especialidad);
-//         });
-//     });
-// }
-
 async function existeTurnoPecas(turno: any) {
-    let result = await new sql.Request(poolTurnos)
+    const result = await new sql.Request(poolTurnos)
         .input('idTurno', sql.VarChar(50), turno)
-        .query('SELECT idTurno FROM dbo.Pecas_consolidado_1 WHERE idTurno = @idTurno');
+        .query('SELECT idTurno FROM dbo.Pecas_test WHERE idTurno = @idTurno');
     return result;
 }
 
 async function eliminaTurnoPecas(turno: any) {
-    let result = await new sql.Request(poolTurnos)
+    const result = await new sql.Request(poolTurnos)
         .input('idTurno', sql.VarChar(50), turno)
-        .query('DELETE FROM dbo.Pecas_consolidado_1 WHERE idTurno = @idTurno');
+        .query('DELETE FROM dbo.Pecas_test WHERE idTurno = @idTurno');
     return result;
 }
 
 function getEfector(idOrganizacion: any) {
     return new Promise((resolve, reject) => {
         organizacion.findOne({
-            '_id': mongoose.Types.ObjectId(idOrganizacion)
-        }).exec(function (err, data) {
+            _id: mongoose.Types.ObjectId(idOrganizacion)
+        }).exec((err, data) => {
             if (err) {
                 reject(err);
             }
             if ((data as any).codigo) {
-                let codigoSips = (data as any).codigo as any;
-                let efector = {
+                const codigoSips = (data as any).codigo as any;
+                const efector = {
                     codigo: codigoSips.sips ? codigoSips.sips : null,
                     tipoEfector: (data as any).tipoEstablecimiento.nombre
                 };
@@ -404,10 +431,12 @@ function getEfector(idOrganizacion: any) {
     });
 }
 
+/*
+[REVISAR]
 function getCapitulo(codigoCIE10: string) {
     return new Promise((resolve, reject) => {
         cie10.model.findOne({
-            'codigo': String(codigoCIE10)
+            codigo: String(codigoCIE10)
         }).exec(function (err, data) {
             if (err) {
                 reject(err);
@@ -421,14 +450,15 @@ function getCapitulo(codigoCIE10: string) {
         });
     });
 }
+*/
 
 function calcularEdad(fechaNacimiento) {
     let edad: any;
-    let fechaActual: Date = new Date();
-    let fechaAct = moment(fechaActual, 'YYYY-MM-DD HH:mm:ss');
-    let difDias = fechaAct.diff(fechaNacimiento, 'd'); // Diferencia en días
-    let difAnios = Math.floor(difDias / 365.25);
-    let difMeses = Math.floor(difDias / 30.4375);
+    const fechaActual: Date = new Date();
+    const fechaAct = moment(fechaActual, 'YYYY-MM-DD HH:mm:ss');
+    const difDias = fechaAct.diff(fechaNacimiento, 'd'); // Diferencia en días
+    const difAnios = Math.floor(difDias / 365.25);
+    const difMeses = Math.floor(difDias / 30.4375);
 
     if (difAnios !== 0) {
         edad = {
@@ -472,19 +502,26 @@ function calcularEdad(fechaNacimiento) {
     return edad;
 }
 
+function organizacionesExcluidas() {
+    let organizaciones = [];
+    const medicoIntegral = '5a5e3f7e0bd5677324737244';
+    organizaciones.push({ 'organizacion._id': { $ne: mongoose.Types.ObjectId(medicoIntegral) } });
+    return organizaciones;
+}
+
 async function executeQuery(query: any) {
     try {
         query += ' select SCOPE_IDENTITY() as id';
-        let result = await new sql.Request(poolTurnos).query(query);
+        const result = await new sql.Request(poolTurnos).query(query);
         if (result && result.recordset) {
             return result.recordset[0].id;
         }
     } catch (err) {
         // console.log('err ', err);
-        // console.log('query ', query);
         let jsonWrite = fs.appendFileSync(outputFile, query + '\r', {
             encoding: 'utf8'
         });
-        return (err);
+        return err;
     }
 }
+

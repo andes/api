@@ -1,34 +1,26 @@
-import * as config from '../config';
 import * as configPrivate from '../config.private';
-import { Matching } from '@andes/match';
-import * as moment from 'moment';
 
-let soap = require('soap');
-let url = configPrivate.renaper.url;
-let serv = configPrivate.renaper.serv;
-let datosRenaper = [];
-let login = configPrivate.renaper;
+const soap = require('soap');
+const url = configPrivate.renaper.url;
+const serv = configPrivate.renaper.serv;
+const login = configPrivate.renaper;
 
 export function getServicioRenaper(paciente) {
-    let match = new Matching();
-    let weights = config.mpi.weightsFaAnses;
-    let matchPorcentaje = 0;
     let resultado: any;
-    let fecha: any;
     return new Promise((resolve, reject) => {
         if (paciente) {
-            soap.createClient(url, function (err, client) {
+            soap.createClient(url, (err, client) => {
                 if (err) {
                     return reject(err);
                 }
                 if (client) {
                     if (paciente.documento && paciente.sexo) {
-                        client.LoginPecas(login, async function (err2, result) {
+                        client.LoginPecas(login, async (err2, result) => {
                             if (err2) {
                                 reject(err2);
                             }
-                            let tipoConsulta = 'WS_RENAPER_documento';
-                            let filtro = 'documento=' + paciente.documento + ';sexo=' + paciente.sexo;
+                            const tipoConsulta = 'WS_RENAPER_documento';
+                            const filtro = 'documento=' + paciente.documento + ';sexo=' + paciente.sexo;
                             try {
                                 resultado = await consultaRenaper(result, tipoConsulta, filtro);
                             } catch (error) {
@@ -44,23 +36,21 @@ export function getServicioRenaper(paciente) {
                 }
             });
         } else {
-            resolve({ 'paciente': paciente, 'matcheos': { 'entidad': 'Renaper', 'matcheo': 0, 'datosPaciente': {} } });
+            resolve({ paciente, matcheos: { entidad: 'Renaper', matcheo: 0, datosPaciente: {} } });
         }
     });
 }
 
 function consultaRenaper(sesion, tipo, filtro) {
-    let resultado: any;
     let rst: any;
-    datosRenaper = [];
     return new Promise((resolve, reject) => {
         if (sesion.return) {
-            soap.createClient(url, function (err, client) {
-                let args = {
+            soap.createClient(url, (_err, client) => {
+                const args = {
                     IdSesion: sesion.return['$value'],
                     Base: 'PecasAutorizacion'
                 };
-                client.FijarBaseDeSesion(args, async function (err2, result) {
+                client.FijarBaseDeSesion(args, async (err2, _result) => {
                     if (err2) {
                         reject(err2);
                     }
@@ -81,11 +71,11 @@ function consultaRenaper(sesion, tipo, filtro) {
 
 function solicitarServicio(sesion, tipo, filtro) {
     return new Promise((resolve, reject) => {
-        soap.createClient(serv, function (err3, client2) {
+        soap.createClient(serv, (err3, client2) => {
             if (err3) {
                 reject(err3);
             }
-            let args2 = {
+            const args2 = {
                 IdSesionPecas: sesion.return['$value'],
                 Cliente: 'ANDES SISTEMA',
                 Proveedor: 'GP-RENAPER',
@@ -98,15 +88,15 @@ function solicitarServicio(sesion, tipo, filtro) {
                 CuerpoEncriptado: false
             };
             if (client2) {
-                client2.Solicitar_Servicio(args2, function (err4, result2) {
+                client2.Solicitar_Servicio(args2, (err4, result2) => {
                     if (err4) {
                         reject(err4);
                     }
-                    let codigoResultado = result2.return.CodResultado['$value'];
+                    const codigoResultado = result2.return.CodResultado['$value'];
                     if (result2.return.Resultado['$value']) {
-                        let resultado = Buffer.from(result2.return.Resultado['$value'], 'base64').toString('utf8');
+                        const resultado = Buffer.from(result2.return.Resultado['$value'], 'base64').toString('utf8');
                         // convertimos a JSON el resultado
-                        let resArray = JSON.parse(resultado);
+                        const resArray = JSON.parse(resultado);
                         resolve({ codigo: codigoResultado, datos: resArray });
                     } else {
                         resolve({ codigo: codigoResultado, datos: [] });

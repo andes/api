@@ -3,7 +3,7 @@ import * as NumeracionMatriculas from './../schemas/numeracionMatriculas';
 import * as SIISA from './../../../core/tm/schemas/siisa';
 
 
-var router = express.Router();
+const router = express.Router();
 
 // router.get('/numeraciones/codigo', (request, response, errorHandler) => {
 //     console.log(request.params.codigo)
@@ -22,10 +22,10 @@ var router = express.Router();
 // })
 
 router.get('/numeraciones/:id*?', function (req, res, next) {
-    var resultado;
+    let resultado;
     if (req.query.especialidad || req.query.profesion  ) {
         if (req.query.profesion) {
-            NumeracionMatriculas.find({ 'profesion._id': req.query.profesion }, function (err, data) {
+            NumeracionMatriculas.find({ 'profesion._id': req.query.profesion }, (err, data) => {
                 if (err) {
                     next(err);
                 }
@@ -33,7 +33,7 @@ router.get('/numeraciones/:id*?', function (req, res, next) {
             });
         }
         if (req.query.especialidad) {
-            NumeracionMatriculas.find({ 'especialidad._id': req.query.especialidad }, function (err, data) {
+            NumeracionMatriculas.find({ 'especialidad._id': req.query.especialidad }, (err, data) => {
                 if (err) {
                     next(err);
                 }
@@ -43,15 +43,15 @@ router.get('/numeraciones/:id*?', function (req, res, next) {
         }
     } else {
 
-        let offset = req.query.offset ? parseInt(req.query.offset, 10) : 0;
-        let chunkSize = parseInt(req.query.size, 10);
+        const offset = req.query.offset ? parseInt(req.query.offset, 10) : 0;
+        const chunkSize = parseInt(req.query.size, 10);
 
-        let responseData = {
+        const responseData = {
             totalPages: null,
             data: null
         };
 
-        var busquedaNumeracion = {};
+        const busquedaNumeracion = {};
         if (req.query.codigo) {
             busquedaNumeracion['profesion.codigo'] = req.query.codigo;
         }
@@ -70,7 +70,7 @@ router.get('/numeraciones/:id*?', function (req, res, next) {
         NumeracionMatriculas.find(busquedaNumeracion)
             .skip(offset)
             .limit(chunkSize)
-            .exec(function (error, data) {
+            .exec((error, data) => {
 
                 if (error) {
                     return next(error);
@@ -93,7 +93,6 @@ router.get('/numeraciones/:id*?', function (req, res, next) {
             });
 
 
-
     }
 });
 
@@ -110,7 +109,7 @@ router.get('/numeracionesRestart', (req, resp, errorHandler) => {
                 return errorHandler(err);
             }
             profs.forEach((prof, i) => {
-                var numeracion = new NumeracionMatriculas({
+                const numeracion = new NumeracionMatriculas({
                     profesion: prof,
                     proximoNumero: 1
                 });
@@ -132,8 +131,8 @@ router.get('/numeracionesRestart', (req, resp, errorHandler) => {
 /**
  *
  */
-router.post('/numeraciones', function (request, response, errorHandler) {
-    let opciones = {};
+router.post('/numeraciones', (request, response, errorHandler) => {
+    const opciones = {};
     let query;
 
     if (request.body.profesion) {
@@ -148,7 +147,7 @@ router.post('/numeraciones', function (request, response, errorHandler) {
     query = NumeracionMatriculas.find(opciones);
 
 
-    query.exec(function (err, data) {
+    query.exec((err, data) => {
         if (data.length > 0) {
             response.send(null);
         } else {
@@ -170,7 +169,7 @@ router.post('/numeraciones', function (request, response, errorHandler) {
 });
 
 
-router.put('/numeraciones', function (request, response, errorHandler) {
+router.put('/numeraciones', (request, response, errorHandler) => {
     NumeracionMatriculas.findByIdAndUpdate(request.body.id, request.body, (error, numeracion) => {
 
         if (error) {
@@ -181,7 +180,6 @@ router.put('/numeraciones', function (request, response, errorHandler) {
     });
 
 });
-
 
 
 export = router;

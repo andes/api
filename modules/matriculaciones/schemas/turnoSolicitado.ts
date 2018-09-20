@@ -3,12 +3,9 @@ import * as mongoose from 'mongoose';
 import * as constantes from '../../../core/tm/schemas/constantes';
 // import * as direccionSchema from '../../../core/tm/schemas/direccion';
 import * as contactoSchema from '../../../core/tm/schemas/contacto';
-import * as especialidadSchema from '../../../core/tm/schemas/especialidad';
-import * as paisSchema from '../../../core/tm/schemas/pais';
-import * as profesionSchema from '../../../core/tm/schemas/profesion';
 import { ObjSIISASchema } from '../../../core/tm/schemas/siisa';
 
-let matriculacionSchema = new mongoose.Schema({
+const matriculacionSchema = new mongoose.Schema({
     matriculaNumero: { type: Number, required: false },
     libro: { type: String, required: false },
     folio: { type: String, required: false },
@@ -17,21 +14,21 @@ let matriculacionSchema = new mongoose.Schema({
     revalidacionNumero: Number
 });
 
-let nombreSchema = new mongoose.Schema({
+const nombreSchema = new mongoose.Schema({
     nombre: {
         type: String,
         required: false
     }
 });
 
-let ubicacionSchema = new mongoose.Schema({
+const ubicacionSchema = new mongoose.Schema({
     barrio: nombreSchema,
     localidad: nombreSchema,
     provincia: nombreSchema,
     pais: nombreSchema
 });
 
-let direccionSchema = new mongoose.Schema({
+const direccionSchema = new mongoose.Schema({
     tipo: {
         type: String,
         required: false
@@ -90,38 +87,38 @@ export let turnoSolicitadoSchema = new mongoose.Schema({
         matriculacion: [matriculacionSchema]
     }],
     formacionPosgrado: [{
-         profesion: { type: ObjSIISASchema, required: false },
-         institucionFormadora: { type: ObjSIISASchema, required: false },
-         especialidad: { type: ObjSIISASchema, required: false },
-         fechaIngreso: { type: Date, required: false },
-         fechaEgreso: { type: Date, required: false },
-         observacion: String,
-         certificacion: {
-           fecha: { type: Date, required: false },
-             modalidad: { type: ObjSIISASchema, required: false },
-             establecimiento: { type: ObjSIISASchema, required: false },
-         },
-         matriculacion: [matriculacionSchema]
-     }],
+        profesion: { type: ObjSIISASchema, required: false },
+        institucionFormadora: { type: ObjSIISASchema, required: false },
+        especialidad: { type: ObjSIISASchema, required: false },
+        fechaIngreso: { type: Date, required: false },
+        fechaEgreso: { type: Date, required: false },
+        observacion: String,
+        certificacion: {
+            fecha: { type: Date, required: false },
+            modalidad: { type: ObjSIISASchema, required: false },
+            establecimiento: { type: ObjSIISASchema, required: false },
+        },
+        matriculacion: [matriculacionSchema]
+    }],
     // origen: {
     //     type: String,
     //     enum: ['matriculación', 'rrhh', 'colegio de psicólogos']
     // },
     sanciones: [{
-         numero: {type: Number, required: false},
-         sancion: {
+        numero: {type: Number, required: false},
+        sancion: {
             id: Number,
             nombre: String,
         },
         motivo: {type: String, required: false},
         normaLegal: {type: String, required: false},
-         fecha: {type: Date, required: false},
-         vencimiento: {type: Date, required: false}
-     }],
-     notas: { type: String, required: false },
-     rematriculado: { type: Boolean, default: false },
-     agenteMatriculador: { type: String, required: false },
-     OtrosDatos:  [{
+        fecha: {type: Date, required: false},
+        vencimiento: {type: Date, required: false}
+    }],
+    notas: { type: String, required: false },
+    rematriculado: { type: Boolean, default: false },
+    agenteMatriculador: { type: String, required: false },
+    OtrosDatos:  [{
         matriculaProvincial: { type: Number, required: false },
         folio: { type: String, required: false },
         libro: { type: String, required: false },
@@ -134,7 +131,7 @@ export let turnoSolicitadoSchema = new mongoose.Schema({
 
 
 // Virtuals
-turnoSolicitadoSchema.virtual('nombreCompleto').get(function() {
+turnoSolicitadoSchema.virtual('nombreCompleto').get(function () {
     return this.apellido + ', ' + this.nombre;
 
 });
@@ -145,7 +142,7 @@ turnoSolicitadoSchema.virtual('nombreCompleto').get(function() {
 //     return Math.abs(ageDate.getUTCFullYear() - 1970);
 // });
 
-turnoSolicitadoSchema.virtual('fallecido').get(function() {
+turnoSolicitadoSchema.virtual('fallecido').get(function () {
     return this.fechaFallecimiento;
 });
 

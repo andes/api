@@ -13,7 +13,7 @@ export class Logger {
      * @memberof Logger
      */
     public static log(req, mod, op, data?, callback?): any {
-        let newLog = new log.log({
+        const newLog = new log.log({
             fecha: new Date(),
             usuario: req.user.usuario,
             organizacion: req.user.organizacion,

@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-let paisSchema = new mongoose.Schema({
+const paisSchema = new mongoose.Schema({
     nombre: String
 });
 export = paisSchema;

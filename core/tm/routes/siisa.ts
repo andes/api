@@ -1,17 +1,17 @@
 import * as express from 'express';
 import * as SIISA from '../schemas/siisa';
 
-let router = express.Router();
+const router = express.Router();
 
 /**
  * Entidades Formadoras
  */
-router.post('/siisa/entidadesformadoras', function(req, resp, errorHandler) {
-    let total = req.body.length;
-    let saved = [];
+router.post('/siisa/entidadesformadoras', (req, resp, errorHandler) => {
+    const total = req.body.length;
+    const saved = [];
 
     req.body.forEach(element => {
-        let siisa = new SIISA.EntidadFormadora(element);
+        const siisa = new SIISA.EntidadFormadora(element);
 
         siisa.save((error) => {
             if (error) {
@@ -27,7 +27,7 @@ router.post('/siisa/entidadesformadoras', function(req, resp, errorHandler) {
     });
 });
 
-router.get('/siisa/entidadesformadoras', function(req, resp, errorHandler) {
+router.get('/siisa/entidadesformadoras', (req, resp, errorHandler) => {
     SIISA.EntidadFormadora.find({}, (error, datos) => {
         if (error) {
             return errorHandler(error);
@@ -38,11 +38,10 @@ router.get('/siisa/entidadesformadoras', function(req, resp, errorHandler) {
 });
 
 
-
 /**
  * Profesiones
  */
-router.get('/siisa/profesion', function(req, resp, errorHandler) {
+router.get('/siisa/profesion', (req, resp, errorHandler) => {
     SIISA.Profesion.find({}, (error, datos) => {
         if (error) {
             return errorHandler(error);
@@ -52,12 +51,12 @@ router.get('/siisa/profesion', function(req, resp, errorHandler) {
     });
 });
 
-router.post('/siisa/profesion', function(req, resp, errorHandler) {
-    let total = req.body.length;
-    let saved = [];
+router.post('/siisa/profesion', (req, resp, errorHandler) => {
+    const total = req.body.length;
+    const saved = [];
 
     req.body.forEach(element => {
-        let siisa_p = new SIISA.Profesion(element);
+        const siisa_p = new SIISA.Profesion(element);
 
         siisa_p.save((error) => {
             if (error) {
@@ -74,17 +73,16 @@ router.post('/siisa/profesion', function(req, resp, errorHandler) {
 });
 
 
-
 /**
  * Paises
  */
 
-router.post('/siisa/paises', function(req, resp, errorHandler) {
-    let total = req.body.length;
-    let saved = [];
+router.post('/siisa/paises', (req, resp, errorHandler) => {
+    const total = req.body.length;
+    const saved = [];
 
     req.body.forEach(element => {
-        let siisa_pais = new SIISA.Pais(element);
+        const siisa_pais = new SIISA.Pais(element);
 
         siisa_pais.save((error) => {
             if (error) {
@@ -103,8 +101,8 @@ router.post('/siisa/paises', function(req, resp, errorHandler) {
 /**
  * Especialidades
  */
-router.get('/siisa/especialidad', function(req, resp, errorHandler) {
-    SIISA.Especialidad.find({}).exec(function(err, especialidades) {
+router.get('/siisa/especialidad', (req, resp, errorHandler) => {
+    SIISA.Especialidad.find({}).exec((err, especialidades) => {
         resp.json(especialidades);
     });
 });
@@ -113,8 +111,8 @@ router.get('/siisa/especialidad', function(req, resp, errorHandler) {
 /**
  * Sexos
  */
-router.get('/siisa/sexo', function(req, resp, errorHandler) {
-    SIISA.Sexo.find({}).exec(function(err, sexos) {
+router.get('/siisa/sexo', (req, resp, errorHandler) => {
+    SIISA.Sexo.find({}).exec((err, sexos) => {
         resp.status(201).json(sexos);
     });
 });
@@ -122,8 +120,8 @@ router.get('/siisa/sexo', function(req, resp, errorHandler) {
 /**
  * Modalidades Certificacion
  */
-router.get('/siisa/modalidadesCertificacion', function(req, resp, errorHandler) {
-    SIISA.ModalidadCertificacionEspecialidad.find({}).exec(function(err, modalidades) {
+router.get('/siisa/modalidadesCertificacion', (req, resp, errorHandler) => {
+    SIISA.ModalidadCertificacionEspecialidad.find({}).exec((err, modalidades) => {
         resp.json(modalidades);
     });
 });
@@ -131,8 +129,8 @@ router.get('/siisa/modalidadesCertificacion', function(req, resp, errorHandler) 
 /**
  * Establecimiento Certificador
  */
-router.get('/siisa/establecimientosCertificadores', function(req, resp, errorHandler) {
-    SIISA.EstablecimientoCertificador.find({}).exec(function(err, establecimientos) {
+router.get('/siisa/establecimientosCertificadores', (req, resp, errorHandler) => {
+    SIISA.EstablecimientoCertificador.find({}).exec((err, establecimientos) => {
         resp.json(establecimientos);
     });
 });

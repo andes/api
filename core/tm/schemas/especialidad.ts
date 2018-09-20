@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-let especialidadSchema = new mongoose.Schema({
+const especialidadSchema = new mongoose.Schema({
     nombre: {
         type: String,
         required: true

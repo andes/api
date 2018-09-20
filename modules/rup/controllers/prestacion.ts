@@ -10,9 +10,9 @@ import { Auth } from '../../../auth/auth.class';
  * @param {*} req request
  */
 export function liberarRefTurno(tid, req) {
-    let query = Prestacion.findOne({ $where: 'this.estados[this.estados.length - 1].tipo ==  "pendiente"' });
+    const query = Prestacion.findOne({ $where: 'this.estados[this.estados.length - 1].tipo ==  "pendiente"' });
     query.where({ 'solicitud.turno': mongoose.Types.ObjectId(tid) });
-    query.exec(function (err, data1: any) {
+    query.exec((err, data1: any) => {
         if (err) {
             return ({
                 err: 'No se encontro prestacion para el turno'
@@ -22,7 +22,7 @@ export function liberarRefTurno(tid, req) {
             data1.solicitud.turno = undefined;
             Auth.audit(data1, req);
 
-            data1.save(function (error) {
+            data1.save((error) => {
                 if (error) {
                     return (error);
                 }

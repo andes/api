@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-let profeSchema = new mongoose.Schema({
+export const ProfeSchema = new mongoose.Schema({
     nombre: String,
     tipoDocumento: String,
     dni: Number,
@@ -8,4 +8,4 @@ let profeSchema = new mongoose.Schema({
     version: Date
 });
 
-export let profe: any = mongoose.model('profe', profeSchema, 'profe');
+export const Profe: any = mongoose.model('profe', ProfeSchema, 'profe');
