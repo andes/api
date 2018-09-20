@@ -16,7 +16,7 @@ function filterData(filter: any[], data) {
     return true;
 }
 
-EventCore.on(/.*/, async (body) => {
+EventCore.on(/.*/, async function (body) {
     const event = this.event;
     let subscriptions = await WebHook.find({
         event
