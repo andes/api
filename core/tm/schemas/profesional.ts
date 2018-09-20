@@ -99,7 +99,7 @@ export let profesionalSchema = new mongoose.Schema({
          vencimiento: {type: Date, required: false}
      }],
      notas: { type: String, required: false },
-     rematriculado: { type: Boolean, default: false },
+     rematriculado: { type: Number, default: false },
      agenteMatriculador: { type: String, required: false },
      supervisor : {
         id: String,
@@ -112,7 +112,9 @@ export let profesionalSchema = new mongoose.Schema({
         anio: { type: Number, required: false }
     }],
     idRenovacion: { type: String, required: false },
-    documentoViejo: { type: Number, required: false }
+    documentoViejo: { type: Number, required: false },
+    turno: Date,
+    profesionalMatriculado: { type: Boolean, default: true }
 });
 
 

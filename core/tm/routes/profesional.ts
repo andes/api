@@ -24,7 +24,7 @@ import {
 import * as stream from 'stream';
 import * as base64 from 'base64-stream';
 import { Auth } from '../../../auth/auth.class';
-import { vencimientoMatriculaGrado, vencimientoMatriculaPosgrado } from '../controller/profesional';
+import {formacionCero, vencimientoMatriculaGrado, matriculaCero, vencimientoMatriculaPosgrado, migrarTurnos } from '../controller/profesional';
 
 import { sendSms } from '../../../utils/roboSender/sendSms';
 import { toArray } from '../../../utils/utils';
@@ -33,7 +33,6 @@ import { toArray } from '../../../utils/utils';
 let router = express.Router();
 
 router.get('/profesionales/ultimoPosgrado', async (req, res, next) => {
-    console.log('hola');
     let query = [{ '$unwind': '$formacionPosgrado' },
     { '$unwind': '$formacionPosgrado.matriculacion' },
     {
@@ -50,35 +49,11 @@ router.get('/profesionales/ultimoPosgrado', async (req, res, next) => {
 
 router.get('/profesionales/estadisticas', async (req, res, next) => {
     let estadisticas = {};
-      estadisticas['total'] = await profesional.count({});
-     estadisticas['totalMatriculados'] = await  profesional.count({ rematriculado: false });
-     estadisticas['totalRematriculados'] = await profesional.count({ rematriculado: true });
-//     let estadisticas;
-//  let total =  await  profesional.find({}).count().exec(function (err, data) {
-
-//         console.log(data);
-//       return data;
-
-//     });
-
-    console.log(estadisticas);
-    // let totalMatriculados =   await  profesional.find({ rematriculado: false }).count().exec(function (err, data2) {
-    //     if (err) {
-    //         return next(err);
-    //     }
-    //     return data2;
-    // });
-
-    // let totalRematriculados =  await  profesional.find({ rematriculado: true }).count().exec(function (err, data2) {
-    //     if (err) {
-    //         return next(err);
-    //     }
-    //     return data2;
-    // });
+    estadisticas['total'] = await profesional.count({profesionalMatriculado: true});
+    estadisticas['totalMatriculados'] = await profesional.count({ rematriculado: 0 , profesionalMatriculado: true});
+    estadisticas['totalRematriculados'] = await profesional.count({ rematriculado: 1 , profesionalMatriculado: true});
 
     res.json(estadisticas);
-
-
 
 });
 
@@ -154,23 +129,19 @@ router.get('/profesionales/firma/:id*?', Auth.authenticate(), (req: any, res, ne
 
     }
     if (req.query.firmaAdmin) {
-console.log(req.query);
         let idAdmin = req.query.firmaAdmin;
         let fotoAdmin = makeFsFirmaAdmin();
         fotoAdmin.find({
-            'metadata.idProfesional': idAdmin
+            'metadata.idSupervisor': idAdmin
         }, {}, {
                 sort: {
                     '_id': -1
                 }
             }, function (err, file) {
-                console.log(file);
                 if (file[0] == null) {
                     res.send(null);
                 } else {
-                    console.log(file[0]._id);
                     var stream1 = fotoAdmin.readById(file[0]._id, function (err2, buffer) {
-                        console.log(buffer);
                         if (err2) {
                             return next(err2);
                         }
@@ -233,6 +204,7 @@ router.get('/profesionales/:id*?', Auth.authenticate(), function (req, res, next
     // if (!Auth.check(req, 'matriculaciones:profesionales:getProfesional')) {
     //     return next(403);
     // }
+    console.log(req.query);
     let opciones = {};
     let query;
     if (req.params.id) {
@@ -247,6 +219,11 @@ router.get('/profesionales/:id*?', Auth.authenticate(), function (req, res, next
             opciones['nombre'] = {
                 '$regex': utils.makePattern(req.query.nombre)
             };
+        }
+
+        if (req.query.matriculacion) {
+            console.log('acaaaaa');
+            opciones['profesionalMatriculado'] = true;
         }
 
         if (req.query.apellido) {
@@ -285,7 +262,6 @@ router.get('/profesionales/:id*?', Auth.authenticate(), function (req, res, next
                 '$regex': utils.makePattern(req.query.nombreCompleto)
             };
         }
-
         if (req.query.documento) {
             opciones['documento'] = utils.makePattern(req.query.documento);
         }
@@ -426,7 +402,7 @@ router.post('/profesionales', Auth.authenticate(), function (req, res, next) {
 
         // remove la firma vieja antes de insertar la nueva
         firmaAdmin.find({
-            'metadata.idProfesional': req.body.firmaAdmin.idProfesional
+            'metadata.idSupervisor': req.body.firmaAdmin.idSupervisor
         }, function (err, file) {
             file.forEach(recorre => {
                 firmaAdmin.unlinkById(recorre._id, function (error, unlinkedAttachment) { });
@@ -437,7 +413,7 @@ router.post('/profesionales', Auth.authenticate(), function (req, res, next) {
             filename: 'firmaAdmin.png',
             contentType: 'image/jpeg',
             metadata: {
-                idProfesional: req.body.firmaAdmin.idProfesional,
+                idSupervisor: req.body.firmaAdmin.idSupervisor,
                 administracion: req.body.firmaAdmin.nombreCompleto,
             }
         },
@@ -722,10 +698,29 @@ router.get('/resumen/:id*?', function (req, res, next) {
     });
 });
 
-
 router.post('/profesionales/vencimientoMatriculaGrado', async (req, res, next) => {
     let prueba = await Promise.all([vencimientoMatriculaGrado(), vencimientoMatriculaPosgrado()]);
     console.log(prueba);
 });
+
+router.post('/profesionales/migrarTurnos', async (req, res, next) => {
+    migrarTurnos();
+});
+
+router.post('/profesionales/matriculaCero', async (req, res, next) => {
+    let ress = await matriculaCero();
+  res.json(ress)  ;
+
+});
+
+
+router.post('/profesionales/formacionCero', async (req, res, next) => {
+    let ress = await formacionCero();
+  res.json(ress)  ;
+
+});
+
+
+
 
 export = router;
