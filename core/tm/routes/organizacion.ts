@@ -267,9 +267,7 @@ router.get('/organizaciones/:id*?', (req, res, next) => {
         }
 
         if (req.query.sisa) {
-            filtros['codigo.sisa'] = {
-                $regex: utils.makePattern(req.query.sisa)
-            };
+            filtros['codigo.sisa'] = req.query.sisa;
         }
         if (req.query.activo) {
             filtros['activo'] = req.query.activo;
