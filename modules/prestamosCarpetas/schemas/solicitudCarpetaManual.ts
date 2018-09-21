@@ -1,13 +1,33 @@
-import * as mongoose from 'mongoose';
+import { Schema, Model, model, Document } from 'mongoose';
 import * as nombreApellidoSchema from '../../../core/tm/schemas/nombreApellido';
 import { pacienteSchema } from '../../../core/mpi/schemas/paciente';
-import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
-import { espacioFisicoSchema } from '../../../modules/turnos/schemas/espacioFisico';
+import { tipoPrestacionSchema, ITipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
+import { espacioFisicoSchema, IEspacioFisico } from '../../../modules/turnos/schemas/espacioFisico';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import * as constantes from './constantes';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
+// [TODO] acomodar los schemas nombreApellido y nombreSchema
+// [TODO] implementar interface paciente
+export interface ISolicitudManual extends Document {
+    fecha: Date;
+    numero: String;
+    estado: String;
+    paciente: any;
+    organizacion: {
+        nombre: String;
+    };
 
-const solicitudCarpetaManualSchema = new mongoose.Schema({
+    datosSolicitudManual: {
+        espacioFisico: IEspacioFisico;
+        prestacion: ITipoPrestacion;
+        profesional: { nombre: String; apellido: String };
+        responsable: { nombre: String; apellido: String };
+        observaciones: String;
+    };
+}
+
+export const SolicitudCarpetaManualSchema = new Schema({
     fecha: Date,
     paciente: pacienteSchema,
     numero: String,
@@ -29,7 +49,7 @@ const solicitudCarpetaManualSchema = new mongoose.Schema({
     }
 });
 
-solicitudCarpetaManualSchema.plugin(require('../../../mongoose/audit'));
+SolicitudCarpetaManualSchema.plugin(AuditPlugin);
 
-const solicitudCarpetaManual = mongoose.model('solicitudCarpetaManual', solicitudCarpetaManualSchema, 'solicitudCarpetaManual');
-export = solicitudCarpetaManual;
+export const SolicitudCarpetaManual: Model<ISolicitudManual> = model<ISolicitudManual>('solicitudCarpetaManual', SolicitudCarpetaManualSchema, 'solicitudCarpetaManual');
+
