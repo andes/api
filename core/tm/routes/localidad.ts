@@ -1,6 +1,7 @@
 import * as express from 'express';
 import * as localidad from '../schemas/localidad';
 import * as mongoose from 'mongoose';
+import { toArray } from '../../../utils/utils';
 
 const router = express.Router();
 
@@ -69,7 +70,7 @@ const router = express.Router();
  *         schema:
  *           $ref: '#/definitions/localidad'
  */
-router.get('/localidades/:id*?', (req, res, next) => {
+router.get('/localidades/:id?', (req, res, next) => {
 
     if (req.params.id) {
         localidad.findById(req.params.id, (err, data) => {
@@ -90,6 +91,10 @@ router.get('/localidades/:id*?', (req, res, next) => {
             query.where('provincia._id').equals(mongoose.Types.ObjectId(req.query.provincia));
         }
 
+        if (req.query.codigo) {
+            query.where('codigoProvincia').equals(Number(req.query.codigo));
+        }
+
         query.sort({ nombre: 1 }).exec((err, data) => {
             if (err) {
                 return next(err);
@@ -98,5 +103,6 @@ router.get('/localidades/:id*?', (req, res, next) => {
         });
     }
 });
+
 
 export = router;

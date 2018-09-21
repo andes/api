@@ -9,9 +9,7 @@ import * as turno from '../../../modules/matriculaciones/schemas/turno';
  * funcion que controla los vencimientos de la matriculas y de ser necesario envia sms y email avisando al profesional.
  */
 export async function vencimientoMatriculaGrado() {
-    let profesionales: any = await profesional.find({ 'formacionGrado.matriculado': true, 'profesionalMatriculado': true }, (data: any) => { return data; });
-    console.log('grado');
-
+    let profesionales: any = await profesional.find({ 'formacionGrado.matriculado': true, profesionalMatriculado: true }, (data: any) => { return data; });
     for (let _n = 0; _n < profesionales.length; _n++) {
         if (profesionales[_n].habilitado === true) {
             for (let _i = 0; _i < profesionales[_n].formacionGrado.length; _i++) {
@@ -77,11 +75,9 @@ export async function vencimientoMatriculaGrado() {
                     if (profesionales[_n].formacionGrado[_i].matriculado === true && profesionales[_n].formacionGrado[_i].matriculacion[profesionales[_n].formacionGrado[_i].matriculacion.length - 1].fin <= new Date()) {
                         profesionales[_n].formacionGrado[_i].matriculado = false;
                         profesionales[_n].formacionGrado[_i].papelesVerificados = false;
-
-                        console.log(profesionales[_n].documento);
                         const datosActualizacionGrado = {
-                            'descripcion': 'updateEstadoGrado',
-                            'data': profesionales[_n].formacionGrado,
+                            descripcion: 'updateEstadoGrado',
+                            data: profesionales[_n].formacionGrado,
                         };
 
                         actualizar(profesionales[_n]._id, datosActualizacionGrado);
@@ -95,15 +91,10 @@ export async function vencimientoMatriculaGrado() {
 
 
     }
-    console.log('fin');
-
 }
 
 export async function vencimientoMatriculaPosgrado() {
-    let profesionales: any = await profesional.find({ 'formacionPosgrado.matriculado': true, 'profesionalMatriculado': true }, (data: any) => { return data; });
-    console.log('posgrado');
-
-
+    let profesionales: any = await profesional.find({ 'formacionPosgrado.matriculado': true, profesionalMatriculado: true }, (data: any) => { return data; });
     for (let _n = 0; _n < profesionales.length; _n++) {
         if (profesionales[_n].habilitado === true) {
             if (profesionales[_n].formacionPosgrado) {
@@ -164,11 +155,10 @@ export async function vencimientoMatriculaPosgrado() {
                             profesionales[_n].formacionPosgrado[_i].matriculado = false;
                             profesionales[_n].formacionPosgrado[_i].papelesVerificados = false;
                             const datosActualizacionFormacionGrado = {
-                                'descripcion': 'updateEstadoPosGrado',
-                                'data': profesionales[_n].formacionPosgrado,
+                                descripcion: 'updateEstadoPosGrado',
+                                data: profesionales[_n].formacionPosgrado,
                             };
 
-                            console.log(profesionales[_n].documento);
                             actualizar(profesionales[_n].id, datosActualizacionFormacionGrado);
 
                         }
@@ -178,7 +168,6 @@ export async function vencimientoMatriculaPosgrado() {
         }
 
     }
-    console.log('fin');
 }
 
 /**
@@ -258,17 +247,12 @@ function enviarMail(unProfesional) {
     });
 
 
-
 }
 
 export async function migrarTurnos() {
     let profesionales: any = await profesional.find({ turno: { $gte: new Date() } }, (data: any) => { return data; });
-    console.log('go');
-
     profesionales.forEach(unProfesional => {
         let tipoDeTurno;
-        console.log('go', unProfesional);
-        unProfesional.turno;
         let turnoSolicitud = {
             nombre: unProfesional.nombre,
             apellido: unProfesional.apellido,
@@ -284,27 +268,10 @@ export async function migrarTurnos() {
         } else {
             tipoDeTurno = 'renovacion';
         }
-        // formacionGrado.forEach((element, n) => {
-        //     console.log('aca si');
-
-        //     if (element.matriculacion[element.matriculacion.length - 1] === null) {
-        //        tipoDeTurno = 'matriculacion';
-        //     } else {
-        //         tipoDeTurno = 'renovacion';
-        //     }
-        //     // element.matriculacion.forEach((unaMatricula, m) => {
-        //     //     if (unaMatricula.matriculaNumero === 0) {
-        //     //         unaMatricula = null;
-        //     //         unProfesional.formacionGrado[n].matriculacion[m] = null;
-        //     //     }
-        //     //     console.log('unamatri', unaMatricula);
-        //     // });
-        // });
 
         let newTurnoSolicitado = new turnoSolicitado(turnoSolicitud);
         let unTurno: any = newTurnoSolicitado.save((err2) => {
 
-            console.log('asdas', newTurnoSolicitado);
             let nTurno = new turno({
                 notificado: false,
                 sePresento: false,
@@ -314,8 +281,6 @@ export async function migrarTurnos() {
             });
 
             nTurno.save((err) => {
-                console.log(err);
-                console.log('neww', nTurno);
             });
 
         });
@@ -325,44 +290,23 @@ export async function migrarTurnos() {
 }
 
 export async function matriculaCero() {
-    let profesionales: any = await profesional.find({'formacionGrado.matriculacion.matriculaNumero': 0 }, (data: any) => { return data; }; )
-    console.log('go');
+    let profesionales: any = await profesional.find({ 'formacionGrado.matriculacion.matriculaNumero': 0 }, (data: any) => { return data; }; )
     let prof = [];
     profesionales.forEach((unProfesional, i) => {
-        console.log('unprof', unProfesional);
         let formacionGrado = unProfesional.formacionGrado;
         formacionGrado.forEach((element, n) => {
-            console.log('aca si');
-
             if (element.matriculacion[element.matriculacion.length - 1].matriculaNumero === 0) {
                 unProfesional.formacionGrado[n].matriculacion = null;
             }
-            // element.matriculacion.forEach((unaMatricula, m) => {
-            //     if (unaMatricula.matriculaNumero === 0) {
-            //         unaMatricula = null;
-            //         unProfesional.formacionGrado[n].matriculacion[m] = null;
-            //     }
-            //     console.log('unamatri', unaMatricula);
-            // });
         });
-        profesional.findByIdAndUpdate(unProfesional.id, unProfesional, function (err, resultado: any) {
-
-
-        });
-        console.log('salida', unProfesional);
+        profesional.findByIdAndUpdate(unProfesional.id, unProfesional, (err, resultado: any) => { });
         prof.push(unProfesional);
     });
-    console.log(prof);
     return prof;
 }
 
 
 export async function formacionCero() {
-    let profesionales: any = await profesional.find({'$where': 'this.formacionGrado.length > 1 && this.formacionGrado[0].matriculacion == null' }, (data: any) => { return data; }; )
-    console.log(profesionales.length);
+    let profesionales: any = await profesional.find({ $where: 'this.formacionGrado.length > 1 && this.formacionGrado[0].matriculacion == null' }, (data: any) => { return data; }; )
     return profesionales;
 }
-
-
-
-

@@ -9,7 +9,7 @@ import { makeFsFirmaAdmin } from '../schemas/firmaAdmin';
 import * as stream from 'stream';
 import * as base64 from 'base64-stream';
 import { Auth } from '../../../auth/auth.class';
-import {formacionCero, vencimientoMatriculaGrado, matriculaCero, vencimientoMatriculaPosgrado, migrarTurnos } from '../controller/profesional';
+import { formacionCero, vencimientoMatriculaGrado, matriculaCero, vencimientoMatriculaPosgrado, migrarTurnos } from '../controller/profesional';
 
 import { sendSms } from '../../../utils/roboSender/sendSms';
 import { toArray } from '../../../utils/utils';
@@ -34,9 +34,9 @@ router.get('/profesionales/ultimoPosgrado', async (req, res, next) => {
 
 router.get('/profesionales/estadisticas', async (req, res, next) => {
     let estadisticas = {};
-    estadisticas['total'] = await profesional.count({profesionalMatriculado: true});
-    estadisticas['totalMatriculados'] = await profesional.count({ rematriculado: 0 , profesionalMatriculado: true});
-    estadisticas['totalRematriculados'] = await profesional.count({ rematriculado: 1 , profesionalMatriculado: true});
+    estadisticas['total'] = await profesional.count({ profesionalMatriculado: true });
+    estadisticas['totalMatriculados'] = await profesional.count({ rematriculado: 0, profesionalMatriculado: true });
+    estadisticas['totalRematriculados'] = await profesional.count({ rematriculado: 1, profesionalMatriculado: true });
 
     res.json(estadisticas);
 
@@ -120,23 +120,23 @@ router.get('/profesionales/firma/:id*?', Auth.authenticate(), (req: any, res, ne
             sort: {
                 _id: -1
             }
-        }, function (err, file) {
+        },  (err, file) => {
             if (file[0] == null) {
-                    res.send(null);
-                } else {
-                    let stream1 = fotoAdmin.readById(file[0]._id, function (err2, buffer) {
-                        if (err2) {
-                            return next(err2);
-                        }
-                        res.setHeader('Content-Type', file[0].contentType);
-                        res.setHeader('Content-Length', file[0].length);
-                        let firmaAdmin = {
-                            firma: buffer.toString('base64'),
-                            administracion: file[0].metadata.administracion
-                        };
-                        return res.send(firmaAdmin);
-                    });
-                }
+                res.send(null);
+            } else {
+                let stream1 = fotoAdmin.readById(file[0]._id,  (err2, buffer) => {
+                    if (err2) {
+                        return next(err2);
+                    }
+                    res.setHeader('Content-Type', file[0].contentType);
+                    res.setHeader('Content-Length', file[0].length);
+                    let firmaAdmin = {
+                        firma: buffer.toString('base64'),
+                        administracion: file[0].metadata.administracion
+                    };
+                    return res.send(firmaAdmin);
+                });
+            }
         });
 
     }
@@ -187,7 +187,6 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
     // if (!Auth.check(req, 'matriculaciones:profesionales:getProfesional')) {
     //     return next(403);
     // }
-    console.log(req.query);
     let opciones = {};
     let query;
     if (req.params.id) {
@@ -205,7 +204,6 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
         }
 
         if (req.query.matriculacion) {
-            console.log('acaaaaa');
             opciones['profesionalMatriculado'] = true;
         }
 
@@ -386,7 +384,7 @@ router.post('/profesionales', Auth.authenticate(), (req, res, next) => {
         // remove la firma vieja antes de insertar la nueva
         firmaAdmin.find({
             'metadata.idSupervisor': req.body.firmaAdmin.idSupervisor
-        }, function (err, file) {
+        },  (err, file) => {
             file.forEach(recorre => {
                 firmaAdmin.unlinkById(recorre._id, (error, unlinkedAttachment) => { });
             });
@@ -416,6 +414,7 @@ router.post('/profesionales', Auth.authenticate(), (req, res, next) => {
         //         res.json(null);
         //     } else {
         const newProfesional = new profesional(req.body.profesional);
+        Auth.audit(newProfesional, req);
         newProfesional.save((err2) => {
             if (err2) {
                 next(err2);
@@ -545,7 +544,7 @@ router.delete('/profesionales/:id', Auth.authenticate(), (req, res, next) => {
     });
 });
 
-router.patch('/profesionales/:id?', (req, res, next) => {
+router.patch('/profesionales/:id?', Auth.authenticate(), (req, res, next) => {
     profesional.findById(req.params.id, (err, resultado: any) => {
         if (resultado) {
             switch (req.body.op) {
@@ -579,7 +578,7 @@ router.patch('/profesionales/:id?', (req, res, next) => {
 
             }
         }
-
+        Auth.audit(resultado, req);
         resultado.save((err2) => {
             if (err2) {
                 next(err2);
@@ -683,7 +682,6 @@ router.get('/resumen/:id*?', (req, res, next) => {
 
 router.post('/profesionales/vencimientoMatriculaGrado', async (req, res, next) => {
     let prueba = await Promise.all([vencimientoMatriculaGrado(), vencimientoMatriculaPosgrado()]);
-    console.log(prueba);
 });
 
 router.post('/profesionales/migrarTurnos', async (req, res, next) => {
@@ -692,14 +690,14 @@ router.post('/profesionales/migrarTurnos', async (req, res, next) => {
 
 router.post('/profesionales/matriculaCero', async (req, res, next) => {
     let ress = await matriculaCero();
-    res.json(ress)  ;
+    res.json(ress);
 
 });
 
 
 router.post('/profesionales/formacionCero', async (req, res, next) => {
     let ress = await formacionCero();
-    res.json(ress)  ;
+    res.json(ress);
 
 });
 

@@ -31,11 +31,6 @@ export let profesionalSchema = new mongoose.Schema({
     fechaFallecimiento: { type: Date, required: false },
     nacionalidad: { type: ObjSIISASchema, required: false },
     sexo: { type: String, required: false },
-    estadoCivil: {
-        type: String,
-        enum: ['casado', 'separado', 'divorciado', 'viudo', 'soltero', 'otro'],
-        required: false
-    },
     contactos: [contactoSchema],
     domicilios: [direccionSchema],
     fotoArchivo: { type: String, required: false },
@@ -54,6 +49,7 @@ export let profesionalSchema = new mongoose.Schema({
         papelesVerificados: { type: Boolean, default: false },
         matriculacion: [matriculacionSchema],
         matriculado: { type: Boolean, default: false },
+        exportadoSisa: Boolean
 
     }],
     formacionPosgrado: [{
@@ -84,6 +80,7 @@ export let profesionalSchema = new mongoose.Schema({
         matriculado: { type: Boolean, default: false },
         revalida: { type: Boolean, default: false },
         papelesVerificados: { type: Boolean, default: false },
+        exportadoSisa: Boolean
     }],
     sanciones: [{
         numero: { type: Number, required: false },
@@ -124,4 +121,7 @@ profesionalSchema.virtual('nombreCompleto').get(function () {
 profesionalSchema.virtual('fallecido').get(function () {
     return this.fechaFallecimiento;
 });
+
+profesionalSchema.plugin(require('../../../mongoose/audit'));
+
 export let profesional = mongoose.model('profesional', profesionalSchema, 'profesional');

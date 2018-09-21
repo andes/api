@@ -21,7 +21,7 @@ const router = express.Router();
 //     });
 // })
 
-router.get('/numeraciones/:id*?', function (req, res, next) {
+router.get('/numeraciones/:id*?',  (req, res, next) => {
     let resultado;
     if (req.query.especialidad || req.query.profesion  ) {
         if (req.query.profesion) {

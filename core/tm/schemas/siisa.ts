@@ -5,7 +5,8 @@ export const ObjSIISASchema = new Schema({
     nombre: String,
     codigo: Number,
     tipoDeFormacion: String,
-    habilitado: Boolean
+    habilitado: Boolean,
+    profesionCodigoRef: Number
 });
 
 export interface SIISAObject extends Document {
