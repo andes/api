@@ -4,12 +4,18 @@ import * as moment from 'moment';
 import { sendSms } from '../../../utils/roboSender/sendSms';
 import { turnoSolicitado } from '../../../modules/matriculaciones/schemas/turnoSolicitado';
 import * as turno from '../../../modules/matriculaciones/schemas/turno';
+import { userScheduler } from '../../../config.private';
+import { Auth } from './../../../auth/auth.class';
 
 /**
  * funcion que controla los vencimientos de la matriculas y de ser necesario envia sms y email avisando al profesional.
  */
 export async function vencimientoMatriculaGrado() {
-    let profesionales: any = await profesional.find({ 'formacionGrado.matriculado': true, profesionalMatriculado: true }, (data: any) => { return data; });
+    // let profesionales: any = await profesional.find({ 'formacionGrado.matriculado': true, profesionalMatriculado: true }, (data: any) => { return data; });
+    console.log('entre');
+    let profesionales: any = await profesional.find({ 'formacionGrado.matriculacion.fin': { $lte: new Date() }, 'formacionGrado.matriculado': true, profesionalMatriculado: true });
+
+    console.log( profesionales.length);
     for (let _n = 0; _n < profesionales.length; _n++) {
         if (profesionales[_n].habilitado === true) {
             for (let _i = 0; _i < profesionales[_n].formacionGrado.length; _i++) {
@@ -75,6 +81,7 @@ export async function vencimientoMatriculaGrado() {
                     if (profesionales[_n].formacionGrado[_i].matriculado === true && profesionales[_n].formacionGrado[_i].matriculacion[profesionales[_n].formacionGrado[_i].matriculacion.length - 1].fin <= new Date()) {
                         profesionales[_n].formacionGrado[_i].matriculado = false;
                         profesionales[_n].formacionGrado[_i].papelesVerificados = false;
+                        console.log(profesionales[_n].documento);
                         const datosActualizacionGrado = {
                             descripcion: 'updateEstadoGrado',
                             data: profesionales[_n].formacionGrado,
@@ -91,6 +98,8 @@ export async function vencimientoMatriculaGrado() {
 
 
     }
+    console.log('fin');
+    // done();
 }
 
 export async function vencimientoMatriculaPosgrado() {
@@ -151,7 +160,7 @@ export async function vencimientoMatriculaPosgrado() {
                         // }
 
                         // tslint:disable-next-line:max-line-length
-                        if (profesionales[_n].formacionPosgrado[_i].matriculado === true && profesionales[_n].formacionPosgrado[_i].matriculacion[profesionales[_n].formacionPosgrado[_i].matriculacion.length - 1].fin.getFullYear() <= new Date().getFullYear()) {
+                        if (profesionales[_n].formacionPosgrado[_i].matriculado === true && profesionales[_n].formacionPosgrado[_i].matriculacion[profesionales[_n].formacionPosgrado[_i].matriculacion.length - 1].fin.getFullYear() < new Date().getFullYear()) {
                             profesionales[_n].formacionPosgrado[_i].matriculado = false;
                             profesionales[_n].formacionPosgrado[_i].papelesVerificados = false;
                             const datosActualizacionFormacionGrado = {
@@ -176,7 +185,9 @@ export async function vencimientoMatriculaPosgrado() {
  * @param opciones datos necesarios para hacer la actualizacion deseada
  */
 function actualizar(idProfesional, opciones) {
+    console.log('acaaa', idProfesional);
     profesional.findById(idProfesional, (err, resultado: any) => {
+        console.log('laea', resultado);
         if (resultado) {
             switch (opciones.descripcion) {
                 case 'updateEstadoGrado':
@@ -188,9 +199,11 @@ function actualizar(idProfesional, opciones) {
             }
 
         }
-
+        console.log('aca');
+        Auth.audit(resultado, (userScheduler as any));
         resultado.save((err2) => {
-            return resultado;
+            console.log(resultado.formacionGrado);
+
         });
 
     });
