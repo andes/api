@@ -262,7 +262,6 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                     organizacion: prestacion.solicitud.organizacion,
                     frecuentes: req.body.registros
                 };
-
                 frecuentescrl.actualizarFrecuentes(dto)
                     .then((resultadoFrec: any) => {
                         Logger.log(req, 'rup', 'update', {
@@ -313,17 +312,6 @@ router.patch('/prestaciones/:id', (req, res, next) => {
             } else {
                 res.json(prestacion);
             }
-
-            Auth.audit(data, req);
-            /*
-            Logger.log(req, 'prestacionPaciente', 'update', {
-                accion: req.body.op,
-                ruta: req.url,
-                method: req.method,
-                data: data,
-                err: err || false
-            });
-            */
         });
     });
 });
