@@ -157,7 +157,7 @@ export async function vencimientoMatriculaPosgrado() {
                                 data: profesionales[_n].formacionPosgrado,
                             };
 
-                            actualizar(profesionales[_n].id, datosActualizacionFormacionGrado);
+                            actualizar(profesionales[_n]);
 
                         }
                     }

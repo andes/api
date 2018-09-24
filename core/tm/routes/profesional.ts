@@ -680,9 +680,6 @@ router.get('/resumen/:id*?', (req, res, next) => {
     });
 });
 
-router.post('/profesionales/vencimientoMatriculaGrado', async (req, res, next) => {
-    let prueba = await Promise.all([vencimientoMatriculaGrado(), vencimientoMatriculaPosgrado()]);
-});
 
 router.post('/profesionales/migrarTurnos', async (req, res, next) => {
     migrarTurnos();
