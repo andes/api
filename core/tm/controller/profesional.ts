@@ -10,7 +10,7 @@ import { Auth } from './../../../auth/auth.class';
 /**
  * funcion que controla los vencimientos de la matriculas y de ser necesario envia sms y email avisando al profesional.
  */
-export async function vencimientoMatriculaGrado() {
+export async function vencimientoMatriculaGrado(done) {
     // let profesionales: any = await profesional.find({ 'formacionGrado.matriculado': true, profesionalMatriculado: true }, (data: any) => { return data; });
     let profesionales: any = await profesional.find({ 'formacionGrado.matriculacion.fin': { $lte: new Date() }, 'formacionGrado.matriculado': true, profesionalMatriculado: true });
 
@@ -79,23 +79,16 @@ export async function vencimientoMatriculaGrado() {
                     if (profesionales[_n].formacionGrado[_i].matriculado === true && profesionales[_n].formacionGrado[_i].matriculacion[profesionales[_n].formacionGrado[_i].matriculacion.length - 1].fin <= new Date()) {
                         profesionales[_n].formacionGrado[_i].matriculado = false;
                         profesionales[_n].formacionGrado[_i].papelesVerificados = false;
-                        const datosActualizacionGrado = {
-                            descripcion: 'updateEstadoGrado',
-                            data: profesionales[_n].formacionGrado,
-                        };
+                        await actualizar(profesionales[_n]);
 
-                        actualizar(profesionales[_n]._id, datosActualizacionGrado);
 
                     }
 
                 }
-
             }
         }
-
-
     }
-    // done();
+    done();
 }
 
 export async function vencimientoMatriculaPosgrado() {
@@ -177,27 +170,17 @@ export async function vencimientoMatriculaPosgrado() {
 
 /**
  * funcion que actualiza la formacion grado, formacion posgrado y estados de vencimientos;
- * @param idProfesional  id para hacer el find por el mismo
+ * @param profesional  profesional a modificar
  * @param opciones datos necesarios para hacer la actualizacion deseada
  */
-function actualizar(idProfesional, opciones) {
-    profesional.findById(idProfesional, (err, resultado: any) => {
-        if (resultado) {
-            switch (opciones.descripcion) {
-                case 'updateEstadoGrado':
-                    resultado.formacionGrado = opciones.data;
-                    break;
-                case 'updateEstadoPosGrado':
-                    resultado.formacionPosgrado = opciones.data;
-                    break;
-            }
-
-        }
-        Auth.audit(resultado, (userScheduler as any));
-        resultado.save((err2) => {
+async function actualizar(unProfesional) {
+    return new Promise(resolve => {
+        Auth.audit(unProfesional, (userScheduler as any));
+        unProfesional.save((err2) => {
+            resolve(profesional);
         });
-
     });
+
 }
 
 /**
@@ -294,7 +277,7 @@ export async function migrarTurnos() {
 }
 
 export async function matriculaCero() {
-    let profesionales: any = await profesional.find({ 'formacionGrado.matriculacion.matriculaNumero': 0 }, (data: any) => { return data; } );
+    let profesionales: any = await profesional.find({ 'formacionGrado.matriculacion.matriculaNumero': 0 }, (data: any) => { return data; });
     let prof = [];
     profesionales.forEach((unProfesional, i) => {
         let formacionGrado = unProfesional.formacionGrado;
@@ -311,6 +294,6 @@ export async function matriculaCero() {
 
 
 export async function formacionCero() {
-    let profesionales: any = await profesional.find({ $where: 'this.formacionGrado.length > 1 && this.formacionGrado[0].matriculacion == null' }, (data: any) => { return data; } );
+    let profesionales: any = await profesional.find({ $where: 'this.formacionGrado.length > 1 && this.formacionGrado[0].matriculacion == null' }, (data: any) => { return data; });
     return profesionales;
 }
