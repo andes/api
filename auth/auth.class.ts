@@ -88,9 +88,6 @@ export class Auth {
         return passport.authenticate();
     }
 
-    static authenticatePublic() {
-        return  passport.authenticate();
-    }
 
     /**
      * optionalAuth: extract
