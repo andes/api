@@ -294,7 +294,7 @@ export async function migrarTurnos() {
 }
 
 export async function matriculaCero() {
-    let profesionales: any = await profesional.find({ 'formacionGrado.matriculacion.matriculaNumero': 0 }, (data: any) => { return data; }; )
+    let profesionales: any = await profesional.find({ 'formacionGrado.matriculacion.matriculaNumero': 0 }, (data: any) => { return data; } );
     let prof = [];
     profesionales.forEach((unProfesional, i) => {
         let formacionGrado = unProfesional.formacionGrado;
@@ -311,6 +311,6 @@ export async function matriculaCero() {
 
 
 export async function formacionCero() {
-    let profesionales: any = await profesional.find({ $where: 'this.formacionGrado.length > 1 && this.formacionGrado[0].matriculacion == null' }, (data: any) => { return data; }; )
+    let profesionales: any = await profesional.find({ $where: 'this.formacionGrado.length > 1 && this.formacionGrado[0].matriculacion == null' }, (data: any) => { return data; } );
     return profesionales;
 }
