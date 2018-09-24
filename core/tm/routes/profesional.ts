@@ -56,26 +56,26 @@ router.get('/profesionales/foto/:id*?', Auth.authenticate(), (req: any, res, nex
             'metadata.idProfesional': id
         }, {}, {
             sort: {
-                _id: -1
-            }
+                    _id: -1
+                }
         }, (err, file) => {
-            if (file[0] == null) {
-                res.setHeader('Content-Type', 'image/jpeg');
+                if (file[0] == null) {
+                    res.setHeader('Content-Type', 'image/jpeg');
                     // input.pipe(decoder).pipe(res);
                     // input.end(img);
-                res.end(img);
-            } else {
-                fotoProf.readById(file[0].id, (err2, buffer) => {
-                    if (err2) {
-                        return next(err2);
-                    }
-                    res.setHeader('Content-Type', file[0].contentType);
-                    res.setHeader('Content-Length', file[0].length);
-                    const _img = buffer.toString('base64');
-                    return res.send(_img);
-                });
-            }
-        });
+                    res.end(img);
+                } else {
+                    fotoProf.readById(file[0].id, (err2, buffer) => {
+                        if (err2) {
+                            return next(err2);
+                        }
+                        res.setHeader('Content-Type', file[0].contentType);
+                        res.setHeader('Content-Length', file[0].length);
+                        const _img = buffer.toString('base64');
+                        return res.send(_img);
+                    });
+                }
+            });
     } catch (ex) {
         return next(ex);
     }
@@ -96,16 +96,16 @@ router.get('/profesionales/firma/:id*?', Auth.authenticate(), (req: any, res, ne
             }
         }, (err, file) => {
             if (file[0] == null) {
-                res.send(null);
+                    res.send(null);
             } else {
                 fotoProf.readById(file[0].id, (err2, buffer) => {
-                    if (err2) {
-                        return next(err2);
-                    }
-                    res.setHeader('Content-Type', file[0].contentType);
-                    res.setHeader('Content-Length', file[0].length);
-                    const firma = buffer.toString('base64');
-                    return res.send(firma);
+                        if (err2) {
+                            return next(err2);
+                        }
+                        res.setHeader('Content-Type', file[0].contentType);
+                        res.setHeader('Content-Length', file[0].length);
+                        const firma = buffer.toString('base64');
+                        return res.send(firma);
                 });
             }
         });
@@ -120,11 +120,11 @@ router.get('/profesionales/firma/:id*?', Auth.authenticate(), (req: any, res, ne
             sort: {
                 _id: -1
             }
-        },  (err, file) => {
+        }, (err, file) => {
             if (file[0] == null) {
                 res.send(null);
             } else {
-                let stream1 = fotoAdmin.readById(file[0]._id,  (err2, buffer) => {
+                let stream1 = fotoAdmin.readById(file[0]._id, (err2, buffer) => {
                     if (err2) {
                         return next(err2);
                     }
@@ -384,7 +384,7 @@ router.post('/profesionales', Auth.authenticate(), (req, res, next) => {
         // remove la firma vieja antes de insertar la nueva
         firmaAdmin.find({
             'metadata.idSupervisor': req.body.firmaAdmin.idSupervisor
-        },  (err, file) => {
+        }, (err, file) => {
             file.forEach(recorre => {
                 firmaAdmin.unlinkById(recorre._id, (error, unlinkedAttachment) => { });
             });

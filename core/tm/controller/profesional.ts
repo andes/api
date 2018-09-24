@@ -12,10 +12,8 @@ import { Auth } from './../../../auth/auth.class';
  */
 export async function vencimientoMatriculaGrado() {
     // let profesionales: any = await profesional.find({ 'formacionGrado.matriculado': true, profesionalMatriculado: true }, (data: any) => { return data; });
-    console.log('entre');
     let profesionales: any = await profesional.find({ 'formacionGrado.matriculacion.fin': { $lte: new Date() }, 'formacionGrado.matriculado': true, profesionalMatriculado: true });
 
-    console.log( profesionales.length);
     for (let _n = 0; _n < profesionales.length; _n++) {
         if (profesionales[_n].habilitado === true) {
             for (let _i = 0; _i < profesionales[_n].formacionGrado.length; _i++) {
@@ -81,7 +79,6 @@ export async function vencimientoMatriculaGrado() {
                     if (profesionales[_n].formacionGrado[_i].matriculado === true && profesionales[_n].formacionGrado[_i].matriculacion[profesionales[_n].formacionGrado[_i].matriculacion.length - 1].fin <= new Date()) {
                         profesionales[_n].formacionGrado[_i].matriculado = false;
                         profesionales[_n].formacionGrado[_i].papelesVerificados = false;
-                        console.log(profesionales[_n].documento);
                         const datosActualizacionGrado = {
                             descripcion: 'updateEstadoGrado',
                             data: profesionales[_n].formacionGrado,
@@ -98,7 +95,6 @@ export async function vencimientoMatriculaGrado() {
 
 
     }
-    console.log('fin');
     // done();
 }
 
@@ -185,9 +181,7 @@ export async function vencimientoMatriculaPosgrado() {
  * @param opciones datos necesarios para hacer la actualizacion deseada
  */
 function actualizar(idProfesional, opciones) {
-    console.log('acaaa', idProfesional);
     profesional.findById(idProfesional, (err, resultado: any) => {
-        console.log('laea', resultado);
         if (resultado) {
             switch (opciones.descripcion) {
                 case 'updateEstadoGrado':
@@ -199,11 +193,8 @@ function actualizar(idProfesional, opciones) {
             }
 
         }
-        console.log('aca');
         Auth.audit(resultado, (userScheduler as any));
         resultado.save((err2) => {
-            console.log(resultado.formacionGrado);
-
         });
 
     });
