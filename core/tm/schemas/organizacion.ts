@@ -30,7 +30,17 @@ const _schema = new mongoose.Schema({
     },
     fechaAlta: Date,
     fechaBaja: Date,
-    unidadesOrganizativas: [SnomedConcept]
+    /*
+    //Se modifica el campo unidadesOrganizativas por servicios
+    // dado que desde la app se envia el campo con el nombre servicios
+    // (el esquema del modelo en la app se llama servicios)
+    // con este cambio se pudieron actualizar correctamente los servicios
+    // unidadesOrganizativas: [SnomedConcept]
+    // Esto tambien traia incoveninentes en el get dado que el objeto desde la api
+    // no era igual al del esquema
+    // el del castro rendon funcionaba por si tenia el campo llamado servicios
+    */
+    servicios: [SnomedConcept]
 });
 const audit = require('../../../mongoose/audit');
 _schema.plugin(audit);
