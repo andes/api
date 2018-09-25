@@ -7,7 +7,7 @@ import { Logger } from '../../../utils/logService';
 import * as recordatorioController from '../controller/RecordatorioController';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { toArray } from '../../../utils/utils';
-
+import * as controllerPaciente from '../../../core/mpi/controller/paciente';
 // let async = require('async');
 
 const router = express.Router();
