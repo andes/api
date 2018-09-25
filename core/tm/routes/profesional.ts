@@ -20,9 +20,9 @@ let router = express.Router();
 router.get('/profesionales/ultimoPosgrado', async (req, res, next) => {
     let query = [{ $unwind: '$formacionPosgrado' },
     { $unwind: '$formacionPosgrado.matriculacion' },
-        {
-            $sort: { 'formacionPosgrado.matriculacion.matriculaNumero': -1 }
-        }, { $limit: 1 }];
+    {
+        $sort: { 'formacionPosgrado.matriculacion.matriculaNumero': -1 }
+    }, { $limit: 1 }];
 
 
     let data = await toArray(profesional.aggregate(query).cursor({}).exec());
@@ -55,27 +55,27 @@ router.get('/profesionales/foto/:id*?', Auth.authenticate(), (req: any, res, nex
         fotoProf.find({
             'metadata.idProfesional': id
         }, {}, {
-            sort: {
-                _id: -1
-            }
-        }, (err, file) => {
-            if (file[0] == null) {
-                res.setHeader('Content-Type', 'image/jpeg');
+                sort: {
+                    _id: -1
+                }
+            }, (err, file) => {
+                if (file[0] == null) {
+                    res.setHeader('Content-Type', 'image/jpeg');
                     // input.pipe(decoder).pipe(res);
                     // input.end(img);
-                res.end(img);
-            } else {
-                fotoProf.readById(file[0].id, (err2, buffer) => {
-                    if (err2) {
-                        return next(err2);
-                    }
-                    res.setHeader('Content-Type', file[0].contentType);
-                    res.setHeader('Content-Length', file[0].length);
-                    const _img = buffer.toString('base64');
-                    return res.send(_img);
-                });
-            }
-        });
+                    res.end(img);
+                } else {
+                    fotoProf.readById(file[0].id, (err2, buffer) => {
+                        if (err2) {
+                            return next(err2);
+                        }
+                        res.setHeader('Content-Type', file[0].contentType);
+                        res.setHeader('Content-Length', file[0].length);
+                        const _img = buffer.toString('base64');
+                        return res.send(_img);
+                    });
+                }
+            });
     } catch (ex) {
         return next(ex);
     }
@@ -91,24 +91,24 @@ router.get('/profesionales/firma/:id*?', Auth.authenticate(), (req: any, res, ne
         fotoProf.find({
             'metadata.idProfesional': id
         }, {}, {
-            sort: {
-                _id: -1
-            }
-        }, (err, file) => {
-            if (file[0] == null) {
-                res.send(null);
-            } else {
-                fotoProf.readById(file[0].id, (err2, buffer) => {
-                    if (err2) {
-                        return next(err2);
-                    }
-                    res.setHeader('Content-Type', file[0].contentType);
-                    res.setHeader('Content-Length', file[0].length);
-                    const firma = buffer.toString('base64');
-                    return res.send(firma);
-                });
-            }
-        });
+                sort: {
+                    _id: -1
+                }
+            }, (err, file) => {
+                if (file[0] == null) {
+                    res.send(null);
+                } else {
+                    fotoProf.readById(file[0].id, (err2, buffer) => {
+                        if (err2) {
+                            return next(err2);
+                        }
+                        res.setHeader('Content-Type', file[0].contentType);
+                        res.setHeader('Content-Length', file[0].length);
+                        const firma = buffer.toString('base64');
+                        return res.send(firma);
+                    });
+                }
+            });
 
     }
     if (req.query.firmaAdmin) {
@@ -117,27 +117,27 @@ router.get('/profesionales/firma/:id*?', Auth.authenticate(), (req: any, res, ne
         fotoAdmin.find({
             'metadata.idSupervisor': idAdmin
         }, {}, {
-            sort: {
-                _id: -1
-            }
-        }, (err, file) => {
-            if (file[0] == null) {
-                res.send(null);
-            } else {
-                let stream1 = fotoAdmin.readById(file[0]._id, (err2, buffer) => {
-                    if (err2) {
-                        return next(err2);
-                    }
-                    res.setHeader('Content-Type', file[0].contentType);
-                    res.setHeader('Content-Length', file[0].length);
-                    let firmaAdmin = {
-                        firma: buffer.toString('base64'),
-                        administracion: file[0].metadata.administracion
-                    };
-                    return res.send(firmaAdmin);
-                });
-            }
-        });
+                sort: {
+                    _id: -1
+                }
+            }, (err, file) => {
+                if (file[0] == null) {
+                    res.send(null);
+                } else {
+                    let stream1 = fotoAdmin.readById(file[0]._id, (err2, buffer) => {
+                        if (err2) {
+                            return next(err2);
+                        }
+                        res.setHeader('Content-Type', file[0].contentType);
+                        res.setHeader('Content-Length', file[0].length);
+                        let firmaAdmin = {
+                            firma: buffer.toString('base64'),
+                            administracion: file[0].metadata.administracion
+                        };
+                        return res.send(firmaAdmin);
+                    });
+                }
+            });
 
     }
 
@@ -590,93 +590,36 @@ router.patch('/profesionales/:id?', Auth.authenticate(), (req, res, next) => {
     });
 });
 
-router.get('/resumen/:id*?', (req, res, next) => {
-
+router.get('/resumen', (req, res, next) => {
     const opciones = {};
     let query;
-    if (req.params.id) {
-        profesional.findById(req.params.id, (err, data) => {
-            if (err) {
-                return next(err);
-            }
-            res.json(data);
-        });
-    } else {
-        if (req.query.nombre) {
-            opciones['nombre'] = utils.makePattern(req.query.nombre);
-        }
-
-        if (req.query.apellido) {
-            opciones['apellido'] = utils.makePattern(req.query.apellido);
-
-        }
-
-        if (req.query.nombreCompleto) {
-            opciones['nombre'] = {
-                $regex: utils.makePattern(req.query.nombreCompleto)
-            };
-            opciones['apellido'] = {
-                $regex: utils.makePattern(req.query.nombreCompleto)
-            };
-        }
-
-        if (req.query.documento !== '') {
-            opciones['documento'] = req.query.documento;
-        }
-
-        if (req.query.fechaNacimiento) {
-            opciones['fechaNacimiento'] = req.query.fechaNacimiento;
-        }
-
-        if (req.query.numeroMatricula) {
-            opciones['matriculas.numero'] = req.query.numeroMatricula;
-        }
-
-        if (req.query.especialidad) {
-            opciones['especialidad.nombre'] = {
-                $regex: utils.makePattern(req.query.especialidad)
-            };
-        }
+    if (req.query.nombre) {
+        opciones['nombre'] = utils.makePattern(req.query.nombre);
     }
 
-    const radix = 10;
-    const skip: number = parseInt(req.query.skip || 0, radix);
-    const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
+    if (req.query.apellido) {
+        opciones['apellido'] = utils.makePattern(req.query.apellido);
 
-    if (req.query.nombreCompleto) {
-        query = profesional.find({
-            apellido: {
-                $regex: utils.makePattern(req.query.nombreCompleto)
-            }
-        }).
-            sort({
-                apellido: 1,
-                nombre: 1
-            });
-    } else {
-        query = profesional.find(opciones).skip(skip).limit(limit);
     }
-
-    const select = [];
+    if (req.query.documento !== '') {
+        opciones['documento'] = req.query.documento;
+    }
+    query = profesional.find(opciones);
     query.exec((err, data) => {
         if (err) {
             return next(err);
         }
-        data.forEach(element => {
-            const resultado = {
-                select: '' + element.nombreCompleto + ' - ' + element.documento + '',
-                idRenovacion: element.id,
-                nombre: element.nombre,
-                apellido: element.apellido,
-                fechaNacimiento: element.fechaNacimiento,
-                documento: element.documento,
-                nacionalidad: element.nacionalidad
+        const resultado = [{
+            select: '' + data[0].nombreCompleto + ' - ' + data[0].documento + '',
+            idRenovacion: data[0].id,
+            nombre: data[0].nombre,
+            apellido: data[0].apellido,
+            fechaNacimiento: data[0].fechaNacimiento,
+            documento: data[0].documento,
+            nacionalidad: data[0].nacionalidad
 
-            };
-            select.push(resultado);
-
-        });
-        res.json(select);
+        }];
+        res.json(resultado);
     });
 });
 
