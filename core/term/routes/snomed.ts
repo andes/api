@@ -4,7 +4,7 @@ import * as utils from '../../../utils/utils';
 import * as cie10 from '../schemas/cie10';
 import { SnomedCIE10Mapping } from './../controller/mapping';
 
-let router = express.Router();
+const router = express.Router();
 
 /**
  * @swagger
@@ -47,11 +47,11 @@ let router = express.Router();
  *         default: 0
  */
 
-router.get('/snomed', function (req, res, next) {
+router.get('/snomed', (req, res, next) => {
     if (!req.query.search && !req.query.refsetId && req.query.search !== '') {
         return next('Debe ingresar un parámetro de búsqueda');
     }
-    let conditions = {
+    const conditions = {
         languageCode: 'spanish',
         conceptActive: true,
         active: true
@@ -67,14 +67,14 @@ router.get('/snomed', function (req, res, next) {
         if (isNaN(req.query.search)) {
             // Busca por palabras
             conditions['$and'] = [];
-            let words = req.query.search.split(' ');
-            words.forEach(function (word) {
+            const words = req.query.search.split(' ');
+            words.forEach((word) => {
                 // normalizamos cada una de las palabras como hace SNOMED para poder buscar palabra a palabra
-                word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08');
-                let expWord = '^' + utils.removeDiacritics(word) + '.*';
+                word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08').replace('ñ', 'n');
+                const expWord = '^' + utils.removeDiacritics(word) + '.*';
 
                 // agregamos la palabra a la condicion
-                conditions['$and'].push({ 'words': { '$regex': expWord } });
+                conditions['$and'].push({ words: { $regex: expWord } });
             });
         } else {
             // Busca por conceptId
@@ -86,7 +86,7 @@ router.get('/snomed', function (req, res, next) {
         }
     }
     // preparamos query
-    let query = textIndexModel.find(conditions, {
+    const query = textIndexModel.find(conditions, {
         conceptId: 1,
         term: 1,
         fsn: 1,
@@ -97,7 +97,7 @@ router.get('/snomed', function (req, res, next) {
     // limitamos resultados
     query.limit(10000);
     query.sort({ term: 1 });
-    query.exec(function (err, data) {
+    query.exec((err, data) => {
         if (err) {
             return next(err);
         }
@@ -115,7 +115,7 @@ router.get('/snomed', function (req, res, next) {
                 return 0;
             });
         }
-        let skip: number = parseInt(req.query.skip || 0, 10);
+        const skip: number = parseInt(req.query.skip || 0, 10);
         res.json(data.slice(skip, req.query.limit || 500));
     });
 });
@@ -135,29 +135,35 @@ router.get('/snomed', function (req, res, next) {
  * @param {String[]} secondaryConcepts  Listado de concepto secundario para mejorar el mapeo.
  */
 
-router.get('/snomed/map', function (req, res, next) {
+router.get('/snomed/map', (req, res, next) => {
     if (!req.query.conceptId) {
         return next('Debe ingresar un concepto principal');
     }
 
-    let conceptId = req.query.conceptId;
-    let paciente = req.query.paciente;
-    let contexto = req.query.secondaryConcepts;
+    const conceptId = req.query.conceptId;
+    const paciente = req.query.paciente;
+    const contexto = req.query.secondaryConcepts;
 
-    let map = new SnomedCIE10Mapping(paciente, contexto);
+    const map = new SnomedCIE10Mapping(paciente, contexto);
 
-    map.transform(conceptId).then(target => {
-        cie10.model.findOne({ codigo: target }).then(cie => {
-            res.json(cie);
-        }).catch(err => {
-            return next(err);
-        });
-
+    map.transform(conceptId).then((target: string) => {
+        if (target) {
+            // Como los mapeos oficiles traen códigos tales como H47.019, S91.001?, ...
+            // busca las opciones H47.19, S91.1?, ...
+            let target2 = target.replace('.00', '.');
+            let target3 = target.replace('.0', '.');
+            cie10.model.findOne({ codigo: { $in: [target, target2, target3] } }).then(cie => {
+                res.json(cie);
+            }).catch(err => {
+                return next(err);
+            });
+        } else {
+            res.json(null);
+        }
     }).catch(error => {
         return next(error);
     });
 });
-
 
 
 export = router;

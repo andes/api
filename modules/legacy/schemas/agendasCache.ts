@@ -1,8 +1,4 @@
 import * as mongoose from 'mongoose';
-import {
-    tipoPrestacionSchema
-} from '../../../core/tm/schemas/tipoPrestacion';
-import * as constantes from './constantes';
 
 export let agendasCacheSchema = new mongoose.Schema({
     id: Object,

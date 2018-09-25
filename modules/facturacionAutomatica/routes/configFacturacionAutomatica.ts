@@ -9,7 +9,7 @@ let router = express.Router();
  * @param {any} conceptId
  * @returns
  */
-router.get('/configFacturacionAutomatica/', async function (req, res, next) {
+router.get('/configFacturacionAutomatica/',  (req, res, next) => {
     if (req.query.conceptId) {
         let query;
         query = facturacionAutomaticaModel.find({});
@@ -21,7 +21,7 @@ router.get('/configFacturacionAutomatica/', async function (req, res, next) {
             res.json(data);
         });
     } else {
-        res.status(400).json({ msg: 'Parámetros incorrectos' });
+        return next('Parámetros incorrectos');
     }
 });
 export = router;

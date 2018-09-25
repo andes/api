@@ -13,9 +13,11 @@ const mobileMiddleware = [
     Auth.authenticate()
 ];
 
+/*
 const publicMiddleware = [
     Auth.authenticatePublic()
 ];
+*/
 
 
 // Habilita/deshabilita módulos de la API
@@ -155,6 +157,22 @@ export const modules = {
         active: true,
         path: './modules/prestamosCarpetas/routes',
         route: '/modules/prestamosCarpetas',
+        middleware: appMiddleware
+    },
+    version: {
+        active: true,
+        path: './modules/version/routes',
+        route: '/version'
+    },
+    webhook: {
+        active: true,
+        path: './modules/webhook/routes',
+        route: '/modules/webhook'
+    },
+    configFacturacionAutomatica: {
+        active: true,
+        path: './modules/facturacionAutomatica/routes',
+        route: '/modules/facturacionAutomatica',
         middleware: appMiddleware
     },
     carpetas: {

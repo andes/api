@@ -10,23 +10,26 @@ import * as operations from './../../legacy/controller/operations';
 import * as turnosController from '../controller/turnosController';
 import * as moment from 'moment';
 import * as debug from 'debug';
+import { EventCore } from '@andes/event-bus';
 
-let router = express.Router();
-let dbgTurno = debug('dbgTurno');
+const router = express.Router();
+const dbgTurno = debug('dbgTurno');
 
-router.get('/turno/:id*?', async function (req, res, next) {
+router.get('/turno/:id*?', async (req, res, next) => {
     try {
-        let resultado = await turnosController.getTurno(req);
+        const resultado = await turnosController.getTurno(req);
         res.json(resultado);
     } catch (err) {
         return next(err);
     }
 
 });
-router.get('/historial', async function (req, res, next) {
+router.get('/historial', async (req, res, next) => {
     try {
-        let resultado = await turnosController.getHistorialPaciente(req);
-        res.json(resultado);
+        const historial = turnosController.getHistorialPaciente(req);
+        const liberados = turnosController.getLiberadosPaciente(req);
+        const turnos = await Promise.all([historial, liberados]);
+        res.json([...turnos[0], ...turnos[1]]);
     } catch (err) {
         return next(err);
     }
@@ -43,16 +46,14 @@ function getAgenda(idAgenda) {
     return agenda.findById(idAgenda).exec();
 }
 
-router.patch('/turno/agenda/:idAgenda', async function (req, res, next) {
-    let continues = ValidateDarTurno.checkTurno(req.body);
+router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
+    const continues = ValidateDarTurno.checkTurno(req.body);
 
     if (continues.valid) {
-        let pacienteRes;
-        let tipoPrestacionRes;
         let agendaRes;
         try {
-            pacienteRes = await getPaciente(req.body.paciente.id);
-            tipoPrestacionRes = await getTipoPrestacion(req.body.tipoPrestacion._id);
+            await getPaciente(req.body.paciente.id);
+            await getTipoPrestacion(req.body.tipoPrestacion._id);
             agendaRes = await getAgenda(req.params.idAgenda);
         } catch (err) {
             return next(err);
@@ -63,14 +64,14 @@ router.patch('/turno/agenda/:idAgenda', async function (req, res, next) {
             esHoy = true;
         }
 
-        let usuario = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
+        const usuario = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
         // Copia la organización desde el token
         usuario.organizacion = (req as any).user.organizacion;
-        let tipoTurno = (esHoy ? 'delDia' : 'programado');
-        let turno = {
+        const tipoTurno = (esHoy ? 'delDia' : 'programado');
+        const turno = {
             horaInicio: moment(new Date(), 'YYYY-MM-DD HH:mm:ss'),
             estado: 'asignado',
-            tipoTurno: tipoTurno,
+            tipoTurno,
             nota: req.body.nota,
             motivoConsulta: req.body.motivoConsulta,
             paciente: req.body.paciente,
@@ -78,14 +79,14 @@ router.patch('/turno/agenda/:idAgenda', async function (req, res, next) {
             updatedAt: new Date(),
             updatedBy: usuario
         };
-        let turnos = ((agendaRes as any).bloques[0].turnos);
+        const turnos = ((agendaRes as any).bloques[0].turnos);
         turnos.push(turno);
         let update;
         let query;
         // seteamos el cupo en -1 cuando la agenda no tiene límite de cupos
         if ((agendaRes as any).cupo > -1) {
-            let nuevoCupo = ((agendaRes as any).cupo > 0) ? (agendaRes as any).cupo - 1 : 0;
-            update = { 'bloques.0.turnos': turnos, 'cupo': nuevoCupo };
+            const nuevoCupo = ((agendaRes as any).cupo > 0) ? (agendaRes as any).cupo - 1 : 0;
+            update = { 'bloques.0.turnos': turnos, cupo: nuevoCupo };
             query = {
                 _id: req.params.idAgenda,
                 cupo: { $gt: 0 }
@@ -107,7 +108,7 @@ router.patch('/turno/agenda/:idAgenda', async function (req, res, next) {
             if (writeOpResult && writeOpResult.value === null) {
                 return next('Turno no disponible');
             } else {
-                let datosOp = {
+                const datosOp = {
                     estado: doc2.estado,
                     paciente: doc2.paciente,
                     prestacion: doc2.tipoPrestacion,
@@ -116,10 +117,12 @@ router.patch('/turno/agenda/:idAgenda', async function (req, res, next) {
                     motivoConsulta: doc2.motivoConsulta
                 };
                 Logger.log(req, 'citas', 'asignarTurno', datosOp);
-                let turnoLog = doc2.bloques[0].turnos[turnos.length - 1];
+                const turnoLog = doc2.bloques[0].turnos[turnos.length - 1];
 
                 LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turnoLog, doc2.bloques[0].id, req.params.idAgenda);
                 res.json(doc2);
+
+                EventCore.emitAsync('citas:turno:asignar', turno);
             }
         });
 
@@ -129,10 +132,8 @@ router.patch('/turno/agenda/:idAgenda', async function (req, res, next) {
 });
 
 
-
-
-
 /**
+ * DAR UN TURNO
  * Espera un objeto como este:
  * // Datos del Turno
     let datosTurno = {
@@ -145,18 +146,16 @@ router.patch('/turno/agenda/:idAgenda', async function (req, res, next) {
         motivoConsulta: String
     };
  */
-router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async function (req, res, next) {
+router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res, next) => {
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
-    let continues = ValidateDarTurno.checkTurno(req.body);
+    const continues = ValidateDarTurno.checkTurno(req.body);
 
 
     if (continues.valid) {
-        let pacienteRes;
-        let tipoPrestacionRes;
         let agendaRes;
         try {
-            pacienteRes = await getPaciente(req.body.paciente.id);
-            tipoPrestacionRes = await getTipoPrestacion(req.body.tipoPrestacion._id);
+            await getPaciente(req.body.paciente.id);
+            await getTipoPrestacion(req.body.tipoPrestacion._id);
             agendaRes = await getAgenda(req.params.idAgenda);
         } catch (err) {
             return next(err);
@@ -190,7 +189,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async functio
 
                 for (let y = 0; y < (agendaRes as any).bloques[posBloque].turnos.length; y++) {
                     if ((agendaRes as any).bloques[posBloque].turnos[y]._id.equals(req.params.idTurno)) {
-                        let turnoSeleccionado = (agendaRes as any).bloques[posBloque].turnos[y];
+                        const turnoSeleccionado = (agendaRes as any).bloques[posBloque].turnos[y];
                         if (turnoSeleccionado.estado === 'disponible') {
                             posTurno = y;
                         } else {
@@ -224,7 +223,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async functio
 
         // Verifica si el turno se encuentra todavia disponible
         // Si quedan turnos
-        let update: any = {};
+        const update: any = {};
         switch (tipoTurno) {
             case ('delDia'):
                 update['bloques.' + posBloque + '.restantesDelDia'] = countBloques.delDia - 1;
@@ -242,7 +241,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async functio
                 update['bloques.' + posBloque + '.restantesGestion'] = countBloques.gestion - 1;
                 break;
         }
-        let usuario = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
+        const usuario = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
         // Copia la organización desde el token
         usuario.organizacion = (req as any).user.organizacion;
 
@@ -254,10 +253,10 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async functio
         let etiquetaMotivoConsulta: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.motivoConsulta';
         let etiquetaEstadoFacturacion: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.estadoFacturacion';
 
-        let etiquetaReasignado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.reasignado';
-        let etiquetaUpdateAt: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedAt';
-        let etiquetaUpdateBy: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedBy';
-        let etiquetaPrimeraVez: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.primeraVez';
+        const etiquetaReasignado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.reasignado';
+        const etiquetaUpdateAt: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedAt';
+        const etiquetaUpdateBy: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedBy';
+        // let etiquetaPrimeraVez: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.primeraVez';
 
         update[etiquetaEstado] = 'asignado';
         update[etiquetaEstadoFacturacion] = 'sinFacturar';
@@ -276,7 +275,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async functio
 
         // update[etiquetaPrimeraVez] = await esPrimerPaciente(agenda, req.body.paciente.id, ['primerPrestacion', 'primerProfesional']);
 
-        let query = {
+        const query = {
             _id: req.params.idAgenda,
         };
 
@@ -294,7 +293,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async functio
             if (writeOpResult && writeOpResult.value === null) {
                 return next('noDisponible');
             } else {
-                let datosOp = {
+                const datosOp = {
                     estado: update[etiquetaEstado],
                     paciente: update[etiquetaPaciente],
                     prestacion: update[etiquetaPrestacion],
@@ -307,12 +306,17 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async functio
 
                 LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turno, req.params.idBloque, req.params.idAgenda);
 
+                EventCore.emitAsync('citas:turno:asignar', turno);
+
                 // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
                 // Donde doc2 es el documeto Agenda actualizado
                 operations.cacheTurnos(doc2);
                 // Fin de insert cache
                 res.json(agendaRes);
+
             }
+
+
         });
     } else {
         return next('Los datos del paciente son inválidos');
@@ -320,35 +324,35 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async functio
 });
 
 
-router.patch('/turno/:idTurno/:idBloque/:idAgenda', async function (req, res, next) {
+router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
     let agendaRes;
     try {
         agendaRes = await getAgenda(req.params.idAgenda);
     } catch (err) {
         return next(err);
     }
-    let indexBloque = (agendaRes as any).bloques.findIndex(bloq => {
+    const indexBloque = (agendaRes as any).bloques.findIndex(bloq => {
         return (bloq.id === req.params.idBloque);
     });
-    let indexTurno = (agendaRes as any).bloques[indexBloque].turnos.findIndex(t => {
+    const indexTurno = (agendaRes as any).bloques[indexBloque].turnos.findIndex(t => {
         return (t.id === req.params.idTurno);
     });
-    let update = {};
+    const update = {};
     if (req.body.avisoSuspension) {
-        let etiquetaAvisoSuspension: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.avisoSuspension';
+        const etiquetaAvisoSuspension: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.avisoSuspension';
         update[etiquetaAvisoSuspension] = req.body.avisoSuspension;
     }
     if (req.body.motivoConsulta) {
-        let etiquetaMotivoConsulta: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.motivoConsulta';
+        const etiquetaMotivoConsulta: string = 'bloques.' + indexBloque + '.turnos.' + indexTurno + '.motivoConsulta';
         update[etiquetaMotivoConsulta] = req.body.motivoConsulta;
 
     }
-    let query = {
+    const query = {
         _id: req.params.idAgenda,
     };
     dbgTurno('query --->', query);
 
-    agenda.update(query, { $set: update }, function (error, data) {
+    agenda.update(query, { $set: update }, (error, data) => {
         if (error) {
             return next(error);
         }
@@ -356,9 +360,12 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', async function (req, res, ne
     });
 });
 
-router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async function (req, res, next) {
+/**
+ * se marca como reasginado un turno suspendido
+ */
+router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res, next) => {
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
-    let continues = ValidateDarTurno.checkTurno(req.body.turno);
+    const continues = ValidateDarTurno.checkTurno(req.body.turno);
 
     if (continues.valid) {
         // Se obtiene la agenda que se va a modificar
@@ -379,13 +386,13 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async function 
             posTurno = (agendaRes as any).sobreturnos.findIndex(sobreturno => Object.is(req.params.idTurno, String(sobreturno._id)));
             etiquetaTurno = 'sobreturnos.' + posTurno;
         }
-        let usuario = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
+        const usuario = (Object as any).assign({}, (req as any).user.usuario || (req as any).user.app);
         // Copia la organización desde el token
         usuario.organizacion = (req as any).user.organizacion;
 
-        let update: any = {};
+        const update: any = {};
 
-        let query = {
+        const query = {
             _id: req.params.idAgenda,
         };
         update[etiquetaTurno] = req.body.turno;
@@ -398,7 +405,7 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async function 
                 if (writeOpResult && writeOpResult.value === null) {
                     return next('No se pudo actualizar los datos del turno');
                 } else {
-                    let datosOp = {
+                    const datosOp = {
                         turno: update[etiquetaTurno]
                     };
                     // TODO: loggear estas operaciones sobre turnos de forma mas clara.
@@ -411,7 +418,7 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async function 
                 res.json(doc2);
 
                 if (req.body.turno.reasignado && req.body.turno.reasignado.siguiente) {
-                    let turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
+                    const turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
                     LoggerPaciente.logTurno(req, 'turnos:reasignar', req.body.turno.paciente, turno, req.params.idBloque, req.params.idAgenda);
 
                     NotificationService.notificarReasignar(req.params);

@@ -1,10 +1,13 @@
 {
   "name": "api",
-  "version": "3.5.0",
+  "version": "3.8.0",
   "description": "API para ANDES",
   "main": "index.js",
   "dependencies": {
+    "@andes/event-bus": "file:packages/event-bus",
+    "@andes/fhir": "file:packages/fhir",
     "@andes/match": "^1.1.12",
+    "@andes/mongoose-plugin-audit": "file:packages/mongoose-plugin-audit",
     "@types/async": "^2.0.49",
     "@types/bcrypt-nodejs": "0.0.30",
     "@types/core-js": "^0.9.36",
@@ -40,14 +43,14 @@
     "is-reachable": "^2.3.2",
     "jsonwebtoken": "^8.2.1",
     "ldapjs": "^1.0.1",
-    "libxmljs": "0.18.7",
+    "libxmljs": "^0.19.3",
     "mime-db": "^1.29.0",
     "moment": "^2.19.3",
     "mongoose": "^5.0.14",
     "mongoose-gridfs": "^0.3.2",
     "mssql": "^4.1.0",
     "node-pushnotifications": "^1.0.18",
-    "node-sass": "^4.8.1",
+    "node-sass": "^4.9.3",
     "node-schedule": "^1.2.4",
     "nodemailer": "^4.6.2",
     "passport": "^0.3.2",
@@ -62,6 +65,7 @@
     "stream": "0.0.2",
     "supports-color": "^4.2.1",
     "swagger-jsdoc": "^1.7.0",
+    "twitter": "^1.7.1",
     "typescript": "^2.6.2",
     "ws": "^3.2.0",
     "xmlbuilder": "^9.0.4",
@@ -76,6 +80,7 @@
     "tsc:w": "tsc -w",
     "jobs": "tsc && node jobs/scheduler.js",
     "lint": "tslint --project .",
+    "lint:fix": "tslint --project . --fix",
     "parse": "apg -i core/term/controller/grammar/Expression-ABNF.txt -o core/term/controller/grammar/grammar.js"
   },
   "repository": {
@@ -92,7 +97,7 @@
     "before": "0.0.1",
     "chai": "^4.1.2",
     "nodemon": "^1.17.4",
-    "tslint": "^5.9.1",
-    "tslint-eslint-rules": "^4.1.1"
+    "tslint": "^5.11.0",
+    "tslint-eslint-rules": "^5.3.1"
   }
 }

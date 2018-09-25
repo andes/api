@@ -24,7 +24,7 @@ import * as mongoose from 'mongoose';
 import * as ubicacionSchema from './ubicacion';
 
 
-let schema = new mongoose.Schema({
+const schema = new mongoose.Schema({
     tipo: {
         type: String,
         required: false

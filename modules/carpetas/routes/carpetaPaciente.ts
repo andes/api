@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as carpetaPaciente from '../schemas/carpetaPaciente';
 
-let router = express.Router();
+const router = express.Router();
 
 /**
  * @swagger
@@ -56,10 +56,10 @@ let router = express.Router();
  *           $ref: '#/definitions/carpetaPaciente'
  */
 
-router.get('/carpetasPacientes/:id*?', function (req, res, next) {
+router.get('/carpetasPacientes/:id*?', (req, res, next) => {
 
     if (req.params.id) {
-        carpetaPaciente.findById(req.params.id, function (err, data) {
+        carpetaPaciente.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -80,7 +80,7 @@ router.get('/carpetasPacientes/:id*?', function (req, res, next) {
                     return next(err);
                 }
                 if (data && data.length > 0) {
-                    let carpetaEfector = data[0].carpetaEfectores.find((carpeta) => {
+                    const carpetaEfector = data[0].carpetaEfectores.find((carpeta) => {
                         return (carpeta.organizacion.id === req.query.organizacion);
                     });
                     if (carpetaEfector) {
