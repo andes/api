@@ -34,11 +34,16 @@ router.get('/profesionales/ultimoPosgrado', async (req, res, next) => {
 
 router.get('/profesionales/estadisticas', async (req, res, next) => {
     let estadisticas = {};
-    estadisticas['total'] = await profesional.count({ profesionalMatriculado: true });
-    estadisticas['totalMatriculados'] = await profesional.count({ rematriculado: 0, profesionalMatriculado: true });
-    estadisticas['totalRematriculados'] = await profesional.count({ rematriculado: 1, profesionalMatriculado: true });
+    let total = profesional.count({ profesionalMatriculado: true });
+    let totalMatriculados = profesional.count({ rematriculado: 0, profesionalMatriculado: true });
+    let totalRematriculados = profesional.count({ rematriculado: 1, profesionalMatriculado: true })
+    Promise.all([total, totalMatriculados, totalRematriculados]).then(values => {
+        estadisticas['total'] = values[0];
+        estadisticas['totalMatriculados'] = values[1];
+        estadisticas['totalRematriculados'] = values[2];
+        res.json(estadisticas);
+    });
 
-    res.json(estadisticas);
 
 });
 
