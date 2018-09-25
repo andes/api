@@ -14,133 +14,6 @@ import { toArray } from '../../../utils/utils';
 const logD = debug('paciente-controller');
 const router = express.Router();
 
-/**
- * @swagger
- * definition:
- *   paciente:
- *     properties:
- *       documento:
- *          type: string
- *       cuil:
- *          type: string
- *       activo:
- *          type: boolean
- *       estado:
- *          type: string
- *          enum:
- *              - temporal
- *              - identificado
- *              - validado
- *              - recienNacido
- *              - extranjero
- *       nombre:
- *          type: string
- *       apellido:
- *          type: string
- *       alias:
- *          type: string
- *       contacto:
- *          type: array
- *          items:
- *              type: object
- *              properties:
- *                  tipo:
- *                      type: string
- *                      enum:
- *                          - Teléfono Fijo
- *                          - Teléfono Celular
- *                          - Email
- *                  valor:
- *                      type: string
- *                  ranking:
- *                      type: number
- *                      format: float
- *                  ultimaActualizacion:
- *                      type: string
- *                      format: date
- *                  activo:
- *                      type: boolean
- *       direccion:
- *          type: array
- *          items:
- *              $ref: '#/definitions/direccion'
- *       sexo:
- *          type: string
- *          enum:
- *              - femenino
- *              - masculino
- *              - otro
- *       genero:
- *          type: string
- *          enum:
- *              - femenino
- *              - masculino
- *              - otro
- *       fechaNacimiento:
- *          type: string
- *          format: date
- *       fechaFallecimiento:
- *          type: string
- *          format: date
- *       estadoCivil:
- *          type: string
- *          enum:
- *              - casado
- *              - separado
- *              - divorciado
- *              - viudo
- *              - soltero
- *              - otro
- *       foto:
- *          type: string
- *       relaciones:
- *          type: array
- *          items:
- *              type: object
- *              properties:
- *                  relacion:
- *                      type: string
- *                      enum:
- *                          - padre
- *                          - madre
- *                          - hijo
- *                          - tutor
- *                  nombre:
- *                      type: string
- *                  apellido:
- *                      type: string
- *                  documento:
- *                      type: string
- *       financiador:
- *          type: array
- *          items:
- *              type: object
- *              properties:
- *                  id:
- *                      type: string
- *                  nombre:
- *                      type: string
- *                  activo:
- *                      type: boolean
- *                  fechaAlta:
- *                      type: string
- *                      format: date
- *                  fechaBaja:
- *                      type: string
- *                      format: date
- *                  ranking:
- *                      type: number
- *       claveBloking:
- *          type: array
- *          items:
- *              type: string
- *       entidadesValidadoras:
- *          type: array
- *          items:
- *              type: string
- */
-
-
 /* Consultas de estado de pacientes para el panel de información */
 router.get('/pacientes/counts/', (req, res, next) => {
     /* Este get es público ya que muestra sólamente la cantidad de pacientes en MPI */
@@ -230,101 +103,71 @@ router.get('/pacientes/dashboard/', async (req, res, next) => {
     result.logs = await toArray(log.aggregate(logAggregate).cursor({ batchSize: 1000 }).exec());
     res.json(result);
 
-    // paciente.aggregate(estadoAggregate).cursor({batchSize: 1000}).exec().on('data', function(doc) {
-    //     result.paciente.push(doc);
-    // }).on('end', function () {
-    //     pacienteMpi.aggregate(estadoAggregate).cursor({batchSize: 1000}).exec().on('data', function(doc) {
-    //         result.pacienteMpi.push(doc);
-    //     }).on('end', function () {
-    //         log.aggregate(logAggregate).cursor({batchSize: 1000}).exec().on('data', function(doc) {
-    //             result.logs.push(doc);
-    //         }).on('end', function () {
-    //             res.json(result);
-    //         });
-    //     });
-    // });
 });
 
-/**
- * @swagger
- * /pacientes:
- *   get:
- *     tags:
- *       - Paciente
- *     description: Retorna un arreglo de objetos Paciente
- *     summary: Buscar pacientes
- *     produces:
- *       - application/json
- *     parameters:
- *       - name: nombre
- *         in: query
- *         description: El nombre del paciente
- *         required: false
- *         type: string
- *       - name: apellido
- *         in: query
- *         description: El apellido del paciente
- *         required: false
- *         type: string
- *       - name: documento
- *         in: query
- *         description: El documento del paciente
- *         required: false
- *         type: string
- *       - name: fechaNacimiento
- *         in: query
- *         description: El documento del paciente
- *         required: false
- *         type: string
- *         format: date
- *       - name: estado
- *         in: query
- *         description: El estado del paciente
- *         required: false
- *         type: string
- *         enum:
- *              - temporal
- *              - identificado
- *              - validado
- *              - recienNacido
- *              - extranjero
- *       - name: sexo
- *         in: query
- *         description:
- *         required: false
- *         type: string
- *         enum:
- *              - femenino
- *              - masculino
- *              - otro
- *     responses:
- *       200:
- *         description: un arreglo de objetos paciente
- *         schema:
- *           $ref: '#/definitions/paciente'
- *       400:
- *         description: Error- Agregar parámetro de búsqueda
- *
- * /pacientes/{id}:
- *   get:
- *     tags:
- *       - Paciente
- *     description: Retorna un objeto Paciente
- *     summary: Buscar paciente por ID
- *     produces:
- *       - application/json
- *     parameters:
- *       - name: id
- *         in: path
- *         description: _Id del paciente
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: un arreglo con un paciente
- *         schema:
- *           $ref: '#/definitions/paciente'
- */
+
+router.get('/pacientes/auditoria/', (req, res, next) => {
+    let filtro;
+    switch (req.query.estado) {
+        case 'validados':
+            filtro = {
+                estado: 'validado'
+            };
+            break;
+        case 'temporales':
+            filtro = {
+                estado: 'temporal'
+            };
+            break;
+        case 'fallecidos':
+            filtro = {
+                fechaFallecimiento: {
+                    $exists: true
+                }
+            };
+            break;
+    }
+    filtro['activo'] = req.query.activo === 'true' ? true : false;
+
+    let query = paciente.find(filtro);
+    query.exec((err, data) => {
+        if (err) {
+            return next(err);
+        }
+        res.json(data);
+    });
+
+});
+
+router.get('/pacientes/auditoria/vinculados/', (req, res, next) => {
+    let filtro = { 'identificadores.entidad': 'ANDES' };
+    // filtro['activo'] = req.query.activo === 'true' ? true : false;
+    let query = paciente.find(filtro);
+    query.exec((err, data) => {
+        if (err) {
+            return next(err);
+        }
+        res.json(data);
+    });
+
+});
+
+router.get('/pacientes/auditoria/pacientesValidados/', (req, res, next) => {
+    // if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
+    //     return next(403);
+    // }
+    // Logger de la consulta a ejecutar
+    // Logger.log(req, 'mpi', 'query', {
+    //     elasticSearch: req.query
+    // });
+
+    controller.matchingAuditoria(req.query).then(result => {
+        res.send(result);
+    }).catch(error => {
+        return next(error);
+    });
+});
+
 
 // Simple mongodb query by ObjectId --> better performance
 router.get('/pacientes/:id', (req, res, next) => {
@@ -350,69 +193,6 @@ router.get('/pacientes/:id', (req, res, next) => {
 
 });
 
-/**
- * @swagger
- * /pacientes:
- *   get:
- *     tags:
- *       - Paciente
- *     description: Retorna un arreglo de objetos Paciente
- *     summary: Buscar pacientes usando ElasticSearch
- *     produces:
- *       - application/json
- *     parameters:
- *       - name: type
- *         description: tipo de búsqueda
- *         in: body
- *         required: true
- *         type: string
- *         enum:
- *              - simplequery
- *              - multimatch
- *              - suggest
- *       - name: cadenaInput
- *         description: pámetro requerido para multimatch
- *         in: body
- *         type: string
- *       - name: claveBlocking
- *         description: pámetro requerido para suggest
- *         in: body
- *         type: string
- *       - name: percentage
- *         description: pámetro requerido para suggest
- *         in: body
- *         type: boolean
- *       - name: documento
- *         description: pámetro requerido para suggest y simplequery
- *         in: body
- *         type: string
- *       - name: nombre
- *         description: pámetro requerido para suggest y simplequery
- *         in: body
- *         type: string
- *       - name: apellido
- *         description: pámetro requerido para suggest y simplequery
- *         in: body
- *         type: string
- *       - name: sexo
- *         description: pámetro requerido para suggest y simplequery
- *         in: body
- *         type: string
- *       - name: fechaNacimiento
- *         description: pámetro requerido para suggest
- *         in: body
- *         type: Date
- *       - name: escaneado
- *         description: pámetro requerido para suggest
- *         in: body
- *         type: boolean
- *     responses:
- *       200:
- *         description: un arreglo de objetos paciente
- *       400:
- *         description: Error- Agregar parámetro de búsqueda
- *
- */
 // Search using elastic search
 router.get('/pacientes', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
@@ -533,6 +313,9 @@ router.delete('/pacientes/mpi/:id', (req, res, next) => {
         }).catch(error => {
             return next(error);
         });
+        Auth.audit(patientFound, req);
+    }).catch((error) => {
+        return next(error);
     });
 });
 
@@ -729,6 +512,12 @@ router.delete('/pacientes/:id', (req, res, next) => {
     const ObjectId = mongoose.Types.ObjectId;
     const objectId = new ObjectId(req.params.id);
     controller.deletePacienteAndes(objectId).then((patientFound: any) => {
+        let connElastic = new ElasticSync();
+        connElastic.delete(patientFound._id.toString()).then(() => {
+            res.json(patientFound);
+        }).catch(error => {
+            return next(error);
+        });
         Auth.audit(patientFound, req);
     }).catch((error) => {
         return next(error);
@@ -797,7 +586,9 @@ router.patch('/pacientes/:id', (req, res, next) => {
                     resultado.paciente.contacto = req.body.contacto;
                     try {
                         controller.updateTurnosPaciente(resultado.paciente);
-                    } catch (error) { return next(error); }
+                    } catch (error) {
+                        return next(error);
+                    }
                     break;
                 case 'linkIdentificadores':
                     controller.linkIdentificadores(req, resultado.paciente);
@@ -827,6 +618,12 @@ router.patch('/pacientes/:id', (req, res, next) => {
             } else {
                 pacienteAndes = resultado.paciente;
             }
+            let connElastic = new ElasticSync();
+            connElastic.sync(pacienteAndes).then(() => {
+                res.json(pacienteAndes);
+            }).catch(error => {
+                return next(error);
+            });
             Auth.audit(pacienteAndes, req);
             pacienteAndes.save((errPatch) => {
                 if (errPatch) {

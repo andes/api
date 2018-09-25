@@ -37,7 +37,12 @@ router.get('/turnos', async (req: any, res, next) => {
 
     const pacienteId = req.user.pacientes[0].id;
 
-    matchTurno['bloques.turnos.paciente.id'] = mongoose.Types.ObjectId(pacienteId);
+    let { paciente } = await controllerPaciente.buscarPaciente(pacienteId);
+    if (!paciente) {
+        return next({ message: 'no existe el paciente' });
+    }
+
+    matchTurno['bloques.turnos.paciente.id'] = { $in: paciente.vinculos };
 
     // matchTurno['estado'] = 'publicada';
 

@@ -60,6 +60,37 @@ export class ElasticSync {
         return this.connElastic.search(searchObj);
     }
 
+    public searchMultipleFields(query) {
+        let searchObj = {};
+        if (query) {
+            let must = [];
+            const terms = {};
+
+            for (let key in query) {
+                const match = {};
+                if (key === 'claveBlocking') {
+                    terms[key] = query[key].map(s => s.toLowerCase());
+                    must.push({terms});
+                } else {
+                    match[key] = query[key];
+                    must.push({ match });
+                }
+            }
+            searchObj = {
+                index: this.INDEX,
+                size: 1000,
+                body: {
+                    query : {
+                        bool: {
+                            must
+                       }
+                    }
+                }
+            };
+        }
+        return this.connElastic.search(searchObj);
+    }
+
     public create(id, data) {
         return new Promise((resolve, reject) => {
             this.connElastic.create({
@@ -88,26 +119,6 @@ export class ElasticSync {
             }
         });
     }
-
-    // Cambiamos este método ya que teníamos problemas con el metadata de Elastic para pacientes viejos creados con mongoconnector
-    // public update(id, data) {
-    //     return new Promise((resolve, reject) => {
-    //         this.connElastic.update({
-    //             index: this.INDEX,
-    //             type: this.TYPE,
-    //             id,
-    //             body: {
-    //                 doc: data
-    //             }
-    //         }, function (error, response) {
-    //             if (error) {
-    //                 console.log('error gros en update elastico', error, data);
-    //                 reject(error);
-    //             }
-    //             resolve(true);
-    //         });
-    //     });
-    // }
 
     public delete(id) {
         return new Promise((resolve, reject) => {

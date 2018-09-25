@@ -9,6 +9,7 @@ import * as moment from 'moment';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import { Matching } from '@andes/match';
 
+let ObjectId = mongoose.Types.ObjectId;
 /*
 interface IUserModel extends mongoose.Document {
     nombre: String;
@@ -99,6 +100,14 @@ pacienteSchema.pre('save', function (next) {
     }
     next();
 
+});
+
+pacienteSchema.virtual('vinculos').get(function () {
+    if (this.identificadores) {
+        let identificadores = this.identificadores.filter(i => i.entidad === 'ANDES').map(i => ObjectId(i.valor));
+        return [this._id, ...identificadores];
+    }
+    return [];
 });
 
 /* Se definen los campos virtuals */

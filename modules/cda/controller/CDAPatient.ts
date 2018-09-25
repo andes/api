@@ -6,7 +6,6 @@ import { Organization } from './class/Organization';
 import { Author } from './class/Author';
 import { Body, Component, ImageComponent } from './class/Body';
 import { CDABuilder } from './builder/CdaBuilder';
-
 import * as base64_stream from 'base64-stream';
 import { makeFs } from '../schemas/CDAFiles';
 import * as Stream from 'stream';
@@ -423,10 +422,7 @@ export async function CDAExists(id, fecha, orgId) {
  * listado de CDA por paciente y tipo de prestación
  */
 
-export function searchByPatient(pacienteId, prestacion, {
-    limit,
-    skip
-}): Promise<any[]> {
+export function searchByPatient(pacienteId, prestacion, { limit, skip }): Promise<any[]> {
     return new Promise(async (resolve, reject) => {
         const CDAFiles = makeFs();
         const conditions: any = {
