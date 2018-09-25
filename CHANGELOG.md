@@ -137,5 +137,6 @@
 * CITAS: Se soluciona incidente con el número de carpeta de un paciente.
 * HUDS - Prestación Screening de otoemisión acústica neonatal: Si en una consulta de Screening de Otoemisión acústica se registran en antecedentes, estos se visualizan cuando se inicia una consulta nueva de Screening de Otoemisión del mismo paciente. (https://github.com/andes/app/issues/617)
 * RUP: Fix en la validación de RUP para consultas de niño sano.
+* CDA-LABORATORIO: Se soluciona el problema que mostraba siempre a SUBSECRETARIA DE SALUD como efector.
 
 
