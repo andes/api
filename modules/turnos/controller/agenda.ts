@@ -919,26 +919,27 @@ export function updatePaciente(pacienteModified, turno) {
         }
         const bloques: any = data.bloques;
         let indiceTurno = -1;
+        let i = 0;
+        while (indiceTurno < 0 && i < bloques.length) {
+            indiceTurno = bloques[i].turnos.findIndex(elem => elem._id.toString() === turno._id.toString());
 
-        for (const bloque of bloques) {
-            indiceTurno = bloque.turnos.findIndex(elem => elem._id.toString() === turno._id.toString());
-
-            if (indiceTurno > 0) { // encontro el turno en este bloque?
-                bloque.turnos[indiceTurno].paciente.nombre = pacienteModified.nombre;
-                bloque.turnos[indiceTurno].paciente.apellido = pacienteModified.apellido;
-                bloque.turnos[indiceTurno].paciente.documento = pacienteModified.documento;
+            if (indiceTurno > -1) { // encontro el turno en este bloque?
+                bloques[i].turnos[indiceTurno].paciente.nombre = pacienteModified.nombre;
+                bloques[i].turnos[indiceTurno].paciente.apellido = pacienteModified.apellido;
+                bloques[i].turnos[indiceTurno].paciente.documento = pacienteModified.documento;
                 if (pacienteModified.contacto && pacienteModified.contacto[0]) {
-                    bloque.turnos[indiceTurno].paciente.telefono = pacienteModified.contacto[0].valor;
+                    bloques[i].turnos[indiceTurno].paciente.telefono = pacienteModified.contacto[0].valor;
                 }
-                bloque.turnos[indiceTurno].paciente.carpetaEfectores = pacienteModified.carpetaEfectores;
-                bloque.turnos[indiceTurno].paciente.fechaNacimiento = pacienteModified.fechaNacimiento;
+                bloques[i].turnos[indiceTurno].paciente.carpetaEfectores = pacienteModified.carpetaEfectores;
+                bloques[i].turnos[indiceTurno].paciente.fechaNacimiento = pacienteModified.fechaNacimiento;
             }
+            i++;
         }
 
         if (indiceTurno < 0) { // no se encontro el turno en los bloques de turnos?
             indiceTurno = data.sobreturnos.findIndex(elem => elem._id.toString() === turno._id.toString());
 
-            if (indiceTurno > 0) { // esta el turno entre los sobreturnos?
+            if (indiceTurno > -1) { // esta el turno entre los sobreturnos?
                 data.sobreturnos[indiceTurno].paciente.nombre = pacienteModified.nombre;
                 data.sobreturnos[indiceTurno].paciente.apellido = pacienteModified.apellido;
                 data.sobreturnos[indiceTurno].paciente.documento = pacienteModified.documento;
@@ -949,8 +950,7 @@ export function updatePaciente(pacienteModified, turno) {
                 data.sobreturnos[indiceTurno].paciente.fechaNacimiento = pacienteModified.fechaNacimiento;
             }
         }
-
-        if (indiceTurno > 0) {
+        if (indiceTurno > -1) {
             try {
                 Auth.audit(data, (userScheduler as any));
                 saveAgenda(data);

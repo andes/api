@@ -787,8 +787,8 @@ router.patch('/pacientes/:id', (req, res, next) => {
                     try { // Actualizamos los turnos activos del paciente
                         const repetida = await controller.checkCarpeta(req, resultado.paciente);
                         if (!repetida) {
-                            // controller.updateTurnosPaciente(resultado.paciente);
                             controller.updateCarpetaEfectores(req, resultado.paciente);
+                            controller.updateTurnosPaciente(resultado.paciente);
                         } else {
                             return next('El numero de carpeta ya existe');
                         }
