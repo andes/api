@@ -5,6 +5,7 @@ import { tipoPrestacionSchema, ITipoPrestacion } from '../../../core/tm/schemas/
 import { espacioFisicoSchema, IEspacioFisico } from '../../../modules/turnos/schemas/espacioFisico';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import * as constantes from './constantes';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 // [TODO] acomodar los schemas nombreApellido y nombreSchema
 // [TODO] implementar interface paciente
@@ -48,7 +49,7 @@ export const SolicitudCarpetaManualSchema = new Schema({
     }
 });
 
-SolicitudCarpetaManualSchema.plugin(require('../../../mongoose/audit'));
+SolicitudCarpetaManualSchema.plugin(AuditPlugin);
 
 export const SolicitudCarpetaManual: Model<ISolicitudManual> = model<ISolicitudManual>('solicitudCarpetaManual', SolicitudCarpetaManualSchema, 'solicitudCarpetaManual');
 

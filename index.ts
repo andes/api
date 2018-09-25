@@ -3,7 +3,6 @@ import * as debug from 'debug';
 import { initAPI } from './initialize';
 import { Websockets } from './websockets';
 
-
 // Inicializa express
 const app = express();
 initAPI(app);
