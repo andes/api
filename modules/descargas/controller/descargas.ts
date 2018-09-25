@@ -24,9 +24,6 @@ export class Documento {
     // private static locale = 'es-ES';
     public static timeZone = 'America/Argentina/Buenos_Aires';
 
-    private static headerHTML = fs.readFileSync('./templates/andes/html/header.html');
-    private static footerHTML = fs.readFileSync('./templates/andes/html/footer.html');
-
     /**
      * Opciones default de PDF rendering
      */
