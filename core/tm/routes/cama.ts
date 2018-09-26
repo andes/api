@@ -242,7 +242,7 @@ router.patch('/camas/cambiaEstado/:idCama', Auth.authenticate(), (req, res, next
 
         } else if (req.body.estado === 'disponible') {
 
-            if (ultimoEstado.estado !== 'desocupada' && ultimoEstado.estado !== 'bloqueada') {
+            if (ultimoEstado.estado !== 'desocupada' && ultimoEstado.estado !== 'ocupada' && ultimoEstado.estado !== 'bloqueada') {
                 return res.status(500).send('La cama debe estar disponible');
             }
             // actualizamos el estadode la cama
