@@ -44,11 +44,7 @@ export async function vencimientoMatriculaPosgrado(done) {
                         if (profesionales[_n].formacionPosgrado[_i].matriculado === true && profesionales[_n].formacionPosgrado[_i].matriculacion[profesionales[_n].formacionPosgrado[_i].matriculacion.length - 1].fin.getFullYear() < new Date().getFullYear()) {
                             profesionales[_n].formacionPosgrado[_i].matriculado = false;
                             profesionales[_n].formacionPosgrado[_i].papelesVerificados = false;
-                            const datosActualizacionFormacionGrado = {
-                                descripcion: 'updateEstadoPosGrado',
-                                data: profesionales[_n].formacionPosgrado,
-                            };
-
+                            console.log(profesionales[_n].documento)
                             await actualizar(profesionales[_n]);
 
                         }
@@ -58,7 +54,7 @@ export async function vencimientoMatriculaPosgrado(done) {
         }
 
     }
-    done();
+     done();
 }
 
 /**

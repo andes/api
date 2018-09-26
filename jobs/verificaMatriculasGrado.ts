@@ -2,8 +2,7 @@
 import { vencimientoMatriculaGrado, vencimientoMatriculaPosgrado } from './../core/tm/controller/profesional';
 
 async function run(done) {
-    await vencimientoMatriculaGrado(done);
-    // await vencimientoMatriculaPosgrado();
+     await vencimientoMatriculaGrado(done);
 }
 
 export = run;

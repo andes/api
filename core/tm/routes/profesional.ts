@@ -614,16 +614,20 @@ router.get('/resumen', (req, res, next) => {
         if (err) {
             return next(err);
         }
-        const resultado = [{
-            select: '' + data[0].nombreCompleto + ' - ' + data[0].documento + '',
-            idRenovacion: data[0].id,
-            nombre: data[0].nombre,
-            apellido: data[0].apellido,
-            fechaNacimiento: data[0].fechaNacimiento,
-            documento: data[0].documento,
-            nacionalidad: data[0].nacionalidad
-
-        }];
+        let resultado = [];
+        if(data.length > 0){
+             resultado = [{
+                select: '' + data[0].nombreCompleto + ' - ' + data[0].documento + '',
+                idRenovacion: data[0].id,
+                nombre: data[0].nombre,
+                apellido: data[0].apellido,
+                fechaNacimiento: data[0].fechaNacimiento,
+                documento: data[0].documento,
+                nacionalidad: data[0].nacionalidad
+    
+            }];
+           
+        }
         res.json(resultado);
     });
 });
@@ -645,6 +649,13 @@ router.post('/profesionales/formacionCero', async (req, res, next) => {
     res.json(ress);
 
 });
+
+router.post('/profesionales/vencimientoPosGrado', async (req, res, next) => {
+    let ress = await vencimientoMatriculaPosgrado();
+    res.json(ress);
+
+});
+
 
 
 export = router;
