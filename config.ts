@@ -165,6 +165,16 @@ export const modules = {
         route: '/modules/top',
         middleware: appMiddleware
     },
+    version: {
+        active: true,
+        path: './modules/version/routes',
+        route: '/version'
+    },
+    webhook: {
+        active: true,
+        path: './modules/webhook/routes',
+        route: '/modules/webhook'
+    },
     configFacturacionAutomatica: {
         active: true,
         path: './modules/facturacionAutomatica/routes',
