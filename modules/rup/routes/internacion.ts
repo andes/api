@@ -9,7 +9,7 @@ const router = express.Router();
 
 router.get('/internaciones/ultima/:idPaciente', (req, res, next) => {
     // buscamos la ultima interncion del paciente
-    internacionesController.buscarUltimaInternacion(req.params.idPaciente, req.query.estado).then(
+    internacionesController.buscarUltimaInternacion(req.params.idPaciente, req.query.estado, req.query.organizacion).then(
         internacion => {
             let salida = { ultimaInternacion: null, cama: null };
             if (internacion && internacion.length > 0) {

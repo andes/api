@@ -30,6 +30,7 @@ export let schema = new mongoose.Schema({
     observaciones: {
         type: String
     },
+    esMovimiento: Boolean,
     sugierePase: {
         type: SnomedConcept,
         required: false,
