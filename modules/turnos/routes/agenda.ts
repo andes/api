@@ -14,8 +14,10 @@ import * as operations from './../../legacy/controller/operations';
 import { toArray } from '../../../utils/utils';
 
 import * as AgendasEstadisticas from '../controller/estadisticas';
+import { EventCore } from '@andes/event-bus';
 
 const router = express.Router();
+
 
 // devuelve los 10 ultimos turnos del paciente
 router.get('/agenda/paciente/:idPaciente', (req, res, next) => {
@@ -264,6 +266,9 @@ router.post('/agenda', (req, res, next) => {
         if (err) {
             return next(err);
         }
+
+        EventCore.emitAsync('citas:agenda:create', data);
+
         // Al crear una nueva agenda la cacheo para Sips
         operations.cacheTurnos(data).catch(error => { return next(error); });
         // Fin de insert cache
@@ -335,6 +340,9 @@ router.post('/agenda/clonar', (req, res, next) => {
                     Auth.audit(nueva, req);
                     listaSaveAgenda.push(
                         agendaCtrl.saveAgenda(nueva).then((nuevaAgenda) => {
+                            // Ver si es necesario especificar que fue una agenda clonada
+                            EventCore.emitAsync('citas:agenda:create', nuevaAgenda);
+
                             Logger.log(req, 'citas', 'insert', {
                                 accion: 'Clonar Agenda',
                                 ruta: req.url,
@@ -349,6 +357,7 @@ router.post('/agenda/clonar', (req, res, next) => {
                 }
             });
             Promise.all(listaSaveAgenda).then(resultado => {
+                EventCore.emitAsync('citas:agenda:clone', data);
                 res.json(resultado);
             }).catch(error => { return next(error); });
         });
@@ -367,15 +376,18 @@ router.put('/agenda/:id', (req, res, next) => {
         if (err) {
             return next(err);
         }
+
         // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
         operations.cacheTurnos(data).catch(error => { return next(error); });
         // Fin de insert cache
         res.json(data);
+
+        EventCore.emitAsync('citas:agenda:update', data);
     });
 });
 
 router.patch('/agenda/:id*?', (req, res, next) => {
-
+    let event = { object: '', accion: '', data: null };
     // Hubo que agregar un control por si no se tiene el idagenda (en los casos en que el patch se haga desde RUP)
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         const t = req.body.turnos;
@@ -443,14 +455,17 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                 let turno;
                 switch (req.body.op) {
                     case 'darAsistencia':
-                        agendaCtrl.darAsistencia(req, data, turnos[y]);
+                        turno = agendaCtrl.darAsistencia(req, data, turnos[y]);
+                        event = { object: 'turno', accion: 'asistencia', data: turno };
                         break;
                     // Agregar operacion para marcar que noAsistio
                     case 'sacarAsistencia':
-                        agendaCtrl.sacarAsistencia(req, data, turnos[y]);
+                        turno = agendaCtrl.sacarAsistencia(req, data, turnos[y]);
+                        event = { object: 'turno', accion: 'unasistencia', data: turno }; // [TODO] Definir nombre
                         break;
                     case 'noAsistio':
-                        agendaCtrl.marcarNoAsistio(req, data, turnos[y]);
+                        turno = agendaCtrl.marcarNoAsistio(req, data, turnos[y]);
+                        event = { object: 'turno', accion: 'inasistencia', data: turno };
                         break;
                     case 'quitarTurnoDoble':
                         agendaCtrl.quitarTurnoDoble(req, data, turnos[y]);
@@ -463,6 +478,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                         }
                         agendaCtrl.liberarTurno(req, data, turno);
                         prestacionCtrl.liberarRefTurno(turno._id, req);
+                        event = { object: 'turno', accion: 'liberar', data: turno };
                         break;
                     case 'suspenderTurno':
                         turno = agendaCtrl.getTurno(req, data, turnos[y]);
@@ -473,6 +489,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                             LoggerPaciente.logTurno(req, 'turnos:suspender', (turno.paciente ? turno.paciente : null), turno, -1, data._id);
                         }
                         agendaCtrl.suspenderTurno(req, data, turno);
+                        event = { object: 'turno', accion: 'suspender', data: turno };
                         break;
                     case 'codificarTurno':
                         agendaCtrl.codificarTurno(req, data, turnos[y]).catch((err2) => {
@@ -490,13 +507,16 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                         break;
                     case 'editarAgenda':
                         agendaCtrl.editarAgenda(req, data);
+                        event = { object: 'agenda', accion: 'update', data };
                         break;
                     case 'agregarSobreturno':
-                        agendaCtrl.agregarSobreturno(req, data);
+                        event = { object: 'turno', accion: 'asignar', data: null };
+                        event.data = agendaCtrl.agregarSobreturno(req, data);
                         break;
                     case 'disponible':
                     case 'publicada':
                         agendaCtrl.actualizarEstado(req, data);
+                        event = { object: 'agenda', accion: 'estado', data };
                         break;
                     case 'pausada':
                     case 'prePausada':
@@ -506,6 +526,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                     case 'suspendida':
                     case 'borrada':
                         agendaCtrl.actualizarEstado(req, data);
+                        event = { object: 'agenda', accion: 'estado', data };
                         break;
                     case 'avisos':
                         agendaCtrl.agregarAviso(req, data);
@@ -516,6 +537,10 @@ router.patch('/agenda/:id*?', (req, res, next) => {
 
                 Auth.audit(data, req);
                 data.save((error) => {
+
+                    if (event.data) {
+                        EventCore.emitAsync(`citas:${event.object}:${event.accion}`, event.data);
+                    }
 
                     Logger.log(req, 'citas', 'update', {
                         accion: req.body.op,
@@ -545,7 +570,9 @@ router.patch('/agenda/:id*?', (req, res, next) => {
             }
             operations.cacheTurnos(data).catch(error => { return next(error); });
             // Fin de insert cache
-            return res.json(data);
+            res.json(data);
+
+            return;
         });
     }
 });
