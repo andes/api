@@ -124,6 +124,19 @@
 * CDA: se agrega documentación.  Se realizan cambios en xml, para interoperar con otro efectores.
 * CITAS: resuelve incidentes de bloques desordenados en la creación de agendas
 
+## [3.7.3] - 2018-09-19
 
+* PRESTAMOS HC - Cargar el Historico Digitalizado de una Historia Clinica en papel a la HUDS de un paciente.
+* PUCO: se agregan mejoras a la recuperación de obras sociales
+* MAPEO SNOMED-CIE10: Se agrega un mapeo estático para conceptos snomed que no hayan encontrado un correspondencia automática con algún código CIE10.
+* CITAS- RUP : Prestaciones No nominalizadas, permite registrar las actividades que se realizan para la comunidad. También permite registrar un listado de pacientes para marcar la asistencia de los mismos.
+
+## [3.8.0] - 2018-09-25
+
+* WEBHOOKS : se agrega un módulo para el control de eventos y notificaciones mediante wehooks.  Permite traer los datos históricos del paciente mediante CDA
+* CITAS: Se soluciona incidente con el número de carpeta de un paciente.
+* HUDS - Prestación Screening de otoemisión acústica neonatal: Si en una consulta de Screening de Otoemisión acústica se registran en antecedentes, estos se visualizan cuando se inicia una consulta nueva de Screening de Otoemisión del mismo paciente. (https://github.com/andes/app/issues/617)
+* RUP: Fix en la validación de RUP para consultas de niño sano.
+* CDA-LABORATORIO: Se soluciona el problema que mostraba siempre a SUBSECRETARIA DE SALUD como efector.
 
 
