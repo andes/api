@@ -88,6 +88,7 @@ export class Auth {
         return passport.authenticate();
     }
 
+
     /**
      * optionalAuth: extract
      */
@@ -280,6 +281,7 @@ export class Auth {
         const token: UserToken = {
             id: mongoose.Types.ObjectId(),
             usuario: {
+                id: user.id,
                 nombreCompleto: user.nombre + ' ' + user.apellido,
                 nombre: user.nombre,
                 apellido: user.apellido,

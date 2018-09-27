@@ -67,7 +67,7 @@ export async function savePaciente(paciente: any, transaction) {
         .query(query).then(result => {
             return {
                 idHistoria: result.recordset[0].codigo,
-               // idPaciente: result.recordset[0].idPaciente
+                // idPaciente: result.recordset[0].idPaciente
             };
         }).catch(err => {
             throw err;
@@ -75,7 +75,7 @@ export async function savePaciente(paciente: any, transaction) {
 }
 
 export async function getDatosPaciente(tipoDocumento, paciente, transaction) {
-    const documento = paciente.documento;
+    const documento = paciente.documento.replace(/^0+/, '');
     const andesId = paciente._id;
 
     if (documento) {
