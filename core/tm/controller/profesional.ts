@@ -44,7 +44,6 @@ export async function vencimientoMatriculaPosgrado(done) {
                         if (profesionales[_n].formacionPosgrado[_i].matriculado === true && profesionales[_n].formacionPosgrado[_i].matriculacion[profesionales[_n].formacionPosgrado[_i].matriculacion.length - 1].fin.getFullYear() < new Date().getFullYear()) {
                             profesionales[_n].formacionPosgrado[_i].matriculado = false;
                             profesionales[_n].formacionPosgrado[_i].papelesVerificados = false;
-                            console.log(profesionales[_n].documento)
                             await actualizar(profesionales[_n]);
 
                         }
@@ -54,7 +53,7 @@ export async function vencimientoMatriculaPosgrado(done) {
         }
 
     }
-     done();
+    done();
 }
 
 /**
@@ -62,13 +61,8 @@ export async function vencimientoMatriculaPosgrado(done) {
  * @param profesional  profesional a modificar
  */
 async function actualizar(unProfesional) {
-    return new Promise(resolve => {
-        Auth.audit(unProfesional, (userScheduler as any));
-        unProfesional.save((err2) => {
-            resolve(profesional);
-        });
-    });
-
+    Auth.audit(unProfesional, (userScheduler as any));
+    await unProfesional.save();
 }
 
 export async function migrarTurnos() {

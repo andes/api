@@ -20,15 +20,9 @@ let router = express.Router();
 router.get('/profesionales/ultimoPosgrado', async (req, res, next) => {
     let query = [{ $unwind: '$formacionPosgrado' },
     { $unwind: '$formacionPosgrado.matriculacion' },
-    {
-        $sort: { 'formacionPosgrado.matriculacion.matriculaNumero': -1 }
-    }, { $limit: 1 }];
-
-
+    { $sort: { 'formacionPosgrado.matriculacion.matriculaNumero': -1 } }, { $limit: 1 }];
     let data = await toArray(profesional.aggregate(query).cursor({}).exec());
-
     let ultimoNumero = data[0].formacionPosgrado.matriculacion.matriculaNumero;
-
     res.json(ultimoNumero);
 });
 
@@ -36,7 +30,7 @@ router.get('/profesionales/estadisticas', async (req, res, next) => {
     let estadisticas = {};
     let total = profesional.count({ profesionalMatriculado: true });
     let totalMatriculados = profesional.count({ rematriculado: 0, profesionalMatriculado: true });
-    let totalRematriculados = profesional.count({ rematriculado: 1, profesionalMatriculado: true })
+    let totalRematriculados = profesional.count({ rematriculado: 1, profesionalMatriculado: true });
     Promise.all([total, totalMatriculados, totalRematriculados]).then(values => {
         estadisticas['total'] = values[0];
         estadisticas['totalMatriculados'] = values[1];
@@ -57,30 +51,26 @@ router.get('/profesionales/foto/:id*?', Auth.authenticate(), (req: any, res, nex
     const id = req.query.id;
     const fotoProf = makeFs();
     try {
-        fotoProf.find({
-            'metadata.idProfesional': id
-        }, {}, {
-                sort: {
-                    _id: -1
-                }
-            }, (err, file) => {
-                if (file[0] == null) {
-                    res.setHeader('Content-Type', 'image/jpeg');
-                    // input.pipe(decoder).pipe(res);
-                    // input.end(img);
-                    res.end(img);
-                } else {
-                    fotoProf.readById(file[0].id, (err2, buffer) => {
-                        if (err2) {
-                            return next(err2);
-                        }
-                        res.setHeader('Content-Type', file[0].contentType);
-                        res.setHeader('Content-Length', file[0].length);
-                        const _img = buffer.toString('base64');
-                        return res.send(_img);
-                    });
-                }
-            });
+        fotoProf.find({ 'metadata.idProfesional': id }, {}, {
+            sort: { _id: -1 }
+        }, (err, file) => {
+            if (file[0] == null) {
+                res.setHeader('Content-Type', 'image/jpeg');
+                // input.pipe(decoder).pipe(res);
+                // input.end(img);
+                res.end(img);
+            } else {
+                fotoProf.readById(file[0].id, (err2, buffer) => {
+                    if (err2) {
+                        return next(err2);
+                    }
+                    res.setHeader('Content-Type', file[0].contentType);
+                    res.setHeader('Content-Length', file[0].length);
+                    const _img = buffer.toString('base64');
+                    return res.send(_img);
+                });
+            }
+        });
     } catch (ex) {
         return next(ex);
     }
@@ -93,60 +83,49 @@ router.get('/profesionales/firma/:id*?', Auth.authenticate(), (req: any, res, ne
     if (req.query.id) {
         const id = req.query.id;
         const fotoProf = makeFsFirma();
-        fotoProf.find({
-            'metadata.idProfesional': id
-        }, {}, {
-                sort: {
-                    _id: -1
-                }
-            }, (err, file) => {
-                if (file[0] == null) {
-                    res.send(null);
-                } else {
-                    fotoProf.readById(file[0].id, (err2, buffer) => {
-                        if (err2) {
-                            return next(err2);
-                        }
-                        res.setHeader('Content-Type', file[0].contentType);
-                        res.setHeader('Content-Length', file[0].length);
-                        const firma = buffer.toString('base64');
-                        return res.send(firma);
-                    });
-                }
-            });
+        fotoProf.find({ 'metadata.idProfesional': id }, {}, { sort: { _id: -1 } }, (err, file) => {
+            if (file[0] == null) {
+                res.send(null);
+            } else {
+                fotoProf.readById(file[0].id, (err2, buffer) => {
+                    if (err2) {
+                        return next(err2);
+                    }
+                    res.setHeader('Content-Type', file[0].contentType);
+                    res.setHeader('Content-Length', file[0].length);
+                    const firma = buffer.toString('base64');
+                    return res.send(firma);
+                });
+            }
+        });
 
     }
     if (req.query.firmaAdmin) {
         let idAdmin = req.query.firmaAdmin;
         let fotoAdmin = makeFsFirmaAdmin();
-        fotoAdmin.find({
-            'metadata.idSupervisor': idAdmin
-        }, {}, {
-                sort: {
-                    _id: -1
-                }
-            }, (err, file) => {
-                if (file[0] == null) {
-                    res.send(null);
-                } else {
-                    let stream1 = fotoAdmin.readById(file[0]._id, (err2, buffer) => {
-                        if (err2) {
-                            return next(err2);
-                        }
-                        res.setHeader('Content-Type', file[0].contentType);
-                        res.setHeader('Content-Length', file[0].length);
-                        let firmaAdmin = {
-                            firma: buffer.toString('base64'),
-                            administracion: file[0].metadata.administracion
-                        };
-                        return res.send(firmaAdmin);
-                    });
-                }
-            });
+        fotoAdmin.find({ 'metadata.idSupervisor': idAdmin }, {}, { sort: { _id: -1 } }, (err, file) => {
+            if (file[0] == null) {
+                res.send(null);
+            } else {
+                let stream1 = fotoAdmin.readById(file[0]._id, (err2, buffer) => {
+                    if (err2) {
+                        return next(err2);
+                    }
+                    res.setHeader('Content-Type', file[0].contentType);
+                    res.setHeader('Content-Length', file[0].length);
+                    let firmaAdmin = {
+                        firma: buffer.toString('base64'),
+                        administracion: file[0].metadata.administracion
+                    };
+                    return res.send(firmaAdmin);
+                });
+            }
+        });
 
     }
 
 });
+
 router.get('/profesionales/matricula/:id', (req, resp, errHandler) => {
     const oCredencial = {
         foto: null,
@@ -615,8 +594,8 @@ router.get('/resumen', (req, res, next) => {
             return next(err);
         }
         let resultado = [];
-        if(data.length > 0){
-             resultado = [{
+        if (data.length > 0) {
+            resultado = [{
                 select: '' + data[0].nombreCompleto + ' - ' + data[0].documento + '',
                 idRenovacion: data[0].id,
                 nombre: data[0].nombre,
@@ -624,9 +603,9 @@ router.get('/resumen', (req, res, next) => {
                 fechaNacimiento: data[0].fechaNacimiento,
                 documento: data[0].documento,
                 nacionalidad: data[0].nacionalidad
-    
+
             }];
-           
+
         }
         res.json(resultado);
     });
@@ -650,12 +629,11 @@ router.post('/profesionales/formacionCero', async (req, res, next) => {
 
 });
 
-router.post('/profesionales/vencimientoPosGrado', async (req, res, next) => {
-    let ress = await vencimientoMatriculaPosgrado();
-    res.json(ress);
+// router.post('/profesionales/vencimientoPosGrado', async (req, res, next) => {
+//     let ress = await vencimientoMatriculaPosgrado();
+//     res.json(ress);
 
-});
-
+// });
 
 
 export = router;
