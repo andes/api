@@ -64,7 +64,7 @@ router.post('/turnos/:tipo/:profesionalId/', (request, response, errorHandler) =
 /**
  * Listado de Turnos
  */
-router.get('/turnos/proximos/?', Auth.authenticate() , (request: any, response, errorHandler) => {
+router.get('/turnos/proximos/?', Auth.authenticate(), (request: any, response, errorHandler) => {
     if (!Auth.check(request, 'matriculaciones:turnos:*')) {
         return errorHandler(403);
     }
@@ -124,7 +124,7 @@ router.get('/turnos/proximos/?', Auth.authenticate() , (request: any, response, 
             busquedaTurno['profesional'] = { $in: profesionalesIds };
 
             turno.find(busquedaTurno).populate('profesional')
-                .sort({fecha: 1, hora: 1})
+                .sort({ fecha: 1, hora: 1 })
                 .skip(offset)
                 .limit(chunkSize)
                 .exec((errTurno, data) => {
@@ -149,7 +149,7 @@ router.get('/turnos/proximos/?', Auth.authenticate() , (request: any, response, 
     } else {
 
         turno.find(busquedaTurno).populate('profesional')
-            .sort({fecha: 1, hora: 1})
+            .sort({ fecha: 1, hora: 1 })
             .skip(offset)
             .limit(chunkSize)
             .exec((error, data) => {
