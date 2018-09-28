@@ -69,7 +69,7 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
         usuario.organizacion = (req as any).user.organizacion;
         const tipoTurno = (esHoy ? 'delDia' : 'programado');
         const turno = {
-            horaInicio: moment(new Date(), 'YYYY-MM-DD HH:mm:ss'),
+            horaInicio: (agendaRes as any).horaInicio,
             estado: 'asignado',
             tipoTurno,
             nota: req.body.nota,
