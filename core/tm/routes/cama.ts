@@ -191,7 +191,6 @@ router.patch('/camas/cambiaEstado/:idCama', Auth.authenticate(), (req, res, next
         if (err) {
             return next(err);
         }
-        console.log(_cama);
         let ultimoEstado = _cama.estados[_cama.estados.length - 1];
 
         if (req.body.estado === ultimoEstado.estado) {
@@ -254,7 +253,6 @@ router.patch('/camas/cambiaEstado/:idCama', Auth.authenticate(), (req, res, next
         // guardamos organizacion
         _cama.save((errUpdate) => {
             if (errUpdate) {
-                console.log(errUpdate);
                 return next(errUpdate);
             }
             res.json(_cama);
