@@ -3,10 +3,11 @@ import * as turno from '../schemas/turno';
 import { profesional } from '../../../core/tm/schemas/profesional';
 import { turnoSolicitado } from '../schemas/turnoSolicitado';
 import { Auth } from '../../../auth/auth.class';
-const router = express.Router();
+import { toArray } from '../../../utils/utils';
+let router = express.Router();
 
 
-router.post('/turnos/save/:turnoId', (request, response, errorHandler) => {
+router.post('/turnos/save/:turnoId',  (request, response, errorHandler) => {
 
     turno.findByIdAndUpdate(request.params.turnoId, request.body, { new: true }, (err, res) => {
         if (err) {
@@ -23,10 +24,10 @@ router.post('/turnos/save/:turnoId', (request, response, errorHandler) => {
 router.post('/turnos/:tipo/:profesionalId/', (request, response, errorHandler) => {
 
     // Convert date to user datetime.
-    const fechaTurno = new Date(request.body.turno.fecha);
+    let fechaTurno = new Date(request.body.turno.fecha);
     if (request.body.sobreTurno) {
-        profesional.findById(request.params.profesionalId, (error, datos) => {
-            const nTurno = new turno({
+        profesional.findById(request.params.profesionalId,  (error, datos) => {
+            let nTurno = new turno({
                 fecha: fechaTurno,
                 tipo: request.body.turno.tipo,
                 profesional: datos
@@ -41,9 +42,8 @@ router.post('/turnos/:tipo/:profesionalId/', (request, response, errorHandler) =
             });
         });
     } else {
-
-        turnoSolicitado.findById(request.params.profesionalId, (error, datos) => {
-            const nTurno = new turno({
+        turnoSolicitado.findById(request.params.profesionalId,  (error, datos) => {
+            let nTurno = new turno({
                 fecha: fechaTurno,
                 tipo: request.body.turno.tipo,
                 profesional: datos
@@ -172,10 +172,11 @@ router.get('/turnos/proximos/?', Auth.authenticate(), (request: any, response, e
 /**
  * Devuelve los turnos del tipo y mes pasados por parametro.
  */
-router.get('/turnos/:tipo/?', (request, response, errorHandler) => {
+router.get('/turnos/:tipo/?', async (request, response, errorHandler) => {
 
-    const matchObj = {
-        tipo: request.params.tipo
+    let matchObj = {
+        // comentado para diferenciar los diferentes tipo de turnos y filtrar por lo mismo
+        // tipo: request.params.tipo
     };
 
     if (request.query.anio) {
@@ -192,7 +193,7 @@ router.get('/turnos/:tipo/?', (request, response, errorHandler) => {
 
 
     if (!request.query.dia) {
-        turno.aggregate(
+        let aggregate = turno.aggregate(
             [{
                 $project: {
                     tipo: true,
@@ -219,18 +220,14 @@ router.get('/turnos/:tipo/?', (request, response, errorHandler) => {
                     },
                     count: { $sum: 1 }
                 }
-            }], (error, datos) => {
+            }]);
 
-                if (error) {
-                    return errorHandler(error);
-                }
-
-                response.status(201).json(datos);
-            });
+        let datos = await toArray(aggregate.cursor({}).exec());
+        response.status(201).json(datos);
 
     } else {
 
-        turno.aggregate(
+        let aggregate = turno.aggregate(
             [{
                 $project: {
                     tipo: true,
@@ -257,14 +254,10 @@ router.get('/turnos/:tipo/?', (request, response, errorHandler) => {
                     },
                     count: { $sum: 1 }
                 }
-            }], (error, datos) => {
+            }]);
 
-                if (error) {
-                    return errorHandler(error);
-                }
-
-                response.status(201).json(datos);
-            });
+        let datos = await toArray(aggregate.cursor({}).exec());
+        response.status(201).json(datos);
     }
 });
 

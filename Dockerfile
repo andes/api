@@ -9,7 +9,8 @@ RUN npm i -g npm@latest
 
 WORKDIR /usr/src/api
 
-COPY package.json package-lock.json  ./
+COPY package.json  ./
+COPY packages ./packages
 
 RUN npm install
 
