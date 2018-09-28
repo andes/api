@@ -59,14 +59,10 @@ router.post('/login', (req, res, next) => {
                     user
                 });
 
-                EventCore.emitAsync('mobile:patient:login', user);
-
-                // Hack momentaneo. Descargamos los laboratorios a demanda.
-                // Después vamos a cambiar esto.
-
                 buscarPaciente(user.pacientes[0].id).then((resultado) => {
                     if (resultado.paciente) {
-                        labsImport.importarDatos(resultado.paciente);
+                        user.pacientes[0] = resultado.paciente.basicos();
+                        EventCore.emitAsync('mobile:patient:login', user);
                     }
                 });
 
