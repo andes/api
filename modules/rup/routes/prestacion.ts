@@ -318,8 +318,6 @@ router.patch('/prestaciones/:id', (req, res, next) => {
             } else {
                 res.json(prestacion);
             }
-<<<<<<< HEAD
-=======
             /*
             Logger.log(req, 'prestacionPaciente', 'update', {
                 accion: req.body.op,
@@ -329,7 +327,6 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 err: err || false
             });
             */
->>>>>>> master
         });
     });
 });
