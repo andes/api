@@ -219,33 +219,29 @@ async function codificaOdontologia(connection, _idConsulta: any, turno: any, pre
             turno.diagnostico.ilegible = false;
             if (diente && caras === '') {
                 repetido = turno.diagnostico.codificaciones.filter(elem =>
-                    elem.codificacionProfesional && elem.codificacionProfesional.cie10
-                    && elem.codificacionProfesional.cie10.codigo === codificacionOdonto.codigo
-                    && elem.codificacionProfesional.cie10.causa && elem.codificacionProfesional.cie10.causa === diente);
+                    elem.codificacionAuditoria && elem.codificacionAuditoria.codigo === codificacionOdonto.codigo
+                    && elem.codificacionAuditoria.causa && elem.codificacionAuditoria.causa === diente);
             }
             if (diente && caras !== '') {
                 repetido = turno.diagnostico.codificaciones.filter(elem =>
-                    elem.codificacionProfesional && elem.codificacionProfesional.cie10
-                    && elem.codificacionProfesional.cie10.codigo === codificacionOdonto.codigo
-                    && elem.codificacionProfesional.cie10.causa && elem.codificacionProfesional.cie10.causa === diente
-                    && elem.codificacionProfesional.cie10.subcausa && elem.codificacionProfesional.cie10.subcausa === caras);
+                    elem.codificacionAuditoria
+                    && elem.codificacionAuditoria.codigo === codificacionOdonto.codigo
+                    && elem.codificacionAuditoria.causa && elem.codificacionAuditoria.causa === diente
+                    && elem.codificacionAuditoria.subcausa && elem.codificacionAuditoria.subcausa === caras);
             }
             if (!diente) {
                 repetido = turno.diagnostico.codificaciones.filter(elem =>
-                    elem.codificacionProfesional && elem.codificacionProfesional.cie10
-                    && elem.codificacionProfesional.cie10.codigo === codificacionOdonto.codigo);
+                    elem.codificacionAuditoria && elem.codificacionAuditoria.codigo === codificacionOdonto.codigo);
             }
             if (repetido.length === 0) {
                 turno.diagnostico.codificaciones.push({
-                    codificacionProfesional: {
-                        cie10: {
-                            causa: diente,
-                            subcausa: caras,
-                            codigo: codificacionOdonto.codigo,
-                            nombre: codificacionOdonto.descripcion,
-                            sinonimo: codificacionOdonto.descripcion,
-                            c2: false
-                        }
+                    codificacionAuditoria: {
+                        causa: diente,
+                        subcausa: caras,
+                        codigo: codificacionOdonto.codigo,
+                        nombre: codificacionOdonto.descripcion,
+                        sinonimo: codificacionOdonto.descripcion,
+                        c2: false
                     }
                 });
             }
@@ -271,31 +267,27 @@ async function codificacionCie10(connection, idConsulta: any, turno: any) {
             if (codCie10[i].PRINCIPAL === true) {
                 if (codificaCie10 && codificaCie10[0]) {
                     turno.diagnostico.codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del arrays
-                        codificacionProfesional: {
-                            cie10: {
-                                causa: codificaCie10[0].CAUSA,
-                                subcausa: codificaCie10[0].SUBCAUSA,
-                                codigo: codificaCie10[0].CODIGO,
-                                nombre: codificaCie10[0].Nombre,
-                                sinonimo: codificaCie10[0].Sinonimo,
-                                c2: codificaCie10[0].C2
-                                // TODO: campo primeraVez -> verificar en SIPS
-                            }
+                        codificacionAuditoria: {
+                            causa: codificaCie10[0].CAUSA,
+                            subcausa: codificaCie10[0].SUBCAUSA,
+                            codigo: codificaCie10[0].CODIGO,
+                            nombre: codificaCie10[0].Nombre,
+                            sinonimo: codificaCie10[0].Sinonimo,
+                            c2: codificaCie10[0].C2
+                            // TODO: campo primeraVez -> verificar en SIPS
                         }
                     });
                 }
             } else {
                 if (codificaCie10 && codificaCie10[0]) {
                     turno.diagnostico.codificaciones.push({
-                        codificacionProfesional: {
-                            cie10: {
-                                causa: codificaCie10[0].CAUSA,
-                                subcausa: codificaCie10[0].SUBCAUSA,
-                                codigo: codificaCie10[0].CODIGO,
-                                nombre: codificaCie10[0].Nombre,
-                                sinonimo: codificaCie10[0].Sinonimo,
-                                c2: codificaCie10[0].C2
-                            }
+                        codificacionAuditoria: {
+                            causa: codificaCie10[0].CAUSA,
+                            subcausa: codificaCie10[0].SUBCAUSA,
+                            codigo: codificaCie10[0].CODIGO,
+                            nombre: codificaCie10[0].Nombre,
+                            sinonimo: codificaCie10[0].Sinonimo,
+                            c2: codificaCie10[0].C2
                         }
                     });
                 }
@@ -390,9 +382,7 @@ async function markAgendaAsProcessed(agenda, error = null) {
         return agendasCache.update({
             _id: agenda._id
         }, {
-            $set: {
-                estadoIntegracion
-            }
+            $set: { estadoIntegracion }
         });
     } catch (err) {
         return err;
@@ -658,7 +648,7 @@ async function grabaAgendaSips(connection, agendaSips: any, datosSips: any) {
     const fecha = moment(agendaSips.horaInicio).format('YYYYMMDD');
     const horaInicio = moment(agendaSips.horaInicio).utcOffset('-03:00').format('HH:mm');
     const horaFin = moment(agendaSips.horaFin).utcOffset('-03:00').format('HH:mm');
-    const duracionTurno = agendaSips.bloques[0].duracionTurno  <= 0 ? 20 : agendaSips.bloques[0].duracionTurno;
+    const duracionTurno = agendaSips.bloques[0].duracionTurno <= 0 ? 20 : agendaSips.bloques[0].duracionTurno;
 
     const maximoSobreTurnos = 100;
     const porcentajeTurnosDia = 0;
