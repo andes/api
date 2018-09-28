@@ -1,10 +1,8 @@
 import { pacienteApp } from '../schemas/pacienteApp';
 import { buscarPaciente } from '../../../core/mpi/controller/paciente';
-
 import * as express from 'express';
 import * as authController from '../controller/AuthController';
 import { Auth } from '../../../auth/auth.class';
-import * as labsImport from '../../cda/controller/import-labs';
 import { EventCore } from '@andes/event-bus';
 
 const router = express.Router();
