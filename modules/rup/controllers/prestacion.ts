@@ -29,6 +29,5 @@ export function liberarRefTurno(tid, req) {
             });
             return (data1);
         }
-
     });
 }

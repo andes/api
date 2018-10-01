@@ -173,8 +173,8 @@ export const modules = {
     },
     laboratorio: {
         active: true,
-        path: './modules/laboratorio/routes',
-        route: '/modules/laboratorio',
+        path: './modules/rup/laboratorio/routes',
+        route: '/modules/rup/laboratorio',
         middleware: appMiddleware
     }
 

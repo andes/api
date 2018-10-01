@@ -82,7 +82,6 @@ router.get('/prestaciones/huds/:idPaciente', async (req, res, next) => {
 });
 
 
-
 router.get('/prestaciones/:id*?', (req, res, next) => {
 
     if (req.params.id) {
@@ -225,7 +224,6 @@ router.post('/prestaciones', (req, res, next) => {
 });
 
 
-
 router.patch('/prestaciones/:id', (req, res, next) => {
     Prestacion.findById(req.params.id, (err, data: any) => {
         if (err) {
@@ -269,6 +267,16 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                     }
                 }
                 break;
+            case 'nuevoProtocoloLaboratorio':
+                if (req.body.registros) {
+                    data.ejecucion.registros = req.body.registros;
+                }
+                if (req.body.solicitud) {
+                    data.solicitud = req.body.solicitud;
+                }
+                data['estados'].push(req.body.estado);
+                break;
+
             case 'asignarTurno':
                 if (req.body.idTurno) {
                     data.solicitud.turno = req.body.idTurno;

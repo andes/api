@@ -1,6 +1,6 @@
-import * as mongoose from 'mongoose';
-import { model as prestacion } from '../../../modules/rup/schemas/prestacion';
-import { toArray } from '../../../utils/utils';
+import { Types } from 'mongoose';
+import { model as prestacion } from '../../schemas/prestacion';
+import { toArray } from '../../../../utils/utils';
 
 export async function getUltimoNumeroProtocolo(idOrganizacion) {
 
@@ -9,7 +9,7 @@ export async function getUltimoNumeroProtocolo(idOrganizacion) {
             $match: {
                 $and: [
                     {
-                        'solicitud.organizacion.id': { $eq: mongoose.Types.ObjectId(idOrganizacion) },
+                        'solicitud.organizacion.id': { $eq: Types.ObjectId(idOrganizacion) },
                         'solicitud.tipoPrestacion.conceptId': '15220000'
                     }]
             }
@@ -27,7 +27,7 @@ export async function getUltimoNumeroProtocolo(idOrganizacion) {
         {
             $group: {
                 _id: null,
-                first: { $first: "$$ROOT" }
+                first: { $first: '$$ROOT' }
             }
         }
     ];
@@ -40,8 +40,8 @@ export async function getUltimoNumeroProtocolo(idOrganizacion) {
     } else {
         ultimoNumero = 0;
     }
-    return parseInt(ultimoNumero);
-};
+    return parseInt(ultimoNumero, 10);
+}
 
 export async function getResultadosAnteriores(idPaciente, conceptIdPractica) {
     let pipeline = [
@@ -57,7 +57,7 @@ export async function getResultadosAnteriores(idPaciente, conceptIdPractica) {
         },
         { $unwind: '$ejecucion.registros' },
         { $unwind: '$ejecucion.registros.valor' },
-        {   
+        {
             $match: {
                 'ejecucion.registros.valor.concepto.conceptId': conceptIdPractica,
                 'ejecucion.registros.valor.resultado.validado': true
@@ -80,4 +80,4 @@ export async function getResultadosAnteriores(idPaciente, conceptIdPractica) {
         resultadosAnteriores.push(r.resultadoAnterior);
     });
     return resultadosAnteriores;
-};
+}

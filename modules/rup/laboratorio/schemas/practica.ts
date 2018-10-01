@@ -1,8 +1,8 @@
-import * as mongoose from 'mongoose';
-import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
+import {  model, Schema } from 'mongoose';
+import { SnomedConcept } from '../../schemas/snomed-concept';
 
 // tslint:disable
-export let schema = new mongoose.Schema({
+export let schema = new Schema({
     codigo: {
         type: String,
         required: false
@@ -201,6 +201,6 @@ export let schema = new mongoose.Schema({
 
 
 // Habilitar plugin de auditoría
-schema.plugin(require('../../../mongoose/audit'));
+schema.plugin(require('../../../../mongoose/audit'));
 
-export let Practica = mongoose.model('practica', schema, 'practica');
+export let Practica = model('practica', schema, 'practica');
