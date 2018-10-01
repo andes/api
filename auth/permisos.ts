@@ -152,6 +152,7 @@ export default [
             },
             { key: 'censo', title: 'Ver senso diario y mensual', type: 'boolean' },
             { key: 'alta', title: 'Ingregar paciente', type: 'boolean' },
+            { key: 'inicio', title: 'Punto de inicio', type: 'boolean' }
         ]
     },
     {
