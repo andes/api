@@ -149,7 +149,8 @@ export default [
                 child: [
                     { key: 'anses', title: 'ANSES', type: 'boolean' },
                     { key: 'sintys', title: 'SINTYS', type: 'boolean' },
-                    { key: 'sisa', title: 'SISA', type: 'boolean' }
+                    { key: 'sisa', title: 'SISA', type: 'boolean' },
+                    { key: 'renaper', title: 'RENAPER', type: 'boolean' }
                 ]
             }
         ]
