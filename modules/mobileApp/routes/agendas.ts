@@ -26,8 +26,6 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
 
     const pacienteId = req.user.pacientes[0].id;
 
-
-
     if (req.query.horaInicio) {
         matchAgendas['horaInicio'] = { $gte: new Date(moment().format('YYYY-MM-DD')) };
     }

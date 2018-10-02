@@ -245,6 +245,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         const etiquetaPaciente: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.paciente';
         const etiquetaPrestacion: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.tipoPrestacion';
         const etiquetaNota: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.nota';
+        const etiquetaEmitidoPor: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.emitidoPor';
         const etiquetaMotivoConsulta: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.motivoConsulta';
 
         const etiquetaReasignado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.reasignado';
@@ -257,6 +258,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         update[etiquetaPaciente] = req.body.paciente;
         update[etiquetaTipoTurno] = tipoTurno;
         update[etiquetaNota] = req.body.nota;
+        update[etiquetaEmitidoPor] = req.body.emitidoPor ? req.body.emitidoPor : 'Gestión de pacientes';
         update[etiquetaMotivoConsulta] = req.body.motivoConsulta;
         if (req.body.reasignado) {
             update[etiquetaReasignado] = req.body.reasignado;
@@ -292,6 +294,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                     prestacion: update[etiquetaPrestacion],
                     tipoTurno: update[etiquetaTipoTurno] !== null ? update[etiquetaTipoTurno] : null,
                     nota: update[etiquetaNota],
+                    emitidoPor: update[etiquetaEmitidoPor], // agregamos el emitidoPor
                     motivoConsulta: update[etiquetaMotivoConsulta]
                 };
                 Logger.log(req, 'citas', 'asignarTurno', datosOp);

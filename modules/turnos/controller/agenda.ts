@@ -72,7 +72,7 @@ export function liberarTurno(req, data, turno) {
         turno.confirmedAt = null;
         turno.updatedAt = new Date();
         turno.updatedBy = req.user.usuario || req.user;
-
+        turno.emitidoPor = ''; // Blanqueamos el emitido por (VER SI LO DEJAMOS O LO BLANQUEAMOS CUANDO EL PACIENTE LO ELIMINA)
         let cant = 1;
 
         const turnoDoble = getTurnoSiguiente(req, data, turno._id);
