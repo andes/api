@@ -379,10 +379,10 @@ async function markAgendaAsProcessed(agenda, error = null) {
         }
     }
     try {
-        return agendasCache.update({
-            _id: agenda._id
-        }, {
-            $set: { estadoIntegracion }
+        return agendasCache.update({ _id: agenda._id }, {
+            $set: {
+                estadoIntegracion
+            }
         });
     } catch (err) {
         return err;
@@ -450,7 +450,6 @@ export async function guardarCacheASips(agenda) {
             datosSips.idEfector = resultEfector.recordset[0].idEfector;
         }
         debug('1 - efector', resultEfector);
-
 
         const resultProfesional = await new sql.Request(connection)
             .input('dniProfesional', sql.Int, dniProfesional)

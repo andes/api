@@ -1,10 +1,8 @@
 import { pacienteApp } from '../schemas/pacienteApp';
 import { buscarPaciente } from '../../../core/mpi/controller/paciente';
-
 import * as express from 'express';
 import * as authController from '../controller/AuthController';
 import { Auth } from '../../../auth/auth.class';
-import * as labsImport from '../../cda/controller/import-labs';
 import { EventCore } from '@andes/event-bus';
 
 const router = express.Router();
@@ -59,14 +57,10 @@ router.post('/login', (req, res, next) => {
                     user
                 });
 
-                EventCore.emitAsync('mobile:patient:login', user);
-
-                // Hack momentaneo. Descargamos los laboratorios a demanda.
-                // Después vamos a cambiar esto.
-
                 buscarPaciente(user.pacientes[0].id).then((resultado) => {
                     if (resultado.paciente) {
-                        labsImport.importarDatos(resultado.paciente);
+                        user.pacientes[0] = resultado.paciente.basicos();
+                        EventCore.emitAsync('mobile:patient:login', user);
                     }
                 });
 
