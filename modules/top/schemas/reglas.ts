@@ -1,5 +1,6 @@
 import * as mongoose from 'mongoose';
 import { SnomedConcept } from '../../rup/schemas/snomed-concept';
+import { SemanticTag } from '../../rup/schemas/semantic-tag';
 
 let reglasSchema = new mongoose.Schema({
     origen: {
@@ -22,7 +23,14 @@ let reglasSchema = new mongoose.Schema({
             nombre: String,
             id: { type: mongoose.Schema.Types.ObjectId, ref: 'organizacion' }
         },
-        prestacion: SnomedConcept
+        prestacion: {
+            id: mongoose.Schema.Types.ObjectId,
+            conceptId: String,
+            term: String,
+            fsn: String,
+            semanticTag: SemanticTag,
+            refsetIds: [String]
+        }
     }
 });
 
