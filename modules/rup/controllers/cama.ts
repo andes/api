@@ -207,7 +207,41 @@ export function disponibilidadXUO(unidad, fecha, idOrganizacion) {
 
     });
 }
+export async function getHistorialCama(idOrganizacion, fechaDesde, fechaHasta, idCama) {
 
+    let historial = [];
+    historial = [{
+        $match: {
+            _id: idCama
+        }
+    },
+    { $unwind: '$estados' },
+    { $sort: { nombre: 1, 'estados.fecha': -1 } },
+    {
+        $match: {
+            'organizacion._id': idOrganizacion,
+            'estados.fecha': {
+                $lte: fechaHasta,
+                $gte: fechaDesde
+            },
+        }
+    },
+    {
+        $project: {
+            estado: '$estados.estado',
+            fecha: '$estados.fecha',
+            censable: '$estados.esCensable',
+            unidadOrganizativa: '$estados.unidadOrganizativa.term',
+            paciente: '$estados.paciente'
+
+        }
+    },
+    {
+        $limit: 30
+    },
+    ];
+    return await cama.aggregate(historial).exec();
+}
 
 export function camasXfecha(idOrganizacion, fecha) {
     return new Promise(async (resolve, reject) => {

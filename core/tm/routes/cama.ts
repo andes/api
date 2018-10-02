@@ -53,6 +53,13 @@ router.get('/camas/porfecha', Auth.authenticate(), (req, res, next) => {
         });
 });
 
+router.get('/camas/historial', Auth.authenticate(), (req, res, next) => {
+    camaController.getHistorialCama(new mongoose.Types.ObjectId(req.query.idOrganizacion), new Date(req.query.fechaDesde), new Date(req.query.fechaHasta), new mongoose.Types.ObjectId(req.query.idCama)).then(result => {
+        res.json(result);
+    }).catch(error => {
+        return next(error);
+    });
+});
 
 /**
  * Busca la cama por su id.
@@ -114,7 +121,7 @@ router.put('/camas/:id', Auth.authenticate(), (req, res, next) => {
                     return next(err2);
                 }
                 res.json(data);
-            }, );
+            });
         } else {
             res.json(null);
         }
