@@ -139,4 +139,11 @@
 * RUP: Fix en la validación de RUP para consultas de niño sano.
 * CDA-LABORATORIO: Se soluciona el problema que mostraba siempre a SUBSECRETARIA DE SALUD como efector.
 
+## [3.8.2] - 2018-10-02
+
+* RUP: Prestación de odontología. Permite registrar odontograma en la consulta y poder relacionar diferentes conceptos
+* CITAS: Modificaciones en agendas dinámicas para permitir la creación de agendas a futuro
+* Integración: los turnos codificados por los profesionales en los sistemas legacy se auditan automáticamente en la revisión
+* Agrega evento de login de app mobile
+
 

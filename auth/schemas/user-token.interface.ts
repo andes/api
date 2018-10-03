@@ -1,4 +1,5 @@
 import { Token } from './token.interface';
+import * as mongoose from 'mongoose';
 
 export interface UserToken extends Token {
     usuario: {

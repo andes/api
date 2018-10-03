@@ -165,6 +165,17 @@ pacienteSchema.virtual('edadReal').get(function () {
     return edad;
 });
 
+pacienteSchema.methods.basicos = function () {
+    return {
+        id: this._id,
+        nombre: this.nombre,
+        apellido: this.apellido,
+        documento: this.documento,
+        fechaNacimiento: this.fechaNacimiento,
+        sexo: this.sexo
+    };
+};
+
 /* Creo un indice para fulltext Search */
 // pacienteSchema.index({
 //     '$**': 'text'
