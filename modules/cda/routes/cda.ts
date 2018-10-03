@@ -56,6 +56,11 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
             }
         }
 
+        let confidencialidad = 'N';
+        if (req.body.confidencialidad === 'R') {
+            confidencialidad = req.body.confidencialidad;
+        }
+
         const paciente = await cdaCtr.findOrCreate(req, dataPaciente, organizacion._id);
         if (!paciente) {
             return next({ error: 'paciente_inexistente' });
@@ -72,7 +77,7 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
             fileData = await cdaCtr.storeFile(fileObj);
             adjuntos = [{ path: fileData.data, id: fileData.id }];
         }
-        const cda = cdaCtr.generateCDA(uniqueId, 'N', paciente, fecha, dataProfesional, organizacion, prestacion, cie10, texto, fileData);
+        const cda = cdaCtr.generateCDA(uniqueId, confidencialidad, paciente, fecha, dataProfesional, organizacion, prestacion, cie10, texto, fileData);
 
         const metadata = {
             paciente: paciente._id,
