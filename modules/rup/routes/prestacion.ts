@@ -250,7 +250,6 @@ router.patch('/prestaciones/:id', (req, res, next) => {
         if (err) {
             return next(err);
         }
-
         switch (req.body.op) {
             case 'paciente':
                 if (req.body.paciente) {
@@ -266,6 +265,12 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 }
                 if (req.body.registros) {
                     data.ejecucion.registros = req.body.registros;
+                }
+                if (req.body.ejecucion.fecha) {
+                    data.ejecucion.fecha = req.body.ejecucion.fecha;
+                }
+                if (req.body.ejecucion.organizacion) {
+                    data.ejecucion.organizacion = req.body.ejecucion.organizacion;
                 }
                 break;
             case 'romperValidacion':
