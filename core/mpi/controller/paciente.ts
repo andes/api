@@ -623,7 +623,7 @@ export function unlinkIdentificadores(req, data) {
 
 export function updateActivo(req, data) {
     data.markModified('activo');
-    data.activo = req.body.dto;
+    data.activo = req.body.activo;
 }
 
 export function updateRelacion(req, data) {

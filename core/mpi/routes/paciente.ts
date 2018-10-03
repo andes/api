@@ -527,6 +527,134 @@ router.delete('/pacientes/:id', (req, res, next) => {
 
 /**
  * @swagger
+ * /pacientes/{id}/activo:
+ *   post:
+ *     tags:
+ *       - Paciente
+ *       - Activo
+ *     description: Modificar el atributo activo del paciente
+ *     summary: Modificar el atributo activo del paciente
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         description: Id de un paciente
+ *         required: true
+ *         type: string
+ *
+ *     responses:
+ *       200:
+ *         description: Un objeto paciente
+ *         schema:
+ *           $ref: '#/definitions/paciente'
+ */
+router.post('/pacientes/:id/activo', async (req, res, next) => {
+    if (!Auth.check(req, 'mpi:paciente:patchAndes')) {
+        return next(403);
+    }
+    try {
+        let resultado = await controller.buscarPaciente(req.params.id);
+        if (resultado) {
+            controller.updateActivo(req, resultado.paciente);
+
+            let pacienteAndes: any;
+            if (resultado.db === 'mpi') {
+                pacienteAndes = new paciente(resultado.paciente.toObject());
+            } else {
+                pacienteAndes = resultado.paciente;
+            }
+            let connElastic = new ElasticSync();
+            // El nuevo estado es activo?
+            if (req.body.activo) {
+                await connElastic.sync(pacienteAndes);
+            } else {
+                await connElastic.delete(req.params.id);
+            }
+            Auth.audit(pacienteAndes, req);
+            let pacienteSaved = await pacienteAndes.save();
+            res.json(pacienteSaved);
+        } else {
+            return next('Paciente no encontrado');
+        }
+    } catch (error) {
+        return next(error);
+    }
+});
+/**
+ * @swagger
+ * /pacientes/{id}/activo:
+ *   post:
+ *     tags:
+ *       - Paciente
+ *       - Activo
+ *     description: Modificar el atributo activo del paciente
+ *     summary: Modificar el atributo activo del paciente
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         description: Id de un paciente
+ *         required: true
+ *         type: string
+ *
+ *     responses:
+ *       200:
+ *         description: Un objeto paciente
+ *         schema:
+ *           $ref: '#/definitions/paciente'
+ */
+router.post('/pacientes/:id/identificadores', async (req, res, next) => {
+
+
+    // case 'linkIdentificadores':
+    // controller.linkIdentificadores(req, resultado.paciente);
+    //     break;
+    // case 'unlinkIdentificadores':
+    //     controller.unlinkIdentificadores(req, resultado.paciente);
+    //     break;
+    if (!Auth.check(req, 'mpi:paciente:patchAndes')) {
+        return next(403);
+    }
+    try {
+        let resultado = await controller.buscarPaciente(req.params.id);
+        if (resultado) {
+            if (req.body.op === 'link') {
+                controller.linkIdentificadores(req, resultado.paciente);
+            }
+            if (req.body.op === 'unlink') {
+                controller.unlinkIdentificadores(req, resultado.paciente);
+            }
+
+
+            // controller.updateActivo(req, resultado.paciente);
+
+            let pacienteAndes: any;
+            if (resultado.db === 'mpi') {
+                pacienteAndes = new paciente(resultado.paciente.toObject());
+            } else {
+                pacienteAndes = resultado.paciente;
+            }
+            let connElastic = new ElasticSync();
+            await connElastic.sync(pacienteAndes);
+            Auth.audit(pacienteAndes, req);
+            let pacienteSaved = await pacienteAndes.save();
+            res.json(pacienteSaved);
+        } else {
+            return next('Paciente no encontrado');
+        }
+    } catch (error) {
+        return next(error);
+    }
+});
+
+/**
+ * @swagger
  * /pacientes/{id}:
  *   patch:
  *     tags:
@@ -552,11 +680,13 @@ router.delete('/pacientes/:id', (req, res, next) => {
  */
 
 
-router.patch('/pacientes/:id', (req, res, next) => {
+router.patch('/pacientes/:id', async (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:patchAndes')) {
         return next(403);
     }
-    controller.buscarPaciente(req.params.id).then(async (resultado: any) => {
+    try {
+        let resultado = await controller.buscarPaciente(req.params.id);
+
         if (resultado) {
             switch (req.body.op) {
                 case 'updateContactos':
@@ -590,15 +720,7 @@ router.patch('/pacientes/:id', (req, res, next) => {
                         return next(error);
                     }
                     break;
-                case 'linkIdentificadores':
-                    controller.linkIdentificadores(req, resultado.paciente);
-                    break;
-                case 'unlinkIdentificadores':
-                    controller.unlinkIdentificadores(req, resultado.paciente);
-                    break;
-                case 'updateActivo':
-                    controller.updateActivo(req, resultado.paciente);
-                    break;
+
                 case 'updateRelacion':
                     controller.updateRelacion(req, resultado.paciente);
                     break;
@@ -619,22 +741,19 @@ router.patch('/pacientes/:id', (req, res, next) => {
                 pacienteAndes = resultado.paciente;
             }
             let connElastic = new ElasticSync();
-            connElastic.sync(pacienteAndes).then(() => {
-                res.json(pacienteAndes);
-            }).catch(error => {
-                return next(error);
-            });
+
+            await connElastic.sync(pacienteAndes);
+
             Auth.audit(pacienteAndes, req);
-            pacienteAndes.save((errPatch) => {
-                if (errPatch) {
-                    return next(errPatch);
-                }
-                return res.json(pacienteAndes);
-            });
+            let pacienteSaved = await pacienteAndes.save();
+            res.json(pacienteSaved);
+        } else {
+            return next('Paciente no encontrado');
         }
-    }).catch((err) => {
-        return next(err);
-    });
+    } catch (error) {
+        return next(error);
+    }
+
 });
 
 // Patch específico para actualizar masivamente MPI (NINGUN USUARIO DEBERIA TENER PERMISOS PARA ESTO)
