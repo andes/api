@@ -88,6 +88,17 @@ export class Auth {
         return passport.authenticate();
     }
 
+    static validateToken(token) {
+        try {
+            let tokenData = jwt.verify(token, configPrivate.auth.jwtKey);
+            if (tokenData) {
+                return tokenData;
+            }
+            return null;
+        } catch (e) {
+            return null;
+        }
+    }
 
     /**
      * optionalAuth: extract
@@ -281,7 +292,7 @@ export class Auth {
         const token: UserToken = {
             id: mongoose.Types.ObjectId(),
             usuario: {
-                id: user.id,
+                id: user._id,
                 nombreCompleto: user.nombre + ' ' + user.apellido,
                 nombre: user.nombre,
                 apellido: user.apellido,
@@ -309,17 +320,19 @@ export class Auth {
      *
      * @memberOf Auth
      */
-    static generateAppToken(nombre: string, organizacion: any, permisos: string[]): any {
+
+    static generateAppToken(user: any, organizacion: any, permisos: string[], type: 'app-token' | 'turnero-token' = 'app-token'): any {
         // Un token por organización. A futuro distintos permisos en la organización externa deberá modificarse esto!
         const token: AppToken = {
             id: mongoose.Types.ObjectId(),
             app: {
-                nombre
+                id: user._id,
+                nombre: user.nombre
             },
             organizacion,
             permisos,
             account_id: null,
-            type: 'app-token'
+            type
         };
         return jwt.sign(token, configPrivate.auth.jwtKey);
     }
