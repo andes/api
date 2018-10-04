@@ -23,7 +23,7 @@ export async function getCarpetasSolicitud(req) {
 
 
     // [TODO] Paralelizar la busquedas de turnos, sobreturnos y solicitudesManuales
-    const solicitudesManuales = await getSolicitudCarpetaManual(organizacionId);
+    const solicitudesManuales = await getSolicitudCarpetaManual({ organizacionId: organizacionId, tipoPrestacionId: tipoPrestacionId, espacioFisicoId: espacioFisicoId, profesionalId: profesionalId });
     const agendas = await buscarAgendasTurnos(organizacionId, tipoPrestacionId, espacioFisicoId, profesionalId, horaInicio, horaFin);
     const agendasSobreturno = await buscarAgendasSobreturnos(organizacionId, tipoPrestacionId, espacioFisicoId, profesionalId, horaInicio, horaFin);
 
@@ -200,7 +200,7 @@ async function findCarpetasPrestamo(organizacionId: string, horaInicio: string, 
     }
 
     if (espacioFisico) {
-        match['datosPrestamo.turno.espacioFisico._id'] = espacioFisico;
+        match['datosPrestamo.turno.espacioFisico._id'] = new ObjectId(espacioFisico);
     }
 
     if (profesionalId) {
@@ -456,21 +456,32 @@ export async function solicitudManualCarpeta(req) {
     return solicitud;
 }
 
-async function getSolicitudCarpetaManual(organizacionId, idSolicitud = null, estadoSolicitud = null) {
+async function getSolicitudCarpetaManual(filtros) {
     let query;
-    if (idSolicitud) {
-        query = SolicitudCarpetaManual.findById(idSolicitud);
+    if (filtros.idSolicitud) {
+        query = SolicitudCarpetaManual.findById(filtros.idSolicitud);
     } else {
         query = SolicitudCarpetaManual.find({});
-        query.where('organizacion._id').equals(organizacionId);
-        query.where('estado').equals((estadoSolicitud ? estadoSolicitud : constantes.EstadoSolicitudCarpeta.Pendiente));
+        if (filtros.organizacionId) {
+            query.where('organizacion._id').equals(filtros.organizacionId);
+        }
+        if (filtros.tipoPrestacionId) {
+            query.where('datosSolicitudManual.prestacion._id').equals(filtros.tipoPrestacionId);
+        }
+        if (filtros.espacioFisicoId) {
+            query.where('datosSolicitudManual.espacioFisico._id').equals(filtros.espacioFisicoId);
+        }
+        if (filtros.profesionalId) {
+            query.where('datosSolicitudManual.profesional._id').equals(filtros.profesionalId);
+        }
+        query.where('estado').equals((filtros.estadoSolicitud ? filtros.estadoSolicitud : constantes.EstadoSolicitudCarpeta.Pendiente));
     }
 
     return await query;
 }
 
 async function cambiarEstadoSolicitudManual(req, idSolicitud, organizacion) {
-    const solicitud = await getSolicitudCarpetaManual(organizacion.id, String(idSolicitud));
+    const solicitud = await getSolicitudCarpetaManual({ organizacionId: organizacion.id, idSolicitud: String(idSolicitud) });
     solicitud.estado = constantes.EstadoSolicitudCarpeta.Aprobada;
     Auth.audit(solicitud, req);
     solicitud.save();
