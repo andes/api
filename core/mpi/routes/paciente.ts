@@ -583,15 +583,16 @@ router.post('/pacientes/:id/activo', async (req, res, next) => {
         return next(error);
     }
 });
+
 /**
  * @swagger
- * /pacientes/{id}/activo:
+ * /pacientes/{id}/identificadores:
  *   post:
  *     tags:
  *       - Paciente
  *       - Activo
- *     description: Modificar el atributo activo del paciente
- *     summary: Modificar el atributo activo del paciente
+ *     description: Modificar el array de identificadores del paciente
+ *     summary: Modificar el array de identificadores del paciente
  *     consumes:
  *       - application/json
  *     produces:
@@ -610,40 +611,50 @@ router.post('/pacientes/:id/activo', async (req, res, next) => {
  *           $ref: '#/definitions/paciente'
  */
 router.post('/pacientes/:id/identificadores', async (req, res, next) => {
-
-
-    // case 'linkIdentificadores':
-    // controller.linkIdentificadores(req, resultado.paciente);
-    //     break;
-    // case 'unlinkIdentificadores':
-    //     controller.unlinkIdentificadores(req, resultado.paciente);
-    //     break;
     if (!Auth.check(req, 'mpi:paciente:patchAndes')) {
         return next(403);
     }
     try {
-        let resultado = await controller.buscarPaciente(req.params.id);
-        if (resultado) {
+        let pacienteBase = await controller.buscarPaciente(req.params.id);
+        let pacienteLinkeado: any = await controller.buscarPaciente(req.body.dto.valor);
+        if (pacienteBase && pacienteLinkeado) {
             if (req.body.op === 'link') {
-                controller.linkIdentificadores(req, resultado.paciente);
+                controller.linkIdentificadores(req, pacienteBase.paciente);
+                pacienteLinkeado.paciente.markModified('activo');
+                pacienteLinkeado.paciente.activo = false;
             }
             if (req.body.op === 'unlink') {
-                controller.unlinkIdentificadores(req, resultado.paciente);
+                controller.unlinkIdentificadores(req, pacienteBase.paciente);
+                pacienteLinkeado.paciente.markModified('activo');
+                pacienteLinkeado.paciente.activo = true;
             }
 
-
-            // controller.updateActivo(req, resultado.paciente);
-
-            let pacienteAndes: any;
-            if (resultado.db === 'mpi') {
-                pacienteAndes = new paciente(resultado.paciente.toObject());
+            let pacienteAndesBase: any;
+            if (pacienteBase.db === 'mpi') {
+                pacienteAndesBase = new paciente(pacienteBase.paciente.toObject());
             } else {
-                pacienteAndes = resultado.paciente;
+                pacienteAndesBase = pacienteBase.paciente;
             }
+
+            let pacienteAndesLinkeado: any;
+            if (pacienteLinkeado.db === 'mpi') {
+                pacienteAndesLinkeado = new paciente(pacienteLinkeado.paciente.toObject());
+            } else {
+                pacienteAndesLinkeado = pacienteLinkeado.paciente;
+            }
+
             let connElastic = new ElasticSync();
-            await connElastic.sync(pacienteAndes);
-            Auth.audit(pacienteAndes, req);
-            let pacienteSaved = await pacienteAndes.save();
+
+            await connElastic.sync(pacienteAndesBase);
+
+            if (pacienteLinkeado.paciente.activo) {
+                await connElastic.sync(pacienteAndesLinkeado);
+            } else {
+                await connElastic.delete(pacienteLinkeado.paciente._id.toString());
+            }
+
+            Auth.audit(pacienteAndesBase, req);
+            let pacienteSaved = await pacienteAndesBase.save();
             res.json(pacienteSaved);
         } else {
             return next('Paciente no encontrado');
