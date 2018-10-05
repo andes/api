@@ -197,18 +197,15 @@ router.post('/turnos/cancelar', (req: any, res, next) => {
     if (!mongoose.Types.ObjectId.isValid(agendaId)) {
         return next('ObjectID Inválido');
     }
-
     agenda.findById(agendaId, (err, agendaObj) => {
         if (err) {
             return res.status(422).send({ message: 'agenda_id_invalid' });
         }
         const turno = agendaCtrl.getTurno(req, agendaObj, turnoId);
-        if (turno) {
+        if (turno && turno.estado === 'asignado') {
             if (String(turno.paciente.id) === pacienteId) {
                 LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, bloqueId, agendaId);
-
                 agendaCtrl.liberarTurno(req, agendaObj, turno);
-
                 Auth.audit(agendaObj, req);
                 return agendaObj.save((error) => {
                     Logger.log(req, 'citas', 'update', {

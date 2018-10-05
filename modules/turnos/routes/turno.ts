@@ -404,11 +404,9 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res
                 operations.cacheTurnos(doc2);
                 // Fin de insert cache
                 res.json(doc2);
-
                 if (req.body.turno.reasignado && req.body.turno.reasignado.siguiente) {
                     const turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
                     LoggerPaciente.logTurno(req, 'turnos:reasignar', req.body.turno.paciente, turno, req.params.idBloque, req.params.idAgenda);
-
                     NotificationService.notificarReasignar(req.params);
                 }
 
