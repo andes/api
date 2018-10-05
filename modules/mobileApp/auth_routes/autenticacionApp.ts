@@ -1,10 +1,9 @@
 import { pacienteApp } from '../schemas/pacienteApp';
 import { buscarPaciente } from '../../../core/mpi/controller/paciente';
-
 import * as express from 'express';
 import * as authController from '../controller/AuthController';
 import { Auth } from '../../../auth/auth.class';
-import * as labsImport from '../../cda/controller/import-labs';
+import { EventCore } from '@andes/event-bus';
 
 const router = express.Router();
 
@@ -58,10 +57,10 @@ router.post('/login', (req, res, next) => {
                     user
                 });
 
-                // Hack momentaneo. Descargamos los laboratorios a demanda.
                 buscarPaciente(user.pacientes[0].id).then((resultado) => {
                     if (resultado.paciente) {
-                        labsImport.importarDatos(resultado.paciente);
+                        user.pacientes[0] = resultado.paciente.basicos();
+                        EventCore.emitAsync('mobile:patient:login', user);
                     }
                 });
 
@@ -103,6 +102,7 @@ router.post('/olvide-password', (req, res, next) => {
                 return next(errSave);
             }
 
+            EventCore.emitAsync('mobile:patient:reset-password', user);
             // enviamos email de reestablecimiento de password
             authController.enviarCodigoCambioPassword(datosUsuario);
 
@@ -177,6 +177,8 @@ router.post('/reestablecer-password', (req, res, next) => {
             res.status(200).json({
                 valid: true
             });
+            EventCore.emitAsync('mobile:patient:reset-password', user);
+
         });
     });
 });

@@ -239,6 +239,12 @@ export const conSqlPecas = {
     }
 };
 
+export const RedisWebSockets = {
+    active: getEnv('REDIS', false),
+    host: getEnv('REDIS_HOST', 'localhost', 'b'),
+    port: getEnv('REDIS_PORT', '6379', 'n')
+};
+
 export const sqlCarpetasJob = {
     user: '',
     password: '',
