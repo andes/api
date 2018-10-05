@@ -102,8 +102,8 @@ export const modules = {
     turnero: {
         active: true,
         path: './modules/turnero/routes',
-        route: '/modules/turnero',
-        middleware: null
+        route: '/modules/turnero'
+        // middleware: appMiddleware
     },
     fuentesAutenticas: {
         active: true,

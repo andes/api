@@ -19,3 +19,5 @@ export class EventBus extends Emitter {
 }
 
 export const EventCore = new EventBus();
+
+export const EventSocket = new EventBus();

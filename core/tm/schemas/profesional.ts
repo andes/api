@@ -1,10 +1,9 @@
 import * as mongoose from 'mongoose';
-import * as constantes from './constantes';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import * as direccionSchema from './direccion';
 import * as contactoSchema from './contacto';
 import { ObjSIISASchema } from './siisa';
-import * as moment from 'moment';
-mongoose.plugin(schema => { schema.options.usePushEach = true; });
+
 let matriculacionSchema = new mongoose.Schema({
     matriculaNumero: { type: Number, required: false },
     libro: { type: String, required: false },
@@ -122,6 +121,6 @@ profesionalSchema.virtual('fallecido').get(function () {
     return this.fechaFallecimiento;
 });
 
-profesionalSchema.plugin(require('../../../mongoose/audit'));
+profesionalSchema.plugin(AuditPlugin);
 
 export let profesional = mongoose.model('profesional', profesionalSchema, 'profesional');

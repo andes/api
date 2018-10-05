@@ -3,7 +3,7 @@ import * as mongoose from 'mongoose';
 
 export interface UserToken extends Token {
     usuario: {
-        id: mongoose.Types.ObjectId
+        id: string,
         nombreCompleto: string,
         nombre: string,
         apellido: string,
