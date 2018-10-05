@@ -2,7 +2,7 @@ import { model as Prestacion } from '../schemas/prestacion';
 import * as camasController from './../controllers/cama';
 
 
-export function buscarUltimaInternacion(idPaciente, estado) {
+export function buscarUltimaInternacion(idPaciente, estado, organizacion) {
     let query;
     if (estado) {
         query = Prestacion.find({
@@ -14,6 +14,9 @@ export function buscarUltimaInternacion(idPaciente, estado) {
 
     if (idPaciente) {
         query.where('paciente.id').equals(idPaciente);
+    }
+    if (organizacion) {
+        query.where('ejecucion.organizacion.id').equals(organizacion);
     }
 
     query.where('solicitud.ambitoOrigen').equals('internacion');
