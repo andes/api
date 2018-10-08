@@ -102,8 +102,8 @@ export const modules = {
     turnero: {
         active: true,
         path: './modules/turnero/routes',
-        route: '/modules/turnero',
-        middleware: null
+        route: '/modules/turnero'
+        // middleware: appMiddleware
     },
     fuentesAutenticas: {
         active: true,
@@ -158,6 +158,16 @@ export const modules = {
         path: './modules/prestamosCarpetas/routes',
         route: '/modules/prestamosCarpetas',
         middleware: appMiddleware
+    },
+    version: {
+        active: true,
+        path: './modules/version/routes',
+        route: '/version'
+    },
+    webhook: {
+        active: true,
+        path: './modules/webhook/routes',
+        route: '/modules/webhook'
     },
     configFacturacionAutomatica: {
         active: true,

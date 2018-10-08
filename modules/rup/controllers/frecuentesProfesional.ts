@@ -39,7 +39,11 @@ export function actualizarFrecuentes(data) {
                                 frecuencia: 1
                             });
                         } else {
-                            resultado.frecuentes[indexConcepto].frecuencia = parseInt(resultado.frecuentes[indexConcepto].frecuencia, 0) + 1;
+                            if (resultado.frecuentes[indexConcepto].frecuencia) {
+                                resultado.frecuentes[indexConcepto].frecuencia = parseInt(resultado.frecuentes[indexConcepto].frecuencia, 0) + 1;
+                            } else {
+                                resultado.frecuentes[indexConcepto].frecuencia = 1;
+                            }
                         }
                     });
                 }

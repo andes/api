@@ -2,6 +2,7 @@ import { pacienteApp } from '../schemas/pacienteApp';
 import * as express from 'express';
 import * as authController from '../controller/AuthController';
 import { Auth } from '../../../auth/auth.class';
+import { EventCore } from '@andes/event-bus';
 
 const router = express.Router();
 // let emailRegex = /^[a-z0-9]+(\.[_a-z0-9]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,15})$/;
@@ -132,6 +133,8 @@ router.post('/v2/registrar', (req, res, next) => {
                 token,
                 user
             });
+
+            EventCore.emitAsync('mobile:patient:register', datosUsuario);
 
         }).catch((er) => {
             return next(er);
