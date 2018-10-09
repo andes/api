@@ -11,6 +11,7 @@ import * as turnosController from '../controller/turnosController';
 import * as moment from 'moment';
 import * as debug from 'debug';
 import { EventCore } from '@andes/event-bus';
+import carpetaPaciente = require('../../carpetas/schemas/carpetaPaciente');
 
 const router = express.Router();
 const dbgTurno = debug('dbgTurno');
@@ -44,6 +45,9 @@ function getTipoPrestacion(idTipoPrestacion) {
 }
 function getAgenda(idAgenda) {
     return agenda.findById(idAgenda).exec();
+}
+function getCarpeta(nroDocumento, idOrganizacion) {
+    return carpetaPaciente.find({ documento: nroDocumento, 'carpetaEfectores.organizacion._id': idOrganizacion }).exec();
 }
 
 router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
@@ -147,14 +151,17 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
     };
  */
 router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res, next) => {
-    // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
     const continues = ValidateDarTurno.checkTurno(req.body);
-
+    const pacienteSave = req.body.paciente;
     if (continues.valid) {
         let agendaRes;
         try {
-            await getPaciente(req.body.paciente.id);
-            await getTipoPrestacion(req.body.tipoPrestacion._id);
+            // Si el paciente no tiene carpetas, se busca en la colección carpetaPaciente
+            if (!req.body.paciente.carpetaEfectores || req.body.paciente.carpetaEfectores.length === 0) {
+                let carpetas = await getCarpeta(req.body.paciente.documento, (req as any).user.organizacion._id);
+                pacienteSave.carpetaEfectores = (carpetas[0] as any).carpetaEfectores;
+                await turnosController.actualizarCarpeta(req, res, next, pacienteSave);
+            }
             agendaRes = await getAgenda(req.params.idAgenda);
         } catch (err) {
             return next(err);
@@ -254,11 +261,12 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         const etiquetaReasignado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.reasignado';
         const etiquetaUpdateAt: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedAt';
         const etiquetaUpdateBy: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedBy';
-        // let etiquetaPrimeraVez: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.primeraVez';
 
         update[etiquetaEstado] = 'asignado';
         update[etiquetaPrestacion] = req.body.tipoPrestacion;
-        update[etiquetaPaciente] = req.body.paciente;
+        // update[etiquetaPaciente] = req.body.paciente;
+        update[etiquetaPaciente] = pacienteSave;
+
         update[etiquetaTipoTurno] = tipoTurno;
         update[etiquetaNota] = req.body.nota;
         update[etiquetaMotivoConsulta] = req.body.motivoConsulta;
@@ -267,10 +275,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         }
         update[etiquetaUpdateAt] = new Date();
         update[etiquetaUpdateBy] = usuario;
-
-        // TODO: buscar si es primera vez del paciente => TP y paciente => Profesional
-
-        // update[etiquetaPrimeraVez] = await esPrimerPaciente(agenda, req.body.paciente.id, ['primerPrestacion', 'primerProfesional']);
 
         const query = {
             _id: req.params.idAgenda,
@@ -312,8 +316,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                 res.json(agendaRes);
 
             }
-
-
         });
     } else {
         return next('Los datos del paciente son inválidos');

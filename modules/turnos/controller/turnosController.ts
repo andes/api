@@ -2,6 +2,9 @@ import * as mongoose from 'mongoose';
 import * as agenda from '../../../modules/turnos/schemas/agenda';
 import { toArray } from '../../../utils/utils';
 import { logPaciente } from '../../../core/log/schemas/logPaciente';
+import * as controller from '../../../core/mpi/controller/paciente';
+import { Auth } from './../../../auth/auth.class';
+import { paciente } from '../../../core/mpi/schemas/paciente';
 
 export function getTurno(req) {
     return new Promise(async (resolve, reject) => {
@@ -308,4 +311,38 @@ export async function getLiberadosPaciente(req) {
     } else {
         return ('Datos insuficientes');
     }
+}
+
+export function actualizarCarpeta(req, res, next, pacienteSave) {
+    controller.buscarPaciente(req.body.paciente.id).then(async (resultado: any) => {
+        if (resultado) {
+            try { // Actualizamos los turnos activos del paciente
+                req.body.carpetaEfectores = pacienteSave.carpetaEfectores;
+                const repetida = await controller.checkCarpeta(req, resultado.paciente);
+                if (!repetida) {
+                    controller.updateCarpetaEfectores(req, resultado.paciente);
+                    controller.updateTurnosPaciente(resultado.paciente);
+                } else {
+                    return next('El numero de carpeta ya existe');
+                }
+            } catch (error) { return next(error); }
+            let pacienteAndes: any;
+            if (resultado.db === 'mpi') {
+                pacienteAndes = new paciente(resultado.paciente.toObject());
+            } else {
+                pacienteAndes = resultado.paciente;
+            }
+            Auth.audit(pacienteAndes, req);
+            pacienteAndes.save((errPatch) => {
+                if (errPatch) {
+                    return next(errPatch);
+                }
+                // res.json(pacienteAndes);
+                // EventCore.emitAsync('mpi:patient:update', pacienteAndes);
+                // return;
+            });
+        }
+    }).catch((err) => {
+        return next(err);
+    });
 }
