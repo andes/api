@@ -164,12 +164,17 @@ async function saveTurno(idAgendaAndes, turno: any, datosPaciente, duracion, idT
 
 async function updateTurno(id, estado, pool, transaction) {
     let idEstado = 30; // Suponemos la prestación suspendida
+    let query = '';
 
     if (estado === constantes.EstadoTurnosAndes.disponible) {
         idEstado = 50; // Prestación ha sido liberada
+        query = 'UPDATE dbo.Prestaciones_Worklist SET ' +
+            'idEstado=' + idEstado + ' idHistoria = NULL, idPaciente = NULL, idTipoPrestacion=NULL where andesId=\'' + id + '\'';
+    } else {
+        // Query de suspensión
+        query = 'UPDATE dbo.Prestaciones_Worklist SET ' +
+            'idEstado=' + idEstado + ' where andesId=\'' + id + '\'';
     }
-    const query = 'UPDATE dbo.Prestaciones_Worklist SET ' +
-        'idEstado=' + idEstado + ' where andesId=\'' + id + '\'';
     return await new sql.Request(transaction)
         .query(query)
         .catch(err => {
