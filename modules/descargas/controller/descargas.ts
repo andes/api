@@ -89,16 +89,6 @@ export class Documento {
         });
     }
 
-    private static registroHTML(term: string, valor: any) {
-        valor = valor && valor.evolucion ? valor.evolucion : valor;
-        return `
-            <article class="contenedor-concepto-data">
-                <h3><!--term--></h3>
-                <hr class="sm"></hr>
-                <p><!--valor--></p>
-            </article>`.replace(/(<!--term-->)/, term).replace(/(<!--valor-->)/, valor);
-    }
-
     /**
      *
      * @param st string semanticTag
@@ -106,7 +96,6 @@ export class Documento {
     private static existeSemanticTagMPC(st) {
         return st === 'entidad observable' || st === 'regimen/tratamiento' || st === 'procedimiento' || st === 'hallazgo' || st === 'trastorno';
     }
-
 
     private static esHallazgo(st) {
         return st === 'hallazgo' || st === 'situacion' || st === 'trastorno';
@@ -116,14 +105,23 @@ export class Documento {
         return (st === 'procedimiento' || st === 'entidad observable' || st === 'régimen/tratamiento' || st === 'elemento de registro');
     }
 
+    private static esSolicitud(st, esSolicitud) {
+        return (st === 'procedimiento' || st === 'entidad observable' || st === 'régimen/tratamiento' || st === 'elemento de registro')
+            && esSolicitud;
+    }
+
+    private static esInsumo(st) {
+        return (st === 'producto');
+    }
+
     // private static getRegistros(registro) {
     //     return registro.valor === null ? registro.registros.filter()
     // }
 
     // 'plan'
-    static generarRegistroPlanHTML(plan: any, template: string): any {
+    static generarRegistroSolicitudHTML(plan: any, template: string): any {
         return template
-            .replace('<!--plan-->', plan.concepto.term)
+            .replace('<!--plan-->', this.ucaseFirst(plan.concepto.term))
             .replace('<!--motivo-->', plan.valor.solicitudPrestacion.motivo)
             .replace('<!--indicaciones-->', plan.valor.solicitudPrestacion.indicaciones)
             .replace('<!--organizacionDestino-->', (plan.valor.solicitudPrestacion.organizacionDestino ? plan.valor.solicitudPrestacion.organizacionDestino.nombre : ''))
@@ -134,7 +132,7 @@ export class Documento {
     // 'procedimiento' || 'entidad observable' || 'régimen/tratamiento' || 'elemento de registro'
     static generarRegistroProcedimientoHTML(proc: any, template: string): any {
         return template
-            .replace('<!--concepto-->', proc.concepto.term)
+            .replace('<!--concepto-->', this.ucaseFirst(proc.concepto.term))
             .replace('<!--valor-->', proc.valor)
             // .replace('<!--valor-->', (proc.valor || this.getRegistros(proc)))
             .replace('<!--motivoPrincipalDeConsulta-->', proc.esDiagnosticoPrincipal === true ? 'PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL' : '');
@@ -144,19 +142,24 @@ export class Documento {
     // 'procedimiento' || 'hallazgo' || 'trastorno'
     static generarRegistroHallazgoHTML(hallazgo: any, template: string): any {
         return template
-            .replace('<!--concepto-->', hallazgo.concepto.term)
-            .replace('<!--evolucion-->', hallazgo.valor.evolucion)
+            .replace('<!--concepto-->', this.ucaseFirst(hallazgo.concepto.term))
+            .replace('<!--evolucion-->', hallazgo.valor.evolucion ? hallazgo.valor.evolucion : 'sin valor')
             .replace('<!--motivoPrincipalDeConsulta-->', hallazgo.esDiagnosticoPrincipal === true ? 'PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL' : '');
 
     }
 
     // 'producto'
-    static generarRegistroMedicamentoHTML(producto: any, template: string): any {
+    static generarRegistroInsumoHTML(producto: any, template: string): any {
         return template
-            .replace('<!--concepto-->', producto.concepto.term)
-            .replace('<!--indicacion-->', producto.valor.evolucion)
-            .replace('<!--motivoPrincipalDeConsulta-->', producto.esDiagnosticoPrincipal === true ? 'PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL' : '');
-
+            .replace('<!--concepto-->', this.ucaseFirst(producto.concepto.term))
+            .replace('<!--motivoPrincipalDeConsulta-->', producto.esDiagnosticoPrincipal === true ? 'PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL' : '')
+            .replace('<!--recetable-->', producto.valor.recetable ? '(recetable)' : '(no recetable)')
+            .replace('<!--estado-->', producto.valor.estado)
+            .replace('<!--cantidad-->', producto.valor.cantidad)
+            .replace('<!--unidad-->', producto.valor.unidad)
+            .replace('<!--cantidadDuracion-->', producto.valor.duracion.cantidad)
+            .replace('<!--unidadDuracion-->', producto.valor.duracion.unidad)
+            .replace('<!--indicacion-->', producto.valor.indicacion);
     }
 
     static crearProcedimientos(proc, template) {
@@ -182,7 +185,7 @@ export class Documento {
     static crearPlanes(plan, template) {
         return plan.length > 0 ? plan.map(x => {
             if (x.esSolicitud) {
-                return this.generarRegistroPlanHTML(x, template);
+                return this.generarRegistroSolicitudHTML(x, template);
             }
         }) : [];
     }
@@ -192,6 +195,8 @@ export class Documento {
             this.generarRegistroHallazgoHTML(registro, template);
         } else if (this.esProcedimiento(registro.concepto.semanticTag)) {
             this.generarRegistroProcedimientoHTML(registro, template);
+        } else if (this.esInsumo(registro.concepto.semanticTag)) {
+            this.generarRegistroInsumoHTML(registro, template);
         }
     }
 
@@ -202,7 +207,8 @@ export class Documento {
     static informeRegistros: any[] = [];
     static hallazgoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/hallazgo.html'), 'utf8');
     static procedimientoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/procedimiento.html'), 'utf8');
-    static planTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/plan.html'), 'utf8');
+    static planTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/solicitud.html'), 'utf8');
+    static insumoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/insumo.html'), 'utf8');
     static nivelPadre = 0;
 
     static async generarInforme(registros, titulos?) {
@@ -213,8 +219,14 @@ export class Documento {
                     if (registros[i].valor.descripcion) {
                         this.informeRegistros = [...this.informeRegistros, ({ concepto: { term: registros[i].nombre, semanticTag: registros[i].concepto.semanticTag }, valor: `<div class="nivel-${this.nivelPadre}"><h3>${this.ucaseFirst(registros[i].nombre)}</h3><p>${this.ucaseFirst(registros[i].valor.descripcion)}</p></div>` })];
                     } else if (registros[i].valor !== null) {
-                        if (registros[i].valor.evolucion) {
-                            this.informeRegistros = [...this.informeRegistros, ({ concepto: { term: registros[i].concepto.term, semanticTag: registros[i].concepto.semanticTag }, valor: `<div class="nivel-${this.nivelPadre}"><h3>${this.ucaseFirst(registros[i].nombre)}</h3>${registros[i].valor.evolucion}</div>` })];
+                        if (this.esHallazgo(registros[i].concepto.semanticTag)) {
+                            this.informeRegistros = [...this.informeRegistros, ({ concepto: { term: registros[i].concepto.term, semanticTag: registros[i].concepto.semanticTag }, valor: `<div class="nivel-${this.nivelPadre}">${this.generarRegistroHallazgoHTML(registros[i], this.hallazgoTemplate)}</div>` })];
+                        } else if (this.esSolicitud(registros[i].concepto.semanticTag, registros[i].esSolicitud)) {
+                            this.informeRegistros = [...this.informeRegistros, ({ concepto: { term: registros[i].concepto.term, semanticTag: registros[i].concepto.semanticTag }, valor: `<div class="nivel-${this.nivelPadre}">${this.generarRegistroSolicitudHTML(registros[i], this.hallazgoTemplate)}</div>` })];
+                        } else if (this.esProcedimiento(registros[i].concepto.semanticTag)) {
+                            this.informeRegistros = [...this.informeRegistros, ({ concepto: { term: registros[i].concepto.term, semanticTag: registros[i].concepto.semanticTag }, valor: `<div class="nivel-${this.nivelPadre}">${this.generarRegistroProcedimientoHTML(registros[i], this.procedimientoTemplate)}</div>` })];
+                        } else if (this.esInsumo(registros[i].concepto.semanticTag)) {
+                            this.informeRegistros = [...this.informeRegistros, ({ concepto: { term: registros[i].concepto.term, semanticTag: registros[i].concepto.semanticTag }, valor: `<div class="nivel-${this.nivelPadre}">${this.generarRegistroInsumoHTML(registros[i], this.insumoTemplate)}</div>` })];
                         } else {
                             if (typeof registros[i].valor !== 'string') {
                                 registros[i].valor = registros[i].valor.evolucion ? registros[i].valor.evolucion : (registros[i].valor.estado ? registros[i].valor.estado : 'sin datos');
@@ -227,7 +239,7 @@ export class Documento {
                 }
             }
             if (registros[i] && registros[i].registros && registros[i].registros.length > 0) {
-                let template = this.esHallazgo(registros[i].concepto.semanticTag) ? this.hallazgoTemplate : this.procedimientoTemplate;
+                let template = this.esHallazgo(registros[i].concepto.semanticTag) ? this.hallazgoTemplate : (this.esProcedimiento(registros[i].concepto.semanticTag) ? this.procedimientoTemplate : this.insumoTemplate);
                 let reg = this.generarRegistro(registros[i], template);
                 if (reg) {
                     this.informeRegistros[i] = reg;
@@ -310,7 +322,6 @@ export class Documento {
 
             // let registros = '';
             this.generarInforme(prestacion.ejecucion.registros[0].registros, config.requeridos);
-
 
             // Si no hay configuración de informe o si se configura "registrosDefault" en true, se genera el informe por defecto (default)
             if (!config.informe || config.informe.registrosDefault) {
