@@ -27,8 +27,8 @@ export function PasesParaCenso(dtoCama) {
                 let salida = {
                     cama: dtoCama._id,
                     ultimoEstado: dtoCama.ultimoEstado,
-                    pases: pases,
-                    internacion: internacion
+                    pases,
+                    internacion
                 };
                 resolve(salida);
             });

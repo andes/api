@@ -27,9 +27,6 @@ export class Documento {
     // private static locale = 'es-ES';
     // public static timeZone = 'America/Argentina/Buenos_Aires';
 
-    // private static headerHTML = fs.readFileSync(path.join(__dirname, '../../../templates/andes/html/header.html'));
-    // private static footerHTML = fs.readFileSync(path.join(__dirname, '../../../templates/andes/html/footer.html'));
-
     /**
      * Opciones default de PDF rendering
      */
@@ -313,7 +310,6 @@ export class Documento {
 
             // let registros = '';
             this.generarInforme(prestacion.ejecucion.registros[0].registros, config.requeridos);
-
 
 
             // Si no hay configuración de informe o si se configura "registrosDefault" en true, se genera el informe por defecto (default)

@@ -5,6 +5,7 @@ import { ElasticSync } from '../../../utils/elasticSync';
 import { Logger } from '../../../utils/logService';
 import { Matching } from '@andes/match';
 import { Auth } from './../../../auth/auth.class';
+import { EventCore } from '@andes/event-bus';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
 
@@ -30,6 +31,9 @@ export function createPaciente(data, req) {
             const connElastic = new ElasticSync();
             connElastic.create(newPatient._id.toString(), nuevoPac).then(() => {
                 Logger.log(req, 'mpi', 'insert', newPatient);
+                // Código para emitir eventos
+                EventCore.emitAsync('mpi:patient:create', newPatient);
+                //
                 return resolve(newPatient);
             }).catch(error => {
                 return reject(error);
@@ -67,6 +71,7 @@ export function updatePaciente(pacienteObj, data, req) {
                 } else {
                     Logger.log(req, 'mpi', 'insert', pacienteObj);
                 }
+                EventCore.emitAsync('mpi:patient:update', pacienteObj);
                 resolve(pacienteObj);
             }).catch(error => {
                 return reject(error);
@@ -442,10 +447,11 @@ export function deletePacienteAndes(objectId) {
         };
         paciente.findById(query, (err, patientFound) => {
             if (err) {
-                reject(err);
+                return reject(err);
             }
             patientFound.remove();
-            resolve(patientFound);
+            EventCore.emitAsync('mpi:patient:delete', patientFound);
+            return resolve(patientFound);
         });
     });
 }

@@ -7,6 +7,7 @@ import * as frecuentescrl from '../controllers/frecuentesProfesional';
 
 import { buscarEnHuds } from '../controllers/rup';
 import { Logger } from '../../../utils/logService';
+import { EventCore } from '@andes/event-bus';
 import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
 import { snomedModel } from '../../../core/term/schemas/snomed';
 
@@ -26,7 +27,7 @@ router.get('/prestaciones/sinCama', (req, res, next) => {
         'solicitud.organizacion.id': mongoose.Types.ObjectId(Auth.getOrganization(req)),
         'solicitud.ambitoOrigen': 'internacion',
         'solicitud.tipoPrestacion.conceptId': '32485007',  // Ver si encontramos otra forma de diferenciar las prestaciones de internacion
-        '$where': 'this.estados[this.estados.length - 1].tipo ==  \"' + 'ejecucion' + '\"',
+        $where: 'this.estados[this.estados.length - 1].tipo ==  \"' + 'ejecucion' + '\"',
     };
 
     // Buscamos prestaciones que sean del ambito de internacion.
@@ -52,7 +53,7 @@ router.get('/prestaciones/sinCama', (req, res, next) => {
             // Buscamos si tiene una cama ocupada con el id de la internacion.
             let cama = await camasController.buscarCamaInternacion(mongoose.Types.ObjectId(prestacion.id), 'ocupada');
             // Loopeamos los registros de la prestacion buscando el informe de egreso.
-            let esEgreso = prestacion.ejecucion.registros.find(r => { r.valor && r.valor.InformeEgreso; });
+            let esEgreso = prestacion.ejecucion.registros.find(r => r.valor && r.valor.InformeEgreso);
             // Si no encontramos una cama ocupada quiere decir que esa prestacion va a formar parte
             // de nuestra lista.
             if (cama && cama.length === 0) {
@@ -78,7 +79,7 @@ router.get('/prestaciones/sinCama', (req, res, next) => {
 });
 
 
-router.get('/prestaciones/huds/:idPaciente', function (req, res, next) {
+router.get('/prestaciones/huds/:idPaciente', (req, res, next) => {
 
     // verificamos que sea un ObjectId válido
     if (!mongoose.Types.ObjectId.isValid(req.params.idPaciente)) {
@@ -248,6 +249,7 @@ router.post('/prestaciones', (req, res, next) => {
             return next(err);
         }
         res.json(data);
+        EventCore.emitAsync('rup:prestacion:create', data);
     });
 });
 
@@ -297,7 +299,7 @@ router.patch('/prestaciones/:id', (req, res, next) => {
             case 'informeIngreso':
                 if (req.body.informeIngreso) {
                     data.ejecucion.registros[0].valor.informeIngreso = req.body.informeIngreso;
-                    data.ejecucion.registros[0].markModified("valor");
+                    data.ejecucion.registros[0].markModified('valor');
                 }
                 break;
             case 'asignarTurno':
@@ -314,6 +316,11 @@ router.patch('/prestaciones/:id', (req, res, next) => {
             if (error) {
                 return next(error);
             }
+
+            if (req.body.estado && req.body.estado.tipo === 'validada') {
+                EventCore.emitAsync('rup:prestacion:validate', data);
+            }
+
             // Actualizar conceptos frecuentes por profesional y tipo de prestacion
             if (req.body.registrarFrecuentes && req.body.registros) {
 
@@ -373,8 +380,6 @@ router.patch('/prestaciones/:id', (req, res, next) => {
             } else {
                 res.json(prestacion);
             }
-
-            Auth.audit(data, req);
             /*
             Logger.log(req, 'prestacionPaciente', 'update', {
                 accion: req.body.op,

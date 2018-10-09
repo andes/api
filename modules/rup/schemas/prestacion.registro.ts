@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 import { SnomedConcept } from './snomed-concept';
-
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 // Cada registro contiene la información usuario que lo creó (plugin audit)
 // y los valores generados por los elementos RUP correspondientes.
 // Esto permite que múltiples usuarios generen registros para la ejecución de una prestación
@@ -45,4 +45,4 @@ schema.add({
 });
 
 // Habilitar plugin de auditoría
-schema.plugin(require('../../../mongoose/audit'));
+schema.plugin(AuditPlugin);

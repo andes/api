@@ -11,6 +11,7 @@ import * as moment from 'moment';
 
 
 import { Auth } from '../../../auth/auth.class';
+import { EventCore } from '@andes/event-bus';
 
 let path = require('path');
 let router = express.Router();
@@ -20,17 +21,14 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
     if (!Auth.check(req, 'cda:post')) {
         return next(403);
     }
-
     try {
         const idPrestacion = req.body.id;
-
         const fecha = moment(req.body.fecha).toDate();
 
         let orgId = req.user.organizacion.id ? req.user.organizacion.id : req.user.organizacion;
         if (Auth.check(req, 'cda:organizacion') && req.body.organizacion) {
             orgId = req.body.organizacion;
         }
-
         const yaExiste = await cdaCtr.CDAExists(idPrestacion, fecha, orgId);
         if (yaExiste) {
             return next({ error: 'prestacion_existente' });
@@ -58,6 +56,11 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
             }
         }
 
+        let confidencialidad = 'N';
+        if (req.body.confidencialidad === 'R') {
+            confidencialidad = req.body.confidencialidad;
+        }
+
         const paciente = await cdaCtr.findOrCreate(req, dataPaciente, organizacion._id);
         if (!paciente) {
             return next({ error: 'paciente_inexistente' });
@@ -74,8 +77,7 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
             fileData = await cdaCtr.storeFile(fileObj);
             adjuntos = [{ path: fileData.data, id: fileData.id }];
         }
-
-        const cda = cdaCtr.generateCDA(uniqueId, 'N', paciente, fecha, dataProfesional, organizacion, prestacion, cie10, texto, fileData);
+        const cda = cdaCtr.generateCDA(uniqueId, confidencialidad, paciente, fecha, dataProfesional, organizacion, prestacion, cie10, texto, fileData);
 
         const metadata = {
             paciente: paciente._id,
@@ -90,8 +92,9 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
             }
         };
         let obj = await cdaCtr.storeCDA(uniqueId, cda, metadata);
-
         res.json({ cda: uniqueId, paciente: paciente._id });
+
+        EventCore.emitAsync('huds:cda:create', { cda: uniqueId, paciente: paciente._id });
 
     } catch (e) {
         return next(e);
@@ -288,16 +291,36 @@ router.get('/tojson/:id', async (req: any, res, next) => {
     if (!Auth.check(req, 'cda:get')) {
         return next(403);
     }
-
     const _base64 = req.params.id;
     let contexto = await cdaCtr.loadCDA(_base64);
+    let setText = false;
     // Limpiamos xml previo al parsing
     contexto = contexto.toString().replace(new RegExp('<br>', 'g'), ' ');
     contexto = contexto.toString().replace(new RegExp('[\$]', 'g'), '');
+    contexto = contexto.toString().replace(new RegExp('&#xD', 'g'), '');
+
+    /**
+     * ATENCION: FIX para poder visualizar los informes de evolución que traen caracteres raros.
+     * Obtenemos el texto dentro de los tags <text> del xml, la extraemos tal cual está y la agregamos luego de la ejecución del parser
+     * para conservala tal cual la escribieron.
+     * PD: Deberemos mejorar esto a futuro!
+     */
+
+    let resultado = contexto.toString().match('(<text>)[^~]*(<\/text>)')[0];
+    if (!resultado.includes('Sin datos')) {
+        resultado = resultado.replace('<text>', '');
+        resultado = resultado.replace('</text>', '');
+        setText = true;
+    }
+    contexto = contexto.toString().replace(new RegExp('(<text>)[^~]*(<\/text>)'), '');
     to_json(contexto, (error, data) => {
         if (error) {
             return next(error);
         } else {
+            if (setText) {
+                // Volvemos a agregar el texto de la evolución
+                data.ClinicalDocument.component.structuredBody.component.section.text = resultado;
+            }
             res.json(data);
         }
     });

@@ -46,13 +46,13 @@ router.get('/organizaciones/georef/:id?', async (req, res, next) => {
             };
 
             if (dir !== '' && localidad !== '' && provincia !== '') {
-                let reqGet = https.request(optionsgetmsg, function (res2) {
+                let reqGet = https.request(optionsgetmsg, (res2) => {
                     res2
-                        .on('data', function (d, error) {
+                        .on('data', (d, error) => {
                             jsonGoogle = jsonGoogle + d.toString();
                         });
 
-                    res2.on('end', function () {
+                    res2.on('end', () => {
                         let salida = JSON.parse(jsonGoogle);
                         if (salida.status === 'OK') {
                             res.json(salida.results[0].geometry.location);
@@ -73,19 +73,19 @@ router.get('/organizaciones/georef/:id?', async (req, res, next) => {
     } else {
         let query = OrganizacionModel.aggregate([
             {
-                '$match': {
+                $match: {
                     'direccion.geoReferencia': {
                         $exists: true
                     }
                 }
             }, {
-                '$project': {
-                    '_id': 0,
-                    'nombre': '$nombre',
-                    'lat': {
+                $project: {
+                    _id: 0,
+                    nombre: '$nombre',
+                    lat: {
                         $arrayElemAt: ['$direccion.geoReferencia', 0]
                     },
-                    'lng': {
+                    lng: {
                         $arrayElemAt: ['$direccion.geoReferencia', 1]
                     }
                 }
@@ -260,9 +260,7 @@ router.get('/organizaciones/:id*?', (req, res, next) => {
         }
 
         if (req.query.sisa) {
-            filtros['codigo.sisa'] = {
-                $regex: utils.makePattern(req.query.sisa)
-            };
+            filtros['codigo.sisa'] = req.query.sisa;
         }
         if (req.query.activo) {
             filtros['activo'] = req.query.activo;
@@ -306,7 +304,7 @@ router.get('/organizaciones/:id*?', (req, res, next) => {
         // }
 
 
-        // query.exec(function (err, data) {
+        // query.exec (err, data) => {
         //     if (err) {
         //         return next(err);
         //     }
@@ -339,8 +337,9 @@ router.get('/organizaciones/:id*?', (req, res, next) => {
  *         description: Un objeto organizacion
  *         schema:
  *           $ref: '#/definitions/organizacion'
+ * Auth.audit(newPatientMpi, req)
  */
-router.post('/organizaciones', Auth.authenticate(), function (req, res, next) {
+router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
     if (!Auth.check(req, 'tm:organizacion:create')) {
         return next(403);
     }
@@ -383,11 +382,11 @@ router.post('/organizaciones', Auth.authenticate(), function (req, res, next) {
  *         schema:
  *           $ref: '#/definitions/organizacion'
  */
-router.put('/organizaciones/:id', Auth.authenticate(), function (req, res, next) {
+router.put('/organizaciones/:id', Auth.authenticate(), (req, res, next) => {
     if (!Auth.check(req, 'tm:organizacion:edit')) {
         return next(403);
     }
-    OrganizacionModel.findByIdAndUpdate(req.params.id, req.body, function (err, data) {
+    OrganizacionModel.findByIdAndUpdate(req.params.id, req.body, (err, data) => {
         if (err) {
             return next(err);
         }
@@ -421,11 +420,11 @@ router.put('/organizaciones/:id', Auth.authenticate(), function (req, res, next)
  *         schema:
  *           $ref: '#/definitions/organizacion'
  */
-router.delete('/organizaciones/:id', Auth.authenticate(), function (req, res, next) {
+router.delete('/organizaciones/:id', Auth.authenticate(), (req, res, next) => {
     if (!Auth.check(req, 'tm:organizacion:delete')) {
         return next(403);
     }
-    OrganizacionModel.findByIdAndRemove(req.params._id, function (err, data) {
+    OrganizacionModel.findByIdAndRemove(req.params._id, (err, data) => {
         if (err) {
             return next(err);
         }
