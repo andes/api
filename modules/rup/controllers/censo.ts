@@ -6,6 +6,28 @@ import * as camasController from './../controllers/cama';
 import * as internacionesController from './../controllers/internacion';
 import * as censoController from './../controllers/censo';
 
+
+export function filtrarMovimientosIntraUO(camas) {
+    let salida = [];
+    camas.forEach(unaCama => {
+        // buscamos si en la salida ya existe una cama ocupada con la misma internacion en la misma unidad organizativa
+        let indiceEncontrado = salida.findIndex(c => (c.ultimoEstado.unidadOrganizativa.conceptId === unaCama.ultimoEstado.unidadOrganizativa.conceptId) && (c.ultimoEstado.idInternacion.toString() === unaCama.ultimoEstado.idInternacion.toString()));
+        if (indiceEncontrado >= 0) {
+            // Si existe vamos a coparar las fechas para quedarnos con la ultima ocupada
+            let fechaEncontrada = moment(salida[indiceEncontrado].ultimoEstado.fecha);
+            let fechaCama = moment(unaCama.ultimoEstado.fecha);
+            // Solo si la fecha de la cama actual es posterior a la ya almacenada en salida la reemplazamos
+            if (fechaEncontrada < fechaCama) {
+                salida[indiceEncontrado] = unaCama;
+            }
+        } else {
+            // si no se encontro agregamos la cama a la salida
+            salida.push(unaCama);
+        }
+    });
+    return salida;
+}
+
 export function censoDiario(unidad, fechaConsulta, idOrganizacion) {
     return new Promise((resolve, reject) => {
         const fecha = fechaConsulta;
@@ -13,10 +35,14 @@ export function censoDiario(unidad, fechaConsulta, idOrganizacion) {
         camasController.camaOcupadasxUO(unidad, fecha, idOrganizacion).then(
             camas => {
                 if (camas) {
-                    let salidaCamas = Promise.all(camas.map(c => camasController.desocupadaEnDia(c, fecha)));
+                    // filtramos aquellos movimientos que fueron dentro de una misma unidad organizativa
+                    // y nos quedamos con el ultimo
+                    let camasFiltradas = this.filtrarMovimientosIntraUO(camas);
+                    let salidaCamas = Promise.all(camasFiltradas.map(c => camasController.desocupadaEnDia(c, fecha)));
+
                     salidaCamas.then(salida => {
-                        salida = salida.filter(s => s);
-                        let pasesDeCama = Promise.all(salida.map(c => internacionesController.PasesParaCenso(c)));
+                        let filtroNulos = salida.filter(s => s);
+                        let pasesDeCama = Promise.all(filtroNulos.map(c => internacionesController.PasesParaCenso(c)));
                         pasesDeCama.then(resultado => {
                             if (resultado.length) {
                                 let pasesCamaCenso: any[] = resultado;
@@ -245,7 +271,6 @@ function esPaseA(pases, fecha, idUnidadOrganizativa) {
         let fechaFin = moment(fecha).endOf('day').toDate();
         let ultimoPase = pases[pases.length - 1];
         let paseAnterior = pases[pases.length - 2];
-
         if (ultimoPase.estados.fecha >= fechaInicio && ultimoPase.estados.fecha <= fechaFin) {
             if (paseAnterior.estados.unidadOrganizativa.conceptId === idUnidadOrganizativa &&
                 ultimoPase.estados.unidadOrganizativa.conceptId !== idUnidadOrganizativa) {
@@ -253,7 +278,10 @@ function esPaseA(pases, fecha, idUnidadOrganizativa) {
             } else {
                 let paseAux = pases[pases.length - 3];
                 if (paseAux && ultimoPase.estados.unidadOrganizativa.conceptId === idUnidadOrganizativa && paseAux.estados.unidadOrganizativa.conceptId === idUnidadOrganizativa) {
-                    return paseAnterior.estados;
+                    if (paseAnterior.estados.unidadOrganizativa.conceptId !== idUnidadOrganizativa) {
+                        return paseAnterior.estados;
+                    }
+
                 }
             }
         }
