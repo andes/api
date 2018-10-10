@@ -617,7 +617,7 @@ export function linkIdentificadores(req, data) {
 export function unlinkIdentificadores(req, data) {
     data.markModified('identificadores');
     if (data.identificadores) {
-        data.identificadores = data.identificadores.filter(x => x.valor !== req.body.dto);
+        data.identificadores = data.identificadores.filter(x => x.valor !== req.body.dto.valor);
     }
 }
 
