@@ -11,7 +11,7 @@ import * as turnosController from '../controller/turnosController';
 import * as moment from 'moment';
 import * as debug from 'debug';
 import { EventCore } from '@andes/event-bus';
-import carpetaPaciente = require('../../carpetas/schemas/carpetaPaciente');
+import * as carpetaPaciente from '../../carpetas/schemas/carpetaPaciente';
 
 const router = express.Router();
 const dbgTurno = debug('dbgTurno');
