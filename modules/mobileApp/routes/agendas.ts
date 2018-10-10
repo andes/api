@@ -30,6 +30,7 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
         matchAgendas['horaInicio'] = { $gte: new Date(moment().format('YYYY-MM-DD HH:mm')) };
     }
     matchAgendas['tipoPrestaciones.conceptId'] = '34043003'; // Tipo de turno Hardcodeado para odontología
+    matchAgendas['bloques.restantesProgramados'] = { $gt: 0 };
     matchAgendas['estado'] = 'publicada';
     matchAgendas['dinamica'] = false;
 
