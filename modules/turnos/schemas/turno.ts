@@ -66,6 +66,7 @@ const turnoSchema = new mongoose.Schema({
         type: String,
         enum: ['no enviado', 'enviado', 'fallido']
     },
+    emitidoPor: String, // Agregamos para identificar desde donde se emitio el turno. Ej: appmobile.
     paciente: pacienteSchema,
     motivoConsulta: String,
     tipoPrestacion: {

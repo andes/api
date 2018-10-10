@@ -90,9 +90,10 @@ export function liberarTurno(req, data, turno) {
         turno.tipoPrestacion = null;
         turno.nota = null;
         turno.confirmedAt = null;
+        turno.reasignado = undefined;  // Esto es necesario cuando se libera un turno reasignado
         turno.updatedAt = new Date();
         turno.updatedBy = req.user.usuario || req.user;
-
+        turno.emitidoPor = ''; // Blanqueamos el emitido por (VER SI LO DEJAMOS O LO BLANQUEAMOS CUANDO EL PACIENTE LO ELIMINA)
         let cant = 1;
 
         const turnoDoble = getTurnoSiguiente(req, data, turno._id);
@@ -1052,10 +1053,10 @@ export function getCantidadConsultaXPrestacion(params) {
         pipeline = [{
             $match: {
                 $and: [
-                        { horaInicio: { $gte: new Date(params.horaInicio) } },
-                        { horaFin: { $lte: new Date(params.horaFin) } },
-                        { 'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) } },
-                        { 'bloques.turnos.estado': 'asignado' }
+                    { horaInicio: { $gte: new Date(params.horaInicio) } },
+                    { horaFin: { $lte: new Date(params.horaFin) } },
+                    { 'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) } },
+                    { 'bloques.turnos.estado': 'asignado' }
                 ]
             }
         },
