@@ -1,14 +1,31 @@
-import { SnomedCIE10Mapping } from './../../../core/term/controller/mapping';
+import {
+    SnomedCIE10Mapping
+} from './../../../core/term/controller/mapping';
 import * as cie10 from './../../../core/term/schemas/cie10';
 import * as agendaModel from '../../turnos/schemas/agenda';
 import * as moment from 'moment';
-import { Auth } from '../../../auth/auth.class';
-import { userScheduler } from '../../../config.private';
-import { Logger } from '../../../utils/logService';
-import { model as Prestacion } from '../../rup/schemas/prestacion';
+import {
+    Auth
+} from '../../../auth/auth.class';
+import {
+    userScheduler
+} from '../../../config.private';
+import {
+    Logger
+} from '../../../utils/logService';
+import {
+    model as Prestacion
+} from '../../rup/schemas/prestacion';
 import * as request from 'request';
 import * as mongoose from 'mongoose';
-import { toArray } from '../../../utils/utils';
+import {
+    toArray
+} from '../../../utils/utils';
+import {
+    EventCore
+} from '@andes/event-bus';
+import * as turnosController from '../../../modules/turnos/controller/turnosController';
+import * as agendaController from '../../../modules/turnos/controller/agenda';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -16,6 +33,7 @@ export function darAsistencia(req, data, tid = null) {
     turno.asistencia = 'asistio';
     turno.updatedAt = new Date();
     turno.updatedBy = req.user.usuario || req.user;
+    return turno;
     // crearPrestacionVacia(turno, req);
 }
 
@@ -25,6 +43,7 @@ export function sacarAsistencia(req, data, tid = null) {
     turno.asistencia = undefined;
     turno.updatedAt = new Date();
     turno.updatedBy = req.user.usuario || req.user;
+    return turno;
 }
 // Turno
 export function marcarNoAsistio(req, data, tid = null) {
@@ -32,6 +51,7 @@ export function marcarNoAsistio(req, data, tid = null) {
     turno.asistencia = 'noAsistio';
     turno.updatedAt = new Date();
     turno.updatedBy = req.user.usuario || req.user;
+    return turno;
 }
 
 // Turno
@@ -70,9 +90,10 @@ export function liberarTurno(req, data, turno) {
         turno.tipoPrestacion = null;
         turno.nota = null;
         turno.confirmedAt = null;
+        turno.reasignado = undefined;  // Esto es necesario cuando se libera un turno reasignado
         turno.updatedAt = new Date();
         turno.updatedBy = req.user.usuario || req.user;
-
+        turno.emitidoPor = ''; // Blanqueamos el emitido por (VER SI LO DEJAMOS O LO BLANQUEAMOS CUANDO EL PACIENTE LO ELIMINA)
         let cant = 1;
 
         const turnoDoble = getTurnoSiguiente(req, data, turno._id);
@@ -193,7 +214,9 @@ export function codificarTurno(req, data, tid) {
 
                         if (target) {
                             // Buscar en cie10 los primeros 5 digitos
-                            cie10.model.findOne({ codigo: (target as String).substring(0, 5) }).then(cie => {
+                            cie10.model.findOne({
+                                codigo: (target as String).substring(0, 5)
+                            }).then(cie => {
                                 if (cie != null) {
                                     if (registro.esDiagnosticoPrincipal) {
                                         codificaciones.unshift({ // El diagnostico principal se inserta al comienzo del array
@@ -385,6 +408,7 @@ export function agregarSobreturno(req, data) {
         sobreturno.updatedAt = new Date();
         sobreturno.updatedBy = usuario;
         data.sobreturnos.push(sobreturno);
+        return data.sobreturnos[data.sobreturnos.length - 1]; // Para poder trackear el id del sobreturno
     }
 }
 
@@ -635,7 +659,10 @@ export function esPrimerPaciente(agenda: any, idPaciente: string, opciones: any[
                 });
             });
         });
-        resolve({ profesional: primerProfesional, tipoPrestacion: primerPrestacion });
+        resolve({
+            profesional: primerProfesional,
+            tipoPrestacion: primerPrestacion
+        });
     });
 
 }
@@ -857,6 +884,28 @@ export function saveAgenda(nuevaAgenda) {
     });
 }
 
+
+// Actualiza el paciente dentro del turno, si se realizo un update del paciente (Eventos entre módulos)
+EventCore.on('mpi:patient:update', async (pacienteModified) => {
+    let req = {
+        query: {
+            estado: 'asignado',
+            pacienteId: pacienteModified.id,
+            horaInicio: moment(new Date()).startOf('day').toDate() as any
+        }
+    };
+    let turnos: any = await turnosController.getTurno(req);
+    if (turnos.length > 0) {
+        turnos.forEach(element => {
+            try {
+                agendaController.updatePaciente(pacienteModified, element);
+            } catch (error) {
+                return error;
+            }
+        });
+    }
+});
+
 /**
  * Actualiza el paciente embebido en el turno.
  *
@@ -871,26 +920,26 @@ export function updatePaciente(pacienteModified, turno) {
         }
         const bloques: any = data.bloques;
         let indiceTurno = -1;
+        let i = 0;
+        while (indiceTurno < 0 && i < bloques.length) {
+            indiceTurno = bloques[i].turnos.findIndex(elem => elem._id.toString() === turno._id.toString());
 
-        for (const bloque of bloques) {
-            indiceTurno = bloque.turnos.findIndex(elem => elem._id.toString() === turno._id.toString());
-
-            if (indiceTurno > 0) { // encontro el turno en este bloque?
-                bloque.turnos[indiceTurno].paciente.nombre = pacienteModified.nombre;
-                bloque.turnos[indiceTurno].paciente.apellido = pacienteModified.apellido;
-                bloque.turnos[indiceTurno].paciente.documento = pacienteModified.documento;
+            if (indiceTurno > -1) { // encontro el turno en este bloque?
+                bloques[i].turnos[indiceTurno].paciente.nombre = pacienteModified.nombre;
+                bloques[i].turnos[indiceTurno].paciente.apellido = pacienteModified.apellido;
+                bloques[i].turnos[indiceTurno].paciente.documento = pacienteModified.documento;
                 if (pacienteModified.contacto && pacienteModified.contacto[0]) {
-                    bloque.turnos[indiceTurno].paciente.telefono = pacienteModified.contacto[0].valor;
+                    data.sobreturnos[indiceTurno].paciente.telefono = pacienteModified.contacto[0].valor;
                 }
-                bloque.turnos[indiceTurno].paciente.carpetaEfectores = pacienteModified.carpetaEfectores;
-                bloque.turnos[indiceTurno].paciente.fechaNacimiento = pacienteModified.fechaNacimiento;
+                data.sobreturnos[indiceTurno].paciente.carpetaEfectores = pacienteModified.carpetaEfectores;
+                data.sobreturnos[indiceTurno].paciente.fechaNacimiento = pacienteModified.fechaNacimiento;
             }
         }
 
         if (indiceTurno < 0) { // no se encontro el turno en los bloques de turnos?
             indiceTurno = data.sobreturnos.findIndex(elem => elem._id.toString() === turno._id.toString());
 
-            if (indiceTurno > 0) { // esta el turno entre los sobreturnos?
+            if (indiceTurno > -1) { // esta el turno entre los sobreturnos?
                 data.sobreturnos[indiceTurno].paciente.nombre = pacienteModified.nombre;
                 data.sobreturnos[indiceTurno].paciente.apellido = pacienteModified.apellido;
                 data.sobreturnos[indiceTurno].paciente.documento = pacienteModified.documento;
@@ -901,8 +950,7 @@ export function updatePaciente(pacienteModified, turno) {
                 data.sobreturnos[indiceTurno].paciente.fechaNacimiento = pacienteModified.fechaNacimiento;
             }
         }
-
-        if (indiceTurno > 0) {
+        if (indiceTurno > -1) {
             try {
                 Auth.audit(data, (userScheduler as any));
                 saveAgenda(data);
@@ -1001,55 +1049,60 @@ export function getCantidadConsultaXPrestacion(params) {
 
     return new Promise(async (resolve, reject) => {
         let pipeline = [];
-        pipeline = [
-            {
-                $match: {
-                    $and: [
-                        { horaInicio: { $gte: new Date(params.horaInicio) } },
-                        { horaFin: { $lte: new Date(params.horaFin) } },
-                        { 'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) } },
-                        { 'bloques.turnos.estado': 'asignado' }
-                    ]
-                }
-            },
-            {
-                $unwind: '$bloques'
-            },
-            {
-                $project: {
-                    idBloque: '$bloques._id',
-                    bloqueTurnos: { $concatArrays: ['$sobreturnos', '$bloques.turnos'] }
-                }
-            },
-
-
-            {
-                $unwind: '$bloqueTurnos'
-            },
-            {
-                $project: {
-                    hora: '$bloqueTurnos.horaInicio',
-                    estado: '$bloqueTurnos.estado',
-                    tipoPrestacion: '$bloqueTurnos.tipoPrestacion'
-                }
-            },
-            {
-                $match: {
-                    estado: 'asignado'
-                }
-            },
-            {
-                $group: {
-                    _id: '$tipoPrestacion.term',
-                    nombrePrestacion: { $first: '$tipoPrestacion.term' },
-                    conceptId: {
-                        $first: '$tipoPrestacion.conceptId'
-                    },
-                    total: { $sum: 1 },
-                }
-
-
+        pipeline = [{
+            $match: {
+                $and: [
+                    { horaInicio: { $gte: new Date(params.horaInicio) } },
+                    { horaFin: { $lte: new Date(params.horaFin) } },
+                    { 'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) } },
+                    { 'bloques.turnos.estado': 'asignado' }
+                ]
             }
+        },
+        {
+            $unwind: '$bloques'
+        },
+        {
+            $project: {
+                idBloque: '$bloques._id',
+                bloqueTurnos: {
+                    $concatArrays: ['$sobreturnos', '$bloques.turnos']
+                }
+            }
+        },
+
+
+        {
+            $unwind: '$bloqueTurnos'
+        },
+        {
+            $project: {
+                hora: '$bloqueTurnos.horaInicio',
+                estado: '$bloqueTurnos.estado',
+                tipoPrestacion: '$bloqueTurnos.tipoPrestacion'
+            }
+        },
+        {
+            $match: {
+                estado: 'asignado'
+            }
+        },
+        {
+            $group: {
+                _id: '$tipoPrestacion.term',
+                nombrePrestacion: {
+                    $first: '$tipoPrestacion.term'
+                },
+                conceptId: {
+                    $first: '$tipoPrestacion.conceptId'
+                },
+                total: {
+                    $sum: 1
+                },
+            }
+
+
+        }
 
         ];
 
@@ -1071,4 +1124,3 @@ export function getCantidadConsultaXPrestacion(params) {
 
     });
 }
-

@@ -10,9 +10,21 @@ import { Logger } from '../../../utils/logService';
 import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
 import { snomedModel } from '../../../core/term/schemas/snomed';
 import * as camasController from './../controllers/cama';
+import { EventCore } from '@andes/event-bus';
 
-let router = express.Router();
-let async = require('async');
+const router = express.Router();
+const async = require('async');
+
+
+/***
+ *  Buscar un determinado concepto snomed ya sea en una prestación especifica o en la huds completa de un paciente
+ *
+ * @param idPaciente: id mongo del paciente
+ * @param estado: buscar en prestaciones con un estado distinto a validada
+ * @param idPrestacion: buscar concepto/s en una prestacion especifica
+ * @param expresion: expresion snomed que incluye los conceptos que estamos buscando
+ *
+ */
 
 
 /**
@@ -258,6 +270,7 @@ router.post('/prestaciones', (req, res, next) => {
             return next(err);
         }
         res.json(data);
+        EventCore.emitAsync('rup:prestacion:create', data);
     });
 });
 
@@ -319,6 +332,10 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 return next(error);
             }
 
+            if (req.body.estado && req.body.estado.tipo === 'validada') {
+                EventCore.emitAsync('rup:prestacion:validate', data);
+            }
+
             // Actualizar conceptos frecuentes por profesional y tipo de prestacion
             if (req.body.registrarFrecuentes && req.body.registros) {
 
@@ -378,8 +395,6 @@ router.patch('/prestaciones/:id', (req, res, next) => {
             } else {
                 res.json(prestacion);
             }
-
-            Auth.audit(data, req);
             /*
             Logger.log(req, 'prestacionPaciente', 'update', {
                 accion: req.body.op,

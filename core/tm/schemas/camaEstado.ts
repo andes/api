@@ -1,6 +1,7 @@
 import { pacienteSchema } from './../../mpi/schemas/paciente';
 import * as mongoose from 'mongoose';
 import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 export let schema = new mongoose.Schema({
     fecha: Date,
@@ -44,4 +45,4 @@ export let schema = new mongoose.Schema({
 });
 
 // Habilitar plugin de auditoría
-schema.plugin(require('../../../mongoose/audit'));
+schema.plugin(AuditPlugin);

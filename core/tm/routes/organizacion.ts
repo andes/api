@@ -345,6 +345,7 @@ router.get('/organizaciones/:id*?', (req, res, next) => {
  *         description: Un objeto organizacion
  *         schema:
  *           $ref: '#/definitions/organizacion'
+ * Auth.audit(newPatientMpi, req)
  */
 router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
     if (!Auth.check(req, 'tm:especialidad:postEspecialidad')) {

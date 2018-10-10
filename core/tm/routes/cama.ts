@@ -12,7 +12,6 @@ const router = express.Router();
 //  * pueden filtrar por estado o habitacion.
 //  */
 
-
 router.get('/camas', Auth.authenticate(), (req, res, next) => {
 
     let query;
