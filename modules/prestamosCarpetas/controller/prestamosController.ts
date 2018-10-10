@@ -8,6 +8,7 @@ import * as constantes from '../schemas/constantes';
 import { toArray } from '../../../utils/utils';
 import { searchByPatient } from '../../cda/controller/CDAPatient';
 import { Types } from 'mongoose';
+import { buscarPacienteWithcondition } from '../../../core/mpi/controller/paciente';
 
 const ObjectId = Types.ObjectId;
 
@@ -431,12 +432,18 @@ export async function getHistorial(req) {
     const nroCarpeta = req.query.numero;
     const organizacionId = req.query.organizacion;
 
+    const query = await buscarPacienteWithcondition({
+        'carpetaEfectores.organizacion._id': organizacionId,
+        'carpetaEfectores.nroCarpeta': nroCarpeta
+    });
+
     const filter: any = {
         'organizacion._id': new ObjectId(organizacionId),
         numero: nroCarpeta
     };
+    const historial = await Prestamo.find(filter).sort('-createdAt');
 
-    return await Prestamo.find(filter).sort('-createdAt');
+    return { historial: historial, paciente: query.paciente }
 }
 
 export async function solicitudManualCarpeta(req) {
