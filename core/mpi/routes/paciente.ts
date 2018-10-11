@@ -139,16 +139,20 @@ router.get('/pacientes/auditoria/', (req, res, next) => {
 
 });
 
-router.get('/pacientes/auditoria/vinculados/', (req, res, next) => {
-    let filtro = { 'identificadores.entidad': 'ANDES' };
+router.get('/pacientes/auditoria/vinculados/', async (req, res, next) => {
+    let filtro = {
+        'identificadores.0': { $exists: true },
+        'identificadores.entidad': 'ANDES'
+    };
     // filtro['activo'] = req.query.activo === 'true' ? true : false;
-    let query = paciente.find(filtro);
-    query.exec((err, data) => {
-        if (err) {
-            return next(err);
-        }
-        res.json(data);
-    });
+    try {
+        let resultadosAndes = paciente.find(filtro).exec();
+        let resultadosMpi = pacienteMpi.find(filtro).exec();
+        const pacientes = await Promise.all([resultadosAndes, resultadosMpi]);
+        res.json([...pacientes[0], ...pacientes[1]]);
+    } catch (error) {
+        return next(error);
+    }
 
 });
 
