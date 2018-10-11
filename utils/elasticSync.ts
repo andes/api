@@ -50,6 +50,7 @@ export class ElasticSync {
         let searchObj = {};
         if (query.q) {
             searchObj = query;
+            searchObj['index'] = this.INDEX;
         } else {
             searchObj = {
                 index: this.INDEX,
@@ -70,7 +71,7 @@ export class ElasticSync {
                 const match = {};
                 if (key === 'claveBlocking') {
                     terms[key] = query[key].map(s => s.toLowerCase());
-                    must.push({terms});
+                    must.push({ terms });
                 } else {
                     match[key] = query[key];
                     must.push({ match });
@@ -80,10 +81,10 @@ export class ElasticSync {
                 index: this.INDEX,
                 size: 1000,
                 body: {
-                    query : {
+                    query: {
                         bool: {
                             must
-                       }
+                        }
                     }
                 }
             };
