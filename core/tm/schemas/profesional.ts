@@ -48,8 +48,8 @@ export let profesionalSchema = new mongoose.Schema({
         papelesVerificados: { type: Boolean, default: false },
         matriculacion: [matriculacionSchema],
         matriculado: { type: Boolean, default: false },
-        exportadoSisa: Boolean
-
+        exportadoSisa: Boolean,
+        fechaDeInscripcion : Date
     }],
     formacionPosgrado: [{
         profesion: { type: ObjSIISASchema, required: false },
@@ -76,10 +76,13 @@ export let profesionalSchema = new mongoose.Schema({
             fin: Date,
             revalidacionNumero: Number
         }],
+        fechasDeAltas: [{ fecha: { type: Date, required: false } }],
         matriculado: { type: Boolean, default: false },
         revalida: { type: Boolean, default: false },
         papelesVerificados: { type: Boolean, default: false },
-        exportadoSisa: Boolean
+        exportadoSisa: Boolean,
+        tieneVencimiento: Boolean,
+        notas: String
     }],
     sanciones: [{
         numero: { type: Number, required: false },
