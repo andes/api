@@ -30,6 +30,7 @@ const _schema = new mongoose.Schema({
         required: true,
         default: true
     },
+    turnosMobile: { type: Boolean, default: false },
     fechaAlta: Date,
     fechaBaja: Date,
     unidadesOrganizativas: [SnomedConcept]
