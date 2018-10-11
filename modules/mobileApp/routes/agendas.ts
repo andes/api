@@ -32,9 +32,7 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
     }
     matchAgendas['tipoPrestaciones.conceptId'] = '34043003'; // Tipo de turno Hardcodeado para odontología
     matchAgendas['bloques.restantesProgramados'] = { $gt: 0 };
-    // Filtramos el colegio médico para que no traiga las agendas
-    matchAgendas['organizacion._id'] = { $ne: new mongoose.Types.ObjectId('5a5e3f7e0bd5677324737244') },
-        matchAgendas['estado'] = 'publicada';
+    matchAgendas['estado'] = 'publicada';
     matchAgendas['dinamica'] = false;
 
     pipelineAgendas.push({ $match: matchAgendas });
