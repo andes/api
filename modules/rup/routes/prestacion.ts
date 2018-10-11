@@ -269,10 +269,10 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 if (req.body.registros) {
                     data.ejecucion.registros = req.body.registros;
                 }
-                if (req.body.ejecucion.fecha) {
+                if (req.body.ejecucion && req.body.ejecucion.fecha) {
                     data.ejecucion.fecha = req.body.ejecucion.fecha;
                 }
-                if (req.body.ejecucion.organizacion) {
+                if (req.body.ejecucion && req.body.ejecucion.organizacion) {
                     data.ejecucion.organizacion = req.body.ejecucion.organizacion;
                 }
                 break;
