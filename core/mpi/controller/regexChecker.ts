@@ -14,7 +14,7 @@ import { matchSisa } from '../../../utils/servicioSisa';
 export async function regexChecker(done) {
     try {
 
-        let cursor = await pacienteMpi.find({ $or: [{ nombre: { $regex: regtest } }, { apellido: { $regex: regtest } }] }).cursor();
+        let cursor = await pacienteMpi.find({ $or: [{ nombre: { $regex: regtest } }, { apellido: { $regex: regtest } }] }).limit(100).cursor();
         let countPacienteError = 0;
 
         await cursor.eachAsync(async (pac: any) => {
