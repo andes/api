@@ -15,25 +15,25 @@ const ObjectId = Types.ObjectId;
 
 export async function getCarpetasSolicitud(req) {
     const query = req.query;
-    const organizacionId = query.organizacion;
-    const tipoPrestacionId = query.idTipoPrestacion;
-    const espacioFisicoId = query.idEspacioFisico;
-    const profesionalId = query.idProfesional;
+    const organizacion = query.organizacion;
+    const tipoPrestacion = query.idTipoPrestacion;
+    const espacioFisico = query.idEspacioFisico;
+    const profesional = query.idProfesional;
     const horaInicio = query.fechaDesde;
     const horaFin = query.fechaHasta;
 
 
     // [TODO] Paralelizar la busquedas de turnos, sobreturnos y solicitudesManuales
-    const solicitudesManuales = await getSolicitudCarpetaManual({ organizacionId: organizacionId, tipoPrestacionId: tipoPrestacionId, espacioFisicoId: espacioFisicoId, profesionalId: profesionalId });
-    const agendas = await buscarAgendasTurnos(organizacionId, tipoPrestacionId, espacioFisicoId, profesionalId, horaInicio, horaFin);
-    const agendasSobreturno = await buscarAgendasSobreturnos(organizacionId, tipoPrestacionId, espacioFisicoId, profesionalId, horaInicio, horaFin);
+    const solicitudesManuales = await getSolicitudCarpetaManual({ organizacionId: organizacion, tipoPrestacionId: tipoPrestacion, espacioFisicoId: espacioFisico, profesionalId: profesional });
+    const agendas = await buscarAgendasTurnos(organizacion, tipoPrestacion, espacioFisico, profesional, horaInicio, horaFin);
+    const agendasSobreturno = await buscarAgendasSobreturnos(organizacion, tipoPrestacion, espacioFisico, profesional, horaInicio, horaFin);
 
 
     const nrosCarpetas = getNrosCarpetas(agendas, agendasSobreturno, solicitudesManuales);
 
     // [TODO] Castear a ObjectId en la función interna
-    const carpetas = await findCarpetas(organizacionId, nrosCarpetas);
-    const prestamosCarpetas = await getRegistrosSolicitudCarpetas(req, organizacionId, [agendas, agendasSobreturno], carpetas, solicitudesManuales);
+    const carpetas = await findCarpetas(organizacion, nrosCarpetas);
+    const prestamosCarpetas = await getRegistrosSolicitudCarpetas(req, organizacion, [agendas, agendasSobreturno], carpetas, solicitudesManuales);
 
     return prestamosCarpetas;
 }
@@ -442,10 +442,10 @@ export async function getHistorial(req) {
             'organizacion._id': new ObjectId(organizacionId),
             numero: nroCarpeta
         };
-        const historial = await Prestamo.find(filter).sort('-createdAt');
-        return { historial: historial, paciente: queryPaciente.paciente }
+        const queryHistorial = await Prestamo.find(filter).sort('-createdAt');
+        return { historial: queryHistorial, paciente: queryPaciente.paciente };
     } else {
-        return {}
+        return {};
     }
 
 
