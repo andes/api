@@ -1,8 +1,26 @@
 import * as express from 'express';
 import { Puco } from '../schemas/puco';
 import { ObraSocial } from '../schemas/obraSocial';
+import * as utils from '../../../utils/utils';
 
 const router = express.Router();
+
+/**
+ * Obtiene todas las obras sociales
+ * @returns array de obras sociales
+ */
+router.get('/', async (req, res, next) => {
+    let query = {};
+    if (req.query.nombre) {
+        query = { nombre: { $regex: utils.makePattern(req.query.nombre) } };
+    }
+    ObraSocial.find(query).exec((err, obrasSociales) => {
+        if (err) {
+            return next(err);
+        }
+        res.json(obrasSociales);
+    });
+});
 
 /**
  * Obtiene los datos de la obra social asociada a un paciente
@@ -23,7 +41,7 @@ router.get('/puco', async (req, res, next) => {
             padron = await obtenerVersiones();   // trae las distintas versiones de los padrones
             padron = padron[0].version; // asigna el ultimo padron actualizado
         }
-        // realiza la busqueda por dni y el padron seteado anteriormente
+        // realiza la busqueda por dni y el pa  dron seteado anteriormente
         rta = await Puco.find({ dni: Number.parseInt(req.query.dni, 10), version: padron }).exec();
 
         if (rta.length > 0) {
