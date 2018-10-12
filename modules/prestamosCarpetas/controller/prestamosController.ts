@@ -432,18 +432,23 @@ export async function getHistorial(req) {
     const nroCarpeta = req.query.numero;
     const organizacionId = req.query.organizacion;
 
-    const query = await buscarPacienteWithcondition({
+    const queryPaciente = await buscarPacienteWithcondition({
         'carpetaEfectores.organizacion._id': organizacionId,
         'carpetaEfectores.nroCarpeta': nroCarpeta
     });
 
-    const filter: any = {
-        'organizacion._id': new ObjectId(organizacionId),
-        numero: nroCarpeta
-    };
-    const historial = await Prestamo.find(filter).sort('-createdAt');
+    if (queryPaciente) {
+        const filter: any = {
+            'organizacion._id': new ObjectId(organizacionId),
+            numero: nroCarpeta
+        };
+        const historial = await Prestamo.find(filter).sort('-createdAt');
+        return { historial: historial, paciente: queryPaciente.paciente }
+    } else {
+        return {}
+    }
 
-    return { historial: historial, paciente: query.paciente }
+
 }
 
 export async function solicitudManualCarpeta(req) {
