@@ -1,5 +1,6 @@
 import * as express from 'express';
 import * as campania from '../schemas/campaniasSalud';
+import * as campaniaCtrl from '../controller/campaniasSalud';
 import * as moment from 'moment';
 
 let router = express.Router();
@@ -18,16 +19,20 @@ router.get('/campania/:id', (req: any, res, next) => {
     }
 });
 
-// Todas las campañas vigentes
+// Todas las campañas vigentes al día de la fecha
 router.get('/campanias', async (req, res, next) => {
     let today = new Date(moment().format('YYYY-MM-DD'));
-    let query = { $and: [{ 'vigencia.desde': { $lte: today } }, { 'vigencia.hasta': { $gte: today } }] };
-    campania.find(query, (err, campanias) => {
-        if (err) {
-            return next(err);
+    try {
+        let docs: any = await campaniaCtrl.campaniasVigentes(today);
+        if (docs.length > 0) {
+            res.json(docs);
+        } else {
+            return null;
         }
-        res.json(campanias);
-    }).sort({ 'vigencia.desde': -1 });
+
+    } catch (e) {
+        return next(e);
+    }
 });
 
 export = router;
