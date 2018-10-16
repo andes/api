@@ -259,14 +259,14 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 data.estados.push(req.body.estado);
                 break;
             case 'registros':
-                if (req.body.registros) {
+            if (req.body.registros) {
                     data.ejecucion.registros = req.body.registros;
 
                     if (req.body.solicitud) {
                         data.solicitud = req.body.solicitud;
                     }
                 }
-                break;
+            break;
             case 'nuevoProtocoloLaboratorio':
                 if (req.body.registros) {
                     data.ejecucion.registros = req.body.registros;
@@ -276,6 +276,7 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 }
                 data['estados'].push(req.body.estado);
                 break;
+
 
             case 'asignarTurno':
                 if (req.body.idTurno) {
