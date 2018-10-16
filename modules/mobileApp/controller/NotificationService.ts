@@ -34,8 +34,9 @@ export class NotificationService {
             }
         };
         // aca ver de hacer un foreach account para enviar a todos o a los que corresponda según datosCampania
-        console.log('justo antes de la notificacion: ', JSON.stringify(notificacion));
-        this.sendByPaciente(datosCampania.account._id, notificacion);
+        // console.log('justo antes de la notificacion: ', JSON.stringify(notificacion));
+        let idPaciente = mongoose.Types.ObjectId(datosCampania.account.pacientes[0].id);
+        this.sendByPaciente(idPaciente, notificacion);
         // this.sendNotification(datosCampania.account, notificacion);
     }
 
