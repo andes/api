@@ -1,10 +1,10 @@
-import { tipoPrestacion } from './../../../core/tm/schemas/tipoPrestacion';
 import { SemanticTag } from './semantic-tag';
 import * as mongoose from 'mongoose';
 import * as registro from './prestacion.registro';
 import * as estado from './prestacion.estado';
 import { auditoriaPrestacionPacienteSchema } from '../../auditorias/schemas/auditoriaPrestacionPaciente';
 import { iterate, convertToObjectId } from '../controllers/rup';
+import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 // tslint:disable
@@ -41,7 +41,7 @@ export let schema = new mongoose.Schema({
             default: 'ambulatorio'
         },
 
-        // Tipo de Prestación a ejecutarse
+        // Tipo de Prestación a ejecutarse (destino)
         tipoPrestacion: {
             id: mongoose.Schema.Types.ObjectId,
             conceptId: String,
@@ -50,6 +50,14 @@ export let schema = new mongoose.Schema({
             semanticTag: SemanticTag,
             refsetIds: [String],
             noNominalizada: Boolean
+        },
+        tipoPrestacionOrigen: {
+            id: mongoose.Schema.Types.ObjectId,
+            conceptId: String,
+            term: String,
+            fsn: String,
+            semanticTag: SemanticTag,
+            refsetIds: [String]
         },
 
         // Datos de auditoría sobre el estado de la solicitud (aprobada, desaprobada, ...)
@@ -61,14 +69,19 @@ export let schema = new mongoose.Schema({
         // Registros de la solicitud ... para los planes o prestaciones futuras
         registros: [registro.schema],
 
-        // Organización desde la que se solicita la Prestación.
+        // Organización Destino de la solicitud.
         organizacion: {
             // requirido, validar en middleware
             id: mongoose.Schema.Types.ObjectId,
             nombre: String
         },
 
-        // Profesional que solicita la Prestación
+        organizacionOrigen: {
+            id: mongoose.Schema.Types.ObjectId,
+            nombre: String
+        },
+
+        // Profesional Destino
         profesional: {
             // requerido, validar en middleware
             id: mongoose.Schema.Types.ObjectId,
@@ -77,12 +90,22 @@ export let schema = new mongoose.Schema({
             documento: String
         },
 
+        profesionalOrigen: {
+            // requerido, validar en middleware
+            id: mongoose.Schema.Types.ObjectId,
+            nombre: String,
+            apellido: String,
+            documento: String
+        },
+
+
+        // TODO: REVISAR TIPOPRESTACION ORIGEN, ES LO MISMO QU ESTO???
+
         // ID de la Prestación desde la que se generó esta Solicitud
         prestacionOrigen: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'prestacion'
         }
-
 
     },
 
@@ -126,13 +149,14 @@ schema.pre('save', function (next) {
         let err = new Error('Debe seleccionar el paciente');
         return next(err);
     }
-
-    if (!prestacion.solicitud.organizacion.id) {
+    // Prestación debe tener organización asignada
+    // Solicitudes deben tener organización origen asignada
+    if (!prestacion.solicitud.organizacion.id && (prestacion.solicitud.tipoPrestacionOrigen.conceptId && prestacion.solicitud.organizacionOrigen.id)) {
         let err = new Error('Debe seleccionar la organizacion desde la cual se solicita');
         return next(err);
     }
-
-    if (!prestacion.solicitud.profesional.id) {
+    // Si es prestación debe tener profesional asignado, y si es solicitud debe tener profesional origen asignado.
+    if (!prestacion.solicitud.profesional.id && (prestacion.solicitud.tipoPrestacionOrigen.conceptId && !prestacion.solicitud.profesionalOrigen.id)) {
         let err = new Error('Debe seleccionar el profesional que solicita');
         return next(err);
     }
@@ -142,7 +166,7 @@ schema.pre('save', function (next) {
             return next(err);
         }
 
-        if (!prestacion.ejecucion.organizacion.id && !prestacion.solicitud.organizacion.id) {
+        if (!prestacion.ejecucion.organizacion && !prestacion.solicitud.organizacion.id) {
             let err = new Error('Debe seleccionar la organizacion desde la cual se solicita');
             return next(err);
         }

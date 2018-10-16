@@ -55,7 +55,7 @@ export function getTurno(req) {
 
                 const data = await toArray(agenda.aggregate(pipelineTurno).cursor({}).exec());
 
-                if (data && data[0].bloques && data[0].bloques.turnos && data[0].bloques.turnos >= 0) {
+                if (data.length > 0 && data[0].bloques && data[0].bloques.turnos && data[0].bloques.turnos >= 0) {
                     resolve(data[0].bloques.turnos[0]);
                 } else {
                     resolve(data);

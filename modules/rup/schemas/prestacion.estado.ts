@@ -11,6 +11,11 @@ export let schema = new mongoose.Schema({
         type: String,
         required: false,
         default: null
+    },
+    motivoRechazo: {
+        type: String,
+        required: false,
+        default: null
     }
 });
 
