@@ -50,7 +50,7 @@ router.get('/puco', async (req, res, next) => {
             // genera un array con todas las obras sociales para una version de padron dada
             for (let i = 0; i < rta.length; i++) {
                 unaOS = await ObraSocial.find({ codigoPuco: rta[i].codigoOS }).exec();
-                resultOS[i] = { tipoDocumento: rta[i].tipoDoc, dni: rta[i].dni, transmite: rta[i].transmite, nombre: rta[i].nombre, codigoFinanciador: rta[i].codigoOS, financiador: unaOS[0].nombre, version: rta[i].version };
+                resultOS[i] = { tipoDocumento: rta[i].tipoDoc, dni: rta[i].dni, transmite: rta[i].transmite, nombre: rta[i].nombre, codigoFinanciador: rta[i].codigoOS, idFinanciador: unaOS[0]._id, financiador: unaOS[0].nombre, version: rta[i].version };
             }
             res.json(resultOS);
         } else {
