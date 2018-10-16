@@ -18,7 +18,8 @@ const campaniasSaludSchema = new Schema({
         desde: Date,
         hasta: Date
     },
-    fechaPublicacion: Date
+    fechaPublicacion: Date,
+    textoAccion: String
 });
 
 let campania = model('campanias', campaniasSaludSchema, 'campanias');
