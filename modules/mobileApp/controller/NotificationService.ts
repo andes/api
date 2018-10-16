@@ -23,9 +23,26 @@ export class NotificationService {
     }
 
     /**
+     * Envía notificación de campaña de salud
+     */
+    public static notificarCampaniaSalud(datosCampania) {
+        const notificacion = {
+            body: datosCampania.campania.asunto,
+            extraData: {
+                action: 'campaniaSalud',
+                campania: datosCampania.campania
+            }
+        };
+        // aca ver de hacer un foreach account para enviar a todos o a los que corresponda según datosCampania
+        console.log('justo antes de la notificacion: ', JSON.stringify(notificacion));
+        this.sendByPaciente(datosCampania.account._id, notificacion);
+        // this.sendNotification(datosCampania.account, notificacion);
+    }
+
+    /**
      * Envia una notificacion de adjunto
      */
-    public static solicitudAdjuntos (profesionalId, adjuntoId) {
+    public static solicitudAdjuntos(profesionalId, adjuntoId) {
         const notificacion = {
             body: 'Haz click para adjuntar la foto solicitada',
             extraData: {
@@ -80,7 +97,7 @@ export class NotificationService {
      * @param {objectId} profesionalId Id de profesional.
      * @param {INotificacion} notification  Notificacion a enviar.
      */
-    private static sendByProfesional (id, notification) {
+    private static sendByProfesional(id, notification) {
         id = new mongoose.Types.ObjectId(id);
         pacienteApp.find({ profesionalId: id }, (err, docs: any[]) => {
             docs.forEach(user => {
