@@ -18,6 +18,11 @@ router.get('/', async (req, res, next) => {
         if (err) {
             return next(err);
         }
+        obrasSociales = obrasSociales.map(os => {
+            os.financiador = os.nombre;
+            os.id = os._id;
+            return os;
+        });
         res.json(obrasSociales);
     });
 });
