@@ -149,7 +149,8 @@ router.get('/pacientes/auditoria/vinculados/', async (req, res, next) => {
         let resultadosAndes = paciente.find(filtro).exec();
         let resultadosMpi = pacienteMpi.find(filtro).exec();
         const pacientes = await Promise.all([resultadosAndes, resultadosMpi]);
-        res.json([...pacientes[0], ...pacientes[1]]);
+        let listado = [...pacientes[0], ...pacientes[1]];
+        res.json(listado);
     } catch (error) {
         return next(error);
     }
@@ -657,8 +658,16 @@ router.post('/pacientes/:id/identificadores', async (req, res, next) => {
                 await connElastic.delete(pacienteLinkeado.paciente._id.toString());
             }
 
+            Auth.audit(pacienteAndesLinkeado, req);
+            await pacienteAndesLinkeado.save();
             Auth.audit(pacienteAndesBase, req);
             let pacienteSaved = await pacienteAndesBase.save();
+            if (pacienteBase.db === 'mpi') {
+                controller.deletePacienteMpi(pacienteBase.paciente._id);
+            }
+            if (pacienteLinkeado.db === 'mpi') {
+                controller.deletePacienteMpi(pacienteLinkeado._id);
+            }
             res.json(pacienteSaved);
         } else {
             return next('Paciente no encontrado');
