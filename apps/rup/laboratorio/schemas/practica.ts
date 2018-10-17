@@ -1,5 +1,5 @@
+import { SnomedConcept } from './../../../../modules/rup/schemas/snomed-concept';
 import {  model, Schema } from 'mongoose';
-import { SnomedConcept } from '../../schemas/snomed-concept';
 
 // tslint:disable
 export let schema = new Schema({

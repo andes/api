@@ -212,6 +212,7 @@ router.get('/prestaciones/:id*?', (req, res, next) => {
 });
 
 router.post('/prestaciones', (req, res, next) => {
+    console.log('nueva prestacion', req.body.registros)
     const prestacion = req.body;
     const data = new Prestacion(req.body);
     Auth.audit(data, req);
@@ -225,6 +226,7 @@ router.post('/prestaciones', (req, res, next) => {
 
 
 router.patch('/prestaciones/:id', (req, res, next) => {
+    
     Prestacion.findById(req.params.id, (err, data: any) => {
         if (err) {
             return next(err);
@@ -268,6 +270,7 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 }
             break;
             case 'nuevoProtocoloLaboratorio':
+            console.log('nuevoProtocoloLaboratorio', req.body.registros)
                 if (req.body.registros) {
                     data.ejecucion.registros = req.body.registros;
                 }

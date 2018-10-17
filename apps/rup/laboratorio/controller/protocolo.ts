@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { model as prestacion } from '../../schemas/prestacion';
+import { model as prestacion } from '../../../../modules/rup/schemas/prestacion';
 import { toArray } from '../../../../utils/utils';
 
 export async function getUltimoNumeroProtocolo(idOrganizacion) {
