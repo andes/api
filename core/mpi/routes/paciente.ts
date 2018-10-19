@@ -666,7 +666,7 @@ router.post('/pacientes/:id/identificadores', async (req, res, next) => {
                 controller.deletePacienteMpi(pacienteBase.paciente._id);
             }
             if (pacienteLinkeado.db === 'mpi') {
-                controller.deletePacienteMpi(pacienteLinkeado._id);
+                controller.deletePacienteMpi(pacienteLinkeado.paciente._id);
             }
             res.json(pacienteSaved);
         } else {
