@@ -5,7 +5,7 @@ export async function campaniasVigentes(today) {
         const query = { $and: [{ 'vigencia.desde': { $lte: today } }, { 'vigencia.hasta': { $gte: today } }] };
         campania.find(query, (err, docs) => {
             if (err) {
-                reject(null);
+                return reject(null);
             }
             resolve(docs);
         }).sort({ 'vigencia.desde': -1 });
