@@ -4,6 +4,18 @@ import { toArray } from '../../../../utils/utils';
 import { Mongoose, Types } from 'mongoose';
 let router = express.Router();
 
+
+
+router.get('/practicas/codigo/:codigo', (req, res, next) => {
+    const redix = 10;
+    const codigo: number = parseInt(req.params.codigo, redix);
+    let query = { $and: [ { codigoNomenclador: { $ne: '' } }, { codigo: req.params.codigo } ] };
+    console.log(req.params.codigo)
+    Practica.find(query).then((practicas: any[]) => {
+        res.json(practicas);
+    });
+});
+
 router.get('/practicas', (req, res, next) => {
     let query;
     if (req.params.id) {
@@ -25,7 +37,6 @@ router.get('/practicas', (req, res, next) => {
 
             query = {
                 $or: [
-                    {codigo: { $regex: paramBusqueda }},
                     {descripcion: { $regex: paramBusqueda }},
                     {nombre: { $regex: paramBusqueda }},
                     {'concepto.term': { $regex: paramBusqueda }}
