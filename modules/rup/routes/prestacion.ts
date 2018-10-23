@@ -7,14 +7,14 @@ import * as frecuentescrl from '../controllers/frecuentesProfesional';
 
 import { buscarEnHuds } from '../controllers/rup';
 import { Logger } from '../../../utils/logService';
-import { EventCore } from '@andes/event-bus';
 import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
 import { snomedModel } from '../../../core/term/schemas/snomed';
+import * as camasController from './../controllers/cama';
+import { EventCore } from '@andes/event-bus';
 
 const router = express.Router();
 import async = require('async');
 
-import * as camasController from './../controllers/cama';
 
 /**
  * Trae todas las prestaciones con ambitoOrigen = internacion, tambien solo las prestaciones
@@ -79,7 +79,17 @@ router.get('/prestaciones/sinCama', (req, res, next) => {
 });
 
 
-router.get('/prestaciones/huds/:idPaciente', (req, res, next) => {
+/***
+ *  Buscar un determinado concepto snomed ya sea en una prestación especifica o en la huds completa de un paciente
+ *
+ * @param idPaciente: id mongo del paciente
+ * @param estado: buscar en prestaciones con un estado distinto a validada
+ * @param idPrestacion: buscar concepto/s en una prestacion especifica
+ * @param expresion: expresion snomed que incluye los conceptos que estamos buscando
+ *
+ */
+
+router.get('/prestaciones/huds/:idPaciente', async (req, res, next) => {
 
     // verificamos que sea un ObjectId válido
     if (!mongoose.Types.ObjectId.isValid(req.params.idPaciente)) {

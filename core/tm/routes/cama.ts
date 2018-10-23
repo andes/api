@@ -52,6 +52,13 @@ router.get('/camas/porfecha', Auth.authenticate(), (req, res, next) => {
         });
 });
 
+router.get('/camas/historial', Auth.authenticate(), (req, res, next) => {
+    camaController.getHistorialCama(new mongoose.Types.ObjectId(req.query.idOrganizacion), new Date(req.query.fechaDesde), new Date(req.query.fechaHasta), new mongoose.Types.ObjectId(req.query.idCama)).then(result => {
+        res.json(result);
+    }).catch(error => {
+        return next(error);
+    });
+});
 
 /**
  * Busca la cama por su id.
@@ -241,7 +248,7 @@ router.patch('/camas/cambiaEstado/:idCama', Auth.authenticate(), (req, res, next
 
         } else if (req.body.estado === 'disponible') {
 
-            if (ultimoEstado.estado !== 'desocupada' && ultimoEstado.estado !== 'bloqueada') {
+            if (ultimoEstado.estado !== 'desocupada' && ultimoEstado.estado !== 'ocupada' && ultimoEstado.estado !== 'bloqueada') {
                 return res.status(500).send('La cama debe estar disponible');
             }
             // actualizamos el estadode la cama

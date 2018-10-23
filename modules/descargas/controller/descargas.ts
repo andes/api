@@ -24,9 +24,6 @@ if (env.NODE_ENV !== 'production') {
 
 export class Documento {
 
-    // private static locale = 'es-ES';
-    // public static timeZone = 'America/Argentina/Buenos_Aires';
-
     /**
      * Opciones default de PDF rendering
      */
@@ -296,9 +293,6 @@ export class Documento {
                 tipoPrestacion = prestacion.ejecucion.registros[0].nombre;
                 prestacion.ejecucion.registros[0].concepto.term = tituloInforme;
                 tituloInforme = tituloInforme[0].toUpperCase() + tituloInforme.slice(1);
-                // contenidoInforme = prestacion.ejecucion.registros.find(x => this.registroHTML(x.concepto.term, x.valor)).valor;
-                // contenidoInforme = contenidoInforme && contenidoInforme.evolucion ? contenidoInforme.evolucion : contenidoInforme;
-
             } else {
                 // Si tiene un hijo directo, usamos su nombre como título de la consulta
                 tipoPrestacion = prestacion.solicitud.tipoPrestacion.term[0].toUpperCase() + prestacion.solicitud.tipoPrestacion.term.slice(1);

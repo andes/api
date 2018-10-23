@@ -146,7 +146,7 @@ function solicitarServicio(sesion, tipo, filtro) {
                 Proveedor: 'GN-ANSES',
                 Servicio: tipo,
                 DatoAuditado: filtro,
-                Operador: login.username,
+                Operador: login.Usuario,
                 Cuerpo: 'hola',
                 CuerpoFirmado: false,
                 CuerpoEncriptado: false

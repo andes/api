@@ -18,7 +18,6 @@ import { EventCore } from '@andes/event-bus';
 
 const router = express.Router();
 
-
 // devuelve los 10 ultimos turnos del paciente
 router.get('/agenda/paciente/:idPaciente', (req, res, next) => {
 

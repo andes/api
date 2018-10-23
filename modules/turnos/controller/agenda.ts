@@ -90,9 +90,10 @@ export function liberarTurno(req, data, turno) {
         turno.tipoPrestacion = null;
         turno.nota = null;
         turno.confirmedAt = null;
+        turno.reasignado = undefined;  // Esto es necesario cuando se libera un turno reasignado
         turno.updatedAt = new Date();
         turno.updatedBy = req.user.usuario || req.user;
-
+        turno.emitidoPor = ''; // Blanqueamos el emitido por (VER SI LO DEJAMOS O LO BLANQUEAMOS CUANDO EL PACIENTE LO ELIMINA)
         let cant = 1;
 
         const turnoDoble = getTurnoSiguiente(req, data, turno._id);
@@ -928,12 +929,11 @@ export function updatePaciente(pacienteModified, turno) {
                 bloques[i].turnos[indiceTurno].paciente.apellido = pacienteModified.apellido;
                 bloques[i].turnos[indiceTurno].paciente.documento = pacienteModified.documento;
                 if (pacienteModified.contacto && pacienteModified.contacto[0]) {
-                    bloques[i].turnos[indiceTurno].paciente.telefono = pacienteModified.contacto[0].valor;
+                    data.sobreturnos[indiceTurno].paciente.telefono = pacienteModified.contacto[0].valor;
                 }
-                bloques[i].turnos[indiceTurno].paciente.carpetaEfectores = pacienteModified.carpetaEfectores;
-                bloques[i].turnos[indiceTurno].paciente.fechaNacimiento = pacienteModified.fechaNacimiento;
+                data.sobreturnos[indiceTurno].paciente.carpetaEfectores = pacienteModified.carpetaEfectores;
+                data.sobreturnos[indiceTurno].paciente.fechaNacimiento = pacienteModified.fechaNacimiento;
             }
-            i++;
         }
 
         if (indiceTurno < 0) { // no se encontro el turno en los bloques de turnos?

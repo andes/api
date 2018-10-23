@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as https from 'https';
 
-import { model as OrganizacionModel } from '../schemas/organizacion';
+import { model as organizacion } from '../schemas/organizacion';
 
 import * as utils from '../../../utils/utils';
 import { toArray } from '../../../utils/utils';
@@ -16,69 +16,80 @@ const router = express.Router();
 
 router.get('/organizaciones/georef/:id?', async (req, res, next) => {
     if (req.params.id) {
-        OrganizacionModel.findById(req.params.id, (err, data: any) => {
-            if (err) {
-                return next(err);
-            }
-            let dir = data.direccion.valor;
-            let localidad = data.direccion.ubicacion.localidad.nombre;
-            let provincia = data.direccion.ubicacion.provincia.nombre;
-            // let pais = organizacion.direccion.ubicacion.pais;
-            let pathGoogleApi = '';
-            let jsonGoogle = '';
-            pathGoogleApi = '/maps/api/geocode/json?address=' + dir + ',+' + localidad + ',+' + provincia + ',+AR&key=' + configPrivate.geoKey;
+        organizacion
+            .findById(req.params.id, (err, data: any) => {
+                if (err) {
+                    return next(err);
+                }
+                const dir = data.direccion.valor;
+                const localidad = data.direccion.ubicacion.localidad.nombre;
+                const provincia = data.direccion.ubicacion.provincia.nombre;
+                // let pais = organizacion.direccion.ubicacion.pais;
+                let pathGoogleApi = '';
+                let jsonGoogle = '';
+                pathGoogleApi = '/maps/api/geocode/json?address=' + dir + ',+' + localidad + ',+' + provincia + ',+AR&key=' + configPrivate.geoKey;
 
-            pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
-            pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
-            pathGoogleApi = pathGoogleApi.replace(/é/gi, 'e');
-            pathGoogleApi = pathGoogleApi.replace(/í/gi, 'i');
-            pathGoogleApi = pathGoogleApi.replace(/ó/gi, 'o');
-            pathGoogleApi = pathGoogleApi.replace(/ú/gi, 'u');
-            pathGoogleApi = pathGoogleApi.replace(/ü/gi, 'u');
-            pathGoogleApi = pathGoogleApi.replace(/ñ/gi, 'n');
+                pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
+                pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
+                pathGoogleApi = pathGoogleApi.replace(/é/gi, 'e');
+                pathGoogleApi = pathGoogleApi.replace(/í/gi, 'i');
+                pathGoogleApi = pathGoogleApi.replace(/ó/gi, 'o');
+                pathGoogleApi = pathGoogleApi.replace(/ú/gi, 'u');
+                pathGoogleApi = pathGoogleApi.replace(/ü/gi, 'u');
+                pathGoogleApi = pathGoogleApi.replace(/ñ/gi, 'n');
 
-            let optionsgetmsg = {
-                host: 'maps.googleapis.com',
-                port: 443,
-                path: pathGoogleApi,
-                method: 'GET',
-                rejectUnauthorized: false
-            };
+                const optionsgetmsg = {
+                    host: 'maps.googleapis.com',
+                    port: 443,
+                    path: pathGoogleApi,
+                    method: 'GET',
+                    rejectUnauthorized: false
+                };
 
-            if (dir !== '' && localidad !== '' && provincia !== '') {
-                let reqGet = https.request(optionsgetmsg, (res2) => {
-                    res2
-                        .on('data', (d, error) => {
-                            jsonGoogle = jsonGoogle + d.toString();
+                if (dir !== '' && localidad !== '' && provincia !== '') {
+                    const reqGet = https.request(optionsgetmsg, (res2) => {
+                        res2
+                            .on('data', (d, error) => {
+                                jsonGoogle = jsonGoogle + d.toString();
+                            });
+
+                        res2.on('end', () => {
+                            const salida = JSON.parse(jsonGoogle);
+                            if (salida.status === 'OK') {
+                                res.json(salida.results[0].geometry.location);
+                            } else {
+                                res.json('');
+                            }
                         });
 
-                    res2.on('end', () => {
-                        let salida = JSON.parse(jsonGoogle);
-                        if (salida.status === 'OK') {
-                            res.json(salida.results[0].geometry.location);
-                        } else {
-                            res.json('');
-                        }
+                        res2.on('end', () => {
+                            let salida = JSON.parse(jsonGoogle);
+                            if (salida.status === 'OK') {
+                                res.json(salida.results[0].geometry.location);
+                            } else {
+                                res.json('');
+                            }
+                        });
                     });
-                });
-                req.on('error', (e) => {
-                    return next(e);
-                });
-                reqGet.end();
-            } else {
-                return next('Datos de dirección incompletos');
-            }
-        });
+                    req.on('error', (e) => {
+                        return next(e);
+                    });
+                    reqGet.end();
+                } else {
+                    return next('Datos de dirección incompletos');
+                }
+            });
 
     } else {
-        let query = OrganizacionModel.aggregate([
+        const query = organizacion.aggregate([
             {
                 $match: {
                     'direccion.geoReferencia': {
                         $exists: true
                     }
                 }
-            }, {
+            },
+            {
                 $project: {
                     _id: 0,
                     nombre: '$nombre',
@@ -234,12 +245,13 @@ router.get('/organizaciones/georef/:id?', async (req, res, next) => {
  */
 router.get('/organizaciones/:id*?', (req, res, next) => {
     if (req.params.id) {
-        OrganizacionModel.findById(req.params.id, (err, data) => {
-            if (err) {
-                return next(err);
-            }
-            res.json(data);
-        });
+        organizacion
+            .findById(req.params.id, (err, data) => {
+                if (err) {
+                    return next(err);
+                }
+                res.json(data);
+            });
     } else {
         let query;
         const act: Boolean = true;
@@ -260,7 +272,9 @@ router.get('/organizaciones/:id*?', (req, res, next) => {
         }
 
         if (req.query.sisa) {
-            filtros['codigo.sisa'] = req.query.sisa;
+            filtros['codigo.sisa'] = {
+                $regex: utils.makePattern(req.query.sisa)
+            };
         }
         if (req.query.activo) {
             filtros['activo'] = req.query.activo;
@@ -277,7 +291,10 @@ router.get('/organizaciones/:id*?', (req, res, next) => {
         const skip: number = parseInt(req.query.skip || 0, 10);
         const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, 10), maxLimit);
 
-        query = OrganizacionModel.find(filtros).skip(skip).limit(limit);
+        query = organizacion
+            .find(filtros);
+        // .skip(skip)
+        // .limit(limit);
         query.exec((err, data) => {
             if (err) {
                 return next(err);
@@ -340,10 +357,10 @@ router.get('/organizaciones/:id*?', (req, res, next) => {
  * Auth.audit(newPatientMpi, req)
  */
 router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
-    if (!Auth.check(req, 'tm:organizacion:create')) {
+    if (!Auth.check(req, 'tm:especialidad:postEspecialidad')) {
         return next(403);
     }
-    let newOrganization = new OrganizacionModel(req.body);
+    const newOrganization = new organizacion(req.body);
     newOrganization.save((err) => {
         if (err) {
             return next(err);
@@ -386,7 +403,7 @@ router.put('/organizaciones/:id', Auth.authenticate(), (req, res, next) => {
     if (!Auth.check(req, 'tm:organizacion:edit')) {
         return next(403);
     }
-    OrganizacionModel.findByIdAndUpdate(req.params.id, req.body, (err, data) => {
+    organizacion.findByIdAndUpdate(req.params.id, req.body, (err, data) => {
         if (err) {
             return next(err);
         }
@@ -424,7 +441,7 @@ router.delete('/organizaciones/:id', Auth.authenticate(), (req, res, next) => {
     if (!Auth.check(req, 'tm:organizacion:delete')) {
         return next(403);
     }
-    OrganizacionModel.findByIdAndRemove(req.params._id, (err, data) => {
+    organizacion.findByIdAndRemove(req.params._id, (err, data) => {
         if (err) {
             return next(err);
         }

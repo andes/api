@@ -171,7 +171,7 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
     // if (!Auth.check(req, 'matriculaciones:profesionales:getProfesional')) {
     //     return next(403);
     // }
-    let opciones = {};
+    const opciones = {};
     let query;
     if (req.params.id) {
         profesional.findById(req.params.id, (err, data) => {

@@ -4,7 +4,7 @@ import * as direccionSchema from './direccion';
 import * as contactoSchema from './contacto';
 import { ObjSIISASchema } from './siisa';
 
-let matriculacionSchema = new mongoose.Schema({
+const matriculacionSchema = new mongoose.Schema({
     matriculaNumero: { type: Number, required: false },
     libro: { type: String, required: false },
     folio: { type: String, required: false },

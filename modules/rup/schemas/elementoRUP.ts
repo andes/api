@@ -25,6 +25,10 @@ export let schema = new mongoose.Schema({
         required: true,
         default: false
     },
+
+    // true si no muestra el label de motivo de consulta.
+    motivoConsoltaOpcional: Boolean,
+
     // Parámetros generales a la hora de iniciar la prestación
     params: {
         type: mongoose.Schema.Types.Mixed,
