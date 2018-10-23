@@ -29,7 +29,8 @@ export async function dashboard(org, prestaciones, desde, hasta) {
                                 }
                             }
                         ]
-                    },        (365 * 24 * 60 * 60 * 1000)]
+                    },
+                        (365 * 24 * 60 * 60 * 1000)]
                 }
             }
         },

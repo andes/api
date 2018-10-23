@@ -1,15 +1,15 @@
 import * as mongoose from 'mongoose';
-import * as constantes from './constantes';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import * as direccionSchema from './direccion';
 import * as contactoSchema from './contacto';
 import { ObjSIISASchema } from './siisa';
 
-const matriculacionSchema = new mongoose.Schema({
+let matriculacionSchema = new mongoose.Schema({
     matriculaNumero: { type: Number, required: false },
     libro: { type: String, required: false },
     folio: { type: String, required: false },
     inicio: Date,
-    baja : {
+    baja: {
         motivo: { type: String, required: false },
         fecha: { type: String, required: false }
     },
@@ -30,7 +30,6 @@ export let profesionalSchema = new mongoose.Schema({
     fechaFallecimiento: { type: Date, required: false },
     nacionalidad: { type: ObjSIISASchema, required: false },
     sexo: { type: String, required: false },
-    estadoCivil: constantes.ESTADOCIVIL,
     contactos: [contactoSchema],
     domicilios: [direccionSchema],
     fotoArchivo: { type: String, required: false },
@@ -49,7 +48,8 @@ export let profesionalSchema = new mongoose.Schema({
         papelesVerificados: { type: Boolean, default: false },
         matriculacion: [matriculacionSchema],
         matriculado: { type: Boolean, default: false },
-
+        exportadoSisa: Boolean,
+        fechaDeInscripcion : Date
     }],
     formacionPosgrado: [{
         profesion: { type: ObjSIISASchema, required: false },
@@ -63,33 +63,55 @@ export let profesionalSchema = new mongoose.Schema({
             modalidad: { type: ObjSIISASchema, required: false },
             establecimiento: { type: ObjSIISASchema, required: false },
         },
-        matriculacion: [matriculacionSchema],
+        matriculacion: [{
+            matriculaNumero: { type: Number, required: false },
+            libro: { type: String, required: false },
+            folio: { type: String, required: false },
+            inicio: Date,
+            baja: {
+                motivo: { type: String, required: false },
+                fecha: { type: String, required: false }
+            },
+            notificacionVencimiento: { type: Boolean, required: false },
+            fin: Date,
+            revalidacionNumero: Number
+        }],
+        fechasDeAltas: [{ fecha: { type: Date, required: false } }],
         matriculado: { type: Boolean, default: false },
         revalida: { type: Boolean, default: false },
         papelesVerificados: { type: Boolean, default: false },
+        exportadoSisa: Boolean,
+        tieneVencimiento: Boolean,
+        notas: String
     }],
     sanciones: [{
-        numero: {type: Number, required: false},
+        numero: { type: Number, required: false },
         sancion: {
             id: Number,
             nombre: String,
         },
-        motivo: {type: String, required: false},
-        normaLegal: {type: String, required: false},
-        fecha: {type: Date, required: false},
-        vencimiento: {type: Date, required: false}
+        motivo: { type: String, required: false },
+        normaLegal: { type: String, required: false },
+        fecha: { type: Date, required: false },
+        vencimiento: { type: Date, required: false }
     }],
     notas: { type: String, required: false },
-    rematriculado: { type: Boolean, default: false },
+    rematriculado: { type: Number, default: false },
     agenteMatriculador: { type: String, required: false },
-    OtrosDatos:  [{
+    supervisor: {
+        id: String,
+        nombreCompleto: String,
+    },
+    OtrosDatos: [{
         matriculaProvincial: { type: Number, required: false },
         folio: { type: String, required: false },
         libro: { type: String, required: false },
         anio: { type: Number, required: false }
     }],
     idRenovacion: { type: String, required: false },
-    documentoViejo: { type: Number, required: false }
+    documentoViejo: { type: Number, required: false },
+    turno: Date,
+    profesionalMatriculado: { type: Boolean, default: true }
 });
 
 
@@ -101,4 +123,7 @@ profesionalSchema.virtual('nombreCompleto').get(function () {
 profesionalSchema.virtual('fallecido').get(function () {
     return this.fechaFallecimiento;
 });
+
+profesionalSchema.plugin(AuditPlugin);
+
 export let profesional = mongoose.model('profesional', profesionalSchema, 'profesional');

@@ -3,10 +3,11 @@ import * as turno from '../schemas/turno';
 import { profesional } from '../../../core/tm/schemas/profesional';
 import { turnoSolicitado } from '../schemas/turnoSolicitado';
 import { Auth } from '../../../auth/auth.class';
-const router = express.Router();
+import { toArray } from '../../../utils/utils';
+let router = express.Router();
 
 
-router.post('/turnos/save/:turnoId', (request, response, errorHandler) => {
+router.post('/turnos/save/:turnoId',  (request, response, errorHandler) => {
 
     turno.findByIdAndUpdate(request.params.turnoId, request.body, { new: true }, (err, res) => {
         if (err) {
@@ -23,10 +24,10 @@ router.post('/turnos/save/:turnoId', (request, response, errorHandler) => {
 router.post('/turnos/:tipo/:profesionalId/', (request, response, errorHandler) => {
 
     // Convert date to user datetime.
-    const  fechaTurno = new Date(request.body.turno.fecha);
+    let fechaTurno = new Date(request.body.turno.fecha);
     if (request.body.sobreTurno) {
-        profesional.findById(request.params.profesionalId, (error, datos) => {
-            const nTurno = new turno({
+        profesional.findById(request.params.profesionalId,  (error, datos) => {
+            let nTurno = new turno({
                 fecha: fechaTurno,
                 tipo: request.body.turno.tipo,
                 profesional: datos
@@ -41,9 +42,8 @@ router.post('/turnos/:tipo/:profesionalId/', (request, response, errorHandler) =
             });
         });
     } else {
-
-        turnoSolicitado.findById(request.params.profesionalId, (error, datos) => {
-            const nTurno = new turno({
+        turnoSolicitado.findById(request.params.profesionalId,  (error, datos) => {
+            let nTurno = new turno({
                 fecha: fechaTurno,
                 tipo: request.body.turno.tipo,
                 profesional: datos
@@ -64,7 +64,7 @@ router.post('/turnos/:tipo/:profesionalId/', (request, response, errorHandler) =
 /**
  * Listado de Turnos
  */
-router.get('/turnos/proximos/?', Auth.authenticate() , (request: any, response, errorHandler) => {
+router.get('/turnos/proximos/?', Auth.authenticate(), (request: any, response, errorHandler) => {
     if (!Auth.check(request, 'matriculaciones:turnos:*')) {
         return errorHandler(403);
     }
@@ -94,7 +94,7 @@ router.get('/turnos/proximos/?', Auth.authenticate() , (request: any, response, 
 
     };
 
-    if (request.query.nombre || request.query.apellido || request.query.documento ) {
+    if (request.query.nombre || request.query.apellido || request.query.documento) {
 
         const busquedaProfesional = {};
 
@@ -124,7 +124,7 @@ router.get('/turnos/proximos/?', Auth.authenticate() , (request: any, response, 
             busquedaTurno['profesional'] = { $in: profesionalesIds };
 
             turno.find(busquedaTurno).populate('profesional')
-                .sort({fecha: 1, hora: 1})
+                .sort({ fecha: 1, hora: 1 })
                 .skip(offset)
                 .limit(chunkSize)
                 .exec((errTurno, data) => {
@@ -149,7 +149,7 @@ router.get('/turnos/proximos/?', Auth.authenticate() , (request: any, response, 
     } else {
 
         turno.find(busquedaTurno).populate('profesional')
-            .sort({fecha: 1, hora: 1})
+            .sort({ fecha: 1, hora: 1 })
             .skip(offset)
             .limit(chunkSize)
             .exec((error, data) => {
@@ -172,10 +172,11 @@ router.get('/turnos/proximos/?', Auth.authenticate() , (request: any, response, 
 /**
  * Devuelve los turnos del tipo y mes pasados por parametro.
  */
-router.get('/turnos/:tipo/?', (request, response, errorHandler) => {
+router.get('/turnos/:tipo/?', async (request, response, errorHandler) => {
 
-    const matchObj = {
-        tipo: request.params.tipo
+    let matchObj = {
+        // comentado para diferenciar los diferentes tipo de turnos y filtrar por lo mismo
+        // tipo: request.params.tipo
     };
 
     if (request.query.anio) {
@@ -192,13 +193,13 @@ router.get('/turnos/:tipo/?', (request, response, errorHandler) => {
 
 
     if (!request.query.dia) {
-        turno.aggregate(
+        let aggregate = turno.aggregate(
             [{
                 $project: {
                     tipo: true,
                     fecha: true,
-                    anio: {  $year: '$fecha' },
-                    mes: { $month: '$fecha'},
+                    anio: { $year: '$fecha' },
+                    mes: { $month: '$fecha' },
                     dia: { $dayOfMonth: '$fecha' }
                     // hora: { $hour: '$fecha' },
                     // minutos: { $minute: '$fecha'}
@@ -213,24 +214,20 @@ router.get('/turnos/:tipo/?', (request, response, errorHandler) => {
                         // anio: { $year: '$fecha' },
                         // mes: { $month: '$fecha' },
                         // dia: { $dayOfMonth: '$fecha' },
-                        fechaStr: { $concat: [{ $substr: ['$dia', 0 , -1] }, '/', { $substr: ['$mes', 0 , -1] }, '/', { $substr: ['$anio', 0 , -1] }] }
+                        fechaStr: { $concat: [{ $substr: ['$dia', 0, -1] }, '/', { $substr: ['$mes', 0, -1] }, '/', { $substr: ['$anio', 0, -1] }] }
                         // hora: { $hour: '$fecha' },
                         // minutos: { $minute: '$fecha'}
                     },
-                    count: { $sum: 1}
+                    count: { $sum: 1 }
                 }
-            }], (error, datos) => {
+            }]);
 
-            if (error) {
-                return errorHandler(error);
-            }
-
-            response.status(201).json(datos);
-        });
+        let datos = await toArray(aggregate.cursor({}).exec());
+        response.status(201).json(datos);
 
     } else {
 
-        turno.aggregate(
+        let aggregate = turno.aggregate(
             [{
                 $project: {
                     tipo: true,
@@ -252,19 +249,15 @@ router.get('/turnos/:tipo/?', (request, response, errorHandler) => {
                         anio: { $year: '$fecha' },
                         dia: { $dayOfMonth: '$fecha' },
                         hora: { $hour: '$horaTimeOffset' },
-                        minutos: { $minute: '$fecha'}
+                        minutos: { $minute: '$fecha' }
                         // dateDifference: { $hour: '$dateDifference'}
                     },
                     count: { $sum: 1 }
                 }
-            }], (error, datos) => {
+            }]);
 
-            if (error) {
-                return errorHandler(error);
-            }
-
-            response.status(201).json(datos);
-        });
+        let datos = await toArray(aggregate.cursor({}).exec());
+        response.status(201).json(datos);
     }
 });
 
@@ -293,7 +286,7 @@ router.get('/turnos/:id*?', Auth.authenticate(), (req, res, errorHandler) => {
             opciones['fecha'] = req.query.fecha;
         }
 
-        turno.find(opciones).populate('profesional').sort({fecha: 1, hora: 1}).exec((error, data) => {
+        turno.find(opciones).populate('profesional').sort({ fecha: 1, hora: 1 }).exec((error, data) => {
             if (error) {
                 return errorHandler(error);
             }

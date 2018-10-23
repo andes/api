@@ -29,7 +29,7 @@ const turnoSchema = new mongoose.Schema({
         enum: ['asistio', 'noAsistio', 'sinDatos']
     },
     primeraVez: {
-        type : {
+        type: {
             profesional: Boolean,
             tipoPrestacion: Boolean
         }
@@ -66,23 +66,7 @@ const turnoSchema = new mongoose.Schema({
         type: String,
         enum: ['no enviado', 'enviado', 'fallido']
     },
-    // paciente: {
-    //     type: {
-    //         id: mongoose.Schema.Types.ObjectId,
-    //         nombre: String,
-    //         apellido: String,
-    //         alias: String,
-    //         documento: String,
-    //         fechaNacimiento: Date,
-    //         telefono: String,
-    //         sexo: String,
-    //         carpetaEfectores: [{
-    //             organizacion: nombreSchema,
-    //             nroCarpeta: String
-    //         }],
-    //         obraSocial: { type: obraSocialSchema }
-    //     }
-    // },
+    emitidoPor: String, // Agregamos para identificar desde donde se emitio el turno. Ej: appmobile.
     paciente: pacienteSchema,
     motivoConsulta: String,
     tipoPrestacion: {

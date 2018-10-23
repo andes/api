@@ -9,6 +9,7 @@ import { Logger } from '../../../utils/logService';
 import { ElasticSync } from '../../../utils/elasticSync';
 import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
+import { EventCore } from '@andes/event-bus';
 
 
 const logD = debug('paciente-controller');
@@ -315,6 +316,7 @@ router.delete('/pacientes/mpi/:id', (req, res, next) => {
         const connElastic = new ElasticSync();
         connElastic.delete(patientFound._id.toString()).then(() => {
             res.json(patientFound);
+            EventCore.emitAsync('mpi:patient:delete', patientFound);
         }).catch(error => {
             return next(error);
         });
@@ -728,8 +730,8 @@ router.patch('/pacientes/:id', async (req, res, next) => {
                     try { // Actualizamos los turnos activos del paciente
                         const repetida = await controller.checkCarpeta(req, resultado.paciente);
                         if (!repetida) {
-                            controller.updateTurnosPaciente(resultado.paciente);
                             controller.updateCarpetaEfectores(req, resultado.paciente);
+                            controller.updateTurnosPaciente(resultado.paciente);
                         } else {
                             return next('El numero de carpeta ya existe');
                         }

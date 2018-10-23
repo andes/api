@@ -136,11 +136,11 @@ turnoSolicitadoSchema.virtual('nombreCompleto').get(function () {
 
 });
 
-turnoSolicitadoSchema.virtual('edad').get(function () {
-    const ageDifMs = Date.now() - this.fechaNacimiento.getTime();
-    const ageDate = new Date(ageDifMs);
-    return Math.abs(ageDate.getUTCFullYear() - 1970);
-});
+// turnoSolicitadoSchema.virtual('edad').get(function() {
+//     let ageDifMs = Date.now() - this.fechaNacimiento.getTime();
+//     let ageDate = new Date(ageDifMs);
+//     return Math.abs(ageDate.getUTCFullYear() - 1970);
+// });
 
 turnoSolicitadoSchema.virtual('fallecido').get(function () {
     return this.fechaFallecimiento;

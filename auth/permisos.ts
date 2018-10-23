@@ -139,6 +139,15 @@ export default [
         ]
     },
     {
+        key: 'huds',
+        title: 'Modulo HUDS',
+        comment: '',
+        avoidAll: true,
+        child: [
+            { key: 'visualizacionHuds', title: 'Visualización HUDS por paciente', type: 'boolean' },
+        ]
+    },
+    {
         key: 'fa',
         title: 'Fuentas Autenticas',
         comment: 'Habilita el acceso a distintas fuentes autenticas',
@@ -252,6 +261,13 @@ export default [
         key: 'reportes',
         title: 'Modulo Reportes',
         child: [
+        ]
+    },
+    {
+        key: 'descargas',
+        title: 'Descarga de Documentos',
+        child: [
+            { key: 'pdf', title: 'Documentos PDF', type: 'boolean' }
         ]
     },
     {
