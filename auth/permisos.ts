@@ -87,7 +87,6 @@ export default [
         title: 'Modulo MPI',
         comment: '',
         child: [
-            { key: 'auditoria', title: 'Auditoria MPI', type: 'boolean' },
             { key: 'nuevoPaciente', title: 'Crear paciente', type: 'boolean' },
             { key: 'editarPaciente', title: 'Editar paciente', type: 'boolean' },
             {
@@ -266,6 +265,12 @@ export default [
         title: 'Prestamo de Carpetas',
         child: [
         ]
-    }
+    },
+    {
+        key: 'auditoriaPacientes',
+        title: 'Auditoria Pacientes',
+        comment: '',
+        child: []
+    },
 
 ];
