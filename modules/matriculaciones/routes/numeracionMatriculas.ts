@@ -21,7 +21,8 @@ const router = express.Router();
 //     });
 // })
 
-router.get('/numeraciones/:id*?', (req, res, next) => {
+router.get('/numeraciones', (req, res, next) => {
+    let resultado;
     if (req.query.especialidad || req.query.profesion) {
         if (req.query.profesion) {
             NumeracionMatriculas.find({ 'profesion._id': req.query.profesion }, (err, data) => {
@@ -52,10 +53,18 @@ router.get('/numeraciones/:id*?', (req, res, next) => {
 
         const busquedaNumeracion = {};
         if (req.query.codigo) {
-            busquedaNumeracion['profesion._id'] = req.query.codigo;
+            busquedaNumeracion['profesion.codigo'] = req.query.codigo;
         }
         if (req.query.codigoEspecialidad) {
-            busquedaNumeracion['especialidad._id'] = req.query.codigoEspecialidad;
+            busquedaNumeracion['especialidad.codigo'] = req.query.codigoEspecialidad;
+        }
+
+        if (req.query.codigoSisa) {
+            busquedaNumeracion['profesion.codigo'] = req.query.codigoSisa;
+        }
+
+        if (req.query.codigoSisaEspecialidad) {
+            busquedaNumeracion['especialidad.codigo'] = req.query.codigoSisaEspecialidad;
         }
 
         NumeracionMatriculas.find(busquedaNumeracion)

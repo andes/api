@@ -131,4 +131,19 @@
 * MAPEO SNOMED-CIE10: Se agrega un mapeo estático para conceptos snomed que no hayan encontrado un correspondencia automática con algún código CIE10.
 * CITAS- RUP : Prestaciones No nominalizadas, permite registrar las actividades que se realizan para la comunidad. También permite registrar un listado de pacientes para marcar la asistencia de los mismos.
 
+## [3.8.0] - 2018-09-25
+
+* WEBHOOKS : se agrega un módulo para el control de eventos y notificaciones mediante wehooks.  Permite traer los datos históricos del paciente mediante CDA
+* CITAS: Se soluciona incidente con el número de carpeta de un paciente.
+* HUDS - Prestación Screening de otoemisión acústica neonatal: Si en una consulta de Screening de Otoemisión acústica se registran en antecedentes, estos se visualizan cuando se inicia una consulta nueva de Screening de Otoemisión del mismo paciente. (https://github.com/andes/app/issues/617)
+* RUP: Fix en la validación de RUP para consultas de niño sano.
+* CDA-LABORATORIO: Se soluciona el problema que mostraba siempre a SUBSECRETARIA DE SALUD como efector.
+
+## [3.8.2] - 2018-10-02
+
+* RUP: Prestación de odontología. Permite registrar odontograma en la consulta y poder relacionar diferentes conceptos
+* CITAS: Modificaciones en agendas dinámicas para permitir la creación de agendas a futuro
+* Integración: los turnos codificados por los profesionales en los sistemas legacy se auditan automáticamente en la revisión
+* Agrega evento de login de app mobile
+
 

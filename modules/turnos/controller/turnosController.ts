@@ -55,7 +55,7 @@ export function getTurno(req) {
 
                 const data = await toArray(agenda.aggregate(pipelineTurno).cursor({}).exec());
 
-                if (data && data[0].bloques && data[0].bloques.turnos && data[0].bloques.turnos >= 0) {
+                if (data.length > 0 && data[0].bloques && data[0].bloques.turnos && data[0].bloques.turnos >= 0) {
                     resolve(data[0].bloques.turnos[0]);
                 } else {
                     resolve(data);
@@ -293,9 +293,9 @@ export async function getLiberadosPaciente(req) {
             const turnos = [];
             resultado.forEach(elem => {
                 turno = elem.dataTurno.turno.toObject();
-                turno.id = elem.dataTurno.turno._id.toString();
-                turno.agenda_id = elem.dataTurno.idAgenda.toString();
-                turno.bloque_id = elem.dataTurno.idBloque.toString();
+                turno.id = elem.dataTurno.turno._id;
+                turno.agenda_id = elem.dataTurno.idAgenda;
+                turno.bloque_id = elem.dataTurno.idBloque;
                 turno.organizacion = elem.dataTurno.turno.updatedBy.organizacion;
                 turno.profesionales = elem.dataTurno.profesionales;
                 turno.estado = 'liberado';

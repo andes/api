@@ -1,7 +1,13 @@
 import * as mongoose from 'mongoose';
-import { schemaDefaults } from './mongoose/defaults';
 import * as configPrivate from './config.private';
 import * as debug from 'debug';
+
+function schemaDefaults(schema) {
+    schema.set('toJSON', {
+        virtuals: true,
+        versionKey: false
+    });
+}
 
 export class Connections {
     static main: mongoose.Connection;
