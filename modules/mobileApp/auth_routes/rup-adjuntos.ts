@@ -5,10 +5,7 @@ import * as moment from 'moment';
 import { Auth } from './../../../auth/auth.class';
 import { model as Prestacion } from '../../rup/schemas/prestacion';
 import { model as PrestacionAdjunto } from '../../rup/schemas/prestacion-adjuntos';
-
-
 import { NotificationService } from '../../mobileApp/controller/NotificationService';
-
 import { storeFile } from '../../rup/controllers/rupStore';
 
 const router = express.Router();
@@ -23,7 +20,7 @@ const router = express.Router();
  * @param {RegistroSchema} resgistro ID de la prestación
  */
 
-router.post('/prestaciones-adjuntar', Auth.authenticate() , (req: any, res, next) => {
+router.post('/prestaciones-adjuntar', Auth.authenticate(), (req: any, res, next) => {
 
     const registro = req.body.registro;
     const pacienteId = req.body.paciente;
@@ -32,7 +29,7 @@ router.post('/prestaciones-adjuntar', Auth.authenticate() , (req: any, res, next
 
     const adjunto = (new PrestacionAdjunto() as any);
     adjunto.paciente = pacienteId;
-    adjunto.prestacion =  prestacionId;
+    adjunto.prestacion = prestacionId;
     adjunto.registro = registro;
     adjunto.profesional = profesionalId;
     adjunto.estado = 'pending';
@@ -58,7 +55,7 @@ router.delete('/prestaciones-adjuntar/:id', Auth.authenticate(), (req: any, res,
 
     PrestacionAdjunto.findById(id).then((doc: any) => {
         doc.remove().then(() => {
-            return res.json({status: 'ok'});
+            return res.json({ status: 'ok' });
         }).catch(next);
     }).catch((err) => {
         return next(err);
@@ -93,7 +90,7 @@ router.get('/prestaciones-adjuntar', Auth.optionalAuth(), async (req: any, res, 
     } else {
         return next(403);
     }
-    find.then( async (docs) => {
+    find.then(async (docs) => {
         const pendientes = [];
         for (const doc of docs) {
             const obj = doc.toObject();
@@ -144,7 +141,7 @@ router.patch('/prestaciones-adjuntar/:id', Auth.optionalAuth(), async (req: any,
         doc.valor = { documentos: files };
         doc.estado = estado;
         doc.save().then(() => {
-            return res.json({status: 'ok'});
+            return res.json({ status: 'ok' });
         }).catch(next);
     }).catch((err) => {
         return next(err);

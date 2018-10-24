@@ -10,13 +10,15 @@ createToken();
 async function createToken() {
     const id = process.argv[2];
     const app: any = await authApps.findById(id);
-    const organizacion = app.organizacion;
+    const organizacion = {
+        id: app.organizacion,
+        nombre: app.nombre
+    };
     const permisos = app.permisos;
-    const nombre = app.nombre;
 
-    const token = AuthClass.Auth.generateAppToken(nombre, organizacion, permisos);
+    const token = AuthClass.Auth.generateAppToken(app, organizacion, permisos);
     app.token = token;
-    app.save().then( () => {
+    app.save().then(() => {
         process.exit();
     });
 }

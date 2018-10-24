@@ -1,6 +1,6 @@
-import * as mongoose from 'mongoose';
+import { Schema, model} from 'mongoose';
 
-export let turneroSchema = new mongoose.Schema({
+export let TurneroSchema = new Schema({
     horaInicio: Date,
     horaLlamada: Date,
     espacioFisico: Array,
@@ -9,4 +9,4 @@ export let turneroSchema = new mongoose.Schema({
     tipoPrestacion: Array
 });
 
-export let turno = mongoose.model('turno', turneroSchema, 'turnero');
+export let Turno = model('turno', TurneroSchema, 'turnero');

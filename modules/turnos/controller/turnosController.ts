@@ -43,6 +43,7 @@ export function getTurno(req) {
                     bloques: { $push: { _id: '$_id.bloqueId', turnos: '$turnos' } }
                 }
             }];
+            // ver llamado, req.query
             if (req.params && mongoose.Types.ObjectId.isValid(req.params.id)) {
                 const matchId = {
                     $match: {
@@ -292,9 +293,9 @@ export async function getLiberadosPaciente(req) {
             const turnos = [];
             resultado.forEach(elem => {
                 turno = elem.dataTurno.turno.toObject();
-                turno.id = elem.dataTurno.turno._id.toString();
-                turno.agenda_id = elem.dataTurno.idAgenda.toString();
-                turno.bloque_id = elem.dataTurno.idBloque.toString();
+                turno.id = elem.dataTurno.turno._id;
+                turno.agenda_id = elem.dataTurno.idAgenda;
+                turno.bloque_id = elem.dataTurno.idBloque;
                 turno.organizacion = elem.dataTurno.turno.updatedBy.organizacion;
                 turno.profesionales = elem.dataTurno.profesionales;
                 turno.estado = 'liberado';

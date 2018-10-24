@@ -1,9 +1,11 @@
+import { tipoPrestacion } from './../../../core/tm/schemas/tipoPrestacion';
 import { SemanticTag } from './semantic-tag';
 import * as mongoose from 'mongoose';
 import * as registro from './prestacion.registro';
 import * as estado from './prestacion.estado';
 import { auditoriaPrestacionPacienteSchema } from '../../auditorias/schemas/auditoriaPrestacionPaciente';
 import { iterate, convertToObjectId } from '../controllers/rup';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 export let schema = new mongoose.Schema({
     // Datos principales del paciente
@@ -17,7 +19,11 @@ export let schema = new mongoose.Schema({
         sexo: String,
         fechaNacimiento: Date
     },
-
+    noNominalizada: {
+        type: Boolean,
+        required: true,
+        default: false
+    },
     // Datos de la Solicitud
     solicitud: {
 
@@ -41,7 +47,8 @@ export let schema = new mongoose.Schema({
             term: String,
             fsn: String,
             semanticTag: SemanticTag,
-            refsetIds: [String]
+            refsetIds: [String],
+            noNominalizada: Boolean
         },
 
         // Datos de auditoría sobre el estado de la solicitud (aprobada, desaprobada, ...)
@@ -112,7 +119,7 @@ export let schema = new mongoose.Schema({
 schema.pre('save', function (next) {
     let prestacion: any = this;
 
-    if (!prestacion.paciente.id) {
+    if (!prestacion.solicitud.tipoPrestacion.noNominalizada && !prestacion.paciente.id) {
         let err = new Error('Debe seleccionar el paciente');
         return next(err);
     }
@@ -151,6 +158,6 @@ schema.pre('save', function (next) {
 
 
 // Habilitar plugin de auditoría
-schema.plugin(require('../../../mongoose/audit'));
+schema.plugin(AuditPlugin);
 
 export let model = mongoose.model('prestacion', schema, 'prestaciones');

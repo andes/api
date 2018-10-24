@@ -3,7 +3,6 @@ import * as express from 'express';
 import * as mongoose from 'mongoose';
 import * as authController from '../controller/AuthController';
 import * as controllerPaciente from '../../../core/mpi/controller/paciente';
-import * as labsImport from '../../cda/controller/import-labs';
 
 const router = express.Router();
 
@@ -49,7 +48,6 @@ router.post('/create/:id', (req: any, res, next) => {
 
         authController.createUserFromPaciente(pacienteObj, contacto).then(() => {
             // Hack momentaneo. Descargamos los laboratorios a demanda.
-            labsImport.importarDatos(pacienteObj);
             return res.send({ message: 'OK' });
         }).catch((error) => {
             return res.send(error);

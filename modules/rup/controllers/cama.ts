@@ -23,7 +23,7 @@ export function buscarPasesCamaXInternacion(idInternacion) {
     pipelineEstado = [
         { $match: { 'estados.idInternacion': idInternacion } },
         { $unwind: '$estados' },
-        { $match: { 'estados.idInternacion': idInternacion } },
+        { $match: { 'estados.idInternacion': idInternacion, 'estados.esMovimiento': true } },
         { $sort: { 'estados.fecha': 1 } }];
 
     const query = cama.aggregate(pipelineEstado);
@@ -53,6 +53,7 @@ export function camaOcupadasxUO(unidadOrganizativa, fecha, idOrganizacion) {
             'estados.unidadOrganizativa.conceptId': unidadOrganizativa,
             'estados.fecha': { $lte: fecha },
             'estados.esCensable': true,
+            'estados.esMovimiento': true,
             'estados.estado': 'ocupada'
         }
     },
@@ -64,11 +65,14 @@ export function camaOcupadasxUO(unidadOrganizativa, fecha, idOrganizacion) {
                 nombre: '$nombre',
                 organizacion: '$organizacion',
                 tipoCama: '$tipoCama',
-                idInternacion: '$estados.idInternacion',
+                idInternacion: '$estados.idInternacion'
             },
             ultimoEstado: { $last: '$estados' }
         }
     },
+    // {
+    //     $match: { 'ultimoEstado.estado': 'ocupada' }
+    // },
     { $sort: { 'ultimoEstado.fecha': 1 } }];
 
 
@@ -171,6 +175,7 @@ export function disponibilidadXUO(unidad, fecha, idOrganizacion) {
 
         let pipelineFinDia = [{
             $match: {
+                'organizacion._id': idOrganizacion,
                 'estados.unidadOrganizativa.conceptId': unidad,
                 'estados.fecha': { $lte: finDia }
             }
@@ -207,7 +212,41 @@ export function disponibilidadXUO(unidad, fecha, idOrganizacion) {
 
     });
 }
+export async function getHistorialCama(idOrganizacion, fechaDesde, fechaHasta, idCama) {
 
+    let historial = [];
+    historial = [{
+        $match: {
+            _id: idCama
+        }
+    },
+    { $unwind: '$estados' },
+    { $sort: { nombre: 1, 'estados.fecha': -1 } },
+    {
+        $match: {
+            'organizacion._id': idOrganizacion,
+            'estados.fecha': {
+                $lte: fechaHasta,
+                $gte: fechaDesde
+            },
+        }
+    },
+    {
+        $project: {
+            estado: '$estados.estado',
+            fecha: '$estados.fecha',
+            censable: '$estados.esCensable',
+            unidadOrganizativa: '$estados.unidadOrganizativa.term',
+            paciente: '$estados.paciente'
+
+        }
+    },
+    {
+        $limit: 30
+    },
+    ];
+    return await cama.aggregate(historial).exec();
+}
 
 export function camasXfecha(idOrganizacion, fecha) {
     return new Promise(async (resolve, reject) => {

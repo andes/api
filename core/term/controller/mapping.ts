@@ -1,5 +1,6 @@
 import * as moment from 'moment';
 import { SnomedMapping } from '../schemas/mapping';
+import * as staticMapping from '../schemas/staticmapping';
 
 /**
  * Mapea un concepto de snomed a CIE10
@@ -89,7 +90,13 @@ export class SnomedCIE10Mapping {
                         }
                     }
                 }
-                resolve(null);
+
+                // Chequea si existe un mapeo estático
+                staticMapping.model.findOne({ conceptId }).then((staticmap: any) => {
+                    resolve(staticmap ? staticmap.mapTarget : null);
+                }).catch(err2 => {
+                    reject(err2);
+                });
             }).catch((err) => {
                 reject(err);
             });
@@ -123,16 +130,13 @@ export class SnomedCIE10Mapping {
                         } else {
                             result = false;
                         }
-
                     } else {
                         result = result && (this.contexto.indexOf(r.concept) >= 0);
                     }
-
                 }
                 return result;
             }
         }
         return false;
     }
-
 }

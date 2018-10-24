@@ -195,7 +195,7 @@ export default [
     },
     {
         key: 'matriculaciones',
-        title: 'matriculaciones',
+        title: 'Matriculaciones',
         comment: '',
         child: [
             {
@@ -262,6 +262,8 @@ export default [
             { key: 'get', title: 'Leer CDA', type: 'boolean' },
             { key: 'list', title: 'Listar CDA por paciente', type: 'boolean' },
             { key: 'post', title: 'Generar CDA', type: 'boolean' },
+            { key: 'organizacion', title: 'Seleccionar organización', type: 'boolean' },
+            { key: 'paciente', title: 'Setear paciente', type: 'boolean' },
         ]
     },
     {

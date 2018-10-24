@@ -21,9 +21,9 @@ const Prestacion = require('../../../modules/rup/schemas/prestacion').model;
 Connections.initialize();
 // Ya está abierta?
 
-    // console.log('Conectado.');
+// console.log('Conectado.');
 
-    // Instanciamos un cursor
+// Instanciamos un cursor
 const cursor = Prestacion.findOne().cursor();
 
 cursor.on('close', () => { // Si no encuentra nada, termina el script.
