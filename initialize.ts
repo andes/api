@@ -7,7 +7,7 @@ import { Express } from 'express';
 import * as bodyParser from 'body-parser';
 import * as userAgent from 'express-useragent';
 
-let requireDir = require('require-dir');
+const requireDir = require('require-dir');
 
 export function initAPI(app: Express) {
     // Inicializa la autenticación con Passport/JWT
@@ -18,9 +18,10 @@ export function initAPI(app: Express) {
 
     // Configura Express
     app.use(bodyParser.json({ limit: '150mb' }));
-    app.use(bodyParser.urlencoded({ extended: true }));
-    app.use(userAgent.express());
-    app.all('*', function (req, res, next) {
+    app.use(bodyParser.urlencoded({
+        extended: true
+    }));
+    app.all('*', (req, res, next) => {
         res.header('Access-Control-Allow-Origin', '*');
         res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS');
         res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
@@ -38,10 +39,10 @@ export function initAPI(app: Express) {
     Swagger.initialize(app);
 
     // Carga los módulos y rutas
-    for (let m in config.modules) {
+    for (const m in config.modules) {
         if (config.modules[m].active) {
-            let routes = requireDir(config.modules[m].path);
-            for (let route in routes) {
+            const routes = requireDir(config.modules[m].path);
+            for (const route in routes) {
                 if (config.modules[m].middleware) {
                     app.use('/api' + config.modules[m].route, config.modules[m].middleware, routes[route]);
                 } else {
@@ -52,7 +53,7 @@ export function initAPI(app: Express) {
     }
 
     // Error handler
-    app.use(function (err: any, req, res, next) {
+    app.use((err: any, req, res, next) => {
         if (err) {
             // Parse err
             let e: Error;

@@ -4,19 +4,29 @@ import * as moment from 'moment';
 // import * as async from 'async';
 import { Auth } from './../../../auth/auth.class';
 import { model as Prestacion } from '../schemas/prestacion';
-import { model as PrestacionAdjunto } from '../schemas/prestacion-adjuntos';
-
-import { buscarPaciente } from '../../../core/mpi/controller/paciente';
 import * as frecuentescrl from '../controllers/frecuentesProfesional';
-import { NotificationService } from '../../mobileApp/controller/NotificationService';
 
-import { iterate, convertToObjectId, buscarEnHuds, matchConcepts } from '../controllers/rup';
+import { buscarEnHuds } from '../controllers/rup';
 import { Logger } from '../../../utils/logService';
+import { EventCore } from '@andes/event-bus';
+import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
+import { snomedModel } from '../../../core/term/schemas/snomed';
 
-let router = express.Router();
-let async = require('async');
+const router = express.Router();
+const async = require('async');
 
-router.get('/prestaciones/huds/:idPaciente', function (req, res, next) {
+
+/***
+ *  Buscar un determinado concepto snomed ya sea en una prestación especifica o en la huds completa de un paciente
+ *
+ * @param idPaciente: id mongo del paciente
+ * @param estado: buscar en prestaciones con un estado distinto a validada
+ * @param idPrestacion: buscar concepto/s en una prestacion especifica
+ * @param expresion: expresion snomed que incluye los conceptos que estamos buscando
+ *
+ */
+
+router.get('/prestaciones/huds/:idPaciente', async (req, res, next) => {
 
     // verificamos que sea un ObjectId válido
     if (!mongoose.Types.ObjectId.isValid(req.params.idPaciente)) {
@@ -25,12 +35,17 @@ router.get('/prestaciones/huds/:idPaciente', function (req, res, next) {
 
     // por defecto traemos todas las validadas, si no vemos el estado que viene en la request
     const estado = (req.query.estado) ? req.query.estado : 'validada';
-    let query = {
+
+    const query = {
         'paciente.id': req.params.idPaciente,
-        '$where': 'this.estados[this.estados.length - 1].tipo ==  \"' + estado + '\"'
+        $where: 'this.estados[this.estados.length - 1].tipo ==  \"' + estado + '\"'
     };
 
-    let conceptos = (req.query.conceptIds) ? req.query.conceptIds : null;
+    if (req.query.idPrestacion) {
+        query['_id'] = mongoose.Types.ObjectId(req.query.idPrestacion);
+    }
+
+    let conceptos: any = [];
 
     return Prestacion.find(query, (err, prestaciones) => {
 
@@ -42,18 +57,87 @@ router.get('/prestaciones/huds/:idPaciente', function (req, res, next) {
             return res.status(404).send('Paciente no encontrado');
         }
 
-        // ejecutamos busqueda recursiva
-        let data = buscarEnHuds(prestaciones, conceptos);
+        if (req.query.expresion) {
+            const querySnomed = makeMongoQuery(req.query.expresion);
+            snomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docs: any[]) => {
 
+                conceptos = docs.map((item) => {
+                    const term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
+                    return {
+                        fsn: item.fullySpecifiedName,
+                        term,
+                        conceptId: item.conceptId,
+                        semanticTag: item.semtag
+                    };
+                });
+
+                // ejecutamos busqueda recursiva
+                const data = buscarEnHuds(prestaciones, conceptos);
+
+                res.json(data);
+            });
+        }
+    });
+
+
+});
+
+router.get('/prestaciones/solicitudes', (req, res, next) => {
+    let query;
+    if (req.query.estados) {
+        const estados = (typeof req.query.estados === 'string') ? [req.query.estados] : req.query.estados;
+        query = Prestacion.find({
+            $where: estados.map(x => 'this.estados[this.estados.length - 1].tipo ==  \"' + x + '"').join(' || '),
+        });
+    } else {
+        query = Prestacion.find({}); // Trae todos
+    }
+
+    // Solicitudes tienen tipoPrestacionOrigen, entonces utilizamos esta propiedad
+    // para filtrarlas de de la colección prestaciones
+    // query.where('solicitud.tipoPrestacionOrigen.conceptId').exists(true); <<<<< cuando salgan de circulación solicitudes viejas la query es esta
+    query.where('estados.0.tipo').in(['pendiente', 'auditoria']);
+
+
+    if (req.query.idPaciente) {
+        query.where('paciente.id').equals(req.query.idPaciente);
+    }
+
+    if (req.query.solicitudDesde) {
+        query.where('solicitud.fecha').gte(moment(req.query.solicitudDesde).startOf('day').toDate() as any);
+    }
+
+    if (req.query.solicitudHasta) {
+        query.where('solicitud.fecha').lte(moment(req.query.solicitudHasta).endOf('day').toDate() as any);
+    }
+
+    // Ordenar por fecha de solicitud
+    if (req.query.ordenFecha) {
+        query.sort({ 'solicitud.fecha': -1 });
+    } else if (req.query.ordenFechaEjecucion) {
+        query.sort({ 'ejecucion.fecha': -1 });
+    }
+
+    if (req.query.limit) {
+        query.limit(parseInt(req.query.limit, 10));
+    }
+
+    query.exec((err, data) => {
+        if (err) {
+            return next(err);
+        }
+        if (req.params.id && !data) {
+            return next(404);
+        }
         res.json(data);
     });
 });
 
-router.get('/prestaciones/:id*?', function (req, res, next) {
+router.get('/prestaciones/:id*?', (req, res, next) => {
 
     if (req.params.id) {
-        let query = Prestacion.findById(req.params.id);
-        query.exec(function (err, data) {
+        const query = Prestacion.findById(req.params.id);
+        query.exec((err, data) => {
             if (err) {
                 return next(err);
             }
@@ -65,7 +149,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
     } else {
         let query;
         if (req.query.estado) {
-            let estados = (typeof req.query.estado === 'string') ? [req.query.estado] : req.query.estado;
+            const estados = (typeof req.query.estado === 'string') ? [req.query.estado] : req.query.estado;
             query = Prestacion.find({
                 // $where: 'this.estados[this.estados.length - 1].tipo ==  \"' + req.query.estado + '\"',
                 $where: estados.map(x => 'this.estados[this.estados.length - 1].tipo ==  \"' + x + '"').join(' || '),
@@ -93,6 +177,9 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
         }
         if (req.query.idPrestacionOrigen) {
             query.where('solicitud.prestacionOrigen').equals(req.query.idPrestacionOrigen);
+        }
+        if (req.query.conceptId) {
+            query.where('solicitud.tipoPrestacion.conceptId').equals(req.query.conceptId);
         }
         if (req.query.turnos) {
             query.where('solicitud.turno').in(req.query.turnos);
@@ -137,7 +224,7 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
             query.limit(parseInt(req.query.limit, 10));
         }
 
-        query.exec(function (err, data) {
+        query.exec((err, data) => {
             if (err) {
                 return next(err);
             }
@@ -149,23 +236,23 @@ router.get('/prestaciones/:id*?', function (req, res, next) {
     }
 });
 
-router.post('/prestaciones', function (req, res, next) {
-    let data = new Prestacion(req.body);
+router.post('/prestaciones', (req, res, next) => {
+    const data = new Prestacion(req.body);
     Auth.audit(data, req);
     data.save((err) => {
         if (err) {
             return next(err);
         }
         res.json(data);
+        EventCore.emitAsync('rup:prestacion:create', data);
     });
 });
 
-router.patch('/prestaciones/:id', function (req, res, next) {
+router.patch('/prestaciones/:id', (req, res, next) => {
     Prestacion.findById(req.params.id, (err, data: any) => {
         if (err) {
             return next(err);
         }
-
         switch (req.body.op) {
             case 'paciente':
                 if (req.body.paciente) {
@@ -181,6 +268,12 @@ router.patch('/prestaciones/:id', function (req, res, next) {
                 }
                 if (req.body.registros) {
                     data.ejecucion.registros = req.body.registros;
+                }
+                if (req.body.ejecucion && req.body.ejecucion.fecha) {
+                    data.ejecucion.fecha = req.body.ejecucion.fecha;
+                }
+                if (req.body.ejecucion && req.body.ejecucion.organizacion) {
+                    data.ejecucion.organizacion = req.body.ejecucion.organizacion;
                 }
                 break;
             case 'romperValidacion':
@@ -213,15 +306,19 @@ router.patch('/prestaciones/:id', function (req, res, next) {
         }
 
         Auth.audit(data, req);
-        data.save(function (error, prestacion) {
+        data.save((error, prestacion) => {
             if (error) {
                 return next(error);
+            }
+
+            if (req.body.estado && req.body.estado.tipo === 'validada') {
+                EventCore.emitAsync('rup:prestacion:validate', data);
             }
 
             // Actualizar conceptos frecuentes por profesional y tipo de prestacion
             if (req.body.registrarFrecuentes && req.body.registros) {
 
-                let dto = {
+                const dto = {
                     profesional: Auth.getProfesional(req),
                     tipoPrestacion: prestacion.solicitud.tipoPrestacion,
                     organizacion: prestacion.solicitud.organizacion,
@@ -247,13 +344,13 @@ router.patch('/prestaciones/:id', function (req, res, next) {
                 // creamos una variable falsa para cuando retorne hacer el get
                 // de todas estas prestaciones
 
-                let solicitadas = [];
+                const solicitadas = [];
 
-                async.each(req.body.planes, function (plan, callback) {
-                    let nuevoPlan = new Prestacion(plan);
+                async.each(req.body.planes, (plan, callback) => {
+                    const nuevoPlan = new Prestacion(plan);
 
                     Auth.audit(nuevoPlan, req);
-                    nuevoPlan.save(function (errorPlan, nuevaPrestacion) {
+                    nuevoPlan.save((errorPlan, nuevaPrestacion) => {
                         if (errorPlan) { return callback(errorPlan); }
 
                         solicitadas.push(nuevaPrestacion);
@@ -261,7 +358,7 @@ router.patch('/prestaciones/:id', function (req, res, next) {
                         callback();
 
                     });
-                }, function (err2) {
+                }, (err2) => {
                     if (err2) {
                         return next(err2);
                     }
@@ -269,7 +366,7 @@ router.patch('/prestaciones/:id', function (req, res, next) {
                     // como el objeto de mongoose es un inmutable, no puedo agregar directamente una propiedad
                     // para poder retornar el nuevo objeto con los planes solicitados, primero
                     // debemos clonarlo con JSON.parse(JSON.stringify());
-                    let convertedJSON = JSON.parse(JSON.stringify(prestacion));
+                    const convertedJSON = JSON.parse(JSON.stringify(prestacion));
                     convertedJSON.solicitadas = solicitadas;
                     res.json(convertedJSON);
                 });
@@ -277,8 +374,6 @@ router.patch('/prestaciones/:id', function (req, res, next) {
             } else {
                 res.json(prestacion);
             }
-
-            Auth.audit(data, req);
             /*
             Logger.log(req, 'prestacionPaciente', 'update', {
                 accion: req.body.op,

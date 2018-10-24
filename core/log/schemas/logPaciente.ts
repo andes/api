@@ -1,4 +1,4 @@
-import { tipoPrestacion, tipoPrestacionSchema } from './../../tm/schemas/tipoPrestacion';
+import { tipoPrestacionSchema } from './../../tm/schemas/tipoPrestacion';
 import { profesionalSchema } from './../../tm/schemas/profesional';
 
 import * as mongoose from 'mongoose';

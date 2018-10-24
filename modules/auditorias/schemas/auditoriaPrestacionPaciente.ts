@@ -4,6 +4,7 @@ import * as nombreSchema from '../../../core/tm/schemas/nombre';
 // import { tipoPrestacionSchema } from '../../../core/tm/schemas/tipoPrestacion';
 // import { prestacionPacienteSchema } from '../../../modules/rup/schemas/prestacionPaciente';
 import { profesionalSchema } from '../../../core/tm/schemas/profesional';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 // Exportar Schema
 export let auditoriaPrestacionPacienteSchema = new mongoose.Schema({
@@ -20,6 +21,6 @@ export let auditoriaPrestacionPacienteSchema = new mongoose.Schema({
     },
 });
 // Habilitar plugin de auditoría
-auditoriaPrestacionPacienteSchema.plugin(require('../../../mongoose/audit'));
+auditoriaPrestacionPacienteSchema.plugin(AuditPlugin);
 // Exportar Model
 export let auditoriaPrestacionPaciente = mongoose.model('auditoriaPrestacionPaciente', auditoriaPrestacionPacienteSchema, 'auditoriaPrestacionPaciente');

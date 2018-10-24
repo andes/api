@@ -3,18 +3,18 @@ import { Document, Schema, model } from 'mongoose';
 
 export const ObjSIISASchema = new Schema({
     nombre: String,
-    codigo: String,
+    codigo: Number,
     tipoDeFormacion: String,
-    habilitado: Boolean
+    habilitado: Boolean,
+    profesionCodigoRef: Number
 });
 
 export interface SIISAObject extends Document {
     nombre: string;
-    codigo: string;
+    codigo: Number;
     tipoDeFormacion: String;
     habilitado: boolean;
 }
-
 
 
 export const TipoDocumento = model<SIISAObject>('SIISATipoDocumento', ObjSIISASchema, 'siisa_tipoDocumento');

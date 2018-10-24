@@ -1,11 +1,9 @@
 import * as express from 'express';
 import * as organizacionCache from '../schemas/organizacionCache';
-import * as servicioSisa from '../../../utils/servicioSisa';
-import * as configPrivate from '../../../config.private';
 
-let router = express.Router();
+const router = express.Router();
 
-router.get('/organizacionesCache', function (req, res, next) {
+router.get('/organizacionesCache', (req, res, next) => {
 
     let query;
 
@@ -16,7 +14,7 @@ router.get('/organizacionesCache', function (req, res, next) {
         domicilio: 1,
         telefono: 1
     });
-    query.exec(function (err, data) {
+    query.exec((err, data) => {
         if (err) {
             return next(err);
         }

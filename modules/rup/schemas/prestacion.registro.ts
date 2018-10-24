@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 import { SnomedConcept } from './snomed-concept';
-
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 // Cada registro contiene la información usuario que lo creó (plugin audit)
 // y los valores generados por los elementos RUP correspondientes.
 // Esto permite que múltiples usuarios generen registros para la ejecución de una prestación
@@ -33,18 +33,16 @@ schema.add({
         type: Boolean,
         default: false
     },
-    esPrimeraVez: {
-        type: Boolean,
-        default: false
-    },
+    esPrimeraVez: Boolean,
     // Almacena el valor del átomo, molécula o fórmula.
     // Para el caso de las moléculas, el valor puede ser nulo.
     valor: mongoose.Schema.Types.Mixed,
     // Almacena los registros de los átomos asociados a la molécula
     registros: [schema],
     // Indica los id de otros registros dentro array 'registros' de la prestación
-    relacionadoCon: [mongoose.Schema.Types.ObjectId],
+    // O un conceptId si el registro está relacionado con un concepto (ej: un registro de "caries" con concepto "diente 18")
+    relacionadoCon: [mongoose.Schema.Types.Mixed],
 });
 
 // Habilitar plugin de auditoría
-schema.plugin(require('../../../mongoose/audit'));
+schema.plugin(AuditPlugin);

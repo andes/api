@@ -2,7 +2,7 @@ import { profesionalMeta } from '../schemas/profesionalMeta';
 
 export function actualizarFrecuentes(data) {
     return new Promise((resolve, reject) => {
-        let query = {
+        const query = {
             // profesional
             ...(data.profesional) && { 'profesional.id': data.profesional.id },
             // organizacion
@@ -18,9 +18,9 @@ export function actualizarFrecuentes(data) {
 
             // si no existe agregamos el nuevo frecuente
             if (typeof resultado === null || !resultado) {
-                let frecuente = new profesionalMeta(data);
+                const frecuente = new profesionalMeta(data);
 
-                frecuente.save(function (err2) {
+                frecuente.save((err2) => {
                     if (err2) {
                         return reject(err2);
                     }
@@ -31,7 +31,7 @@ export function actualizarFrecuentes(data) {
 
                 if (data.frecuentes) {
                     data.frecuentes.forEach(frecuente => {
-                        let indexConcepto = resultado.frecuentes.findIndex(x => x.concepto.conceptId === frecuente.concepto.conceptId);
+                        const indexConcepto = resultado.frecuentes.findIndex(x => x.concepto.conceptId === frecuente.concepto.conceptId);
 
                         if (indexConcepto === -1) {
                             resultado.frecuentes.push({
@@ -39,7 +39,11 @@ export function actualizarFrecuentes(data) {
                                 frecuencia: 1
                             });
                         } else {
-                            resultado.frecuentes[indexConcepto].frecuencia = parseInt(resultado.frecuentes[indexConcepto].frecuencia, 0) + 1;
+                            if (resultado.frecuentes[indexConcepto].frecuencia) {
+                                resultado.frecuentes[indexConcepto].frecuencia = parseInt(resultado.frecuentes[indexConcepto].frecuencia, 0) + 1;
+                            } else {
+                                resultado.frecuentes[indexConcepto].frecuencia = 1;
+                            }
                         }
                     });
                 }

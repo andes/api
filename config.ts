@@ -13,9 +13,11 @@ const mobileMiddleware = [
     Auth.authenticate()
 ];
 
+/*
 const publicMiddleware = [
     Auth.authenticatePublic()
 ];
+*/
 
 
 // Habilita/deshabilita módulos de la API
@@ -106,8 +108,8 @@ export const modules = {
     turnero: {
         active: true,
         path: './modules/turnero/routes',
-        route: '/modules/turnero',
-        middleware: null
+        route: '/modules/turnero'
+        // middleware: appMiddleware
     },
     fuentesAutenticas: {
         active: true,
@@ -155,7 +157,7 @@ export const modules = {
         active: true,
         path: './modules/sugerencias/routes',
         route: '/modules/sugerencias',
-        middleware: null
+        middleware: appMiddleware
     },
     prestamosCarpetas: {
         active: true,
@@ -163,6 +165,35 @@ export const modules = {
         route: '/modules/prestamosCarpetas',
         middleware: appMiddleware
     },
+    reglas: {
+        active: true,
+        path: './modules/top/routes',
+        route: '/modules/top',
+        middleware: appMiddleware
+    },
+    version: {
+        active: true,
+        path: './modules/version/routes',
+        route: '/version'
+    },
+    webhook: {
+        active: true,
+        path: './modules/webhook/routes',
+        route: '/modules/webhook'
+    },
+    configFacturacionAutomatica: {
+        active: true,
+        path: './modules/facturacionAutomatica/routes',
+        route: '/modules/facturacionAutomatica',
+        middleware: appMiddleware
+    },
+    carpetas: {
+        active: true,
+        path: './modules/carpetas/routes',
+        route: '/modules/carpetas',
+        middleware: appMiddleware
+    }
+
 };
 
 // Cotas de consumo de APIs

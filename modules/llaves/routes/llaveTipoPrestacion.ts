@@ -8,11 +8,11 @@ import { Logger } from '../../../utils/logService';
  * Configuración de Tipo Prestación, incluye llaves
  */
 
-let router = express.Router();
+const router = express.Router();
 
-router.get('/tipoPrestacion/:id*?', function (req, res, next) {
+router.get('/tipoPrestacion/:id*?', (req, res, next) => {
     if (req.params.id) {
-        llaveTipoPrestacion.findById(req.params.id, function (err, data) {
+        llaveTipoPrestacion.findById(req.params.id, (err, data) => {
             if (err) {
                 return next(err);
             }
@@ -81,8 +81,8 @@ router.get('/tipoPrestacion/:id*?', function (req, res, next) {
     }
 });
 
-router.post('/tipoPrestacion', function (req, res, next) {
-    let insertLlaveTipoPrestacion = new llaveTipoPrestacion(req.body);
+router.post('/tipoPrestacion', (req, res, next) => {
+    const insertLlaveTipoPrestacion = new llaveTipoPrestacion(req.body);
 
     // Debe ir antes del save, y ser una instancia del modelo
     Auth.audit(insertLlaveTipoPrestacion, req);
@@ -101,9 +101,9 @@ router.post('/tipoPrestacion', function (req, res, next) {
     });
 });
 
-router.put('/tipoPrestacion/:id', function (req, res, next) {
+router.put('/tipoPrestacion/:id', (req, res, next) => {
 
-    let updateLlaveTipoPrestacion = new llaveTipoPrestacion(req.body);
+    const updateLlaveTipoPrestacion = new llaveTipoPrestacion(req.body);
 
     Auth.audit(updateLlaveTipoPrestacion, req);
 
@@ -126,7 +126,7 @@ router.put('/tipoPrestacion/:id', function (req, res, next) {
 });
 
 // [A] 2017-05-08: Los patch de ANDES son una mentira
-router.patch('/tipoPrestacion/:id', function (req, res, next) {
+router.patch('/tipoPrestacion/:id', (req, res, next) => {
 
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         return next('ObjectID Inválido');
@@ -141,13 +141,13 @@ router.patch('/tipoPrestacion/:id', function (req, res, next) {
         // Patch
         data.set(req.body.key, req.body.value);
 
-        data.save(function (errOnPatch) {
+        data.save((errOnPatch) => {
 
             Logger.log(req, 'llaveTipoPrestacion', 'update', {
                 accion: 'Actualizar configuración de TipoPrestacion',
                 ruta: req.url,
                 method: req.method,
-                data: data,
+                data,
                 err: errOnPatch || false
             });
 
@@ -162,14 +162,14 @@ router.patch('/tipoPrestacion/:id', function (req, res, next) {
 
 });
 
-router.delete('/tipoPrestacion/:id', function (req, res, next) {
-    llaveTipoPrestacion.findByIdAndRemove(req.params.id, function (err, data) {
+router.delete('/tipoPrestacion/:id', (req, res, next) => {
+    llaveTipoPrestacion.findByIdAndRemove(req.params.id, (err, data) => {
 
         Logger.log(req, 'llaveTipoPrestacion', 'delete', {
             accion: 'Eliminar Configuración de TipoPrestacion',
             ruta: req.url,
             method: req.method,
-            data: data,
+            data,
             err: err || false
         });
 
