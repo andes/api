@@ -670,6 +670,7 @@ router.post('/pacientes/:id/identificadores', async (req, res, next) => {
             if (pacienteLinkeado.db === 'mpi') {
                 controller.deletePacienteMpi(pacienteLinkeado.paciente._id);
             }
+            Logger.log(req, 'mpi', req.body.op, { pacienteBase: pacienteBase.paciente._id, pacienteLinkeado: pacienteLinkeado.paciente._id });
             res.json(pacienteSaved);
         } else {
             return next('Paciente no encontrado');
