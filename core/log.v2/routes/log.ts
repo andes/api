@@ -6,7 +6,7 @@ import { defaultLimit, maxLimit } from './../../../config';
 
 let router = express.Router();
 
-router.post('/', function (req, res, next) {
+router.post('/', (req, res, next) => {
     if (!Auth.check(req, 'log:post')) {
         return next(403);
     }
@@ -20,7 +20,7 @@ router.post('/', function (req, res, next) {
     );
 });
 
-router.get('/', function (req, res, next) {
+router.get('/', (req, res, next) => {
     if (!Auth.check(req, 'log:get')) {
         return next(403);
     }

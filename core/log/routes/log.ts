@@ -5,7 +5,7 @@ import { Auth } from '../../../auth/auth.class';
 
 let router = express.Router();
 
-router.post('/operaciones/:module/:op', function (req, res, next) {
+router.post('/operaciones/:module/:op', (req, res, next) => {
     if (!Auth.check(req, 'log:post')) {
         return next(403);
     }
@@ -17,7 +17,7 @@ router.post('/operaciones/:module/:op', function (req, res, next) {
     });
 });
 
-router.get('/operaciones/:module?', function (req, res, next) {
+router.get('/operaciones/:module?', (req, res, next) => {
     if (!Auth.check(req, 'log:get')) {
         return next(403);
     }

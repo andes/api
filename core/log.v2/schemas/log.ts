@@ -5,13 +5,13 @@ import * as organizacion from '../../../core/tm/schemas/organizacion';
 export let schema = new mongoose.Schema({
     key: {
         type: String,
-        required: function () {
+        required: () => {
             return !this.paciente;
         }
     },
     paciente: {
         type: mongoose.Schema.Types.ObjectId,
-        required: function () {
+        required: () => {
             return !this.key;
         }
     },
