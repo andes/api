@@ -9,6 +9,6 @@ const _financiadorSchema = new mongoose.Schema({
     fechaAlta: Date,
     fechaBaja: Date,
     ranking: Number,
-    nroAfiliado: String
+    numeroAfiliado: String
 });
 
