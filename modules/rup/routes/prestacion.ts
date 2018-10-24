@@ -13,18 +13,7 @@ import * as camasController from './../controllers/cama';
 import { EventCore } from '@andes/event-bus';
 
 const router = express.Router();
-const async = require('async');
-
-
-/***
- *  Buscar un determinado concepto snomed ya sea en una prestación especifica o en la huds completa de un paciente
- *
- * @param idPaciente: id mongo del paciente
- * @param estado: buscar en prestaciones con un estado distinto a validada
- * @param idPrestacion: buscar concepto/s en una prestacion especifica
- * @param expresion: expresion snomed que incluye los conceptos que estamos buscando
- *
- */
+import async = require('async');
 
 
 /**
@@ -315,6 +304,12 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                     if (req.body.solicitud) {
                         data.solicitud = req.body.solicitud;
                     }
+                }
+                break;
+            case 'informeIngreso':
+                if (req.body.informeIngreso) {
+                    data.ejecucion.registros[0].valor.informeIngreso = req.body.informeIngreso;
+                    data.ejecucion.registros[0].markModified('valor');
                 }
                 break;
             case 'asignarTurno':

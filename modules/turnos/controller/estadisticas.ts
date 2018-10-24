@@ -94,7 +94,7 @@ const facets = {
 
 function makePrimaryMatch(filtros) {
     const match: any = {
-        estado: { $nin: ['planificacion', /* 'suspendida' */, 'pausada', 'borrada'] }
+        estado: { $nin: ['planificacion', 'pausada', 'borrada'] }
     };
 
     if (filtros.fechaDesde) {

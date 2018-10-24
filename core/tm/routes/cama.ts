@@ -81,7 +81,7 @@ router.get('/camas/:idCama', Auth.authenticate(), (req, res, next) => {
  */
 
 router.post('/camas', Auth.authenticate(), (req, res, next) => {
-    let newCama: any = new CamaModel(req.body);
+    const newCama: any = new CamaModel(req.body);
     newCama.unidadOrganizativaOriginal = req.body.estados[0].unidadOrganizativa;
     Auth.audit(newCama, req);
     newCama.save((err) => {

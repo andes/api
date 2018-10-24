@@ -85,6 +85,10 @@ export let schema = new mongoose.Schema({
     // Por ejemplo, en "Consulta de medicina general" se puede sugerir ejecutar "Signos vitales"
     frecuentes: [SnomedConcept],
 
+    informe: {
+        type: mongoose.Schema.Types.Mixed
+    },
+
     busqueda_guiada: [{
         nombre: String,
         conceptIds: [String],

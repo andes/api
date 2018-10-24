@@ -312,7 +312,7 @@ router.get('/organizaciones/:id*?', (req, res, next) => {
         // }
 
 
-        // query.exec(function (err, data) {
+        // query.exec (err, data) => {
         //     if (err) {
         //         return next(err);
         //     }
@@ -391,7 +391,7 @@ router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
  *           $ref: '#/definitions/organizacion'
  */
 router.put('/organizaciones/:id', Auth.authenticate(), (req, res, next) => {
-    if (!Auth.check(req, 'tm:especialidad:putEspecialidad')) {
+    if (!Auth.check(req, 'tm:organizacion:edit')) {
         return next(403);
     }
     organizacion.findByIdAndUpdate(req.params.id, req.body, (err, data) => {
@@ -429,7 +429,7 @@ router.put('/organizaciones/:id', Auth.authenticate(), (req, res, next) => {
  *           $ref: '#/definitions/organizacion'
  */
 router.delete('/organizaciones/:id', Auth.authenticate(), (req, res, next) => {
-    if (!Auth.check(req, 'tm:organizacion:deleteOrganizacion')) {
+    if (!Auth.check(req, 'tm:organizacion:delete')) {
         return next(403);
     }
     organizacion.findByIdAndRemove(req.params._id, (err, data) => {
