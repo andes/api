@@ -46,7 +46,7 @@ router.get('/puco', async (req, res, next) => {
             padron = await obtenerVersiones();   // trae las distintas versiones de los padrones
             padron = padron[0].version; // asigna el ultimo padron actualizado
         }
-        // realiza la busqueda por dni y el pa  dron seteado anteriormente
+        // realiza la busqueda por dni y el padron seteado anteriormente
         rta = await Puco.find({ dni: Number.parseInt(req.query.dni, 10), version: padron }).exec();
 
         if (rta.length > 0) {
