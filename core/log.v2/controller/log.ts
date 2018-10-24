@@ -15,16 +15,16 @@ import { model, schema } from '../schemas/log';
  */
 export function log(req: Express.Request, key: String, paciente: String, operacion: String, valor: any, anterior?: any): Promise<Document> {
     let data = new model({
-        key: key,
-        paciente: paciente,
-        operacion: operacion,
+        key,
+        paciente,
+        operacion,
         fecha: new Date(),
         usuario: (req as any).user.usuario,
         app: (req as any).user.app,
         organizacion: (req as any).user.organizacion,
         data: anterior || valor ? {
-            anterior: anterior,
-            valor: valor,
+            anterior,
+            valor,
         } : null,
         cliente: {
             ip: (req as any).ip,

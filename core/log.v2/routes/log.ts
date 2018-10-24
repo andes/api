@@ -16,7 +16,7 @@ router.post('/', (req, res, next) => {
 
     log(req, req.body.key, req.body.paciente, req.body.operacion, req.body.valor, req.body.anterior).then(
         (data) => res.json(data),
-        (err) => next(err)
+        (err) => { next(err); }
     );
 });
 

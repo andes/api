@@ -5,7 +5,6 @@ import { Connections } from './connections';
 import * as HttpStatus from 'http-status-codes';
 import { Express } from 'express';
 import * as bodyParser from 'body-parser';
-import * as userAgent from 'express-useragent';
 
 const requireDir = require('require-dir');
 
