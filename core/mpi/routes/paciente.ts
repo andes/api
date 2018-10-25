@@ -158,22 +158,6 @@ router.get('/pacientes/auditoria/vinculados/', async (req, res, next) => {
 
 });
 
-router.get('/pacientes/auditoria/pacientesValidados/', (req, res, next) => {
-    // if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
-    //     return next(403);
-    // }
-    // Logger de la consulta a ejecutar
-    // Logger.log(req, 'mpi', 'query', {
-    //     elasticSearch: req.query
-    // });
-
-    controller.matchingAuditoria(req.query).then(result => {
-        res.send(result);
-    }).catch(error => {
-        return next(error);
-    });
-});
-
 
 // Simple mongodb query by ObjectId --> better performance
 router.get('/pacientes/:id', (req, res, next) => {
