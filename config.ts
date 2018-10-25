@@ -200,7 +200,7 @@ export const algoritmo = 'Levenshtein';
 export const mpi = {
     cotaAppMobile: 1,
     cotaMatchMin: 0.80,
-    cotaMatchMax: 0.84,
+    cotaMatchMax: 0.94,
     weightsDefault: {
         identity: 0.55,
         name: 0.10,
