@@ -12,7 +12,7 @@ router.get('/practicas/codigo/:codigo', (req, res, next) => {
     let query = { $and: [ { codigoNomenclador: { $ne: '' } }, { codigo: req.params.codigo } ] };
     console.log(req.params.codigo)
     Practica.find(query).then((practicas: any[]) => {
-        res.json(practicas);
+        res.json(practicas.length > 0 ? practicas[0] : null);
     });
 });
 
