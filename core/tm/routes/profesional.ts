@@ -10,7 +10,7 @@ import * as stream from 'stream';
 import * as base64 from 'base64-stream';
 import { Auth } from '../../../auth/auth.class';
 import { formacionCero, vencimientoMatriculaGrado, matriculaCero, vencimientoMatriculaPosgrado, migrarTurnos } from '../controller/profesional';
-
+import { IGuiaProfesional } from '../interfaces/interfaceProfesional';
 import { sendSms } from '../../../utils/roboSender/sendSms';
 import { toArray } from '../../../utils/utils';
 
@@ -39,6 +39,44 @@ router.get('/profesionales/estadisticas', async (req, res, next) => {
     });
 
 
+});
+
+router.get('/profesionales/guiaProfesional', (req, res, next) => {
+    const opciones = {};
+    let query;
+
+    if (req.query.documento) {
+        opciones['documento'] = req.query.documento;
+    }
+    if (req.query.codigoProfesion && req.query.numeroMatricula) {
+        opciones['formacionGrado.profesion.codigo'] = Number(req.query.codigoProfesion);
+        opciones['formacionGrado.matriculacion.matriculaNumero'] = Number(req.query.numeroMatricula);
+    }
+
+    if (Object.keys(opciones).length !== 0) {
+        query = profesional.find(opciones);
+        query.exec((err, data) => {
+            if (err) {
+                return next(err);
+            }
+            let resultado: IGuiaProfesional;
+            if (data.length > 0) {
+                resultado = {
+                    id: data[0].id,
+                    nombre: data[0].nombre,
+                    sexo: data[0].sexo,
+                    apellido: data[0].apellido,
+                    documento: data[0].documento,
+                    nacionalidad: data[0].nacionalidad.nombre,
+                    profesiones: data[0].formacionGrado
+                };
+
+            }
+            res.json(resultado);
+        });
+    } else {
+        res.json({});
+    }
 });
 
 
