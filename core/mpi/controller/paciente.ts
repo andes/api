@@ -553,6 +553,9 @@ export async function actualizarFinanciador(req, next) {
     // por ahora se pisa la información
     // TODO: analizar como sería
     if (req.body.paciente.obraSocial) {
+        if (!resultado.paciente.financiador) {
+            resultado.paciente.financiador = [];
+        }
         resultado.paciente.financiador[0] = req.body.paciente.obraSocial;
         let pacienteAndes: any;
         if (resultado.db === 'mpi') {
