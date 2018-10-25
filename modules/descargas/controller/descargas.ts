@@ -192,11 +192,13 @@ export class Documento {
 
     static generarRegistro(registro, template) {
         if (this.esHallazgo(registro.concepto.semanticTag)) {
-            this.generarRegistroHallazgoHTML(registro, template);
+            return this.generarRegistroHallazgoHTML(registro, template);
         } else if (this.esProcedimiento(registro.concepto.semanticTag)) {
-            this.generarRegistroProcedimientoHTML(registro, template);
+            return this.generarRegistroProcedimientoHTML(registro, template);
         } else if (this.esInsumo(registro.concepto.semanticTag)) {
-            this.generarRegistroInsumoHTML(registro, template);
+            return this.generarRegistroInsumoHTML(registro, template);
+        } else {
+            return false;
         }
     }
 
@@ -267,6 +269,8 @@ export class Documento {
 
         // Se crea un objecto nuevo
         config = JSON.parse(JSON.stringify(config));
+
+        console.log(config);
 
         // Paciente
         let mpi: any = await Paciente.buscarPaciente(prestacion.paciente.id);
@@ -433,6 +437,8 @@ export class Documento {
 
             return html;
         } else {
+            console.log('aca');
+
             return false;
         }
     }
