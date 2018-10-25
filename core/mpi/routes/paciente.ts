@@ -649,10 +649,10 @@ router.post('/pacientes/:id/identificadores', async (req, res, next) => {
             Auth.audit(pacienteAndesBase, req);
             let pacienteSaved = await pacienteAndesBase.save();
             if (pacienteBase.db === 'mpi') {
-                controller.deletePacienteMpi(pacienteBase.paciente._id);
+                await controller.deletePacienteMpi(pacienteBase.paciente._id);
             }
             if (pacienteLinkeado.db === 'mpi') {
-                controller.deletePacienteMpi(pacienteLinkeado.paciente._id);
+                await controller.deletePacienteMpi(pacienteLinkeado.paciente._id);
             }
             Logger.log(req, 'mpi', req.body.op, { pacienteBase: pacienteBase.paciente._id, pacienteLinkeado: pacienteLinkeado.paciente._id });
             res.json(pacienteSaved);

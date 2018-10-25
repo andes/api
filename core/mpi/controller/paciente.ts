@@ -376,7 +376,7 @@ export function matching(data) {
                                 documento: data.documento ? data.documento.toString() : '',
                                 nombre: data.nombre ? data.nombre : '',
                                 apellido: data.apellido ? data.apellido : '',
-                                fechaNacimiento: data.fechaNacimiento ? moment(new Date(data.fechaNacimiento)).format('YYYY-MM-DD') : '',
+                                fechaNacimiento: data.fechaNacimiento ? moment(data.fechaNacimiento).format('YYYY-MM-DD') : '',
                                 sexo: data.sexo ? data.sexo : ''
                             };
                             const pacElastic = {
@@ -466,19 +466,16 @@ export function deletePacienteAndes(objectId) {
     });
 }
 
-export function deletePacienteMpi(objectId) {
-    return new Promise((resolve, reject) => {
-        let query = {
-            _id: objectId
-        };
-        pacienteMpi.findById(query, (err, patientFound) => {
-            if (err) {
-                reject(err);
-            }
-            patientFound.remove();
-            resolve(patientFound);
-        });
-    });
+export async function deletePacienteMpi(objectId) {
+    let query = {
+        _id: objectId
+    };
+    try {
+        let pacremove = await pacienteMpi.findById(query).exec();
+        await pacremove.remove();
+    } catch (error) {
+        throw error;
+    }
 }
 
 /* Funciones de operaciones PATCH */
