@@ -466,16 +466,13 @@ export function deletePacienteAndes(objectId) {
     });
 }
 
+// Borramos un paciente en la BD MPI - es necesario handlear posibles errores en la fn llamadora.
 export async function deletePacienteMpi(objectId) {
     let query = {
         _id: objectId
     };
-    try {
-        let pacremove = await pacienteMpi.findById(query).exec();
-        await pacremove.remove();
-    } catch (error) {
-        throw error;
-    }
+    let pacremove = await pacienteMpi.findById(query).exec();
+    await pacremove.remove();
 }
 
 /* Funciones de operaciones PATCH */
