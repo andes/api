@@ -75,7 +75,7 @@ router.get('/profesionales/guiaProfesional', (req, res, next) => {
             res.json(resultado);
         });
     } else {
-        res.json({});
+        res.json();
     }
 });
 
