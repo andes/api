@@ -2,7 +2,7 @@ import { Document } from 'mongoose';
 import { model, schema } from '../schemas/log';
 
 /**
- * Cuando un log en la base de datos
+ * Crea un log en la base de datos
  *
  * @export
  * @param {Express.Request} req Request
