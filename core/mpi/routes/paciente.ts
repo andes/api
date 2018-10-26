@@ -11,7 +11,6 @@ import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
 import { EventCore } from '@andes/event-bus';
 
-
 const logD = debug('paciente-controller');
 const router = express.Router();
 
@@ -594,6 +593,49 @@ router.post('/pacientes', (req, res, next) => {
         }).catch((error2 => {
             return next(error2);
         }));
+    }
+});
+
+// Post para insertar un conjunto de pacientes contenidos en un array
+router.post('/pacientesAll', async (req, res, next) => {
+    if (!Auth.check(req, 'mpi:paciente:postAndes')) {
+        return next(403);
+    }
+    if (req.body.pacientesArray) {
+        let pacientes = req.body.pacientesArray;
+        let pacientesReturn = [];
+
+        for (let i = 0; i < pacientes.length; i++) {
+            if (pacientes[i].documento) {
+                const condicion = {
+                    documento: pacientes[i].documento
+                };
+                await controller.searchSimilar(paciente[i], 'andes', condicion).then(async (data) => {
+                    logD('Encontrados', data.map(item => item.value));
+                    if (data && data.length && data[0].value > 0.90) {
+                        logD('hay uno parecido');
+                        return next('existen similares');
+                    } else {
+                        pacientes[i].activo = true;
+                        await controller.createPaciente(pacientes[i], req).then(pacienteObj => {
+                            pacientesReturn.push(pacienteObj);
+                        }).catch((error) => {
+                            return next(error);
+                        });
+                    }
+                });
+            } else {
+                paciente[i].activo = true;
+                await controller.createPaciente(paciente[i], req).then(pacienteObjSinDocumento => {
+                    pacientesReturn.push(pacienteObjSinDocumento);
+                }).catch((error2 => {
+                    return next(error2);
+                }));
+            }
+        }
+        return res.json(pacientesReturn);
+    } else {
+        return next('Parámetros incorrectos');
     }
 });
 
