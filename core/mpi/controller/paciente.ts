@@ -479,6 +479,14 @@ export function updateRelaciones(req, data) {
 export function updateDireccion(req, data) {
     data.markModified('direccion');
     data.direccion = req.body.direccion;
+
+    // Se carga geo referencia desde api de google
+    if (req.body.direccion[0].valor && req.body.direccion[0].ubicacion.localidad.nombre) {
+        let geoRef: any = geoRefPaciente(req.body);
+        data.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
+    } else {
+        data.direccion[0].geoReferencia = null;
+    }
 }
 
 export function updateCarpetaEfectores(req, data) {
@@ -693,9 +701,24 @@ export async function matchPaciente(dataPaciente) {
     }
 }
 
+export function actualizarGeoReferencia(dataPaciente) {
+    return new Promise(async (resolve, reject) => {
+        if (dataPaciente.direccion[0].valor && dataPaciente.direccion[0].ubicacion.localidad.nombre) {
+            // Se carga geo referencia desde api de google
+            try {
+                const geoRef: any = await geoRefPaciente(dataPaciente);
+                return resolve([geoRef.lat, geoRef.lng]);
+            } catch (err) {
+                return err;
+            }
+        } else {
+            return resolve(null);
+        }
+    });
+}
+
 export function geoRefPaciente(dataPaciente) {
     return new Promise((resolve, reject) => {
-
         const address = dataPaciente.direccion[0].valor + ',' + dataPaciente.direccion[0].ubicacion.localidad.nombre;
         let pathGoogleApi = '';
         let jsonGoogle = '';
