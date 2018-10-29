@@ -18,7 +18,7 @@ export function storeFile(base64, metadata) {
 
         RupFiles.write({
             _id: uniqueId,
-            filename:  uniqueId + '.' + mime.split('/')[1],
+            filename: uniqueId + '.' + mime.split('/')[1],
             contentType: mime,
             metadata
         },
@@ -36,7 +36,7 @@ export function readFile(id) {
         try {
             const RupFiles = makeFs();
             const contexto = await RupFiles.findById(id);
-            const stream2  = RupFiles.readById(id);
+            const stream2 = RupFiles.readById(id);
             resolve({
                 file: contexto,
                 stream: stream2
@@ -51,6 +51,22 @@ export function readFile(id) {
             //         buffer
             //     });
             // });
+        } catch (e) {
+            return reject(e);
+        }
+    });
+}
+
+export function readAsBase64(id) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const RupFiles = makeFs();
+            const contexto = await RupFiles.findById(id);
+            const stream2 = RupFiles.readById(id);
+            resolve({
+                file: contexto,
+                stream: stream2
+            });
         } catch (e) {
             return reject(e);
         }
