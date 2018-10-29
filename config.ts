@@ -186,8 +186,13 @@ export const modules = {
         path: './modules/carpetas/routes',
         route: '/modules/carpetas',
         middleware: appMiddleware
+    },
+    geonode: {
+        active: true,
+        path: './modules/geonode/routes',
+        route: '/modules/geonode',
+        middleware: appMiddleware
     }
-
 };
 
 // Cotas de consumo de APIs
