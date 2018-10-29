@@ -8,6 +8,8 @@ import { Auth } from './../../../auth/auth.class';
 import { EventCore } from '@andes/event-bus';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
+import * as https from 'https';
+import * as configPrivate from '../../../config.private';
 
 /**
  * Crea un paciente y lo sincroniza con elastic
@@ -689,5 +691,47 @@ export async function matchPaciente(dataPaciente) {
     } catch (e) {
         return [];
     }
+}
+
+export function geoRefPaciente(dataPaciente) {
+    return new Promise((resolve, reject) => {
+
+        const address = dataPaciente.direccion[0].valor + ',' + dataPaciente.direccion[0].ubicacion.localidad.nombre;
+        let pathGoogleApi = '';
+        let jsonGoogle = '';
+
+        pathGoogleApi = '/maps/api/geocode/json?address=' + address + ', ' + 'AR' + '&key=' + configPrivate.geoKey;
+
+        pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
+        pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
+        pathGoogleApi = pathGoogleApi.replace(/é/gi, 'e');
+        pathGoogleApi = pathGoogleApi.replace(/í/gi, 'i');
+        pathGoogleApi = pathGoogleApi.replace(/ó/gi, 'o');
+        pathGoogleApi = pathGoogleApi.replace(/ú/gi, 'u');
+        pathGoogleApi = pathGoogleApi.replace(/ü/gi, 'u');
+        pathGoogleApi = pathGoogleApi.replace(/ñ/gi, 'n');
+
+        const optionsgetmsg = {
+            host: 'maps.googleapis.com',
+            port: 443,
+            path: pathGoogleApi,
+            method: 'GET',
+            rejectUnauthorized: false
+        };
+        const reqGet = https.request(optionsgetmsg, (res2) => {
+            res2.on('data', (d, error) => {
+                jsonGoogle = jsonGoogle + d.toString();
+            });
+            res2.on('end', () => {
+                const salida = JSON.parse(jsonGoogle);
+                if (salida.status === 'OK') {
+                    return resolve(salida.results[0].geometry.location);
+                } else {
+                    return resolve({});
+                }
+            });
+        });
+        reqGet.end();
+    });
 }
 
