@@ -194,6 +194,16 @@ main {
         small {
             font-size: 0.25cm;
         }
+
+        img {
+            text-align: center;
+            max-width: 14cm;
+            max-height: 9cm;
+        }
+
+        page-break-before:always;
+        page-break-inside:avoid;
+        // margin-top: 300mm; /*phantomjs renders it on the top of the next page*/
     }
 
     .tipo-prestacion {
@@ -229,7 +239,7 @@ main {
 
             h3 {
                 font-size: 0.65em;
-                ;
+                
             }
         }
 
