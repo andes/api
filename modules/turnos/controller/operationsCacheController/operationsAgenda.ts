@@ -1,6 +1,5 @@
 // Imports
 import { agendasCache } from '../../../legacy/schemas/agendasCache';
-import * as agendaModel from '../../../turnos/schemas/agenda';
 import { configuracionPrestacionModel } from './../../../../core/term/schemas/configuracionPrestacion';
 import * as sql from 'mssql';
 import * as moment from 'moment';
@@ -161,13 +160,6 @@ export async function checkCodificacion(agendaCacheada) {
                 }
             }
         }
-
-        // Modificamos el estado de la agenda integrada a auditada
-        agendaModel.update({ _id: agendaCacheada.id }, {
-            $set: {
-                estado : 'auditada'
-            }
-        }).exec();
 
         const estadoAgendaSips: any = await getEstadoAgenda(connection, agendaCacheada.id);
         if (estadoAgendaSips === 4 || agendaCacheada.estado === 'auditada') {  // estado cerrada en sips o agenda en estado auditada
