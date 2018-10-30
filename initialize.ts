@@ -4,7 +4,8 @@ import { Auth } from './auth/auth.class';
 import { Swagger } from './swagger/swagger.class';
 import { Connections } from './connections';
 import * as HttpStatus from 'http-status-codes';
-import { Express } from 'express';
+import { Express, Router } from 'express';
+import { AndesDrive } from '@andes/drive';
 
 const requireDir = require('require-dir');
 
@@ -50,6 +51,16 @@ export function initAPI(app: Express) {
             }
         }
     }
+
+    /**
+     * Inicializa las rutas para adjuntar archivos
+     */
+    const router = Router();
+    AndesDrive.url = 'http://localhost:3000';
+    app.use(Auth.authenticate());
+    app.use(Auth.extractToken());
+    AndesDrive.initialize(router);
+    app.use('/api', router);
 
     // Error handler
     app.use((err: any, req, res, next) => {
