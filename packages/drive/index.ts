@@ -21,7 +21,7 @@ export class AndesDrive {
             const token = req.token;
             const uuid = req.params.uuid;
             if (token) {
-                return this.readFile(uuid, token, res, req);
+                return this.readFile(uuid, token, req, res);
             }
             return next(403);
         });
@@ -34,6 +34,6 @@ export class AndesDrive {
 
     public static readFile (uuid, token, req, res) {
         const url = `${this.url}/drive/${uuid}?token=${token}`;
-        req.pipe(request.post(url)).pipe(res);
+        req.pipe(request.get(url)).pipe(res);
     }
 }
