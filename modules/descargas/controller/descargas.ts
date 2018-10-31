@@ -187,8 +187,7 @@ export class Documento {
 
                     archivo.stream.on('end', () => {
                         adjuntos = `<img src="data:image/${documento.ext};base64,${Buffer.concat(file).toString('base64')}">`;
-                        templateAdjuntos += template.replace(`<!--adjuntos-->`, adjuntos);
-                        // console.log(templateAdjuntos);
+                        templateAdjuntos = template.replace(`<!--adjuntos-->`, adjuntos);
                         resolve(templateAdjuntos);
                     });
 
@@ -229,19 +228,6 @@ export class Documento {
         }) : [];
     }
 
-    static async generarRegistro(registro, template) {
-        if (this.esHallazgo(registro.concepto.semanticTag)) {
-            return this.generarRegistroHallazgoHTML(registro, template);
-        } else if (this.esProcedimiento(registro.concepto.semanticTag)) {
-            return this.generarRegistroProcedimientoHTML(registro, template);
-        } else if (this.esInsumo(registro.concepto.semanticTag)) {
-            return this.generarRegistroInsumoHTML(registro, template);
-        } else if (this.esAdjunto(registro.concepto.conceptId)) {
-            return await this.generarArchivoAdjuntoHTML(registro, template);
-        } else {
-            return false;
-        }
-    }
 
     static ucaseFirst(titulo: string) {
         return titulo[0].toLocaleUpperCase() + titulo.slice(1).toLocaleLowerCase();
