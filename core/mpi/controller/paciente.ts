@@ -31,6 +31,7 @@ export function createPaciente(data, req) {
             const nuevoPac = JSON.parse(JSON.stringify(newPatient));
             delete nuevoPac._id;
             delete nuevoPac.relaciones;
+            delete nuevoPac.direccion;
             const connElastic = new ElasticSync();
             connElastic.create(newPatient._id.toString(), nuevoPac).then(() => {
                 Logger.log(req, 'mpi', 'insert', newPatient);

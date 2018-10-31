@@ -571,14 +571,23 @@ router.post('/pacientes', (req, res, next) => {
         const condicion = {
             documento: req.body.documento
         };
-        controller.searchSimilar(req.body, 'andes', condicion).then((data) => {
+        controller.searchSimilar(req.body, 'andes', condicion).then(async (data) => {
             logD('Encontrados', data.map(item => item.value));
             if (data && data.length && data[0].value > 0.90) {
                 logD('hay uno parecido');
                 return next('existen similares');
             } else {
                 req.body.activo = true;
-                return controller.createPaciente(req.body, req).then(pacienteObj => {
+                let patient = req.body;
+                // se carga geo referencia desde api de google
+                if (req.body.estado === 'validado') {
+                    try {
+                        await controller.actualizarGeoReferencia(req.body, patient);
+                    } catch (err) {
+                        res.json(err);
+                    }
+                }
+                return controller.createPaciente(patient, req).then(pacienteObj => {
                     return res.json(pacienteObj);
                 }).catch((error) => {
                     return next(error);
@@ -667,7 +676,7 @@ router.put('/pacientes/:id', (req, res, next) => {
         } else {
             try {
                 req.body._id = req.body.id;
-                const newPatient = new paciente(req.body);
+                let newPatient = new paciente(req.body);
 
                 // se carga geo referencia desde api de google
                 if (req.body.estado === 'validado') {
