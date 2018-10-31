@@ -28,13 +28,14 @@ export function getServicioGeonode(point) {
                     .get(decodeURI(url))
                     .then(({ statusCode, body, headers }) => {
                         if (statusCode === 200) {
-                            return JSON.parse(body).features[0].properties.NOMBRE;
-                        } else {
-                            return null;
+                            if (JSON.parse(body).features.length) {
+                                return JSON.parse(body).features[0].properties.NOMBRE;
+                            }
                         }
+                        return null;
                     })
                     .catch((e) => {
-                        return e;
+                        return null;
                     });
 
                 resolve(resultado);
