@@ -557,6 +557,8 @@ export async function actualizarFinanciador(req, next) {
             resultado.paciente.financiador = [];
         }
         resultado.paciente.financiador[0] = req.body.paciente.obraSocial;
+        resultado.paciente.markModified('financiador');
+
         let pacienteAndes: any;
         if (resultado.db === 'mpi') {
             pacienteAndes = new paciente(resultado.paciente.toObject());
