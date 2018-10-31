@@ -10,6 +10,7 @@ import * as agendaController from '../../../modules/turnos/controller/agenda';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
 import * as https from 'https';
 import * as configPrivate from '../../../config.private';
+import { getServicioGeonode } from '../../../utils/servicioGeonode';
 
 /**
  * Crea un paciente y lo sincroniza con elastic
@@ -476,17 +477,25 @@ export function updateRelaciones(req, data) {
     data.relaciones = req.body.relaciones;
 }
 
-export function updateDireccion(req, data) {
+export async function updateDireccion(req, data) {
     data.markModified('direccion');
     data.direccion = req.body.direccion;
-
-    // Se carga geo referencia desde api de google
-    if (req.body.direccion[0].valor && req.body.direccion[0].ubicacion.localidad.nombre) {
-        let geoRef: any = geoRefPaciente(req.body);
-        data.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
-    } else {
-        data.direccion[0].geoReferencia = null;
+    try {
+        await actualizarGeoReferencia(req, data);
+    } catch (err) {
+        return err;
     }
+}
+
+export function updateBarrio(geoRef) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const barrio = await getServicioGeonode(geoRef);
+            resolve(barrio);
+        } catch (err) {
+            return reject(err);
+        }
+    });
 }
 
 export function updateCarpetaEfectores(req, data) {
@@ -701,18 +710,24 @@ export async function matchPaciente(dataPaciente) {
     }
 }
 
-export function actualizarGeoReferencia(dataPaciente) {
+/**
+ * Segun la entrada, retorna un Point con las coordenadas de geo referencia o null.
+ * @param dataPaciente debe contener direccion y localidad.
+ */
+export function actualizarGeoReferencia(req, data) {
     return new Promise(async (resolve, reject) => {
-        if (dataPaciente.direccion[0].valor && dataPaciente.direccion[0].ubicacion.localidad.nombre) {
+        if (data.direccion[0].valor && data.direccion[0].ubicacion.localidad && data.direccion[0].ubicacion.localidad.nombre) {
             // Se carga geo referencia desde api de google
             try {
-                const geoRef: any = await geoRefPaciente(dataPaciente);
-                return resolve([geoRef.lat, geoRef.lng]);
+                const geoRef: any = await geoRefPaciente(req);
+                data.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
+                data.direccion[0].ubicacion.barrio = await getServicioGeonode(data.direccion[0].geoReferencia);
+                resolve(true);
             } catch (err) {
-                return err;
+                return reject(err);
             }
         } else {
-            return resolve(null);
+            return resolve(false);
         }
     });
 }
