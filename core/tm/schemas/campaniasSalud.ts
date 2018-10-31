@@ -3,10 +3,19 @@ import { SEXO } from './constantes';
 
 
 const campaniasSaludSchema = new Schema({
-    asunto: String,
-    cuerpo: String,
+    asunto: {
+        type: String,
+        required: true
+    },
+    cuerpo: {
+        type: String,
+        required: true
+    },
     link: String,
-    imagen: String,
+    imagen: {
+        type: String,
+        required: true
+    },
     target: {
         sexo: SEXO,
         grupoEtareo: {
@@ -15,11 +24,32 @@ const campaniasSaludSchema = new Schema({
         }
     },
     vigencia: {
-        desde: Date,
-        hasta: Date
+        desde: {
+            type: Date,
+            required: true
+        },
+        hasta: {
+            type: Date,
+            required: true
+        }
     },
-    fechaPublicacion: Date,
-    textoAccion: String
+ /** 
+  * fechaPublicacion es la fecha en la que se activa la notificación push en la app mobile 
+  */
+    fechaPublicacion: {
+        type: Date,
+        required: true
+    },
+    textoAccion: {
+        type: String,
+        required: true,
+        default: 'Más información aquí'
+    },
+    activo: {
+        type: Boolean,
+        required:true,
+        default: true
+    }
 });
 
 let campania = model('campanias', campaniasSaludSchema, 'campanias');

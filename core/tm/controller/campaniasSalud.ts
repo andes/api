@@ -11,3 +11,17 @@ export async function campaniasVigentes(today) {
         }).sort({ 'vigencia.desde': -1 });
     });
 }
+
+export async function campanias(fechaDesde, fechaHasta) {
+    const query = {$nor: [{'vigencia.desde':{$gt: fechaHasta}}, 
+                {'vigencia.hasta':{$lt:fechaDesde}}  
+                ]};
+    let res;
+    try{
+       res = await campania.find(query).sort({ 'vigencia.desde': -1 });
+    }
+    catch (e) {
+        return e;
+    }
+    return res;
+}
