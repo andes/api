@@ -47,9 +47,13 @@ router.get('/practicas', (req, res, next) => {
             });
         } else {
             let ids = [];
-            req.query.ids.map( (id) => { ids.push(Types.ObjectId(id)); } );
-            query = { _id: { $in: ids } };
-
+            if (Array.isArray(req.query.ids)){
+                req.query.ids.map( (id) => { ids.push( Types.ObjectId(id) ); } );
+            } else {
+                ids = [req.query.ids];
+            }
+            query = { _id: { $in: ids } };    
+            
             Practica.find(query).exec((err, data) => {
                 if (err) {
                     return next(err);
