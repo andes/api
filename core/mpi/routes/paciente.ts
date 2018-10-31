@@ -601,20 +601,20 @@ router.post('/pacientesAll', async (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:postAndes')) {
         return next(403);
     }
-    if (req.body.pacientesArray) {
-        let pacientes = req.body.pacientesArray;
+    if (req.body) {
+        const pacientes = req.body;
         let pacientesReturn = [];
+        let pacientesRepetidos = [];
 
         for (let i = 0; i < pacientes.length; i++) {
             if (pacientes[i].documento) {
                 const condicion = {
                     documento: pacientes[i].documento
                 };
-                await controller.searchSimilar(paciente[i], 'andes', condicion).then(async (data) => {
+                await controller.searchSimilar(pacientes[i], 'andes', condicion).then(async (data) => {
                     logD('Encontrados', data.map(item => item.value));
                     if (data && data.length && data[0].value > 0.90) {
-                        logD('hay uno parecido');
-                        return next('existen similares');
+                        pacientesRepetidos.push(pacientes[i]);
                     } else {
                         pacientes[i].activo = true;
                         await controller.createPaciente(pacientes[i], req).then(pacienteObj => {
@@ -633,7 +633,7 @@ router.post('/pacientesAll', async (req, res, next) => {
                 }));
             }
         }
-        return res.json(pacientesReturn);
+        return res.json([pacientesReturn, pacientesRepetidos]);
     } else {
         return next('Parámetros incorrectos');
     }
