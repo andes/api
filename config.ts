@@ -159,6 +159,12 @@ export const modules = {
         route: '/modules/prestamosCarpetas',
         middleware: appMiddleware
     },
+    reglas: {
+        active: true,
+        path: './modules/top/routes',
+        route: '/modules/top',
+        middleware: appMiddleware
+    },
     version: {
         active: true,
         path: './modules/version/routes',

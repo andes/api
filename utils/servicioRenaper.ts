@@ -92,14 +92,18 @@ function solicitarServicio(sesion, tipo, filtro) {
                     if (err4) {
                         reject(err4);
                     }
-                    const codigoResultado = result2.return.CodResultado['$value'];
-                    if (result2.return.Resultado['$value']) {
-                        const resultado = Buffer.from(result2.return.Resultado['$value'], 'base64').toString('utf8');
-                        // convertimos a JSON el resultado
-                        const resArray = JSON.parse(resultado);
-                        resolve({ codigo: codigoResultado, datos: resArray });
+                    if (result2 && result2.return) {
+                        const codigoResultado = result2.return.CodResultado['$value'];
+                        if (result2.return.Resultado['$value']) {
+                            const resultado = Buffer.from(result2.return.Resultado['$value'], 'base64').toString('utf8');
+                            // convertimos a JSON el resultado
+                            const resArray = JSON.parse(resultado);
+                            resolve({ codigo: codigoResultado, datos: resArray });
+                        } else {
+                            resolve({ codigo: codigoResultado, datos: [] });
+                        }
                     } else {
-                        resolve({ codigo: codigoResultado, datos: [] });
+                        reject('Error servicio RENAPER');
                     }
                 });
             } else {

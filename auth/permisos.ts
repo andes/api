@@ -43,7 +43,7 @@ export default [
                     { key: 'puedeReanudar', title: 'Reanudar agenda', type: 'boolean' },
                     { key: 'puedeClonar', title: 'Clonar agenda', type: 'boolean' },
                     { key: 'puedeDarSobreturno', title: 'Dar Sobreturno agenda', type: 'boolean' },
-                    { key: 'puedeImprimir', title: 'Imprimir agenda', type: 'boolean' },
+                    { key: 'puedeImprimir', title: 'Revisar-Imprimir agenda', type: 'boolean' },
                     { key: 'puedeReasignar', title: 'Reasignar Turno', type: 'boolean' },
                     { key: 'puedeEditarCarpeta', title: 'Editar número de carpeta', type: 'boolean' },
                     { key: 'puedeBorrar', title: 'Borrar agenda', type: 'boolean' },
@@ -154,6 +154,16 @@ export default [
             { key: 'alta', title: 'Ingregar paciente', type: 'boolean' },
             { key: 'inicio', title: 'Punto de inicio', type: 'boolean' }
         ]
+
+    },
+    {
+        key: 'huds',
+        title: 'Modulo HUDS',
+        comment: '',
+        avoidAll: true,
+        child: [
+            { key: 'visualizacionHuds', title: 'Visualización HUDS por paciente', type: 'boolean' },
+        ]
     },
     {
         key: 'fa',
@@ -166,7 +176,8 @@ export default [
                 child: [
                     { key: 'anses', title: 'ANSES', type: 'boolean' },
                     { key: 'sintys', title: 'SINTYS', type: 'boolean' },
-                    { key: 'sisa', title: 'SISA', type: 'boolean' }
+                    { key: 'sisa', title: 'SISA', type: 'boolean' },
+                    { key: 'renaper', title: 'RENAPER', type: 'boolean' }
                 ]
             }
         ]

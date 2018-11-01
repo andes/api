@@ -230,6 +230,12 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
         if (req.query.documento) {
             opciones['documento'] = utils.makePattern(req.query.documento);
         }
+        if (req.query.numeroMatriculaGrado) {
+            opciones['formacionGrado.matriculacion.matriculaNumero'] = req.query.numeroMatriculaGrado;
+        }
+        if (req.query.numeroMatriculaEspecialidad) {
+            opciones['formacionPosgrado.matriculacion.matriculaNumero'] = req.query.numeroMatriculaEspecialidad;
+        }
 
         if (req.query.bajaMatricula) {
             opciones['formacionGrado.matriculacion.baja.motivo'] = { $nin: [null] };
