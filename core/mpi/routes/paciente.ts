@@ -416,7 +416,6 @@ router.put('/pacientes/:id', (req, res, next) => {
         if (err) {
             return next(404);
         }
-        // let pacienteOriginal = null;
         if (patientFound) {
             const data = req.body;
             if (patientFound.estado === 'validado' && !patientFound.isScan) {
@@ -425,6 +424,7 @@ router.put('/pacientes/:id', (req, res, next) => {
                 delete data.sexo;
                 delete data.fechaNacimiento;
             }
+
             controller.updatePaciente(patientFound, data, req).then((p) => {
                 res.json(p);
             }).catch(next);
@@ -441,6 +441,7 @@ router.put('/pacientes/:id', (req, res, next) => {
                     if (patientFountMpi) {
                         Auth.audit(newPatient, req);
                     }
+
                     newPatient.save((err2) => {
                         if (err2) {
                             return next(err2);
@@ -518,65 +519,6 @@ router.delete('/pacientes/:id', (req, res, next) => {
 
 /**
  * @swagger
- * /pacientes/{id}/activo:
- *   post:
- *     tags:
- *       - Paciente
- *       - Activo
- *     description: Modificar el atributo activo del paciente
- *     summary: Modificar el atributo activo del paciente
- *     consumes:
- *       - application/json
- *     produces:
- *       - application/json
- *     parameters:
- *       - name: id
- *         in: path
- *         description: Id de un paciente
- *         required: true
- *         type: string
- *
- *     responses:
- *       200:
- *         description: Un objeto paciente
- *         schema:
- *           $ref: '#/definitions/paciente'
- */
-router.post('/pacientes/:id/activo', async (req, res, next) => {
-    if (!Auth.check(req, 'mpi:paciente:patchAndes')) {
-        return next(403);
-    }
-    try {
-        let resultado = await controller.buscarPaciente(req.params.id);
-        if (resultado) {
-            controller.updateActivo(req, resultado.paciente);
-
-            let pacienteAndes: any;
-            if (resultado.db === 'mpi') {
-                pacienteAndes = new paciente(resultado.paciente.toObject());
-            } else {
-                pacienteAndes = resultado.paciente;
-            }
-            let connElastic = new ElasticSync();
-            // El nuevo estado es activo?
-            if (req.body.activo) {
-                await connElastic.sync(pacienteAndes);
-            } else {
-                await connElastic.delete(req.params.id);
-            }
-            Auth.audit(pacienteAndes, req);
-            let pacienteSaved = await pacienteAndes.save();
-            res.json(pacienteSaved);
-        } else {
-            return next('Paciente no encontrado');
-        }
-    } catch (error) {
-        return next(error);
-    }
-});
-
-/**
- * @swagger
  * /pacientes/{id}/identificadores:
  *   post:
  *     tags:
@@ -633,16 +575,10 @@ router.post('/pacientes/:id/identificadores', async (req, res, next) => {
             } else {
                 pacienteAndesLinkeado = pacienteLinkeado.paciente;
             }
-
+            // sincronizamos los cambios en el paciente de elastic
             let connElastic = new ElasticSync();
-
             await connElastic.sync(pacienteAndesBase);
-
-            if (pacienteLinkeado.paciente.activo) {
-                await connElastic.sync(pacienteAndesLinkeado);
-            } else {
-                await connElastic.delete(pacienteLinkeado.paciente._id.toString());
-            }
+            await connElastic.sync(pacienteAndesLinkeado);
 
             Auth.audit(pacienteAndesLinkeado, req);
             await pacienteAndesLinkeado.save();
