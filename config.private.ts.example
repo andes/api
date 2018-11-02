@@ -261,3 +261,7 @@ export const TwitterConfig = {
     access_token_secret: ''
 };
 
+export const Drive = {
+    adapter: 'file',
+    options: {}
+};

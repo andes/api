@@ -1,5 +1,6 @@
 import * as bodyParser from 'body-parser';
 import * as config from './config';
+import * as configPrivate from './config.private';
 import { Auth } from './auth/auth.class';
 import { Swagger } from './swagger/swagger.class';
 import { Connections } from './connections';
@@ -55,12 +56,13 @@ export function initAPI(app: Express) {
     /**
      * Inicializa las rutas para adjuntar archivos
      */
-    const router = Router();
-    AndesDrive.url = 'http://localhost:3000';
-    app.use(Auth.authenticate());
-    app.use(Auth.extractToken());
-    AndesDrive.initialize(router);
-    app.use('/api', router);
+    if (configPrivate.Drive) {
+        AndesDrive.setup(configPrivate.Drive);
+        const router = Router();
+        app.use(Auth.authenticate());
+        AndesDrive.install(router);
+        app.use('/api/drive', router);
+    }
 
     // Error handler
     app.use((err: any, req, res, next) => {
