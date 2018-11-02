@@ -147,7 +147,7 @@ export function formatearDatosSisa(datosSisa) {
 
 export function getPacienteSisa(nroDocumento, sexo?: string) {
     return new Promise((resolve, reject) => {
-        this.getSisaCiudadano(nroDocumento, configPrivate.sisa.username, configPrivate.sisa.password)
+        this.getSisaCiudadano(nroDocumento, configPrivate.sisa.username, configPrivate.sisa.password, sexo)
             .then((resultado) => {
                 if (resultado) {
                     const dato = this.formatearDatosSisa(resultado[1].Ciudadano);
