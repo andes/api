@@ -48,7 +48,7 @@ export let logSchema = new mongoose.Schema({
             // ...Fuentes Autenticas
             'validar', 'error',
             // Scheduler
-            'cda'
+            'cda', 'regexCheck'
         ]
     },
     datosOperacion: mongoose.Schema.Types.Mixed,
