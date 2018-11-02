@@ -46,23 +46,50 @@ router.get('/practicas', (req, res, next) => {
                 res.json(practicas);
             });
         } else {
+            // let ids = [];
+            // if (Array.isArray(req.query.ids)) {
+            //     req.query.ids.map( (id) => { ids.push( Types.ObjectId(id) ); } );
+            // } else {
+            //     ids = [Types.ObjectId(req.query.ids)];
+            // }
             let ids = [];
-            if (Array.isArray(req.query.ids)){
-                req.query.ids.map( (id) => { ids.push( Types.ObjectId(id) ); } );
-            } else {
-                ids = [req.query.ids];
-            }
+            req.query.ids.split(',').map( (id) => { ids.push( Types.ObjectId(id) ); } );
             query = { _id: { $in: ids } };    
             
-            Practica.find(query).exec((err, data) => {
-                if (err) {
-                    return next(err);
-                }
-                if (req.params.id && !data) {
-                    return next(404);
-                }
-                res.json(data);
-            });
+            if (req.query.fields) {
+
+                let fields = req.query.fields.split(',');
+                let project : any = {};
+                fields.forEach(field => {
+                    if(field === 'codigo')
+                    project.codigo = `$codigo`;
+                });
+
+                let pipeline = [
+                    {
+                        $match: {
+                            '_id': { $in: ids }
+                        }
+                    },{
+                        $project: project
+                    }
+                ];
+ 
+                toArray(Practica.aggregate(pipeline).cursor({}).exec()).then(
+                    (data) => res.json(data)
+                );
+
+            } else {
+                Practica.find(query).exec((err, data) => {
+                    if (err) {
+                        return next(err);
+                    }
+                    if (req.params.id && !data) {
+                        return next(404);
+                    }
+                    res.json(data);
+                });
+            }            
         }
     }
 });
