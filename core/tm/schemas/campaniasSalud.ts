@@ -18,7 +18,7 @@ const campaniasSaludSchema = new Schema({
     },
     target: {
         sexo: SEXO,
-        grupoEtareo: {
+        grupoEtario: {
             desde: Number,
             hasta: Number
         }
@@ -33,9 +33,9 @@ const campaniasSaludSchema = new Schema({
             required: true
         }
     },
- /** 
-  * fechaPublicacion es la fecha en la que se activa la notificación push en la app mobile 
-  */
+    /**
+     * fechaPublicacion es la fecha en la que se activa la notificación push en la app mobile 
+     */
     fechaPublicacion: {
         type: Date,
         required: true
@@ -47,7 +47,7 @@ const campaniasSaludSchema = new Schema({
     },
     activo: {
         type: Boolean,
-        required:true,
+        required: true,
         default: true
     }
 });
