@@ -2,6 +2,7 @@ import { profesional } from './../../../../core/tm/schemas/profesional';
 import { Practica } from './practica';
 import { model, Schema } from 'mongoose';
 import { model as efector } from '../../../../core/tm/schemas/organizacion';
+import { ObjectID } from 'bson';
 
 enum formatoAnchoColumnas {
     'Texto corto' = 0,
@@ -30,9 +31,7 @@ export let schema = new Schema({
     textoInferiorIzquierda: String,
     cantidadLineaAdicional: Number,
     baja: Boolean,
-    idUsuarioRegistro: Number,
-    fechaRegistro: Date,
-    idUltimoProtocoloListado: Number,
+    idUltimoProtocoloListado: ObjectID,
     practicas: [{ nombre: String, practica: Practica }],
 });
 
