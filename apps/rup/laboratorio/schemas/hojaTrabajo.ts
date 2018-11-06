@@ -4,13 +4,20 @@ import { model, Schema } from 'mongoose';
 import { model as efector } from '../../../../core/tm/schemas/organizacion';
 
 
+enum formatoAnchoColumnas {
+    'Texto corto' = 0,
+    'Texto mediano' = 1,
+    'Texto grande' = 2,
+    'Texto corto c/Nro. Fila' = 3
+}
+
 export let schema = new Schema({
     laboratorio: efector,
     codigo: String,
     responsable: profesional,
     formato: Number,
     tipoHoja: Boolean,
-    formatoAncho: Number,
+    formatoAncho: formatoAnchoColumnas,
     imprimirPrioridad: Boolean,
     imprimirOrigen: Boolean,
     imprimirApellidoNombre: Boolean,
@@ -27,7 +34,7 @@ export let schema = new Schema({
     idUsuarioRegistro: Number,
     fechaRegistro: Date,
     idUltimoProtocoloListado: Number,
-
+    practicas: [Practica],
 });
 
 
