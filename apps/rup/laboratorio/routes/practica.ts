@@ -5,12 +5,11 @@ import { Mongoose, Types } from 'mongoose';
 let router = express.Router();
 
 
-
 router.get('/practicas/codigo/:codigo', (req, res, next) => {
     const redix = 10;
     const codigo: number = parseInt(req.params.codigo, redix);
-    let query = { $and: [ { codigoNomenclador: { $ne: '' } }, { codigo: req.params.codigo } ] };
-    console.log(req.params.codigo)
+    let query = { $and: [{ codigoNomenclador: { $ne: '' } }, { codigo: req.params.codigo }] };
+    console.log(req.params.codigo);
     Practica.find(query).then((practicas: any[]) => {
         res.json(practicas.length > 0 ? practicas[0] : null);
     });
@@ -54,27 +53,28 @@ router.get('/practicas', (req, res, next) => {
             // }
             let ids = [];
             req.query.ids.split(',').map( (id) => { ids.push( Types.ObjectId(id) ); } );
-            query = { _id: { $in: ids } };    
-            
+            query = { _id: { $in: ids } };
+
             if (req.query.fields) {
 
                 let fields = req.query.fields.split(',');
-                let project : any = {};
+                let project: any = {};
                 fields.forEach(field => {
-                    if(field === 'codigo')
-                    project.codigo = `$codigo`;
+                    if (field === 'codigo') {
+                        project.codigo = `$codigo`;
+                    }
                 });
 
                 let pipeline = [
                     {
                         $match: {
-                            '_id': { $in: ids }
+                            _id: { $in: ids }
                         }
-                    },{
+                    }, {
                         $project: project
                     }
                 ];
- 
+
                 toArray(Practica.aggregate(pipeline).cursor({}).exec()).then(
                     (data) => res.json(data)
                 );
@@ -89,7 +89,7 @@ router.get('/practicas', (req, res, next) => {
                     }
                     res.json(data);
                 });
-            }            
+            }
         }
     }
 });
