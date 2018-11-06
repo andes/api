@@ -3,7 +3,6 @@ import { Practica } from './practica';
 import { model, Schema } from 'mongoose';
 import { model as efector } from '../../../../core/tm/schemas/organizacion';
 
-
 enum formatoAnchoColumnas {
     'Texto corto' = 0,
     'Texto mediano' = 1,
@@ -34,7 +33,7 @@ export let schema = new Schema({
     idUsuarioRegistro: Number,
     fechaRegistro: Date,
     idUltimoProtocoloListado: Number,
-    practicas: [Practica],
+    practicas: [{ nombre: String, practica: Practica }],
 });
 
 
