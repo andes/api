@@ -15,7 +15,6 @@ export class ElasticSync {
     }
 
     public sync(paciente) {
-        console.log('El paciente: ', paciente);
         const nuevoPac = JSON.parse(JSON.stringify(paciente));
         delete nuevoPac._id;
         delete nuevoPac.relaciones;
@@ -42,7 +41,6 @@ export class ElasticSync {
                     });
                 }
             }).catch((error) => {
-                console.log('palenque: ', error);
                 reject(error);
             });
         });
