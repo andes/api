@@ -806,8 +806,8 @@ export async function actualizarTurno(idTurno) {
         let indexs = getPosition(null, data[0], idTurno);
         let turno = data[0].bloques[indexs.indexBloque].turnos[indexs.indexTurno];
         turno.paciente.obraSocial = {
-            codigoPuco: 499,
-            nombre: 'Sumar'
+            codigoFinanciador: 499,
+            financiador: 'Sumar'
         };
         Auth.audit(data[0], configPrivate.userScheduler);
         data[0].save((err2, result) => {
@@ -928,12 +928,13 @@ export async function pacientesDelDia() {
         $match: {
             $and: [
                 { createdAt: { $gte: new Date(hoyDesde), $lte: new Date(hoyHasta) } },
-                { 'solicitud.turno': { $exists: false } }
+                { 'solicitud.turno': { $exists: false } },
+                { paciente: { $exists: true } }
             ]
         }
     }]).cursor({ batchSize: 1000 }).exec());
-
     prestaciones.forEach(element => {
+        console.log(element);
         element.paciente['organizacionId'] = element.solicitud.organizacion.id;
 
         pacientesTotal.push({

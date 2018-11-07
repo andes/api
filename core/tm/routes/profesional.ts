@@ -266,12 +266,13 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                 $regex: utils.makePattern(req.query.especialidad)
             };
         }
+    }
 
-        const radix = 10;
-        const skip: number = parseInt(req.query.skip || 0, radix);
-        const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
+    const radix = 10;
+    const skip: number = parseInt(req.query.skip || 0, radix);
+    const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
 
-        if (req.query.nombreCompleto) {
+    if (req.query.nombreCompleto) {
         const filter = [{
             apellido: {
                 $regex: utils.makePattern(req.query.nombreCompleto, { startWith: true })
@@ -289,6 +290,13 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
             });
     } else {
         query = profesional.find(opciones).skip(skip).limit(limit);
+
+        query.exec((err, data) => {
+            if (err) {
+                    return next(err);
+                }
+            res.json(data);
+        });
     }
 });
 
@@ -428,6 +436,7 @@ router.post('/profesionales/sendMail', (req, res, next) => {
     const _profesional = req.body.profesional;
     // Generate test SMTP service account from ethereal.email
     // Only needed if you don't have a real mail account for testing
+
     // create reusable transporter object using the default SMTP transport
     const transporter = nodemailer.createTransport({
         host: config_private.enviarMail.host,
@@ -464,6 +473,7 @@ router.post('/profesionales/sendMail', (req, res, next) => {
         }
         res.send(true);
         // Preview only available when sending through an Ethereal account
+
         // Message sent: <b658f8ca-6296-ccf4-8306-87d57a0b4321@blurdybloop.com>
         // Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
     });
