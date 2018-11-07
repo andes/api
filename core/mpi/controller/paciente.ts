@@ -747,8 +747,6 @@ export async function mapeoPuco(dni) {
 export async function insertSips() {
 
     let datos: any = await pacientesDelDia();
-    console.log('pacientes', datos);
-
     for (let index = 0; index < datos.length; index++) {
         let existeEnSips = await getPacienteSips(datos[index].paciente.documento);
         // let existeEnPuco: any = await operacionesLegacy.postPuco(pacientes[index].documento)
@@ -768,7 +766,6 @@ export async function insertSips() {
             let pacienteSips = await operacionesLegacy.pacienteSipsFactory(datos[index].paciente, efector.idEfector);
             let idPacienteSips = await operacionesLegacy.insertaPacienteSips(pacienteSips);
         }
-
         // let existeEnPuco: any = await sisaController.postPuco(pacientes[index].documento);
         let existeEnPuco: any = await this.mapeoPuco(datos[index].paciente.documento);
 
@@ -808,7 +805,6 @@ export async function actualizarTurno(idTurno) {
     }).exec(function (err, data: any) {
         let indexs = getPosition(null, data[0], idTurno);
         let turno = data[0].bloques[indexs.indexBloque].turnos[indexs.indexTurno];
-        console.log(turno);
         turno.paciente.obraSocial = {
             codigoPuco: 499,
             nombre: 'Sumar'
