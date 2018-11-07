@@ -19,9 +19,6 @@ import { Connections } from '../../../connections';
 const Prestacion = require('../../../modules/rup/schemas/prestacion').model;
 
 Connections.initialize();
-// Ya está abierta?
-
-// console.log('Conectado.');
 
 // Instanciamos un cursor
 const cursor = Prestacion.findOne().cursor();
