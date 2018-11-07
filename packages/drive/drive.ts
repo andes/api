@@ -31,10 +31,12 @@ export class AndesDrive {
         router.post('/', this.multer.single('file'), async (req: any, res, next) => {
             try {
                 const file = req.file;
+                const extension = file.originalname.split('.').pop();
                 const data: IFileDescriptor = {
                     real_id: file.id,
                     adapter: file.adapter,
                     originalname: file.originalname,
+                    extension,
                     mimetype: file.mimetype
                 };
                 const fd = await FileDescriptor.create(data);
@@ -62,6 +64,14 @@ export class AndesDrive {
             }
         });
         return router;
+    }
+
+    public static async find(id) {
+        return FileDescriptor.find(id);
+    }
+
+    public static async read(file: IFileDescriptor) {
+        return await this.adapter.read(file.real_id);
     }
 
 }

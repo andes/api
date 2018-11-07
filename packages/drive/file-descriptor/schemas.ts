@@ -5,6 +5,7 @@ export interface IFileDescriptor {
     real_id?: string;
     mimetype: string;
     originalname: string;
+    extension: string;
 }
 
 export interface FileDescriptorDocument extends Document, IFileDescriptor {}
@@ -13,6 +14,7 @@ export let FileDescriptorSchema: Schema = new Schema({
     adapter: String,
     real_id: String,
     mimetype: String,
+    extension: String,
     originalname: String
 });
 
