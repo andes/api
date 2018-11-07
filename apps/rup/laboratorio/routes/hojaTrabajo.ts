@@ -1,3 +1,4 @@
+import { SnomedConcept } from './../../../../modules/rup/schemas/snomed-concept';
 import { ObjectId } from 'bson';
 import { jobs } from './../../../../config.private';
 import { Practica } from './../schemas/practica';
@@ -11,7 +12,7 @@ import { profesional as Profesional } from './../../../../core/tm/schemas/profes
 
 let router = express.Router();
 
-router.get('/hojatrabajo', async (req, res, next) => {
+router.get('/hojatrabajo/:id', async (req, res, next) => {
     let query;
     if (req.params.id) {
         query = HojaTrabajo.findById(req.params.id);
@@ -24,11 +25,13 @@ router.get('/hojatrabajo', async (req, res, next) => {
             }
             res.json(data);
         });
-    } else {
-        HojaTrabajo.find().then((hojas: any[]) => {
-            res.json(hojas);
-        });
     }
+});
+
+router.get('/hojatrabajo', async (req, res, next) => {
+    HojaTrabajo.find().then((hojas: any[]) => {
+        res.json(hojas);
+    });
 });
 
 
@@ -42,35 +45,32 @@ router.post('/hojatrabajo', async (req, res, next) => {
 
     let hoja = {
         laboratorio: labo,
-        codigo: 'qwerty',
+        nombre: 'hello labo',
         responsable: prof,
+        area: { nombre: 'QUIMICA CLINICA', conceptoSnomed: { conceptId: '310076001' } },
         protocolo: {
             imprimirPrioridad: 1,
             imprimirOrigen: 0,
-            imprimirCorrelativo: 0,
-            imprimirDiagnostico: 0,
-            idUltimoProtocoloListado: new ObjectId()
+            imprimirDiagnostico: 1
         },
         paciente: {
             imprimirApellidoNombre: 1,
             imprimirEdad: 0,
             imprimirSexo: 1,
-            imprimirAntecedente: 0,
-            cantidadLineaAdicional: 12,
+            cantidadLineaAdicional: 5
         },
         papel: {
-            formato: 1,
-            orientacion: 1,
-            anchoColumnasMilimetros: 25,
-            imprimirFechaHora: 0,
-            imprimirMedico: 1,
-            textoInferiorDerecha: 'Observaciones',
-            textoInferiorIzquierda: 'firma profesional',
+            formato: 1, // A4 | Oficio
+            orientacion: 0, // Horizontal | Vertical
+            anchoColumnasMilimetros: 50,
+            textoInferiorDerecha: 'texto inferior derecha',
+            textoInferiorIzquierda: 'texto inferior izquierda',
         },
         baja: 0,
         practicas: [{ nombre: 'insu60', practica: pract1 }, { nombre: 'Basofilos', practica: pract2 }]
     };
     */
+
     const hojatrabajo = req.body;
 
     const data = new HojaTrabajo(hojatrabajo);

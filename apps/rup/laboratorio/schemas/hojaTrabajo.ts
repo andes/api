@@ -3,31 +3,34 @@ import { Practica } from './practica';
 import * as mongoose from 'mongoose';
 import { model as efector } from '../../../../core/tm/schemas/organizacion';
 import { ObjectID } from 'bson';
+import { SnomedConcept } from './../../../../modules/rup/schemas/snomed-concept';
 
 export let schema = new mongoose.Schema({
     laboratorio: { type: mongoose.Schema.Types.ObjectId, ref: 'efector', required: true },
-    codigo: String,
+    nombre: String,
     responsable: { type: mongoose.Schema.Types.ObjectId, ref: 'profesional', required: true },
+    area: {
+        nombre: {
+            type: String,
+            required: true
+        },
+        conceptoSnomed: SnomedConcept
+    },
     protocolo: {
         imprimirPrioridad: Boolean,
         imprimirOrigen: Boolean,
-        imprimirCorrelativo: Boolean,
-        imprimirDiagnostico: Boolean,
-        idUltimoProtocoloListado: ObjectID,
+        imprimirDiagnostico: Boolean
     },
     paciente: {
         imprimirApellidoNombre: Boolean,
         imprimirEdad: Boolean,
         imprimirSexo: Boolean,
-        cantidadLineaAdicional: Number,
-        imprimirAntecedente: Boolean,
+        cantidadLineaAdicional: Number
     },
     papel: {
-        formato: Number,
-        orientacion: Boolean,
+        formato: Number, // A4 | Oficio
+        orientacion: Boolean, // Horizontal | Vertical
         anchoColumnasMilimetros: Number,
-        imprimirFechaHora: Boolean,
-        imprimirMedico: Boolean,
         textoInferiorDerecha: String,
         textoInferiorIzquierda: String,
     },
