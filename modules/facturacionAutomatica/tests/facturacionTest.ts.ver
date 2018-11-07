@@ -1,0 +1,67 @@
+import * as configPrivate from '../../../config.private';
+import * as sql from 'mssql';
+import * as operationRF from '../controllers/operationsCtrl/operationsRF';
+let poolAgendas;
+
+let config = {
+    user: configPrivate.conSql.auth.user,
+    password: configPrivate.conSql.auth.password,
+    server: configPrivate.conSql.serverSql.server,
+    database: configPrivate.conSql.serverSql.database,
+    connectionTimeout: 10000,
+    requestTimeout: 45000
+};
+
+async function conectar () {
+    if (!poolAgendas) {
+        poolAgendas = await new sql.ConnectionPool(config).connect();
+    }
+}
+export async function testearMapeoServicio(id) {
+    conectar();
+    let result = await operationRF.mapeoServicio(id, poolAgendas);
+    sql.close();
+    return result;
+}
+
+export async function testearMapeoEfector(codigo) {
+    conectar();
+    let result = await operationRF.mapeoEfector(codigo, poolAgendas);
+    sql.close();
+    return result;
+}
+
+export async function testearMapeoPaciente(dni, pacienteId) {
+    conectar();
+    let result = await operationRF.mapeoPaciente(dni, pacienteId, poolAgendas);
+    sql.close();
+    return result;
+}
+
+export async function testearMapeoProfesional(dni, profesionalId) {
+    conectar();
+    let result = await operationRF.mapeoProfesional(dni, profesionalId, poolAgendas);
+    sql.close();
+    return result;
+}
+
+export async function testearMapeoTipoPractica(id) {
+    conectar();
+    let result = await operationRF.mapeoTipoPractica(id, poolAgendas);
+    sql.close();
+    return result;
+}
+
+export async function testearMapeoObraSocial(id) {
+    conectar();
+    let result = await operationRF.mapeoObraSocial(id, poolAgendas);
+    sql.close();
+    return result;
+}
+
+export async function testearMapeoDiagnostico(codigo) {
+    conectar();
+    let result = await operationRF.mapeoDiagnostico(codigo, poolAgendas);
+    sql.close();
+    return result;
+}

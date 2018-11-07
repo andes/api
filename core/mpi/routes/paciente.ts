@@ -569,6 +569,7 @@ router.post('/pacientes', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:postAndes')) {
         return next(403);
     }
+
     if (req.body.documento) {
         const condicion = {
             documento: req.body.documento
@@ -581,6 +582,8 @@ router.post('/pacientes', (req, res, next) => {
             } else {
                 req.body.activo = true;
                 return controller.createPaciente(req.body, req).then(pacienteObj => {
+                    // insert en sips
+
                     return res.json(pacienteObj);
                 }).catch((error) => {
                     return next(error);
@@ -595,6 +598,13 @@ router.post('/pacientes', (req, res, next) => {
             return next(error2);
         }));
     }
+});
+
+router.post('/exportPacientesSips', function (req, res, next) {
+    // if (!Auth.check(req, 'mpi:paciente:postAndes')) {
+    //     return next(403);
+    // }
+    controller.insertSips();
 });
 
 /**

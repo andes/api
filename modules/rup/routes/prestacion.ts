@@ -6,7 +6,7 @@ import { Auth } from './../../../auth/auth.class';
 import { model as Prestacion } from '../schemas/prestacion';
 import * as frecuentescrl from '../controllers/frecuentesProfesional';
 
-import { buscarEnHuds } from '../controllers/rup';
+import { buscarEnHuds, buscarEnHudsFacturacion } from '../controllers/rup';
 import { Logger } from '../../../utils/logService';
 import { EventCore } from '@andes/event-bus';
 import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
@@ -48,7 +48,6 @@ router.get('/prestaciones/huds/:idPaciente', async (req, res, next) => {
     let conceptos: any = [];
 
     return Prestacion.find(query, (err, prestaciones) => {
-
         if (err) {
             return next(err);
         }
@@ -132,6 +131,66 @@ router.get('/prestaciones/solicitudes', (req, res, next) => {
         res.json(data);
     });
 });
+
+
+router.get('/prestaciones/facturacion/:idPaciente', async (req, res, next) => {
+    // verificamos que sea un ObjectId válido
+    if (!mongoose.Types.ObjectId.isValid(req.params.idPaciente)) {
+        return res.status(404).send('Turno no encontrado');
+    }
+
+    // por defecto traemos todas las validadas, si no vemos el estado que viene en la request
+    const estado = (req.query.estado) ? req.query.estado : 'validada';
+
+    let query = {
+        'paciente.id': req.params.idPaciente,
+        $where: 'this.estados[this.estados.length - 1].tipo ==  \"' + estado + '\"'
+    };
+    console.log(req.query);
+    if (req.query.idPrestacion) {
+        query['_id'] = mongoose.Types.ObjectId(req.query.idPrestacion);
+    }
+
+    let conceptos: any = [];
+
+    return Prestacion.find(query, (err, prestaciones) => {
+
+        if (err) {
+            return next(err);
+        }
+
+        if (!prestaciones) {
+            return res.status(404).send('Paciente no encontrado');
+        }
+
+        if (req.query.expresion) {
+            let querySnomed = makeMongoQuery(req.query.expresion);
+            snomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docs: any[]) => {
+
+                conceptos = docs.map((item) => {
+                    let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
+                    return {
+                        fsn: item.fullySpecifiedName,
+                        term,
+                        conceptId: item.conceptId,
+                        semanticTag: item.semtag
+                    };
+                });
+                // ejecutamos busqueda recursiva
+                let data: any = buscarEnHudsFacturacion(prestaciones, conceptos);
+                let data2;
+                console.log('hola', data);
+                // if (data) {
+                //      data2 = matchConcepts(data[0].registro, conceptos);
+                // }
+
+                res.json(data);
+            });
+        }
+    });
+
+});
+
 
 router.get('/prestaciones/:id*?', (req, res, next) => {
 

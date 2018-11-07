@@ -38,6 +38,12 @@ const schema = new mongoose.Schema({
         required: true,
         default: 'planificacion'
     },
+    estadoFacturacion: {
+        type: String,
+        enum: ['pendiente', 'facturada'],
+        required: true,
+        default: 'pendiente'
+    },
     avisos: [{
         _id: false,
         profesionalId: mongoose.Schema.Types.ObjectId,

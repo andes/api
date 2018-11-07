@@ -76,6 +76,7 @@ router.get('/formularioTerapeutico/:id?', async (req, res, next) => {
                     out = [];
                     data.forEach((nodo, indiceNodo) => {
                         out.push(nodo);
+                        console.log(nodo)
                     });
                 } else {
                     const idpadre = req.query.idpadre;

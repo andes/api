@@ -42,6 +42,10 @@ const constantes = {
         error: 'error'
     },
 
+    EstadoFacturacionAgendasCache: {
+        pendiente: 'pendiente'
+    },
+
     Especialidades: {
         odontologia: 34,
         medicinaGral: 14

@@ -69,12 +69,12 @@ router.get('/puco/:documento', async (req, res, next) => {
             } else {
                 // TODO: consultar BD mongo
                 // default: sumar
-                res.json({ nombre: 'Sumar', codigo: '123' });
+                res.json({ nombre: 'Sumar', codigo: '499' });
             }
         } catch (e) {
             // TODO: consultar BD mongo
             // default: sumar
-            res.json({ nombre: 'Sumar', codigo: '123' });
+            res.json({ nombre: 'Sumar', codigo: '499' });
         }
     }
 });

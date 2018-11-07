@@ -1,4 +1,7 @@
 import * as config from '../../../config';
+import * as sql from 'mssql';
+// import * as operationsSumar from './../../../modules/facturacionAutomatica/controllers/operationsCtrl/operationsSumar';
+import * as configPrivate from '../../../config.private';
 import * as moment from 'moment';
 import { paciente, pacienteMpi } from '../schemas/paciente';
 import { ElasticSync } from '../../../utils/elasticSync';
@@ -8,6 +11,16 @@ import { Auth } from './../../../auth/auth.class';
 import { EventCore } from '@andes/event-bus';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
+import * as operacionesLegacy from './../../../modules/legacy/controller/operations';
+import * as organizacion from '../../../core/tm/schemas/organizacion';
+import { toArray } from '../../../utils/utils';
+let to_json = require('xmljson').to_json;
+import * as https from 'https';
+import * as sisaController from '../../../modules/fuentesAutenticas/controller/sisaController';
+import { Puco } from '../../../modules/obraSocial/schemas/puco';
+import * as agendaSchema from '../../../modules/turnos/schemas/agenda';
+import * as prestacionSchema from '../../../modules/rup/schemas/prestacion';
+import { getPosition } from '../../../modules/turnos/controller/agenda';
 
 /**
  * Crea un paciente y lo sincroniza con elastic
@@ -15,6 +28,16 @@ import * as turnosController from '../../../modules/turnos/controller/turnosCont
  * @param data Datos del paciente
  * @param req  request de express para poder auditar
  */
+
+
+let poolAgendas;
+let configSql = {
+    user: configPrivate.conSql.auth.user,
+    password: configPrivate.conSql.auth.password,
+    server: configPrivate.conSql.serverSql.server,
+    database: configPrivate.conSql.serverSql.database,
+    requestTimeout: 45000
+};
 export function createPaciente(data, req) {
     return new Promise((resolve, reject) => {
         const newPatient = new paciente(data);
@@ -688,6 +711,366 @@ export async function matchPaciente(dataPaciente) {
 
     } catch (e) {
         return [];
+    }
+}
+
+async function obtenerVersiones() {
+    let versiones = await Puco.distinct('version').exec();  // esta consulta obtiene un arreglo de strings
+    for (let i = 0; i < versiones.length; i++) {
+        versiones[i] = { version: versiones[i] };
+    }
+    versiones.sort((a, b) => compare(a.version, b.version));
+    return versiones;
+}
+
+function compare(a, b) {
+    if (new Date(a) > new Date(b)) {
+        return -1;
+    }
+    if (new Date(a) < new Date(b)) {
+        return 1;
+    }
+    return 0;
+}
+
+export async function mapeoPuco(dni) {
+
+    let padron;
+    padron = await obtenerVersiones();   // trae las distintas versiones de los padrones
+    padron = padron[0].version;
+    let salida = await Puco.findOne({ dni, version: padron }, {}, function (err, data: any) { });
+
+    return salida;
+}
+
+
+export async function insertSips() {
+
+    let datos: any = await pacientesDelDia();
+    console.log('pacientes', datos);
+
+    for (let index = 0; index < datos.length; index++) {
+        let existeEnSips = await getPacienteSips(datos[index].paciente.documento);
+        // let existeEnPuco: any = await operacionesLegacy.postPuco(pacientes[index].documento)
+        let esBeneficiario = await getBeneficiario(datos[index].paciente.documento);
+        let edad = moment().diff(datos[index].paciente.fechaNacimiento, 'years');
+        let efector = await mapeoEfector(datos[index].paciente.organizacionId);
+        // si esta en sips pero esta como desactivado lo activo
+        if (existeEnSips.length > 0) {
+            if (existeEnSips[0].activo === false) {
+
+                await updateEstadoSips(existeEnSips[0].idPaciente);
+            }
+
+        }
+        // si no esta en sips o
+        if (existeEnSips.length === 0) {
+            let pacienteSips = await operacionesLegacy.pacienteSipsFactory(datos[index].paciente, efector.idEfector);
+            let idPacienteSips = await operacionesLegacy.insertaPacienteSips(pacienteSips);
+        }
+
+        // let existeEnPuco: any = await sisaController.postPuco(pacientes[index].documento);
+        let existeEnPuco: any = await this.mapeoPuco(datos[index].paciente.documento);
+
+        // si no existe en puco entra para hacer la validacion con afiliados y beneficiarios
+        if (!existeEnPuco) {
+            let existeEnAfiliado = await getAfiliadoSumar(datos[index].paciente.documento);
+            // si esta en la tabla afiliados va a actualizar la obra social del turno
+            if (existeEnAfiliado) {
+                console.log(datos[index]);
+                if (datos[index].origen === 'agendas') {
+                    console.log(datos[index]);
+                    console.log('actualizo turno', await actualizarTurno(datos[index].idTurno));
+                }
+            } else {
+                if (edad <= 64) {
+                    console.log('sumar');
+                    if (esBeneficiario.length === 0) {
+                        // FALTA EL EFECTOR
+                        let benef = beneficiarioFactory(datos[index].paciente, efector.cuie);
+                        await insertBeneficiario(benef);
+                    }
+                }
+            }
+
+        }
+
+
+    }
+
+
+}
+
+
+export async function actualizarTurno(idTurno) {
+    agendaSchema.find({
+        'bloques.turnos._id': idTurno
+    }).exec(function (err, data: any) {
+        let indexs = getPosition(null, data[0], idTurno);
+        let turno = data[0].bloques[indexs.indexBloque].turnos[indexs.indexTurno];
+        console.log(turno);
+        turno.paciente.obraSocial = {
+            codigoPuco: 499,
+            nombre: 'Sumar'
+        };
+        Auth.audit(data[0], configPrivate.userScheduler);
+        data[0].save((err2, result) => {
+        });
+    });
+}
+
+export async function mapeoEfector(idEfector) {
+    let efectorMongo: any = await mapeoEfectorMongo(idEfector);
+
+    poolAgendas = await new sql.ConnectionPool(configSql).connect();
+    let query = 'SELECT * FROM dbo.Sys_efector WHERE cuie = @codigo';
+    let resultado = await new sql.Request(poolAgendas)
+        .input('codigo', sql.VarChar(50), efectorMongo.codigo.cuie)
+        .query(query);
+    poolAgendas.close();
+
+    return resultado.recordset[0];
+}
+
+/* Se trae el efector de mongo por ObjectId*/
+async function mapeoEfectorMongo(idEfector: any) {
+    return new Promise((resolve, reject) => {
+        organizacion.model.findById(idEfector).then(efector => {
+            resolve(efector);
+        });
+    });
+}
+
+
+export async function getPacienteSips(documento) {
+
+    poolAgendas = await new sql.ConnectionPool(configSql).connect();
+    let query = 'SELECT * FROM dbo.Sys_Paciente WHERE numeroDocumento = @documento';
+    let resultado = await new sql.Request(poolAgendas)
+        .input('documento', sql.VarChar(50), documento)
+        .query(query);
+    poolAgendas.close();
+    resultado = resultado.recordset;
+
+    return resultado;
+}
+
+export async function getBeneficiario(documento) {
+
+    poolAgendas = await new sql.ConnectionPool(configSql).connect();
+    let query = 'SELECT * FROM dbo.PN_beneficiarios  WHERE numero_doc = @documento';
+    let resultado = await new sql.Request(poolAgendas)
+        .input('documento', sql.VarChar(50), documento)
+        .query(query);
+    poolAgendas.close();
+    resultado = resultado.recordset;
+
+    return resultado;
+}
+
+export async function getAfiliadoSumar(documento) {
+    poolAgendas = await new sql.ConnectionPool(configSql).connect();
+    let query = 'SELECT * FROM dbo.PN_smiafiliados WHERE afidni = @documento AND activo = @activo';
+    let resultado = await new sql.Request(poolAgendas)
+        .input('documento', sql.VarChar(50), documento)
+        .input('activo', sql.VarChar(1), 'S')
+        .query(query);
+    poolAgendas.close();
+    return resultado.recordset[0] ? resultado.recordset[0] : null;
+}
+
+export async function updateEstadoSips(id) {
+    poolAgendas = await new sql.ConnectionPool(configSql).connect();
+    let query = 'UPDATE  [dbo].[Sys_Paciente] SET activo = 1 where idPaciente = @id';
+    let resultado = await new sql.Request(poolAgendas)
+        .input('id', sql.VarChar(50), id)
+        .query(query);
+    poolAgendas.close();
+    resultado = resultado.recordset;
+
+    return resultado;
+}
+
+export async function pacientesDelDia() {
+    // busca los pacientes del dia en mpi y andes para validarlos con sips y pn beneficiarios
+    // TODO: DEBEMOS BUSCAR LOS PACIENTES DIA VENCIDO
+
+
+    let hoyDesde = moment(new Date()).startOf('day').format();
+    let hoyHasta = moment(new Date()).endOf('day').format();
+    let pacientesTotal = [];
+    // let start = moment(req.query.fechaDesde).startOf('day').toDate();
+    // let end = moment(req.query.fechaHasta).endOf('day').toDate();
+
+    // PACIENTES ANDES
+    let pacientesAgenda = await toArray(agendaSchema.aggregate([
+        { $unwind: '$bloques' },
+        { $unwind: '$bloques.turnos' },
+        {
+            $match: {
+                $and: [
+                    { createdAt: { $gte: new Date(hoyDesde), $lte: new Date(hoyHasta) } },
+                    { 'bloques.turnos.estado': { $eq: 'asignado' } },
+                ]
+            }
+        }
+
+    ]).cursor({}).exec());
+
+
+    pacientesAgenda.forEach(element => {
+        element.bloques.turnos.paciente['organizacionId'] = element.organizacion._id;
+        pacientesTotal.push({
+            paciente: element.bloques.turnos.paciente,
+            idTurno: element.bloques.turnos._id,
+            origen: 'agendas'
+        });
+    });
+
+    // // PACIENTES MPI
+    let prestaciones = await toArray(prestacionSchema.model.aggregate([{
+        $match: {
+            $and: [
+                { createdAt: { $gte: new Date(hoyDesde), $lte: new Date(hoyHasta) } },
+                { 'solicitud.turno': { $exists: false } }
+            ]
+        }
+    }]).cursor({ batchSize: 1000 }).exec());
+
+    prestaciones.forEach(element => {
+        element.paciente['organizacionId'] = element.solicitud.organizacion.id;
+
+        pacientesTotal.push({
+            paciente: element.paciente,
+            origen: 'prestaciones'
+        });
+    });
+
+    console.log(pacientesTotal);
+    return pacientesTotal;
+}
+
+// export async function pacientesDelDia() {
+//     // busca los pacientes del dia en mpi y andes para validarlos con sips y pn beneficiarios
+//     // TODO: DEBEMOS BUSCAR LOS PACIENTES DIA VENCIDO
+
+
+//     let hoyDesde = moment(new Date()).startOf('day').format();
+//     let hoyHasta = moment(new Date()).endOf('day').format();
+//     let pacientesTotal = [];
+//     // let start = moment(req.query.fechaDesde).startOf('day').toDate();
+//     // let end = moment(req.query.fechaHasta).endOf('day').toDate();
+
+//     // PACIENTES ANDES
+//     let pacientesAndes = await toArray(paciente.aggregate([{
+//         $match: {
+//             'createdAt': {
+//                 $gte: new Date(hoyDesde), $lte: new Date(hoyHasta)
+//             }
+//         }
+//     }]).cursor({ batchSize: 1000 }).exec());
+
+
+//     pacientesAndes.forEach(element => {
+//         pacientesTotal.push(element);
+//     });
+
+//     // PACIENTES MPI
+//     let pacientesMpi = await toArray(pacienteMpi.aggregate([{
+//         $match: {
+//             'createdAt': {
+//                 $gte: new Date(hoyDesde), $lte: new Date(hoyHasta)
+//             }
+//         }
+//     }]).cursor({ batchSize: 1000 }).exec());
+
+//     pacientesMpi.forEach(element => {
+//         pacientesTotal.push(element);
+//     });
+
+//     return pacientesTotal;
+// }
+
+function beneficiarioFactory(paciente, efector) {
+    let tipoCategoria;
+    let edad = moment().diff(paciente.fechaNacimiento, 'years');
+    if ((edad >= 0) && (edad <= 10)) {
+        tipoCategoria = 4;
+    } else if ((edad > 10) && (edad <= 19)) {
+        tipoCategoria = 5;
+    } else if ((edad > 19) && (edad <= 64)) {
+
+        if (paciente.idSexo === 2) {
+            tipoCategoria = 6;
+        } else {
+            tipoCategoria = 7;
+        }
+    }
+    let beneficiario = {
+        id: null,
+        estado_enviado: 'n',
+        clave_beneficiario: 2101300000000000, // falta sumar id
+        tipo_transaccion: 'A',
+        apellido: paciente.apellido,
+        nombre: paciente.nombre,
+        clase_doc: null,
+        tipo_documento: 'DNI',
+        numero_doc: paciente.documento,
+        id_categoria: tipoCategoria,
+        sexo: (paciente.sexo === 'masculino' ? 'M' : paciente.sexo === 'femenino' ? 'F' : 'I'),
+        fechaNacimiento: moment(paciente.fechaNacimiento).format('YYYY-MM-DD'),
+        pais: 'ARGENTINA',
+        indigena: 'N',
+        idTribu: 0,
+        idLengua: 0,
+        anioMayorNivel: 0,
+        anioMayorNivelMadre: 0,
+        cuie_ea: efector,
+        cuie_ah: efector,
+        fecha_carga: moment(new Date()).format('YYYY-MM-DD'),
+        fecha_inscripcion: moment(new Date()).format('YYYY-MM-DD'),
+
+    };
+    return beneficiario;
+}
+
+async function insertBeneficiario(paciente) {
+
+    let query = 'INSERT INTO [dbo].[PN_beneficiarios] (estado_envio ,clave_beneficiario ,tipo_transaccion ,apellido_benef ,nombre_benef ,clase_documento_benef ,tipo_documento ,numero_doc ,id_categoria ,sexo ,fecha_nacimiento_benef ,provincia_nac ,localidad_nac ,pais_nac ,indigena ,id_tribu ,id_lengua ,alfabeta ,estudios ,anio_mayor_nivel ,tipo_doc_madre ,nro_doc_madre ,apellido_madre ,nombre_madre ,alfabeta_madre ,estudios_madre ,anio_mayor_nivel_madre ,tipo_doc_padre ,nro_doc_padre ,apellido_padre ,nombre_padre ,alfabeta_padre ,estudios_padre ,anio_mayor_nivel_padre ,tipo_doc_tutor ,nro_doc_tutor ,apellido_tutor ,nombre_tutor ,alfabeta_tutor ,estudios_tutor ,anio_mayor_nivel_tutor ,fecha_diagnostico_embarazo ,semanas_embarazo ,fecha_probable_parto ,fecha_efectiva_parto ,cuie_ea ,cuie_ah ,menor_convive_con_adulto ,calle ,numero_calle ,piso ,dpto ,manzana ,entre_calle_1 ,entre_calle_2 ,telefono ,departamento ,localidad ,municipio ,barrio ,cod_pos ,observaciones ,fecha_inscripcion ,fecha_carga ,usuario_carga ,activo ,fum ,tipo_ficha ,responsable ,discv ,disca ,discmo ,discme ,otradisc ,' +
+        'rcv) VALUES(' +
+        '\'' + paciente.estado_enviado + '\',' + '\'' + paciente.clave_beneficiario + '\',' + '\'' + paciente.tipo_transaccion + '\',' + '\'' + paciente.apellido + '\',' + '\'' + paciente.nombre + '\',' + '' + '\'P\',\'' +
+        paciente.tipo_documento + '\',' + '\'' + paciente.numero_doc + '\',' + '\'' + paciente.id_categoria + '\',' + '\'' + paciente.sexo + '\',' + '\'' + paciente.fechaNacimiento + '\',' + '' +
+        null + ',' + null + ',' + '\'' + paciente.pais + '\',' + '\'' + paciente.indigena + '\',' + '' + paciente.idTribu + ',' + '' + paciente.idLengua + ',' + '' + null + ',' + '' + null + ',' + '' + paciente.anioMayorNivel + ',' + '' + null + ',' + '' + null + ',' + '' +
+        null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + 0 + ',' + '' + paciente.anioMayorNivelMadre + ',' + '' + null + ',' +
+        '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' +
+        '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '\'' + paciente.cuie_ah + '\',' +
+        '\'' + paciente.cuie_ea + '\',' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' +
+        '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' +
+        '' + 0 + ',' + '\'' + paciente.fecha_inscripcion + '\',' + '' + null + ',' + '\'' + paciente.fecha_carga + '\',' + '' + null + ',' + '' + null + ',' + '' + null + ',' +
+        '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + ',' + '' + null + '' + ')';
+    let idComprobante = await executeQueryBeneficiario(query);
+
+    return idComprobante;
+}
+
+async function executeQueryBeneficiario(query: any) {
+    try {
+        let id;
+        query += ' select SCOPE_IDENTITY() as id';
+        poolAgendas = await new sql.ConnectionPool(configSql).connect();
+        let result = await new sql.Request(poolAgendas).query(query);
+        if (result && result.recordset) {
+            id = result.recordset[0].id;
+        }
+        let queryUpdate = 'UPDATE  [dbo].[PN_beneficiarios] SET clave_beneficiario = ' + (2101300000000000 + parseInt(id)) + ' where id_beneficiarios = ' + id + '  ';
+
+        let resultUpdate = await new sql.Request(poolAgendas).query(queryUpdate);
+        if (resultUpdate && resultUpdate.recordset) {
+            return resultUpdate.recordset[0].clave_beneficiario;
+        }
+
+    } catch (err) {
+        return (err);
     }
 }
 
