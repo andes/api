@@ -139,6 +139,24 @@ export default [
         ]
     },
     {
+        key: 'internacion',
+        title: 'Modulo Internación',
+        comment: '',
+        child: [
+            {
+                key: 'cama',
+                title: 'Acciones sobre una cama',
+                child: [
+                    { key: 'create', title: 'Crear nueva cama', type: 'boolean' }
+                ]
+            },
+            { key: 'censo', title: 'Ver senso diario y mensual', type: 'boolean' },
+            { key: 'alta', title: 'Ingregar paciente', type: 'boolean' },
+            { key: 'inicio', title: 'Punto de inicio', type: 'boolean' }
+        ]
+
+    },
+    {
         key: 'huds',
         title: 'Modulo HUDS',
         comment: '',
@@ -229,7 +247,7 @@ export default [
         child: [
             {
                 key: 'especialidad',
-                title: 'especialidad',
+                title: 'Especialidades',
                 child: [
                     { key: 'postEspecialidad', title: 'insertar especialidad', type: 'boolean' },
                     { key: 'putEspecialidad', title: 'actualizar especialidad', type: 'boolean' },
@@ -238,11 +256,12 @@ export default [
             },
             {
                 key: 'organizacion',
-                title: 'organizacion',
+                title: 'Organizaciones',
                 child: [
-                    { key: 'postOrganizacion', title: 'insertar organizacion', type: 'boolean' },
-                    { key: 'putOrganizacion', title: 'actualizar organizacion', type: 'boolean' },
-                    { key: 'deleteOrganizacion', title: 'borrar organizacion', type: 'boolean' }
+                    { key: 'create', title: 'Crear nueva', type: 'boolean' },
+                    { key: 'edit', title: 'Editar organizaciones', type: 'boolean' },
+                    { key: 'delete', title: 'Borrar organizaciones', type: 'boolean' },
+                    { key: 'sectores', title: 'Editar sectores físicos', type: 'organizacion' }
                 ]
             },
         ]

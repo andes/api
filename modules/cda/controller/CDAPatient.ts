@@ -10,7 +10,6 @@ import * as base64_stream from 'base64-stream';
 import { makeFs } from '../schemas/CDAFiles';
 import * as Stream from 'stream';
 import * as moment from 'moment';
-
 import { CDA as CDAConfig } from '../../../config.private';
 import { configuracionPrestacionModel } from './../../../core/term/schemas/configuracionPrestacion';
 import { Auth } from '../../../auth/auth.class';
@@ -601,7 +600,6 @@ export function checkAndExtract(xmlDom) {
         } else {
             data[key] = value;
         }
-
     }
 
     function checkArg(root, params) {
@@ -630,7 +628,6 @@ export function checkAndExtract(xmlDom) {
 
             if (param.match) {
                 passed = passed && text === param.match;
-
             }
 
             passed = passed && (!param.require || text.length > 0);

@@ -265,9 +265,9 @@ router.get('/paciente/:id', async (req: any, res, next) => {
  * Devuelve el XML de un CDA según un ID
  */
 router.get('/:id', async (req: any, res, next) => {
-    if (!Auth.check(req, 'cda:get')) {
-        return next(403);
-    }
+    // if (!Auth.check(req, 'cda:get')) {
+    //     return next(403);
+    // }
 
     const _base64 = req.params.id;
     const CDAFiles = makeFs();

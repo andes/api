@@ -345,11 +345,13 @@ router.post('/pacientes', (req, res, next) => {
         const condicion = {
             documento: req.body.documento
         };
-        controller.searchSimilar(req.body, 'andes', condicion).then((data) => {
+        controller.searchSimilar(req.body, 'andes', condicion).then(async (data: any) => {
             logD('Encontrados', data.map(item => item.value));
             if (data && data.length && data[0].value > 0.90) {
-                logD('hay uno parecido');
-                return next('existen similares');
+                logD('hay un paciente muy parecido en la base de datos');
+                const connElastic = new ElasticSync();
+                await connElastic.sync(data[0].paciente);
+                return res.json(data[0].paciente);
             } else {
                 req.body.activo = true;
                 return controller.createPaciente(req.body, req).then(pacienteObj => {
