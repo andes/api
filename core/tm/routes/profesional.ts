@@ -266,35 +266,36 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                 $regex: utils.makePattern(req.query.especialidad)
             };
         }
-    }
 
-    const radix = 10;
-    const skip: number = parseInt(req.query.skip || 0, radix);
-    const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
 
-    if (req.query.nombreCompleto) {
-        const filter = [{
-            apellido: {
-                $regex: utils.makePattern(req.query.nombreCompleto, { startWith: true })
-            }
-        }, {
-            nombre: {
-                $regex: utils.makePattern(req.query.nombreCompleto, { startWith: true })
-            }
-        }];
-        let q = req.query.nombreCompleto.indexOf(' ') >= 0 ? { $and: filter } : { $or: filter };
-        query = profesional.find(q).
-            sort({
-                apellido: 1,
-                nombre: 1
-            });
-    } else {
-        query = profesional.find(opciones).skip(skip).limit(limit);
+        const radix = 10;
+        const skip: number = parseInt(req.query.skip || 0, radix);
+        const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
 
+        if (req.query.nombreCompleto) {
+            const filter = [{
+                apellido: {
+                    $regex: utils.makePattern(req.query.nombreCompleto, { startWith: true })
+                }
+            }, {
+                nombre: {
+                    $regex: utils.makePattern(req.query.nombreCompleto, { startWith: true })
+                }
+            }];
+            let q = req.query.nombreCompleto.indexOf(' ') >= 0 ? { $and: filter } : { $or: filter };
+            query = profesional.find(q).
+                sort({
+                    apellido: 1,
+                    nombre: 1
+                });
+        } else {
+            query = profesional.find(opciones).skip(skip).limit(limit);
+
+        }
         query.exec((err, data) => {
             if (err) {
-                    return next(err);
-                }
+                return next(err);
+            }
             res.json(data);
         });
     }
