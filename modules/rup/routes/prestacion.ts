@@ -174,6 +174,13 @@ router.get('/prestaciones/solicitudes', (req, res, next) => {
         query.where('solicitud.fecha').lte(moment(req.query.solicitudHasta).endOf('day').toDate() as any);
     }
 
+    if (req.query.tipoPrestaciones) {
+        const variable: any[] = [];
+        variable.push({ 'solicitud.tipoPrestacion.id': { $in: [req.query.tipoPrestaciones] } });
+        variable.push({ 'solicitud.tipoPrestacionOrigen.id': { $in: [req.query.tipoPrestaciones] } });
+        query.or(variable);
+    }
+
     // Ordenar por fecha de solicitud
     if (req.query.ordenFecha) {
         query.sort({ 'solicitud.fecha': -1 });
