@@ -1,5 +1,5 @@
-const mongoose_1 = require("mongoose");
-const carpetaPaciente = require("../schemas/carpetaPaciente");
+const mongoose_1 = require('mongoose');
+const carpetaPaciente = require('../schemas/carpetaPaciente');
 const ObjectId = mongoose_1.Types.ObjectId;
 export async function buscarCarpeta(req) {
     let carpeta;
