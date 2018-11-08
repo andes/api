@@ -5,7 +5,9 @@ import { Patient } from './class/Patient';
 import { Organization } from './class/Organization';
 import { Author } from './class/Author';
 import { Body, Component, ImageComponent } from './class/Body';
-import { CDABuilder } from './builder/CdaBuilder';
+import {
+    CDABuilder
+} from './builder/CdaBuilder';
 
 import * as base64_stream from 'base64-stream';
 import { makeFs } from '../schemas/CDAFiles';
@@ -607,7 +609,6 @@ export function checkAndExtract(xmlDom) {
         } else {
             data[key] = value;
         }
-
     }
 
     function checkArg(root, params) {
@@ -636,7 +637,6 @@ export function checkAndExtract(xmlDom) {
 
             if (param.match) {
                 passed = passed && text === param.match;
-
             }
 
             passed = passed && (!param.require || text.length > 0);

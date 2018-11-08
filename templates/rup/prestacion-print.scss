@@ -128,9 +128,9 @@
         }
     }
     .rup-body {
-        padding: 5px 10px !important;
-        min-height: 50px !important;
-        max-height: 100px !important;
+        // padding: 5px 10px !important;
+        // min-height: 50px !important;
+        // max-height: 100px !important;
     }
     .rup-card {
         margin-bottom: 0 !important;
@@ -151,4 +151,14 @@
     .readonly span {
         font-weight: bold;
     }
+}
+    .title-element{
+        font-size: 0.75rem;
+        font-weight: bold;
+        padding: 8px 0;
+        display: inline-block;
+        text-align: left;
+}
+    .add {
+        display:none;
 }
