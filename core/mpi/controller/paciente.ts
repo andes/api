@@ -747,6 +747,7 @@ export async function mapeoPuco(dni) {
 export async function insertSips() {
 
     let datos: any = await pacientesDelDia();
+    console.log(datos);
     for (let index = 0; index < datos.length; index++) {
         let existeEnSips = await getPacienteSips(datos[index].paciente.documento);
         // let existeEnPuco: any = await operacionesLegacy.postPuco(pacientes[index].documento)
@@ -768,18 +769,26 @@ export async function insertSips() {
         }
         // let existeEnPuco: any = await sisaController.postPuco(pacientes[index].documento);
         let existeEnPuco: any = await this.mapeoPuco(datos[index].paciente.documento);
-
+        console.log(datos[index].paciente.nombre, 'obbra social', existeEnPuco);
         // si no existe en puco entra para hacer la validacion con afiliados y beneficiarios
-        if (!existeEnPuco) {
+        if (existeEnPuco === null) {
+            console.log('no existe en puco', datos[index].paciente.nombre);
+
             let existeEnAfiliado = await getAfiliadoSumar(datos[index].paciente.documento);
             // si esta en la tabla afiliados va a actualizar la obra social del turno
             if (existeEnAfiliado) {
-                console.log(datos[index]);
+                console.log(' es afiliado', datos[index].paciente.nombre);
                 if (datos[index].origen === 'agendas') {
-                    console.log(datos[index]);
-                    console.log('actualizo turno', await actualizarTurno(datos[index].idTurno));
+                    console.log(datos[index].paciente.obraSocial);
+                    if (datos[index].paciente.obraSocial === undefined) {
+
+                        console.log('no tiene,vamo a insertar', datos[index].paciente);
+                        await actualizarTurno(datos[index].idTurno);
+                    }
+
                 }
             } else {
+
                 if (edad <= 64) {
                     console.log('sumar');
                     if (esBeneficiario.length === 0) {
@@ -934,7 +943,6 @@ export async function pacientesDelDia() {
         }
     }]).cursor({ batchSize: 1000 }).exec());
     prestaciones.forEach(element => {
-        console.log(element);
         element.paciente['organizacionId'] = element.solicitud.organizacion.id;
 
         pacientesTotal.push({
@@ -943,7 +951,6 @@ export async function pacientesDelDia() {
         });
     });
 
-    console.log(pacientesTotal);
     return pacientesTotal;
 }
 
