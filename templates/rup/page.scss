@@ -23,6 +23,7 @@
         font-size: 8px;
         margin-bottom: 15px;
         padding: 5px;
+        width: 100%;
     }
     .logo {
         float: left;
@@ -41,7 +42,7 @@
     }
     .textoPDP {
         float: left;
-        width: 400px;
+        width: 75%;
         margin-right: 10px;
         text-align: justify;
     }
@@ -66,18 +67,7 @@
         // color-adjust: exact !important;
         /*Firefox*/
     }
-    table tr>* {
-        display: block;
-    }
-    table tr {
-        display: table-cell;
-    }
-    th {
-        font-size: 0.7rem;
-    }
-    tr {
-        // border-bottom: 2px solid rgba(0, 0, 0, .15);
-    }
+  
     small {
         font-size: 0.7rem;
     }
