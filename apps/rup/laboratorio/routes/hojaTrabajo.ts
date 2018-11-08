@@ -1,3 +1,4 @@
+import { paciente } from './../../../../core/mpi/schemas/paciente';
 import { SnomedConcept } from './../../../../modules/rup/schemas/snomed-concept';
 import { ObjectId } from 'bson';
 import { jobs } from './../../../../config.private';
@@ -11,6 +12,12 @@ import { profesional as Profesional } from './../../../../core/tm/schemas/profes
 
 
 let router = express.Router();
+
+router.get('/hojatrabajo', async (req, res, next) => {
+    HojaTrabajo.find().then((hojas: any[]) => {
+        res.json(hojas);
+    });
+});
 
 router.get('/hojatrabajo/:id', async (req, res, next) => {
     let query;
@@ -27,13 +34,6 @@ router.get('/hojatrabajo/:id', async (req, res, next) => {
         });
     }
 });
-
-router.get('/hojatrabajo', async (req, res, next) => {
-    HojaTrabajo.find().then((hojas: any[]) => {
-        res.json(hojas);
-    });
-});
-
 
 router.post('/hojatrabajo', async (req, res, next) => {
     /*
@@ -83,5 +83,43 @@ router.post('/hojatrabajo', async (req, res, next) => {
         res.json(data);
     });
 });
+
+router.patch('/hojatrabajo/:id', (req, res, next) => {
+    HojaTrabajo.findById(req.params.id, (err, data: any) => {
+        if (err) {
+            return next(err);
+        }
+        if (data) {
+            data.nombre = req.body.nombre ? req.body.nombre : data.nombre;
+            data.area = req.body.area ? req.body.area : data.area;
+            data.protocolo = req.body.protocolo ? req.body.protocolo : data.protocolo;
+            if (req.body.paciente) {
+                data.paciente = req.body.paciente;
+            }
+            if (req.body.papel) {
+                data.papel = req.body.papel;
+            }
+            if (req.body.practicas) {
+                data.practicas = req.body.practicas;
+            }
+
+            Auth.audit(data, req);
+            data.save((error, hoja) => {
+                if (error) {
+                    return next(error);
+                }
+                res.json(hoja);
+            });
+        }
+    });
+});
+
+// No se borra nada
+// router.delete('/hojatrabajo/:id', (req, res, next) => {
+//     HojaTrabajo.findByIdAndRemove(req.params.id, (err, data) => {
+//         if (err) { return next(err); }
+//         res.json(data);
+//     });
+// });
 
 export = router;
