@@ -929,10 +929,10 @@ export function updatePaciente(pacienteModified, turno) {
                 bloques[i].turnos[indiceTurno].paciente.apellido = pacienteModified.apellido;
                 bloques[i].turnos[indiceTurno].paciente.documento = pacienteModified.documento;
                 if (pacienteModified.contacto && pacienteModified.contacto[0]) {
-                    data.sobreturnos[indiceTurno].paciente.telefono = pacienteModified.contacto[0].valor;
+                    bloques[i].turnos[indiceTurno].paciente.telefono = pacienteModified.contacto[0].valor;
                 }
-                data.sobreturnos[indiceTurno].paciente.carpetaEfectores = pacienteModified.carpetaEfectores;
-                data.sobreturnos[indiceTurno].paciente.fechaNacimiento = pacienteModified.fechaNacimiento;
+                bloques[i].turnos[indiceTurno].paciente.carpetaEfectores = pacienteModified.carpetaEfectores;
+                bloques[i].turnos[indiceTurno].paciente.fechaNacimiento = pacienteModified.fechaNacimiento;
             }
         }
 

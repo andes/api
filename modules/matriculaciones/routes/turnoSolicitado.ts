@@ -11,29 +11,13 @@ router.post('/turnoSolicitados', (req, res, next) => {
     // // // if (!Auth.check(req, 'matriculaciones:profesional:postProfesional')) {
     // // //     return next(403);
     // // // }
-    if (req.body.id) {
-        turnoSolicitado.findByIdAndUpdate(req.body.id, req.body, { new: true }, (err, data) => {
-            if (err) {
-                return next(err);
-            }
-            res.json(data);
-        });
-    } else {
-        turnoSolicitado.findOne({ documento: req.body.documento }, (err, person) => {
-
-            const newProfesional = new turnoSolicitado(req.body);
-            newProfesional.save((err2) => {
-                if (err2) {
-                    next(err2);
-                }
-                res.json(newProfesional);
-            });
-
-
-        });
-
-    }
-
+    const newProfesional = new turnoSolicitado(req.body);
+    newProfesional.save((err2) => {
+        if (err2) {
+            next(err2);
+        }
+        res.json(newProfesional);
+    });
 
 });
 

@@ -68,7 +68,7 @@ export async function consultaPecas(start, end, done) {
     };
     try {
         const agendas = agendaModel.aggregate([
-            { $match: match },
+         { $match: match },
         ]).cursor({ batchSize: 100 }).exec();
         await agendas.eachAsync(async (a, error) => {
             if (error) {
@@ -338,6 +338,10 @@ async function auxiliar(a: any, b: any, t: any) {
         turno.Latitud = '';
         turno.telefono = t.paciente && t.paciente.telefono ? t.paciente.telefono : '';
         turno.estadoAgenda = a.estado;
+        turno.turnosMobile = 0;
+        if (t.emitidoPor && (t.emitidoPor === 'appMobile')) {
+            turno.turnosMobile = 1;
+        }
 
         // se verifica si existe el turno en sql
         let queryInsert = 'INSERT INTO dbo.Pecas_consolidado_2' +
@@ -352,7 +356,7 @@ async function auxiliar(a: any, b: any, t: any) {
             'Diag2CodigoOriginal, Desc2DiagOriginal, Diag2CodigoAuditado, Desc2DiagAuditado, SemanticTag2, SnomedConcept2, SnomedTerm2, primeraVez2, ' +
             'Diag3CodigoOriginal, Desc3DiagOriginal, Diag3CodigoAuditado, Desc3DiagAuditado, SemanticTag3, SnomedConcept3, SnomedTerm3, primeraVez3, ' +
             'Profesional, TipoProfesional, CodigoEspecialidad, Especialidad, CodigoServicio, Servicio, ' +
-            'codifica) ' +
+            'codifica, turnosMobile) ' +
             'VALUES  ( ' + turno.idEfector + ',\'' + turno.Organizacion + '\',\'' + turno.TipoEfector + '\',\'' + turno.DescTipoEfector +
             '\',' + turno.IdZona + ',\'' + turno.Zona + '\',\'' + turno.SubZona + '\',' + turno.idEfectorSuperior + ',\'' + turno.EfectorSuperior + '\',\'' + turno.AreaPrograma +
             '\',\'' + turno.idAgenda + '\',\'' + turno.FechaAgenda + '\',\'' + turno.HoraAgenda + '\',\'' + turno.estadoAgenda +
@@ -377,8 +381,7 @@ async function auxiliar(a: any, b: any, t: any) {
             ',\'' + turno.Diag3CodigoOriginal + '\',\'' + turno.Desc3DiagOriginal + '\',\'' + turno.Diag3CodigoAuditado + '\',\'' + turno.Desc3DiagAuditado +
             '\',\'' + turno.semanticTag3 + '\',\'' + turno.conceptId3 + '\',\'' + turno.term3 + '\',' + turno.primeraVez3 +
             ',\'' + turno.Profesional + '\',\'' + turno.TipoProfesional + '\',' + turno.CodigoEspecialidad + ',\'' + turno.Especialidad +
-            '\',' + turno.CodigoServicio + ',\'' + turno.Servicio + '\',\'' + turno.codifica + '\') ';
-        // console.log(queryInsert);
+            '\',' + turno.CodigoServicio + ',\'' + turno.Servicio + '\',\'' + turno.codifica + '\',' + turno.turnosMobile + '\) ';
         let rta = await existeTurnoPecas(turno.idTurno);
         if (rta.recordset.length > 0 && rta.recordset[0].idTurno) {
             const queryDel = await eliminaTurnoPecas(turno.idTurno);

@@ -61,15 +61,6 @@ router.get('/organizaciones/georef/:id?', async (req, res, next) => {
                                 res.json('');
                             }
                         });
-
-                        res2.on('end', () => {
-                            let salida = JSON.parse(jsonGoogle);
-                            if (salida.status === 'OK') {
-                                res.json(salida.results[0].geometry.location);
-                            } else {
-                                res.json('');
-                            }
-                        });
                     });
                     req.on('error', (e) => {
                         return next(e);
