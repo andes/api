@@ -86,7 +86,7 @@ async function validarPaciente(pacienteAndes) {
             pacienteAndes.fechaNacimiento = new Date(pacienteRenaper.fechaNacimiento);
             pacienteAndes.cuil = pacienteRenaper.cuil;
             pacienteAndes.estado = 'validado';
-            pacienteAndes.foto = resRenaper.foto;
+            pacienteAndes.foto = pacienteRenaper.foto;
         }
         return pacienteAndes;
     }
@@ -144,10 +144,16 @@ async function relacionar(mama, bebe) {
         }]
     };
 
-    await updatePaciente(bebeAndes, updateBebe, userScheduler);
-    // TODO loguear update bebe
-    await updatePaciente(mama, updateMama, userScheduler);
-    // TODO loguear update mama
+    let bebeUpdated = await updatePaciente(bebeAndes, updateBebe, userScheduler);
+    Logger.log(userScheduler, 'mpi', 'update', {
+        original: bebeAndes,
+        nuevo: bebeUpdated
+    });
+    let mamaUpdated = await updatePaciente(mama, updateMama, userScheduler);
+    Logger.log(userScheduler, 'mpi', 'update', {
+        original: mama,
+        nuevo: mamaUpdated
+    });
 }
 
 function parsearPacientes(importedData) {
@@ -220,7 +226,10 @@ async function procesarPacientes(pacienteImportado) {
                     let pac = await validarPaciente(mama.paciente);
                     relacionar(pac, resultadoParse.bebe);
                 } catch (error) {
-                    // TODO loguear error
+                    // Logger.log(userScheduler, 'mpi', 'update', {
+                    //     original: mama,
+                    //     nuevo: mamaUpdated
+                    // });
                     console.log(2, error);
                 }
             }
@@ -235,7 +244,7 @@ async function procesarPacientes(pacienteImportado) {
         // NO ENCONTRADO O ERROR
         // Obtener paciente de Fuentas auténticas
         let nuevaMama = await validarPaciente(resultadoParse.mama);
-        let mamaAndes = await createPaciente(nuevaMama, userScheduler);
+        let mamaAndes: any = await createPaciente(nuevaMama, userScheduler);
         relacionar(mamaAndes, resultadoParse.bebe);
 
     }
@@ -244,7 +253,7 @@ async function procesarPacientes(pacienteImportado) {
 
 export async function importBebes(done) {
     const today = moment().format('YYYY-MM-DD');
-    let babyarray = await getBebes('2018-11-03');
+    let babyarray = await getBebes(today);
     for (let bebe of babyarray as [any]) {
         await procesarPacientes(bebe);
     }
