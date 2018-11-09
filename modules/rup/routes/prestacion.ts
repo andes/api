@@ -174,6 +174,13 @@ router.get('/prestaciones/solicitudes', (req, res, next) => {
         query.where('solicitud.fecha').lte(moment(req.query.solicitudHasta).endOf('day').toDate() as any);
     }
 
+    if (req.query.organizacionOrigen) {
+        const arr: any[] = [];
+        arr.push({ 'solicitud.organizacionOrigen': { $exists: true } });
+        arr.push({ 'solicitud.organizacionOrigen.id': req.query.organizacionOrigen });
+        query.and(arr);
+    }
+
     // Ordenar por fecha de solicitud
     if (req.query.ordenFecha) {
         query.sort({ 'solicitud.fecha': -1 });
