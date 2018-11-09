@@ -9,7 +9,8 @@ let router = express.Router();
 
 function filterData(filter: any[], data) {
     for (let key in filter) {
-        if (!data[key] || data[key] !== filter[key]) {
+        if (!data[key] || JSON.stringify(data[key]) === JSON.stringify(filter[key])) {
+            // Si entra por esta condición se termina con la ejecución del evento.
             return false;
         }
     }
@@ -21,10 +22,6 @@ EventCore.on(/.*/, async function (body) {
     let subscriptions = await WebHook.find({
         event
     });
-
-    // Ejemplo de uso del paquete FHIR: Luego borrar
-    // let value = Fhir.Patient.encode(body);
-    // console.log('Resultado: ', value);
 
     subscriptions.forEach((sub: any) => {
         if (!filterData(sub.filter, body)) {

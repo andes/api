@@ -268,6 +268,7 @@ router.post('/agenda', (req, res, next) => {
 
         EventCore.emitAsync('citas:agenda:create', data);
 
+
         // Al crear una nueva agenda la cacheo para Sips
         operations.cacheTurnos(data).catch(error => { return next(error); });
         // Fin de insert cache
@@ -382,6 +383,7 @@ router.put('/agenda/:id', (req, res, next) => {
         res.json(data);
 
         EventCore.emitAsync('citas:agenda:update', data);
+        EventCore.emitAsync('citas:integracion', data);
     });
 });
 
@@ -410,6 +412,8 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                                 if (error) {
                                     return next(error);
                                 }
+                                // PAra probar ahora
+                                EventCore.emitAsync('citas:integracion', data);
                             });
                         }).catch(err2 => { return next(err2); });
                     }
@@ -429,6 +433,8 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                                         data: data2,
                                         err: error || false
                                     });
+                                    // PAra probar ahora
+                                    EventCore.emitAsync('citas:integracion', data2);
                                     if (error) {
                                         return next(error);
                                     }
@@ -536,6 +542,8 @@ router.patch('/agenda/:id*?', (req, res, next) => {
 
                 Auth.audit(data, req);
                 data.save((error) => {
+                    // PAra probar ahora
+                    EventCore.emitAsync('citas:integracion', data); // Mers way!
 
                     if (event.data) {
                         EventCore.emitAsync(`citas:${event.object}:${event.accion}`, event.data);

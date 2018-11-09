@@ -123,6 +123,7 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
                 res.json(doc2);
 
                 EventCore.emitAsync('citas:turno:asignar', turno);
+
             }
         });
 
