@@ -135,10 +135,25 @@ export class Documento {
 
     // 'procedimiento' || 'entidad observable' || 'régimen/tratamiento' || 'elemento de registro'
     static generarRegistroProcedimientoHTML(proc: any, template: string): any {
-        const unidad = proc.concepto.conceptId === '440588003' ? 'minutos' : '';
+        let valor;
+        if (proc.valor === 1) {
+            valor = 'SI';
+        } else if (proc.valor === 0) {
+            valor = 'NO';
+        } else if (proc.concepto.conceptId === '716141001') {
+            valor = `${proc.valor.total}/9`;
+        } else if (proc.concepto.conceptId === '440588003') {
+            const unidad = proc.concepto.conceptId === '440588003' ? 'minutos' : '';
+            valor = `${proc.valor} ${unidad}`;
+        } else if (proc.valor.id && proc.valor.label) {
+            valor = proc.valor.otro ? proc.valor.otro : proc.valor.label;
+        } else {
+            valor = proc.valor.toString();
+        }
+
         return template
             .replace('<!--concepto-->', proc.concepto.conceptId !== '716141001' ? this.ucaseFirst(proc.nombre) : (proc.concepto.term[0].toLocaleUpperCase() + proc.concepto.term.slice(1)))
-            .replace('<!--valor-->', proc.valor === 1 ? 'SI' : (proc.valor === 0 ? 'NO' : (proc.concepto.conceptId !== '716141001' ? `${proc.valor} ${unidad}` : `${proc.valor.total}/9`)))
+            .replace('<!--valor-->', valor)
             // .replace('<!--valor-->', (proc.valor || this.getRegistros(proc)))
             .replace('<!--motivoPrincipalDeConsulta-->', proc.esDiagnosticoPrincipal === true ? 'PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL' : '');
 
