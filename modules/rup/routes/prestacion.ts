@@ -176,8 +176,8 @@ router.get('/prestaciones/solicitudes', (req, res, next) => {
 
     if (req.query.tipoPrestaciones) {
         const variable: any[] = [];
-        variable.push({ 'solicitud.tipoPrestacion.id': { $in: [req.query.tipoPrestaciones] } });
-        variable.push({ 'solicitud.tipoPrestacionOrigen.id': { $in: [req.query.tipoPrestaciones] } });
+        variable.push({ 'solicitud.tipoPrestacion.id': { $in: req.query.tipoPrestaciones } });
+        variable.push({ 'solicitud.tipoPrestacionOrigen.id': { $in: req.query.tipoPrestaciones } });
         query.or(variable);
     }
 
