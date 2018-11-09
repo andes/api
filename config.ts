@@ -129,6 +129,12 @@ export const modules = {
         route: '/fhir/patient',
         middleware: appMiddleware
     },
+    fhir_profesional: {
+        active: true,
+        path: './fhir/practitioner/routes',
+        route: '/fhir/practitioner',
+        middleware: appMiddleware
+    },
     cda: {
         active: true,
         path: './modules/cda/routes',
