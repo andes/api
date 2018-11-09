@@ -56,10 +56,10 @@ paths:
           type: string
         - name: identifier
           in: query
-          description: documento del profesional.
+          description: Documento del profesional.
           type: string
       responses:
         '200':
-          description: Devuelve un listado con los datos de los profesionales que encontro coincidencias
+          description: Devuelve un listado con los datos de los profesionales que encontro coincidencias en formato FHIR
         '401':
           description: No Autorizado
