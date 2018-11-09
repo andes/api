@@ -3,7 +3,7 @@ import * as codes from '../../patient/controller/errorCodes';
 import { Auth } from '../../../auth/auth.class';
 import * as utils from '../../../utils/utils';
 import { profesional } from '../../../core/tm/schemas/profesional';
-import { Practitioner } from '@andes/fhir/src/practitioner';
+import { Practitioner } from '@andes/fhir';
 // Schemas
 const router = express.Router();
 
