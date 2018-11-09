@@ -7,7 +7,6 @@ import { iterate, convertToObjectId } from '../controllers/rup';
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
-// tslint:disable
 export let schema = new mongoose.Schema({
     // Datos principales del paciente
     paciente: {
@@ -106,7 +105,6 @@ export let schema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'prestacion'
         }
-
     },
 
     // Datos de la ejecución (i.e. realización)
@@ -128,10 +126,10 @@ export let schema = new mongoose.Schema({
          *  DESTINO DE SOLICITUD
          *      a.  Organización: Si no existe se completa con una copia de ejecucion.registros.createdBy.organizacion.
          *          Si no hay registros se completa con createdBy.organizacion
-         *      
+         *
          *      b.  Profesionales: Si no existe se completa con una copia de solicitud.registros.valor.solicituPrestacion.profesionales.
          *          Si no hay registros se completa con solicitud.profesional
-         * 
+         *
          */
 
         // Registros de la ejecución

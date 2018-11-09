@@ -9,7 +9,7 @@ const turnoAsignadoMatch = {
     $match: {
         'turno.paciente.nombre': { $exists: true },
         'turno.estado': 'asignado',
-        estado: { $ne:  'suspendida' }
+        estado: { $ne: 'suspendida' }
     }
 };
 
@@ -80,9 +80,9 @@ const facets = {
         {
             $addFields: {
                 'real-state': {
-                    $cond:  {
-                        if: { $eq: ['$estado', 'suspendida'] } ,
-                        then: { $cond: { if: { $ne: ['$turno.reasignado.siguiente', null]  }, then: 'reasignado', else: 'suspendida' } },
+                    $cond: {
+                        if: { $eq: ['$estado', 'suspendida'] },
+                        then: { $cond: { if: { $ne: ['$turno.reasignado.siguiente', null] }, then: 'reasignado', else: 'suspendida' } },
                         else: '$turno.estado'
                     }
                 }
@@ -94,7 +94,7 @@ const facets = {
 
 function makePrimaryMatch(filtros) {
     const match: any = {
-        estado: { $nin: ['planificacion', /* 'suspendida' */ , 'pausada', 'borrada'] }
+        estado: { $nin: ['planificacion', 'pausada', 'borrada'] }
     };
 
     if (filtros.fechaDesde) {
@@ -198,14 +198,18 @@ export async function estadisticas(filtros) {
         {
             $addFields: {
                 'turno.paciente.edad': {
-                    $divide: [{ $subtract: [
-                        '$turno.horaInicio',
-                        { $cond:  {
-                            if: {  $eq: [{$type: '$turno.paciente.fechaNacimiento' }, 'string']   },
-                            then: { $dateFromString: { dateString: '$turno.paciente.fechaNacimiento' } },
-                            else:  '$turno.paciente.fechaNacimiento'
-                        } }
-                    ]},       (365 * 24 * 60 * 60 * 1000)]
+                    $divide: [{
+                        $subtract: [
+                            '$turno.horaInicio',
+                            {
+                                $cond: {
+                                    if: { $eq: [{ $type: '$turno.paciente.fechaNacimiento' }, 'string'] },
+                                    then: { $dateFromString: { dateString: '$turno.paciente.fechaNacimiento' } },
+                                    else: '$turno.paciente.fechaNacimiento'
+                                }
+                            }
+                        ]
+                    }, (365 * 24 * 60 * 60 * 1000)]
                 }
             }
         },
