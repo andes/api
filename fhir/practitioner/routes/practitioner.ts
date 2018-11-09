@@ -3,7 +3,7 @@ import * as codes from '../../patient/controller/errorCodes';
 import { Auth } from '../../../auth/auth.class';
 import * as utils from '../../../utils/utils';
 import { profesional } from '../../../core/tm/schemas/profesional';
-import { encode } from '@andes/fhir/src/practitioner';
+import { Practitioner } from '@andes/fhir/src/practitioner';
 // Schemas
 const router = express.Router();
 
@@ -30,7 +30,7 @@ router.get('/([\$])match', async (req, res, next) => {
     const profesionalesFHIR = [];
     const profesionalesAndes = await profesional.find(opciones).cursor({ batchSize: 100 });
     await profesionalesAndes.eachAsync(async (unProf) => {
-        const datosFhir = encode(unProf);
+        const datosFhir = Practitioner.encode(unProf);
         profesionalesFHIR.push(datosFhir);
 
     });
