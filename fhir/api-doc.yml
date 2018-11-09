@@ -31,3 +31,35 @@ paths:
           description: Devuelve un listado con los datos de los pacientes que encontro coincidencias
         '401':
           description: No Autorizado
+  /fhir/practitioner/$match:
+    get:
+      tags:
+        - "fhir"
+      description: Encuentra coincidencias de profesionales según la consulta dada. Ejemplos ../fhir/patient/$match?family='ALBARRACIN' ../fhir/practitioner/$match?given='JOAQUIN' ../fhir/practitioner/$match?identifier='11111111'
+      summary: Encuentra coincidencias de profesionales usando la lógica basada en MPI. 
+      security:
+        - JWT: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: family
+          in: query
+          description: Apellidos del profesional.
+          example: ../fhir/patient/$match?family='ALBARRACIN'
+          type: string
+        - name: given
+          in: query
+          description: Nombres del profesional
+          example: ../fhir/patient/$match?given='JOAQUIN'
+          type: string
+        - name: identifier
+          in: query
+          description: documento del profesional.
+          type: string
+      responses:
+        '200':
+          description: Devuelve un listado con los datos de los profesionales que encontro coincidencias
+        '401':
+          description: No Autorizado
