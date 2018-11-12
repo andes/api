@@ -25,7 +25,7 @@ let fechaPrueba;
  * @param {string} fecha
  * @returns Promise<{}>
  */
-function getBebes(): Promise<any[]> {
+function getInfoNacimientos(): Promise<any[]> {
     return new Promise((resolve, reject) => {
         let today = moment().format('YYYY-MM-DD');
         if (fechaPrueba) {
@@ -42,19 +42,19 @@ function getBebes(): Promise<any[]> {
             rejectUnauthorized: false
         };
 
-        let databebes = '';
+        let dataNacimientos;
         const reqGet = https.request(optionsgetmsg, (res2) => {
             res2.on('data', (data, error) => {
                 if (error) { reject(error); }
-                databebes = databebes + data.toString();
+                dataNacimientos = dataNacimientos + data.toString();
             });
             res2.on('end', () => {
                 // Transformamos la respuesta en un array JSON correcto
-                let lastChar = databebes.lastIndexOf(',');
-                databebes = databebes.substring(0, lastChar);
-                databebes = '[' + databebes + ']';
-                databebes = JSON.parse(databebes);
-                resolve(databebes);
+                let lastChar = dataNacimientos.lastIndexOf(',');
+                dataNacimientos = dataNacimientos.substring(0, lastChar);
+                dataNacimientos = '[' + dataNacimientos + ']';
+                dataNacimientos = JSON.parse(dataNacimientos);
+                resolve(dataNacimientos);
 
             });
             res2.on('error', (error) => {
@@ -121,7 +121,6 @@ async function validarSisa(pacienteAndes: any) {
 }
 
 async function relacionar(mama, bebe) {
-    deb('2');
     // Insertamos al bebé en ANDES
     bebe.relaciones = [{
         relacion: {
@@ -135,7 +134,6 @@ async function relacionar(mama, bebe) {
         documento: mama.documento,
     }];
     let bebeAndes: any = await createPaciente(bebe, userScheduler);
-    // deb('CREATE BEBE--->', bebeAndes);
     Logger.log(userScheduler, 'mpi', 'insert', {
         paciente: bebeAndes
     });
@@ -246,8 +244,8 @@ function parsearPacientes(importedData) {
     return { bebe, mama };
 }
 
-async function procesarPacientes(pacienteImportado) {
-    let resultadoParse: any = parsearPacientes(pacienteImportado);
+async function procesarDataNacimientos(nacimiento) {
+    let resultadoParse: any = parsearPacientes(nacimiento);
     deb('PARSER RESULT--->', resultadoParse);
     try {
         let resultadoBusqueda = await buscarPacienteWithcondition({ documento: resultadoParse.mama.documento, sexo: 'femenino' });
@@ -257,7 +255,6 @@ async function procesarPacientes(pacienteImportado) {
             if (resultadoBusqueda.paciente.estado === 'temporal') {
                 await validarPaciente(resultadoBusqueda.paciente);
             }
-            deb('1');
             await relacionar(resultadoBusqueda.paciente, resultadoParse.bebe);
         } else {
             // No existe en ANDES
@@ -267,29 +264,22 @@ async function procesarPacientes(pacienteImportado) {
             await relacionar(mamaAndes, resultadoParse.bebe);
         }
     } catch (error) {
-        deb('2');
 
         // No existe en ANDES,  la función buscarPacienteWithcondition hace un reject cuando no encuentra al paciente
         // entonces tenemos que seguir la ejecución en este catch
         // --> Obtener paciente de Fuentas auténticas
         let nuevaMama = await validarPaciente(resultadoParse.mama);
-        deb('3');
         let mamaAndes = await createPaciente(nuevaMama, userScheduler);
-        deb('4');
         await relacionar(mamaAndes, resultadoParse.bebe);
-        deb('5');
-
-
     }
-
 }
 
 export async function importBebes(done, fecha: string = null) {
     fechaPrueba = fecha;
-    let babyarray = await getBebes();
-    for (let bebe of babyarray) {
-        deb('Elemento ----->', bebe);
-        await procesarPacientes(bebe);
+    let infoNacimientosArray = await getInfoNacimientos();
+    for (let nacimiento of infoNacimientosArray) {
+        deb('Elemento ----->', nacimiento);
+        await procesarDataNacimientos(nacimiento);
     }
     deb('Proceso Finalizado');
     done();
