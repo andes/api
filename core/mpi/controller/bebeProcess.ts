@@ -13,10 +13,11 @@ import { getServicioRenaper } from '../../../utils/servicioRenaper';
 import { MatchingMetaphone } from '@andes/match/lib/matchingMetaphone.class';
 import { Types } from 'mongoose';
 import debug = require('debug');
+import { registroProvincialData } from '../../../config.private';
 const deb = debug('bebeJob');
 
 const regtest = /[^a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ ']+/;
-
+let fechaPrueba;
 /**
  * Obtiene todos los bebes nacidos a partir de la fecha pasada por parámetro.
  * Fuente: Registro provincial de las personas
@@ -26,11 +27,12 @@ const regtest = /[^a-zA-Zàáâäãåąčćęèéêëėįìíîïłńòóôöõ�
  */
 function getBebes() {
     return new Promise((resolve, reject) => {
-        const today = moment().format('YYYY-MM-DD');
-
-        // PASAR AL CONFIG ----------------------------------
-        let dprcpHost = 'dprcp.neuquen.gob.ar';
-        let queryFechaPath = '/serneuquen/backend/obtenernacidofecha.php?fecha=' + today;
+        let today = moment().format('YYYY-MM-DD');
+        if (fechaPrueba) {
+            today = fechaPrueba;
+        }
+        let dprcpHost = registroProvincialData.hostost;
+        let queryFechaPath = registroProvincialData.queryFechaPath + today;
 
         const optionsgetmsg = {
             host: dprcpHost,
@@ -282,7 +284,8 @@ async function procesarPacientes(pacienteImportado) {
 
 }
 
-export async function importBebes(done) {
+export async function importBebes(done, fecha: string = null) {
+    fechaPrueba = fecha;
     let babyarray = await getBebes();
     for (let bebe of babyarray as [any]) {
         deb('Elemento ----->', bebe);
