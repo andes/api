@@ -8,6 +8,10 @@ import { Auth } from './../../../auth/auth.class';
 import { EventCore } from '@andes/event-bus';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
+import { matchSisa } from '../../../utils/servicioSisa';
+import { getServicioRenaper } from '../../../utils/servicioRenaper';
+
+const regtest = /[^a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ ']+/;
 
 /**
  * Crea un paciente y lo sincroniza con elastic
@@ -691,3 +695,57 @@ export async function matchPaciente(dataPaciente) {
     }
 }
 
+/**
+ * Intenta validar un paciente con fuentes auténticas.
+ * Devuelve el paciente, validado o no
+ *
+ * @param {*} pacienteAndes
+ * @returns Object Paciente
+ */
+export async function validarPaciente(pacienteAndes) {
+
+    let sexoRenaper = pacienteAndes.sexo === 'masculino' ? 'M' : 'F';
+    let resRenaper: any;
+    try {
+        resRenaper = await getServicioRenaper({ documento: pacienteAndes.documento, sexo: sexoRenaper });
+    } catch (error) {
+        return await validarSisa(pacienteAndes);
+    }
+    let band = true;
+    // Respuesta correcta de renaper?
+    if (resRenaper && resRenaper.datos.nroError === 0) {
+        let pacienteRenaper = resRenaper.datos;
+        band = regtest.test(pacienteRenaper.nombres);
+        band = band || regtest.test(pacienteRenaper.apellido);
+        if (!band) {
+            pacienteAndes.nombre = pacienteRenaper.nombres;
+            pacienteAndes.apellido = pacienteRenaper.apellido;
+            pacienteAndes.fechaNacimiento = new Date(pacienteRenaper.fechaNacimiento);
+            pacienteAndes.cuil = pacienteRenaper.cuil;
+            pacienteAndes.estado = 'validado';
+            pacienteAndes.foto = pacienteRenaper.foto;
+        }
+        return pacienteAndes;
+    }
+    // Respuesta erronea de renaper o test regex fallido?
+    if (!resRenaper || resRenaper.datos.nroError !== 0 || band) {
+        return await validarSisa(pacienteAndes);
+    }
+}
+
+async function validarSisa(pacienteAndes: any) {
+    try {
+        let resSisa: any = await matchSisa(pacienteAndes);
+        let porcentajeMatcheo = resSisa.matcheos.matcheo;
+        if (porcentajeMatcheo > 95) {
+            pacienteAndes.nombre = resSisa.matcheos.datosPaciente.nombre;
+            pacienteAndes.apellido = resSisa.matcheos.datosPaciente.apellido;
+            pacienteAndes.fechaNacimiento = resSisa.matcheos.datosPaciente.fechaNacimiento;
+            pacienteAndes.estado = 'validado';
+        }
+        return pacienteAndes;
+    } catch (error) {
+        // no hacemos nada con el paciente
+        return pacienteAndes;
+    }
+}
