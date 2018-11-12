@@ -298,7 +298,7 @@ export default [
                 key: 'tipoPrestacion',
                 title: 'Vista / Edición de Solicitudes',
                 type: 'prestacion',
-                avoidAll: true
+                // avoidAll: true
             },
             {
                 key: 'reglas',
