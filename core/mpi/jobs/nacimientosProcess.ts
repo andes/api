@@ -7,7 +7,9 @@ import { Types } from 'mongoose';
 import debug = require('debug');
 import { registroProvincialData } from '../../../config.private';
 import { Logger } from '../../../utils/logService';
-const deb = debug('bebeJob');
+import { handleRequest } from '../../../utils/requestHandler';
+import { Db } from 'mongodb';
+const deb = debug('nacimientosJob');
 
 // Variable utilizada en testing
 let fechaPrueba;
@@ -18,44 +20,28 @@ let fechaPrueba;
  * @param {string} fecha
  * @returns Promise<{}>
  */
-function getInfoNacimientos(): Promise<any[]> {
-    return new Promise((resolve, reject) => {
-        let today = moment().format('YYYY-MM-DD');
-        if (fechaPrueba) {
-            today = fechaPrueba;
-        }
-        let dprcpHost = registroProvincialData.hostost;
-        let queryFechaPath = registroProvincialData.queryFechaPath + today;
-
-        const optionsgetmsg = {
-            host: dprcpHost,
-            port: 443,
-            path: queryFechaPath,
-            method: 'GET',
-            rejectUnauthorized: false
-        };
-
-        let dataNacimientos;
-        const reqGet = https.request(optionsgetmsg, (res2) => {
-            res2.on('data', (data, error) => {
-                if (error) { reject(error); }
-                dataNacimientos = dataNacimientos + data.toString();
-            });
-            res2.on('end', () => {
-                // Transformamos la respuesta en un array JSON correcto
-                let lastChar = dataNacimientos.lastIndexOf(',');
-                dataNacimientos = dataNacimientos.substring(0, lastChar);
-                dataNacimientos = '[' + dataNacimientos + ']';
-                dataNacimientos = JSON.parse(dataNacimientos);
-                resolve(dataNacimientos);
-
-            });
-            res2.on('error', (error) => {
-                reject(error);
-            });
-        });
-        reqGet.end();
-    });
+async function getInfoNacimientos() {
+    let today = moment().format('YYYY-MM-DD');
+    if (fechaPrueba) {
+        today = fechaPrueba;
+    }
+    let dprcpHost = registroProvincialData.hostost;
+    let queryFechaPath = registroProvincialData.queryFechaPath + today;
+    const optionsgetmsg = {
+        host: dprcpHost,
+        port: 443,
+        path: queryFechaPath,
+        method: 'GET',
+        rejectUnauthorized: false
+    };
+    let dataNacimientos: string = await handleRequest(optionsgetmsg);
+    deb('INFO NACIMIENTOS-->', dataNacimientos);
+    // Transformamos la respuesta en un array JSON correcto
+    let lastChar = dataNacimientos.lastIndexOf(',');
+    dataNacimientos = dataNacimientos.substring(0, lastChar);
+    dataNacimientos = '[' + dataNacimientos + ']';
+    dataNacimientos = JSON.parse(dataNacimientos);
+    return (dataNacimientos);
 }
 
 
@@ -79,7 +65,7 @@ async function relacionar(mama, bebe) {
 
     if (mama.relaciones) {
         let resultado = mama.relaciones.filter(elem => {
-            return elem.nombre === bebeAndes.nombre && elem.apellido === bebeAndes.apellido;
+            return elem.nombre.trim() === bebeAndes.nombre && elem.apellido.trim() === bebeAndes.apellido;
         });
         deb('RESULTADOO --->', resultado);
         if (resultado.length === 0) {
