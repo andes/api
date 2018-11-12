@@ -185,36 +185,36 @@ export function postPacienteMpi(newPatientMpi, req) {
  * @param {any} id
  * @returns
  */
-export function buscarPaciente(id): Promise<{ db: String, paciente: any }> {
-    return new Promise((resolve, reject) => {
-        paciente.findById(id, (err, data) => {
-            if (err) {
-                reject(err);
+export function buscarPaciente(id: any) {
+    // return new Promise((resolve, reject) => {
+    paciente.findById(id, (err, data) => {
+        if (err) {
+            return (err);
+        } else {
+            if (data) {
+                const resultado = {
+                    db: 'andes',
+                    paciente: data
+                };
+                return (resultado);
             } else {
-                if (data) {
-                    const resultado = {
-                        db: 'andes',
-                        paciente: data
-                    };
-                    resolve(resultado);
-                } else {
-                    pacienteMpi.findById(id, (err2, dataMpi) => {
-                        if (err2) {
-                            reject(err2);
-                        } else if (dataMpi) {
-                            const resultado = {
-                                db: 'mpi',
-                                paciente: dataMpi
-                            };
-                            resolve(resultado);
-                        } else {
-                            reject(null);
-                        }
-                    });
-                }
+                pacienteMpi.findById(id, (err2, dataMpi) => {
+                    if (err2) {
+                        return (err2);
+                    } else if (dataMpi) {
+                        const resultado = {
+                            db: 'mpi',
+                            paciente: dataMpi
+                        };
+                        return (resultado);
+                    } else {
+                        return (null);
+                    }
+                });
             }
-        });
+        }
     });
+    // });
 }
 /**
  * Busca un paciente en ambas DBs (Andes y MPI) segun su documento, sexo y estado validado
