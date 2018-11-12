@@ -54,7 +54,7 @@ router.get('/profesionales/guia', async (req, res, next) => {
     }
 
     if (Object.keys(opciones).length !== 0) {
-        let datosGuia: any = await profesional.findOne(opciones, (data: any) => {  });
+        let datosGuia: any = await profesional.findOne(opciones);
         let resultado: IGuiaProfesional;
         if (datosGuia) {
             resultado = {
