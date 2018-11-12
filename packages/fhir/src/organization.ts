@@ -65,10 +65,10 @@ export function encode(organization) {
         let organizacionFHIR = {
             resourceType: 'Organization',
             identifier: identificadores,
-            active: data.activo ? data.activo : null, // Whether the organization's record is still in active use            name: [{
+            active: data.activo ? data.activo : null,
             type: [{
                 resourceType: 'CodeableConcept',
-                text: data.tipoEstablecimiento ? data.tipoEstablecimiento.nombre : null, //	Kind of organization
+                text: data.tipoEstablecimiento ? data.tipoEstablecimiento.nombre : null,
             }],
             name: data.nombre ? data.nombre : null, // Name used for the organization
         };
