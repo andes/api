@@ -11,6 +11,7 @@ router.get('/cie10', (req, res, next) => {
     let termino: String = '';
     // conditions['$and'] = [];
     conditions['$or'] = [];
+
     // separamos todas las palabras y eliminamos caracteres extraños
     const words = String(req.query.nombre).split(' ');
     words.forEach((word) => {
@@ -25,7 +26,14 @@ router.get('/cie10', (req, res, next) => {
     conditions['$or'].push({ codigo: RegExp('^.*' + termino + '.*$', 'i') });
     conditions['$or'].push({ nombre: RegExp('^.*' + termino + '.*$', 'i') });
     conditions['$or'].push({ sinonimo: RegExp('^.*' + termino + '.*$', 'i') });
+
     query = cie10.model.find(conditions);
+    let filtro = '';
+    if (req.query.codigoDesde && req.query.codigoHasta) {
+        query.where('codigo').gt(req.query.codigoDesde);
+        query.where('codigo').lt(req.query.codigoHasta);
+    }
+
     const skip = parseInt(req.query.skip || 0, 10);
     const limit = Math.min(parseInt(req.query.limit || defaultLimit, 15), maxLimit);
     query.skip(skip);

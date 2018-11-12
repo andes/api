@@ -9,14 +9,18 @@ export let schema = new mongoose.Schema({
         type: nombreSchema,
         required: true
     },
-    sector: {
-        type: String,
+    unidadOrganizativaOriginal: {
+        type: SnomedConcept,
         required: true
     },
-    habitacion: {
-        type: String,
-        required: true
-    },
+    sectores: [{
+        tipoSector: SnomedConcept,
+        unidadConcept: {
+            type: SnomedConcept,
+            required: false
+        },
+        nombre: String
+    }],
     nombre: {
         type: String,
         required: true

@@ -151,7 +151,7 @@ export const modules = {
         active: true,
         path: './modules/obraSocial/routes',
         route: '/modules/obraSocial',
-        middleware: appMiddleware
+        middleware: null // appMiddleware
     },
     sugerencias: {
         active: true,
