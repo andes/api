@@ -262,6 +262,6 @@ export const TwitterConfig = {
 };
 
 export const registroProvincialData = {
-    hostost: hostDir,
-    queryFechaPath: QueryPath
+    hostost: '',
+    queryFechaPath: ''
 };
