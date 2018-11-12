@@ -7,11 +7,14 @@ import moment = require('moment');
 import { ElasticSync } from '../../../utils/elasticSync';
 import { Logger } from '../../../utils/logService';
 import { userScheduler } from '../../../config.private';
-import { buscarPacienteWithcondition, createPaciente, updatePaciente } from './paciente';
+import { buscarPacienteWithcondition, createPaciente, updatePaciente, updatePacienteMpi } from './paciente';
 import * as https from 'https';
 import { getServicioRenaper } from '../../../utils/servicioRenaper';
 import { MatchingMetaphone } from '@andes/match/lib/matchingMetaphone.class';
 import { Types } from 'mongoose';
+import debug = require('debug');
+const deb = debug('bebeJob');
+
 const regtest = /[^a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ ']+/;
 
 /**
@@ -114,24 +117,45 @@ async function validarSisa(pacienteAndes: any) {
 }
 
 async function relacionar(mama, bebe) {
+    deb('2');
     // Insertamos al bebé en ANDES
+    bebe.relaciones = [{
+        relacion: {
+            _id: new Types.ObjectId('59247be21ebf0273353b23bf'),
+            nombre: 'progenitor/a',
+            opuesto: 'hijo/a'
+        },
+        referencia: mama._id,
+        nombre: mama.nombre,
+        apellido: mama.apellido,
+        documento: mama.documento,
+    }];
     let bebeAndes: any = await createPaciente(bebe, userScheduler);
-    // TODO loguear creacion paciente
-    let updateBebe = {
-        relaciones: [{
-            relacion: {
-                _id: new Types.ObjectId('59247be21ebf0273353b23bf'),
-                nombre: 'progenitor/a',
-                opuesto: 'hijo/a'
-            },
-            referencia: mama._id,
-            nombre: mama.nombre,
-            apellido: mama.apellido,
-            documento: mama.documento
-        }]
-    };
-    let updateMama = {
-        relaciones: [{
+    // deb('CREATE BEBE--->', bebeAndes);
+    Logger.log(userScheduler, 'mpi', 'insert', {
+        paciente: bebeAndes
+    });
+
+    if (mama.relaciones) {
+        let resultado = mama.relaciones.filter(elem => {
+            return elem.nombre === bebeAndes.nombre && elem.apellido === bebeAndes.apellido;
+        });
+        deb('RESULTADOO --->', resultado);
+        if (resultado.length === 0) {
+            mama.relaciones.push({
+                relacion: {
+                    _id: new Types.ObjectId('59247c391ebf0273353b23c0'),
+                    nombre: 'hijo/a',
+                    opuesto: 'progenitor/a'
+                },
+                referencia: bebeAndes._id,
+                nombre: bebeAndes.nombre,
+                apellido: bebeAndes.apellido,
+                documento: bebeAndes.documento,
+            });
+        }
+    } else {
+        mama.relaciones = [{
             relacion: {
                 _id: new Types.ObjectId('59247c391ebf0273353b23c0'),
                 nombre: 'hijo/a',
@@ -140,15 +164,18 @@ async function relacionar(mama, bebe) {
             referencia: bebeAndes._id,
             nombre: bebeAndes.nombre,
             apellido: bebeAndes.apellido,
-            documento: bebeAndes.documento
-        }]
+            documento: bebeAndes.documento,
+        }];
+    }
+
+    let updateMama = {
+        estado: mama.estado,
+        foto: mama.foto ? mama.foto : '',
+        relaciones: mama.relaciones
     };
 
-    let bebeUpdated = await updatePaciente(bebeAndes, updateBebe, userScheduler);
-    Logger.log(userScheduler, 'mpi', 'update', {
-        original: bebeAndes,
-        nuevo: bebeUpdated
-    });
+
+    // deb('UPDATE MAMA--->', updateMama);
     let mamaUpdated = await updatePaciente(mama, updateMama, userScheduler);
     Logger.log(userScheduler, 'mpi', 'update', {
         original: mama,
@@ -177,8 +204,8 @@ function parsearPacientes(importedData) {
             apellido: importedData.apellidos.trim(),
             documento: importedData.nrodoc.trim(),
             fechaNacimiento: moment(importedData.fechanac.trim(), 'YYYY-MM-DD', 'ar', true),
-            sexo: 'femenino', // Hardcodear está mal pero el dato no viene, suponemos femenino
-            genero: 'femenino', // Hardcodear está mal pero el dato no viene, suponemos femenino
+            sexo: 'femenino',
+            genero: 'femenino',
             contacto: [],
             direccion: []
         }
@@ -217,35 +244,37 @@ function parsearPacientes(importedData) {
 
 async function procesarPacientes(pacienteImportado) {
     let resultadoParse: any = parsearPacientes(pacienteImportado);
+    deb('PARSER RESULT--->', resultadoParse);
     try {
-        let mama = await buscarPacienteWithcondition({ documento: resultadoParse.mama.documento, sexo: 'femenino' });
+        let resultadoBusqueda = await buscarPacienteWithcondition({ documento: resultadoParse.mama.documento, sexo: 'femenino' });
         // Existe en ANDES?
-        if (mama) {
-            if (mama.paciente.estado === 'temporal') {
-                try {
-                    let pac = await validarPaciente(mama.paciente);
-                    relacionar(pac, resultadoParse.bebe);
-                } catch (error) {
-                    // Logger.log(userScheduler, 'mpi', 'update', {
-                    //     original: mama,
-                    //     nuevo: mamaUpdated
-                    // });
-                    console.log(2, error);
-                }
+        deb('Resultado Busqueda --> ', resultadoBusqueda.db);
+        if (resultadoBusqueda) {
+            if (resultadoBusqueda.paciente.estado === 'temporal') {
+                await validarPaciente(resultadoBusqueda.paciente);
             }
+            deb('1');
+            await relacionar(resultadoBusqueda.paciente, resultadoParse.bebe);
         } else {
             // No existe en ANDES
-            // Obtener paciente de Fuentas auténticas
+            // --> Obtener paciente de Fuentas auténticas
             let nuevaMama = await validarPaciente(resultadoParse.mama);
             let mamaAndes = await createPaciente(nuevaMama, userScheduler);
-            relacionar(mamaAndes, resultadoParse.bebe);
+            await relacionar(mamaAndes, resultadoParse.bebe);
         }
     } catch (error) {
-        // NO ENCONTRADO O ERROR
-        // Obtener paciente de Fuentas auténticas
+        deb('2');
+
+        // No existe en ANDES,  la función buscarPacienteWithcondition hace un reject cuando no encuentra al paciente
+        // entonces tenemos que seguir la ejecución en este catch
+        // --> Obtener paciente de Fuentas auténticas
         let nuevaMama = await validarPaciente(resultadoParse.mama);
-        let mamaAndes: any = await createPaciente(nuevaMama, userScheduler);
-        relacionar(mamaAndes, resultadoParse.bebe);
+        deb('3');
+        let mamaAndes = await createPaciente(nuevaMama, userScheduler);
+        deb('4');
+        await relacionar(mamaAndes, resultadoParse.bebe);
+        deb('5');
+
 
     }
 
@@ -255,7 +284,9 @@ export async function importBebes(done) {
     const today = moment().format('YYYY-MM-DD');
     let babyarray = await getBebes(today);
     for (let bebe of babyarray as [any]) {
+        deb('Elemento ----->', bebe);
         await procesarPacientes(bebe);
     }
+    deb('Proceso Finalizado');
     done();
 }
