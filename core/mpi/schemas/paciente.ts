@@ -65,7 +65,8 @@ export let pacienteSchema: mongoose.Schema = new mongoose.Schema({
         },
         nombre: String,
         apellido: String,
-        documento: String
+        documento: String,
+        foto: String
     }],
     financiador: [financiadorSchema],
     claveBlocking: { type: [String], es_indexed: true },
