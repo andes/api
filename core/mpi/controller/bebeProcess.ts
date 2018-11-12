@@ -25,7 +25,7 @@ let fechaPrueba;
  * @param {string} fecha
  * @returns Promise<{}>
  */
-function getBebes() {
+function getBebes(): Promise<any[]> {
     return new Promise((resolve, reject) => {
         let today = moment().format('YYYY-MM-DD');
         if (fechaPrueba) {
@@ -287,7 +287,7 @@ async function procesarPacientes(pacienteImportado) {
 export async function importBebes(done, fecha: string = null) {
     fechaPrueba = fecha;
     let babyarray = await getBebes();
-    for (let bebe of babyarray as [any]) {
+    for (let bebe of babyarray) {
         deb('Elemento ----->', bebe);
         await procesarPacientes(bebe);
     }
