@@ -41,7 +41,7 @@ router.get('/profesionales/estadisticas', async (req, res, next) => {
 
 });
 
-router.get('/profesionales/guiaProfesional', (req, res, next) => {
+router.get('/profesionales/guia', async (req, res, next) => {
     const opciones = {};
     let query;
 
@@ -54,26 +54,21 @@ router.get('/profesionales/guiaProfesional', (req, res, next) => {
     }
 
     if (Object.keys(opciones).length !== 0) {
-        query = profesional.find(opciones);
-        query.exec((err, data) => {
-            if (err) {
-                return next(err);
-            }
-            let resultado: IGuiaProfesional;
-            if (data.length > 0) {
-                resultado = {
-                    id: data[0].id,
-                    nombre: data[0].nombre,
-                    sexo: data[0].sexo,
-                    apellido: data[0].apellido,
-                    documento: data[0].documento,
-                    nacionalidad: data[0].nacionalidad.nombre,
-                    profesiones: data[0].formacionGrado
-                };
+        let datosGuia: any = await profesional.findOne(opciones, (data: any) => {  });
+        let resultado: IGuiaProfesional;
+        if (datosGuia) {
+            resultado = {
+                id: datosGuia.id,
+                nombre: datosGuia.nombre,
+                sexo: datosGuia.sexo,
+                apellido: datosGuia.apellido,
+                documento: datosGuia.documento,
+                nacionalidad: datosGuia.nacionalidad.nombre,
+                profesiones: datosGuia.formacionGrado
+            };
 
-            }
-            res.json(resultado);
-        });
+        }
+        res.json(resultado);
     } else {
         res.json();
     }
