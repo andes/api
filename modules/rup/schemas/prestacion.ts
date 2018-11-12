@@ -6,6 +6,8 @@ import { auditoriaPrestacionPacienteSchema } from '../../auditorias/schemas/audi
 import { iterate, convertToObjectId } from '../controllers/rup';
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+import { ObraSocial } from 'modules/obraSocial/schemas/obraSocial';
+import * as obraSocialSchema from '../../obraSocial/schemas/obraSocial';
 
 export let schema = new mongoose.Schema({
     // Datos principales del paciente
@@ -17,7 +19,8 @@ export let schema = new mongoose.Schema({
         documento: String,
         telefono: String,
         sexo: String,
-        fechaNacimiento: Date
+        fechaNacimiento: Date,
+        obraSocial :  { type: obraSocialSchema }
     },
     noNominalizada: {
         type: Boolean,

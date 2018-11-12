@@ -777,7 +777,10 @@ export async function insertSips() {
                     if (datos[index].paciente.obraSocial === undefined) {
                         await actualizarTurno(datos[index].idTurno);
                     }
-
+                } else {
+                    if (datos[index].paciente.obraSocial === undefined) {
+                        await actualizarPrestacion(datos[index].idPrestacion);
+                    }
                 }
             } else {
 
@@ -802,10 +805,26 @@ export async function insertSips() {
 export async function actualizarTurno(idTurno) {
     agendaSchema.find({
         'bloques.turnos._id': idTurno
-    }).exec( (err, data: any) => {
+    }).exec((err, data: any) => {
         let indexs = getPosition(null, data[0], idTurno);
         let turno = data[0].bloques[indexs.indexBloque].turnos[indexs.indexTurno];
         turno.paciente.obraSocial = {
+            codigoFinanciador: 499,
+            financiador: 'Sumar'
+        };
+        Auth.audit(data[0], configPrivate.userScheduler);
+        data[0].save((err2, result) => {
+        });
+    });
+}
+
+
+export async function actualizarPrestacion(idPrestaciom) {
+    prestacionSchema.model.find({
+        _id: idPrestaciom
+    }).exec((err, data: any) => {
+        let prestacion = data[0];
+        prestacion.paciente.obraSocial = {
             codigoFinanciador: 499,
             financiador: 'Sumar'
         };
@@ -938,6 +957,7 @@ export async function pacientesDelDia() {
 
         pacientesTotal.push({
             paciente: element.paciente,
+            idPrestacion: element._id,
             origen: 'prestaciones'
         });
     });
