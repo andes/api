@@ -1,4 +1,4 @@
-import { importBebes } from '../core/mpi/controller/bebeProcess';
+import { importBebes } from '../core/mpi/jobs/bebeProcess';
 
 function run(done) {
     // PARAMETRO FECHA OPCIONAL PARA TESTEAR , el formato debe ser 'yyyy-mm-dd'

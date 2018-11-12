@@ -1,13 +1,12 @@
-
-
 import { paciente } from '../schemas/paciente';
 import moment = require('moment');
 import { userScheduler } from '../../../config.private';
-import { buscarPacienteWithcondition, createPaciente, updatePaciente, validarPaciente } from './paciente';
+import { buscarPacienteWithcondition, createPaciente, updatePaciente, validarPaciente } from '../controller/paciente';
 import * as https from 'https';
 import { Types } from 'mongoose';
 import debug = require('debug');
 import { registroProvincialData } from '../../../config.private';
+import { Logger } from '../../../utils/logService';
 const deb = debug('bebeJob');
 
 // Variable utilizada en testing
