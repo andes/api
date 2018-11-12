@@ -1,22 +1,16 @@
 
 
 import { paciente } from '../schemas/paciente';
-import { Auth } from '../../../auth/auth.class';
-import { matchSisa } from '../../../utils/servicioSisa';
 import moment = require('moment');
-import { ElasticSync } from '../../../utils/elasticSync';
-import { Logger } from '../../../utils/logService';
 import { userScheduler } from '../../../config.private';
-import { buscarPacienteWithcondition, createPaciente, updatePaciente, updatePacienteMpi } from './paciente';
+import { buscarPacienteWithcondition, createPaciente, updatePaciente, validarPaciente } from './paciente';
 import * as https from 'https';
-import { getServicioRenaper } from '../../../utils/servicioRenaper';
-import { MatchingMetaphone } from '@andes/match/lib/matchingMetaphone.class';
 import { Types } from 'mongoose';
 import debug = require('debug');
 import { registroProvincialData } from '../../../config.private';
 const deb = debug('bebeJob');
 
-const regtest = /[^a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ ']+/;
+// Variable utilizada en testing
 let fechaPrueba;
 /**
  * Obtiene todos los bebes nacidos a partir de la fecha pasada por parámetro.
@@ -65,60 +59,6 @@ function getInfoNacimientos(): Promise<any[]> {
     });
 }
 
-/**
- * Intenta validar un paciente con fuentes auténticas.
- * Devuelve el paciente, validado o no
- *
- * @param {*} pacienteAndes
- * @returns Object Paciente
- */
-async function validarPaciente(pacienteAndes) {
-
-    let sexoRenaper = pacienteAndes.sexo === 'masculino' ? 'M' : 'F';
-    let resRenaper: any;
-    try {
-        resRenaper = await getServicioRenaper({ documento: pacienteAndes.documento, sexo: sexoRenaper });
-    } catch (error) {
-        return await validarSisa(pacienteAndes);
-    }
-    let band = true;
-    // Respuesta correcta de renaper?
-    if (resRenaper && resRenaper.datos.nroError === 0) {
-        let pacienteRenaper = resRenaper.datos;
-        band = regtest.test(pacienteRenaper.nombres);
-        band = band || regtest.test(pacienteRenaper.apellido);
-        if (!band) {
-            pacienteAndes.nombre = pacienteRenaper.nombres;
-            pacienteAndes.apellido = pacienteRenaper.apellido;
-            pacienteAndes.fechaNacimiento = new Date(pacienteRenaper.fechaNacimiento);
-            pacienteAndes.cuil = pacienteRenaper.cuil;
-            pacienteAndes.estado = 'validado';
-            pacienteAndes.foto = pacienteRenaper.foto;
-        }
-        return pacienteAndes;
-    }
-    // Respuesta erronea de renaper o test regex fallido?
-    if (!resRenaper || resRenaper.datos.nroError !== 0 || band) {
-        return await validarSisa(pacienteAndes);
-    }
-}
-
-async function validarSisa(pacienteAndes: any) {
-    try {
-        let resSisa: any = await matchSisa(pacienteAndes);
-        let porcentajeMatcheo = resSisa.matcheos.matcheo;
-        if (porcentajeMatcheo > 95) {
-            pacienteAndes.nombre = resSisa.matcheos.datosPaciente.nombre;
-            pacienteAndes.apellido = resSisa.matcheos.datosPaciente.apellido;
-            pacienteAndes.fechaNacimiento = resSisa.matcheos.datosPaciente.fechaNacimiento;
-            pacienteAndes.estado = 'validado';
-        }
-        return pacienteAndes;
-    } catch (error) {
-        // no hacemos nada con el paciente
-        return pacienteAndes;
-    }
-}
 
 async function relacionar(mama, bebe) {
     // Insertamos al bebé en ANDES
