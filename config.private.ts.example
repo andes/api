@@ -263,5 +263,5 @@ export const TwitterConfig = {
 
 export const registroProvincialData = {
     hostost: hostDir,
-    queryFechaPath: /QueryPath
+    queryFechaPath: QueryPath
 };
