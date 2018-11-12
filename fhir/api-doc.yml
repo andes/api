@@ -35,7 +35,7 @@ paths:
     get:
       tags:
         - "fhir"
-      description: Encuentra coincidencias de profesionales según la consulta dada. Ejemplos ../fhir/patient/$match?family='ALBARRACIN' ../fhir/practitioner/$match?given='JOAQUIN' ../fhir/practitioner/$match?identifier='11111111'
+      description: Encuentra coincidencias de profesionales según la consulta dada. Ejemplos ../fhir/practitioner/$match?family='ALBARRACIN' ../fhir/practitioner/$match?given='JOAQUIN' ../fhir/practitioner/$match?identifier='11111111'
       summary: Encuentra coincidencias de profesionales.
       security:
         - JWT: []
@@ -47,12 +47,12 @@ paths:
         - name: family
           in: query
           description: Apellidos del profesional.
-          example: ../fhir/patient/$match?family='ALBARRACIN'
+          example: ../fhir/practitioner/$match?family='ALBARRACIN'
           type: string
         - name: given
           in: query
           description: Nombres del profesional
-          example: ../fhir/patient/$match?given='JOAQUIN'
+          example: ../fhir/practitioner/$match?given='JOAQUIN'
           type: string
         - name: identifier
           in: query
