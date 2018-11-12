@@ -24,11 +24,13 @@ const regtest = /[^a-zA-Zàáâäãåąčćęèéêëėįìíîïłńòóôöõ�
  * @param {string} fecha
  * @returns Promise<{}>
  */
-function getBebes(fecha: string) {
+function getBebes() {
     return new Promise((resolve, reject) => {
+        const today = moment().format('YYYY-MM-DD');
+
         // PASAR AL CONFIG ----------------------------------
         let dprcpHost = 'dprcp.neuquen.gob.ar';
-        let queryFechaPath = '/serneuquen/backend/obtenernacidofecha.php?fecha=' + fecha;
+        let queryFechaPath = '/serneuquen/backend/obtenernacidofecha.php?fecha=' + today;
 
         const optionsgetmsg = {
             host: dprcpHost,
@@ -281,8 +283,7 @@ async function procesarPacientes(pacienteImportado) {
 }
 
 export async function importBebes(done) {
-    const today = moment().format('YYYY-MM-DD');
-    let babyarray = await getBebes(today);
+    let babyarray = await getBebes();
     for (let bebe of babyarray as [any]) {
         deb('Elemento ----->', bebe);
         await procesarPacientes(bebe);
