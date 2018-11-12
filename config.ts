@@ -123,6 +123,7 @@ export const modules = {
         route: '/modules/matriculaciones',
         middleware: null
     },
+    // Unificar en el próx sprint
     fhir: {
         active: true,
         path: './fhir/patient/routes',
@@ -133,6 +134,12 @@ export const modules = {
         active: true,
         path: './fhir/practitioner/routes',
         route: '/fhir/practitioner',
+        middleware: appMiddleware
+    },
+    fhir_organizacion: {
+        active: true,
+        path: './fhir/organization/routes',
+        route: '/fhir/organization',
         middleware: appMiddleware
     },
     cda: {

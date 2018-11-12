@@ -63,3 +63,29 @@ paths:
           description: Devuelve un listado con los datos de los profesionales que encontro coincidencias en formato FHIR
         '401':
           description: No Autorizado
+  /fhir/organization/$match:
+    get:
+      tags:
+        - "fhir"
+      description: Encuentra coincidencias de organizaciones según la consulta dada. Ejemplos ../fhir/organization/$match?name=ZAPALA ../fhir/practitioner/$match?identifier=51581122367569
+      summary: Encuentra coincidencias de organizaciones.
+      security:
+        - JWT: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: name
+          in: query
+          description: Nombre de la organizacion.
+          type: string
+        - name: identifier
+          in: query
+          description: Código sisa.
+          type: string
+      responses:
+        '200':
+          description: Devuelve un listado con los datos de las organizaciones que encontro coincidencias en formato FHIR
+        '401':
+          description: No Autorizado
