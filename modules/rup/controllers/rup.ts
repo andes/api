@@ -103,14 +103,6 @@ export function matchConcepts(registro, conceptos) {
 }
 
 
-/**
- * Devuelve prestaciones en las que contengan alguno de los conceptos
- * enviados por parametro dentro de su array de registros
- *
- * @param {any} prestaciones Array de prestaciones a recorrer y buscar
- * @param {any} conceptos Array con conceptId de SNOMED a buscar dentro de los registros de prestaciones
- * @returns {any[]} Prestaciones que matcheen con 'conceptos'
- */
 export function buscarEnHudsFacturacion(prestaciones, conceptos) {
 
     let data = [];
@@ -138,14 +130,7 @@ export function buscarEnHudsFacturacion(prestaciones, conceptos) {
     return data;
 }
 
-/**
- * Método recursivo que busca los conceptos enviados por parametro
- * dentro del array de registros de una prestación
- *
- * @param {any} registro Registro actual a consultar por conceptId o ver si tiene un subarray de registros para seguir loopeando
- * @param {any} conceptos Array con conceptId de SNOMED a buscar dentro de la variable registro
- * @returns {any} Si existe el concepto en el array de registros devuelve el registro, si no FALSE.
- */
+
 export function matchConceptsFacturacion(registro, conceptos) {
     // almacenamos la variable de matcheo para devolver el resultado
     let match = false;

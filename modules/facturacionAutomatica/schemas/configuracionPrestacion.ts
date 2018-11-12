@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-var configuracionPrestacionesSchema = new mongoose.Schema({
+let configuracionPrestacionesSchema = new mongoose.Schema({
     id: Object,
     snomed: Object,
     nomencladorRecuperoFinanciero: String,

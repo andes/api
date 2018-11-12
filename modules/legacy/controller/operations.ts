@@ -227,7 +227,7 @@ export async function mapeoObraSocial(codigoObraSocial) {
 }
 
 export async function insertaPacienteSips(paciente: any) {
-    return new Promise(async function (resolve, reject) {
+    return new Promise(async  (resolve, reject) => {
         try {
             let idPacienteGrabadoSips;
             let idPaciente = await existepaciente(paciente);
@@ -358,7 +358,7 @@ export async function insertaPacienteSips(paciente: any) {
 function existepaciente(paciente) {
     let idpaciente;
     return new Promise((resolve: any, reject: any) => {
-        (async function () {
+        (async  () => {
             try {
                 let query = 'SELECT idPaciente FROM dbo.Sys_Paciente WHERE objectId = @objectId';
                 let result = await new sql.Request()

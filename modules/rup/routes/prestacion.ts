@@ -209,7 +209,6 @@ router.get('/prestaciones/facturacion/:idPaciente', async (req, res, next) => {
         'paciente.id': req.params.idPaciente,
         $where: 'this.estados[this.estados.length - 1].tipo ==  \"' + estado + '\"'
     };
-    console.log(req.query);
     if (req.query.idPrestacion) {
         query['_id'] = mongoose.Types.ObjectId(req.query.idPrestacion);
     }
@@ -242,10 +241,7 @@ router.get('/prestaciones/facturacion/:idPaciente', async (req, res, next) => {
                 // ejecutamos busqueda recursiva
                 let data: any = buscarEnHudsFacturacion(prestaciones, conceptos);
                 let data2;
-                console.log('hola', data);
-                // if (data) {
-                //      data2 = matchConcepts(data[0].registro, conceptos);
-                // }
+
 
                 res.json(data);
             });

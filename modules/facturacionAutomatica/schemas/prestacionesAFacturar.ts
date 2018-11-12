@@ -10,4 +10,4 @@ let prestacionesAFacturarSchema = new mongoose.Schema({
 });
 
 
-export let prestacionesAFacturarModel = mongoose.model('prestacionesAFacturar',prestacionesAFacturarSchema,'prestacionesAFacturar')
+export let prestacionesAFacturarModel = mongoose.model('prestacionesAFacturar', prestacionesAFacturarSchema, 'prestacionesAFacturar');
