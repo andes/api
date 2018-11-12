@@ -213,7 +213,7 @@ async function procesarDataNacimientos(nacimiento) {
     }
 }
 
-export async function importBebes(done, fecha: string = null) {
+export async function importarNacimientos(done, fecha: string = null) {
     fechaPrueba = fecha;
     let infoNacimientosArray = await getInfoNacimientos();
     for (let nacimiento of infoNacimientosArray) {

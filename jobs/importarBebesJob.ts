@@ -1,9 +1,9 @@
-import { importBebes } from '../core/mpi/jobs/bebeProcess';
+import { importarNacimientos } from '../core/mpi/jobs/nacimientosProcess';
 
 function run(done) {
     // PARAMETRO FECHA OPCIONAL PARA TESTEAR , el formato debe ser 'yyyy-mm-dd'
     // let fecha='yyyy-mm-dd'
-    importBebes(done); // <-- parametro opcional va aquí
+    importarNacimientos(done); // <-- parametro opcional va aquí
 }
 
 export = run;
