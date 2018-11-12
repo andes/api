@@ -174,6 +174,10 @@ router.get('/prestaciones/solicitudes', (req, res, next) => {
         query.where('solicitud.fecha').lte(moment(req.query.solicitudHasta).endOf('day').toDate() as any);
     }
 
+    if (req.query.prestacionDestino) {
+        query.where('solicitud.tipoPrestacion.id').equals(req.query.prestacionDestino);
+    }
+
     if (req.query.organizacionOrigen) {
         const arr: any[] = [];
         arr.push({ 'solicitud.organizacionOrigen': { $exists: true } });
