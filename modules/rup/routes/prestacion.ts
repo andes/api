@@ -161,6 +161,14 @@ router.get('/prestaciones/solicitudes', (req, res, next) => {
     // query.where('solicitud.tipoPrestacionOrigen.conceptId').exists(true); <<<<< cuando salgan de circulación solicitudes viejas la query es esta
     query.where('estados.0.tipo').in(['pendiente', 'auditoria']);
 
+    if (req.query.tieneTurno) {
+        if (req.query.tieneTurno === 'si') {
+            query.where('solicitud.turno').ne(null);
+        }
+        if (req.query.tieneTurno === 'no') {
+            query.where('solicitud.turno').equals(null);
+        }
+    }
 
     if (req.query.idPaciente) {
         query.where('paciente.id').equals(req.query.idPaciente);
