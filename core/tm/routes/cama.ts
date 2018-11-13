@@ -1,23 +1,11 @@
 import * as express from 'express';
-import * as cama from '../schemas/camas';
+import { model as CamaModel } from '../schemas/camas';
 import { Auth } from './../../../auth/auth.class';
+import * as mongoose from 'mongoose';
+import * as camaController from '../../../modules/rup/controllers/cama';
 
 const router = express.Router();
 
-/**
- * Busca la cama por su id.
- */
-
-router.get('/camas/:idCama', Auth.authenticate(), (req, res, next) => {
-    cama.model.findById({
-        _id: req.params.idCama
-    }, (err, data: any) => {
-        if (err) {
-            return next(err);
-        }
-        res.json(data);
-    });
-});
 
 /**
 //  * busca las camas de una organizacion, por defecto trae todas o se
@@ -27,7 +15,7 @@ router.get('/camas/:idCama', Auth.authenticate(), (req, res, next) => {
 router.get('/camas', Auth.authenticate(), (req, res, next) => {
 
     let query;
-    query = cama.model.find({});
+    query = CamaModel.find({});
     if (req.query.idOrganizacion) {
         query.where('organizacion._id').equals(req.query.idOrganizacion);
     }
@@ -38,8 +26,48 @@ router.get('/camas', Auth.authenticate(), (req, res, next) => {
     if (req.query.habitacion) {
         query.where('habitacion').equals(req.query.habitacion);
     }
+    if (req.query.sectorId) {
+        query.where('sectores._id').equals(req.query.sectorId);
+    }
     query.sort({ numero: 1, habitacion: 1 });
     query.exec({}, (err, data) => {
+        if (err) {
+            return next(err);
+        }
+        res.json(data);
+    });
+});
+
+
+/**
+ * trae las camas por fecha y hora.
+ */
+
+router.get('/camas/porfecha', Auth.authenticate(), (req, res, next) => {
+    camaController.camasXfecha(new mongoose.Types.ObjectId(req.query.idOrganizacion), new Date(req.query.fecha)).then(
+        camas => {
+            res.json(camas);
+        }).catch(error => {
+            return next(error);
+        });
+});
+
+router.get('/camas/historial', Auth.authenticate(), (req, res, next) => {
+    camaController.getHistorialCama(new mongoose.Types.ObjectId(req.query.idOrganizacion), new Date(req.query.fechaDesde), new Date(req.query.fechaHasta), new mongoose.Types.ObjectId(req.query.idCama)).then(result => {
+        res.json(result);
+    }).catch(error => {
+        return next(error);
+    });
+});
+
+/**
+ * Busca la cama por su id.
+ */
+
+router.get('/camas/:idCama', Auth.authenticate(), (req, res, next) => {
+    CamaModel.findById({
+        _id: req.params.idCama
+    }, (err, data: any) => {
         if (err) {
             return next(err);
         }
@@ -53,8 +81,8 @@ router.get('/camas', Auth.authenticate(), (req, res, next) => {
  */
 
 router.post('/camas', Auth.authenticate(), (req, res, next) => {
-    const newCama = new cama.model(req.body);
-    // agregamos audit a la cama
+    const newCama: any = new CamaModel(req.body);
+    newCama.unidadOrganizativaOriginal = req.body.estados[0].unidadOrganizativa;
     Auth.audit(newCama, req);
     newCama.save((err) => {
         if (err) {
@@ -70,7 +98,7 @@ router.post('/camas', Auth.authenticate(), (req, res, next) => {
 
 router.put('/camas/:id', Auth.authenticate(), (req, res, next) => {
 
-    cama.model.findById(req.params.id, (err3, data: any) => {
+    CamaModel.findById(req.params.id, (err3, data: any) => {
         if (err3) {
             return next(404);
         }
@@ -78,8 +106,7 @@ router.put('/camas/:id', Auth.authenticate(), (req, res, next) => {
             data.markModified('estados');
             data.markModified('equipamiento');
             data.organizacion = req.body.organizacion;
-            data.sector = req.body.sector;
-            data.habitacion = req.body.habitacion;
+            data.sectores = req.body.sectores;
             data.nombre = req.body.nombre;
             data.tipoCama = req.body.tipoCama;
             data.equipamiento = req.body.equipamiento;
@@ -93,7 +120,7 @@ router.put('/camas/:id', Auth.authenticate(), (req, res, next) => {
                     return next(err2);
                 }
                 res.json(data);
-            }, );
+            });
         } else {
             res.json(null);
         }
@@ -103,7 +130,7 @@ router.put('/camas/:id', Auth.authenticate(), (req, res, next) => {
 
 
 router.patch('/camas/:idCama', Auth.authenticate(), (req, res, next) => {
-    cama.model.findById({
+    CamaModel.findById({
         _id: req.params.idCama,
     }, (err, data: any) => {
         if (err) {
@@ -164,14 +191,18 @@ router.patch('/camas/:idCama', Auth.authenticate(), (req, res, next) => {
 });
 
 router.patch('/camas/cambiaEstado/:idCama', Auth.authenticate(), (req, res, next) => {
-    cama.model.findById({
+    CamaModel.findById({
         _id: req.params.idCama,
     }, (err, _cama: any) => {
         if (err) {
             return next(err);
         }
-        const ultimoEstado = _cama.estados[_cama.estados.length - 1];
-        if (req.body.estado === 'reparacion') {
+        let ultimoEstado = _cama.estados[_cama.estados.length - 1];
+
+        if (req.body.estado === ultimoEstado.estado) {
+            _cama.estados.push(req.body);
+
+        } else if (req.body.estado === 'reparacion') {
             // validamos que la cama no este ya en reparacion
             if (ultimoEstado.estado === 'reparacion') {
 
@@ -190,7 +221,10 @@ router.patch('/camas/cambiaEstado/:idCama', Auth.authenticate(), (req, res, next
             // ocupada, bloqueada o en reparacion.
             if (ultimoEstado.estado === 'reparacion' || ultimoEstado.estado === 'ocupada' || ultimoEstado.estado === 'bloqueada') {
                 // Limpiamos los datos del paciente
-
+                if (req.body.sugierePase) {
+                    _cama.estados[_cama.estados.length - 1].sugierePase = req.body.sugierePase;
+                    delete req.body['sugierePase'];
+                }
                 _cama.estados.push(req.body);
             }
         } else if (req.body.estado === 'bloqueada') {
@@ -214,7 +248,7 @@ router.patch('/camas/cambiaEstado/:idCama', Auth.authenticate(), (req, res, next
 
         } else if (req.body.estado === 'disponible') {
 
-            if (ultimoEstado.estado !== 'desocupada' && ultimoEstado.estado !== 'bloqueada') {
+            if (ultimoEstado.estado !== 'desocupada' && ultimoEstado.estado !== 'ocupada' && ultimoEstado.estado !== 'bloqueada') {
                 return res.status(500).send('La cama debe estar disponible');
             }
             // actualizamos el estadode la cama

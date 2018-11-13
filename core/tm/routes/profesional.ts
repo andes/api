@@ -10,7 +10,7 @@ import * as stream from 'stream';
 import * as base64 from 'base64-stream';
 import { Auth } from '../../../auth/auth.class';
 import { formacionCero, vencimientoMatriculaGrado, matriculaCero, vencimientoMatriculaPosgrado, migrarTurnos } from '../controller/profesional';
-
+import { IGuiaProfesional } from '../interfaces/interfaceProfesional';
 import { sendSms } from '../../../utils/roboSender/sendSms';
 import { toArray } from '../../../utils/utils';
 
@@ -39,6 +39,39 @@ router.get('/profesionales/estadisticas', async (req, res, next) => {
     });
 
 
+});
+
+router.get('/profesionales/guia', async (req, res, next) => {
+    const opciones = {};
+    let query;
+
+    if (req.query.documento) {
+        opciones['documento'] = req.query.documento;
+    }
+    if (req.query.codigoProfesion && req.query.numeroMatricula) {
+        opciones['formacionGrado.profesion.codigo'] = Number(req.query.codigoProfesion);
+        opciones['formacionGrado.matriculacion.matriculaNumero'] = Number(req.query.numeroMatricula);
+    }
+
+    if (Object.keys(opciones).length !== 0) {
+        let datosGuia: any = await profesional.findOne(opciones);
+        let resultado: IGuiaProfesional;
+        if (datosGuia) {
+            resultado = {
+                id: datosGuia.id,
+                nombre: datosGuia.nombre,
+                sexo: datosGuia.sexo,
+                apellido: datosGuia.apellido,
+                documento: datosGuia.documento,
+                nacionalidad: datosGuia.nacionalidad.nombre,
+                profesiones: datosGuia.formacionGrado
+            };
+
+        }
+        res.json(resultado);
+    } else {
+        res.json();
+    }
 });
 
 
@@ -171,7 +204,7 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
     // if (!Auth.check(req, 'matriculaciones:profesionales:getProfesional')) {
     //     return next(403);
     // }
-    let opciones = {};
+    const opciones = {};
     let query;
     if (req.params.id) {
         profesional.findById(req.params.id, (err, data) => {
@@ -229,6 +262,12 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
         }
         if (req.query.documento) {
             opciones['documento'] = utils.makePattern(req.query.documento);
+        }
+        if (req.query.numeroMatriculaGrado) {
+            opciones['formacionGrado.matriculacion.matriculaNumero'] = req.query.numeroMatriculaGrado;
+        }
+        if (req.query.numeroMatriculaEspecialidad) {
+            opciones['formacionPosgrado.matriculacion.matriculaNumero'] = req.query.numeroMatriculaEspecialidad;
         }
 
         if (req.query.bajaMatricula) {

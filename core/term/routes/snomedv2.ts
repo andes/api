@@ -215,7 +215,7 @@ router.get('/snomed/expression', async (req, res, next) => {
             conditions.push({ 'descriptions.words': { $regex: expWord } });
         });
 
-        let pipeline = [
+        const pipeline = [
             {
                 $match: query,
             },

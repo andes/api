@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as https from 'https';
 
-import * as organizacion from '../schemas/organizacion';
+import { model as organizacion } from '../schemas/organizacion';
 
 import * as utils from '../../../utils/utils';
 import { toArray } from '../../../utils/utils';
@@ -17,7 +17,6 @@ const router = express.Router();
 router.get('/organizaciones/georef/:id?', async (req, res, next) => {
     if (req.params.id) {
         organizacion
-            .model
             .findById(req.params.id, (err, data: any) => {
                 if (err) {
                     return next(err);
@@ -73,29 +72,27 @@ router.get('/organizaciones/georef/:id?', async (req, res, next) => {
             });
 
     } else {
-        const query = organizacion
-            .model
-            .aggregate([
-                {
-                    $match: {
-                        'direccion.geoReferencia': {
-                            $exists: true
-                        }
-                    }
-                },
-                {
-                    $project: {
-                        _id: 0,
-                        nombre: '$nombre',
-                        lat: {
-                            $arrayElemAt: ['$direccion.geoReferencia', 0]
-                        },
-                        lng: {
-                            $arrayElemAt: ['$direccion.geoReferencia', 1]
-                        }
+        const query = organizacion.aggregate([
+            {
+                $match: {
+                    'direccion.geoReferencia': {
+                        $exists: true
                     }
                 }
-            ])
+            },
+            {
+                $project: {
+                    _id: 0,
+                    nombre: '$nombre',
+                    lat: {
+                        $arrayElemAt: ['$direccion.geoReferencia', 0]
+                    },
+                    lng: {
+                        $arrayElemAt: ['$direccion.geoReferencia', 1]
+                    }
+                }
+            }
+        ])
             .cursor({})
             .exec();
 
@@ -240,7 +237,6 @@ router.get('/organizaciones/georef/:id?', async (req, res, next) => {
 router.get('/organizaciones/:id*?', (req, res, next) => {
     if (req.params.id) {
         organizacion
-            .model
             .findById(req.params.id, (err, data) => {
                 if (err) {
                     return next(err);
@@ -267,7 +263,9 @@ router.get('/organizaciones/:id*?', (req, res, next) => {
         }
 
         if (req.query.sisa) {
-            filtros['codigo.sisa'] = req.query.sisa;
+            filtros['codigo.sisa'] = {
+                $regex: utils.makePattern(req.query.sisa)
+            };
         }
         if (req.query.activo) {
             filtros['activo'] = req.query.activo;
@@ -285,7 +283,6 @@ router.get('/organizaciones/:id*?', (req, res, next) => {
         const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, 10), maxLimit);
 
         query = organizacion
-            .model
             .find(filtros);
         // .skip(skip)
         // .limit(limit);
@@ -315,7 +312,7 @@ router.get('/organizaciones/:id*?', (req, res, next) => {
         // }
 
 
-        // query.exec(function (err, data) {
+        // query.exec (err, data) => {
         //     if (err) {
         //         return next(err);
         //     }
@@ -354,8 +351,7 @@ router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
     if (!Auth.check(req, 'tm:especialidad:postEspecialidad')) {
         return next(403);
     }
-    const newOrganization = new organizacion.model(req.body);
-    Auth.audit(newOrganization, req);
+    const newOrganization = new organizacion(req.body);
     newOrganization.save((err) => {
         if (err) {
             return next(err);
@@ -395,10 +391,10 @@ router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
  *           $ref: '#/definitions/organizacion'
  */
 router.put('/organizaciones/:id', Auth.authenticate(), (req, res, next) => {
-    if (!Auth.check(req, 'tm:especialidad:putEspecialidad')) {
+    if (!Auth.check(req, 'tm:organizacion:edit')) {
         return next(403);
     }
-    organizacion.model.findByIdAndUpdate(req.params.id, req.body, (err, data) => {
+    organizacion.findByIdAndUpdate(req.params.id, req.body, (err, data) => {
         if (err) {
             return next(err);
         }
@@ -433,10 +429,10 @@ router.put('/organizaciones/:id', Auth.authenticate(), (req, res, next) => {
  *           $ref: '#/definitions/organizacion'
  */
 router.delete('/organizaciones/:id', Auth.authenticate(), (req, res, next) => {
-    if (!Auth.check(req, 'tm:organizacion:deleteOrganizacion')) {
+    if (!Auth.check(req, 'tm:organizacion:delete')) {
         return next(403);
     }
-    organizacion.model.findByIdAndRemove(req.params._id, (err, data) => {
+    organizacion.findByIdAndRemove(req.params._id, (err, data) => {
         if (err) {
             return next(err);
         }

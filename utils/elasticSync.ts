@@ -50,6 +50,7 @@ export class ElasticSync {
         let searchObj = {};
         if (query.q) {
             searchObj = query;
+            searchObj['index'] = this.INDEX;
         } else {
             searchObj = {
                 index: this.INDEX,

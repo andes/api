@@ -94,7 +94,7 @@ export async function updateTurnosPaciente(pacienteModified) {
             horaInicio: moment(new Date()).startOf('day').toDate() as any
         }
     };
-    const turnos: any = await turnosController.getHistorialPaciente(req);
+    const turnos: any = await turnosController.getTurno(req);
     if (turnos.length > 0) {
         turnos.forEach(element => {
             try {

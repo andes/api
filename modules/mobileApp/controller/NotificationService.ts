@@ -23,9 +23,24 @@ export class NotificationService {
     }
 
     /**
+     * Envía notificación de campaña de salud
+     */
+    public static notificarCampaniaSalud(datosCampania) {
+        const notificacion = {
+            body: datosCampania.campania.asunto,
+            extraData: {
+                action: 'campaniaSalud',
+                campania: datosCampania.campania
+            }
+        };
+        let idPaciente = mongoose.Types.ObjectId(datosCampania.account.pacientes[0].id);
+        this.sendByPaciente(idPaciente, notificacion);
+    }
+
+    /**
      * Envia una notificacion de adjunto
      */
-    public static solicitudAdjuntos (profesionalId, adjuntoId) {
+    public static solicitudAdjuntos(profesionalId, adjuntoId) {
         const notificacion = {
             body: 'Haz click para adjuntar la foto solicitada',
             extraData: {
@@ -80,7 +95,7 @@ export class NotificationService {
      * @param {objectId} profesionalId Id de profesional.
      * @param {INotificacion} notification  Notificacion a enviar.
      */
-    private static sendByProfesional (id, notification) {
+    private static sendByProfesional(id, notification) {
         id = new mongoose.Types.ObjectId(id);
         pacienteApp.find({ profesionalId: id }, (err, docs: any[]) => {
             docs.forEach(user => {

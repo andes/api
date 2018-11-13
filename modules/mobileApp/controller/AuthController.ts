@@ -78,7 +78,7 @@ export function enviarCodigoVerificacion(user, password) {
  */
 
 export function listadoCodigos() {
-    return PacienteApp.find({ codigoVerificacion: { $ne: null } }, {codigoVerificacion: 1, _id: 0}).then(listado => {
+    return PacienteApp.find({ codigoVerificacion: { $ne: null } }, { codigoVerificacion: 1, _id: 0 }).then(listado => {
         const numeros = listado.map((item: any) => item.codigoVerificacion);
         return Promise.resolve(numeros);
     }).catch(() => Promise.reject([]));
@@ -127,7 +127,7 @@ export function checkAppAccounts(pacienteData) {
             if (docs.length > 0) {
                 return resolve({ message: 'account_assigned', account: docs[0] });
             } else {
-                return resolve({message: 'account_doesntExists', account: null});
+                return resolve({ message: 'account_doesntExists', account: null });
             }
         });
     });
@@ -420,5 +420,18 @@ export function habilitarCuenta(userAccount, password) {
             }
             return resolve(user);
         });
+    });
+}
+
+/**
+ * Recupera todos los ID de pacientes que tienen la aplicación mobile activa
+ */
+export function getPatientIdEnabledAccounts() {
+    return new Promise((resolve, reject) => {
+        try {
+            resolve(PacienteApp.find({ $and: [{ activacionApp: true }, { 'pacientes._id': { $exists: true } }] }, { _id: 0, 'pacientes.id': 1 }));
+        } catch {
+            reject(null);
+        }
     });
 }
