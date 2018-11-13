@@ -1,10 +1,9 @@
-import * as https from 'https';
-
+import * as request from 'request';
 /**
  *
  *
  * @export
- * @param {*} reqCfg ={
+ * @param {*} path ={
             host,
             port,
             path,
@@ -13,21 +12,16 @@ import * as https from 'https';
         }
  * @returns {Promise<any>}
  */
-export function handleRequest(reqCfg, ): Promise<any> {
+export function handleHttpRequest(path): Promise<any> {
+
     return new Promise((resolve, reject) => {
-        const reqGet = https.request(reqCfg, (res) => {
-            let responseData = '';
-            res.on('data', (chunk, error) => {
-                if (error) { reject(error); }
-                responseData = responseData + chunk;
-            });
-            res.on('end', () => {
-                resolve(responseData);
-            });
-            res.on('error', (error) => {
-                reject(error);
-            });
+        request(path, (err, response, body) => {
+            if (!err) {
+                let status = response && response.statusCode;
+                return resolve([status, body]);
+            } else {
+                return reject(err);
+            }
         });
-        reqGet.end();
     });
 }

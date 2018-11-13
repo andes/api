@@ -7,7 +7,7 @@ import { Types } from 'mongoose';
 import debug = require('debug');
 import { registroProvincialData } from '../../../config.private';
 import { Logger } from '../../../utils/logService';
-import { handleRequest } from '../../../utils/requestHandler';
+import { handleHttpRequest } from '../../../utils/requestHandler';
 const deb = debug('nacimientosJob');
 
 // Variable utilizada en testing
@@ -24,23 +24,17 @@ async function getInfoNacimientos() {
     if (fechaPrueba) {
         today = fechaPrueba;
     }
-    let dprcpHost = registroProvincialData.hostost;
     let queryFechaPath = registroProvincialData.queryFechaPath + today;
-    const optionsgetmsg = {
-        host: dprcpHost,
-        port: 443,
-        path: queryFechaPath,
-        method: 'GET',
-        rejectUnauthorized: false
-    };
-    let dataNacimientos: string = await handleRequest(optionsgetmsg);
-    deb('INFO NACIMIENTOS-->', dataNacimientos);
+    let dataNacimientos = await handleHttpRequest(queryFechaPath);
+    deb('Response query Nacimientos -->', dataNacimientos[0]);
+    deb('INFO NACIMIENTOS-->', dataNacimientos[1]);
+
     // Transformamos la respuesta en un array JSON correcto
-    let lastChar = dataNacimientos.lastIndexOf(',');
-    dataNacimientos = dataNacimientos.substring(0, lastChar);
-    dataNacimientos = '[' + dataNacimientos + ']';
-    dataNacimientos = JSON.parse(dataNacimientos);
-    return (dataNacimientos);
+    let lastChar = dataNacimientos[1].lastIndexOf(',');
+    dataNacimientos[1] = dataNacimientos[1].substring(0, lastChar);
+    dataNacimientos[1] = '[' + dataNacimientos[1] + ']';
+    dataNacimientos[1] = JSON.parse(dataNacimientos[1]);
+    return (dataNacimientos[1]);
 }
 
 

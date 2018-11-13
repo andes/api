@@ -713,7 +713,7 @@ export async function validarPaciente(pacienteAndes) {
     }
     let band = true;
     // Respuesta correcta de renaper?
-    if (resRenaper && resRenaper.datos.nroError === 0) {
+    if (resRenaper && resRenaper.datos && resRenaper.datos.nroError === 0) {
         let pacienteRenaper = resRenaper.datos;
         band = regtest.test(pacienteRenaper.nombres);
         band = band || regtest.test(pacienteRenaper.apellido);
@@ -728,7 +728,7 @@ export async function validarPaciente(pacienteAndes) {
         return pacienteAndes;
     }
     // Respuesta erronea de renaper o test regex fallido?
-    if (!resRenaper || resRenaper.datos.nroError !== 0 || band) {
+    if (!resRenaper || (resRenaper && resRenaper.datos && resRenaper.datos.nroError !== 0) || band) {
         return await validarSisa(pacienteAndes);
     }
 }
