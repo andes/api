@@ -1,8 +1,4 @@
-import { profesional } from './../../../../core/tm/schemas/profesional';
-import { Practica } from './practica';
 import * as mongoose from 'mongoose';
-import { model as efector } from '../../../../core/tm/schemas/organizacion';
-import { ObjectID } from 'bson';
 import { SnomedConcept } from './../../../../modules/rup/schemas/snomed-concept';
 
 export let schema = new mongoose.Schema({
@@ -28,8 +24,14 @@ export let schema = new mongoose.Schema({
         cantidadLineaAdicional: Number
     },
     papel: {
-        formato: Number, // A4 | Oficio
-        orientacion: Boolean, // Horizontal | Vertical
+        formato: {
+            type: String,
+            enum: ['A4', 'Oficio']
+        },
+        orientacion: {
+            type: String,
+            enum: ['Horizontal', 'Vertical']
+        },
         anchoColumnasMilimetros: Number,
         textoInferiorDerecha: String,
         textoInferiorIzquierda: String,
