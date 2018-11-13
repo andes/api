@@ -10,7 +10,7 @@ import * as moment from 'moment';
 async function run(done) {
     try {
         let today = new Date(moment().format('YYYY-MM-DD'));
-        let campanias: any = await campaniasCtrl.campaniasVigentes(today);
+        let campanias: any = await campaniasCtrl.campanias(today, today);
         if (campanias.length > 0) {
             campanias.forEach(async c => {
                 let ids: any = await authController.getPatientIdEnabledAccounts();
