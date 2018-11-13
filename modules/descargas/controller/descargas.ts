@@ -101,7 +101,7 @@ export class Documento {
     }
 
     private static esProcedimiento(st) {
-        return (st === 'procedimiento' || st === 'entidad observable' || st === 'régimen/tratamiento' || st === 'elemento de registro' || st === 'objeto físico');
+        return (st === 'procedimiento' || st === 'entidad observable' || st === 'régimen/tratamiento' || st === 'elemento de registro' || st === 'situación' || st === 'objeto físico');
     }
 
     private static esSolicitud(st, esSolicitud) {
@@ -142,8 +142,8 @@ export class Documento {
             valor = 'NO';
         } else if (proc.concepto.conceptId === '716141001') {
             valor = `${proc.valor.total}/9`;
-        } else if (proc.concepto.conceptId === '440588003') {
-            const unidad = proc.concepto.conceptId === '440588003' ? 'minutos' : '';
+        } else if (proc.concepto.conceptId === '371767005') {
+            const unidad = 'minutos';
             valor = `${proc.valor} ${unidad}`;
         } else if (proc.valor.id && proc.valor.label) {
             valor = proc.valor.otro ? proc.valor.otro : proc.valor.label;
@@ -253,7 +253,7 @@ export class Documento {
     static adjuntoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/adjunto.html'), 'utf8');
     static nivelPadre = 0;
 
-    static async generarInforme(registros, titulos?, prestacionSCTID?) {
+    static async generarInforme(registros) {
         return new Promise(async (resolve, reject) => {
             for (let i = 0; i < registros.length; i++) {
                 if (registros[i]) {
@@ -315,11 +315,6 @@ export class Documento {
                         })];
                     }
                     if (registros[i] && registros[i].registros && registros[i].registros.length > 0) {
-                        // let template = this.esHallazgo(registros[i].concepto.semanticTag) ? this.hallazgoTemplate : (this.esProcedimiento(registros[i].concepto.semanticTag) ? this.procedimientoTemplate : this.insumoTemplate);
-                        // let reg = this.generarRegistro(registros[i], template);
-                        // if (reg) {
-                        //     this.informeRegistros[i] = reg;
-                        // }
                         this.nivelPadre = 0;
                         this.generarInforme(registros[i].registros);
                     }
@@ -348,8 +343,6 @@ export class Documento {
 
                 // Se crea un objecto nuevo
                 config = JSON.parse(JSON.stringify(config));
-
-                // console.log(config);
 
                 // Paciente
                 let mpi: any = await Paciente.buscarPaciente(prestacion.paciente.id);
@@ -407,7 +400,7 @@ export class Documento {
                     }
 
                     // SE ARMA TODO EL HTML PARA GENERAR EL PDF:
-                    await this.generarInforme(prestacion.ejecucion.registros[0].registros, config.requeridos, prestacion.solicitud.tipoPrestacion.conceptId);
+                    await this.generarInforme(prestacion.ejecucion.registros[0].registros);
 
 
                     // Si no hay configuración de informe o si se configura "registrosDefault" en true, se genera el informe por defecto (default)
