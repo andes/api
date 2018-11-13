@@ -47,18 +47,17 @@ export function getTurno(req) {
                 }
             }];
             // ver llamado, req.query
-            if (req.params && mongoose.Types.ObjectId.isValid(req.params.id)) {
+            if (req.query && mongoose.Types.ObjectId.isValid(req.query.id)) {
                 const matchId = {
                     $match: {
-                        'bloques.turnos._id': mongoose.Types.ObjectId(req.params.id),
+                        'bloques.turnos._id': mongoose.Types.ObjectId(req.query.id),
                     }
                 };
                 pipelineTurno[0] = matchId;
                 pipelineTurno[3] = matchId;
 
                 const data = await toArray(agenda.aggregate(pipelineTurno).cursor({}).exec());
-
-                if (data && data[0].bloques && data[0].bloques.turnos && data[0].bloques.turnos >= 0) {
+                if (data.length > 0 && data[0].bloques && data[0].bloques.turnos && data[0].bloques.turnos >= 0) {
                     resolve(data[0].bloques.turnos[0]);
                 } else {
                     resolve(data);

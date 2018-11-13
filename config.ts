@@ -145,7 +145,7 @@ export const modules = {
         active: true,
         path: './modules/obraSocial/routes',
         route: '/modules/obraSocial',
-        middleware: appMiddleware
+        middleware: null // appMiddleware
     },
     sugerencias: {
         active: true,
@@ -157,6 +157,12 @@ export const modules = {
         active: true,
         path: './modules/prestamosCarpetas/routes',
         route: '/modules/prestamosCarpetas',
+        middleware: appMiddleware
+    },
+    reglas: {
+        active: true,
+        path: './modules/top/routes',
+        route: '/modules/top',
         middleware: appMiddleware
     },
     version: {

@@ -122,7 +122,7 @@ $rotate: -90deg;
             }
         }
         .title {
-            font-size: 1rem;
+            font-size: 0.85rem;
             font-weight: bold;
             padding: 10px 0;
             display: inline-block;
@@ -213,4 +213,13 @@ $rotate: -90deg;
     .actions div b {
         font-size: .75rem;
     }
+}
+table tr>* {
+    display: block;
+}
+table tr {
+    display: table-cell;
+}
+th {
+    font-size: 0.7rem;
 }

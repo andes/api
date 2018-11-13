@@ -11,6 +11,7 @@ import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { toArray } from '../../../utils/utils';
 import * as moment from 'moment';
 import { forEach } from 'async';
+import { ObjectID, ObjectId } from 'bson';
 
 const router = express.Router();
 
@@ -27,9 +28,10 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
     const pacienteId = req.user.pacientes[0].id;
 
     if (req.query.horaInicio) {
-        matchAgendas['horaInicio'] = { $gte: new Date(moment().format('YYYY-MM-DD HH:mm')) };
+        matchAgendas['horaInicio'] = { $gt: new Date(moment().format('YYYY-MM-DD HH:mm')) };
     }
     matchAgendas['tipoPrestaciones.conceptId'] = '34043003'; // Tipo de turno Hardcodeado para odontología
+    matchAgendas['bloques.restantesProgramados'] = { $gt: 0 };
     matchAgendas['estado'] = 'publicada';
     matchAgendas['dinamica'] = false;
 
@@ -51,7 +53,7 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
     try {
         for (let i = 0; i <= agendasResultado.length - 1; i++) {
             const org: any = await organizacion.model.findById(agendasResultado[i].id);
-            if (org.codigo && org.codigo.sisa) {
+            if (org.codigo && org.codigo.sisa && org.turnosMobile) {
                 const orgCache: any = await organizacionCache.findOne({ codigo: org.codigo.sisa });
                 agendasResultado[i].coordenadasDeMapa = orgCache.coordenadasDeMapa;
                 agendasResultado[i].domicilio = orgCache.domicilio;

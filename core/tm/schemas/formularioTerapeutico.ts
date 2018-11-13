@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 const schema = new mongoose.Schema({
-    idpadre:  {
+    idpadre: {
         type: mongoose.Schema.Types.ObjectId,
     },
     descripcion: String,
