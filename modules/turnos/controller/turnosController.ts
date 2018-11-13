@@ -313,36 +313,30 @@ export async function getLiberadosPaciente(req) {
     }
 }
 
-export function actualizarCarpeta(req, res, next, pacienteSave) {
-    controller.buscarPaciente(req.body.paciente.id).then(async (resultado: any) => {
-        if (resultado) {
-            try { // Actualizamos los turnos activos del paciente
-                req.body.carpetaEfectores = pacienteSave.carpetaEfectores;
-                const repetida = await controller.checkCarpeta(req, resultado.paciente);
-                if (!repetida) {
-                    controller.updateCarpetaEfectores(req, resultado.paciente);
-                    controller.updateTurnosPaciente(resultado.paciente);
-                } else {
-                    return next('El numero de carpeta ya existe');
-                }
-            } catch (error) { return next(error); }
-            let pacienteAndes: any;
-            if (resultado.db === 'mpi') {
-                pacienteAndes = new paciente(resultado.paciente.toObject());
+export async function actualizarCarpeta(req, res, next, pacienteSave) {
+    const resultado = await controller.buscarPaciente(req.body.paciente.id) as any;
+    if (resultado) {
+        try { // Actualizamos los turnos activos del paciente
+            req.body.carpetaEfectores = pacienteSave.carpetaEfectores;
+            const repetida = await controller.checkCarpeta(req, resultado.paciente);
+            if (!repetida) {
+                controller.updateCarpetaEfectores(req, resultado.paciente);
+                controller.updateTurnosPaciente(resultado.paciente);
             } else {
-                pacienteAndes = resultado.paciente;
+                return next('El numero de carpeta ya existe');
             }
-            Auth.audit(pacienteAndes, req);
-            pacienteAndes.save((errPatch) => {
-                if (errPatch) {
-                    return next(errPatch);
-                }
-                // res.json(pacienteAndes);
-                // EventCore.emitAsync('mpi:patient:update', pacienteAndes);
-                // return;
-            });
+        } catch (error) { return next(error); }
+        let pacienteAndes: any;
+        if (resultado.db === 'mpi') {
+            pacienteAndes = new paciente(resultado.paciente.toObject());
+        } else {
+            pacienteAndes = resultado.paciente;
         }
-    }).catch((err) => {
-        return next(err);
-    });
+        Auth.audit(pacienteAndes, req);
+        pacienteAndes.save((errPatch) => {
+            if (errPatch) {
+                return next(errPatch);
+            }
+        });
+    }
 }
