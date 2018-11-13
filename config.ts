@@ -125,16 +125,16 @@ export const modules = {
     },
     fhir: {
         active: true,
-        path: './fhir/patient/routes',
-        route: '/fhir/patient',
+        path: './connect/fhir/routes',
+        route: '/connect/fhir',
         middleware: appMiddleware
     },
-    fhir_profesional: {
-        active: true,
-        path: './fhir/practitioner/routes',
-        route: '/fhir/practitioner',
-        middleware: appMiddleware
-    },
+    // fhir_profesional: {
+    //     active: true,
+    //     path: './fhir/practitioner/routes',
+    //     route: '/fhir/practitioner',
+    //     middleware: appMiddleware
+    // },
     cda: {
         active: true,
         path: './modules/cda/routes',
