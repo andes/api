@@ -185,30 +185,30 @@ export function postPacienteMpi(newPatientMpi, req) {
  * @param {any} id
  * @returns
  */
-export function buscarPaciente(id: any): Promise<{ db: String, paciente: any }> {
+export function buscarPaciente(id: any) {
     return new Promise((resolve, reject) => {
         paciente.findById(id, (err, data) => {
             if (err) {
-                reject(err);
+                return (err);
             } else {
                 if (data) {
                     const resultado = {
                         db: 'andes',
                         paciente: data
                     };
-                    resolve(resultado);
+                    return (resultado);
                 } else {
                     pacienteMpi.findById(id, (err2, dataMpi) => {
                         if (err2) {
-                            reject(err2);
+                            return (err2);
                         } else if (dataMpi) {
                             const resultado = {
                                 db: 'mpi',
                                 paciente: dataMpi
                             };
-                            resolve(resultado);
+                            return (resultado);
                         } else {
-                            reject(null);
+                            return (null);
                         }
                     });
                 }
