@@ -8,7 +8,6 @@ import debug = require('debug');
 import { registroProvincialData } from '../../../config.private';
 import { Logger } from '../../../utils/logService';
 import { handleRequest } from '../../../utils/requestHandler';
-import { Db } from 'mongodb';
 const deb = debug('nacimientosJob');
 
 // Variable utilizada en testing
