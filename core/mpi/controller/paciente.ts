@@ -5,6 +5,7 @@ import { ElasticSync } from '../../../utils/elasticSync';
 import { Logger } from '../../../utils/logService';
 import { Matching } from '@andes/match';
 import { Auth } from './../../../auth/auth.class';
+import { EventCore } from '@andes/event-bus';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
 
@@ -30,6 +31,9 @@ export function createPaciente(data, req) {
             const connElastic = new ElasticSync();
             connElastic.create(newPatient._id.toString(), nuevoPac).then(() => {
                 Logger.log(req, 'mpi', 'insert', newPatient);
+                // Código para emitir eventos
+                EventCore.emitAsync('mpi:patient:create', newPatient);
+                //
                 return resolve(newPatient);
             }).catch(error => {
                 return reject(error);
@@ -67,6 +71,7 @@ export function updatePaciente(pacienteObj, data, req) {
                 } else {
                     Logger.log(req, 'mpi', 'insert', pacienteObj);
                 }
+                EventCore.emitAsync('mpi:patient:update', pacienteObj);
                 resolve(pacienteObj);
             }).catch(error => {
                 return reject(error);
@@ -89,7 +94,7 @@ export async function updateTurnosPaciente(pacienteModified) {
             horaInicio: moment(new Date()).startOf('day').toDate() as any
         }
     };
-    const turnos: any = await turnosController.getHistorialPaciente(req);
+    const turnos: any = await turnosController.getTurno(req);
     if (turnos.length > 0) {
         turnos.forEach(element => {
             try {
@@ -211,6 +216,35 @@ export function buscarPaciente(id): Promise<{ db: String, paciente: any }> {
         });
     });
 }
+/**
+ * Busca un paciente en ambas DBs (Andes y MPI) segun su documento, sexo y estado validado
+ * devuelve los datos del paciente
+ *
+ * @export
+ * @param {string} documento
+ * @param {string} sexo
+ * @returns
+ */
+export function buscarPacByDocYSexo(documento, sexo): Promise<{ db: String, paciente: any }[]> {
+
+    return new Promise((resolve, reject) => {
+        let query = {
+            documento,
+            sexo,
+            estado: 'validado' // Analizar
+        };
+        Promise.all([
+            paciente.find(query),
+            pacienteMpi.find(query)
+        ]).then(values => {
+            let lista = [];
+            lista = [...values[0], ...values[1]];
+            resolve(lista);
+        });
+
+    });
+}
+
 
 /**
  * Busca un paciente en MPI y luego en andes con cierta condición.
@@ -413,10 +447,11 @@ export function deletePacienteAndes(objectId) {
         };
         paciente.findById(query, (err, patientFound) => {
             if (err) {
-                reject(err);
+                return reject(err);
             }
             patientFound.remove();
-            resolve(patientFound);
+            EventCore.emitAsync('mpi:patient:delete', patientFound);
+            return resolve(patientFound);
         });
     });
 }

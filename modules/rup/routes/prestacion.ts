@@ -1,7 +1,6 @@
 import * as mongoose from 'mongoose';
 import * as express from 'express';
 import * as moment from 'moment';
-// import * as async from 'async';
 import { Auth } from './../../../auth/auth.class';
 import { model as Prestacion } from '../schemas/prestacion';
 import * as frecuentescrl from '../controllers/frecuentesProfesional';
@@ -10,9 +9,74 @@ import { iterate, convertToObjectId, buscarEnHuds, matchConcepts, buscarRegistro
 import { Logger } from '../../../utils/logService';
 import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
 import { snomedModel } from '../../../core/term/schemas/snomed';
+import * as camasController from './../controllers/cama';
+import { EventCore } from '@andes/event-bus';
 
 const router = express.Router();
-const async = require('async');
+import async = require('async');
+
+
+/**
+ * Trae todas las prestaciones con ambitoOrigen = internacion, tambien solo las prestaciones
+ * internación y
+ * que el paciente no tiene una cama asignada.
+ */
+
+router.get('/prestaciones/sinCama', (req, res, next) => {
+    let query = {
+        'solicitud.organizacion.id': mongoose.Types.ObjectId(Auth.getOrganization(req)),
+        'solicitud.ambitoOrigen': 'internacion',
+        'solicitud.tipoPrestacion.conceptId': '32485007',  // Ver si encontramos otra forma de diferenciar las prestaciones de internacion
+        $where: 'this.estados[this.estados.length - 1].tipo ==  \"' + 'ejecucion' + '\"',
+    };
+
+    // Buscamos prestaciones que sean del ambito de internacion.
+    Prestacion.find(query, async (err, prestaciones) => {
+        if (err) {
+            return next(err);
+        }
+        if (!prestaciones) {
+            return res.status(404).send('No se encontraron prestaciones de internacion');
+        }
+        // Ahora buscamos si se encuentra asociada la internacion a una cama
+        let listaEspera = [];
+        let prestacion: any;
+        for (prestacion of prestaciones) {
+            let enEspera = {
+                prestacion,
+                ultimoEstado: null,
+                paseDe: false,
+                esEgreso: false,
+                paseA: null
+            };
+
+            // Buscamos si tiene una cama ocupada con el id de la internacion.
+            let cama = await camasController.buscarCamaInternacion(mongoose.Types.ObjectId(prestacion.id), 'ocupada');
+            // Loopeamos los registros de la prestacion buscando el informe de egreso.
+            let esEgreso = prestacion.ejecucion.registros.find(r => r.valor && r.valor.InformeEgreso);
+            // Si no encontramos una cama ocupada quiere decir que esa prestacion va a formar parte
+            // de nuestra lista.
+            if (cama && cama.length === 0) {
+                // Si encontramos el informe de ingreso en la prestacion entonces es
+                // un egreso. En caso de que no sea ingreso utilizamos la funcion buscarPasesCamaXInternacion.
+                if (esEgreso) {
+                    enEspera.ultimoEstado = esEgreso.concepto.term;
+                    enEspera.esEgreso = true;
+                } else {
+                    // Buscamos los pases que tiene la internacion
+                    let _camas: any = await camasController.buscarPasesCamaXInternacion(prestacion._id);
+                    if (_camas && _camas.length) {
+                        enEspera.ultimoEstado = _camas[_camas.length - 1].estados.unidadOrganizativa.term;
+                        enEspera.paseDe = true;
+                        enEspera.paseA = _camas[_camas.length - 1].estados.sugierePase;
+                    }
+                }
+                listaEspera.push(enEspera);
+            }
+        }
+        return res.json(listaEspera);
+    });
+});
 
 
 /***
@@ -203,6 +267,56 @@ router.get('/prestaciones/resumenPaciente/:idPaciente', async (req, res, next) =
     });
 });
 
+router.get('/prestaciones/solicitudes', (req, res, next) => {
+    let query;
+    if (req.query.estados) {
+        const estados = (typeof req.query.estados === 'string') ? [req.query.estados] : req.query.estados;
+        query = Prestacion.find({
+            $where: estados.map(x => 'this.estados[this.estados.length - 1].tipo ==  \"' + x + '"').join(' || '),
+        });
+    } else {
+        query = Prestacion.find({}); // Trae todos
+    }
+
+    // Solicitudes tienen tipoPrestacionOrigen, entonces utilizamos esta propiedad
+    // para filtrarlas de de la colección prestaciones
+    // query.where('solicitud.tipoPrestacionOrigen.conceptId').exists(true); <<<<< cuando salgan de circulación solicitudes viejas la query es esta
+    query.where('estados.0.tipo').in(['pendiente', 'auditoria']);
+
+
+    if (req.query.idPaciente) {
+        query.where('paciente.id').equals(req.query.idPaciente);
+    }
+
+    if (req.query.solicitudDesde) {
+        query.where('solicitud.fecha').gte(moment(req.query.solicitudDesde).startOf('day').toDate() as any);
+    }
+
+    if (req.query.solicitudHasta) {
+        query.where('solicitud.fecha').lte(moment(req.query.solicitudHasta).endOf('day').toDate() as any);
+    }
+
+    // Ordenar por fecha de solicitud
+    if (req.query.ordenFecha) {
+        query.sort({ 'solicitud.fecha': -1 });
+    } else if (req.query.ordenFechaEjecucion) {
+        query.sort({ 'ejecucion.fecha': -1 });
+    }
+
+    if (req.query.limit) {
+        query.limit(parseInt(req.query.limit, 10));
+    }
+
+    query.exec((err, data) => {
+        if (err) {
+            return next(err);
+        }
+        if (req.params.id && !data) {
+            return next(404);
+        }
+        res.json(data);
+    });
+});
 
 router.get('/prestaciones/:id*?', (req, res, next) => {
 
@@ -249,6 +363,9 @@ router.get('/prestaciones/:id*?', (req, res, next) => {
         if (req.query.idPrestacionOrigen) {
             query.where('solicitud.prestacionOrigen').equals(req.query.idPrestacionOrigen);
         }
+        if (req.query.conceptId) {
+            query.where('solicitud.tipoPrestacion.conceptId').equals(req.query.conceptId);
+        }
         if (req.query.turnos) {
             query.where('solicitud.turno').in(req.query.turnos);
         }
@@ -279,6 +396,9 @@ router.get('/prestaciones/:id*?', (req, res, next) => {
 
         if (req.query.organizacion) {
             query.where('solicitud.organizacion.id').equals(req.query.organizacion);
+        }
+        if (req.query.ambitoOrigen) {
+            query.where('solicitud.ambitoOrigen').equals(req.query.ambitoOrigen);
         }
 
         // Ordenar por fecha de solicitud
@@ -312,6 +432,7 @@ router.post('/prestaciones', (req, res, next) => {
             return next(err);
         }
         res.json(data);
+        EventCore.emitAsync('rup:prestacion:create', data);
     });
 });
 
@@ -320,7 +441,6 @@ router.patch('/prestaciones/:id', (req, res, next) => {
         if (err) {
             return next(err);
         }
-
         switch (req.body.op) {
             case 'paciente':
                 if (req.body.paciente) {
@@ -336,6 +456,12 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 }
                 if (req.body.registros) {
                     data.ejecucion.registros = req.body.registros;
+                }
+                if (req.body.ejecucion && req.body.ejecucion.fecha) {
+                    data.ejecucion.fecha = req.body.ejecucion.fecha;
+                }
+                if (req.body.ejecucion && req.body.ejecucion.organizacion) {
+                    data.ejecucion.organizacion = req.body.ejecucion.organizacion;
                 }
                 break;
             case 'romperValidacion':
@@ -358,6 +484,12 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                     }
                 }
                 break;
+            case 'informeIngreso':
+                if (req.body.informeIngreso) {
+                    data.ejecucion.registros[0].valor.informeIngreso = req.body.informeIngreso;
+                    data.ejecucion.registros[0].markModified('valor');
+                }
+                break;
             case 'asignarTurno':
                 if (req.body.idTurno) {
                     data.solicitud.turno = req.body.idTurno;
@@ -371,6 +503,10 @@ router.patch('/prestaciones/:id', (req, res, next) => {
         data.save((error, prestacion) => {
             if (error) {
                 return next(error);
+            }
+
+            if (req.body.estado && req.body.estado.tipo === 'validada') {
+                EventCore.emitAsync('rup:prestacion:validate', data);
             }
 
             // Actualizar conceptos frecuentes por profesional y tipo de prestacion
@@ -432,8 +568,6 @@ router.patch('/prestaciones/:id', (req, res, next) => {
             } else {
                 res.json(prestacion);
             }
-
-            Auth.audit(data, req);
             /*
             Logger.log(req, 'prestacionPaciente', 'update', {
                 accion: req.body.op,

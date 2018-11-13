@@ -239,6 +239,12 @@ export const conSqlPecas = {
     }
 };
 
+export const RedisWebSockets = {
+    active: getEnv('REDIS', false),
+    host: getEnv('REDIS_HOST', 'localhost', 'b'),
+    port: getEnv('REDIS_PORT', '6379', 'n')
+};
+
 export const sqlCarpetasJob = {
     user: '',
     password: '',
@@ -249,9 +255,9 @@ export const sqlCarpetasJob = {
 };
 
 export const TwitterConfig = {
-  consumer_key: '',
-  consumer_secret: '',
-  access_token_key: '',
-  access_token_secret: ''
+    consumer_key: '',
+    consumer_secret: '',
+    access_token_key: '',
+    access_token_secret: ''
 };
 

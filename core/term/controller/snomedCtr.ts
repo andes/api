@@ -11,11 +11,21 @@ const StatedSct = '900000000000010007';
  *
  * @param sctid ConceptId
  */
-export function getConcept(sctid) {
+export function getConcept(sctid, format = 'full') {
     return new Promise((resolve, reject) => {
         snomedModel.findOne({ conceptId: sctid }).then((concept: any) => {
             if (concept) {
-                return resolve(concept);
+                if (format === 'full') {
+                    return resolve(concept);
+                } else {
+                    return resolve({
+                        conceptId: concept.conceptId,
+                        term: concept.preferredTerm,
+                        fsn: concept.fullySpecifiedName,
+                        semanticTag: concept.semtag,
+                        refsetIds: concept.memberships.map(m => m.refset.conceptId)
+                    });
+                }
             }
             return reject('not_found');
         }).catch(reject);

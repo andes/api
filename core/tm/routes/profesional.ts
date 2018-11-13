@@ -9,9 +9,71 @@ import { makeFsFirmaAdmin } from '../schemas/firmaAdmin';
 import * as stream from 'stream';
 import * as base64 from 'base64-stream';
 import { Auth } from '../../../auth/auth.class';
+import { formacionCero, vencimientoMatriculaGrado, matriculaCero, vencimientoMatriculaPosgrado, migrarTurnos } from '../controller/profesional';
+import { IGuiaProfesional } from '../interfaces/interfaceProfesional';
 import { sendSms } from '../../../utils/roboSender/sendSms';
+import { toArray } from '../../../utils/utils';
 
-const router = express.Router();
+
+let router = express.Router();
+
+router.get('/profesionales/ultimoPosgrado', async (req, res, next) => {
+    let query = [{ $unwind: '$formacionPosgrado' },
+    { $unwind: '$formacionPosgrado.matriculacion' },
+    { $sort: { 'formacionPosgrado.matriculacion.matriculaNumero': -1 } }, { $limit: 1 }];
+    let data = await toArray(profesional.aggregate(query).cursor({}).exec());
+    let ultimoNumero = data[0].formacionPosgrado.matriculacion.matriculaNumero;
+    res.json(ultimoNumero);
+});
+
+router.get('/profesionales/estadisticas', async (req, res, next) => {
+    let estadisticas = {};
+    let total = profesional.count({ profesionalMatriculado: true });
+    let totalMatriculados = profesional.count({ rematriculado: 0, profesionalMatriculado: true });
+    let totalRematriculados = profesional.count({ rematriculado: 1, profesionalMatriculado: true });
+    Promise.all([total, totalMatriculados, totalRematriculados]).then(values => {
+        estadisticas['total'] = values[0];
+        estadisticas['totalMatriculados'] = values[1];
+        estadisticas['totalRematriculados'] = values[2];
+        res.json(estadisticas);
+    });
+
+
+});
+
+router.get('/profesionales/guia', async (req, res, next) => {
+    const opciones = {};
+    let query;
+
+    if (req.query.documento) {
+        opciones['documento'] = req.query.documento;
+    }
+    if (req.query.codigoProfesion && req.query.numeroMatricula) {
+        opciones['formacionGrado.profesion.codigo'] = Number(req.query.codigoProfesion);
+        opciones['formacionGrado.matriculacion.matriculaNumero'] = Number(req.query.numeroMatricula);
+    }
+
+    if (Object.keys(opciones).length !== 0) {
+        let datosGuia: any = await profesional.findOne(opciones);
+        let resultado: IGuiaProfesional;
+        if (datosGuia) {
+            resultado = {
+                id: datosGuia.id,
+                nombre: datosGuia.nombre,
+                sexo: datosGuia.sexo,
+                apellido: datosGuia.apellido,
+                documento: datosGuia.documento,
+                nacionalidad: datosGuia.nacionalidad.nombre,
+                profesiones: datosGuia.formacionGrado
+            };
+
+        }
+        res.json(resultado);
+    } else {
+        res.json();
+    }
+});
+
 
 router.get('/profesionales/foto/:id*?', Auth.authenticate(), (req: any, res, next) => {
     if (!Auth.check(req, 'matriculaciones:profesionales:getProfesionalFoto')) {
@@ -22,17 +84,13 @@ router.get('/profesionales/foto/:id*?', Auth.authenticate(), (req: any, res, nex
     const id = req.query.id;
     const fotoProf = makeFs();
     try {
-        fotoProf.find({
-            'metadata.idProfesional': id
-        }, {}, {
-            sort: {
-                _id: -1
-            }
+        fotoProf.find({ 'metadata.idProfesional': id }, {}, {
+            sort: { _id: -1 }
         }, (err, file) => {
             if (file[0] == null) {
                 res.setHeader('Content-Type', 'image/jpeg');
-                    // input.pipe(decoder).pipe(res);
-                    // input.end(img);
+                // input.pipe(decoder).pipe(res);
+                // input.end(img);
                 res.end(img);
             } else {
                 fotoProf.readById(file[0].id, (err2, buffer) => {
@@ -58,13 +116,7 @@ router.get('/profesionales/firma/:id*?', Auth.authenticate(), (req: any, res, ne
     if (req.query.id) {
         const id = req.query.id;
         const fotoProf = makeFsFirma();
-        fotoProf.find({
-            'metadata.idProfesional': id
-        }, {}, {
-            sort: {
-                _id: -1
-            }
-        }, (err, file) => {
+        fotoProf.find({ 'metadata.idProfesional': id }, {}, { sort: { _id: -1 } }, (err, file) => {
             if (file[0] == null) {
                 res.send(null);
             } else {
@@ -82,26 +134,19 @@ router.get('/profesionales/firma/:id*?', Auth.authenticate(), (req: any, res, ne
 
     }
     if (req.query.firmaAdmin) {
-
-        const idAdmin = req.query.firmaAdmin;
-        const fotoAdmin = makeFsFirmaAdmin();
-        fotoAdmin.find({
-            'metadata.idProfesional': idAdmin
-        }, {}, {
-            sort: {
-                _id: -1
-            }
-        }, (err, file) => {
+        let idAdmin = req.query.firmaAdmin;
+        let fotoAdmin = makeFsFirmaAdmin();
+        fotoAdmin.find({ 'metadata.idSupervisor': idAdmin }, {}, { sort: { _id: -1 } }, (err, file) => {
             if (file[0] == null) {
                 res.send(null);
             } else {
-                fotoAdmin.readById(file[0].id, (err2, buffer) => {
+                let stream1 = fotoAdmin.readById(file[0]._id, (err2, buffer) => {
                     if (err2) {
                         return next(err2);
                     }
                     res.setHeader('Content-Type', file[0].contentType);
                     res.setHeader('Content-Length', file[0].length);
-                    const firmaAdmin = {
+                    let firmaAdmin = {
                         firma: buffer.toString('base64'),
                         administracion: file[0].metadata.administracion
                     };
@@ -113,6 +158,7 @@ router.get('/profesionales/firma/:id*?', Auth.authenticate(), (req: any, res, ne
     }
 
 });
+
 router.get('/profesionales/matricula/:id', (req, resp, errHandler) => {
     const oCredencial = {
         foto: null,
@@ -174,6 +220,10 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
             };
         }
 
+        if (req.query.matriculacion) {
+            opciones['profesionalMatriculado'] = true;
+        }
+
         if (req.query.apellido) {
             opciones['apellido'] = {
                 $regex: utils.makePattern(req.query.apellido)
@@ -210,9 +260,14 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                 $regex: utils.makePattern(req.query.nombreCompleto)
             };
         }
-
         if (req.query.documento) {
             opciones['documento'] = utils.makePattern(req.query.documento);
+        }
+        if (req.query.numeroMatriculaGrado) {
+            opciones['formacionGrado.matriculacion.matriculaNumero'] = req.query.numeroMatriculaGrado;
+        }
+        if (req.query.numeroMatriculaEspecialidad) {
+            opciones['formacionPosgrado.matriculacion.matriculaNumero'] = req.query.numeroMatriculaEspecialidad;
         }
 
         if (req.query.bajaMatricula) {
@@ -260,7 +315,7 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                 $regex: utils.makePattern(req.query.nombreCompleto, { startWith: true })
             }
         }];
-        const q = req.query.nombreCompleto.indexOf(' ') >= 0 ?  { $and: filter } : { $or: filter };
+        let q = req.query.nombreCompleto.indexOf(' ') >= 0 ? { $and: filter } : { $or: filter };
         query = profesional.find(q).
             sort({
                 apellido: 1,
@@ -351,7 +406,7 @@ router.post('/profesionales', Auth.authenticate(), (req, res, next) => {
 
         // remove la firma vieja antes de insertar la nueva
         firmaAdmin.find({
-            'metadata.idProfesional': req.body.firmaAdmin.idProfesional
+            'metadata.idSupervisor': req.body.firmaAdmin.idSupervisor
         }, (err, file) => {
             file.forEach(recorre => {
                 firmaAdmin.unlinkById(recorre._id, (error, unlinkedAttachment) => { });
@@ -362,7 +417,7 @@ router.post('/profesionales', Auth.authenticate(), (req, res, next) => {
             filename: 'firmaAdmin.png',
             contentType: 'image/jpeg',
             metadata: {
-                idProfesional: req.body.firmaAdmin.idProfesional,
+                idSupervisor: req.body.firmaAdmin.idSupervisor,
                 administracion: req.body.firmaAdmin.nombreCompleto,
             }
         },
@@ -382,6 +437,7 @@ router.post('/profesionales', Auth.authenticate(), (req, res, next) => {
         //         res.json(null);
         //     } else {
         const newProfesional = new profesional(req.body.profesional);
+        Auth.audit(newProfesional, req);
         newProfesional.save((err2) => {
             if (err2) {
                 next(err2);
@@ -511,7 +567,7 @@ router.delete('/profesionales/:id', Auth.authenticate(), (req, res, next) => {
     });
 });
 
-router.patch('/profesionales/:id?', (req, res, next) => {
+router.patch('/profesionales/:id?', Auth.authenticate(), (req, res, next) => {
     profesional.findById(req.params.id, (err, resultado: any) => {
         if (resultado) {
             switch (req.body.op) {
@@ -545,7 +601,7 @@ router.patch('/profesionales/:id?', (req, res, next) => {
 
             }
         }
-
+        Auth.audit(resultado, req);
         resultado.save((err2) => {
             if (err2) {
                 next(err2);
@@ -557,94 +613,66 @@ router.patch('/profesionales/:id?', (req, res, next) => {
     });
 });
 
-router.get('/resumen/:id*?', (req, res, next) => {
-
+router.get('/resumen', (req, res, next) => {
     const opciones = {};
     let query;
-    if (req.params.id) {
-        profesional.findById(req.params.id, (err, data) => {
-            if (err) {
-                return next(err);
-            }
-            res.json(data);
-        });
-    } else {
-        if (req.query.nombre) {
-            opciones['nombre'] = utils.makePattern(req.query.nombre);
-        }
-
-        if (req.query.apellido) {
-            opciones['apellido'] = utils.makePattern(req.query.apellido);
-
-        }
-
-        if (req.query.nombreCompleto) {
-            opciones['nombre'] = {
-                $regex: utils.makePattern(req.query.nombreCompleto)
-            };
-            opciones['apellido'] = {
-                $regex: utils.makePattern(req.query.nombreCompleto)
-            };
-        }
-
-        if (req.query.documento !== '') {
-            opciones['documento'] = req.query.documento;
-        }
-
-        if (req.query.fechaNacimiento) {
-            opciones['fechaNacimiento'] = req.query.fechaNacimiento;
-        }
-
-        if (req.query.numeroMatricula) {
-            opciones['matriculas.numero'] = req.query.numeroMatricula;
-        }
-
-        if (req.query.especialidad) {
-            opciones['especialidad.nombre'] = {
-                $regex: utils.makePattern(req.query.especialidad)
-            };
-        }
+    if (req.query.nombre) {
+        opciones['nombre'] = utils.makePattern(req.query.nombre);
     }
 
-    const radix = 10;
-    const skip: number = parseInt(req.query.skip || 0, radix);
-    const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
+    if (req.query.apellido) {
+        opciones['apellido'] = utils.makePattern(req.query.apellido);
 
-    if (req.query.nombreCompleto) {
-        query = profesional.find({
-            apellido: {
-                $regex: utils.makePattern(req.query.nombreCompleto)
-            }
-        }).
-            sort({
-                apellido: 1,
-                nombre: 1
-            });
-    } else {
-        query = profesional.find(opciones).skip(skip).limit(limit);
     }
-
-    const select = [];
+    if (req.query.documento !== '') {
+        opciones['documento'] = req.query.documento;
+    }
+    query = profesional.find(opciones);
     query.exec((err, data) => {
         if (err) {
             return next(err);
         }
-        data.forEach(element => {
-            const resultado = {
-                select: '' + element.nombreCompleto + ' - ' + element.documento + '',
-                idRenovacion: element.id,
-                nombre: element.nombre,
-                apellido: element.apellido,
-                fechaNacimiento: element.fechaNacimiento,
-                documento: element.documento,
-                nacionalidad: element.nacionalidad
+        let resultado = [];
+        if (data.length > 0) {
+            resultado = [{
+                select: '' + data[0].nombreCompleto + ' - ' + data[0].documento + '',
+                idRenovacion: data[0].id,
+                nombre: data[0].nombre,
+                apellido: data[0].apellido,
+                fechaNacimiento: data[0].fechaNacimiento,
+                documento: data[0].documento,
+                nacionalidad: data[0].nacionalidad
 
-            };
-            select.push(resultado);
+            }];
 
-        });
-        res.json(select);
+        }
+        res.json(resultado);
     });
 });
+
+
+router.post('/profesionales/migrarTurnos', async (req, res, next) => {
+    migrarTurnos();
+});
+
+router.post('/profesionales/matriculaCero', async (req, res, next) => {
+    let ress = await matriculaCero();
+    res.json(ress);
+
+});
+
+
+router.post('/profesionales/formacionCero', async (req, res, next) => {
+    let ress = await formacionCero();
+    res.json(ress);
+
+});
+
+// router.post('/profesionales/vencimientoPosGrado', async (req, res, next) => {
+//     let ress = await vencimientoMatriculaPosgrado();
+//     res.json(ress);
+
+// });
+
 
 export = router;

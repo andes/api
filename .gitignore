@@ -5,12 +5,16 @@ config.private.ts
 logs
 **/*.log
 **/*.log*
+
+# Javascript
 **/*.js
 **/*.map
 *.js
 **.js
 *.map
 **.map
+
+!swagger/static*/*.js
 
 # Dependency directories
 node_modules

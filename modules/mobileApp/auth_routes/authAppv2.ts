@@ -2,6 +2,7 @@ import { pacienteApp } from '../schemas/pacienteApp';
 import * as express from 'express';
 import * as authController from '../controller/AuthController';
 import { Auth } from '../../../auth/auth.class';
+import { EventCore } from '@andes/event-bus';
 
 const router = express.Router();
 // let emailRegex = /^[a-z0-9]+(\.[_a-z0-9]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,15})$/;
@@ -37,7 +38,7 @@ function getAccount(code, email) {
             } else if (!datosUsuario.email) {
                 // el usuario puede elegir el email. Cuando se envia el codigo de forma automatia
                 // chequemos que el emial que eligio el usuario no exista
-                return pacienteApp.findOne({email}).then(existsEmail => {
+                return pacienteApp.findOne({ email }).then(existsEmail => {
                     if (!existsEmail) {
                         datosUsuario.email = email;
                         return Promise.resolve(datosUsuario);
@@ -133,6 +134,8 @@ router.post('/v2/registrar', (req, res, next) => {
                 user
             });
 
+            EventCore.emitAsync('mobile:patient:register', datosUsuario);
+
         }).catch((er) => {
             return next(er);
         });
@@ -161,7 +164,7 @@ router.post('/v2/registrar', (req, res, next) => {
 router.post('/check-update', (req, res, next) => {
     // let app_version = req.body.app_version;
     // Por el momento devolvemos que todo esta bien
-    return res.json({status: 'ok'});
+    return res.json({ status: 'ok' });
 
     // new-version advierte al usuario que hay una nueva versión
     // return res.json({status: 'new-version'});

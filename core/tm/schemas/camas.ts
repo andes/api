@@ -2,20 +2,25 @@ import * as mongoose from 'mongoose';
 import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
 import * as nombreSchema from './nombre';
 import * as estado from './camaEstado';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 export let schema = new mongoose.Schema({
     organizacion: {
         type: nombreSchema,
         required: true
     },
-    sector: {
-        type: String,
+    unidadOrganizativaOriginal: {
+        type: SnomedConcept,
         required: true
     },
-    habitacion: {
-        type: String,
-        required: true
-    },
+    sectores: [{
+        tipoSector: SnomedConcept,
+        unidadConcept: {
+            type: SnomedConcept,
+            required: false
+        },
+        nombre: String
+    }],
     nombre: {
         type: String,
         required: true
@@ -38,7 +43,6 @@ schema.virtual('ultimoEstado').get(function () {
 
 });
 
-const audit = require('../../../mongoose/audit');
-schema.plugin(audit);
+schema.plugin(AuditPlugin);
 
 export let model = mongoose.model('cama', schema, 'cama');
