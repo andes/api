@@ -1,6 +1,5 @@
-const mongoose_1 = require('mongoose');
-const carpetaPaciente = require('../schemas/carpetaPaciente');
-const ObjectId = mongoose_1.Types.ObjectId;
+import { carpetaPaciente } from '../schemas/carpetaPaciente';
+
 export async function buscarCarpeta(req) {
     let carpeta;
     if (req.params.id) {
