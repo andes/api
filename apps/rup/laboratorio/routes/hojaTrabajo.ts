@@ -84,6 +84,16 @@ router.post('/hojatrabajo', async (req, res, next) => {
     });
 });
 
+router.put('/hojatrabajo/:id', async (req, res, next) => {
+    HojaTrabajo.findByIdAndUpdate(req.params.id, req.body, (err, data: any) => {
+        if (err) {
+            return next(err);
+        }
+        res.json(data);
+    });
+});
+
+
 router.patch('/hojatrabajo/:id', (req, res, next) => {
     HojaTrabajo.findById(req.params.id, (err, data: any) => {
         if (err) {
