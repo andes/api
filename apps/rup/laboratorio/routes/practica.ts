@@ -9,7 +9,7 @@ let router = express.Router();
 router.get('/practicas/codigo/:codigo', (req, res, next) => {
     const redix = 10;
     const codigo: number = parseInt(req.params.codigo, redix);
-    let query = { $and: [ { codigoNomenclador: { $ne: '' } }, { codigo: req.params.codigo } ] };
+    let query = { $and: [{ codigoNomenclador: { $ne: '' } }, { codigo: req.params.codigo }] };
     console.log(req.params.codigo)
     Practica.find(query).then((practicas: any[]) => {
         res.json(practicas.length > 0 ? practicas[0] : null);
@@ -37,32 +37,34 @@ router.get('/practicas', (req, res, next) => {
 
             query = {
                 $or: [
-                    {descripcion: { $regex: paramBusqueda }},
-                    {nombre: { $regex: paramBusqueda }},
-                    {'concepto.term': { $regex: paramBusqueda }}
-                ]
+                    { descripcion: { $regex: paramBusqueda } },
+                    { nombre: { $regex: paramBusqueda } },
+                    { 'concepto.term': { $regex: paramBusqueda } }
+                ],
+                $and: [{ codigoNomenclador: { $ne: '' } }]
             };
+
+            if (req.query.buscarSimples) {
+                query.$and.push({ categoria: { $eq: 'simple' } })
+            }
+
+            
+
             Practica.find(query).then((practicas: any[]) => {
                 res.json(practicas);
             });
         } else {
-            // let ids = [];
-            // if (Array.isArray(req.query.ids)) {
-            //     req.query.ids.map( (id) => { ids.push( Types.ObjectId(id) ); } );
-            // } else {
-            //     ids = [Types.ObjectId(req.query.ids)];
-            // }
             let ids = [];
-            req.query.ids.split(',').map( (id) => { ids.push( Types.ObjectId(id) ); } );
-            query = { _id: { $in: ids } };    
-            
+            req.query.ids.split(',').map((id) => { ids.push(Types.ObjectId(id)); });
+            query = { _id: { $in: ids } };
+
             if (req.query.fields) {
 
                 let fields = req.query.fields.split(',');
-                let project : any = {};
+                let project: any = {};
                 fields.forEach(field => {
-                    if(field === 'codigo')
-                    project.codigo = `$codigo`;
+                    if (field === 'codigo')
+                        project.codigo = `$codigo`;
                 });
 
                 let pipeline = [
@@ -70,13 +72,13 @@ router.get('/practicas', (req, res, next) => {
                         $match: {
                             '_id': { $in: ids }
                         }
-                    },{
+                    }, {
                         $project: project
                     }
                 ];
- 
+
                 toArray(Practica.aggregate(pipeline).cursor({}).exec()).then(
-                    (data) => res.json(data)
+                    (data) => { res.json(data) }
                 );
 
             } else {
@@ -89,7 +91,7 @@ router.get('/practicas', (req, res, next) => {
                     }
                     res.json(data);
                 });
-            }            
+            }
         }
     }
 });

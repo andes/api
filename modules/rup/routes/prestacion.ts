@@ -83,7 +83,7 @@ router.get('/prestaciones/huds/:idPaciente', async (req, res, next) => {
 
 
 router.get('/prestaciones/:id*?', (req, res, next) => {
-
+    console.log('GET/prestaciones/')
     if (req.params.id) {
         const query = Prestacion.findById(req.params.id);
         query.exec((err, data) => {
@@ -172,7 +172,7 @@ router.get('/prestaciones/:id*?', (req, res, next) => {
         // Solicitudes generadas desde puntoInicio Ventanilla
         // Solicitudes que no tienen prestacionOrigen ni turno
         // Si tienen prestacionOrigen son generadas por RUP y no se listan
-        // Si tienen turno, dejan de estar pendientes de turno y no se listan
+        // Si tienen turno, dejan de estsar pendientes de turno y no se listan
 
         if (req.query.tienePrestacionOrigen === 'no') {
             query.where('solicitud.prestacionOrigen').equals(null);
@@ -212,7 +212,6 @@ router.get('/prestaciones/:id*?', (req, res, next) => {
 });
 
 router.post('/prestaciones', (req, res, next) => {
-    console.log('nueva prestacion', req.body.registros)
     const prestacion = req.body;
     const data = new Prestacion(req.body);
     Auth.audit(data, req);
@@ -226,7 +225,7 @@ router.post('/prestaciones', (req, res, next) => {
 
 
 router.patch('/prestaciones/:id', (req, res, next) => {
-    
+
     Prestacion.findById(req.params.id, (err, data: any) => {
         if (err) {
             return next(err);
@@ -261,16 +260,15 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 data.estados.push(req.body.estado);
                 break;
             case 'registros':
-            if (req.body.registros) {
+                if (req.body.registros) {
                     data.ejecucion.registros = req.body.registros;
 
                     if (req.body.solicitud) {
                         data.solicitud = req.body.solicitud;
                     }
                 }
-            break;
+                break;
             case 'nuevoProtocoloLaboratorio':
-            console.log('nuevoProtocoloLaboratorio', req.body.registros)
                 if (req.body.registros) {
                     data.ejecucion.registros = req.body.registros;
                 }
