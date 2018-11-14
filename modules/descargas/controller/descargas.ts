@@ -145,7 +145,7 @@ export class Documento {
         } else if (proc.concepto.conceptId === '440588003') {
             const unidad = proc.concepto.conceptId === '440588003' ? 'minutos' : '';
             valor = `${proc.valor} ${unidad}`;
-        } else if (proc.valor.id && proc.valor.label) {
+        } else if (proc.valor.id !== undefined && proc.valor.label !== undefined) {
             valor = proc.valor.otro ? proc.valor.otro : proc.valor.label;
         } else {
             valor = proc.valor.toString();
