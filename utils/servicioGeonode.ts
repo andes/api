@@ -1,5 +1,5 @@
 import * as express from 'express';
-import { geoNode } from './../config.private';
+import { geoNode } from '../config.private';
 
 const router = express.Router();
 
