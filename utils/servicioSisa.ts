@@ -1,10 +1,10 @@
 import { Matching } from '@andes/match';
 import * as config from '../config';
 import * as configPrivate from '../config.private';
-const request = require('request');
+import * as request from 'request';
 const to_json = require('xmljson').to_json;
 
-function getSisaCiudadano(nroDocumento, usuario, clave, sexo) {
+export function getSisaCiudadano(nroDocumento, usuario, clave, sexo) {
     /**
      * Capítulo 5.2.2 - Ficha del ciudadano
      * Se obtienen los datos desde Sisa
