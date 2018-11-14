@@ -1,6 +1,6 @@
 {
   "name": "api",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "API para ANDES",
   "main": "index.js",
   "dependencies": {
@@ -96,6 +96,7 @@
   },
   "homepage": "https://github.com/andes/api#readme",
   "devDependencies": {
+    "@types/request": "^2.48.1",
     "before": "0.0.1",
     "chai": "^4.1.2",
     "nodemon": "^1.17.4",
