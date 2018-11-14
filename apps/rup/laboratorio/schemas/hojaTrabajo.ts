@@ -37,7 +37,21 @@ export let schema = new mongoose.Schema({
         textoInferiorIzquierda: String,
     },
     baja: Boolean,
-    practicas: [{ nombre: String, practica: { type: mongoose.Schema.Types.ObjectId, ref: 'Practica', required: true } }],
+    practicas: [{
+        id: mongoose.Schema.Types.ObjectId,
+        nombre: String,
+        practica: {
+            codigo: {
+                type: String,
+                required: false
+            },
+            nombre: {
+                type: String,
+                required: true
+            },
+            concepto: SnomedConcept,
+        }
+    }],
 });
 
 
