@@ -1,43 +1,47 @@
-import { profesional } from './../../../../core/tm/schemas/profesional';
-import { Practica } from './practica';
-import { model, Schema } from 'mongoose';
-import { model as efector } from '../../../../core/tm/schemas/organizacion';
+import * as mongoose from 'mongoose';
+import { SnomedConcept } from './../../../../modules/rup/schemas/snomed-concept';
 
-enum formatoAnchoColumnas {
-    'Texto corto' = 0,
-    'Texto mediano' = 1,
-    'Texto grande' = 2,
-    'Texto corto c/Nro. Fila' = 3
-}
-
-export let schema = new Schema({
-    laboratorio: efector,
-    codigo: String,
-    responsable: profesional,
-    formato: Number,
-    tipoHoja: Boolean,
-    formatoAncho: formatoAnchoColumnas,
-    imprimirPrioridad: Boolean,
-    imprimirOrigen: Boolean,
-    imprimirApellidoNombre: Boolean,
-    imprimirEdad: Boolean,
-    imprimirSexo: Boolean,
-    imprimirAntecedente: Boolean,
-    imprimirFechaHora: Boolean,
-    imprimirCorrelativo: Boolean,
-    imprimirMedico: Boolean,
-    textoInferiorDerecha: String,
-    textoInferiorIzquierda: String,
-    cantidadLineaAdicional: Number,
+export let schema = new mongoose.Schema({
+    laboratorio: { type: mongoose.Schema.Types.ObjectId, ref: 'efector', required: true },
+    nombre: String,
+    responsable: { type: mongoose.Schema.Types.ObjectId, ref: 'profesional', required: true },
+    area: {
+        nombre: {
+            type: String,
+            required: true
+        },
+        conceptoSnomed: SnomedConcept
+    },
+    protocolo: {
+        imprimirPrioridad: Boolean,
+        imprimirOrigen: Boolean,
+        imprimirDiagnostico: Boolean
+    },
+    paciente: {
+        imprimirApellidoNombre: Boolean,
+        imprimirEdad: Boolean,
+        imprimirSexo: Boolean,
+        cantidadLineaAdicional: Number
+    },
+    papel: {
+        formato: {
+            type: String,
+            enum: ['A4', 'Oficio']
+        },
+        orientacion: {
+            type: String,
+            enum: ['Horizontal', 'Vertical']
+        },
+        anchoColumnasMilimetros: Number,
+        textoInferiorDerecha: String,
+        textoInferiorIzquierda: String,
+    },
     baja: Boolean,
-    idUsuarioRegistro: Number,
-    fechaRegistro: Date,
-    idUltimoProtocoloListado: Number,
-    practicas: [{ nombre: String, practica: Practica }],
+    practicas: [{ nombre: String, practica: { type: mongoose.Schema.Types.ObjectId, ref: 'Practica', required: true } }],
 });
 
 
 // Habilitar plugin de auditoría
 schema.plugin(require('../../../../mongoose/audit'));
 
-export let HojaTrabajo = model('hojaTrabajo', schema, 'hojaTrabajo');
+export let HojaTrabajo = mongoose.model('hojaTrabajo', schema, 'hojaTrabajo');

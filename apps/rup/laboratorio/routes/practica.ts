@@ -5,12 +5,11 @@ import { Mongoose, Types } from 'mongoose';
 let router = express.Router();
 
 
-
 router.get('/practicas/codigo/:codigo', (req, res, next) => {
     const redix = 10;
     const codigo: number = parseInt(req.params.codigo, redix);
     let query = { $and: [{ codigoNomenclador: { $ne: '' } }, { codigo: req.params.codigo }] };
-    console.log(req.params.codigo)
+
     Practica.find(query).then((practicas: any[]) => {
         res.json(practicas.length > 0 ? practicas[0] : null);
     });
@@ -70,7 +69,7 @@ router.get('/practicas', (req, res, next) => {
                 let pipeline = [
                     {
                         $match: {
-                            '_id': { $in: ids }
+                            _id: { $in: ids }
                         }
                     }, {
                         $project: project
