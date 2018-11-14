@@ -1,4 +1,4 @@
-import { carpetaPaciente } from '../schemas/carpetaPaciente';
+import * as carpetaPaciente from '../../carpetas/schemas/carpetaPaciente';
 
 export async function buscarCarpeta(req) {
     let carpeta;

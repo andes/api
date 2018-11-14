@@ -1,7 +1,7 @@
 import * as mongoose from 'mongoose';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
 
-let carpetaPacienteSchema = new mongoose.Schema({
+const carpetaPacienteSchema = new mongoose.Schema({
     documento: String,
     carpetaEfectores: [{
         organizacion: nombreSchema,
@@ -10,5 +10,5 @@ let carpetaPacienteSchema = new mongoose.Schema({
     }]
 });
 
-export let carpetaPaciente = mongoose.model('carpetaPaciente', carpetaPacienteSchema, 'carpetaPaciente');
-
+const carpetaPaciente = mongoose.model('carpetaPaciente', carpetaPacienteSchema, 'carpetaPaciente');
+export = carpetaPaciente;
