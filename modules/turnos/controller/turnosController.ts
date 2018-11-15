@@ -312,17 +312,27 @@ export async function getLiberadosPaciente(req) {
     }
 }
 
-export async function actualizarCarpeta(req, res, next, pacienteSave) {
+/**
+ *
+ *
+ * @export
+ * @param {*} req
+ * @param {*} res
+ * @param {*} next
+ * @param {*} pacienteSave
+ * @returns
+ */
+export async function actualizarCarpeta(req, next, pacienteSave) {
     const resultado = await controller.buscarPaciente(req.body.paciente.id) as any;
     if (resultado) {
         try { // Actualizamos los turnos activos del paciente
-            req.body.carpetaEfectores = pacienteSave.carpetaEfectores;
+            req.body.carpetaEfectores = pacienteSave.carpetaEfectores ? pacienteSave.carpetaEfectores : resultado.paciente.carpetaEfectores;
             const repetida = await controller.checkCarpeta(req, resultado.paciente);
             if (!repetida) {
                 controller.updateCarpetaEfectores(req, resultado.paciente);
                 controller.updateTurnosPaciente(resultado.paciente);
             } else {
-                return next('El numero de carpeta ya existe');
+                return next('El nÚmero de carpeta ya existe');
             }
         } catch (error) { return next(error); }
         let pacienteAndes: any;

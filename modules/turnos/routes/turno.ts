@@ -12,6 +12,7 @@ import * as moment from 'moment';
 import * as debug from 'debug';
 import { EventCore } from '@andes/event-bus';
 import * as carpetaPaciente from '../../carpetas/schemas/carpetaPaciente';
+import * as controller from '../../../core/mpi/controller/paciente';
 
 const router = express.Router();
 const dbgTurno = debug('dbgTurno');
@@ -156,11 +157,18 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
     if (continues.valid) {
         let agendaRes;
         try {
-            // Si el paciente no tiene carpetas, se busca en la colección carpetaPaciente
+            // Si el paciente no tiene carpetas, se busca en la colección carpetaPaciente y en  MPI
             if (!req.body.paciente.carpetaEfectores || req.body.paciente.carpetaEfectores.length === 0) {
+                const pacienteMPI = await controller.buscarPaciente(req.body.paciente.id) as any;
+                // si existe el paciente en MPI y tiene carpeta llamo
                 let carpetas = await getCarpeta(req.body.paciente.documento, (req as any).user.organizacion._id);
-                pacienteSave.carpetaEfectores = (carpetas[0] as any).carpetaEfectores;
-                await turnosController.actualizarCarpeta(req, res, next, pacienteSave);
+                console.log('carpetas ', carpetas);
+                if (carpetas.length > 0) {
+                    pacienteSave.carpetaEfectores = (carpetas[0] as any).carpetaEfectores;
+                    await turnosController.actualizarCarpeta(req, next, pacienteSave);
+                } else {
+                    await turnosController.actualizarCarpeta(req, next, pacienteSave);
+                }
             }
             agendaRes = await getAgenda(req.params.idAgenda);
         } catch (err) {
