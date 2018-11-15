@@ -52,9 +52,12 @@ router.get('/profesionales/guia', async (req, res, next) => {
         opciones['formacionGrado.profesion.codigo'] = Number(req.query.codigoProfesion);
         opciones['formacionGrado.matriculacion.matriculaNumero'] = Number(req.query.numeroMatricula);
     }
+    opciones['formacionGrado.matriculacion'] = {$ne: null};
+    opciones['profesionalMatriculado'] = true;
 
     if (Object.keys(opciones).length !== 0) {
         let datosGuia: any = await profesional.findOne(opciones);
+        console.log(datosGuia);
         let resultado: IGuiaProfesional;
         if (datosGuia) {
             resultado = {
