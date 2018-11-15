@@ -1,9 +1,9 @@
 import * as express from 'express';
 import * as configPrivate from '../../../config.private';
-import * as parser from '../controller/parser';
-import * as validator from '../controller/validator';
+import * as parser from '../../fhir/controllers/parser';
+import * as validator from '../../fhir/controllers/validator';
 import * as checkPatientExist from '../../../utils/checkPatientExist';
-import * as codes from '../controller/errorCodes';
+import * as codes from '../../fhir/controllers/errorCodes';
 import { Matching } from '@andes/match';
 import { Client } from 'elasticsearch';
 import { Auth } from './../../../auth/auth.class';
@@ -12,7 +12,7 @@ import { paciente } from '../../../core/mpi/schemas/paciente';
 // Schemas
 const router = express.Router();
 
-router.get('/([\$])match', (req, res, next) => {
+router.get('/patient/([\$])match', (req, res, next) => {
     if (!Auth.check(req, 'fhir:pacient:match')) {
         return next(codes.status.unauthorized);
     }

@@ -502,8 +502,10 @@ export function validateMiddleware(req, res, next) {
         errors.fecha = 'invalid_format';
     }
 
-    if (file && !base64RegExp.test(file)) {
-        errors.file = 'file_error';
+    if (file) {
+        if (!base64RegExp.test(file) && !file.startsWith('id:')) {
+            errors.file = 'file_error';
+        }
     }
 
     if (!validString(dataProfesional.nombre)) {
