@@ -257,9 +257,13 @@ export class Documento {
         return new Promise(async (resolve, reject) => {
             for (let i = 0; i < registros.length; i++) {
                 if (registros[i]) {
+                    // Es resumen de la internación?
                     if (registros[0].concepto.conceptId === '3571000013102') {
                         this.nivelPadre = 1;
 
+                        // Es colonoscopia?
+                    } else if (registros[0].concepto.conceptId === '32780001') {
+                        this.nivelPadre = 1;
                     } else {
                         this.nivelPadre = (registros[i].registros.length > 0) ? 1 : 2;
                     }
