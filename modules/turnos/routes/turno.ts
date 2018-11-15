@@ -153,24 +153,19 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
  */
 router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res, next) => {
     const continues = ValidateDarTurno.checkTurno(req.body);
-    const pacienteSave = req.body.paciente;
+    const pacienteTurno = req.body.paciente;
     if (continues.valid) {
         let agendaRes;
         try {
             // Si el paciente no tiene carpetas, se busca en la colección carpetaPaciente y en  MPI
-            if (!req.body.paciente.carpetaEfectores || req.body.paciente.carpetaEfectores.length === 0) {
+            if (!pacienteTurno.carpetaEfectores || pacienteTurno.carpetaEfectores.length === 0) {
                 const pacienteMPI = await controller.buscarPaciente(req.body.paciente.id) as any;
-                // si existe el paciente en MPI y tiene carpeta llamo
-                let carpetas = await getCarpeta(req.body.paciente.documento, (req as any).user.organizacion._id);
-                console.log('carpetas ', carpetas);
-                if (carpetas.length > 0) {
-                    pacienteSave.carpetaEfectores = (carpetas[0] as any).carpetaEfectores;
-                    await turnosController.actualizarCarpeta(req, next, pacienteSave);
-                } else {
-                    await turnosController.actualizarCarpeta(req, next, pacienteSave);
-                }
+                const carpetas = await getCarpeta(req.body.paciente.documento, (req as any).user.organizacion._id);
+                await turnosController.actualizarCarpeta(req, res, next, pacienteMPI, carpetas);
+                pacienteTurno.carpetaEfectores = req.body.carpetaEfectores;
             }
             agendaRes = await getAgenda(req.params.idAgenda);
+
         } catch (err) {
             return next(err);
         }
@@ -274,7 +269,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         update[etiquetaEstado] = 'asignado';
         update[etiquetaPrestacion] = req.body.tipoPrestacion;
         // update[etiquetaPaciente] = req.body.paciente;
-        update[etiquetaPaciente] = pacienteSave;
+        update[etiquetaPaciente] = pacienteTurno;
 
         update[etiquetaTipoTurno] = tipoTurno;
         update[etiquetaNota] = req.body.nota;

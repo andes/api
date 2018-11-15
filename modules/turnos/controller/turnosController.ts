@@ -319,27 +319,32 @@ export async function getLiberadosPaciente(req) {
  * @param {*} req
  * @param {*} res
  * @param {*} next
- * @param {*} pacienteSave
+ * @param {*} pacienteMPI
  * @returns
  */
-export async function actualizarCarpeta(req, next, pacienteSave) {
-    const resultado = await controller.buscarPaciente(req.body.paciente.id) as any;
-    if (resultado) {
+export async function actualizarCarpeta(req, res, next, pacienteMPI, carpetas) {
+    if (pacienteMPI) {
         try { // Actualizamos los turnos activos del paciente
-            req.body.carpetaEfectores = pacienteSave.carpetaEfectores ? pacienteSave.carpetaEfectores : resultado.paciente.carpetaEfectores;
-            const repetida = await controller.checkCarpeta(req, resultado.paciente);
+            if (pacienteMPI.paciente.carpetaEfectores.length > 0) {
+                req.body.carpetaEfectores = pacienteMPI.paciente.carpetaEfectores;
+            } else {
+                if (carpetas.length > 0) {
+                    req.body.carpetaEfectores = (carpetas[0] as any).carpetaEfectores;
+                }
+            }
+            const repetida = await controller.checkCarpeta(req, pacienteMPI.paciente);
             if (!repetida) {
-                controller.updateCarpetaEfectores(req, resultado.paciente);
-                controller.updateTurnosPaciente(resultado.paciente);
+                controller.updateCarpetaEfectores(req, pacienteMPI.paciente);
+                controller.updateTurnosPaciente(pacienteMPI.paciente);
             } else {
                 return next('El nÚmero de carpeta ya existe');
             }
         } catch (error) { return next(error); }
         let pacienteAndes: any;
-        if (resultado.db === 'mpi') {
-            pacienteAndes = new paciente(resultado.paciente.toObject());
+        if (pacienteMPI.db === 'mpi') {
+            pacienteAndes = new paciente(pacienteMPI.paciente.toObject());
         } else {
-            pacienteAndes = resultado.paciente;
+            pacienteAndes = pacienteMPI.paciente;
         }
         Auth.audit(pacienteAndes, req);
         pacienteAndes.save((errPatch) => {
