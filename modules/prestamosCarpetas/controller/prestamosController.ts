@@ -433,8 +433,13 @@ export async function getHistorial(req) {
     const organizacionId = req.query.organizacion;
 
     const queryPaciente = await buscarPacienteWithcondition({
-        'carpetaEfectores.organizacion._id': organizacionId,
-        'carpetaEfectores.nroCarpeta': nroCarpeta
+        carpetaEfectores: {
+            $elemMatch:
+            {
+                'organizacion._id': organizacionId,
+                nroCarpeta: nroCarpeta
+            }
+        }
     });
 
     if (queryPaciente) {
