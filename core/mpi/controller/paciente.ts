@@ -744,9 +744,10 @@ export async function mapeoPuco(dni) {
 }
 
 
-export async function insertSips() {
-
+export async function insertSips(done) {
+    console.log('iniciando job');
     let datos: any = await pacientesDelDia();
+    console.log('datos', datos);
     for (let index = 0; index < datos.length; index++) {
         let existeEnSips = await getPacienteSips(datos[index].paciente.documento);
         // let existeEnPuco: any = await operacionesLegacy.postPuco(pacientes[index].documento)
@@ -798,40 +799,49 @@ export async function insertSips() {
 
     }
 
+    done();
+
 
 }
 
 
 export async function actualizarTurno(idTurno) {
-    agendaSchema.find({
-        'bloques.turnos._id': idTurno
-    }).exec((err, data: any) => {
-        let indexs = getPosition(null, data[0], idTurno);
-        let turno = data[0].bloques[indexs.indexBloque].turnos[indexs.indexTurno];
-        turno.paciente.obraSocial = {
-            codigoFinanciador: 499,
-            financiador: 'Sumar'
-        };
-        Auth.audit(data[0], configPrivate.userScheduler);
-        data[0].save((err2, result) => {
-        });
-    });
+    // agendaSchema.find({
+    //     'bloques.turnos._id': idTurno
+    // }).exec((err, data: any) => {
+    //     let indexs = getPosition(null, data[0], idTurno);
+    //     let turno = data[0].bloques[indexs.indexBloque].turnos[indexs.indexTurno];
+    //     turno.paciente.obraSocial = {
+    //         codigoFinanciador: 499,
+    //         financiador: 'Sumar'
+    //     };
+    //     Auth.audit(data[0], configPrivate.userScheduler);
+    //     data[0].save((err2, result) => {
+    //     });
+    // });
+
+    let data: any = await agendaSchema.find({ 'bloques.turnos._id': idTurno });
+    let indexs = getPosition(null, data[0], idTurno);
+    let turno = data[0].bloques[indexs.indexBloque].turnos[indexs.indexTurno];
+    console.log('turno', turno);
+    turno.paciente.obraSocial = {
+        codigoFinanciador: 499,
+        financiador: 'Sumar'
+    };
+    await Auth.audit(data[0], configPrivate.userScheduler);
+    await data[0].save({});
 }
 
 
 export async function actualizarPrestacion(idPrestaciom) {
-    prestacionSchema.model.find({
-        _id: idPrestaciom
-    }).exec((err, data: any) => {
-        let prestacion = data[0];
-        prestacion.paciente.obraSocial = {
-            codigoFinanciador: 499,
-            financiador: 'Sumar'
-        };
-        Auth.audit(data[0], configPrivate.userScheduler);
-        data[0].save((err2, result) => {
-        });
-    });
+    let prestaciones: any = await prestacionSchema.model.find({ _id: idPrestaciom });
+    prestaciones[0].paciente.obraSocial = {
+        codigoFinanciador: 499,
+        financiador: 'Sumar'
+    };
+    await Auth.audit(prestaciones[0], configPrivate.userScheduler);
+    await prestaciones[0].save({});
+
 }
 
 export async function mapeoEfector(idEfector) {
