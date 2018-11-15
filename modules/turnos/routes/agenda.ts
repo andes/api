@@ -413,7 +413,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                                     return next(error);
                                 }
                                 // PAra probar ahora
-                                EventCore.emitAsync('citas:integracion', data);
+                                EventCore.emitAsync('citas:integracion', data[0]);
                             });
                         }).catch(err2 => { return next(err2); });
                     }
@@ -434,7 +434,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                                         err: error || false
                                     });
                                     // PAra probar ahora
-                                    EventCore.emitAsync('citas:integracion', data2);
+                                    EventCore.emitAsync('citas:integracion', data2[0]);
                                     if (error) {
                                         return next(error);
                                     }
