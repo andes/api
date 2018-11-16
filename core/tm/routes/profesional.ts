@@ -58,17 +58,17 @@ router.get('/profesionales/guia', async (req, res, next) => {
     if (Object.keys(opciones).length !== 0) {
         let datosGuia: any = await profesional.findOne(opciones);
         let resultado: IGuiaProfesional;
+
         if (datosGuia) {
             resultado = {
                 id: datosGuia.id,
-                nombre: datosGuia.nombre,
-                sexo: datosGuia.sexo,
-                apellido: datosGuia.apellido,
-                documento: datosGuia.documento,
-                nacionalidad: datosGuia.nacionalidad.nombre,
+                nombre: datosGuia.nombre ? datosGuia.nombre : '',
+                sexo: datosGuia.sexo ? datosGuia.sexo : '',
+                apellido: datosGuia.apellido ? datosGuia.apellido : '',
+                documento: datosGuia.documento ? datosGuia.documento : '' ,
+                nacionalidad: datosGuia.nacionalidad ? datosGuia.nacionalidad.nombre : '',
                 profesiones: datosGuia.formacionGrado
             };
-
         }
         res.json(resultado);
     } else {
