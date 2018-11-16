@@ -309,7 +309,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                 LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turno, req.params.idBloque, req.params.idAgenda);
 
                 EventCore.emitAsync('citas:turno:asignar', turno);
-                EventCore.emitAsync('citas:integracion', doc2);
+                EventCore.emitAsync('citas:agenda:update', doc2);
 
                 // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
                 // Donde doc2 es el documeto Agenda actualizado
