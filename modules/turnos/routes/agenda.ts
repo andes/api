@@ -542,8 +542,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
 
                 Auth.audit(data, req);
                 data.save((error) => {
-                    // PAra probar ahora
-                    EventCore.emitAsync('citas:integracion', data); // Mers way!
+                    EventCore.emitAsync('citas:integracion', data);
 
                     if (event.data) {
                         EventCore.emitAsync(`citas:${event.object}:${event.accion}`, event.data);
