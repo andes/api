@@ -18,7 +18,8 @@ router.get('/espacioFisico/:_id*?', (req, res, next) => {
         const radix = 10;
         const skip: number = parseInt(req.query.skip || 0, radix);
         const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
-        const query = espacioFisico.find({}).skip(skip).limit(limit);
+        const query = espacioFisico.find({});
+        // .skip(skip).limit(limit);
         const nombres = [];
 
         if (req.query.nombre) {
