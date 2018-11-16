@@ -437,7 +437,7 @@ export async function getHistorial(req) {
             $elemMatch:
             {
                 'organizacion._id': organizacionId,
-                nroCarpeta: nroCarpeta
+                nroCarpeta
             }
         }
     });
