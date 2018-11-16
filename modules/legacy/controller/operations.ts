@@ -11,6 +11,16 @@ import * as organizacion from './../../../core/tm/schemas/organizacion';
 import * as sql from 'mssql';
 import * as sisaController from '../../../modules/fuentesAutenticas/controller/sisaController';
 import { configuracionPrestacionModel } from '../../../core/term/schemas/configuracionPrestacion';
+import { mapeoPuco } from '../../../modules/obraSocial/controller/obraSocial';
+import * as configPrivate from '../../../config.private';
+
+let configSql = {
+    user: configPrivate.conSql.auth.user,
+    password: configPrivate.conSql.auth.password,
+    server: configPrivate.conSql.serverSql.server,
+    database: configPrivate.conSql.serverSql.database,
+    requestTimeout: 45000
+};
 
 // Funciones privadas
 function traeProfesionalPorId(id) {
@@ -138,7 +148,8 @@ export async function pacienteSipsFactory(paciente: any, idEfectorSips: any) {
         numeroDocumento: paciente.documento,
         idSexo: (paciente.sexo === 'masculino' ? 3 : paciente.sexo === 'femenino' ? 2 : 1),
         fechaNacimiento: moment(paciente.fechaNacimiento).format('YYYYMMDD'),
-        idEstado: mapeoEstado(paciente.estado),
+        idEstado: 3 ,
+        // idEstado: mapeoEstado(paciente.estado),
         /* Estado Validado en SIPS*/
         idMotivoNI: 0,
         idPais: 54,
@@ -184,15 +195,15 @@ export async function pacienteSipsFactory(paciente: any, idEfectorSips: any) {
         email: '',
         latitud: 0,
         longitud: 0,
-        objectId: paciente._id
+        objectId: paciente._id ? paciente._id : paciente.id
     };
 }
 
 async function codigoPucoPorDni(dni) {
     let idObraSocial;
-    let obraSocial: any = await sisaController.postPuco(dni);
-    if (obraSocial.puco.resultado === 'OK') {
-        idObraSocial = await mapeoObraSocial(obraSocial.puco.rnos);
+    let obraSocial: any = await mapeoPuco(dni);
+    if (obraSocial) {
+        idObraSocial = await mapeoObraSocial(obraSocial.codigoFinanciador);
         if (idObraSocial === 0) {
             idObraSocial = 499;
         }
@@ -200,7 +211,6 @@ async function codigoPucoPorDni(dni) {
         idObraSocial = 499;
 
     }
-
 
     return idObraSocial;
 
@@ -341,7 +351,6 @@ export async function insertaPacienteSips(paciente: any) {
                     '\'' + paciente.longitud + '\', ' +
                     '\'' + paciente.objectId + '\' ' +
                     ') ';
-
                 idPacienteGrabadoSips = await executeQuery(query);
             } else {
                 idPacienteGrabadoSips = idPaciente;
@@ -360,11 +369,13 @@ function existepaciente(paciente) {
     return new Promise((resolve: any, reject: any) => {
         (async  () => {
             try {
+
+                let pool = await new sql.ConnectionPool(configSql).connect();
+
                 let query = 'SELECT idPaciente FROM dbo.Sys_Paciente WHERE objectId = @objectId';
-                let result = await new sql.Request()
+                let result = await new sql.Request(pool)
                     .input('objectId', sql.VarChar(50), paciente.objectId)
                     .query(query);
-
                 if (typeof result[0] !== 'undefined') {
                     idpaciente = result[0].idPaciente;
                     resolve(idpaciente);
@@ -380,10 +391,12 @@ function existepaciente(paciente) {
     });
 }
 
-function executeQuery(query: any) {
+async function executeQuery(query: any) {
     query += ' select SCOPE_IDENTITY() as id';
+    let pool = await new sql.ConnectionPool(configSql).connect();
+
     return new Promise((resolve: any, reject: any) => {
-        return new sql.Request()
+        return new sql.Request(pool)
             .query(query)
             .then(result => {
                 resolve(result.recordset[0].id);

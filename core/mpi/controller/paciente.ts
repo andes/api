@@ -21,7 +21,7 @@ import { Puco } from '../../../modules/obraSocial/schemas/puco';
 import * as agendaSchema from '../../../modules/turnos/schemas/agenda';
 import * as prestacionSchema from '../../../modules/rup/schemas/prestacion';
 import { getPosition } from '../../../modules/turnos/controller/agenda';
-
+import { mapeoPuco } from '../../../modules/obraSocial/controller/obraSocial';
 /**
  * Crea un paciente y lo sincroniza con elastic
  *
@@ -714,40 +714,39 @@ export async function matchPaciente(dataPaciente) {
     }
 }
 
-async function obtenerVersiones() {
-    let versiones = await Puco.distinct('version').exec();  // esta consulta obtiene un arreglo de strings
-    for (let i = 0; i < versiones.length; i++) {
-        versiones[i] = { version: versiones[i] };
-    }
-    versiones.sort((a, b) => compare(a.version, b.version));
-    return versiones;
-}
+// async function obtenerVersiones() {
+//     let versiones = await Puco.distinct('version').exec();  // esta consulta obtiene un arreglo de strings
+//     for (let i = 0; i < versiones.length; i++) {
+//         versiones[i] = { version: versiones[i] };
+//     }
+//     versiones.sort((a, b) => compare(a.version, b.version));
+//     return versiones;
+// }
 
-function compare(a, b) {
-    if (new Date(a) > new Date(b)) {
-        return -1;
-    }
-    if (new Date(a) < new Date(b)) {
-        return 1;
-    }
-    return 0;
-}
+// function compare(a, b) {
+//     if (new Date(a) > new Date(b)) {
+//         return -1;
+//     }
+//     if (new Date(a) < new Date(b)) {
+//         return 1;
+//     }
+//     return 0;
+// }
 
-export async function mapeoPuco(dni) {
+// export async function mapeoPuco(dni) {
 
-    let padron;
-    padron = await obtenerVersiones();   // trae las distintas versiones de los padrones
-    padron = padron[0].version;
-    let salida = await Puco.findOne({ dni, version: padron }, {}, (err, data: any) => { });
+//     let padron;
+//     padron = await obtenerVersiones();   // trae las distintas versiones de los padrones
+//     padron = padron[0].version;
+//     let salida = await Puco.findOne({ dni, version: padron }, {}, (err, data: any) => { });
 
-    return salida;
-}
+//     return salida;
+// }
 
 
 export async function insertSips(done) {
     console.log('iniciando job');
     let datos: any = await pacientesDelDia();
-    console.log('datos', datos);
     for (let index = 0; index < datos.length; index++) {
         let existeEnSips = await getPacienteSips(datos[index].paciente.documento);
         // let existeEnPuco: any = await operacionesLegacy.postPuco(pacientes[index].documento)
@@ -768,7 +767,7 @@ export async function insertSips(done) {
             let idPacienteSips = await operacionesLegacy.insertaPacienteSips(pacienteSips);
         }
         // let existeEnPuco: any = await sisaController.postPuco(pacientes[index].documento);
-        let existeEnPuco: any = await this.mapeoPuco(datos[index].paciente.documento);
+        let existeEnPuco: any = await mapeoPuco(datos[index].paciente.documento);
         // si no existe en puco entra para hacer la validacion con afiliados y beneficiarios
         if (existeEnPuco === null) {
             let existeEnAfiliado = await getAfiliadoSumar(datos[index].paciente.documento);
@@ -823,7 +822,6 @@ export async function actualizarTurno(idTurno) {
     let data: any = await agendaSchema.find({ 'bloques.turnos._id': idTurno });
     let indexs = getPosition(null, data[0], idTurno);
     let turno = data[0].bloques[indexs.indexBloque].turnos[indexs.indexTurno];
-    console.log('turno', turno);
     turno.paciente.obraSocial = {
         codigoFinanciador: 499,
         financiador: 'Sumar'
