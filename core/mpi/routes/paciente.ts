@@ -157,6 +157,22 @@ router.get('/pacientes/auditoria/vinculados/', async (req, res, next) => {
     }
 
 });
+router.get('/pacientes/inactivos/', async (req, res, next) => {
+    let filtro = {
+        activo: false
+    };
+    // filtro['activo'] = req.query.activo === 'true' ? true : false;
+    try {
+        let resultadosAndes = paciente.find(filtro).exec();
+        let resultadosMpi = pacienteMpi.find(filtro).exec();
+        const pacientes = await Promise.all([resultadosAndes, resultadosMpi]);
+        let listado = [...pacientes[0], ...pacientes[1]];
+        res.json(listado);
+    } catch (error) {
+        return next(error);
+    }
+
+});
 
 
 // Simple mongodb query by ObjectId --> better performance
