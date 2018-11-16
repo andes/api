@@ -1,6 +1,8 @@
 import * as mongoose from 'mongoose';
 import * as cie10 from '../../../core/term/schemas/cie10';
 import { SnomedConcept } from './snomed-concept';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
+
 
 const codificacionSchema = new mongoose.Schema({
     idPrestacion: {
@@ -19,5 +21,5 @@ const codificacionSchema = new mongoose.Schema({
         }]
     }
 });
-
+codificacionSchema.plugin(AuditPlugin);
 export let codificacion = mongoose.model('codificacion', codificacionSchema, 'codificacion');
