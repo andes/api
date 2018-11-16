@@ -702,9 +702,9 @@ export async function checkRepetido(nuevoPaciente): Promise<boolean> {
         type: 'suggest',
         claveBlocking: 'documento',
         percentage: true,
-        apellido: nuevoPaciente.apellido.toString(),
-        nombre: nuevoPaciente.nombre.toString(),
-        documento: nuevoPaciente.documento.toString(),
+        apellido: nuevoPaciente.apellido,
+        nombre: nuevoPaciente.nombre,
+        documento: nuevoPaciente.documento,
         sexo: ((typeof nuevoPaciente.sexo === 'string')) ? nuevoPaciente.sexo : (Object(nuevoPaciente.sexo).id),
         fechaNacimiento: nuevoPaciente.fechaNacimiento
     };
