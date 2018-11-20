@@ -139,7 +139,7 @@ export const modules = {
         active: true,
         path: './modules/descargas/routes',
         route: '/modules/descargas',
-        middleware: appMiddleware
+        middleware: null
     },
     obraSocial: {
         active: true,
