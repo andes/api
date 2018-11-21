@@ -2,6 +2,7 @@ import * as mongoose from 'mongoose';
 import * as agenda from '../../../modules/turnos/schemas/agenda';
 import { toArray } from '../../../utils/utils';
 import { logPaciente } from '../../../core/log/schemas/logPaciente';
+import { buscarPaciente } from '../../../core/mpi/controller/paciente';
 
 export function getTurno(req) {
     return new Promise(async (resolve, reject) => {
@@ -91,7 +92,9 @@ export function getTurno(req) {
                 }
 
                 if (req.query && req.query.pacienteId) {
-                    matchTurno['bloques.turnos.paciente.id'] = mongoose.Types.ObjectId(req.query.pacienteId);
+                    const idPaciente = new mongoose.Types.ObjectId(req.query.pacienteId);
+                    let { paciente } = await buscarPaciente(idPaciente);
+                    matchTurno['bloques.turnos.paciente.id'] = { $in: paciente.vinculos };
                 }
 
                 pipelineTurno[0] = { $match: matchTurno };
@@ -134,6 +137,8 @@ export function getTurno(req) {
 
 export async function getHistorialPaciente(req) {
     if (req.query && req.query.pacienteId) {
+        const idPaciente = new mongoose.Types.ObjectId(req.query.pacienteId);
+        let { paciente } = await buscarPaciente(idPaciente);
         try {
             let pipelineTurno = [];
             const turnos = [];
@@ -152,7 +157,7 @@ export async function getHistorialPaciente(req) {
                                 'pausada'
                             ]
                         },
-                        'bloques.turnos.paciente.id': mongoose.Types.ObjectId(req.query.pacienteId)
+                        'bloques.turnos.paciente.id': { $in: paciente.vinculos }
                     }
                 },
                 {
@@ -167,7 +172,7 @@ export async function getHistorialPaciente(req) {
                 },
                 {
                     $match: {
-                        'bloques.turnos.paciente.id': mongoose.Types.ObjectId(req.query.pacienteId)
+                        'bloques.turnos.paciente.id': { $in: paciente.vinculos }
                     }
                 },
                 {
@@ -214,7 +219,7 @@ export async function getHistorialPaciente(req) {
                                 'pausada'
                             ]
                         },
-                        'sobreturnos.paciente.id': mongoose.Types.ObjectId(req.query.pacienteId)
+                        'sobreturnos.paciente.id': { $in: paciente.vinculos }
                     }
                 },
                 {
@@ -224,7 +229,7 @@ export async function getHistorialPaciente(req) {
                 },
                 {
                     $match: {
-                        'sobreturnos.paciente.id': mongoose.Types.ObjectId(req.query.pacienteId)
+                        'sobreturnos.paciente.id': { $in: paciente.vinculos }
                     }
                 },
                 {
@@ -281,9 +286,10 @@ export async function getLiberadosPaciente(req) {
     if (req.query && req.query.pacienteId) {
         try {
             const idPaciente = new mongoose.Types.ObjectId(req.query.pacienteId);
+            let { paciente } = await buscarPaciente(idPaciente);
             const resultado: any = await logPaciente.find(
                 {
-                    paciente: idPaciente,
+                    paciente: { $in: paciente.vinculos },
                     operacion: 'turnos:liberar',
                     'dataTurno.turno.updatedBy.organizacion._id': req.user.organizacion._id
                 })
