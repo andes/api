@@ -25,6 +25,7 @@ export async function mapeoPuco(dni) {
     padron = await obtenerVersiones();   // trae las distintas versiones de los padrones
     padron = padron[0].version;
     let salida = await Puco.findOne({ dni, version: padron }, {}, (err, data: any) => { });
+    console.log(salida);
 
     return salida;
 }

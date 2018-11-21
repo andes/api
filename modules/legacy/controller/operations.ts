@@ -203,7 +203,7 @@ async function codigoPucoPorDni(dni) {
     let idObraSocial;
     let obraSocial: any = await mapeoPuco(dni);
     if (obraSocial) {
-        idObraSocial = await mapeoObraSocial(obraSocial.codigoFinanciador);
+        idObraSocial = await mapeoObraSocial(obraSocial.codigoOS);
         if (idObraSocial === 0) {
             idObraSocial = 499;
         }
@@ -231,8 +231,11 @@ function mapeoEstado(estado) {
 
 
 export async function mapeoObraSocial(codigoObraSocial) {
+    let pool = await new sql.ConnectionPool(configSql).connect();
+
     let query = 'SELECT idObraSocial, cod_puco FROM dbo.Sys_ObraSocial WHERE cod_PUCO = ' + codigoObraSocial + ';';
-    let result = await new sql.Request().query(query);
+    console.log(query);
+    let result = await new sql.Request(pool).query(query);
     return result.recordset[0] ? result.recordset[0].idObraSocial : 0;
 }
 

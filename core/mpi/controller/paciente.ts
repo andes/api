@@ -747,6 +747,7 @@ export async function matchPaciente(dataPaciente) {
 export async function insertSips(done) {
     console.log('iniciando job');
     let datos: any = await pacientesDelDia();
+    console.log(datos);
     for (let index = 0; index < datos.length; index++) {
         let existeEnSips = await getPacienteSips(datos[index].paciente.documento);
         // let existeEnPuco: any = await operacionesLegacy.postPuco(pacientes[index].documento)
