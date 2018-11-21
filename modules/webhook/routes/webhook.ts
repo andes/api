@@ -7,13 +7,38 @@ const request = require('request');
 
 let router = express.Router();
 
-function filterData(filter: any[], data) {
-    for (let key in filter) {
-        if (!data[key] || JSON.stringify(data[key]) === JSON.stringify(filter[key])) {
-            // Si entra por esta condición se termina con la ejecución del evento.
-            return false;
+function filterData(filters: any[], data) {
+    filters.forEach(filter => {
+        let op = filter.operation;
+        let band = false;
+        if (op) {
+            switch (op) {
+                case 'equal': {
+                    for (let key in filter.data) {
+                        if (!data[key] || JSON.stringify(data[key]) === JSON.stringify(filter[key])) {
+                            band = true;
+                        }
+                    }
+                    break;
+                }
+                // case 'distinct': {
+                //     for (let key in filter.data) {
+                //         if (!data[key] || JSON.stringify(data[key]) === JSON.stringify(filter[key])) {
+                //             band = false;
+                //         }
+                //     }
+                //     break;
+                // }
+                default: {
+                    // No se aplica ningún filtrado porque no entró en ninguna condición
+                    band = true;
+                    break;
+                }
+            }
         }
-    }
+        return band;
+    });
+    // No se aplica el filtrado si no hay elementos en el array de filters
     return true;
 }
 
@@ -24,7 +49,7 @@ EventCore.on(/.*/, async function (body) {
     });
 
     subscriptions.forEach((sub: any) => {
-        if (!filterData(sub.filter, body)) {
+        if (!filterData(sub.filters, body)) {
             return null;
         }
         let data = {
