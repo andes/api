@@ -59,7 +59,7 @@ export function initAPI(app: Express) {
     if (configPrivate.Drive) {
         AndesDrive.setup(configPrivate.Drive);
         const router = Router();
-        app.use(Auth.authenticate());
+        router.use(Auth.authenticate());
         AndesDrive.install(router);
         app.use('/api/drive', router);
     }
