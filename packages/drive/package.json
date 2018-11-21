@@ -1,0 +1,19 @@
+{
+  "name": "@andes/drive",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "request": "^2.83.0",
+    "mongoose": "^5.0.14",
+    "multer": "^1.4.0",
+    "node-seaweedfs": "^1.4.0",
+    "gridfs-stream": "^1.1.1"
+  }
+}

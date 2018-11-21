@@ -383,7 +383,6 @@ router.put('/agenda/:id', (req, res, next) => {
         res.json(data);
 
         EventCore.emitAsync('citas:agenda:update', data);
-        EventCore.emitAsync('citas:integracion', data);
     });
 });
 
@@ -412,8 +411,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                                 if (error) {
                                     return next(error);
                                 }
-                                // PAra probar ahora
-                                EventCore.emitAsync('citas:integracion', data);
+                                EventCore.emitAsync('citas:agenda:update', data[0]);
                             });
                         }).catch(err2 => { return next(err2); });
                     }
@@ -434,7 +432,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                                         err: error || false
                                     });
                                     // PAra probar ahora
-                                    EventCore.emitAsync('citas:integracion', data2);
+                                    EventCore.emitAsync('citas:agenda:update', data2[0]);
                                     if (error) {
                                         return next(error);
                                     }
@@ -542,8 +540,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
 
                 Auth.audit(data, req);
                 data.save((error) => {
-                    // PAra probar ahora
-                    EventCore.emitAsync('citas:integracion', data); // Mers way!
+                    EventCore.emitAsync('citas:agenda:update', data);
 
                     if (event.data) {
                         EventCore.emitAsync(`citas:${event.object}:${event.accion}`, event.data);
