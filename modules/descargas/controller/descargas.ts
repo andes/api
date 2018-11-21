@@ -43,7 +43,6 @@ export class Documento {
                 }
                 resolve(prestacion);
             });
-
         });
     }
 
@@ -129,7 +128,7 @@ export class Documento {
             .replace('<!--motivo-->', plan.valor.solicitudPrestacion.motivo)
             .replace('<!--indicaciones-->', plan.valor.solicitudPrestacion.indicaciones)
             .replace('<!--organizacionDestino-->', (plan.valor.solicitudPrestacion.organizacionDestino ? plan.valor.solicitudPrestacion.organizacionDestino.nombre : ''))
-            .replace('<!--profesionalesDestino-->', plan.valor.solicitudPrestacion.profesionalesDestino.map(y => y.nombreCompleto).join(' '));
+            .replace('<!--profesionalesDestino-->', plan.valor.solicitudPrestacion.profesionalesDestino ? plan.valor.solicitudPrestacion.profesionalesDestino.map(y => y.nombreCompleto).join(' ') : '');
 
     }
 
@@ -387,8 +386,6 @@ export class Documento {
                         tipoPrestacion = prestacion.solicitud.tipoPrestacion.term[0].toUpperCase() + prestacion.solicitud.tipoPrestacion.term.slice(1);
                     }
 
-                    tipoPrestacion = tipoPrestacion[0].toUpperCase() + tipoPrestacion.slice(1);
-
                     // Existe configuración de PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL?
                     if (config.informe && config.informe.motivoPrincipalDeConsultaOverride) {
                         if (prestacion.ejecucion.registros.length > 1) {
@@ -403,8 +400,10 @@ export class Documento {
                         }
                     }
 
+
+                    let registros = prestacion.ejecucion.registros[0].registros.length ? prestacion.ejecucion.registros[0].registros : prestacion.ejecucion.registros;
                     // SE ARMA TODO EL HTML PARA GENERAR EL PDF:
-                    await this.generarInforme(prestacion.ejecucion.registros[0].registros);
+                    await this.generarInforme(registros);
 
 
                     // Si no hay configuración de informe o si se configura "registrosDefault" en true, se genera el informe por defecto (default)

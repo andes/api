@@ -34,7 +34,6 @@ export function darAsistencia(req, data, tid = null) {
     turno.updatedAt = new Date();
     turno.updatedBy = req.user.usuario || req.user;
     return turno;
-    // crearPrestacionVacia(turno, req);
 }
 
 // Turno
@@ -198,7 +197,6 @@ export function codificarTurno(req, data, tid) {
             }
             const arrPrestacion = data1 as any;
             const codificaciones = [];
-            // let promises = [];
             if (arrPrestacion.length > 0 && arrPrestacion[0].ejecucion) {
                 const prestaciones = arrPrestacion[0].ejecucion.registros.filter(f => {
                     return f.concepto.semanticTag !== 'elemento de registro';
@@ -235,6 +233,8 @@ export function codificarTurno(req, data, tid) {
                                                     nombre: (cie as any).nombre,
                                                     sinonimo: (cie as any).sinonimo,
                                                     c2: (cie as any).c2,
+                                                    reporteC2: (cie as any).reporteC2,
+                                                    ficha: (cie as any).ficha
                                                 }
                                             },
                                             primeraVez: registro.esPrimeraVez,
@@ -257,6 +257,8 @@ export function codificarTurno(req, data, tid) {
                                                     nombre: (cie as any).nombre,
                                                     sinonimo: (cie as any).sinonimo,
                                                     c2: (cie as any).c2,
+                                                    reporteC2: (cie as any).reporteC2,
+                                                    ficha: (cie as any).ficha
                                                 }
                                             },
                                             primeraVez: registro.esPrimeraVez
@@ -280,7 +282,6 @@ export function codificarTurno(req, data, tid) {
                                     });
                                 }
                                 if (prestaciones.length === codificaciones.length) {
-                                    // console.log('codificaciones ', codificaciones);
                                     turno.diagnostico = {
                                         ilegible: false,
                                         codificaciones: codificaciones.filter(cod => Object.keys(cod).length > 0)
@@ -934,6 +935,7 @@ export function updatePaciente(pacienteModified, turno) {
                 bloques[i].turnos[indiceTurno].paciente.carpetaEfectores = pacienteModified.carpetaEfectores;
                 bloques[i].turnos[indiceTurno].paciente.fechaNacimiento = pacienteModified.fechaNacimiento;
             }
+            i++;
         }
 
         if (indiceTurno < 0) { // no se encontro el turno en los bloques de turnos?

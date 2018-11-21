@@ -1,9 +1,10 @@
 {
   "name": "api",
-  "version": "4.0.0",
+  "version": "4.0.3",
   "description": "API para ANDES",
   "main": "index.js",
   "dependencies": {
+    "@andes/drive": "file:packages/drive",
     "@andes/event-bus": "file:packages/event-bus",
     "@andes/fhir": "file:packages/fhir",
     "@andes/match": "^1.1.12",
@@ -95,6 +96,7 @@
   },
   "homepage": "https://github.com/andes/api#readme",
   "devDependencies": {
+    "@types/request": "^2.48.1",
     "before": "0.0.1",
     "chai": "^4.1.2",
     "nodemon": "^1.17.4",
