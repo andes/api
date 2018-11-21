@@ -34,7 +34,6 @@ export async function getCarpetasSolicitud(req) {
     // [TODO] Castear a ObjectId en la función interna
     const carpetas = await findCarpetas(organizacion, nrosCarpetas);
     const prestamosCarpetas = await getRegistrosSolicitudCarpetas(req, organizacion, [agendas, agendasSobreturno], carpetas, solicitudesManuales);
-
     return prestamosCarpetas;
 }
 
@@ -57,7 +56,7 @@ function getNrosCarpetas(agendas, agendasSobreturno, solicitudesManuales) {
         agendas.forEach(_agenda => {
             _agenda.turnos.forEach(unTurno => {
                 unTurno.paciente.carpetaEfectores.forEach(async unaCarpeta => {
-                    if (nroCarpetas.indexOf(unaCarpeta.nroCarpeta) < 0) {
+                    if (unaCarpeta.nroCarpeta.indexOf('PDR') < 0 && unaCarpeta.nroCarpeta !== '' && nroCarpetas.indexOf(unaCarpeta.nroCarpeta) < 0) {
                         nroCarpetas.push(unaCarpeta.nroCarpeta);
                     }
                 });
@@ -118,7 +117,7 @@ async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carp
             _agenda.turnos.forEach(_turno => {
                 _turno.paciente.carpetaEfectores.forEach(unaCarpeta => {
                     // Validación de PDR para ignorar números de carpetas autogenerados por HPN.
-                    if ((unaCarpeta.nroCarpeta.indexOf('PDR') < 0) && unaCarpeta.organizacion._id.equals(unaOrganizacion)) {
+                    if (unaCarpeta.nroCarpeta.indexOf('PDR') < 0 && unaCarpeta.organizacion._id.equals(unaOrganizacion) && unaCarpeta.nroCarpeta !== '') {
                         let estadoCarpeta = constantes.EstadosPrestamosCarpeta.EnArchivo;
                         carpetas.map(carpeta => {
                             if (carpeta._id === unaCarpeta.nroCarpeta) {
@@ -312,7 +311,7 @@ async function buscarAgendasTurnos(organizacionId: string, tipoPrestacion: strin
 
     matchCarpeta['bloques.turnos.estado'] = { $eq: 'asignado' };
     matchCarpeta['bloques.turnos.paciente.carpetaEfectores.organizacion._id'] = new ObjectId(organizacionId);
-    matchCarpeta['bloques.turnos.paciente.carpetaEfectores.nroCarpeta'] = { $ne: '' };
+    // matchCarpeta['bloques.turnos.paciente.carpetaEfectores.nroCarpeta'] = { $ne: '' };
 
     const pipelineCarpeta = [
         {

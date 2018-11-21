@@ -163,6 +163,22 @@ export class Auth {
     }
 
     /**
+     * Extrack token middleware
+     */
+
+    static extractToken() {
+        return (req, _res, next) => {
+            if (req.headers && req.headers.authorization) {
+                req.token = req.headers.authorization.substring(4);
+            } else if (req.query.token) {
+                req.token = req.query.token;
+            }
+            next();
+        };
+    }
+
+
+    /**
      * Genera los registros de auditoría en el documento indicado
      *
      * @static
