@@ -4,7 +4,7 @@ import * as moment from 'moment';
 import { Auth } from './../../../auth/auth.class';
 import { model as Prestacion } from '../schemas/prestacion';
 import * as frecuentescrl from '../controllers/frecuentesProfesional';
-
+import { buscarPaciente } from '../../../core/mpi/controller/paciente';
 import { buscarEnHuds } from '../controllers/rup';
 import { Logger } from '../../../utils/logService';
 import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
@@ -196,7 +196,7 @@ router.get('/prestaciones/solicitudes', (req, res, next) => {
     });
 });
 
-router.get('/prestaciones/:id*?', (req, res, next) => {
+router.get('/prestaciones/:id*?', async (req, res, next) => {
 
     if (req.params.id) {
         const query = Prestacion.findById(req.params.id);
@@ -236,7 +236,10 @@ router.get('/prestaciones/:id*?', (req, res, next) => {
             query.where('solicitud.profesional.id').equals(req.query.idProfesional);
         }
         if (req.query.idPaciente) {
-            query.where('paciente.id').equals(req.query.idPaciente);
+            let { paciente } = await buscarPaciente(req.query.idPaciente);
+            if (paciente) {
+                query.where('paciente.id').in(paciente.vinculos);
+            }
         }
         if (req.query.idPrestacionOrigen) {
             query.where('solicitud.prestacionOrigen').equals(req.query.idPrestacionOrigen);
