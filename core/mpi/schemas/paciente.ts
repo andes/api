@@ -21,6 +21,10 @@ interface IUserModel extends mongoose.Document {
 */
 
 export let pacienteSchema: mongoose.Schema = new mongoose.Schema({
+    /*
+    * Información de los IDs de los pacientes en otros sistemas y también la información
+    * de los pacientes vinculados. La vinculación es unilateral.
+    */
     identificadores: [{
         _id: false,
         entidad: String,
