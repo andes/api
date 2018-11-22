@@ -21,7 +21,6 @@ router.get('/campania/:id', (req: any, res, next) => {
 router.get('/campanias', async (req, res, next) => {
     try {
         let docs: any = await campaniaCtrl.campanias(req.query.fechaDesde, req.query.fechaHasta);
-        console.log('campanias filtradas: ', docs);
         res.json(docs);
     } catch (e) {
         return next(e);

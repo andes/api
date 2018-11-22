@@ -2,7 +2,7 @@ import * as campania from '../../tm/schemas/campaniasSalud';
 
 export async function campaniasVigentes(today) {
     return new Promise((resolve, reject) => {
-        const query = { $and: [{ 'vigencia.desde': { $lte: today } }, { 'vigencia.hasta': { $gte: today } }] };
+        const query = { $and: [{ 'vigencia.desde': { $gte: today } }, { 'vigencia.hasta': { $lte: today } }] };
         campania.find(query, (err, docs) => {
             if (err) {
                 return reject(null);
@@ -13,12 +13,14 @@ export async function campaniasVigentes(today) {
 }
 
 export async function campanias(fechaDesde, fechaHasta) {
-    const query = {$nor: [{'vigencia.desde':{$gt: fechaHasta}}, 
-                {'vigencia.hasta':{$lt:fechaDesde}}  
-                ]};
+    const query = {
+        $nor: [{ 'vigencia.desde': { $gt: fechaHasta } },
+        { 'vigencia.hasta': { $lt: fechaDesde } }
+        ]
+    };
     let res;
-    try{
-       res = await campania.find(query).sort({ 'vigencia.desde': -1 });
+    try {
+        res = await campania.find(query).sort({ 'vigencia.desde': -1 });
     }
     catch (e) {
         return e;
