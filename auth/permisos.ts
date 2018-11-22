@@ -293,11 +293,13 @@ export default [
     {
         key: 'solicitudes',
         title: 'Modulo Solicitudes',
+        comment: '',
+        // avoidAll: true,
         child: [
             {
                 key: 'tipoPrestacion',
                 title: 'Vista / Edición de Solicitudes',
-                type: 'prestacion',
+                type: 'prestacion'
                 // avoidAll: true
             },
             {
