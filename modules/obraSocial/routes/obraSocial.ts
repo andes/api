@@ -1,8 +1,31 @@
 import * as express from 'express';
 import { Puco } from '../schemas/puco';
 import { ObraSocial } from '../schemas/obraSocial';
+import * as utils from '../../../utils/utils';
 
 const router = express.Router();
+
+/**
+ * Obtiene todas las obras sociales
+ * @returns array de obras sociales
+ */
+router.get('/', async (req, res, next) => {
+    let query = {};
+    if (req.query.nombre) {
+        query = { nombre: { $regex: utils.makePattern(req.query.nombre) } };
+    }
+    ObraSocial.find(query).exec((err, obrasSociales) => {
+        if (err) {
+            return next(err);
+        }
+        obrasSociales = obrasSociales.map(os => {
+            os.financiador = os.nombre;
+            os.id = os._id;
+            return os;
+        });
+        res.json(obrasSociales);
+    });
+});
 
 /**
  * Obtiene los datos de la obra social asociada a un paciente
@@ -32,7 +55,7 @@ router.get('/puco', async (req, res, next) => {
             // genera un array con todas las obras sociales para una version de padron dada
             for (let i = 0; i < rta.length; i++) {
                 unaOS = await ObraSocial.find({ codigoPuco: rta[i].codigoOS }).exec();
-                resultOS[i] = { tipoDocumento: rta[i].tipoDoc, dni: rta[i].dni, transmite: rta[i].transmite, nombre: rta[i].nombre, codigoFinanciador: rta[i].codigoOS, financiador: unaOS[0].nombre, version: rta[i].version };
+                resultOS[i] = { tipoDocumento: rta[i].tipoDoc, dni: rta[i].dni, transmite: rta[i].transmite, nombre: rta[i].nombre, codigoFinanciador: rta[i].codigoOS, idFinanciador: unaOS[0]._id, financiador: unaOS[0].nombre, version: rta[i].version };
             }
             res.json(resultOS);
         } else {
