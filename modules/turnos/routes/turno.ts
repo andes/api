@@ -3,6 +3,8 @@ import * as express from 'express';
 import * as agenda from '../schemas/agenda';
 import { Logger } from '../../../utils/logService';
 import { paciente } from '../../../core/mpi/schemas/paciente';
+import * as pacienteController from '../../../core/mpi/controller/paciente';
+
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 import { NotificationService } from '../../mobileApp/controller/NotificationService';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
@@ -282,7 +284,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         query[etiquetaEstado] = 'disponible';
 
         // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
-        (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true }, function actualizarAgenda(err4, doc2: any, writeOpResult) {
+        (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true }, async function actualizarAgenda(err4, doc2: any, writeOpResult) {
             if (err4) {
                 return next(err4);
             }
@@ -301,6 +303,11 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                     emitidoPor: update[etiquetaEmitidoPor], // agregamos el emitidoPor
                     motivoConsulta: update[etiquetaMotivoConsulta]
                 };
+
+
+                // Se actualiza el campo financiador del paciente
+                pacienteController.actualizarFinanciador(req, next);
+
                 Logger.log(req, 'citas', 'asignarTurno', datosOp);
                 let turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
 
