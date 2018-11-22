@@ -56,7 +56,7 @@ function getNrosCarpetas(agendas, agendasSobreturno, solicitudesManuales) {
         agendas.forEach(_agenda => {
             _agenda.turnos.forEach(unTurno => {
                 unTurno.paciente.carpetaEfectores.forEach(async unaCarpeta => {
-                    if (unaCarpeta.nroCarpeta.indexOf('PDR') < 0 && unaCarpeta.nroCarpeta !== '' && nroCarpetas.indexOf(unaCarpeta.nroCarpeta) < 0) {
+                    if (unaCarpeta.nroCarpeta && unaCarpeta.nroCarpeta.indexOf('PDR') < 0 && unaCarpeta.nroCarpeta !== '' && nroCarpetas.indexOf(unaCarpeta.nroCarpeta) < 0) {
                         nroCarpetas.push(unaCarpeta.nroCarpeta);
                     }
                 });
