@@ -34,7 +34,8 @@ const campaniasSaludSchema = new Schema({
         }
     },
     /**
-     * fechaPublicacion es la fecha en la que se activa la notificación push en la app mobile 
+     * fechaPublicacion es la fecha en la que se activa la notificación push en la app mobile. Cae dentro del
+     * periodo de vigencia de la campaña
      */
     fechaPublicacion: {
         type: Date,
@@ -51,6 +52,5 @@ const campaniasSaludSchema = new Schema({
         default: true
     }
 });
-
 let campania = model('campanias', campaniasSaludSchema, 'campanias');
 export = campania;
