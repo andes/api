@@ -806,19 +806,6 @@ export async function insertSips(done) {
 
 
 export async function actualizarTurno(idTurno) {
-    // agendaSchema.find({
-    //     'bloques.turnos._id': idTurno
-    // }).exec((err, data: any) => {
-    //     let indexs = getPosition(null, data[0], idTurno);
-    //     let turno = data[0].bloques[indexs.indexBloque].turnos[indexs.indexTurno];
-    //     turno.paciente.obraSocial = {
-    //         codigoFinanciador: 499,
-    //         financiador: 'Sumar'
-    //     };
-    //     Auth.audit(data[0], configPrivate.userScheduler);
-    //     data[0].save((err2, result) => {
-    //     });
-    // });
 
     let data: any = await agendaSchema.find({ 'bloques.turnos._id': idTurno });
     let indexs = getPosition(null, data[0], idTurno);
@@ -974,46 +961,6 @@ export async function pacientesDelDia() {
     return pacientesTotal;
 }
 
-// export async function pacientesDelDia() {
-//     // busca los pacientes del dia en mpi y andes para validarlos con sips y pn beneficiarios
-//     // TODO: DEBEMOS BUSCAR LOS PACIENTES DIA VENCIDO
-
-
-//     let hoyDesde = moment(new Date()).startOf('day').format();
-//     let hoyHasta = moment(new Date()).endOf('day').format();
-//     let pacientesTotal = [];
-//     // let start = moment(req.query.fechaDesde).startOf('day').toDate();
-//     // let end = moment(req.query.fechaHasta).endOf('day').toDate();
-
-//     // PACIENTES ANDES
-//     let pacientesAndes = await toArray(paciente.aggregate([{
-//         $match: {
-//             'createdAt': {
-//                 $gte: new Date(hoyDesde), $lte: new Date(hoyHasta)
-//             }
-//         }
-//     }]).cursor({ batchSize: 1000 }).exec());
-
-
-//     pacientesAndes.forEach(element => {
-//         pacientesTotal.push(element);
-//     });
-
-//     // PACIENTES MPI
-//     let pacientesMpi = await toArray(pacienteMpi.aggregate([{
-//         $match: {
-//             'createdAt': {
-//                 $gte: new Date(hoyDesde), $lte: new Date(hoyHasta)
-//             }
-//         }
-//     }]).cursor({ batchSize: 1000 }).exec());
-
-//     pacientesMpi.forEach(element => {
-//         pacientesTotal.push(element);
-//     });
-
-//     return pacientesTotal;
-// }
 
 function beneficiarioFactory(paciente, efector) {
     let tipoCategoria;
