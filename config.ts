@@ -125,8 +125,8 @@ export const modules = {
     },
     fhir: {
         active: true,
-        path: './fhir/patient/routes',
-        route: '/fhir/patient',
+        path: './connect/fhir/routes',
+        route: '/connect/fhir',
         middleware: appMiddleware
     },
     cda: {
@@ -145,7 +145,7 @@ export const modules = {
         active: true,
         path: './modules/obraSocial/routes',
         route: '/modules/obraSocial',
-        middleware: appMiddleware
+        middleware: null // appMiddleware
     },
     sugerencias: {
         active: true,
