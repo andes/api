@@ -58,6 +58,9 @@ router.get('/codificacion/:id?', async (req, res, next) => {
         if (req.query.fechaHasta) {
             query.where('createdAt').lte(req.query.fechaHasta);
         }
+        if (req.query.auditadas === 'false') {
+            query.where('diagnostico.codificaciones.codificacionAuditoria.codigo').exists(false);
+        }
         query.exec((err, data) => {
             if (err) {
                 return next(err);
