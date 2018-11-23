@@ -9,6 +9,7 @@ import { Logger } from '../../../utils/logService';
 import { ElasticSync } from '../../../utils/elasticSync';
 import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
+import { EventCore } from '@andes/event-bus';
 
 
 const logD = debug('paciente-controller');
@@ -541,6 +542,7 @@ router.delete('/pacientes/mpi/:id', (req, res, next) => {
         const connElastic = new ElasticSync();
         connElastic.delete(patientFound._id.toString()).then(() => {
             res.json(patientFound);
+            EventCore.emitAsync('mpi:patient:delete', patientFound);
         }).catch(error => {
             return next(error);
         });
@@ -582,11 +584,13 @@ router.post('/pacientes', (req, res, next) => {
         const condicion = {
             documento: req.body.documento
         };
-        controller.searchSimilar(req.body, 'andes', condicion).then((data) => {
+        controller.searchSimilar(req.body, 'andes', condicion).then(async (data: any) => {
             logD('Encontrados', data.map(item => item.value));
             if (data && data.length && data[0].value > 0.90) {
-                logD('hay uno parecido');
-                return next('existen similares');
+                logD('hay un paciente muy parecido en la base de datos');
+                const connElastic = new ElasticSync();
+                await connElastic.sync(data[0].paciente);
+                return res.json(data[0].paciente);
             } else {
                 req.body.activo = true;
                 return controller.createPaciente(req.body, req).then(pacienteObj => {
@@ -812,8 +816,8 @@ router.patch('/pacientes/:id', (req, res, next) => {
                     try { // Actualizamos los turnos activos del paciente
                         const repetida = await controller.checkCarpeta(req, resultado.paciente);
                         if (!repetida) {
-                            controller.updateTurnosPaciente(resultado.paciente);
                             controller.updateCarpetaEfectores(req, resultado.paciente);
+                            controller.updateTurnosPaciente(resultado.paciente);
                         } else {
                             return next('El numero de carpeta ya existe');
                         }
@@ -823,7 +827,8 @@ router.patch('/pacientes/:id', (req, res, next) => {
                     resultado.paciente.markModified('contacto');
                     resultado.paciente.contacto = req.body.contacto;
                     try {
-                        controller.updateTurnosPaciente(resultado.paciente);
+                        // EventCore.emitAsync('mpi:patient:update', resultado.paciente);
+                        // controller.updateTurnosPaciente(resultado.paciente);
                     } catch (error) { return next(error); }
                     break;
                 case 'linkIdentificadores':
@@ -865,8 +870,10 @@ router.patch('/pacientes/:id', (req, res, next) => {
                 if (errPatch) {
                     return next(errPatch);
                 }
-                return res.json(pacienteAndes);
 
+                res.json(pacienteAndes);
+                EventCore.emitAsync('mpi:patient:update', pacienteAndes);
+                return;
             });
         }
     }).catch((err) => {

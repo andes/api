@@ -5,6 +5,7 @@ import { ElasticSync } from '../../../utils/elasticSync';
 import { Logger } from '../../../utils/logService';
 import { Matching } from '@andes/match';
 import { Auth } from './../../../auth/auth.class';
+import { EventCore } from '@andes/event-bus';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
 import * as https from 'https';
@@ -32,6 +33,9 @@ export function createPaciente(data, req) {
             const connElastic = new ElasticSync();
             connElastic.create(newPatient._id.toString(), nuevoPac).then(() => {
                 Logger.log(req, 'mpi', 'insert', newPatient);
+                // Código para emitir eventos
+                EventCore.emitAsync('mpi:patient:create', newPatient);
+                //
                 return resolve(newPatient);
             }).catch(error => {
                 return reject(error);
@@ -69,6 +73,7 @@ export function updatePaciente(pacienteObj, data, req) {
                 } else {
                     Logger.log(req, 'mpi', 'insert', pacienteObj);
                 }
+                EventCore.emitAsync('mpi:patient:update', pacienteObj);
                 resolve(pacienteObj);
             }).catch(error => {
                 return reject(error);
@@ -91,7 +96,7 @@ export async function updateTurnosPaciente(pacienteModified) {
             horaInicio: moment(new Date()).startOf('day').toDate() as any
         }
     };
-    const turnos: any = await turnosController.getHistorialPaciente(req);
+    const turnos: any = await turnosController.getTurno(req);
     if (turnos.length > 0) {
         turnos.forEach(element => {
             try {
@@ -444,10 +449,11 @@ export function deletePacienteAndes(objectId) {
         };
         paciente.findById(query, (err, patientFound) => {
             if (err) {
-                reject(err);
+                return reject(err);
             }
             patientFound.remove();
-            resolve(patientFound);
+            EventCore.emitAsync('mpi:patient:delete', patientFound);
+            return resolve(patientFound);
         });
     });
 }
@@ -542,6 +548,33 @@ export function updateScan(req, data) {
 export function updateCuil(req, data) {
     data.markModified('cuil');
     data.cuil = req.body.cuil;
+}
+
+export async function actualizarFinanciador(req, next) {
+    let resultado = await this.buscarPaciente(req.body.paciente.id);
+    // por ahora se pisa la información
+    // TODO: analizar como sería
+    if (req.body.paciente.obraSocial) {
+        if (!resultado.paciente.financiador) {
+            resultado.paciente.financiador = [];
+        }
+        resultado.paciente.financiador[0] = req.body.paciente.obraSocial;
+        resultado.paciente.markModified('financiador');
+
+        let pacienteAndes: any;
+        if (resultado.db === 'mpi') {
+            pacienteAndes = new paciente(resultado.paciente.toObject());
+        } else {
+            pacienteAndes = resultado.paciente;
+        }
+        Auth.audit(pacienteAndes, req);
+        pacienteAndes.save((errPatch) => {
+            if (errPatch) {
+                return next(errPatch);
+            }
+            return;
+        });
+    }
 }
 
 export function checkCarpeta(req, data) {

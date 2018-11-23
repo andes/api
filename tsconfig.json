@@ -9,9 +9,17 @@
         "removeComments": false,
         "noImplicitAny": false,
         "noImplicitReturns": true,
-        "allowUnusedLabels": false,  
+        "allowUnusedLabels": false,
+        "baseUrl": ".",
+        "paths": {
+            "@andes/event-bus/*": ["./packages/event-bus/*"],
+            "@andes/mongoose-plugin-audit/*": ["./packages/mongoose-plugin-audit/*"],
+            "@andes/fhir/*": ["./packages/fhir/*"],
+            "@andes/drive/*": ["./packages/drive/*"]
+        },
         "typeRoots": [
-            "node_modules/@types"
+            "node_modules/@types",
+            "./packages/*",
         ]
     }
 }

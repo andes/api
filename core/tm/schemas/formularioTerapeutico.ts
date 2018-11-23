@@ -1,7 +1,8 @@
 import * as mongoose from 'mongoose';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 const schema = new mongoose.Schema({
-    idpadre:  {
+    idpadre: {
         type: mongoose.Schema.Types.ObjectId,
     },
     descripcion: String,
@@ -45,7 +46,7 @@ const schema = new mongoose.Schema({
 });
 
 // Habilitar plugin de auditoría
-schema.plugin(require('../../../mongoose/audit'));
+schema.plugin(AuditPlugin);
 
 // Exportar modelo
 const model = mongoose.model('formularioTerapeutico', schema, 'formularioTerapeutico');

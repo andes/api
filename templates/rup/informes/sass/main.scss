@@ -1,5 +1,6 @@
 @import 'variables/formales';
 @import 'variables/cromaticas';
+
 html {
     display: inline-block; // height: 100vh;
     padding: 0 2rem;
@@ -17,28 +18,34 @@ header {
         height: 1cm;
         width: 100%; // padding: 0.5cm 0 0 0;
         border-bottom: $borderBottom;
+
         .contenedor-logo-efector {
             margin-top: .05cm;
             display: inline-block;
             height: 60px;
             width: 40%;
+
             .logo-efector {
                 height: .75cm;
                 width: auto;
                 max-width: 7cm;
             }
+
             .no-logo-efector {
                 font-size: .20cm;
             }
         }
+
         .contenedor-logos-secundarios {
             margin-top: .15cm;
             float: right; // display: inline-block; // width: 300px;
             width: 40%;
+
             .logo-adicional {
                 height: .55cm;
                 width: auto;
             }
+
             .logo-andes {
                 float: right; // display: inline-block; // width: 300px;
                 height: .55cm;
@@ -46,15 +53,18 @@ header {
             }
         }
     }
+
     .contenedor-data-origen {
         display: inline-block;
         border-bottom: $borderBottom;
         width: 100%;
+
         .contenedor-principal-data {
             display: inline-block;
             margin-top: 0.25cm;
             margin-bottom: 0.25cm;
             width: 50%;
+
             &:nth-of-type(2) {
                 // display: inline-block;
                 float: right;
@@ -66,25 +76,31 @@ header {
 // Globales
 .contenedor-secundario {
     display: block;
+
     &.horizontal {
         float: right;
         margin-bottom: .25cm;
+
         hr {
             margin: 0 0;
         }
     }
+
     &.vertical {
         margin-bottom: .25cm;
     }
+
     font-size: .25cm;
 }
 
 .contenedor-bloque-texto {
     display: inline-block;
     margin-right: 1rem;
+
     &:last-child {
         margin-right: 0;
     }
+
     h6 {
         margin: 0;
         white-space: nowrap;
@@ -99,6 +115,7 @@ h4,
 h5,
 h6 {
     margin: 0.1cm 0;
+
     &.bolder {
         font-weight: 900;
     }
@@ -129,9 +146,11 @@ hr {
     // border: $borderBottom;
     margin: 5px 0 5px 0;
     width: 100%;
+
     &.sm {
         width: 15px;
     }
+
     &.lg {
         width: 100%;
     }
@@ -153,30 +172,47 @@ hr {
 
 // Cuerpo
 main {
+
     // padding: 1rem 0;
     .contenedor-concepto {
         display: inline-block;
         padding: 1rem 0; // max-height: 10cm;
     }
+
     .contenedor-concepto-data {
         display: inline-block;
         width: 100%;
+
         >h3 {
             // border-bottom: $borderBottom;
         }
+
         p {
             line-height: 3mm;
         }
+
         small {
             font-size: 0.25cm;
         }
+
+        img {
+            text-align: center;
+            max-width: 14cm;
+            max-height: 12cm;
+        }
+
+        page-break-before:always;
+        page-break-inside:avoid;
+        // margin-top: 300mm; /*phantomjs renders it on the top of the next page*/
     }
+
     .tipo-prestacion {
         font-size: .35cm;
         display: block; // height: .5cm;
         width: 5.75cm;
         font-weight: 900;
     }
+
     .contenedor-informe {
         .cabezal-conceptos {
             display: inline-block; // height: 8mm; // margin-top: 0.5cm;
@@ -184,7 +220,33 @@ main {
             width: 100%;
         }
     }
-    .registros {}
+
+    .registros {
+        display: inline !important;
+        padding-top: 10px;
+
+        .nivel-1 {
+            margin-left: 0em;
+
+            &:not(:first-child) {
+                padding-top: 10px;
+                border-top: 1px solid $andes-gris;
+            }
+        }
+
+        .nivel-2:not(:first-child) {
+            margin-left: 1em;
+
+            h3 {
+                font-size: 0.65em;
+                
+            }
+        }
+
+        .nivel-3 {
+            margin-left: 2em;
+        }
+    }
 }
 
 // Footer
@@ -197,16 +259,19 @@ footer {
     float: right;
     margin-bottom: 0.5cm;
     text-align: center;
+
     >.contenedor-bloque-texto {
         &:first-child {
             margin-right: 5rem;
         }
     }
+
     img {
         width: 3.5cm;
         height: auto;
         max-height: 2.5cm;
     }
+
     h6 {
         line-height: 0.5cm;
     }
@@ -214,28 +279,35 @@ footer {
 
 .contenedor-zocalo {
     display: inline-block; // padding-bottom: 0.5cm;
+
     // h6 {
     //     font-size: 10px;
     // }
     img {
         float: left; // margin-right: 1rem;
+
         &.logo-pdp {
             height: 1cm;
             width: auto;
-        } // Disposicion horizontal
+        }
+
+        // Disposicion horizontal
         &.logo-pdp-h {
             display: none;
         }
     }
+
     hr {
         margin: 5px 0 5px 0;
     }
+
     .contenedor-data-pdp {
         width: 37%;
         display: inline-block;
         margin-left: 0.5cm;
         text-align: justify;
     }
+
     .contenedor-data-impresion,
     .contenedor-data-validacion,
     .contenedor-data-organizacion {
@@ -245,9 +317,11 @@ footer {
         margin-left: 0; // text-align: right;
         margin-left: 0.25cm;
     }
+
     .contenedor-data-organizacion {
         text-align: left;
     }
+
     .numeracion {
         // display: inline-block;
         float: right;

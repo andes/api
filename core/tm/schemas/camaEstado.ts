@@ -1,6 +1,7 @@
 import { pacienteSchema } from './../../mpi/schemas/paciente';
 import * as mongoose from 'mongoose';
 import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 export let schema = new mongoose.Schema({
     fecha: Date,
@@ -29,8 +30,19 @@ export let schema = new mongoose.Schema({
     },
     observaciones: {
         type: String
-    }
+    },
+    esMovimiento: {
+        type: Boolean,
+        required: true,
+        default: false
+    },
+    sugierePase: {
+        type: SnomedConcept,
+        required: false,
+        default: null
+    },
+
 });
 
 // Habilitar plugin de auditoría
-schema.plugin(require('../../../mongoose/audit'));
+schema.plugin(AuditPlugin);
