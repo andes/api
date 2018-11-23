@@ -1,68 +1,34 @@
 import { Matching } from '@andes/match';
-import * as https from 'https';
 import * as config from '../config';
 import * as configPrivate from '../config.private';
-// Services
-// import { Logger } from '../utils/logService';
+import * as request from 'request';
 const to_json = require('xmljson').to_json;
 
-
-export function getSisaCiudadano(nroDocumento, usuario, clave, sexo?: string) {
+export function getSisaCiudadano(nroDocumento, usuario, clave, sexo) {
     /**
      * Capítulo 5.2.2 - Ficha del ciudadano
      * Se obtienen los datos desde Sisa
      * Ejemplo de llamada https://sisa.msal.gov.ar/sisa/services/rest/cmdb/obtener?nrodoc=26334344&usuario=user&clave=pass
      * Información de Campos https://sisa.msal.gov.ar/sisa/sisadoc/index.jsp?id=cmdb_ws_042
      */
-    // options for GET
-    let xml = '';
-    let pathSisa = configPrivate.sisa.url + 'nrodoc=' + nroDocumento + '&usuario=' + usuario + '&clave=' + clave;
-
+    let pathSisa = `${configPrivate.sisa.url}nrodoc=${nroDocumento}&usuario=${usuario}&clave=${clave}`;
     if (sexo) {
-        pathSisa = configPrivate.sisa.url + 'nrodoc=' + nroDocumento + '&sexo=' + sexo + '&usuario=' + usuario + '&clave=' + clave;
+        pathSisa += `&sexo=${sexo}`;
     }
-
-    const optionsgetmsg = {
-        host: configPrivate.sisa.host,
-        port: configPrivate.sisa.port,
-        path: pathSisa,
-        method: 'GET', // do GET,
-        rejectUnauthorized: false,
-    };
-
-    // Realizar GET request
     return new Promise((resolve, reject) => {
-        const reqGet = https.request(optionsgetmsg, (res) => {
-            res.on('data', (d) => {
-                // console.info('GET de Sisa ' + nroDocumento + ':\n');
-                if (d.toString()) {
-                    xml = xml + d.toString();
-                }
-            });
-
-            res.on('end', () => {
-
-                if (xml) {
-                    // Se parsea el xml obtenido a JSON
-                    to_json(xml, (error, data) => {
-                        if (error) {
-                            resolve([500, {}]);
-                        } else {
-                            // console.log(data);
-                            resolve([res.statusCode, data]);
-                        }
-                    });
-                } else {
-                    resolve([res.statusCode, {}]);
-                }
-            });
-
+        request(pathSisa, (err, response, body) => {
+            if (!err) {
+                to_json(body, (error, data) => {
+                    if (error) {
+                        return resolve([500, {}]);
+                    } else {
+                        return resolve([response.statusCode, data]);
+                    }
+                });
+            } else {
+                return reject(err);
+            }
         });
-        reqGet.end();
-        reqGet.on('error', (e) => {
-            reject(e);
-        });
-
     });
 }
 

@@ -41,7 +41,6 @@ export class Documento {
                 }
                 resolve(prestacion);
             });
-
         });
     }
 
@@ -251,7 +250,6 @@ export class Documento {
 
         // Prestación
         let prestacion: any = await this.getPrestacionData(req.body.idPrestacion);
-
         // Títulos default
         let tituloFechaEjecucion = 'Fecha Ejecución';
 
@@ -315,7 +313,9 @@ export class Documento {
             }
 
             // let registros = '';
-            this.generarInforme(prestacion.ejecucion.registros[0].registros, config.requeridos);
+            let registros = prestacion.ejecucion.registros[0].registros.length ? prestacion.ejecucion.registros[0].registros : prestacion.ejecucion.registros;
+
+            this.generarInforme(registros, config.requeridos);
 
             // Si no hay configuración de informe o si se configura "registrosDefault" en true, se genera el informe por defecto (default)
             if (!config.informe || config.informe.registrosDefault) {
