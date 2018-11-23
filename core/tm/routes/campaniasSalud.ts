@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as campania from '../schemas/campaniasSalud';
 import * as campaniaCtrl from '../controller/campaniasSalud';
-import moment = require('moment');
+import * as moment from 'moment';
 
 let router = express.Router();
 
