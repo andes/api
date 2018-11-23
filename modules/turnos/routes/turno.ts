@@ -125,6 +125,7 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
                 res.json(doc2);
 
                 EventCore.emitAsync('citas:turno:asignar', turno);
+
             }
         });
 
@@ -304,7 +305,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                     motivoConsulta: update[etiquetaMotivoConsulta]
                 };
 
-
                 // Se actualiza el campo financiador del paciente
                 pacienteController.actualizarFinanciador(req, next);
 
@@ -314,6 +314,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                 LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turno, req.params.idBloque, req.params.idAgenda);
 
                 EventCore.emitAsync('citas:turno:asignar', turno);
+                EventCore.emitAsync('citas:agenda:update', doc2);
 
                 // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
                 // Donde doc2 es el documeto Agenda actualizado
