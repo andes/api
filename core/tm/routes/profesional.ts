@@ -54,19 +54,22 @@ router.get('/profesionales/guia', async (req, res, next) => {
     }
 
     if (Object.keys(opciones).length !== 0) {
+        opciones['formacionGrado.matriculacion'] = { $ne: null };
+        opciones['profesionalMatriculado'] = true;
+
         let datosGuia: any = await profesional.findOne(opciones);
         let resultado: IGuiaProfesional;
+
         if (datosGuia) {
             resultado = {
                 id: datosGuia.id,
-                nombre: datosGuia.nombre,
-                sexo: datosGuia.sexo,
-                apellido: datosGuia.apellido,
-                documento: datosGuia.documento,
-                nacionalidad: datosGuia.nacionalidad.nombre,
+                nombre: datosGuia.nombre ? datosGuia.nombre : '',
+                sexo: datosGuia.sexo ? datosGuia.sexo : '',
+                apellido: datosGuia.apellido ? datosGuia.apellido : '',
+                documento: datosGuia.documento ? datosGuia.documento : '',
+                nacionalidad: datosGuia.nacionalidad ? datosGuia.nacionalidad.nombre : '',
                 profesiones: datosGuia.formacionGrado
             };
-
         }
         res.json(resultado);
     } else {
@@ -323,8 +326,8 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                 });
         } else {
             query = profesional.find(opciones).skip(skip).limit(limit);
-
         }
+
         query.exec((err, data) => {
             if (err) {
                 return next(err);
