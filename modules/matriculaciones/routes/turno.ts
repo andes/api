@@ -60,6 +60,19 @@ router.post('/turnos/:tipo/:profesionalId/', (request, response, errorHandler) =
     }
 });
 
+router.get('/turnos/turnosPorDocumentos', (req, res, errorHandler) => {
+
+    if (req.query.documento) {
+        turno.find({'profesional.habilitado': true}).populate('profesional').sort({ fecha: 1, hora: 1 }).exec((error, data) => {
+            if (error) {
+                return errorHandler(error);
+            }
+
+            res.json(data);
+        });
+
+    }
+});
 
 /**
  * Listado de Turnos

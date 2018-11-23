@@ -74,6 +74,39 @@ router.get('/profesionales/guia', async (req, res, next) => {
     }
 });
 
+router.get('/profesionales/matching', async (req, res, next) => {
+    const opciones = {};
+    let query;
+
+    if (req.query.documento) {
+        opciones['documento'] = req.query.documento;
+    }
+
+    if (Object.keys(opciones).length !== 0) {
+        let datosGuia: any = await profesional.find(opciones);
+        console.log(datosGuia);
+        let arrayProf = [];
+        let resultado;
+        if (datosGuia) {
+            datosGuia.forEach(element => {
+                resultado = {
+                    id: element.id,
+                    nombre: element.nombre,
+                    sexo: element.sexo,
+                    apellido: element.apellido,
+                    documento: element.documento,
+                    fechaNacimiento : element.fechaNacimiento
+                };
+                arrayProf.push(resultado);
+            });
+
+        }
+        res.json(arrayProf);
+    } else {
+        res.json();
+    }
+});
+
 
 router.get('/profesionales/foto/:id*?', Auth.authenticate(), (req: any, res, next) => {
     if (!Auth.check(req, 'matriculaciones:profesionales:getProfesionalFoto')) {
