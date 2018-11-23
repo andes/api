@@ -1,5 +1,6 @@
 import * as express from 'express';
 import * as mongoose from 'mongoose';
+import { removeDiacritics } from '../../../utils/utils';
 import { espacioFisico } from '../schemas/espacioFisico';
 import { defaultLimit, maxLimit } from './../../../config';
 
@@ -23,12 +24,24 @@ router.get('/espacioFisico/:_id*?', (req, res, next) => {
         const nombres = [];
 
         if (req.query.nombre) {
-            nombres.push({ nombre: RegExp('^.*' + req.query.nombre + '.*$', 'i') });
-            nombres.push({ 'sector.nombre': RegExp('^.*' + req.query.nombre + '.*$', 'i') });
-            nombres.push({ 'servicio.nombre': RegExp('^.*' + req.query.nombre + '.*$', 'i') });
-            nombres.push({ 'edificio.descripcion': RegExp('^.*' + req.query.nombre + '.*$', 'i') });
-            // query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
+
+            let termino: String = '';
+            // separamos todas las palabras y eliminamos caracteres extraños
+            const words = String(req.query.nombre).split(' ');
+            words.forEach((word) => {
+                // normalizamos cada una de las palabras como hace SNOMED para poder buscar palabra a palabra
+                word = word.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08');
+                const expWord = removeDiacritics(word) + '.*';
+                // conditions['$or'].push({ 'words': { '$regex': '(?i)' + word } });
+                // agregamos la palabra al término de búsqueda
+                termino = termino + expWord;
+            });
+            nombres.push({ nombre: RegExp('^.*' + termino + '.*$', 'i') });
+            nombres.push({ 'sector.nombre': RegExp('^.*' + termino + '.*$', 'i') });
+            nombres.push({ 'servicio.nombre': RegExp('^.*' + termino + '.*$', 'i') });
+            nombres.push({ 'edificio.descripcion': RegExp('^.*' + termino + '.*$', 'i') });
             query.or(nombres);
+
         }
 
         if (req.query.descripcion) {
