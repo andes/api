@@ -52,6 +52,12 @@ router.get('/codificacion/:id?', async (req, res, next) => {
     } else {
         let query;
         query = codificacion.find({});
+        if (req.query.fechaDesde) {
+            query.where('createdAt').gte(req.query.fechaDesde);
+        }
+        if (req.query.fechaHasta) {
+            query.where('createdAt').lte(req.query.fechaHasta);
+        }
         query.exec((err, data) => {
             if (err) {
                 return next(err);
