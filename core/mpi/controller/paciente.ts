@@ -11,7 +11,6 @@ import * as turnosController from '../../../modules/turnos/controller/turnosCont
 import * as https from 'https';
 import * as configPrivate from '../../../config.private';
 import { getServicioGeonode } from '../../../utils/servicioGeonode';
-import { nextTick } from 'async';
 
 /**
  * Crea un paciente y lo sincroniza con elastic

@@ -1,5 +1,4 @@
 import * as express from 'express';
-import { nextTick } from 'async';
 import { getServicioGeonode } from '../../../utils/servicioGeonode';
 
 const router = express.Router();
