@@ -2,6 +2,9 @@ import * as mongoose from 'mongoose';
 import * as agenda from '../../../modules/turnos/schemas/agenda';
 import { toArray } from '../../../utils/utils';
 import { logPaciente } from '../../../core/log/schemas/logPaciente';
+import * as controller from '../../../core/mpi/controller/paciente';
+import { Auth } from './../../../auth/auth.class';
+import { paciente } from '../../../core/mpi/schemas/paciente';
 
 export function getTurno(req) {
     return new Promise(async (resolve, reject) => {
@@ -44,17 +47,16 @@ export function getTurno(req) {
                 }
             }];
             // ver llamado, req.query
-            if (req.params && mongoose.Types.ObjectId.isValid(req.params.id)) {
+            if (req.query && mongoose.Types.ObjectId.isValid(req.query.id)) {
                 const matchId = {
                     $match: {
-                        'bloques.turnos._id': mongoose.Types.ObjectId(req.params.id),
+                        'bloques.turnos._id': mongoose.Types.ObjectId(req.query.id),
                     }
                 };
                 pipelineTurno[0] = matchId;
                 pipelineTurno[3] = matchId;
 
                 const data = await toArray(agenda.aggregate(pipelineTurno).cursor({}).exec());
-
                 if (data.length > 0 && data[0].bloques && data[0].bloques.turnos && data[0].bloques.turnos >= 0) {
                     resolve(data[0].bloques.turnos[0]);
                 } else {
@@ -307,5 +309,48 @@ export async function getLiberadosPaciente(req) {
         }
     } else {
         return ('Datos insuficientes');
+    }
+}
+
+/**
+ *
+ *
+ * @export
+ * @param {*} req
+ * @param {*} res
+ * @param {*} next
+ * @param {*} pacienteMPI
+ * @returns
+ */
+export async function actualizarCarpeta(req, res, next, pacienteMPI, carpetas) {
+    if (pacienteMPI) {
+        try { // Actualizamos los turnos activos del paciente
+            if (pacienteMPI.paciente.carpetaEfectores.length > 0) {
+                req.body.carpetaEfectores = pacienteMPI.paciente.carpetaEfectores;
+            } else {
+                if (carpetas.length > 0) {
+                    req.body.carpetaEfectores = (carpetas[0] as any).carpetaEfectores;
+                }
+            }
+            const repetida = await controller.checkCarpeta(req, pacienteMPI.paciente);
+            if (!repetida) {
+                controller.updateCarpetaEfectores(req, pacienteMPI.paciente);
+                controller.updateTurnosPaciente(pacienteMPI.paciente);
+            } else {
+                return next('El nÚmero de carpeta ya existe');
+            }
+        } catch (error) { return next(error); }
+        let pacienteAndes: any;
+        if (pacienteMPI.db === 'mpi') {
+            pacienteAndes = new paciente(pacienteMPI.paciente.toObject());
+        } else {
+            pacienteAndes = pacienteMPI.paciente;
+        }
+        Auth.audit(pacienteAndes, req);
+        pacienteAndes.save((errPatch) => {
+            if (errPatch) {
+                return next(errPatch);
+            }
+        });
     }
 }

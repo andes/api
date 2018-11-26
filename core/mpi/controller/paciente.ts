@@ -99,7 +99,7 @@ export async function updateTurnosPaciente(pacienteModified) {
             horaInicio: moment(new Date()).startOf('day').toDate() as any
         }
     };
-    const turnos: any = await turnosController.getHistorialPaciente(req);
+    const turnos: any = await turnosController.getTurno(req);
     if (turnos.length > 0) {
         turnos.forEach(element => {
             try {
@@ -567,6 +567,33 @@ export function updateScan(req, data) {
 export function updateCuil(req, data) {
     data.markModified('cuil');
     data.cuil = req.body.cuil;
+}
+
+export async function actualizarFinanciador(req, next) {
+    let resultado = await this.buscarPaciente(req.body.paciente.id);
+    // por ahora se pisa la información
+    // TODO: analizar como sería
+    if (req.body.paciente.obraSocial) {
+        if (!resultado.paciente.financiador) {
+            resultado.paciente.financiador = [];
+        }
+        resultado.paciente.financiador[0] = req.body.paciente.obraSocial;
+        resultado.paciente.markModified('financiador');
+
+        let pacienteAndes: any;
+        if (resultado.db === 'mpi') {
+            pacienteAndes = new paciente(resultado.paciente.toObject());
+        } else {
+            pacienteAndes = resultado.paciente;
+        }
+        Auth.audit(pacienteAndes, req);
+        pacienteAndes.save((errPatch) => {
+            if (errPatch) {
+                return next(errPatch);
+            }
+            return;
+        });
+    }
 }
 
 export function checkCarpeta(req, data) {

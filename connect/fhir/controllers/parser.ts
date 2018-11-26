@@ -1,7 +1,7 @@
 // Schemas
 import {
     PacienteFHIR
-} from '../../interfaces/IPacienteFHIR';
+} from '../../fhir/schemas/IPacienteFHIR';
 import * as controller from '../../../core/mpi/controller/paciente';
 import * as localidad from '../../../core/tm/schemas/localidad';
 
@@ -17,7 +17,7 @@ export function pacientesAFHIR(ids: any[]) {
                         const data = result.paciente;
                         if (data) {
                             const identificadores = data.documento ? [{ assigner: 'DU', value: data.documento }] : [];
-                            identificadores.push({assigner: 'andes', value: id });
+                            identificadores.push({ assigner: 'andes', value: id });
                             // Parsea contactos
                             const contactos = data.contacto ? data.contacto.map(unContacto => {
                                 const cont = {
@@ -228,7 +228,7 @@ export function FHIRAPaciente(pacienteFhir: PacienteFHIR) {
 
         const relaciones = pacienteFhir.contact ? pacienteFhir.contact.map(aContact => {
             const relacion = {
-                relacion : { nombre: aContact.relationship[0].text},
+                relacion: { nombre: aContact.relationship[0].text },
                 nombre: aContact.name.given.join().replace(',', ' '),
                 apellido: aContact.name.family
             };

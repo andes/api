@@ -8,32 +8,32 @@ import * as constantes from '../schemas/constantes';
 import { toArray } from '../../../utils/utils';
 import { searchByPatient } from '../../cda/controller/CDAPatient';
 import { Types } from 'mongoose';
+import { buscarPacienteWithcondition } from '../../../core/mpi/controller/paciente';
 
 const ObjectId = Types.ObjectId;
 
 
 export async function getCarpetasSolicitud(req) {
     const query = req.query;
-    const organizacionId = query.organizacion;
-    const tipoPrestacionId = query.idTipoPrestacion;
-    const espacioFisicoId = query.idEspacioFisico;
-    const profesionalId = query.idProfesional;
+    const organizacion = query.organizacion;
+    const tipoPrestacion = query.idTipoPrestacion;
+    const espacioFisico = query.idEspacioFisico;
+    const profesional = query.idProfesional;
     const horaInicio = query.fechaDesde;
     const horaFin = query.fechaHasta;
 
 
     // [TODO] Paralelizar la busquedas de turnos, sobreturnos y solicitudesManuales
-    const solicitudesManuales = await getSolicitudCarpetaManual(organizacionId);
-    const agendas = await buscarAgendasTurnos(organizacionId, tipoPrestacionId, espacioFisicoId, profesionalId, horaInicio, horaFin);
-    const agendasSobreturno = await buscarAgendasSobreturnos(organizacionId, tipoPrestacionId, espacioFisicoId, profesionalId, horaInicio, horaFin);
+    const solicitudesManuales = await getSolicitudCarpetaManual({ organizacionId: organizacion, tipoPrestacionId: tipoPrestacion, espacioFisicoId: espacioFisico, profesionalId: profesional });
+    const agendas = await buscarAgendasTurnos(organizacion, tipoPrestacion, espacioFisico, profesional, horaInicio, horaFin);
+    const agendasSobreturno = await buscarAgendasSobreturnos(organizacion, tipoPrestacion, espacioFisico, profesional, horaInicio, horaFin);
 
 
     const nrosCarpetas = getNrosCarpetas(agendas, agendasSobreturno, solicitudesManuales);
 
     // [TODO] Castear a ObjectId en la función interna
-    const carpetas = await findCarpetas(organizacionId, nrosCarpetas);
-    const prestamosCarpetas = await getRegistrosSolicitudCarpetas(req, organizacionId, [agendas, agendasSobreturno], carpetas, solicitudesManuales);
-
+    const carpetas = await findCarpetas(organizacion, nrosCarpetas);
+    const prestamosCarpetas = await getRegistrosSolicitudCarpetas(req, organizacion, [agendas, agendasSobreturno], carpetas, solicitudesManuales);
     return prestamosCarpetas;
 }
 
@@ -56,7 +56,7 @@ function getNrosCarpetas(agendas, agendasSobreturno, solicitudesManuales) {
         agendas.forEach(_agenda => {
             _agenda.turnos.forEach(unTurno => {
                 unTurno.paciente.carpetaEfectores.forEach(async unaCarpeta => {
-                    if (nroCarpetas.indexOf(unaCarpeta.nroCarpeta) < 0) {
+                    if (unaCarpeta.nroCarpeta && unaCarpeta.nroCarpeta.indexOf('PDR') < 0 && unaCarpeta.nroCarpeta !== '' && nroCarpetas.indexOf(unaCarpeta.nroCarpeta) < 0) {
                         nroCarpetas.push(unaCarpeta.nroCarpeta);
                     }
                 });
@@ -117,7 +117,7 @@ async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carp
             _agenda.turnos.forEach(_turno => {
                 _turno.paciente.carpetaEfectores.forEach(unaCarpeta => {
                     // Validación de PDR para ignorar números de carpetas autogenerados por HPN.
-                    if ((unaCarpeta.nroCarpeta.indexOf('PDR') < 0) && unaCarpeta.organizacion._id.equals(unaOrganizacion)) {
+                    if (unaCarpeta.nroCarpeta.indexOf('PDR') < 0 && unaCarpeta.organizacion._id.equals(unaOrganizacion) && unaCarpeta.nroCarpeta !== '') {
                         let estadoCarpeta = constantes.EstadosPrestamosCarpeta.EnArchivo;
                         carpetas.map(carpeta => {
                             if (carpeta._id === unaCarpeta.nroCarpeta) {
@@ -200,7 +200,7 @@ async function findCarpetasPrestamo(organizacionId: string, horaInicio: string, 
     }
 
     if (espacioFisico) {
-        match['datosPrestamo.turno.espacioFisico._id'] = espacioFisico;
+        match['datosPrestamo.turno.espacioFisico._id'] = new ObjectId(espacioFisico);
     }
 
     if (profesionalId) {
@@ -311,7 +311,7 @@ async function buscarAgendasTurnos(organizacionId: string, tipoPrestacion: strin
 
     matchCarpeta['bloques.turnos.estado'] = { $eq: 'asignado' };
     matchCarpeta['bloques.turnos.paciente.carpetaEfectores.organizacion._id'] = new ObjectId(organizacionId);
-    matchCarpeta['bloques.turnos.paciente.carpetaEfectores.nroCarpeta'] = { $ne: '' };
+    // matchCarpeta['bloques.turnos.paciente.carpetaEfectores.nroCarpeta'] = { $ne: '' };
 
     const pipelineCarpeta = [
         {
@@ -431,12 +431,23 @@ export async function getHistorial(req) {
     const nroCarpeta = req.query.numero;
     const organizacionId = req.query.organizacion;
 
-    const filter: any = {
-        'organizacion._id': new ObjectId(organizacionId),
-        numero: nroCarpeta
-    };
+    const queryPaciente = await buscarPacienteWithcondition({
+        'carpetaEfectores.organizacion._id': organizacionId,
+        'carpetaEfectores.nroCarpeta': nroCarpeta
+    });
 
-    return await Prestamo.find(filter).sort('-createdAt');
+    if (queryPaciente) {
+        const filter: any = {
+            'organizacion._id': new ObjectId(organizacionId),
+            numero: nroCarpeta
+        };
+        const queryHistorial = await Prestamo.find(filter).sort('-createdAt');
+        return { historial: queryHistorial, paciente: queryPaciente.paciente };
+    } else {
+        return {};
+    }
+
+
 }
 
 export async function solicitudManualCarpeta(req) {
@@ -456,21 +467,32 @@ export async function solicitudManualCarpeta(req) {
     return solicitud;
 }
 
-async function getSolicitudCarpetaManual(organizacionId, idSolicitud = null, estadoSolicitud = null) {
+async function getSolicitudCarpetaManual(filtros) {
     let query;
-    if (idSolicitud) {
-        query = SolicitudCarpetaManual.findById(idSolicitud);
+    if (filtros.idSolicitud) {
+        query = SolicitudCarpetaManual.findById(filtros.idSolicitud);
     } else {
         query = SolicitudCarpetaManual.find({});
-        query.where('organizacion._id').equals(organizacionId);
-        query.where('estado').equals((estadoSolicitud ? estadoSolicitud : constantes.EstadoSolicitudCarpeta.Pendiente));
+        if (filtros.organizacionId) {
+            query.where('organizacion._id').equals(filtros.organizacionId);
+        }
+        if (filtros.tipoPrestacionId) {
+            query.where('datosSolicitudManual.prestacion._id').equals(filtros.tipoPrestacionId);
+        }
+        if (filtros.espacioFisicoId) {
+            query.where('datosSolicitudManual.espacioFisico._id').equals(filtros.espacioFisicoId);
+        }
+        if (filtros.profesionalId) {
+            query.where('datosSolicitudManual.profesional._id').equals(filtros.profesionalId);
+        }
+        query.where('estado').equals((filtros.estadoSolicitud ? filtros.estadoSolicitud : constantes.EstadoSolicitudCarpeta.Pendiente));
     }
 
     return await query;
 }
 
 async function cambiarEstadoSolicitudManual(req, idSolicitud, organizacion) {
-    const solicitud = await getSolicitudCarpetaManual(organizacion.id, String(idSolicitud));
+    const solicitud = await getSolicitudCarpetaManual({ organizacionId: organizacion.id, idSolicitud: String(idSolicitud) });
     solicitud.estado = constantes.EstadoSolicitudCarpeta.Aprobada;
     Auth.audit(solicitud, req);
     solicitud.save();
