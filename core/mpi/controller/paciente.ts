@@ -10,6 +10,7 @@ import * as agendaController from '../../../modules/turnos/controller/agenda';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
 import * as https from 'https';
 import * as configPrivate from '../../../config.private';
+import { getServicioGeonode } from '../../../utils/servicioGeonode';
 
 /**
  * Crea un paciente y lo sincroniza con elastic
@@ -30,6 +31,7 @@ export function createPaciente(data, req) {
             const nuevoPac = JSON.parse(JSON.stringify(newPatient));
             delete nuevoPac._id;
             delete nuevoPac.relaciones;
+            delete nuevoPac.direccion;
             const connElastic = new ElasticSync();
             connElastic.create(newPatient._id.toString(), nuevoPac).then(() => {
                 Logger.log(req, 'mpi', 'insert', newPatient);
@@ -476,9 +478,25 @@ export function updateRelaciones(req, data) {
     data.relaciones = req.body.relaciones;
 }
 
-export function updateDireccion(req, data) {
+export async function updateDireccion(req, data) {
     data.markModified('direccion');
     data.direccion = req.body.direccion;
+    try {
+        await actualizarGeoReferencia(req, data);
+    } catch (err) {
+        return err;
+    }
+}
+
+export function updateBarrio(geoRef) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const barrio = await getServicioGeonode(geoRef);
+            resolve(barrio);
+        } catch (err) {
+            return reject(err);
+        }
+    });
 }
 
 export function updateCarpetaEfectores(req, data) {
@@ -720,9 +738,25 @@ export async function matchPaciente(dataPaciente) {
     }
 }
 
+/**
+ * Segun la entrada, retorna un Point con las coordenadas de geo referencia o null.
+ * @param dataPaciente debe contener direccion y localidad.
+ */
+export async function actualizarGeoReferencia(req, data) {
+    if (data.direccion[0].valor && data.direccion[0].ubicacion.localidad && data.direccion[0].ubicacion.localidad.nombre) {
+        // Se carga geo referencia desde api de google
+        try {
+            const geoRef: any = await geoRefPaciente(req);
+            data.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
+            data.direccion[0].ubicacion.barrio = await getServicioGeonode(data.direccion[0].geoReferencia);
+        } catch (err) {
+            return (err);
+        }
+    }
+}
+
 export function geoRefPaciente(dataPaciente) {
     return new Promise((resolve, reject) => {
-
         const address = dataPaciente.direccion[0].valor + ',' + dataPaciente.direccion[0].ubicacion.localidad.nombre;
         let pathGoogleApi = '';
         let jsonGoogle = '';

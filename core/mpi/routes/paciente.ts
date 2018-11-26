@@ -338,9 +338,9 @@ router.get('/pacientes/:id', (req, res, next) => {
     }
     controller.buscarPaciente(req.params.id).then((resultado: any) => {
         if (resultado) {
-            // Logger.log(req, 'mpi', 'query', {
-            //     mongoDB: resultado.paciente
-            // });
+            Logger.log(req, 'mpi', 'query', {
+                mongoDB: resultado.paciente
+            });
             res.json(resultado.paciente);
         } else {
             return next(500);
@@ -431,13 +431,13 @@ router.get('/pacientes', (req, res, next) => {
     });
 });
 
+
 router.put('/pacientes/mpi/:id', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:putMpi')) {
         return next(403);
     }
     if (!(mongoose.Types.ObjectId.isValid(req.params.id))) {
         return next(404);
-
     }
     const ObjectId = mongoose.Types.ObjectId;
     const objectId = new ObjectId(req.params.id);
@@ -455,11 +455,6 @@ router.put('/pacientes/mpi/:id', (req, res, next) => {
         const connElastic = new ElasticSync();
         if (patientFound) {
             const data = req.body;
-            // se carga geo referencia desde api de google
-            if (patientFound.estado === 'validado' && patientFound.direccion[0].valor !== data.direccion[0].valor) {
-                let geoRef: any = await controller.geoRefPaciente(patientFound);
-                patientFound.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
-            }
 
             controller.updatePacienteMpi(patientFound, data, req).then(async (p: any) => {
                 res.json(p);
@@ -470,12 +465,6 @@ router.put('/pacientes/mpi/:id', (req, res, next) => {
             newPatient['claveBlocking'] = claves;
             newPatient['apellido'] = newPatient['apellido'].toUpperCase();
             newPatient['nombre'] = newPatient['nombre'].toUpperCase();
-
-            if (newPatient.estado === 'validado') {
-                // se carga geo referencia desde api de google
-                let geoRef: any = await controller.geoRefPaciente(newPatient);
-                newPatient.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
-            }
 
             Auth.audit(newPatient, req);
             newPatient.save((err2) => {
@@ -492,8 +481,6 @@ router.put('/pacientes/mpi/:id', (req, res, next) => {
                 }).catch(error => {
                     return next(error);
                 });
-
-
             });
         }
     });
@@ -593,7 +580,16 @@ router.post('/pacientes', (req, res, next) => {
                 return res.json(data[0].paciente);
             } else {
                 req.body.activo = true;
-                return controller.createPaciente(req.body, req).then(pacienteObj => {
+                let patient = req.body;
+                // se carga geo referencia desde api de google
+                if (req.body.estado === 'validado') {
+                    try {
+                        await controller.actualizarGeoReferencia(req.body, patient);
+                    } catch (err) {
+                        res.json(err);
+                    }
+                }
+                return controller.createPaciente(patient, req).then(pacienteObj => {
                     return res.json(pacienteObj);
                 }).catch((error) => {
                     return next(error);
@@ -666,12 +662,14 @@ router.put('/pacientes/:id', (req, res, next) => {
                 delete data.sexo;
                 delete data.fechaNacimiento;
             }
+            // si hubo cambios en la dirección del paciente se carga geo referencia desde api de google
             if (patientFound.estado === 'validado' && patientFound.direccion[0].valor !== data.direccion[0].valor) {
-                // se carga geo referencia desde api de google
-                let geoRef: any = await controller.geoRefPaciente(patientFound);
-                patientFound.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
+                try {
+                    await controller.actualizarGeoReferencia(req.body, data);
+                } catch (err) {
+                    res.json(err);
+                }
             }
-
             controller.updatePaciente(patientFound, data, req).then((p: any) => {
 
                 res.json(p);
@@ -680,15 +678,16 @@ router.put('/pacientes/:id', (req, res, next) => {
         } else {
             try {
                 req.body._id = req.body.id;
+                let newPatient = new paciente(req.body);
 
+                // se carga geo referencia desde api de google
                 if (req.body.estado === 'validado') {
-                    // se carga geo referencia desde api de google
-                    let geoRef: any = await controller.geoRefPaciente(req.body);
-                    req.body.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
+                    try {
+                        await controller.actualizarGeoReferencia(req.body, newPatient);
+                    } catch (err) {
+                        res.json(err);
+                    }
                 }
-
-                const newPatient = new paciente(req.body);
-
                 // verifico si el paciente ya está en MPI
                 pacienteMpi.findById(query, (err3, patientFountMpi: any) => {
                     if (err3) {
@@ -810,7 +809,9 @@ router.patch('/pacientes/:id', (req, res, next) => {
                     controller.updateRelaciones(req, resultado.paciente);
                     break;
                 case 'updateDireccion':
-                    controller.updateDireccion(req, resultado.paciente);
+                    try {
+                        await controller.updateDireccion(req, resultado.paciente);
+                    } catch (err) { return next(err); }
                     break;
                 case 'updateCarpetaEfectores':
                     try { // Actualizamos los turnos activos del paciente
@@ -860,17 +861,11 @@ router.patch('/pacientes/:id', (req, res, next) => {
                 pacienteAndes = resultado.paciente;
             }
             Auth.audit(pacienteAndes, req);
-            if (pacienteAndes.estado === 'validado') {
-                // se carga geo referencia desde api de google
-                let geoRef: any = await controller.geoRefPaciente(pacienteAndes);
-                pacienteAndes.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
-            }
 
             pacienteAndes.save((errPatch) => {
                 if (errPatch) {
                     return next(errPatch);
                 }
-
                 res.json(pacienteAndes);
                 EventCore.emitAsync('mpi:patient:update', pacienteAndes);
                 return;
