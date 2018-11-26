@@ -480,7 +480,6 @@ export function updateDireccion(req, data) {
 }
 
 export function updateCarpetaEfectores(req, data) {
-    console.log('update carpeta');
     data.markModified('carpetaEfectores');
     data.carpetaEfectores = req.body.carpetaEfectores;
 }
