@@ -60,17 +60,52 @@ router.post('/turnos/:tipo/:profesionalId/', (request, response, errorHandler) =
     }
 });
 
-router.get('/turnos/turnosPorDocumentos', (req, res, errorHandler) => {
+router.get('/turnos/turnosPorDocumentos', async (req, res, errorHandler) => {
 
     if (req.query.documento) {
-        turno.find({'profesional.habilitado': true}).populate('profesional').sort({ fecha: 1, hora: 1 }).exec((error, data) => {
-            if (error) {
-                return errorHandler(error);
-            }
+        if (req.query.tipoTurno === 'matriculacion') {
+            turno.find({}).populate({
+                path: 'profesional',
+                match: { documento: '50636505', sexo: 'femenino' }
+            }).exec((error, data) => {
+                if (error) {
+                    return errorHandler(error);
+                }
+                let data2 = data.filter((x: any) => x.profesional !== null);
 
-            res.json(data);
-        });
+                if (data2) {
+                    res.send(true);
 
+                }
+            });
+        } else {
+            console.log('renovacion');
+            turno.find({}).populate({
+                path: 'profesional',
+                match: { documento: req.query.documento }
+            }).exec(async (error, data: any) => {
+                if (error) {
+                    return errorHandler(error);
+                }
+                let data2 = data.filter((x: any) => x.profesional !== null);
+                let match = false;
+
+                for (let index = 0; index < data2.length; index++) {
+                    const element = data2[index];
+
+                    await profesional.findById(element.profesional.idRenovacion, (error, datos: any) => {
+
+                        if (datos.sexo === req.query.sexo) {
+                            match = true;
+                        }
+                        return match;
+                    });
+                }
+                res.send(match);
+
+
+            });
+        }
     }
 });
 

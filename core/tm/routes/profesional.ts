@@ -674,7 +674,8 @@ router.get('/resumen', (req, res, next) => {
                 apellido: data[0].apellido,
                 fechaNacimiento: data[0].fechaNacimiento,
                 documento: data[0].documento,
-                nacionalidad: data[0].nacionalidad
+                nacionalidad: data[0].nacionalidad,
+                sexo: data[0].sexo
 
             }];
 
