@@ -47,8 +47,6 @@ router.get('/practicas', (req, res, next) => {
                 query.$and.push({ categoria: { $eq: 'simple' } })
             }
 
-            
-
             Practica.find(query).then((practicas: any[]) => {
                 res.json(practicas);
             });

@@ -1,5 +1,7 @@
 import { SnomedConcept } from './../../../../modules/rup/schemas/snomed-concept';
+import { AreaLaboratorio } from './areaLaboratorio';
 import {  model, Schema } from 'mongoose';
+
 
 // tslint:disable
 export let schema = new Schema({
@@ -31,13 +33,7 @@ export let schema = new Schema({
             required: true
         }
     },
-    area: {
-        nombre: {
-            type: String,
-            required: true
-        },
-        conceptoSnomed: SnomedConcept
-    },
+    area: AreaLaboratorio,
     categoria: {
         type: String,
         required: true

@@ -83,7 +83,6 @@ router.get('/prestaciones/huds/:idPaciente', async (req, res, next) => {
 
 
 router.get('/prestaciones/:id*?', (req, res, next) => {
-    console.log('GET/prestaciones/')
     if (req.params.id) {
         const query = Prestacion.findById(req.params.id);
         query.exec((err, data) => {
