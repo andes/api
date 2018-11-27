@@ -288,7 +288,7 @@ export function buscarPacienteWithcondition(condition): Promise<{ db: String, pa
  *
  * @param data
  */
-export function matching(data) {
+export function matching(data): Promise<any> {
 
     const connElastic = new ElasticSync();
 
@@ -718,3 +718,38 @@ export async function matchPaciente(dataPaciente) {
     }
 }
 
+/**
+ *  Devuelve true si el paciente ya existe en ANDES
+ *
+ * @param {*} nuevoPaciente
+ * @returns Promise<boolean> || error
+ */
+export async function checkRepetido(nuevoPaciente): Promise<boolean> {
+    let matchingInputData = {
+        type: 'suggest',
+        claveBlocking: 'documento',
+        percentage: true,
+        apellido: nuevoPaciente.apellido,
+        nombre: nuevoPaciente.nombre,
+        documento: nuevoPaciente.documento,
+        sexo: ((typeof nuevoPaciente.sexo === 'string')) ? nuevoPaciente.sexo : (Object(nuevoPaciente.sexo).id),
+        fechaNacimiento: nuevoPaciente.fechaNacimiento
+    };
+
+    let resultadoMatching = await matching(matchingInputData);  // Handlear error en funcion llamadora
+    // Filtramos al mismo paciente
+    resultadoMatching = resultadoMatching.filter(elem => elem.paciente.id !== nuevoPaciente._id);
+    // Si el nuevo paciente está validado, filtramos los candidatos temporales
+    if (nuevoPaciente.estado === 'validado') {
+        resultadoMatching = resultadoMatching.filter(elem => elem.paciente.estado === 'validado');
+    }
+    // La condición verifica que el matching no de superior a la cota maxima y que el nuevo paciente no coincida en dni y sexo con alguno ya existente
+    let cond = false;
+    if (resultadoMatching && resultadoMatching.length > 0) {
+        cond = (resultadoMatching.filter(element => element.match > config.mpi.cotaMatchMax).length > 0);
+        cond = cond || resultadoMatching.filter(element =>
+            (element.paciente.sexo === matchingInputData.sexo && element.paciente.documento === matchingInputData.documento)
+        ).length > 0;
+    }
+    return cond;
+}
