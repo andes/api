@@ -548,6 +548,33 @@ export function updateCuil(req, data) {
     data.cuil = req.body.cuil;
 }
 
+export async function actualizarFinanciador(req, next) {
+    let resultado = await this.buscarPaciente(req.body.paciente.id);
+    // por ahora se pisa la información
+    // TODO: analizar como sería
+    if (req.body.paciente.obraSocial) {
+        if (!resultado.paciente.financiador) {
+            resultado.paciente.financiador = [];
+        }
+        resultado.paciente.financiador[0] = req.body.paciente.obraSocial;
+        resultado.paciente.markModified('financiador');
+
+        let pacienteAndes: any;
+        if (resultado.db === 'mpi') {
+            pacienteAndes = new paciente(resultado.paciente.toObject());
+        } else {
+            pacienteAndes = resultado.paciente;
+        }
+        Auth.audit(pacienteAndes, req);
+        pacienteAndes.save((errPatch) => {
+            if (errPatch) {
+                return next(errPatch);
+            }
+            return;
+        });
+    }
+}
+
 export function checkCarpeta(req, data) {
     return new Promise((resolve, reject) => {
         const indiceCarpeta = req.body.carpetaEfectores.findIndex(x => x.organizacion._id === req.user.organizacion.id);
