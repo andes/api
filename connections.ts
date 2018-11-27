@@ -1,6 +1,7 @@
 import * as mongoose from 'mongoose';
 import * as configPrivate from './config.private';
 import * as debug from 'debug';
+import * as logger from '@andes/log';
 
 function schemaDefaults(schema) {
     schema.set('toJSON', {
@@ -46,6 +47,9 @@ export class Connections {
 
         // 4. PUCO
         this.puco = mongoose.createConnection(configPrivate.hosts.mongoDB_puco.host, configPrivate.hosts.mongoDB_puco.options);
+
+        // 5. LOGGER
+        logger.Connections.initialize(configPrivate.logDatabase.log.host, configPrivate.logDatabase.log.options);
 
         // Configura eventos
         this.configEvents('main', this.main);
