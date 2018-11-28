@@ -146,6 +146,8 @@ export class Documento {
             valor = `${proc.valor} ${unidad}`;
         } else if (proc.valor.id !== undefined && proc.valor.label !== undefined) {
             valor = proc.valor.otro ? proc.valor.otro : proc.valor.label;
+        } else if (proc.valor.concepto) {
+            valor = proc.valor.concepto.term.toString();
         } else {
             valor = proc.valor.toString();
         }
