@@ -719,12 +719,13 @@ export async function matchPaciente(dataPaciente) {
 }
 
 /**
- *  Devuelve true si el paciente ya existe en ANDES
+ *  Devuelve un array de pacientes similares al ingresado por parámetro
+ *  Utiliza
  *
  * @param {*} nuevoPaciente
  * @returns Promise<boolean> || error
  */
-export async function checkRepetido(nuevoPaciente): Promise<boolean> {
+export async function checkRepetido(nuevoPaciente): Promise<any> {
     let matchingInputData = {
         type: 'suggest',
         claveBlocking: 'documento',
@@ -744,12 +745,12 @@ export async function checkRepetido(nuevoPaciente): Promise<boolean> {
         resultadoMatching = resultadoMatching.filter(elem => elem.paciente.estado === 'validado');
     }
     // La condición verifica que el matching no de superior a la cota maxima y que el nuevo paciente no coincida en dni y sexo con alguno ya existente
-    let cond = false;
-    if (resultadoMatching && resultadoMatching.length > 0) {
-        cond = (resultadoMatching.filter(element => element.match > config.mpi.cotaMatchMax).length > 0);
-        cond = cond || resultadoMatching.filter(element =>
-            (element.paciente.sexo === matchingInputData.sexo && element.paciente.documento === matchingInputData.documento)
-        ).length > 0;
-    }
-    return cond;
+
+    let macheoAlto = (resultadoMatching.filter(element => element.match > config.mpi.cotaMatchMax).length > 0);
+    let dniRepetido = resultadoMatching.filter(element =>
+        (element.paciente.sexo === matchingInputData.sexo && element.paciente.documento === matchingInputData.documento)
+    ).length > 0;
+
+    return { resultadoMatching, macheoAlto, dniRepetido };
 }
+
