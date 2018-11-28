@@ -1,13 +1,31 @@
-import * as config from '../../../config';
+import { mpi, algoritmo } from '../../../config';
 import * as moment from 'moment';
 import { paciente, pacienteMpi } from '../schemas/paciente';
 import { ElasticSync } from '../../../utils/elasticSync';
-import { Logger } from '../../../utils/logService';
+import { logKeys } from '../../../config';
+import { log } from '@andes/log';
 import { Matching } from '@andes/match';
 import { Auth } from './../../../auth/auth.class';
 import { EventCore } from '@andes/event-bus';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
+
+
+export function generateLogRequest(req) {
+    return {
+        ip: 'localhost',
+        connection: {
+            localAddress: ''
+        },
+        cliente: {
+            ip: req.ip,
+            userAgent: req.useragent
+        },
+        servidor: {
+            ip: req.connection && req.connection.localAddress
+        }
+    };
+}
 
 /**
  * Crea un paciente y lo sincroniza con elastic
@@ -29,8 +47,21 @@ export function createPaciente(data, req) {
             delete nuevoPac._id;
             delete nuevoPac.relaciones;
             const connElastic = new ElasticSync();
-            connElastic.create(newPatient._id.toString(), nuevoPac).then(() => {
-                Logger.log(req, 'mpi', 'insert', newPatient);
+            connElastic.create(newPatient._id.toString(), nuevoPac).then(async () => {
+                //  Logger.log(req, 'mpi', 'insert', newPatient);
+
+                let logRequest = this.generateLogRequest(req);
+                logRequest.user = {
+                    usuario: { nombre: data.createdBy.nombre, apellido: data.createdBy.apellido },
+                    app: 'mpi',
+                    organizacion: data.createdBy.organizacion
+                };
+                try {
+                    await log(logRequest, logKeys.mpiInsert.key, newPatient.id, logKeys.mpiInsert.operacion, newPatient, null);
+                } catch (err) {
+                    await log(logRequest, logKeys.mpiInsert.key, newPatient.id, logKeys.mpiInsert.operacion, err, null);
+                }
+
                 // Código para emitir eventos
                 EventCore.emitAsync('mpi:patient:create', newPatient);
                 //
@@ -62,14 +93,41 @@ export function updatePaciente(pacienteObj, data, req) {
                 updateTurnosPaciente(pacienteObj);
             } catch (error) { return error; }
             const connElastic = new ElasticSync();
-            connElastic.sync(pacienteObj).then(updated => {
+            connElastic.sync(pacienteObj).then(async updated => {
                 if (updated) {
-                    Logger.log(req, 'mpi', 'update', {
-                        original: pacienteOriginal,
-                        nuevo: pacienteObj
-                    });
+                    // Logger.log(req, 'mpi', 'update', {
+                    //     original: pacienteOriginal,
+                    //     nuevo: pacienteObj
+                    // });
+                    console.log('102 controller mpi update');
+                    let logRequest = this.generateLogRequest(req);
+                    logRequest.user = {
+                        usuario: { nombre: req.updatedBy.usuerio.nombre, apellido: req.updatedBy.usuerio.apellido },
+                        app: 'mpi',
+                        organizacion: req.updatedBy.organizacion
+                    };
+                    try {
+                        console.log('try');
+                        await log(logRequest, logKeys.mpiUpdate.key, pacienteObj.id, logKeys.mpiUpdate.operacion, pacienteObj, pacienteOriginal);
+                    } catch (err) {
+                        await log(logRequest, logKeys.mpiUpdate.key, pacienteObj.id, logKeys.mpiUpdate.operacion, err, pacienteOriginal);
+                        console.log('catch');
+                    }
+
                 } else {
-                    Logger.log(req, 'mpi', 'insert', pacienteObj);
+                    // Logger.log(req, 'mpi', 'insert', pacienteObj);
+                    console.log('controller mpi insert: ', req.body);
+                    let logRequest = this.generateLogRequest(req);
+                    logRequest.user = {
+                        usuario: { nombre: req.createdBy.usuario.nombre, apellido: req.createdBy.usuario.apellido },
+                        app: 'mpi',
+                        organizacion: req.createdBy.organizacion
+                    };
+                    try {
+                        await log(logRequest, logKeys.mpiInsert.key, pacienteObj.id, logKeys.mpiInsert.operacion, pacienteObj, null);
+                    } catch (err) {
+                        await log(logRequest, logKeys.mpiInsert.key, pacienteObj.id, logKeys.mpiInsert.operacion, err, null);
+                    }
                 }
                 EventCore.emitAsync('mpi:patient:update', pacienteObj);
                 resolve(pacienteObj);
@@ -121,14 +179,36 @@ export function updatePacienteMpi(pacMpi, pacAndes, req) {
                 return reject(err2);
             }
             const connElastic = new ElasticSync();
-            connElastic.sync(pacMpi).then(updated => {
+            connElastic.sync(pacMpi).then(async updated => {
                 if (updated) {
-                    Logger.log(req, 'mpi', 'update', {
-                        original: pacOriginalMpi,
-                        nuevo: pacMpi
-                    });
+                    // Logger.log(req, 'mpi', 'update', {
+                    //     original: pacOriginalMpi,
+                    //     nuevo: pacMpi
+                    // });
+                    let logRequest = this.generateLogRequest(req);
+                    logRequest.user = {
+                        usuario: { nombre: req.updateBy.nombre, apellido: req.updateBy.apellido },
+                        app: 'mpi',
+                        organizacion: req.updateBy.organizacion
+                    };
+                    try {
+                        await log(logRequest, logKeys.mpiUpdate.key, pacMpi.id, logKeys.mpiUpdate.operacion, null, pacOriginalMpi);
+                    } catch (err) {
+                        await log(logRequest, logKeys.mpiUpdate.key, pacMpi.id, logKeys.mpiUpdate.operacion, err, pacOriginalMpi);
+                    }
                 } else {
-                    Logger.log(req, 'mpi', 'insert', pacMpi);
+                    // Logger.log(req, 'mpi', 'insert', pacMpi);
+                    let logRequest = this.generateLogRequest(req);
+                    logRequest.user = {
+                        usuario: { nombre: req.createdBy.nombre, apellido: req.createdBy.apellido },
+                        app: 'mpi',
+                        organizacion: req.createdBy.organizacion
+                    };
+                    try {
+                        await log(logRequest, logKeys.mpiInsert.key, pacMpi.id, logKeys.mpiInsert.operacion, pacMpi, null);
+                    } catch (err) {
+                        await log(logRequest, logKeys.mpiInsert.key, pacMpi.id, logKeys.mpiInsert.operacion, err, null);
+                    }
                 }
                 resolve(pacMpi);
             }).catch(error => {
@@ -161,10 +241,23 @@ export function postPacienteMpi(newPatientMpi, req) {
                     reject(err);
                 }
                 const connElastic = new ElasticSync();
-                connElastic.sync(newPatientMpi).then(() => {
-                    Logger.log(req, 'mpi', 'elasticInsert', {
-                        nuevo: newPatientMpi,
-                    });
+                connElastic.sync(newPatientMpi).then(async () => {
+                    // Logger.log(req, 'mpi', 'elasticInsert', {
+                    //     nuevo: newPatientMpi, ;
+                    // });
+
+                    let logRequest = this.generateLogRequest(req);
+                    logRequest.user = {
+                        usuario: { nombre: req.createdBy.nombre, apellido: req.createdBy.apellido },
+                        app: 'mpi',
+                        organizacion: req.createdBy.organizacion
+                    };
+                    try {
+                        await log(logRequest, logKeys.mpiInsert.key, newPatientMpi.id, logKeys.mpiInsert.operacion, newPatientMpi, null);
+                    } catch (err) {
+                        await log(logRequest, logKeys.mpiInsert.key, newPatientMpi.id, logKeys.mpiInsert.operacion, err, null);
+                    }
+
                     resolve(newPatientMpi);
                 }).catch((error) => {
                     reject(error);
@@ -348,14 +441,14 @@ export function matching(data) {
                 .then((searchResult) => {
 
                     // Asigno los valores para el suggest
-                    let weights = config.mpi.weightsDefault;
+                    let weights = mpi.weightsDefault;
 
                     if (data.escaneado) {
-                        weights = config.mpi.weightsScan;
+                        weights = mpi.weightsScan;
                     }
 
-                    const porcentajeMatchMax = config.mpi.cotaMatchMax;
-                    const porcentajeMatchMin = config.mpi.cotaMatchMin;
+                    const porcentajeMatchMax = mpi.cotaMatchMax;
+                    const porcentajeMatchMin = mpi.cotaMatchMin;
                     const listaPacientesMax = [];
                     const listaPacientesMin = [];
 
@@ -377,7 +470,7 @@ export function matching(data) {
                                 sexo: paciente2.sexo ? paciente2.sexo : ''
                             };
                             const match = new Matching();
-                            const valorMatching = match.matchPersonas(pacElastic, pacDto, weights, config.algoritmo);
+                            const valorMatching = match.matchPersonas(pacElastic, pacDto, weights, algoritmo);
                             paciente2['id'] = hit._id;
 
                             if (valorMatching >= porcentajeMatchMax) {
@@ -458,14 +551,26 @@ export function deletePacienteAndes(objectId) {
 
 /* Funciones de operaciones PATCH */
 
-export function updateContactos(req, data) {
+export async function updateContactos(req, data) {
     data.markModified('contacto');
-    Logger.log(req, 'mpi', 'update', {
-        accion: 'updateContacto',
-        ruta: req.url,
-        method: req.method,
-        data: data.contacto,
-    });
+    // Logger.log(req, 'mpi', 'update', {
+    //     accion: 'updateContacto',
+    //     ruta: req.url,
+    //     method: req.method,
+    //     data: data.contacto,
+    // });
+
+    let logRequest = this.generateLogRequest(req);
+    logRequest.user = {
+        usuario: { nombre: req.updateBy.nombre, apellido: req.updateBy.apellido },
+        app: 'mpi',
+        organizacion: req.updateBy.organizacion
+    };
+    try {
+        await log(logRequest, logKeys.mpiUpdateContacto.key, req.paciente.id, logKeys.mpiUpdateContacto.operacion, null, null);
+    } catch (err) {
+        await log(logRequest, logKeys.mpiUpdateContacto.key, req.paciente.id, logKeys.mpiUpdateContacto.operacion, err, null);
+    }
     data.contacto = req.body.contacto;
 }
 
@@ -618,7 +723,7 @@ export function searchSimilar(objective, where: string, conditions, _weights = n
     } else {
         db = pacienteMpi;
     }
-    const weights = _weights || config.mpi.weightsUpdater;
+    const weights = _weights || mpi.weightsUpdater;
     const match = new Matching();
     return new Promise((resolve, reject) => {
         db.find(conditions).then((pacientes) => {
@@ -627,7 +732,7 @@ export function searchSimilar(objective, where: string, conditions, _weights = n
                 for (let i = 0; i < pacientes.length; i++) {
 
                     const pac = pacientes[i];
-                    const valueMatch = match.matchPersonas(objective, pac, weights, config.algoritmo);
+                    const valueMatch = match.matchPersonas(objective, pac, weights, algoritmo);
 
                     matchings.push({
                         paciente: pac,
@@ -679,7 +784,7 @@ export async function matchPaciente(dataPaciente) {
             return elem;
         });
 
-        const weights = config.mpi.weightsDefault;
+        const weights = mpi.weightsDefault;
         const listMatching = [];
         for (const paciente2 of pacientes) {
             const pacDto = {
@@ -697,7 +802,7 @@ export async function matchPaciente(dataPaciente) {
                 sexo: paciente2.sexo ? paciente2.sexo : ''
             };
             const match = new Matching();
-            const valorMatching = match.matchPersonas(pacElastic, pacDto, weights, config.algoritmo);
+            const valorMatching = match.matchPersonas(pacElastic, pacDto, weights, algoritmo);
 
             listMatching.push({
                 value: valorMatching,

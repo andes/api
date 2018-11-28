@@ -5,7 +5,9 @@ import { pacienteMpi, paciente } from '../schemas/paciente';
 import { log } from '../../log/schemas/log';
 import * as controller from '../controller/paciente';
 import { Auth } from './../../../auth/auth.class';
-import { Logger } from '../../../utils/logService';
+// import { Logger } from '../../../utils/logService';
+import { logKeys } from '../../../config';
+import { log as logger } from '@andes/log';
 import { ElasticSync } from '../../../utils/elasticSync';
 import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
@@ -328,19 +330,34 @@ router.get('/pacientes/dashboard/', async (req, res, next) => {
  */
 
 // Simple mongodb query by ObjectId --> better performance
-router.get('/pacientes/:id', (req, res, next) => {
+router.get('/pacientes/:id', (req: any, res, next) => {
     // busca en pacienteAndes y en pacienteMpi
     if (!Auth.check(req, 'mpi:paciente:getbyId')) {
         return next(403);
     }
+    console.log('338 editar pac');
     if (!(mongoose.Types.ObjectId.isValid(req.params.id))) {
         return next(404);
     }
-    controller.buscarPaciente(req.params.id).then((resultado: any) => {
+    controller.buscarPaciente(req.params.id).then(async (resultado: any) => {
         if (resultado) {
-            Logger.log(req, 'mpi', 'query', {
-                mongoDB: resultado.paciente
-            });
+            //     Logger.log(req, 'mpi', 'query', {
+            //         mongoDB: resultado.paciente
+            //     });
+
+            /////////////// ESTO ES EN REALIDAD 'EDITAR PACIENTE' /////////////////
+            let logRequest: any = controller.generateLogRequest(req);
+            logRequest.user = {
+                usuario: { nombre: req.user.usuario.nombre, apellido: req.user.usuario.apellido },
+                app: 'mpi',
+                organizacion: req.user.organizacion
+            };
+            try {
+                await logger(logRequest, logKeys.mpiBuscarPaciente.key, resultado.id, logKeys.mpiBuscarPaciente.operacion, resultado, null);
+            } catch (err) {
+                await logger(logRequest, logKeys.mpiBuscarPaciente.key, resultado.id, logKeys.mpiBuscarPaciente.operacion, err, null);
+            }
+
             res.json(resultado.paciente);
         } else {
             return next(500);
@@ -415,14 +432,26 @@ router.get('/pacientes/:id', (req, res, next) => {
  *
  */
 // Search using elastic search
-router.get('/pacientes', (req, res, next) => {
+router.get('/pacientes', async (req: any, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
         return next(403);
     }
     // Logger de la consulta a ejecutar
-    Logger.log(req, 'mpi', 'query', {
-        elasticSearch: req.query
-    });
+    // Logger.log(req, 'mpi', 'query', {
+    //     elasticSearch: req.query
+    // });
+    console.log('441 buscar pac');
+    let logRequest: any = controller.generateLogRequest(req);
+    logRequest.user = {
+        usuario: { nombre: req.user.usuario.nombre, apellido: req.user.usuario.apellido },
+        app: 'mpi',
+        organizacion: req.user.organizacion
+    };
+    try {
+        await logger(logRequest, logKeys.mpiBuscarPaciente.key, null, logKeys.mpiBuscarPaciente.operacion, null, null);
+    } catch (err) {
+        await logger(logRequest, logKeys.mpiBuscarPaciente.key, null, logKeys.mpiBuscarPaciente.operacion, err, null);
+    }
 
     controller.matching(req.query).then(result => {
         res.send(result);
@@ -431,7 +460,7 @@ router.get('/pacientes', (req, res, next) => {
     });
 });
 
-router.put('/pacientes/mpi/:id', (req, res, next) => {
+router.put('/pacientes/mpi/:id', (req: any, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:putMpi')) {
         return next(403);
     }
@@ -474,8 +503,20 @@ router.put('/pacientes/mpi/:id', (req, res, next) => {
                 const nuevoPac = JSON.parse(JSON.stringify(newPatient));
                 delete nuevoPac._id;
 
-                connElastic.create(newPatient._id.toString(), nuevoPac).then(() => {
-                    Logger.log(req, 'mpi', 'elasticInsertInPut', newPatient);
+                connElastic.create(newPatient._id.toString(), nuevoPac).then(async () => {
+                    // Logger.log(req, 'mpi', 'elasticInsertInPut', newPatient);
+                    console.log('506 elastic create', req.query);
+                    let logRequest: any = controller.generateLogRequest(req);
+                    logRequest.user = {
+                        usuario: { nombre: req.user.usuario.nombre, apellido: req.user.usuario.apellido },
+                        app: 'mpi',
+                        organizacion: req.user.organizacion
+                    };
+                    try {
+                        await logger(logRequest, logKeys.mpiInsert.key, newPatient.id, logKeys.mpiInsert.operacion, newPatient, null);
+                    } catch (err) {
+                        await logger(logRequest, logKeys.mpiInsert.key, newPatient.id, logKeys.mpiInsert.operacion, err, null);
+                    }
                     res.json(newPatient);
                 }).catch(error => {
                     return next(error);
@@ -630,7 +671,7 @@ router.post('/pacientes', (req, res, next) => {
  *           $ref: '#/definitions/paciente'
  */
 
-router.put('/pacientes/:id', (req, res, next) => {
+router.put('/pacientes/:id', (req: any, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:putAndes')) {
         return next(403);
     }
@@ -641,7 +682,7 @@ router.put('/pacientes/:id', (req, res, next) => {
     const query = {
         _id: objectId
     };
-
+    console.log('683 para entrar find de update');
     paciente.findById(query, (err, patientFound: any) => {
         if (err) {
             return next(404);
@@ -655,6 +696,7 @@ router.put('/pacientes/:id', (req, res, next) => {
                 delete data.sexo;
                 delete data.fechaNacimiento;
             }
+            console.log('routes 699 para entrar en update');
             controller.updatePaciente(patientFound, data, req).then((p) => {
                 res.json(p);
             }).catch(next);
@@ -679,14 +721,38 @@ router.put('/pacientes/:id', (req, res, next) => {
                         // delete nuevoPac._id;
                         // delete nuevoPac.relaciones;
                         const connElastic = new ElasticSync();
-                        connElastic.sync(newPatient).then(updated => {
+                        connElastic.sync(newPatient).then(async updated => {
                             if (updated) {
-                                Logger.log(req, 'mpi', 'update', {
-                                    original: nuevoPac,
-                                    nuevo: newPatient
-                                });
+                                // Logger.log(req, 'mpi', 'update', {
+                                //     original: nuevoPac,
+                                //     nuevo: newPatient
+                                // });
+                                let logRequest: any = controller.generateLogRequest(req);
+                                logRequest.user = {
+                                    usuario: { nombre: req.updatedBy.nombre, apellido: req.body.updatedBy.apellido },
+                                    app: 'mpi',
+                                    organizacion: req.updatedBy.organizacion
+                                };
+                                console.log('update elastic route 735. req: ', req);
+                                try {
+                                    await logger(logRequest, logKeys.mpiUpdate.key, newPatient.id, logKeys.mpiUpdate.operacion, newPatient, nuevoPac);
+                                } catch (err) {
+                                    await logger(logRequest, logKeys.mpiUpdate.key, newPatient.id, logKeys.mpiUpdate.operacion, err, nuevoPac);
+                                }
                             } else {
-                                Logger.log(req, 'mpi', 'insert', newPatient);
+                                // Logger.log(req, 'mpi', 'insert', newPatient);
+                                console.log('insert elastic route 744. req: ', req);
+                                let logRequest: any = controller.generateLogRequest(req);
+                                logRequest.user = {
+                                    usuario: { nombre: req.createdBy.nombre, apellido: req.createdBy.apellido },
+                                    app: 'mpi',
+                                    organizacion: req.createdBy.organizacion
+                                };
+                                try {
+                                    await logger(logRequest, logKeys.mpiInsert.key, newPatient.id, logKeys.mpiInsert.operacion, newPatient, null);
+                                } catch (err) {
+                                    await logger(logRequest, logKeys.mpiInsert.key, newPatient.id, logKeys.mpiInsert.operacion, err, null);
+                                }
                             }
                             res.json(nuevoPac);
                         }).catch(error => {

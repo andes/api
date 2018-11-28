@@ -242,7 +242,7 @@ export const logKeys = {
         key: 'mpi:paciente:update',
         operacion: 'Update paciente MPI'
     },
-    mpiUpdateContact: {
+    mpiUpdateContacto: {
         key: 'mpi:paciente:updateContacto',
         operacion: 'Update contacto paciente'
     },
@@ -257,6 +257,5 @@ export const logKeys = {
     mpiUpdaterFinish: {
         key: 'mpi:mpiUpdater:finish',
         operacion: 'MPI updater finish'
-    },
-
+    }
 };
