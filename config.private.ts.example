@@ -269,6 +269,10 @@ export const TwitterConfig = {
     access_token_secret: ''
 };
 
+export const registroProvincialData = {
+    hostost: '',
+    queryFechaPath: ''
+};
 export const Drive = {
     adapter: 'file',
     options: {}
