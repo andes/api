@@ -1,4 +1,4 @@
-// import {  model, Schema } from 'mongoose';
+import {  model, Schema } from 'mongoose';
 
 // // tslint:disable
 // export let schema = new Schema({
@@ -9,9 +9,12 @@
 // });
 
 // export let AreaLaboratorio = model('areaLaboratorio', schema, 'areaLaboratorio');
-export let AreaLaboratorio = {
+export let schema = new Schema({
     nombre: {
         type: String,
         required: true
     }
-};
+});
+schema.plugin(require('../../../../mongoose/audit'));
+
+export let AreaLaboratorio = model('areaLaboratorio', schema, 'areaLaboratorio');

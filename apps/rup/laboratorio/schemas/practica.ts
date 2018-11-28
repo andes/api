@@ -1,5 +1,5 @@
+import { schema as AreaLaboratorio } from './areaLaboratorio';
 import { SnomedConcept } from './../../../../modules/rup/schemas/snomed-concept';
-import { AreaLaboratorio } from './areaLaboratorio';
 import {  model, Schema } from 'mongoose';
 
 
@@ -196,7 +196,7 @@ export let schema = new Schema({
 // });
 
 
-// Habilitar plugin de auditoría
+// Habilitar plugin de auditoría 
 schema.plugin(require('../../../../mongoose/audit'));
 
 export let Practica = model('practica', schema, 'practica');
