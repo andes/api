@@ -265,3 +265,7 @@ export const registroProvincialData = {
     hostost: '',
     queryFechaPath: ''
 };
+export const Drive = {
+    adapter: 'file',
+    options: {}
+};

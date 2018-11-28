@@ -935,6 +935,7 @@ export function updatePaciente(pacienteModified, turno) {
                 bloques[i].turnos[indiceTurno].paciente.carpetaEfectores = pacienteModified.carpetaEfectores;
                 bloques[i].turnos[indiceTurno].paciente.fechaNacimiento = pacienteModified.fechaNacimiento;
             }
+            i++;
         }
 
         if (indiceTurno < 0) { // no se encontro el turno en los bloques de turnos?

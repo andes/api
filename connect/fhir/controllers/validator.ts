@@ -1,4 +1,4 @@
-import { PacienteFHIR } from './../../interfaces/IPacienteFHIR';
+import { PacienteFHIR } from '../../fhir/schemas/IPacienteFHIR';
 
 function pacienteFHIRFields(elem: string) {
     return elem.match('resourceType|identifier|active|name|telecom|gender|birthDate|deceasedBoolean|deceasedDateTime|address|maritalStatus|photo|contact') != null;
