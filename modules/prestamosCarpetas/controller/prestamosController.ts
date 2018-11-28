@@ -33,7 +33,7 @@ export async function getCarpetasSolicitud(req) {
 
     // [TODO] Castear a ObjectId en la función interna
     const carpetas = await findCarpetas(organizacion, nrosCarpetas);
-    const prestamosCarpetas = await getRegistrosSolicitudCarpetas(req, organizacion, [agendas, agendasSobreturno], carpetas, solicitudesManuales);
+    const prestamosCarpetas = await getRegistrosSolicitudCarpetas(query, organizacion, [agendas, agendasSobreturno], carpetas, solicitudesManuales);
     return prestamosCarpetas;
 }
 
@@ -109,7 +109,7 @@ async function armarSolicitudConCDA(_agenda, _turno, unaCarpeta, estadoCarpeta, 
 }
 
 async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carpetas, solicitudesManuales) {
-    let mostrarPrestamos = req.body.mostrarPrestamos;
+    let mostrarPrestamos = req.mostrarPrestamos;
 
     let registrosSolicitudesAutomaticas = [];
     agendas.forEach(unaAgenda => {
@@ -124,7 +124,6 @@ async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carp
                                 estadoCarpeta = carpeta.estado;
                             }
                         });
-
                         if (mostrarPrestamos || (estadoCarpeta === constantes.EstadosPrestamosCarpeta.EnArchivo)) {
                             registrosSolicitudesAutomaticas.push(armarSolicitudConCDA(_agenda, _turno, unaCarpeta, estadoCarpeta, unaOrganizacion));
                         }
