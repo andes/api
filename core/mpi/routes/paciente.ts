@@ -10,6 +10,7 @@ import { ElasticSync } from '../../../utils/elasticSync';
 import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
 import { EventCore } from '@andes/event-bus';
+import { EventEmitter } from 'events';
 
 
 const logD = debug('paciente-controller');
@@ -341,6 +342,7 @@ router.get('/pacientes/:id', (req, res, next) => {
             Logger.log(req, 'mpi', 'query', {
                 mongoDB: resultado.paciente
             });
+            EventCore.emitAsync('mpi:paciente:get', resultado.paciente);
             res.json(resultado.paciente);
         } else {
             return next(500);
