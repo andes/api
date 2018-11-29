@@ -6,11 +6,11 @@ export let schema = new mongoose.Schema({
     nombre: String,
     responsable: { type: mongoose.Schema.Types.ObjectId, ref: 'profesional', required: true },
     area: {
+        id: String,
         nombre: {
             type: String,
             required: true
-        },
-        conceptoSnomed: SnomedConcept
+        }
     },
     protocolo: {
         imprimirPrioridad: Boolean,

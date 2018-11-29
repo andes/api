@@ -10,6 +10,7 @@ import {  model, Schema } from 'mongoose';
 
 // export let AreaLaboratorio = model('areaLaboratorio', schema, 'areaLaboratorio');
 export let schema = new Schema({
+    id: String,
     nombre: {
         type: String,
         required: true
