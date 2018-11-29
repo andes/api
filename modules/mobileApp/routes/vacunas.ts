@@ -1,6 +1,8 @@
 import * as express from 'express';
 import * as controller from './../../../core/mpi/controller/paciente';
 import * as vacunasCtr from '../controller/VacunasController';
+import { codes } from '../../../config';
+import { Auth } from '../../../auth/auth.class';
 
 const router = express.Router();
 
@@ -30,6 +32,29 @@ router.get('/vacunas/count', async (req: any, res, next) => {
         const count = await vacunasCtr.getCount(data.paciente);
         res.json(count);
     });
+});
+
+/**
+ * Insertamos una nueva vacuna, verificando previamente que no exista en la base de datos.
+ */
+
+router.post('/nomivac', async (req: any, res, next) => {
+    if (!Auth.check(req, 'vacunas:nomivac:post')) {
+        return next(codes.status.unauthorized);
+    }
+    try {
+        const vacuna = req.body;
+        let result = await vacunasCtr.getVacuna(vacuna.idvacuna);
+        if (!result) {
+            let doc = await vacunasCtr.createVacuna(vacuna);
+            return res.json(doc);
+        } else {
+            return res.json(result);
+        }
+    } catch (err) {
+        return next(err);
+    }
+
 });
 
 module.exports = router;

@@ -232,3 +232,21 @@ export const mpi = {
         birthDate: 0.15
     }
 };
+
+export const weightsVaccine = {
+    identity: 0.3,
+    name: 0.2,
+    gender: 0.3,
+    birthDate: 0.2
+};
+
+export const codes = {
+    status: {
+        sucess: '200',
+        badRequest: '400',
+        unauthorized: '401',
+        forbidden: '403',
+        notFound: '404',
+        error: '500'
+    },
+};
