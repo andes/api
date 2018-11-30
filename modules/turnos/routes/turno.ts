@@ -278,7 +278,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         update[etiquetaEstado] = 'asignado';
         update[etiquetaPrestacion] = req.body.tipoPrestacion;
         // update[etiquetaPaciente] = req.body.paciente;
-        update[etiquetaPaciente] = pacienteTurno;
+        update[etiquetaPaciente] = req.body.paciente;
 
         update[etiquetaTipoTurno] = tipoTurno;
         update[etiquetaNota] = req.body.nota;
