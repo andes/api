@@ -2,25 +2,14 @@ import { vacunas } from '../schemas/vacunas';
 import { Matching } from '@andes/match';
 import { weightsVaccine } from '../../../config';
 
-export function getCount(paciente) {
-    return new Promise((resolve, reject) => {
-        vacunas.find({ documento: paciente.documento }).count().exec((err, count) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(count);
-        });
-    });
-}
-export function getVacunas(paciente) {
-    const conditions = {};
-    conditions['documento'] = paciente.documento;
-    const sort = { fechaAplicacion: -1 };
-    return new Promise((resolve, reject) => {
-        vacunas.find(conditions).sort(sort).exec((err, resultados) => {
-            if (!resultados || err) {
-                return reject(err);
-            }
+export async function getVacunas(paciente) {
+    try {
+        const conditions = {};
+        conditions['documento'] = paciente.documento;
+        const sort = { fechaAplicacion: -1 };
+
+        let resultados = await vacunas.find(conditions).sort(sort);
+        if (resultados.length > 0) {
             resultados.forEach((vacuna: any, index) => {
                 const pacienteVacuna = {
                     nombre: vacuna.nombre,
@@ -31,7 +20,6 @@ export function getVacunas(paciente) {
                 };
                 const match = new Matching();
                 const resultadoMatching = match.matchPersonas(paciente, pacienteVacuna, weightsVaccine, 'Levenshtein');
-                // no cumple con el numero del matching
                 if (resultadoMatching < 0.90) {
                     resultados.splice(index, 1);
                 } else {
@@ -42,10 +30,19 @@ export function getVacunas(paciente) {
                     vacuna.fechaNacimiento = undefined;
                 }
             });
-            return resolve(resultados);
-        });
-    });
+        }
+        return resultados;
+
+    } catch (err) {
+        return err;
+    }
 }
+
+export async function getCount(paciente) {
+    let cantidad = await vacunas.find({ documento: paciente.documento }).count();
+    return cantidad;
+}
+
 export async function getVacuna(id) {
     let doc = await vacunas.findOne({ idvacuna: id });
     return doc;

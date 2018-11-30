@@ -239,14 +239,3 @@ export const weightsVaccine = {
     gender: 0.3,
     birthDate: 0.2
 };
-
-export const codes = {
-    status: {
-        sucess: '200',
-        badRequest: '400',
-        unauthorized: '401',
-        forbidden: '403',
-        notFound: '404',
-        error: '500'
-    },
-};

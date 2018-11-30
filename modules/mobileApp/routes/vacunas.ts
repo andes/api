@@ -1,8 +1,8 @@
 import * as express from 'express';
 import * as controller from './../../../core/mpi/controller/paciente';
 import * as vacunasCtr from '../controller/VacunasController';
-import { codes } from '../../../config';
 import { Auth } from '../../../auth/auth.class';
+import * as HttpStatus from 'http-status-codes';
 
 const router = express.Router();
 
@@ -11,13 +11,17 @@ const router = express.Router();
  */
 
 router.get('/vacunas', (req: any, res, next) => {
-    const pacienteId = req.user.pacientes[0].id;
-    // primero buscar paciente
-    controller.buscarPaciente(pacienteId).then(async data => {
-        const pacienteMPI = data.paciente;
-        const resultados = await vacunasCtr.getVacunas(pacienteMPI);
-        res.json(resultados);
-    });
+    try {
+        const pacienteId = req.user.pacientes[0].id;
+        controller.buscarPaciente(pacienteId).then(async data => {
+            const pacienteMPI = data.paciente;
+            const resultados = await vacunasCtr.getVacunas(pacienteMPI);
+            return res.json(resultados);
+        });
+    } catch (err) {
+        // TODO agregar andesLog
+        return next(err);
+    }
 });
 
 
@@ -26,12 +30,16 @@ router.get('/vacunas', (req: any, res, next) => {
  */
 
 router.get('/vacunas/count', async (req: any, res, next) => {
-    const pacienteId = req.user.pacientes[0].id;
-    // primero buscar paciente
-    controller.buscarPaciente(pacienteId).then(async data => {
-        const count = await vacunasCtr.getCount(data.paciente);
-        res.json(count);
-    });
+    try {
+        const pacienteId = req.user.pacientes[0].id;
+        controller.buscarPaciente(pacienteId).then(async data => {
+            const count = await vacunasCtr.getCount(data.paciente);
+            return res.json(count);
+        });
+    } catch (err) {
+        // TODO agregar andesLog
+        return next(err);
+    }
 });
 
 /**
@@ -40,7 +48,7 @@ router.get('/vacunas/count', async (req: any, res, next) => {
 
 router.post('/nomivac', async (req: any, res, next) => {
     if (!Auth.check(req, 'vacunas:nomivac:post')) {
-        return next(codes.status.unauthorized);
+        return next(HttpStatus.UNAUTHORIZED);
     }
     try {
         const vacuna = req.body;
