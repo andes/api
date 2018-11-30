@@ -322,24 +322,29 @@ export async function getLiberadosPaciente(req) {
  * @param {*} pacienteMPI
  * @returns
  */
-export async function actualizarCarpeta(req, res, next, pacienteMPI, carpetas) {
+export async function actualizarCarpeta(req: any, res: any, next: any, pacienteMPI: any, carpetas) {
+    let carpetasAux = (carpetas && carpetas.length > 0) ? (carpetas[0] as any).carpetaEfectores : [];
     if (pacienteMPI) {
-        try { // Actualizamos los turnos activos del paciente
-            if (pacienteMPI.paciente.carpetaEfectores.length > 0) {
+        if (pacienteMPI.paciente.carpetaEfectores.length > 0) {
+            if (carpetasAux.length < pacienteMPI.paciente.carpetaEfectores.length) {
                 req.body.carpetaEfectores = pacienteMPI.paciente.carpetaEfectores;
             } else {
-                if (carpetas.length > 0) {
-                    req.body.carpetaEfectores = (carpetas[0] as any).carpetaEfectores;
+                if (carpetasAux) {
+                    req.body.carpetaEfectores = carpetasAux;
                 }
             }
-            const repetida = await controller.checkCarpeta(req, pacienteMPI.paciente);
-            if (!repetida) {
-                controller.updateCarpetaEfectores(req, pacienteMPI.paciente);
-                controller.updateTurnosPaciente(pacienteMPI.paciente);
-            } else {
-                return next('El nÚmero de carpeta ya existe');
+        } else {
+            if (carpetas.length > 0) {
+                req.body.carpetaEfectores = carpetasAux;
             }
-        } catch (error) { return next(error); }
+        }
+        const repetida = await controller.checkCarpeta(req, pacienteMPI.paciente);
+        if (!repetida) {
+            controller.updateCarpetaEfectores(req, pacienteMPI.paciente);
+            controller.updateTurnosPaciente(pacienteMPI.paciente);
+        } else {
+            return next('El nÚmero de carpeta ya existe');
+        }
         let pacienteAndes: any;
         if (pacienteMPI.db === 'mpi') {
             pacienteAndes = new paciente(pacienteMPI.paciente.toObject());
@@ -347,10 +352,6 @@ export async function actualizarCarpeta(req, res, next, pacienteMPI, carpetas) {
             pacienteAndes = pacienteMPI.paciente;
         }
         Auth.audit(pacienteAndes, req);
-        pacienteAndes.save((errPatch) => {
-            if (errPatch) {
-                return next(errPatch);
-            }
-        });
+        await pacienteAndes.save();
     }
 }

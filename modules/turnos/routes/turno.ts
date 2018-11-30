@@ -154,14 +154,21 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
         motivoConsulta: String
     };
  */
+
 router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res, next) => {
     const continues = ValidateDarTurno.checkTurno(req.body);
     const pacienteTurno = req.body.paciente;
     if (continues.valid) {
         let agendaRes = await getAgenda(req.body.idAgenda);
         try {
-            // Si el paciente no tiene carpetas, se busca en la colección carpetaPaciente y en  MPI
-            if (!pacienteTurno.carpetaEfectores || pacienteTurno.carpetaEfectores.length === 0) {
+            let arrPrueba = [];
+            if (pacienteTurno.carpetaEfectores) {
+                arrPrueba = pacienteTurno.carpetaEfectores.find((elto) => {
+                    return elto.organizacion._id === (req as any).user.organizacion._id;
+                });
+            }
+            // Si el paciente no tiene carpeta en ese efector, se busca en la colección carpetaPaciente y se actualiza
+            if (!arrPrueba || arrPrueba.length === 0) {
                 const pacienteMPI = await controller.buscarPaciente(req.body.paciente.id) as any;
                 const carpetas = await getCarpeta(req.body.paciente.documento, (req as any).user.organizacion._id);
                 await turnosController.actualizarCarpeta(req, res, next, pacienteMPI, carpetas);
@@ -325,13 +332,9 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                 // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
                 // Donde doc2 es el documeto Agenda actualizado
                 operations.cacheTurnos(doc2);
-                console.log('antes ');
                 // Fin de insert cache
-
-
+                res.json(agendaRes);
             }
-            res.json(agendaRes);
-            console.log('despues ');
         });
     } else {
         return next('Los datos del paciente son inválidos');
