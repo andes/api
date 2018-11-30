@@ -46,14 +46,11 @@ export function getVacunas(paciente) {
         });
     });
 }
-export function getVacuna(id) {
-    return vacunas.findOne({ idvacuna: id }).then((doc) => {
-        return doc;
-    });
+export async function getVacuna(id) {
+    let doc = await vacunas.findOne({ idvacuna: id });
+    return doc;
 }
-export function createVacuna(vacuna) {
+export async function createVacuna(vacuna) {
     let doc = new vacunas(vacuna);
-    return doc.save().then(() => {
-        return doc;
-    });
+    return await doc.save();
 }
