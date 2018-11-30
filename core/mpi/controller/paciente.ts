@@ -8,6 +8,12 @@ import { Auth } from './../../../auth/auth.class';
 import { EventCore } from '@andes/event-bus';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
+import { matchSisa } from '../../../utils/servicioSisa';
+import { getServicioRenaper } from '../../../utils/servicioRenaper';
+const regtest = /[^a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ ']+/;
+import * as https from 'https';
+import * as configPrivate from '../../../config.private';
+import { getServicioGeonode } from '../../../utils/servicioGeonode';
 
 /**
  * Crea un paciente y lo sincroniza con elastic
@@ -28,6 +34,7 @@ export function createPaciente(data, req) {
             const nuevoPac = JSON.parse(JSON.stringify(newPatient));
             delete nuevoPac._id;
             delete nuevoPac.relaciones;
+            delete nuevoPac.direccion;
             const connElastic = new ElasticSync();
             connElastic.create(newPatient._id.toString(), nuevoPac).then(() => {
                 Logger.log(req, 'mpi', 'insert', newPatient);
@@ -474,9 +481,25 @@ export function updateRelaciones(req, data) {
     data.relaciones = req.body.relaciones;
 }
 
-export function updateDireccion(req, data) {
+export async function updateDireccion(req, data) {
     data.markModified('direccion');
     data.direccion = req.body.direccion;
+    try {
+        await actualizarGeoReferencia(req, data);
+    } catch (err) {
+        return err;
+    }
+}
+
+export function updateBarrio(geoRef) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const barrio = await getServicioGeonode(geoRef);
+            resolve(barrio);
+        } catch (err) {
+            return reject(err);
+        }
+    });
 }
 
 export function updateCarpetaEfectores(req, data) {
@@ -716,5 +739,118 @@ export async function matchPaciente(dataPaciente) {
     } catch (e) {
         return [];
     }
+}
+
+/**
+ * Intenta validar un paciente con fuentes auténticas.
+ * Devuelve el paciente, validado o no
+ *
+ * @param {*} pacienteAndes
+ * @returns Object Paciente
+ */
+export async function validarPaciente(pacienteAndes) {
+
+    let sexoRenaper = pacienteAndes.sexo === 'masculino' ? 'M' : 'F';
+    let resRenaper: any;
+    try {
+        resRenaper = await getServicioRenaper({ documento: pacienteAndes.documento, sexo: sexoRenaper });
+    } catch (error) {
+        return await validarSisa(pacienteAndes);
+    }
+    let band = true;
+    // Respuesta correcta de renaper?
+    if (resRenaper && resRenaper.datos && resRenaper.datos.nroError === 0) {
+        let pacienteRenaper = resRenaper.datos;
+        band = regtest.test(pacienteRenaper.nombres);
+        band = band || regtest.test(pacienteRenaper.apellido);
+        if (!band) {
+            pacienteAndes.nombre = pacienteRenaper.nombres;
+            pacienteAndes.apellido = pacienteRenaper.apellido;
+            pacienteAndes.fechaNacimiento = new Date(pacienteRenaper.fechaNacimiento);
+            pacienteAndes.cuil = pacienteRenaper.cuil;
+            pacienteAndes.estado = 'validado';
+            pacienteAndes.foto = pacienteRenaper.foto;
+        }
+        return pacienteAndes;
+    }
+    // Respuesta erronea de renaper o test regex fallido?
+    if (!resRenaper || (resRenaper && resRenaper.datos && resRenaper.datos.nroError !== 0) || band) {
+        return await validarSisa(pacienteAndes);
+    }
+}
+
+async function validarSisa(pacienteAndes: any) {
+    try {
+        let resSisa: any = await matchSisa(pacienteAndes);
+        let porcentajeMatcheo = resSisa.matcheos.matcheo;
+        if (porcentajeMatcheo > 95) {
+            pacienteAndes.nombre = resSisa.matcheos.datosPaciente.nombre;
+            pacienteAndes.apellido = resSisa.matcheos.datosPaciente.apellido;
+            pacienteAndes.fechaNacimiento = resSisa.matcheos.datosPaciente.fechaNacimiento;
+            pacienteAndes.estado = 'validado';
+        }
+        return pacienteAndes;
+    } catch (error) {
+        // no hacemos nada con el paciente
+        return pacienteAndes;
+    }
+}
+/**
+ * * Segun la entrada, retorna un Point con las coordenadas de geo referencia o null.
+ * @param dataPaciente debe contener direccion y localidad.
+ */
+
+export async function actualizarGeoReferencia(req, data) {
+    if (data.direccion[0].valor && data.direccion[0].ubicacion.localidad && data.direccion[0].ubicacion.localidad.nombre) {
+        // Se carga geo referencia desde api de google
+        try {
+            const geoRef: any = await geoRefPaciente(req);
+            data.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
+            data.direccion[0].ubicacion.barrio = await getServicioGeonode(data.direccion[0].geoReferencia);
+        } catch (err) {
+            return (err);
+        }
+    }
+}
+
+export function geoRefPaciente(dataPaciente) {
+    return new Promise((resolve, reject) => {
+        const address = dataPaciente.direccion[0].valor + ',' + dataPaciente.direccion[0].ubicacion.localidad.nombre;
+        let pathGoogleApi = '';
+        let jsonGoogle = '';
+
+        pathGoogleApi = '/maps/api/geocode/json?address=' + address + ', ' + 'AR' + '&key=' + configPrivate.geoKey;
+
+        pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
+        pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
+        pathGoogleApi = pathGoogleApi.replace(/é/gi, 'e');
+        pathGoogleApi = pathGoogleApi.replace(/í/gi, 'i');
+        pathGoogleApi = pathGoogleApi.replace(/ó/gi, 'o');
+        pathGoogleApi = pathGoogleApi.replace(/ú/gi, 'u');
+        pathGoogleApi = pathGoogleApi.replace(/ü/gi, 'u');
+        pathGoogleApi = pathGoogleApi.replace(/ñ/gi, 'n');
+
+        const optionsgetmsg = {
+            host: 'maps.googleapis.com',
+            port: 443,
+            path: pathGoogleApi,
+            method: 'GET',
+            rejectUnauthorized: false
+        };
+        const reqGet = https.request(optionsgetmsg, (res2) => {
+            res2.on('data', (d, error) => {
+                jsonGoogle = jsonGoogle + d.toString();
+            });
+            res2.on('end', () => {
+                const salida = JSON.parse(jsonGoogle);
+                if (salida.status === 'OK') {
+                    return resolve(salida.results[0].geometry.location);
+                } else {
+                    return resolve({});
+                }
+            });
+        });
+        reqGet.end();
+    });
 }
 
