@@ -76,19 +76,17 @@ router.get('/profesionales/guia', async (req, res, next) => {
 
 router.get('/profesionales/matching', async (req, res, next) => {
     const opciones = {};
-    let query;
 
     if (req.query.documento) {
         opciones['documento'] = req.query.documento;
     }
 
     if (Object.keys(opciones).length !== 0) {
-        let datosGuia: any = await profesional.find(opciones);
-        console.log(datosGuia);
+        let profEncontrados: any = await profesional.find(opciones);
         let arrayProf = [];
         let resultado;
-        if (datosGuia) {
-            datosGuia.forEach(element => {
+        if (profEncontrados) {
+            profEncontrados.forEach(element => {
                 resultado = {
                     id: element.id,
                     nombre: element.nombre,
@@ -339,6 +337,7 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
     const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
 
     if (req.query.nombreCompleto) {
+        console.log('aca completo', req.query.nombreCompleto);
         const filter = [{
             apellido: {
                 $regex: utils.makePattern(req.query.nombreCompleto, { startWith: true })
