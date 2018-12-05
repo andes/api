@@ -588,7 +588,7 @@ router.post('/pacientes', (req, res, next) => {
                     try {
                         await controller.actualizarGeoReferencia(req.body, patient);
                     } catch (err) {
-                        res.json(err);
+                        logD(err);
                     }
                 }
                 return controller.createPaciente(patient, req).then(pacienteObj => {
