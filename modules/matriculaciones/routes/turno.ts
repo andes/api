@@ -63,10 +63,12 @@ router.post('/turnos/:tipo/:profesionalId/', (request, response, errorHandler) =
 router.get('/turnos/turnosPorDocumentos', async (req, res, errorHandler) => {
 
     if (req.query.documento) {
+        console.log('matriculacion', req.query);
+
         if (req.query.tipoTurno === 'matriculacion') {
-            turno.find({}).populate({
+            turno.find({fecha: {$gte: new Date()}, sePresento: false}).populate({
                 path: 'profesional',
-                match: { documento: '50636505', sexo: 'femenino' }
+                match: { documento: req.query.documento, sexo: req.query.sexo }
             }).exec((error, data) => {
                 if (error) {
                     return errorHandler(error);
@@ -74,13 +76,15 @@ router.get('/turnos/turnosPorDocumentos', async (req, res, errorHandler) => {
                 let data2 = data.filter((x: any) => x.profesional !== null);
 
                 if (data2) {
-                    res.send(true);
+                    res.send(data2);
 
+                } else {
+                    res.send(data2);
                 }
             });
         } else {
-            console.log('renovacion');
-            turno.find({}).populate({
+            console.log('renovacion', req.query);
+            turno.find({fecha: {$gte: new Date()}, sePresento: false}).populate({
                 path: 'profesional',
                 match: { documento: req.query.documento }
             }).exec(async (error, data: any) => {
@@ -88,18 +92,21 @@ router.get('/turnos/turnosPorDocumentos', async (req, res, errorHandler) => {
                     return errorHandler(error);
                 }
                 let data2 = data.filter((x: any) => x.profesional !== null);
-                let match = false;
+                let match = null;
 
                 for (let index = 0; index < data2.length; index++) {
                     const element = data2[index];
 
-                    await profesional.findById(element.profesional.idRenovacion, (error, datos: any) => {
+                    if (element.profesional.idRenovacion) {
+                        console.log(element.profesional.idRenovacion);
 
-                        if (datos.sexo === req.query.sexo) {
-                            match = true;
-                        }
-                        return match;
-                    });
+                        await profesional.findById(element.profesional.idRenovacion, (error, datos: any) => {
+                            if (datos && (datos.sexo === req.query.sexo)) {
+                                match = element;
+                            }
+                            return match;
+                        });
+                    }
                 }
                 res.send(match);
 
