@@ -50,7 +50,7 @@ export async function getResultadosAnteriores(idPaciente, conceptIdPractica) {
                 $and: [{
                     'solicitud.tipoPrestacion.conceptId': '15220000',
                     'paciente.id': idPaciente,
-                    'ejecucion.registros.valor.concepto.conceptId': conceptIdPractica,
+                    'ejecucion.registros.concepto.conceptId': conceptIdPractica,
                     'ejecucion.registros.valor.resultado.validado': true
                 }]
             }
@@ -59,7 +59,7 @@ export async function getResultadosAnteriores(idPaciente, conceptIdPractica) {
         { $unwind: '$ejecucion.registros.valor' },
         {
             $match: {
-                'ejecucion.registros.valor.concepto.conceptId': conceptIdPractica,
+                'ejecucion.registros.concepto.conceptId': conceptIdPractica,
                 'ejecucion.registros.valor.resultado.validado': true
             }
         },
