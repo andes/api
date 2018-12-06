@@ -508,8 +508,8 @@ export function validateMiddleware(req, res, next) {
     const validString = (value) => {
         return value && value.length > 0;
     };
-    const dataPaciente = req.body.paciente;
-    const dataProfesional = req.body.profesional;
+    const dataPaciente = req.body.paciente || {};
+    const dataProfesional = req.body.profesional || {};
     const file = req.body.file;
 
     if (!moment(req.body.fecha).isValid()) {

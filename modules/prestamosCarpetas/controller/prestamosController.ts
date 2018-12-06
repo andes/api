@@ -108,8 +108,8 @@ async function armarSolicitudConCDA(_agenda, _turno, unaCarpeta, estadoCarpeta, 
     };
 }
 
-async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carpetas, solicitudesManuales) {
-    let mostrarPrestamos = req.mostrarPrestamos;
+async function getRegistrosSolicitudCarpetas(query, unaOrganizacion, agendas, carpetas, solicitudesManuales) {
+    let mostrarPrestamos = query.mostrarPrestamos;
 
     let registrosSolicitudesAutomaticas = [];
     agendas.forEach(unaAgenda => {
@@ -117,7 +117,7 @@ async function getRegistrosSolicitudCarpetas(req, unaOrganizacion, agendas, carp
             _agenda.turnos.forEach(_turno => {
                 _turno.paciente.carpetaEfectores.forEach(unaCarpeta => {
                     // Validación de PDR para ignorar números de carpetas autogenerados por HPN.
-                    if (unaCarpeta.nroCarpeta.indexOf('PDR') < 0 && unaCarpeta.organizacion._id.equals(unaOrganizacion) && unaCarpeta.nroCarpeta !== '') {
+                    if (unaCarpeta.nroCarpeta && unaCarpeta.nroCarpeta.indexOf('PDR') < 0 && unaCarpeta.organizacion._id.equals(unaOrganizacion) && unaCarpeta.nroCarpeta !== '') {
                         let estadoCarpeta = constantes.EstadosPrestamosCarpeta.EnArchivo;
                         carpetas.map(carpeta => {
                             if (carpeta._id === unaCarpeta.nroCarpeta) {
@@ -176,7 +176,7 @@ async function findCarpetas(organizacionId, nrosCarpetas) {
     pipeline.push({ $sort: sort });
     pipeline.push({ $group: group });
 
-    return await toArray(Prestamo.aggregate(pipeline).cursor({}).exec());
+    return await toArray(Prestamo.aggregate(pipeline).allowDiskUse(true).cursor({}).exec());
 }
 
 async function findCarpetasPrestamo(organizacionId: string, horaInicio: string, horaFin: string, tipoPrestacion: string, espacioFisico: string, profesionalId: string) {
@@ -431,8 +431,13 @@ export async function getHistorial(req) {
     const organizacionId = req.query.organizacion;
 
     const queryPaciente = await buscarPacienteWithcondition({
-        'carpetaEfectores.organizacion._id': organizacionId,
-        'carpetaEfectores.nroCarpeta': nroCarpeta
+        carpetaEfectores: {
+            $elemMatch:
+            {
+                'organizacion._id': organizacionId,
+                nroCarpeta
+            }
+        }
     });
 
     if (queryPaciente) {
