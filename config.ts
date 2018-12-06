@@ -237,3 +237,10 @@ export const mpi = {
         birthDate: 0.15
     }
 };
+
+export const weightsVaccine = {
+    identity: 0.3,
+    name: 0.2,
+    gender: 0.3,
+    birthDate: 0.2
+};

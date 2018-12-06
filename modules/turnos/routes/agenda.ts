@@ -476,7 +476,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                     case 'liberarTurno':
                         turno = agendaCtrl.getTurno(req, data, turnos[y]);
                         // LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, bloqueId, agendaId);
-                        if (turno.paciente.id) {
+                        if (turno.paciente && turno.paciente.id) {
                             LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, agendaCtrl.getBloque(data, turno)._id, data);
                         }
                         agendaCtrl.liberarTurno(req, data, turno);
