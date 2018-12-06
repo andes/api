@@ -1,7 +1,7 @@
 // Schemas
 import {
     PacienteFHIR
-} from '../../interfaces/IPacienteFHIR';
+} from '../../fhir/schemas/IPacienteFHIR';
 import * as controller from '../../../core/mpi/controller/paciente';
 import * as localidad from '../../../core/tm/schemas/localidad';
 

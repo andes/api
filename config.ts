@@ -125,8 +125,8 @@ export const modules = {
     },
     fhir: {
         active: true,
-        path: './fhir/patient/routes',
-        route: '/fhir/patient',
+        path: './connect/fhir/routes',
+        route: '/connect/fhir',
         middleware: appMiddleware
     },
     cda: {
@@ -192,8 +192,13 @@ export const modules = {
         path: './modules/vacunas/routes',
         route: '/modules/vacunas',
         middleware: appMiddleware
+    },
+    geonode: {
+        active: true,
+        path: './modules/geonode/routes',
+        route: '/modules/geonode',
+        middleware: appMiddleware
     }
-
 };
 
 // Cotas de consumo de APIs

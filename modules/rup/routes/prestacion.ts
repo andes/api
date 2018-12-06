@@ -282,7 +282,14 @@ router.get('/prestaciones/solicitudes', (req, res, next) => {
     // para filtrarlas de de la colección prestaciones
     // query.where('solicitud.tipoPrestacionOrigen.conceptId').exists(true); <<<<< cuando salgan de circulación solicitudes viejas la query es esta
     query.where('estados.0.tipo').in(['pendiente', 'auditoria']);
-
+    if (req.query.tieneTurno !== undefined) {
+        if (req.query.tieneTurno === true) {
+            query.where('solicitud.turno').ne(null);
+        }
+        if (req.query.tieneTurno === false) {
+            query.where('solicitud.turno').equals(null);
+        }
+    }
 
     if (req.query.idPaciente) {
         query.where('paciente.id').equals(req.query.idPaciente);
@@ -294,6 +301,24 @@ router.get('/prestaciones/solicitudes', (req, res, next) => {
 
     if (req.query.solicitudHasta) {
         query.where('solicitud.fecha').lte(moment(req.query.solicitudHasta).endOf('day').toDate() as any);
+    }
+
+    if (req.query.prestacionDestino) {
+        query.where('solicitud.tipoPrestacion.id').equals(req.query.prestacionDestino);
+    }
+
+    if (req.query.organizacionOrigen) {
+        const arr: any[] = [];
+        arr.push({ 'solicitud.organizacionOrigen': { $exists: true } });
+        arr.push({ 'solicitud.organizacionOrigen.id': req.query.organizacionOrigen });
+        query.and(arr);
+    }
+
+    if (req.query.tipoPrestaciones) {
+        const variable: any[] = [];
+        variable.push({ 'solicitud.tipoPrestacion.id': { $in: req.query.tipoPrestaciones } });
+        variable.push({ 'solicitud.tipoPrestacionOrigen.id': { $in: req.query.tipoPrestaciones } });
+        query.or(variable);
     }
 
     // Ordenar por fecha de solicitud
