@@ -57,6 +57,8 @@ export let pacienteSchema: mongoose.Schema = new mongoose.Schema({
     foto: String,
     fotoMobile: String,
     nacionalidad: String,
+    tipoIdentificacion: String,
+    numeroIdentificacion: String,
     relaciones: [{
         relacion: parentezcoSchema,
         referencia: {
