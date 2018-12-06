@@ -570,26 +570,14 @@ router.post('/pacientes', async (req, res, next) => {
         return next(403);
     }
     try {
-        if (req.body.documento) {
-            const condicion = {
-                documento: req.body.documento
-            };
-            let data = await controller.searchSimilar(req.body, 'andes', condicion);
-            logD('Encontrados', data.map(item => item.value));
-            if (data && data.length && data[0].value > 0.90) {
-                logD('hay un paciente muy parecido en la base de datos');
-                const connElastic = new ElasticSync();
-                await connElastic.sync(data[0].paciente);
-                return res.json(data[0].paciente);
+        if (req.body.documento && !req.body.ignorarRepetidos) {
+            let resultado = await controller.checkRepetido(req.body);
+            if (resultado) {
+                return res.json(resultado);
             } else {
-                let cond = await controller.checkRepetido(req.body);
-                if (cond) {
-                    return next('El paciente ya existe');
-                } else {
-                    req.body.activo = true;
-                    let pacienteObj = await controller.createPaciente(req.body, req);
-                    return res.json(pacienteObj);
-                }
+                req.body.activo = true;
+                let pacienteObj = await controller.createPaciente(req.body, req);
+                return res.json(pacienteObj);
             }
         } else {
             req.body.activo = true;
@@ -639,14 +627,15 @@ router.put('/pacientes/:id', async (req, res, next) => {
     if (!(mongoose.Types.ObjectId.isValid(req.params.id))) {
         return next(404);
     }
+
     const objectId = new mongoose.Types.ObjectId(req.params.id);
     const query = {
         _id: objectId
     };
     try {
-        let cond = await controller.checkRepetido(req.body);
-        if (cond) {
-            return next('El paciente ya existe');
+        let resultado = await controller.checkRepetido(req.body);
+        if (resultado) {
+            return res.json(resultado);
         } else {
 
             let patientFound: any = await paciente.findById(query).exec();
