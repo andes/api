@@ -47,7 +47,7 @@ export function getServicioGeonode(point) {
                     }
                 });
             } catch (error) {
-                return reject(error);
+                return resolve(null);
             }
         } else {
             resolve(null);

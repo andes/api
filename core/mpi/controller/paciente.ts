@@ -805,10 +805,12 @@ export async function actualizarGeoReferencia(req, data) {
         // Se carga geo referencia desde api de google
         try {
             const geoRef: any = await geoRefPaciente(req);
-            data.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
-            data.direccion[0].ubicacion.barrio = await getServicioGeonode(data.direccion[0].geoReferencia);
+            if (geoRef && geoRef.lat) {
+                data.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
+                data.direccion[0].ubicacion.barrio = await getServicioGeonode(data.direccion[0].geoReferencia);
+            }
         } catch (err) {
-            return (err);
+            // return (err);    No deberia reflejar el error en la app
         }
     }
 }

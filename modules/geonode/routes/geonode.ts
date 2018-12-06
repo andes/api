@@ -10,7 +10,8 @@ router.get('/geonode', async (req, res, next) => {
             const resultado: any = await getServicioGeonode(point);
             res.json(resultado);
         } catch (err) {
-            return next(err);
+            // return next(err);  No debería reflejarse el error en la app
+            res.json(null);
         }
     } else {
         return next(500);
