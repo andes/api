@@ -4,10 +4,8 @@ import { getUltimoNumeroProtocolo } from '../controller/protocolo';
 import { getResultadosAnteriores } from '../controller/protocolo';
 
 let router = express.Router();
-let async = require('async');
 
 router.get('/protocolo/numero/', async (req, res, next) => {
-    // console.log('/protocolo/numero/')
     const ObjectId = require('mongoose').Types.ObjectId;
     let idEfector = new ObjectId(req.query.idEfector);
     let ultimoNumeroProtocolo = await getUltimoNumeroProtocolo(idEfector);
@@ -25,7 +23,6 @@ router.get('/protocolo/numero/', async (req, res, next) => {
         });
     } catch (e) {
         res.json(e);
-
     }
 });
 

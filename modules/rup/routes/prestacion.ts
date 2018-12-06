@@ -4,14 +4,12 @@ import * as moment from 'moment';
 // import * as async from 'async';
 import { Auth } from './../../../auth/auth.class';
 import { model as Prestacion } from '../schemas/prestacion';
-import { buscarPaciente } from '../../../core/mpi/controller/paciente';
 import * as frecuentescrl from '../controllers/frecuentesProfesional';
 
 import { buscarEnHuds } from '../controllers/rup';
 import { Logger } from '../../../utils/logService';
 import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
 import { snomedModel } from '../../../core/term/schemas/snomed';
-import { toArray } from '../../../utils/utils';
 
 const router = express.Router();
 const async = require('async');
@@ -165,7 +163,7 @@ router.get('/prestaciones/:id*?', (req, res, next) => {
             query.where('solicitud.registros.valor.solicitudPrestacion.servicio.conceptId').equals(req.query.servicio);
         }
         if (req.query.area) {
-            query.where('solicitud.registros.valor.solicitudPrestacion.area.id').equals(req.query.area);
+            query.where('solicitud.registros.valor.solicitudPrestacion.practicas.area._id').equals(req.query.area);
         }
 
         // Solicitudes generadas desde puntoInicio Ventanilla
