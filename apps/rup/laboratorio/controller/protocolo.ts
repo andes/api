@@ -69,7 +69,8 @@ export async function getResultadosAnteriores(idPaciente, conceptIdPractica) {
                 fecha: '$ejecucion.fecha',
                 unidadMedida: '$ejecucion.registros.valor.unidadMedida.term'
             }
-        }
+        },
+        { $sort : { fecha : -1 } }
     ];
 
     let res = await toArray(prestacion.aggregate(pipeline).cursor({}).exec());
