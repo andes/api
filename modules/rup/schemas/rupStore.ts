@@ -1,5 +1,5 @@
 import * as mongoose from 'mongoose';
-const  gridfs = require('mongoose-gridfs');
+const gridfs = require('mongoose-gridfs');
 
 /**
  * No podemos inicializar directamente el schema por un defecto del paquete mongoose-gridfs

@@ -1,5 +1,6 @@
 import * as express from 'express';
 import * as carpetaPaciente from '../schemas/carpetaPaciente';
+import * as carpetaPacienteController from '../controller/carpetaPacienteController';
 
 const router = express.Router();
 
@@ -56,48 +57,13 @@ const router = express.Router();
  *           $ref: '#/definitions/carpetaPaciente'
  */
 
-router.get('/carpetasPacientes/:id*?', (req, res, next) => {
-
-    if (req.params.id) {
-        carpetaPaciente.findById(req.params.id, (err, data) => {
-            if (err) {
-                return next(err);
-            }
-            res.json(data);
-        });
-    } else {
-        if (req.query.documento && req.query.organizacion) {
-
-            let query;
-            query = carpetaPaciente.find({
-                documento: req.query.documento
-            });
-
-            query.where('carpetaEfectores.organizacion._id').equals(req.query.organizacion);
-
-            query.exec((err, data) => {
-                if (err) {
-                    return next(err);
-                }
-                if (data && data.length > 0) {
-                    const carpetaEfector = data[0].carpetaEfectores.find((carpeta) => {
-                        return (carpeta.organizacion.id === req.query.organizacion);
-                    });
-                    if (carpetaEfector) {
-                        res.json(carpetaEfector);
-                    }
-
-                } else {
-                    res.json({});
-                }
-
-            });
-        } else {
-            res.json({});
-        }
+router.get('/carpetasPacientes/:id*?', async (req, res, next) => {
+    try {
+        const resultado = await carpetaPacienteController.buscarCarpeta(req);
+        res.json(resultado);
+    } catch (err) {
+        return next(err);
     }
-
-
 });
 
 
