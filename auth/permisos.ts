@@ -308,8 +308,8 @@ export default [
                 type: 'boolean'
             },
             {
-                key: 'desactivar',
-                title: 'Desactivar Solicitudes',
+                key: 'anular',
+                title: 'Anular Solicitudes',
                 type: 'boolean'
             }
         ]
