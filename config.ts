@@ -187,6 +187,12 @@ export const modules = {
         route: '/modules/carpetas',
         middleware: appMiddleware
     },
+    vacunas: {
+        active: true,
+        path: './modules/vacunas/routes',
+        route: '/modules/vacunas',
+        middleware: appMiddleware
+    },
     geonode: {
         active: true,
         path: './modules/geonode/routes',
