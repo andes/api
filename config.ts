@@ -186,8 +186,13 @@ export const modules = {
         path: './modules/carpetas/routes',
         route: '/modules/carpetas',
         middleware: appMiddleware
+    },
+    geonode: {
+        active: true,
+        path: './modules/geonode/routes',
+        route: '/modules/geonode',
+        middleware: appMiddleware
     }
-
 };
 
 // Cotas de consumo de APIs
@@ -231,4 +236,11 @@ export const mpi = {
         gender: 0.3,
         birthDate: 0.15
     }
+};
+
+export const weightsVaccine = {
+    identity: 0.3,
+    name: 0.2,
+    gender: 0.3,
+    birthDate: 0.2
 };
