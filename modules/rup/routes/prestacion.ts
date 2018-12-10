@@ -109,7 +109,7 @@ router.get('/prestaciones/huds/:idPaciente', async (req, res, next) => {
     }
 
     if (req.query.deadline) {
-        query['ejecucion.fecha'] = { $gte: moment(req.query.deadline).startOf('day').toDate() }
+        query['ejecucion.fecha'] = { $gte: moment(req.query.deadline).startOf('day').toDate() };
     }
 
     let conceptos: any = [];
