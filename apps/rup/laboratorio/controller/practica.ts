@@ -12,6 +12,31 @@ export async function findById(id) {
     return await Practica.findById(id);
 }
 
+
+/**
+ * Busca prácticas por id y las retorna con todas las subpracticas cargadas en el array de requeridos.
+ * Las practicas subpracticas son buscadas recursivamente mediante una funcion interna
+ *
+ * @export
+ * @param {*} idPaciente
+ * @param {*} conceptIdPractica
+ * @returns
+ */
+// export async function getPracticasCompletas(idsPracticas) {
+//     let findPracticasById = async (practicasIds) => {
+//         let practicas = await Practica.find({ _id: { $in: practicasIds } });
+//         let promises = practicas.map(async (practica: any) => {
+//             if (practica.requeridos) {
+//                 practica.requeridos = await findPracticasById(practica.requeridos.map((e) => e._id));
+//             }
+//         });
+//         return Promise.all(promises).then(() => {return practicas; } );
+//     };
+
+//     return await findPracticasById(idsPracticas);
+// }
+
+
 /**
  * Busca prácticas por id y las retorna con todas las subpracticas cargadas en el array de requeridos.
  * Las practicas subpracticas son buscadas recursivamente mediante una funcion interna
@@ -22,11 +47,14 @@ export async function findById(id) {
  * @returns
  */
 export async function getPracticasCompletas(idsPracticas) {
+    let practicas = []; 
+    
     let findPracticasById = async (practicasIds) => {
-        let practicas = await Practica.find({ _id: { $in: practicasIds } });
-        let promises = practicas.map(async (practica: any) => {
+        let res = await Practica.find({ _id: { $in: practicasIds } });
+        practicas = practicas.concat(res);
+        let promises = res.map(async (practica: any) => {
             if (practica.requeridos) {
-                practica.requeridos = await findPracticasById(practica.requeridos.map((e) => e._id));
+                await findPracticasById(practica.requeridos.map((e) => e._id));
             }
         });
         return Promise.all(promises).then(() => {return practicas; } );
@@ -43,7 +71,6 @@ export async function getPracticasCompletas(idsPracticas) {
  * @returns
  */
 export async function getPracticaByCodigo(codigo) {
-    console.log('getPracticaByCodigo', codigo);
     let result = await Practica.find( { $and: [{ codigoNomenclador: { $ne: '' } }, { codigo }] } ).exec();
     return result.length > 0 ? result[0] : null;
 }
