@@ -66,7 +66,7 @@ router.get('/turnos/turnosPorDocumentos', async (req, res, errorHandler) => {
         console.log('matriculacion', req.query);
 
         if (req.query.tipoTurno === 'matriculacion') {
-            turno.find({fecha: {$gte: new Date()}, sePresento: false}).populate({
+            turno.find({fecha: {$gte: new Date()}}).populate({
                 path: 'profesional',
                 match: { documento: req.query.documento, sexo: req.query.sexo }
             }).exec((error, data) => {
@@ -84,7 +84,7 @@ router.get('/turnos/turnosPorDocumentos', async (req, res, errorHandler) => {
             });
         } else {
             console.log('renovacion', req.query);
-            turno.find({fecha: {$gte: new Date()}, sePresento: false}).populate({
+            turno.find({fecha: {$gte: new Date()}}).populate({
                 path: 'profesional',
                 match: { documento: req.query.documento }
             }).exec(async (error, data: any) => {
