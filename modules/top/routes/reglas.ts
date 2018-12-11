@@ -50,4 +50,13 @@ router.get('/reglas', (req, res, next) => {
     });
 });
 
+router.delete('/reglas', async (req, res, next) => {
+    reglas.deleteMany({
+        'destino.organizacion.id': new mongoose.Types.ObjectId(req.query.organizacionDestino),
+        'destino.prestacion.conceptId': req.query.prestacionDestino
+    }).exec((err, data) => {
+        res.json(data);
+    });
+});
+
 export = router;
