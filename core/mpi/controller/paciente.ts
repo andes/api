@@ -138,6 +138,7 @@ export function updatePacienteMpi(pacMpi, pacAndes, req) {
                 } else {
                     Logger.log(req, 'mpi', 'insert', pacMpi);
                 }
+                EventCore.emitAsync('mpi:paciente:update', Fhir.encode(pacMpi));
                 resolve(pacMpi);
             }).catch(error => {
                 return reject(error);
@@ -173,6 +174,7 @@ export function postPacienteMpi(newPatientMpi, req) {
                     Logger.log(req, 'mpi', 'elasticInsert', {
                         nuevo: newPatientMpi,
                     });
+                    EventCore.emitAsync('mpi:paciente:create', Fhir.encode(newPatientMpi));
                     resolve(newPatientMpi);
                 }).catch((error) => {
                     reject(error);
