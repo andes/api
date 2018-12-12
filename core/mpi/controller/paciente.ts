@@ -79,6 +79,7 @@ export function updatePaciente(pacienteObj, data, req) {
                 } else {
                     Logger.log(req, 'mpi', 'insert', pacienteObj);
                 }
+
                 EventCore.emitAsync('mpi:patient:update', pacienteObj);
                 resolve(pacienteObj);
             }).catch(error => {
@@ -138,6 +139,7 @@ export function updatePacienteMpi(pacMpi, pacAndes, req) {
                 } else {
                     Logger.log(req, 'mpi', 'insert', pacMpi);
                 }
+                EventCore.emitAsync('mpi:patient:update', pacMpi);
                 resolve(pacMpi);
             }).catch(error => {
                 return reject(error);
@@ -173,6 +175,7 @@ export function postPacienteMpi(newPatientMpi, req) {
                     Logger.log(req, 'mpi', 'elasticInsert', {
                         nuevo: newPatientMpi,
                     });
+                    EventCore.emitAsync('mpi:patient:create', newPatientMpi);
                     resolve(newPatientMpi);
                 }).catch((error) => {
                     reject(error);
