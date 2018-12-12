@@ -14,7 +14,7 @@ const regtest = /[^a-zA-Zàáâäãåąčćęèéêëėįìíîïłńòóôöõ�
 import * as https from 'https';
 import * as configPrivate from '../../../config.private';
 import { getServicioGeonode } from '../../../utils/servicioGeonode';
-import * as Fhir from '../../../packages/fhir/src/patient';
+
 /**
  * Crea un paciente y lo sincroniza con elastic
  *
@@ -39,7 +39,7 @@ export function createPaciente(data, req) {
             connElastic.create(newPatient._id.toString(), nuevoPac).then(() => {
                 Logger.log(req, 'mpi', 'insert', newPatient);
                 // Código para emitir eventos
-                EventCore.emitAsync('mpi:paciente:create', Fhir.encode(newPatient));
+                EventCore.emitAsync('mpi:patient:create', newPatient);
                 //
                 return resolve(newPatient);
             }).catch(error => {
@@ -79,7 +79,7 @@ export function updatePaciente(pacienteObj, data, req) {
                     Logger.log(req, 'mpi', 'insert', pacienteObj);
                 }
 
-                EventCore.emitAsync('mpi:paciente:update', Fhir.encode(pacienteObj));
+                EventCore.emitAsync('mpi:patient:update', pacienteObj);
                 resolve(pacienteObj);
             }).catch(error => {
                 return reject(error);
@@ -138,7 +138,7 @@ export function updatePacienteMpi(pacMpi, pacAndes, req) {
                 } else {
                     Logger.log(req, 'mpi', 'insert', pacMpi);
                 }
-                EventCore.emitAsync('mpi:paciente:update', Fhir.encode(pacMpi));
+                EventCore.emitAsync('mpi:patient:update', pacMpi);
                 resolve(pacMpi);
             }).catch(error => {
                 return reject(error);
@@ -174,7 +174,7 @@ export function postPacienteMpi(newPatientMpi, req) {
                     Logger.log(req, 'mpi', 'elasticInsert', {
                         nuevo: newPatientMpi,
                     });
-                    EventCore.emitAsync('mpi:paciente:create', Fhir.encode(newPatientMpi));
+                    EventCore.emitAsync('mpi:patient:create', newPatientMpi);
                     resolve(newPatientMpi);
                 }).catch((error) => {
                     reject(error);
