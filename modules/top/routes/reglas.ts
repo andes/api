@@ -16,11 +16,12 @@ router.post('/reglas', async (req, res, next) => {
             };
             await reglas.deleteMany(params);
         }
-        ArrReglas.map(async (regla) => {
+        let grabarReglas = ArrReglas.map(async (regla) => {
             let unaRegla = new reglas(regla);
             Auth.audit(unaRegla, req);
-            await unaRegla.save();
+            return unaRegla.save();
         });
+        await Promise.all(grabarReglas);
         res.json(ArrReglas);
     } catch (err) {
         return err;
