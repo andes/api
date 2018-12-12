@@ -3,8 +3,9 @@ import * as config from '../config';
 import * as configPrivate from '../config.private';
 import * as request from 'request';
 const to_json = require('xmljson').to_json;
+import * as requestHandler from '../utils/requestHandler';
 
-export function getSisaCiudadano(nroDocumento, usuario, clave, sexo) {
+export async function getSisaCiudadano(nroDocumento, usuario, clave, sexo): Promise<any> {
     /**
      * Capítulo 5.2.2 - Ficha del ciudadano
      * Se obtienen los datos desde Sisa
@@ -16,7 +17,7 @@ export function getSisaCiudadano(nroDocumento, usuario, clave, sexo) {
         pathSisa += `&sexo=${sexo}`;
     }
     return new Promise((resolve, reject) => {
-        request(pathSisa, (err, response, body) => {
+        request({ uri: pathSisa, rejectUnauthorized: false }, (err, response, body) => {
             if (!err) {
                 to_json(body, (error, data) => {
                     if (error) {
@@ -111,20 +112,15 @@ export function formatearDatosSisa(datosSisa) {
 }
 
 
-export function getPacienteSisa(nroDocumento, sexo?: string) {
-    return new Promise((resolve, reject) => {
-        this.getSisaCiudadano(nroDocumento, configPrivate.sisa.username, configPrivate.sisa.password, sexo)
-            .then((resultado) => {
-                if (resultado) {
-                    const dato = this.formatearDatosSisa(resultado[1].Ciudadano);
-                    resolve(dato);
-                }
-                resolve(null);
-            })
-            .catch((err) => {
-                reject(err);
-            });
-    });
+export async function getPacienteSisa(nroDocumento, sexo?: string) {
+    let resultadoSisa = await getSisaCiudadano(nroDocumento, configPrivate.sisa.username, configPrivate.sisa.password, sexo);
+    if (resultadoSisa) {
+        const dato = formatearDatosSisa(resultadoSisa[1].Ciudadano);
+        return (dato);
+    } else {
+        return (null);
+    }
+
 }
 
 

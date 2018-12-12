@@ -89,10 +89,10 @@ export function formatearDatosSintys(datosSintys) {
 
 export function getPacienteSintys(nroDocumento) {
     return new Promise((resolve, reject) => {
-        this.getPersonaSintys(nroDocumento)
+        getPersonaSintys(nroDocumento)
             .then((resultado) => {
                 if (resultado) {
-                    const dato = this.formatearDatosSintys(JSON.parse(resultado[1])[0]);
+                    const dato = formatearDatosSintys(JSON.parse(resultado[1])[0]);
                     resolve(dato);
                 }
                 resolve(null);
