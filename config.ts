@@ -139,7 +139,7 @@ export const modules = {
         active: true,
         path: './modules/descargas/routes',
         route: '/modules/descargas',
-        middleware: appMiddleware
+        middleware: null
     },
     obraSocial: {
         active: true,
@@ -185,6 +185,12 @@ export const modules = {
         active: true,
         path: './modules/carpetas/routes',
         route: '/modules/carpetas',
+        middleware: appMiddleware
+    },
+    vacunas: {
+        active: true,
+        path: './modules/vacunas/routes',
+        route: '/modules/vacunas',
         middleware: appMiddleware
     },
     geonode: {

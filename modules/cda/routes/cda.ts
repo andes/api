@@ -336,7 +336,11 @@ router.get('/tojson/:id', async (req: any, res, next) => {
         } else {
             if (setText) {
                 // Volvemos a agregar el texto de la evolución
-                data.ClinicalDocument.component.structuredBody.component.section.text = resultado;
+                if (typeof data.ClinicalDocument.component.structuredBody.component.section === 'object') {
+                    data.ClinicalDocument.component.structuredBody.component.section.text = resultado;
+                } else {
+                    data.ClinicalDocument.component.structuredBody.component.section = { text: resultado };
+                }
             }
             res.json(data);
         }
