@@ -14,6 +14,7 @@ const regtest = /[^a-zA-Zàáâäãåąčćęèéêëėįìíîïłńòóôöõ�
 import * as https from 'https';
 import * as configPrivate from '../../../config.private';
 import { getServicioGeonode } from '../../../utils/servicioGeonode';
+import { handleHttpRequest } from '../../../utils/requestHandler';
 
 /**
  * Crea un paciente y lo sincroniza con elastic
@@ -78,6 +79,7 @@ export function updatePaciente(pacienteObj, data, req) {
                 } else {
                     Logger.log(req, 'mpi', 'insert', pacienteObj);
                 }
+
                 EventCore.emitAsync('mpi:patient:update', pacienteObj);
                 resolve(pacienteObj);
             }).catch(error => {
@@ -137,6 +139,7 @@ export function updatePacienteMpi(pacMpi, pacAndes, req) {
                 } else {
                     Logger.log(req, 'mpi', 'insert', pacMpi);
                 }
+                EventCore.emitAsync('mpi:patient:update', pacMpi);
                 resolve(pacMpi);
             }).catch(error => {
                 return reject(error);
@@ -172,6 +175,7 @@ export function postPacienteMpi(newPatientMpi, req) {
                     Logger.log(req, 'mpi', 'elasticInsert', {
                         nuevo: newPatientMpi,
                     });
+                    EventCore.emitAsync('mpi:patient:create', newPatientMpi);
                     resolve(newPatientMpi);
                 }).catch((error) => {
                     reject(error);
@@ -815,44 +819,24 @@ export async function actualizarGeoReferencia(req, data) {
     }
 }
 
-export function geoRefPaciente(dataPaciente) {
-    return new Promise((resolve, reject) => {
-        const address = dataPaciente.direccion[0].valor + ',' + dataPaciente.direccion[0].ubicacion.localidad.nombre;
-        let pathGoogleApi = '';
-        let jsonGoogle = '';
+export async function geoRefPaciente(dataPaciente) {
+    const address = dataPaciente.direccion[0].valor + ',' + dataPaciente.direccion[0].ubicacion.localidad.nombre;
+    let pathGoogleApi = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + address + ', ' + 'AR' + '&key=' + configPrivate.geoKey;
 
-        pathGoogleApi = '/maps/api/geocode/json?address=' + address + ', ' + 'AR' + '&key=' + configPrivate.geoKey;
+    pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
+    pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
+    pathGoogleApi = pathGoogleApi.replace(/é/gi, 'e');
+    pathGoogleApi = pathGoogleApi.replace(/í/gi, 'i');
+    pathGoogleApi = pathGoogleApi.replace(/ó/gi, 'o');
+    pathGoogleApi = pathGoogleApi.replace(/ú/gi, 'u');
+    pathGoogleApi = pathGoogleApi.replace(/ü/gi, 'u');
+    pathGoogleApi = pathGoogleApi.replace(/ñ/gi, 'n');
 
-        pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
-        pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
-        pathGoogleApi = pathGoogleApi.replace(/é/gi, 'e');
-        pathGoogleApi = pathGoogleApi.replace(/í/gi, 'i');
-        pathGoogleApi = pathGoogleApi.replace(/ó/gi, 'o');
-        pathGoogleApi = pathGoogleApi.replace(/ú/gi, 'u');
-        pathGoogleApi = pathGoogleApi.replace(/ü/gi, 'u');
-        pathGoogleApi = pathGoogleApi.replace(/ñ/gi, 'n');
-
-        const optionsgetmsg = {
-            host: 'maps.googleapis.com',
-            port: 443,
-            path: pathGoogleApi,
-            method: 'GET',
-            rejectUnauthorized: false
-        };
-        const reqGet = https.request(optionsgetmsg, (res2) => {
-            res2.on('data', (d, error) => {
-                jsonGoogle = jsonGoogle + d.toString();
-            });
-            res2.on('end', () => {
-                const salida = JSON.parse(jsonGoogle);
-                if (salida.status === 'OK') {
-                    return resolve(salida.results[0].geometry.location);
-                } else {
-                    return resolve({});
-                }
-            });
-        });
-        reqGet.end();
-    });
+    const [status, body] = await handleHttpRequest(pathGoogleApi);
+    const salida = JSON.parse(body);
+    if (salida.status === 'OK') {
+        return salida.results[0].geometry.location;
+    } else {
+        return {};
+    }
 }
-

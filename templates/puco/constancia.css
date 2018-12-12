@@ -1,0 +1,22 @@
+html {
+    display: inline-block;
+    padding: 0 2rem;
+    font-family: sans-serif;
+    margin-top: 0;
+}
+
+body {
+    margin: 0;
+}
+
+.logoHeader {
+    width: 100%;
+}
+
+ .bordered-section {
+            border: #000000 2px solid;
+            border-radius: 40px;
+            padding: 1.5rem;
+            font-size: 0.6rem;
+            line-height: 1.1rem;
+    }
