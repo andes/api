@@ -143,12 +143,6 @@ router.get('/prestaciones/:id*?', (req, res, next) => {
         if (req.query.origen) {
             query.where('solicitud.ambitoOrigen').equals(req.query.origen);
         }
-        if (req.query.numProtocoloDesde) {
-            query.where('solicitud.registros.valor.solicitudPrestacion.numeroProtocolo.numero').gte(Number(req.query.numProtocoloDesde));
-        }
-        if (req.query.numProtocoloHasta) {
-            query.where('solicitud.registros.valor.solicitudPrestacion.numeroProtocolo.numero').lte(Number(req.query.numProtocoloHasta));
-        }
         if (req.query.solicitudDesde) {
             query.where('solicitud.fecha').gte(moment(req.query.solicitudDesde).startOf('day').toDate() as any);
         }
@@ -162,10 +156,20 @@ router.get('/prestaciones/:id*?', (req, res, next) => {
         if (req.query.servicio) {
             query.where('solicitud.registros.valor.solicitudPrestacion.servicio.conceptId').equals(req.query.servicio);
         }
-        if (req.query.area) {
-            query.where('solicitud.registros.valor.solicitudPrestacion.practicas.area._id').equals(req.query.area);
+        //LAB
+        if (req.query.areas) {
+            query.where('solicitud.registros.valor.solicitudPrestacion.practicas.area._id').in(Array.isArray(req.query.areas) ? req.query.areas : [req.query.areas] );
         }
-
+        if (req.query.practicas) {
+            query.where('ejecucion.registros._id').in(Array.isArray(req.query.practicas) ? req.query.practicas : [req.query.practicas] );
+        }
+        if (req.query.numProtocoloDesde) {
+            query.where('solicitud.registros.valor.solicitudPrestacion.numeroProtocolo.numero').gte(Number(req.query.numProtocoloDesde));
+        }
+        if (req.query.numProtocoloHasta) {
+            query.where('solicitud.registros.valor.solicitudPrestacion.numeroProtocolo.numero').lte(Number(req.query.numProtocoloHasta));
+        }
+        
         // Solicitudes generadas desde puntoInicio Ventanilla
         // Solicitudes que no tienen prestacionOrigen ni turno
         // Si tienen prestacionOrigen son generadas por RUP y no se listan

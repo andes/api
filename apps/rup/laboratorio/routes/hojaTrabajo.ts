@@ -6,7 +6,7 @@ import { Auth } from '../../../../auth/auth.class';
 let router = express.Router();
 
 router.get('/hojatrabajo', async (req, res, next) => {
-    HojaTrabajo.find().then((hojas: any[]) => {
+    HojaTrabajo.find({ laboratorio: req.query.organizacion }).then((hojas: any[]) => {
         res.json(hojas);
     });
 });
