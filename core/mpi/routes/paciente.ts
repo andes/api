@@ -457,7 +457,6 @@ router.put('/pacientes/mpi/:id', (req, res, next) => {
         const connElastic = new ElasticSync();
         if (patientFound) {
             const data = req.body;
-
             controller.updatePacienteMpi(patientFound, data, req).then(async (p: any) => {
                 res.json(p);
             }).catch(next);
@@ -477,7 +476,7 @@ router.put('/pacientes/mpi/:id', (req, res, next) => {
                 delete nuevoPac._id;
 
                 connElastic.create(newPatient._id.toString(), nuevoPac).then(() => {
-
+                    EventCore.emitAsync('mpi:patient:update', newPatient);
                     Logger.log(req, 'mpi', 'elasticInsertInPut', newPatient);
                     res.json();
                 }).catch(error => {
@@ -716,6 +715,7 @@ router.put('/pacientes/:id', (req, res, next) => {
                             } else {
                                 Logger.log(req, 'mpi', 'insert', newPatient);
                             }
+                            EventCore.emitAsync('mpi:patient:update', nuevoPac);
                             res.json(nuevoPac);
                         }).catch(error => {
                             return next(error);
@@ -868,8 +868,8 @@ router.patch('/pacientes/:id', (req, res, next) => {
                 if (errPatch) {
                     return next(errPatch);
                 }
-                res.json(pacienteAndes);
                 EventCore.emitAsync('mpi:patient:update', pacienteAndes);
+                res.json(pacienteAndes);
                 return;
             });
         }
