@@ -5,7 +5,7 @@ import * as request from 'request';
 const to_json = require('xmljson').to_json;
 import * as requestHandler from '../utils/requestHandler';
 
-export async function getSisaCiudadano(nroDocumento, usuario, clave, sexo): Promise<any> {
+async function getSisaCiudadano(nroDocumento, usuario, clave, sexo) {
     /**
      * Capítulo 5.2.2 - Ficha del ciudadano
      * Se obtienen los datos desde Sisa
@@ -16,21 +16,16 @@ export async function getSisaCiudadano(nroDocumento, usuario, clave, sexo): Prom
     if (sexo) {
         pathSisa += `&sexo=${sexo}`;
     }
-    return new Promise((resolve, reject) => {
-        request({ uri: pathSisa, rejectUnauthorized: false }, (err, response, body) => {
-            if (!err) {
-                to_json(body, (error, data) => {
-                    if (error) {
-                        return resolve([500, {}]);
-                    } else {
-                        return resolve([response.statusCode, data]);
-                    }
-                });
-            } else {
-                return reject(err);
-            }
-        });
+    let response = await requestHandler.handleHttpRequest({ uri: pathSisa, rejectUnauthorized: false });
+    let parsedResponse;
+    to_json(response[1], (error, data) => {
+        if (error) {
+            return error;
+        } else {
+            parsedResponse = data;
+        }
     });
+    return parsedResponse;
 }
 
 export function formatearDatosSisa(datosSisa) {
@@ -115,12 +110,11 @@ export function formatearDatosSisa(datosSisa) {
 export async function getPacienteSisa(nroDocumento, sexo?: string) {
     let resultadoSisa = await getSisaCiudadano(nroDocumento, configPrivate.sisa.username, configPrivate.sisa.password, sexo);
     if (resultadoSisa) {
-        const dato = formatearDatosSisa(resultadoSisa[1].Ciudadano);
+        const dato = formatearDatosSisa(resultadoSisa.Ciudadano);
         return (dato);
     } else {
         return (null);
     }
-
 }
 
 
