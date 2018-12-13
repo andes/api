@@ -34,6 +34,7 @@ export let pacienteSchema: mongoose.Schema = new mongoose.Schema({
         type: String,
         es_indexed: true
     },
+    certificadoRenaper: String,
     cuil: {
         type: String,
         es_indexed: true

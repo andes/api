@@ -18,6 +18,7 @@ export class ElasticSync {
         const nuevoPac = JSON.parse(JSON.stringify(paciente));
         delete nuevoPac._id;
         delete nuevoPac.relaciones;
+        delete nuevoPac.direccion;
         return this._sync(paciente._id.toString(), nuevoPac);
     }
 

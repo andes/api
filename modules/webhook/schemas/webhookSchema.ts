@@ -10,7 +10,7 @@ export let WebHookSchema = new mongoose.Schema({
     },
     headers: mongoose.SchemaTypes.Mixed, // for Token AUTH
     data: mongoose.SchemaTypes.Mixed, // a projections of data to send
-    filter: mongoose.SchemaTypes.Mixed, // posibles filtros filtros
+    filters: [mongoose.SchemaTypes.Mixed], // posibles filtros filtros
 
 }, { timestamps: true });
 

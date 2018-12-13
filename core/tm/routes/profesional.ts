@@ -10,7 +10,7 @@ import * as stream from 'stream';
 import * as base64 from 'base64-stream';
 import { Auth } from '../../../auth/auth.class';
 import { formacionCero, vencimientoMatriculaGrado, matriculaCero, vencimientoMatriculaPosgrado, migrarTurnos } from '../controller/profesional';
-
+import { IGuiaProfesional } from '../interfaces/interfaceProfesional';
 import { sendSms } from '../../../utils/roboSender/sendSms';
 import { toArray } from '../../../utils/utils';
 
@@ -39,6 +39,42 @@ router.get('/profesionales/estadisticas', async (req, res, next) => {
     });
 
 
+});
+
+router.get('/profesionales/guia', async (req, res, next) => {
+    const opciones = {};
+    let query;
+
+    if (req.query.documento) {
+        opciones['documento'] = req.query.documento;
+    }
+    if (req.query.codigoProfesion && req.query.numeroMatricula) {
+        opciones['formacionGrado.profesion.codigo'] = Number(req.query.codigoProfesion);
+        opciones['formacionGrado.matriculacion.matriculaNumero'] = Number(req.query.numeroMatricula);
+    }
+
+    if (Object.keys(opciones).length !== 0) {
+        opciones['formacionGrado.matriculacion'] = { $ne: null };
+        opciones['profesionalMatriculado'] = true;
+
+        let datosGuia: any = await profesional.findOne(opciones);
+        let resultado: IGuiaProfesional;
+
+        if (datosGuia) {
+            resultado = {
+                id: datosGuia.id,
+                nombre: datosGuia.nombre ? datosGuia.nombre : '',
+                sexo: datosGuia.sexo ? datosGuia.sexo : '',
+                apellido: datosGuia.apellido ? datosGuia.apellido : '',
+                documento: datosGuia.documento ? datosGuia.documento : '',
+                nacionalidad: datosGuia.nacionalidad ? datosGuia.nacionalidad.nombre : '',
+                profesiones: datosGuia.formacionGrado
+            };
+        }
+        res.json(resultado);
+    } else {
+        res.json();
+    }
 });
 
 
@@ -266,38 +302,39 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                 $regex: utils.makePattern(req.query.especialidad)
             };
         }
-    }
 
-    const radix = 10;
-    const skip: number = parseInt(req.query.skip || 0, radix);
-    const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
 
-    if (req.query.nombreCompleto) {
-        const filter = [{
-            apellido: {
-                $regex: utils.makePattern(req.query.nombreCompleto, { startWith: true })
-            }
-        }, {
-            nombre: {
-                $regex: utils.makePattern(req.query.nombreCompleto, { startWith: true })
-            }
-        }];
-        let q = req.query.nombreCompleto.indexOf(' ') >= 0 ? { $and: filter } : { $or: filter };
-        query = profesional.find(q).
-            sort({
-                apellido: 1,
-                nombre: 1
-            });
-    } else {
-        query = profesional.find(opciones).skip(skip).limit(limit);
-    }
+        const radix = 10;
+        const skip: number = parseInt(req.query.skip || 0, radix);
+        const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
 
-    query.exec((err, data) => {
-        if (err) {
-            return next(err);
+        if (req.query.nombreCompleto) {
+            const filter = [{
+                apellido: {
+                    $regex: utils.makePattern(req.query.nombreCompleto, { startWith: true })
+                }
+            }, {
+                nombre: {
+                    $regex: utils.makePattern(req.query.nombreCompleto, { startWith: true })
+                }
+            }];
+            let q = req.query.nombreCompleto.indexOf(' ') >= 0 ? { $and: filter } : { $or: filter };
+            query = profesional.find(q).
+                sort({
+                    apellido: 1,
+                    nombre: 1
+                });
+        } else {
+            query = profesional.find(opciones).skip(skip).limit(limit);
         }
-        res.json(data);
-    });
+
+        query.exec((err, data) => {
+            if (err) {
+                return next(err);
+            }
+            res.json(data);
+        });
+    }
 });
 
 

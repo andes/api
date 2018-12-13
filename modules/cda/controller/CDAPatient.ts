@@ -110,7 +110,21 @@ export async function matchCode(snomed) {
         if (prestacion) {
             return prestacion;
         } else {
-            return null;
+            // Devuelvo una prestación genérica debido a que no existe el mapeo aún
+            return prestacion = {
+                loinc: {
+                    code: '34764-1',
+                    codeSystem: '2.16.840.1.113883.6.1',
+                    codeSystemName: 'LOINC',
+                    displayName: 'General medicine Consult note'
+                },
+                snomed: {
+                    conceptId: '11429006',
+                    term: 'consulta (procedimiento)',
+                    fsn: 'consulta (procedimiento)',
+                    semanticTag: 'procedimiento'
+                }
+            };
         }
     } else {
         return null;
@@ -488,16 +502,18 @@ export function validateMiddleware(req, res, next) {
     const validString = (value) => {
         return value && value.length > 0;
     };
-    const dataPaciente = req.body.paciente;
-    const dataProfesional = req.body.profesional;
+    const dataPaciente = req.body.paciente || {};
+    const dataProfesional = req.body.profesional || {};
     const file = req.body.file;
 
     if (!moment(req.body.fecha).isValid()) {
         errors.fecha = 'invalid_format';
     }
 
-    if (file && !base64RegExp.test(file)) {
-        errors.file = 'file_error';
+    if (file) {
+        if (!base64RegExp.test(file) && !file.startsWith('id:')) {
+            errors.file = 'file_error';
+        }
     }
 
     if (!validString(dataProfesional.nombre)) {

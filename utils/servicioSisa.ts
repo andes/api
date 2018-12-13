@@ -1,69 +1,31 @@
 import { Matching } from '@andes/match';
-import * as https from 'https';
 import * as config from '../config';
 import * as configPrivate from '../config.private';
-// Services
-// import { Logger } from '../utils/logService';
+import * as request from 'request';
 const to_json = require('xmljson').to_json;
+import * as requestHandler from '../utils/requestHandler';
 
-
-export function getSisaCiudadano(nroDocumento, usuario, clave, sexo?: string) {
+async function getSisaCiudadano(nroDocumento, usuario, clave, sexo) {
     /**
      * Capítulo 5.2.2 - Ficha del ciudadano
      * Se obtienen los datos desde Sisa
      * Ejemplo de llamada https://sisa.msal.gov.ar/sisa/services/rest/cmdb/obtener?nrodoc=26334344&usuario=user&clave=pass
      * Información de Campos https://sisa.msal.gov.ar/sisa/sisadoc/index.jsp?id=cmdb_ws_042
      */
-    // options for GET
-    let xml = '';
-    let pathSisa = configPrivate.sisa.url + 'nrodoc=' + nroDocumento + '&usuario=' + usuario + '&clave=' + clave;
-
+    let pathSisa = `${configPrivate.sisa.url}nrodoc=${nroDocumento}&usuario=${usuario}&clave=${clave}`;
     if (sexo) {
-        pathSisa = configPrivate.sisa.url + 'nrodoc=' + nroDocumento + '&sexo=' + sexo + '&usuario=' + usuario + '&clave=' + clave;
+        pathSisa += `&sexo=${sexo}`;
     }
-
-    const optionsgetmsg = {
-        host: configPrivate.sisa.host,
-        port: configPrivate.sisa.port,
-        path: pathSisa,
-        method: 'GET', // do GET,
-        rejectUnauthorized: false,
-    };
-
-    // Realizar GET request
-    return new Promise((resolve, reject) => {
-        const reqGet = https.request(optionsgetmsg, (res) => {
-            res.on('data', (d) => {
-                // console.info('GET de Sisa ' + nroDocumento + ':\n');
-                if (d.toString()) {
-                    xml = xml + d.toString();
-                }
-            });
-
-            res.on('end', () => {
-
-                if (xml) {
-                    // Se parsea el xml obtenido a JSON
-                    to_json(xml, (error, data) => {
-                        if (error) {
-                            resolve([500, {}]);
-                        } else {
-                            // console.log(data);
-                            resolve([res.statusCode, data]);
-                        }
-                    });
-                } else {
-                    resolve([res.statusCode, {}]);
-                }
-            });
-
-        });
-        reqGet.end();
-        reqGet.on('error', (e) => {
-            reject(e);
-        });
-
+    let response = await requestHandler.handleHttpRequest({ uri: pathSisa, rejectUnauthorized: false });
+    let parsedResponse;
+    to_json(response[1], (error, data) => {
+        if (error) {
+            return error;
+        } else {
+            parsedResponse = data;
+        }
     });
+    return parsedResponse;
 }
 
 export function formatearDatosSisa(datosSisa) {
@@ -145,20 +107,14 @@ export function formatearDatosSisa(datosSisa) {
 }
 
 
-export function getPacienteSisa(nroDocumento, sexo?: string) {
-    return new Promise((resolve, reject) => {
-        this.getSisaCiudadano(nroDocumento, configPrivate.sisa.username, configPrivate.sisa.password)
-            .then((resultado) => {
-                if (resultado) {
-                    const dato = this.formatearDatosSisa(resultado[1].Ciudadano);
-                    resolve(dato);
-                }
-                resolve(null);
-            })
-            .catch((err) => {
-                reject(err);
-            });
-    });
+export async function getPacienteSisa(nroDocumento, sexo?: string) {
+    let resultadoSisa = await getSisaCiudadano(nroDocumento, configPrivate.sisa.username, configPrivate.sisa.password, sexo);
+    if (resultadoSisa) {
+        const dato = formatearDatosSisa(resultadoSisa.Ciudadano);
+        return (dato);
+    } else {
+        return (null);
+    }
 }
 
 

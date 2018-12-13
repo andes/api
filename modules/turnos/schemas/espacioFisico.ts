@@ -23,15 +23,16 @@ export let espacioFisicoSchema = new Schema({
     nombre: String,
     detalle: String,
     descripcion: String,
-    organizacion: {type: nombreSchema},
-    edificio: {type: edificioSchema},
-    sector: {type: nombreSchema},
-    servicio: {type: nombreSchema},
+    organizacion: { type: nombreSchema },
+    edificio: { type: edificioSchema },
+    sector: { type: nombreSchema },
+    servicio: { type: nombreSchema },
     equipamiento: [SnomedConcept],
     activo: Boolean,
     estado: {
         type: String,
-        enum: ['disponible', 'mantenimiento', 'clausurado', 'baja permanente']
+        enum: ['disponible', 'mantenimiento', 'clausurado', 'baja permanente'],
+        default: 'disponible'
     }
 });
 
