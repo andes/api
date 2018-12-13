@@ -63,10 +63,8 @@ router.post('/turnos/:tipo/:profesionalId/', (request, response, errorHandler) =
 router.get('/turnos/turnosPorDocumentos', async (req, res, errorHandler) => {
 
     if (req.query.documento) {
-        console.log('matriculacion', req.query);
-
         if (req.query.tipoTurno === 'matriculacion') {
-            turno.find({fecha: {$gte: new Date()}}).populate({
+            turno.find({ fecha: { $gte: new Date() } }).populate({
                 path: 'profesional',
                 match: { documento: req.query.documento, sexo: req.query.sexo }
             }).exec((error, data) => {
@@ -83,8 +81,7 @@ router.get('/turnos/turnosPorDocumentos', async (req, res, errorHandler) => {
                 }
             });
         } else {
-            console.log('renovacion', req.query);
-            turno.find({fecha: {$gte: new Date()}}).populate({
+            turno.find({ fecha: { $gte: new Date() } }).populate({
                 path: 'profesional',
                 match: { documento: req.query.documento }
             }).exec(async (error, data: any) => {
@@ -98,9 +95,7 @@ router.get('/turnos/turnosPorDocumentos', async (req, res, errorHandler) => {
                     const element = data2[index];
 
                     if (element.profesional.idRenovacion) {
-                        console.log(element.profesional.idRenovacion);
-
-                        await profesional.findById(element.profesional.idRenovacion, (error, datos: any) => {
+                        await profesional.findById(element.profesional.idRenovacion, (error2, datos: any) => {
                             if (datos && (datos.sexo === req.query.sexo)) {
                                 match = element;
                             }

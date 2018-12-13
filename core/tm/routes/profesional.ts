@@ -337,7 +337,6 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
     const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
 
     if (req.query.nombreCompleto) {
-        console.log('aca completo', req.query.nombreCompleto);
         const filter = [{
             apellido: {
                 $regex: utils.makePattern(req.query.nombreCompleto, { startWith: true })
