@@ -10,6 +10,7 @@ import { ElasticSync } from '../../../utils/elasticSync';
 import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
 import { EventCore } from '@andes/event-bus';
+import { EventEmitter } from 'events';
 
 
 const logD = debug('paciente-controller');
@@ -341,6 +342,7 @@ router.get('/pacientes/:id', (req, res, next) => {
             Logger.log(req, 'mpi', 'query', {
                 mongoDB: resultado.paciente
             });
+            EventCore.emitAsync('mpi:paciente:get', resultado.paciente);
             res.json(resultado.paciente);
         } else {
             return next(500);
@@ -455,7 +457,6 @@ router.put('/pacientes/mpi/:id', (req, res, next) => {
         const connElastic = new ElasticSync();
         if (patientFound) {
             const data = req.body;
-
             controller.updatePacienteMpi(patientFound, data, req).then(async (p: any) => {
                 res.json(p);
             }).catch(next);
@@ -475,7 +476,7 @@ router.put('/pacientes/mpi/:id', (req, res, next) => {
                 delete nuevoPac._id;
 
                 connElastic.create(newPatient._id.toString(), nuevoPac).then(() => {
-
+                    EventCore.emitAsync('mpi:patient:update', newPatient);
                     Logger.log(req, 'mpi', 'elasticInsertInPut', newPatient);
                     res.json();
                 }).catch(error => {
@@ -586,7 +587,7 @@ router.post('/pacientes', (req, res, next) => {
                     try {
                         await controller.actualizarGeoReferencia(req.body, patient);
                     } catch (err) {
-                        res.json(err);
+                        logD(err);
                     }
                 }
                 return controller.createPaciente(patient, req).then(pacienteObj => {
@@ -714,6 +715,7 @@ router.put('/pacientes/:id', (req, res, next) => {
                             } else {
                                 Logger.log(req, 'mpi', 'insert', newPatient);
                             }
+                            EventCore.emitAsync('mpi:patient:update', nuevoPac);
                             res.json(nuevoPac);
                         }).catch(error => {
                             return next(error);
@@ -866,8 +868,8 @@ router.patch('/pacientes/:id', (req, res, next) => {
                 if (errPatch) {
                     return next(errPatch);
                 }
-                res.json(pacienteAndes);
                 EventCore.emitAsync('mpi:patient:update', pacienteAndes);
+                res.json(pacienteAndes);
                 return;
             });
         }

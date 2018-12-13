@@ -19,6 +19,11 @@ export let schema = new mongoose.Schema({
         type: String,
         enum: ['atomo', 'molecula', 'formula']
     },
+    // Calculo de formula a implementar
+    formulaImplementation: {
+        type: String,
+        required: false
+    },
     // Indica si este elementoRUP aplica a una solicitud
     esSolicitud: {
         type: Boolean,
@@ -44,6 +49,8 @@ export let schema = new mongoose.Schema({
      * tipoSelect: Valores: select|radio -> renderiza uno o el otro en el componente SelectPorRefset
      * titleOverride: Muestra un titulo como label (Atomo valorNumerico).
      * unit: Unidad establecida en Atomo valorNumerico.
+     * min: valor minimo para componente valorNumerico
+     * max: valor maximo para componente valorNumerico
      */
 
     params: {
