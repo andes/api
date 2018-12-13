@@ -5,7 +5,7 @@ import { logPaciente } from '../../../core/log/schemas/logPaciente';
 import { buscarPaciente } from '../../../core/mpi/controller/paciente';
 import * as controller from '../../../core/mpi/controller/paciente';
 import { Auth } from './../../../auth/auth.class';
-import { paciente } from '../../../core/mpi/schemas/paciente';
+import { paciente as pacienteModel } from '../../../core/mpi/schemas/paciente';
 
 export function getTurno(req) {
     return new Promise(async (resolve, reject) => {
@@ -348,7 +348,7 @@ export async function actualizarCarpeta(req, res, next, pacienteMPI, carpetas) {
         } catch (error) { return next(error); }
         let pacienteAndes: any;
         if (pacienteMPI.db === 'mpi') {
-            pacienteAndes = new paciente(pacienteMPI.paciente.toObject());
+            pacienteAndes = new pacienteModel(pacienteMPI.paciente.toObject());
         } else {
             pacienteAndes = pacienteMPI.paciente;
         }
