@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 import * as express from 'express';
 import { EventCore } from '@andes/event-bus';
 import { WebHook, WebHookLog } from '../schemas/webhookSchema';
-
+import * as Fhir from '../../../packages/fhir/src/patient';
 const request = require('request');
 let router = express.Router();
 
@@ -50,6 +50,11 @@ function filterData(filters: any[], data) {
 
 EventCore.on(/.*/, async function (body) {
     const event = this.event;
+    let bodyFhir = null;
+    if (event === 'mpi:patient:create' || event === 'mpi:patient:update') {
+        bodyFhir = (Object as any).assign({}, Fhir.encode(body));
+    }
+
     let subscriptions = await WebHook.find({
         event
     });
@@ -63,9 +68,10 @@ EventCore.on(/.*/, async function (body) {
         let data = {
             id: new mongoose.Types.ObjectId(),
             subscription: sub._id,
-            data: body,
+            data: bodyFhir ? bodyFhir : body,
             event
         };
+
         request({
             method: sub.method,
             uri: sub.url,
