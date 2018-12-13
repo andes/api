@@ -319,6 +319,12 @@ export default [
         title: 'Prestamo de Carpetas',
         child: [
         ]
-    }
+    },
+    {
+        key: 'espaciosFisicos',
+        title: 'Edición de espacios físicos',
+        child: [
+        ]
+    },
 
 ];
