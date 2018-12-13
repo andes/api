@@ -268,6 +268,7 @@ router.post('/agenda', (req, res, next) => {
 
         EventCore.emitAsync('citas:agenda:create', data);
 
+
         // Al crear una nueva agenda la cacheo para Sips
         operations.cacheTurnos(data).catch(error => { return next(error); });
         // Fin de insert cache
@@ -410,6 +411,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                                 if (error) {
                                     return next(error);
                                 }
+                                EventCore.emitAsync('citas:agenda:update', data[0]);
                             });
                         }).catch(err2 => { return next(err2); });
                     }
@@ -429,6 +431,8 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                                         data: data2,
                                         err: error || false
                                     });
+                                    // PAra probar ahora
+                                    EventCore.emitAsync('citas:agenda:update', data2[0]);
                                     if (error) {
                                         return next(error);
                                     }
@@ -472,7 +476,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                     case 'liberarTurno':
                         turno = agendaCtrl.getTurno(req, data, turnos[y]);
                         // LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, bloqueId, agendaId);
-                        if (turno.paciente.id) {
+                        if (turno.paciente && turno.paciente.id) {
                             LoggerPaciente.logTurno(req, 'turnos:liberar', turno.paciente, turno, agendaCtrl.getBloque(data, turno)._id, data);
                         }
                         agendaCtrl.liberarTurno(req, data, turno);
@@ -536,6 +540,7 @@ router.patch('/agenda/:id*?', (req, res, next) => {
 
                 Auth.audit(data, req);
                 data.save((error) => {
+                    EventCore.emitAsync('citas:agenda:update', data);
 
                     if (event.data) {
                         EventCore.emitAsync(`citas:${event.object}:${event.accion}`, event.data);

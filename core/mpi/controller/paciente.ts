@@ -8,6 +8,13 @@ import { Auth } from './../../../auth/auth.class';
 import { EventCore } from '@andes/event-bus';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
+import { matchSisa } from '../../../utils/servicioSisa';
+import { getServicioRenaper } from '../../../utils/servicioRenaper';
+const regtest = /[^a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ ']+/;
+import * as https from 'https';
+import * as configPrivate from '../../../config.private';
+import { getServicioGeonode } from '../../../utils/servicioGeonode';
+import { handleHttpRequest } from '../../../utils/requestHandler';
 
 /**
  * Crea un paciente y lo sincroniza con elastic
@@ -28,6 +35,7 @@ export function createPaciente(data, req) {
             const nuevoPac = JSON.parse(JSON.stringify(newPatient));
             delete nuevoPac._id;
             delete nuevoPac.relaciones;
+            delete nuevoPac.direccion;
             const connElastic = new ElasticSync();
             connElastic.create(newPatient._id.toString(), nuevoPac).then(() => {
                 Logger.log(req, 'mpi', 'insert', newPatient);
@@ -71,6 +79,7 @@ export function updatePaciente(pacienteObj, data, req) {
                 } else {
                     Logger.log(req, 'mpi', 'insert', pacienteObj);
                 }
+
                 EventCore.emitAsync('mpi:patient:update', pacienteObj);
                 resolve(pacienteObj);
             }).catch(error => {
@@ -130,6 +139,7 @@ export function updatePacienteMpi(pacMpi, pacAndes, req) {
                 } else {
                     Logger.log(req, 'mpi', 'insert', pacMpi);
                 }
+                EventCore.emitAsync('mpi:patient:update', pacMpi);
                 resolve(pacMpi);
             }).catch(error => {
                 return reject(error);
@@ -165,6 +175,7 @@ export function postPacienteMpi(newPatientMpi, req) {
                     Logger.log(req, 'mpi', 'elasticInsert', {
                         nuevo: newPatientMpi,
                     });
+                    EventCore.emitAsync('mpi:patient:create', newPatientMpi);
                     resolve(newPatientMpi);
                 }).catch((error) => {
                     reject(error);
@@ -474,9 +485,25 @@ export function updateRelaciones(req, data) {
     data.relaciones = req.body.relaciones;
 }
 
-export function updateDireccion(req, data) {
+export async function updateDireccion(req, data) {
     data.markModified('direccion');
     data.direccion = req.body.direccion;
+    try {
+        await actualizarGeoReferencia(req, data);
+    } catch (err) {
+        return err;
+    }
+}
+
+export function updateBarrio(geoRef) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const barrio = await getServicioGeonode(geoRef);
+            resolve(barrio);
+        } catch (err) {
+            return reject(err);
+        }
+    });
 }
 
 export function updateCarpetaEfectores(req, data) {
@@ -546,6 +573,33 @@ export function updateScan(req, data) {
 export function updateCuil(req, data) {
     data.markModified('cuil');
     data.cuil = req.body.cuil;
+}
+
+export async function actualizarFinanciador(req, next) {
+    let resultado = await this.buscarPaciente(req.body.paciente.id);
+    // por ahora se pisa la información
+    // TODO: analizar como sería
+    if (req.body.paciente.obraSocial) {
+        if (!resultado.paciente.financiador) {
+            resultado.paciente.financiador = [];
+        }
+        resultado.paciente.financiador[0] = req.body.paciente.obraSocial;
+        resultado.paciente.markModified('financiador');
+
+        let pacienteAndes: any;
+        if (resultado.db === 'mpi') {
+            pacienteAndes = new paciente(resultado.paciente.toObject());
+        } else {
+            pacienteAndes = resultado.paciente;
+        }
+        Auth.audit(pacienteAndes, req);
+        pacienteAndes.save((errPatch) => {
+            if (errPatch) {
+                return next(errPatch);
+            }
+            return;
+        });
+    }
 }
 
 export function checkCarpeta(req, data) {
@@ -691,3 +745,98 @@ export async function matchPaciente(dataPaciente) {
     }
 }
 
+/**
+ * Intenta validar un paciente con fuentes auténticas.
+ * Devuelve el paciente, validado o no
+ *
+ * @param {*} pacienteAndes
+ * @returns Object Paciente
+ */
+export async function validarPaciente(pacienteAndes) {
+
+    let sexoRenaper = pacienteAndes.sexo === 'masculino' ? 'M' : 'F';
+    let resRenaper: any;
+    try {
+        resRenaper = await getServicioRenaper({ documento: pacienteAndes.documento, sexo: sexoRenaper });
+    } catch (error) {
+        return await validarSisa(pacienteAndes);
+    }
+    let band = true;
+    // Respuesta correcta de renaper?
+    if (resRenaper && resRenaper.datos && resRenaper.datos.nroError === 0) {
+        let pacienteRenaper = resRenaper.datos;
+        band = regtest.test(pacienteRenaper.nombres);
+        band = band || regtest.test(pacienteRenaper.apellido);
+        if (!band) {
+            pacienteAndes.nombre = pacienteRenaper.nombres;
+            pacienteAndes.apellido = pacienteRenaper.apellido;
+            pacienteAndes.fechaNacimiento = new Date(pacienteRenaper.fechaNacimiento);
+            pacienteAndes.cuil = pacienteRenaper.cuil;
+            pacienteAndes.estado = 'validado';
+            pacienteAndes.foto = pacienteRenaper.foto;
+        }
+        return pacienteAndes;
+    }
+    // Respuesta erronea de renaper o test regex fallido?
+    if (!resRenaper || (resRenaper && resRenaper.datos && resRenaper.datos.nroError !== 0) || band) {
+        return await validarSisa(pacienteAndes);
+    }
+}
+
+async function validarSisa(pacienteAndes: any) {
+    try {
+        let resSisa: any = await matchSisa(pacienteAndes);
+        let porcentajeMatcheo = resSisa.matcheos.matcheo;
+        if (porcentajeMatcheo > 95) {
+            pacienteAndes.nombre = resSisa.matcheos.datosPaciente.nombre;
+            pacienteAndes.apellido = resSisa.matcheos.datosPaciente.apellido;
+            pacienteAndes.fechaNacimiento = resSisa.matcheos.datosPaciente.fechaNacimiento;
+            pacienteAndes.estado = 'validado';
+        }
+        return pacienteAndes;
+    } catch (error) {
+        // no hacemos nada con el paciente
+        return pacienteAndes;
+    }
+}
+/**
+ * * Segun la entrada, retorna un Point con las coordenadas de geo referencia o null.
+ * @param dataPaciente debe contener direccion y localidad.
+ */
+
+export async function actualizarGeoReferencia(req, data) {
+    if (data.direccion[0].valor && data.direccion[0].ubicacion.localidad && data.direccion[0].ubicacion.localidad.nombre) {
+        // Se carga geo referencia desde api de google
+        try {
+            const geoRef: any = await geoRefPaciente(req);
+            if (geoRef && geoRef.lat) {
+                data.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
+                data.direccion[0].ubicacion.barrio = await getServicioGeonode(data.direccion[0].geoReferencia);
+            }
+        } catch (err) {
+            return (err);
+        }
+    }
+}
+
+export async function geoRefPaciente(dataPaciente) {
+    const address = dataPaciente.direccion[0].valor + ',' + dataPaciente.direccion[0].ubicacion.localidad.nombre;
+    let pathGoogleApi = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + address + ', ' + 'AR' + '&key=' + configPrivate.geoKey;
+
+    pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
+    pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
+    pathGoogleApi = pathGoogleApi.replace(/é/gi, 'e');
+    pathGoogleApi = pathGoogleApi.replace(/í/gi, 'i');
+    pathGoogleApi = pathGoogleApi.replace(/ó/gi, 'o');
+    pathGoogleApi = pathGoogleApi.replace(/ú/gi, 'u');
+    pathGoogleApi = pathGoogleApi.replace(/ü/gi, 'u');
+    pathGoogleApi = pathGoogleApi.replace(/ñ/gi, 'n');
+
+    const [status, body] = await handleHttpRequest(pathGoogleApi);
+    const salida = JSON.parse(body);
+    if (salida.status === 'OK') {
+        return salida.results[0].geometry.location;
+    } else {
+        return {};
+    }
+}

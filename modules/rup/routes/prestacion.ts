@@ -5,7 +5,7 @@ import { Auth } from './../../../auth/auth.class';
 import { model as Prestacion } from '../schemas/prestacion';
 import * as frecuentescrl from '../controllers/frecuentesProfesional';
 
-import { buscarEnHuds } from '../controllers/rup';
+import { iterate, convertToObjectId, buscarEnHuds, matchConcepts, buscarRegistros, registrosProfundidad } from '../controllers/rup';
 import { Logger } from '../../../utils/logService';
 import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
 import { snomedModel } from '../../../core/term/schemas/snomed';
@@ -141,8 +141,130 @@ router.get('/prestaciones/huds/:idPaciente', async (req, res, next) => {
             });
         }
     });
+});
 
 
+router.get('/prestaciones/resumenPaciente/:idPaciente', async (req, res, next) => {
+
+    // verificamos que sea un ObjectId válido
+    if (!mongoose.Types.ObjectId.isValid(req.params.idPaciente)) {
+        return res.status(404).send('Turno no encontrado');
+    }
+    // por defecto traemos todas las validadas, si no vemos el estado que viene en la request
+    const estado = (req.query.estado) ? req.query.estado : 'validada';
+
+    let query = {
+        'paciente.id': req.params.idPaciente,
+        $where: 'this.estados[this.estados.length - 1].tipo ==  \"' + estado + '\"'
+    };
+
+    if (req.query.idPrestacion) {
+        query['_id'] = mongoose.Types.ObjectId(req.query.idPrestacion);
+    }
+    // 'filtroPrestaciones' va a contener un primer filtro con todas las consultas relacionadas a 'consultaPrincipal'
+    let filtroPrestaciones: any = [];
+
+    return Prestacion.find(query, async (err, prestaciones) => {
+
+        if (err) {
+            return next(err);
+        }
+        if (!prestaciones) {
+            return res.status(404).send('Paciente no encontrado');
+        }
+
+        if (req.query.consultaPrincipal && req.query.conceptos) {
+            let consultaPrincipal = req.query.consultaPrincipal;
+            let conceptosBuscados = JSON.parse(req.query.conceptos);
+            let querySnomed = makeMongoQuery(consultaPrincipal);
+            let conceptosAux = [];
+            let concepto;
+
+            /* Se recorre el arreglo 'conceptosBuscados' para separar aquellos conceptos que son una expresion de snomed
+            ya que requieren una consulta a su DB para traer los conceptos concretos que se buscarán */
+            for (let i = 0; i < conceptosBuscados.length; i++) {
+                concepto = conceptosBuscados[i];
+
+                // si el concepto buscado es una expresion snomed ..
+                if (!/^([0-9])+$/.test(concepto.conceptId)) {
+                    let docs = await snomedModel.find(makeMongoQuery(concepto.conceptId), { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 });
+
+                    // Set de conceptos relacionados ..
+                    let conceptosArray = docs.map((item: any) => {
+                        let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
+                        return {
+                            fsn: item.fullySpecifiedName,
+                            term,
+                            conceptId: item.conceptId,
+                            semanticTag: item.semtag
+                        };
+                    });
+                    conceptosAux.push({ titulo: concepto.titulo, conceptos: conceptosArray });
+                } else {
+                    // Si no es una expresion snomed se almacena en un arreglo como unico elemento
+                    conceptosAux.push({ titulo: concepto.titulo, conceptos: [concepto] });
+                }
+            }
+            conceptosBuscados = conceptosAux;
+
+
+            /* Los 'conceptosBuscados' que se quieren encontrar, son sólo los que pertenecen a la consulta 'consultaPrincipal',
+                para esto se realiza el siguiente filtro mediante una consulta snomed */
+            snomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docsCP: any[]) => {
+                // Set de consultas relacionadas con 'consultaPrincipal'
+                filtroPrestaciones = docsCP.map((item) => {
+                    let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
+                    return {
+                        fsn: item.fullySpecifiedName,
+                        term,
+                        conceptId: item.conceptId,
+                        semanticTag: item.semtag
+                    };
+                });
+
+                let data = [];
+
+                // Para cada prestación del paciente se busca si contiene una 'consultaPrincipal'
+                prestaciones.forEach((prestacion: any) => {
+                    let registros = [];
+                    let motivoConsulta;
+                    let resultBusqueda = [];
+                    // recorremos los registros de cada prestacion del paciente.
+                    prestacion.ejecucion.registros.forEach(reg => {
+                        // Si alguna prestación matchea con una de las anteriormente filtradas..
+                        if (filtroPrestaciones.find(fp => fp.conceptId === reg.concepto.conceptId)) {
+                            motivoConsulta = { term: reg.concepto.term, conceptId: reg.concepto.conceptId };
+                            let dto;
+                            /* Por cada concepto buscado se genera un obj json para retornar. Si el concepto no fue encontrado
+                                se inserta de todas maneras con 'contenido' nulo para conservar registro del resultado */
+                            conceptosBuscados.forEach(conceptos => {
+                                dto = { titulo: conceptos.titulo, contenido: null };
+                                resultBusqueda = registrosProfundidad(reg, conceptos.conceptos);
+
+                                if (resultBusqueda.length) {
+                                    dto.contenido = resultBusqueda[0];
+                                }
+                                registros.push(dto);
+                            });
+
+                            if (registros.length) {
+                                // se agrega la prestacion y los conceptos matcheados al arreglo a retornar
+                                data.push({
+                                    motivo: motivoConsulta,
+                                    fecha: prestacion.createdAt,
+                                    profesional: prestacion.createdBy,
+                                    conceptos: registros
+                                });
+                            }
+                        }
+                    });
+                });
+                res.json(data);
+            });
+        } else {
+            return next(404);
+        }
+    });
 });
 
 router.get('/prestaciones/solicitudes', (req, res, next) => {
@@ -160,7 +282,14 @@ router.get('/prestaciones/solicitudes', (req, res, next) => {
     // para filtrarlas de de la colección prestaciones
     // query.where('solicitud.tipoPrestacionOrigen.conceptId').exists(true); <<<<< cuando salgan de circulación solicitudes viejas la query es esta
     query.where('estados.0.tipo').in(['pendiente', 'auditoria']);
-
+    if (req.query.tieneTurno !== undefined) {
+        if (req.query.tieneTurno === true) {
+            query.where('solicitud.turno').ne(null);
+        }
+        if (req.query.tieneTurno === false) {
+            query.where('solicitud.turno').equals(null);
+        }
+    }
 
     if (req.query.idPaciente) {
         query.where('paciente.id').equals(req.query.idPaciente);
@@ -172,6 +301,24 @@ router.get('/prestaciones/solicitudes', (req, res, next) => {
 
     if (req.query.solicitudHasta) {
         query.where('solicitud.fecha').lte(moment(req.query.solicitudHasta).endOf('day').toDate() as any);
+    }
+
+    if (req.query.prestacionDestino) {
+        query.where('solicitud.tipoPrestacion.id').equals(req.query.prestacionDestino);
+    }
+
+    if (req.query.organizacionOrigen) {
+        const arr: any[] = [];
+        arr.push({ 'solicitud.organizacionOrigen': { $exists: true } });
+        arr.push({ 'solicitud.organizacionOrigen.id': req.query.organizacionOrigen });
+        query.and(arr);
+    }
+
+    if (req.query.tipoPrestaciones) {
+        const variable: any[] = [];
+        variable.push({ 'solicitud.tipoPrestacion.id': { $in: req.query.tipoPrestaciones } });
+        variable.push({ 'solicitud.tipoPrestacionOrigen.id': { $in: req.query.tipoPrestaciones } });
+        query.or(variable);
     }
 
     // Ordenar por fecha de solicitud

@@ -3,6 +3,8 @@ import * as express from 'express';
 import * as agenda from '../schemas/agenda';
 import { Logger } from '../../../utils/logService';
 import { paciente } from '../../../core/mpi/schemas/paciente';
+import * as pacienteController from '../../../core/mpi/controller/paciente';
+
 import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 import { NotificationService } from '../../mobileApp/controller/NotificationService';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
@@ -11,6 +13,8 @@ import * as turnosController from '../controller/turnosController';
 import * as moment from 'moment';
 import * as debug from 'debug';
 import { EventCore } from '@andes/event-bus';
+import * as carpetaPaciente from '../../carpetas/schemas/carpetaPaciente';
+import * as controller from '../../../core/mpi/controller/paciente';
 
 const router = express.Router();
 const dbgTurno = debug('dbgTurno');
@@ -44,6 +48,9 @@ function getTipoPrestacion(idTipoPrestacion) {
 }
 function getAgenda(idAgenda) {
     return agenda.findById(idAgenda).exec();
+}
+function getCarpeta(nroDocumento, idOrganizacion) {
+    return carpetaPaciente.find({ documento: nroDocumento, 'carpetaEfectores.organizacion._id': idOrganizacion }).exec();
 }
 
 router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
@@ -123,6 +130,7 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
                 res.json(doc2);
 
                 EventCore.emitAsync('citas:turno:asignar', turno);
+
             }
         });
 
@@ -147,15 +155,15 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
     };
  */
 router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res, next) => {
-    // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
     const continues = ValidateDarTurno.checkTurno(req.body);
-
+    // const pacienteTurno = req.body.paciente;
     if (continues.valid) {
         let agendaRes;
         try {
             await getPaciente(req.body.paciente.id);
             await getTipoPrestacion(req.body.tipoPrestacion._id);
             agendaRes = await getAgenda(req.params.idAgenda);
+
         } catch (err) {
             return next(err);
         }
@@ -255,11 +263,12 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         const etiquetaReasignado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.reasignado';
         const etiquetaUpdateAt: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedAt';
         const etiquetaUpdateBy: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedBy';
-        // let etiquetaPrimeraVez: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.primeraVez';
 
         update[etiquetaEstado] = 'asignado';
         update[etiquetaPrestacion] = req.body.tipoPrestacion;
+        // update[etiquetaPaciente] = req.body.paciente;
         update[etiquetaPaciente] = req.body.paciente;
+
         update[etiquetaTipoTurno] = tipoTurno;
         update[etiquetaNota] = req.body.nota;
         update[etiquetaEmitidoPor] = req.body.emitidoPor ? req.body.emitidoPor : 'Gestión de pacientes';
@@ -270,10 +279,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         update[etiquetaUpdateAt] = new Date();
         update[etiquetaUpdateBy] = usuario;
 
-        // TODO: buscar si es primera vez del paciente => TP y paciente => Profesional
-
-        // update[etiquetaPrimeraVez] = await esPrimerPaciente(agenda, req.body.paciente.id, ['primerPrestacion', 'primerProfesional']);
-
         const query = {
             _id: req.params.idAgenda,
         };
@@ -282,7 +287,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         query[etiquetaEstado] = 'disponible';
 
         // Se hace el update con findOneAndUpdate para garantizar la atomicidad de la operación
-        (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true }, function actualizarAgenda(err4, doc2: any, writeOpResult) {
+        (agenda as any).findOneAndUpdate(query, { $set: update }, { new: true }, async function actualizarAgenda(err4, doc2: any, writeOpResult) {
             if (err4) {
                 return next(err4);
             }
@@ -301,12 +306,17 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                     emitidoPor: update[etiquetaEmitidoPor], // agregamos el emitidoPor
                     motivoConsulta: update[etiquetaMotivoConsulta]
                 };
+
+                // Se actualiza el campo financiador del paciente
+                pacienteController.actualizarFinanciador(req, next);
+
                 Logger.log(req, 'citas', 'asignarTurno', datosOp);
                 let turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
 
                 LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turno, req.params.idBloque, req.params.idAgenda);
 
                 EventCore.emitAsync('citas:turno:asignar', turno);
+                EventCore.emitAsync('citas:agenda:update', doc2);
 
                 // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
                 // Donde doc2 es el documeto Agenda actualizado
@@ -315,8 +325,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                 res.json(agendaRes);
 
             }
-
-
         });
     } else {
         return next('Los datos del paciente son inválidos');

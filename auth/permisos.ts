@@ -293,7 +293,20 @@ export default [
     {
         key: 'solicitudes',
         title: 'Modulo Solicitudes',
+        comment: '',
+        // avoidAll: true,
         child: [
+            {
+                key: 'tipoPrestacion',
+                title: 'Vista / Edición de Solicitudes',
+                type: 'prestacion'
+                // avoidAll: true
+            },
+            {
+                key: 'reglas',
+                title: 'Edición de Reglas',
+                type: 'boolean'
+            }
         ]
     },
     {
@@ -301,6 +314,12 @@ export default [
         title: 'Prestamo de Carpetas',
         child: [
         ]
-    }
+    },
+    {
+        key: 'espaciosFisicos',
+        title: 'Edición de espacios físicos',
+        child: [
+        ]
+    },
 
 ];
