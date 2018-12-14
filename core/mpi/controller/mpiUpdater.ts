@@ -75,7 +75,7 @@ export async function updatingMpi() {
         user: {
             usuario: { nombre: 'mpiUpdaterJob', apellido: 'mpiUpdaterJob' },
             app: 'mpi',
-            organizacion: ''
+            organizacion: userScheduler.user.organizacion.nombre
         },
         ip: 'localhost',
         connection: {
@@ -84,7 +84,6 @@ export async function updatingMpi() {
     };
     try {
         await log(logRequest, logKeys.mpiUpdaterStart.key, null, logKeys.mpiUpdaterStart.operacion, null, null);
-
     } catch (err) {
         await log(logRequest, logKeys.mpiUpdaterStart.key, null, logKeys.mpiUpdaterStart.operacion, err, null);
     }
@@ -94,53 +93,49 @@ export async function updatingMpi() {
         estado: 'validado',
     };
     const cursorPacientes = paciente.find(condicion).cursor();
-    return cursorPacientes.eachAsync((pacAndes: any) => {
-        return new Promise(async (resolve, reject) => {
 
-            if (pacAndes !== null) {
-                try {
-                    // Preservo el usuario real que hizo la modificación / creación
-                    userScheduler.user = {
-                        usuario: { nombre: pacAndes.createdBy.nombre, apellido: pacAndes.createdBy.apellido },
-                        organizacion: pacAndes.createdBy.organizacion
-                    };
+    return cursorPacientes.eachAsync(async (pacAndes: any) => {
+        if (pacAndes !== null) {
+            try {
+                // Preservo el usuario real que hizo la modificación / creación
+                userScheduler.user = {
+                    usuario: { nombre: pacAndes.createdBy.nombre, apellido: pacAndes.createdBy.apellido },
+                    organizacion: pacAndes.createdBy.organizacion
+                };
 
-                    const resultado = await existeEnMpi(pacAndes);
+                const resultado = await existeEnMpi(pacAndes);
 
-                    /*Si NO hubo matching al 100% lo tengo que insertar en MPI */
-                    if (resultado[0] !== 'merge') {
-                        if (resultado[0] === 'new') {
-                            const pacElastic = resultado[1].toObject();
-                            const pac = new pacienteMpi(pacElastic);
-                            await controller.deletePacienteAndes(pacAndes._id); // Borra paciente mongodb Local
-                            await controller.postPacienteMpi(pac, userScheduler);
-                        } else if (resultado[0] === 'notMerge') {
-                            // caso: paciente en mpi más actual que el paciente local
-                            await controller.deletePacienteAndes(pacAndes._id); // no hace nada en elastic
-                        }
-                    } else {
-                        /*Se fusionan los pacientes, pacFusionar es un paciente de ANDES y tengo q agregar
-                        los campos de este paciente al paciente de mpi*/
-                        const pacienteAndes = pacAndes;
-                        const pacMpi: any = new pacienteMpi(resultado[1]);
-                        await controller.deletePacienteAndes(pacAndes._id); // Borro el paciente de mongodb Local
-                        // Verifico cuil anses
-                        if (!pacienteAndes.cuil) {
-                            const cuilData = await servicioAnses.getServicioAnses(pacienteAndes);
-                            pacienteAndes.cuil = cuilData['cuil'];
-                        }
-                        await controller.updatePacienteMpi(pacMpi, pacienteAndes, userScheduler);
+                /*Si NO hubo matching al 100% lo tengo que insertar en MPI */
+                if (resultado[0] !== 'merge') {
+                    if (resultado[0] === 'new') {
+                        const pacElastic = resultado[1].toObject();
+                        const pac = new pacienteMpi(pacElastic);
+                        await controller.deletePacienteAndes(pacAndes._id); // Borra paciente mongodb Local
+                        await controller.postPacienteMpi(pac, userScheduler);
+                    } else if (resultado[0] === 'notMerge') {
+                        // caso: paciente en mpi más actual que el paciente local
+                        await controller.deletePacienteAndes(pacAndes._id); // no hace nada en elastic
                     }
-                    // await log(logRequest, 'mpi:mpiUpdater:pacienteUpdated', pacAndes.id, 'Se finaliza con el paciente', null, null);
-                    resolve();
-
-                } catch (ex) {
-                    await log(logRequest, logKeys.mpiUpdate.key, pacAndes, logKeys.mpiUpdate.operacion, ex, null);
-                    resolve();
-                    return (ex);
+                } else {
+                    /*Se fusionan los pacientes, pacFusionar es un paciente de ANDES y tengo q agregar
+                    los campos de este paciente al paciente de mpi*/
+                    const pacienteAndes = pacAndes;
+                    const pacMpi: any = new pacienteMpi(resultado[1]);
+                    await controller.deletePacienteAndes(pacAndes._id); // Borro el paciente de mongodb Local
+                    // Verifico cuil anses
+                    if (!pacienteAndes.cuil) {
+                        const cuilData = await servicioAnses.getServicioAnses(pacienteAndes);
+                        pacienteAndes.cuil = cuilData['cuil'];
+                    }
+                    await controller.updatePacienteMpi(pacMpi, pacienteAndes, userScheduler);
                 }
+                // await log(logRequest, 'mpi:mpiUpdater:pacienteUpdated', pacAndes.id, 'Se finaliza con el paciente', null, null);
+
+            } catch (ex) {
+                await log(logRequest, logKeys.mpiUpdate.key, pacAndes, logKeys.mpiUpdate.operacion, ex, null);
+                return (ex);
             }
-        });
+        }
     }).then(async () => {
         try {
             await log(logRequest, logKeys.mpiUpdaterFinish.key, null, logKeys.mpiUpdaterFinish.operacion, null, null);
