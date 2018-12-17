@@ -374,11 +374,10 @@ export function matching(data): Promise<any[]> {
             break;
     }
 
-    // Configuramos la cantidad de resultados que quiero que se devuelva y la query correspondiente
-
     if (data.incluirInactivos) {
         delete query.bool.filter;
     }
+    // Configuramos la cantidad de resultados que quiero que se devuelva y la query correspondiente
     const body = {
         size: 100,
         from: 0,
