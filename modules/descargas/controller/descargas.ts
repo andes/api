@@ -545,10 +545,13 @@ export class Documento {
             .replace('<!--logoHeader-->', `<img class="logoHeader" src="data:image/jpg;base64,${headerConstancia.toString('base64')}">`);
 
         // BODY
+        let fechaActual = moment(new Date());
         html = html
             .replace('<!--nombre-->', req.body.nombre)
             .replace('<!--dni-->', req.body.dni)
-            .replace('<!--financiador-->', req.body.codigoFinanciador + ' ' + req.body.financiador);
+            .replace('<!--financiador-->', req.body.codigoFinanciador + ' ' + req.body.financiador)
+            .replace('<!--añoActual-->', fechaActual.format('YYYY'))
+            .replace('<!--fechaActual-->', fechaActual.format('DD [de] MMMM [de] YYYY'));
 
         return html;
     }
