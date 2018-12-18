@@ -300,7 +300,7 @@ export function buscarPacienteWithcondition(condition): Promise<{ db: String, pa
  *
  * @param data
  */
-export function matching(data) {
+export function matching(data): Promise<any[]> {
 
     const connElastic = new ElasticSync();
 
@@ -309,10 +309,17 @@ export function matching(data) {
         case 'simplequery':
             {
                 query = {
-                    simple_query_string: {
-                        query: '\"' + data.documento + '\" + \"' + data.apellido + '\" + \"' + data.nombre + '\" +' + data.sexo,
-                        fields: ['documento', 'apellido', 'nombre', 'sexo'],
-                        default_operator: 'and'
+                    bool: {
+                        must: {
+                            simple_query_string: {
+                                query: '\"' + data.documento + '\" + \"' + data.apellido + '\" + \"' + data.nombre + '\" +' + data.sexo,
+                                fields: ['documento', 'apellido', 'nombre', 'sexo'],
+                                default_operator: 'and'
+                            }
+                        }
+                    },
+                    filter: {
+                        term: { activo: 'true' }
                     }
                 };
             }
@@ -320,11 +327,18 @@ export function matching(data) {
         case 'multimatch':
             {
                 query = {
-                    multi_match: {
-                        query: data.cadenaInput,
-                        type: 'cross_fields',
-                        fields: ['documento', 'apellido^5', 'nombre^4'],
-                        operator: 'and'
+                    bool: {
+                        must: {
+                            multi_match: {
+                                query: data.cadenaInput,
+                                type: 'cross_fields',
+                                fields: ['documento', 'apellido^5', 'nombre^4'],
+                                operator: 'and'
+                            }
+                        },
+                        filter: {
+                            term: { activo: 'true' }
+                        }
                     }
                 };
             }
@@ -347,20 +361,28 @@ export function matching(data) {
                     fuzziness: 2
                 };
                 query = {
-                    match: condicionMatch
+                    bool: {
+                        must: {
+                            match: condicionMatch
+                        },
+                        filter: {
+                            term: { activo: 'true' }
+                        }
+                    }
                 };
             }
             break;
     }
 
+    if (data.incluirInactivos) {
+        delete query.bool.filter;
+    }
     // Configuramos la cantidad de resultados que quiero que se devuelva y la query correspondiente
     const body = {
         size: 100,
         from: 0,
         query
     };
-
-
     return new Promise((resolve, reject) => {
 
         if (data.type === 'suggest') {
