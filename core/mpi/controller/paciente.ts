@@ -294,12 +294,13 @@ export function buscarPacienteWithcondition(condition): Promise<{ db: String, pa
     });
 }
 
+
 /**
  * Matching de paciente
  *
  * @param data
  */
-export function matching(data) {
+export function matching(data): Promise<any[]> {
 
     const connElastic = new ElasticSync();
 
@@ -308,10 +309,17 @@ export function matching(data) {
         case 'simplequery':
             {
                 query = {
-                    simple_query_string: {
-                        query: '\"' + data.documento + '\" + \"' + data.apellido + '\" + \"' + data.nombre + '\" +' + data.sexo,
-                        fields: ['documento', 'apellido', 'nombre', 'sexo'],
-                        default_operator: 'and'
+                    bool: {
+                        must: {
+                            simple_query_string: {
+                                query: '\"' + data.documento + '\" + \"' + data.apellido + '\" + \"' + data.nombre + '\" +' + data.sexo,
+                                fields: ['documento', 'apellido', 'nombre', 'sexo'],
+                                default_operator: 'and'
+                            }
+                        }
+                    },
+                    filter: {
+                        term: { activo: 'true' }
                     }
                 };
             }
@@ -319,11 +327,18 @@ export function matching(data) {
         case 'multimatch':
             {
                 query = {
-                    multi_match: {
-                        query: data.cadenaInput,
-                        type: 'cross_fields',
-                        fields: ['documento', 'apellido^5', 'nombre^4'],
-                        operator: 'and'
+                    bool: {
+                        must: {
+                            multi_match: {
+                                query: data.cadenaInput,
+                                type: 'cross_fields',
+                                fields: ['documento', 'apellido^5', 'nombre^4'],
+                                operator: 'and'
+                            }
+                        },
+                        filter: {
+                            term: { activo: 'true' }
+                        }
                     }
                 };
             }
@@ -331,28 +346,45 @@ export function matching(data) {
         case 'suggest':
             {
                 // Sugiere pacientes que tengan la misma clave de blocking
-                const campo = data.claveBlocking;
-                const condicionMatch = {};
+                let campo = data.claveBlocking;
+                let filter;
+                if (campo === 'documento') {
+                    filter = data.documento;
+                } else {
+                    campo = 'claveBlocking';
+                    filter = data.claveBlocking; // Enviamos una clave de blocking (q sea la segunda lo estoy probando)
+                }
+                let condicionMatch = {};
                 condicionMatch[campo] = {
-                    query: data.documento,
+                    query: filter,
                     minimum_should_match: 3,
                     fuzziness: 2
                 };
                 query = {
-                    match: condicionMatch
+                    bool: {
+                        must: {
+                            match: condicionMatch
+                        },
+                        filter: {
+                            term: { activo: 'true' }
+                        }
+                    }
                 };
             }
             break;
     }
 
+    if (data.incluirInactivos) {
+        delete query.bool.filter;
+    }
     // Configuramos la cantidad de resultados que quiero que se devuelva y la query correspondiente
     const body = {
         size: 100,
         from: 0,
         query
     };
-
     return new Promise((resolve, reject) => {
+
         if (data.type === 'suggest') {
 
             connElastic.search(body)
@@ -377,7 +409,7 @@ export function matching(data) {
                                 documento: data.documento ? data.documento.toString() : '',
                                 nombre: data.nombre ? data.nombre : '',
                                 apellido: data.apellido ? data.apellido : '',
-                                fechaNacimiento: data.fechaNacimiento ? moment(new Date(data.fechaNacimiento)).format('YYYY-MM-DD') : '',
+                                fechaNacimiento: data.fechaNacimiento ? moment(data.fechaNacimiento).format('YYYY-MM-DD') : '',
                                 sexo: data.sexo ? data.sexo : ''
                             };
                             const pacElastic = {
@@ -387,10 +419,10 @@ export function matching(data) {
                                 fechaNacimiento: paciente2.fechaNacimiento ? moment(paciente2.fechaNacimiento).format('YYYY-MM-DD') : '',
                                 sexo: paciente2.sexo ? paciente2.sexo : ''
                             };
-                            const match = new Matching();
-                            const valorMatching = match.matchPersonas(pacElastic, pacDto, weights, config.algoritmo);
-                            paciente2['id'] = hit._id;
+                            let match = new Matching();
+                            let valorMatching = match.matchPersonas(pacElastic, pacDto, weights, config.algoritmo);
 
+                            paciente2['id'] = hit._id;
                             if (valorMatching >= porcentajeMatchMax) {
                                 listaPacientesMax.push({
                                     id: hit._id,
@@ -467,6 +499,15 @@ export function deletePacienteAndes(objectId) {
     });
 }
 
+// Borramos un paciente en la BD MPI - es necesario handlear posibles errores en la fn llamadora.
+export async function deletePacienteMpi(objectId) {
+    let query = {
+        _id: objectId
+    };
+    let pacremove = await pacienteMpi.findById(query).exec();
+    await pacremove.remove();
+}
+
 /* Funciones de operaciones PATCH */
 
 export function updateContactos(req, data) {
@@ -523,13 +564,13 @@ export function linkIdentificadores(req, data) {
 export function unlinkIdentificadores(req, data) {
     data.markModified('identificadores');
     if (data.identificadores) {
-        data.identificadores = data.identificadores.filter(x => x.valor !== req.body.dto);
+        data.identificadores = data.identificadores.filter(x => x.valor !== req.body.dto.valor);
     }
 }
 
 export function updateActivo(req, data) {
     data.markModified('activo');
-    data.activo = req.body.dto;
+    data.activo = req.body.activo;
 }
 
 export function updateRelacion(req, data) {
