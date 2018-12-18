@@ -176,7 +176,8 @@ export let schema = new Schema({
             required: true
         }
     },
-    requeridos: []
+    requeridos: [],
+    nivel: Number
 });
 
 // // Valida el esquema

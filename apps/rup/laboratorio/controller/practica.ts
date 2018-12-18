@@ -49,18 +49,19 @@ export async function findById(id) {
 export async function getPracticasCompletas(idsPracticas) {
     let practicas = []; 
     
-    let findPracticasById = async (practicasIds) => {
+    let findPracticasById = async (practicasIds, deep) => {
         let res = await Practica.find({ _id: { $in: practicasIds } });
+        res.forEach( (e : any) => {e.nivel = deep; console.log('e',e.nivel)} )
         practicas = practicas.concat(res);
         let promises = res.map(async (practica: any) => {
             if (practica.requeridos) {
-                await findPracticasById(practica.requeridos.map((e) => e._id));
+                await findPracticasById(practica.requeridos.map((e) => e._id), deep + 1);
             }
         });
         return Promise.all(promises).then(() => {return practicas; } );
     };
 
-    return await findPracticasById(idsPracticas);
+    return await findPracticasById(idsPracticas, 0);
 }
 
 /**
