@@ -28,7 +28,6 @@ const outputFile = type + '.json';
  * @returns resultado
  */
 export async function consultaPecas(start, end, done) {
-    console.log('consultaPecas');
     try {
         poolTurnos = await new sql.ConnectionPool(config).connect();
     } catch (ex) {
