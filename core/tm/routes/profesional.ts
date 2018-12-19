@@ -52,25 +52,40 @@ router.get('/profesionales/guia', async (req, res, next) => {
         opciones['formacionGrado.profesion.codigo'] = Number(req.query.codigoProfesion);
         opciones['formacionGrado.matriculacion.matriculaNumero'] = Number(req.query.numeroMatricula);
     }
+    console.log(req.query);
+    if (req.query.apellido && req.query.codigoProfesion) {
+        opciones['formacionGrado.profesion.codigo'] = Number(req.query.codigoProfesion);
+        opciones['apellido'] =  utils.makePattern(req.query.apellido);
+    }
+
+    if (req.query.nombre) {
+        opciones['nombre'] =  utils.makePattern(req.query.nombre);
+
+    }
 
     if (Object.keys(opciones).length !== 0) {
         opciones['formacionGrado.matriculacion'] = { $ne: null };
         opciones['profesionalMatriculado'] = true;
 
-        let datosGuia: any = await profesional.findOne(opciones);
-        let resultado: IGuiaProfesional;
+        let datosGuia: any = await profesional.find(opciones);
+        console.log(opciones);
+        let resultado = [];
 
-        if (datosGuia) {
-            resultado = {
-                id: datosGuia.id,
-                nombre: datosGuia.nombre ? datosGuia.nombre : '',
-                sexo: datosGuia.sexo ? datosGuia.sexo : '',
-                apellido: datosGuia.apellido ? datosGuia.apellido : '',
-                documento: datosGuia.documento ? datosGuia.documento : '',
-                nacionalidad: datosGuia.nacionalidad ? datosGuia.nacionalidad.nombre : '',
-                profesiones: datosGuia.formacionGrado
-            };
+        if (datosGuia.length > 0) {
+            datosGuia.forEach(element => {
+                console.log(element);
+                resultado.push({
+                    id: element.id,
+                    nombre: element.nombre ? element.nombre : '',
+                    sexo: element.sexo ? element.sexo : '',
+                    apellido: element.apellido ? element.apellido : '',
+                    documento: element.documento ? element.documento : '',
+                    nacionalidad: element.nacionalidad ? element.nacionalidad.nombre : '',
+                    profesiones: element.formacionGrado
+                });
+            });
         }
+        console.log('aca', resultado);
         res.json(resultado);
     } else {
         res.json();
