@@ -5,7 +5,6 @@ import { model as Cie10 } from '../../../core/term/schemas/cie10';
 import { makeFs } from '../schemas/CDAFiles';
 import * as pacienteCtr from '../../../core/mpi/controller/paciente';
 import * as cdaCtr from '../controller/CDAPatient';
-
 import { Types } from 'mongoose';
 import * as moment from 'moment';
 import { Auth } from '../../../auth/auth.class';
@@ -347,6 +346,25 @@ router.get('/tojson/:id', async (req: any, res, next) => {
     });
 });
 
+/**
+ * Listado de los CDAs de un paciente
+ * API demostrativa, falta analizar como se va a buscar en el repositorio
+ */
+router.get('/paciente/:id', async (req: any, res, next) => {
+    if (!Auth.check(req, 'cda:list')) {
+        return next(403);
+    }
+    let pacienteID = req.params.id;
+    let prestacion = req.query.prestacion;
+    let { paciente } = await pacienteCtr.buscarPaciente(pacienteID);
+
+    if (paciente) {
+        let list = await cdaCtr.searchByPatient(paciente.vinculos, prestacion, { skip: 0, limit: 100 });
+        return res.json(list);
+    } else {
+        return next({ message: 'no existe el paciente' });
+    }
+});
 
 /**
  * Devuelve los archivos almacenados por los CDAs
@@ -368,7 +386,7 @@ router.get('/:id/:name', async (req: any, res, next) => {
     if (cda) {
         const adj = cda.metadata.adjuntos.find(_adj => {
             return String(_adj.id) === realName;
-        } );
+        });
 
         if (adj && adj.adapter === 'drive') {
 

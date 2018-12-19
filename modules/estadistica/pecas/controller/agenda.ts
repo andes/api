@@ -321,7 +321,7 @@ async function auxiliar(a: any, b: any, t: any) {
         turno.Manzana = null;
         turno.ConsObst = t.tipoPrestacion && t.tipoPrestacion.term.includes('obstetricia') ? 'SI' : 'NO';
         turno.IdObraSocial = (turnoConPaciente && t.paciente.obraSocial && t.paciente.obraSocial.codigo) ? t.paciente.obraSocial.codigo : null;
-        turno.ObraSocial = (turnoConPaciente && t.paciente.obraSocial && t.paciente.obraSocial.nombre) ? t.paciente.obraSocial.nombre.toString().replace('\'', '\'\'') : null;
+        turno.ObraSocial = (turnoConPaciente && t.paciente.obraSocial && t.paciente.obraSocial.financiador) ? t.paciente.obraSocial.financiador.toString().replace('\'', '\'\'') : null;
         if (tipoEfector && tipoEfector === 'Centro de Salud') {
             turno.TipoEfector = '1';
         }

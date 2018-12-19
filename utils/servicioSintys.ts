@@ -87,20 +87,12 @@ export function formatearDatosSintys(datosSintys) {
 
 }
 
-export function getPacienteSintys(nroDocumento) {
-    return new Promise((resolve, reject) => {
-        this.getPersonaSintys(nroDocumento)
-            .then((resultado) => {
-                if (resultado) {
-                    const dato = this.formatearDatosSintys(JSON.parse(resultado[1])[0]);
-                    resolve(dato);
-                }
-                resolve(null);
-            })
-            .catch((err) => {
-                reject(err);
-            });
-    });
+export async function getPacienteSintys(nroDocumento) {
+    let resultado = getPersonaSintys(nroDocumento);
+    if (resultado) {
+        return formatearDatosSintys(JSON.parse(resultado[1])[0]);
+    }
+    return null;
 }
 
 
