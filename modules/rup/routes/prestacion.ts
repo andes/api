@@ -150,13 +150,13 @@ router.get('/prestaciones/:id*?', (req, res, next) => {
         if (req.query.solicitudHasta) {
             query.where('solicitud.fecha').lte(moment(req.query.solicitudHasta).endOf('day').toDate() as any);
         }
+        //LAB
         if (req.query.prioridad) {
             query.where('solicitud.registros.valor.solicitudPrestacion.prioridad.id').equals(req.query.prioridad);
         }
         if (req.query.servicio) {
-            query.where('solicitud.registros.valor.solicitudPrestacion.servicio.conceptId').equals(req.query.servicio);
+            query.where('solicitud.registros.valor.solicitudPrestacion.servicio.id').in(Array.isArray(req.query.servicio) ? req.query.servicio : [req.query.servicio]);
         }
-        //LAB
         if (req.query.areas) {
             query.where('solicitud.registros.valor.solicitudPrestacion.practicas.area._id').in(Array.isArray(req.query.areas) ? req.query.areas : [req.query.areas] );
         }

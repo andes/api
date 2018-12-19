@@ -31,7 +31,7 @@ export let schema = new mongoose.Schema({
         // Ambito de la prestacion: ambulatorio, internacion, emergencia, etc.
         ambitoOrigen: {
             type: String,
-            required: false,
+            required: true,
             default: 'ambulatorio'
         },
 
