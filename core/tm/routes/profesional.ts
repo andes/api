@@ -52,7 +52,6 @@ router.get('/profesionales/guia', async (req, res, next) => {
         opciones['formacionGrado.profesion.codigo'] = Number(req.query.codigoProfesion);
         opciones['formacionGrado.matriculacion.matriculaNumero'] = Number(req.query.numeroMatricula);
     }
-    console.log(req.query);
     if (req.query.apellido && req.query.codigoProfesion) {
         opciones['formacionGrado.profesion.codigo'] = Number(req.query.codigoProfesion);
         opciones['apellido'] =  utils.makePattern(req.query.apellido);
@@ -68,12 +67,10 @@ router.get('/profesionales/guia', async (req, res, next) => {
         opciones['profesionalMatriculado'] = true;
 
         let datosGuia: any = await profesional.find(opciones);
-        console.log(opciones);
         let resultado = [];
 
         if (datosGuia.length > 0) {
             datosGuia.forEach(element => {
-                console.log(element);
                 resultado.push({
                     id: element.id,
                     nombre: element.nombre ? element.nombre : '',
@@ -85,7 +82,6 @@ router.get('/profesionales/guia', async (req, res, next) => {
                 });
             });
         }
-        console.log('aca', resultado);
         res.json(resultado);
     } else {
         res.json();
