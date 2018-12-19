@@ -89,23 +89,10 @@ router.get('/turnos/turnosPorDocumentos', async (req, res, errorHandler) => {
                     return errorHandler(error);
                 }
                 let data2 = data.filter((x: any) => x.profesional !== null);
-                let match = null;
 
-                for (let index = 0; index < data2.length; index++) {
-                    const element = data2[index];
+                let match = data2.length > 0 ? data2[0] : null;
 
-                    if (element.profesional.idRenovacion) {
-                        await profesional.findById(element.profesional.idRenovacion, (error2, datos: any) => {
-                            if (datos && (datos.sexo === req.query.sexo)) {
-                                match = element;
-                            }
-                            return match;
-                        });
-                    }
-                }
                 res.send(match);
-
-
             });
         }
     }
