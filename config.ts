@@ -139,7 +139,7 @@ export const modules = {
         active: true,
         path: './modules/descargas/routes',
         route: '/modules/descargas',
-        middleware: appMiddleware
+        middleware: null
     },
     obraSocial: {
         active: true,
@@ -185,6 +185,12 @@ export const modules = {
         active: true,
         path: './modules/carpetas/routes',
         route: '/modules/carpetas',
+        middleware: appMiddleware
+    },
+    vacunas: {
+        active: true,
+        path: './modules/vacunas/routes',
+        route: '/modules/vacunas',
         middleware: appMiddleware
     },
     geonode: {
@@ -235,5 +241,22 @@ export const mpi = {
         name: 0.45,
         gender: 0.3,
         birthDate: 0.15
-    }
+    },
+    // En auditoria de la pacientes le quitamos importancia al DNI ya que es frecuente que este mal ya que mpi realiza control sobre DNI y Sexo con
+    // matching muy altos.
+    cotaMatchMinAuditoria: 0.75,
+    cotaMatchMaxAuditoria: 0.85,
+    weightsAuditoriaPacientes: {
+        identity: 0.10,
+        name: 0.40,
+        gender: 0.35,
+        birthDate: 0.15
+    },
+};
+
+export const weightsVaccine = {
+    identity: 0.3,
+    name: 0.2,
+    gender: 0.3,
+    birthDate: 0.2
 };

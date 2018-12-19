@@ -14,6 +14,7 @@ const regtest = /[^a-zA-Zàáâäãåąčćęèéêëėįìíîïłńòóôöõ�
 import * as https from 'https';
 import * as configPrivate from '../../../config.private';
 import { getServicioGeonode } from '../../../utils/servicioGeonode';
+import { handleHttpRequest } from '../../../utils/requestHandler';
 
 /**
  * Crea un paciente y lo sincroniza con elastic
@@ -78,6 +79,7 @@ export function updatePaciente(pacienteObj, data, req) {
                 } else {
                     Logger.log(req, 'mpi', 'insert', pacienteObj);
                 }
+
                 EventCore.emitAsync('mpi:patient:update', pacienteObj);
                 resolve(pacienteObj);
             }).catch(error => {
@@ -137,6 +139,7 @@ export function updatePacienteMpi(pacMpi, pacAndes, req) {
                 } else {
                     Logger.log(req, 'mpi', 'insert', pacMpi);
                 }
+                EventCore.emitAsync('mpi:patient:update', pacMpi);
                 resolve(pacMpi);
             }).catch(error => {
                 return reject(error);
@@ -172,6 +175,7 @@ export function postPacienteMpi(newPatientMpi, req) {
                     Logger.log(req, 'mpi', 'elasticInsert', {
                         nuevo: newPatientMpi,
                     });
+                    EventCore.emitAsync('mpi:patient:create', newPatientMpi);
                     resolve(newPatientMpi);
                 }).catch((error) => {
                     reject(error);
@@ -290,12 +294,13 @@ export function buscarPacienteWithcondition(condition): Promise<{ db: String, pa
     });
 }
 
+
 /**
  * Matching de paciente
  *
  * @param data
  */
-export function matching(data) {
+export function matching(data): Promise<any[]> {
 
     const connElastic = new ElasticSync();
 
@@ -304,10 +309,17 @@ export function matching(data) {
         case 'simplequery':
             {
                 query = {
-                    simple_query_string: {
-                        query: '\"' + data.documento + '\" + \"' + data.apellido + '\" + \"' + data.nombre + '\" +' + data.sexo,
-                        fields: ['documento', 'apellido', 'nombre', 'sexo'],
-                        default_operator: 'and'
+                    bool: {
+                        must: {
+                            simple_query_string: {
+                                query: '\"' + data.documento + '\" + \"' + data.apellido + '\" + \"' + data.nombre + '\" +' + data.sexo,
+                                fields: ['documento', 'apellido', 'nombre', 'sexo'],
+                                default_operator: 'and'
+                            }
+                        }
+                    },
+                    filter: {
+                        term: { activo: 'true' }
                     }
                 };
             }
@@ -315,11 +327,18 @@ export function matching(data) {
         case 'multimatch':
             {
                 query = {
-                    multi_match: {
-                        query: data.cadenaInput,
-                        type: 'cross_fields',
-                        fields: ['documento', 'apellido^5', 'nombre^4'],
-                        operator: 'and'
+                    bool: {
+                        must: {
+                            multi_match: {
+                                query: data.cadenaInput,
+                                type: 'cross_fields',
+                                fields: ['documento', 'apellido^5', 'nombre^4'],
+                                operator: 'and'
+                            }
+                        },
+                        filter: {
+                            term: { activo: 'true' }
+                        }
                     }
                 };
             }
@@ -327,28 +346,45 @@ export function matching(data) {
         case 'suggest':
             {
                 // Sugiere pacientes que tengan la misma clave de blocking
-                const campo = data.claveBlocking;
-                const condicionMatch = {};
+                let campo = data.claveBlocking;
+                let filter;
+                if (campo === 'documento') {
+                    filter = data.documento;
+                } else {
+                    campo = 'claveBlocking';
+                    filter = data.claveBlocking; // Enviamos una clave de blocking (q sea la segunda lo estoy probando)
+                }
+                let condicionMatch = {};
                 condicionMatch[campo] = {
-                    query: data.documento,
+                    query: filter,
                     minimum_should_match: 3,
                     fuzziness: 2
                 };
                 query = {
-                    match: condicionMatch
+                    bool: {
+                        must: {
+                            match: condicionMatch
+                        },
+                        filter: {
+                            term: { activo: 'true' }
+                        }
+                    }
                 };
             }
             break;
     }
 
+    if (data.incluirInactivos) {
+        delete query.bool.filter;
+    }
     // Configuramos la cantidad de resultados que quiero que se devuelva y la query correspondiente
     const body = {
         size: 100,
         from: 0,
         query
     };
-
     return new Promise((resolve, reject) => {
+
         if (data.type === 'suggest') {
 
             connElastic.search(body)
@@ -373,7 +409,7 @@ export function matching(data) {
                                 documento: data.documento ? data.documento.toString() : '',
                                 nombre: data.nombre ? data.nombre : '',
                                 apellido: data.apellido ? data.apellido : '',
-                                fechaNacimiento: data.fechaNacimiento ? moment(new Date(data.fechaNacimiento)).format('YYYY-MM-DD') : '',
+                                fechaNacimiento: data.fechaNacimiento ? moment(data.fechaNacimiento).format('YYYY-MM-DD') : '',
                                 sexo: data.sexo ? data.sexo : ''
                             };
                             const pacElastic = {
@@ -383,10 +419,10 @@ export function matching(data) {
                                 fechaNacimiento: paciente2.fechaNacimiento ? moment(paciente2.fechaNacimiento).format('YYYY-MM-DD') : '',
                                 sexo: paciente2.sexo ? paciente2.sexo : ''
                             };
-                            const match = new Matching();
-                            const valorMatching = match.matchPersonas(pacElastic, pacDto, weights, config.algoritmo);
-                            paciente2['id'] = hit._id;
+                            let match = new Matching();
+                            let valorMatching = match.matchPersonas(pacElastic, pacDto, weights, config.algoritmo);
 
+                            paciente2['id'] = hit._id;
                             if (valorMatching >= porcentajeMatchMax) {
                                 listaPacientesMax.push({
                                     id: hit._id,
@@ -463,6 +499,15 @@ export function deletePacienteAndes(objectId) {
     });
 }
 
+// Borramos un paciente en la BD MPI - es necesario handlear posibles errores en la fn llamadora.
+export async function deletePacienteMpi(objectId) {
+    let query = {
+        _id: objectId
+    };
+    let pacremove = await pacienteMpi.findById(query).exec();
+    await pacremove.remove();
+}
+
 /* Funciones de operaciones PATCH */
 
 export function updateContactos(req, data) {
@@ -519,13 +564,13 @@ export function linkIdentificadores(req, data) {
 export function unlinkIdentificadores(req, data) {
     data.markModified('identificadores');
     if (data.identificadores) {
-        data.identificadores = data.identificadores.filter(x => x.valor !== req.body.dto);
+        data.identificadores = data.identificadores.filter(x => x.valor !== req.body.dto.valor);
     }
 }
 
 export function updateActivo(req, data) {
     data.markModified('activo');
-    data.activo = req.body.dto;
+    data.activo = req.body.activo;
 }
 
 export function updateRelacion(req, data) {
@@ -804,52 +849,34 @@ export async function actualizarGeoReferencia(req, data) {
         // Se carga geo referencia desde api de google
         try {
             const geoRef: any = await geoRefPaciente(req);
-            data.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
-            data.direccion[0].ubicacion.barrio = await getServicioGeonode(data.direccion[0].geoReferencia);
+            if (geoRef && geoRef.lat) {
+                data.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
+                data.direccion[0].ubicacion.barrio = await getServicioGeonode(data.direccion[0].geoReferencia);
+            }
         } catch (err) {
             return (err);
         }
     }
 }
 
-export function geoRefPaciente(dataPaciente) {
-    return new Promise((resolve, reject) => {
-        const address = dataPaciente.direccion[0].valor + ',' + dataPaciente.direccion[0].ubicacion.localidad.nombre;
-        let pathGoogleApi = '';
-        let jsonGoogle = '';
+export async function geoRefPaciente(dataPaciente) {
+    const address = dataPaciente.direccion[0].valor + ',' + dataPaciente.direccion[0].ubicacion.localidad.nombre;
+    let pathGoogleApi = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + address + ', ' + 'AR' + '&key=' + configPrivate.geoKey;
 
-        pathGoogleApi = '/maps/api/geocode/json?address=' + address + ', ' + 'AR' + '&key=' + configPrivate.geoKey;
+    pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
+    pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
+    pathGoogleApi = pathGoogleApi.replace(/é/gi, 'e');
+    pathGoogleApi = pathGoogleApi.replace(/í/gi, 'i');
+    pathGoogleApi = pathGoogleApi.replace(/ó/gi, 'o');
+    pathGoogleApi = pathGoogleApi.replace(/ú/gi, 'u');
+    pathGoogleApi = pathGoogleApi.replace(/ü/gi, 'u');
+    pathGoogleApi = pathGoogleApi.replace(/ñ/gi, 'n');
 
-        pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
-        pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
-        pathGoogleApi = pathGoogleApi.replace(/é/gi, 'e');
-        pathGoogleApi = pathGoogleApi.replace(/í/gi, 'i');
-        pathGoogleApi = pathGoogleApi.replace(/ó/gi, 'o');
-        pathGoogleApi = pathGoogleApi.replace(/ú/gi, 'u');
-        pathGoogleApi = pathGoogleApi.replace(/ü/gi, 'u');
-        pathGoogleApi = pathGoogleApi.replace(/ñ/gi, 'n');
-
-        const optionsgetmsg = {
-            host: 'maps.googleapis.com',
-            port: 443,
-            path: pathGoogleApi,
-            method: 'GET',
-            rejectUnauthorized: false
-        };
-        const reqGet = https.request(optionsgetmsg, (res2) => {
-            res2.on('data', (d, error) => {
-                jsonGoogle = jsonGoogle + d.toString();
-            });
-            res2.on('end', () => {
-                const salida = JSON.parse(jsonGoogle);
-                if (salida.status === 'OK') {
-                    return resolve(salida.results[0].geometry.location);
-                } else {
-                    return resolve({});
-                }
-            });
-        });
-        reqGet.end();
-    });
+    const [status, body] = await handleHttpRequest(pathGoogleApi);
+    const salida = JSON.parse(body);
+    if (salida.status === 'OK') {
+        return salida.results[0].geometry.location;
+    } else {
+        return {};
+    }
 }
-

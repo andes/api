@@ -533,6 +533,44 @@ export class Documento {
         return css;
     }
 
+
+    private static async generarConstanciaPuco(req) {
+        let html = fs.readFileSync(path.join(__dirname, '../../../templates/puco/constancia.html'), 'utf8');
+
+        // logo header
+        let headerConstancia = fs.readFileSync(path.join(__dirname, '../../../templates/puco/img/header-puco.jpg'));
+
+        // HEADER
+        html = html
+            .replace('<!--logoHeader-->', `<img class="logoHeader" src="data:image/jpg;base64,${headerConstancia.toString('base64')}">`);
+
+        // BODY
+        let fechaActual = moment(new Date());
+        html = html
+            .replace('<!--nombre-->', req.body.nombre)
+            .replace('<!--dni-->', req.body.dni)
+            .replace('<!--financiador-->', req.body.codigoFinanciador + ' ' + req.body.financiador)
+            .replace('<!--añoActual-->', fechaActual.format('YYYY'))
+            .replace('<!--fechaActual-->', fechaActual.format('DD [de] MMMM [de] YYYY'));
+
+        return html;
+    }
+
+    private static generarCssPuco() {
+        let scssFile = path.join(__dirname, '../../../templates/puco/constancia.scss');
+
+        // Se agregan los estilos
+        let css = '<style>\n\n';
+
+        // SCSS => CSS
+        css += scss.renderSync({
+            file: scssFile
+        }).css;
+        css += '</style>';
+        return css;
+    }
+
+
     /**
      *
      * @param req ExpressJS request
@@ -589,15 +627,55 @@ export class Documento {
 
                             resolve(file.filename);
 
-                            // resolve('/tmp/test.pdf');
-
                         });
                     });
                     break;
-
             }
-
         });
     }
 
+
+    // Descarga/imprime constancia solicitada desde pantalla de consulta de padrones PUCO
+    static descargarDocPuco(req, res, next, options = null) {
+        return new Promise((resolve, reject) => {
+
+            switch (req.params.tipo) {
+                case 'pdf':
+                    // PhantomJS PDF rendering options
+                    // https://www.npmjs.com/package/html-pdf
+                    // http://phantomjs.org/api/webpage/property/paper-size.html
+                    let phantomPDFOptions: pdf.CreateOptions = {
+                        format: 'A4',
+                        border: {
+                            // default is 0, units: mm, cm, in, px
+                            top: '0cm',
+                            right: '0cm',
+                            bottom: '0cm',
+                            left: '0cm'
+                        },
+                        header: {
+                            top: '0cm',
+                            height: '0cm'
+                        },
+                        footer: {
+                            height: '1cm',
+                            contents: {}
+                        }
+                    };
+
+                    this.options = options || phantomPDFOptions;
+
+                    this.generarConstanciaPuco(req).then(htmlPDF => {
+                        htmlPDF = htmlPDF + this.generarCssPuco();
+                        pdf.create(htmlPDF, this.options).toFile((err2, file): any => {
+                            if (err2) {
+                                reject(err2);
+                            }
+                            resolve(file.filename);
+                        });
+                    });
+                    break;
+            }
+        });
+    }
 }
