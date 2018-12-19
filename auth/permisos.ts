@@ -321,6 +321,11 @@ export default [
         ]
     },
     {
+        key: 'auditoriaPacientes',
+        title: 'Auditoria Pacientes',
+        comment: '',
+        child: []
+    }, {
         key: 'espaciosFisicos',
         title: 'Edición de espacios físicos',
         child: [
