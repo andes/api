@@ -314,6 +314,17 @@ export default [
         title: 'Prestamo de Carpetas',
         child: [
         ]
-    }
+    },
+    {
+        key: 'auditoriaPacientes',
+        title: 'Auditoria Pacientes',
+        comment: '',
+        child: []
+    }, {
+        key: 'espaciosFisicos',
+        title: 'Edición de espacios físicos',
+        child: [
+        ]
+    },
 
 ];

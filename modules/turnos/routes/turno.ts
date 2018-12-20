@@ -156,17 +156,12 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
  */
 router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res, next) => {
     const continues = ValidateDarTurno.checkTurno(req.body);
-    const pacienteTurno = req.body.paciente;
+    // const pacienteTurno = req.body.paciente;
     if (continues.valid) {
         let agendaRes;
         try {
-            // Si el paciente no tiene carpetas, se busca en la colección carpetaPaciente y en  MPI
-            if (!pacienteTurno.carpetaEfectores || pacienteTurno.carpetaEfectores.length === 0) {
-                const pacienteMPI = await controller.buscarPaciente(req.body.paciente.id) as any;
-                const carpetas = await getCarpeta(req.body.paciente.documento, (req as any).user.organizacion._id);
-                await turnosController.actualizarCarpeta(req, res, next, pacienteMPI, carpetas);
-                pacienteTurno.carpetaEfectores = req.body.carpetaEfectores;
-            }
+            await getPaciente(req.body.paciente.id);
+            await getTipoPrestacion(req.body.tipoPrestacion._id);
             agendaRes = await getAgenda(req.params.idAgenda);
 
         } catch (err) {
@@ -272,7 +267,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         update[etiquetaEstado] = 'asignado';
         update[etiquetaPrestacion] = req.body.tipoPrestacion;
         // update[etiquetaPaciente] = req.body.paciente;
-        update[etiquetaPaciente] = pacienteTurno;
+        update[etiquetaPaciente] = req.body.paciente;
 
         update[etiquetaTipoTurno] = tipoTurno;
         update[etiquetaNota] = req.body.nota;
