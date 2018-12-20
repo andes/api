@@ -1,3 +1,4 @@
+import { Practica } from './../schemas/practica';
 import { Types } from 'mongoose';
 import { model as prestacion } from '../../../../modules/rup/schemas/prestacion';
 import { toArray } from '../../../../utils/utils';
@@ -70,7 +71,7 @@ export async function getResultadosAnteriores(idPaciente, conceptIdPractica) {
                 unidadMedida: '$ejecucion.registros.valor.unidadMedida.term'
             }
         },
-        { $sort : { fecha : -1 } }
+        { $sort: { fecha: -1 } }
     ];
 
     let res = await toArray(prestacion.aggregate(pipeline).cursor({}).exec());
@@ -81,4 +82,41 @@ export async function getResultadosAnteriores(idPaciente, conceptIdPractica) {
         resultadosAnteriores.push(r.resultadoAnterior);
     });
     return resultadosAnteriores;
+}
+
+export async function getPracticasCobasC311() {
+    const conceptosCobas = ['166849007', '63571001', '89659001', '313849004'];
+    let pipeline = [
+        {
+            $match: {
+                'ejecucion.registros.concepto.conceptId': { $in: conceptosCobas }
+            }
+        },
+        {
+            $addFields: {
+                numeroProtocolo: {
+                    $reduce: {
+                        input: '$solicitud.registros.valor.solicitudPrestacion.numeroProtocolo.numeroCompleto',
+                        initialValue: '',
+                        in: { $concat: ['$$value', '$$this'] }
+                    }
+                }
+            }
+        },
+        {
+            $project: {
+                numeroProtocolo: '$numeroProtocolo',
+                registros: {
+                    $filter: {
+                        input: '$ejecucion.registros',
+                        as: 'registro',
+                        cond: { $in: ['$$registro.concepto.conceptId', conceptosCobas] }
+                    }
+                }
+            }
+        }
+    ];
+
+    let res = await toArray(prestacion.aggregate(pipeline).cursor({}).exec());
+    return res;
 }
