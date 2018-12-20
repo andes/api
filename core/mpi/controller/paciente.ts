@@ -309,17 +309,10 @@ export function matching(data): Promise<any[]> {
         case 'simplequery':
             {
                 query = {
-                    bool: {
-                        must: {
-                            simple_query_string: {
-                                query: '\"' + data.documento + '\" + \"' + data.apellido + '\" + \"' + data.nombre + '\" +' + data.sexo,
-                                fields: ['documento', 'apellido', 'nombre', 'sexo'],
-                                default_operator: 'and'
-                            }
-                        }
-                    },
-                    filter: {
-                        term: { activo: 'true' }
+                    simple_query_string: {
+                        query: '\"' + data.documento + '\" + \"' + data.apellido + '\" + \"' + data.nombre + '\" +' + data.sexo,
+                        fields: ['documento', 'apellido', 'nombre', 'sexo'],
+                        default_operator: 'and'
                     }
                 };
             }
