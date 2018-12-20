@@ -31,11 +31,7 @@ const _schema = new mongoose.Schema({
     fechaAlta: Date,
     fechaBaja: Date,
     unidadesOrganizativas: [SnomedConcept],
-    prefijosLab: {
-        nivel : String,
-        prefijo : String,
-        sisaRefes : String
-    }
+    prefijo : String
 
 });
 const audit = require('../../../mongoose/audit');
