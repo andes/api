@@ -25,7 +25,7 @@ router.get('/noticias/:name', async (req, res) => {
                     }
                     const tw = {
                         id: item.id_str,
-                        fecha: moment(item.created_at, 'ddd MMM DD HH:mm:ss ZZ YYYY'),
+                        fecha: moment(item.created_at, 'ddd MMM DD HH:mm:ss ZZ YYYY', 'en'),
                         text,
                         hashtags: item.entities.hashtags ? item.entities.hashtags.map(i => i.text) : [],
                         urls: item.entities.urls ? item.entities.urls.map(i => i.expanded_url) : [],
