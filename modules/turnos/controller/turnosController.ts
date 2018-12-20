@@ -196,6 +196,9 @@ export async function getHistorialPaciente(req) {
                         },
                         turno: {
                             $first: '$bloques.turnos'
+                        },
+                        espacioFisico: {
+                            $first: '$espacioFisico'
                         }
                     }
                 },
@@ -252,6 +255,9 @@ export async function getHistorialPaciente(req) {
                         },
                         turno: {
                             $first: '$sobreturnos'
+                        },
+                        espacioFisico: {
+                            $first: '$espacioFisico'
                         }
                     }
                 },
@@ -273,6 +279,7 @@ export async function getHistorialPaciente(req) {
                 turno.organizacion = elem.organizacion;
                 turno.profesionales = elem.profesionales;
                 turno.paciente = elem.turno.paciente;
+                turno.espacioFisico = elem.espacioFisico;
                 turnos.push(turno);
             });
             return (turnos);
