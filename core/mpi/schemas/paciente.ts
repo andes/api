@@ -113,6 +113,8 @@ pacienteSchema.virtual('vinculos').get(function () {
     if (this.identificadores) {
         let identificadores = this.identificadores.filter(i => i.entidad === 'ANDES').map(i => ObjectId(i.valor));
         return [this._id, ...identificadores];
+    } else {
+        return [this._id];
     }
     return [];
 });

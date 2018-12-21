@@ -245,8 +245,8 @@ export function buscarPacByDocYSexo(documento, sexo): Promise<{ db: String, paci
             estado: 'validado' // Analizar
         };
         Promise.all([
-            paciente.find(query),
-            pacienteMpi.find(query)
+            paciente.find(query).exec(),
+            pacienteMpi.find(query).exec()
         ]).then(values => {
             let lista = [];
             lista = [...values[0], ...values[1]];
@@ -309,17 +309,10 @@ export function matching(data): Promise<any[]> {
         case 'simplequery':
             {
                 query = {
-                    bool: {
-                        must: {
-                            simple_query_string: {
-                                query: '\"' + data.documento + '\" + \"' + data.apellido + '\" + \"' + data.nombre + '\" +' + data.sexo,
-                                fields: ['documento', 'apellido', 'nombre', 'sexo'],
-                                default_operator: 'and'
-                            }
-                        }
-                    },
-                    filter: {
-                        term: { activo: 'true' }
+                    simple_query_string: {
+                        query: '\"' + data.documento + '\" + \"' + data.apellido + '\" + \"' + data.nombre + '\" +' + data.sexo,
+                        fields: ['documento', 'apellido', 'nombre', 'sexo'],
+                        default_operator: 'and'
                     }
                 };
             }
@@ -787,6 +780,42 @@ export async function matchPaciente(dataPaciente) {
 }
 
 /**
+ *  Devuelve true si el paciente ya existe en ANDES
+ *
+ * @param {*} nuevoPaciente
+ * @returns Promise<boolean> || error
+ */
+export async function checkRepetido(nuevoPaciente): Promise<boolean> {
+    let matchingInputData = {
+        type: 'suggest',
+        claveBlocking: 'documento',
+        percentage: true,
+        apellido: nuevoPaciente.apellido,
+        nombre: nuevoPaciente.nombre,
+        documento: nuevoPaciente.documento,
+        sexo: ((typeof nuevoPaciente.sexo === 'string')) ? nuevoPaciente.sexo : (Object(nuevoPaciente.sexo).id),
+        fechaNacimiento: nuevoPaciente.fechaNacimiento
+    };
+
+    let resultadoMatching = await matching(matchingInputData);  // Handlear error en funcion llamadora
+    // Filtramos al mismo paciente
+    resultadoMatching = resultadoMatching.filter(elem => elem.paciente.id !== nuevoPaciente._id);
+    // Si el nuevo paciente está validado, filtramos los candidatos temporales
+    if (nuevoPaciente.estado === 'validado') {
+        resultadoMatching = resultadoMatching.filter(elem => elem.paciente.estado === 'validado');
+    }
+    // La condición verifica que el matching no de superior a la cota maxima y que el nuevo paciente no coincida en dni y sexo con alguno ya existente
+    let cond = false;
+    if (resultadoMatching && resultadoMatching.length > 0) {
+        cond = (resultadoMatching.filter(element => element.match > config.mpi.cotaMatchMax).length > 0);
+        cond = cond || resultadoMatching.filter(element =>
+            (element.paciente.sexo === matchingInputData.sexo && element.paciente.documento === matchingInputData.documento)
+        ).length > 0;
+    }
+    return cond;
+}
+
+/*
  * Intenta validar un paciente con fuentes auténticas.
  * Devuelve el paciente, validado o no
  *
