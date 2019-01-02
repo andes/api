@@ -274,14 +274,14 @@ export function federar(patientFhir) {
         system: 'urn:oid:2.16.840.1.113883.2.10.35',
         value: id
     },
-    {
-        system: 'http://www.renaper.gob.ar/dni',
-        value: doc
-    }];
+        {
+            system: 'http://www.renaper.gob.ar/dni',
+            value: doc
+        }];
     patientFhir['identifier'] = identificadores;
     delete patientFhir['active'];
-    let nombre = patientFhir.name[0].given.join().replace(',', ' ');
-    let apellido = (patientFhir.name[0].family.join().replace(',', ' ')).trim();
+    let nombre = patientFhir.name[0].given.replace(',', ' ');
+    let apellido = (patientFhir.name[0].family.replace(',', ' ')).trim();
     let texto = nombre + ' ' + apellido;
     texto = texto.trim();
     let name: any = [
