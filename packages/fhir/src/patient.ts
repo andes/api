@@ -253,6 +253,68 @@ export function decode(patient) {
  * Verify if a patient has a FHIR format
  * @param {*} patient
  */
+/**
+ * Convierte un paciente Fhir a un paciente federado
+ * @param {} patientFhir
+ */
+export function federar(patientFhir) {
+    let id;
+    let doc;
+    for (let i = 0; i < (patientFhir.identifier).length; i++) {
+        switch (patientFhir.identifier[i].assigner) {
+            case 'andes':
+                id = patientFhir.identifier[i].value;
+                break;
+            case 'DU':
+                doc = patientFhir.identifier[i].value;
+                break;
+        }
+    }
+    let identificadores: any = [{
+        system: 'urn:oid:2.16.840.1.113883.2.10.35',
+        value: id
+    },
+    {
+        system: 'http://www.renaper.gob.ar/dni',
+        value: doc
+    }];
+    patientFhir['identifier'] = identificadores;
+    delete patientFhir['active'];
+    let nombre = patientFhir.name[0].given.join().replace(',', ' ');
+    let apellido = (patientFhir.name[0].family.join().replace(',', ' ')).trim();
+    let texto = nombre + ' ' + apellido;
+    texto = texto.trim();
+    let name: any = [
+        {
+            text: texto,
+            family: apellido,
+            _family: {
+                extension: [
+                    {
+                        url: 'http://hl7.org/fhir/StructureDefinition/humanname-fathers-family',
+                        valueString: apellido
+                    },
+                ]
+            },
+            given: [
+                nombre
+            ]
+        }
+    ];
+    patientFhir['name'] = name;
+    patientFhir['birthDate'] = new Date(patientFhir['birthDate']).toISOString().slice(0, 10);
+    delete patientFhir['deceasedDateTime'];
+    delete patientFhir['maritalStatus'];
+    delete patientFhir['photo'];
+    delete patientFhir['address'];
+    delete patientFhir['contact'];
+    let contactos = patientFhir['telecom'] ? patientFhir['telecom'] : [];
+    if (contactos.length > 0) {
+        contactos.splice(1, contactos.length);
+    }
+    return patientFhir;
+}
+
 export function verify(patient) {
     let respuesta = true;
     let fieldVerified = Object.keys(patient).every(pacienteFHIRFields);
