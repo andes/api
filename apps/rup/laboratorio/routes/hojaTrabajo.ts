@@ -6,7 +6,11 @@ import { Auth } from '../../../../auth/auth.class';
 let router = express.Router();
 
 router.get('/hojatrabajo', async (req, res, next) => {
-    HojaTrabajo.find({ laboratorio: req.query.organizacion }).then((hojas: any[]) => {
+    let query: any = { laboratorio: req.query.organizacion };
+    if (req.query.area) {
+        query['area.id'] = req.query.area;
+    }
+    HojaTrabajo.find(query).then((hojas: any[]) => {
         res.json(hojas);
     });
 });
