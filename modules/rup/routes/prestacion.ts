@@ -482,6 +482,17 @@ router.get('/prestaciones/:id*?', async (req, res, next) => {
             if (req.params.id && !data) {
                 return next(404);
             }
+            if (data) {
+                for (let i = 0; i < data.length; i++) {
+                    if (data[i].ejecucion.registros) {
+                        for (let j = 0; j < data[i].ejecucion.registros.length; j++) {
+                            if (data[i].ejecucion.registros[j].privacy.scope === 'private' && Auth.getProfesional(req).id.toString() !== data[i].solicitud.profesional.id.toString()) {
+                                data[i].ejecucion.registros.splice(j, 1);
+                            }
+                        }
+                    }
+                }
+            }
             res.json(data);
         });
     }
