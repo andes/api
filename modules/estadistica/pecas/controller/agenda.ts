@@ -68,7 +68,7 @@ export async function consultaPecas(start, end, done) {
     };
     try {
         const agendas = agendaModel.aggregate([
-         { $match: match },
+            { $match: match },
         ]).cursor({ batchSize: 100 }).exec();
         await agendas.eachAsync(async (a, error) => {
             if (error) {
@@ -128,7 +128,7 @@ async function auxiliar(a: any, b: any, t: any) {
         turno.DNI = turnoConPaciente ? Number(t.paciente.documento) : null;
         turno.Apellido = turnoConPaciente ? t.paciente.apellido : null;
         turno.Apellido = turnoConPaciente ? turno.Apellido.toString().replace('\'', '\'\'') : null;
-        turno.Nombres = turnoConPaciente ? t.paciente.nombre : null;
+        turno.Nombres = turnoConPaciente ? t.paciente.nombre.toString().replace('\'', '\'\'') : null;
         const carpetas = turnoConPaciente ? t.paciente.carpetaEfectores.filter(x => String(x.organizacion._id) === String(a.organizacion._id)) : [];
         if (Array(carpetas).length > 0) {
             turno.HC = carpetas[0] ? (carpetas[0] as any).nroCarpeta : null;
