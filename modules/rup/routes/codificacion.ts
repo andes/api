@@ -50,8 +50,7 @@ router.get('/codificacion/:id?', async (req, res, next) => {
         const unaCodificacion = await codificacion.findById(req.params.id);
         res.json(unaCodificacion);
     } else {
-        let query;
-        query = codificacion.find({});
+        let query = codificacion.find({});
         if (req.query.fechaDesde) {
             query.where('createdAt').gte(req.query.fechaDesde);
         }
