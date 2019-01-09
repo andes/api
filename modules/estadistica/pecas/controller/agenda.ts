@@ -142,7 +142,7 @@ async function auxiliar(a: any, b: any, t: any) {
         }
         turno.codSexo = turnoConPaciente ? String(t.paciente.sexo) === 'femenino' ? String(2) : String(1) : null;
         turno.Sexo = turnoConPaciente ? t.paciente.sexo : null;
-        turno.FechaNacimiento = (turnoConPaciente && t.paciente.fechaNacimiento ? moment(t.paciente.fechaNacimiento).format('YYYYMMDD') : '');
+        turno.FechaNacimiento = (turnoConPaciente && t.paciente.fechaNacimiento && moment(t.paciente.fechaNacimiento).year() > 1900) ? moment(t.paciente.fechaNacimiento).format('YYYYMMDD') : '';
         const objectoEdad = (t.paciente && turno.FechaNacimiento) ? calcularEdad(t.paciente.fechaNacimiento) : null;
 
         turno.Edad = t.paciente && turno.fechaNacimiento ? objectoEdad.valor : null;
