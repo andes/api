@@ -8,6 +8,10 @@ import { Auth } from './../../../auth/auth.class';
 import { EventCore } from '@andes/event-bus';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
+import { matchSisa } from 'utils/servicioSisa';
+import { getServicioRenaper } from 'utils/servicioRenaper';
+
+const regtest = /[^a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ ']+/;
 
 /**
  * Crea un paciente y lo sincroniza con elastic
@@ -738,19 +742,76 @@ export async function checkRepetido(nuevoPaciente): Promise<any> {
     };
 
     let resultadoMatching = await matching(matchingInputData);  // Handlear error en funcion llamadora
-    // Filtramos al mismo paciente
-    resultadoMatching = resultadoMatching.filter(elem => elem.paciente.id !== nuevoPaciente._id);
+    // Filtramos al propio paciente y a los resultados por debajo de la cota minima
+    resultadoMatching = resultadoMatching.filter(elem => (elem.paciente.id !== nuevoPaciente._id) && (elem.match > config.mpi.cotaMatchMin));
+    // Extraemos los validados de los resultados
+    let similaresValidados = resultadoMatching.filter(elem => elem.paciente.estado === 'validado');
     // Si el nuevo paciente está validado, filtramos los candidatos temporales
     if (nuevoPaciente.estado === 'validado') {
-        resultadoMatching = resultadoMatching.filter(elem => elem.paciente.estado === 'validado');
+        resultadoMatching = similaresValidados;
     }
     // La condición verifica que el matching no de superior a la cota maxima y que el nuevo paciente no coincida en dni y sexo con alguno ya existente
 
     let macheoAlto = (resultadoMatching.filter(element => element.match > config.mpi.cotaMatchMax).length > 0);
-    let dniRepetido = resultadoMatching.filter(element =>
-        (element.paciente.sexo === matchingInputData.sexo && element.paciente.documento === matchingInputData.documento)
+    let dniRepetido = similaresValidados.filter(element =>
+        (element.paciente.sexo.toString() === matchingInputData.sexo.toString() && element.paciente.documento.toString() === matchingInputData.documento.toString())
     ).length > 0;
+    // TODO: es necesario loguear matcheo alto???? loguear si es necesario.
 
-    return { resultadoMatching, macheoAlto, dniRepetido };
+    return { resultadoMatching, dniRepetido, macheoAlto };
 }
 
+/**
+ * Intenta validar un paciente con fuentes auténticas.
+ * Devuelve el paciente, validado o no
+ *
+ * @param {*} pacienteAndes
+ * @returns Object Paciente
+ */
+export async function validarPaciente(pacienteAndes) {
+
+    let sexoRenaper = pacienteAndes.sexo === 'masculino' ? 'M' : 'F';
+    let resRenaper: any;
+    try {
+        resRenaper = await getServicioRenaper({ documento: pacienteAndes.documento, sexo: sexoRenaper });
+    } catch (error) {
+        return await validarSisa(pacienteAndes);
+    }
+    let band = true;
+    // Respuesta correcta de renaper?
+    if (resRenaper && resRenaper.datos && resRenaper.datos.nroError === 0) {
+        let pacienteRenaper = resRenaper.datos;
+        band = regtest.test(pacienteRenaper.nombres);
+        band = band || regtest.test(pacienteRenaper.apellido);
+        if (!band) {
+            pacienteAndes.nombre = pacienteRenaper.nombres;
+            pacienteAndes.apellido = pacienteRenaper.apellido;
+            pacienteAndes.fechaNacimiento = new Date(pacienteRenaper.fechaNacimiento);
+            pacienteAndes.cuil = pacienteRenaper.cuil;
+            pacienteAndes.estado = 'validado';
+            pacienteAndes.foto = pacienteRenaper.foto;
+        }
+        return pacienteAndes;
+    }
+    // Respuesta erronea de renaper o test regex fallido?
+    if (!resRenaper || (resRenaper && resRenaper.datos && resRenaper.datos.nroError !== 0) || band) {
+        return await validarSisa(pacienteAndes);
+    }
+}
+
+async function validarSisa(pacienteAndes: any) {
+    try {
+        let resSisa: any = await matchSisa(pacienteAndes);
+        let porcentajeMatcheo = resSisa.matcheos.matcheo;
+        if (porcentajeMatcheo > 95) {
+            pacienteAndes.nombre = resSisa.matcheos.datosPaciente.nombre;
+            pacienteAndes.apellido = resSisa.matcheos.datosPaciente.apellido;
+            pacienteAndes.fechaNacimiento = resSisa.matcheos.datosPaciente.fechaNacimiento;
+            pacienteAndes.estado = 'validado';
+        }
+        return pacienteAndes;
+    } catch (error) {
+        // no hacemos nada con el paciente
+        return pacienteAndes;
+    }
+}
