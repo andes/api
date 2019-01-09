@@ -76,18 +76,23 @@ export async function consultaPecas(start, end, done) {
                 return (error);
             }
             const promises = [];
-            // Se recorren los turnos dentro de los bloques
-            a.bloques.forEach(b => {
-                b.turnos.forEach(t => {
-                    const p = auxiliar(a, b, t);
+            // Se recorren los turnos
+            for (let i = 0; i < a.bloques.length; i++) {
+                let b = a.bloques[i];
+                for (let j = 0; j < b.turnos.length; j++) {
+                    let t = a.bloques[i].turnos[j];
+                    let p = await auxiliar(a, b, t);
                     promises.push(p);
-                });
-            });
+                }
+            }
+
             // Se recorren los sobreturnos
-            a.sobreturnos.forEach(t => {
-                const p = auxiliar(a, null, t);
+
+            for (let i = 0; i < a.sobreturnos.length; i++) {
+                let t = a.sobreturnos[i];
+                let p = await auxiliar(a, null, t);
                 promises.push(p);
-            });
+            }
             return await Promise.all(promises);
         });
         done();
