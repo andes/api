@@ -769,7 +769,9 @@ export async function checkRepetido(nuevoPaciente): Promise<any> {
  * @returns Object Paciente
  */
 export async function validarPaciente(pacienteAndes) {
-
+    if (pacienteAndes.sexo === 'otro') {
+        return pacienteAndes;
+    }
     let sexoRenaper = pacienteAndes.sexo === 'masculino' ? 'M' : 'F';
     let resRenaper: any;
     try {
