@@ -349,7 +349,7 @@ async function auxiliar(a: any, b: any, t: any) {
         }
 
         // se verifica si existe el turno en sql
-        let queryInsert = 'INSERT INTO dbo.Pecas_consolidado_2' +
+        let queryInsert = 'INSERT INTO ' + configPrivate.conSqlPecas.table.pecasTable +
             '(idEfector, Efector, TipoEfector, DescTipoEfector, IdZona, Zona, SubZona, idEfectorSuperior, EfectorSuperior, AreaPrograma, ' +
             'idAgenda, FechaAgenda, HoraAgenda, estadoAgenda, numeroBloque, turnosProgramados, turnosProfesional, turnosLlaves, turnosDelDia, ' +
             'idTurno, estadoTurno, tipoTurno, sobreturno, FechaConsulta, HoraTurno, Periodo, Tipodeconsulta, estadoTurnoAuditoria, Principal, ConsC2, ConsObst, tipoPrestacion, ' +
@@ -404,14 +404,14 @@ async function auxiliar(a: any, b: any, t: any) {
 async function existeTurnoPecas(turno: any) {
     const result = await new sql.Request(poolTurnos)
         .input('idTurno', sql.VarChar(50), turno)
-        .query('SELECT idTurno FROM dbo.Pecas_consolidado_2 WHERE idTurno = @idTurno');
+        .query(`SELECT idTurno FROM ${configPrivate.conSqlPecas.table.pecasTable}  WHERE idTurno = @idTurno`);
     return result;
 }
 
 async function eliminaTurnoPecas(turno: any) {
     const result = await new sql.Request(poolTurnos)
         .input('idTurno', sql.VarChar(50), turno)
-        .query('DELETE FROM dbo.Pecas_consolidado_2 WHERE idTurno = @idTurno');
+        .query(`DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE idTurno = @idTurno`);
     return result;
 }
 
