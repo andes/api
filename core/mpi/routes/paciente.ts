@@ -570,14 +570,15 @@ router.post('/pacientes', async (req, res, next) => {
         return next(403);
     }
     try {
-        if (req.body.documento && !req.body.ignorarRepetidos) {
+        if (req.body.documento) {
+            // Todo loguear posible duplicado si ignora el check
             let resultado = await controller.checkRepetido(req.body);
-            if (resultado) {
-                return res.json(resultado);
-            } else {
+            if (!resultado || (resultado && req.body.ignoreCheck && !resultado.macheoAlto && !resultado.dniRepetido)) {
                 req.body.activo = true;
                 let pacienteObj = await controller.createPaciente(req.body, req);
                 return res.json(pacienteObj);
+            } else {
+                return res.json(resultado);
             }
         } else {
             req.body.activo = true;
@@ -633,10 +634,10 @@ router.put('/pacientes/:id', async (req, res, next) => {
         _id: objectId
     };
     try {
+        // Todo loguear posible duplicado si ignora el check
+
         let resultado = await controller.checkRepetido(req.body);
-        if (resultado) {
-            return res.json(resultado);
-        } else {
+        if (resultado.length === 0 || (resultado.length > 0 && req.body.ignoreCheck && !resultado.macheoAlto && !resultado.dniRepetido)) {
 
             let patientFound: any = await paciente.findById(query).exec();
             if (patientFound) {
@@ -677,6 +678,8 @@ router.put('/pacientes/:id', async (req, res, next) => {
                 }
                 res.json(nuevoPac);
             }
+        } else {
+            return res.json(resultado);
         }
     } catch (error) {
         return next(error);
