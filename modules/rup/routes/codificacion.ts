@@ -44,14 +44,16 @@ router.patch('/codificacion/:id', async (req, res, next) => {
 });
 
 
-router.get('/codificacion/:id?', async (req, res, next) => {
-
+router.get('/codificacion/:id?', async (req: any, res, next) => {
     if (mongoose.Types.ObjectId.isValid(req.params.id)) {
         const unaCodificacion = await codificacion.findById(req.params.id);
         res.json(unaCodificacion);
     } else {
         let query;
         query = codificacion.find({});
+        if (req.user.organizacion && req.user.organizacion.id) {
+            query.where('createdBy.organizacion._id').equals(req.user.organizacion.id);
+        }
         if (req.query.fechaDesde) {
             query.where('createdAt').gte(req.query.fechaDesde);
         }
@@ -61,9 +63,19 @@ router.get('/codificacion/:id?', async (req, res, next) => {
         if (req.query.auditadas === false) {
             query.where('diagnostico.codificaciones.codificacionAuditoria.codigo').exists(false);
         }
-        query.exec((err, data) => {
+
+        query.exec(async (err, data: any) => {
             if (err) {
                 return next(err);
+            }
+            const cantidad = data.length;
+            if (cantidad > 0) {
+                for (let i = 0; i < cantidad; i++) {
+                    let objeto = { ...data[i] }._doc;
+                    let unaPrestacion = await prestacion.model.findById(data[i].idPrestacion);
+                    objeto.prestacion = (unaPrestacion as any).solicitud.tipoPrestacion ? (unaPrestacion as any).solicitud.tipoPrestacion.term : null;
+                    data[i] = objeto;
+                }
             }
             res.json(data);
         });
