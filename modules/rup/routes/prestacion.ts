@@ -409,17 +409,29 @@ router.get('/prestaciones/:id*?', async (req, res, next) => {
         if (req.query.solicitudHasta) {
             query.where('solicitud.fecha').lte(moment(req.query.solicitudHasta).endOf('day').toDate() as any);
         }
-        // Solicitudes generadas desde puntoInicio Ventanilla
-        // Solicitudes que no tienen prestacionOrigen ni turno
-        // Si tienen prestacionOrigen son generadas por RUP y no se listan
-        // Si tienen turno, dejan de estar pendientes de turno y no se listan
 
-        if (req.query.tienePrestacionOrigen === 'no') {
-            query.where('solicitud.prestacionOrigen').equals(null);
+
+        if (req.query.tienePrestacionOrigen !== undefined) {
+            if (req.query.tienePrestacionOrigen === true) {
+                query.where('solicitud.prestacionOrigen').ne(null);
+            }
+            if (req.query.tienePrestacionOrigen === false) {
+                query.where('solicitud.prestacionOrigen').equals(null);
+            }
         }
 
-        if (req.query.tieneTurno === 'no') {
-            query.where('solicitud.turno').equals(null);
+
+        if (req.query.tieneTurno !== undefined) {
+            if (req.query.tieneTurno === true) {
+                query.where('solicitud.turno').ne(null);
+            }
+            if (req.query.tieneTurno === false) {
+                query.where('solicitud.turno').equals(null);
+            }
+        }
+
+        if (req.query.tipoPrestaciones) {
+            query.where({ 'solicitud.tipoPrestacion.conceptId': { $in: req.query.tipoPrestaciones } });
         }
 
         if (req.query.organizacion) {
