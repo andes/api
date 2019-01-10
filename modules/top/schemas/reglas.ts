@@ -1,6 +1,7 @@
 import * as mongoose from 'mongoose';
 import { SnomedConcept } from '../../rup/schemas/snomed-concept';
 import { SemanticTag } from '../../rup/schemas/semantic-tag';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 let reglasSchema = new mongoose.Schema({
     origen: {
@@ -33,6 +34,7 @@ let reglasSchema = new mongoose.Schema({
         }
     }
 });
-
-let model = mongoose.model('reglas', reglasSchema, 'reglas');
+// Habilitar plugin de auditoría
+reglasSchema.plugin(AuditPlugin);
+const model = mongoose.model('reglas', reglasSchema, 'reglas');
 export = model;

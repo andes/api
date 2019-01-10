@@ -5,15 +5,11 @@ import { Patient } from './class/Patient';
 import { Organization } from './class/Organization';
 import { Author } from './class/Author';
 import { Body, Component, ImageComponent } from './class/Body';
-import {
-    CDABuilder
-} from './builder/CdaBuilder';
-
+import { CDABuilder } from './builder/CdaBuilder';
 import * as base64_stream from 'base64-stream';
 import { makeFs } from '../schemas/CDAFiles';
 import * as Stream from 'stream';
 import * as moment from 'moment';
-
 import { CDA as CDAConfig } from '../../../config.private';
 import { configuracionPrestacionModel } from './../../../core/term/schemas/configuracionPrestacion';
 import { Auth } from '../../../auth/auth.class';
@@ -439,14 +435,12 @@ export async function CDAExists(id, fecha, orgId) {
  * listado de CDA por paciente y tipo de prestación
  */
 
-export function searchByPatient(pacienteId, prestacion, {
-    limit,
-    skip
-}): Promise<any[]> {
+export function searchByPatient(pacienteId, prestacion, { limit, skip }): Promise<any[]> {
     return new Promise(async (resolve, reject) => {
+        let ids = Array.isArray(pacienteId) ? pacienteId : [mongoose.Types.ObjectId(pacienteId)];
         const CDAFiles = makeFs();
         const conditions: any = {
-            'metadata.paciente': mongoose.Types.ObjectId(pacienteId),
+            'metadata.paciente': { $in: ids },
             'metadata.cdaId': { $exists: false }
         };
         if (prestacion) {
@@ -508,8 +502,8 @@ export function validateMiddleware(req, res, next) {
     const validString = (value) => {
         return value && value.length > 0;
     };
-    const dataPaciente = req.body.paciente;
-    const dataProfesional = req.body.profesional;
+    const dataPaciente = req.body.paciente || {};
+    const dataProfesional = req.body.profesional || {};
     const file = req.body.file;
 
     if (!moment(req.body.fecha).isValid()) {

@@ -6,13 +6,26 @@ import * as reglasCtrl from '../controller/reglas';
 
 const router = express.Router();
 
-router.post('/reglas', (req, res, next) => {
-    let ArrReglas = req.body.reglas;
-    let data = reglasCtrl.guardarReglas(ArrReglas);
-    Promise.all(data.lista).then(resultado => {
-        return (data.resultados);
-    }).catch(error => { return (error); });
-    res.json(data.resultados);
+router.post('/reglas', async (req, res, next) => {
+    const ArrReglas = req.body.reglas;
+    try {
+        if (ArrReglas.length > 0) {
+            const params = {
+                'destino.organizacion.id': ArrReglas[0].destino.organizacion.id,
+                'destino.prestacion.conceptId': ArrReglas[0].destino.prestacion.conceptId,
+            };
+            await reglas.deleteMany(params);
+        }
+        let grabarReglas = ArrReglas.map(async (regla) => {
+            let unaRegla = new reglas(regla);
+            Auth.audit(unaRegla, req);
+            return unaRegla.save();
+        });
+        await Promise.all(grabarReglas);
+        res.json(ArrReglas);
+    } catch (err) {
+        return err;
+    }
 });
 
 router.get('/reglas', (req, res, next) => {
@@ -34,6 +47,15 @@ router.get('/reglas', (req, res, next) => {
         if (err) {
             return next(err);
         }
+        res.json(data);
+    });
+});
+
+router.delete('/reglas', async (req, res, next) => {
+    reglas.deleteMany({
+        'destino.organizacion.id': new mongoose.Types.ObjectId(req.query.organizacionDestino),
+        'destino.prestacion.conceptId': req.query.prestacionDestino
+    }).exec((err, data) => {
         res.json(data);
     });
 });
