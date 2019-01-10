@@ -880,20 +880,26 @@ export async function actualizarGeoReferencia(patientFound, data, req) {
         // Se carga geo referencia desde api de google
         try {
             const geoRef: any = await geoRefPaciente(data);
+            // si se obtuvieron coordenadas (geolocalizacion exitosa)
             if (geoRef && geoRef.lat) {
                 data.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
                 data.direccion[0].ubicacion.barrio = await getServicioGeonode(data.direccion[0].geoReferencia);
             } else {
-                // si no huvo georeferencia (correcta) pero existía una con la direccion anterior
+                // si no huvo georeferencia (correcta) se setean variables en null ya que podrian contener informacion anterior
                 if (patientFound.direccion[0].geoReferencia) {
                     data.direccion[0].geoReferencia = null;
                     data.direccion[0].ubicacion.barrio = null;
                 }
             }
+            // se guardan los datos
             updatePaciente(patientFound, data, req);
         } catch (err) {
             return (err);
         }
+    } else {
+        // si no ingreso direccion, provincia o localidad se setean variables en null ya que podrian contener informacion anterior
+        data.direccion[0].geoReferencia = null;
+        data.direccion[0].ubicacion.barrio = null;
     }
 }
 

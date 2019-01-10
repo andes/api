@@ -451,9 +451,12 @@ router.put('/pacientes/:id', async (req, res, next) => {
                     delete data.fechaNacimiento;
                 }
 
+                // si el paciente esta validado y huvo cambios en direccion o localidad..
                 if (patientFound.estado === 'validado' && (patientFound.direccion[0].valor !== data.direccion[0].valor) ||
                     (patientFound.direccion[0].ubicacion.localidad && data.direccion[0].ubicacion.localidad &&
-                        patientFound.direccion[0].ubicacion.localidad.nombre !== data.direccion[0].ubicacion.localidad.nombre)) {
+                        patientFound.direccion[0].ubicacion.localidad.nombre !== data.direccion[0].ubicacion.localidad.nombre) ||
+                    (patientFound.direccion[0].ubicacion.localidad && !data.direccion[0].ubicacion.localidad) ||
+                    (!patientFound.direccion[0].ubicacion.localidad && data.direccion[0].ubicacion.localidad)) {
                     controller.actualizarGeoReferencia(patientFound, data, req);
                 }
                 let pacienteUpdated = await controller.updatePaciente(patientFound, data, req);
