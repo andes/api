@@ -8,8 +8,8 @@ import { Auth } from './../../../auth/auth.class';
 import { EventCore } from '@andes/event-bus';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
-import { matchSisa } from 'utils/servicioSisa';
-import { getServicioRenaper } from 'utils/servicioRenaper';
+import { matchSisa } from './../../../utils/servicioSisa';
+import { getServicioRenaper } from './../../../utils/servicioRenaper';
 
 const regtest = /[^a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ ']+/;
 
@@ -763,14 +763,14 @@ export async function checkRepetido(nuevoPaciente): Promise<any> {
 
 /**
  * Intenta validar un paciente con fuentes auténticas.
- * Devuelve el paciente, validado o no
+ * Devuelve el paciente, y si fue validado o no (true/false)
  *
  * @param {*} pacienteAndes
  * @returns Object Paciente
  */
 export async function validarPaciente(pacienteAndes) {
     if (pacienteAndes.sexo === 'otro') {
-        return pacienteAndes;
+        return { paciente: pacienteAndes, validado: false };
     }
     let sexoRenaper = pacienteAndes.sexo === 'masculino' ? 'M' : 'F';
     let resRenaper: any;
@@ -793,7 +793,7 @@ export async function validarPaciente(pacienteAndes) {
             pacienteAndes.estado = 'validado';
             pacienteAndes.foto = pacienteRenaper.foto;
         }
-        return pacienteAndes;
+        return { paciente: pacienteAndes, validado: true };
     }
     // Respuesta erronea de renaper o test regex fallido?
     if (!resRenaper || (resRenaper && resRenaper.datos && resRenaper.datos.nroError !== 0) || band) {
@@ -811,9 +811,9 @@ async function validarSisa(pacienteAndes: any) {
             pacienteAndes.fechaNacimiento = resSisa.matcheos.datosPaciente.fechaNacimiento;
             pacienteAndes.estado = 'validado';
         }
-        return pacienteAndes;
+        return { paciente: pacienteAndes, validado: true };
     } catch (error) {
         // no hacemos nada con el paciente
-        return pacienteAndes;
+        return { paciente: pacienteAndes, validado: false };
     }
 }

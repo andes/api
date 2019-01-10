@@ -15,6 +15,7 @@ import { EventCore } from '@andes/event-bus';
 const logD = debug('paciente-controller');
 const router = express.Router();
 
+
 /**
  * @swagger
  * definition:
@@ -246,6 +247,32 @@ router.get('/pacientes/dashboard/', async (req, res, next) => {
     // });
 });
 
+router.post('/pacientes/validar/', async (req, res, next) => {
+    // TODO modificar permiso renaper -> validar/validacion o algo asi
+    if (!Auth.check(req, 'fa:get:renaper')) {
+        return next(403);
+    }
+    const pacienteAndes = req.body;
+    if (pacienteAndes && pacienteAndes.documento && pacienteAndes.sexo) {
+        try {
+            const resultado: any = await controller.validarPaciente(pacienteAndes);
+            // TODO loguear dentro de los metodos de validación renaper/sisa
+            // Logueamos la operación de búsqueda en la colección.
+            // Logger.log(req, 'fa_renaper', 'validar', {
+            //     data: resultado
+            // });
+            res.json(resultado);
+        } catch (err) {
+            // Logger.log(req, 'fa_renaper', 'error', {
+            //     error: err
+            // });
+            return next(err);
+        }
+    } else {
+        return next(500);
+    }
+});
+
 /**
  * @swagger
  * /pacientes:
@@ -351,6 +378,7 @@ router.get('/pacientes/:id', (req, res, next) => {
 
 });
 
+
 /**
  * @swagger
  * /pacientes:
@@ -430,6 +458,7 @@ router.get('/pacientes', (req, res, next) => {
         return next(error);
     });
 });
+
 
 router.put('/pacientes/mpi/:id', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:putMpi')) {
@@ -867,30 +896,5 @@ router.patch('/pacientes/mpi/:id', (req, res, next) => {
         });
 });
 
-router.get('/validar', async (req, res, next) => {
-    // TODO modificar permiso renaper -> validar/validacion o algo asi
-    if (!Auth.check(req, 'fa:get:renaper')) {
-        return next(403);
-    }
-    if (req.query) {
-        const pacienteAndes = req.query;
-        try {
-            const resultado: any = await controller.validarPaciente(pacienteAndes);
-            // TODO loguear dentro de los metodos de validación renaper/sisa
-            // Logueamos la operación de búsqueda en la colección.
-            // Logger.log(req, 'fa_renaper', 'validar', {
-            //     data: resultado
-            // });
-            res.json(resultado);
-        } catch (err) {
-            // Logger.log(req, 'fa_renaper', 'error', {
-            //     error: err
-            // });
-            return next(err);
-        }
-    } else {
-        return next(500);
-    }
-});
 
 export = router;
