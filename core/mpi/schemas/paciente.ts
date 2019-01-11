@@ -203,3 +203,4 @@ pacienteSchema.plugin(AuditPlugin);
 
 export let paciente = mongoose.model('paciente', pacienteSchema, 'paciente');
 export let pacienteMpi = Connections.mpi.model('paciente', pacienteSchema, 'paciente');
+export let pacienteGeoPrueba = mongoose.model('pacienteGeoPrueba', pacienteSchema, 'pacienteGeoPrueba');
