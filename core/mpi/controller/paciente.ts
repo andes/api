@@ -824,7 +824,7 @@ export async function checkRepetido(nuevoPaciente): Promise<any> {
  * @param {*} pacienteAndes
  * @returns Object Paciente
  */
-export async function validarPaciente(pacienteAndes) {
+export async function validarPaciente(pacienteAndes, req: any = configPrivate.userScheduler) {
     if (pacienteAndes.sexo === 'otro') {
         return { paciente: pacienteAndes, validado: false };
     }
@@ -832,8 +832,11 @@ export async function validarPaciente(pacienteAndes) {
     let resRenaper: any;
     try {
         resRenaper = await getServicioRenaper({ documento: pacienteAndes.documento, sexo: sexoRenaper });
+        Logger.log(req, 'fa_renaper', 'validar', {
+            resultado: resRenaper
+        });
     } catch (error) {
-        return await validarSisa(pacienteAndes);
+        return await validarSisa(pacienteAndes, req);
     }
     let band = true;
     // Respuesta correcta de renaper?
@@ -850,29 +853,28 @@ export async function validarPaciente(pacienteAndes) {
             pacienteAndes.foto = pacienteRenaper.foto;
             return { paciente: pacienteAndes, validado: true };
         } else {
-            return await validarSisa(pacienteAndes, pacienteRenaper.foto);
+            return await validarSisa(pacienteAndes, req, pacienteRenaper.foto);
 
         }
     } else {
-        return await validarSisa(pacienteAndes);
+        return await validarSisa(pacienteAndes, req);
     }
 }
 
-async function validarSisa(pacienteAndes: any, foto = null) {
+async function validarSisa(pacienteAndes: any, req: any, foto = null) {
     try {
         let resSisa: any = await matchSisa(pacienteAndes);
-        let porcentajeMatcheo = resSisa.matcheos.matcheo;
-        if (porcentajeMatcheo > 95) {
-            pacienteAndes.nombre = resSisa.matcheos.datosPaciente.nombre;
-            pacienteAndes.apellido = resSisa.matcheos.datosPaciente.apellido;
-            pacienteAndes.fechaNacimiento = resSisa.matcheos.datosPaciente.fechaNacimiento;
-            pacienteAndes.estado = 'validado';
-            if (foto) {
-                pacienteAndes.foto = foto;
-            }
-            return { paciente: pacienteAndes, validado: true };
+        Logger.log(req, 'fa_sisa', 'validar', {
+            resultado: resSisa
+        });
+        pacienteAndes.nombre = resSisa.matcheos.datosPaciente.nombre;
+        pacienteAndes.apellido = resSisa.matcheos.datosPaciente.apellido;
+        pacienteAndes.fechaNacimiento = resSisa.matcheos.datosPaciente.fechaNacimiento;
+        pacienteAndes.estado = 'validado';
+        if (foto) {
+            pacienteAndes.foto = foto;
         }
-        return { paciente: pacienteAndes, validado: false };
+        return { paciente: pacienteAndes, validado: true };
     } catch (error) {
         // no hacemos nada con el paciente
         return { paciente: pacienteAndes, validado: false };

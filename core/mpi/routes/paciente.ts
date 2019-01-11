@@ -115,7 +115,7 @@ router.post('/pacientes/validar/', async (req, res, next) => {
     const pacienteAndes = req.body;
     if (pacienteAndes && pacienteAndes.documento && pacienteAndes.sexo) {
         try {
-            const resultado: any = await controller.validarPaciente(pacienteAndes);
+            const resultado: any = await controller.validarPaciente(pacienteAndes, req);
             // TODO loguear dentro de los metodos de validación renaper/sisa
             // Logueamos la operación de búsqueda en la colección.
             // Logger.log(req, 'fa_renaper', 'validar', {
