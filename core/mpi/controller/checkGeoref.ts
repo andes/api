@@ -31,10 +31,10 @@ export function checkGeoreferencia() {
                     delete unPaciente.direccion[0].ubicacion.barrio;
                     await controller.actualizarGeoReferencia(unPaciente, unPaciente, userScheduler);
 
-                    console.log('Paciente con DNI: ' + unPaciente.documento + ' finalizado.');
+                    // console.log('Paciente con DNI: ' + unPaciente.documento + ' finalizado.');
                     resolve();
                 } catch (ex) {
-                    console.log('**** error en paciente con DNI: ', unPaciente.documento, ' ****\n', ex);
+                    // console.log('**** error en paciente con DNI: ', unPaciente.documento, ' ****\n', ex);
                     resolve();
                     return (ex);
                 }
