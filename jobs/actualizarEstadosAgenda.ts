@@ -7,7 +7,8 @@ async function run(done) {
 
     const start = (moment(fechaDesde).startOf('day')).format('YYYY-MM-DD HH:mm:ss');
     const end = (moment(fechaHAsta).endOf('day')).format('YYYY-MM-DD HH:mm:ss');
-    agendaCtrl.actualizarEstadoAgendas(start, end);
+    agendaCtrl.actualizarEstadoAgendas(start, end).then(done)
+        .catch(done);
 }
 
 export = run;
