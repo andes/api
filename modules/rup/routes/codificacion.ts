@@ -64,14 +64,14 @@ router.get('/codificacion/:id?', async (req: any, res, next) => {
             query.where('diagnostico.codificaciones.codificacionAuditoria.codigo').exists(false);
         }
 
-        query.exec(async (err, data: any) => {
+        query.exec(async (err, data) => {
             if (err) {
                 return next(err);
             }
             const cantidad = data.length;
             if (cantidad > 0) {
                 for (let i = 0; i < cantidad; i++) {
-                    let objeto = { ...data[i] }._doc;
+                    let objeto = data[i];
                     let unaPrestacion = await prestacion.model.findById(data[i].idPrestacion);
                     objeto.prestacion = (unaPrestacion as any).solicitud.tipoPrestacion ? (unaPrestacion as any).solicitud.tipoPrestacion.term : null;
                     data[i] = objeto;
