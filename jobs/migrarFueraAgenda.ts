@@ -6,7 +6,7 @@ import { Auth } from '../auth/auth.class';
 
 async function run(done) {
     const fechaDesde = moment(new Date(2018, 11, 1)); // mes - 1
-    const fechaHAsta = moment(new Date(2018, 11, 5)); // mes - 1
+    const fechaHAsta = moment(new Date(2018, 11, 18)); // mes - 1
     const start = (moment(fechaDesde).startOf('day')).format('YYYY-MM-DD HH:mm:ss');
     const end = (moment(fechaHAsta).endOf('day')).format('YYYY-MM-DD HH:mm:ss');
     await migrarFueraAgenda(done, start, end);
@@ -25,10 +25,8 @@ async function migrarFueraAgenda(done, start, end) {
         ],
     };
     try {
-        let lista = [];
         const prestaciones = await Prestacion.find(parametros).cursor({ batchSize: 100 });
         await prestaciones.eachAsync(async (prestacion) => {
-            lista.push(prestacion);
             const codificaciones = await codificacionController.codificarPrestacion(prestacion);
             let data = new codificacion({
                 createdAt: (prestacion as any).ejecucion.fecha,
