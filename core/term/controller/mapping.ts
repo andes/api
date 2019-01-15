@@ -101,7 +101,7 @@ export class SnomedCIE10Mapping {
 
                 let docsRespuesta = promesas.filter(x => x !== null);
 
-                if (docsRespuesta) {
+                if (docsRespuesta.length) {
                     return resolve(docsRespuesta[0].codigo);
                 } else {
                     // Chequea si existe un mapeo estático
