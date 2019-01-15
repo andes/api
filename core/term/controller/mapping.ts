@@ -1,6 +1,7 @@
 import * as moment from 'moment';
 import { SnomedMapping } from '../schemas/mapping';
 import * as staticMapping from '../schemas/staticmapping';
+import * as cie10 from './../../../core/term/schemas/cie10';
 
 /**
  * Mapea un concepto de snomed a CIE10
@@ -68,7 +69,7 @@ export class SnomedCIE10Mapping {
      *
      * @param {any} conceptId
      * @param {any} [contexto=null]
-     * @return CIE10Model
+     * @return código CIE10Model
      * @memberof SnomedCIE10Mapping
      */
     public transform(conceptId, contexto = null) {
@@ -76,27 +77,45 @@ export class SnomedCIE10Mapping {
             this.setContexto(contexto);
         }
         return new Promise((resolve, reject) => {
-            SnomedMapping.find({ conceptId }).sort('mapGroup mapPriority').then((mapping) => {
+            SnomedMapping.find({ conceptId }).sort('mapGroup mapPriority').then(async (mapping) => {
                 /**
                  * Chequeamos regla a regla cual es la primera que se cumple
                  */
+                let arreglo: any[] = [];
                 for (let i = 0; i < mapping.length; i++) {
                     const rules = mapping[i] as any;
                     const rule = rules.mapRule;
 
                     if (this.check(rule)) {
+                        let prom;
                         if (rules.mapTarget.length > 0) {
-                            return resolve(rules.mapTarget);
+                            prom = cie10.model.findOne({
+                                codigo: rules.mapTarget
+                            });
                         }
+                        arreglo.push(prom);
                     }
                 }
-
-                // Chequea si existe un mapeo estático
-                staticMapping.model.findOne({ conceptId }).then((staticmap: any) => {
-                    resolve(staticmap ? staticmap.mapTarget : null);
-                }).catch(err2 => {
-                    reject(err2);
-                });
+                let promesas = await Promise.all(arreglo);
+                let indice = 0;
+                let docRespuesta = null;
+                while (indice < promesas.length) {
+                    if (promesas[indice]) {
+                        docRespuesta = promesas[indice];
+                        break;
+                    }
+                    indice++;
+                }
+                if (docRespuesta) {
+                    return resolve(docRespuesta.codigo);
+                } else {
+                    // Chequea si existe un mapeo estático
+                    staticMapping.model.findOne({ conceptId }).then((staticmap: any) => {
+                        resolve(staticmap ? staticmap.mapTarget : null);
+                    }).catch(err2 => {
+                        reject(err2);
+                    });
+                }
             }).catch((err) => {
                 reject(err);
             });
