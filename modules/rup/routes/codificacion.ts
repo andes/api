@@ -49,11 +49,7 @@ router.get('/codificacion/:id?', async (req: any, res, next) => {
         const unaCodificacion = await codificacion.findById(req.params.id);
         res.json(unaCodificacion);
     } else {
-        let query;
-        query = codificacion.find({});
-        if (req.user.organizacion && req.user.organizacion.id) {
-            query.where('createdBy.organizacion._id').equals(req.user.organizacion.id);
-        }
+        let query = codificacion.find({});
         if (req.query.fechaDesde) {
             query.where('createdAt').gte(req.query.fechaDesde);
         }
