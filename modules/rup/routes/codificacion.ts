@@ -60,7 +60,7 @@ router.get('/codificacion/:id?', async (req: any, res, next) => {
             query.where('diagnostico.codificaciones.codificacionAuditoria.codigo').exists(false);
         }
 
-        query.exec(async (err, data) => {
+        query.exec(async (err, data: any) => {
             if (err) {
                 return next(err);
             }
