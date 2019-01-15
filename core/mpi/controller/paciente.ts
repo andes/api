@@ -523,7 +523,7 @@ export async function updateDireccion(req, data) {
     data.markModified('direccion');
     data.direccion = req.body.direccion;
     try {
-        await actualizarGeoReferencia(data.paciente, req.body, req);
+        await actualizarGeoReferencia(req.body, data, null);
     } catch (err) {
         return err;
     }
@@ -875,6 +875,7 @@ async function validarSisa(pacienteAndes: any) {
  */
 
 export async function actualizarGeoReferencia(patientFound, data, req) {
+
     if (data.direccion[0].valor && data.direccion[0].ubicacion.localidad && data.direccion[0].ubicacion.localidad.nombre
         && data.direccion[0].ubicacion.provincia && data.direccion[0].ubicacion.provincia.nombre) {
         // Se carga geo referencia desde api de google
@@ -891,8 +892,10 @@ export async function actualizarGeoReferencia(patientFound, data, req) {
                     data.direccion[0].ubicacion.barrio = null;
                 }
             }
-            // se guardan los datos
-            updatePaciente(patientFound, data, req);
+            if (req) {
+                // se guardan los datos
+                updatePaciente(patientFound, data, req);
+            }
         } catch (err) {
             return (err);
         }
