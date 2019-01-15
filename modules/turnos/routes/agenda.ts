@@ -268,11 +268,13 @@ router.post('/agenda', (req, res, next) => {
 
         EventCore.emitAsync('citas:agenda:create', data);
 
+        res.json(data);
 
         // Al crear una nueva agenda la cacheo para Sips
-        operations.cacheTurnos(data).catch(error => { return next(error); });
+        operations.cacheTurnos(data).catch(error => {
+            return error;
+        });
         // Fin de insert cache
-        res.json(data);
     });
 });
 
