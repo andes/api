@@ -96,18 +96,13 @@ export class SnomedCIE10Mapping {
                         arreglo.push(prom);
                     }
                 }
+                // Guarda cada una de las promesas incluidas las que son null
                 let promesas = await Promise.all(arreglo);
-                let indice = 0;
-                let docRespuesta = null;
-                while (indice < promesas.length) {
-                    if (promesas[indice]) {
-                        docRespuesta = promesas[indice];
-                        break;
-                    }
-                    indice++;
-                }
-                if (docRespuesta) {
-                    return resolve(docRespuesta.codigo);
+
+                let docsRespuesta = promesas.filter(x => x !== null);
+
+                if (docsRespuesta) {
+                    return resolve(docsRespuesta[0].codigo);
                 } else {
                     // Chequea si existe un mapeo estático
                     staticMapping.model.findOne({ conceptId }).then((staticmap: any) => {
