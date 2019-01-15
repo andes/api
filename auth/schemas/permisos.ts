@@ -12,7 +12,11 @@ const schema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'organizacion'
         },
-        permisos: [String]
+        permisos: [String],
+        permisosPausados: {
+            type: Boolean,
+            default: false
+        }
     }]
 });
 

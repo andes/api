@@ -13,6 +13,36 @@ const sha1Hash = require('sha1');
 const shiroTrie = require('shiro-trie');
 const router = express.Router();
 
+
+router.put('/estadoPermisos/:username', Auth.authenticate(), (req, res, next) => {
+    console.log('aca', req.params, req.body);
+    authUsers.findOne({ usuario: req.params.username }, (err, user: any) => {
+        console.log(user);
+        console.log( req.body.toString());
+        let organizacion =  user.organizaciones.find(x =>  x._id.toString() === req.body.idOrganizacion.toString() );
+        console.log(organizacion);
+        if (!organizacion.permisosPausados) {
+            console.log('true');
+            organizacion.permisosPausados = true;
+        } else {
+            console.log('false');
+
+            organizacion.permisosPausados = false;
+
+        }
+        console.log(organizacion);
+        let obj = new authUsers(user);
+        // Auth.audit(obj, req);
+        obj.save((err2) => {
+            if (err2) {
+                next(err2);
+            }
+            res.json(organizacion);
+        });
+    });
+    // res.send(true);
+});
+
 /**
  * Obtiene el user de la session
  * @get /api/auth/sesion
@@ -28,6 +58,7 @@ router.get('/sesion', Auth.authenticate(), (req, res) => {
  */
 router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
     let username;
+    let origanizacionesFiltradas = [];
     if (req.query.user) {
         username = req.query.user;
     } else {
@@ -38,7 +69,15 @@ router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
         if (err) {
             return next(err);
         }
-        const organizaciones = user.organizaciones.map((item) => {
+
+        // user.organizaciones.forEach(element => {
+        //     if (element.permisosPausados === false) {
+        //         origanizacionesFiltradas.push(element);
+        //     }
+        // });
+        origanizacionesFiltradas = user.organizaciones.filter(x =>  x.permisosPausados === false);
+
+        const organizaciones = origanizacionesFiltradas.map((item) => {
             if ((req as any).query.admin) {
                 const shiro = shiroTrie.new();
                 shiro.add(item.permisos);
@@ -51,7 +90,8 @@ router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
             } else {
                 return mongoose.Types.ObjectId(item._id);
             }
-        }).filter(item => item !== null);
+
+        }).filter(item =>  item !== null);
         authOrganizaciones.model.find({ _id: { $in: organizaciones } }, (errOrgs, orgs: any[]) => {
             if (errOrgs) {
                 return next(errOrgs);
@@ -270,7 +310,8 @@ router.post('/login', (req, res, next) => {
  */
 
 router.post('/file-token', Auth.authenticate(), (req, res, next) => {
-    return res.json({token: Auth.generateFileToken()});
+    return res.json({ token: Auth.generateFileToken() });
 });
+
 
 export = router;

@@ -290,6 +290,8 @@ router.get('/organizaciones/:id*?', (req, res, next) => {
             if (err) {
                 return next(err);
             }
+
+            console.log(data);
             res.json(data);
         });
 
