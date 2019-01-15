@@ -44,44 +44,54 @@ export async function getUltimoNumeroProtocolo(idOrganizacion) {
     return parseInt(ultimoNumero, 10);
 }
 
-export async function getResultadosAnteriores(idPaciente, conceptIdPractica) {
+export async function getResultadosAnteriores(idPaciente, conceptsIdPractica: []) {
     let pipeline = [
         {
             $match: {
                 $and: [{
                     'solicitud.tipoPrestacion.conceptId': '15220000',
                     'paciente.id': idPaciente,
-                    'ejecucion.registros.concepto.conceptId': conceptIdPractica,
-                    'ejecucion.registros.valor.resultado.validado': true
+                    'ejecucion.registros.concepto.conceptId': {
+                        $in: conceptsIdPractica
+                    },
+                    'ejecucion.registros.valor.estados.tipo': 'validada'
                 }]
             }
         },
         { $unwind: '$ejecucion.registros' },
-        { $unwind: '$ejecucion.registros.valor' },
         {
             $match: {
-                'ejecucion.registros.concepto.conceptId': conceptIdPractica,
-                'ejecucion.registros.valor.resultado.validado': true
+                $and: [{
+                    'ejecucion.registros.concepto.conceptId': {
+                        $in: conceptsIdPractica
+                    },
+                    'ejecucion.registros.valor.estados.tipo': 'validada'
+                }]
+            }
+        },
+        { $unwind: '$ejecucion.registros.valor.estados' },
+        { $sort: { 'ejecucion.registros.valor.estados.fecha': -1 } },
+
+        {
+            $match: {
+                'ejecucion.registros.valor.estados.tipo': 'validada'
             }
         },
         {
-            $project: {
-                resultadoAnterior: '$ejecucion.registros.valor.resultado',
-                fecha: '$ejecucion.fecha',
-                unidadMedida: '$ejecucion.registros.valor.unidadMedida.term'
+            $group: {
+                _id: '$ejecucion.registros.concepto.conceptId',
+                conceptIdPractica: { $first: '$ejecucion.registros.concepto.conceptId' },
+                resultados : {
+                    $push: {
+                        valor: '$ejecucion.registros.valor.resultado.valor',
+                        fecha: '$ejecucion.registros.valor.estados.fecha'
+                    }
+                }
             }
-        },
-        { $sort: { fecha: -1 } }
+        }
     ];
 
-    let res = await toArray(prestacion.aggregate(pipeline).cursor({}).exec());
-    let resultadosAnteriores = [];
-    res.forEach(r => {
-        r.resultadoAnterior.fecha = r.fecha;
-        r.resultadoAnterior.unidadMedida = r.unidadMedida;
-        resultadosAnteriores.push(r.resultadoAnterior);
-    });
-    return resultadosAnteriores;
+    return await toArray(prestacion.aggregate(pipeline).cursor({}).exec());
 }
 
 export async function getPracticasCobasC311() {

@@ -4,7 +4,6 @@ import { model as Prestacion } from '../../../../modules/rup/schemas/prestacion'
 
 import { getUltimoNumeroProtocolo, getResultadosAnteriores, getPracticasCobasC311 } from '../controller/protocolo';
 import { Auth } from '../../../../auth/auth.class';
-import { stringify } from 'querystring';
 import { Types } from 'mongoose';
 
 
@@ -32,10 +31,9 @@ router.get('/protocolo/numero/', async (req, res, next) => {
 });
 
 router.get('/practicas/resultadosAnteriores', async (req, res, next) => {
-    const ObjectId = require('mongoose').Types.ObjectId;
-    let idPaciente = new ObjectId(req.query.idPaciente);
-    let practicaConceptId = req.query.practicaConceptId;
-    let resultadosAnteriores = await getResultadosAnteriores(idPaciente, practicaConceptId);
+    let idPaciente = Types.ObjectId(req.query.idPaciente);
+    let practicaConceptIds = Array.isArray(req.query.practicaConceptIds) ? req.query.practicaConceptIds : [req.query.practicaConceptIds];
+    let resultadosAnteriores = await getResultadosAnteriores(idPaciente, practicaConceptIds);
 
     res.json(resultadosAnteriores);
 });
@@ -78,7 +76,6 @@ router.patch('/practicas/cobasc311/:id', async (req, res, next) => {
 
             data.ejecucion.registros[index].valor = req.body.valor;
             Auth.audit(data, req);
-            console.log(JSON.stringify(data.ejecucion.registros[index]));
             data.save();
             return res.json(data);
         }
