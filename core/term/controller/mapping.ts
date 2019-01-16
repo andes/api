@@ -87,19 +87,18 @@ export class SnomedCIE10Mapping {
                     const rule = rules.mapRule;
 
                     if (this.check(rule)) {
-                        let prom;
                         if (rules.mapTarget.length > 0) {
-                            prom = cie10.model.findOne({
+                            let prom = cie10.model.findOne({
                                 codigo: rules.mapTarget
                             });
+                            arreglo.push(prom);
                         }
-                        arreglo.push(prom);
                     }
                 }
                 // Guarda cada una de las promesas incluidas las que son null
                 let promesas = await Promise.all(arreglo);
 
-                let docsRespuesta = promesas.filter(x => x !== null);
+                let docsRespuesta = promesas.filter(x => !!x);
 
                 if (docsRespuesta.length) {
                     return resolve(docsRespuesta[0].codigo);
