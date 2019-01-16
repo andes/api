@@ -18,8 +18,6 @@ const config = {
     connectionTimeout: 10000,
     requestTimeout: 45000
 };
-const type = 'PECAS-' + (new Date()).toISOString();
-const outputFile = type + '.json';
 
 /**
  * Actualiza la tabla pecas_consolidado de la BD Andes
@@ -72,8 +70,7 @@ export async function consultaPecas(start, end, done) {
         ]).cursor({ batchSize: 100 }).exec();
         await agendas.eachAsync(async (a, error) => {
             if (error) {
-                // console.log('error ', error);
-                return (error);
+                return error;
             }
             const promises = [];
             // Se recorren los turnos
@@ -424,53 +421,25 @@ async function eliminaTurnoPecas(turno: any) {
     return result;
 }
 
-function getEfector(idOrganizacion: any) {
-
-    return new Promise((resolve, reject) => {
-        organizacion.findOne({
-            _id: mongoose.Types.ObjectId(idOrganizacion)
-        }).exec((err, data) => {
-            if (err) {
-                reject(err);
+const orgCache = {};
+async function getEfector(idOrganizacion: any) {
+    if (orgCache[idOrganizacion]) {
+        return orgCache[idOrganizacion];
+    } else {
+        const org: any = organizacion.findById(idOrganizacion);
+        if (org && org.codigo) {
+            const codigoSips = org.codigo;
+            const efector = {
+                codigo: codigoSips.sips ? codigoSips.sips : null,
+                tipoEfector: org.tipoEstablecimiento ? org.tipoEstablecimiento.nombre : ''
+            };
+            if (codigoSips) {
+                return efector;
             }
-            if ((data as any).codigo) {
-                const codigoSips = (data as any).codigo as any;
-                const efector = {
-                    codigo: codigoSips.sips ? codigoSips.sips : null,
-                    tipoEfector: (data as any).tipoEstablecimiento ? (data as any).tipoEstablecimiento.nombre : ''
-                };
-                if (codigoSips) {
-                    resolve(efector);
-                } else {
-                    resolve(null);
-                }
-            } else {
-                resolve(null);
-            }
-        });
-    });
+        }
+        return null;
+    }
 }
-
-/*
-[REVISAR]
-function getCapitulo(codigoCIE10: string) {
-    return new Promise((resolve, reject) => {
-        cie10.model.findOne({
-            codigo: String(codigoCIE10)
-        }).exec(function (err, data) {
-            if (err) {
-                reject(err);
-            }
-            if (data) {
-                let capitulo = String((data as any).capitulo);
-                resolve(capitulo);
-            } else {
-                resolve('');
-            }
-        });
-    });
-}
-*/
 
 function calcularEdad(fechaNacimiento) {
     let edad: any;
