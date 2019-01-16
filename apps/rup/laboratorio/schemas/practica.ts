@@ -177,7 +177,11 @@ export let schema = new Schema({
         }
     },
     requeridos: [],
-    nivel: Number
+    nivel: Number,
+    configuracionAnalizador: {
+        cobasC311: String,
+        cobasC221: String
+    }
 });
 
 // // Valida el esquema

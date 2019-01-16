@@ -1,4 +1,4 @@
-import { Practica } from './../schemas/practica';
+import { getPracticasCobasC311 } from './../controller/practica';
 import { Types } from 'mongoose';
 import { model as prestacion } from '../../../../modules/rup/schemas/prestacion';
 import { toArray } from '../../../../utils/utils';
@@ -44,7 +44,7 @@ export async function getUltimoNumeroProtocolo(idOrganizacion) {
     return parseInt(ultimoNumero, 10);
 }
 
-export async function getResultadosAnteriores(idPaciente, conceptsIdPractica: []) {
+export async function getResultadosAnteriores(idPaciente, conceptsIdPractica: [any]) {
     let pipeline = [
         {
             $match: {
@@ -81,7 +81,7 @@ export async function getResultadosAnteriores(idPaciente, conceptsIdPractica: []
             $group: {
                 _id: '$ejecucion.registros.concepto.conceptId',
                 conceptIdPractica: { $first: '$ejecucion.registros.concepto.conceptId' },
-                resultados : {
+                resultados: {
                     $push: {
                         valor: '$ejecucion.registros.valor.resultado.valor',
                         fecha: '$ejecucion.registros.valor.estados.fecha'
@@ -94,8 +94,12 @@ export async function getResultadosAnteriores(idPaciente, conceptsIdPractica: []
     return await toArray(prestacion.aggregate(pipeline).cursor({}).exec());
 }
 
-export async function getPracticasCobasC311() {
-    const conceptosCobas = ['166849007', '63571001', '89659001', '313849004'];
+export async function getEjecucionesCobasC311() {
+    const practicasCobas = await getPracticasCobasC311(); // ['166849007', '63571001', '89659001', '313849004', '104485008', '271234008'];
+    let conceptosCobas  = [];
+    practicasCobas.forEach(element => {
+        conceptosCobas.push(element.conceptId);
+    });
     let pipeline = [
         {
             $match: {
@@ -124,7 +128,41 @@ export async function getPracticasCobasC311() {
                     }
                 }
             }
+        },
+        {
+            $unwind: '$registros'
+        },
+        {
+            $lookup:
+            {
+                from: 'practica',
+                localField: 'registros.concepto.conceptId',
+                foreignField: 'concepto.conceptId',
+                as: 'practica'
+            }
+        },
+        {
+            $addFields: {
+                'registros.configuracionAnalizador': { $arrayElemAt: ['$practica.configuracionAnalizador', 0] }
+            }
+        },
+        {
+            $project: {
+                numeroProtocolo: '$numeroProtocolo',
+                ejecucion: '$registros',
+                test: '$registros.configuracionAnalizador.cobasC311',
+                conceptId: '$registros.concepto.conceptId',
+                valor: '$registros.resultado.valor'
+            }
         }
+        /*
+        {
+            $group : {
+                _id : '$_id',
+                numeroProtocolo: {$first: '$numeroProtocolo' } ,
+                registros: {$push: '$registros'}
+            }
+        }*/
     ];
 
     let res = await toArray(prestacion.aggregate(pipeline).cursor({}).exec());
