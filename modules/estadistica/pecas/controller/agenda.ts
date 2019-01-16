@@ -128,8 +128,8 @@ async function auxiliar(a: any, b: any, t: any) {
         let turnoConPaciente = t.estado === 'asignado' && t.paciente; // && t.asistencia
         let org: any = await getEfector(a.organizacion._id);
         efector = {
-            tipoEfector: org.tipoEfector ? org.tipoEfector : null,
-            codigo: org.codigo ? org.codigo : null
+            tipoEfector: org.tipoEstablecimiento && org.tipoEstablecimiento.nombre ? org.tipoEstablecimiento.nombre : null,
+            codigo: org.codigo && org.codigo.sisa ? org.codigo.sisa : null
         };
         let idEfector = efector && efector.codigo ? parseInt(efector.codigo, 10) : null;
         let tipoEfector = efector && efector.tipoEfector ? efector.tipoEfector : null;
@@ -446,16 +446,10 @@ async function getEfector(idOrganizacion: any) {
     if (orgCache[idOrganizacion]) {
         return orgCache[idOrganizacion];
     } else {
-        const org: any = organizacion.findById(idOrganizacion);
-        if (org && org.codigo) {
-            const codigoSips = org.codigo;
-            const efector = {
-                codigo: codigoSips.sips ? codigoSips.sips : null,
-                tipoEfector: org.tipoEstablecimiento ? org.tipoEstablecimiento.nombre : ''
-            };
-            if (codigoSips) {
-                return efector;
-            }
+        const org: any = await organizacion.findById(idOrganizacion);
+        if (org) {
+            orgCache[idOrganizacion] = org;
+            return org;
         }
         return null;
     }
