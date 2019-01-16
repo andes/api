@@ -6,7 +6,6 @@ import * as prestacion from '../schemas/prestacion';
 import * as codificacionController from '../controllers/codificacionController';
 import { Auth } from './../../../auth/auth.class';
 import { toArray } from '../../../utils/utils';
-import { stringify } from 'querystring';
 
 
 const router = express.Router();
