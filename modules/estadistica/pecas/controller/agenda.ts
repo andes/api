@@ -76,18 +76,23 @@ export async function consultaPecas(start, end, done) {
                 return (error);
             }
             const promises = [];
-            // Se recorren los turnos dentro de los bloques
-            a.bloques.forEach(b => {
-                b.turnos.forEach(t => {
-                    const p = auxiliar(a, b, t);
+            // Se recorren los turnos
+            for (let i = 0; i < a.bloques.length; i++) {
+                let b = a.bloques[i];
+                for (let j = 0; j < b.turnos.length; j++) {
+                    let t = a.bloques[i].turnos[j];
+                    let p = await auxiliar(a, b, t);
                     promises.push(p);
-                });
-            });
+                }
+            }
+
             // Se recorren los sobreturnos
-            a.sobreturnos.forEach(t => {
-                const p = auxiliar(a, null, t);
+
+            for (let i = 0; i < a.sobreturnos.length; i++) {
+                let t = a.sobreturnos[i];
+                let p = await auxiliar(a, null, t);
                 promises.push(p);
-            });
+            }
             return await Promise.all(promises);
         });
         done();
@@ -137,7 +142,7 @@ async function auxiliar(a: any, b: any, t: any) {
         turno.DNI = turnoConPaciente ? Number(t.paciente.documento) : null;
         turno.Apellido = turnoConPaciente ? t.paciente.apellido : null;
         turno.Apellido = turnoConPaciente ? turno.Apellido.toString().replace('\'', '\'\'') : null;
-        turno.Nombres = turnoConPaciente ? t.paciente.nombre : null;
+        turno.Nombres = turnoConPaciente ? t.paciente.nombre.toString().replace('\'', '\'\'') : null;
         const carpetas = turnoConPaciente ? t.paciente.carpetaEfectores.filter(x => String(x.organizacion._id) === String(a.organizacion._id)) : [];
         if (Array(carpetas).length > 0) {
             turno.HC = carpetas[0] ? (carpetas[0] as any).nroCarpeta : null;
@@ -146,7 +151,7 @@ async function auxiliar(a: any, b: any, t: any) {
         }
         turno.codSexo = turnoConPaciente ? String(t.paciente.sexo) === 'femenino' ? String(2) : String(1) : null;
         turno.Sexo = turnoConPaciente ? t.paciente.sexo : null;
-        turno.FechaNacimiento = (turnoConPaciente && t.paciente.fechaNacimiento ? moment(t.paciente.fechaNacimiento).format('YYYYMMDD') : '');
+        turno.FechaNacimiento = (turnoConPaciente && t.paciente.fechaNacimiento && moment(t.paciente.fechaNacimiento).year() > 1900) ? moment(t.paciente.fechaNacimiento).format('YYYYMMDD') : '';
         const objectoEdad = (t.paciente && turno.FechaNacimiento) ? calcularEdad(t.paciente.fechaNacimiento) : null;
 
         turno.Edad = t.paciente && turno.fechaNacimiento ? objectoEdad.valor : null;
@@ -365,7 +370,7 @@ async function auxiliar(a: any, b: any, t: any) {
             'Diag2CodigoOriginal, Desc2DiagOriginal, Diag2CodigoAuditado, Desc2DiagAuditado, SemanticTag2, SnomedConcept2, SnomedTerm2, primeraVez2, ' +
             'Diag3CodigoOriginal, Desc3DiagOriginal, Diag3CodigoAuditado, Desc3DiagAuditado, SemanticTag3, SnomedConcept3, SnomedTerm3, primeraVez3, ' +
             'Profesional, TipoProfesional, CodigoEspecialidad, Especialidad, CodigoServicio, Servicio, ' +
-            'codifica, turnosMobile) ' +
+            'codifica, turnosMobile, updated) ' +
             'VALUES  ( ' + turno.idEfector + ',\'' + turno.Organizacion + '\',\'' + turno.TipoEfector + '\',\'' + turno.DescTipoEfector +
             '\',' + turno.IdZona + ',\'' + turno.Zona + '\',\'' + turno.SubZona + '\',' + turno.idEfectorSuperior + ',\'' + turno.EfectorSuperior + '\',\'' + turno.AreaPrograma +
             '\',\'' + turno.idAgenda + '\',\'' + turno.FechaAgenda + '\',\'' + turno.HoraAgenda + '\',\'' + turno.estadoAgenda +
@@ -390,7 +395,7 @@ async function auxiliar(a: any, b: any, t: any) {
             ',\'' + turno.Diag3CodigoOriginal + '\',\'' + turno.Desc3DiagOriginal + '\',\'' + turno.Diag3CodigoAuditado + '\',\'' + turno.Desc3DiagAuditado +
             '\',\'' + turno.semanticTag3 + '\',\'' + turno.conceptId3 + '\',\'' + turno.term3 + '\',' + turno.primeraVez3 +
             ',\'' + turno.Profesional + '\',\'' + turno.TipoProfesional + '\',' + turno.CodigoEspecialidad + ',\'' + turno.Especialidad +
-            '\',' + turno.CodigoServicio + ',\'' + turno.Servicio + '\',\'' + turno.codifica + '\',' + turno.turnosMobile + '\) ';
+            '\',' + turno.CodigoServicio + ',\'' + turno.Servicio + '\',\'' + turno.codifica + '\',' + turno.turnosMobile + ',\'' + moment().format('YYYYMMDD HH:mm') + '\') ';
         let rta = await existeTurnoPecas(turno.idTurno);
         if (rta.recordset.length > 0 && rta.recordset[0].idTurno) {
             const queryDel = await eliminaTurnoPecas(turno.idTurno);
