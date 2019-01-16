@@ -68,7 +68,7 @@ export async function consultaPecas(start, end, done) {
     };
     try {
         const agendas = agendaModel.aggregate([
-         { $match: match },
+            { $match: match },
         ]).cursor({ batchSize: 100 }).exec();
         await agendas.eachAsync(async (a, error) => {
             if (error) {
@@ -99,6 +99,7 @@ export async function consultaPecas(start, end, done) {
 // castea cada turno asignado y lo inserta en la tabla Sql
 async function auxiliar(a: any, b: any, t: any) {
     let turno: any = {};
+    let efector: any = {};
     turno.sobreturno = (b !== null) ? 'NO' : 'SI';
     // console.log('b => ', b);
     try {
@@ -106,11 +107,19 @@ async function auxiliar(a: any, b: any, t: any) {
         turno.tipoTurno = t.tipoTurno ? (t.tipoTurno === 'profesional' ? 'autocitado' : (t.tipoTurno === 'gestion' ? 'conllave' : t.tipoTurno)) : 'Sin datos';
         turno.estadoTurno = t.estado;
         let turnoConPaciente = t.estado === 'asignado' && t.paciente; // && t.asistencia
-        let efector = await getEfector(a.organizacion._id) as any;
-        let idEfector = efector ? efector.codigo : null;
-        let tipoEfector = efector ? efector.tipoEfector : null;
+        let org: any = await getEfector(a.organizacion._id);
+        efector = {
+            tipoEfector: org.tipoEfector ? org.tipoEfector : null,
+            codigo: org.codigo ? org.codigo : null
+        };
+        let idEfector = efector && efector.codigo ? parseInt(efector.codigo, 10) : null;
+        let tipoEfector = efector && efector.tipoEfector ? efector.tipoEfector : null;
+        // let efector = await getEfector(a.organizacion._id) as any;
+        // let idEfector = efector ? efector.codigo : null;
+        // let tipoEfector = efector ? efector.tipoEfector : null;
         turno.tipoPrestacion = (turnoConPaciente && t.tipoPrestacion && t.tipoPrestacion.term) ? t.tipoPrestacion.term : null;
-        turno.idEfector = parseInt(idEfector, 10);
+        // turno.idEfector = parseInt(idEfector, 10);
+        turno.idEfector = idEfector;
         turno.Organizacion = a.organizacion.nombre;
         turno.idAgenda = a._id;
         turno.FechaAgenda = moment(a.horaInicio).format('YYYYMMDD');
@@ -344,7 +353,7 @@ async function auxiliar(a: any, b: any, t: any) {
         }
 
         // se verifica si existe el turno en sql
-        let queryInsert = 'INSERT INTO dbo.Pecas_consolidado_2' +
+        let queryInsert = 'INSERT INTO ' + configPrivate.conSqlPecas.table.pecasTable +
             '(idEfector, Efector, TipoEfector, DescTipoEfector, IdZona, Zona, SubZona, idEfectorSuperior, EfectorSuperior, AreaPrograma, ' +
             'idAgenda, FechaAgenda, HoraAgenda, estadoAgenda, numeroBloque, turnosProgramados, turnosProfesional, turnosLlaves, turnosDelDia, ' +
             'idTurno, estadoTurno, tipoTurno, sobreturno, FechaConsulta, HoraTurno, Periodo, Tipodeconsulta, estadoTurnoAuditoria, Principal, ConsC2, ConsObst, tipoPrestacion, ' +
@@ -399,18 +408,19 @@ async function auxiliar(a: any, b: any, t: any) {
 async function existeTurnoPecas(turno: any) {
     const result = await new sql.Request(poolTurnos)
         .input('idTurno', sql.VarChar(50), turno)
-        .query('SELECT idTurno FROM dbo.Pecas_consolidado_2 WHERE idTurno = @idTurno');
+        .query(`SELECT idTurno FROM ${configPrivate.conSqlPecas.table.pecasTable}  WHERE idTurno = @idTurno`);
     return result;
 }
 
 async function eliminaTurnoPecas(turno: any) {
     const result = await new sql.Request(poolTurnos)
         .input('idTurno', sql.VarChar(50), turno)
-        .query('DELETE FROM dbo.Pecas_consolidado_2 WHERE idTurno = @idTurno');
+        .query(`DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE idTurno = @idTurno`);
     return result;
 }
 
 function getEfector(idOrganizacion: any) {
+
     return new Promise((resolve, reject) => {
         organizacion.findOne({
             _id: mongoose.Types.ObjectId(idOrganizacion)
