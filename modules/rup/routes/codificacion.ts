@@ -51,6 +51,7 @@ router.get('/codificacion/:id?', async (req: any, res, next) => {
         const unaCodificacion = await codificacion.findById(req.params.id);
         res.json(unaCodificacion);
     } else {
+<<<<<<< HEAD
         let filtros = {
             'createdBy.organizacion.id': req.user.organizacion.id,
             createdAt: {
@@ -73,6 +74,30 @@ router.get('/codificacion/:id?', async (req: any, res, next) => {
                     localField: 'idPrestacion',
                     foreignField: '_id',
                     as: 'prestacion'
+=======
+        let query = codificacion.find({});
+        if (req.query.fechaDesde) {
+            query.where('createdAt').gte(req.query.fechaDesde);
+        }
+        if (req.query.fechaHasta) {
+            query.where('createdAt').lte(req.query.fechaHasta);
+        }
+        if (req.query.auditadas === false) {
+            query.where('diagnostico.codificaciones.codificacionAuditoria.codigo').exists(false);
+        }
+
+        query.exec(async (err, data: any) => {
+            if (err) {
+                return next(err);
+            }
+            const cantidad = data.length;
+            if (cantidad > 0) {
+                for (let i = 0; i < cantidad; i++) {
+                    let objeto = data[i];
+                    let unaPrestacion = await prestacion.model.findById(data[i].idPrestacion);
+                    objeto.prestacion = (unaPrestacion as any).solicitud.tipoPrestacion ? (unaPrestacion as any).solicitud.tipoPrestacion.term : null;
+                    data[i] = objeto;
+>>>>>>> master
                 }
             },
             { $unwind: '$prestacion' },
