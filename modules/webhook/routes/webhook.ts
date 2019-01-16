@@ -5,7 +5,10 @@ import { WebHook, WebHookLog } from '../schemas/webhookSchema';
 import * as Fhir from '../../../packages/fhir/src/patient';
 const request = require('request');
 let router = express.Router();
+import * as localidad from '../../../core/tm/schemas/localidad';
+import * as organizacion from '../../../core/tm/schemas/organizacion';
 
+import * as provincia_model from '../../../core/tm/schemas/provincia_model';
 function filterData(filters: any[], data) {
     let i = 0;
     let continua = true;
@@ -52,7 +55,21 @@ EventCore.on(/.*/, async function (body) {
     const event = this.event;
     let bodyFhir = null;
     if (event === 'mpi:patient:create' || event === 'mpi:patient:update') {
+
+        // Pensar esto, capas conviene no convertirlo a fhir. Para Sips y sumar necesito muchos datos que se pierden al convertirlo.
         bodyFhir = (Object as any).assign({}, Fhir.encode(body));
+        bodyFhir['financiador'] = body.financiador;
+        const org: any = await organizacion.model.findById(body.createdBy.organizacion._id);
+        const prov: any = body.direccion[0].ubicacion.provincia ? await provincia_model.findOne({ nombre: body.direccion[0].ubicacion.provincia.nombre }) : null;
+        bodyFhir['efectorCodigo'] = org.codigo;
+        bodyFhir['estado'] = body.estado;
+        bodyFhir['fechaCreacion'] = body.createdAt;
+        bodyFhir['fechaActualizacion'] = body.updatedAt;
+        const loc: any = body.direccion[0].ubicacion.localidad ? await localidad.findById(body.direccion[0].ubicacion.localidad._id) : null;
+        bodyFhir['localidad'] = loc;
+        bodyFhir['provincia'] = prov;
+        bodyFhir['doc'] = body.documento;
+        bodyFhir['docTutor'] = body.relaciones ? body.relaciones[0] : null;
     }
 
     let subscriptions = await WebHook.find({
