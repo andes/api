@@ -244,6 +244,9 @@ export const conSqlPecas = {
     serverSql: {
         server: '',
         database: ''
+    },
+    table: {
+        pecasTable: 'pecas_consolidadoPrueba'
     }
 };
 
