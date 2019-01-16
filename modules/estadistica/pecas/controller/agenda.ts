@@ -72,13 +72,30 @@ export async function consultaPecas(start, end, done) {
             if (error) {
                 return error;
             }
-            const promises = [];
             // Se recorren los turnos
+
+            const turnos = [];
             for (let i = 0; i < a.bloques.length; i++) {
                 let b = a.bloques[i];
                 for (let j = 0; j < b.turnos.length; j++) {
                     let t = a.bloques[i].turnos[j];
-                    let p = await auxiliar(a, b, t);
+                    turnos.push(String(t._id));
+                }
+            }
+
+            for (let i = 0; i < a.sobreturnos.length; i++) {
+                let t = a.sobreturnos[i];
+                turnos.push(String(t._id));
+            }
+            await eliminaTurnoPecas(turnos);
+
+
+            const promises = [];
+            for (let i = 0; i < a.bloques.length; i++) {
+                let b = a.bloques[i];
+                for (let j = 0; j < b.turnos.length; j++) {
+                    let t = a.bloques[i].turnos[j];
+                    let p = auxiliar(a, b, t);
                     promises.push(p);
                 }
             }
@@ -87,7 +104,7 @@ export async function consultaPecas(start, end, done) {
 
             for (let i = 0; i < a.sobreturnos.length; i++) {
                 let t = a.sobreturnos[i];
-                let p = await auxiliar(a, null, t);
+                let p = auxiliar(a, null, t);
                 promises.push(p);
             }
             return await Promise.all(promises);
@@ -393,32 +410,35 @@ async function auxiliar(a: any, b: any, t: any) {
             '\',\'' + turno.semanticTag3 + '\',\'' + turno.conceptId3 + '\',\'' + turno.term3 + '\',' + turno.primeraVez3 +
             ',\'' + turno.Profesional + '\',\'' + turno.TipoProfesional + '\',' + turno.CodigoEspecialidad + ',\'' + turno.Especialidad +
             '\',' + turno.CodigoServicio + ',\'' + turno.Servicio + '\',\'' + turno.codifica + '\',' + turno.turnosMobile + ',\'' + moment().format('YYYYMMDD HH:mm') + '\') ';
-        let rta = await existeTurnoPecas(turno.idTurno);
-        if (rta.recordset.length > 0 && rta.recordset[0].idTurno) {
-            const queryDel = await eliminaTurnoPecas(turno.idTurno);
-            if (queryDel.rowsAffected[0] > 0) {
-                await executeQuery(queryInsert);
-            }
-        } else {
-            await executeQuery(queryInsert);
-        }
+
+        await executeQuery(queryInsert);
+
     } catch (error) {
         return (error);
     }
 }
 
-async function existeTurnoPecas(turno: any) {
-    const result = await new sql.Request(poolTurnos)
-        .input('idTurno', sql.VarChar(50), turno)
-        .query(`SELECT idTurno FROM ${configPrivate.conSqlPecas.table.pecasTable}  WHERE idTurno = @idTurno`);
-    return result;
+/**
+ * @param request sql request object
+ * @param {string} columnName sql table column name
+ * @param {string} paramNamePrefix prefix for parameter name
+ * @param type parameter type
+ * @param {Array<string>} values an array of values
+ */
+function parameteriseQueryForIn(request, columnName, parameterNamePrefix, type, values) {
+    let parameterNames = [];
+    for (let i = 0; i < values.length; i++) {
+        let parameterName = parameterNamePrefix + i;
+        request.input(parameterName, type, values[i]);
+        parameterNames.push(`@${parameterName}`);
+    }
+    return `${columnName} IN (${parameterNames.join(',')})`;
 }
 
-async function eliminaTurnoPecas(turno: any) {
-    const result = await new sql.Request(poolTurnos)
-        .input('idTurno', sql.VarChar(50), turno)
-        .query(`DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE idTurno = @idTurno`);
-    return result;
+async function eliminaTurnoPecas(turnos: any[]) {
+    const result = new sql.Request(poolTurnos);
+    let query = `DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE ` + parameteriseQueryForIn(result, 'idTurno', 'idTurno', sql.NVarChar, turnos);
+    return await result.query(query);
 }
 
 const orgCache = {};
