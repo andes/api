@@ -87,7 +87,7 @@ function getDatosOrganizacion(idOrganizacion: any) {
 
 function getObraSocial(dni: any) {
     return new Promise(async (resolve, reject) => {
-        let osPuco: any = await Puco.find({ dni: Number.parseInt(dni, 10), version: '2018-12-01T00:00:00.000Z' }).exec();
+        let osPuco: any = await Puco.find({ dni: Number.parseInt(dni, 10) }).exec();
 
         if (osPuco.length > 0) {
             let obraSocial = await ObraSocial.find({ codigoPuco: osPuco[0].codigoOS }).exec();
