@@ -11,6 +11,7 @@ import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
 import { snomedModel } from '../../../core/term/schemas/snomed';
 import * as camasController from './../controllers/cama';
 import { EventCore } from '@andes/event-bus';
+import { facturacionAutomatica } from '../controllers/facturacionAutomatica';
 
 const router = express.Router();
 import async = require('async');
@@ -546,6 +547,8 @@ router.patch('/prestaciones/:id', (req, res, next) => {
             }
 
             if (req.body.estado && req.body.estado.tipo === 'validada') {
+                facturacionAutomatica(prestacion);
+
                 EventCore.emitAsync('rup:prestacion:validate', data);
             }
 
