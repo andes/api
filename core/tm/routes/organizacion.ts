@@ -155,11 +155,12 @@ router.get('/organizaciones', async (req, res, next) => {
 });
 
 router.post('/organizaciones', Auth.authenticate(), async (req, res, next) => {
-    if (!Auth.check(req, 'tm:especialidad:postEspecialidad')) {
+    if (!Auth.check(req, 'tm:organizacion:create')) {
         return next(403);
     }
     try {
         const newOrganization = new Organizacion(req.body);
+        Auth.audit(newOrganization, req);
         await newOrganization.save();
         return res.json(newOrganization);
     } catch (err) {
@@ -172,7 +173,7 @@ router.put('/organizaciones/:id', Auth.authenticate(), async (req, res, next) =>
         return next(403);
     }
     try {
-        let org = await Organizacion.findByIdAndUpdate(req.params.id, req.body) ;
+        let org = await Organizacion.findByIdAndUpdate(req.params.id, req.body);
         return res.json(org);
     } catch (err) {
         return next(err);
