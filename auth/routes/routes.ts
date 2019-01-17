@@ -15,24 +15,15 @@ const router = express.Router();
 
 
 router.put('/estadoPermisos/:username', Auth.authenticate(), (req, res, next) => {
-    console.log('aca', req.params, req.body);
     authUsers.findOne({ usuario: req.params.username }, (err, user: any) => {
-        console.log(user);
-        console.log( req.body.toString());
         let organizacion =  user.organizaciones.find(x =>  x._id.toString() === req.body.idOrganizacion.toString() );
-        console.log(organizacion);
         if (!organizacion.permisosPausados) {
-            console.log('true');
             organizacion.permisosPausados = true;
         } else {
-            console.log('false');
-
             organizacion.permisosPausados = false;
 
         }
-        console.log(organizacion);
         let obj = new authUsers(user);
-        // Auth.audit(obj, req);
         obj.save((err2) => {
             if (err2) {
                 next(err2);
@@ -40,7 +31,6 @@ router.put('/estadoPermisos/:username', Auth.authenticate(), (req, res, next) =>
             res.json(organizacion);
         });
     });
-    // res.send(true);
 });
 
 /**
