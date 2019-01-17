@@ -772,8 +772,10 @@ export async function validarPaciente(pacienteAndes) {
     if (pacienteAndes.sexo === 'otro') {
         return { paciente: pacienteAndes, validado: false };
     }
-    let sexoRenaper = pacienteAndes.sexo === 'masculino' ? 'M' : 'F';
+    let sexoPaciente = ((typeof pacienteAndes.sexo === 'string')) ? pacienteAndes.sexo : (Object(pacienteAndes.sexo).id);
+    let sexoRenaper = sexoPaciente === 'masculino' ? 'M' : 'F';
     let resRenaper: any;
+
     try {
         resRenaper = await getServicioRenaper({ documento: pacienteAndes.documento, sexo: sexoRenaper });
     } catch (error) {
@@ -799,6 +801,7 @@ export async function validarPaciente(pacienteAndes) {
     if (!resRenaper || (resRenaper && resRenaper.datos && resRenaper.datos.nroError !== 0) || band) {
         return await validarSisa(pacienteAndes);
     }
+    return { paciente: pacienteAndes, validado: false };
 }
 
 async function validarSisa(pacienteAndes: any) {

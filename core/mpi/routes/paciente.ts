@@ -466,7 +466,6 @@ router.put('/pacientes/mpi/:id', (req, res, next) => {
     }
     if (!(mongoose.Types.ObjectId.isValid(req.params.id))) {
         return next(404);
-
     }
     const ObjectId = mongoose.Types.ObjectId;
     const objectId = new ObjectId(req.params.id);
@@ -657,18 +656,17 @@ router.put('/pacientes/:id', async (req, res, next) => {
     if (!(mongoose.Types.ObjectId.isValid(req.params.id))) {
         return next(404);
     }
-
     const objectId = new mongoose.Types.ObjectId(req.params.id);
     const query = {
         _id: objectId
     };
     try {
         // Todo loguear posible duplicado si ignora el check
-
         let resultado = await controller.checkRepetido(req.body);
-        if (resultado.length === 0 || (resultado.length > 0 && req.body.ignoreCheck && !resultado.macheoAlto && !resultado.dniRepetido)) {
 
+        if (!resultado.length || resultado.length === 0 || (resultado.length > 0 && req.body.ignoreCheck && !resultado.macheoAlto && !resultado.dniRepetido)) {
             let patientFound: any = await paciente.findById(query).exec();
+
             if (patientFound) {
                 const data = req.body;
                 if (patientFound.estado === 'validado' && !patientFound.isScan) {
@@ -677,7 +675,6 @@ router.put('/pacientes/:id', async (req, res, next) => {
                     delete data.sexo;
                     delete data.fechaNacimiento;
                 }
-
                 let pacienteUpdated = await controller.updatePaciente(patientFound, data, req);
                 res.json(pacienteUpdated);
 
@@ -690,7 +687,6 @@ router.put('/pacientes/:id', async (req, res, next) => {
                 if (patientFountMpi) {
                     Auth.audit(newPatient, req);
                 }
-
                 await newPatient.save();
                 const nuevoPac = JSON.parse(JSON.stringify(newPatient));
                 // delete nuevoPac._id;
