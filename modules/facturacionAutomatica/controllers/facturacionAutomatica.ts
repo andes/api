@@ -9,8 +9,8 @@ export async function facturacionAutomatica(prestacion: any) {
     let idOrganizacion = prestacion.ejecucion.organizacion.id;
     // console.log("Prestacion: ", prestacion);
 
-    let organizacion: any = await getDatosOrganizacion(idOrganizacion);
-    let obraSocialPaciente = await getObraSocial('25334392');
+    let datosOrganizacion: any = await getDatosOrganizacion(idOrganizacion);
+    let obraSocialPaciente = await getObraSocial(prestacion.paciente.documento);
 
     const factura = {
         turno: {
@@ -56,8 +56,8 @@ export async function facturacionAutomatica(prestacion: any) {
         },
         organizacion: {
             nombre: prestacion.ejecucion.organizacion.nombre,
-            cuie: organizacion.codigo.cuie,
-            idSips: organizacion.codigo.sips
+            cuie: datosOrganizacion.codigo.cuie,
+            idSips: datosOrganizacion.codigo.sips
         },
         obraSocial: (obraSocialPaciente) ? {
             codigoFinanciador: obraSocialPaciente[0].codigoPuco,

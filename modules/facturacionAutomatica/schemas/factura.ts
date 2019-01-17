@@ -41,6 +41,3 @@ export let schema = new mongoose.Schema({
         dni: String,
     }
 });
-
-// let model = mongoose.model('configFacturacionAutomatica', schema, 'configFacturacionAutomatica');
-// export = model;
