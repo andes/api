@@ -1,4 +1,3 @@
-import { consultaCarpetaPacienteSips } from './carpetasController/config';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import * as agendaModel from '../schemas/agenda';
@@ -364,12 +363,10 @@ export function getDiagnosticos(params) {
                                     if (sexo === 'femenino') {
                                         tipo.secrecionSEFemenino++;
                                         pacientes.SECSEF.push(paciente);
-                                        console.log('R2: MUJERES->', r2)
                                         sumaSexo(sumaFemenino, 'secrecionSE');
                                     } else {
                                         tipo.secrecionSEMasculino++;
                                         pacientes.SECSEM.push(paciente);
-                                        console.log('R2: HOMBRES->', r2)
                                         sumaSexo(sumaMasculino, 'secrecionSE');
                                     }
                                     break;
@@ -520,7 +517,6 @@ export function getDiagnosticos(params) {
                         sumaOtro.default++;
                     }
                 }
-                // console.log('Pacientes del elem: ', elem.paciente);
                 elem.paciente.forEach(elem2 => {
                     calcularContadores(elem2);
                 });
@@ -724,7 +720,6 @@ export function getDiagnosticos(params) {
                                     r1.sumaMasculino = sumaMasculino.sifilisSinEspecificar;
                                     r1.total = sumaMasculino.sifilisSinEspecificar;
                                     r1.pacientes = pacientes.SSEM;
-                                    console.log('R2: HOMBRES->', r2)
                                     resultados.push(r1);
                                 }
                                 break;
