@@ -13,6 +13,8 @@ import * as turnosController from '../controller/turnosController';
 import * as moment from 'moment';
 import * as debug from 'debug';
 import { EventCore } from '@andes/event-bus';
+import * as carpetaPaciente from '../../carpetas/schemas/carpetaPaciente';
+import * as controller from '../../../core/mpi/controller/paciente';
 
 const router = express.Router();
 const dbgTurno = debug('dbgTurno');
@@ -46,6 +48,9 @@ function getTipoPrestacion(idTipoPrestacion) {
 }
 function getAgenda(idAgenda) {
     return agenda.findById(idAgenda).exec();
+}
+function getCarpeta(nroDocumento, idOrganizacion) {
+    return carpetaPaciente.find({ documento: nroDocumento, 'carpetaEfectores.organizacion._id': idOrganizacion }).exec();
 }
 
 router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
@@ -149,16 +154,27 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
         motivoConsulta: String
     };
  */
-router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res, next) => {
-    // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
-    const continues = ValidateDarTurno.checkTurno(req.body);
 
+router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res, next) => {
+    const continues = ValidateDarTurno.checkTurno(req.body);
+    const pacienteTurno = req.body.paciente;
     if (continues.valid) {
-        let agendaRes;
+        let agendaRes = await getAgenda(req.body.idAgenda);
         try {
-            await getPaciente(req.body.paciente.id);
-            await getTipoPrestacion(req.body.tipoPrestacion._id);
-            agendaRes = await getAgenda(req.params.idAgenda);
+            let arrPrueba = [];
+            if (pacienteTurno.carpetaEfectores) {
+                arrPrueba = pacienteTurno.carpetaEfectores.find((elto) => {
+                    return elto.organizacion._id === (req as any).user.organizacion._id;
+                });
+            }
+            // Si el paciente no tiene carpeta en ese efector, se busca en la colección carpetaPaciente y se actualiza
+            if (!arrPrueba || arrPrueba.length === 0) {
+                const pacienteMPI = await controller.buscarPaciente(req.body.paciente.id) as any;
+                const carpetas = await getCarpeta(req.body.paciente.documento, (req as any).user.organizacion._id);
+                await turnosController.actualizarCarpeta(req, res, next, pacienteMPI, carpetas);
+                pacienteTurno.carpetaEfectores = req.body.carpetaEfectores;
+            }
+
         } catch (err) {
             return next(err);
         }
@@ -170,7 +186,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
 
         // Los siguientes 2 for ubican el indice del bloque y del turno
         for (let x = 0; x < (agendaRes as any).bloques.length; x++) {
-            if ((agendaRes as any).bloques[x]._id.equals(req.params.idBloque)) {
+            if ((agendaRes as any).bloques[x]._id.equals(req.body.idBloque)) {
                 posBloque = x;
 
                 // Ver si el día de la agenda coincide con el día de hoy
@@ -190,7 +206,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                 };
 
                 for (let y = 0; y < (agendaRes as any).bloques[posBloque].turnos.length; y++) {
-                    if ((agendaRes as any).bloques[posBloque].turnos[y]._id.equals(req.params.idTurno)) {
+                    if ((agendaRes as any).bloques[posBloque].turnos[y]._id.equals(req.body.idTurno)) {
                         const turnoSeleccionado = (agendaRes as any).bloques[posBloque].turnos[y];
                         if (turnoSeleccionado.estado === 'disponible') {
                             posTurno = y;
@@ -258,11 +274,12 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         const etiquetaReasignado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.reasignado';
         const etiquetaUpdateAt: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedAt';
         const etiquetaUpdateBy: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.updatedBy';
-        // let etiquetaPrimeraVez: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.primeraVez';
 
         update[etiquetaEstado] = 'asignado';
         update[etiquetaPrestacion] = req.body.tipoPrestacion;
+        // update[etiquetaPaciente] = req.body.paciente;
         update[etiquetaPaciente] = req.body.paciente;
+
         update[etiquetaTipoTurno] = tipoTurno;
         update[etiquetaNota] = req.body.nota;
         update[etiquetaEmitidoPor] = req.body.emitidoPor ? req.body.emitidoPor : 'Gestión de pacientes';
@@ -273,12 +290,8 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         update[etiquetaUpdateAt] = new Date();
         update[etiquetaUpdateBy] = usuario;
 
-        // TODO: buscar si es primera vez del paciente => TP y paciente => Profesional
-
-        // update[etiquetaPrimeraVez] = await esPrimerPaciente(agenda, req.body.paciente.id, ['primerPrestacion', 'primerProfesional']);
-
         const query = {
-            _id: req.params.idAgenda,
+            _id: req.body.idAgenda,
         };
 
         // Agrega un tag al JSON query
@@ -309,9 +322,9 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                 pacienteController.actualizarFinanciador(req, next);
 
                 Logger.log(req, 'citas', 'asignarTurno', datosOp);
-                let turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
+                let turno = doc2.bloques.id(req.body.idBloque).turnos.id(req.body.idTurno);
 
-                LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turno, req.params.idBloque, req.params.idAgenda);
+                LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turno, req.body.idBloque, req.body.idAgenda);
 
                 EventCore.emitAsync('citas:turno:asignar', turno);
                 EventCore.emitAsync('citas:agenda:update', doc2);
@@ -321,10 +334,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                 operations.cacheTurnos(doc2);
                 // Fin de insert cache
                 res.json(agendaRes);
-
             }
-
-
         });
     } else {
         return next('Los datos del paciente son inválidos');

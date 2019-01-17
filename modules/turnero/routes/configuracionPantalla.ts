@@ -5,7 +5,6 @@ import { TurneroPantallaModel } from '../schemas/turneroPantalla';
 import { Auth } from '../../../auth/auth.class';
 import { EventSocket, EventCore } from '@andes/event-bus';
 import { Packet, Websockets } from '../../../websockets';
-import { nextTick } from 'async';
 
 const ObjectId = mongoose.Types.ObjectId;
 const router = express.Router();

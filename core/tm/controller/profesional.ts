@@ -35,13 +35,13 @@ export async function vencimientoMatriculaGrado(done) {
 }
 
 export async function vencimientoMatriculaPosgrado(done) {
-    let profesionales: any = await profesional.find({ 'formacionPosgrado.matriculado': true, profesionalMatriculado: true }, (data: any) => { return data; });
+    let profesionales: any = await profesional.find({ 'formacionPosgrado.matriculado': true, profesionalMatriculado: true, 'formacionPosgrado.tieneVencimiento': true }, (data: any) => { return data; });
     for (let _n = 0; _n < profesionales.length; _n++) {
         if (profesionales[_n].habilitado === true) {
             if (profesionales[_n].formacionPosgrado) {
                 for (let _i = 0; _i < profesionales[_n].formacionPosgrado.length; _i++) {
                     if (profesionales[_n].formacionPosgrado[_i].matriculacion.length > 0) {
-                        if (profesionales[_n].formacionPosgrado[_i].matriculado === true && profesionales[_n].formacionPosgrado[_i].matriculacion[profesionales[_n].formacionPosgrado[_i].matriculacion.length - 1].fin.getFullYear() < new Date().getFullYear()) {
+                        if (profesionales[_n].formacionPosgrado[_i].matriculado === true && profesionales[_n].formacionPosgrado[_i].tieneVencimiento === true && profesionales[_n].formacionPosgrado[_i].matriculacion[profesionales[_n].formacionPosgrado[_i].matriculacion.length - 1].fin.getFullYear() < new Date().getFullYear()) {
                             profesionales[_n].formacionPosgrado[_i].matriculado = false;
                             profesionales[_n].formacionPosgrado[_i].papelesVerificados = false;
                             await actualizar(profesionales[_n]);

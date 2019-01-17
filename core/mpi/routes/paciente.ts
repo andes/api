@@ -10,138 +10,11 @@ import { ElasticSync } from '../../../utils/elasticSync';
 import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
 import { EventCore } from '@andes/event-bus';
+import { EventEmitter } from 'events';
 
 
 const logD = debug('paciente-controller');
 const router = express.Router();
-
-
-/**
- * @swagger
- * definition:
- *   paciente:
- *     properties:
- *       documento:
- *          type: string
- *       cuil:
- *          type: string
- *       activo:
- *          type: boolean
- *       estado:
- *          type: string
- *          enum:
- *              - temporal
- *              - identificado
- *              - validado
- *              - recienNacido
- *              - extranjero
- *       nombre:
- *          type: string
- *       apellido:
- *          type: string
- *       alias:
- *          type: string
- *       contacto:
- *          type: array
- *          items:
- *              type: object
- *              properties:
- *                  tipo:
- *                      type: string
- *                      enum:
- *                          - Teléfono Fijo
- *                          - Teléfono Celular
- *                          - Email
- *                  valor:
- *                      type: string
- *                  ranking:
- *                      type: number
- *                      format: float
- *                  ultimaActualizacion:
- *                      type: string
- *                      format: date
- *                  activo:
- *                      type: boolean
- *       direccion:
- *          type: array
- *          items:
- *              $ref: '#/definitions/direccion'
- *       sexo:
- *          type: string
- *          enum:
- *              - femenino
- *              - masculino
- *              - otro
- *       genero:
- *          type: string
- *          enum:
- *              - femenino
- *              - masculino
- *              - otro
- *       fechaNacimiento:
- *          type: string
- *          format: date
- *       fechaFallecimiento:
- *          type: string
- *          format: date
- *       estadoCivil:
- *          type: string
- *          enum:
- *              - casado
- *              - separado
- *              - divorciado
- *              - viudo
- *              - soltero
- *              - otro
- *       foto:
- *          type: string
- *       relaciones:
- *          type: array
- *          items:
- *              type: object
- *              properties:
- *                  relacion:
- *                      type: string
- *                      enum:
- *                          - padre
- *                          - madre
- *                          - hijo
- *                          - tutor
- *                  nombre:
- *                      type: string
- *                  apellido:
- *                      type: string
- *                  documento:
- *                      type: string
- *       financiador:
- *          type: array
- *          items:
- *              type: object
- *              properties:
- *                  id:
- *                      type: string
- *                  nombre:
- *                      type: string
- *                  activo:
- *                      type: boolean
- *                  fechaAlta:
- *                      type: string
- *                      format: date
- *                  fechaBaja:
- *                      type: string
- *                      format: date
- *                  ranking:
- *                      type: number
- *       claveBloking:
- *          type: array
- *          items:
- *              type: string
- *       entidadesValidadoras:
- *          type: array
- *          items:
- *              type: string
- */
-
 
 /* Consultas de estado de pacientes para el panel de información */
 router.get('/pacientes/counts/', (req, res, next) => {
@@ -232,19 +105,6 @@ router.get('/pacientes/dashboard/', async (req, res, next) => {
     result.logs = await toArray(log.aggregate(logAggregate).cursor({ batchSize: 1000 }).exec());
     res.json(result);
 
-    // paciente.aggregate(estadoAggregate).cursor({batchSize: 1000}).exec().on('data', function(doc) {
-    //     result.paciente.push(doc);
-    // }).on('end', function () {
-    //     pacienteMpi.aggregate(estadoAggregate).cursor({batchSize: 1000}).exec().on('data', function(doc) {
-    //         result.pacienteMpi.push(doc);
-    //     }).on('end', function () {
-    //         log.aggregate(logAggregate).cursor({batchSize: 1000}).exec().on('data', function(doc) {
-    //             result.logs.push(doc);
-    //         }).on('end', function () {
-    //             res.json(result);
-    //         });
-    //     });
-    // });
 });
 
 router.post('/pacientes/validar/', async (req, res, next) => {
@@ -255,7 +115,7 @@ router.post('/pacientes/validar/', async (req, res, next) => {
     const pacienteAndes = req.body;
     if (pacienteAndes && pacienteAndes.documento && pacienteAndes.sexo) {
         try {
-            const resultado: any = await controller.validarPaciente(pacienteAndes);
+            const resultado: any = await controller.validarPaciente(pacienteAndes, req);
             // TODO loguear dentro de los metodos de validación renaper/sisa
             // Logueamos la operación de búsqueda en la colección.
             // Logger.log(req, 'fa_renaper', 'validar', {
@@ -354,6 +214,74 @@ router.post('/pacientes/validar/', async (req, res, next) => {
  *           $ref: '#/definitions/paciente'
  */
 
+router.get('/pacientes/auditoria/', (req, res, next) => {
+    let filtro;
+    switch (req.query.estado) {
+        case 'validados':
+            filtro = {
+                estado: 'validado'
+            };
+            break;
+        case 'temporales':
+            filtro = {
+                estado: 'temporal'
+            };
+            break;
+        case 'fallecidos':
+            filtro = {
+                fechaFallecimiento: {
+                    $exists: true
+                }
+            };
+            break;
+    }
+    filtro['activo'] = req.query.activo === 'true' ? true : false;
+
+    let query = paciente.find(filtro);
+    query.exec((err, data) => {
+        if (err) {
+            return next(err);
+        }
+        res.json(data);
+    });
+
+});
+
+router.get('/pacientes/auditoria/vinculados/', async (req, res, next) => {
+    let filtro = {
+        'identificadores.0': { $exists: true },
+        'identificadores.entidad': 'ANDES'
+    };
+    // filtro['activo'] = req.query.activo === 'true' ? true : false;
+    try {
+        let resultadosAndes = paciente.find(filtro).exec();
+        let resultadosMpi = pacienteMpi.find(filtro).exec();
+        const pacientes = await Promise.all([resultadosAndes, resultadosMpi]);
+        let listado = [...pacientes[0], ...pacientes[1]];
+        res.json(listado);
+    } catch (error) {
+        return next(error);
+    }
+
+});
+router.get('/pacientes/inactivos/', async (req, res, next) => {
+    let filtro = {
+        activo: false
+    };
+    // filtro['activo'] = req.query.activo === 'true' ? true : false;
+    try {
+        let resultadosAndes = paciente.find(filtro).exec();
+        let resultadosMpi = pacienteMpi.find(filtro).exec();
+        const pacientes = await Promise.all([resultadosAndes, resultadosMpi]);
+        let listado = [...pacientes[0], ...pacientes[1]];
+        res.json(listado);
+    } catch (error) {
+        return next(error);
+    }
+
+});
+
+
 // Simple mongodb query by ObjectId --> better performance
 router.get('/pacientes/:id', (req, res, next) => {
     // busca en pacienteAndes y en pacienteMpi
@@ -368,6 +296,7 @@ router.get('/pacientes/:id', (req, res, next) => {
             Logger.log(req, 'mpi', 'query', {
                 mongoDB: resultado.paciente
             });
+            EventCore.emitAsync('mpi:paciente:get', resultado.paciente);
             res.json(resultado.paciente);
         } else {
             return next(500);
@@ -475,7 +404,7 @@ router.put('/pacientes/mpi/:id', (req, res, next) => {
 
     const match = new Matching();
 
-    pacienteMpi.findById(query, (err, patientFound: any) => {
+    pacienteMpi.findById(query, async (err, patientFound: any) => {
         if (err) {
             return next(404);
         }
@@ -483,12 +412,11 @@ router.put('/pacientes/mpi/:id', (req, res, next) => {
         const connElastic = new ElasticSync();
         if (patientFound) {
             const data = req.body;
-            controller.updatePacienteMpi(patientFound, data, req).then((p) => {
+            controller.updatePacienteMpi(patientFound, data, req).then(async (p: any) => {
                 res.json(p);
             }).catch(next);
-
         } else {
-            const newPatient = new pacienteMpi(req.body);
+            const newPatient: any = new pacienteMpi(req.body);
             const claves = match.crearClavesBlocking(newPatient);
             newPatient['claveBlocking'] = claves;
             newPatient['apellido'] = newPatient['apellido'].toUpperCase();
@@ -503,16 +431,14 @@ router.put('/pacientes/mpi/:id', (req, res, next) => {
                 delete nuevoPac._id;
 
                 connElastic.create(newPatient._id.toString(), nuevoPac).then(() => {
+                    EventCore.emitAsync('mpi:patient:update', newPatient);
                     Logger.log(req, 'mpi', 'elasticInsertInPut', newPatient);
-                    res.json(newPatient);
+                    res.json();
                 }).catch(error => {
                     return next(error);
                 });
-
             });
         }
-
-
     });
 });
 
@@ -563,6 +489,9 @@ router.delete('/pacientes/mpi/:id', (req, res, next) => {
         }).catch(error => {
             return next(error);
         });
+        Auth.audit(patientFound, req);
+    }).catch((error) => {
+        return next(error);
     });
 });
 
@@ -614,6 +543,7 @@ router.post('/pacientes', async (req, res, next) => {
             return res.json(pacienteObjSinDocumento);
         }
     } catch (error) {
+        logD(error);
         return next(error);
     }
 });
@@ -675,12 +605,20 @@ router.put('/pacientes/:id', async (req, res, next) => {
                     delete data.sexo;
                     delete data.fechaNacimiento;
                 }
+                if (patientFound.estado === 'validado' && patientFound.direccion[0].valor !== data.direccion[0].valor) {
+                    controller.actualizarGeoReferencia(req.body, data);
+                }
                 let pacienteUpdated = await controller.updatePaciente(patientFound, data, req);
                 res.json(pacienteUpdated);
 
             } else {
                 req.body._id = req.body.id;
-                const newPatient = new paciente(req.body);
+                let newPatient = new paciente(req.body);
+
+                // se carga geo referencia desde api de google
+                if (req.body.estado === 'validado') {
+                    controller.actualizarGeoReferencia(req.body, newPatient);
+                }
                 // verifico si el paciente ya está en MPI
                 let patientFountMpi = await pacienteMpi.findById(query).exec();
 
@@ -689,8 +627,6 @@ router.put('/pacientes/:id', async (req, res, next) => {
                 }
                 await newPatient.save();
                 const nuevoPac = JSON.parse(JSON.stringify(newPatient));
-                // delete nuevoPac._id;
-                // delete nuevoPac.relaciones;
                 const connElastic = new ElasticSync();
                 let updated = await connElastic.sync(newPatient);
                 if (updated) {
@@ -701,6 +637,7 @@ router.put('/pacientes/:id', async (req, res, next) => {
                 } else {
                     Logger.log(req, 'mpi', 'insert', newPatient);
                 }
+                EventCore.emitAsync('mpi:patient:update', nuevoPac);
                 res.json(nuevoPac);
             }
         } else {
@@ -742,12 +679,101 @@ router.delete('/pacientes/:id', (req, res, next) => {
     const ObjectId = mongoose.Types.ObjectId;
     const objectId = new ObjectId(req.params.id);
     controller.deletePacienteAndes(objectId).then((patientFound: any) => {
+        let connElastic = new ElasticSync();
+        connElastic.delete(patientFound._id.toString()).then(() => {
+            res.json(patientFound);
+        }).catch(error => {
+            return next(error);
+        });
         Auth.audit(patientFound, req);
     }).catch((error) => {
         return next(error);
     });
 });
 
+
+/**
+ * @swagger
+ * /pacientes/{id}/identificadores:
+ *   post:
+ *     tags:
+ *       - Paciente
+ *       - Activo
+ *     description: Modificar el array de identificadores del paciente
+ *     summary: Modificar el array de identificadores del paciente
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         description: Id de un paciente
+ *         required: true
+ *         type: string
+ *
+ *     responses:
+ *       200:
+ *         description: Un objeto paciente
+ *         schema:
+ *           $ref: '#/definitions/paciente'
+ */
+router.post('/pacientes/:id/identificadores', async (req, res, next) => {
+    if (!Auth.check(req, 'mpi:paciente:patchAndes')) {
+        return next(403);
+    }
+    try {
+        let pacienteBase = await controller.buscarPaciente(req.params.id);
+        let pacienteLinkeado: any = await controller.buscarPaciente(req.body.dto.valor);
+        if (pacienteBase && pacienteLinkeado) {
+            if (req.body.op === 'link') {
+                controller.linkIdentificadores(req, pacienteBase.paciente);
+                pacienteLinkeado.paciente.markModified('activo');
+                pacienteLinkeado.paciente.activo = false;
+            }
+            if (req.body.op === 'unlink') {
+                controller.unlinkIdentificadores(req, pacienteBase.paciente);
+                pacienteLinkeado.paciente.markModified('activo');
+                pacienteLinkeado.paciente.activo = true;
+            }
+
+            let pacienteAndesBase: any;
+            if (pacienteBase.db === 'mpi') {
+                pacienteAndesBase = new paciente(pacienteBase.paciente.toObject());
+            } else {
+                pacienteAndesBase = pacienteBase.paciente;
+            }
+
+            let pacienteAndesLinkeado: any;
+            if (pacienteLinkeado.db === 'mpi') {
+                pacienteAndesLinkeado = new paciente(pacienteLinkeado.paciente.toObject());
+            } else {
+                pacienteAndesLinkeado = pacienteLinkeado.paciente;
+            }
+            // sincronizamos los cambios en el paciente de elastic
+            let connElastic = new ElasticSync();
+            await connElastic.sync(pacienteAndesBase);
+            await connElastic.sync(pacienteAndesLinkeado);
+
+            Auth.audit(pacienteAndesLinkeado, req);
+            await pacienteAndesLinkeado.save();
+            Auth.audit(pacienteAndesBase, req);
+            let pacienteSaved = await pacienteAndesBase.save();
+            if (pacienteBase.db === 'mpi') {
+                await controller.deletePacienteMpi(pacienteBase.paciente._id);
+            }
+            if (pacienteLinkeado.db === 'mpi') {
+                await controller.deletePacienteMpi(pacienteLinkeado.paciente._id);
+            }
+            Logger.log(req, 'mpi', req.body.op, { pacienteBase: pacienteBase.paciente._id, pacienteLinkeado: pacienteLinkeado.paciente._id });
+            res.json(pacienteSaved);
+        } else {
+            return next('Paciente no encontrado');
+        }
+    } catch (error) {
+        return next(error);
+    }
+});
 
 /**
  * @swagger
@@ -776,11 +802,13 @@ router.delete('/pacientes/:id', (req, res, next) => {
  */
 
 
-router.patch('/pacientes/:id', (req, res, next) => {
+router.patch('/pacientes/:id', async (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:patchAndes')) {
         return next(403);
     }
-    controller.buscarPaciente(req.params.id).then(async (resultado: any) => {
+    try {
+        let resultado = await controller.buscarPaciente(req.params.id);
+
         if (resultado) {
             switch (req.body.op) {
                 case 'updateContactos':
@@ -792,7 +820,9 @@ router.patch('/pacientes/:id', (req, res, next) => {
                     controller.updateRelaciones(req, resultado.paciente);
                     break;
                 case 'updateDireccion':
-                    controller.updateDireccion(req, resultado.paciente);
+                    try {
+                        await controller.updateDireccion(req, resultado.paciente);
+                    } catch (err) { return next(err); }
                     break;
                 case 'updateCarpetaEfectores':
                     try { // Actualizamos los turnos activos del paciente
@@ -809,19 +839,12 @@ router.patch('/pacientes/:id', (req, res, next) => {
                     resultado.paciente.markModified('contacto');
                     resultado.paciente.contacto = req.body.contacto;
                     try {
-                        // EventCore.emitAsync('mpi:patient:update', resultado.paciente);
-                        // controller.updateTurnosPaciente(resultado.paciente);
-                    } catch (error) { return next(error); }
+                        controller.updateTurnosPaciente(resultado.paciente);
+                    } catch (error) {
+                        return next(error);
+                    }
                     break;
-                case 'linkIdentificadores':
-                    controller.linkIdentificadores(req, resultado.paciente);
-                    break;
-                case 'unlinkIdentificadores':
-                    controller.unlinkIdentificadores(req, resultado.paciente);
-                    break;
-                case 'updateActivo':
-                    controller.updateActivo(req, resultado.paciente);
-                    break;
+
                 case 'updateRelacion':
                     controller.updateRelacion(req, resultado.paciente);
                     break;
@@ -841,19 +864,20 @@ router.patch('/pacientes/:id', (req, res, next) => {
             } else {
                 pacienteAndes = resultado.paciente;
             }
+            let connElastic = new ElasticSync();
+
+            await connElastic.sync(pacienteAndes);
+
             Auth.audit(pacienteAndes, req);
-            pacienteAndes.save((errPatch) => {
-                if (errPatch) {
-                    return next(errPatch);
-                }
-                res.json(pacienteAndes);
-                EventCore.emitAsync('mpi:patient:update', pacienteAndes);
-                return;
-            });
+            let pacienteSaved = await pacienteAndes.save();
+            res.json(pacienteSaved);
+        } else {
+            return next('Paciente no encontrado');
         }
-    }).catch((err) => {
-        return next(err);
-    });
+    } catch (error) {
+        return next(error);
+    }
+
 });
 
 // Patch específico para actualizar masivamente MPI (NINGUN USUARIO DEBERIA TENER PERMISOS PARA ESTO)
@@ -867,12 +891,12 @@ router.patch('/pacientes/mpi/:id', (req, res, next) => {
                 case 'updateCuil':
                     controller.updateCuil(req, resultado.paciente);
                     break;
-
             }
             let pacMpi: any;
             if (resultado.db === 'mpi') {
                 pacMpi = new pacienteMpi(resultado.paciente);
                 Auth.audit(pacMpi, req);
+
                 pacMpi.save((errPatch) => {
                     if (errPatch) {
                         return next(errPatch);
