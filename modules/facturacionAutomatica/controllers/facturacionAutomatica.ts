@@ -4,6 +4,9 @@ import { model as organizacion } from './../../../core/tm/schemas/organizacion';
 import { paciente } from '../../../core/mpi/schemas/paciente';
 import { Puco } from './../../obraSocial/schemas/puco';
 import { ObraSocial } from './../../obraSocial/schemas/obraSocial';
+import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
+import { snomedModel } from '../../../core/term/schemas/snomed';
+import * as configAutomatica from './../schemas/configFacturacionAutomatica';
 
 export async function facturacionAutomatica(prestacion: any) {
     let idOrganizacion = prestacion.ejecucion.organizacion.id;
@@ -11,6 +14,8 @@ export async function facturacionAutomatica(prestacion: any) {
 
     let datosOrganizacion: any = await getDatosOrganizacion(idOrganizacion);
     let obraSocialPaciente = await getObraSocial(prestacion.paciente.documento);
+    let datosReportables = await getDatosReportables(prestacion.solicitud.tipoPrestacion.conceptId);
+    // let datosReportables = await getDatosReportables(103750000);
 
     const factura = {
         turno: {
@@ -70,7 +75,64 @@ export async function facturacionAutomatica(prestacion: any) {
         }
     }
 
-    console.log("Factura: ", factura);
+
+    // console.log("Factura: ", factura);
+}
+
+function getConfiguracionAutomatica(conceptId: any) {
+    return new Promise(async (resolve, reject) => {
+
+        let query;
+        query = configAutomatica.find({});
+        query.where('snomed.conceptId').equals(conceptId);
+        query.exec((err, data) => {
+            if (err) {
+                reject(err);
+            }
+
+            resolve(data[0] ? data[0] : null);
+        });
+    });
+}
+
+function getDatosReportables(idTipoPrestacion: any) {
+    return new Promise(async (resolve, reject) => {
+        let configAuto: any = await getConfiguracionAutomatica(idTipoPrestacion);
+        console.log("Config Automatica: ", configAuto);
+
+        if ((configAuto) && (configAuto.nomencladorSUMAR.datosReportables.length > 0)) {
+            console.log("Entrarrrrr");
+            let conceptos: any = [];
+
+
+            let querySnomed = makeMongoQuery('<<2261000013100');
+            snomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docs: any[]) => {
+
+                conceptos = docs.map((item) => {
+                    let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
+                    return {
+                        fsn: item.fullySpecifiedName,
+                        term: term,
+                        conceptId: item.conceptId,
+                        semanticTag: item.semtag
+                    };
+                });
+                console.log("Conceptos: ", conceptos);
+
+                // ejecutamos busqueda recursiva
+                // let data: any = buscarEnHudsFacturacion(prestaciones, conceptos);
+
+                // console.log('hola', data);
+                // if (data) {
+                //      data2 = matchConcepts(data[0].registro, conceptos);
+                // }
+
+                // res.json(data);
+            });
+
+            resolve(querySnomed);
+        }
+    });
 }
 
 function getDatosOrganizacion(idOrganizacion: any) {
