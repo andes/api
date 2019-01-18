@@ -1,4 +1,4 @@
-import { consultaCarpetaPacienteSips } from "./carpetasController/config";
+import { consultaCarpetaPacienteSips } from './carpetasController/config';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
 import * as agendaModel from '../schemas/agenda';
@@ -194,30 +194,23 @@ export function getDiagnosticos(params) {
 
 
         let arr = [];
-        // Se carga el arreglo arr con todos los reporte C2 de data, sin repetir
+        // Se carga el arreglo arr con todos los reporte C2 de data, sin repetir.
         data.forEach(e => {
             if (!arr.some(x => { return e.codigo.reporteC2 === x.codigo.reporteC2; })) {
                 arr.push({ _id: e._id, codigo: e.codigo, paciente: [] });
             }
         });
-        // a cada reporte C2 le carga todos los pacientes del
+
+        // A cada reporte C2 le carga los pacientes sin repetir
         data.forEach(e => {
             let match = arr.filter(ee => ee.codigo.reporteC2 === e.codigo.reporteC2)[0];
-            match.paciente = match.paciente.concat(e.paciente);
+            e.paciente.forEach(pac => {
+                if (!match.paciente.some(pac2 => { return pac.documento === pac2.documento && pac.sexo === pac2.sexo; })) {
+                    match.paciente.push(pac);
+                }
+            });
         });
 
-        // function removeDuplicates(arr) {
-        //     const unique_array = [];
-        //     const arrMap = arr.map(m => { return m._id; });
-        //     for (let i = 0; i < arr.length; i++) {
-        //         if (arrMap.lastIndexOf(arr[i]._id) === i) {
-        //             unique_array.push(arr[i]);
-        //         }
-        //     }
-        //     console.log('\n\nDatos Devueltos (sin duplicados): ', unique_array);
-        //     return unique_array;
-        // }
-        // data = removeDuplicates(data);
         arr.forEach(elem => {
             if (elem._id != null) {
                 // Se definen variables cuantificadoras
