@@ -47,33 +47,18 @@ export async function consultaPecas(start, end, done) {
         'bloques.turnos': {
             $ne: null
         },
-        $or: [
-            {
-                estado: {
-                    $ne: 'planificacion'
-                }
-            },
-            {
-                estado: {
-                    $ne: 'pausada'
-                }
-            },
-            {
-                estado: {
-                    $ne: 'borrada'
-                }
-            }],
+        estado: { $nin: ['planificacion', 'borrada']}
     };
     try {
         const agendas = agendaModel.aggregate([
             { $match: match },
+            // { $match: { _id: mongoose.Types.ObjectId('5bfd50bc64fcfe69e6faabde') } }
         ]).cursor({ batchSize: 100 }).exec();
         await agendas.eachAsync(async (a, error) => {
             if (error) {
                 return error;
             }
             // Se recorren los turnos
-
             const turnos = [];
             for (let i = 0; i < a.bloques.length; i++) {
                 let b = a.bloques[i];
@@ -87,15 +72,23 @@ export async function consultaPecas(start, end, done) {
                 let t = a.sobreturnos[i];
                 turnos.push(String(t._id));
             }
-            await eliminaTurnoPecas(turnos);
 
+            if (turnos.length) {
+                await eliminaTurnoPecas(turnos);
+            }
 
             const promises = [];
             for (let i = 0; i < a.bloques.length; i++) {
                 let b = a.bloques[i];
-                for (let j = 0; j < b.turnos.length; j++) {
-                    let t = a.bloques[i].turnos[j];
-                    let p = auxiliar(a, b, t);
+                if (b.turnos.length) {
+                    for (let j = 0; j < b.turnos.length; j++) {
+                        let t = a.bloques[i].turnos[j];
+                        let p = auxiliar(a, b, t);
+                        promises.push(p);
+                    }
+                } else {
+                    // Se inserta solo la agenda
+                    let p = insertar_agenda(a, i);
                     promises.push(p);
                 }
             }
@@ -122,15 +115,15 @@ async function auxiliar(a: any, b: any, t: any) {
     turno.sobreturno = (b !== null) ? 'NO' : 'SI';
     // console.log('b => ', b);
     try {
+        let org: any = await getEfector(a.organizacion._id);
+        efector = {
+            tipoEfector: org.tipoEstablecimiento && org.tipoEstablecimiento.nombre ? org.tipoEstablecimiento.nombre : null,
+            codigo: org.codigo && org.codigo.sips ? org.codigo.sips : null
+        };
         // Chequear si el turno existe en sql PECAS y depeniendo de eso hacer un insert o  un update
         turno.tipoTurno = t.tipoTurno ? (t.tipoTurno === 'profesional' ? 'autocitado' : (t.tipoTurno === 'gestion' ? 'conllave' : t.tipoTurno)) : 'Sin datos';
         turno.estadoTurno = t.estado;
         let turnoConPaciente = t.estado === 'asignado' && t.paciente; // && t.asistencia
-        let org: any = await getEfector(a.organizacion._id);
-        efector = {
-            tipoEfector: org.tipoEstablecimiento && org.tipoEstablecimiento.nombre ? org.tipoEstablecimiento.nombre : null,
-            codigo: org.codigo && org.codigo.sisa ? org.codigo.sisa : null
-        };
         let idEfector = efector && efector.codigo ? parseInt(efector.codigo, 10) : null;
         let tipoEfector = efector && efector.tipoEfector ? efector.tipoEfector : null;
         // let efector = await getEfector(a.organizacion._id) as any;
@@ -157,7 +150,7 @@ async function auxiliar(a: any, b: any, t: any) {
         turno.Apellido = turnoConPaciente ? t.paciente.apellido : null;
         turno.Apellido = turnoConPaciente ? turno.Apellido.toString().replace('\'', '\'\'') : null;
         turno.Nombres = turnoConPaciente ? t.paciente.nombre.toString().replace('\'', '\'\'') : null;
-        const carpetas = turnoConPaciente ? t.paciente.carpetaEfectores.filter(x => String(x.organizacion._id) === String(a.organizacion._id)) : [];
+        const carpetas = turnoConPaciente && t.paciente.carpetaEfectores ? t.paciente.carpetaEfectores.filter(x => String(x.organizacion._id) === String(a.organizacion._id)) : [];
         if (Array(carpetas).length > 0) {
             turno.HC = carpetas[0] ? (carpetas[0] as any).nroCarpeta : null;
         } else {
@@ -411,6 +404,54 @@ async function auxiliar(a: any, b: any, t: any) {
             ',\'' + turno.Profesional + '\',\'' + turno.TipoProfesional + '\',' + turno.CodigoEspecialidad + ',\'' + turno.Especialidad +
             '\',' + turno.CodigoServicio + ',\'' + turno.Servicio + '\',\'' + turno.codifica + '\',' + turno.turnosMobile + ',\'' + moment().format('YYYYMMDD HH:mm') + '\') ';
 
+        await executeQuery(queryInsert);
+
+    } catch (error) {
+        return (error);
+    }
+}
+
+async function insertar_agenda(a: any, num_bloque: any) {
+    let ag: any = {};
+    let efector: any = {};
+    try {
+        let org: any = await getEfector(a.organizacion._id);
+        efector = {
+            tipoEfector: org.tipoEstablecimiento && org.tipoEstablecimiento.nombre ? org.tipoEstablecimiento.nombre : null,
+            codigo: org.codigo && org.codigo.sips ? org.codigo.sips : null
+        };
+        let idEfector = efector && efector.codigo ? parseInt(efector.codigo, 10) : null;
+        let tipoEfector = efector && efector.tipoEfector ? efector.tipoEfector : null;
+        ag.idEfector = idEfector;
+        ag.Organizacion = a.organizacion.nombre;
+        ag.idAgenda = a._id;
+        ag.tipoPrestacion = a.tipoPrestaciones && a.tipoPrestaciones.length && a.tipoPrestaciones[0] ? a.tipoPrestaciones[0].term : null;
+        ag.FechaAgenda = moment(a.horaInicio).format('YYYYMMDD');
+        ag.HoraAgenda = moment(a.horaInicio).format('HH:mm').toString();
+        ag.estadoAgenda = a.estado;
+        ag.numeroBloque = num_bloque;
+        ag.idTurno = a.bloques && a.bloques.length ? a.bloques[0]._id : null;
+
+
+        if (tipoEfector && tipoEfector === 'Centro de Salud') {
+            ag.TipoEfector = '1';
+        }
+        if (tipoEfector && tipoEfector === 'Hospital') {
+            ag.TipoEfector = '2';
+        }
+        if (tipoEfector && tipoEfector === 'Puesto Sanitario') {
+            ag.TipoEfector = '3';
+        }
+        if (tipoEfector && tipoEfector === 'ONG') {
+            ag.TipoEfector = '6';
+        }
+        ag.DescTipoEfector = tipoEfector;
+
+        let queryInsert = 'INSERT INTO ' + configPrivate.conSqlPecas.table.pecasTable +
+            '(idEfector, Efector, TipoEfector, DescTipoEfector, idAgenda, FechaAgenda, HoraAgenda, estadoAgenda, numeroBloque,  idTurno, tipoPrestacion,  updated) ' +
+            'VALUES  ( ' + ag.idEfector + ',\'' + ag.Organizacion + '\',\'' + ag.TipoEfector + '\',\'' + ag.DescTipoEfector +
+            '\',\'' + ag.idAgenda + '\',\'' + ag.FechaAgenda + '\',\'' + ag.HoraAgenda + '\',\'' + ag.estadoAgenda +
+            '\',' + ag.numeroBloque + ',\'' + ag.idTurno + '\',\'' + ag.tipoPrestacion + '\',\'' + moment().format('YYYYMMDD HH:mm') + '\') ';
         await executeQuery(queryInsert);
 
     } catch (error) {
