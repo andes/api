@@ -14,7 +14,8 @@ export async function facturacionAutomatica(prestacion: any) {
 
     let datosOrganizacion: any = await getDatosOrganizacion(idOrganizacion);
     let obraSocialPaciente = await getObraSocial(prestacion.paciente.documento);
-    let datosReportables = await getDatosReportables(prestacion.solicitud.tipoPrestacion.conceptId);
+    /* Pasar un solo parámetro prestaciones */
+    let datosReportables = await getDatosReportables(prestacion.solicitud.tipoPrestacion.conceptId, prestacion);
     // let datosReportables = await getDatosReportables(103750000);
 
     const factura = {
@@ -95,45 +96,104 @@ function getConfiguracionAutomatica(conceptId: any) {
     });
 }
 
-function getDatosReportables(idTipoPrestacion: any) {
+function getDatosReportables(idTipoPrestacion: any, prestacion: any) {
     return new Promise(async (resolve, reject) => {
         let configAuto: any = await getConfiguracionAutomatica(idTipoPrestacion);
-        console.log("Config Automatica: ", configAuto);
 
         if ((configAuto) && (configAuto.nomencladorSUMAR.datosReportables.length > 0)) {
-            console.log("Entrarrrrr");
             let conceptos: any = [];
 
+            const expresionesDR = configAuto.nomencladorSUMAR.datosReportables[0].valores.map((config: any) => config);
 
-            let querySnomed = makeMongoQuery('<<2261000013100');
-            snomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docs: any[]) => {
+            let datosReportables = [];
 
-                conceptos = docs.map((item) => {
-                    let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
-                    return {
-                        fsn: item.fullySpecifiedName,
-                        term: term,
-                        conceptId: item.conceptId,
-                        semanticTag: item.semtag
-                    };
+            for (let x = 0; x < expresionesDR.length; x++) {
+                let querySnomed = makeMongoQuery(expresionesDR[x].expresion);
+                snomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docs: any[]) => {
+
+                    conceptos = docs.map((item) => {
+                        let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
+                        return {
+                            fsn: item.fullySpecifiedName,
+                            term: term,
+                            conceptId: item.conceptId,
+                            semanticTag: item.semtag
+                        };
+                    });
+                    // console.log("Conceptos: ", conceptos);
+
+                    // ejecutamos busqueda recursiva
+                    let data: any = buscarEnHudsFacturacion(prestacion, conceptos);
+
+                    if (data.length > 0) {
+                        let datoReportable = {
+                            conceptId: data[0].registro.concepto.conceptId,
+                            term: data[0].registro.concepto.term,
+                            valor: {
+                                conceptId: data[0].registro.valor.concepto.conceptId,
+                                nombre: data[0].registro.valor.concepto.term
+                            }
+                        };
+                        console.log("Un Datooooo: ", datoReportable);
+                        datosReportables.push(datoReportable);
+                        
+                    }
                 });
-                console.log("Conceptos: ", conceptos);
-
-                // ejecutamos busqueda recursiva
-                // let data: any = buscarEnHudsFacturacion(prestaciones, conceptos);
-
-                // console.log('hola', data);
-                // if (data) {
-                //      data2 = matchConcepts(data[0].registro, conceptos);
-                // }
-
-                // res.json(data);
-            });
-
-            resolve(querySnomed);
+            }
+            console.log("Muchos datosss: ", datosReportables);
+            // resolve(querySnomed);
         }
     });
 }
+
+function buscarEnHudsFacturacion(prestacion, conceptos) {
+
+    let data = [];
+    // recorremos prestaciones
+    // prestaciones.forEach((prestacion: any) => {
+    // recorremos los registros de cada prestacion
+    prestacion.ejecucion.registros.forEach(registro => {
+
+        // verificamos si el registro de la prestacion tiene alguno de
+        // los conceptos en su array de registros
+        let resultado = matchConceptsFacturacion(registro, conceptos);
+        if (resultado) {
+            // agregamos el resultado a a devolver
+            data.push({
+                // tipoPrestacion: prestacion.solicitud.tipoPrestacion,
+                // fecha: registro.createdAt,
+                // profesional: registro.createdBy,
+                registro: resultado
+            });
+        }
+
+    });
+    // });
+
+    return data;
+}
+
+export function matchConceptsFacturacion(registro, conceptos) {
+    // almacenamos la variable de matcheo para devolver el resultado
+    let match = false;
+
+    if (!Array.isArray(registro['registros']) || registro['registros'].length <= 0) {
+        // verificamos que el concepto coincida con alguno de los elementos enviados en los conceptos
+        if (registro.concepto && registro.concepto.conceptId && conceptos.find(c => c.conceptId === registro.concepto.conceptId)) {
+            match = registro;
+        }
+
+    } else {
+        registro['registros'].forEach((reg: any) => {
+            let encontrado = null;
+            if (encontrado = matchConceptsFacturacion(reg, conceptos)) {
+                match = encontrado;
+            }
+        });
+    }
+    return match;
+}
+
 
 function getDatosOrganizacion(idOrganizacion: any) {
     return new Promise((resolve, reject) => {

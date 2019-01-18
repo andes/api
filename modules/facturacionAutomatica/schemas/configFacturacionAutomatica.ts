@@ -6,7 +6,7 @@ let schema = new mongoose.Schema({
     idServicio: String,
     nomencladorSUMAR: {
         diagnostico: [{ conceptId: String, diagnostico: String, predomina: Boolean }],
-        datosReportables: [{ idDatosReportables: String, valores: [{ conceptId: String, valor: String }] }],
+        datosReportables: [{ idDatosReportables: String, valores: [{ conceptId: String, valor: String, expresion: String }] }],
         codigo: String,
         id: String
     }
