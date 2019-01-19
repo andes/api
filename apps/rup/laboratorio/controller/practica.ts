@@ -1,4 +1,6 @@
+import { ObjectId } from 'bson';
 import { Practica } from '../schemas/practica';
+import { toArray } from '../../../../utils/utils';
 
 
 /**
@@ -12,6 +14,9 @@ export async function findById(id) {
     return await Practica.findById(id);
 }
 
+export async function findByConceptId(conceptId: number) {
+    return await Practica.findOne({ 'concepto.conceptId': conceptId });
+}
 
 /**
  * Busca prácticas por id y las retorna con todas las subpracticas cargadas en el array de requeridos.
@@ -111,3 +116,24 @@ export async function findByDescripcion(paramBusqueda, soloSimples) {
 export async function getPracticasByArea(areaId) {
     return await Practica.find( { 'area.id' : areaId });
 }
+export async function getPracticasCobasC311() {
+    // Todo: en algun lugar filtrar solamente las practicas que el efector tiene habilitadas,
+    // es posible que tenga practicas deshabilitadas momentaneamente por falta de reactivos
+
+    let pipeline = [
+        {
+            $match: {
+                'configuracionAnalizador.cobasC311': { $ne: null }
+            }
+        },
+        {
+            $project: {
+                conceptId: '$concepto.conceptId'
+            }
+        }
+    ];
+
+    return await toArray(Practica.aggregate(pipeline).cursor({}).exec());
+    // return await Practica.find({ 'configuracionAnalizador.cobasC311': { $ne: null } }).exec();
+}
+

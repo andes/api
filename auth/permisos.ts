@@ -263,6 +263,13 @@ export default [
         title: 'Prestamo de Carpetas',
         child: [
         ]
-    }
+    },
+    {
+        key: 'laboratorio',
+        title: 'Modulo Laboratorio',
+        child: [
+            { key: 'analizador', title: 'Comunicarse con analizadores', type: 'boolean' }
+        ]
+    },
 
 ];

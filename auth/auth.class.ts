@@ -1,3 +1,4 @@
+import { Token } from './schemas/token.interface';
 import { AppToken } from './schemas/app-token.interface';
 import { UserToken } from './schemas/user-token.interface';
 import { PacienteToken } from './schemas/paciente-token.interface';
@@ -137,6 +138,8 @@ export class Auth {
             if (req.user.type === 'app-token') {
                 authApps.findOne({ organizacion: mongoose.Types.ObjectId(req.user.organizacion) }).then((app: any) => {
                     const token: string = req.headers.authorization.substring(4);
+                    console.log('app.token: \n', app.token, ' \n');
+                    console.log('token: \n', token, ' \n');
                     if (app.token && app.token === token) {
                         next();
                     } else {

@@ -2,7 +2,7 @@ import * as express from 'express';
 import { model as Organizacion } from '../../../../core/tm/schemas/organizacion';
 import { model as Prestacion } from '../../../../modules/rup/schemas/prestacion';
 
-import { getUltimoNumeroProtocolo, getResultadosAnteriores, getPracticasCobasC311 } from '../controller/protocolo';
+import { getUltimoNumeroProtocolo, getResultadosAnteriores, getEjecucionesCobasC311 } from '../controller/protocolo';
 import { Auth } from '../../../../auth/auth.class';
 import { Types } from 'mongoose';
 
@@ -42,7 +42,7 @@ router.get('/practicas/cobasc311', async (req, res, next) => {
     // if (!Auth.check(req, 'laboratorio:analizador:*')) {
     //     return next(403);
     // }
-    let practicasCobas = await getPracticasCobasC311();
+    let practicasCobas = await getEjecucionesCobasC311();
     res.json(practicasCobas);
 });
 
