@@ -161,7 +161,7 @@ router.get('/prestaciones/:id*?', (req, res, next) => {
             query.where('solicitud.registros.valor.solicitudPrestacion.practicas.area._id').in(Array.isArray(req.query.areas) ? req.query.areas : [req.query.areas] );
         }
         if (req.query.practicas) {
-            query.where('ejecucion.registros._id').in(Array.isArray(req.query.practicas) ? req.query.practicas : [req.query.practicas] );
+            query.where('ejecucion.registros.valor.idPractica').in(Array.isArray(req.query.practicas) ? req.query.practicas : [req.query.practicas] );
         }
         if (req.query.numProtocoloDesde) {
             query.where('solicitud.registros.valor.solicitudPrestacion.numeroProtocolo.numero').gte(Number(req.query.numProtocoloDesde));

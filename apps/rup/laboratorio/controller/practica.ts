@@ -99,3 +99,15 @@ export async function findByDescripcion(paramBusqueda, soloSimples) {
 
     return await Practica.find(query);
 }
+
+/**
+ *
+ *
+ * @export
+ * @param {*} paramBusqueda
+ * @param {*} soloSimples
+ * @returns
+ */
+export async function getPracticasByArea(areaId) {
+    return await Practica.find( { 'area.id' : areaId });
+}

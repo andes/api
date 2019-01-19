@@ -2,13 +2,18 @@ import * as express from 'express';
 import { Practica } from '../schemas/practica';
 import { toArray } from '../../../../utils/utils';
 import { Types } from 'mongoose';
-import { getPracticasCompletas, getPracticaByCodigo, findById, findByDescripcion } from '../controller/practica';
+import { getPracticasCompletas, getPracticaByCodigo, getPracticasByArea, findById, findByDescripcion } from '../controller/practica';
 let router = express.Router();
 
 
 router.get('/practicas/codigo/:codigo', async (req, res) => {
     const codigo = parseInt(req.params.codigo, 10);
     res.json(await getPracticaByCodigo(codigo));
+});
+
+router.get('/practicas/area/:area', async (req, res) => {
+    let x = await getPracticasByArea(req.params.area);
+    res.json(x);
 });
 
 router.get('/practicas', async (req, res, next) => {
