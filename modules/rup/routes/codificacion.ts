@@ -1,7 +1,7 @@
 
 import * as express from 'express';
 import * as mongoose from 'mongoose';
-import { codificacion } from '../schemas/codificacion';
+import * as codificacion from '../schemas/codificacion';
 import * as prestacion from '../schemas/prestacion';
 import * as codificacionController from '../controllers/codificacionController';
 import { Auth } from './../../../auth/auth.class';
