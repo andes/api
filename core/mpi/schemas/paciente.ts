@@ -74,8 +74,7 @@ export let pacienteSchema: mongoose.Schema = new mongoose.Schema({
         nombre: String,
         apellido: String,
         documento: String,
-        fechaNacimiento: Date,
-        sexo: String
+        foto: String
     }],
     financiador: [financiadorSchema],
     claveBlocking: { type: [String], es_indexed: true },
