@@ -52,15 +52,16 @@ router.get('/frecuentesProfesional', (req, res, next) => {
     const pipeline = [
         { $match: query },
         { $unwind: '$frecuentes' },
-        { $project: { 'frecuentes.concepto': 1, 'frecuentes.frecuencia': 1, _id: 0 } },
+        { $project: { 'frecuentes.concepto': 1, 'frecuentes.frecuencia': 1, 'frecuentes.esSolicitud': 1, _id: 0 } },
         {
             $group: {
                 _id: { conceptId: '$frecuentes.concepto.conceptId', term: '$frecuentes.concepto.term', fsn: '$frecuentes.concepto.fsn', semanticTag: '$frecuentes.concepto.semanticTag' },
-                frecuencia: { $sum: '$frecuentes.frecuencia' }
+                frecuencia: { $sum: '$frecuentes.frecuencia' },
+                esSolicitud: { $last: '$frecuentes.esSolicitud' }
             }
         },
         { $sort: { frecuencia: -1, '_id.conceptId': 1 } },
-        { $project: { _id: 0, concepto: '$_id', frecuencia: 1 } }
+        { $project: { _id: 0, concepto: '$_id', frecuencia: 1, esSolicitud: 1, } }
     ];
     profesionalMeta.aggregate(pipeline, (err, data) => {
         if (err) {
