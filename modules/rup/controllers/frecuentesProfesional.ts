@@ -19,7 +19,6 @@ export function actualizarFrecuentes(data) {
             // si no existe agregamos el nuevo frecuente
             if (typeof resultado === null || !resultado) {
                 const frecuente = new profesionalMeta(data);
-
                 frecuente.save((err2) => {
                     if (err2) {
                         return reject(err2);
@@ -28,17 +27,18 @@ export function actualizarFrecuentes(data) {
                 });
 
             } else {
-
                 if (data.frecuentes) {
                     data.frecuentes.forEach(frecuente => {
                         const indexConcepto = resultado.frecuentes.findIndex(x => x.concepto.conceptId === frecuente.concepto.conceptId);
-
                         if (indexConcepto === -1) {
+
                             resultado.frecuentes.push({
                                 concepto: frecuente.concepto,
+                                esSolicitud: frecuente.esSolicitud,
                                 frecuencia: 1
                             });
                         } else {
+
                             if (resultado.frecuentes[indexConcepto].frecuencia) {
                                 resultado.frecuentes[indexConcepto].frecuencia = parseInt(resultado.frecuentes[indexConcepto].frecuencia, 0) + 1;
                             } else {
