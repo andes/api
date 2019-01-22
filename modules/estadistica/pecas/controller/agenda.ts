@@ -46,8 +46,8 @@ export async function consultaPecas(start, end, done) {
         },
         'bloques.turnos': {
             $ne: null
-        },
-        estado: { $nin: ['planificacion', 'borrada']}
+        }
+       // , estado: { $nin: ['planificacion']}
     };
     try {
         const agendas = agendaModel.aggregate([
@@ -73,9 +73,8 @@ export async function consultaPecas(start, end, done) {
                 turnos.push(String(t._id));
             }
 
-            if (turnos.length) {
-                await eliminaTurnoPecas(turnos);
-            }
+            await eliminaAgenda(a._id);
+
 
             const promises = [];
             for (let i = 0; i < a.bloques.length; i++) {
@@ -104,6 +103,7 @@ export async function consultaPecas(start, end, done) {
         });
         done();
     } catch (error) {
+        console.log(error);
         return (done(error));
     }
 }
@@ -476,9 +476,11 @@ function parameteriseQueryForIn(request, columnName, parameterNamePrefix, type, 
     return `${columnName} IN (${parameterNames.join(',')})`;
 }
 
-async function eliminaTurnoPecas(turnos: any[]) {
+// async function eliminaTurnoPecas(turnos: any[]) {
+async function eliminaAgenda(id_agenda: string) {
     const result = new sql.Request(poolTurnos);
-    let query = `DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE ` + parameteriseQueryForIn(result, 'idTurno', 'idTurno', sql.NVarChar, turnos);
+    // let query = `DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE ` + parameteriseQueryForIn(result, 'idTurno', 'idTurno', sql.NVarChar, turnos);
+    let query = `DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE idAgenda='${id_agenda}'`;
     return await result.query(query);
 }
 
