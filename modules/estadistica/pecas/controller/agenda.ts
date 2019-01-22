@@ -103,7 +103,6 @@ export async function consultaPecas(start, end, done) {
         });
         done();
     } catch (error) {
-        console.log(error);
         return (done(error));
     }
 }
@@ -466,15 +465,15 @@ async function insertar_agenda(a: any, num_bloque: any) {
  * @param type parameter type
  * @param {Array<string>} values an array of values
  */
-function parameteriseQueryForIn(request, columnName, parameterNamePrefix, type, values) {
-    let parameterNames = [];
-    for (let i = 0; i < values.length; i++) {
-        let parameterName = parameterNamePrefix + i;
-        request.input(parameterName, type, values[i]);
-        parameterNames.push(`@${parameterName}`);
-    }
-    return `${columnName} IN (${parameterNames.join(',')})`;
-}
+// function parameteriseQueryForIn(request, columnName, parameterNamePrefix, type, values) {
+//     let parameterNames = [];
+//     for (let i = 0; i < values.length; i++) {
+//         let parameterName = parameterNamePrefix + i;
+//         request.input(parameterName, type, values[i]);
+//         parameterNames.push(`@${parameterName}`);
+//     }
+//     return `${columnName} IN (${parameterNames.join(',')})`;
+// }
 
 // async function eliminaTurnoPecas(turnos: any[]) {
 async function eliminaAgenda(id_agenda: string) {
