@@ -7,6 +7,9 @@ import { ObraSocial } from './../../obraSocial/schemas/obraSocial';
 import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
 import { snomedModel } from '../../../core/term/schemas/snomed';
 import * as configAutomatica from './../schemas/configFacturacionAutomatica';
+import { json } from 'body-parser';
+import { stringify } from 'querystring';
+import { resolve } from 'path';
 
 export async function facturacionAutomatica(prestacion: any) {
     let idOrganizacion = prestacion.ejecucion.organizacion.id;
@@ -16,6 +19,7 @@ export async function facturacionAutomatica(prestacion: any) {
     let obraSocialPaciente = await getObraSocial(prestacion.paciente.documento);
     /* Pasar un solo parámetro prestaciones */
     let datosReportables = await getDatosReportables(prestacion.solicitud.tipoPrestacion.conceptId, prestacion);
+    console.log("Get Datos Reportablesss: ", datosReportables);
     // let datosReportables = await getDatosReportables(103750000);
 
     const factura = {
@@ -33,32 +37,7 @@ export async function facturacionAutomatica(prestacion: any) {
             conceptId: prestacion.solicitud.tipoPrestacion.conceptId,
             term: prestacion.solicitud.tipoPrestacion.term,
             fsn: prestacion.solicitud.tipoPrestacion.fsn,
-            datosReportables: [
-                {
-                    conceptId: '371580005',
-                    term: 'evaluación de antecedentes',
-                    valor: {
-                        conceptId: '160245001',
-                        nombre: 'sin problemas o incapacidad actual'
-                    }
-                },
-                {
-                    conceptId: '2111000013109',
-                    term: 'otoemisión acústica de oído izquierdo',
-                    valor: {
-                        conceptId: '2261000013100',
-                        nombre: 'otoemision acustica ausente'
-                    }
-                },
-                {
-                    conceptId: '2101000013106',
-                    term: 'otoemisión acústica de oído derecho',
-                    valor: {
-                        conceptId: '2271000013107',
-                        nombre: 'otoemisión acustica presente'
-                    }
-                }
-            ],
+            datosReportables: [datosReportables],
         },
         organizacion: {
             nombre: prestacion.ejecucion.organizacion.nombre,
@@ -76,13 +55,11 @@ export async function facturacionAutomatica(prestacion: any) {
         }
     }
 
-
-    // console.log("Factura: ", factura);
+    // console.log("Factura: ", JSON.stringify(factura));
 }
 
 function getConfiguracionAutomatica(conceptId: any) {
     return new Promise(async (resolve, reject) => {
-
         let query;
         query = configAutomatica.find({});
         query.where('snomed.conceptId').equals(conceptId);
@@ -96,102 +73,110 @@ function getConfiguracionAutomatica(conceptId: any) {
     });
 }
 
-function getDatosReportables(idTipoPrestacion: any, prestacion: any) {
-    return new Promise(async (resolve, reject) => {
-        let configAuto: any = await getConfiguracionAutomatica(idTipoPrestacion);
+async function getDatosReportables(idTipoPrestacion: any, prestacion: any) {
+    let configAuto: any = await getConfiguracionAutomatica(idTipoPrestacion);
 
-        if ((configAuto) && (configAuto.nomencladorSUMAR.datosReportables.length > 0)) {
-            let conceptos: any = [];
+    if ((configAuto) && (configAuto.nomencladorSUMAR.datosReportables.length > 0)) {
+        let conceptos: any = [];
 
-            const expresionesDR = configAuto.nomencladorSUMAR.datosReportables[0].valores.map((config: any) => config);
+        const expresionesDR = configAuto.nomencladorSUMAR.datosReportables.map((config: any) => config.valores);
+        console.log("Expresionesss: ", expresionesDR[0]);
+        let promises = expresionesDR[0].map(async (exp, index) => {
+            // for (let x = 0; x < expresionesDR[0].length; x++) { 
+            return new Promise(async (resolve, reject) => {
+                console.log("Expresion: ", exp.expresion);
+                let querySnomed = makeMongoQuery(exp.expresion);
+                let docs = await snomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 });
 
-            let datosReportables = [];
-
-            for (let x = 0; x < expresionesDR.length; x++) {
-                let querySnomed = makeMongoQuery(expresionesDR[x].expresion);
-                snomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docs: any[]) => {
-
-                    conceptos = docs.map((item) => {
-                        let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
-                        return {
-                            fsn: item.fullySpecifiedName,
-                            term: term,
-                            conceptId: item.conceptId,
-                            semanticTag: item.semtag
-                        };
-                    });
-                    // console.log("Conceptos: ", conceptos);
-
-                    // ejecutamos busqueda recursiva
-                    let data: any = buscarEnHudsFacturacion(prestacion, conceptos);
-
-                    if (data.length > 0) {
-                        let datoReportable = {
-                            conceptId: data[0].registro.concepto.conceptId,
-                            term: data[0].registro.concepto.term,
-                            valor: {
-                                conceptId: data[0].registro.valor.concepto.conceptId,
-                                nombre: data[0].registro.valor.concepto.term
-                            }
-                        };
-                        console.log("Un Datooooo: ", datoReportable);
-                        datosReportables.push(datoReportable);
-                        
-                    }
+                conceptos = docs.map((item: any) => {
+                    let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
+                    return {
+                        fsn: item.fullySpecifiedName,
+                        term: term,
+                        conceptId: item.conceptId,
+                        semanticTag: item.semtag
+                    };
                 });
-            }
-            console.log("Muchos datosss: ", datosReportables);
-            // resolve(querySnomed);
-        }
-    });
+                console.log("Conceptos: ", conceptos);
+                // ejecutamos busqueda recursiva
+                let data: any = await buscarEnHudsFacturacion(prestacion, conceptos);
+                console.log("Data despues de buscar en HudsFacturacion:  ", JSON.stringify(data));
+
+                if (data.length > 0) {
+                    let datoReportable = {
+                        conceptId: data[0].registro.concepto.conceptId,
+                        term: data[0].registro.concepto.term,
+                        valor: {
+                            conceptId: (data[0].registro.valor.concepto) ? data[0].registro.valor.concepto.conceptId : data[0].registro.valor,
+                            nombre: (data[0].registro.valor.concepto) ? data[0].registro.valor.concepto.term : data[0].registro.concepto.term
+                        }
+                    };
+                    console.log("Dato Reportable: ", datoReportable);
+                    resolve(datoReportable);
+                    // return datoReportable;
+                } else {
+                    resolve();
+                }
+                // }
+            });
+        });
+
+        return await Promise.all(promises);
+    }
 }
 
 function buscarEnHudsFacturacion(prestacion, conceptos) {
+    return new Promise(async (resolve, reject) => {
+        let data = [];
 
-    let data = [];
-    // recorremos prestaciones
-    // prestaciones.forEach((prestacion: any) => {
-    // recorremos los registros de cada prestacion
-    prestacion.ejecucion.registros.forEach(registro => {
+        prestacion.ejecucion.registros.forEach(async registro => {
+            // verificamos si el registro de la prestacion tiene alguno de
+            // los conceptos en su array de registros
+            let resultado = await matchConceptsFacturacion(registro, conceptos);
+            console.log("Resultado: ", resultado);
+            if (resultado) {
+                // agregamos el resultado a a devolver
+                data.push({
+                    registro: resultado
+                });
+            }
 
-        // verificamos si el registro de la prestacion tiene alguno de
-        // los conceptos en su array de registros
-        let resultado = matchConceptsFacturacion(registro, conceptos);
-        if (resultado) {
-            // agregamos el resultado a a devolver
-            data.push({
-                // tipoPrestacion: prestacion.solicitud.tipoPrestacion,
-                // fecha: registro.createdAt,
-                // profesional: registro.createdBy,
-                registro: resultado
-            });
-        }
-
+        });
+        console.log("Data deHuds facturacion: ", data);
+        resolve(data);
     });
-    // });
-
-    return data;
 }
 
 export function matchConceptsFacturacion(registro, conceptos) {
+    // return new Promise(async (resolve, reject) => {
     // almacenamos la variable de matcheo para devolver el resultado
     let match = false;
 
+    // Si no es un array entra
     if (!Array.isArray(registro['registros']) || registro['registros'].length <= 0) {
+        // console.log("Entra al primer If ");
         // verificamos que el concepto coincida con alguno de los elementos enviados en los conceptos
         if (registro.concepto && registro.concepto.conceptId && conceptos.find(c => c.conceptId === registro.concepto.conceptId)) {
             match = registro;
+            // resolve(match);
+            // console.log("Matchhhh: ", match);
         }
 
     } else {
+        // console.log("Entra al Segundo If");
         registro['registros'].forEach((reg: any) => {
             let encontrado = null;
             if (encontrado = matchConceptsFacturacion(reg, conceptos)) {
                 match = encontrado;
+                // resolve(match);
+                // console.log("Matchhhh Concepto Facturacion: ", match);
             }
         });
     }
+    // console.log("Match definitivo: ", match); 
+    // resolve(match);
     return match;
+    // });
 }
 
 
