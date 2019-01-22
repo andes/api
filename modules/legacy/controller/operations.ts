@@ -1,15 +1,9 @@
 import * as mongoose from 'mongoose';
 import * as constantes from '../schemas/constantes';
-import {
-    agendasCache
-} from '../schemas/agendasCache';
-import {
-    profesional
-} from './../../../core/tm/schemas/profesional';
+import { agendasCache } from '../schemas/agendasCache';
+import { profesional } from './../../../core/tm/schemas/profesional';
 import * as organizacion from './../../../core/tm/schemas/organizacion';
-import * as sql from 'mssql';
 import { configuracionPrestacionModel } from '../../../core/term/schemas/configuracionPrestacion';
-
 
 // Funciones privadas
 function traeProfesionalPorId(id) {
@@ -49,87 +43,6 @@ function organizacionCompleto(idOrganizacion): any {
         });
     });
 }
-
-// Funciones públicas
-export function noExistCDA(protocol, dniPaciente) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const query = 'select * from LAB_ResultadoEncabezado where idProtocolo = ' + protocol + ' and numeroDocumento =  ' + dniPaciente;
-            const result = await new sql.Request().query(query);
-            if (result[0].cda) {
-                return resolve(null); // Si ya tiene el cda no hacer nada
-            } else {
-                return resolve(result[0]); // Si no tiene cda asociado devuelve el objeto
-            }
-        } catch (ex) {
-            return reject(null);
-        }
-    });
-}
-
-export function setMarkProtocol(protocol, documento, idCda) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const query = 'UPDATE LAB_ResultadoEncabezado set cda = ' + '\'' + idCda + '\'' + ' where idProtocolo = ' + protocol + ' and numeroDocumento = ' + documento;
-            const result = await new sql.Request().query(query);
-            resolve(result);
-        } catch (ex) {
-            reject(null);
-        }
-    });
-}
-
-export function organizacionBySisaCode(code): any {
-    return new Promise((resolve, reject) => {
-        organizacion.model.findOne({
-            'codigo.sisa': code
-        }, (err, doc: any) => {
-            if (err) {
-                return reject(err);
-            }
-            if (doc) {
-                const org = {
-                    _id: doc.id,
-                    nombre: doc.nombre,
-                };
-                return resolve(org);
-            } else {
-                return reject({});
-            }
-        });
-    });
-}
-
-
-export function getEncabezados(documento): any {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const query = 'select efector.codigoSisa as efectorCodSisa, efector.nombre as efector, encabezado.idEfector as idEfector, encabezado.apellido, encabezado.nombre, encabezado.fechaNacimiento, encabezado.sexo, ' +
-                'encabezado.numeroDocumento, encabezado.fecha, encabezado.idProtocolo, encabezado.solicitante from LAB_ResultadoEncabezado as encabezado ' +
-                'inner join Sys_Efector as efector on encabezado.idEfector = efector.idEfector ' +
-                'where encabezado.numeroDocumento = ' + documento + ' and efector.codigoSisa<> ' + '\'' + 0 + '\'';
-            const result = await new sql.Request().query(query);
-            resolve(result);
-        } catch (err) {
-            reject(err);
-        }
-    });
-}
-
-
-export async function getDetalles(idProtocolo, idEfector) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const query = 'select grupo, item, resultado, valorReferencia, observaciones, hiv, profesional_val ' +
-                ' from LAB_ResultadoDetalle as detalle where esTitulo = \'No\' and detalle.idProtocolo = ' + idProtocolo + ' and detalle.idEfector = ' + idEfector;
-            const result = await new sql.Request().query(query);
-            resolve(result);
-        } catch (err) {
-            reject(err);
-        }
-    });
-}
-
 
 export async function cacheTurnos(unaAgenda) {
     // Armo el DTO para guardar en la cache de agendas

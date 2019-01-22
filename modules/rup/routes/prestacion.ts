@@ -8,6 +8,7 @@ import * as frecuentescrl from '../controllers/frecuentesProfesional';
 
 import { buscarEnHuds } from '../controllers/rup';
 import { Logger } from '../../../utils/logService';
+import { EventCore } from '@andes/event-bus';
 import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
 import { snomedModel } from '../../../core/term/schemas/snomed';
 
@@ -79,6 +80,58 @@ router.get('/prestaciones/huds/:idPaciente', async (req, res, next) => {
     });
 });
 
+router.get('/prestaciones/solicitudes', (req, res, next) => {
+    let query;
+    if (req.query.estados) {
+        const estados = (typeof req.query.estados === 'string') ? [req.query.estados] : req.query.estados;
+        query = Prestacion.find({
+            $where: estados.map(x => 'this.estados[this.estados.length - 1].tipo ==  \"' + x + '"').join(' || '),
+        });
+    } else {
+        query = Prestacion.find({}); // Trae todos
+    }
+
+    // Solicitudes tienen tipoPrestacionOrigen, entonces utilizamos esta propiedad
+    // para filtrarlas de de la colección prestaciones
+    // query.where('solicitud.tipoPrestacionOrigen.conceptId').exists(true); <<<<< cuando salgan de circulación solicitudes viejas la query es esta
+    query.where('estados.0.tipo').in(['pendiente', 'auditoria']);
+
+
+    if (req.query.idPaciente) {
+        query.where('paciente.id').equals(req.query.idPaciente);
+    }
+
+    if (req.query.solicitudDesde) {
+        query.where('solicitud.fecha').gte(moment(req.query.solicitudDesde).startOf('day').toDate() as any);
+    }
+
+    if (req.query.solicitudHasta) {
+        query.where('solicitud.fecha').lte(moment(req.query.solicitudHasta).endOf('day').toDate() as any);
+    }
+
+    // Ordenar por fecha de solicitud
+    if (req.query.ordenFecha) {
+        query.sort({ 'solicitud.fecha': -1 });
+    } else if (req.query.ordenFechaEjecucion) {
+        query.sort({ 'ejecucion.fecha': -1 });
+    }
+
+    if (req.query.limit) {
+        query.limit(parseInt(req.query.limit, 10));
+    }
+
+    query.exec((err, data) => {
+        if (err) {
+            return next(err);
+        }
+        if (req.params.id && !data) {
+            return next(404);
+        }
+        res.json(data);
+    });
+});
+
+router.get('/prestaciones/:id*?', (req, res, next) => {
 
 router.get('/prestaciones/:id*?', (req, res, next) => {
     if (req.params.id) {
@@ -123,6 +176,9 @@ router.get('/prestaciones/:id*?', (req, res, next) => {
         }
         if (req.query.idPrestacionOrigen) {
             query.where('solicitud.prestacionOrigen').equals(req.query.idPrestacionOrigen);
+        }
+        if (req.query.conceptId) {
+            query.where('solicitud.tipoPrestacion.conceptId').equals(req.query.conceptId);
         }
         if (req.query.turnos) {
             query.where('solicitud.turno').in(req.query.turnos);
@@ -221,6 +277,7 @@ router.post('/prestaciones', (req, res, next) => {
             return next(err);
         }
         res.json(data);
+        EventCore.emitAsync('rup:prestacion:create', data);
     });
 });
 
@@ -231,7 +288,6 @@ router.patch('/prestaciones/:id', (req, res, next) => {
         if (err) {
             return next(err);
         }
-
         switch (req.body.op) {
             case 'paciente':
                 if (req.body.paciente) {
@@ -247,6 +303,12 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 }
                 if (req.body.registros) {
                     data.ejecucion.registros = req.body.registros;
+                }
+                if (req.body.ejecucion && req.body.ejecucion.fecha) {
+                    data.ejecucion.fecha = req.body.ejecucion.fecha;
+                }
+                if (req.body.ejecucion && req.body.ejecucion.organizacion) {
+                    data.ejecucion.organizacion = req.body.ejecucion.organizacion;
                 }
                 break;
             case 'romperValidacion':
@@ -293,6 +355,10 @@ router.patch('/prestaciones/:id', (req, res, next) => {
         data.save((error, prestacion) => {
             if (error) {
                 return next(error);
+            }
+
+            if (req.body.estado && req.body.estado.tipo === 'validada') {
+                EventCore.emitAsync('rup:prestacion:validate', data);
             }
 
             // Actualizar conceptos frecuentes por profesional y tipo de prestacion
@@ -354,8 +420,6 @@ router.patch('/prestaciones/:id', (req, res, next) => {
             } else {
                 res.json(prestacion);
             }
-
-            Auth.audit(data, req);
             /*
             Logger.log(req, 'prestacionPaciente', 'update', {
                 accion: req.body.op,

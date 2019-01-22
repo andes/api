@@ -10,6 +10,7 @@ import * as operations from './../../legacy/controller/operations';
 import * as turnosController from '../controller/turnosController';
 import * as moment from 'moment';
 import * as debug from 'debug';
+import { EventCore } from '@andes/event-bus';
 
 const router = express.Router();
 const dbgTurno = debug('dbgTurno');
@@ -68,7 +69,7 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
         usuario.organizacion = (req as any).user.organizacion;
         const tipoTurno = (esHoy ? 'delDia' : 'programado');
         const turno = {
-            horaInicio: moment(new Date(), 'YYYY-MM-DD HH:mm:ss'),
+            horaInicio: (agendaRes as any).horaInicio,
             estado: 'asignado',
             tipoTurno,
             nota: req.body.nota,
@@ -120,6 +121,8 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
 
                 LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turnoLog, doc2.bloques[0].id, req.params.idAgenda);
                 res.json(doc2);
+
+                EventCore.emitAsync('citas:turno:asignar', turno);
             }
         });
 
@@ -130,6 +133,7 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
 
 
 /**
+ * DAR UN TURNO
  * Espera un objeto como este:
  * // Datos del Turno
     let datosTurno = {
@@ -245,6 +249,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         const etiquetaPaciente: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.paciente';
         const etiquetaPrestacion: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.tipoPrestacion';
         const etiquetaNota: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.nota';
+        const etiquetaEmitidoPor: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.emitidoPor';
         const etiquetaMotivoConsulta: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.motivoConsulta';
 
         const etiquetaReasignado: string = 'bloques.' + posBloque + '.turnos.' + posTurno + '.reasignado';
@@ -257,6 +262,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         update[etiquetaPaciente] = req.body.paciente;
         update[etiquetaTipoTurno] = tipoTurno;
         update[etiquetaNota] = req.body.nota;
+        update[etiquetaEmitidoPor] = req.body.emitidoPor ? req.body.emitidoPor : 'Gestión de pacientes';
         update[etiquetaMotivoConsulta] = req.body.motivoConsulta;
         if (req.body.reasignado) {
             update[etiquetaReasignado] = req.body.reasignado;
@@ -292,19 +298,25 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                     prestacion: update[etiquetaPrestacion],
                     tipoTurno: update[etiquetaTipoTurno] !== null ? update[etiquetaTipoTurno] : null,
                     nota: update[etiquetaNota],
+                    emitidoPor: update[etiquetaEmitidoPor], // agregamos el emitidoPor
                     motivoConsulta: update[etiquetaMotivoConsulta]
                 };
                 Logger.log(req, 'citas', 'asignarTurno', datosOp);
-                const turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
+                let turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
 
                 LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turno, req.params.idBloque, req.params.idAgenda);
+
+                EventCore.emitAsync('citas:turno:asignar', turno);
 
                 // Inserto la modificación como una nueva agenda, ya que luego de asociada a SIPS se borra de la cache
                 // Donde doc2 es el documeto Agenda actualizado
                 operations.cacheTurnos(doc2);
                 // Fin de insert cache
                 res.json(agendaRes);
+
             }
+
+
         });
     } else {
         return next('Los datos del paciente son inválidos');
@@ -348,6 +360,9 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
     });
 });
 
+/**
+ * se marca como reasginado un turno suspendido
+ */
 router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res, next) => {
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
     const continues = ValidateDarTurno.checkTurno(req.body.turno);
@@ -401,11 +416,9 @@ router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res
                 operations.cacheTurnos(doc2);
                 // Fin de insert cache
                 res.json(doc2);
-
                 if (req.body.turno.reasignado && req.body.turno.reasignado.siguiente) {
                     const turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
                     LoggerPaciente.logTurno(req, 'turnos:reasignar', req.body.turno.paciente, turno, req.params.idBloque, req.params.idAgenda);
-
                     NotificationService.notificarReasignar(req.params);
                 }
 

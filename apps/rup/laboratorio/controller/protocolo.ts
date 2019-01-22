@@ -65,12 +65,12 @@ export async function getResultadosAnteriores(idPaciente, conceptsIdPractica: [a
                     'ejecucion.registros.concepto.conceptId': {
                         $in: conceptsIdPractica
                     },
-                    'ejecucion.registros.valor.estados.tipo': 'validada'
+                    'ejecucion.registros.valor.estado   s.tipo': 'validada'
                 }]
             }
         },
         { $unwind: '$ejecucion.registros.valor.estados' },
-        { $sort: { 'ejecucion.registros.valor.estados.fecha': -1 } },
+        // { $sort: { 'ejecucion.registros.valor.estados.fecha': -1 } },
 
         {
             $match: {

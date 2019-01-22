@@ -7,7 +7,9 @@ import * as financiadorSchema from './financiador';
 import * as constantes from './constantes';
 import * as moment from 'moment';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
+
 import { Matching } from '@andes/match';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 /*
 interface IUserModel extends mongoose.Document {
@@ -163,13 +165,25 @@ pacienteSchema.virtual('edadReal').get(function () {
     return edad;
 });
 
+pacienteSchema.methods.basicos = function () {
+    return {
+        id: this._id,
+        nombre: this.nombre,
+        apellido: this.apellido,
+        documento: this.documento,
+        fechaNacimiento: this.fechaNacimiento,
+        sexo: this.sexo
+    };
+};
+
 /* Creo un indice para fulltext Search */
 // pacienteSchema.index({
 //     '$**': 'text'
 // });
 
 // Habilitar plugin de auditoría
-pacienteSchema.plugin(require('../../../mongoose/audit'));
+
+pacienteSchema.plugin(AuditPlugin);
 
 export let paciente = mongoose.model('paciente', pacienteSchema, 'paciente');
 export let pacienteMpi = Connections.mpi.model('paciente', pacienteSchema, 'paciente');

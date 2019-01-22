@@ -1,4 +1,5 @@
 import * as mongoose from 'mongoose';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 export let schema = new mongoose.Schema({
     tipo: {
@@ -10,8 +11,13 @@ export let schema = new mongoose.Schema({
         type: String,
         required: false,
         default: null
+    },
+    motivoRechazo: {
+        type: String,
+        required: false,
+        default: null
     }
 });
 
 // Habilitar plugin de auditoría
-schema.plugin(require('../../../mongoose/audit'));
+schema.plugin(AuditPlugin);
