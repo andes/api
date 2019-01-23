@@ -37,7 +37,7 @@ export async function facturacionAutomatica(prestacion: any) {
             conceptId: prestacion.solicitud.tipoPrestacion.conceptId,
             term: prestacion.solicitud.tipoPrestacion.term,
             fsn: prestacion.solicitud.tipoPrestacion.fsn,
-            datosReportables: [datosReportables],
+            datosReportables: [datosReportables[0]],
         },
         organizacion: {
             nombre: prestacion.ejecucion.organizacion.nombre,
@@ -55,7 +55,7 @@ export async function facturacionAutomatica(prestacion: any) {
         }
     }
 
-    // console.log("Factura: ", JSON.stringify(factura));
+    console.log("Factura: ", JSON.stringify(factura));
 }
 
 function getConfiguracionAutomatica(conceptId: any) {
@@ -80,12 +80,13 @@ async function getDatosReportables(idTipoPrestacion: any, prestacion: any) {
         let conceptos: any = [];
 
         const expresionesDR = configAuto.nomencladorSUMAR.datosReportables.map((config: any) => config.valores);
-        console.log("Expresionesss: ", expresionesDR[0]);
-        let promises = expresionesDR[0].map(async (exp, index) => {
+        console.log("Expresionesss: ", expresionesDR);
+        let promises = expresionesDR.map(async (exp, index) => {
             // for (let x = 0; x < expresionesDR[0].length; x++) { 
             return new Promise(async (resolve, reject) => {
-                console.log("Expresion: ", exp.expresion);
-                let querySnomed = makeMongoQuery(exp.expresion);
+                console.log("Index: ", index);
+                console.log("Expresion: ", exp[0].expresion);
+                let querySnomed = makeMongoQuery(exp[0].expresion);
                 let docs = await snomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 });
 
                 conceptos = docs.map((item: any) => {
@@ -173,7 +174,7 @@ export function matchConceptsFacturacion(registro, conceptos) {
             }
         });
     }
-    // console.log("Match definitivo: ", match); 
+    // console.log("Match definitivo: ", match);
     // resolve(match);
     return match;
     // });
