@@ -587,6 +587,21 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                     data.solicitud.turno = req.body.idTurno;
                 }
                 break;
+            case 'auditoriaLaboratorio':
+                if (req.body.paciente) {
+                    data.paciente = req.body.paciente;
+                }
+                if (req.body.idTurno) {
+                    data.solicitud.turno = req.body.idTurno;
+                }
+                if (req.body.registros) {
+                    data.ejecucion.registros = req.body.registros;
+                }
+                if (req.body.solicitud) {
+                    data.solicitud = req.body.solicitud;
+                }
+                break;
+
             default:
                 return next(500);
         }
