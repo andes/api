@@ -103,7 +103,7 @@ router.patch('/practicas/cobasc311/:id', async (req, res, next) => {
 
 router.post('/practicas/autoanalizador', async (req, res, next) => {
     enviarAutoanalizador();
-    return;
+    res.json({});
 });
 
 
