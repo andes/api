@@ -50,7 +50,7 @@
     "mongoose-gridfs": "^0.3.2",
     "mssql": "^4.1.0",
     "node-pushnotifications": "^1.0.18",
-    "node-sass": "^4.9.3",
+    "node-sass": "^4.11.0",
     "node-schedule": "^1.2.4",
     "nodemailer": "^4.6.2",
     "passport": "^0.3.2",
