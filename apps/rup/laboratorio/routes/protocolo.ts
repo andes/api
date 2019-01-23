@@ -71,7 +71,7 @@ router.patch('/practicas/cobasc311/:id', async (req, res, next) => {
             let id = new Types.ObjectId(req.body._id);
             // console.log('id:', id);
             // console.log(data.ejecucion.registros);
-            let index = data.ejecucion.registros.findIndex(x => {return  x._id.toString() === id.toString(); });
+            let index = data.ejecucion.registros.findIndex(x => { return x._id.toString() === id.toString(); });
             // console.log('index: ', index);
 
             data.ejecucion.registros[index].valor = req.body.valor;
@@ -103,6 +103,7 @@ router.patch('/practicas/cobasc311/:id', async (req, res, next) => {
 
 router.post('/practicas/autoanalizador', async (req, res, next) => {
     enviarAutoanalizador();
+    return;
 });
 
 
