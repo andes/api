@@ -5,7 +5,7 @@ const url = configPrivate.renaper.url;
 const serv = configPrivate.renaper.serv;
 const login = configPrivate.renaper;
 
-export function getServicioRenaper(paciente) {
+export function getServicioRenaper(paciente, userInfo?) {
     let resultado: any;
     return new Promise((resolve, reject) => {
         if (paciente) {
@@ -22,7 +22,7 @@ export function getServicioRenaper(paciente) {
                             const tipoConsulta = 'WS_RENAPER_documento';
                             const filtro = 'documento=' + paciente.documento + ';sexo=' + paciente.sexo;
                             try {
-                                resultado = await consultaRenaper(result, tipoConsulta, filtro);
+                                resultado = await consultaRenaper(result, tipoConsulta, filtro, userInfo);
                             } catch (error) {
                                 reject(error);
                             }
@@ -41,7 +41,7 @@ export function getServicioRenaper(paciente) {
     });
 }
 
-function consultaRenaper(sesion, tipo, filtro) {
+function consultaRenaper(sesion, tipo, filtro, userInfo?) {
     let rst: any;
     return new Promise((resolve, reject) => {
         if (sesion.return) {
@@ -55,7 +55,7 @@ function consultaRenaper(sesion, tipo, filtro) {
                         reject(err2);
                     }
                     try {
-                        rst = await solicitarServicio(sesion, tipo, filtro);
+                        rst = await solicitarServicio(sesion, tipo, filtro, userInfo);
                     } catch (error) {
                         reject(error);
                     }
@@ -69,7 +69,7 @@ function consultaRenaper(sesion, tipo, filtro) {
     });
 }
 
-function solicitarServicio(sesion, tipo, filtro) {
+function solicitarServicio(sesion, tipo, filtro, userInfo?) {
     return new Promise((resolve, reject) => {
         soap.createClient(serv, (err3, client2) => {
             if (err3) {
@@ -81,7 +81,7 @@ function solicitarServicio(sesion, tipo, filtro) {
                 Proveedor: 'GP-RENAPER',
                 Servicio: tipo,
                 DatoAuditado: filtro,
-                Operador: login.Usuario,
+                Operador: userInfo ? userInfo.documento : login.Usuario,
                 Cuerpo: 'hola',
                 Firma: false,
                 CuerpoFirmado: false,
@@ -92,14 +92,18 @@ function solicitarServicio(sesion, tipo, filtro) {
                     if (err4) {
                         reject(err4);
                     }
-                    const codigoResultado = result2.return.CodResultado['$value'];
-                    if (result2.return.Resultado['$value']) {
-                        const resultado = Buffer.from(result2.return.Resultado['$value'], 'base64').toString('utf8');
-                        // convertimos a JSON el resultado
-                        const resArray = JSON.parse(resultado);
-                        resolve({ codigo: codigoResultado, datos: resArray });
+                    if (result2 && result2.return) {
+                        const codigoResultado = result2.return.CodResultado['$value'];
+                        if (result2.return.Resultado['$value']) {
+                            const resultado = Buffer.from(result2.return.Resultado['$value'], 'base64').toString('utf8');
+                            // convertimos a JSON el resultado
+                            const resArray = JSON.parse(resultado);
+                            resolve({ codigo: codigoResultado, datos: resArray });
+                        } else {
+                            resolve({ codigo: codigoResultado, datos: [] });
+                        }
                     } else {
-                        resolve({ codigo: codigoResultado, datos: [] });
+                        reject('Error servicio RENAPER');
                     }
                 });
             } else {

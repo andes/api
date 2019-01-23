@@ -19,13 +19,40 @@ export let schema = new mongoose.Schema({
         type: String,
         enum: ['atomo', 'molecula', 'formula']
     },
+    // Calculo de formula a implementar
+    formulaImplementation: {
+        type: String,
+        required: false
+    },
     // Indica si este elementoRUP aplica a una solicitud
     esSolicitud: {
         type: Boolean,
         required: true,
         default: false
     },
+
+    // true si no muestra el label de motivo de consulta.
+    motivoConsultaOpcional: Boolean,
+
     // Parámetros generales a la hora de iniciar la prestación
+    /**
+     * titulo: label parametrizado
+     * required: Por lo general indica un input como requerido
+     * showterm: Muestra el term del concepto como label
+     * refsetid: En algunos casos se puede elegir conceptos desde un refset (deprecado). usar Query.
+     * query: Query a ejecutar para elegir o permitir conceptos. Depende donde se use la funcionalidad.
+     * reglas (?) se usa en indice de masa corporal
+     * icon: Icono de la secciones
+     * grupo: Se usa en lactancia
+     * defaultOptions: Opciones para renderizar un radioButton. Molecula 'Selección binaria'.
+     * plexRadioType: Tipo de radiobutton a utilizar. Molecula 'Selección binaria'.
+     * tipoSelect: Valores: select|radio -> renderiza uno o el otro en el componente SelectPorRefset
+     * titleOverride: Muestra un titulo como label (Atomo valorNumerico).
+     * unit: Unidad establecida en Atomo valorNumerico.
+     * min: valor minimo para componente valorNumerico
+     * max: valor maximo para componente valorNumerico
+     */
+
     params: {
         type: mongoose.Schema.Types.Mixed,
         validate: {
@@ -80,6 +107,10 @@ export let schema = new mongoose.Schema({
     // Elementos RUP más frecuentes para la ejecución.
     // Por ejemplo, en "Consulta de medicina general" se puede sugerir ejecutar "Signos vitales"
     frecuentes: [SnomedConcept],
+
+    informe: {
+        type: mongoose.Schema.Types.Mixed
+    },
 
     busqueda_guiada: [{
         nombre: String,

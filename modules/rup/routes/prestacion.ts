@@ -1,19 +1,82 @@
 import * as mongoose from 'mongoose';
 import * as express from 'express';
 import * as moment from 'moment';
-// import * as async from 'async';
 import { Auth } from './../../../auth/auth.class';
 import { model as Prestacion } from '../schemas/prestacion';
 import * as frecuentescrl from '../controllers/frecuentesProfesional';
-
-import { buscarEnHuds } from '../controllers/rup';
+import { buscarPaciente } from '../../../core/mpi/controller/paciente';
+import { buscarEnHuds, registrosProfundidad } from '../controllers/rup';
 import { Logger } from '../../../utils/logService';
-import { EventCore } from '@andes/event-bus';
 import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
 import { snomedModel } from '../../../core/term/schemas/snomed';
+import * as camasController from './../controllers/cama';
+import { EventCore } from '@andes/event-bus';
 
 const router = express.Router();
-const async = require('async');
+import async = require('async');
+
+
+/**
+ * Trae todas las prestaciones con ambitoOrigen = internacion, tambien solo las prestaciones
+ * internación y
+ * que el paciente no tiene una cama asignada.
+ */
+
+router.get('/prestaciones/sinCama', (req, res, next) => {
+    let query = {
+        'solicitud.organizacion.id': mongoose.Types.ObjectId(Auth.getOrganization(req)),
+        'solicitud.ambitoOrigen': 'internacion',
+        'solicitud.tipoPrestacion.conceptId': '32485007',  // Ver si encontramos otra forma de diferenciar las prestaciones de internacion
+        $where: 'this.estados[this.estados.length - 1].tipo ==  \"' + 'ejecucion' + '\"',
+    };
+
+    // Buscamos prestaciones que sean del ambito de internacion.
+    Prestacion.find(query, async (err, prestaciones) => {
+        if (err) {
+            return next(err);
+        }
+        if (!prestaciones) {
+            return res.status(404).send('No se encontraron prestaciones de internacion');
+        }
+        // Ahora buscamos si se encuentra asociada la internacion a una cama
+        let listaEspera = [];
+        let prestacion: any;
+        for (prestacion of prestaciones) {
+            let enEspera = {
+                prestacion,
+                ultimoEstado: null,
+                paseDe: false,
+                esEgreso: false,
+                paseA: null
+            };
+
+            // Buscamos si tiene una cama ocupada con el id de la internacion.
+            let cama = await camasController.buscarCamaInternacion(mongoose.Types.ObjectId(prestacion.id), 'ocupada');
+            // Loopeamos los registros de la prestacion buscando el informe de egreso.
+            let esEgreso = prestacion.ejecucion.registros.find(r => r.valor && r.valor.InformeEgreso);
+            // Si no encontramos una cama ocupada quiere decir que esa prestacion va a formar parte
+            // de nuestra lista.
+            if (cama && cama.length === 0) {
+                // Si encontramos el informe de ingreso en la prestacion entonces es
+                // un egreso. En caso de que no sea ingreso utilizamos la funcion buscarPasesCamaXInternacion.
+                if (esEgreso) {
+                    enEspera.ultimoEstado = esEgreso.concepto.term;
+                    enEspera.esEgreso = true;
+                } else {
+                    // Buscamos los pases que tiene la internacion
+                    let _camas: any = await camasController.buscarPasesCamaXInternacion(prestacion._id);
+                    if (_camas && _camas.length) {
+                        enEspera.ultimoEstado = _camas[_camas.length - 1].estados.unidadOrganizativa.term;
+                        enEspera.paseDe = true;
+                        enEspera.paseA = _camas[_camas.length - 1].estados.sugierePase;
+                    }
+                }
+                listaEspera.push(enEspera);
+            }
+        }
+        return res.json(listaEspera);
+    });
+});
 
 
 /***
@@ -80,6 +143,130 @@ router.get('/prestaciones/huds/:idPaciente', async (req, res, next) => {
     });
 });
 
+
+router.get('/prestaciones/resumenPaciente/:idPaciente', async (req, res, next) => {
+
+    // verificamos que sea un ObjectId válido
+    if (!mongoose.Types.ObjectId.isValid(req.params.idPaciente)) {
+        return res.status(404).send('Turno no encontrado');
+    }
+    // por defecto traemos todas las validadas, si no vemos el estado que viene en la request
+    const estado = (req.query.estado) ? req.query.estado : 'validada';
+
+    let query = {
+        'paciente.id': req.params.idPaciente,
+        $where: 'this.estados[this.estados.length - 1].tipo ==  \"' + estado + '\"'
+    };
+
+    if (req.query.idPrestacion) {
+        query['_id'] = mongoose.Types.ObjectId(req.query.idPrestacion);
+    }
+    // 'filtroPrestaciones' va a contener un primer filtro con todas las consultas relacionadas a 'consultaPrincipal'
+    let filtroPrestaciones: any = [];
+
+    return Prestacion.find(query, async (err, prestaciones) => {
+
+        if (err) {
+            return next(err);
+        }
+        if (!prestaciones) {
+            return res.status(404).send('Paciente no encontrado');
+        }
+
+        if (req.query.consultaPrincipal && req.query.conceptos) {
+            let consultaPrincipal = req.query.consultaPrincipal;
+            let conceptosBuscados = JSON.parse(req.query.conceptos);
+            let querySnomed = makeMongoQuery(consultaPrincipal);
+            let conceptosAux = [];
+            let concepto;
+
+            /* Se recorre el arreglo 'conceptosBuscados' para separar aquellos conceptos que son una expresion de snomed
+            ya que requieren una consulta a su DB para traer los conceptos concretos que se buscarán */
+            for (let i = 0; i < conceptosBuscados.length; i++) {
+                concepto = conceptosBuscados[i];
+
+                // si el concepto buscado es una expresion snomed ..
+                if (!/^([0-9])+$/.test(concepto.conceptId)) {
+                    let docs = await snomedModel.find(makeMongoQuery(concepto.conceptId), { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 });
+
+                    // Set de conceptos relacionados ..
+                    let conceptosArray = docs.map((item: any) => {
+                        let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
+                        return {
+                            fsn: item.fullySpecifiedName,
+                            term,
+                            conceptId: item.conceptId,
+                            semanticTag: item.semtag
+                        };
+                    });
+                    conceptosAux.push({ titulo: concepto.titulo, conceptos: conceptosArray });
+                } else {
+                    // Si no es una expresion snomed se almacena en un arreglo como unico elemento
+                    conceptosAux.push({ titulo: concepto.titulo, conceptos: [concepto] });
+                }
+            }
+            conceptosBuscados = conceptosAux;
+
+
+            /* Los 'conceptosBuscados' que se quieren encontrar, son sólo los que pertenecen a la consulta 'consultaPrincipal',
+                para esto se realiza el siguiente filtro mediante una consulta snomed */
+            snomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docsCP: any[]) => {
+                // Set de consultas relacionadas con 'consultaPrincipal'
+                filtroPrestaciones = docsCP.map((item) => {
+                    let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
+                    return {
+                        fsn: item.fullySpecifiedName,
+                        term,
+                        conceptId: item.conceptId,
+                        semanticTag: item.semtag
+                    };
+                });
+
+                let data = [];
+
+                // Para cada prestación del paciente se busca si contiene una 'consultaPrincipal'
+                prestaciones.forEach((prestacion: any) => {
+                    let registros = [];
+                    let motivoConsulta;
+                    let resultBusqueda = [];
+                    // recorremos los registros de cada prestacion del paciente.
+                    prestacion.ejecucion.registros.forEach(reg => {
+                        // Si alguna prestación matchea con una de las anteriormente filtradas..
+                        if (filtroPrestaciones.find(fp => fp.conceptId === reg.concepto.conceptId)) {
+                            motivoConsulta = { term: reg.concepto.term, conceptId: reg.concepto.conceptId };
+                            let dto;
+                            /* Por cada concepto buscado se genera un obj json para retornar. Si el concepto no fue encontrado
+                                se inserta de todas maneras con 'contenido' nulo para conservar registro del resultado */
+                            conceptosBuscados.forEach(conceptos => {
+                                dto = { titulo: conceptos.titulo, contenido: null };
+                                resultBusqueda = registrosProfundidad(reg, conceptos.conceptos);
+
+                                if (resultBusqueda.length) {
+                                    dto.contenido = resultBusqueda[0];
+                                }
+                                registros.push(dto);
+                            });
+
+                            if (registros.length) {
+                                // se agrega la prestacion y los conceptos matcheados al arreglo a retornar
+                                data.push({
+                                    motivo: motivoConsulta,
+                                    fecha: prestacion.createdAt,
+                                    profesional: prestacion.createdBy,
+                                    conceptos: registros
+                                });
+                            }
+                        }
+                    });
+                });
+                res.json(data);
+            });
+        } else {
+            return next(404);
+        }
+    });
+});
+
 router.get('/prestaciones/solicitudes', (req, res, next) => {
     let query;
     if (req.query.estados) {
@@ -95,7 +282,14 @@ router.get('/prestaciones/solicitudes', (req, res, next) => {
     // para filtrarlas de de la colección prestaciones
     // query.where('solicitud.tipoPrestacionOrigen.conceptId').exists(true); <<<<< cuando salgan de circulación solicitudes viejas la query es esta
     query.where('estados.0.tipo').in(['pendiente', 'auditoria']);
-
+    if (req.query.tieneTurno !== undefined) {
+        if (req.query.tieneTurno === true) {
+            query.where('solicitud.turno').ne(null);
+        }
+        if (req.query.tieneTurno === false) {
+            query.where('solicitud.turno').equals(null);
+        }
+    }
 
     if (req.query.idPaciente) {
         query.where('paciente.id').equals(req.query.idPaciente);
@@ -107,6 +301,24 @@ router.get('/prestaciones/solicitudes', (req, res, next) => {
 
     if (req.query.solicitudHasta) {
         query.where('solicitud.fecha').lte(moment(req.query.solicitudHasta).endOf('day').toDate() as any);
+    }
+
+    if (req.query.prestacionDestino) {
+        query.where('solicitud.tipoPrestacion.id').equals(req.query.prestacionDestino);
+    }
+
+    if (req.query.organizacionOrigen) {
+        const arr: any[] = [];
+        arr.push({ 'solicitud.organizacionOrigen': { $exists: true } });
+        arr.push({ 'solicitud.organizacionOrigen.id': req.query.organizacionOrigen });
+        query.and(arr);
+    }
+
+    if (req.query.tipoPrestaciones) {
+        const variable: any[] = [];
+        variable.push({ 'solicitud.tipoPrestacion.id': { $in: req.query.tipoPrestaciones } });
+        variable.push({ 'solicitud.tipoPrestacionOrigen.id': { $in: req.query.tipoPrestaciones } });
+        query.or(variable);
     }
 
     // Ordenar por fecha de solicitud
@@ -131,7 +343,7 @@ router.get('/prestaciones/solicitudes', (req, res, next) => {
     });
 });
 
-router.get('/prestaciones/:id*?', (req, res, next) => {
+router.get('/prestaciones/:id*?', async (req, res, next) => {
 
     if (req.params.id) {
         const query = Prestacion.findById(req.params.id);
@@ -171,7 +383,10 @@ router.get('/prestaciones/:id*?', (req, res, next) => {
             query.where('solicitud.profesional.id').equals(req.query.idProfesional);
         }
         if (req.query.idPaciente) {
-            query.where('paciente.id').equals(req.query.idPaciente);
+            let { paciente } = await buscarPaciente(req.query.idPaciente);
+            if (paciente) {
+                query.where('paciente.id').in(paciente.vinculos);
+            }
         }
         if (req.query.idPrestacionOrigen) {
             query.where('solicitud.prestacionOrigen').equals(req.query.idPrestacionOrigen);
@@ -230,12 +445,28 @@ router.get('/prestaciones/:id*?', (req, res, next) => {
         // Si tienen prestacionOrigen son generadas por RUP y no se listan
         // Si tienen turno, dejan de estsar pendientes de turno y no se listan
 
-        if (req.query.tienePrestacionOrigen === 'no') {
-            query.where('solicitud.prestacionOrigen').equals(null);
+
+        if (req.query.tienePrestacionOrigen !== undefined) {
+            if (req.query.tienePrestacionOrigen === true) {
+                query.where('solicitud.prestacionOrigen').ne(null);
+            }
+            if (req.query.tienePrestacionOrigen === false) {
+                query.where('solicitud.prestacionOrigen').equals(null);
+            }
         }
 
-        if (req.query.tieneTurno === 'no') {
-            query.where('solicitud.turno').equals(null);
+
+        if (req.query.tieneTurno !== undefined) {
+            if (req.query.tieneTurno === true) {
+                query.where('solicitud.turno').ne(null);
+            }
+            if (req.query.tieneTurno === false) {
+                query.where('solicitud.turno').equals(null);
+            }
+        }
+
+        if (req.query.tipoPrestaciones) {
+            query.where({ 'solicitud.tipoPrestacion.conceptId': { $in: req.query.tipoPrestaciones } });
         }
 
         if (req.query.organizacion) {
@@ -244,6 +475,10 @@ router.get('/prestaciones/:id*?', (req, res, next) => {
         if (req.query.tipoPrestacionSolicititud) {
             query.where('solicitud.tipoPrestacion.conceptId').equals(req.query.tipoPrestacionSolicititud);
         }
+        if (req.query.ambitoOrigen) {
+            query.where('solicitud.ambitoOrigen').equals(req.query.ambitoOrigen);
+        }
+
         // Ordenar por fecha de solicitud
         if (req.query.ordenFecha) {
             query.sort({ 'solicitud.fecha': -1 });
@@ -341,6 +576,12 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 break;
 
 
+            case 'informeIngreso':
+                if (req.body.informeIngreso) {
+                    data.ejecucion.registros[0].valor.informeIngreso = req.body.informeIngreso;
+                    data.ejecucion.registros[0].markModified('valor');
+                }
+                break;
             case 'asignarTurno':
                 if (req.body.idTurno) {
                     data.solicitud.turno = req.body.idTurno;

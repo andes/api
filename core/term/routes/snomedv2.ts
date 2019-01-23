@@ -198,8 +198,12 @@ router.get('/snomed/search', async (req, res, next) => {
 });
 
 router.get('/snomed/expression', async (req, res, next) => {
+    let options = {
+        form: req.query.type || 'stated'
+    };
+
     let expression = req.query.expression;
-    let query = makeMongoQuery(expression);
+    let query = makeMongoQuery(expression, options);
     let project = { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 };
     let languageCode = req.query.languageCode ? req.query.languageCode : 'es';
 
@@ -215,7 +219,7 @@ router.get('/snomed/expression', async (req, res, next) => {
             conditions.push({ 'descriptions.words': { $regex: expWord } });
         });
 
-        let pipeline = [
+        const pipeline = [
             {
                 $match: query,
             },

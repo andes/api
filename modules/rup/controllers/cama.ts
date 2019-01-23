@@ -1,5 +1,6 @@
 import { model as cama } from '../../../core/tm/schemas/camas';
 import { toArray } from '../../../utils/utils';
+import * as moment from 'moment';
 
 export function buscarCamaInternacion(idInternacion, estado) {
     const query = cama.aggregate([
@@ -22,10 +23,270 @@ export function buscarPasesCamaXInternacion(idInternacion) {
     pipelineEstado = [
         { $match: { 'estados.idInternacion': idInternacion } },
         { $unwind: '$estados' },
-        { $match: { 'estados.idInternacion': idInternacion } },
+        { $match: { 'estados.idInternacion': idInternacion, 'estados.esMovimiento': true } },
         { $sort: { 'estados.fecha': 1 } }];
 
     const query = cama.aggregate(pipelineEstado);
 
     return toArray(query.cursor({}).exec());
+}
+
+/**
+ * Devuelve todas las camas ocupadas por unidad organizativa en una fecha dada
+ * @param unidadOrganizativa
+ * @param fecha
+ */
+export function camaOcupadasxUO(unidadOrganizativa, fecha, idOrganizacion) {
+    let pipelineEstado = [];
+    pipelineEstado = [{
+        $match: {
+            'organizacion._id': idOrganizacion,
+            'estados.unidadOrganizativa.conceptId': unidadOrganizativa,
+            'estados.fecha': { $lte: fecha },
+            'estados.esCensable': true,
+            'estados.estado': 'ocupada',
+        }
+    },
+    { $unwind: '$estados' },
+    {
+        $match: {
+            'estados.unidadOrganizativa.conceptId': unidadOrganizativa,
+            'estados.fecha': { $lte: fecha },
+            'estados.esCensable': true,
+            'estados.esMovimiento': true,
+            'estados.estado': 'ocupada'
+        }
+    },
+    { $sort: { nombre: 1, 'estados.fecha': 1 } },
+    {
+        $group: {
+            _id: {
+                id: '$_id',
+                nombre: '$nombre',
+                organizacion: '$organizacion',
+                tipoCama: '$tipoCama',
+                idInternacion: '$estados.idInternacion'
+            },
+            ultimoEstado: { $last: '$estados' }
+        }
+    },
+    // {
+    //     $match: { 'ultimoEstado.estado': 'ocupada' }
+    // },
+    { $sort: { 'ultimoEstado.fecha': 1 } }];
+
+
+    let query = cama.aggregate(pipelineEstado);
+
+    return toArray(query.cursor({}).exec());
+}
+
+export function desocupadaEnDia(dtoCama, fecha) {
+    return new Promise(async (resolve, reject) => {
+
+        let pipelineEstado = [];
+        let ultimoEstadofinDia = moment(dtoCama.ultimoEstado.fecha).endOf('day').toDate();
+        let finDiaConsulta = moment(fecha).endOf('day').toDate();
+        let inicioDia = moment(fecha).startOf('day').toDate();
+        if (finDiaConsulta > ultimoEstadofinDia) {
+            pipelineEstado = [
+                { $match: { _id: dtoCama._id.id } },
+                { $unwind: '$estados' },
+                {
+                    $match: {
+                        $and: [{
+                            'estados.fecha': {
+                                $lte: inicioDia,
+                                $gte: dtoCama.ultimoEstado.fecha
+                            }
+                        }, { 'estados.estado': { $ne: 'ocupada' } }]
+                    }
+                }
+            ];
+            let data = await toArray(cama.aggregate(pipelineEstado).cursor({}).exec());
+
+            if (data && data.length > 0) {
+                return resolve(null);
+            } else {
+                return resolve(dtoCama);
+            }
+        } else {
+            return resolve(dtoCama);
+        }
+    });
+}
+export function camaXInternacion(idInternacion) {
+    return new Promise(async (resolve, reject) => {
+        let pipelineEstado = [];
+
+        pipelineEstado = [
+            { $match: { 'estados.idInternacion': idInternacion } },
+            { $unwind: '$estados' },
+            { $match: { 'estados.idInternacion': idInternacion } },
+            { $sort: { 'estados.fecha': -1 } },
+            { $limit: 1 }];
+
+        let data = await toArray(cama.aggregate(pipelineEstado).cursor({}).exec());
+        if (data && data.length) {
+            cama.findById(data[0]._id).then(res => {
+                return resolve(res);
+            }).catch(err1 => {
+                return reject(err1);
+            });
+        } else {
+            return resolve(null);
+        }
+
+    });
+}
+
+export function disponibilidadXUO(unidad, fecha, idOrganizacion) {
+    return new Promise((resolve, reject) => {
+        let inicioDia = moment(fecha).startOf('day').toDate();
+        let finDia = moment(fecha).endOf('day').toDate();
+
+        let pipelineInicioDia = [{
+            $match: {
+                'organizacion._id': idOrganizacion,
+                'estados.unidadOrganizativa.conceptId': unidad,
+                'estados.fecha': { $lte: inicioDia }
+            }
+        },
+        { $unwind: '$estados' }, {
+            $match: {
+                'estados.unidadOrganizativa.conceptId': unidad,
+                'estados.fecha': { $lte: inicioDia }
+            }
+        },
+        { $sort: { 'estados.fecha': 1 } }, {
+            $group: {
+                _id: {
+                    id: '$_id',
+                    nombre: '$nombre',
+                    organizacion: '$organizacion',
+                    sector: '$sector',
+                    habitacion: '$habitacion',
+                    tipoCama: '$tipoCama'
+                },
+                ultimoEstado: { $last: '$estados' }
+            }
+        },
+        { $match: { 'ultimoEstado.unidadOrganizativa.conceptId': unidad, 'ultimoEstado.estado': { $nin: ['bloqueada', 'reparacion', 'ocupada'] } } }];
+
+        let pipelineFinDia = [{
+            $match: {
+                'organizacion._id': idOrganizacion,
+                'estados.unidadOrganizativa.conceptId': unidad,
+                'estados.fecha': { $lte: finDia }
+            }
+        },
+        { $unwind: '$estados' }, {
+            $match: {
+                'estados.unidadOrganizativa.conceptId': unidad,
+                'estados.fecha': { $lte: finDia }
+            }
+        },
+        { $sort: { 'estados.fecha': 1 } }, {
+            $group: {
+                _id: {
+                    id: '$_id',
+                    nombre: '$nombre',
+                    organizacion: '$organizacion',
+                    sector: '$sector',
+                    habitacion: '$habitacion',
+                    tipoCama: '$tipoCama'
+                },
+                ultimoEstado: { $last: '$estados' }
+            }
+        },
+        { $match: { 'ultimoEstado.estado': { $nin: ['bloqueada', 'reparacion', 'ocupada'] } } }];
+
+        let promises = [
+            toArray(cama.aggregate(pipelineInicioDia).cursor({}).exec()),
+            toArray(cama.aggregate(pipelineFinDia).cursor({}).exec())
+        ];
+        return Promise.all(promises).then(([dataIni, dataFin]) => {
+            const salida = { disponibilidad0: dataIni.length, disponibilidad24: dataFin.length };
+            return resolve(salida);
+        }).catch(reject);
+
+    });
+}
+export async function getHistorialCama(idOrganizacion, fechaDesde, fechaHasta, idCama) {
+
+    let historial = [];
+    historial = [{
+        $match: {
+            _id: idCama
+        }
+    },
+    { $unwind: '$estados' },
+    { $sort: { nombre: 1, 'estados.fecha': -1 } },
+    {
+        $match: {
+            'organizacion._id': idOrganizacion,
+            'estados.fecha': {
+                $lte: fechaHasta,
+                $gte: fechaDesde
+            },
+        }
+    },
+    {
+        $project: {
+            estado: '$estados.estado',
+            fecha: '$estados.fecha',
+            censable: '$estados.esCensable',
+            unidadOrganizativa: '$estados.unidadOrganizativa.term',
+            paciente: '$estados.paciente'
+
+        }
+    },
+    {
+        $limit: 30
+    },
+    ];
+    return await cama.aggregate(historial).exec();
+}
+
+export function camasXfecha(idOrganizacion, fecha) {
+    return new Promise(async (resolve, reject) => {
+        let pipelineEstado = [];
+
+        pipelineEstado = [{
+            $match: {
+                'organizacion._id': idOrganizacion,
+                'estados.fecha': { $lte: fecha }
+            }
+        },
+        { $unwind: '$estados' },
+        {
+            $match: {
+                'estados.fecha': { $lte: fecha }
+            }
+        },
+        { $sort: { 'estados.fecha': 1 } },
+        {
+            $group:
+            {
+                _id: { id: '$_id', },
+                id: { $last: '$_id' },
+                ultimoEstado: { $last: '$estados' },
+                organizacion: { $last: '$organizacion' },
+                sectores: { $last: '$sectores' },
+                habitacion: { $last: '$habitacion' },
+                nombre: { $last: '$nombre' },
+                tipoCama: { $last: '$tipoCama' },
+                unidadOrganizativaOriginal: { $last: '$unidadOrganizativaOriginal' },
+                equipamiento: { $last: '$equipamiento' }
+
+            }
+        }];
+        let camas = await toArray(cama.aggregate(pipelineEstado).cursor({}).exec());
+        if (camas && camas.length) {
+            return resolve(camas);
+        } else {
+            return resolve(null);
+        }
+
+    });
 }

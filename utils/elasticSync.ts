@@ -18,6 +18,7 @@ export class ElasticSync {
         const nuevoPac = JSON.parse(JSON.stringify(paciente));
         delete nuevoPac._id;
         delete nuevoPac.relaciones;
+        delete nuevoPac.direccion;
         return this._sync(paciente._id.toString(), nuevoPac);
     }
 
@@ -50,6 +51,7 @@ export class ElasticSync {
         let searchObj = {};
         if (query.q) {
             searchObj = query;
+            searchObj['index'] = this.INDEX;
         } else {
             searchObj = {
                 index: this.INDEX,
@@ -57,6 +59,37 @@ export class ElasticSync {
             };
         }
 
+        return this.connElastic.search(searchObj);
+    }
+
+    public searchMultipleFields(query) {
+        let searchObj = {};
+        if (query) {
+            let must = [];
+            const terms = {};
+
+            for (let key in query) {
+                const match = {};
+                if (key === 'claveBlocking') {
+                    terms[key] = query[key].map(s => s.toLowerCase());
+                    must.push({ terms });
+                } else {
+                    match[key] = query[key];
+                    must.push({ match });
+                }
+            }
+            searchObj = {
+                index: this.INDEX,
+                size: 1000,
+                body: {
+                    query: {
+                        bool: {
+                            must
+                        }
+                    }
+                }
+            };
+        }
         return this.connElastic.search(searchObj);
     }
 
@@ -88,26 +121,6 @@ export class ElasticSync {
             }
         });
     }
-
-    // Cambiamos este método ya que teníamos problemas con el metadata de Elastic para pacientes viejos creados con mongoconnector
-    // public update(id, data) {
-    //     return new Promise((resolve, reject) => {
-    //         this.connElastic.update({
-    //             index: this.INDEX,
-    //             type: this.TYPE,
-    //             id,
-    //             body: {
-    //                 doc: data
-    //             }
-    //         }, function (error, response) {
-    //             if (error) {
-    //                 console.log('error gros en update elastico', error, data);
-    //                 reject(error);
-    //             }
-    //             resolve(true);
-    //         });
-    //     });
-    // }
 
     public delete(id) {
         return new Promise((resolve, reject) => {

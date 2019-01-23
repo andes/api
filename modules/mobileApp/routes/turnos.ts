@@ -9,7 +9,7 @@ import { Logger } from '../../../utils/logService';
 import * as recordatorioController from '../controller/RecordatorioController';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { toArray } from '../../../utils/utils';
-
+import * as controllerPaciente from '../../../core/mpi/controller/paciente';
 // let async = require('async');
 
 const router = express.Router();
@@ -39,7 +39,12 @@ router.get('/turnos', async (req: any, res, next) => {
 
     const pacienteId = req.user.pacientes[0].id;
 
-    matchTurno['bloques.turnos.paciente.id'] = mongoose.Types.ObjectId(pacienteId);
+    let { paciente } = await controllerPaciente.buscarPaciente(pacienteId);
+    if (!paciente) {
+        return next({ message: 'no existe el paciente' });
+    }
+
+    matchTurno['bloques.turnos.paciente.id'] = { $in: paciente.vinculos };
 
     // matchTurno['estado'] = 'publicada';
 

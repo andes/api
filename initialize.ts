@@ -1,10 +1,13 @@
 import * as bodyParser from 'body-parser';
+import * as boolParser from 'express-query-boolean';
 import * as config from './config';
+import * as configPrivate from './config.private';
 import { Auth } from './auth/auth.class';
 import { Swagger } from './swagger/swagger.class';
 import { Connections } from './connections';
 import * as HttpStatus from 'http-status-codes';
-import { Express } from 'express';
+import { Express, Router } from 'express';
+import { AndesDrive } from '@andes/drive';
 
 const requireDir = require('require-dir');
 
@@ -17,6 +20,7 @@ export function initAPI(app: Express) {
 
     // Configura Express
     app.use(bodyParser.json({ limit: '150mb' }));
+    app.use(boolParser());
     app.use(bodyParser.urlencoded({
         extended: true
     }));
@@ -49,6 +53,17 @@ export function initAPI(app: Express) {
                 }
             }
         }
+    }
+
+    /**
+     * Inicializa las rutas para adjuntar archivos
+     */
+    if (configPrivate.Drive) {
+        AndesDrive.setup(configPrivate.Drive);
+        const router = Router();
+        router.use(Auth.authenticate());
+        AndesDrive.install(router);
+        app.use('/api/drive', router);
     }
 
     // Error handler

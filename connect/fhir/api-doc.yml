@@ -1,0 +1,87 @@
+paths:
+  /connect/fhir/patient/$match:
+    get:
+      tags:
+        - "fhir"
+      description: Encuentra coincidencias de pacientes usando la lógica basada en MPI. Ejemplos ../connect/fhir/patient/$match?family='ALBARRACIN' ../connect/fhir/patient/$match?given='JOAQUIN' ../connect/fhir/patient/$match?identifier='11111111'
+      summary: Encuentra coincidencias de pacientes usando la lógica basada en MPI. 
+      security:
+        - JWT: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: family
+          in: query
+          description: Apellidos del paciente.
+          ¿type: string
+        - name: given
+          in: query
+          description: Nombres del paciente, incluye segundo nombre
+          type: string
+        - name: identifier
+          in: query
+          description: Identificador del paciente(documento).
+          type: string
+      responses:
+        '200':
+          description: Devuelve un listado con los datos de los pacientes que encontro coincidencias
+        '401':
+          description: No Autorizado
+  /connect/fhir/practitioner/$match:
+    get:
+      tags:
+        - "fhir"
+      description: Encuentra coincidencias de profesionales según la consulta dada. Ejemplos ../connect/fhir/practitioner/$match?family='ALBARRACIN' ../connect/fhir/practitioner/$match?given='JOAQUIN' ../connect/fhir/practitioner/$match?identifier='11111111'
+      summary: Encuentra coincidencias de profesionales.
+      security:
+        - JWT: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: family
+          in: query
+          description: Apellidos del profesional.
+          type: string
+        - name: given
+          in: query
+          description: Nombres del profesional
+          type: string
+        - name: identifier
+          in: query
+          description: Documento del profesional.
+          type: string
+      responses:
+        '200':
+          description: Devuelve un listado con los datos de los profesionales que encontro coincidencias en formato FHIR
+        '401':
+          description: No Autorizado
+  /connect/fhir/organization/$match:
+    get:
+      tags:
+        - "fhir"
+      description: Encuentra coincidencias de organizaciones según la consulta dada. Ejemplos ../connect/fhir/organization/$match?name=ZAPALA ../connect/fhir/organization/$match?identifier=51581122367569
+      summary: Encuentra coincidencias de organizaciones.
+      security:
+        - JWT: []
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: name
+          in: query
+          description: Nombre de la organizacion.
+          type: string
+        - name: identifier
+          in: query
+          description: Código sisa.
+          type: string
+      responses:
+        '200':
+          description: Devuelve un listado con los datos de las organizaciones que encontro coincidencias en formato FHIR
+        '401':
+          description: No Autorizado

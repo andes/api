@@ -11,6 +11,7 @@ import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import { Matching } from '@andes/match';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
+let ObjectId = mongoose.Types.ObjectId;
 /*
 interface IUserModel extends mongoose.Document {
     nombre: String;
@@ -20,6 +21,10 @@ interface IUserModel extends mongoose.Document {
 */
 
 export let pacienteSchema: mongoose.Schema = new mongoose.Schema({
+    /*
+    * Información de los IDs de los pacientes en otros sistemas y también la información
+    * de los pacientes vinculados. La vinculación es unilateral.
+    */
     identificadores: [{
         _id: false,
         entidad: String,
@@ -29,6 +34,7 @@ export let pacienteSchema: mongoose.Schema = new mongoose.Schema({
         type: String,
         es_indexed: true
     },
+    certificadoRenaper: String,
     cuil: {
         type: String,
         es_indexed: true
@@ -101,6 +107,16 @@ pacienteSchema.pre('save', function (next) {
     }
     next();
 
+});
+
+pacienteSchema.virtual('vinculos').get(function () {
+    if (this.identificadores) {
+        let identificadores = this.identificadores.filter(i => i.entidad === 'ANDES').map(i => ObjectId(i.valor));
+        return [this._id, ...identificadores];
+    } else {
+        return [this._id];
+    }
+    return [];
 });
 
 /* Se definen los campos virtuals */

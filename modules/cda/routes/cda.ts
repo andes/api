@@ -5,13 +5,13 @@ import { model as Cie10 } from '../../../core/term/schemas/cie10';
 import { makeFs } from '../schemas/CDAFiles';
 import * as pacienteCtr from '../../../core/mpi/controller/paciente';
 import * as cdaCtr from '../controller/CDAPatient';
-
-import * as mongoose from 'mongoose';
+import { Types } from 'mongoose';
 import * as moment from 'moment';
-
-
 import { Auth } from '../../../auth/auth.class';
 import { EventCore } from '@andes/event-bus';
+import { AndesDrive } from '@andes/drive';
+
+const ObjectId = Types.ObjectId;
 
 let path = require('path');
 let router = express.Router();
@@ -44,7 +44,7 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
             return next({ error: 'prestacion_invalida' });
         }
         const cie10Code = req.body.cie10;
-        const file = req.body.file;
+        const file: string = req.body.file;
         const texto = req.body.texto;
         // Terminar de decidir esto
         const organizacion = await Organizaciones.findById(orgId, { _id: 1, nombre: 1 });
@@ -65,17 +65,33 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
         if (!paciente) {
             return next({ error: 'paciente_inexistente' });
         }
-        const uniqueId = String(new mongoose.Types.ObjectId());
+        const uniqueId = String(new ObjectId());
 
         let fileData, adjuntos;
         if (file) {
-            const fileObj: any = cdaCtr.base64toStream(file);
-            fileObj.metadata = {
-                cdaId: mongoose.Types.ObjectId(uniqueId),
-                paciente: mongoose.Types.ObjectId(paciente.id)
-            };
-            fileData = await cdaCtr.storeFile(fileObj);
-            adjuntos = [{ path: fileData.data, id: fileData.id }];
+            if (file.startsWith('id:')) {
+                const id = file.substring(3);
+                const adjunto = await AndesDrive.find(id);
+                if (adjunto) {
+                    fileData = {
+                        id,
+                        is64: false,
+                        mime: adjunto.mimetype,
+                        data: `${id}.${adjunto.extension}`
+                    };
+                    adjuntos = [{ path: fileData.data, id: ObjectId(fileData.id), adapter: 'drive' }];
+                } else {
+                    return next({ error: 'file_not_exists' });
+                }
+            } else {
+                const fileObj: any = cdaCtr.base64toStream(file);
+                fileObj.metadata = {
+                    cdaId: ObjectId(uniqueId),
+                    paciente: ObjectId(paciente.id)
+                };
+                fileData = await cdaCtr.storeFile(fileObj);
+                adjuntos = [{ path: fileData.data, id: fileData.id }];
+            }
         }
         const cda = cdaCtr.generateCDA(uniqueId, confidencialidad, paciente, fecha, dataProfesional, organizacion, prestacion, cie10, texto, fileData);
 
@@ -120,7 +136,7 @@ router.post('/', async (req: any, res, next) => {
             const cdaData: any = cdaCtr.checkAndExtract(dom);
 
             if (cdaData) {
-                const uniqueId = new mongoose.Types.ObjectId();
+                const uniqueId = new ObjectId();
 
                 if (cdaData.organizacion.id !== orgId) {
                     return next({ error: 'wrong_organization' });
@@ -151,7 +167,7 @@ router.post('/', async (req: any, res, next) => {
                     const fileObj: any = cdaCtr.base64toStream(adjunto64);
                     fileObj.metadata = {
                         cdaId: uniqueId,
-                        paciente: mongoose.Types.ObjectId(pacientec.id)
+                        paciente: ObjectId(pacientec.id)
                     };
                     fileObj.filename = cdaData.adjunto;
                     fileData = await cdaCtr.storeFile(fileObj);
@@ -166,7 +182,7 @@ router.post('/', async (req: any, res, next) => {
                     adjuntos,
                     extras: {
                         id: cdaData.id,
-                        organizacion: mongoose.Types.ObjectId(orgId)
+                        organizacion: ObjectId(orgId)
                     }
                 };
                 let obj = await cdaCtr.storeCDA(uniqueId, cdaXml, metadata);
@@ -249,7 +265,7 @@ router.get('/paciente/', async (req: any, res, next) => {
  */
 
 router.get('/paciente/:id', async (req: any, res, next) => {
-    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+    if (ObjectId.isValid(req.params.id)) {
         if (!Auth.check(req, 'cda:list')) {
             return next(403);
         }
@@ -268,9 +284,9 @@ router.get('/paciente/:id', async (req: any, res, next) => {
  * Devuelve el XML de un CDA según un ID
  */
 router.get('/:id', async (req: any, res, next) => {
-    if (!Auth.check(req, 'cda:get')) {
-        return next(403);
-    }
+    // if (!Auth.check(req, 'cda:get')) {
+    //     return next(403);
+    // }
 
     const _base64 = req.params.id;
     const CDAFiles = makeFs();
@@ -319,13 +335,36 @@ router.get('/tojson/:id', async (req: any, res, next) => {
         } else {
             if (setText) {
                 // Volvemos a agregar el texto de la evolución
-                data.ClinicalDocument.component.structuredBody.component.section.text = resultado;
+                if (typeof data.ClinicalDocument.component.structuredBody.component.section === 'object') {
+                    data.ClinicalDocument.component.structuredBody.component.section.text = resultado;
+                } else {
+                    data.ClinicalDocument.component.structuredBody.component.section = { text: resultado };
+                }
             }
             res.json(data);
         }
     });
 });
 
+/**
+ * Listado de los CDAs de un paciente
+ * API demostrativa, falta analizar como se va a buscar en el repositorio
+ */
+router.get('/paciente/:id', async (req: any, res, next) => {
+    if (!Auth.check(req, 'cda:list')) {
+        return next(403);
+    }
+    let pacienteID = req.params.id;
+    let prestacion = req.query.prestacion;
+    let { paciente } = await pacienteCtr.buscarPaciente(pacienteID);
+
+    if (paciente) {
+        let list = await cdaCtr.searchByPatient(paciente.vinculos, prestacion, { skip: 0, limit: 100 });
+        return res.json(list);
+    } else {
+        return next({ message: 'no existe el paciente' });
+    }
+});
 
 /**
  * Devuelve los archivos almacenados por los CDAs
@@ -337,23 +376,44 @@ router.get('/:id/:name', async (req: any, res, next) => {
     if (req.user.type === 'user-token' && !Auth.check(req, 'cda:get')) {
         return next(403);
     }
-    const id = mongoose.Types.ObjectId(req.params.id);
+    const id = ObjectId(req.params.id);
     const name = req.params.name;
+    const realName = req.params.name.split('.')[0];
+
     const CDAFiles = makeFs();
 
-    const query = {
-        filename: name,
-        'metadata.cdaId': id
-    };
-    CDAFiles.findOne(query).then(async file => {
-        if (req.user.type === 'paciente-token' && String(file.metadata.paciente) !== String(req.user.pacientes[0].id)) {
-            return next(403);
+    const cda = await CDAFiles.findById(id);
+    if (cda) {
+        const adj = cda.metadata.adjuntos.find(_adj => {
+            return String(_adj.id) === realName;
+        });
+
+        if (adj && adj.adapter === 'drive') {
+
+            const fileDrive = await AndesDrive.find(ObjectId(realName));
+            if (fileDrive) {
+                const stream1 = await AndesDrive.read(fileDrive);
+                res.contentType(fileDrive.mimetype);
+                stream1.pipe(res);
+            }
+
+        } else {
+            const query = {
+                filename: name,
+                'metadata.cdaId': id
+            };
+
+            const file = await CDAFiles.findOne(query);
+            if (req.user.type === 'paciente-token' && String(file.metadata.paciente) !== String(req.user.pacientes[0].id)) {
+                return next(403);
+            }
+
+            const stream1 = await CDAFiles.readById(file._id);
+            res.contentType(file.contentType);
+            stream1.pipe(res);
         }
 
-        const stream1 = await CDAFiles.readById(file._id);
-        res.contentType(file.contentType);
-        stream1.pipe(res);
-    }).catch(next);
+    }
 });
 
 
