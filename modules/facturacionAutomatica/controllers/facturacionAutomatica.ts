@@ -77,10 +77,9 @@ async function getDatosReportables(idTipoPrestacion: any, prestacion: any) {
         let conceptos: any = [];
 
         const expresionesDR = configAuto.nomencladorSUMAR.datosReportables.map((config: any) => config.valores);
-        console.log("Expresiones: ", expresionesDR);
 
         let promises = expresionesDR.map(async (exp, index) => {
-            console.log("Expresinnn: ", exp[0]);
+
             return new Promise(async (resolve, reject) => {
                 let querySnomed = makeMongoQuery(exp[0].expresion);
                 let docs = await snomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 });
@@ -126,14 +125,13 @@ function buscarEnHudsFacturacion(prestacion, conceptos) {
             // verificamos si el registro de la prestacion tiene alguno de
             // los conceptos en su array de registros
             let resultado = await matchConceptsFacturacion(registro, conceptos);
-            console.log("Resultado: ", resultado);
+
             if (resultado) {
                 // agregamos el resultado a a devolver
                 data.push({
                     registro: resultado
                 });
             }
-
         });
         resolve(data);
     });
