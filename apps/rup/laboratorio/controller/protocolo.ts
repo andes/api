@@ -65,7 +65,7 @@ export async function getResultadosAnteriores(idPaciente, conceptsIdPractica: [a
                     'ejecucion.registros.concepto.conceptId': {
                         $in: conceptsIdPractica
                     },
-                    'ejecucion.registros.valor.estado   s.tipo': 'validada'
+                    'ejecucion.registros.valor.estados.tipo': 'validada'
                 }]
             }
         },
