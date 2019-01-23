@@ -70,4 +70,9 @@ router.get('/practicas', async (req, res, next) => {
     }
 });
 
+router.post('/practicas/testAutoanalizador', async (req, res) => {
+    console.log("RESULT: ", req.body);
+    res.json("RESULT: " + req.body);
+});
+
 export = router;

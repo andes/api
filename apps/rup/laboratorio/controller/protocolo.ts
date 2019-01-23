@@ -2,6 +2,7 @@ import { getPracticasCobasC311 } from './../controller/practica';
 import { Types } from 'mongoose';
 import { model as prestacion } from '../../../../modules/rup/schemas/prestacion';
 import { toArray } from '../../../../utils/utils';
+import { EventCore } from '@andes/event-bus';
 
 export async function getUltimoNumeroProtocolo(idOrganizacion) {
 
@@ -167,4 +168,9 @@ export async function getEjecucionesCobasC311() {
 
     let res = await toArray(prestacion.aggregate(pipeline).cursor({}).exec());
     return res;
+}
+
+export function enviarAutoanalizador() {
+    console.log('enviarAutoanalizador', EventCore.emitAsync('rup:prestacion:autoanalizador', {}))
+    return EventCore.emitAsync('rup:prestacion:autoanalizador', {});
 }
