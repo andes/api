@@ -541,13 +541,15 @@ router.patch('/prestaciones/:id', (req, res, next) => {
         }
 
         Auth.audit(data, req);
-        data.save((error, prestacion) => {
+        data.save(async (error, prestacion) => {
             if (error) {
                 return next(error);
             }
 
             if (req.body.estado && req.body.estado.tipo === 'validada') {
-                facturacionAutomatica(prestacion);
+                let factura = await facturacionAutomatica(prestacion);
+
+                EventCore.emitAsync('facturacion:factura:create', factura);
 
                 EventCore.emitAsync('rup:prestacion:validate', data);
             }

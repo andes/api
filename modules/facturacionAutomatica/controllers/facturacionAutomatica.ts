@@ -52,7 +52,8 @@ export async function facturacionAutomatica(prestacion: any) {
         }
     }
 
-    console.log("Factura: ", JSON.stringify(factura));
+    return factura;
+    // console.log("Factura: ", JSON.stringify(factura));
 }
 
 function getConfiguracionAutomatica(conceptId: any) {
