@@ -13,14 +13,11 @@ import { resolve } from 'path';
 
 export async function facturacionAutomatica(prestacion: any) {
     let idOrganizacion = prestacion.ejecucion.organizacion.id;
-    // console.log("Prestacion: ", prestacion);
 
     let datosOrganizacion: any = await getDatosOrganizacion(idOrganizacion);
     let obraSocialPaciente = await getObraSocial(prestacion.paciente.documento);
     /* Pasar un solo parámetro prestaciones */
     let datosReportables = await getDatosReportables(prestacion.solicitud.tipoPrestacion.conceptId, prestacion);
-    console.log("Get Datos Reportablesss: ", datosReportables);
-    // let datosReportables = await getDatosReportables(103750000);
 
     const factura = {
         turno: {
@@ -37,7 +34,7 @@ export async function facturacionAutomatica(prestacion: any) {
             conceptId: prestacion.solicitud.tipoPrestacion.conceptId,
             term: prestacion.solicitud.tipoPrestacion.term,
             fsn: prestacion.solicitud.tipoPrestacion.fsn,
-            datosReportables: [datosReportables[0]],
+            datosReportables: datosReportables,
         },
         organizacion: {
             nombre: prestacion.ejecucion.organizacion.nombre,
@@ -80,12 +77,11 @@ async function getDatosReportables(idTipoPrestacion: any, prestacion: any) {
         let conceptos: any = [];
 
         const expresionesDR = configAuto.nomencladorSUMAR.datosReportables.map((config: any) => config.valores);
-        console.log("Expresionesss: ", expresionesDR);
+        console.log("Expresiones: ", expresionesDR);
+
         let promises = expresionesDR.map(async (exp, index) => {
-            // for (let x = 0; x < expresionesDR[0].length; x++) { 
+            console.log("Expresinnn: ", exp[0]);
             return new Promise(async (resolve, reject) => {
-                console.log("Index: ", index);
-                console.log("Expresion: ", exp[0].expresion);
                 let querySnomed = makeMongoQuery(exp[0].expresion);
                 let docs = await snomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 });
 
@@ -98,10 +94,9 @@ async function getDatosReportables(idTipoPrestacion: any, prestacion: any) {
                         semanticTag: item.semtag
                     };
                 });
-                console.log("Conceptos: ", conceptos);
+
                 // ejecutamos busqueda recursiva
                 let data: any = await buscarEnHudsFacturacion(prestacion, conceptos);
-                console.log("Data despues de buscar en HudsFacturacion:  ", JSON.stringify(data));
 
                 if (data.length > 0) {
                     let datoReportable = {
@@ -112,13 +107,10 @@ async function getDatosReportables(idTipoPrestacion: any, prestacion: any) {
                             nombre: (data[0].registro.valor.concepto) ? data[0].registro.valor.concepto.term : data[0].registro.concepto.term
                         }
                     };
-                    console.log("Dato Reportable: ", datoReportable);
                     resolve(datoReportable);
-                    // return datoReportable;
                 } else {
                     resolve();
                 }
-                // }
             });
         });
 
@@ -143,41 +135,30 @@ function buscarEnHudsFacturacion(prestacion, conceptos) {
             }
 
         });
-        console.log("Data deHuds facturacion: ", data);
         resolve(data);
     });
 }
 
 export function matchConceptsFacturacion(registro, conceptos) {
-    // return new Promise(async (resolve, reject) => {
     // almacenamos la variable de matcheo para devolver el resultado
     let match = false;
 
     // Si no es un array entra
     if (!Array.isArray(registro['registros']) || registro['registros'].length <= 0) {
-        // console.log("Entra al primer If ");
         // verificamos que el concepto coincida con alguno de los elementos enviados en los conceptos
         if (registro.concepto && registro.concepto.conceptId && conceptos.find(c => c.conceptId === registro.concepto.conceptId)) {
             match = registro;
-            // resolve(match);
-            // console.log("Matchhhh: ", match);
         }
 
     } else {
-        // console.log("Entra al Segundo If");
         registro['registros'].forEach((reg: any) => {
             let encontrado = null;
             if (encontrado = matchConceptsFacturacion(reg, conceptos)) {
                 match = encontrado;
-                // resolve(match);
-                // console.log("Matchhhh Concepto Facturacion: ", match);
             }
         });
     }
-    // console.log("Match definitivo: ", match);
-    // resolve(match);
     return match;
-    // });
 }
 
 
