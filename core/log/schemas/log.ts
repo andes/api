@@ -27,7 +27,8 @@ export let logSchema = new mongoose.Schema({
     organizacion: { type: organizacion },
     modulo: {
         type: String,
-        enum: ['mpi', 'citas', 'rup', 'configTipoPrestacion', 'fa_sintys', 'fa_sisa', 'fa_anses', 'fa_renaper', 'usuarios', 'scheduler']
+        enum: ['mpi', 'citas', 'rup', 'configTipoPrestacion', 'fa_sintys', 'fa_sisa', 'fa_anses', 'fa_renaper', 'usuarios', 'scheduler', 'elastic',
+            'mpiUpdater']
     },
     operacion: {
         type: String,
@@ -48,7 +49,11 @@ export let logSchema = new mongoose.Schema({
             // ...Fuentes Autenticas
             'validar', 'error',
             // Scheduler
-            'cda', 'regexCheck'
+            'cda', 'regexCheck',
+            // mpiUpdater
+            'started', 'finished', 'error', 'update',
+            // elastic
+            'sync'
         ]
     },
     datosOperacion: mongoose.Schema.Types.Mixed,
