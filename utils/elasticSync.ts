@@ -2,6 +2,7 @@ import {
     Client
 } from 'elasticsearch';
 import * as configPrivate from '../config.private';
+import { Logger } from './logService';
 
 export class ElasticSync {
     private connElastic;
@@ -30,14 +31,38 @@ export class ElasticSync {
                 const hits = body.hits.hits;
                 if (hits.length > 0) {
                     this.update(id, data).then(() => {
+                        Logger.log(configPrivate.userScheduler, 'elastic', 'sync', {
+                            paciente: data,
+                            idPaciente: id,
+                            accion: 'update',
+                            fn: 'updatePacienteMpi'
+                        });
                         resolve(true);
                     }).catch((error) => {
+                        Logger.log(configPrivate.userScheduler, 'elastic', 'error', {
+                            paciente: data,
+                            idPaciente: id,
+                            accion: 'sync-update',
+                            fn: 'updatePacienteMpi'
+                        });
                         reject(error);
                     });
                 } else {
                     this.create(id, data).then(() => {
+                        Logger.log(configPrivate.userScheduler, 'elastic', 'sync', {
+                            paciente: data,
+                            idPaciente: id,
+                            accion: 'create',
+                            fn: 'updatePacienteMpi'
+                        });
                         resolve(false);
                     }).catch((error) => {
+                        Logger.log(configPrivate.userScheduler, 'elastic', 'error', {
+                            paciente: data,
+                            idPaciente: id,
+                            accion: 'sync-create',
+                            fn: 'updatePacienteMpi'
+                        });
                         reject(error);
                     });
                 }
@@ -65,10 +90,10 @@ export class ElasticSync {
     public searchMultipleFields(query) {
         let searchObj = {};
         if (query) {
-            let must = [];
+            const must = [];
             const terms = {};
 
-            for (let key in query) {
+            for (const key in query) {
                 const match = {};
                 if (key === 'claveBlocking') {
                     terms[key] = query[key].map(s => s.toLowerCase());
