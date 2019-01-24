@@ -15,6 +15,7 @@ import * as https from 'https';
 import * as configPrivate from '../../../config.private';
 import { getServicioGeonode } from '../../../utils/servicioGeonode';
 import { handleHttpRequest } from '../../../utils/requestHandler';
+import { userScheduler } from '../../../config.private';
 
 /**
  * Crea un paciente y lo sincroniza con elastic
@@ -126,19 +127,14 @@ export function updatePacienteMpi(pacMpi, pacAndes, req) {
             Auth.audit(pacMpi, req);
         }
         pacMpi.save((err2) => {
-            if (err2) {
-                return reject(err2);
-            }
+            if (err2) { return reject(err2); }
+            Logger.log(req, 'mpi', 'update', {
+                original: pacOriginalMpi,
+                nuevo: pacMpi,
+                fn: 'updatePacienteMpi'
+            });
             const connElastic = new ElasticSync();
             connElastic.sync(pacMpi).then(updated => {
-                if (updated) {
-                    Logger.log(req, 'mpi', 'update', {
-                        original: pacOriginalMpi,
-                        nuevo: pacMpi
-                    });
-                } else {
-                    Logger.log(req, 'mpi', 'insert', pacMpi);
-                }
                 EventCore.emitAsync('mpi:patient:update', pacMpi);
                 resolve(pacMpi);
             }).catch(error => {
@@ -239,7 +235,7 @@ export function buscarPaciente(id): Promise<{ db: String, paciente: any }> {
 export function buscarPacByDocYSexo(documento, sexo): Promise<{ db: String, paciente: any }[]> {
 
     return new Promise((resolve, reject) => {
-        let query = {
+        const query = {
             documento,
             sexo,
             estado: 'validado' // Analizar
@@ -347,7 +343,7 @@ export function matching(data): Promise<any[]> {
                     campo = 'claveBlocking';
                     filter = data.claveBlocking; // Enviamos una clave de blocking (q sea la segunda lo estoy probando)
                 }
-                let condicionMatch = {};
+                const condicionMatch = {};
                 condicionMatch[campo] = {
                     query: filter,
                     minimum_should_match: 3,
@@ -412,8 +408,8 @@ export function matching(data): Promise<any[]> {
                                 fechaNacimiento: paciente2.fechaNacimiento ? moment(paciente2.fechaNacimiento).format('YYYY-MM-DD') : '',
                                 sexo: paciente2.sexo ? paciente2.sexo : ''
                             };
-                            let match = new Matching();
-                            let valorMatching = match.matchPersonas(pacElastic, pacDto, weights, config.algoritmo);
+                            const match = new Matching();
+                            const valorMatching = match.matchPersonas(pacElastic, pacDto, weights, config.algoritmo);
 
                             paciente2['id'] = hit._id;
                             if (valorMatching >= porcentajeMatchMax) {
@@ -471,7 +467,7 @@ export function matching(data): Promise<any[]> {
 }
 
 /**
- * Delete de paciente con sincronizacion a elastic
+ * Delete de paciente
  *
  * @param objectId ---> Id del paciente a eliminar
  */
@@ -481,11 +477,14 @@ export function deletePacienteAndes(objectId) {
         const query = {
             _id: objectId
         };
-        paciente.findById(query, (err, patientFound) => {
+        paciente.findById(query, async (err, patientFound) => {
             if (err) {
                 return reject(err);
             }
-            patientFound.remove();
+            Logger.log(userScheduler, 'mpi', 'delete', {
+                paciente: patientFound
+            });
+            await patientFound.remove();
             EventCore.emitAsync('mpi:patient:delete', patientFound);
             return resolve(patientFound);
         });
@@ -494,10 +493,10 @@ export function deletePacienteAndes(objectId) {
 
 // Borramos un paciente en la BD MPI - es necesario handlear posibles errores en la fn llamadora.
 export async function deletePacienteMpi(objectId) {
-    let query = {
+    const query = {
         _id: objectId
     };
-    let pacremove = await pacienteMpi.findById(query).exec();
+    const pacremove = await pacienteMpi.findById(query).exec();
     await pacremove.remove();
 }
 
@@ -610,7 +609,7 @@ export function updateCuil(req, data) {
 }
 
 export async function actualizarFinanciador(req, next) {
-    let resultado = await this.buscarPaciente(req.body.paciente.id);
+    const resultado = await this.buscarPaciente(req.body.paciente.id);
     // por ahora se pisa la información
     // TODO: analizar como sería
     if (req.body.paciente.obraSocial) {
@@ -649,7 +648,7 @@ export async function checkCarpeta(req, data) {
                     }
                 }
             };
-            let unPaciente = await paciente.find(query).exec();
+            const unPaciente = await paciente.find(query).exec();
             return (unPaciente && unPaciente.length > 0);
         } else {
             return null;
@@ -785,7 +784,7 @@ export async function matchPaciente(dataPaciente) {
  * @returns Promise<boolean> || error
  */
 export async function checkRepetido(nuevoPaciente): Promise<boolean> {
-    let matchingInputData = {
+    const matchingInputData = {
         type: 'suggest',
         claveBlocking: 'documento',
         percentage: true,
@@ -823,7 +822,7 @@ export async function checkRepetido(nuevoPaciente): Promise<boolean> {
  */
 export async function validarPaciente(pacienteAndes) {
 
-    let sexoRenaper = pacienteAndes.sexo === 'masculino' ? 'M' : 'F';
+    const sexoRenaper = pacienteAndes.sexo === 'masculino' ? 'M' : 'F';
     let resRenaper: any;
     try {
         resRenaper = await getServicioRenaper({ documento: pacienteAndes.documento, sexo: sexoRenaper });
@@ -833,7 +832,7 @@ export async function validarPaciente(pacienteAndes) {
     let band = true;
     // Respuesta correcta de renaper?
     if (resRenaper && resRenaper.datos && resRenaper.datos.nroError === 0) {
-        let pacienteRenaper = resRenaper.datos;
+        const pacienteRenaper = resRenaper.datos;
         band = regtest.test(pacienteRenaper.nombres);
         band = band || regtest.test(pacienteRenaper.apellido);
         if (!band) {
@@ -854,8 +853,8 @@ export async function validarPaciente(pacienteAndes) {
 
 async function validarSisa(pacienteAndes: any) {
     try {
-        let resSisa: any = await matchSisa(pacienteAndes);
-        let porcentajeMatcheo = resSisa.matcheos.matcheo;
+        const resSisa: any = await matchSisa(pacienteAndes);
+        const porcentajeMatcheo = resSisa.matcheos.matcheo;
         if (porcentajeMatcheo > 95) {
             pacienteAndes.nombre = resSisa.matcheos.datosPaciente.nombre;
             pacienteAndes.apellido = resSisa.matcheos.datosPaciente.apellido;
