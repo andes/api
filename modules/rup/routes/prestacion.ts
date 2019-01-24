@@ -600,6 +600,9 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 if (req.body.solicitud) {
                     data.solicitud = req.body.solicitud;
                 }
+                if (req.body.solicitud) {
+                    data.ejecucion.fecha = req.body.fechaEjecucion;
+                }
                 break;
 
             default:
