@@ -97,7 +97,7 @@ export async function getResultadosAnteriores(idPaciente, conceptsIdPractica: [a
 
 export async function getEjecucionesCobasC311() {
     const practicasCobas = await getPracticasCobasC311(); // ['166849007', '63571001', '89659001', '313849004', '104485008', '271234008'];
-    let conceptosCobas  = [];
+    let conceptosCobas = [];
     practicasCobas.forEach(element => {
         conceptosCobas.push(element.conceptId);
     });
@@ -168,4 +168,11 @@ export async function getEjecucionesCobasC311() {
 
     let res = await toArray(prestacion.aggregate(pipeline).cursor({}).exec());
     return res;
+}
+
+export async function enviarAutoanalizador() {
+    console.log('entró: enviarAutoanalizador');
+    let ejecuciones = await getEjecucionesCobasC311();
+    EventCore.emitAsync('rup:prestacion:autoanalizador', ejecuciones);
+    return;
 }

@@ -2,7 +2,7 @@ import * as express from 'express';
 import { model as Organizacion } from '../../../../core/tm/schemas/organizacion';
 import { model as Prestacion } from '../../../../modules/rup/schemas/prestacion';
 
-import { getUltimoNumeroProtocolo, getResultadosAnteriores, getEjecucionesCobasC311 } from '../controller/protocolo';
+import { getUltimoNumeroProtocolo, getResultadosAnteriores, getEjecucionesCobasC311, enviarAutoanalizador } from '../controller/protocolo';
 import { Auth } from '../../../../auth/auth.class';
 import { Types } from 'mongoose';
 
@@ -71,7 +71,7 @@ router.patch('/practicas/cobasc311/:id', async (req, res, next) => {
             let id = new Types.ObjectId(req.body._id);
             // console.log('id:', id);
             // console.log(data.ejecucion.registros);
-            let index = data.ejecucion.registros.findIndex(x => {return  x._id.toString() === id.toString(); });
+            let index = data.ejecucion.registros.findIndex(x => { return x._id.toString() === id.toString(); });
             // console.log('index: ', index);
 
             data.ejecucion.registros[index].valor = req.body.valor;
@@ -101,6 +101,10 @@ router.patch('/practicas/cobasc311/:id', async (req, res, next) => {
     // });
 });
 
+router.post('/practicas/autoanalizador', async (req, res, next) => {
+    enviarAutoanalizador();
+    res.json({});
+});
 
 
 export = router;
