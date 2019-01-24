@@ -27,6 +27,12 @@ export const modules = {
         path: './auth/routes',
         route: '/auth'
     },
+    authCore: {
+        active: true,
+        path: './core/auth/routes',
+        route: '/core/auth',
+        middleware: appMiddleware
+    },
     tm: {
         active: true,
         path: './core/tm/routes',
