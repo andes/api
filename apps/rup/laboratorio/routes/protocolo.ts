@@ -80,29 +80,11 @@ router.patch('/practicas/cobasc311/:id', async (req, res, next) => {
             return res.json(data);
         }
     });
-
-    // let search = { _id: req.params.id, 'ejecucion.registros._id': req.body._id };
-    // let values = {
-    //     $set: {
-    //         'ejecucion.$.registros': req.body
-    //     }
-    // };
-    // let options = { runValidators: false };
-
-    // return Prestacion.findOneAndUpdate(search, values, options, (err, data: any) => {
-    //     if (err) {
-    //         return next(err);
-    //     }
-    //     if (data) {
-    //         Auth.audit(data, req);
-    //         data.save();
-    //         return res.json(data);
-    //     }
-    // });
 });
 
 router.post('/practicas/autoanalizador', async (req, res, next) => {
-    enviarAutoanalizador();
+    let numeroProtocolo = req.query.numeroProtocolo;
+    enviarAutoanalizador(numeroProtocolo);
     res.json({});
 });
 

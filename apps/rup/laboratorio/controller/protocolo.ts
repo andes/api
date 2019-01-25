@@ -95,18 +95,30 @@ export async function getResultadosAnteriores(idPaciente, conceptsIdPractica: [a
     return await toArray(prestacion.aggregate(pipeline).cursor({}).exec());
 }
 
-export async function getEjecucionesCobasC311() {
+export async function getEjecucionesCobasC311(numeroProtocolo?: string ) {
     const practicasCobas = await getPracticasCobasC311(); // ['166849007', '63571001', '89659001', '313849004', '104485008', '271234008'];
     let conceptosCobas = [];
     practicasCobas.forEach(element => {
         conceptosCobas.push(element.conceptId);
     });
+
+    let match: any = {
+        $match: {
+            $and: [
+                {
+                    'ejecucion.registros.concepto.conceptId': { $in: conceptosCobas }
+                }
+            ]
+        }
+    };
+
+    if (numeroProtocolo) {
+        match.$match.$and.push({ 'solicitud.registros.valor.solicitudPrestacion.numeroProtocolo.numeroCompleto': { $eq: numeroProtocolo } });
+    }
+
     let pipeline = [
-        {
-            $match: {
-                'ejecucion.registros.concepto.conceptId': { $in: conceptosCobas }
-            }
-        },
+        match
+        ,
         {
             $addFields: {
                 numeroProtocolo: {
@@ -165,14 +177,12 @@ export async function getEjecucionesCobasC311() {
             }
         }*/
     ];
-
     let res = await toArray(prestacion.aggregate(pipeline).cursor({}).exec());
     return res;
 }
 
-export async function enviarAutoanalizador() {
-    console.log('entró: enviarAutoanalizador');
-    let ejecuciones = await getEjecucionesCobasC311();
+export async function enviarAutoanalizador(numeroProtocolo?: string) {
+    let ejecuciones = await getEjecucionesCobasC311(numeroProtocolo);
     EventCore.emitAsync('rup:prestacion:autoanalizador', ejecuciones);
     return;
 }
