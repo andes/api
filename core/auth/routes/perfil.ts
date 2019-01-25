@@ -54,12 +54,13 @@ router.get('/perfiles', Auth.authenticate(), async (req, res, next) => {
 /*
 * Modifica un perfil con id pasado por params y los valores se obtienen del body
 */
-router.put('/perfiles/:id', async (req, res, next) => {
+router.put('/perfiles/:id', Auth.authenticate(), async (req, res, next) => {
     try {
         let perfilActualizado = {
             nombre: req.body.nombre,
             permisos: req.body.permisos,
-            organizacion: undefined
+            organizacion: undefined,
+            activo: req.body.activo
         };
         if (req.body.organizacion) {
             perfilActualizado.organizacion = req.body.organizacion;
@@ -79,7 +80,7 @@ router.put('/perfiles/:id', async (req, res, next) => {
 /*
 * Crea un perfil con los datos pasados por body
 */
-router.post('/perfiles', async (req, res, next) => {
+router.post('/perfiles', Auth.authenticate(), async (req, res, next) => {
     try {
         let perfilParametro = req.body;
         if (!perfilParametro.organizacion) {
@@ -89,6 +90,19 @@ router.post('/perfiles', async (req, res, next) => {
         let perfilNuevo = new perfil(perfilParametro);
         await perfilNuevo.save();
         res.json(perfilNuevo);
+    } catch (e) {
+        return next(e);
+    }
+});
+
+/*
+* Borra el perfil pasado por parámetro
+*/
+router.delete('/perfiles/:id', (req, res, next) => {
+    try {
+        perfil.deleteOne({ id: req.body._id }).then(res2 => {
+            res.json('api');
+        });
     } catch (e) {
         return next(e);
     }
