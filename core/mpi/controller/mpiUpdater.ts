@@ -9,7 +9,7 @@ import {
 
 import * as debug from 'debug';
 import * as servicioAnses from './../../../utils/servicioAnses';
-import { Logger } from 'utils/logService';
+import { Logger } from '../../../utils/logService';
 const dbg = debug('mpiUpdater');
 
 
