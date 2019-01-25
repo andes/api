@@ -29,6 +29,9 @@ router.get('/camas', Auth.authenticate(), (req, res, next) => {
     if (req.query.sectorId) {
         query.where('sectores._id').equals(req.query.sectorId);
     }
+    if (req.query.unidadesOrganizativas) {
+        query.where('estados.unidadOrganizativa._id').equals(req.query.unidadesOrganizativas);
+    }
     query.sort({ numero: 1, habitacion: 1 });
     query.exec({}, (err, data) => {
         if (err) {
@@ -54,6 +57,14 @@ router.get('/camas/porfecha', Auth.authenticate(), (req, res, next) => {
 
 router.get('/camas/historial', Auth.authenticate(), (req, res, next) => {
     camaController.getHistorialCama(new mongoose.Types.ObjectId(req.query.idOrganizacion), new Date(req.query.fechaDesde), new Date(req.query.fechaHasta), new mongoose.Types.ObjectId(req.query.idCama)).then(result => {
+        res.json(result);
+    }).catch(error => {
+        return next(error);
+    });
+});
+
+router.get('/camas/internacionCama', Auth.authenticate(), (req, res, next) => {
+    camaController.getInternacionCama(new mongoose.Types.ObjectId(req.query.idCama)).then(result => {
         res.json(result);
     }).catch(error => {
         return next(error);
@@ -128,6 +139,14 @@ router.put('/camas/:id', Auth.authenticate(), (req, res, next) => {
     });
 });
 
+router.delete('/camas/eliminarCama/:idCama', Auth.authenticate(), (req, res, next) => {
+    CamaModel.findByIdAndRemove(req.params.idCama, (err, data) => {
+        if (err) {
+            return next(err);
+        }
+        res.json(data);
+    });
+});
 
 router.patch('/camas/:idCama', Auth.authenticate(), (req, res, next) => {
     CamaModel.findById({
@@ -265,6 +284,7 @@ router.patch('/camas/cambiaEstado/:idCama', Auth.authenticate(), (req, res, next
         });
     });
 });
+
 
 /*
 [REVISAR]

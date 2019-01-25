@@ -212,6 +212,7 @@ export function disponibilidadXUO(unidad, fecha, idOrganizacion) {
 
     });
 }
+
 export async function getHistorialCama(idOrganizacion, fechaDesde, fechaHasta, idCama) {
 
     let historial = [];
@@ -247,6 +248,33 @@ export async function getHistorialCama(idOrganizacion, fechaDesde, fechaHasta, i
     ];
     return await cama.aggregate(historial).exec();
 }
+
+
+export async function getInternacionCama(idCama) {
+    let internacion = [];
+    internacion = [{
+        $match: {
+            _id: idCama
+        }
+    },
+    { $unwind: '$estados' },
+    { $sort: { nombre: 1, 'estados.fecha': -1 } },
+    {
+        $project: {
+            estado: '$estados.estado',
+            paciente: '$estados.paciente'
+
+        }
+    },
+    {
+        $match: {
+            paciente: { $ne: null }
+        }
+    },
+    ];
+    return await cama.aggregate(internacion).exec();
+}
+
 
 export function camasXfecha(idOrganizacion, fecha) {
     return new Promise(async (resolve, reject) => {
