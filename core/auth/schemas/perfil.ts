@@ -16,6 +16,11 @@ const perfilSchema = new Schema({
     organizacion: {
         type: Schema.Types.ObjectId,
         ref: 'organizacion'
+    },
+    /* Para saber si está habilitado el perfil para usarse */
+    activo: {
+        type: Boolean,
+        required: true
     }
 });
 
