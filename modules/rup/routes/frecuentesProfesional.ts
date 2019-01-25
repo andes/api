@@ -55,7 +55,13 @@ router.get('/frecuentesProfesional', (req, res, next) => {
         { $project: { 'frecuentes.concepto': 1, 'frecuentes.frecuencia': 1, 'frecuentes.esSolicitud': 1, _id: 0 } },
         {
             $group: {
-                _id: { conceptId: '$frecuentes.concepto.conceptId', term: '$frecuentes.concepto.term', fsn: '$frecuentes.concepto.fsn', semanticTag: '$frecuentes.concepto.semanticTag' },
+                _id: {
+                    conceptId: '$frecuentes.concepto.conceptId',
+                    term: '$frecuentes.concepto.term',
+                    fsn: '$frecuentes.concepto.fsn',
+                    refsetIds: '$frecuentes.concepto.refsetIds',
+                    semanticTag: '$frecuentes.concepto.semanticTag'
+                },
                 frecuencia: { $sum: '$frecuentes.frecuencia' },
                 esSolicitud: { $last: '$frecuentes.esSolicitud' }
             }
