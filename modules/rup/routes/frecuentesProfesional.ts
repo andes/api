@@ -11,17 +11,17 @@ const router = express.Router();
 
 router.get('/frecuentesProfesional/:id', async (req, res, next) => {
     try {
-        const data: any = await ProfesionalMeta.find({ 'profesional.id': req.params.id });
+        const frecuente = await ProfesionalMeta.find({ 'profesional.id': req.params.id });
 
-        if (!data) {
+        if (!frecuente) {
             return next(404);
         }
 
-        if (data[0] && data[0].frecuentes) {
-            data[0].frecuentes.sort((a, b) => a.frecuencia - b.frecuencia);
+        if (frecuente[0] && frecuente[0].frecuentes) {
+            frecuente[0].frecuentes.sort((a, b) => a.frecuencia - b.frecuencia);
         }
 
-        return res.json(data);
+        return res.json(frecuente);
     } catch (err) {
         return next(err);
     }
@@ -64,8 +64,8 @@ router.get('/frecuentesProfesional', async (req, res, next) => {
     ];
 
     try {
-        const data = await toArray(ProfesionalMeta.aggregate(pipeline).cursor({}).exec());
-        res.json(data);
+        const frecuente = await toArray(ProfesionalMeta.aggregate(pipeline).cursor({}).exec());
+        res.json(frecuente);
     } catch (err) {
         return next(err);
     }
@@ -82,10 +82,10 @@ router.post('/frecuentesProfesional', async (req, res, next) => {
         return next(400);
     }
 
-    const data = new ProfesionalMeta(req.body);
+    const frecuente = new ProfesionalMeta(req.body);
     try {
-        data.save();
-        return res.json(data);
+        frecuente.save();
+        return res.json(frecuente);
     } catch (err) {
         return next(err);
     }

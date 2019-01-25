@@ -7,7 +7,27 @@
  */
 
 import * as mongoose from 'mongoose';
-import { SnomedConcept } from './snomed-concept';
+import { SnomedConcept, ISnomedConcept } from './snomed-concept';
+
+export interface IProfesionalMeta extends mongoose.Document {
+    profesional: {
+        id: mongoose.Types.ObjectId;
+        nombre: string;
+        apellido: string;
+        documento: Number;
+    };
+    organizacion: {
+        id: mongoose.Types.ObjectId;
+        nombre: String;
+    };
+    tipoPrestacion: ISnomedConcept;
+    frecuentes: [{
+        // tipo de prestacion desde la cual se solicita
+        concepto: ISnomedConcept;
+        esSolicitud: Boolean;
+        frecuencia: number;
+    }];
+}
 
 export let ProfesionalMetaSchema = new mongoose.Schema({
     profesional: {
@@ -30,4 +50,4 @@ export let ProfesionalMetaSchema = new mongoose.Schema({
     }]
 });
 
-export let ProfesionalMeta = mongoose.model('profesionalMeta', ProfesionalMetaSchema, 'profesionalMeta');
+export let ProfesionalMeta: mongoose.Model<IProfesionalMeta> = mongoose.model<IProfesionalMeta>('profesionalMeta', ProfesionalMetaSchema, 'profesionalMeta');
