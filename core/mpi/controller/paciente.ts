@@ -522,7 +522,7 @@ export async function updateDireccion(req, data) {
     data.markModified('direccion');
     data.direccion = req.body.direccion;
     try {
-        await actualizarGeoReferencia(req, data);
+        await actualizarGeoReferencia(req.body, data, null);
     } catch (err) {
         return err;
     }
@@ -927,42 +927,78 @@ async function validarSisa(pacienteAndes: any, req: any, foto = null) {
 
 /**
  * * Segun la entrada, retorna un Point con las coordenadas de geo referencia o null.
- * @param dataPaciente debe contener direccion y localidad.
+ * @param data debe contener direccion y localidad.
  */
 
-export async function actualizarGeoReferencia(req, data) {
-    if (data.direccion[0].valor && data.direccion[0].ubicacion.localidad && data.direccion[0].ubicacion.localidad.nombre) {
+export async function actualizarGeoReferencia(patientFound, data, req) {
+
+    if (data.direccion[0].valor && data.direccion[0].ubicacion.localidad && data.direccion[0].ubicacion.localidad.nombre
+        && data.direccion[0].ubicacion.provincia && data.direccion[0].ubicacion.provincia.nombre) {
         // Se carga geo referencia desde api de google
         try {
-            const geoRef: any = await geoRefPaciente(req);
+            const geoRef: any = await geoRefPaciente(data);
+            // si se obtuvieron coordenadas (geolocalizacion exitosa)
             if (geoRef && geoRef.lat) {
                 data.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
                 data.direccion[0].ubicacion.barrio = await getServicioGeonode(data.direccion[0].geoReferencia);
+            } else {
+                // si no huvo georeferencia (correcta) se setean variables en null ya que podrian contener informacion anterior
+                if (patientFound.direccion[0].geoReferencia) {
+                    data.direccion[0].geoReferencia = null;
+                    data.direccion[0].ubicacion.barrio = null;
+                }
+            }
+            if (req) {
+                // se guardan los datos
+                updatePaciente(patientFound, data, req);
             }
         } catch (err) {
             return (err);
         }
+    } else {
+        // si no ingreso direccion, provincia o localidad se setean variables en null ya que podrian contener informacion anterior
+        data.direccion[0].geoReferencia = null;
+        data.direccion[0].ubicacion.barrio = null;
     }
 }
 
 export async function geoRefPaciente(dataPaciente) {
-    const address = dataPaciente.direccion[0].valor + ',' + dataPaciente.direccion[0].ubicacion.localidad.nombre;
+    const address = dataPaciente.direccion[0].valor + ',' + dataPaciente.direccion[0].ubicacion.localidad.nombre
+        + ',' + dataPaciente.direccion[0].ubicacion.provincia.nombre;
     let pathGoogleApi = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + address + ', ' + 'AR' + '&key=' + configPrivate.geoKey;
 
-    pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
-    pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
-    pathGoogleApi = pathGoogleApi.replace(/é/gi, 'e');
-    pathGoogleApi = pathGoogleApi.replace(/í/gi, 'i');
-    pathGoogleApi = pathGoogleApi.replace(/ó/gi, 'o');
-    pathGoogleApi = pathGoogleApi.replace(/ú/gi, 'u');
-    pathGoogleApi = pathGoogleApi.replace(/ü/gi, 'u');
-    pathGoogleApi = pathGoogleApi.replace(/ñ/gi, 'n');
+    pathGoogleApi = limpiarTildes(pathGoogleApi);
 
     const [status, body] = await handleHttpRequest(pathGoogleApi);
     const salida = JSON.parse(body);
     if (salida.status === 'OK') {
-        return salida.results[0].geometry.location;
+        let respuesta;
+        for (let elto of salida.results) {
+            // se obtiene la localidad del resultado
+            let localidad = elto.address_components.find(atributo => atributo.types[0] === 'locality');
+            localidad = limpiarTildes(localidad.short_name);
+            let localidadPaciente = limpiarTildes(dataPaciente.direccion[0].ubicacion.localidad.nombre);
+            // si la localidad coincide con la buscada, entonces la geolocalización se considera válida
+            if (localidad.toUpperCase() === localidadPaciente.toUpperCase()) {
+                respuesta = elto.geometry.location;
+                break;
+            }
+        }
+        return respuesta;
     } else {
         return {};
     }
+}
+
+export function limpiarTildes(cadena) {
+    cadena = cadena.replace(/ /g, '+');
+    cadena = cadena.replace(/á/gi, 'a');
+    cadena = cadena.replace(/é/gi, 'e');
+    cadena = cadena.replace(/í/gi, 'i');
+    cadena = cadena.replace(/ó/gi, 'o');
+    cadena = cadena.replace(/ú/gi, 'u');
+    cadena = cadena.replace(/ü/gi, 'u');
+    cadena = cadena.replace(/ñ/gi, 'n');
+
+    return cadena;
 }
