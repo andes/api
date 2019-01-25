@@ -4,14 +4,14 @@
 
 import * as express from 'express';
 import * as mongoose from 'mongoose';
-import { profesionalMeta } from './../schemas/profesionalMeta';
+import { ProfesionalMeta } from './../schemas/profesionalMeta';
 import { toArray } from '../../../utils/utils';
 
 const router = express.Router();
 
 router.get('/frecuentesProfesional/:id', async (req, res, next) => {
     try {
-        const data: any = await profesionalMeta.find({ 'profesional.id': req.params.id });
+        const data: any = await ProfesionalMeta.find({ 'profesional.id': req.params.id });
 
         if (!data) {
             return next(404);
@@ -64,7 +64,7 @@ router.get('/frecuentesProfesional', async (req, res, next) => {
     ];
 
     try {
-        const data = await toArray(profesionalMeta.aggregate(pipeline).cursor({}).exec());
+        const data = await toArray(ProfesionalMeta.aggregate(pipeline).cursor({}).exec());
         res.json(data);
     } catch (err) {
         return next(err);
@@ -82,7 +82,7 @@ router.post('/frecuentesProfesional', async (req, res, next) => {
         return next(400);
     }
 
-    const data = new profesionalMeta(req.body);
+    const data = new ProfesionalMeta(req.body);
     try {
         data.save();
         return res.json(data);
@@ -107,9 +107,9 @@ router.put('/frecuentesProfesional/:id', async (req, res, next) => {
     };
 
     try {
-        const resultado: any = await profesionalMeta.findOne(query);
+        const resultado: any = await ProfesionalMeta.findOne(query);
         if (typeof resultado === null || !resultado) {
-            const frecuente = new profesionalMeta(req.body);
+            const frecuente = new ProfesionalMeta(req.body);
             await frecuente.save();
             return res.json(resultado);
 

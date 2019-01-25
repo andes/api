@@ -9,7 +9,7 @@
 import * as mongoose from 'mongoose';
 import { SnomedConcept } from './snomed-concept';
 
-export let schema = new mongoose.Schema({
+export let ProfesionalMetaSchema = new mongoose.Schema({
     profesional: {
         id: mongoose.SchemaTypes.ObjectId,
         nombre: String,
@@ -30,10 +30,4 @@ export let schema = new mongoose.Schema({
     }]
 });
 
-// Autopopula todos los hijos
-// schema.pre('find', (next) => {
-//     this.populate('frecuentes');
-//     next();
-// });
-
-export let profesionalMeta = mongoose.model('profesionalMeta', schema, 'profesionalMeta');
+export let ProfesionalMeta = mongoose.model('profesionalMeta', ProfesionalMetaSchema, 'profesionalMeta');

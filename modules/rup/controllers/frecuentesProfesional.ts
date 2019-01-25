@@ -1,4 +1,4 @@
-import { profesionalMeta } from '../schemas/profesionalMeta';
+import { ProfesionalMeta } from '../schemas/profesionalMeta';
 
 export function actualizarFrecuentes(data) {
     return new Promise((resolve, reject) => {
@@ -11,14 +11,14 @@ export function actualizarFrecuentes(data) {
             ...(data.tipoPrestacion.conceptId) && { 'tipoPrestacion.conceptId': data.tipoPrestacion.conceptId }
         };
 
-        profesionalMeta.findOne(query, (err, resultado: any) => {
+        ProfesionalMeta.findOne(query, (err, resultado: any) => {
             if (err) {
                 return reject(err);
             }
 
             // si no existe agregamos el nuevo frecuente
             if (typeof resultado === null || !resultado) {
-                const frecuente = new profesionalMeta(data);
+                const frecuente = new ProfesionalMeta(data);
                 frecuente.save((err2) => {
                     if (err2) {
                         return reject(err2);
