@@ -14,7 +14,7 @@ const regtest = /[^a-zA-Zàáâäãåąčćęèéêëėįìíîïłńòóôöõ�
 import * as https from 'https';
 import * as configPrivate from '../../../config.private';
 import { getServicioGeonode } from '../../../utils/servicioGeonode';
-import { handleHttpRequest } from '../../../utils/requestHandler';
+import { getGeoreferencia } from '../../../utils/servicioGeoreferencia';
 
 /**
  * Crea un paciente y lo sincroniza con elastic
@@ -936,7 +936,7 @@ export async function actualizarGeoReferencia(patientFound, data, req) {
         && data.direccion[0].ubicacion.provincia && data.direccion[0].ubicacion.provincia.nombre) {
         // Se carga geo referencia desde api de google
         try {
-            const geoRef: any = await geoRefPaciente(data);
+            const geoRef: any = await getGeoreferencia(data);
             // si se obtuvieron coordenadas (geolocalizacion exitosa)
             if (geoRef && geoRef.lat) {
                 data.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
@@ -962,43 +962,43 @@ export async function actualizarGeoReferencia(patientFound, data, req) {
     }
 }
 
-export async function geoRefPaciente(dataPaciente) {
-    const address = dataPaciente.direccion[0].valor + ',' + dataPaciente.direccion[0].ubicacion.localidad.nombre
-        + ',' + dataPaciente.direccion[0].ubicacion.provincia.nombre;
-    let pathGoogleApi = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + address + ', ' + 'AR' + '&key=' + configPrivate.geoKey;
+// export async function geoRefPaciente(dataPaciente) {
+//     const address = dataPaciente.direccion[0].valor + ',' + dataPaciente.direccion[0].ubicacion.localidad.nombre
+//         + ',' + dataPaciente.direccion[0].ubicacion.provincia.nombre;
+//     let pathGoogleApi = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + address + ', ' + 'AR' + '&key=' + configPrivate.geoKey;
 
-    pathGoogleApi = limpiarTildes(pathGoogleApi);
+//     pathGoogleApi = limpiarTildes(pathGoogleApi);
 
-    const [status, body] = await handleHttpRequest(pathGoogleApi);
-    const salida = JSON.parse(body);
-    if (salida.status === 'OK') {
-        let respuesta;
-        for (let elto of salida.results) {
-            // se obtiene la localidad del resultado
-            let localidad = elto.address_components.find(atributo => atributo.types[0] === 'locality');
-            localidad = limpiarTildes(localidad.short_name);
-            let localidadPaciente = limpiarTildes(dataPaciente.direccion[0].ubicacion.localidad.nombre);
-            // si la localidad coincide con la buscada, entonces la geolocalización se considera válida
-            if (localidad.toUpperCase() === localidadPaciente.toUpperCase()) {
-                respuesta = elto.geometry.location;
-                break;
-            }
-        }
-        return respuesta;
-    } else {
-        return {};
-    }
-}
+//     const [status, body] = await handleHttpRequest(pathGoogleApi);
+//     const salida = JSON.parse(body);
+//     if (salida.status === 'OK') {
+//         let respuesta;
+//         for (let elto of salida.results) {
+//             // se obtiene la localidad del resultado
+//             let localidad = elto.address_components.find(atributo => atributo.types[0] === 'locality');
+//             localidad = limpiarTildes(localidad.short_name);
+//             let localidadPaciente = limpiarTildes(dataPaciente.direccion[0].ubicacion.localidad.nombre);
+//             // si la localidad coincide con la buscada, entonces la geolocalización se considera válida
+//             if (localidad.toUpperCase() === localidadPaciente.toUpperCase()) {
+//                 respuesta = elto.geometry.location;
+//                 break;
+//             }
+//         }
+//         return respuesta;
+//     } else {
+//         return {};
+//     }
+// }
 
-export function limpiarTildes(cadena) {
-    cadena = cadena.replace(/ /g, '+');
-    cadena = cadena.replace(/á/gi, 'a');
-    cadena = cadena.replace(/é/gi, 'e');
-    cadena = cadena.replace(/í/gi, 'i');
-    cadena = cadena.replace(/ó/gi, 'o');
-    cadena = cadena.replace(/ú/gi, 'u');
-    cadena = cadena.replace(/ü/gi, 'u');
-    cadena = cadena.replace(/ñ/gi, 'n');
+// export function limpiarTildes(cadena) {
+//     cadena = cadena.replace(/ /g, '+');
+//     cadena = cadena.replace(/á/gi, 'a');
+//     cadena = cadena.replace(/é/gi, 'e');
+//     cadena = cadena.replace(/í/gi, 'i');
+//     cadena = cadena.replace(/ó/gi, 'o');
+//     cadena = cadena.replace(/ú/gi, 'u');
+//     cadena = cadena.replace(/ü/gi, 'u');
+//     cadena = cadena.replace(/ñ/gi, 'n');
 
-    return cadena;
-}
+//     return cadena;
+// }
