@@ -89,6 +89,20 @@ const facets = {
             }
         },
         { $sortByCount: '$real-state' }
+    ],
+
+    tipoTurno: [
+        { $match: {
+            'turno.estado': 'asignado',
+            estado: { $ne: 'suspendida' },
+            'turno.tipoTurno': {$ne: null}
+        }},
+        {
+            $group: {
+                _id: {tipoTurno: '$turno.tipoTurno'},
+                total: { $sum: 1 }
+            }
+        }
     ]
 };
 
@@ -169,6 +183,8 @@ function makeFacet(filtros) {
 
     facet['estado_turno'] = facets.estadoTurno;
 
+    facet['tipoTurno'] = facets.tipoTurno;
+
     return facet;
 }
 
@@ -178,17 +194,26 @@ export async function estadisticas(filtros) {
         {
             $match: makePrimaryMatch(filtros)
         },
-        { $unwind: '$bloques' },
-        { $addFields: { 'sobreturnos.sobreturno': true } },
+        {
+            $addFields: {
+                'sobreturnos.tipoTurno': 'sobreturno'
+            }
+        },
+        { $addFields: { _sobreturnos: [{ turnos: '$sobreturnos' }] } },
+        { $addFields: { _bloques: { $concatArrays: ['$_sobreturnos', '$bloques'] }}
+        },
+        {
+            $unwind: '$_bloques'
+        },
+        { $unwind: '$_bloques.turnos' },
         {
             $project: {
-                turno: { $concatArrays: ['$sobreturnos', '$bloques.turnos'] },
+                turno: '$_bloques.turnos',
                 profesionales: 1,
-                prestaciones: '$bloques.tipoPrestaciones',
+                prestaciones: '$_bloques.tipoPrestaciones',
                 estado: '$estado'
             },
         },
-        { $unwind: '$turno' },
 
         // Turnos asignados por el momento
         // { $match: { 'turno.paciente.nombre': { $exists: true }, 'turno.estado': 'asignado' } },
