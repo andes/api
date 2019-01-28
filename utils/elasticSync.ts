@@ -137,4 +137,23 @@ export class ElasticSync {
             });
         });
     }
+
+    public async scroll(scrollCfg) {
+        return await this.connElastic.scroll(scrollCfg);
+    }
+
+    public async searchScroll() {
+        return await this.connElastic.search({
+            index: this.INDEX,
+            type: this.TYPE,
+            scroll: '1m',
+            size: '100',
+            body: {
+                query: {
+                    match_all: {}
+                },
+                _source: false
+            }
+        });
+    }
 }
