@@ -78,6 +78,7 @@ router.get('/codificacion/:id?', async (req: any, res, next) => {
             {
                 $project:
                 {
+                    id: '$_id',
                     diagnostico: 1,
                     idPrestacion: 1,
                     paciente: 1,
