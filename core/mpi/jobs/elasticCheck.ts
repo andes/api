@@ -6,7 +6,7 @@ import { ElasticSync } from '../../../utils/elasticSync';
 import debug = require('debug');
 import * as mongoose from 'mongoose';
 import { Logger } from '../../../utils/logService';
-import { userScheduler } from 'config.private';
+import { userScheduler } from '../../../config.private';
 
 const dbg = debug('elastic');
 
