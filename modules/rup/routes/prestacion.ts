@@ -4,8 +4,8 @@ import * as moment from 'moment';
 import { Auth } from './../../../auth/auth.class';
 import { model as Prestacion } from '../schemas/prestacion';
 import * as frecuentescrl from '../controllers/frecuentesProfesional';
-
-import { iterate, convertToObjectId, buscarEnHuds, matchConcepts, buscarRegistros, registrosProfundidad } from '../controllers/rup';
+import { buscarPaciente } from '../../../core/mpi/controller/paciente';
+import { buscarEnHuds, registrosProfundidad } from '../controllers/rup';
 import { Logger } from '../../../utils/logService';
 import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
 import { snomedModel } from '../../../core/term/schemas/snomed';
@@ -106,6 +106,10 @@ router.get('/prestaciones/huds/:idPaciente', async (req, res, next) => {
 
     if (req.query.idPrestacion) {
         query['_id'] = mongoose.Types.ObjectId(req.query.idPrestacion);
+    }
+
+    if (req.query.deadline) {
+        query['ejecucion.fecha'] = { $gte: moment(req.query.deadline).startOf('day').toDate() };
     }
 
     let conceptos: any = [];
@@ -343,7 +347,7 @@ router.get('/prestaciones/solicitudes', (req, res, next) => {
     });
 });
 
-router.get('/prestaciones/:id*?', (req, res, next) => {
+router.get('/prestaciones/:id*?', async (req, res, next) => {
 
     if (req.params.id) {
         const query = Prestacion.findById(req.params.id);
@@ -383,7 +387,10 @@ router.get('/prestaciones/:id*?', (req, res, next) => {
             query.where('solicitud.profesional.id').equals(req.query.idProfesional);
         }
         if (req.query.idPaciente) {
-            query.where('paciente.id').equals(req.query.idPaciente);
+            let { paciente } = await buscarPaciente(req.query.idPaciente);
+            if (paciente) {
+                query.where('paciente.id').in(paciente.vinculos);
+            }
         }
         if (req.query.idPrestacionOrigen) {
             query.where('solicitud.prestacionOrigen').equals(req.query.idPrestacionOrigen);
@@ -406,17 +413,29 @@ router.get('/prestaciones/:id*?', (req, res, next) => {
         if (req.query.solicitudHasta) {
             query.where('solicitud.fecha').lte(moment(req.query.solicitudHasta).endOf('day').toDate() as any);
         }
-        // Solicitudes generadas desde puntoInicio Ventanilla
-        // Solicitudes que no tienen prestacionOrigen ni turno
-        // Si tienen prestacionOrigen son generadas por RUP y no se listan
-        // Si tienen turno, dejan de estar pendientes de turno y no se listan
 
-        if (req.query.tienePrestacionOrigen === 'no') {
-            query.where('solicitud.prestacionOrigen').equals(null);
+
+        if (req.query.tienePrestacionOrigen !== undefined) {
+            if (req.query.tienePrestacionOrigen === true) {
+                query.where('solicitud.prestacionOrigen').ne(null);
+            }
+            if (req.query.tienePrestacionOrigen === false) {
+                query.where('solicitud.prestacionOrigen').equals(null);
+            }
         }
 
-        if (req.query.tieneTurno === 'no') {
-            query.where('solicitud.turno').equals(null);
+
+        if (req.query.tieneTurno !== undefined) {
+            if (req.query.tieneTurno === true) {
+                query.where('solicitud.turno').ne(null);
+            }
+            if (req.query.tieneTurno === false) {
+                query.where('solicitud.turno').equals(null);
+            }
+        }
+
+        if (req.query.tipoPrestaciones) {
+            query.where({ 'solicitud.tipoPrestacion.conceptId': { $in: req.query.tipoPrestaciones } });
         }
 
         if (req.query.organizacion) {

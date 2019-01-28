@@ -124,12 +124,17 @@ router.get('/laboratorios/(:id)', async (req, res, next) => {
     const pacientes = (req as any).user.pacientes;
     const index = pacientes.findIndex(item => item.id === idPaciente);
     if (index >= 0) {
-        const limit = parseInt (req.query.limit || 10, 0);
-        const skip = parseInt (req.query.skip || 0, 0);
-        const cdas: any[] = await cdaCtr.searchByPatient(idPaciente, '4241000179101', { limit, skip });
-        for (const cda of cdas) {
-            const _xml = await cdaCtr.loadCDA(cda.cda_id);
-            const dom: any = xmlToJson(_xml);
+        let { paciente } = await controllerPaciente.buscarPaciente(idPaciente);
+        if (!paciente) {
+            return next({ message: 'no existe el paciente' });
+        }
+
+        let limit = parseInt(req.query.limit || 10, 0);
+        let skip = parseInt(req.query.skip || 0, 0);
+        let cdas: any[] = await cdaCtr.searchByPatient(paciente.vinculos, '4241000179101', { limit, skip });
+        for (let cda of cdas) {
+            let _xml = await cdaCtr.loadCDA(cda.cda_id);
+            let dom: any = xmlToJson(_xml);
             cda.confidentialityCode = dom.ClinicalDocument.confidentialityCode['@attributes'].code;
             cda.title = dom.ClinicalDocument.title['#text'];
             cda.organizacion = dom.ClinicalDocument.author.assignedAuthor.representedOrganization.name['#text'];

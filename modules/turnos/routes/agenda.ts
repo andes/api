@@ -268,11 +268,13 @@ router.post('/agenda', (req, res, next) => {
 
         EventCore.emitAsync('citas:agenda:create', data);
 
+        res.json(data);
 
         // Al crear una nueva agenda la cacheo para Sips
-        operations.cacheTurnos(data).catch(error => { return next(error); });
+        operations.cacheTurnos(data).catch(error => {
+            return error;
+        });
         // Fin de insert cache
-        res.json(data);
     });
 });
 
@@ -537,41 +539,39 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                     default:
                         return next('Error: No se seleccionó ninguna opción.');
                 }
-
-                Auth.audit(data, req);
-                data.save((error) => {
-                    EventCore.emitAsync('citas:agenda:update', data);
-
-                    if (event.data) {
-                        EventCore.emitAsync(`citas:${event.object}:${event.accion}`, event.data);
-                    }
-
-                    Logger.log(req, 'citas', 'update', {
-                        accion: req.body.op,
-                        ruta: req.url,
-                        method: req.method,
-                        data,
-                        err: error || false
-                    });
-                    if (error) {
-                        return next(error);
-                    }
-
-                    if (req.body.op === 'suspendida') {
-                        (data as any).bloques.forEach(bloque => {
-
-                            // Loggear cada turno
-                            bloque.turnos.forEach(t => {
-                                if (t.paciente && t.paciente.id) {
-                                    LoggerPaciente.logTurno(req, 'turnos:suspender', t.paciente, t, bloque._id, data._id);
-                                }
-                            });
-
-                        });
-                    }
-                });
-
             }
+            Auth.audit(data, req);
+            data.save((error) => {
+                EventCore.emitAsync('citas:agenda:update', data);
+
+                if (event.data) {
+                    EventCore.emitAsync(`citas:${event.object}:${event.accion}`, event.data);
+                }
+
+                Logger.log(req, 'citas', 'update', {
+                    accion: req.body.op,
+                    ruta: req.url,
+                    method: req.method,
+                    data,
+                    err: error || false
+                });
+                if (error) {
+                    return next(error);
+                }
+
+                if (req.body.op === 'suspendida') {
+                    (data as any).bloques.forEach(bloque => {
+
+                        // Loggear cada turno
+                        bloque.turnos.forEach(t => {
+                            if (t.paciente && t.paciente.id) {
+                                LoggerPaciente.logTurno(req, 'turnos:suspender', t.paciente, t, bloque._id, data._id);
+                            }
+                        });
+
+                    });
+                }
+            });
             operations.cacheTurnos(data).catch(error => { return next(error); });
             // Fin de insert cache
             res.json(data);

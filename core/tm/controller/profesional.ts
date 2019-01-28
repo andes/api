@@ -35,7 +35,7 @@ export async function vencimientoMatriculaGrado(done) {
 }
 
 export async function vencimientoMatriculaPosgrado(done) {
-    let profesionales: any = await profesional.find({ 'formacionPosgrado.matriculado': true, profesionalMatriculado: true, 'formacionPosgrado.tieneVencimiento': true}, (data: any) => { return data; });
+    let profesionales: any = await profesional.find({ 'formacionPosgrado.matriculado': true, profesionalMatriculado: true, 'formacionPosgrado.tieneVencimiento': true }, (data: any) => { return data; });
     for (let _n = 0; _n < profesionales.length; _n++) {
         if (profesionales[_n].habilitado === true) {
             if (profesionales[_n].formacionPosgrado) {

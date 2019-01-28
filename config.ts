@@ -241,7 +241,17 @@ export const mpi = {
         name: 0.45,
         gender: 0.3,
         birthDate: 0.15
-    }
+    },
+    // En auditoria de la pacientes le quitamos importancia al DNI ya que es frecuente que este mal ya que mpi realiza control sobre DNI y Sexo con
+    // matching muy altos.
+    cotaMatchMinAuditoria: 0.75,
+    cotaMatchMaxAuditoria: 0.85,
+    weightsAuditoriaPacientes: {
+        identity: 0.10,
+        name: 0.40,
+        gender: 0.35,
+        birthDate: 0.15
+    },
 };
 
 export const weightsVaccine = {
@@ -249,4 +259,31 @@ export const weightsVaccine = {
     name: 0.2,
     gender: 0.3,
     birthDate: 0.2
+};
+
+export const logKeys = {
+    mpiInsert: {
+        key: 'mpi:paciente:insert',
+        operacion: 'Insert paciente MPI'
+    },
+    mpiUpdate: {
+        key: 'mpi:paciente:update',
+        operacion: 'Update paciente MPI'
+    },
+    mpiUpdateContact: {
+        key: 'mpi:paciente:updateContacto',
+        operacion: 'Update contacto paciente'
+    },
+    mpiBuscarPaciente: {
+        key: 'mpi:paciente:buscar',
+        operacion: 'Buscar paciente'
+    },
+    mpiUpdaterStart: {
+        key: 'mpi:mpiUpdater:start',
+        operacion: 'MPI updater start'
+    },
+    mpiUpdaterFinish: {
+        key: 'mpi:mpiUpdater:finish',
+        operacion: 'MPI updater finish'
+    },
 };

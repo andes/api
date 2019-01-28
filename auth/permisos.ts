@@ -306,6 +306,11 @@ export default [
                 key: 'reglas',
                 title: 'Edición de Reglas',
                 type: 'boolean'
+            },
+            {
+                key: 'anular',
+                title: 'Anular Solicitudes',
+                type: 'boolean'
             }
         ]
     },
@@ -316,6 +321,11 @@ export default [
         ]
     },
     {
+        key: 'auditoriaPacientes',
+        title: 'Auditoria Pacientes',
+        comment: '',
+        child: []
+    }, {
         key: 'espaciosFisicos',
         title: 'Edición de espacios físicos',
         child: [

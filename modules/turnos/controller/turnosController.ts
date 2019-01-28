@@ -2,9 +2,10 @@ import * as mongoose from 'mongoose';
 import * as agenda from '../../../modules/turnos/schemas/agenda';
 import { toArray } from '../../../utils/utils';
 import { logPaciente } from '../../../core/log/schemas/logPaciente';
+import { buscarPaciente } from '../../../core/mpi/controller/paciente';
 import * as controller from '../../../core/mpi/controller/paciente';
 import { Auth } from './../../../auth/auth.class';
-import { paciente } from '../../../core/mpi/schemas/paciente';
+import { paciente as pacienteModel } from '../../../core/mpi/schemas/paciente';
 
 export function getTurno(req) {
     return new Promise(async (resolve, reject) => {
@@ -94,7 +95,9 @@ export function getTurno(req) {
                 }
 
                 if (req.query && req.query.pacienteId) {
-                    matchTurno['bloques.turnos.paciente.id'] = mongoose.Types.ObjectId(req.query.pacienteId);
+                    const idPaciente = new mongoose.Types.ObjectId(req.query.pacienteId);
+                    let { paciente } = await buscarPaciente(idPaciente);
+                    matchTurno['bloques.turnos.paciente.id'] = { $in: paciente.vinculos };
                 }
 
                 pipelineTurno[0] = { $match: matchTurno };
@@ -137,6 +140,8 @@ export function getTurno(req) {
 
 export async function getHistorialPaciente(req) {
     if (req.query && req.query.pacienteId) {
+        const idPaciente = new mongoose.Types.ObjectId(req.query.pacienteId);
+        let { paciente } = await buscarPaciente(idPaciente);
         try {
             let pipelineTurno = [];
             const turnos = [];
@@ -155,7 +160,7 @@ export async function getHistorialPaciente(req) {
                                 'pausada'
                             ]
                         },
-                        'bloques.turnos.paciente.id': mongoose.Types.ObjectId(req.query.pacienteId)
+                        'bloques.turnos.paciente.id': { $in: paciente.vinculos }
                     }
                 },
                 {
@@ -170,7 +175,7 @@ export async function getHistorialPaciente(req) {
                 },
                 {
                     $match: {
-                        'bloques.turnos.paciente.id': mongoose.Types.ObjectId(req.query.pacienteId)
+                        'bloques.turnos.paciente.id': { $in: paciente.vinculos }
                     }
                 },
                 {
@@ -191,6 +196,9 @@ export async function getHistorialPaciente(req) {
                         },
                         turno: {
                             $first: '$bloques.turnos'
+                        },
+                        espacioFisico: {
+                            $first: '$espacioFisico'
                         }
                     }
                 },
@@ -217,7 +225,7 @@ export async function getHistorialPaciente(req) {
                                 'pausada'
                             ]
                         },
-                        'sobreturnos.paciente.id': mongoose.Types.ObjectId(req.query.pacienteId)
+                        'sobreturnos.paciente.id': { $in: paciente.vinculos }
                     }
                 },
                 {
@@ -227,7 +235,7 @@ export async function getHistorialPaciente(req) {
                 },
                 {
                     $match: {
-                        'sobreturnos.paciente.id': mongoose.Types.ObjectId(req.query.pacienteId)
+                        'sobreturnos.paciente.id': { $in: paciente.vinculos }
                     }
                 },
                 {
@@ -247,6 +255,9 @@ export async function getHistorialPaciente(req) {
                         },
                         turno: {
                             $first: '$sobreturnos'
+                        },
+                        espacioFisico: {
+                            $first: '$espacioFisico'
                         }
                     }
                 },
@@ -268,6 +279,7 @@ export async function getHistorialPaciente(req) {
                 turno.organizacion = elem.organizacion;
                 turno.profesionales = elem.profesionales;
                 turno.paciente = elem.turno.paciente;
+                turno.espacioFisico = elem.espacioFisico;
                 turnos.push(turno);
             });
             return (turnos);
@@ -284,9 +296,10 @@ export async function getLiberadosPaciente(req) {
     if (req.query && req.query.pacienteId) {
         try {
             const idPaciente = new mongoose.Types.ObjectId(req.query.pacienteId);
+            let { paciente } = await buscarPaciente(idPaciente);
             const resultado: any = await logPaciente.find(
                 {
-                    paciente: idPaciente,
+                    paciente: { $in: paciente.vinculos },
                     operacion: 'turnos:liberar',
                     'dataTurno.turno.updatedBy.organizacion._id': req.user.organizacion._id
                 })
@@ -322,35 +335,36 @@ export async function getLiberadosPaciente(req) {
  * @param {*} pacienteMPI
  * @returns
  */
-export async function actualizarCarpeta(req, res, next, pacienteMPI, carpetas) {
+export async function actualizarCarpeta(req: any, res: any, next: any, pacienteMPI: any, carpetas) {
+    let carpetasAux = (carpetas && carpetas.length > 0) ? (carpetas[0] as any).carpetaEfectores : [];
     if (pacienteMPI) {
-        try { // Actualizamos los turnos activos del paciente
-            if (pacienteMPI.paciente.carpetaEfectores.length > 0) {
+        if (pacienteMPI.paciente.carpetaEfectores.length > 0) {
+            if (carpetasAux.length < pacienteMPI.paciente.carpetaEfectores.length) {
                 req.body.carpetaEfectores = pacienteMPI.paciente.carpetaEfectores;
             } else {
-                if (carpetas.length > 0) {
-                    req.body.carpetaEfectores = (carpetas[0] as any).carpetaEfectores;
+                if (carpetasAux) {
+                    req.body.carpetaEfectores = carpetasAux;
                 }
             }
-            const repetida = await controller.checkCarpeta(req, pacienteMPI.paciente);
-            if (!repetida) {
-                controller.updateCarpetaEfectores(req, pacienteMPI.paciente);
-                controller.updateTurnosPaciente(pacienteMPI.paciente);
-            } else {
-                return next('El nÚmero de carpeta ya existe');
+        } else {
+            if (carpetas.length > 0) {
+                req.body.carpetaEfectores = carpetasAux;
             }
-        } catch (error) { return next(error); }
+        }
+        const repetida = await controller.checkCarpeta(req, pacienteMPI.paciente);
+        if (!repetida) {
+            controller.updateCarpetaEfectores(req, pacienteMPI.paciente);
+            controller.updateTurnosPaciente(pacienteMPI.paciente);
+        } else {
+            return next('El nÚmero de carpeta ya existe');
+        }
         let pacienteAndes: any;
         if (pacienteMPI.db === 'mpi') {
-            pacienteAndes = new paciente(pacienteMPI.paciente.toObject());
+            pacienteAndes = new pacienteModel(pacienteMPI.paciente.toObject());
         } else {
             pacienteAndes = pacienteMPI.paciente;
         }
         Auth.audit(pacienteAndes, req);
-        pacienteAndes.save((errPatch) => {
-            if (errPatch) {
-                return next(errPatch);
-            }
-        });
+        await pacienteAndes.save();
     }
 }
