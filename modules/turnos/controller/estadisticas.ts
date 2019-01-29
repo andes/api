@@ -144,7 +144,9 @@ function makeSecondaryMatch(filtros) {
     }
 
     if (filtros.profesional) {
-        match['profesionales._id'] = ObjectId(filtros.profesional);
+        match['profesionales._id'] = {
+            $nin: filtros.profesional
+        };
     }
 
     if (filtros.administrativo) {
@@ -152,7 +154,15 @@ function makeSecondaryMatch(filtros) {
     }
 
     if (filtros.prestacion) {
-        match['turno.tipoPrestacion.conceptId'] = filtros.prestacion;
+        match['turno.tipoPrestacion.conceptId'] = {
+            $nin: filtros.prestacion
+        };
+    }
+
+    if (filtros.estado_turno) {
+        match['turno.estado'] = {
+            $nin: filtros.estado_turno
+        };
     }
 
     return match;
@@ -181,7 +191,9 @@ function makeFacet(filtros) {
         facet['prestacion'] = facets['prestacion'];
     }
 
-    facet['estado_turno'] = facets.estadoTurno;
+    if (!filtros.estado_turno) {
+        facet['estado_turno'] = facets.estadoTurno;
+    }
 
     facet['tipoTurno'] = facets.tipoTurno;
 
@@ -189,6 +201,10 @@ function makeFacet(filtros) {
 }
 
 export async function estadisticas(filtros) {
+    const pipelineAgendas = [
+        { $match: makePrimaryMatch(filtros) },
+        // { $match: {tipoPrestaciones: {}}}
+    ];
     const pipeline = [
         /* Filtros iniciales */
         {
