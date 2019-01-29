@@ -9,9 +9,8 @@ import { Types } from 'mongoose';
 
 let router = express.Router();
 
-router.get('/protocolo/numero/', async (req, res, next) => {
-    const ObjectId = require('mongoose').Types.ObjectId;
-    let idEfector = new ObjectId(req.query.idEfector);
+router.get('/protocolo/generarNumero/', async (req, res, next) => {
+    let idEfector = Types.ObjectId(req.query.idEfector);
     let ultimoNumeroProtocolo = await getUltimoNumeroProtocolo(idEfector);
     let anio = new Date().getFullYear().toString().substr(-2);
     let prefijo;
@@ -38,7 +37,7 @@ router.get('/practicas/resultadosAnteriores', async (req, res, next) => {
     res.json(resultadosAnteriores);
 });
 
-router.get('/practicas/cobasc311', async (req, res, next) => {
+router.get('/protocolo/cobasc311', async (req, res, next) => {
     // if (!Auth.check(req, 'laboratorio:analizador:*')) {
     //     return next(403);
     // }
@@ -46,7 +45,7 @@ router.get('/practicas/cobasc311', async (req, res, next) => {
     res.json(practicasCobas);
 });
 
-router.get('/practicas/cobasc311/:id', async (req, res, next) => {
+router.get('/protocolo/cobasc311/:id', async (req, res, next) => {
     Prestacion.findById(req.params.id, (err, data: any) => {
         if (err) {
             return next(err);
@@ -57,11 +56,7 @@ router.get('/practicas/cobasc311/:id', async (req, res, next) => {
     });
 });
 
-router.patch('/practicas/cobasc311/:id', async (req, res, next) => {
-    // console.log('req.params:', req.params);
-    // console.log('req.body:', req.body.valor.resultado);
-    // console.log('req.body._id:', req.body._id);
-
+router.patch('/protocolo/cobasc311/:id', async (req, res, next) => {
     Prestacion.findById(req.params.id, (err, data: any) => {
         if (err) {
             return next(err);
@@ -69,10 +64,7 @@ router.patch('/practicas/cobasc311/:id', async (req, res, next) => {
         if (data) {
 
             let id = new Types.ObjectId(req.body._id);
-            // console.log('id:', id);
-            // console.log(data.ejecucion.registros);
             let index = data.ejecucion.registros.findIndex(x => { return x._id.toString() === id.toString(); });
-            // console.log('index: ', index);
 
             data.ejecucion.registros[index].valor = req.body.valor;
             Auth.audit(data, req);
@@ -82,11 +74,26 @@ router.patch('/practicas/cobasc311/:id', async (req, res, next) => {
     });
 });
 
-router.post('/practicas/autoanalizador', async (req, res, next) => {
+router.post('/protocolo/autoanalizador', async (req, res, next) => {
     let numeroProtocolo = req.query.numeroProtocolo;
     enviarAutoanalizador(numeroProtocolo);
     res.json({});
 });
 
+
+router.get('/protocolo/numero/:numero', async (req, res, next) => {
+    if (req.params.numero) {
+        Prestacion.find({ 'solicitud.registros.valor.solicitudPrestacion.numeroProtocolo.numeroCompleto': req.params.numero }).exec((err, data) => {
+            if (err) {
+                return next(err);
+            }
+            if (req.params.id && !data) {
+                return next(404);
+            }
+            res.json(data);
+        });
+    }
+    // res.json(req);
+});
 
 export = router;
