@@ -286,4 +286,16 @@ export const logKeys = {
         key: 'mpi:mpiUpdater:finish',
         operacion: 'MPI updater finish'
     },
+    elasticCheck1: {
+        key: 'elastic:notFound:andes',
+        operacion: 'Paciente en Andes no encontrado en elastic'
+    },
+    elasticCheck2: {
+        key: 'elastic:notFound:mpi',
+        operacion: 'paciente en MPI no encontrado en elastic'
+    },
+    elasticCheck3: {
+        key: 'andes:notFound',
+        operacion: 'paciente en elasticsearch no encontrado en ANDES/MPI'
+    },
 };
