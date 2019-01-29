@@ -1,7 +1,7 @@
 
 import * as express from 'express';
 import * as mongoose from 'mongoose';
-import { codificacion } from '../schemas/codificacion';
+import * as codificacion from '../schemas/codificacion';
 import * as prestacion from '../schemas/prestacion';
 import * as codificacionController from '../controllers/codificacionController';
 import { Auth } from './../../../auth/auth.class';
@@ -78,6 +78,7 @@ router.get('/codificacion/:id?', async (req: any, res, next) => {
             {
                 $project:
                 {
+                    id: '$_id',
                     diagnostico: 1,
                     idPrestacion: 1,
                     paciente: 1,
