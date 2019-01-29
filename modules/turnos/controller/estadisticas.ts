@@ -107,9 +107,23 @@ const facets = {
 };
 
 function makePrimaryMatch(filtros) {
-    const match: any = {
-        estado: { $nin: ['planificacion', 'pausada', 'borrada'] }
-    };
+    const match: any = {};
+
+    if (filtros.tipoDeFiltro === 'turnos') {
+        match.estado = { $nin: ['planificacion', 'pausada', 'borrada'] };
+    } else {
+        if (filtros.profesional) {
+            match['profesionales._id'] = {
+                $in: filtros.profesional
+            };
+        }
+
+        if (filtros.prestacion) {
+            match['tipoPrestacion.conceptId'] = {
+                $in: filtros.prestacion
+            };
+        }
+    }
 
     if (filtros.fechaDesde) {
         match.horaInicio = { $gte: moment(filtros.fechaDesde).startOf('day').toDate() };
@@ -145,7 +159,7 @@ function makeSecondaryMatch(filtros) {
 
     if (filtros.profesional) {
         match['profesionales._id'] = {
-            $nin: filtros.profesional
+            $in: filtros.profesional.map(pr => mongoose.Types.ObjectId(pr))
         };
     }
 
@@ -155,45 +169,32 @@ function makeSecondaryMatch(filtros) {
 
     if (filtros.prestacion) {
         match['turno.tipoPrestacion.conceptId'] = {
-            $nin: filtros.prestacion
+            $in: filtros.prestacion
+        };
+    }
+
+    if (filtros.tipoTurno) {
+        match['turno.tipoTurno'] = {
+            $in: filtros.tipoTurno
         };
     }
 
     if (filtros.estado_turno) {
         match['turno.estado'] = {
-            $nin: filtros.estado_turno
+            $in: filtros.estado_turno
         };
     }
-
     return match;
 }
 
 function makeFacet(filtros) {
     const facet: any = {};
 
-    if (!filtros.edad) {
-        facet['edad'] = facets['edad'];
-    }
+    facet['profesionales'] = facets['profesionales'];
 
-    if (!filtros.sexo) {
-        facet['sexo'] = facets['sexo'];
-    }
+    facet['prestacion'] = facets['prestacion'];
 
-    if (!filtros.profesional) {
-        facet['profesionales'] = facets['profesionales'];
-    }
-
-    if (!filtros.administrativo) {
-        facet['administrativo'] = facets['administrativo'];
-    }
-
-    if (!filtros.prestacion) {
-        facet['prestacion'] = facets['prestacion'];
-    }
-
-    if (!filtros.estado_turno) {
-        facet['estado_turno'] = facets.estadoTurno;
-    }
+    facet['estado_turno'] = facets.estadoTurno;
 
     facet['tipoTurno'] = facets.tipoTurno;
 
@@ -203,7 +204,6 @@ function makeFacet(filtros) {
 export async function estadisticas(filtros) {
     const pipelineAgendas = [
         { $match: makePrimaryMatch(filtros) },
-        // { $match: {tipoPrestaciones: {}}}
     ];
     const pipeline = [
         /* Filtros iniciales */
@@ -259,7 +259,6 @@ export async function estadisticas(filtros) {
             $facet: makeFacet(filtros)
         }
     ];
-
     const agr = AgendarModel.aggregate(pipeline).cursor({ batchSize: 1000 }).exec();
     return await toArray(agr);
 }
