@@ -483,11 +483,15 @@ router.get('/prestaciones/:id*?', async (req, res, next) => {
                 return next(404);
             }
             if (data) {
+                const profesionalId = Auth.getProfesional(req).id.toString();
                 for (let i = 0; i < data.length; i++) {
                     if (data[i].ejecucion.registros) {
                         for (let j = 0; j < data[i].ejecucion.registros.length; j++) {
-                            if (data[i].ejecucion.registros[j].privacy.scope === 'private' && Auth.getProfesional(req).id.toString() !== data[i].solicitud.profesional.id.toString()) {
+                            const privacy = data[i].ejecucion.registros[j].privacy;
+                            const profId = data[i].solicitud.profesional.id.toString();
+                            if (privacy && privacy.scope === 'private' &&  profesionalId !== profId) {
                                 data[i].ejecucion.registros.splice(j, 1);
+                                j--;
                             }
                         }
                     }
