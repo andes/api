@@ -30,7 +30,7 @@ router.get('/camas', Auth.authenticate(), (req, res, next) => {
         query.where('sectores._id').equals(req.query.sectorId);
     }
     if (req.query.unidadesOrganizativas) {
-        query.where('estados.unidadOrganizativa._id').equals(req.query.unidadesOrganizativas);
+        query.where('estados.unidadOrganizativa.conceptId').equals(req.query.unidadesOrganizativas);
     }
     query.sort({ numero: 1, habitacion: 1 });
     query.exec({}, (err, data) => {
@@ -122,7 +122,7 @@ router.put('/camas/:id', Auth.authenticate(), (req, res, next) => {
             data.sectores = req.body.sectores;
             data.nombre = req.body.nombre;
             data.tipoCama = req.body.tipoCama;
-            data.observaciones = req.body.observaciones ? req.body.observaciones : '' ;
+            data.observaciones = req.body.observaciones ? req.body.observaciones : '';
             data.equipamiento = req.body.equipamiento;
             if (req.body.estados.length > data.estados.length) {
                 data.estados.push(req.body.estados[req.body.estados.length - 1]);
