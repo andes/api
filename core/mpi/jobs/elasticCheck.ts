@@ -5,10 +5,9 @@ import {
 import { ElasticSync } from '../../../utils/elasticSync';
 import debug = require('debug');
 import * as mongoose from 'mongoose';
-import { Logger } from '../../../utils/logService';
 import { userScheduler } from '../../../config.private';
-import { logKeys } from 'config';
-
+import { logKeys } from '../../../config';
+import { log } from '@andes/log';
 const dbg = debug('elastic');
 
 export async function elasticCheck(done) {
@@ -28,7 +27,7 @@ export async function elasticCheck(done) {
             if (elasticResult && elasticResult.hits.total < 1) {
                 dbg(' ELASTIC RESULT---> ', elasticResult);
                 dbg('PACIENTE NO EXISTE EN ELASTIC---> ', pacMpi._id);
-                await log(userScheduler, logKeys.elasticCheck2.key, pacMpi, logKeys.elasticCheck2.operacion, pacMpi._id, null);
+                log(userScheduler, logKeys.elasticCheck2.key, pacMpi, logKeys.elasticCheck2.operacion, pacMpi._id, null);
 
             }
         });
@@ -47,7 +46,7 @@ export async function elasticCheck(done) {
             if (elasticResult && elasticResult.hits.total < 1) {
                 dbg(' ELASTIC RESULT---> ', elasticResult);
                 dbg('PACIENTE NO EXISTE EN ELASTIC---> ', pacAndes._id);
-                await log(userScheduler, logKeys.elasticCheck1.key, pacAndes, logKeys.elasticCheck1.operacion, pacAndes._id, null);
+                log(userScheduler, logKeys.elasticCheck1.key, pacAndes, logKeys.elasticCheck1.operacion, pacAndes._id, null);
 
 
             }
@@ -67,7 +66,7 @@ export async function elasticCheck(done) {
                     pac = await pacienteMpi.findOne({ _id: id });
                     if (!pac) {
                         dbg('PACIENTE NO EXISTE EN MONGO---> ', hit);
-                        await log(userScheduler, logKeys.elasticCheck3.key, hit, logKeys.elasticCheck3.operacion, hit._id, null);
+                        log(userScheduler, logKeys.elasticCheck3.key, hit, logKeys.elasticCheck3.operacion, hit._id, null);
                     }
                 }
                 count++;
