@@ -51,6 +51,17 @@ const facets = {
         }
     ],
 
+    profesionalesAgendas: [
+        { $unwind: '$profesionales' },
+        {
+            $group: {
+                _id: '$profesionales._id',
+                total: { $sum: 1 },
+                nombre: { $first: '$profesionales.nombre' },
+                apellido: { $first: '$profesionales.apellido' }
+            }
+        }
+    ],
 
     administrativo: [
         turnoAsignadoMatch,
@@ -71,6 +82,27 @@ const facets = {
                 _id: '$turno.tipoPrestacion.conceptId',
                 total: { $sum: 1 },
                 nombre: { $first: '$turno.tipoPrestacion.term' }
+            }
+        }
+    ],
+
+    prestacionAgendas: [
+        { $unwind: '$tipoPrestaciones' },
+        {
+            $group: {
+                _id: '$tipoPrestaciones.conceptId',
+                total: { $sum: 1 },
+                nombre: { $first: '$tipoPrestaciones.term' }
+            }
+        }
+    ],
+
+    estadoAgenda: [
+        {
+            $group: {
+                _id: '$estado',
+                nombre: { $first: '$estado' },
+                total: { $sum: 1 }
             }
         }
     ],
@@ -111,18 +143,6 @@ function makePrimaryMatch(filtros) {
 
     if (filtros.tipoDeFiltro === 'turnos') {
         match.estado = { $nin: ['planificacion', 'pausada', 'borrada'] };
-    } else {
-        if (filtros.profesional) {
-            match['profesionales._id'] = {
-                $in: filtros.profesional
-            };
-        }
-
-        if (filtros.prestacion) {
-            match['tipoPrestacion.conceptId'] = {
-                $in: filtros.prestacion
-            };
-        }
     }
 
     if (filtros.fechaDesde) {
@@ -143,46 +163,67 @@ function makePrimaryMatch(filtros) {
 function makeSecondaryMatch(filtros) {
     const match: any = {};
 
-    if (filtros.edad) {
-        const ages = filtros.edad.split('-');
-        match['turno.paciente.edad'] = {
-            $gte: parseInt(ages[0], 10)
-        };
-        match['turno.paciente.edad'] = {
-            $lt: parseInt(ages[1], 10)
-        };
-    }
+    if (filtros.tipoDeFiltro === 'turnos') {
+        if (filtros.edad) {
+            const ages = filtros.edad.split('-');
+            match['turno.paciente.edad'] = {
+                $gte: parseInt(ages[0], 10)
+            };
+            match['turno.paciente.edad'] = {
+                $lt: parseInt(ages[1], 10)
+            };
+        }
 
-    if (filtros.sexo) {
-        match['turno.paciente.sexo'] = filtros.sexo;
-    }
+        if (filtros.sexo) {
+            match['turno.paciente.sexo'] = filtros.sexo;
+        }
 
-    if (filtros.profesional) {
-        match['profesionales._id'] = {
-            $in: filtros.profesional.map(pr => mongoose.Types.ObjectId(pr))
-        };
-    }
+        if (filtros.profesional) {
+            match['profesionales._id'] = {
+                $in: filtros.profesional.map(pr => mongoose.Types.ObjectId(pr))
+            };
+        }
 
-    if (filtros.administrativo) {
-        match['turno.updatedBy.username'] = parseInt(filtros.administrativo, 10);
-    }
+        if (filtros.administrativo) {
+            match['turno.updatedBy.username'] = parseInt(filtros.administrativo, 10);
+        }
 
-    if (filtros.prestacion) {
-        match['turno.tipoPrestacion.conceptId'] = {
-            $in: filtros.prestacion
-        };
-    }
+        if (filtros.prestacion) {
+            match['turno.tipoPrestacion.conceptId'] = {
+                $in: filtros.prestacion
+            };
+        }
 
-    if (filtros.tipoTurno) {
-        match['turno.tipoTurno'] = {
-            $in: filtros.tipoTurno
-        };
-    }
+        if (filtros.tipoTurno) {
+            match['turno.tipoTurno'] = {
+                $in: filtros.tipoTurno
+            };
+        }
 
-    if (filtros.estado_turno) {
-        match['turno.estado'] = {
-            $in: filtros.estado_turno
-        };
+        if (filtros.estado_turno) {
+            match['turno.estado'] = {
+                $in: filtros.estado_turno
+            };
+        }
+    } else {
+        console.log('secondary -> ', filtros)
+        if (filtros.profesional) {
+            match['profesionales._id'] = {
+                $in: filtros.profesional.map(pr => mongoose.Types.ObjectId(pr))
+            };
+        }
+
+        if (filtros.prestacion) {
+            match['tipoPrestaciones.conceptId'] = {
+                $in: filtros.prestacion
+            };
+        }
+
+        if (filtros.estado_agenda) {
+            match['estado'] = {
+                $in: filtros.estado_agenda
+            };
+        }
     }
     return match;
 }
@@ -190,22 +231,32 @@ function makeSecondaryMatch(filtros) {
 function makeFacet(filtros) {
     const facet: any = {};
 
-    facet['profesionales'] = facets['profesionales'];
+    if (filtros.tipoDeFiltro === 'turnos') {
+        facet['prestacion'] = facets['prestacion'];
+        if (!filtros.profesionales) {
+            facet['profesionales'] = facets['profesionales'];
+        }
+        facet['estado_turno'] = facets.estadoTurno;
+        facet['tipoTurno'] = facets.tipoTurno;
+    } else {
+        facet['profesionales'] = facets['profesionalesAgendas'];
+        facet['prestacion'] = facets['prestacionAgendas'];
+        facet['estado_agenda'] = facets['estadoAgenda'];
+    }
 
-    facet['prestacion'] = facets['prestacion'];
-
-    facet['estado_turno'] = facets.estadoTurno;
-
-    facet['tipoTurno'] = facets.tipoTurno;
 
     return facet;
 }
 
 export async function estadisticas(filtros) {
+    console.log('filtros -> ', filtros)
+    let pipeline;
     const pipelineAgendas = [
         { $match: makePrimaryMatch(filtros) },
+        { $match: makeSecondaryMatch(filtros) },
+        { $facet: makeFacet(filtros) }
     ];
-    const pipeline = [
+    const pipelineTurno = [
         /* Filtros iniciales */
         {
             $match: makePrimaryMatch(filtros)
@@ -259,6 +310,11 @@ export async function estadisticas(filtros) {
             $facet: makeFacet(filtros)
         }
     ];
+    if (filtros.tipoDeFiltro === 'turnos') {
+        pipeline = pipelineTurno;
+    } else {
+        pipeline = pipelineAgendas;
+    }
     const agr = AgendarModel.aggregate(pipeline).cursor({ batchSize: 1000 }).exec();
     return await toArray(agr);
 }
