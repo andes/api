@@ -20,7 +20,7 @@ export function getServicioGeonode(point) {
             // Seteo de datos para realizar el request
             let user = geoNode.auth.user;
             let pass = geoNode.auth.password;
-            let auth = new Buffer(user + ':' + pass).toString('base64');
+        let auth = Buffer.from(`${user}:${pass}`).toString('base64');
             let url = encodeURI('http://geosalud.neuquen.gov.ar/geoserver/geonode/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetFeatureInfo&FORMAT=image%2Fpng&TRANSPARENT=true&QUERY_LAYERS=geonode%3Abarrios&LAYERS=geonode%3Abarrios&STYLES=barrios&FORMAT_OPTIONS=antialias%3Atext&INFO_FORMAT=application/json&FEATURE_COUNT=50&X=50&Y=50&SRS=EPSG%3A22182&WIDTH=101&HEIGHT=101&BBOX=' + geoBox);
             let req = {
                 uri: decodeURI(url),
