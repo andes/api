@@ -1,7 +1,7 @@
 export default [
     {
         key: 'turnos',
-        title: 'Modulo Citas',
+        title: 'Módulo Citas',
         comment: '',
         child: [
             {
@@ -26,9 +26,9 @@ export default [
             },
             {
                 key: 'planificarAgenda',
-                title: 'Planificacion de agenda',
+                title: 'Planificación de agenda',
                 child: [
-                    { key: 'prestacion', title: 'Tipo de prestacion', type: 'prestacion' }
+                    { key: 'prestacion', title: 'Tipo de prestación', type: 'prestacion' }
                 ]
             },
             {
@@ -64,7 +64,7 @@ export default [
                 key: 'darTurnos',
                 title: 'Dar Turnos',
                 child: [
-                    { key: 'prestacion', title: 'Tipo de prestacion', type: 'prestacion' },
+                    { key: 'prestacion', title: 'Tipo de prestación', type: 'prestacion' },
                     { key: 'delDia', title: 'Turnos del día', type: 'boolean' },
                     { key: 'paraProfesional', title: 'Para profesional', type: 'boolean' },
                     { key: 'programados', title: 'Turnos programados', type: 'boolean' }
@@ -72,7 +72,7 @@ export default [
             },
             {
                 key: 'puntoInicio',
-                title: 'puntoInicio',
+                title: 'Punto Inicio',
                 child: [
                     { key: 'solicitud', title: 'Registrar solicitud', type: 'boolean' },
                     { key: 'autocitado', title: 'Registrar Autocitación', type: 'boolean' },
@@ -84,7 +84,7 @@ export default [
     },
     {
         key: 'mpi',
-        title: 'Modulo MPI',
+        title: 'Módulo MPI',
         comment: '',
         child: [
             { key: 'nuevoPaciente', title: 'Crear paciente', type: 'boolean' },
@@ -115,10 +115,10 @@ export default [
                 child: [
                     { key: 'dashboard', title: 'Dashboard', type: 'boolean' },
                     { key: 'getbyId', title: 'Detalle de un paciente', type: 'boolean' },
-                    { key: 'elasticSearch', title: 'Busqueda de un paciente', type: 'boolean' },
+                    { key: 'elasticSearch', title: 'Búsqueda de un paciente', type: 'boolean' },
                     { key: 'putMpi', title: 'Actualización de un paciente MPI', type: 'boolean' },
                     { key: 'deleteMpi', title: 'Eliminar un paciente MPI', type: 'boolean' },
-                    { key: 'postAndes', title: 'Creacion de un paciente', type: 'boolean' },
+                    { key: 'postAndes', title: 'Creación de un paciente', type: 'boolean' },
                     { key: 'putAndes', title: 'Actualización de un paciente', type: 'boolean' },
                     { key: 'deleteAndes', title: 'Eliminar un paciente', type: 'boolean' },
                     { key: 'patchAndes', title: 'Modificar datos de un paciente', type: 'boolean' }, // patchAdams
@@ -131,7 +131,7 @@ export default [
     },
     {
         key: 'rup',
-        title: 'Modulo RUP',
+        title: 'Módulo RUP',
         comment: '',
         avoidAll: true,
         child: [
@@ -140,7 +140,7 @@ export default [
     },
     {
         key: 'internacion',
-        title: 'Modulo Internación',
+        title: 'Módulo Internación',
         comment: '',
         child: [
             {
@@ -150,7 +150,7 @@ export default [
                     { key: 'create', title: 'Crear nueva cama', type: 'boolean' }
                 ]
             },
-            { key: 'censo', title: 'Ver senso diario y mensual', type: 'boolean' },
+            { key: 'censo', title: 'Ver censo diario y mensual', type: 'boolean' },
             { key: 'alta', title: 'Ingregar paciente', type: 'boolean' },
             { key: 'inicio', title: 'Punto de inicio', type: 'boolean' }
         ]
@@ -158,7 +158,7 @@ export default [
     },
     {
         key: 'huds',
-        title: 'Modulo HUDS',
+        title: 'Módulo HUDS',
         comment: '',
         avoidAll: true,
         child: [
@@ -167,12 +167,12 @@ export default [
     },
     {
         key: 'fa',
-        title: 'Fuentas Autenticas',
-        comment: 'Habilita el acceso a distintas fuentes autenticas',
+        title: 'Fuentes Auténticas',
+        comment: 'Habilita el acceso a distintas fuentes auténticas',
         child: [
             {
                 key: 'get',
-                title: 'Consulta a fuentes auntentica',
+                title: 'Consulta a fuentes aunténticas',
                 child: [
                     { key: 'anses', title: 'ANSES', type: 'boolean' },
                     { key: 'sintys', title: 'SINTYS', type: 'boolean' },
@@ -196,7 +196,7 @@ export default [
         key: 'usuarios',
         title: 'Gestor de usuarios',
         child: [
-            { key: 'set', title: 'Modificacion de permisos', type: 'boolean' },
+            { key: 'set', title: 'Modificación de permisos', type: 'boolean' },
             { key: 'get', title: 'Ver usuario', type: 'boolean' },
             { key: 'ldap', title: 'Consutar usuario en LDAP', type: 'boolean' },
             { key: 'post', title: 'Crear usuario', type: 'boolean' },
@@ -215,9 +215,9 @@ export default [
                 child: [
                     { key: 'getProfesional', title: 'Ver profesional', type: 'boolean' },
                     { key: 'getProfesionalFoto', title: 'Ver foto profesional', type: 'boolean' },
-                    { key: 'postProfesional', title: 'crea profesional', type: 'boolean' },
-                    { key: 'putProfesional', title: 'actualiza profesional', type: 'boolean' },
-                    { key: 'deleteProfesional', title: 'borrar profesional', type: 'boolean' }
+                    { key: 'postProfesional', title: 'Crea profesional', type: 'boolean' },
+                    { key: 'putProfesional', title: 'Actualiza profesional', type: 'boolean' },
+                    { key: 'deleteProfesional', title: 'Borrar profesional', type: 'boolean' }
                 ]
             },
             {
@@ -226,7 +226,7 @@ export default [
                 child: [
                     { key: 'postTurno', title: 'insert turno', type: 'boolean' },
                     { key: 'postTurnoTipo', title: '', type: 'boolean' },
-                    { key: 'getTurnosProximos', title: 'trae proximos turnos', type: 'boolean' },
+                    { key: 'getTurnosProximos', title: 'Trae próximos turnos', type: 'boolean' },
                     { key: 'getTurnoTipo', title: '', type: 'boolean' },
                     { key: 'getTurno', title: 'traeTurno', type: 'boolean' }
                 ]
@@ -268,7 +268,7 @@ export default [
     },
     {
         key: 'cda',
-        title: 'Modulo CDA',
+        title: 'Módulo CDA',
         child: [
             { key: 'get', title: 'Leer CDA', type: 'boolean' },
             { key: 'list', title: 'Listar CDA por paciente', type: 'boolean' },
@@ -279,7 +279,7 @@ export default [
     },
     {
         key: 'reportes',
-        title: 'Modulo Reportes',
+        title: 'Módulo Reportes',
         child: [
         ]
     },
@@ -292,7 +292,7 @@ export default [
     },
     {
         key: 'solicitudes',
-        title: 'Modulo Solicitudes',
+        title: 'Módulo Solicitudes',
         comment: '',
         // avoidAll: true,
         child: [
@@ -316,13 +316,13 @@ export default [
     },
     {
         key: 'prestamos',
-        title: 'Prestamo de Carpetas',
+        title: 'Préstamo de Carpetas',
         child: [
         ]
     },
     {
         key: 'auditoriaPacientes',
-        title: 'Auditoria Pacientes',
+        title: 'Auditoría Pacientes',
         comment: '',
         child: []
     }, {

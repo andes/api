@@ -28,17 +28,20 @@ router.get('/perfiles/:id', (req: any, res, next) => {
 */
 router.get('/perfiles', Auth.authenticate(), async (req, res, next) => {
     let query;
-
     if (req.query.idOrganizacion) {
         query = {
             $or: [
-                { 'organizacion._id': { $exists: false } }, // perfiles globales
-                { 'organizacion._id': req.query.idOrganizacion } // perfiles locales de la organización
+                { organizacion: { $exists: false } }, // perfiles globales
+                { organizacion: null },
+                { organizacion: req.query.idOrganizacion }  // perfiles locales de la organización
             ]
         };
     } else {
         query = {
-            'organizacion._id': { $exists: false } // perfiles globales solamente
+            $or: [
+                { organizacion: { $exists: false } }, // perfiles globales
+                { organizacion: null }
+            ]
         };
     }
 
@@ -101,7 +104,7 @@ router.post('/perfiles', Auth.authenticate(), async (req, res, next) => {
 router.delete('/perfiles/:id', (req, res, next) => {
     try {
         perfil.deleteOne({ id: req.body._id }).then(res2 => {
-            res.json('api');
+            res.json(res2);
         });
     } catch (e) {
         return next(e);

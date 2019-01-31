@@ -103,6 +103,29 @@ router.get('/:dni', (req, res, next) => {
 });
 
 /**
+* Devuelve los permisos del usuario cuyo nombre se pasa por parámetro (dni) para una organización en particular (idOrganizacion)
+* @method GET
+*/
+router.get('/dniOrg/?:dni', (req, res, next) => {
+    if (!Auth.check(req, 'usuarios:get')) {
+        return next(403);
+    }
+    let query = {
+        nombre: req.query.dni,
+        'organizaciones._id': req.query.idOrganizacion
+    };
+    let project = { 'organizaciones._id.$': req.query.idOrganizacion };
+
+    try {
+        authUsers.find(query, project).then((res2: any) => {
+            res.json(res2[0].organizaciones[0].permisos);
+        });
+    } catch (err) {
+        return next(err);
+    }
+});
+
+/**
  * Chequea un documento en LDAP
  *
  * @method GET
@@ -180,4 +203,5 @@ router.get('', (req, res, next) => {
         return next(err);
     });
 });
+
 export = router;
