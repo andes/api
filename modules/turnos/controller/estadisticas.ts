@@ -131,7 +131,7 @@ const facets = {
         }},
         {
             $group: {
-                _id: {tipoTurno: '$turno.tipoTurno'},
+                _id: '$turno.tipoTurno',
                 total: { $sum: 1 }
             }
         }
@@ -180,7 +180,7 @@ function makeSecondaryMatch(filtros) {
 
         if (filtros.profesional) {
             match['profesionales._id'] = {
-                $in: filtros.profesional.map(pr => mongoose.Types.ObjectId(pr))
+                $in: filtros.profesional.map(pr => mongoose.Types.ObjectId(pr.id))
             };
         }
 
@@ -190,7 +190,7 @@ function makeSecondaryMatch(filtros) {
 
         if (filtros.prestacion) {
             match['turno.tipoPrestacion.conceptId'] = {
-                $in: filtros.prestacion
+                $in: filtros.prestacion.map(pres => pres.id)
             };
         }
 
@@ -206,16 +206,15 @@ function makeSecondaryMatch(filtros) {
             };
         }
     } else {
-        console.log('secondary -> ', filtros)
         if (filtros.profesional) {
             match['profesionales._id'] = {
-                $in: filtros.profesional.map(pr => mongoose.Types.ObjectId(pr))
+                $in: filtros.profesional.map(pr => mongoose.Types.ObjectId(pr.id))
             };
         }
 
         if (filtros.prestacion) {
             match['tipoPrestaciones.conceptId'] = {
-                $in: filtros.prestacion
+                $in: filtros.prestacion.map(pres => pres.id)
             };
         }
 
@@ -248,8 +247,75 @@ function makeFacet(filtros) {
     return facet;
 }
 
+function filtrosFaltantes(filtros, agr) {
+    agr.forEach(data => {
+        if (filtros.profesional) {
+            filtros.profesional.forEach((pr: any) => {
+                let hayProfesional = data.profesionales.find(prof => prof._id.toString() === pr.id);
+                if (hayProfesional === undefined) {
+                    data.profesionales.push({
+                        _id: pr.id,
+                        nombre: pr.nombre,
+                        apellido: pr.apellido,
+                        total: 0
+                    });
+                }
+            });
+        }
+
+        if (filtros.prestacion) {
+            filtros.prestacion.forEach((prestacion: any) => {
+                let hayPrestacion = data.prestacion.find(prest => prest._id.toString() === prestacion.id);
+                if (hayPrestacion === undefined) {
+                    data.prestacion.push({
+                        _id: prestacion.id,
+                        total: 0,
+                        nombre: prestacion.nombre
+                    });
+                }
+            });
+        }
+
+        if (filtros.tipoTurno) {
+            filtros.tipoTurno.forEach((tt: any) => {
+                let hayTipoTurno = data.tipoTurno.find(datatt => datatt._id === tt);
+                if (hayTipoTurno === undefined) {
+                    data.tipoTurno.push({
+                        _id: tt,
+                        total: 0,
+                    });
+                }
+            });
+        }
+
+        if (filtros.estado_turno) {
+            filtros.estado_turno.forEach((et: any) => {
+                let hayEstadoTurno = data.estado_turno.find(dataET => dataET._id === et);
+                if (hayEstadoTurno === undefined) {
+                    data.estado_turno.push({
+                        _id: et,
+                        total: 0,
+                    });
+                }
+            });
+        }
+
+        if (filtros.estado_agenda) {
+            filtros.estado_agenda.forEach((ea: any) => {
+                let hayEstadoAgenda = data.estado_agenda.find(dataEA => dataEA._id === ea);
+                if (hayEstadoAgenda === undefined) {
+                    data.estado_agenda.push({
+                        _id: ea,
+                        total: 0,
+                    });
+                }
+            });
+        }
+    });
+    return agr;
+}
+
 export async function estadisticas(filtros) {
-    console.log('filtros -> ', filtros)
     let pipeline;
     const pipelineAgendas = [
         { $match: makePrimaryMatch(filtros) },
@@ -310,11 +376,14 @@ export async function estadisticas(filtros) {
             $facet: makeFacet(filtros)
         }
     ];
+
     if (filtros.tipoDeFiltro === 'turnos') {
         pipeline = pipelineTurno;
     } else {
         pipeline = pipelineAgendas;
     }
-    const agr = AgendarModel.aggregate(pipeline).cursor({ batchSize: 1000 }).exec();
-    return await toArray(agr);
+
+    const agr = await toArray(AgendarModel.aggregate(pipeline).cursor({ batchSize: 1000 }).exec());
+    const dataEstadisticas = filtrosFaltantes(filtros, agr);
+    return dataEstadisticas;
 }
