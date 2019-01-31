@@ -10,7 +10,6 @@ import { ElasticSync } from '../../../utils/elasticSync';
 import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
 import { EventCore } from '@andes/event-bus';
-import { EventEmitter } from 'events';
 
 
 const logD = debug('paciente-controller');
@@ -441,7 +440,6 @@ router.put('/pacientes/:id', async (req, res, next) => {
         if (cond) {
             return next('El paciente ya existe');
         } else {
-
             let patientFound: any = await paciente.findById(query).exec();
             if (patientFound) {
                 const data = req.body;
@@ -451,8 +449,8 @@ router.put('/pacientes/:id', async (req, res, next) => {
                     delete data.sexo;
                     delete data.fechaNacimiento;
                 }
-                if (patientFound.estado === 'validado' && patientFound.direccion[0].valor !== data.direccion[0].valor) {
-                    controller.actualizarGeoReferencia(req.body, data);
+                if (patientFound.estado === 'validado' &&  patientFound.direccion[0].valor !== data.direccion[0].valor) {
+                    await controller.actualizarGeoReferencia(data);
                 }
                 let pacienteUpdated = await controller.updatePaciente(patientFound, data, req);
                 res.json(pacienteUpdated);
@@ -463,7 +461,7 @@ router.put('/pacientes/:id', async (req, res, next) => {
 
                 // se carga geo referencia desde api de google
                 if (req.body.estado === 'validado') {
-                    controller.actualizarGeoReferencia(req.body, newPatient);
+                    await controller.actualizarGeoReferencia(newPatient);
                 }
                 // verifico si el paciente ya está en MPI
                 let patientFountMpi = await pacienteMpi.findById(query).exec();
