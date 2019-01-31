@@ -3,12 +3,12 @@ import * as configPrivate from './../config.private';
 
 /**
  *
- * @param dataPaciente JSON que debe contener la dirección del paciente según su esquema.
+ * @param direccion Dirección del paciente según su esquema.
  * @returns coordenadas: { latitud, longitud } en caso de éxito. De lo contrario null.
  */
-export async function getGeoreferencia(dataPaciente) {
-    const address = dataPaciente.direccion[0].valor + ',' + dataPaciente.direccion[0].ubicacion.localidad.nombre
-        + ',' + dataPaciente.direccion[0].ubicacion.provincia.nombre;
+export async function getGeoreferencia(direccion) {
+    const address = direccion[0].valor + ',' + direccion[0].ubicacion.localidad.nombre
+        + ',' + direccion[0].ubicacion.provincia.nombre;
     let pathGoogleApi = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + address + ', ' + 'AR' + '&key=' + configPrivate.geoKey;
 
     pathGoogleApi = limpiarTildes(pathGoogleApi);
@@ -20,13 +20,15 @@ export async function getGeoreferencia(dataPaciente) {
         for (let elto of salida.results) {
             // se obtiene la localidad del resultado (pueden ser varios resultados)
             let localidad = elto.address_components.find(atributo => atributo.types[0] === 'locality');
-            localidad = limpiarTildes(localidad.short_name);
-            let localidadPaciente = limpiarTildes(dataPaciente.direccion[0].ubicacion.localidad.nombre);
-            // si la localidad coincide con la buscada, entonces la geolocalización se considera válida
-            // se retorna el primer elemento que tenga coincidencia
-            if (localidad.toUpperCase() === localidadPaciente.toUpperCase()) {
-                respuesta = elto.geometry.location;
-                break;
+            if (localidad) {
+                localidad = limpiarTildes(localidad.short_name);
+                let localidadPaciente = limpiarTildes(direccion[0].ubicacion.localidad.nombre);
+                // si la localidad coincide con la buscada, entonces la geolocalización se considera válida
+                // se retorna el primer elemento que tenga coincidencia
+                if (localidad.toUpperCase() === localidadPaciente.toUpperCase()) {
+                    respuesta = elto.geometry.location;
+                    break;
+                }
             }
         }
         return respuesta;
