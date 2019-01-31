@@ -294,10 +294,24 @@ export function camasXfecha(idOrganizacion, fecha) {
         },
         { $sort: { 'estados.fecha': 1 } },
         {
+            $project: {
+                estados: '$estados',
+                organizacion: '$organizacion',
+                sectores: '$sectores',
+                habitacion: '$habitacion',
+                nombre: '$nombre',
+                tipoCama: '$tipoCama',
+                unidadOrganizativaOriginal: '$unidadOrganizativaOriginal',
+                equipamiento: '$equipamiento',
+
+            },
+        },
+        {
             $group:
             {
                 _id: { id: '$_id', },
                 id: { $last: '$_id' },
+                estados: { $push: '$estados' },
                 ultimoEstado: { $last: '$estados' },
                 organizacion: { $last: '$organizacion' },
                 sectores: { $last: '$sectores' },

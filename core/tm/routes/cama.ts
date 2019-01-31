@@ -49,8 +49,6 @@ router.get('/camas', Auth.authenticate(), (req, res, next) => {
 router.get('/camas/porfecha', Auth.authenticate(), (req, res, next) => {
     camaController.camasXfecha(new mongoose.Types.ObjectId(req.query.idOrganizacion), new Date(req.query.fecha)).then(
         camas => {
-            console.log(camas);
-
             res.json(camas);
         }).catch(error => {
             return next(error);
@@ -110,7 +108,6 @@ router.post('/camas', Auth.authenticate(), (req, res, next) => {
  */
 
 router.put('/camas/:id', Auth.authenticate(), (req, res, next) => {
-    console.log(req.body);
     CamaModel.findById(req.params.id, (err3, data: any) => {
         if (err3) {
             return next(404);
@@ -220,7 +217,6 @@ router.patch('/camas/cambiaEstado/:idCama', Auth.authenticate(), (req, res, next
             return next(err);
         }
         let ultimoEstado = _cama.estados[_cama.estados.length - 1];
-
         if (req.body.estado === ultimoEstado.estado) {
             _cama.estados.push(req.body);
 
