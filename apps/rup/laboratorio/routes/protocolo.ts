@@ -60,7 +60,6 @@ router.patch('/practicas/cobasc311/:id', async (req, res, next) => {
     // console.log('req.params:', req.params);
     // console.log('req.body:', req.body);
     // console.log('req.body._id:', req.body._id);
-
     try {
         Prestacion.updateOne(
             {
@@ -74,11 +73,8 @@ router.patch('/practicas/cobasc311/:id', async (req, res, next) => {
             },
             (err, data: any) => {
                 if (err) {
-                    console.log('eror1:', err);
                     return next(err);
                 }
-                Auth.audit(data, req);
-                console.log('data.ejecucion.registros:', data);
                 return res.json(data);
             }
         );
