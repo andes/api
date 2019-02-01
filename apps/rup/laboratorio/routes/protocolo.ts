@@ -56,22 +56,35 @@ router.get('/protocolo/cobasc311/:id', async (req, res, next) => {
     });
 });
 
-router.patch('/protocolo/cobasc311/:id', async (req, res, next) => {
-    Prestacion.findById(req.params.id, (err, data: any) => {
-        if (err) {
-            return next(err);
-        }
-        if (data) {
+router.patch('/practicas/cobasc311/:id', async (req, res, next) => {
+    // console.log('req.params:', req.params);
+    // console.log('req.body:', req.body);
+    // console.log('req.body._id:', req.body._id);
 
-            let id = new Types.ObjectId(req.body._id);
-            let index = data.ejecucion.registros.findIndex(x => { return x._id.toString() === id.toString(); });
-
-            data.ejecucion.registros[index].valor = req.body.valor;
-            Auth.audit(data, req);
-            data.save();
-            return res.json(data);
-        }
-    });
+    try {
+        Prestacion.updateOne(
+            {
+                _id: req.params.id,
+                'ejecucion.registros.concepto.conceptId': req.body.conceptId
+            },
+            {
+                $set: {
+                    'ejecucion.registros.$.valor.resultado.valor': req.body.valor
+                }
+            },
+            (err, data: any) => {
+                if (err) {
+                    console.log('eror1:', err);
+                    return next(err);
+                }
+                Auth.audit(data, req);
+                console.log('data.ejecucion.registros:', data);
+                return res.json(data);
+            }
+        );
+    } catch (error) {
+        console.log('error Prestacion.updateOne:', error);
+    }
 });
 
 router.post('/protocolo/autoanalizador', async (req, res, next) => {
