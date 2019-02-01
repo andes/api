@@ -52,15 +52,16 @@ export async function facturacionAutomatica(prestacion: any) {
         }
     }
 
+    console.log("Factura:  ", JSON.stringify(factura));
     return factura;
-    // console.log("Factura: ", JSON.stringify(factura));
+
 }
 
 function getConfiguracionAutomatica(conceptId: any) {
     return new Promise(async (resolve, reject) => {
         let query;
         query = configAutomatica.find({});
-        query.where('snomed.conceptId').equals(conceptId);
+        query.where('prestacionSnomed.conceptId').equals(conceptId);
         query.exec((err, data) => {
             if (err) {
                 reject(err);
@@ -74,10 +75,10 @@ function getConfiguracionAutomatica(conceptId: any) {
 async function getDatosReportables(idTipoPrestacion: any, prestacion: any) {
     let configAuto: any = await getConfiguracionAutomatica(idTipoPrestacion);
 
-    if ((configAuto) && (configAuto.nomencladorSUMAR.datosReportables.length > 0)) {
+    if ((configAuto) && (configAuto.sumar.datosReportables.length > 0)) {
         let conceptos: any = [];
 
-        const expresionesDR = configAuto.nomencladorSUMAR.datosReportables.map((config: any) => config.valores);
+        const expresionesDR = configAuto.sumar.datosReportables.map((config: any) => config.valores);
 
         let promises = expresionesDR.map(async (exp, index) => {
 
@@ -102,11 +103,12 @@ async function getDatosReportables(idTipoPrestacion: any, prestacion: any) {
                     let datoReportable = {
                         conceptId: data[0].registro.concepto.conceptId,
                         term: data[0].registro.concepto.term,
-                        valor: {
+                        valor: (data[0].registro.valor.concepto) ? {
                             conceptId: (data[0].registro.valor.concepto) ? data[0].registro.valor.concepto.conceptId : data[0].registro.valor,
                             nombre: (data[0].registro.valor.concepto) ? data[0].registro.valor.concepto.term : data[0].registro.concepto.term
-                        }
+                        } : data[0].registro.valor
                     };
+
                     resolve(datoReportable);
                 } else {
                     resolve();
