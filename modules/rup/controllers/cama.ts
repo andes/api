@@ -1,4 +1,4 @@
-import { model as cama } from '../../../core/tm/schemas/camas';
+import { model as cama } from './../schemas/camas';
 import { toArray } from '../../../utils/utils';
 import * as moment from 'moment';
 
