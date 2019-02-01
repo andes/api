@@ -109,7 +109,6 @@ export function getDiagnosticos(params) {
         let pipeline = [];
         pipeline = [{
             $match: {
-                'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria': { $exists: true, $ne: {} },
                 'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
                 'bloques.turnos.diagnostico.codificaciones.0.primeraVez': true,
                 horaInicio: { $gte: new Date(params.horaInicio) },
@@ -124,21 +123,43 @@ export function getDiagnosticos(params) {
             $unwind: '$bloques.turnos'
         },
         {
-            $unwind: '$bloques.turnos.diagnostico.codificaciones'
+            $match: {
+                'bloques.turnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
+                'bloques.turnos.diagnostico.codificaciones.0.primeraVez': true,
+                horaInicio: { $gte: new Date(params.horaInicio) },
+                horaFin: { $lte: new Date(params.horaFin) },
+                'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) }
+            }
+        },
+
+        {
+            $project: {
+                paciente: '$bloques.turnos.paciente',
+                diagnosticoCodificaciones: '$bloqueTurnos.diagnostico.codificaciones',
+                codificacionesAuditoria: '$bloques.turnos.diagnostico.codificaciones.codificacionAuditoria',
+            }
+        },
+        {
+            $unwind: '$codificacionesAuditoria'
+        },
+        {
+            $match: {
+                'codificacionesAuditoria.c2': true
+            }
         },
         {
             $group: {
-                _id: '$bloques.turnos.diagnostico.codificaciones.codificacionAuditoria.nombre',
+                _id: '$codificacionesAuditoria.nombre',
                 codigo: {
-                    $first: '$bloques.turnos.diagnostico.codificaciones.codificacionAuditoria'
+                    $first: '$codificacionesAuditoria'
                 },
-                paciente: { $push: '$bloques.turnos.paciente' }
+                paciente: { $push: '$paciente' }
             }
         }];
+
         let pipeline1 = [];
         pipeline1 = [{
             $match: {
-                'sobreturnos.diagnostico.codificaciones.0.codificacionAuditoria': { $exists: true, $ne: {} },
                 'sobreturnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
                 'sobreturnos.diagnostico.codificaciones.0.primeraVez': true,
                 horaInicio: { $gte: new Date(params.horaInicio) },
@@ -153,14 +174,41 @@ export function getDiagnosticos(params) {
             $unwind: '$sobreturnos.diagnostico.codificaciones'
         },
         {
+            $match: {
+                'sobreturnos.diagnostico.codificaciones.0.codificacionAuditoria.c2': true,
+                'sobreturnos.diagnostico.codificaciones.0.primeraVez': true,
+                horaInicio: { $gte: new Date(params.horaInicio) },
+                horaFin: { $lte: new Date(params.horaFin) },
+                'organizacion._id': { $eq: mongoose.Types.ObjectId(params.organizacion) }
+            }
+        },
+        {
+            $project: {
+                paciente: '$sobreturnos.paciente',
+                diagnosticoCodificaciones: '$sobreturnos.diagnostico.codificaciones',
+                codificacionesAuditoria: '$sobreturnos.diagnostico.codificaciones.codificacionAuditoria',
+            }
+        },
+        {
+            $unwind: '$codificacionesAuditoria'
+        },
+        {
+            $match: {
+                'codificacionesAuditoria.c2': true
+            }
+
+        },
+        {
             $group: {
-                _id: '$sobreturnos.diagnostico.codificaciones.codificacionAuditoria.nombre',
+                _id: '$codificacionesAuditoria.nombre',
                 codigo: {
-                    $first: '$sobreturnos.diagnostico.codificaciones.codificacionAuditoria'
+                    $first: '$codificacionesAuditoria'
                 },
-                paciente: { $push: '$sobreturnos.paciente' }
+                paciente: { $push: '$paciente' }
             }
         }];
+
+        // Se buscan las prestaciones fuera de agenda codificados con algun diagnostico c2
         let pipeline2 = [];
         pipeline2 = [
             {
@@ -168,11 +216,33 @@ export function getDiagnosticos(params) {
                     'diagnostico.codificaciones.codificacionAuditoria': { $exists: true, $ne: {} },
                     'diagnostico.codificaciones.codificacionAuditoria.c2': true,
                     'diagnostico.codificaciones.primeraVez': true,
-                    createdAt: { $gte: new Date(params.horaInicio) }
+                }
+            },
+            {
+                $lookup: {
+                    from: 'prestaciones',
+                    localField: 'idPrestacion',
+                    foreignField: '_id',
+                    as: 'prestacion'
                 }
             },
             {
                 $unwind: '$diagnostico.codificaciones'
+            },
+            {
+                $unwind: '$prestacion',
+            },
+            {
+                $match: {
+                    'diagnostico.codificaciones.codificacionAuditoria': { $exists: true, $ne: {} },
+                    'diagnostico.codificaciones.codificacionAuditoria.c2': true,
+                    'diagnostico.codificaciones.primeraVez': true,
+                    'prestacion.solicitud.organizacion.id': { $eq: mongoose.Types.ObjectId(params.organizacion) },
+                    $and: [
+                        { 'prestacion.solicitud.fecha': { $lte: new Date(params.horaFin) } },
+                        { 'prestacion.solicitud.fecha': { $gte: new Date(params.horaInicio) } }
+                    ]
+                }
             },
             {
                 $group: {
