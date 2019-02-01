@@ -253,12 +253,7 @@ function filtrosFaltantes(filtros, agr) {
             filtros.profesional.forEach((pr: any) => {
                 let hayProfesional = data.profesionales.find(prof => prof._id.toString() === pr.id);
                 if (hayProfesional === undefined) {
-                    data.profesionales.push({
-                        _id: pr.id,
-                        nombre: pr.nombre,
-                        apellido: pr.apellido,
-                        total: 0
-                    });
+                    data.profesionales.push({ _id: pr.id, nombre: pr.nombre, apellido: pr.apellido, total: 0 });
                 }
             });
         }
@@ -267,11 +262,7 @@ function filtrosFaltantes(filtros, agr) {
             filtros.prestacion.forEach((prestacion: any) => {
                 let hayPrestacion = data.prestacion.find(prest => prest._id.toString() === prestacion.id);
                 if (hayPrestacion === undefined) {
-                    data.prestacion.push({
-                        _id: prestacion.id,
-                        total: 0,
-                        nombre: prestacion.nombre
-                    });
+                    data.prestacion.push({ _id: prestacion.id, total: 0, nombre: prestacion.nombre });
                 }
             });
         }
@@ -280,10 +271,7 @@ function filtrosFaltantes(filtros, agr) {
             filtros.tipoTurno.forEach((tt: any) => {
                 let hayTipoTurno = data.tipoTurno.find(datatt => datatt._id === tt);
                 if (hayTipoTurno === undefined) {
-                    data.tipoTurno.push({
-                        _id: tt,
-                        total: 0,
-                    });
+                    data.tipoTurno.push({ _id: tt, total: 0 });
                 }
             });
         }
@@ -292,10 +280,7 @@ function filtrosFaltantes(filtros, agr) {
             filtros.estado_turno.forEach((et: any) => {
                 let hayEstadoTurno = data.estado_turno.find(dataET => dataET._id === et);
                 if (hayEstadoTurno === undefined) {
-                    data.estado_turno.push({
-                        _id: et,
-                        total: 0,
-                    });
+                    data.estado_turno.push({ _id: et, total: 0 });
                 }
             });
         }
@@ -304,10 +289,7 @@ function filtrosFaltantes(filtros, agr) {
             filtros.estado_agenda.forEach((ea: any) => {
                 let hayEstadoAgenda = data.estado_agenda.find(dataEA => dataEA._id === ea);
                 if (hayEstadoAgenda === undefined) {
-                    data.estado_agenda.push({
-                        _id: ea,
-                        total: 0,
-                    });
+                    data.estado_agenda.push({ _id: ea, total: 0 });
                 }
             });
         }
@@ -324,20 +306,11 @@ export async function estadisticas(filtros) {
     ];
     const pipelineTurno = [
         /* Filtros iniciales */
-        {
-            $match: makePrimaryMatch(filtros)
-        },
-        {
-            $addFields: {
-                'sobreturnos.tipoTurno': 'sobreturno'
-            }
-        },
+        { $match: makePrimaryMatch(filtros) },
+        { $addFields: { 'sobreturnos.tipoTurno': 'sobreturno' } },
         { $addFields: { _sobreturnos: [{ turnos: '$sobreturnos' }] } },
-        { $addFields: { _bloques: { $concatArrays: ['$_sobreturnos', '$bloques'] }}
-        },
-        {
-            $unwind: '$_bloques'
-        },
+        { $addFields: { _bloques: { $concatArrays: ['$_sobreturnos', '$bloques'] }}},
+        { $unwind: '$_bloques' },
         { $unwind: '$_bloques.turnos' },
         {
             $project: {
@@ -372,9 +345,7 @@ export async function estadisticas(filtros) {
             }
         },
         { $match: makeSecondaryMatch(filtros) },
-        {
-            $facet: makeFacet(filtros)
-        }
+        { $facet: makeFacet(filtros) }
     ];
 
     if (filtros.tipoDeFiltro === 'turnos') {
