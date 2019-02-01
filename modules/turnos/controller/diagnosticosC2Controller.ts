@@ -105,7 +105,7 @@ export function getDiagnosticos(params) {
     let resultados = [];
     const promises = [];
     return new Promise(async (resolve, reject) => {
-        //Se buscan las agendas que tengan turnos o sobreturnos codificados con algun diagnostico c2
+        // Se buscan las agendas que tengan turnos o sobreturnos codificados con algun diagnostico c2
         let pipeline = [];
         pipeline = [{
             $match: {
@@ -208,7 +208,7 @@ export function getDiagnosticos(params) {
             }
         }];
 
-        //Se buscan las prestaciones fuera de agenda codificados con algun diagnostico c2
+        // Se buscan las prestaciones fuera de agenda codificados con algun diagnostico c2
         let pipeline2 = [];
         pipeline2 = [
             {
@@ -216,11 +216,33 @@ export function getDiagnosticos(params) {
                     'diagnostico.codificaciones.codificacionAuditoria': { $exists: true, $ne: {} },
                     'diagnostico.codificaciones.codificacionAuditoria.c2': true,
                     'diagnostico.codificaciones.primeraVez': true,
-                    createdAt: { $gte: new Date(params.horaInicio) }
+                }
+            },
+            {
+                $lookup: {
+                    from: 'prestaciones',
+                    localField: 'idPrestacion',
+                    foreignField: '_id',
+                    as: 'prestacion'
                 }
             },
             {
                 $unwind: '$diagnostico.codificaciones'
+            },
+            {
+                $unwind: '$prestacion',
+            },
+            {
+                $match: {
+                    'diagnostico.codificaciones.codificacionAuditoria': { $exists: true, $ne: {} },
+                    'diagnostico.codificaciones.codificacionAuditoria.c2': true,
+                    'diagnostico.codificaciones.primeraVez': true,
+                    'prestacion.solicitud.organizacion.id': { $eq: mongoose.Types.ObjectId(params.organizacion) },
+                    $and: [
+                        { 'prestacion.solicitud.fecha': { $lte: new Date(params.horaFin) } },
+                        { 'prestacion.solicitud.fecha': { $gte: new Date(params.horaInicio) } }
+                    ]
+                }
             },
             {
                 $group: {
