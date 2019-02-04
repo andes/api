@@ -294,6 +294,7 @@ function filtrosFaltantes(filtros, agr) {
             });
         }
     });
+    agr.push({tipoDeFiltro: filtros.tipoDeFiltro});
     return agr;
 }
 
