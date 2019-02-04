@@ -708,9 +708,9 @@ router.patch('/pacientes/:id', async (req, res, next) => {
             } else {
                 pacienteAndes = resultado.paciente;
             }
-            let connElastic = new ElasticSync();
-
-            await connElastic.sync(pacienteAndes);
+            // Quitamos esta sincronizacion con elastic para evitar la sincronización de campos no necesarios.
+            // let connElastic = new ElasticSync();
+            // await connElastic.sync(pacienteAndes);
 
             Auth.audit(pacienteAndes, req);
             let pacienteSaved = await pacienteAndes.save();
