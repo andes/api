@@ -17,7 +17,7 @@ export async function facturacionAutomatica(prestacion: any) {
     let datosOrganizacion: any = await getDatosOrganizacion(idOrganizacion);
     let obraSocialPaciente = await getObraSocial(prestacion.paciente.documento);
     /* Pasar un solo parámetro prestaciones */
-    let datosReportables = await getDatosReportables(prestacion.solicitud.tipoPrestacion.conceptId, prestacion);
+    let datosReportables = await getDatosReportables(prestacion);
 
     const factura = {
         turno: {
@@ -72,16 +72,15 @@ function getConfiguracionAutomatica(conceptId: any) {
     });
 }
 
-async function getDatosReportables(idTipoPrestacion: any, prestacion: any) {
+async function getDatosReportables(prestacion: any) {
+    let idTipoPrestacion = prestacion.solicitud.tipoPrestacion.conceptId;
     let configAuto: any = await getConfiguracionAutomatica(idTipoPrestacion);
 
     if ((configAuto) && (configAuto.sumar.datosReportables.length > 0)) {
         let conceptos: any = [];
-
         const expresionesDR = configAuto.sumar.datosReportables.map((config: any) => config.valores);
 
         let promises = expresionesDR.map(async (exp, index) => {
-
             return new Promise(async (resolve, reject) => {
                 let querySnomed = makeMongoQuery(exp[0].expresion);
                 let docs = await snomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 });
@@ -98,7 +97,7 @@ async function getDatosReportables(idTipoPrestacion: any, prestacion: any) {
 
                 // ejecutamos busqueda recursiva
                 let data: any = await buscarEnHudsFacturacion(prestacion, conceptos);
-
+                console.log("Data: ", data);
                 if (data.length > 0) {
                     let datoReportable = {
                         conceptId: data[0].registro.concepto.conceptId,
