@@ -10,7 +10,6 @@ import { ElasticSync } from '../../../utils/elasticSync';
 import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
 import { EventCore } from '@andes/event-bus';
-import { EventEmitter } from 'events';
 
 
 const logD = debug('paciente-controller');
@@ -187,9 +186,6 @@ router.get('/pacientes/:id', (req, res, next) => {
     }
     controller.buscarPaciente(req.params.id).then((resultado: any) => {
         if (resultado) {
-            Logger.log(req, 'mpi', 'query', {
-                mongoDB: resultado.paciente
-            });
             EventCore.emitAsync('mpi:paciente:get', resultado.paciente);
             res.json(resultado.paciente);
         } else {
@@ -206,10 +202,6 @@ router.get('/pacientes', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
         return next(403);
     }
-    // Logger de la consulta a ejecutar
-    Logger.log(req, 'mpi', 'query', {
-        elasticSearch: req.query
-    });
 
     controller.matching(req.query).then(result => {
         res.send(result);
