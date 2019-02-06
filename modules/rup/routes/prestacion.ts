@@ -24,10 +24,15 @@ import async = require('async');
  */
 
 router.get('/prestaciones/sinCama', (req, res, next) => {
+    console.log('rwqq.query', req.query);
     let query = {
         'solicitud.organizacion.id': mongoose.Types.ObjectId(Auth.getOrganization(req)),
         'solicitud.ambitoOrigen': 'internacion',
-        'solicitud.tipoPrestacion.conceptId': '32485007',  // Ver si encontramos otra forma de diferenciar las prestaciones de internacion
+        'solicitud.tipoPrestacion.conceptId': '32485007',  // Ver si encontramos otra forma de diferenciar las prestaciones de internacion,
+        'ejecucion.registros.valor.informeIngreso.fechaIngreso': {
+            $gte: new Date(req.query.fechaDesde),
+            $lte: new Date(req.query.fechaHasta)
+        },
         $where: 'this.estados[this.estados.length - 1].tipo ==  \"' + 'ejecucion' + '\"',
     };
     // Buscamos prestaciones que sean del ambito de internacion.
