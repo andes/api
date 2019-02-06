@@ -1,5 +1,29 @@
 import { handleHttpRequest } from './requestHandler';
-import * as configPrivate from './../config.private';
+import * as configPrivate from '../config.private';
+
+/**
+ *
+ * @param texto para autocompletar
+ * @returns opciones
+ */
+export async function autocompletar(texto) {
+    let pathGoogleApi = 'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=' + texto + '+street&types=address&components=country:ar&language=es' + '&key=' + configPrivate.geoKey;
+    pathGoogleApi = formatear(pathGoogleApi);
+
+    const [status, body] = await handleHttpRequest(pathGoogleApi);
+    const salida = JSON.parse(body);
+    if (salida.status === 'OK') {
+        let respuesta = [];
+        for (let elto of salida.predictions) {
+            respuesta.push(elto.description);
+        }
+        console.log('req: ', pathGoogleApi);
+        return respuesta;
+    } else {
+        return {};
+    }
+}
+
 
 /**
  *
@@ -7,12 +31,11 @@ import * as configPrivate from './../config.private';
  * @returns coordenadas: { latitud, longitud } en caso de éxito. De lo contrario null.
  */
 export async function getGeoreferencia(direccion) {
-    const address = direccion[0].valor + ',' + direccion[0].ubicacion.localidad.nombre
+    const address = direccion[0].valor + '+street,' + direccion[0].ubicacion.localidad.nombre
         + ',' + direccion[0].ubicacion.provincia.nombre;
-    let pathGoogleApi = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + address + ', ' + 'AR' + '&key=' + configPrivate.geoKey;
-
-    pathGoogleApi = limpiarTildes(pathGoogleApi);
-
+    let pathGoogleApi = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + address + ',AR&key=' + configPrivate.geoKey;
+    pathGoogleApi = formatear(pathGoogleApi);
+    console.log(pathGoogleApi);
     const [status, body] = await handleHttpRequest(pathGoogleApi);
     const salida = JSON.parse(body);
     if (salida.status === 'OK') {
@@ -21,8 +44,8 @@ export async function getGeoreferencia(direccion) {
             // se obtiene la localidad del resultado (pueden ser varios resultados)
             let localidad = elto.address_components.find(atributo => atributo.types[0] === 'locality');
             if (localidad) {
-                localidad = limpiarTildes(localidad.short_name);
-                let localidadPaciente = limpiarTildes(direccion[0].ubicacion.localidad.nombre);
+                localidad = formatear(localidad.short_name);
+                let localidadPaciente = formatear(direccion[0].ubicacion.localidad.nombre);
                 // si la localidad coincide con la buscada, entonces la geolocalización se considera válida
                 // se retorna el primer elemento que tenga coincidencia
                 if (localidad.toUpperCase() === localidadPaciente.toUpperCase()) {
@@ -37,7 +60,7 @@ export async function getGeoreferencia(direccion) {
     }
 }
 
-export function limpiarTildes(cadena) {
+export function formatear(cadena) {
     cadena = cadena.replace(/ /g, '+');
     cadena = cadena.replace(/á/gi, 'a');
     cadena = cadena.replace(/é/gi, 'e');

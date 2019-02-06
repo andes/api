@@ -199,10 +199,10 @@ export const modules = {
         route: '/modules/geonode',
         middleware: appMiddleware
     },
-    georeferencia: {
+    serviciosGoogle: {
         active: true,
-        path: './modules/georeferencia/routes',
-        route: '/modules/georeferencia',
+        path: './modules/googleServices/routes',
+        route: '/modules/googleServices',
         middleware: appMiddleware
     }
 };
