@@ -29,7 +29,6 @@ router.get('/prestaciones/sinCama', (req, res, next) => {
         'solicitud.tipoPrestacion.conceptId': '32485007',  // Ver si encontramos otra forma de diferenciar las prestaciones de internacion
         $where: 'this.estados[this.estados.length - 1].tipo ==  \"' + 'ejecucion' + '\"',
     };
-
     // Buscamos prestaciones que sean del ambito de internacion.
     Prestacion.find(query, async (err, prestaciones) => {
         if (err) {
@@ -38,6 +37,14 @@ router.get('/prestaciones/sinCama', (req, res, next) => {
         if (!prestaciones) {
             return res.status(404).send('No se encontraron prestaciones de internacion');
         }
+        // if (req.query.fechaDesde) {
+        //     prestaciones.where('ejecucion.registros.valor.informeIngreso.fechaIngreso').gte(moment(req.query.fechaDesde).startOf('day').toDate() as any);
+        // }
+
+        // if (req.query.fechaHasta) {
+        //     prestaciones.where('ejecucion.registros.valor.informeIngreso.fechaIngreso').lte(moment(req.query.fechaHasta).endOf('day').toDate() as any);
+        // }
+
         // Ahora buscamos si se encuentra asociada la internacion a una cama
         let listaEspera = [];
         let prestacion: any;
@@ -47,9 +54,10 @@ router.get('/prestaciones/sinCama', (req, res, next) => {
                 ultimoEstado: null,
                 paseDe: false,
                 esEgreso: false,
-                paseA: null
+                paseA: null,
+                fechaIngreso: null,
             };
-
+            enEspera.fechaIngreso = new Date(prestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso);
             // Buscamos si tiene una cama ocupada con el id de la internacion.
             let cama = await camasController.buscarCamaInternacion(mongoose.Types.ObjectId(prestacion.id), 'ocupada');
             // Loopeamos los registros de la prestacion buscando el informe de egreso.
