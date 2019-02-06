@@ -1,6 +1,6 @@
 import * as express from 'express';
 import * as https from 'https';
-import { model as Organizacion } from '../schemas/organizacion';
+import { Organizacion } from '../schemas/organizacion';
 import * as utils from '../../../utils/utils';
 import { toArray } from '../../../utils/utils';
 
