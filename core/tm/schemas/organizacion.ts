@@ -1,4 +1,4 @@
-import { Schema, model } from 'mongoose';
+import { Schema, model, SchemaTypes } from 'mongoose';
 import * as edificioSchema from './edificio';
 import * as direccionSchema from './direccion';
 import * as contactoSchema from './contacto';
@@ -52,7 +52,8 @@ const _schema = new Schema({
     fechaAlta: Date,
     fechaBaja: Date,
     mapaSectores: [MapaSectoresSchema],
-    unidadesOrganizativas: [SnomedConcept]
+    unidadesOrganizativas: [SnomedConcept],
+    configuraciones: SchemaTypes.Mixed
 });
 
 _schema.plugin(AuditPlugin);
