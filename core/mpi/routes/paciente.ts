@@ -455,6 +455,9 @@ router.put('/pacientes/:id', async (req, res, next) => {
                     controller.actualizarGeoReferencia(req.body, data);
                 }
                 let pacienteUpdated = await controller.updatePaciente(patientFound, data, req);
+                try {
+                    controller.updateTurnosPaciente(pacienteUpdated);
+                } catch (error) { return error; }
                 res.json(pacienteUpdated);
 
             } else {

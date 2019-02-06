@@ -62,7 +62,7 @@ export function updatePaciente(pacienteObj, data, req) {
             // pacienteObj.markModified;
             Auth.audit(pacienteObj, req);
         }
-        pacienteObj.save((err2) => {
+        pacienteObj.save(async (err2) => {
             if (err2) {
                 return reject(err2);
             }
@@ -70,7 +70,8 @@ export function updatePaciente(pacienteObj, data, req) {
                 updateTurnosPaciente(pacienteObj);
             } catch (error) { return error; }
             const connElastic = new ElasticSync();
-            connElastic.sync(pacienteObj).then(updated => {
+            try {
+                let updated = await connElastic.sync(pacienteObj);
                 if (updated) {
                     Logger.log(req, 'mpi', 'update', {
                         original: pacienteOriginal,
@@ -79,13 +80,11 @@ export function updatePaciente(pacienteObj, data, req) {
                 } else {
                     Logger.log(req, 'mpi', 'insert', pacienteObj);
                 }
-
                 EventCore.emitAsync('mpi:patient:update', pacienteObj);
                 resolve(pacienteObj);
-            }).catch(error => {
+            } catch (error) {
                 return reject(error);
-            });
-            resolve(pacienteObj);
+            }
         });
     });
 }
