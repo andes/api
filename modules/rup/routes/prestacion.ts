@@ -10,6 +10,7 @@ import { Logger } from '../../../utils/logService';
 import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
 import { snomedModel } from '../../../core/term/schemas/snomed';
 import * as camasController from './../controllers/cama';
+import { parseDate } from './../../../shared/parse';
 import { EventCore } from '@andes/event-bus';
 
 const router = express.Router();
@@ -465,7 +466,8 @@ router.get('/prestaciones/:id*?', async (req, res, next) => {
 });
 
 router.post('/prestaciones', (req, res, next) => {
-    const data = new Prestacion(req.body);
+    let dto = parseDate(JSON.stringify(req.body));
+    const data = new Prestacion(dto);
     Auth.audit(data, req);
     data.save((err) => {
         if (err) {
