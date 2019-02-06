@@ -483,6 +483,7 @@ router.patch('/prestaciones/:id', (req, res, next) => {
         if (err) {
             return next(err);
         }
+        req.body = parseDate(JSON.stringify(req.body));
         switch (req.body.op) {
             case 'paciente':
                 if (req.body.paciente) {
@@ -542,6 +543,7 @@ router.patch('/prestaciones/:id', (req, res, next) => {
         }
 
         Auth.audit(data, req);
+
         data.save((error, prestacion) => {
             if (error) {
                 return next(error);
