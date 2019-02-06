@@ -4,6 +4,7 @@ import { model as CamaModel } from './../schemas/camas';
 import { Auth } from '../../../auth/auth.class';
 import * as mongoose from 'mongoose';
 import * as camaController from './../controllers/cama';
+import { parseDate } from './../../../shared/parse';
 
 const router = express.Router();
 
@@ -214,7 +215,7 @@ router.patch('/camas/cambiaEstado/:idCama', Auth.authenticate(), async (req, res
     try {
         const unaCama: any = await CamaModel.findById({ _id: req.params.idCama });
         if (unaCama) {
-
+            let datas = parseDate(JSON.stringify(req.body));
             // recuperamos el ultimo estado para controlar si el cambio de estados es posible
             unaCama.estados.sort((a, b) => {
                 return b.fecha - a.fecha;
