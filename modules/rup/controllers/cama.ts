@@ -289,7 +289,7 @@ export function camasXfecha(idOrganizacion, fecha) {
         { $unwind: '$estados' },
         {
             $match: {
-                'estados.fecha': { $lte: fecha }
+                'estados.fecha': { $lte: fecha },
             }
         },
         { $sort: { 'estados.fecha': 1 } },
@@ -321,6 +321,11 @@ export function camasXfecha(idOrganizacion, fecha) {
                 unidadOrganizativaOriginal: { $last: '$unidadOrganizativaOriginal' },
                 equipamiento: { $last: '$equipamiento' }
 
+            }
+        },
+        {
+            $match: {
+                'ultimoEstado.estado': { $ne: 'inactiva' }
             }
         }];
         let camas = await toArray(cama.aggregate(pipelineEstado).cursor({}).exec());

@@ -1,9 +1,9 @@
-import { Body } from './../../cda/controller/class/Body';
 import * as express from 'express';
 import { model as CamaModel } from './../schemas/camas';
 import { Auth } from '../../../auth/auth.class';
 import * as mongoose from 'mongoose';
 import * as camaController from './../controllers/cama';
+import { parseDate } from './../../../shared/parse';
 
 const router = express.Router();
 
@@ -73,7 +73,7 @@ router.get('/camas/internacionCama', Auth.authenticate(), (req, res, next) => {
 });
 
 /**
- * Busca la cama por su id.
+ * Busca la cama por su id
  */
 
 router.get('/camas/:idCama', Auth.authenticate(), (req, res, next) => {
@@ -214,7 +214,7 @@ router.patch('/camas/cambiaEstado/:idCama', Auth.authenticate(), async (req, res
     try {
         const unaCama: any = await CamaModel.findById({ _id: req.params.idCama });
         if (unaCama) {
-
+            let datas = parseDate(JSON.stringify(req.body));
             // recuperamos el ultimo estado para controlar si el cambio de estados es posible
             unaCama.estados.sort((a, b) => {
                 return b.fecha - a.fecha;
@@ -275,6 +275,13 @@ router.patch('/camas/cambiaEstado/:idCama', Auth.authenticate(), async (req, res
                             // actualizamos el estadode la cama
                             unaCama.estados.push(req.body);
                             break;
+                        case 'inactiva':
+                            if (ultimoEstado.estado === 'ocupada') {
+                                return next('La cama se encuentra ocupada en la fecha seleccionada');
+                            }
+                            // actualizamos el estadode la cama
+                            unaCama.estados.push(req.body);
+                            break;
                     }
                 }
 
@@ -293,82 +300,6 @@ router.patch('/camas/cambiaEstado/:idCama', Auth.authenticate(), async (req, res
     } catch (err) {
         return next(err);
     }
-
-
-    // CamaModel.findById({
-    //     _id: req.params.idCama,
-    // }, (err, _cama: any) => {
-    //     if (err) {
-    //         return next(err);
-    //     }
-
-    //     let ultimoEstado = _cama.estados[_cama.estados.length - 1];
-
-    //     if (req.body.estado === ultimoEstado.estado) {
-    //         _cama.estados.push(req.body);
-
-    //     } else if (req.body.estado === 'reparacion') {
-    //         // validamos que la cama no este ya en reparacion
-    //         if (ultimoEstado.estado === 'reparacion') {
-
-    //             return res.status(500).send('La cama ya fué enviada a reparación');
-    //         }
-    //         // validamos que la cama no este ocupada
-    //         if (ultimoEstado.estado === 'ocupada') {
-
-    //             return res.status(500).send('La cama está actualmente ocupada, no se puede enviar a reparación');
-    //         }
-
-    //         _cama.estados.push(req.body);
-
-    //     } else if (req.body.estado === 'desocupada') {
-    //         // verificamos que el estado anterior sea uno de los siguientes.
-    //         // ocupada, bloqueada o en reparacion.
-    //         if (ultimoEstado.estado === 'reparacion' || ultimoEstado.estado === 'ocupada' || ultimoEstado.estado === 'bloqueada') {
-    //             // Limpiamos los datos del paciente
-    //             if (req.body.sugierePase) {
-    //                 _cama.estados[_cama.estados.length - 1].sugierePase = req.body.sugierePase;
-    //                 delete req.body['sugierePase'];
-    //             }
-    //             _cama.estados.push(req.body);
-    //         }
-    //     } else if (req.body.estado === 'bloqueada') {
-    //         // validamos que la cama no este ocupada
-    //         if (ultimoEstado.estado === 'ocupada') {
-    //             return res.status(500).send('La cama está actualmente ocupada, no se puede bloquear.');
-    //         }
-    //         // actualizamos el estadode la cama
-    //         _cama.estados.push(req.body);
-
-    //     } else if (req.body.estado === 'ocupada') {
-
-    //         if (ultimoEstado.estado !== 'disponible') {
-    //             return res.status(500).send('La cama actualmente no esta preparada');
-    //         }
-    //         if (!req.body.paciente.id) {
-    //             return res.status(500).send('No puede ocupar una cama sin un paciente');
-    //         }
-    //         // actualizamos el estadode la cama
-    //         _cama.estados.push(req.body);
-
-    //     } else if (req.body.estado === 'disponible') {
-
-    //         if (ultimoEstado.estado !== 'desocupada' && ultimoEstado.estado !== 'ocupada' && ultimoEstado.estado !== 'bloqueada') {
-    //             return res.status(500).send('La cama debe estar disponible');
-    //         }
-    //         // actualizamos el estadode la cama
-    //         _cama.estados.push(req.body);
-    //     }
-    //     // agregamos audit a la organizacion
-    //     Auth.audit(_cama, req);
-    //     // guardamos organizacion
-    //     _cama.save((errUpdate) => {
-    //         if (errUpdate) {
-    //             return next(errUpdate);
-    //         }
-    //         res.json(_cama);
-    //     });
-    // });
 });
 
 

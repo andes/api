@@ -10,6 +10,7 @@ import { Logger } from '../../../utils/logService';
 import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
 import { snomedModel } from '../../../core/term/schemas/snomed';
 import * as camasController from './../controllers/cama';
+import { parseDate } from './../../../shared/parse';
 import { EventCore } from '@andes/event-bus';
 
 const router = express.Router();
@@ -26,10 +27,13 @@ router.get('/prestaciones/sinCama', (req, res, next) => {
     let query = {
         'solicitud.organizacion.id': mongoose.Types.ObjectId(Auth.getOrganization(req)),
         'solicitud.ambitoOrigen': 'internacion',
-        'solicitud.tipoPrestacion.conceptId': '32485007',  // Ver si encontramos otra forma de diferenciar las prestaciones de internacion
+        'solicitud.tipoPrestacion.conceptId': '32485007',  // Ver si encontramos otra forma de diferenciar las prestaciones de internacion,
+        'ejecucion.registros.valor.informeIngreso.fechaIngreso': {
+            $gte: new Date(req.query.fechaDesde),
+            $lte: new Date(req.query.fechaHasta)
+        },
         $where: 'this.estados[this.estados.length - 1].tipo ==  \"' + 'ejecucion' + '\"',
     };
-
     // Buscamos prestaciones que sean del ambito de internacion.
     Prestacion.find(query, async (err, prestaciones) => {
         if (err) {
@@ -47,8 +51,11 @@ router.get('/prestaciones/sinCama', (req, res, next) => {
                 ultimoEstado: null,
                 paseDe: false,
                 esEgreso: false,
-                paseA: null
+                paseA: null,
+                fechaIngreso: null,
             };
+            enEspera.fechaIngreso = new Date(prestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso);
+            enEspera.paseA = prestacion.ejecucion.registros[0].valor.informeIngreso.PaseAunidadOrganizativa ? prestacion.ejecucion.registros[0].valor.informeIngreso.PaseAunidadOrganizativa : null;
 
             // Buscamos si tiene una cama ocupada con el id de la internacion.
             let cama = await camasController.buscarCamaInternacion(mongoose.Types.ObjectId(prestacion.id), 'ocupada');
@@ -67,7 +74,7 @@ router.get('/prestaciones/sinCama', (req, res, next) => {
                     let _camas: any = await camasController.buscarPasesCamaXInternacion(prestacion._id);
                     if (_camas && _camas.length) {
                         enEspera.ultimoEstado = _camas[_camas.length - 1].estados.unidadOrganizativa.term;
-                        enEspera.paseDe = true;
+                        enEspera.paseDe = _camas[_camas.length - 1].estados.unidadOrganizativa;
                         enEspera.paseA = _camas[_camas.length - 1].estados.sugierePase;
                     }
                 }
@@ -465,7 +472,8 @@ router.get('/prestaciones/:id*?', async (req, res, next) => {
 });
 
 router.post('/prestaciones', (req, res, next) => {
-    const data = new Prestacion(req.body);
+    let dto = parseDate(JSON.stringify(req.body));
+    const data = new Prestacion(dto);
     Auth.audit(data, req);
     data.save((err) => {
         if (err) {
@@ -481,6 +489,7 @@ router.patch('/prestaciones/:id', (req, res, next) => {
         if (err) {
             return next(err);
         }
+        req.body = parseDate(JSON.stringify(req.body));
         switch (req.body.op) {
             case 'paciente':
                 if (req.body.paciente) {
@@ -540,6 +549,7 @@ router.patch('/prestaciones/:id', (req, res, next) => {
         }
 
         Auth.audit(data, req);
+
         data.save((error, prestacion) => {
             if (error) {
                 return next(error);
