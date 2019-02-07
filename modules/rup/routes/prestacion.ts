@@ -115,6 +115,10 @@ router.get('/prestaciones/huds/:idPaciente', async (req, res, next) => {
         query['_id'] = mongoose.Types.ObjectId(req.query.idPrestacion);
     }
 
+    if (req.query.deadline) {
+        query['ejecucion.fecha'] = { $gte: moment(req.query.deadline).startOf('day').toDate() };
+    }
+
     let conceptos: any = [];
 
     return Prestacion.find(query, (err, prestaciones) => {
