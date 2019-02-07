@@ -7,7 +7,7 @@ export let schema = new mongoose.Schema({
     fecha: Date,
     estado: {
         type: String,
-        enum: ['ocupada', 'desocupada', 'disponible', 'reparacion', 'bloqueada'],
+        enum: ['ocupada', 'desocupada', 'disponible', 'reparacion', 'bloqueada', 'inactiva'],
         required: true,
         default: 'desocupada'
     },
