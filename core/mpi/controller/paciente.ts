@@ -523,21 +523,10 @@ export async function updateDireccion(req, data) {
     data.markModified('direccion');
     data.direccion = req.body.direccion;
     try {
-        await actualizarGeoReferencia(req, data);
+        await actualizarGeoReferencia(data);
     } catch (err) {
         return err;
     }
-}
-
-export function updateBarrio(geoRef) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const barrio = await getServicioGeonode(geoRef);
-            resolve(barrio);
-        } catch (err) {
-            return reject(err);
-        }
-    });
 }
 
 export function updateCarpetaEfectores(req, data) {
@@ -798,7 +787,7 @@ export async function checkRepetido(nuevoPaciente): Promise<boolean> {
 
     let resultadoMatching = await matching(matchingInputData);  // Handlear error en funcion llamadora
     // Filtramos al mismo paciente
-    resultadoMatching = resultadoMatching.filter(elem => elem.paciente.id !== nuevoPaciente._id);
+    resultadoMatching = resultadoMatching.filter(elem => elem.paciente.id !== nuevoPaciente.id);
     // Si el nuevo paciente está validado, filtramos los candidatos temporales
     if (nuevoPaciente.estado === 'validado') {
         resultadoMatching = resultadoMatching.filter(elem => elem.paciente.estado === 'validado');
@@ -873,14 +862,13 @@ async function validarSisa(pacienteAndes: any) {
  * @param dataPaciente debe contener direccion y localidad.
  */
 
-export async function actualizarGeoReferencia(req, data) {
-    if (data.direccion[0].valor && data.direccion[0].ubicacion.localidad && data.direccion[0].ubicacion.localidad.nombre) {
-        // Se carga geo referencia desde api de google
+export async function actualizarGeoReferencia(patient) {
+    if (patient.direccion[0].valor && patient.direccion[0].ubicacion.localidad && patient.direccion[0].ubicacion.localidad.nombre) {
         try {
-            const geoRef: any = await geoRefPaciente(req);
+            const geoRef: any = await geoRefPaciente(patient);
             if (geoRef && geoRef.lat) {
-                data.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
-                data.direccion[0].ubicacion.barrio = await getServicioGeonode(data.direccion[0].geoReferencia);
+                patient.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
+                patient.direccion[0].ubicacion.barrio = await getServicioGeonode(patient.direccion[0].geoReferencia);
             }
         } catch (err) {
             return (err);
@@ -890,7 +878,7 @@ export async function actualizarGeoReferencia(req, data) {
 
 export async function geoRefPaciente(dataPaciente) {
     const address = dataPaciente.direccion[0].valor + ',' + dataPaciente.direccion[0].ubicacion.localidad.nombre;
-    let pathGoogleApi = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + address + ', ' + 'AR' + '&key=' + configPrivate.geoKey;
+    let pathGoogleApi = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}, AR&key=${configPrivate.geoKey}`;
 
     pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
     pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
