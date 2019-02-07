@@ -24,7 +24,6 @@ import async = require('async');
  */
 
 router.get('/prestaciones/sinCama', (req, res, next) => {
-    console.log('rwqq.query', req.query);
     let query = {
         'solicitud.organizacion.id': mongoose.Types.ObjectId(Auth.getOrganization(req)),
         'solicitud.ambitoOrigen': 'internacion',
@@ -43,14 +42,6 @@ router.get('/prestaciones/sinCama', (req, res, next) => {
         if (!prestaciones) {
             return res.status(404).send('No se encontraron prestaciones de internacion');
         }
-        // if (req.query.fechaDesde) {
-        //     prestaciones.where('ejecucion.registros.valor.informeIngreso.fechaIngreso').gte(moment(req.query.fechaDesde).startOf('day').toDate() as any);
-        // }
-
-        // if (req.query.fechaHasta) {
-        //     prestaciones.where('ejecucion.registros.valor.informeIngreso.fechaIngreso').lte(moment(req.query.fechaHasta).endOf('day').toDate() as any);
-        // }
-
         // Ahora buscamos si se encuentra asociada la internacion a una cama
         let listaEspera = [];
         let prestacion: any;
@@ -64,6 +55,8 @@ router.get('/prestaciones/sinCama', (req, res, next) => {
                 fechaIngreso: null,
             };
             enEspera.fechaIngreso = new Date(prestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso);
+            enEspera.paseA = prestacion.ejecucion.registros[0].valor.informeIngreso.PaseAunidadOrganizativa ? prestacion.ejecucion.registros[0].valor.informeIngreso.PaseAunidadOrganizativa : null;
+
             // Buscamos si tiene una cama ocupada con el id de la internacion.
             let cama = await camasController.buscarCamaInternacion(mongoose.Types.ObjectId(prestacion.id), 'ocupada');
             // Loopeamos los registros de la prestacion buscando el informe de egreso.
@@ -81,7 +74,7 @@ router.get('/prestaciones/sinCama', (req, res, next) => {
                     let _camas: any = await camasController.buscarPasesCamaXInternacion(prestacion._id);
                     if (_camas && _camas.length) {
                         enEspera.ultimoEstado = _camas[_camas.length - 1].estados.unidadOrganizativa.term;
-                        enEspera.paseDe = true;
+                        enEspera.paseDe = _camas[_camas.length - 1].estados.unidadOrganizativa;
                         enEspera.paseA = _camas[_camas.length - 1].estados.sugierePase;
                     }
                 }
