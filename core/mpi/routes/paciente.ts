@@ -458,7 +458,7 @@ router.put('/pacientes/:id', async (req, res, next) => {
                 try {
                     controller.updateTurnosPaciente(pacienteUpdated);
                 } catch (error) {
-                    return error;
+                    return next(error);
                 }
                 res.json(pacienteUpdated);
 
