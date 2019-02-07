@@ -1,5 +1,6 @@
 import { model as Prestacion } from '../schemas/prestacion';
 import * as camasController from './../controllers/cama';
+import * as utils from '../../../utils/utils';
 
 
 export function buscarUltimaInternacion(idPaciente, estado, organizacion) {
@@ -41,5 +42,46 @@ export function PasesParaCenso(dtoCama) {
         });
 
     });
+}
+
+
+export function listadoInternacion(filtros, organizacion) {
+    let query;
+    const opciones = {};
+    if (organizacion) {
+        opciones['ejecucion.organizacion.id'] = organizacion;
+    }
+    if (filtros.apellido) {
+        opciones['paciente.apellido'] = {
+            $regex: utils.makePattern(filtros.apellido)
+        };
+    }
+    if (filtros.documento) {
+        opciones['paciente.documento'] = {
+            $regex: utils.makePattern(filtros.documento)
+        };
+    }
+    let fechas = {};
+    if (filtros.fechaIngresoDesde) {
+        fechas['$gte'] = filtros.fechaIngresoDesde;
+    }
+    if (filtros.fechaIngresoHasta) {
+        fechas['$lte'] = filtros.fechaIngresoHasta;
+
+    }
+    if (filtros.fechaIngresoHasta || filtros.fechaIngresoDesde) {
+        opciones['ejecucion.registros.valor.informeIngreso.fechaIngreso'] = fechas;
+
+    }
+
+    if (filtros.estadoString) {
+        opciones['$where'] =  'this.estados[this.estados.length - 1].tipo ==  \"' + filtros.estadoString + '\"' ;
+
+    }
+    opciones['solicitud.ambitoOrigen'] = 'internacion';
+    opciones['solicitud.tipoPrestacion.conceptId'] = '32485007';
+    query = Prestacion.find(opciones);
+
+    return query.exec();
 }
 

@@ -133,4 +133,13 @@ router.get('/internaciones/censo/disponibilidad', (req, res, next) => {
         });
 });
 
+
+router.get('/internaciones/listadoInternacion', (req, res, next) => {
+    let idOrganizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
+    internacionesController.listadoInternacion(req.query, idOrganizacion).then(
+        internacion => {
+            res.json(internacion);
+        });
+});
+
 export = router;
