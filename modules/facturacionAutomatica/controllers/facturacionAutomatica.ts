@@ -99,14 +99,15 @@ async function getDatosReportables(prestacion: any) {
                 let data: any = await buscarEnHudsFacturacion(prestacion, conceptos);
                 console.log("Data: ", data);
                 if (data.length > 0) {
-                    let datoReportable = {
-                        conceptId: data[0].registro.concepto.conceptId,
-                        term: data[0].registro.concepto.term,
-                        valor: (data[0].registro.valor.concepto) ? {
-                            conceptId: (data[0].registro.valor.concepto) ? data[0].registro.valor.concepto.conceptId : data[0].registro.valor,
-                            nombre: (data[0].registro.valor.concepto) ? data[0].registro.valor.concepto.term : data[0].registro.concepto.term
-                        } : data[0].registro.valor
-                    };
+                    let datoReportable = data;
+                    // let datoReportable = {
+                    //     conceptId: data[0].registro.concepto.conceptId,
+                    //     term: data[0].registro.concepto.term,
+                    //     valor: (data[0].registro.valor.concepto) ? {
+                    //         conceptId: (data[0].registro.valor.concepto) ? data[0].registro.valor.concepto.conceptId : data[0].registro.valor,
+                    //         nombre: (data[0].registro.valor.concepto) ? data[0].registro.valor.concepto.term : data[0].registro.concepto.term
+                    //     } : data[0].registro.valor
+                    // };
 
                     resolve(datoReportable);
                 } else {
