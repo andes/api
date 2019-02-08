@@ -44,9 +44,8 @@ const facets = {
         {
             $group: {
                 _id: '$profesionales._id',
-                total: { $sum: 1 },
-                nombre: { $first: '$profesionales.nombre' },
-                apellido: { $first: '$profesionales.apellido' }
+                count: { $sum: 1 },
+                nombre: {$addToSet: { $concat: ['$profesionales.nombre', ' ', '$profesionales.apellido'] }}
             }
         }
     ],
@@ -56,9 +55,8 @@ const facets = {
         {
             $group: {
                 _id: '$profesionales._id',
-                total: { $sum: 1 },
-                nombre: { $first: '$profesionales.nombre' },
-                apellido: { $first: '$profesionales.apellido' }
+                count: { $sum: 1 },
+                nombre: {$addToSet: { $concat: ['$profesionales.nombre', ' ', '$profesionales.apellido'] }}
             }
         }
     ],
@@ -68,7 +66,7 @@ const facets = {
         {
             $group: {
                 _id: '$turno.updatedBy.username',
-                total: { $sum: 1 },
+                count: { $sum: 1 },
                 nombre: { $first: '$turno.updatedBy.nombre' },
                 apellido: { $first: '$turno.updatedBy.apellido' }
             }
@@ -80,7 +78,7 @@ const facets = {
         {
             $group: {
                 _id: '$turno.tipoPrestacion.conceptId',
-                total: { $sum: 1 },
+                count: { $sum: 1 },
                 nombre: { $first: '$turno.tipoPrestacion.term' }
             }
         }
@@ -91,7 +89,7 @@ const facets = {
         {
             $group: {
                 _id: '$tipoPrestaciones.conceptId',
-                total: { $sum: 1 },
+                count: { $sum: 1 },
                 nombre: { $first: '$tipoPrestaciones.term' }
             }
         }
@@ -102,7 +100,7 @@ const facets = {
             $group: {
                 _id: '$estado',
                 nombre: { $first: '$estado' },
-                total: { $sum: 1 }
+                count: { $sum: 1 }
             }
         }
     ],
@@ -132,7 +130,8 @@ const facets = {
         {
             $group: {
                 _id: '$turno.tipoTurno',
-                total: { $sum: 1 }
+                count: { $sum: 1 },
+                nombre: {$first: '$turno.tipoTurno'}
             }
         }
     ]
@@ -253,7 +252,7 @@ function filtrosFaltantes(filtros, agr) {
             filtros.profesional.forEach((pr: any) => {
                 let hayProfesional = data.profesionales.find(prof => prof._id.toString() === pr.id);
                 if (hayProfesional === undefined) {
-                    data.profesionales.push({ _id: pr.id, nombre: pr.nombre, apellido: pr.apellido, total: 0 });
+                    data.profesionales.push({ _id: pr.id, count: 0, nombre: pr.nombre });
                 }
             });
         }
@@ -262,7 +261,7 @@ function filtrosFaltantes(filtros, agr) {
             filtros.prestacion.forEach((prestacion: any) => {
                 let hayPrestacion = data.prestacion.find(prest => prest._id.toString() === prestacion.id);
                 if (hayPrestacion === undefined) {
-                    data.prestacion.push({ _id: prestacion.id, total: 0, nombre: prestacion.nombre });
+                    data.prestacion.push({ _id: prestacion._id, count: 0 , nombre: prestacion.nombre});
                 }
             });
         }
@@ -271,7 +270,7 @@ function filtrosFaltantes(filtros, agr) {
             filtros.tipoTurno.forEach((tt: any) => {
                 let hayTipoTurno = data.tipoTurno.find(datatt => datatt._id === tt);
                 if (hayTipoTurno === undefined) {
-                    data.tipoTurno.push({ _id: tt, total: 0 });
+                    data.tipoTurno.push({ _id: tt, count: 0, nombre: tt });
                 }
             });
         }
@@ -280,7 +279,7 @@ function filtrosFaltantes(filtros, agr) {
             filtros.estado_turno.forEach((et: any) => {
                 let hayEstadoTurno = data.estado_turno.find(dataET => dataET._id === et);
                 if (hayEstadoTurno === undefined) {
-                    data.estado_turno.push({ _id: et, total: 0 });
+                    data.estado_turno.push({ _id: et, count: 0, nombre: et });
                 }
             });
         }
@@ -289,7 +288,7 @@ function filtrosFaltantes(filtros, agr) {
             filtros.estado_agenda.forEach((ea: any) => {
                 let hayEstadoAgenda = data.estado_agenda.find(dataEA => dataEA._id === ea);
                 if (hayEstadoAgenda === undefined) {
-                    data.estado_agenda.push({ _id: ea, total: 0 });
+                    data.estado_agenda.push({ _id: ea, count: 0, nombre: ea });
                 }
             });
         }
