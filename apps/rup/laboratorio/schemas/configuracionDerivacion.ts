@@ -3,10 +3,10 @@ import { SnomedConcept } from './../../../../modules/rup/schemas/snomed-concept'
 
 export let schema = new Schema({
     laboratorioDestino: {
-        nombre: String,
-        id: { type: Schema.Types.ObjectId, ref: 'organizacion' }
+        nombre: { type: String, required: true },
+        id: { type: Schema.Types.ObjectId, ref: 'organizacion', required: true }
     },
-    concepto: SnomedConcept
+    concepto: { type: SnomedConcept, required: true }
 });
 schema.plugin(require('../../../../mongoose/audit'));
 

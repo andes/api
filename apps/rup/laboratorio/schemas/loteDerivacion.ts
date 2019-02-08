@@ -1,7 +1,7 @@
 import { model, Schema } from 'mongoose';
 import * as Registro from './../../../../modules/rup/schemas/prestacion.registro';
 
-export let Mischema = new Schema({
+export let schema = new Schema({
     laboratorioOrigen: { type: Schema.Types.ObjectId, ref: 'organizacion', required: true },
     laboratorioDestino: { type: Schema.Types.ObjectId, ref: 'organizacion', required: true },
     prestaciones: [{
@@ -10,6 +10,6 @@ export let Mischema = new Schema({
         registro: Registro
     }]
 });
-Mischema.plugin(require('../../../../mongoose/audit'));
+schema.plugin(require('../../../../mongoose/audit'));
 
-export let LoteDerivacion = model('loteDerivacion', Mischema, 'loteDerivacion');
+export let LoteDerivacion = model('loteDerivacion', schema, 'loteDerivacion');
