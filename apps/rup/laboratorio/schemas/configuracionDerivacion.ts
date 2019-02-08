@@ -7,4 +7,4 @@ export let schema = new Schema({
 });
 schema.plugin(require('../../../../mongoose/audit'));
 
-export let Practica = model('configuracionDerivacion', schema, 'configuracionDerivacion');
+export let ConfiguracionDerivacion = model('configuracionDerivacion', schema, 'configuracionDerivacion');
