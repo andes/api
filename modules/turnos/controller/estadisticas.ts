@@ -2,6 +2,7 @@ import * as AgendarModel from '../schemas/agenda';
 import { toArray } from '../../../utils/utils';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
+import * as pacienteSchema from '../../../core/mpi/schemas/paciente';
 
 const ObjectId = mongoose.Types.ObjectId;
 
@@ -124,11 +125,13 @@ const facets = {
     ],
 
     tipoTurno: [
-        { $match: {
-            'turno.estado': 'asignado',
-            estado: { $ne: 'suspendida' },
-            'turno.tipoTurno': {$ne: null}
-        }},
+        {
+            $match: {
+                'turno.estado': 'asignado',
+                estado: { $ne: 'suspendida' },
+                'turno.tipoTurno': { $ne: null }
+            }
+        },
         {
             $group: {
                 _id: '$turno.tipoTurno',
@@ -294,7 +297,7 @@ function filtrosFaltantes(filtros, agr) {
             });
         }
     });
-    agr.push({tipoDeFiltro: filtros.tipoDeFiltro});
+    agr.push({ tipoDeFiltro: filtros.tipoDeFiltro });
     return agr;
 }
 
@@ -310,7 +313,7 @@ export async function estadisticas(filtros) {
         { $match: makePrimaryMatch(filtros) },
         { $addFields: { 'sobreturnos.tipoTurno': 'sobreturno' } },
         { $addFields: { _sobreturnos: [{ turnos: '$sobreturnos' }] } },
-        { $addFields: { _bloques: { $concatArrays: ['$_sobreturnos', '$bloques'] }}},
+        { $addFields: { _bloques: { $concatArrays: ['$_sobreturnos', '$bloques'] } } },
         { $unwind: '$_bloques' },
         { $unwind: '$_bloques.turnos' },
         {
@@ -321,12 +324,6 @@ export async function estadisticas(filtros) {
                 estado: '$estado'
             },
         },
-
-        // Turnos asignados por el momento
-        // { $match: { 'turno.paciente.nombre': { $exists: true }, 'turno.estado': 'asignado' } },
-
-        // Agregamos la edad del paciente cuando tomo el turno
-
         {
             $addFields: {
                 'turno.paciente.edad': {
@@ -357,5 +354,69 @@ export async function estadisticas(filtros) {
 
     const agr = await toArray(AgendarModel.aggregate(pipeline).cursor({ batchSize: 1000 }).exec());
     const dataEstadisticas = filtrosFaltantes(filtros, agr);
-    return dataEstadisticas;
+    let dataFiltros = [...dataEstadisticas, await filtroPorCiudad(filtros)];
+    return dataFiltros;
 }
+
+/**
+ * Busca en la base de mpi y andes a los pacientes y retorna el tipo de turno
+ * y la ubicacion de los pacientes
+ * @param filtros Recibe a los filtros iniciales.
+ */
+async function filtroPorCiudad(filtros) {
+    const pipelineAsignados = [
+        { $match: makePrimaryMatch(filtros) },
+        { $addFields: { 'sobreturnos.tipoTurno': 'sobreturno' } },
+        { $addFields: { _sobreturnos: [{ turnos: '$sobreturnos' }] } },
+        { $addFields: { _bloques: { $concatArrays: ['$_sobreturnos', '$bloques'] } } },
+        { $unwind: '$_bloques' },
+        { $unwind: '$_bloques.turnos' },
+        {
+            $project: {
+                turno: '$_bloques.turnos',
+                idPaciente: '$_bloques.turnos.paciente.id',
+                _id: 0
+            },
+        },
+        { $match: { 'turno.paciente.nombre': { $exists: true }, 'turno.estado': 'asignado' } },
+    ];
+    const agr = await toArray(AgendarModel.aggregate(pipelineAsignados).cursor({ batchSize: 1000 }).exec());
+    const dataEstadisticas = filtrosFaltantes(filtros, agr);
+    let idPacientes = dataEstadisticas.map(data => ObjectId(data.idPaciente));
+    const pipelineUbicacionPacientes = [
+        {
+            $match: {
+                _id:
+                    { $in: idPacientes },
+            }
+        },
+        {
+            $project: {
+                direccion: 1,
+                _id: 1
+            }
+        }
+    ];
+    let andes = await toArray(pacienteSchema.paciente.aggregate(pipelineUbicacionPacientes).cursor({ batchSize: 1000 }).exec());
+    let mpi = await toArray(pacienteSchema.pacienteMpi.aggregate(pipelineUbicacionPacientes).cursor({ batchSize: 1000 }).exec());
+    let ubicacionesPaciente = {};
+    andes.map(paciente => { return ubicacionesPaciente[paciente._id] = paciente.direccion[0]; });
+    mpi.map(paciente => { return ubicacionesPaciente[paciente._id] = paciente.direccion[0]; });
+    let respuesta = {};
+    dataEstadisticas.map(data => {
+        let nombreLocalidad = 'sin localidad';
+        if (data.turno && data.turno.tipoTurno) {
+            if (ubicacionesPaciente[data.idPaciente] && ubicacionesPaciente[data.idPaciente].ubicacion
+                && ubicacionesPaciente[data.idPaciente].ubicacion.localidad) {
+                nombreLocalidad = ubicacionesPaciente[data.idPaciente].ubicacion.localidad.nombre;
+            }
+            if (!respuesta[nombreLocalidad]) {
+                respuesta[nombreLocalidad] = { delDia: 0, programado: 0, gestion: 0, profesional: 0 };
+            }
+            respuesta[nombreLocalidad][data.turno.tipoTurno]++;
+        }
+        return respuesta;
+    });
+    return respuesta;
+}
+
