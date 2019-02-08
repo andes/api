@@ -69,6 +69,9 @@ router.patch('/practicas/cobasc311/:id', async (req, res, next) => {
             {
                 $set: {
                     'ejecucion.registros.$.valor.resultado.valor': req.body.valor
+                },
+                $push: {
+                    'ejecucion.registros.$.valor.estados': req.body.estados
                 }
             },
             (err, data: any) => {
@@ -89,7 +92,6 @@ router.post('/protocolo/autoanalizador', async (req, res, next) => {
     res.json({});
 });
 
-
 router.get('/protocolo/numero/:numero', async (req, res, next) => {
     if (req.params.numero) {
         Prestacion.find({ 'solicitud.registros.valor.solicitudPrestacion.numeroProtocolo.numeroCompleto': req.params.numero }).exec((err, data) => {
@@ -103,6 +105,66 @@ router.get('/protocolo/numero/:numero', async (req, res, next) => {
         });
     }
     // res.json(req);
+});
+
+router.patch('/protocolos/ejecuciones/registros/:id', async (req, res, next) => {
+    // console.log('req.params: ', req.params.id);
+    // console.log('req.body: ', req.body);
+    // console.log('req.json: ', req);
+
+    try {
+        Prestacion.updateOne(
+            {
+                _id: req.params.id,
+                'ejecucion.registros.concepto.conceptId': req.body.registros[0].conceptId
+            },
+            {
+                $set: {
+                    'ejecucion.registros.$.valor.resultado.valor': req.body.registros[0].valor
+                },
+                $push: {
+                    'ejecucion.registros.$.valor.estados': req.body.registros[0].estado
+                }
+            },
+            (err, data: any) => {
+                if (err) {
+                    return next(err);
+                }
+                return res.json(data);
+            }
+        );
+    } catch (error) {
+        console.log('error /protocolos/ejecuciones/registros/:id :', error);
+    }
+});
+
+router.patch('/protocolos/ejecuciones/registros', async (req, res, next) => {
+    // console.log('req.params', req.body.registros);
+
+    let registros = req.body.registros;
+    let promises = registros.map((ejecucion: any) => {
+        return Prestacion.updateOne(
+            {
+                _id: ejecucion._id,
+                'ejecucion.registros.concepto.conceptId': ejecucion.conceptId
+            },
+            {
+                $set: {
+                    'ejecucion.registros.$.valor.resultado.valor': ejecucion.valor
+                },
+                $push: {
+                    'ejecucion.registros.$.valor.estados': ejecucion.estado
+                }
+            },
+            (err, data: any) => {
+                if (err) {
+                    return next(err);
+                }
+                console.log('data:', data);
+            }
+        );
+    });
+    res.json(await Promise.all(promises));
 });
 
 export = router;
