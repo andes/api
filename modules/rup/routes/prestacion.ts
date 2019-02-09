@@ -428,10 +428,10 @@ router.get('/prestaciones/:id*?', async (req, res, next) => {
             query.where('solicitud.registros.valor.solicitudPrestacion.servicio.id').in(Array.isArray(req.query.servicio) ? req.query.servicio : [req.query.servicio]);
         }
         if (req.query.areas) {
-            query.where('solicitud.registros.valor.solicitudPrestacion.practicas.area._id').in(Array.isArray(req.query.areas) ? req.query.areas : [req.query.areas] );
+            query.where('solicitud.registros.valor.solicitudPrestacion.practicas.area._id').in(Array.isArray(req.query.areas) ? req.query.areas : [req.query.areas]);
         }
         if (req.query.practicas) {
-            query.where('ejecucion.registros.valor.idPractica').in(Array.isArray(req.query.practicas) ? req.query.practicas : [req.query.practicas] );
+            query.where('ejecucion.registros.valor.idPractica').in(Array.isArray(req.query.practicas) ? req.query.practicas : [req.query.practicas]);
         }
         if (req.query.numProtocoloDesde) {
             query.where('solicitud.registros.valor.solicitudPrestacion.numeroProtocolo.numero').gte(Number(req.query.numProtocoloDesde));
@@ -517,11 +517,13 @@ router.post('/prestaciones', (req, res, next) => {
 
 
 router.patch('/prestaciones/:id', (req, res, next) => {
-
+    console.log('req.params.id', req.params.id)
     Prestacion.findById(req.params.id, (err, data: any) => {
+        console.log('data', data)
         if (err) {
             return next(err);
         }
+        
         switch (req.body.op) {
             case 'paciente':
                 if (req.body.paciente) {

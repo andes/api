@@ -2,14 +2,33 @@ import * as express from 'express';
 import { model as Organizacion } from '../../../../core/tm/schemas/organizacion';
 import { model as Prestacion } from '../../../../modules/rup/schemas/prestacion';
 
-import { getUltimoNumeroProtocolo, getResultadosAnteriores, getEjecucionesCobasC311, enviarAutoanalizador } from '../controller/protocolo';
-import { Auth } from '../../../../auth/auth.class';
+import { getUltimoNumeroProtocolo,
+    getResultadosAnteriores,
+    getEjecucionesCobasC311,
+    enviarAutoanalizador,
+    getProtocoloById,
+    getProtocoloByNumero,
+    getProtocolos
+} from '../controller/protocolo';
 import { Types } from 'mongoose';
 
 
 let router = express.Router();
 
-router.get('/protocolo/generarNumero/', async (req, res, next) => {
+router.get('/protocolos/', async (req, res, next) => {
+    try {
+        let data = await getProtocolos(req.query);
+        if (data) {
+            res.json(data);
+        } else {
+            return next(404);
+        }
+    } catch (err) {
+        return next(err);
+    }
+});
+
+router.get('/protocolos/generarNumero/', async (req, res, next) => {
     let idEfector = Types.ObjectId(req.query.idEfector);
     let ultimoNumeroProtocolo = await getUltimoNumeroProtocolo(idEfector);
     let anio = new Date().getFullYear().toString().substr(-2);
@@ -37,7 +56,7 @@ router.get('/practicas/resultadosAnteriores', async (req, res, next) => {
     res.json(resultadosAnteriores);
 });
 
-router.get('/protocolo/cobasc311', async (req, res, next) => {
+router.get('/protocolos/cobasc311', async (req, res, next) => {
     // if (!Auth.check(req, 'laboratorio:analizador:*')) {
     //     return next(403);
     // }
@@ -45,7 +64,7 @@ router.get('/protocolo/cobasc311', async (req, res, next) => {
     res.json(practicasCobas);
 });
 
-router.get('/protocolo/cobasc311/:id', async (req, res, next) => {
+router.get('/protocolos/cobasc311/:id', async (req, res, next) => {
     Prestacion.findById(req.params.id, (err, data: any) => {
         if (err) {
             return next(err);
@@ -79,30 +98,45 @@ router.patch('/practicas/cobasc311/:id', async (req, res, next) => {
             }
         );
     } catch (error) {
-        console.log('error Prestacion.updateOne:', error);
+        // console.log('error Prestacion.updateOne:', error);
     }
 });
 
-router.post('/protocolo/autoanalizador', async (req, res, next) => {
+router.post('/protocolos/autoanalizador', async (req, res, next) => {
     let numeroProtocolo = req.query.numeroProtocolo;
     enviarAutoanalizador(numeroProtocolo);
     res.json({});
 });
 
 
-router.get('/protocolo/numero/:numero', async (req, res, next) => {
-    if (req.params.numero) {
-        Prestacion.find({ 'solicitud.registros.valor.solicitudPrestacion.numeroProtocolo.numeroCompleto': req.params.numero }).exec((err, data) => {
-            if (err) {
-                return next(err);
-            }
-            if (req.params.id && !data) {
+router.get('/protocolos/numero/:numero', async (req, res, next) => {
+    try {
+        if (req.params.numero) {
+            let data = await getProtocoloByNumero(req.params.numero);
+            if (data) {
+                res.json(data);
+            } else {
                 return next(404);
             }
-            res.json(data);
-        });
+        }
+    } catch (err) {
+        return next(err);
     }
-    // res.json(req);
+});
+
+router.get('/protocolos/:id', async (req, res, next) => {
+    try {
+        if (req.params.id) {
+            let data = await getProtocoloById(req.params.id);
+            if (data) {
+                res.json(data);
+            } else {
+                return next(404);
+            }
+        }
+    } catch (err) {
+        return next(err);
+    }
 });
 
 export = router;
