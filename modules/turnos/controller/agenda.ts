@@ -112,6 +112,9 @@ export function liberarTurno(req, data, turno) {
                 break;
             case ('programado'):
                 data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
+                if (data.bloques[position.indexBloque].restantesMobile) {
+                    data.bloques[position.indexBloque].restantesMobile = data.bloques[position.indexBloque].restantesMobile + cant;
+                }
                 break;
             case ('profesional'):
                 data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional + cant;
