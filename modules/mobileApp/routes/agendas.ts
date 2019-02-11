@@ -1,17 +1,10 @@
 import * as express from 'express';
-import * as mongoose from 'mongoose';
 import * as agenda from '../../turnos/schemas/agenda';
 import { organizacionCache } from '../../../core/tm/schemas/organizacionCache';
 import * as organizacion from '../../../core/tm/schemas/organizacion';
-import * as agendaCtrl from '../../turnos/controller/agenda';
-import { Auth } from './../../../auth/auth.class';
-import { Logger } from '../../../utils/logService';
-import * as recordatorioController from '../controller/RecordatorioController';
-import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import { toArray } from '../../../utils/utils';
 import * as moment from 'moment';
-import { forEach } from 'async';
-import { ObjectID, ObjectId } from 'bson';
+
 
 const router = express.Router();
 
@@ -22,16 +15,17 @@ const router = express.Router();
 router.get('/agendasDisponibles', async (req: any, res, next) => {
     const pipelineAgendas = [];
     const matchAgendas = {};
-    const agendas = [];
-    let ag: any;
-
-    const pacienteId = req.user.pacientes[0].id;
 
     if (req.query.horaInicio) {
         matchAgendas['horaInicio'] = { $gt: new Date(moment().format('YYYY-MM-DD HH:mm')) };
     }
-    matchAgendas['tipoPrestaciones.conceptId'] = '34043003'; // Tipo de turno Hardcodeado para odontología
+    if (req.query.prestacion) {
+        const conceptoTurneable = JSON.parse(req.query.prestacion);
+        matchAgendas['tipoPrestaciones.conceptId'] = conceptoTurneable.conceptId;
+    }
     matchAgendas['bloques.restantesProgramados'] = { $gt: 0 };
+    matchAgendas['bloques.restantesMobile'] = { $gt: 0 };
+
     matchAgendas['estado'] = 'publicada';
     matchAgendas['dinamica'] = false;
 
@@ -48,6 +42,7 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
         $sort: { 'agendas.horaInicio': 1 }
     });
     const agendasResultado = await toArray(agenda.aggregate(pipelineAgendas).cursor({}).exec());
+
     // URGENTE: Unificar la información de organizacion y organización cache, ahora hago esta búsqueda para obtener tanto el punto gps como la dirección según sisa.
     const promisesStack = [];
     try {
