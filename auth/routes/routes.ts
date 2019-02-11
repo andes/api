@@ -15,14 +15,9 @@ const router = express.Router();
 
 
 router.put('/estadoPermisos/:username', Auth.authenticate(), (req, res, next) => {
-    authUsers.findOne({ usuario: req.params.username }, (err, user: any) => {
-        let organizacion =  user.organizaciones.find(x =>  x._id.toString() === req.body.idOrganizacion.toString() );
-        if (!organizacion.permisosPausados) {
-            organizacion.permisosPausados = true;
-        } else {
-            organizacion.permisosPausados = false;
-
-        }
+    authUsers.findOne({ usuario: req.params.username }).then((user: any) => {
+        let organizacion = user.organizaciones.find(x => x._id.toString() === req.body.idOrganizacion.toString());
+        organizacion.permisosPausados = !organizacion.permisosPausados;
         let obj = new authUsers(user);
         obj.save((err2) => {
             if (err2) {
@@ -30,6 +25,7 @@ router.put('/estadoPermisos/:username', Auth.authenticate(), (req, res, next) =>
             }
             res.json(organizacion);
         });
+
     });
 });
 
@@ -65,7 +61,7 @@ router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
         //         origanizacionesFiltradas.push(element);
         //     }
         // });
-        origanizacionesFiltradas = user.organizaciones.filter(x =>  x.permisosPausados === false);
+        origanizacionesFiltradas = user.organizaciones.filter(x => x.permisosPausados === false);
 
         const organizaciones = origanizacionesFiltradas.map((item) => {
             if ((req as any).query.admin) {
@@ -81,7 +77,7 @@ router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
                 return mongoose.Types.ObjectId(item._id);
             }
 
-        }).filter(item =>  item !== null);
+        }).filter(item => item !== null);
         authOrganizaciones.model.find({ _id: { $in: organizaciones } }, (errOrgs, orgs: any[]) => {
             if (errOrgs) {
                 return next(errOrgs);
@@ -165,9 +161,9 @@ router.post('/login', (req, res, next) => {
             profesional.findOne({
                 documento: req.body.usuario
             }, {
-                matriculas: true,
-                especialidad: true
-            }),
+                    matriculas: true,
+                    especialidad: true
+                }),
             authUsers.findOneAndUpdate(
                 { usuario: req.body.usuario },
                 { password: sha1Hash(req.body.password), nombre, apellido },
@@ -212,9 +208,9 @@ router.post('/login', (req, res, next) => {
             profesional.findOne({
                 documento: req.body.usuario
             }, {
-                matriculas: true,
-                especialidad: true
-            }),
+                    matriculas: true,
+                    especialidad: true
+                }),
         ]).then((data: any[]) => {
             const user = data[0];
             const prof = data[1];
