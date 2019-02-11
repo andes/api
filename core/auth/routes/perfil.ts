@@ -2,6 +2,7 @@ import * as express from 'express';
 import * as perfil from '../schemas/perfil';
 
 import { Auth } from './../../../auth/auth.class';
+import * as mongoose from 'mongoose';
 
 const router = express.Router();
 
@@ -99,11 +100,11 @@ router.post('/perfiles', Auth.authenticate(), async (req, res, next) => {
 });
 
 /*
-* Borra el perfil pasado por parámetro
+* Borra el perfil que coincida con el id pasado por parámetro
 */
 router.delete('/perfiles/:id', (req, res, next) => {
     try {
-        perfil.deleteOne({ id: req.body._id }).then(res2 => {
+        perfil.deleteOne({ _id: new mongoose.Types.ObjectId(req.params.id) }).then(res2 => {
             res.json(res2);
         });
     } catch (e) {

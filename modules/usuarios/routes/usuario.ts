@@ -103,7 +103,8 @@ router.get('/:dni', (req, res, next) => {
 });
 
 /**
-* Devuelve los permisos del usuario cuyo nombre se pasa por parámetro (dni) para una organización en particular (idOrganizacion)
+* Devuelve los permisos del usuario cuyo nombre se pasa por parámetro (dni) para una organización en particular (idOrganizacion).
+* Devuelve vacío si no encuentra permisos para el usuario y organización
 * @method GET
 */
 router.get('/dniOrg/?:dni', (req, res, next) => {
@@ -118,7 +119,11 @@ router.get('/dniOrg/?:dni', (req, res, next) => {
 
     try {
         authUsers.find(query, project).then((res2: any) => {
-            res.json(res2[0].organizaciones[0].permisos);
+            if (res2[0]) {
+                res.json(res2[0].organizaciones[0].permisos);
+            } else {
+                res.json([]); // mando vacío porque el usuario no tiene la organización (sin permisos para esta organización)
+            }
         });
     } catch (err) {
         return next(err);
