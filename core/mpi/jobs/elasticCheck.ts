@@ -15,7 +15,7 @@ export async function elasticCheck(done) {
         const connElastic = new ElasticSync();
         // Buscamos los pacientes que estan en mongo y no en Elasticsearch
         const cursorPacientesMpi = pacienteMpi.find({}).cursor();
-        cursorPacientesMpi.eachAsync(async (pacMpi: any) => {
+        await cursorPacientesMpi.eachAsync(async (pacMpi: any) => {
             if (!pacMpi) { return null; }
             const query = {
                 query: {
@@ -27,13 +27,13 @@ export async function elasticCheck(done) {
             if (elasticResult && elasticResult.hits.total < 1) {
                 dbg(' ELASTIC RESULT---> ', elasticResult);
                 dbg('PACIENTE NO EXISTE EN ELASTIC---> ', pacMpi._id);
-                log(userScheduler, logKeys.elasticCheck2.key, pacMpi, logKeys.elasticCheck2.operacion, pacMpi._id, null);
+                await log(userScheduler, logKeys.elasticCheck2.key, pacMpi, logKeys.elasticCheck2.operacion, pacMpi._id, null);
 
             }
         });
 
         const cursorPacientesAndes = paciente.find({}).cursor();
-        cursorPacientesAndes.eachAsync(async (pacAndes: any) => {
+        await cursorPacientesAndes.eachAsync(async (pacAndes: any) => {
             if (!pacAndes) { return null; }
             // dbg('ID PACIENTE---> ', pacMpi._id);
             const query = {
@@ -46,7 +46,7 @@ export async function elasticCheck(done) {
             if (elasticResult && elasticResult.hits.total < 1) {
                 dbg(' ELASTIC RESULT---> ', elasticResult);
                 dbg('PACIENTE NO EXISTE EN ELASTIC---> ', pacAndes._id);
-                log(userScheduler, logKeys.elasticCheck1.key, pacAndes, logKeys.elasticCheck1.operacion, pacAndes._id, null);
+                await log(userScheduler, logKeys.elasticCheck1.key, pacAndes, logKeys.elasticCheck1.operacion, pacAndes._id, null);
 
 
             }
