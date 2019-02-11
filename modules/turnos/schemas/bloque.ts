@@ -34,6 +34,10 @@ const bloqueSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    cupoMobile: {
+        type: Number,
+        default: 0
+    },
     restantesDelDia: {
         type: Number,
         default: 0
@@ -47,6 +51,10 @@ const bloqueSchema = new mongoose.Schema({
         default: 0
     },
     restantesProfesional: {
+        type: Number,
+        default: 0
+    },
+    restantesMobile: {
         type: Number,
         default: 0
     },
