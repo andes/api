@@ -15,8 +15,9 @@ const lookup = {
     foreignField: 'id',
     as: 'practicas'
 };
+
 const set = {
-    'ejecucion.registros.valor.practica':  { $arrayElemAt: ['$practicas', 0] }
+    'ejecucion.registros.valor.practica': { $arrayElemAt: ['$practicas', 0] }
 };
 
 const group = {
@@ -46,6 +47,34 @@ const project = {
     updatedAt: '$updatedAt',
     updatedBy: '$updatedBy'
 };
+
+async function getProtocolo(params) {
+    let conditions = await getQuery(params);
+    conditions.push({ $unwind: unwind });
+    conditions.push({ $lookup: lookup });
+    if (params.areas) {
+        let areas = Array.isArray(params.areas) ? params.areas : [params.areas];
+        conditions.push({
+            $addFields: {
+                practicasFiltradas: {
+                    $filter: {
+                        input: '$practicas', as: 'p', cond: { $in: ['$$p.area._id', areas] }
+                    }
+                }
+            }
+        });
+        conditions.push({ $match: { practicasFiltradas: { $ne: [] } } }),
+            conditions.push({ $addFields: { 'ejecucion.registros.valor.practica': { $arrayElemAt: ['$practicasFiltradas', 0] } } });
+    } else {
+        conditions.push({ $addFields: { 'ejecucion.registros.valor.practica': { $arrayElemAt: ['$practicas', 0] } } });
+    }
+
+    conditions.push({ $group: group });
+    conditions.push({ $project: project });
+
+    // return conditions;
+    return await Prestacion.aggregate(conditions).exec();
+}
 
 export async function x(idPaciente, conceptsIdPractica: [any]) {
     let pipeline = [
@@ -98,18 +127,8 @@ export async function getProtocoloByNumero(numero) {
     return getProtocolo({ 'solicitud.registros.valor.solicitudPrestacion.numeroProtocolo.numeroCompleto': numero });
 }
 
-async function getProtocolo(matches) {
-    return await Prestacion.aggregate(matches.concat([
-        { $unwind: unwind },
-        { $lookup: lookup },
-        { $addFields: {'ejecucion.registros.valor.practica':  { $arrayElemAt: ['$practicas', 0] }} },
-        { $group: group },
-        { $project: project }
-    ])).exec();
-}
-
 export async function getProtocolos(params) {
-    return getProtocolo(await getQuery(params));
+    return getProtocolo(params);
 }
 
 export async function getUltimoNumeroProtocolo(idOrganizacion) {
@@ -160,9 +179,7 @@ export async function getResultadosAnteriores(idPaciente, conceptsIdPractica: [a
                 $and: [{
                     'solicitud.tipoPrestacion.conceptId': '15220000',
                     'paciente.id': idPaciente,
-                    'ejecucion.registros.concepto.conceptId': {
-                        $in: conceptsIdPractica
-                    },
+                    'ejecucion.registros.concepto.conceptId': { $in: conceptsIdPractica },
                     'ejecucion.registros.valor.estados.tipo': 'validada'
                 }]
             }
@@ -171,21 +188,14 @@ export async function getResultadosAnteriores(idPaciente, conceptsIdPractica: [a
         {
             $match: {
                 $and: [{
-                    'ejecucion.registros.concepto.conceptId': {
-                        $in: conceptsIdPractica
-                    },
+                    'ejecucion.registros.concepto.conceptId': { $in: conceptsIdPractica },
                     'ejecucion.registros.valor.estados.tipo': 'validada'
                 }]
             }
         },
         { $unwind: '$ejecucion.registros.valor.estados' },
         // { $sort: { 'ejecucion.registros.valor.estados.fecha': -1 } },
-
-        {
-            $match: {
-                'ejecucion.registros.valor.estados.tipo': 'validada'
-            }
-        },
+        { $match: { 'ejecucion.registros.valor.estados.tipo': 'validada' } },
         {
             $group: {
                 _id: '$ejecucion.registros.concepto.conceptId',
@@ -324,9 +334,8 @@ async function getQuery(params) {
             } else if (e === 'numProtocoloHasta') {
                 matchOpt.$match['solicitud.registros.valor.solicitudPrestacion.numeroProtocolo.numero'] = { $lte: Number(value) };
             } else if (e === 'estado') {
-                matchOpt.$match['estados.tipo'] = { $in: (typeof value === 'string') ? [value] : value};
+                matchOpt.$match['estados.tipo'] = { $in: (typeof value === 'string') ? [value] : value };
             } else if (e === 'areas') {
-                // revisar filtro de areas
                 matchOpt.$match['solicitud.registros.valor.solicitudPrestacion.practicas.area._id'] = {
                     $in: (Array.isArray(value) ? value : [value])
                 };
@@ -338,7 +347,9 @@ async function getQuery(params) {
                     resolve();
                 }
             } else {
-                matchOpt.$match[matchKeys[e]] = value;
+                if (matchKeys[e]) {
+                    matchOpt.$match[matchKeys[e]] = value;
+                }
             }
             resolve(matchOpt);
         });
