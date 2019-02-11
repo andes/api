@@ -41,18 +41,19 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
     pipelineAgendas.push({
         $sort: { 'agendas.horaInicio': 1 }
     });
-    const agendasResultado = await toArray(agenda.aggregate(pipelineAgendas).cursor({}).exec());
-
-    // URGENTE: Unificar la información de organizacion y organización cache, ahora hago esta búsqueda para obtener tanto el punto gps como la dirección según sisa.
+    let agendasResultado = await toArray(agenda.aggregate(pipelineAgendas).cursor({}).exec());
     const promisesStack = [];
     try {
         for (let i = 0; i <= agendasResultado.length - 1; i++) {
             const org: any = await organizacion.model.findById(agendasResultado[i].id);
             if (org.codigo && org.codigo.sisa && org.turnosMobile) {
-                const orgCache: any = await organizacionCache.findOne({ codigo: org.codigo.sisa });
-                agendasResultado[i].coordenadasDeMapa = orgCache.coordenadasDeMapa;
-                agendasResultado[i].domicilio = orgCache.domicilio;
-                promisesStack.push(orgCache);
+                agendasResultado[i].coordenadasDeMapa = {
+                    latitud: org.direccion.geoReferencia[0],
+                    longitud: org.direccion.geoReferencia[1]
+                };
+                agendasResultado[i].coordenadasDeMapa.longitud = org.direccion.geoReferencia[1];
+                agendasResultado[i].domicilio = org.direccion.valor;
+                promisesStack.push(org);
             }
         }
         await Promise.all(promisesStack);
