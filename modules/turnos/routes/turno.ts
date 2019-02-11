@@ -187,6 +187,8 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         let countBloques;
         let esHoy = false;
 
+        // TODO : Refactor, obtener el indice del bloque y del turno con findIndex como en la sig.linea
+        let ind = (agendaRes as any).bloques.findIndex(bl => bl._id.toString() === req.params.idBloque.toString());
         // Los siguientes 2 for ubican el indice del bloque y del turno
         for (let x = 0; x < (agendaRes as any).bloques.length; x++) {
             if ((agendaRes as any).bloques[x]._id.equals(req.body.idBloque)) {
@@ -205,7 +207,8 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                     ) : (agendaRes as any).bloques[x].restantesDelDia,
                     programado: esHoy ? 0 : (agendaRes as any).bloques[x].restantesProgramados,
                     gestion: esHoy ? 0 : (agendaRes as any).bloques[x].restantesGestion,
-                    profesional: esHoy ? 0 : (agendaRes as any).bloques[x].restantesProfesional
+                    profesional: esHoy ? 0 : (agendaRes as any).bloques[x].restantesProfesional,
+                    mobile: esHoy ? 0 : (agendaRes as any).bloques[x].restantesMobile,
                 };
 
                 for (let y = 0; y < (agendaRes as any).bloques[posBloque].turnos.length; y++) {
@@ -254,6 +257,9 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                 break;
             case ('programado'):
                 update['bloques.' + posBloque + '.restantesProgramados'] = countBloques.programado - 1;
+                if (req.body.emitidoPor && req.body.emitidoPor === 'appMobile') {
+                    update['bloques.' + posBloque + '.restantesMobile'] = countBloques.mobile - 1;
+                }
                 break;
             case ('profesional'):
                 update['bloques.' + posBloque + '.restantesProfesional'] = countBloques.profesional - 1;
