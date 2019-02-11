@@ -36,7 +36,7 @@ export let logSchema = new mongoose.Schema({
             'query', 'insert', 'update', 'delete',
             // Operaciones de módulos
             // ... Mpi
-            'macheoAlto', 'posibleDuplicado', 'reportarError', 'validadoScan', 'scan', 'scanFail',
+            'macheoAlto', 'posibleDuplicado', 'reportarError', 'validadoScan', 'scan', 'scanFail', 'link', 'unlink',
             // OperacionesElastic
             'elasticInsert', 'elasticInsertInPut', 'elasticUpdate', 'elasticDelete', 'elasticError',
             // ... Citas
@@ -48,7 +48,7 @@ export let logSchema = new mongoose.Schema({
             // ...Fuentes Autenticas
             'validar', 'error',
             // Scheduler
-            'cda'
+            'cda', 'regexCheck'
         ]
     },
     datosOperacion: mongoose.Schema.Types.Mixed,

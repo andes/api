@@ -7,7 +7,7 @@ import { toArray } from '../../../utils/utils';
 let router = express.Router();
 
 
-router.post('/turnos/save/:turnoId',  (request, response, errorHandler) => {
+router.post('/turnos/save/:turnoId', (request, response, errorHandler) => {
 
     turno.findByIdAndUpdate(request.params.turnoId, request.body, { new: true }, (err, res) => {
         if (err) {
@@ -26,7 +26,7 @@ router.post('/turnos/:tipo/:profesionalId/', (request, response, errorHandler) =
     // Convert date to user datetime.
     let fechaTurno = new Date(request.body.turno.fecha);
     if (request.body.sobreTurno) {
-        profesional.findById(request.params.profesionalId,  (error, datos) => {
+        profesional.findById(request.params.profesionalId, (error, datos) => {
             let nTurno = new turno({
                 fecha: fechaTurno,
                 tipo: request.body.turno.tipo,
@@ -42,7 +42,7 @@ router.post('/turnos/:tipo/:profesionalId/', (request, response, errorHandler) =
             });
         });
     } else {
-        turnoSolicitado.findById(request.params.profesionalId,  (error, datos) => {
+        turnoSolicitado.findById(request.params.profesionalId, (error, datos) => {
             let nTurno = new turno({
                 fecha: fechaTurno,
                 tipo: request.body.turno.tipo,
@@ -60,6 +60,43 @@ router.post('/turnos/:tipo/:profesionalId/', (request, response, errorHandler) =
     }
 });
 
+router.get('/turnos/turnosPorDocumentos', async (req, res, errorHandler) => {
+
+    if (req.query.documento) {
+        if (req.query.tipoTurno === 'matriculacion') {
+            turno.find({ fecha: { $gte: new Date() } }).populate({
+                path: 'profesional',
+                match: { documento: req.query.documento, sexo: req.query.sexo }
+            }).exec((error, data) => {
+                if (error) {
+                    return errorHandler(error);
+                }
+                let data2 = data.filter((x: any) => x.profesional !== null);
+
+                if (data2) {
+                    res.send(data2);
+
+                } else {
+                    res.send(data2);
+                }
+            });
+        } else {
+            turno.find({ fecha: { $gte: new Date() } }).populate({
+                path: 'profesional',
+                match: { documento: req.query.documento }
+            }).exec(async (error, data: any) => {
+                if (error) {
+                    return errorHandler(error);
+                }
+                let data2 = data.filter((x: any) => x.profesional !== null);
+
+                let match = data2.length > 0 ? data2[0] : null;
+
+                res.send(match);
+            });
+        }
+    }
+});
 
 /**
  * Listado de Turnos

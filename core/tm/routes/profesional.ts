@@ -10,7 +10,7 @@ import * as stream from 'stream';
 import * as base64 from 'base64-stream';
 import { Auth } from '../../../auth/auth.class';
 import { formacionCero, vencimientoMatriculaGrado, matriculaCero, vencimientoMatriculaPosgrado, migrarTurnos } from '../controller/profesional';
-
+import { IGuiaProfesional } from '../interfaces/interfaceProfesional';
 import { sendSms } from '../../../utils/roboSender/sendSms';
 import { toArray } from '../../../utils/utils';
 
@@ -39,6 +39,84 @@ router.get('/profesionales/estadisticas', async (req, res, next) => {
     });
 
 
+});
+
+router.get('/profesionales/guia', async (req, res, next) => {
+    const opciones = {};
+    let query;
+
+    if (req.query.documento) {
+        opciones['documento'] = req.query.documento;
+    }
+    if (req.query.codigoProfesion && req.query.numeroMatricula) {
+        opciones['formacionGrado.profesion.codigo'] = Number(req.query.codigoProfesion);
+        opciones['formacionGrado.matriculacion.matriculaNumero'] = Number(req.query.numeroMatricula);
+    }
+    if (req.query.apellido && req.query.codigoProfesion) {
+        opciones['formacionGrado.profesion.codigo'] = Number(req.query.codigoProfesion);
+        opciones['apellido'] = utils.makePattern(req.query.apellido);
+    }
+
+    if (req.query.nombre) {
+        opciones['nombre'] = utils.makePattern(req.query.nombre);
+
+    }
+
+    if (Object.keys(opciones).length !== 0) {
+        opciones['formacionGrado.matriculacion'] = { $ne: null };
+        opciones['profesionalMatriculado'] = true;
+
+        let datosGuia: any = await profesional.find(opciones);
+        let resultado = [];
+
+        if (datosGuia.length > 0) {
+            datosGuia.forEach(element => {
+                resultado.push({
+                    id: element.id,
+                    nombre: element.nombre ? element.nombre : '',
+                    sexo: element.sexo ? element.sexo : '',
+                    apellido: element.apellido ? element.apellido : '',
+                    documento: element.documento ? element.documento : '',
+                    nacionalidad: element.nacionalidad ? element.nacionalidad.nombre : '',
+                    profesiones: element.formacionGrado
+                });
+            });
+        }
+        res.json(resultado);
+    } else {
+        res.json();
+    }
+});
+
+router.get('/profesionales/matching', async (req, res, next) => {
+    const opciones = {};
+
+    if (req.query.documento) {
+        opciones['documento'] = req.query.documento;
+    }
+
+    if (Object.keys(opciones).length !== 0) {
+        let profEncontrados: any = await profesional.find(opciones);
+        let arrayProf = [];
+        let resultado;
+        if (profEncontrados) {
+            profEncontrados.forEach(element => {
+                resultado = {
+                    id: element.id,
+                    nombre: element.nombre,
+                    sexo: element.sexo,
+                    apellido: element.apellido,
+                    documento: element.documento,
+                    fechaNacimiento: element.fechaNacimiento
+                };
+                arrayProf.push(resultado);
+            });
+
+        }
+        res.json(arrayProf);
+    } else {
+        res.json();
+    }
 });
 
 
@@ -171,7 +249,7 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
     // if (!Auth.check(req, 'matriculaciones:profesionales:getProfesional')) {
     //     return next(403);
     // }
-    let opciones = {};
+    const opciones = {};
     let query;
     if (req.params.id) {
         profesional.findById(req.params.id, (err, data) => {
@@ -230,6 +308,12 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
         if (req.query.documento) {
             opciones['documento'] = utils.makePattern(req.query.documento);
         }
+        if (req.query.numeroMatriculaGrado) {
+            opciones['formacionGrado.matriculacion.matriculaNumero'] = req.query.numeroMatriculaGrado;
+        }
+        if (req.query.numeroMatriculaEspecialidad) {
+            opciones['formacionPosgrado.matriculacion.matriculaNumero'] = req.query.numeroMatriculaEspecialidad;
+        }
 
         if (req.query.bajaMatricula) {
             opciones['formacionGrado.matriculacion.baja.motivo'] = { $nin: [null] };
@@ -260,38 +344,39 @@ router.get('/profesionales/:id*?', Auth.authenticate(), (req, res, next) => {
                 $regex: utils.makePattern(req.query.especialidad)
             };
         }
-    }
 
-    const radix = 10;
-    const skip: number = parseInt(req.query.skip || 0, radix);
-    const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
 
-    if (req.query.nombreCompleto) {
-        const filter = [{
-            apellido: {
-                $regex: utils.makePattern(req.query.nombreCompleto, { startWith: true })
-            }
-        }, {
-            nombre: {
-                $regex: utils.makePattern(req.query.nombreCompleto, { startWith: true })
-            }
-        }];
-        let q = req.query.nombreCompleto.indexOf(' ') >= 0 ? { $and: filter } : { $or: filter };
-        query = profesional.find(q).
-            sort({
-                apellido: 1,
-                nombre: 1
-            });
-    } else {
-        query = profesional.find(opciones).skip(skip).limit(limit);
-    }
+        const radix = 10;
+        const skip: number = parseInt(req.query.skip || 0, radix);
+        const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, radix), maxLimit);
 
-    query.exec((err, data) => {
-        if (err) {
-            return next(err);
+        if (req.query.nombreCompleto) {
+            const filter = [{
+                apellido: {
+                    $regex: utils.makePattern(req.query.nombreCompleto, { startWith: true })
+                }
+            }, {
+                nombre: {
+                    $regex: utils.makePattern(req.query.nombreCompleto, { startWith: true })
+                }
+            }];
+            let q = req.query.nombreCompleto.indexOf(' ') >= 0 ? { $and: filter } : { $or: filter };
+            query = profesional.find(q).
+                sort({
+                    apellido: 1,
+                    nombre: 1
+                });
+        } else {
+            query = profesional.find(opciones).skip(skip).limit(limit);
         }
-        res.json(data);
-    });
+
+        query.exec((err, data) => {
+            if (err) {
+                return next(err);
+            }
+            res.json(data);
+        });
+    }
 });
 
 
@@ -602,7 +687,8 @@ router.get('/resumen', (req, res, next) => {
                 apellido: data[0].apellido,
                 fechaNacimiento: data[0].fechaNacimiento,
                 documento: data[0].documento,
-                nacionalidad: data[0].nacionalidad
+                nacionalidad: data[0].nacionalidad,
+                sexo: data[0].sexo
 
             }];
 

@@ -5,7 +5,6 @@ import { TurneroPantallaModel } from '../schemas/turneroPantalla';
 import { Auth } from '../../../auth/auth.class';
 import { EventSocket, EventCore } from '@andes/event-bus';
 import { Packet, Websockets } from '../../../websockets';
-import { nextTick } from 'async';
 
 const ObjectId = mongoose.Types.ObjectId;
 const router = express.Router();
@@ -16,7 +15,7 @@ router.get('/pantalla', Auth.authenticate(), async (req: any, res, next) => {
     try {
         let organizacion = Auth.getOrganization(req);
         let opciones = {
-            organizacion:  ObjectId(organizacion)
+            organizacion: ObjectId(organizacion)
         };
 
         if (req.query.nombre) {
@@ -63,7 +62,7 @@ router.post('/pantalla', Auth.authenticate(), async (req: any, res, next) => {
         await pantalla.save();
         res.json(pantalla);
         EventCore.emitAsync('turnero-create', { pantalla });
-        return ;
+        return;
     } catch (err) {
         return next(err);
     }
@@ -75,7 +74,7 @@ router.post('/pantalla/:id/retoken', Auth.authenticate(), async (req: any, res, 
         let organizacion = Auth.getOrganization(req);
         let query = {
             _id: ObjectId(id),
-            organizacion:  ObjectId(organizacion)
+            organizacion: ObjectId(organizacion)
         };
         const pantalla = await TurneroPantallaModel.findOne(query);
         if (pantalla) {
@@ -110,7 +109,7 @@ router.delete('/pantalla/:id', Auth.authenticate(), async (req: any, res, next) 
     try {
         const pantalla = await TurneroPantallaModel.findById(req.params.id);
         await pantalla.remove();
-        res.json({message: 'OK'});
+        res.json({ message: 'OK' });
         EventCore.emitAsync('turnero-remove', { pantalla });
 
     } catch (err) {
@@ -132,12 +131,12 @@ router.post('/pantalla/activate', async (req, res, next) => {
         await pantalla.save();
 
 
-        let token = Auth.generateAppToken(pantalla, {} , [`turnero:${pantalla._id}`], 'turnero-token');
+        let token = Auth.generateAppToken(pantalla, {}, [`turnero:${pantalla._id}`], 'turnero-token');
         res.send({ token });
 
         EventCore.emitAsync('turnero-activated', { pantalla });
     } else {
-        return next({message: 'no eiste pantalla'});
+        return next({ message: 'no eiste pantalla' });
     }
 });
 
@@ -163,7 +162,7 @@ EventCore.on(/turnero-(.*)/, function (data) {
 EventSocket.on('turnero-proximo-llamado', async (paquete: Packet) => {
     try {
         const turno = paquete.data;
-        const espacioFisico =  ObjectId(turno.espacioFisico.id);
+        const espacioFisico = ObjectId(turno.espacioFisico.id);
         const pantallas = await TurneroPantallaModel.find({
             'espaciosFisicos.id': espacioFisico
         });

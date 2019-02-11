@@ -14,7 +14,8 @@
         "paths": {
             "@andes/event-bus/*": ["./packages/event-bus/*"],
             "@andes/mongoose-plugin-audit/*": ["./packages/mongoose-plugin-audit/*"],
-            "@andes/fhir/*": ["./packages/fhir/*"]
+            "@andes/fhir/*": ["./packages/fhir/*"],
+            "@andes/drive/*": ["./packages/drive/*"]
         },
         "typeRoots": [
             "node_modules/@types",

@@ -43,7 +43,7 @@ export default [
                     { key: 'puedeReanudar', title: 'Reanudar agenda', type: 'boolean' },
                     { key: 'puedeClonar', title: 'Clonar agenda', type: 'boolean' },
                     { key: 'puedeDarSobreturno', title: 'Dar Sobreturno agenda', type: 'boolean' },
-                    { key: 'puedeImprimir', title: 'Imprimir agenda', type: 'boolean' },
+                    { key: 'puedeImprimir', title: 'Revisar-Imprimir agenda', type: 'boolean' },
                     { key: 'puedeReasignar', title: 'Reasignar Turno', type: 'boolean' },
                     { key: 'puedeEditarCarpeta', title: 'Editar número de carpeta', type: 'boolean' },
                     { key: 'puedeBorrar', title: 'Borrar agenda', type: 'boolean' },
@@ -139,6 +139,33 @@ export default [
         ]
     },
     {
+        key: 'internacion',
+        title: 'Modulo Internación',
+        comment: '',
+        child: [
+            {
+                key: 'cama',
+                title: 'Acciones sobre una cama',
+                child: [
+                    { key: 'create', title: 'Crear nueva cama', type: 'boolean' }
+                ]
+            },
+            { key: 'censo', title: 'Ver senso diario y mensual', type: 'boolean' },
+            { key: 'alta', title: 'Ingregar paciente', type: 'boolean' },
+            { key: 'inicio', title: 'Punto de inicio', type: 'boolean' }
+        ]
+
+    },
+    {
+        key: 'huds',
+        title: 'Modulo HUDS',
+        comment: '',
+        avoidAll: true,
+        child: [
+            { key: 'visualizacionHuds', title: 'Visualización HUDS por paciente', type: 'boolean' },
+        ]
+    },
+    {
         key: 'fa',
         title: 'Fuentas Autenticas',
         comment: 'Habilita el acceso a distintas fuentes autenticas',
@@ -149,7 +176,8 @@ export default [
                 child: [
                     { key: 'anses', title: 'ANSES', type: 'boolean' },
                     { key: 'sintys', title: 'SINTYS', type: 'boolean' },
-                    { key: 'sisa', title: 'SISA', type: 'boolean' }
+                    { key: 'sisa', title: 'SISA', type: 'boolean' },
+                    { key: 'renaper', title: 'RENAPER', type: 'boolean' }
                 ]
             }
         ]
@@ -219,7 +247,7 @@ export default [
         child: [
             {
                 key: 'especialidad',
-                title: 'especialidad',
+                title: 'Especialidades',
                 child: [
                     { key: 'postEspecialidad', title: 'insertar especialidad', type: 'boolean' },
                     { key: 'putEspecialidad', title: 'actualizar especialidad', type: 'boolean' },
@@ -228,11 +256,12 @@ export default [
             },
             {
                 key: 'organizacion',
-                title: 'organizacion',
+                title: 'Organizaciones',
                 child: [
-                    { key: 'postOrganizacion', title: 'insertar organizacion', type: 'boolean' },
-                    { key: 'putOrganizacion', title: 'actualizar organizacion', type: 'boolean' },
-                    { key: 'deleteOrganizacion', title: 'borrar organizacion', type: 'boolean' }
+                    { key: 'create', title: 'Crear nueva', type: 'boolean' },
+                    { key: 'edit', title: 'Editar organizaciones', type: 'boolean' },
+                    { key: 'delete', title: 'Borrar organizaciones', type: 'boolean' },
+                    { key: 'sectores', title: 'Editar sectores físicos', type: 'organizacion' }
                 ]
             },
         ]
@@ -264,7 +293,25 @@ export default [
     {
         key: 'solicitudes',
         title: 'Modulo Solicitudes',
+        comment: '',
+        // avoidAll: true,
         child: [
+            {
+                key: 'tipoPrestacion',
+                title: 'Vista / Edición de Solicitudes',
+                type: 'prestacion'
+                // avoidAll: true
+            },
+            {
+                key: 'reglas',
+                title: 'Edición de Reglas',
+                type: 'boolean'
+            },
+            {
+                key: 'anular',
+                title: 'Anular Solicitudes',
+                type: 'boolean'
+            }
         ]
     },
     {
@@ -272,6 +319,17 @@ export default [
         title: 'Prestamo de Carpetas',
         child: [
         ]
-    }
+    },
+    {
+        key: 'auditoriaPacientes',
+        title: 'Auditoria Pacientes',
+        comment: '',
+        child: []
+    }, {
+        key: 'espaciosFisicos',
+        title: 'Edición de espacios físicos',
+        child: [
+        ]
+    },
 
 ];

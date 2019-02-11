@@ -5,6 +5,7 @@ import * as organizacion from '../../../core/tm/schemas/organizacion';
 import { toArray } from '../../../utils/utils';
 import * as moment from 'moment';
 
+
 const router = express.Router();
 
 /**
@@ -47,7 +48,7 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
     try {
         for (let i = 0; i <= agendasResultado.length - 1; i++) {
             const org: any = await organizacion.model.findById(agendasResultado[i].id);
-            if (org.codigo && org.codigo.sisa) {
+            if (org.codigo && org.codigo.sisa && org.turnosMobile) {
                 const orgCache: any = await organizacionCache.findOne({ codigo: org.codigo.sisa });
                 agendasResultado[i].coordenadasDeMapa = orgCache.coordenadasDeMapa;
                 agendasResultado[i].domicilio = orgCache.domicilio;

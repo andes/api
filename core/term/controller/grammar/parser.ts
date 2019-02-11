@@ -433,9 +433,9 @@ export class QueryBuilder {
  * All in-one function to convert expression to mongo query
  */
 
-export let makeMongoQuery = (expression) => {
+export let makeMongoQuery = (expression, options = {}) => {
     const ast = parseExpression(expression);
-    const builder = new QueryBuilder(ast, );
+    const builder = new QueryBuilder(ast, options);
     return builder.exec();
 };
 
