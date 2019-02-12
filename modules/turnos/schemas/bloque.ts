@@ -67,6 +67,10 @@ const bloqueSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    turnosMobile: {
+        type: Boolean,
+        default: false
+    },
     cantidadBloque: Number,
     turnos: [turnoSchema]
 });
