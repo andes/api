@@ -377,6 +377,7 @@ async function filtroPorCiudad(filtros) {
             },
         },
         { $match: { 'turno.paciente.nombre': { $exists: true }, 'turno.estado': 'asignado' } },
+        { $match: makeSecondaryMatch(filtros) },
     ];
     const turnosAsignados = await toArray(AgendarModel.aggregate(pipelineAsignados).cursor({ batchSize: 1000 }).exec());
     let idPacientes = turnosAsignados.map(data => ObjectId(data.idPaciente));
