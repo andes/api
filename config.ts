@@ -260,3 +260,30 @@ export const weightsVaccine = {
     gender: 0.3,
     birthDate: 0.2
 };
+
+export const logKeys = {
+    mpiInsert: {
+        key: 'mpi:paciente:insert',
+        operacion: 'Insert paciente MPI'
+    },
+    mpiUpdate: {
+        key: 'mpi:paciente:update',
+        operacion: 'Update paciente MPI'
+    },
+    mpiUpdateContact: {
+        key: 'mpi:paciente:updateContacto',
+        operacion: 'Update contacto paciente'
+    },
+    mpiBuscarPaciente: {
+        key: 'mpi:paciente:buscar',
+        operacion: 'Buscar paciente'
+    },
+    mpiUpdaterStart: {
+        key: 'mpi:mpiUpdater:start',
+        operacion: 'MPI updater start'
+    },
+    mpiUpdaterFinish: {
+        key: 'mpi:mpiUpdater:finish',
+        operacion: 'MPI updater finish'
+    },
+};
