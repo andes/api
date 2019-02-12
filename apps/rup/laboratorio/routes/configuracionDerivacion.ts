@@ -1,14 +1,20 @@
 import * as express from 'express';
 import { ConfiguracionDerivacion } from './../schemas/configuracionDerivacion';
 import { Auth } from '../../../../auth/auth.class';
+import { Types } from 'mongoose';
 
 let router = express.Router();
 
 router.get('/configuracionderivaciones/', async (req, res, next) => {
     try {
-        ConfiguracionDerivacion.find().then((configuraciones: any) => {
-            res.json(configuraciones);
-        });
+        let query: any = {};
+        if (req.query.laboratorioDestino) {
+            query['laboratorioDestino.id'] = Types.ObjectId(req.query.laboratorioDestino);
+        }
+        if (req.query.concepto) {
+            query['concepto.conceptId'] = req.query.concepto.conceptId;
+        }
+        res.json(await ConfiguracionDerivacion.find(query).exec());
     } catch (e) {
         res.json(e);
     }
