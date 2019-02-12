@@ -134,12 +134,14 @@ router.get('/internaciones/censo/disponibilidad', (req, res, next) => {
 });
 
 
-router.get('/internaciones/listadoInternacion', (req, res, next) => {
+router.get('/internaciones/listadoInternacion', async (req, res, next) => {
     let idOrganizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
-    internacionesController.listadoInternacion(req.query, idOrganizacion).then(
-        internacion => {
-            res.json(internacion);
-        });
+    try {
+        let internaciones = await internacionesController.listadoInternacion(req.query, idOrganizacion);
+        res.json(internaciones);
+    } catch (err) {
+        return next(err);
+    }
 });
 
 export = router;

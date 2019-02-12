@@ -47,7 +47,7 @@ export function PasesParaCenso(dtoCama) {
 
 export function listadoInternacion(filtros, organizacion) {
     let query;
-    const opciones = {};
+    let opciones = {};
     if (organizacion) {
         opciones['ejecucion.organizacion.id'] = organizacion;
     }
@@ -63,10 +63,10 @@ export function listadoInternacion(filtros, organizacion) {
     }
     let fechas = {};
     if (filtros.fechaIngresoDesde) {
-        fechas['$gte'] = filtros.fechaIngresoDesde;
+        fechas['$gte'] = new Date(filtros.fechaIngresoDesde);
     }
     if (filtros.fechaIngresoHasta) {
-        fechas['$lte'] = filtros.fechaIngresoHasta;
+        fechas['$lte'] = new Date(filtros.fechaIngresoHasta);
 
     }
     if (filtros.fechaIngresoHasta || filtros.fechaIngresoDesde) {
@@ -75,13 +75,11 @@ export function listadoInternacion(filtros, organizacion) {
     }
 
     if (filtros.estadoString) {
-        opciones['$where'] =  'this.estados[this.estados.length - 1].tipo ==  \"' + filtros.estadoString + '\"' ;
+        opciones['$where'] = 'this.estados[this.estados.length - 1].tipo ==  \"' + filtros.estadoString + '\"';
 
     }
     opciones['solicitud.ambitoOrigen'] = 'internacion';
     opciones['solicitud.tipoPrestacion.conceptId'] = '32485007';
-    query = Prestacion.find(opciones);
-
-    return query.exec();
+    return Prestacion.find(opciones).sort({ 'paciente.apellido': 1, 'ejecucion.registros.valor.informeIngreso.fechaIngreso': -1 });
 }
 
