@@ -2,7 +2,7 @@ import * as AgendarModel from '../schemas/agenda';
 import { toArray } from '../../../utils/utils';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
-import * as pacienteSchema from '../../../core/mpi/schemas/paciente';
+import { paciente as Paciente, pacienteMpi as PacienteMpi } from '../../../core/mpi/schemas/paciente';
 
 const ObjectId = mongoose.Types.ObjectId;
 
@@ -249,55 +249,52 @@ function makeFacet(filtros) {
     return facet;
 }
 
-function filtrosFaltantes(filtros, agr) {
-    agr.forEach(data => {
-        if (filtros.profesional) {
-            filtros.profesional.forEach((pr: any) => {
-                let hayProfesional = data.profesionales.find(prof => prof._id.toString() === pr.id);
-                if (hayProfesional === undefined) {
-                    data.profesionales.push({ _id: pr.id, count: 0, nombre: pr.nombre });
-                }
-            });
-        }
+function filtrosFaltantes(filtros, data) {
 
-        if (filtros.prestacion) {
-            filtros.prestacion.forEach((prestacion: any) => {
-                let hayPrestacion = data.prestacion.find(prest => prest._id.toString() === prestacion.id);
-                if (hayPrestacion === undefined) {
-                    data.prestacion.push({ _id: prestacion._id, count: 0 , nombre: prestacion.nombre});
-                }
-            });
-        }
+    if (filtros.profesional) {
+        filtros.profesional.forEach((pr: any) => {
+            let hayProfesional = data.profesionales.find(prof => prof._id.toString() === pr.id);
+            if (hayProfesional === undefined) {
+                data.profesionales.push({ _id: pr.id, count: 0, nombre: pr.nombre });
+            }
+        });
+    }
 
-        if (filtros.tipoTurno) {
-            filtros.tipoTurno.forEach((tt: any) => {
-                let hayTipoTurno = data.tipoTurno.find(datatt => datatt._id === tt);
-                if (hayTipoTurno === undefined) {
-                    data.tipoTurno.push({ _id: tt, count: 0, nombre: tt });
-                }
-            });
-        }
+    if (filtros.prestacion) {
+        filtros.prestacion.forEach((prestacion: any) => {
+            let hayPrestacion = data.prestacion.find(prest => prest._id.toString() === prestacion.id);
+            if (hayPrestacion === undefined) {
+                data.prestacion.push({ _id: prestacion._id, count: 0 , nombre: prestacion.nombre});
+            }
+        });
+    }
 
-        if (filtros.estado_turno) {
-            filtros.estado_turno.forEach((et: any) => {
-                let hayEstadoTurno = data.estado_turno.find(dataET => dataET._id === et);
-                if (hayEstadoTurno === undefined) {
-                    data.estado_turno.push({ _id: et, count: 0, nombre: et });
-                }
-            });
-        }
+    if (filtros.tipoTurno) {
+        filtros.tipoTurno.forEach((tt: any) => {
+            let hayTipoTurno = data.tipoTurno.find(datatt => datatt._id === tt);
+            if (hayTipoTurno === undefined) {
+                data.tipoTurno.push({ _id: tt, count: 0, nombre: tt });
+            }
+        });
+    }
 
-        if (filtros.estado_agenda) {
-            filtros.estado_agenda.forEach((ea: any) => {
-                let hayEstadoAgenda = data.estado_agenda.find(dataEA => dataEA._id === ea);
-                if (hayEstadoAgenda === undefined) {
-                    data.estado_agenda.push({ _id: ea, count: 0, nombre: ea });
-                }
-            });
-        }
-    });
-    agr.push({ tipoDeFiltro: filtros.tipoDeFiltro });
-    return agr;
+    if (filtros.estado_turno) {
+        filtros.estado_turno.forEach((et: any) => {
+            let hayEstadoTurno = data.estado_turno.find(dataET => dataET._id === et);
+            if (hayEstadoTurno === undefined) {
+                data.estado_turno.push({ _id: et, count: 0, nombre: et });
+            }
+        });
+    }
+
+    if (filtros.estado_agenda) {
+        filtros.estado_agenda.forEach((ea: any) => {
+            let hayEstadoAgenda = data.estado_agenda.find(dataEA => dataEA._id === ea);
+            if (hayEstadoAgenda === undefined) {
+                data.estado_agenda.push({ _id: ea, count: 0, nombre: ea });
+            }
+        });
+    }
 }
 
 export async function estadisticas(filtros) {
@@ -351,10 +348,12 @@ export async function estadisticas(filtros) {
         pipeline = pipelineAgendas;
     }
 
-    const agr = await toArray(AgendarModel.aggregate(pipeline).cursor({ batchSize: 1000 }).exec());
-    const dataEstadisticas = filtrosFaltantes(filtros, agr);
-    let dataFiltros = [...dataEstadisticas, await filtroPorCiudad(filtros)];
-    return dataFiltros;
+    const p1 = toArray(AgendarModel.aggregate(pipeline).cursor({ batchSize: 1000 }).exec());
+    const p2 = filtroPorCiudad(filtros);
+    const [datos, localidades] = await Promise.all([p1, p2]);
+    filtrosFaltantes(filtros, datos[0]);
+    datos[0]['localidades'] = localidades;
+    return datos[0];
 }
 
 /**
@@ -379,9 +378,9 @@ async function filtroPorCiudad(filtros) {
         },
         { $match: { 'turno.paciente.nombre': { $exists: true }, 'turno.estado': 'asignado' } },
     ];
-    const agr = await toArray(AgendarModel.aggregate(pipelineAsignados).cursor({ batchSize: 1000 }).exec());
-    const dataEstadisticas = filtrosFaltantes(filtros, agr);
-    let idPacientes = dataEstadisticas.map(data => ObjectId(data.idPaciente));
+    const turnosAsignados = await toArray(AgendarModel.aggregate(pipelineAsignados).cursor({ batchSize: 1000 }).exec());
+    let idPacientes = turnosAsignados.map(data => ObjectId(data.idPaciente));
+
     const pipelineUbicacionPacientes = [
         {
             $match: {
@@ -396,13 +395,17 @@ async function filtroPorCiudad(filtros) {
             }
         }
     ];
-    let andes = await toArray(pacienteSchema.paciente.aggregate(pipelineUbicacionPacientes).cursor({ batchSize: 1000 }).exec());
-    let mpi = await toArray(pacienteSchema.pacienteMpi.aggregate(pipelineUbicacionPacientes).cursor({ batchSize: 1000 }).exec());
-    let ubicacionesPaciente = {};
-    andes.map(paciente => { return ubicacionesPaciente[paciente._id] = paciente.direccion[0]; });
-    mpi.map(paciente => { return ubicacionesPaciente[paciente._id] = paciente.direccion[0]; });
-    let respuesta = {};
-    dataEstadisticas.map(data => {
+    const p1 = await toArray(Paciente.aggregate(pipelineUbicacionPacientes).cursor({ batchSize: 1000 }).exec());
+    const p2 = await toArray(PacienteMpi.aggregate(pipelineUbicacionPacientes).cursor({ batchSize: 1000 }).exec());
+    const [andes, mpi] = await Promise.all([p1, p2]);
+
+    const ubicacionesPaciente = {};
+    andes.forEach(paciente => { ubicacionesPaciente[paciente._id] = paciente.direccion[0]; });
+    mpi.forEach(paciente => { ubicacionesPaciente[paciente._id] = paciente.direccion[0]; });
+
+    const respuesta = {};
+
+    turnosAsignados.forEach(data => {
         let nombreLocalidad = 'sin localidad';
         if (data.turno && data.turno.tipoTurno) {
             if (ubicacionesPaciente[data.idPaciente] && ubicacionesPaciente[data.idPaciente].ubicacion
@@ -410,11 +413,10 @@ async function filtroPorCiudad(filtros) {
                 nombreLocalidad = ubicacionesPaciente[data.idPaciente].ubicacion.localidad.nombre;
             }
             if (!respuesta[nombreLocalidad]) {
-                respuesta[nombreLocalidad] = { delDia: 0, programado: 0, gestion: 0, profesional: 0 };
+                respuesta[nombreLocalidad] = { delDia: 0, programado: 0, gestion: 0, profesional: 0, sobreturno: 0 };
             }
             respuesta[nombreLocalidad][data.turno.tipoTurno]++;
         }
-        return respuesta;
     });
     return respuesta;
 }
