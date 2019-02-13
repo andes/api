@@ -65,7 +65,8 @@ export function camaOcupadasxUO(unidadOrganizativa, fecha, idOrganizacion) {
                 nombre: '$nombre',
                 organizacion: '$organizacion',
                 tipoCama: '$tipoCama',
-                idInternacion: '$estados.idInternacion'
+                idInternacion: '$estados.idInternacion',
+                fechaMovimiento: '$estados.fecha'
             },
             ultimoEstado: { $last: '$estados' }
         }
@@ -74,8 +75,6 @@ export function camaOcupadasxUO(unidadOrganizativa, fecha, idOrganizacion) {
     //     $match: { 'ultimoEstado.estado': 'ocupada' }
     // },
     { $sort: { 'ultimoEstado.fecha': 1 } }];
-
-
     let query = cama.aggregate(pipelineEstado);
 
     return toArray(query.cursor({}).exec());
