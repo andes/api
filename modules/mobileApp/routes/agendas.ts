@@ -1,10 +1,8 @@
 import * as express from 'express';
 import * as agenda from '../../turnos/schemas/agenda';
-import { organizacionCache } from '../../../core/tm/schemas/organizacionCache';
 import * as organizacion from '../../../core/tm/schemas/organizacion';
 import { toArray } from '../../../utils/utils';
 import * as moment from 'moment';
-
 
 const router = express.Router();
 
@@ -16,13 +14,12 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
     const pipelineAgendas = [];
     const matchAgendas = {};
 
-    if (req.query.horaInicio) {
-        matchAgendas['horaInicio'] = { $gt: new Date(moment().format('YYYY-MM-DD HH:mm')) };
-    }
     if (req.query.prestacion) {
         const conceptoTurneable = JSON.parse(req.query.prestacion);
         matchAgendas['tipoPrestaciones.conceptId'] = conceptoTurneable.conceptId;
     }
+
+    matchAgendas['horaInicio'] = { $gt: new Date(moment().format('YYYY-MM-DD HH:mm')) };
     matchAgendas['bloques.restantesProgramados'] = { $gt: 0 };
     matchAgendas['bloques.restantesMobile'] = { $gt: 0 };
 
@@ -63,5 +60,6 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
     }
 
 });
+
 
 export = router;
