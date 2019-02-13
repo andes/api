@@ -517,13 +517,11 @@ router.post('/prestaciones', (req, res, next) => {
 
 
 router.patch('/prestaciones/:id', (req, res, next) => {
-    console.log('req.params.id', req.params.id)
     Prestacion.findById(req.params.id, (err, data: any) => {
-        console.log('data', data)
         if (err) {
             return next(err);
         }
-        
+
         switch (req.body.op) {
             case 'paciente':
                 if (req.body.paciente) {

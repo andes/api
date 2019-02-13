@@ -1,20 +1,39 @@
+import { EventCore } from './../../../../packages/event-bus/index';
+import { Auth } from './../../../../auth/auth.class';
 import * as express from 'express';
-import { model as Organizacion } from '../../../../core/tm/schemas/organizacion';
 import { model as Prestacion } from '../../../../modules/rup/schemas/prestacion';
 
-import { getUltimoNumeroProtocolo,
-    getResultadosAnteriores,
+import { getResultadosAnteriores,
     getEjecucionesCobasC311,
     enviarAutoanalizador,
     getProtocoloById,
     getProtocoloByNumero,
-    getProtocolos
+    getProtocolos,
+    generarNumeroProtocolo
 } from '../controller/protocolo';
 import { Types } from 'mongoose';
-import { parse } from 'querystring';
 
 
 let router = express.Router();
+
+router.post('/protocolos/', async (req, res, next) => {
+    try {
+        let numero = await generarNumeroProtocolo(req.body.solicitud.organizacion.id);
+        req.body.solicitud.registros[0].valor.solicitudPrestacion.numeroProtocolo = numero;
+
+        let data: any = new Prestacion(req.body);
+        Auth.audit(data, req);
+        data.save((err) => {
+            if (err) {
+                return next(err);
+            }
+            res.json(data);
+            EventCore.emitAsync('rup:prestacion:create', data);
+        });
+    } catch (e) {
+        return next(e);
+    }
+});
 
 router.get('/protocolos/', async (req, res, next) => {
     try {
@@ -26,26 +45,6 @@ router.get('/protocolos/', async (req, res, next) => {
         }
     } catch (err) {
         return next(err);
-    }
-});
-
-router.get('/protocolos/generarNumero/', async (req, res, next) => {
-    let idEfector = Types.ObjectId(req.query.idEfector);
-    let ultimoNumeroProtocolo = await getUltimoNumeroProtocolo(idEfector);
-    let anio = new Date().getFullYear().toString().substr(-2);
-    let prefijo;
-    try {
-        Organizacion.findOne(idEfector).then((organizacion: any) => {
-            prefijo = organizacion.prefijo;
-            ultimoNumeroProtocolo++;
-            let nuevoNumeroProtocolo = {
-                numeroCompleto: ultimoNumeroProtocolo + '-' + prefijo + anio,
-                numero: ultimoNumeroProtocolo
-            };
-            res.json(nuevoNumeroProtocolo);
-        });
-    } catch (e) {
-        res.json(e);
     }
 });
 

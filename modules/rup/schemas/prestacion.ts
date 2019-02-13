@@ -4,7 +4,6 @@ import * as registro from './prestacion.registro';
 import * as estado from './prestacion.estado';
 import { auditoriaPrestacionPacienteSchema } from '../../auditorias/schemas/auditoriaPrestacionPaciente';
 import { iterate, convertToObjectId } from '../controllers/rup';
-import { tipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 export let schema = new mongoose.Schema({
