@@ -246,7 +246,8 @@ export const conSqlPecas = {
         database: ''
     },
     table: {
-        pecasTable: 'pecas_consolidadoPrueba'
+        pecasTable: 'pecas_consolidadoPrueba',
+        fueraAgenda: ''
     }
 };
 
