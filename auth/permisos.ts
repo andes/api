@@ -324,7 +324,18 @@ export default [
         key: 'auditoriaPacientes',
         title: 'Auditoria Pacientes',
         comment: '',
-        child: []
+        child: [
+            {
+                key: 'activar/vincular',
+                title: 'Activar/Vincular Pacientes',
+                type: 'boolean'
+            },
+            {
+                key: 'reporteErrores',
+                title: 'Edición de Pacientes Validados',
+                type: 'boolean'
+            }
+        ]
     }, {
         key: 'espaciosFisicos',
         title: 'Edición de espacios físicos',

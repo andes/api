@@ -365,6 +365,20 @@ export function matching(data): Promise<any[]> {
                 };
             }
             break;
+        case 'search':
+            {
+                query = {
+                    bool: {
+                        must: {
+                            match: data.filtros
+                        },
+                        filter: {
+                            term: { activo: 'true' }
+                        }
+                    }
+                };
+            }
+            break;
     }
 
     if (data.incluirInactivos) {
@@ -798,7 +812,7 @@ export async function checkRepetido(nuevoPaciente): Promise<boolean> {
 
     let resultadoMatching = await matching(matchingInputData);  // Handlear error en funcion llamadora
     // Filtramos al mismo paciente
-    resultadoMatching = resultadoMatching.filter(elem => elem.paciente.id !== nuevoPaciente._id);
+    resultadoMatching = resultadoMatching.filter(elem => elem.paciente.id !== nuevoPaciente.id);
     // Si el nuevo paciente está validado, filtramos los candidatos temporales
     if (nuevoPaciente.estado === 'validado') {
         resultadoMatching = resultadoMatching.filter(elem => elem.paciente.estado === 'validado');

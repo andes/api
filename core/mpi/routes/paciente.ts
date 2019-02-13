@@ -10,7 +10,7 @@ import { ElasticSync } from '../../../utils/elasticSync';
 import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
 import { EventCore } from '@andes/event-bus';
-import { EventEmitter } from 'events';
+import { updatingMpi } from '../controller/mpiUpdater';
 
 
 const logD = debug('paciente-controller');
@@ -107,7 +107,6 @@ router.get('/pacientes/dashboard/', async (req, res, next) => {
 
 });
 
-
 router.get('/pacientes/auditoria/', (req, res, next) => {
     let filtro;
     switch (req.query.estado) {
@@ -129,16 +128,15 @@ router.get('/pacientes/auditoria/', (req, res, next) => {
             };
             break;
     }
-    filtro['activo'] = req.query.activo === 'true' ? true : false;
-
+    filtro['activo'] = req.query.activo === true ? true : false;
     let query = paciente.find(filtro);
+
     query.exec((err, data) => {
         if (err) {
             return next(err);
         }
         res.json(data);
     });
-
 });
 
 router.get('/pacientes/auditoria/vinculados/', async (req, res, next) => {
@@ -175,6 +173,23 @@ router.get('/pacientes/inactivos/', async (req, res, next) => {
 
 });
 
+// Search using elastic search
+router.get('/pacientes/search', (req, res, next) => {
+    if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
+        return next(403);
+    }
+    // Logger de la consulta a ejecutar
+    Logger.log(req, 'mpi', 'query', {
+        elasticSearch: req.query
+    });
+
+    controller.matching({ type: 'search', filtros: req.query }).then(result => {
+        res.send(result);
+    }).catch(error => {
+        return next(error);
+    });
+});
+
 
 // Simple mongodb query by ObjectId --> better performance
 router.get('/pacientes/:id', (req, res, next) => {
@@ -201,6 +216,7 @@ router.get('/pacientes/:id', (req, res, next) => {
 
 });
 
+
 // Search using elastic search
 router.get('/pacientes', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
@@ -217,7 +233,6 @@ router.get('/pacientes', (req, res, next) => {
         return next(error);
     });
 });
-
 
 router.put('/pacientes/mpi/:id', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:putMpi')) {
@@ -442,7 +457,7 @@ router.put('/pacientes/:id', async (req, res, next) => {
             return next('El paciente ya existe');
         } else {
 
-            let patientFound: any = await paciente.findById(query).exec();
+            let patientFound: any = await paciente.findById(query);
             if (patientFound) {
                 const data = req.body;
                 if (patientFound.estado === 'validado' && !patientFound.isScan) {
@@ -451,7 +466,7 @@ router.put('/pacientes/:id', async (req, res, next) => {
                     delete data.sexo;
                     delete data.fechaNacimiento;
                 }
-                if (patientFound.estado === 'validado' && patientFound.direccion[0].valor !== data.direccion[0].valor) {
+                if (patientFound.estado === 'validado' && data.direccion && patientFound.direccion[0].valor !== data.direccion[0].valor) {
                     controller.actualizarGeoReferencia(req.body, data);
                 }
                 let pacienteUpdated = await controller.updatePaciente(patientFound, data, req);
