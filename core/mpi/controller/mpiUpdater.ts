@@ -105,7 +105,6 @@ export async function updatingMpi() {
                     };
 
                     const resultado = await existeEnMpi(pacAndes);
-
                     /*Si NO hubo matching al 100% lo tengo que insertar en MPI */
                     if (resultado[0] !== 'merge') {
                         if (resultado[0] === 'new') {
@@ -126,22 +125,21 @@ export async function updatingMpi() {
                         // Verifico cuil anses
                         if (!pacienteAndes.cuil) {
                             const cuilData = await servicioAnses.getServicioAnses(pacienteAndes);
-                            pacienteAndes.cuil = cuilData['cuil'];
+                            if (cuilData) {
+                                pacienteAndes.cuil = cuilData['cuil'];
+                            }
                         }
                         await controller.updatePacienteMpi(pacMpi, pacienteAndes, userScheduler);
                     }
-                    // await log(logRequest, 'mpi:mpiUpdater:pacienteUpdated', pacAndes.id, 'Se finaliza con el paciente', null, null);
-
                 } catch (ex) {
-                    await log(logRequest, logKeys.mpiUpdate.key, pacAndes, logKeys.mpiUpdate.operacion, ex, null);
+                    log(logRequest, logKeys.mpiUpdate.key, pacAndes, logKeys.mpiUpdate.operacion, ex, null);
                     return (ex);
                 }
             }
         });
 
-        await log(logRequest, logKeys.mpiUpdaterFinish.key, null, logKeys.mpiUpdaterFinish.operacion, null, null);
-
+        log(logRequest, logKeys.mpiUpdaterFinish.key, null, logKeys.mpiUpdaterFinish.operacion, null, null);
     } catch (err) {
-        await log(logRequest, logKeys.mpiUpdaterFinish.key, null, logKeys.mpiUpdaterFinish.operacion, err, null);
+        log(logRequest, logKeys.mpiUpdaterFinish.key, null, logKeys.mpiUpdaterFinish.operacion, err, null);
     }
 }
