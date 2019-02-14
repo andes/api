@@ -1,7 +1,5 @@
-import * as config from '../../../config';
-import * as configPrivate from '../../../config.private';
+
 import * as moment from 'moment';
-import * as mongoose from 'mongoose';
 import * as camasController from './../controllers/cama';
 import * as internacionesController from './../controllers/internacion';
 import * as censoController from './../controllers/censo';
@@ -46,52 +44,41 @@ export function filtrarMovimientosIntraUO(camas) {
     return salida;
 }
 
-export function censoDiario(unidad, fechaConsulta, idOrganizacion) {
-    return new Promise((resolve, reject) => {
+export async function censoDiario(unidad, fechaConsulta, idOrganizacion) {
+    try {
         const fecha = fechaConsulta;
         let listadoCensos = [];
-        camasController.camaOcupadasxUO(unidad, fecha, idOrganizacion).then(
-            camas => {
-                if (camas) {
-
-                    let salidaCamas = Promise.all(camas.map(c => camasController.desocupadaEnDia(c, fecha)));
-
-                    salidaCamas.then(salida => {
-                        let filtroNulos = salida.filter(s => s);
-                        let pasesDeCama = Promise.all(filtroNulos.map(c => internacionesController.PasesParaCenso(c)));
-                        pasesDeCama.then(resultado => {
-                            if (resultado.length) {
-                                // filtramos aquellos movimientos que fueron dentro de una misma unidad organizativa
-                                // y nos quedamos con el ultimo
-                                let pasesCamaCenso: any[] = this.filtrarMovimientosIntraUO(resultado);
-                                // loopeamos todos los pases de las camas
-                                pasesCamaCenso.map((censo: any, indice) => {
-                                    censo.pases = censo.pases.filter(p => { return p.estados.fecha <= moment(fecha).endOf('day').toDate(); });
-                                    // Llamamos a la funcion completarUnCenso que se encarga de devolvernos un array
-                                    // con la informacion que necesitamos para el censo. (ingreso, pase de, pase a, etc)
-
-                                    let result = completarUnCenso(censo, indice, fecha, unidad, pasesCamaCenso[indice]);
-                                    listadoCensos.push({ censo: result, fecha });
-                                });
-                            } else {
-                                listadoCensos.push({ censo: null, fecha });
-                            }
-                            return resolve(listadoCensos);
-                        }).catch(error => {
-                            return reject(error);
-                        });
-                    });
-                } else {
-                    return null;
-                }
-            }).catch(err => {
-                return reject(err);
-            });
-    });
+        let camas = await camasController.camaOcupadasxUO(unidad, fecha, idOrganizacion);
+        if (camas) {
+            let salida = await Promise.all(camas.map(c => camasController.desocupadaEnDia(c, fecha)));
+            let filtroNulos = salida.filter(s => s);
+            let resultado = await Promise.all(filtroNulos.map(c => internacionesController.PasesParaCenso(c)));
+            if (resultado.length) {
+                // filtramos aquellos movimientos que fueron dentro de una misma unidad organizativa
+                // y nos quedamos con el ultimo
+                let pasesCamaCenso: any[] = this.filtrarMovimientosIntraUO(resultado);
+                // loopeamos todos los pases de las camas
+                pasesCamaCenso.map((censo: any, indice) => {
+                    censo.pases = censo.pases.filter(p => { return p.estados.fecha <= moment(fecha).endOf('day').toDate(); });
+                    // Llamamos a la funcion completarUnCenso que se encarga de devolvernos un array
+                    // con la informacion que necesitamos para el censo. (ingreso, pase de, pase a, etc)
+                    let result = completarUnCenso(censo, indice, fecha, unidad, pasesCamaCenso[indice]);
+                    listadoCensos.push({ censo: result, fecha });
+                });
+            } else {
+                listadoCensos.push({ censo: null, fecha });
+            }
+            return await listadoCensos;
+        } else {
+            return null;
+        }
+    } catch (err) {
+        return err;
+    }
 }
 
-export function completarResumenDiario(listadoCenso, unidad, fecha, idOrganizacion) {
-    return new Promise((resolve, reject) => {
+export async function completarResumenDiario(listadoCenso, unidad, fecha, idOrganizacion) {
+    try {
         let resumenCenso = {
             existencia0: 0,
             ingresos: 0,
@@ -150,16 +137,15 @@ export function completarResumenDiario(listadoCenso, unidad, fecha, idOrganizaci
                 resumenCenso.egresosDefuncion + resumenCenso.egresosAlta + resumenCenso.pasesA
                 - resumenCenso.ingresos - resumenCenso.pasesDe;
         }
-        camasController.disponibilidadXUO(unidad, fecha, idOrganizacion).then((respuesta: any) => {
-            if (respuesta) {
-                resumenCenso.disponibles0 = respuesta.disponibilidad0 ? respuesta.disponibilidad0 : 0;
-                resumenCenso.disponibles24 = respuesta.disponibilidad24 ? respuesta.disponibilidad24 : 0;
-            }
-            return resolve(resumenCenso);
-        }).catch(err => {
-            return reject(err);
-        });
-    });
+        let respuesta: any = await camasController.disponibilidadXUO(unidad, fecha, idOrganizacion);
+        if (respuesta) {
+            resumenCenso.disponibles0 = respuesta.disponibilidad0 ? respuesta.disponibilidad0 : 0;
+            resumenCenso.disponibles24 = respuesta.disponibilidad24 ? respuesta.disponibilidad24 : 0;
+        }
+        return await resumenCenso;
+    } catch (err) {
+        return err;
+    }
 }
 
 export function censoMensual(fechaDesde, fechaHasta, unidad, idOrganizacion) {
@@ -196,7 +182,7 @@ export function completarUnCenso(censo, indice, fecha, idUnidadOrganizativa, Cam
     let ingresoEgreso = [];
     ingresoEgreso[indice] = {};
     ingresoEgreso[indice]['dataCenso'] = CamaCenso;
-    ingresoEgreso[indice]['egreso'] = comprobarEgreso(internacion, censo.pases, fecha, idUnidadOrganizativa);
+    ingresoEgreso[indice]['egreso'] = comprobarEgreso(internacion, CamaCenso.ultimoEstado, censo.pases, fecha, idUnidadOrganizativa);
     ingresoEgreso[indice]['esIngreso'] = esIngreso(censo.pases, CamaCenso.ultimoEstado, fecha, idUnidadOrganizativa);
     ingresoEgreso[indice]['esPaseDe'] = esPaseDe(censo.pases, CamaCenso.ultimoEstado, fecha, idUnidadOrganizativa);
     ingresoEgreso[indice]['esPaseA'] = esPaseA(censo.pases, CamaCenso.ultimoEstado, fecha, idUnidadOrganizativa);
@@ -256,20 +242,19 @@ function esPaseA(pases, movimientoActual, fecha, idUnidadOrganizativa) {
     }
 }
 
-function comprobarEgreso(internacion, pases, fecha, idUnidadOrganizativa) {
-    let fechaInicio = moment(fecha).startOf('day').toDate();
-    let fechaFin = moment(fecha).endOf('day').toDate();
-    let registros = internacion.ejecucion.registros;
-    let egresoExiste = registros.find(registro => registro.concepto.conceptId === '58000006');
-
-    if (egresoExiste) {
-
-        if (egresoExiste.valor.InformeEgreso.fechaEgreso && egresoExiste.valor.InformeEgreso.tipoEgreso && new Date(egresoExiste.valor.InformeEgreso.fechaEgreso) >= fechaInicio && new Date(egresoExiste.valor.InformeEgreso.fechaEgreso) <= fechaFin) {
-            if (pases[pases.length - 1].estados.unidadOrganizativa.conceptId === idUnidadOrganizativa) {
-                return egresoExiste.valor.InformeEgreso.tipoEgreso.nombre;
+function comprobarEgreso(internacion, movimientoActual, pases, fecha, idUnidadOrganizativa) {
+    if (pases && pases.length >= 1) {
+        let fechaInicio = moment(fecha).startOf('day').toDate();
+        let fechaFin = moment(fecha).endOf('day').toDate();
+        let registros = internacion.ejecucion.registros;
+        let egresoExiste = registros.find(registro => registro.concepto.conceptId === '58000006');
+        if (egresoExiste) {
+            if (pases[pases.length - 1].estados._id.toString() === movimientoActual._id.toString() && egresoExiste.valor.InformeEgreso.fechaEgreso && egresoExiste.valor.InformeEgreso.tipoEgreso && new Date(egresoExiste.valor.InformeEgreso.fechaEgreso) >= fechaInicio && new Date(egresoExiste.valor.InformeEgreso.fechaEgreso) <= fechaFin) {
+                if (pases[pases.length - 1].estados.unidadOrganizativa.conceptId === idUnidadOrganizativa) {
+                    return egresoExiste.valor.InformeEgreso.tipoEgreso.nombre;
+                }
             }
         }
-
     }
     return '';
 }
