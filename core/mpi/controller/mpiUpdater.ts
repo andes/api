@@ -122,13 +122,6 @@ export async function updatingMpi() {
                         const pacienteAndes = pacAndes;
                         const pacMpi: any = new pacienteMpi(resultado[1]);
                         await controller.deletePacienteAndes(pacAndes._id); // Borro el paciente de mongodb Local
-                        // Verifico cuil anses
-                        if (!pacienteAndes.cuil) {
-                            const cuilData = await servicioAnses.getServicioAnses(pacienteAndes);
-                            if (cuilData) {
-                                pacienteAndes.cuil = cuilData['cuil'];
-                            }
-                        }
                         await controller.updatePacienteMpi(pacMpi, pacienteAndes, userScheduler);
                     }
                 } catch (ex) {
