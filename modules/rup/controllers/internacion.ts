@@ -25,23 +25,20 @@ export function buscarUltimaInternacion(idPaciente, estado, organizacion) {
     return query.sort({ 'solicitud.fecha': -1 }).limit(1).exec();
 }
 
-export function PasesParaCenso(dtoCama) {
-    return new Promise((resolve, reject) => {
-        camasController.buscarPasesCamaXInternacion(dtoCama.ultimoEstado.idInternacion).then(pases => {
-            Prestacion.findById(dtoCama.ultimoEstado.idInternacion).then(internacion => {
-                let salida = {
-                    cama: dtoCama._id,
-                    ultimoEstado: dtoCama.ultimoEstado,
-                    pases,
-                    internacion
-                };
-                resolve(salida);
-            });
-        }).catch(error => {
-            reject(error);
-        });
-
-    });
+export async function PasesParaCenso(dtoCama) {
+    try {
+        let pases = await camasController.buscarPasesCamaXInternacion(dtoCama.ultimoEstado.idInternacion);
+        let internacion = await Prestacion.findById(dtoCama.ultimoEstado.idInternacion);
+        let salida = {
+            cama: dtoCama._id,
+            ultimoEstado: dtoCama.ultimoEstado,
+            pases,
+            internacion
+        };
+        return salida;
+    } catch (error) {
+        return error;
+    }
 }
 
 

@@ -65,55 +65,46 @@ export function camaOcupadasxUO(unidadOrganizativa, fecha, idOrganizacion) {
                 nombre: '$nombre',
                 organizacion: '$organizacion',
                 tipoCama: '$tipoCama',
-                idInternacion: '$estados.idInternacion'
+                idInternacion: '$estados.idInternacion',
+                fechaMovimiento: '$estados.fecha'
             },
             ultimoEstado: { $last: '$estados' }
         }
     },
-    // {
-    //     $match: { 'ultimoEstado.estado': 'ocupada' }
-    // },
     { $sort: { 'ultimoEstado.fecha': 1 } }];
-
-
     let query = cama.aggregate(pipelineEstado);
-
     return toArray(query.cursor({}).exec());
 }
 
-export function desocupadaEnDia(dtoCama, fecha) {
-    return new Promise(async (resolve, reject) => {
-
-        let pipelineEstado = [];
-        let ultimoEstadofinDia = moment(dtoCama.ultimoEstado.fecha).endOf('day').toDate();
-        let finDiaConsulta = moment(fecha).endOf('day').toDate();
-        let inicioDia = moment(fecha).startOf('day').toDate();
-        if (finDiaConsulta > ultimoEstadofinDia) {
-            pipelineEstado = [
-                { $match: { _id: dtoCama._id.id } },
-                { $unwind: '$estados' },
-                {
-                    $match: {
-                        $and: [{
-                            'estados.fecha': {
-                                $lte: inicioDia,
-                                $gte: dtoCama.ultimoEstado.fecha
-                            }
-                        }, { 'estados.estado': { $ne: 'ocupada' } }]
-                    }
+export async function desocupadaEnDia(dtoCama, fecha) {
+    let pipelineEstado = [];
+    let ultimoEstadofinDia = moment(dtoCama.ultimoEstado.fecha).endOf('day').toDate();
+    let finDiaConsulta = moment(fecha).endOf('day').toDate();
+    let inicioDia = moment(fecha).startOf('day').toDate();
+    if (finDiaConsulta > ultimoEstadofinDia) {
+        pipelineEstado = [
+            { $match: { _id: dtoCama._id.id } },
+            { $unwind: '$estados' },
+            {
+                $match: {
+                    $and: [{
+                        'estados.fecha': {
+                            $lte: inicioDia,
+                            $gte: dtoCama.ultimoEstado.fecha
+                        }
+                    }, { 'estados.estado': { $ne: 'ocupada' } }]
                 }
-            ];
-            let data = await toArray(cama.aggregate(pipelineEstado).cursor({}).exec());
-
-            if (data && data.length > 0) {
-                return resolve(null);
-            } else {
-                return resolve(dtoCama);
             }
+        ];
+        let data = await toArray(cama.aggregate(pipelineEstado).cursor({}).exec());
+        if (data && data.length > 0) {
+            return null;
         } else {
-            return resolve(dtoCama);
+            return dtoCama;
         }
-    });
+    } else {
+        return dtoCama;
+    }
 }
 export function camaXInternacion(idInternacion) {
     return new Promise(async (resolve, reject) => {
