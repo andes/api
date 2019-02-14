@@ -17,7 +17,6 @@ export async function autocompletar(texto) {
         for (let elto of salida.predictions) {
             respuesta.push(elto.description);
         }
-        console.log('req: ', pathGoogleApi);
         return respuesta;
     } else {
         return {};
@@ -31,11 +30,10 @@ export async function autocompletar(texto) {
  * @returns coordenadas: { latitud, longitud } en caso de éxito. De lo contrario null.
  */
 export async function getGeoreferencia(direccion) {
-    const address = direccion[0].valor + '+street,' + direccion[0].ubicacion.localidad.nombre
-        + ',' + direccion[0].ubicacion.provincia.nombre;
-    let pathGoogleApi = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + address + ',AR&key=' + configPrivate.geoKey;
+    const address = direccion[0].valor + ',+' + direccion[0].ubicacion.localidad.nombre
+        + ',+' + direccion[0].ubicacion.provincia.nombre;
+    let pathGoogleApi = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + address + ',+AR&key=' + configPrivate.geoKey;
     pathGoogleApi = formatear(pathGoogleApi);
-    console.log(pathGoogleApi);
     const [status, body] = await handleHttpRequest(pathGoogleApi);
     const salida = JSON.parse(body);
     if (salida.status === 'OK') {
