@@ -326,14 +326,25 @@ export default [
         comment: '',
         child: [
             {
-                key: 'activar/vincular',
-                title: 'Activar/Vincular Pacientes',
+                key: 'lectura',
+                title: 'Ver Auditoría de Pacientes',
                 type: 'boolean'
             },
             {
-                key: 'reporteErrores',
-                title: 'Edición de Pacientes Validados',
-                type: 'boolean'
+                key: 'edicion',
+                title: 'Editar auditoría de pacientes',
+                child: [
+                    {
+                        key: 'activar/vincular',
+                        title: 'Activar/Vincular Pacientes',
+                        type: 'boolean'
+                    },
+                    {
+                        key: 'reporteErrores',
+                        title: 'Edición de Pacientes Validados',
+                        type: 'boolean'
+                    }
+                ]
             }
         ]
     }, {
