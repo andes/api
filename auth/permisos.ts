@@ -1,17 +1,23 @@
+/*
+* key es lo que se guarda en la base de datos, separado por : para indicar subpermiso
+* title es el nombre que se muestra en pantalla para referirse al permiso
+* comment es el title de HTML que ayuda a entender el permiso. Si el permiso no tiene comentario, se mostrará
+*       el título como ayuda. No agregarlo vacío -> comment: '', porque queda vacío la ayuda en HTML
+*/
 export default [
     {
         key: 'turnos',
         title: 'Módulo Citas',
-        comment: '',
         child: [
-            {
-                key: 'editarEspacio',
-                title: 'Editar espacios físicos',
-                type: 'boolean'
-            },
             {
                 key: 'crearAgendas',
                 title: 'Crear Agendas',
+                type: 'boolean'
+            },
+            {
+                key: 'editarEspacio',
+                title: 'Agregar espacios físicos',
+                comment: 'Agregar espacios físicos en una agenda',
                 type: 'boolean'
             },
             {
@@ -27,6 +33,7 @@ export default [
             {
                 key: 'planificarAgenda',
                 title: 'Planificación de agenda',
+                comment: 'Agregar prestaciones para poder crear las agendas',
                 child: [
                     { key: 'prestacion', title: 'Tipo de prestación', type: 'prestacion' }
                 ]
@@ -34,6 +41,7 @@ export default [
             {
                 key: 'agenda',
                 title: 'Operaciones sobre agendas',
+                comment: 'Habilita funciones del gestor',
                 child: [
                     { key: 'puedeEditar', title: 'Editar agenda', type: 'boolean' },
                     { key: 'puedeSuspender', title: 'Suspender', type: 'boolean' },
@@ -43,15 +51,16 @@ export default [
                     { key: 'puedeReanudar', title: 'Reanudar agenda', type: 'boolean' },
                     { key: 'puedeClonar', title: 'Clonar agenda', type: 'boolean' },
                     { key: 'puedeDarSobreturno', title: 'Dar Sobreturno agenda', type: 'boolean' },
-                    { key: 'puedeImprimir', title: 'Revisar-Imprimir agenda', type: 'boolean' },
+                    { key: 'puedeImprimir', title: 'Revisar-Imprimir agenda', comment: 'Habilita botón Auditoría de agendas', type: 'boolean' },
                     { key: 'puedeReasignar', title: 'Reasignar Turno', type: 'boolean' },
                     { key: 'puedeEditarCarpeta', title: 'Editar número de carpeta', type: 'boolean' },
-                    { key: 'puedeBorrar', title: 'Borrar agenda', type: 'boolean' },
+                    { key: 'puedeBorrar', title: 'Borrar agenda', comment: 'Borra agendas en planificación', type: 'boolean' },
                 ]
             },
             {
                 key: 'turnos',
                 title: 'Operaciones sobre turnos',
+                comment: 'Operaciones sobre turnos desde el gestor de agendas',
                 child: [
                     { key: 'registrarAsistencia', title: 'Registrar Asistencia', type: 'boolean' },
                     { key: 'suspenderTurno', title: 'Suspender Turno', type: 'boolean' },
@@ -85,7 +94,7 @@ export default [
     {
         key: 'mpi',
         title: 'Módulo MPI',
-        comment: '',
+        comment: 'Ingresar y editar datos de pacientes',
         child: [
             { key: 'nuevoPaciente', title: 'Crear paciente', type: 'boolean' },
             { key: 'editarPaciente', title: 'Editar paciente', type: 'boolean' },
@@ -121,7 +130,7 @@ export default [
                     { key: 'postAndes', title: 'Creación de un paciente', type: 'boolean' },
                     { key: 'putAndes', title: 'Actualización de un paciente', type: 'boolean' },
                     { key: 'deleteAndes', title: 'Eliminar un paciente', type: 'boolean' },
-                    { key: 'patchAndes', title: 'Modificar datos de un paciente', type: 'boolean' }, // patchAdams
+                    { key: 'patchAndes', title: 'Modificar datos de un paciente', type: 'boolean' },
                     { key: 'parentesco', title: 'Obtener parentesco', type: 'boolean' }
                 ]
 
@@ -132,7 +141,7 @@ export default [
     {
         key: 'rup',
         title: 'Módulo RUP',
-        comment: '',
+        comment: 'Habilita permisos sobre prestaciones solo para profesionales matriculados',
         avoidAll: true,
         child: [
             { key: 'tipoPrestacion', title: 'Tipo de prestación', type: 'prestacion', avoidAll: true }
@@ -141,7 +150,6 @@ export default [
     {
         key: 'internacion',
         title: 'Módulo Internación',
-        comment: '',
         child: [
             {
                 key: 'cama',
@@ -159,7 +167,7 @@ export default [
     {
         key: 'huds',
         title: 'Módulo HUDS',
-        comment: '',
+        comment: 'Visualiza historias de salud',
         avoidAll: true,
         child: [
             { key: 'visualizacionHuds', title: 'Visualización HUDS por paciente', type: 'boolean' },
@@ -168,7 +176,7 @@ export default [
     {
         key: 'fa',
         title: 'Fuentes Auténticas',
-        comment: 'Habilita el acceso a distintas fuentes auténticas',
+        comment: 'Habilita el botón Validar con RENAPER en MPI',
         child: [
             {
                 key: 'get',
@@ -185,7 +193,6 @@ export default [
     {
         key: 'log',
         title: 'Logueo',
-        comment: '',
         child: [
             { key: 'post', title: 'Escritura', type: 'boolean' },
             { key: 'get', title: 'Lectura', type: 'boolean' }
@@ -207,7 +214,6 @@ export default [
     {
         key: 'matriculaciones',
         title: 'Matriculaciones',
-        comment: '',
         child: [
             {
                 key: 'profesionales',
@@ -244,6 +250,7 @@ export default [
     {
         key: 'tm',
         title: 'Tablas maestras',
+        comment: 'Tablas maestras para agregar organizaciones',
         child: [
             {
                 key: 'especialidad',
@@ -269,6 +276,7 @@ export default [
     {
         key: 'cda',
         title: 'Módulo CDA',
+        comment: 'Habilita ver el registro histórico de otros sistemas',
         child: [
             { key: 'get', title: 'Leer CDA', type: 'boolean' },
             { key: 'list', title: 'Listar CDA por paciente', type: 'boolean' },
@@ -280,12 +288,14 @@ export default [
     {
         key: 'reportes',
         title: 'Módulo Reportes',
+        comment: 'Estadística',
         child: [
         ]
     },
     {
         key: 'descargas',
         title: 'Descarga de Documentos',
+        comment: 'Descarga resumen de RUP',
         child: [
             { key: 'pdf', title: 'Documentos PDF', type: 'boolean' }
         ]
@@ -293,7 +303,7 @@ export default [
     {
         key: 'solicitudes',
         title: 'Módulo Solicitudes',
-        comment: '',
+        comment: 'Módulo de tránsito ordenado de pacientes',
         // avoidAll: true,
         child: [
             {
@@ -317,17 +327,18 @@ export default [
     {
         key: 'prestamos',
         title: 'Préstamo de Carpetas',
+        comment: 'Archivo de Historia Clínica en papel',
         child: [
         ]
     },
     {
         key: 'auditoriaPacientes',
         title: 'Auditoría Pacientes',
-        comment: '',
         child: []
     }, {
         key: 'espaciosFisicos',
         title: 'Edición de espacios físicos',
+        comment: 'Agregar/editar espacios de la organización',
         child: [
         ]
     },
