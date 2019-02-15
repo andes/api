@@ -66,7 +66,7 @@ export async function elasticCheck(done) {
                     pac = await pacienteMpi.findOne({ _id: id });
                     if (!pac) {
                         dbg('PACIENTE NO EXISTE EN MONGO---> ', hit);
-                        log(userScheduler, logKeys.elasticCheck3.key, hit, logKeys.elasticCheck3.operacion, hit._id, null);
+                        await log(userScheduler, logKeys.elasticCheck3.key, hit, logKeys.elasticCheck3.operacion, hit._id, null);
                     }
                 }
                 count++;
