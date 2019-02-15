@@ -14,7 +14,7 @@ const regtest = /[^a-zA-Zàáâäãåąčćęèéêëėįìíîïłńòóôöõ�
 import * as https from 'https';
 import * as configPrivate from '../../../config.private';
 import { getServicioGeonode } from '../../../utils/servicioGeonode';
-import { getGeoreferencia } from '../../../utils/servicioGeoreferencia';
+import { getGeoreferencia } from '../../../utils/serviciosGoogle';
 
 /**
  * Crea un paciente y lo sincroniza con elastic
