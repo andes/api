@@ -117,6 +117,8 @@ export class ElasticSync {
                 await this.create(id, data);
                 resolve();
             } catch (error) {
+                // tslint:disable-next-line:no-console
+                console.error(error);
                 reject(error);
             }
         });

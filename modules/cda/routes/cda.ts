@@ -43,19 +43,22 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
             // Es obligatorio que posea prestación
             return next({ error: 'prestacion_invalida' });
         }
-        const cie10Code = req.body.cie10;
+        let cie10Code = req.body.cie10;
         const file: string = req.body.file;
         const texto = req.body.texto;
         // Terminar de decidir esto
         const organizacion = await Organizaciones.findById(orgId, { _id: 1, nombre: 1 });
         let cie10 = null;
         if (cie10Code) {
-            cie10 = await Cie10.findOne({ codigo: cie10Code });
+            cie10 = await Cie10.findOne({
+                $or: [
+                    { codigo: cie10Code },
+                    { codigo: cie10Code + '.9' }]
+            });
             if (!cie10) {
                 return next({ error: 'cie10_invalid' });
             }
         }
-
         let confidencialidad = 'N';
         if (req.body.confidencialidad === 'R') {
             confidencialidad = req.body.confidencialidad;
