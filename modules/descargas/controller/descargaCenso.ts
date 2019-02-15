@@ -81,8 +81,7 @@ export class DocumentoCenso {
                      <td>${ params.resumenCenso.existencia24}</td>
                      <td>${ params.resumenCenso.ingresoEgresoDia}</td>
                      <td>${ params.resumenCenso.pacientesDia}</td>
-                     <td>${ params.resumenCenso.disponibles0}</td>
-                     <td>${ params.resumenCenso.disponibles24}</td>
+                      <td>${ params.resumenCenso.disponibles24}</td>
                  </tr>`;
 
             }

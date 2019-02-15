@@ -191,7 +191,6 @@ export function disponibilidadXUO(unidad, fecha, idOrganizacion) {
             }
         },
         { $match: { 'ultimoEstado.estado': { $nin: ['bloqueada', 'reparacion', 'ocupada'] } } }];
-
         let promises = [
             toArray(cama.aggregate(pipelineInicioDia).cursor({}).exec()),
             toArray(cama.aggregate(pipelineFinDia).cursor({}).exec())
@@ -202,6 +201,38 @@ export function disponibilidadXUO(unidad, fecha, idOrganizacion) {
         }).catch(reject);
 
     });
+}
+
+export async function disponibilidadCenso(unidad, fecha, idOrganizacion) {
+    let finDia = moment(fecha).endOf('day').toDate();
+    let pipelineFinDia = [{
+        $match: {
+            'organizacion._id': idOrganizacion,
+            'estados.unidadOrganizativa.conceptId': unidad,
+            'estados.fecha': { $lte: finDia }
+        }
+    },
+    { $unwind: '$estados' }, {
+        $match: {
+            'estados.unidadOrganizativa.conceptId': unidad,
+            'estados.fecha': { $lte: finDia }
+        }
+    },
+    { $sort: { 'estados.fecha': 1 } }, {
+        $group: {
+            _id: {
+                id: '$_id',
+                nombre: '$nombre',
+                organizacion: '$organizacion',
+                sector: '$sector',
+                habitacion: '$habitacion',
+                tipoCama: '$tipoCama'
+            },
+            ultimoEstado: { $last: '$estados' }
+        }
+    },
+    { $match: { 'ultimoEstado.estado': { $nin: ['bloqueada', 'reparacion'] } } }];
+    return await toArray(cama.aggregate(pipelineFinDia).cursor({}).exec());
 }
 
 export async function getHistorialCama(idOrganizacion, fechaDesde, fechaHasta, idCama) {

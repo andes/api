@@ -89,8 +89,8 @@ export async function completarResumenDiario(listadoCenso, unidad, fecha, idOrga
             existencia24: 0,
             ingresoEgresoDia: 0,
             pacientesDia: 0,
-            disponibles24: 0,
-            disponibles0: 0
+            disponibles24: 0
+            //            disponibles0: 0
         };
         if (listadoCenso && listadoCenso.length > 0) {
             Object.keys(listadoCenso).forEach(indice => {
@@ -119,29 +119,31 @@ export async function completarResumenDiario(listadoCenso, unidad, fecha, idOrga
                         } else {
                             resumenCenso.egresosAlta += 1;
                         }
-                        if (listadoCenso[indice].censo['esIngreso']) {
-                            resumenCenso.ingresoEgresoDia += 1;
-                        }
+
+                    }
+                    if ((listadoCenso[indice].censo['esIngreso'] || listadoCenso[indice].censo['esPaseDe']) &&
+                        (listadoCenso[indice].censo['egreso'] !== '' || listadoCenso[indice].censo['esPaseA'])) {
+                        resumenCenso.ingresoEgresoDia += 1;
                     }
                 }
             });
-            resumenCenso.pacientesDia = resumenCenso.existencia0 +
-                resumenCenso.ingresos + resumenCenso.pasesDe -
-                resumenCenso.egresosDefuncion - resumenCenso.egresosAlta;
-            if (resumenCenso.pacientesDia < 0) {
-                resumenCenso.pacientesDia = 0;
-            }
             resumenCenso.existencia24 = resumenCenso.existencia24 -
                 resumenCenso.egresosDefuncion - resumenCenso.egresosAlta - resumenCenso.pasesA;
             resumenCenso.existencia0 = resumenCenso.existencia24 +
                 resumenCenso.egresosDefuncion + resumenCenso.egresosAlta + resumenCenso.pasesA
                 - resumenCenso.ingresos - resumenCenso.pasesDe;
+            resumenCenso.pacientesDia = resumenCenso.existencia24 + resumenCenso.ingresoEgresoDia;
+            //  resumenCenso.existencia0 +
+            //     resumenCenso.ingresos + resumenCenso.pasesDe -
+            //     resumenCenso.egresosDefuncion - resumenCenso.egresosAlta;
+            // if (resumenCenso.pacientesDia < 0) {
+            //     resumenCenso.pacientesDia = 0;
+            // }
+
         }
-        let respuesta: any = await camasController.disponibilidadXUO(unidad, fecha, idOrganizacion);
-        if (respuesta) {
-            resumenCenso.disponibles0 = respuesta.disponibilidad0 ? respuesta.disponibilidad0 : 0;
-            resumenCenso.disponibles24 = respuesta.disponibilidad24 ? respuesta.disponibilidad24 : 0;
-        }
+        let respuesta: any = await camasController.disponibilidadCenso(unidad, fecha, idOrganizacion);
+        resumenCenso.disponibles24 = respuesta ? respuesta.length : 0;
+
         return await resumenCenso;
     } catch (err) {
         return err;

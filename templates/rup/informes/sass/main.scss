@@ -334,12 +334,20 @@ footer {
 .table{
     border-collapse: collapse;
     border-spacing: 0;
+    page-break-inside:auto 
+    
 }
 
 .table tr{
         margin: 0cm !important; 
         padding: 0cm;
+        page-break-inside:avoid; page-break-after:auto
     }
+    
+.table thead { display:table-header-group;
+ }
+
+
 
 .table thead tr th{
     border: 0.03cm solid lightgray;
@@ -356,6 +364,7 @@ footer {
     padding: 0.08cm;
     margin: 0cm !important;
     border-spacing: 0;
+    page-break-inside:avoid; page-break-after:auto
 
 }
 
