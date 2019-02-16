@@ -44,7 +44,7 @@ router.get('/sesion', Auth.authenticate(), (req, res) => {
  */
 router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
     let username;
-    let origanizacionesFiltradas = [];
+    let organizacionesFiltradas = [];
     if (req.query.user) {
         username = req.query.user;
     } else {
@@ -58,12 +58,12 @@ router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
 
         // user.organizaciones.forEach(element => {
         //     if (element.permisosPausados === false) {
-        //         origanizacionesFiltradas.push(element);
+        //         organizacionesFiltradas.push(element);
         //     }
         // });
-        origanizacionesFiltradas = user.organizaciones.filter(x => x.permisosPausados === false);
+        organizacionesFiltradas = user.organizaciones.filter(x => x.permisosPausados === false);
 
-        const organizaciones = origanizacionesFiltradas.map((item) => {
+        const organizaciones = organizacionesFiltradas.map((item) => {
             if ((req as any).query.admin) {
                 const shiro = shiroTrie.new();
                 shiro.add(item.permisos);
