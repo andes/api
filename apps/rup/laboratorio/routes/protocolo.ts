@@ -9,7 +9,8 @@ import { getResultadosAnteriores,
     getProtocoloById,
     getProtocoloByNumero,
     getProtocolos,
-    generarNumeroProtocolo
+    generarNumeroProtocolo,
+    actualizarRegistrosEjecucion
 } from '../controller/protocolo';
 import { Types } from 'mongoose';
 
@@ -39,6 +40,15 @@ router.get('/protocolos/', async (req, res, next) => {
     try {
         let data = await getProtocolos(req.query);
         if (data) {
+            if (req.query.organizacionDerivacion) {
+                data.forEach( (d) => {
+                    d.ejecucion.registros = d.ejecucion.registros.filter( (r) => {
+                        r.valor.estados.forEach( (w) => {
+                        });
+                        return !r.valor.estados.some( e => e.tipo === 'derivada');
+                    });
+                });
+            }
             res.json(data);
         } else {
             return next(404);
@@ -167,33 +177,11 @@ router.patch('/protocolos/ejecuciones/registros/:id', async (req, res, next) => 
 });
 
 router.patch('/protocolos/ejecuciones/registros', async (req, res, next) => {
-    // console.log('req.params', req.body.registros);
-    let registros = req.body.registros;
-    // console.log(req.body)
-    let promises = registros.map((ejecucion: any) => {
-        return Prestacion.updateOne(
-            {
-                // _id: ejecucion._id,
-                // 'ejecucion.registros.concepto.conceptId': ejecucion.conceptId
-                'ejecucion.registros._id': Types.ObjectId(ejecucion._id)
-            },
-            {
-                $set: {
-                    'ejecucion.registros.$.valor': ejecucion.valor
-                }
-                // ,
-                // $push: {
-                //     'ejecucion.registros.$.valor.estados': ejecucion.estado
-                // }
-            },
-            (err, data: any) => {
-                if (err) {
-                    return next(err);
-                }
-            }
-        );
-    });
-    res.json(await Promise.all(promises));
+    try {
+        res.json(actualizarRegistrosEjecucion(req.body.registros));
+    } catch (e) {
+        return next(e);
+    }
 });
 
 export = router;

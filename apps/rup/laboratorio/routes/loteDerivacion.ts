@@ -1,11 +1,13 @@
 import * as express from 'express';
+import { generarNumeroLoteDerivacion } from './../controller/loteDerivacion';
+import { actualizarEstadoDerivadoRegistrosEjecucion } from './../controller/protocolo';
 import { LoteDerivacion } from './../schemas/loteDerivacion';
 import { Auth } from '../../../../auth/auth.class';
 import { Types } from 'mongoose';
 
 let router = express.Router();
 
-router.get('/lotederivaciones/', async (req, res, next) => {
+router.get('/lotesDerivaciones/', async (req, res, next) => {
     try {
         let query: any = {};
         if (req.query.numeroLote) {
@@ -24,21 +26,21 @@ router.get('/lotederivaciones/', async (req, res, next) => {
             query['estado'] = req.query.estado;
         }
         res.json(await LoteDerivacion.find(query).exec());
-        // res.json(query);
     } catch (e) {
         res.json(e);
     }
 });
 
-router.post('/lotederivaciones/', async (req, res, next) => {
-    const derivacion = req.body.derivacion;
-
-    let data = new LoteDerivacion(derivacion);
-    Auth.audit(data, req);
-    data.save((err) => {
+router.post('/lotesDerivaciones/', async (req, res, next) => {
+    let lote: any = new LoteDerivacion(req.body);
+    lote.numero = generarNumeroLoteDerivacion();
+    lote.fecha = new Date();
+    Auth.audit(lote, req);
+    lote.save( async (err, data) => {
         if (err) {
             return next(err);
         }
+        await actualizarEstadoDerivadoRegistrosEjecucion(data.registrosPracticas.map( r => { return r._id; } ), data.createdBy, data.laboratorioDestino);
         res.json(data);
     });
 });

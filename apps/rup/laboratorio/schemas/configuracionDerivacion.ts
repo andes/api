@@ -1,12 +1,8 @@
-import { model, Schema } from 'mongoose';
-import { SnomedConcept } from './../../../../modules/rup/schemas/snomed-concept';
+import { model, Schema  } from 'mongoose';
 
 export let schema = new Schema({
-    laboratorioDestino: {
-        nombre: { type: String, required: true },
-        id: { type: Schema.Types.ObjectId, ref: 'organizacion', required: true }
-    },
-    concepto: { type: SnomedConcept, required: true }
+    laboratorioDestino: Schema.Types.ObjectId,
+    idPractica: Schema.Types.ObjectId
 });
 schema.plugin(require('../../../../mongoose/audit'));
 

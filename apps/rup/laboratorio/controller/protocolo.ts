@@ -8,7 +8,6 @@ import { EventCore } from '@andes/event-bus';
 import { buscarPaciente } from '../../../../core/mpi/controller/paciente';
 
 
-const unwind = '$ejecucion.registros';
 const lookup = {
     from: 'practica',
     localField: 'ejecucion.registros.valor.idPractica',
@@ -47,7 +46,7 @@ const project = {
 const lookupResultadoAnterior = {
     $lookup: {
         from: 'prestaciones',
-        let: {conceptId: '$ejecucion.registros.valor.practica.concepto.conceptId', paciente: '$paciente.id' },
+        let: { conceptId: '$ejecucion.registros.valor.practica.concepto.conceptId', paciente: '$paciente.id' },
         pipeline: [
             {
                 $match: {
@@ -60,16 +59,18 @@ const lookupResultadoAnterior = {
                 }
             },
             { $unwind: '$ejecucion.registros' },
-            { $match: { $expr: { $eq: ['$ejecucion.registros.concepto.conceptId', '$$conceptId'] }} },
+            { $match: { $expr: { $eq: ['$ejecucion.registros.concepto.conceptId', '$$conceptId'] } } },
             { $unwind: '$ejecucion.registros.valor.estados' },
-            { $match: { $expr: { $eq: ['$ejecucion.registros.valor.estados.tipo', 'validada'] }} },
+            { $match: { $expr: { $eq: ['$ejecucion.registros.valor.estados.tipo', 'validada'] } } },
             { $sort: { 'ejecucion.registros.createdAt': 1 } },
             { $limit: 1 },
-            { $project: {
-                _id: '$ejecucion.registros.valor.resultado.valor',
-                valor: '$ejecucion.registros.valor.resultado.valor',
-                estado: '$ejecucion.registros.valor.estados'
-            } }
+            {
+                $project: {
+                    _id: '$ejecucion.registros.valor.resultado.valor',
+                    valor: '$ejecucion.registros.valor.resultado.valor',
+                    estado: '$ejecucion.registros.valor.estados'
+                }
+            }
         ],
         as: 'ejecucion.registros.valor.resultadoAnterior'
     }
@@ -83,7 +84,7 @@ const lookupResultadoAnterior = {
  */
 async function getProtocolo(params) {
     let conditions = await getQuery(params);
-    conditions.push({ $unwind: unwind });
+    conditions.push({ $unwind: '$ejecucion.registros' });
     conditions.push({ $lookup: lookup });
     if (params.areas) {
         let areas = Array.isArray(params.areas) ? params.areas : [params.areas];
@@ -97,9 +98,35 @@ async function getProtocolo(params) {
             }
         });
         conditions.push({ $match: { practicasFiltradas: { $ne: [] } } }),
-            conditions.push({ $addFields: { 'ejecucion.registros.valor.practica': { $arrayElemAt: ['$practicasFiltradas', 0] } } });
+        conditions.push({ $addFields: { 'ejecucion.registros.valor.practica': { $arrayElemAt: ['$practicasFiltradas', 0] } } });
     } else {
         conditions.push({ $addFields: { 'ejecucion.registros.valor.practica': { $arrayElemAt: ['$practicas', 0] } } });
+    }
+
+    if (params.organizacionDerivacion) {
+        conditions.push({
+            $lookup: {
+                from: 'configuracionDerivacion',
+                let: { idPractica: '$ejecucion.registros.valor.practica._id', idOrganizacion: Types.ObjectId(params.organizacionDerivacion) },
+                pipeline: [
+                    {
+                        $match: {
+                            $expr: {
+                                $and: [
+                                    { $eq: ['$laboratorioDestino', '$$idOrganizacion'] },
+                                    { $eq: ['$idPractica', '$$idPractica'] }
+                                ]
+                            }
+                        }
+                    }, {
+                        $project: { x: true }
+                    }
+                ],
+                as: 'ejecucion.registros.valor.practica.derivable'
+            }
+        });
+
+        conditions.push({ $match: { 'ejecucion.registros.valor.practica.derivable': { $ne: [] } } });
     }
 
     conditions.push(lookupResultadoAnterior);
@@ -174,7 +201,6 @@ export async function getResultadosAnteriores(idPaciente, conceptsIdPractica: [a
             }
         },
         { $unwind: '$ejecucion.registros.valor.estados' },
-        // { $sort: { 'ejecucion.registros.valor.estados.fecha': -1 } },
         { $match: { 'ejecucion.registros.valor.estados.tipo': 'validada' } },
         {
             $group: {
@@ -313,7 +339,6 @@ async function getQuery(params) {
         tipoPrestacionSolicititud: 'solicitud.tipoPrestacion.conceptId',
         prioridad: 'solicitud.registros.valor.solicitudPrestacion.prioridad.id',
         origen: 'solicitud.ambitoOrigen'
-        // solicitudDesde:  { '$gt' :  new ISODate('2018-02-05 14:27:46.718-03:00')}
     };
 
     matches = await Promise.all(Object.keys(params).map(async e => {
@@ -323,7 +348,7 @@ async function getQuery(params) {
             if (e === 'solicitudDesde') {
                 matchOpt.$match['solicitud.fecha'] = { $gte: moment(value).startOf('day').toDate() as any };
             } else if (e === 'solicitudHasta') {
-                matchOpt.$match['solicitud.fecha'] = { $lte: moment(value).startOf('day').toDate() as any };
+                matchOpt.$match['solicitud.fecha'] = { $lte: moment(value).endOf('day').toDate() as any };
             } else if (e === 'numProtocoloDesde') {
                 matchOpt.$match['solicitud.registros.valor.solicitudPrestacion.numeroProtocolo.numero'] = { $gte: Number(value) };
             } else if (e === 'numProtocoloHasta') {
@@ -406,4 +431,67 @@ async function getUltimoNumeroProtocolo(idOrganizacion) {
         ultimoNumero = 0;
     }
     return parseInt(ultimoNumero, 10);
+}
+
+/**
+ *
+ *
+ * @export
+ * @param {*} req
+ * @param {*} body
+ * @param {*} registros
+ */
+export async function actualizarRegistrosEjecucion(registros) {
+    let promises = registros.map((ejecucion: any) => {
+        return Prestacion.updateOne(
+            { 'ejecucion.registros._id': Types.ObjectId(ejecucion._id) },
+            {
+                $set: {
+                    'ejecucion.registros.$.valor': ejecucion.valor
+                }
+                // ,
+                // $push: {
+                //     'ejecucion.registros.$.valor.estados': ejecucion.estado
+                // }
+            },
+            (err, data: any) => {
+                throw err;
+            }
+        );
+    });
+    return await Promise.all(promises);
+}
+
+/**
+ *
+ *
+ * @export
+ * @param {*} ids
+ */
+export async function actualizarEstadoDerivadoRegistrosEjecucion(ids, _usuario, organizacionDestino) {
+    let promises = ids.map((id: any) => {
+        return Prestacion.updateOne(
+            { 'ejecucion.registros._id': Types.ObjectId(id) },
+            {
+                $push: {
+                    'ejecucion.registros.$.valor.estados': {
+                        tipo: 'derivada',
+                        usuario: _usuario,
+                        fecha: new Date()
+                    }
+                }
+                ,
+                $set: {
+                    'ejecucion.registros.$.valor.organizacionDestino': organizacionDestino
+                }
+            },
+            (err, data: any) => {
+                if (err) {
+                    throw err;
+                }
+                return data;
+            }
+        );
+    });
+    return await Promise.all(promises);
 }

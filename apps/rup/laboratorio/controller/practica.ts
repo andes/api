@@ -1,4 +1,3 @@
-import { ObjectId } from 'bson';
 import { Practica } from '../schemas/practica';
 import { toArray } from '../../../../utils/utils';
 

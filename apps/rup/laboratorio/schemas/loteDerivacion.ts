@@ -2,7 +2,7 @@ import { model, Schema } from 'mongoose';
 import * as Registro from './../../../../modules/rup/schemas/prestacion.registro';
 
 export let schema = new Schema({
-    numeroLote: { type: String, required: true },
+    numero: { type: String, required: true },
     fecha: { type: Date, required: true },
     laboratorioOrigen:
     {
@@ -13,11 +13,13 @@ export let schema = new Schema({
         nombre: { type: String, required: true },
         id: { type: Schema.Types.ObjectId, ref: 'organizacion', required: true }
     },
-    estado: {
-        type: String,
-        enum: ['preparado', 'en transporte', 'recibido']
-    },
-    prestaciones: [{
+    estados: [{
+        tipo: {
+            type: String,
+            enum: ['preparado', 'en transporte', 'recibido']
+        }
+    }],
+    registrosPracticas: [{
         idPrestacion: String,
         numeroProtocolo: String,
         paciente: {
