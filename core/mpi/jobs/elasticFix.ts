@@ -12,7 +12,7 @@ import { model as prestacionModel } from '../../../modules/rup/schemas/prestacio
 import * as agendaModel from '../../../modules/turnos/schemas/agenda';
 const dbg = debug('elastic');
 
-export async function elasticCheck(done) {
+export async function elasticFix(done) {
     try {
         const connElastic = new ElasticSync();
         // Buscamos los pacientes que estan en mongo y no en Elasticsearch
