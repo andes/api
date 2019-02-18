@@ -15,44 +15,7 @@ const dbg = debug('elastic');
 export async function elasticFix(done) {
     try {
         const connElastic = new ElasticSync();
-        // Buscamos los pacientes que estan en mongo y no en Elasticsearch
-        const cursorPacientesMpi = pacienteMpi.find({}).cursor();
-        await cursorPacientesMpi.eachAsync(async (pacMpi: any) => {
-            if (!pacMpi) { return null; }
-            const query = {
-                query: {
-                    ids: { values: pacMpi._id }
-                }
-            };
-            let elasticResult = await connElastic.search(query);
-            // Logueamos los pacientes que no aparecen en elastic
-            if (elasticResult && elasticResult.hits.total < 1) {
-                dbg(' ELASTIC RESULT---> ', elasticResult);
-                dbg('PACIENTE NO EXISTE EN ELASTIC---> ', pacMpi._id);
-                await log(userScheduler, logKeys.elasticCheck2.key, pacMpi, logKeys.elasticCheck2.operacion, pacMpi._id, null);
 
-            }
-        });
-
-        const cursorPacientesAndes = paciente.find({}).cursor();
-        await cursorPacientesAndes.eachAsync(async (pacAndes: any) => {
-            if (!pacAndes) { return null; }
-            // dbg('ID PACIENTE---> ', pacMpi._id);
-            const query = {
-                query: {
-                    ids: { values: pacAndes._id }
-                }
-            };
-            let elasticResult = await connElastic.search(query);
-            // Logueamos los pacientes que no aparecen en elastic
-            if (elasticResult && elasticResult.hits.total < 1) {
-                dbg(' ELASTIC RESULT---> ', elasticResult);
-                dbg('PACIENTE NO EXISTE EN ELASTIC---> ', pacAndes._id);
-                await log(userScheduler, logKeys.elasticCheck1.key, pacAndes, logKeys.elasticCheck1.operacion, pacAndes._id, null);
-
-
-            }
-        });
 
         // Buscamos pacientes indexados en elasticsearch que no existan en mongo
         // first we do a search, and specify a scroll timeout
@@ -82,10 +45,9 @@ export async function elasticFix(done) {
 
                             if (prestacionesPacienteElastic && prestacionesPacienteElastic.length > 0) {
                                 for (let prestacion of prestacionesPacienteElastic) {
-                                    prestacion._id = pacienteMongo._id;
+                                    (prestacion as any).paciente.id = pacienteMongo._id;
                                     await prestacion.save();
                                 }
-                                prestacionModel.deleteMany({ _id: idElasticPaciente });
                             }
 
                             await agendasPacienteElastic.eachAsync(async agenda => {
@@ -101,16 +63,13 @@ export async function elasticFix(done) {
                                     }
                                 }
                             });
-
-                            let elasticConnection = new ElasticSync();
-                            await elasticConnection.delete(idElasticPaciente);
-
+                            await connElastic.delete(idElasticPaciente);
                         } catch (error) {
 
                             await log(userScheduler, logKeys.elasticFix.key, hit, logKeys.elasticFix.operacion, pacienteMongo, idElasticPaciente);
                         }
                         dbg('PACIENTE NO EXISTE EN MONGO---> ', hit);
-                        await log(userScheduler, logKeys.elasticCheck3.key, hit, logKeys.elasticCheck3.operacion, hit._id, null);
+                        await log(userScheduler, logKeys.elasticFix2.key, hit, logKeys.elasticFix2.operacion, pacienteMongo, idElasticPaciente);
                     }
                 }
                 count++;
@@ -123,6 +82,6 @@ export async function elasticFix(done) {
         }
         done();
     } catch (err) {
-        dbg('ERROR -->', err);
+        await log(userScheduler, logKeys.elasticFix.key, hit, logKeys.elasticFix.operacion, pacienteMongo, idElasticPaciente);
     }
 }

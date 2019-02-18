@@ -301,5 +301,9 @@ export const logKeys = {
     elasticFix: {
         key: 'elasticFix:error',
         operacion: 'error en el proceso'
+    },
+    elasticFix2: {
+        key: 'elasticFix:update',
+        operacion: 'actualizacion de datos con el proceso elasticFix'
     }
 };
