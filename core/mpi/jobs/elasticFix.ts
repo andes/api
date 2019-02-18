@@ -82,6 +82,7 @@ export async function elasticFix(done) {
         }
         done();
     } catch (err) {
-        await log(userScheduler, logKeys.elasticFix.key, hit, logKeys.elasticFix.operacion, pacienteMongo, idElasticPaciente);
+        await log(userScheduler, logKeys.elasticFix.key, {}, logKeys.elasticFix.operacion, err);
+
     }
 }
