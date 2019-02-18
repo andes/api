@@ -156,6 +156,7 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
  */
 
 router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res, next) => {
+    console.log("Turno body: ", req.body);
     const continues = ValidateDarTurno.checkTurno(req.body);
     const pacienteTurno = req.body.paciente;
     if (continues.valid) {
@@ -325,7 +326,8 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                 let turno = doc2.bloques.id(req.body.idBloque).turnos.id(req.body.idTurno);
 
                 LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turno, req.body.idBloque, req.body.idAgenda);
-
+console.log("Turnooooo: ", turno);
+console.log("Doc2: ", doc2);
                 EventCore.emitAsync('citas:turno:asignar', turno);
                 EventCore.emitAsync('citas:agenda:update', doc2);
 

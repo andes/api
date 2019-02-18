@@ -4,6 +4,7 @@ import { model as organizacion } from './../../../core/tm/schemas/organizacion';
 import { paciente } from '../../../core/mpi/schemas/paciente';
 import { Puco } from './../../obraSocial/schemas/puco';
 import { ObraSocial } from './../../obraSocial/schemas/obraSocial';
+import { profesional } from './../../../core/tm/schemas/profesional';
 import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
 import { snomedModel } from '../../../core/term/schemas/snomed';
 import * as configAutomatica from './../schemas/configFacturacionAutomatica';
@@ -12,7 +13,7 @@ import { stringify } from 'querystring';
 import { resolve } from 'path';
 
 export async function facturacionAutomatica(prestacion: any) {
-    let idOrganizacion = prestacion.ejecucion.organizacion.id;
+    let idOrganizacion = (prestacion.ejecucion) ? prestacion.ejecucion.organizacion.id : prestacion.organizacion._id;
 
     let datosOrganizacion: any = await getDatosOrganizacion(idOrganizacion);
     let obraSocialPaciente = await getObraSocial(prestacion.paciente.documento);
@@ -21,7 +22,7 @@ export async function facturacionAutomatica(prestacion: any) {
 
     const factura = {
         turno: {
-            _id: prestacion.solicitud.turno,
+            _id: (prestacion.solicitud) ? prestacion.solicitud.turno : prestacion.id,
         },
         paciente: {
             nombre: prestacion.paciente.nombre,
@@ -31,13 +32,13 @@ export async function facturacionAutomatica(prestacion: any) {
             sexo: prestacion.paciente.sexo
         },
         prestacion: {
-            conceptId: prestacion.solicitud.tipoPrestacion.conceptId,
-            term: prestacion.solicitud.tipoPrestacion.term,
-            fsn: prestacion.solicitud.tipoPrestacion.fsn,
+            conceptId: (prestacion.solicitud) ? prestacion.solicitud.tipoPrestacion.conceptId : prestacion.tipoPrestacion.conceptId,
+            term: (prestacion.solicitud) ? prestacion.solicitud.tipoPrestacion.term : prestacion.tipoPrestacion.term,
+            fsn: (prestacion.solicitud) ? prestacion.solicitud.tipoPrestacion.fsn : prestacion.tipoPrestacion.fsn,
             datosReportables: datosReportables,
         },
         organizacion: {
-            nombre: prestacion.ejecucion.organizacion.nombre,
+            nombre: (prestacion.ejecucion) ? prestacion.ejecucion.organizacion.nombre : prestacion.organizacion.nombre,
             cuie: datosOrganizacion.codigo.cuie,
             idSips: datosOrganizacion.codigo.sips
         },
@@ -46,9 +47,9 @@ export async function facturacionAutomatica(prestacion: any) {
             financiador: obraSocialPaciente[0].nombre
         } : null,
         profesional: {
-            nombre: prestacion.solicitud.profesional.nombre,
-            apellido: prestacion.solicitud.profesional.apellido,
-            dni: prestacion.solicitud.profesional.documento,
+            nombre: (prestacion.solicitud) ? prestacion.solicitud.profesional.nombre : prestacion.profesionales[0].nombre,
+            apellido: (prestacion.solicitud) ? prestacion.solicitud.profesional.apellido : prestacion.profesionales[0].apellido,
+            dni: (prestacion.solicitud) ? prestacion.solicitud.profesional.documento : await getProfesional(prestacion.profesionales[0]._id) //prestacion.profesionales[0].documento,
         }
     }
 
@@ -73,50 +74,52 @@ function getConfiguracionAutomatica(conceptId: any) {
 }
 
 async function getDatosReportables(prestacion: any) {
-    let idTipoPrestacion = prestacion.solicitud.tipoPrestacion.conceptId;
-    let configAuto: any = await getConfiguracionAutomatica(idTipoPrestacion);
+    if (prestacion.solicitud) {
+        let idTipoPrestacion = prestacion.solicitud.tipoPrestacion.conceptId;
+        let configAuto: any = await getConfiguracionAutomatica(idTipoPrestacion);
 
-    if ((configAuto) && (configAuto.sumar.datosReportables.length > 0)) {
-        let conceptos: any = [];
-        const expresionesDR = configAuto.sumar.datosReportables.map((config: any) => config.valores);
+        if ((configAuto) && (configAuto.sumar.datosReportables.length > 0)) {
+            let conceptos: any = [];
+            const expresionesDR = configAuto.sumar.datosReportables.map((config: any) => config.valores);
 
-        let promises = expresionesDR.map(async (exp, index) => {
-            return new Promise(async (resolve, reject) => {
-                let querySnomed = makeMongoQuery(exp[0].expresion);
-                let docs = await snomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 });
+            let promises = expresionesDR.map(async (exp, index) => {
+                return new Promise(async (resolve, reject) => {
+                    let querySnomed = makeMongoQuery(exp[0].expresion);
+                    let docs = await snomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 });
 
-                conceptos = docs.map((item: any) => {
-                    let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
-                    return {
-                        fsn: item.fullySpecifiedName,
-                        term: term,
-                        conceptId: item.conceptId,
-                        semanticTag: item.semtag
-                    };
+                    conceptos = docs.map((item: any) => {
+                        let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
+                        return {
+                            fsn: item.fullySpecifiedName,
+                            term: term,
+                            conceptId: item.conceptId,
+                            semanticTag: item.semtag
+                        };
+                    });
+
+                    // ejecutamos busqueda recursiva
+                    let data: any = await buscarEnHudsFacturacion(prestacion, conceptos);
+                    console.log("Data: ", data);
+                    if (data.length > 0) {
+                        let datoReportable = data;
+                        // let datoReportable = {
+                        //     conceptId: data[0].registro.concepto.conceptId,
+                        //     term: data[0].registro.concepto.term,
+                        //     valor: (data[0].registro.valor.concepto) ? {
+                        //         conceptId: (data[0].registro.valor.concepto) ? data[0].registro.valor.concepto.conceptId : data[0].registro.valor,
+                        //         nombre: (data[0].registro.valor.concepto) ? data[0].registro.valor.concepto.term : data[0].registro.concepto.term
+                        //     } : data[0].registro.valor
+                        // };
+
+                        resolve(datoReportable);
+                    } else {
+                        resolve();
+                    }
                 });
-
-                // ejecutamos busqueda recursiva
-                let data: any = await buscarEnHudsFacturacion(prestacion, conceptos);
-                console.log("Data: ", data);
-                if (data.length > 0) {
-                    let datoReportable = data;
-                    // let datoReportable = {
-                    //     conceptId: data[0].registro.concepto.conceptId,
-                    //     term: data[0].registro.concepto.term,
-                    //     valor: (data[0].registro.valor.concepto) ? {
-                    //         conceptId: (data[0].registro.valor.concepto) ? data[0].registro.valor.concepto.conceptId : data[0].registro.valor,
-                    //         nombre: (data[0].registro.valor.concepto) ? data[0].registro.valor.concepto.term : data[0].registro.concepto.term
-                    //     } : data[0].registro.valor
-                    // };
-
-                    resolve(datoReportable);
-                } else {
-                    resolve();
-                }
             });
-        });
 
-        return await Promise.all(promises);
+            return await Promise.all(promises);
+        }
     }
 }
 
@@ -186,5 +189,13 @@ function getObraSocial(dni: any) {
         } else {
             resolve(null);
         }
+    });
+}
+
+function getProfesional(idProfesional: any) {
+    return new Promise(async (resolve, reject) => {
+        let prof: any = await profesional.findById(idProfesional).exec();
+
+        resolve(prof.documento);
     });
 }

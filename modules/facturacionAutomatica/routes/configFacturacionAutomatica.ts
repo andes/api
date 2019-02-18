@@ -1,5 +1,7 @@
 import * as express from 'express';
 import * as facturacionAutomaticaModel from './../schemas/configFacturacionAutomatica';
+import { facturacionAutomatica } from './../../facturacionAutomatica/controllers/facturacionAutomatica';
+import { EventCore } from '@andes/event-bus';
 
 let router = express.Router();
 
@@ -9,7 +11,7 @@ let router = express.Router();
  * @param {any} conceptId
  * @returns
  */
-router.get('/configFacturacionAutomatica/',  (req, res, next) => {
+router.get('/configFacturacionAutomatica/', (req, res, next) => {
     if (req.query.conceptId) {
         let query;
         query = facturacionAutomaticaModel.find({});
@@ -24,4 +26,14 @@ router.get('/configFacturacionAutomatica/',  (req, res, next) => {
         return next('Parámetros incorrectos');
     }
 });
+
+router.post('/facturaArancelamiento/', async (req, res, next) => {
+    console.log("Arancelamiento: ", req.body);
+
+    let prestacion = req.body;
+    let factura = await facturacionAutomatica(prestacion);
+
+    EventCore.emitAsync('facturacion:factura:create', factura);
+});
+
 export = router;
