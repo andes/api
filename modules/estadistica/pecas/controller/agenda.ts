@@ -1,7 +1,7 @@
 import * as agendaModel from '../../../turnos/schemas/agenda';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
-import { model as organizacion } from '../../../../core/tm/schemas/organizacion';
+import { Organizacion } from '../../../../core/tm/schemas/organizacion';
 import * as sql from 'mssql';
 import * as configPrivate from '../../../../config.private';
 import { Logger } from '../../../../utils/logService';
@@ -480,7 +480,7 @@ async function getEfector(idOrganizacion: any) {
     if (orgCache[idOrganizacion]) {
         return orgCache[idOrganizacion];
     } else {
-        const org: any = await organizacion.findById(idOrganizacion);
+        const org: any = await Organizacion.findById(idOrganizacion);
         if (org) {
             orgCache[idOrganizacion] = org;
             return org;
