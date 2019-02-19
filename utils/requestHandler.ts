@@ -13,7 +13,6 @@ import * as request from 'request';
  * @returns {Promise<[status,body]>}
  */
 export function handleHttpRequest(params): Promise<any> {
-
     return new Promise((resolve, reject) => {
         request(params, (err, response, body) => {
             if (!err) {

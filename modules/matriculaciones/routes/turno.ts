@@ -60,6 +60,43 @@ router.post('/turnos/:tipo/:profesionalId/', (request, response, errorHandler) =
     }
 });
 
+router.get('/turnos/turnosPorDocumentos', async (req, res, errorHandler) => {
+
+    if (req.query.documento) {
+        if (req.query.tipoTurno === 'matriculacion') {
+            turno.find({ fecha: { $gte: new Date() } }).populate({
+                path: 'profesional',
+                match: { documento: req.query.documento, sexo: req.query.sexo }
+            }).exec((error, data) => {
+                if (error) {
+                    return errorHandler(error);
+                }
+                let data2 = data.filter((x: any) => x.profesional !== null);
+
+                if (data2) {
+                    res.send(data2);
+
+                } else {
+                    res.send(data2);
+                }
+            });
+        } else {
+            turno.find({ fecha: { $gte: new Date() } }).populate({
+                path: 'profesional',
+                match: { documento: req.query.documento }
+            }).exec(async (error, data: any) => {
+                if (error) {
+                    return errorHandler(error);
+                }
+                let data2 = data.filter((x: any) => x.profesional !== null);
+
+                let match = data2.length > 0 ? data2[0] : null;
+
+                res.send(match);
+            });
+        }
+    }
+});
 
 /**
  * Listado de Turnos

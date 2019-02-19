@@ -1,5 +1,5 @@
 import { Schema, Model, model, Document } from 'mongoose';
-import * as nombreApellidoSchema from '../../../core/tm/schemas/nombreApellido';
+import { NombreApellidoSchema } from '../../../core/tm/schemas/nombreApellido';
 import { pacienteSchema } from '../../../core/mpi/schemas/paciente';
 import { tipoPrestacionSchema, ITipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 import { espacioFisicoSchema, IEspacioFisico } from '../../../modules/turnos/schemas/espacioFisico';
@@ -43,8 +43,8 @@ export const SolicitudCarpetaManualSchema = new Schema({
     datosSolicitudManual: {
         espacioFisico: espacioFisicoSchema,
         prestacion: tipoPrestacionSchema,
-        profesional: nombreApellidoSchema,
-        responsable: nombreApellidoSchema,
+        profesional: NombreApellidoSchema,
+        responsable: NombreApellidoSchema,
         observaciones: String
     }
 });
