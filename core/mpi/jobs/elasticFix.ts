@@ -7,10 +7,11 @@ import debug = require('debug');
 import * as mongoose from 'mongoose';
 import { userScheduler } from '../../../config.private';
 import { logKeys } from '../../../config';
-import { log } from '@andes/log';
-import * as logSchema from '@andes/log/src/lib/schema/log';
+import * as log from '@andes/log';
 import { model as prestacionModel } from '../../../modules/rup/schemas/prestacion';
 import * as agendaModel from '../../../modules/turnos/schemas/agenda';
+import { auditoriaPrestacionPaciente } from 'modules/auditorias/schemas/auditoriaPrestacionPaciente';
+import { Auth } from '../../../auth/auth.class';
 const dbg = debug('elasticFix');
 
 export async function elasticFix(done) {
@@ -24,12 +25,13 @@ export async function elasticFix(done) {
           5-  reemplazar id de paciente en prestaciones y turnos por el id del paciente en mongo
           6-  delete index en elastic (hit._id)
           */
-        let logCursor = logSchema.model.find({ key: 'elastic:notFound:mpi' }).cursor();
-        await logCursor.eachAsync(async (log: any) => {
-            let idPacienteMPI = new mongoose.Types.ObjectId(log.paciente);
+        let logs = await log.query('elastic:notFound:mpi', null);
+        for (let logData of logs) {
+
+            let idPacienteMPI = new mongoose.Types.ObjectId((logData as any).paciente);
             let pacMpi: any = await pacienteMpi.findOne({ _id: idPacienteMPI });
             if (!pacMpi) { return; }
-            dbg('Paciente a modificar--->', pacMpi._id, idPacienteMPI);
+            dbg('Paciente a modificar--->', pacMpi._id);
             const query = {
                 query: {
                     term: { documento: pacMpi.documento }
@@ -48,6 +50,7 @@ export async function elasticFix(done) {
                             for (let prestacion of prestacionesPacienteElastic) {
                                 dbg('Prestacion modificada---> ', (prestacion as any)._id);
                                 (prestacion as any).paciente.id = idPacienteMPI;
+                                Auth.audit(prestacion, (userScheduler as any));
                                 await prestacion.save();
                             }
                         }
@@ -66,18 +69,19 @@ export async function elasticFix(done) {
                                 }
                             }
                         });
+                        dbg('Deleting from elastic--->', hit._id);
                         await connElastic.delete(hit._id);
                     } catch (error) {
                         dbg('ERROR -------------------->', error);
-                        await log(userScheduler, logKeys.elasticFix.key, hit, logKeys.elasticFix.operacion, pacMpi);
+                        await log.log(userScheduler, logKeys.elasticFix.key, hit, logKeys.elasticFix.operacion, pacMpi);
                     }
                 }
 
             }
-        });
+        }
         done();
     } catch (err) {
         dbg('ERR-------------------->', err);
-        await log(userScheduler, logKeys.elasticFix.key, {}, logKeys.elasticFix.operacion, err);
+        await log.log(userScheduler, logKeys.elasticFix.key, {}, logKeys.elasticFix.operacion, err);
     }
 }
