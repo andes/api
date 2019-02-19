@@ -20,7 +20,6 @@ export async function elasticFix(done) {
         // Buscamos pacientes indexados en elasticsearch que no existan en mongo
         // first we do a search, and specify a scroll timeout
         let response = await connElastic.searchScroll();
-        let count = 0;
         while (response.hits && response.hits.hits.length) {
             for (let hit of response.hits.hits) {
                 // dbg('ID PACIENTE---> ', hit._id);
@@ -74,9 +73,7 @@ export async function elasticFix(done) {
                         }
                     }
                 }
-                count++;
             }
-            dbg('TODO OK-------------------->', count);
             response = await connElastic.scroll({
                 scroll_id: response._scroll_id,
                 scroll: '5m'
