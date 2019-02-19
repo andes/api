@@ -10,7 +10,7 @@ import { logKeys } from '../../../config';
 import { log } from '@andes/log';
 import { model as prestacionModel } from '../../../modules/rup/schemas/prestacion';
 import * as agendaModel from '../../../modules/turnos/schemas/agenda';
-const dbg = debug('elastic');
+const dbg = debug('elasticFix');
 
 export async function elasticFix(done) {
     try {
@@ -34,7 +34,7 @@ export async function elasticFix(done) {
                         /*
                         1- buscar con hit._id en prestaciones y  en bloques.turnos.paciente.id'
                         2- si hay resultados buscar en mpi el paciente por dni y obtener su id mongo
-                        3- reemplazar id en prestaciones y turnos por el id mongo
+                        3- reemplazar id de paciente en prestaciones y turnos por el id del paciente en mongo
                         4- delete index en elastic (hit._id)
                         */
 
@@ -45,6 +45,7 @@ export async function elasticFix(done) {
 
                             if (prestacionesPacienteElastic && prestacionesPacienteElastic.length > 0) {
                                 for (let prestacion of prestacionesPacienteElastic) {
+                                    dbg('Prestacion modificada---> ', (prestacion as any)._id);
                                     (prestacion as any).paciente.id = pacienteMongo._id;
                                     await prestacion.save();
                                 }
@@ -58,6 +59,7 @@ export async function elasticFix(done) {
                                     turnos = (agenda as any).bloques[x].turnos;
                                     index = turnos.findIndex((t) => t.paciente._id.toString() === idElasticPaciente.toString());
                                     if (index > -1) {
+                                        dbg('agenda modificada---> ', (agenda as any)._id);
                                         (agenda as any).bloques[x].turnos[index].paciente.id = pacienteMongo._id;
                                         await agenda.save();
                                     }
@@ -65,6 +67,7 @@ export async function elasticFix(done) {
                             });
                             await connElastic.delete(idElasticPaciente);
                         } catch (error) {
+                            dbg('ERROR -------------------->', error);
 
                             await log(userScheduler, logKeys.elasticFix.key, hit, logKeys.elasticFix.operacion, pacienteMongo, idElasticPaciente);
                         }
@@ -82,7 +85,7 @@ export async function elasticFix(done) {
         }
         done();
     } catch (err) {
+        dbg('ERR-------------------->', err);
         await log(userScheduler, logKeys.elasticFix.key, {}, logKeys.elasticFix.operacion, err);
-
     }
 }
