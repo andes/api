@@ -68,11 +68,8 @@ export async function elasticFix(done) {
                             await connElastic.delete(idElasticPaciente);
                         } catch (error) {
                             dbg('ERROR -------------------->', error);
-
                             await log(userScheduler, logKeys.elasticFix.key, hit, logKeys.elasticFix.operacion, pacienteMongo, idElasticPaciente);
                         }
-                        dbg('PACIENTE NO EXISTE EN MONGO---> ', hit);
-                        await log(userScheduler, logKeys.elasticFix2.key, hit, logKeys.elasticFix2.operacion, pacienteMongo, idElasticPaciente);
                     }
                 }
                 count++;
