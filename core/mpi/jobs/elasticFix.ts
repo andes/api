@@ -38,7 +38,7 @@ export async function elasticFix(done) {
                 }
             };
             let response = await connElastic.search(query);
-            if (!response || !response.length) { return; }
+            if (!response || !response.hits || !response.hits.hits) { return; }
             for (let hit of response.hits.hits) {
                 let idElastic = new mongoose.Types.ObjectId(hit._id);
 
