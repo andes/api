@@ -10,7 +10,6 @@ import { logKeys } from '../../../config';
 import * as log from '@andes/log';
 import { model as prestacionModel } from '../../../modules/rup/schemas/prestacion';
 import * as agendaModel from '../../../modules/turnos/schemas/agenda';
-import { auditoriaPrestacionPaciente } from 'modules/auditorias/schemas/auditoriaPrestacionPaciente';
 import { Auth } from '../../../auth/auth.class';
 const dbg = debug('elasticFix');
 
@@ -72,6 +71,8 @@ export async function elasticFix(done) {
                             if (index > -1) {
                                 dbg('agenda modificada---> ', (agenda as any)._id);
                                 (agenda as any).bloques[x].turnos[index].paciente.id = idPacienteMPI;
+                                Auth.audit(agenda, (userScheduler as any));
+
                                 await agenda.save();
                             }
                         }
