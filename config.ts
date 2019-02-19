@@ -305,4 +305,12 @@ export const logKeys = {
         key: 'andes:notFound',
         operacion: 'paciente en elasticsearch no encontrado en ANDES/MPI'
     },
+    elasticFix: {
+        key: 'elasticFix:error',
+        operacion: 'error en el proceso'
+    },
+    elasticFix2: {
+        key: 'elasticFix:update',
+        operacion: 'paciente de elastic procesado'
+    }
 };
