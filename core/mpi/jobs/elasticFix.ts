@@ -69,8 +69,6 @@ export async function elasticFix(done) {
                             }
                         }
                     });
-                    dbg('Deleting from elastic--->', hit._id);
-                    await connElastic.delete(hit._id.toString());
                 } catch (error) {
                     dbg('ERROR -------------------->', error);
                     await log.log(userScheduler, logKeys.elasticFix.key, hit, logKeys.elasticFix.operacion, pacMpi);
