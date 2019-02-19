@@ -37,6 +37,7 @@ export async function elasticFix(done) {
                     term: { documento: pacMpi.documento }
                 }
             };
+            connElastic.sync(pacMpi);
             let response = await connElastic.search(query);
             if (!response || !response.hits || !response.hits.hits) { return; }
             for (let hit of response.hits.hits) {
@@ -61,7 +62,13 @@ export async function elasticFix(done) {
                         for (let x = 0; x < (agenda as any).bloques.length; x++) {
                             // Si existe este bloque...
                             turnos = (agenda as any).bloques[x].turnos;
-                            index = turnos.findIndex((t) => t.paciente._id.toString() === idPacienteMPI.toString());
+                            index = turnos.findIndex((t) => {
+                                if (t.paciente && t.paciente.id) {
+                                    return t.paciente.id.toString() === idPacienteMPI.toString();
+                                } else {
+                                    return false;
+                                }
+                            });
                             if (index > -1) {
                                 dbg('agenda modificada---> ', (agenda as any)._id);
                                 (agenda as any).bloques[x].turnos[index].paciente.id = idPacienteMPI;
