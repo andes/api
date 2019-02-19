@@ -7,9 +7,29 @@
  */
 
 import * as mongoose from 'mongoose';
-import { SnomedConcept } from './snomed-concept';
+import { SnomedConcept, ISnomedConcept } from './snomed-concept';
 
-export let schema = new mongoose.Schema({
+export interface IProfesionalMeta extends mongoose.Document {
+    profesional: {
+        id: mongoose.Types.ObjectId;
+        nombre: string;
+        apellido: string;
+        documento: Number;
+    };
+    organizacion: {
+        id: mongoose.Types.ObjectId;
+        nombre: String;
+    };
+    tipoPrestacion: ISnomedConcept;
+    frecuentes: [{
+        // tipo de prestacion desde la cual se solicita
+        concepto: ISnomedConcept;
+        esSolicitud: Boolean;
+        frecuencia: number;
+    }];
+}
+
+export let ProfesionalMetaSchema = new mongoose.Schema({
     profesional: {
         id: mongoose.SchemaTypes.ObjectId,
         nombre: String,
@@ -30,10 +50,4 @@ export let schema = new mongoose.Schema({
     }]
 });
 
-// Autopopula todos los hijos
-// schema.pre('find', (next) => {
-//     this.populate('frecuentes');
-//     next();
-// });
-
-export let profesionalMeta = mongoose.model('profesionalMeta', schema, 'profesionalMeta');
+export let ProfesionalMeta: mongoose.Model<IProfesionalMeta> = mongoose.model<IProfesionalMeta>('profesionalMeta', ProfesionalMetaSchema, 'profesionalMeta');
