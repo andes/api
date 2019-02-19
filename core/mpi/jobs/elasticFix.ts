@@ -77,7 +77,7 @@ export async function elasticFix(done) {
                             }
                         }
                     });
-                    await log.log(userScheduler, logKeys.elasticFix2.key, hit, logKeys.elasticFix2.operacion, hit._id);
+                    await log.log(userScheduler, logKeys.elasticFix2.key, hit, logKeys.elasticFix2.operacion, hit._id, idPacienteMPI);
                 } catch (error) {
                     dbg('ERROR -------------------->', error);
                     await log.log(userScheduler, logKeys.elasticFix.key, hit, logKeys.elasticFix.operacion, error);
