@@ -15,6 +15,7 @@ const dbg = debug('elasticFix');
 export async function elasticFix(done) {
     try {
         const connElastic = new ElasticSync();
+        dbg('Elastic Fix starteddd');
 
 
         // Buscamos pacientes indexados en elasticsearch que no existan en mongo
