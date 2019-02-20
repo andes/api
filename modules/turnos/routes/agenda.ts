@@ -595,4 +595,9 @@ router.get('/estadistica', async (req, res, next) => {
     return res.json(stats);
 });
 
+router.post('/estadistica', async (req, res, next) => {
+    const stats = await AgendasEstadisticas.estadisticas(req.body);
+    return res.json(stats);
+});
+
 export = router;
