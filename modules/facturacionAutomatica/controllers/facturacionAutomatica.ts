@@ -53,7 +53,6 @@ export async function facturacionAutomatica(prestacion: any) {
         }
     }
 
-    console.log("Factura:  ", JSON.stringify(factura));
     return factura;
 
 }
@@ -99,7 +98,7 @@ async function getDatosReportables(prestacion: any) {
 
                     // ejecutamos busqueda recursiva
                     let data: any = await buscarEnHudsFacturacion(prestacion, conceptos);
-                    console.log("Data: ", data);
+
                     if (data.length > 0) {
                         let datoReportable = data;
                         // let datoReportable = {

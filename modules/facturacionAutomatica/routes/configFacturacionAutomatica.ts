@@ -28,8 +28,6 @@ router.get('/configFacturacionAutomatica/', (req, res, next) => {
 });
 
 router.post('/facturaArancelamiento/', async (req, res, next) => {
-    console.log("Arancelamiento: ", req.body);
-
     let prestacion = req.body;
     let factura = await facturacionAutomatica(prestacion);
 
