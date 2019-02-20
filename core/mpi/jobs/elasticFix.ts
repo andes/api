@@ -43,7 +43,7 @@ export async function elasticFix(done) {
                 let idElastic = new mongoose.Types.ObjectId(hit._id);
 
                 let prestacionesPacienteElastic = await prestacionModel.find({ 'paciente.id': idElastic });
-                let agendasPacienteElastic = await agendaModel.find({ 'bloques.turnos.paciente.id': idElastic }).cursor();
+                let agendasPacienteElastic = await agendaModel.find({ 'bloques.turnos.paciente.id': idElastic });
                 try {
 
                     if (prestacionesPacienteElastic && prestacionesPacienteElastic.length > 0) {
@@ -55,28 +55,31 @@ export async function elasticFix(done) {
                         }
                     }
 
-                    await agendasPacienteElastic.eachAsync(async agenda => {
-                        let turnos;
-                        let index = -1;
-                        for (let x = 0; x < (agenda as any).bloques.length; x++) {
-                            // Si existe este bloque...
-                            turnos = (agenda as any).bloques[x].turnos;
-                            index = turnos.findIndex((t) => {
-                                if (t.paciente && t.paciente.id) {
-                                    return t.paciente.id.toString() === idPacienteMPI.toString();
-                                } else {
-                                    return false;
+                    if (agendasPacienteElastic && agendasPacienteElastic.length > 0) {
+                        for (let agenda of agendasPacienteElastic) {
+                            let turnos;
+                            let index = -1;
+                            for (let x = 0; x < (agenda as any).bloques.length; x++) {
+                                // Si existe este bloque...
+                                turnos = (agenda as any).bloques[x].turnos;
+                                index = turnos.findIndex((t) => {
+                                    if (t.paciente && t.paciente.id) {
+                                        return t.paciente.id.toString() === idPacienteMPI.toString();
+                                    } else {
+                                        return false;
+                                    }
+                                });
+                                if (index > -1) {
+                                    dbg('agenda modificada---> ', (agenda as any)._id);
+                                    (agenda as any).bloques[x].turnos[index].paciente.id = idPacienteMPI;
                                 }
-                            });
+                            }
                             if (index > -1) {
-                                dbg('agenda modificada---> ', (agenda as any)._id);
-                                (agenda as any).bloques[x].turnos[index].paciente.id = idPacienteMPI;
                                 Auth.audit(agenda, (userScheduler as any));
-
                                 await agenda.save();
                             }
                         }
-                    });
+                    }
                     await log.log(userScheduler, logKeys.elasticFix2.key, hit, logKeys.elasticFix2.operacion, hit._id, idPacienteMPI);
                 } catch (error) {
                     dbg('ERROR -------------------->', error);
