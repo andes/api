@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
 
-export let schema = new mongoose.Schema({
+export let FacturaSchema = new mongoose.Schema({
     turno: {
         _id: String,
     },
