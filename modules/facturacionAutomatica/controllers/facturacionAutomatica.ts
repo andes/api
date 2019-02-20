@@ -111,12 +111,14 @@ async function getDatosReportables(prestacion: any) {
                     } else {
                         resolve();
                     }
+                    resolve();
                 });
             });
 
             return await Promise.all(promises);
         }
     }
+    return;
 }
 
 function buscarEnHudsFacturacion(prestacion, conceptos) {
