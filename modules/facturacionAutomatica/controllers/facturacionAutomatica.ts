@@ -15,7 +15,7 @@ export async function facturacionAutomatica(prestacion: any) {
     let datosOrganizacion: any = await getDatosOrganizacion(idOrganizacion);
     let obraSocialPaciente = await getObraSocial(prestacion.paciente.documento);
     /* Pasar un solo parámetro prestaciones */
-    let datosReportables = await getDatosReportables(prestacion);
+    let getDR = await getDatosReportables(prestacion);
 
     const factura = {
         turno: {
@@ -32,7 +32,7 @@ export async function facturacionAutomatica(prestacion: any) {
             conceptId: (prestacion.solicitud) ? prestacion.solicitud.tipoPrestacion.conceptId : prestacion.tipoPrestacion.conceptId,
             term: (prestacion.solicitud) ? prestacion.solicitud.tipoPrestacion.term : prestacion.tipoPrestacion.term,
             fsn: (prestacion.solicitud) ? prestacion.solicitud.tipoPrestacion.fsn : prestacion.tipoPrestacion.fsn,
-            datosReportables: datosReportables,
+            datosReportables: getDR,
         },
         organizacion: {
             nombre: (prestacion.ejecucion) ? prestacion.ejecucion.organizacion.nombre : prestacion.organizacion.nombre,
@@ -46,9 +46,9 @@ export async function facturacionAutomatica(prestacion: any) {
         profesional: {
             nombre: (prestacion.solicitud) ? prestacion.solicitud.profesional.nombre : prestacion.profesionales[0].nombre,
             apellido: (prestacion.solicitud) ? prestacion.solicitud.profesional.apellido : prestacion.profesionales[0].apellido,
-            dni: (prestacion.solicitud) ? prestacion.solicitud.profesional.documento : await getProfesional(prestacion.profesionales[0]._id) //prestacion.profesionales[0].documento,
+            dni: (prestacion.solicitud) ? prestacion.solicitud.profesional.documento : await getProfesional(prestacion.profesionales[0]._id) // prestacion.profesionales[0].documento,
         }
-    }
+    };
 
     return factura;
 
@@ -84,10 +84,10 @@ async function getDatosReportables(prestacion: any) {
                     let docs = await snomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 });
 
                     conceptos = docs.map((item: any) => {
-                        let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
+                        let termSnomed = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
                         return {
                             fsn: item.fullySpecifiedName,
-                            term: term,
+                            term: termSnomed,
                             conceptId: item.conceptId,
                             semanticTag: item.semtag
                         };
