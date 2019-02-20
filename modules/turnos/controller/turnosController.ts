@@ -146,6 +146,17 @@ export async function getHistorialPaciente(req) {
             let pipelineTurno = [];
             const turnos = [];
             let turno;
+
+
+            let match = req.query.tipoPrestacion ? {
+                $and: [
+                    { 'bloques.turnos.paciente.id': { $in: paciente.vinculos } },
+                    { 'bloques.turnos.tipoPrestacion.conceptId' : req.query.tipoPrestacion }
+                ]
+            } : {
+                'bloques.turnos.paciente.id': { $in: paciente.vinculos }
+            };
+
             pipelineTurno = [
 
                 {
@@ -174,9 +185,7 @@ export async function getHistorialPaciente(req) {
                     }
                 },
                 {
-                    $match: {
-                        'bloques.turnos.paciente.id': { $in: paciente.vinculos }
-                    }
+                    $match: match
                 },
                 {
                     $group: {
