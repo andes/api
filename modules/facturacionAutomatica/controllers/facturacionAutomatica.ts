@@ -12,7 +12,7 @@ import * as configAutomatica from './../schemas/configFacturacionAutomatica';
 export async function facturacionAutomatica(prestacion: any) {
     let idOrganizacion = (prestacion.ejecucion) ? prestacion.ejecucion.organizacion.id : prestacion.organizacion._id;
 
-    let datosOrganizacion: any = await getDatosOrganizacion(idOrganizacion);
+    let datosOrganizacion: any = await organizacion.findById(idOrganizacion)
     let obraSocialPaciente = await getObraSocial(prestacion.paciente.documento);
     /* Pasar un solo parámetro prestaciones */
     let getDR = await getDatosReportables(prestacion);
