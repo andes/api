@@ -25,6 +25,9 @@ export async function elasticFix(done) {
           6-  delete index en elastic (hit._id)
           */
         let logs = await log.query('elastic:notFound:mpi', null);
+        if (logs && logs.length) {
+            dbg('Corrigiendo pacientes en mpi no existentes en elastic, cantidad:', logs.length);
+        }
         for (let logData of logs) {
 
             let idPacienteMPI = new mongoose.Types.ObjectId((logData as any).paciente);
@@ -36,61 +39,32 @@ export async function elasticFix(done) {
                     term: { documento: pacMpi.documento }
                 }
             };
-            connElastic.sync(pacMpi);
             let response = await connElastic.search(query);
             if (!response || !response.hits || !response.hits.hits) { return; }
             for (let hit of response.hits.hits) {
                 let idElastic = new mongoose.Types.ObjectId(hit._id);
+                await fixAgendasPrestaciones(idElastic, idPacienteMPI, hit);
+            }
+            connElastic.sync(pacMpi);
+        }
 
-                let prestacionesPacienteElastic = await prestacionModel.find({ 'paciente.id': idElastic });
-                let agendasPacienteElastic = await agendaModel.find({ 'bloques.turnos.paciente.id': idElastic });
-
-
-                if (prestacionesPacienteElastic && prestacionesPacienteElastic.length > 0) {
-                    for (let prestacion of prestacionesPacienteElastic) {
-                        dbg('Prestacion modificada---> ', (prestacion as any)._id);
-                        (prestacion as any).paciente.id = idPacienteMPI;
-                        try {
-                            Auth.audit(prestacion, (userScheduler as any));
-                            await prestacion.save();
-                        } catch (err) {
-                            dbg('ERROR -------------------->', err);
-                            await log.log(userScheduler, logKeys.elasticFix.key, hit, logKeys.elasticFix.operacion, err);
-                        }
-                    }
-                }
-
-                if (agendasPacienteElastic && agendasPacienteElastic.length > 0) {
-                    for (let agenda of agendasPacienteElastic) {
-                        let turnos;
-                        let index = -1;
-                        for (let x = 0; x < (agenda as any).bloques.length; x++) {
-                            // Si existe este bloque...
-                            turnos = (agenda as any).bloques[x].turnos;
-                            index = turnos.findIndex((t) => {
-                                if (t.paciente && t.paciente.id) {
-                                    return t.paciente.id.toString() === idPacienteMPI.toString();
-                                } else {
-                                    return false;
-                                }
-                            });
-                            if (index > -1) {
-                                dbg('agenda modificada---> ', (agenda as any)._id);
-                                (agenda as any).bloques[x].turnos[index].paciente.id = idPacienteMPI;
-                            }
-                        }
-                        if (index > -1) {
-                            try {
-                                Auth.audit(agenda, (userScheduler as any));
-                                await agenda.save();
-                            } catch (error) {
-                                dbg('ERROR -------------------->', error);
-                                await log.log(userScheduler, logKeys.elasticFix.key, hit, logKeys.elasticFix.operacion, error);
-                            }
-                        }
-                    }
-                }
-                await log.log(userScheduler, logKeys.elasticFix2.key, hit, logKeys.elasticFix2.operacion, hit._id, idPacienteMPI);
+        /*
+        1-Buscamos los logs de los pacientes de elastic que no estan en las bd
+        2- buscamos por dni en las bds
+        3- buscamos prestaciones y agendas con el id de elastic
+        4- reemplazamos el id del paciente de elastic (que no existe) en prestaciones y agendas por el id del paciente en mongo
+        */
+        let logsElastic = await log.query('andes:notFound', null);
+        if (logsElastic && logsElastic.length) {
+            dbg('Corrigiendo pacientes elastic no existentes en MPI ni ANDES, cantidad:', logsElastic.length);
+        }
+        for (let logElasticData of logsElastic) {
+            let pacMpi: any = await pacienteMpi.findOne({ _id: (logElasticData as any).paciente });
+            let pac = await paciente.findOne({ _id: (logElasticData as any).paciente });
+            if (pacMpi) {
+                await fixAgendasPrestaciones((logElasticData as any).paciente, pacMpi._id, pacMpi);
+            } else if (pac) {
+                await fixAgendasPrestaciones((logElasticData as any).paciente, pac._id, pac);
             }
         }
         done();
@@ -99,3 +73,53 @@ export async function elasticFix(done) {
         await log.log(userScheduler, logKeys.elasticFix.key, {}, logKeys.elasticFix.operacion, err);
     }
 }
+
+async function fixAgendasPrestaciones(idOriginal: any, idNuevo, paciente: any) {
+    let prestacionesPacienteElastic = await prestacionModel.find({ 'paciente.id': idOriginal });
+    let agendasPacienteElastic = await agendaModel.find({ 'bloques.turnos.paciente.id': idOriginal });
+    if (prestacionesPacienteElastic && prestacionesPacienteElastic.length > 0) {
+        for (let prestacion of prestacionesPacienteElastic) {
+            dbg('Prestacion modificada---> ', (prestacion as any)._id);
+            (prestacion as any).paciente.id = idNuevo;
+            try {
+                Auth.audit(prestacion, (userScheduler as any));
+                await prestacion.save();
+            } catch (err) {
+                dbg('ERROR -------------------->', err);
+                await log.log(userScheduler, logKeys.elasticFix.key, paciente, logKeys.elasticFix.operacion, err);
+            }
+        }
+    }
+    if (agendasPacienteElastic && agendasPacienteElastic.length > 0) {
+        for (let agenda of agendasPacienteElastic) {
+            let turnos;
+            let index = -1;
+            for (let x = 0; x < (agenda as any).bloques.length; x++) {
+                // Si existe este bloque...
+                turnos = (agenda as any).bloques[x].turnos;
+                index = turnos.findIndex((t) => {
+                    if (t.paciente && t.paciente.id) {
+                        return t.paciente.id.toString() === idNuevo.toString();
+                    } else {
+                        return false;
+                    }
+                });
+                if (index > -1) {
+                    dbg('agenda modificada---> ', (agenda as any)._id);
+                    (agenda as any).bloques[x].turnos[index].paciente.id = idNuevo;
+                }
+            }
+            if (index > -1) {
+                try {
+                    Auth.audit(agenda, (userScheduler as any));
+                    await agenda.save();
+                } catch (error) {
+                    dbg('ERROR -------------------->', error);
+                    await log.log(userScheduler, logKeys.elasticFix.key, paciente, logKeys.elasticFix.operacion, error);
+                }
+            }
+        }
+    }
+    await log.log(userScheduler, logKeys.elasticFix2.key, paciente, logKeys.elasticFix2.operacion, paciente._id, idNuevo);
+}
+
