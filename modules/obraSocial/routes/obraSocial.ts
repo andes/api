@@ -2,6 +2,9 @@ import * as express from 'express';
 import { Puco } from '../schemas/puco';
 import { ObraSocial } from '../schemas/obraSocial';
 import * as utils from '../../../utils/utils';
+import * as pucoController from '../controller/puco';
+import * as sumarController from '../controller/sumar';
+
 
 const router = express.Router();
 
@@ -43,7 +46,7 @@ router.get('/puco', async (req, res, next) => {
         if (req.query.periodo) {
             padron = req.query.periodo;
         } else {
-            padron = await obtenerVersiones();   // trae las distintas versiones de los padrones
+            padron = await pucoController.obtenerVersiones();   // trae las distintas versiones de los padrones
             padron = padron[0].version; // asigna el ultimo padron actualizado
         }
         // realiza la busqueda por dni y el padron seteado anteriormente
@@ -66,35 +69,40 @@ router.get('/puco', async (req, res, next) => {
     }
 });
 
+/**
+ * Obtiene los datos de las obras sociales asociada a un paciente
+ * verifica en PUCO y en la coleccion sumar (pacientes afiliados a SUMAR)
+ * @param {any} dni
+ * @returns array de datos obra sociales
+ */
+
+router.get('/paciente', async (req, res, next) => {
+
+    if (req.query.dni) {
+        let arrayOSPuco: any = await pucoController.pacientePuco(req.query.dni);
+        if (arrayOSPuco.length > 0) {
+            res.json(arrayOSPuco);
+        } else {
+            let arrayOSSumar = await sumarController.pacienteSumar(req.query.dni);
+            if (arrayOSSumar.length > 0) {
+                res.json(arrayOSSumar);
+            } else {
+                res.json([]);
+            }
+        }
+    } else {
+        res.json({ msg: 'Parámetros incorrectos' });
+    }
+});
+
 router.get('/puco/padrones', async (req, res, next) => {
     try {
-        let resp = await obtenerVersiones();
+        let resp = await pucoController.obtenerVersiones();
         res.json(resp);
     } catch (error) {
         return next(error);
     }
 });
 
-
-// obtiene las versiones de todos los padrones cargados
-async function obtenerVersiones() {
-    let versiones = await Puco.distinct('version').exec();  // esta consulta obtiene un arreglo de strings
-    for (let i = 0; i < versiones.length; i++) {
-        versiones[i] = { version: versiones[i] };
-    }
-    versiones.sort((a, b) => compare(a.version, b.version));
-    return versiones;
-}
-
-// Compara fechas. Junto con el sort ordena los elementos de mayor a menor.
-function compare(a, b) {
-    if (new Date(a) > new Date(b)) {
-        return -1;
-    }
-    if (new Date(a) < new Date(b)) {
-        return 1;
-    }
-    return 0;
-}
 
 module.exports = router;
