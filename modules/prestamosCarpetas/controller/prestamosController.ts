@@ -80,6 +80,7 @@ async function findCarpetasPrestamo(organizacionId: string, horaInicio: string, 
 
     sort['createdAt'] = -1;
     group['_id'] = '$numero';
+    group['numero'] = { $first: '$numero' };
     group['estado'] = { $first: '$estado' };
     group['fecha'] = { $first: '$createdAt' };
     group['paciente'] = { $first: '$paciente' };
@@ -137,12 +138,9 @@ async function getSolicitudesManuales(filtros) {
             $lookup: {
                 // Se busca el último prestamo para verificar el estado de la huds
                 from: 'prestamos',
-                let: {
-                    nroCarpeta: '$paciente.carpetaEfectores.nroCarpeta',
-                    pacienteId: '$paciente._id'
-                },
+                let: {nroCarpeta: '$paciente.carpetaEfectores.nroCarpeta'},
                 pipeline: [
-                    {$match: { numero: {$eq: '$$nroCarpeta'} }},
+                    {$match: {$expr: { $eq: ['$numero', '$$nroCarpeta']}}},
                     {$sort: { createdAt: -1}},
                     {$limit: 1}
                 ],
@@ -212,20 +210,20 @@ async function getSolicitudesAutomaticas(organizacionId: string, tipoPrestacion:
         { $match: {'turno.estado': { $eq: 'asignado' }}},
         { $unwind: '$turno.paciente.carpetaEfectores' },
         { $match: {'turno.paciente.carpetaEfectores.organizacion._id': {$eq: new ObjectId(organizacionId)}}},
+        {$addFields: {nro: '$turno.paciente.carpetaEfectores.nroCarpeta'}},
         {
             $lookup: {
                 // Se busca el último prestamo para verificar el estado de la huds
                 from: 'prestamos',
                 let: { nroCarpeta: '$turno.paciente.carpetaEfectores.nroCarpeta' },
                 pipeline: [
-                    {$match: { numero: {$eq: '$$nroCarpeta'} }},
+                    {$match: {$expr: { $eq: ['$numero', '$$nroCarpeta']}}},
                     {$sort: { createdAt: -1}},
                     {$limit: 1}
                 ],
                 as: 'prestamoCarpeta'
             }
         },
-        {$addFields: {nro: '$turno.paciente.carpetaEfectores.nroCarpeta'}},
         {
             $project: {
                 _id: '$turno.paciente._id',
@@ -336,7 +334,7 @@ async function createCarpeta(datosCarpeta, estadoPrestamoCarpeta): Promise<IPres
     return new Prestamo({
         paciente: (datosCarpeta.paciente ? datosCarpeta.paciente : pacienteSeleccionado),
         organizacion: datosCarpeta.organizacion,
-        numero: (datosCarpeta._id ? datosCarpeta._id : datosCarpeta.numero),
+        numero: datosCarpeta.numero,
         estado: estadoPrestamoCarpeta,
         datosPrestamo: datosCarpeta.datosPrestamo,
         datosDevolucion: (datosCarpeta.datosDevolucion ?
