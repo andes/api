@@ -45,6 +45,13 @@ export const modules = {
         route: '/core/log',
         middleware: appMiddleware
     },
+    logV2: {
+        active: true,
+        path: './core/log.v2/routes',
+        route: '/core/log.v2',
+        // Disable Auth for tests
+        middleware: null // appMiddleware
+    },
     status: {
         active: true,
         path: './core/status/routes',
