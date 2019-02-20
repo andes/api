@@ -43,19 +43,25 @@ export async function elasticFix(done) {
                 let idElastic = new mongoose.Types.ObjectId(hit._id);
 
                 let prestacionesPacienteElastic = await prestacionModel.find({ 'paciente.id': idElastic });
-                let agendasPacienteElastic = await agendaModel.find({ 'bloques.turnos.paciente.id': idElastic }).cursor();
-                try {
+                let agendasPacienteElastic = await agendaModel.find({ 'bloques.turnos.paciente.id': idElastic });
 
-                    if (prestacionesPacienteElastic && prestacionesPacienteElastic.length > 0) {
-                        for (let prestacion of prestacionesPacienteElastic) {
-                            dbg('Prestacion modificada---> ', (prestacion as any)._id);
-                            (prestacion as any).paciente.id = idPacienteMPI;
+
+                if (prestacionesPacienteElastic && prestacionesPacienteElastic.length > 0) {
+                    for (let prestacion of prestacionesPacienteElastic) {
+                        dbg('Prestacion modificada---> ', (prestacion as any)._id);
+                        (prestacion as any).paciente.id = idPacienteMPI;
+                        try {
                             Auth.audit(prestacion, (userScheduler as any));
                             await prestacion.save();
+                        } catch (err) {
+                            dbg('ERROR -------------------->', err);
+                            await log.log(userScheduler, logKeys.elasticFix.key, hit, logKeys.elasticFix.operacion, err);
                         }
                     }
+                }
 
-                    await agendasPacienteElastic.eachAsync(async agenda => {
+                if (agendasPacienteElastic && agendasPacienteElastic.length > 0) {
+                    for (let agenda of agendasPacienteElastic) {
                         let turnos;
                         let index = -1;
                         for (let x = 0; x < (agenda as any).bloques.length; x++) {
@@ -71,17 +77,20 @@ export async function elasticFix(done) {
                             if (index > -1) {
                                 dbg('agenda modificada---> ', (agenda as any)._id);
                                 (agenda as any).bloques[x].turnos[index].paciente.id = idPacienteMPI;
-                                Auth.audit(agenda, (userScheduler as any));
-
-                                await agenda.save();
                             }
                         }
-                    });
-                    await log.log(userScheduler, logKeys.elasticFix2.key, hit, logKeys.elasticFix2.operacion, hit._id, idPacienteMPI);
-                } catch (error) {
-                    dbg('ERROR -------------------->', error);
-                    await log.log(userScheduler, logKeys.elasticFix.key, hit, logKeys.elasticFix.operacion, error);
+                        if (index > -1) {
+                            try {
+                                Auth.audit(agenda, (userScheduler as any));
+                                await agenda.save();
+                            } catch (error) {
+                                dbg('ERROR -------------------->', error);
+                                await log.log(userScheduler, logKeys.elasticFix.key, hit, logKeys.elasticFix.operacion, error);
+                            }
+                        }
+                    }
                 }
+                await log.log(userScheduler, logKeys.elasticFix2.key, hit, logKeys.elasticFix2.operacion, hit._id, idPacienteMPI);
             }
         }
         done();
