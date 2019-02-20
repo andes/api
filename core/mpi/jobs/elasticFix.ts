@@ -59,12 +59,25 @@ export async function elasticFix(done) {
             dbg('Corrigiendo pacientes elastic no existentes en MPI ni ANDES, cantidad:', logsElastic.length);
         }
         for (let logElasticData of logsElastic) {
-            let pacMpi: any = await pacienteMpi.findOne({ _id: (logElasticData as any).paciente });
-            let pac = await paciente.findOne({ _id: (logElasticData as any).paciente });
-            if (pacMpi) {
-                await fixAgendasPrestaciones((logElasticData as any).paciente, pacMpi._id, pacMpi);
-            } else if (pac) {
-                await fixAgendasPrestaciones((logElasticData as any).paciente, pac._id, pac);
+            const query = {
+                query: {
+                    term: { id: (logElasticData as any).paciente.toString() }
+                }
+            };
+            let response = await connElastic.search(query);
+            if (!response || !response.hits || !response.hits.hits) { return; }
+            if (response.hits.hits.length && response.hits.hits.length > 0) {
+                let hit = response.hits.hits[0];
+                let pacMpi: any = await pacienteMpi.findOne({ _id: hit.documento });
+
+                if (pacMpi) {
+                    await fixAgendasPrestaciones((logElasticData as any).paciente, pacMpi._id, hit);
+                } else {
+                    let pac = await paciente.findOne({ _id: hit.documento });
+                    if (pac) {
+                        await fixAgendasPrestaciones((logElasticData as any).paciente, pac._id, hit);
+                    }
+                }
             }
         }
         done();
@@ -74,7 +87,7 @@ export async function elasticFix(done) {
     }
 }
 
-async function fixAgendasPrestaciones(idOriginal: any, idNuevo, paciente: any) {
+async function fixAgendasPrestaciones(idOriginal: any, idNuevo, hit: any) {
     let prestacionesPacienteElastic = await prestacionModel.find({ 'paciente.id': idOriginal });
     let agendasPacienteElastic = await agendaModel.find({ 'bloques.turnos.paciente.id': idOriginal });
     if (prestacionesPacienteElastic && prestacionesPacienteElastic.length > 0) {
@@ -86,7 +99,7 @@ async function fixAgendasPrestaciones(idOriginal: any, idNuevo, paciente: any) {
                 await prestacion.save();
             } catch (err) {
                 dbg('ERROR -------------------->', err);
-                await log.log(userScheduler, logKeys.elasticFix.key, paciente, logKeys.elasticFix.operacion, err);
+                await log.log(userScheduler, logKeys.elasticFix.key, hit, logKeys.elasticFix.operacion, err);
             }
         }
     }
@@ -115,11 +128,11 @@ async function fixAgendasPrestaciones(idOriginal: any, idNuevo, paciente: any) {
                     await agenda.save();
                 } catch (error) {
                     dbg('ERROR -------------------->', error);
-                    await log.log(userScheduler, logKeys.elasticFix.key, paciente, logKeys.elasticFix.operacion, error);
+                    await log.log(userScheduler, logKeys.elasticFix.key, hit, logKeys.elasticFix.operacion, error);
                 }
             }
         }
     }
-    await log.log(userScheduler, logKeys.elasticFix2.key, paciente, logKeys.elasticFix2.operacion, paciente._id, idNuevo);
+    await log.log(userScheduler, logKeys.elasticFix2.key, hit, logKeys.elasticFix2.operacion, hit._id, idNuevo);
 }
 
