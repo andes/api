@@ -8,9 +8,6 @@ import { profesional } from './../../../core/tm/schemas/profesional';
 import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
 import { snomedModel } from '../../../core/term/schemas/snomed';
 import * as configAutomatica from './../schemas/configFacturacionAutomatica';
-import { json } from 'body-parser';
-import { stringify } from 'querystring';
-import { resolve } from 'path';
 
 export async function facturacionAutomatica(prestacion: any) {
     let idOrganizacion = (prestacion.ejecucion) ? prestacion.ejecucion.organizacion.id : prestacion.organizacion._id;
