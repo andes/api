@@ -192,12 +192,25 @@ export function completarUnCenso(censo, indice, fecha, idUnidadOrganizativa, Cam
 }
 
 function esIngreso(pases, movimientoActual, fecha, idUnidadOrganizativa) {
+    let ultimoIndice = -1;
+    let bandera = true;
     if (pases && pases.length >= 1) {
         let fechaInicio = moment(fecha).startOf('day').toDate();
         let fechaFin = moment(fecha).endOf('day').toDate();
-        if (pases[0].estados._id.toString() === movimientoActual._id.toString() && pases[0].estados.fecha >= fechaInicio && pases[0].estados.fecha <= fechaFin) {
+        for (const p of pases) {
+            if (bandera && p.estados.unidadOrganizativa.conceptId === movimientoActual.unidadOrganizativa.conceptId) {
+                ultimoIndice = ultimoIndice + 1;
+            } else {
+                bandera = false;
+            }
+        }
+        if (pases[0].estados.fecha >= fechaInicio && pases[0].estados.fecha <= fechaFin) {
             if (pases[0].estados.unidadOrganizativa.conceptId === idUnidadOrganizativa) {
-                return true;
+                if (pases[ultimoIndice].estados._id.toString() === movimientoActual._id.toString()) {
+                    return true;
+                } else {
+                    return false;
+                }
             } else { return false; }
         } else { return false; }
     } else { return false; }
