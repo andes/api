@@ -1,5 +1,7 @@
 import * as mongoose from 'mongoose';
-const _financiadorSchema = new mongoose.Schema({
+export let financiadorSchema = new mongoose.Schema();
+
+financiadorSchema.add({
     codigoPuco: Number,
     nombre: String,
     financiador: String,
