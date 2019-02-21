@@ -1,12 +1,12 @@
 import * as express from 'express';
-import { getGeoreferencia, autocompletar } from '../../../utils/serviciosGoogle';
+import { getGeoreferencia, autocompletar } from '../../../utils/serviciosGeoreferencia';
 
 const router = express.Router();
 
-router.post('/getGooglePoint', async (req, res, next) => {
-    if (req.body.direccion) {
+router.get('/georeferenciar', async (req, res, next) => {
+    if (req.query.direccion) {
         try {
-            const resultado: any = await getGeoreferencia(req.body.direccion);
+            const resultado: any = await getGeoreferencia(req.query.direccion);
             res.json(resultado);
         } catch (err) {
             return next(err);
@@ -16,10 +16,10 @@ router.post('/getGooglePoint', async (req, res, next) => {
     }
 });
 
-router.get('/getGoogleAutocomplete/:texto', async (req, res, next) => {
-    if (req.params.texto) {
+router.get('/autocompletar/', async (req, res, next) => {
+    if (req.query.texto) {
         try {
-            const resultado: any = await autocompletar(req.params.texto);
+            const resultado: any = await autocompletar(req.query.texto);
             res.json(resultado);
         } catch (err) {
             return next(err);
