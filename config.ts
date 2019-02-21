@@ -311,6 +311,6 @@ export const logKeys = {
     },
     elasticFix2: {
         key: 'elasticFix:update',
-        operacion: 'paciente de elastic procesado'
+        operacion: 'Documentos referidos al paciente modificados'
     }
 };

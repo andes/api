@@ -42,7 +42,10 @@ export async function elasticFix(done) {
             let response = await connElastic.search(query);
             if (!response || !response.hits || !response.hits.hits) { return; }
             for (let hit of response.hits.hits) {
+                dbg('procesando1 paciente', hit);
+
                 let idElastic = new mongoose.Types.ObjectId(hit._id);
+                await log.log(userScheduler, logKeys.elasticFix2.key, hit, logKeys.elasticFix2.operacion, hit._id, pacMpi._id);
                 await fixAgendasPrestaciones(idElastic, idPacienteMPI, hit);
             }
             connElastic.sync(pacMpi);
@@ -55,9 +58,6 @@ export async function elasticFix(done) {
         4- reemplazamos el id del paciente de elastic (que no existe) en prestaciones y agendas por el id del paciente en mongo
         */
         let logsElastic = await log.query('andes:notFound', null);
-        if (logsElastic && logsElastic.length) {
-            dbg('Corrigiendo pacientes elastic no existentes en MPI ni ANDES, cantidad:', logsElastic.length);
-        }
         for (let logElasticData of logsElastic) {
             const query = {
                 query: {
@@ -68,13 +68,17 @@ export async function elasticFix(done) {
             if (!response || !response.hits || !response.hits.hits) { return; }
             if (response.hits.hits.length && response.hits.hits.length > 0) {
                 let hit = response.hits.hits[0];
-                let pacMpi: any = await pacienteMpi.findOne({ _id: hit.documento });
+                let pacMpi: any = await pacienteMpi.findOne({ documento: hit._source.documento });
 
                 if (pacMpi) {
+                    dbg('procesando2 paciente', pacMpi._id);
+                    await log.log(userScheduler, logKeys.elasticFix2.key, hit, logKeys.elasticFix2.operacion, hit._id, pacMpi._id);
                     await fixAgendasPrestaciones((logElasticData as any).paciente, pacMpi._id, hit);
                 } else {
-                    let pac = await paciente.findOne({ _id: hit.documento });
+                    let pac = await paciente.findOne({ documento: hit._source.documento });
                     if (pac) {
+                        dbg('procesando2 paciente', pac._id);
+                        await log.log(userScheduler, logKeys.elasticFix2.key, hit, logKeys.elasticFix2.operacion, hit._id, pac._id);
                         await fixAgendasPrestaciones((logElasticData as any).paciente, pac._id, hit);
                     }
                 }
@@ -112,27 +116,25 @@ async function fixAgendasPrestaciones(idOriginal: any, idNuevo, hit: any) {
                 turnos = (agenda as any).bloques[x].turnos;
                 index = turnos.findIndex((t) => {
                     if (t.paciente && t.paciente.id) {
-                        return t.paciente.id.toString() === idNuevo.toString();
+                        return t.paciente.id.toString() === idOriginal.toString();
                     } else {
                         return false;
                     }
                 });
                 if (index > -1) {
-                    dbg('agenda modificada---> ', (agenda as any)._id);
+                    dbg('agenda modificada---> ', (agenda as any)._id, 'indexTurno:', index, 'ID ORIGINAL:', idOriginal, 'ID NUEVO: ', idNuevo);
                     (agenda as any).bloques[x].turnos[index].paciente.id = idNuevo;
+                    try {
+                        Auth.audit(agenda, (userScheduler as any));
+                        await agenda.save();
+                    } catch (error) {
+                        dbg('ERROR -------------------->', error);
+                        await log.log(userScheduler, logKeys.elasticFix.key, hit, logKeys.elasticFix.operacion, error);
+                    }
                 }
             }
-            if (index > -1) {
-                try {
-                    Auth.audit(agenda, (userScheduler as any));
-                    await agenda.save();
-                } catch (error) {
-                    dbg('ERROR -------------------->', error);
-                    await log.log(userScheduler, logKeys.elasticFix.key, hit, logKeys.elasticFix.operacion, error);
-                }
-            }
+
         }
     }
-    await log.log(userScheduler, logKeys.elasticFix2.key, hit, logKeys.elasticFix2.operacion, hit._id, idNuevo);
 }
 
