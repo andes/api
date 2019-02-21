@@ -75,6 +75,8 @@ export function listadoInternacion(filtros, organizacion) {
         opciones['$where'] = 'this.estados[this.estados.length - 1].tipo ==  \"' + filtros.estadoString + '\"';
 
     }
+    opciones['$where'] = 'this.estados[this.estados.length - 1].tipo !=  \"modificada\"';
+
     opciones['solicitud.ambitoOrigen'] = 'internacion';
     opciones['solicitud.tipoPrestacion.conceptId'] = '32485007';
     return Prestacion.find(opciones).sort({ 'paciente.apellido': 1, 'ejecucion.registros.valor.informeIngreso.fechaIngreso': -1 });
