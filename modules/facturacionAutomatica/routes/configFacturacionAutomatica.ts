@@ -15,7 +15,7 @@ router.get('/configFacturacionAutomatica/', (req, res, next) => {
     if (req.query.conceptId) {
         let query;
         query = facturacionAutomaticaModel.find({});
-        query.where('snomed.conceptId').equals(req.query.conceptId);
+        query.where('prestacionSnomed.conceptId').equals(req.query.conceptId);
         query.exec((err, data) => {
             if (err) {
                 return next(err);
