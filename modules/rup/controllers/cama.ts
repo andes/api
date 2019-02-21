@@ -65,6 +65,7 @@ export function camaOcupadasxUO(unidadOrganizativa, fecha, idOrganizacion) {
                 nombre: '$nombre',
                 organizacion: '$organizacion',
                 tipoCama: '$tipoCama',
+                sectores: '$sectores',
                 idInternacion: '$estados.idInternacion',
                 fechaMovimiento: '$estados.fecha'
             },

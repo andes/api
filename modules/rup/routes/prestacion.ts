@@ -521,10 +521,12 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 if (data.estados[data.estados.length - 1].tipo !== 'validada') {
                     return next('Para poder romper la validación, primero debe validar la prestación.');
                 }
-
-                if ((req as any).user.usuario.username !== data.estados[data.estados.length - 1].createdBy.documento) {
-                    return next('Solo puede romper la validación el usuario que haya creado.');
+                if (!req.body.desdeInternacion) {
+                    if ((req as any).user.usuario.username !== data.estados[data.estados.length - 1].createdBy.documento) {
+                        return next('Solo puede romper la validación el usuario que haya creado.');
+                    }
                 }
+
 
                 data.estados.push(req.body.estado);
                 break;
