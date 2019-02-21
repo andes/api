@@ -45,7 +45,7 @@ export async function elasticFix(done) {
                 dbg('procesando1 paciente', hit);
 
                 let idElastic = new mongoose.Types.ObjectId(hit._id);
-                await log.log(userScheduler, logKeys.elasticFix2.key, hit, logKeys.elasticFix2.operacion, hit._id, pacMpi._id);
+                await log.log(userScheduler, logKeys.elasticFix2.key, hit, logKeys.elasticFix2.operacion, pacMpi._id);
                 await fixAgendasPrestaciones(idElastic, idPacienteMPI, hit);
             }
             connElastic.sync(pacMpi);
@@ -78,7 +78,7 @@ export async function elasticFix(done) {
                     let pac = await paciente.findOne({ documento: hit._source.documento });
                     if (pac) {
                         dbg('procesando2 paciente', pac._id);
-                        await log.log(userScheduler, logKeys.elasticFix2.key, hit, logKeys.elasticFix2.operacion, hit._id, pac._id);
+                        await log.log(userScheduler, logKeys.elasticFix2.key, hit, logKeys.elasticFix2.operacion, pac._id);
                         await fixAgendasPrestaciones((logElasticData as any).paciente, pac._id, hit);
                     }
                 }
