@@ -1,5 +1,6 @@
 import { model as Prestacion } from '../schemas/prestacion';
 import * as camasController from './../controllers/cama';
+import * as utils from '../../../utils/utils';
 
 
 export function buscarUltimaInternacion(idPaciente, estado, organizacion) {
@@ -24,22 +25,58 @@ export function buscarUltimaInternacion(idPaciente, estado, organizacion) {
     return query.sort({ 'solicitud.fecha': -1 }).limit(1).exec();
 }
 
-export function PasesParaCenso(dtoCama) {
-    return new Promise((resolve, reject) => {
-        camasController.buscarPasesCamaXInternacion(dtoCama.ultimoEstado.idInternacion).then(pases => {
-            Prestacion.findById(dtoCama.ultimoEstado.idInternacion).then(internacion => {
-                let salida = {
-                    cama: dtoCama._id,
-                    ultimoEstado: dtoCama.ultimoEstado,
-                    pases,
-                    internacion
-                };
-                resolve(salida);
-            });
-        }).catch(error => {
-            reject(error);
-        });
+export async function PasesParaCenso(dtoCama) {
+    try {
+        let pases = await camasController.buscarPasesCamaXInternacion(dtoCama.ultimoEstado.idInternacion);
+        let internacion = await Prestacion.findById(dtoCama.ultimoEstado.idInternacion);
+        let salida = {
+            cama: dtoCama._id,
+            ultimoEstado: dtoCama.ultimoEstado,
+            pases,
+            internacion
+        };
+        return salida;
+    } catch (error) {
+        return error;
+    }
+}
 
-    });
+
+export function listadoInternacion(filtros, organizacion) {
+    let query;
+    let opciones = {};
+    if (organizacion) {
+        opciones['ejecucion.organizacion.id'] = organizacion;
+    }
+    if (filtros.apellido) {
+        opciones['paciente.apellido'] = {
+            $regex: utils.makePattern(filtros.apellido)
+        };
+    }
+    if (filtros.documento) {
+        opciones['paciente.documento'] = {
+            $regex: utils.makePattern(filtros.documento)
+        };
+    }
+    let fechas = {};
+    if (filtros.fechaIngresoDesde) {
+        fechas['$gte'] = new Date(filtros.fechaIngresoDesde);
+    }
+    if (filtros.fechaIngresoHasta) {
+        fechas['$lte'] = new Date(filtros.fechaIngresoHasta);
+
+    }
+    if (filtros.fechaIngresoHasta || filtros.fechaIngresoDesde) {
+        opciones['ejecucion.registros.valor.informeIngreso.fechaIngreso'] = fechas;
+
+    }
+
+    if (filtros.estadoString) {
+        opciones['$where'] = 'this.estados[this.estados.length - 1].tipo ==  \"' + filtros.estadoString + '\"';
+
+    }
+    opciones['solicitud.ambitoOrigen'] = 'internacion';
+    opciones['solicitud.tipoPrestacion.conceptId'] = '32485007';
+    return Prestacion.find(opciones).sort({ 'paciente.apellido': 1, 'ejecucion.registros.valor.informeIngreso.fechaIngreso': -1 });
 }
 
