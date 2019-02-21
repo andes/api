@@ -29,6 +29,7 @@ router.get('/configFacturacionAutomatica/', (req, res, next) => {
 
 router.post('/facturaArancelamiento/', async (req, res, next) => {
     let prestacion = req.body;
+    /* TODO: armar la factura en el microservicio */
     let factura = await facturacionAutomatica(prestacion);
 
     EventCore.emitAsync('facturacion:factura:create', factura);

@@ -547,9 +547,11 @@ router.patch('/prestaciones/:id', (req, res, next) => {
             }
 
             if (req.body.estado && req.body.estado.tipo === 'validada') {
-                let factura = await facturacionAutomatica(prestacion);
 
-                EventCore.emitAsync('facturacion:factura:create', factura);
+                /* Sacar esto y armar todo desde el microservicio pasando solo la prestación */ 
+                // let factura = await facturacionAutomatica(prestacion);
+
+                // EventCore.emitAsync('facturacion:factura:create', factura);
 
                 EventCore.emitAsync('rup:prestacion:validate', data);
             }

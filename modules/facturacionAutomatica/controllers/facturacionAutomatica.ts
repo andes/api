@@ -1,7 +1,4 @@
-import * as mongoose from 'mongoose';
-import { schema as Factura } from './../schemas/factura';
 import { model as organizacion } from './../../../core/tm/schemas/organizacion';
-import { paciente } from '../../../core/mpi/schemas/paciente';
 import { Puco } from './../../obraSocial/schemas/puco';
 import { ObraSocial } from './../../obraSocial/schemas/obraSocial';
 import { profesional } from './../../../core/tm/schemas/profesional';
@@ -11,10 +8,9 @@ import * as configAutomatica from './../schemas/configFacturacionAutomatica';
 
 export async function facturacionAutomatica(prestacion: any) {
     let idOrganizacion = (prestacion.ejecucion) ? prestacion.ejecucion.organizacion.id : prestacion.organizacion._id;
-
-    let datosOrganizacion: any = await getDatosOrganizacion(idOrganizacion);
+    let datosOrganizacion: any = await organizacion.findById(idOrganizacion);
     let obraSocialPaciente = await getObraSocial(prestacion.paciente.documento);
-    /* Pasar un solo parámetro prestaciones */
+
     let getDR = await getDatosReportables(prestacion);
 
     const factura = {
@@ -55,18 +51,7 @@ export async function facturacionAutomatica(prestacion: any) {
 }
 
 function getConfiguracionAutomatica(conceptId: any) {
-    return new Promise(async (resolve, reject) => {
-        let query;
-        query = configAutomatica.find({});
-        query.where('prestacionSnomed.conceptId').equals(conceptId);
-        query.exec((err, data) => {
-            if (err) {
-                reject(err);
-            }
-
-            resolve(data[0] ? data[0] : null);
-        });
-    });
+    return configAutomatica.find({}).where('prestacionSnomed.conceptId').equals(conceptId);
 }
 
 async function getDatosReportables(prestacion: any) {
@@ -79,41 +64,41 @@ async function getDatosReportables(prestacion: any) {
             const expresionesDR = configAuto.sumar.datosReportables.map((config: any) => config.valores);
 
             let promises = expresionesDR.map(async (exp, index) => {
-                return new Promise(async (resolve, reject) => {
-                    let querySnomed = makeMongoQuery(exp[0].expresion);
-                    let docs = await snomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 });
+                // return new Promise(async (resolve, reject) => {
+                let querySnomed = makeMongoQuery(exp[0].expresion);
+                let docs = await snomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 });
 
-                    conceptos = docs.map((item: any) => {
-                        let termSnomed = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
-                        return {
-                            fsn: item.fullySpecifiedName,
-                            term: termSnomed,
-                            conceptId: item.conceptId,
-                            semanticTag: item.semtag
-                        };
-                    });
-
-                    // ejecutamos busqueda recursiva
-                    let data: any = await buscarEnHudsFacturacion(prestacion, conceptos);
-
-                    if (data.length > 0) {
-                        let datoReportable = data;
-                        // let datoReportable = {
-                        //     conceptId: data[0].registro.concepto.conceptId,
-                        //     term: data[0].registro.concepto.term,
-                        //     valor: (data[0].registro.valor.concepto) ? {
-                        //         conceptId: (data[0].registro.valor.concepto) ? data[0].registro.valor.concepto.conceptId : data[0].registro.valor,
-                        //         nombre: (data[0].registro.valor.concepto) ? data[0].registro.valor.concepto.term : data[0].registro.concepto.term
-                        //     } : data[0].registro.valor
-                        // };
-
-                        resolve(datoReportable);
-                    } else {
-                        resolve();
-                    }
-
-                    resolve();
+                conceptos = docs.map((item: any) => {
+                    let termSnomed = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
+                    return {
+                        fsn: item.fullySpecifiedName,
+                        term: termSnomed,
+                        conceptId: item.conceptId,
+                        semanticTag: item.semtag
+                    };
                 });
+
+                // ejecutamos busqueda recursiva
+                let data: any = await buscarEnHudsFacturacion(prestacion, conceptos);
+
+                if (data.length > 0) {
+                    let datoReportable = data;
+                    // let datoReportable = {
+                    //     conceptId: data[0].registro.concepto.conceptId,
+                    //     term: data[0].registro.concepto.term,
+                    //     valor: (data[0].registro.valor.concepto) ? {
+                    //         conceptId: (data[0].registro.valor.concepto) ? data[0].registro.valor.concepto.conceptId : data[0].registro.valor,
+                    //         nombre: (data[0].registro.valor.concepto) ? data[0].registro.valor.concepto.term : data[0].registro.concepto.term
+                    //     } : data[0].registro.valor
+                    // };
+
+                    // resolve(datoReportable);
+                } else {
+                    // resolve();
+                }
+
+                // resolve();
+                // });
             });
 
             return await Promise.all(promises);
@@ -162,19 +147,6 @@ export function matchConceptsFacturacion(registro, conceptos) {
         });
     }
     return match;
-}
-
-
-function getDatosOrganizacion(idOrganizacion: any) {
-    return new Promise((resolve, reject) => {
-        organizacion.findById(idOrganizacion, (err, data) => {
-            if (err) {
-                reject(err);
-            }
-
-            resolve(data);
-        });
-    });
 }
 
 function getObraSocial(dni: any) {
