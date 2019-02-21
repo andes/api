@@ -25,6 +25,7 @@ export let schema = new mongoose.Schema({
     frecuentes: [{
         // tipo de prestacion desde la cual se solicita
         concepto: SnomedConcept,
+        esSolicitud: Boolean,
         frecuencia: Number
     }]
 });
