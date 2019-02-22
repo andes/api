@@ -1,4 +1,4 @@
-import { model as organizacion } from './../../../core/tm/schemas/organizacion';
+import { Organizacion } from './../../../core/tm/schemas/organizacion';
 import { Puco } from './../../obraSocial/schemas/puco';
 import { ObraSocial } from './../../obraSocial/schemas/obraSocial';
 import { profesional } from './../../../core/tm/schemas/profesional';
@@ -8,7 +8,7 @@ import * as configAutomatica from './../schemas/configFacturacionAutomatica';
 
 export async function facturacionAutomatica(prestacion: any) {
     let idOrganizacion = (prestacion.ejecucion) ? prestacion.ejecucion.organizacion.id : prestacion.organizacion._id;
-    let datosOrganizacion: any = await organizacion.findById(idOrganizacion);
+    let datosOrganizacion: any = await Organizacion.findById(idOrganizacion);
     let obraSocialPaciente = await getObraSocial(prestacion.paciente.documento);
 
     let getDR = await getDatosReportables(prestacion);
