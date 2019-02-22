@@ -1,6 +1,9 @@
 import { model as Prestacion } from '../schemas/prestacion';
 import { toArray } from '../../../utils/utils';
 import * as mongoose from 'mongoose';
+import moment = require('moment');
+
+const ObjectId = mongoose.Types.ObjectId;
 
 export async function dashboard(org, prestaciones, desde, hasta) {
     const pipeline = [
@@ -103,4 +106,29 @@ export async function dashboard(org, prestaciones, desde, hasta) {
     const aggr = Prestacion.aggregate(pipeline);
     const data = await toArray(aggr.cursor({}).exec());
     return data[0];
+}
+
+export async function dashboardSolicitudes(filtros) {
+    const matchSolicitudEntrada: any = {};
+    const matchSolicitudSalida: any = {};
+    // console.log('filtros -> ', filtros)
+    if (filtros.organizacion) {
+        // filtro todas las solicitudes de entrada
+        // las que se van a realizar en la organizacion donde estoy parado
+        matchSolicitudEntrada['solicitud.organizacion.id'] = new ObjectId(filtros.organizacion);
+    }
+
+    if (filtros.solicitudDesde && filtros.solicitudHasta) {
+        matchSolicitudEntrada['solicitud.fecha'] = {
+            $gte: moment(filtros.solicitudDesde).startOf('day').toDate(),
+            $lte: moment(filtros.solicitudHasta).endOf('day').toDate()
+        };
+    }
+
+    let pipeline = [
+        /* Filtros iniciales */
+        { $match: matchSolicitudEntrada },
+        { $sort: {'solicitud.fecha': 1}}
+    ];
+    return await toArray(Prestacion.aggregate(pipeline).cursor({ batchSize: 1000 }).exec());
 }

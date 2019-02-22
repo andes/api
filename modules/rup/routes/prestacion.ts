@@ -13,6 +13,7 @@ import * as camasController from './../controllers/cama';
 import { parseDate } from './../../../shared/parse';
 import { EventCore } from '@andes/event-bus';
 import { facturacionAutomatica } from './../../facturacionAutomatica/controllers/facturacionAutomatica';
+import { dashboardSolicitudes } from '../controllers/estadisticas';
 
 const router = express.Router();
 import async = require('async');
@@ -277,6 +278,11 @@ router.get('/prestaciones/resumenPaciente/:idPaciente', async (req, res, next) =
             return next(404);
         }
     });
+});
+
+router.post('/solicitudesDashboard', async (req, res, next) => {
+    const stats = await dashboardSolicitudes(req.body);
+    return res.json(stats);
 });
 
 router.get('/prestaciones/solicitudes', (req, res, next) => {
