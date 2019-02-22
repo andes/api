@@ -63,8 +63,12 @@ export let pacienteSchema: mongoose.Schema = new mongoose.Schema({
     foto: String,
     fotoMobile: String,
     nacionalidad: String,
-    tipoIdentificacion: String,
+    // ---------------------
+    // Campos asociados a pacientes extranjeros
+
+    tipoIdentificacion: constantes.IDENTIFICACION,  // pasaporte o documento extranjero
     numeroIdentificacion: String,
+    // --------------------
     relaciones: [{
         relacion: parentezcoSchema,
         referencia: {
@@ -206,4 +210,3 @@ pacienteSchema.plugin(AuditPlugin);
 
 export let paciente = mongoose.model('paciente', pacienteSchema, 'paciente');
 export let pacienteMpi = Connections.mpi.model('paciente', pacienteSchema, 'paciente');
-export let pacienteGeoPrueba = mongoose.model('pacienteGeoPrueba', pacienteSchema, 'pacienteGeoPrueba');
