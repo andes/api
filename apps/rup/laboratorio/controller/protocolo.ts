@@ -98,7 +98,7 @@ async function getProtocolo(params) {
             }
         });
         conditions.push({ $match: { practicasFiltradas: { $ne: [] } } }),
-        conditions.push({ $addFields: { 'ejecucion.registros.valor.practica': { $arrayElemAt: ['$practicasFiltradas', 0] } } });
+            conditions.push({ $addFields: { 'ejecucion.registros.valor.practica': { $arrayElemAt: ['$practicasFiltradas', 0] } } });
     } else {
         conditions.push({ $addFields: { 'ejecucion.registros.valor.practica': { $arrayElemAt: ['$practicas', 0] } } });
     }
@@ -118,9 +118,8 @@ async function getProtocolo(params) {
                                 ]
                             }
                         }
-                    }, {
-                        $project: { x: true }
-                    }
+                    },
+                    { $project: { x: true } }
                 ],
                 as: 'ejecucion.registros.valor.practica.derivable'
             }
