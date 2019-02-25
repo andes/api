@@ -452,8 +452,8 @@ export class Documento {
 
                     // BODY
                     html = html
-                        .replace('<!--fechaIngreso-->', prestacion.ejecucion.registros[0].valor.fechaDesde ? '<b>Fecha de ingreso al mapa de camas: </b>' + moment(prestacion.ejecucion.registros[0].valor.fechaDesde).format('DD/MM/YYYY HH:mm') + ' hs' : '')
-                        .replace('<!--fechaEgreso-->', prestacion.ejecucion.registros[0].valor.fechaHasta ? '<br><b>Fecha de egreso al mapa de camas: </b>' + moment(prestacion.ejecucion.registros[0].valor.fechaHasta).format('DD/MM/YYYY HH:mm') + ' hs' : '')
+                        .replace('<!--fechaIngreso-->', prestacion.ejecucion.registros[0].valor.fechaDesde ? '<b>Fecha de ingreso: </b>' + moment(prestacion.ejecucion.registros[0].valor.fechaDesde).format('DD/MM/YYYY') : '')
+                        .replace('<!--fechaEgreso-->', prestacion.ejecucion.registros[0].valor.fechaHasta ? '<b>Fecha de egreso: </b>' + moment(prestacion.ejecucion.registros[0].valor.fechaHasta).format('DD/MM/YYYY') : '')
                         .replace('<!--tipoPrestacion-->', tipoPrestacion)
                         .replace('<!--fechaSolicitud-->', moment(prestacion.solicitud.fecha).format('DD/MM/YYYY HH:mm') + ' hs')
                         .replace('<!--tituloFechaEjecucion-->', tituloFechaEjecucion)
