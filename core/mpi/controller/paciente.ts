@@ -15,6 +15,8 @@ import * as https from 'https';
 import * as configPrivate from '../../../config.private';
 import { getServicioGeonode } from '../../../utils/servicioGeonode';
 import { getGeoreferencia } from '../../../utils/serviciosGeoreferencia';
+import { log as andesLog } from '@andes/log';
+import { logKeys } from '../../../config';
 
 /**
  * Crea un paciente y lo sincroniza con elastic
@@ -799,7 +801,11 @@ export async function checkRepetido(nuevoPaciente): Promise<{ resultadoMatching:
 
     let resultadoMatching = await matching(matchingInputData);  // Handlear error en funcion llamadora
     // Filtramos al propio paciente y a los resultados por debajo de la cota minima
-    resultadoMatching = resultadoMatching.filter(elem => (elem.paciente.id !== nuevoPaciente._id) && (elem.match > config.mpi.cotaMatchMin));
+
+    resultadoMatching = resultadoMatching.filter(elem => {
+        return (elem.paciente.id !== nuevoPaciente.id) && (elem.match > config.mpi.cotaMatchMin);
+    });
+
     // Extraemos los validados de los resultados
     let similaresValidados = resultadoMatching.filter(elem => elem.paciente.estado === 'validado');
     // Si el nuevo paciente está validado, filtramos los candidatos temporales
@@ -813,7 +819,6 @@ export async function checkRepetido(nuevoPaciente): Promise<{ resultadoMatching:
         (element.paciente.sexo.toString() === matchingInputData.sexo.toString() && element.paciente.documento.toString() === matchingInputData.documento.toString())
     ).length > 0;
     // TODO: es necesario loguear matcheo alto???? loguear si es necesario.
-
     return { resultadoMatching, dniRepetido, macheoAlto };
 }
 
@@ -838,7 +843,7 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
             resultado: resRenaper
         });
     } catch (error) {
-        // TODO LOGUEAR ERROR RENAPER
+        andesLog(req, logKeys.errorValidacionPaciente.key, pacienteAndes, logKeys.errorValidacionPaciente.operacion, error);
         return await validarSisa(pacienteAndes, req);
     }
     let band = true;
@@ -879,7 +884,7 @@ async function validarSisa(pacienteAndes: any, req: any, foto = null) {
         }
         return { paciente: pacienteAndes, validado: true };
     } catch (error) {
-        // TODO LOGUEAR ERROR SISA
+        andesLog(req, logKeys.errorValidacionPaciente.key, pacienteAndes, logKeys.errorValidacionPaciente.operacion, error);
         // no hacemos nada con el paciente
         return { paciente: pacienteAndes, validado: false };
     }
