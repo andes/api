@@ -109,7 +109,7 @@ export class Documento {
     }
 
     private static esInsumo(st) {
-        return (st === 'producto');
+        return (st === 'producto' || st === 'objeto físico' || st === 'medicamento clínico');
     }
 
     private static esAdjunto(conceptId) {
@@ -179,7 +179,7 @@ export class Documento {
             .replace('<!--unidad-->', producto.valor.unidad)
             .replace('<!--cantidadDuracion-->', producto.valor.duracion.cantidad)
             .replace('<!--unidadDuracion-->', producto.valor.duracion.unidad)
-            .replace('<!--indicacion-->', producto.valor.indicacion);
+            .replace('<!--indicacion-->', producto.valor.indicacion !== '' ? '<b>Indicación:</b>' + producto.valor.indicacion : '');
     }
 
     // 'archivo adjunto'
@@ -452,6 +452,8 @@ export class Documento {
 
                     // BODY
                     html = html
+                        .replace('<!--fechaIngreso-->', prestacion.ejecucion.registros[0].valor.fechaDesde ? '<b>Fecha de ingreso al mapa de camas: </b>' + moment(prestacion.ejecucion.registros[0].valor.fechaDesde).format('DD/MM/YYYY HH:mm') + ' hs' : '')
+                        .replace('<!--fechaEgreso-->', prestacion.ejecucion.registros[0].valor.fechaHasta ? '<br><b>Fecha de egreso al mapa de camas: </b>' + moment(prestacion.ejecucion.registros[0].valor.fechaHasta).format('DD/MM/YYYY HH:mm') + ' hs' : '')
                         .replace('<!--tipoPrestacion-->', tipoPrestacion)
                         .replace('<!--fechaSolicitud-->', moment(prestacion.solicitud.fecha).format('DD/MM/YYYY HH:mm') + ' hs')
                         .replace('<!--tituloFechaEjecucion-->', tituloFechaEjecucion)
@@ -460,7 +462,6 @@ export class Documento {
                         .replace('<!--tituloInforme-->', tituloInforme ? tituloInforme : '')
                         // .replace('<!--contenidoInforme-->', contenidoInforme ? contenidoInforme : '')
                         .replace('<!--registros-->', (contenidoInforme && contenidoInforme.length) ? contenidoInforme.map(x => typeof x.valor === 'string' ? x.valor : JSON.stringify(x.valor)).join('') : this.informeRegistros);
-
                     // FOOTER
                     html = html
                         .replace('<!--profesionalFirmante1-->', profesionalSolicitud)
