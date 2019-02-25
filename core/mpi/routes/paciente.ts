@@ -10,7 +10,9 @@ import { ElasticSync } from '../../../utils/elasticSync';
 import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
 import { EventCore } from '@andes/event-bus';
-import { EventEmitter } from 'events';
+import { log as andesLog } from '@andes/log';
+import { logKeys } from '../../../config';
+
 
 
 const logD = debug('paciente-controller');
@@ -115,103 +117,16 @@ router.post('/pacientes/validar/', async (req, res, next) => {
     if (pacienteAndes && pacienteAndes.documento && pacienteAndes.sexo) {
         try {
             const resultado: any = await controller.validarPaciente(pacienteAndes, req);
-            // TODO loguear dentro de los metodos de validación renaper/sisa
-            // Logueamos la operación de búsqueda en la colección.
-            // Logger.log(req, 'fa_renaper', 'validar', {
-            //     data: resultado
-            // });
             res.json(resultado);
+            andesLog(req, logKeys.validacionPaciente.key, pacienteAndes, logKeys.validacionPaciente.operacion, resultado);
         } catch (err) {
-            // Logger.log(req, 'fa_renaper', 'error', {
-            //     error: err
-            // });
+            andesLog(req, logKeys.errorValidacionPaciente.key, pacienteAndes, logKeys.errorValidacionPaciente.operacion, err);
             return next(err);
         }
     } else {
         return next(500);
     }
 });
-
-/**
- * @swagger
- * /pacientes:
- *   get:
- *     tags:
- *       - Paciente
- *     description: Retorna un arreglo de objetos Paciente
- *     summary: Buscar pacientes
- *     produces:
- *       - application/json
- *     parameters:
- *       - name: nombre
- *         in: query
- *         description: El nombre del paciente
- *         required: false
- *         type: string
- *       - name: apellido
- *         in: query
- *         description: El apellido del paciente
- *         required: false
- *         type: string
- *       - name: documento
- *         in: query
- *         description: El documento del paciente
- *         required: false
- *         type: string
- *       - name: fechaNacimiento
- *         in: query
- *         description: El documento del paciente
- *         required: false
- *         type: string
- *         format: date
- *       - name: estado
- *         in: query
- *         description: El estado del paciente
- *         required: false
- *         type: string
- *         enum:
- *              - temporal
- *              - identificado
- *              - validado
- *              - recienNacido
- *              - extranjero
- *       - name: sexo
- *         in: query
- *         description:
- *         required: false
- *         type: string
- *         enum:
- *              - femenino
- *              - masculino
- *              - otro
- *     responses:
- *       200:
- *         description: un arreglo de objetos paciente
- *         schema:
- *           $ref: '#/definitions/paciente'
- *       400:
- *         description: Error- Agregar parámetro de búsqueda
- *
- * /pacientes/{id}:
- *   get:
- *     tags:
- *       - Paciente
- *     description: Retorna un objeto Paciente
- *     summary: Buscar paciente por ID
- *     produces:
- *       - application/json
- *     parameters:
- *       - name: id
- *         in: path
- *         description: _Id del paciente
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: un arreglo con un paciente
- *         schema:
- *           $ref: '#/definitions/paciente'
- */
 
 router.get('/pacientes/auditoria/', (req, res, next) => {
     let filtro;

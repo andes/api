@@ -292,4 +292,12 @@ export const logKeys = {
         key: 'mpi:mpiUpdater:finish',
         operacion: 'MPI updater finish'
     },
+    errorValidacionPaciente: {
+        key: 'mpi:validacion:error',
+        operacion: 'Error validando paciente'
+    },
+    validacionPaciente: {
+        key: 'mpi:validacion',
+        operacion: 'Validar paciente'
+    },
 };
