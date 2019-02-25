@@ -785,7 +785,7 @@ export async function matchPaciente(dataPaciente) {
  * @param {*} nuevoPaciente
  * @returns Promise<boolean> || error
  */
-export async function checkRepetido(nuevoPaciente): Promise<any> {
+export async function checkRepetido(nuevoPaciente): Promise<{ resultadoMatching: any[], dniRepetido: boolean, macheoAlto: boolean }> {
     let matchingInputData = {
         type: 'suggest',
         claveBlocking: 'documento',
@@ -838,6 +838,7 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
             resultado: resRenaper
         });
     } catch (error) {
+        // TODO LOGUEAR ERROR RENAPER
         return await validarSisa(pacienteAndes, req);
     }
     let band = true;
@@ -878,6 +879,7 @@ async function validarSisa(pacienteAndes: any, req: any, foto = null) {
         }
         return { paciente: pacienteAndes, validado: true };
     } catch (error) {
+        // TODO LOGUEAR ERROR SISA
         // no hacemos nada con el paciente
         return { paciente: pacienteAndes, validado: false };
     }

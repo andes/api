@@ -598,7 +598,10 @@ router.put('/pacientes/:id', async (req, res, next) => {
         // Todo loguear posible duplicado si ignora el check
         let resultado = await controller.checkRepetido(req.body);
 
-        if (!resultado.length || resultado.length === 0 || (resultado.length > 0 && req.body.ignoreCheck && !resultado.macheoAlto && !resultado.dniRepetido)) {
+        if (!resultado.resultadoMatching.length ||
+            resultado.resultadoMatching.length === 0 ||
+            (req.body.ignoreCheck && !resultado.macheoAlto && !resultado.dniRepetido)
+        ) {
             let patientFound: any = await paciente.findById(query).exec();
 
             if (patientFound) {
