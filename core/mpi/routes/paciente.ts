@@ -13,8 +13,6 @@ import { EventCore } from '@andes/event-bus';
 import { log as andesLog } from '@andes/log';
 import { logKeys } from '../../../config';
 
-
-
 const logD = debug('paciente-controller');
 const router = express.Router();
 
@@ -207,9 +205,6 @@ router.get('/pacientes/:id', (req, res, next) => {
     }
     controller.buscarPaciente(req.params.id).then((resultado: any) => {
         if (resultado) {
-            Logger.log(req, 'mpi', 'query', {
-                mongoDB: resultado.paciente
-            });
             EventCore.emitAsync('mpi:paciente:get', resultado.paciente);
             res.json(resultado.paciente);
         } else {
@@ -290,10 +285,6 @@ router.get('/pacientes', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
         return next(403);
     }
-    // Logger de la consulta a ejecutar
-    Logger.log(req, 'mpi', 'query', {
-        elasticSearch: req.query
-    });
 
     controller.matching(req.query).then(result => {
         res.send(result);
@@ -528,7 +519,7 @@ router.put('/pacientes/:id', async (req, res, next) => {
                     delete data.fechaNacimiento;
                 }
 
-                // si el paciente esta validado y huvo cambios en direccion o localidad..
+                // si el paciente esta validado y hay cambios en direccion o localidad..
                 if (patientFound.estado === 'validado' && (patientFound.direccion[0].valor !== data.direccion[0].valor) ||
                     (patientFound.direccion[0].ubicacion.localidad && data.direccion[0].ubicacion.localidad &&
                         patientFound.direccion[0].ubicacion.localidad.nombre !== data.direccion[0].ubicacion.localidad.nombre) ||
@@ -794,9 +785,9 @@ router.patch('/pacientes/:id', async (req, res, next) => {
             } else {
                 pacienteAndes = resultado.paciente;
             }
-            let connElastic = new ElasticSync();
-
-            await connElastic.sync(pacienteAndes);
+            // Quitamos esta sincronizacion con elastic para evitar la sincronización de campos no necesarios.
+            // let connElastic = new ElasticSync();
+            // await connElastic.sync(pacienteAndes);
 
             Auth.audit(pacienteAndes, req);
             let pacienteSaved = await pacienteAndes.save();

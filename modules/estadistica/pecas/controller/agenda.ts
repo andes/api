@@ -1,9 +1,7 @@
-import fs = require('fs');
-import async = require('async');
 import * as agendaModel from '../../../turnos/schemas/agenda';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
-import { model as organizacion } from '../../../../core/tm/schemas/organizacion';
+import { Organizacion } from '../../../../core/tm/schemas/organizacion';
 import * as sql from 'mssql';
 import * as configPrivate from '../../../../config.private';
 import { Logger } from '../../../../utils/logService';
@@ -47,7 +45,7 @@ export async function consultaPecas(start, end, done) {
         'bloques.turnos': {
             $ne: null
         }
-       // , estado: { $nin: ['planificacion']}
+        // , estado: { $nin: ['planificacion']}
     };
     try {
         const agendas = agendaModel.aggregate([
@@ -125,11 +123,7 @@ async function auxiliar(a: any, b: any, t: any) {
         let turnoConPaciente = t.estado === 'asignado' && t.paciente; // && t.asistencia
         let idEfector = efector && efector.codigo ? parseInt(efector.codigo, 10) : null;
         let tipoEfector = efector && efector.tipoEfector ? efector.tipoEfector : null;
-        // let efector = await getEfector(a.organizacion._id) as any;
-        // let idEfector = efector ? efector.codigo : null;
-        // let tipoEfector = efector ? efector.tipoEfector : null;
         turno.tipoPrestacion = (turnoConPaciente && t.tipoPrestacion && t.tipoPrestacion.term) ? t.tipoPrestacion.term : null;
-        // turno.idEfector = parseInt(idEfector, 10);
         turno.idEfector = idEfector;
         turno.Organizacion = a.organizacion.nombre;
         turno.idAgenda = a._id;
@@ -186,7 +180,6 @@ async function auxiliar(a: any, b: any, t: any) {
         // Estado turno
         let estadoAuditoria = null;
         if (t) {
-            // console.log(t.estado);
             switch (t.estado) {
                 case 'disponible':
                     estadoAuditoria = 'Disponible';
@@ -214,7 +207,6 @@ async function auxiliar(a: any, b: any, t: any) {
         }
 
         turno.estadoTurnoAuditoria = estadoAuditoria;
-
 
         // Asistencia
         turno.asistencia = turnoConPaciente && t.asistencia ? t.asistencia : null;
@@ -488,7 +480,7 @@ async function getEfector(idOrganizacion: any) {
     if (orgCache[idOrganizacion]) {
         return orgCache[idOrganizacion];
     } else {
-        const org: any = await organizacion.findById(idOrganizacion);
+        const org: any = await Organizacion.findById(idOrganizacion);
         if (org) {
             orgCache[idOrganizacion] = org;
             return org;

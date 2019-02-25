@@ -531,17 +531,6 @@ export async function updateDireccion(req, data) {
     }
 }
 
-export function updateBarrio(geoRef) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const barrio = await getServicioGeonode(geoRef);
-            resolve(barrio);
-        } catch (err) {
-            return reject(err);
-        }
-    });
-}
-
 export function updateCarpetaEfectores(req, data) {
     data.markModified('carpetaEfectores');
     data.carpetaEfectores = req.body.carpetaEfectores;
