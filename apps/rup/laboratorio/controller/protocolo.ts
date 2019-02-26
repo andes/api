@@ -449,13 +449,12 @@ export async function actualizarRegistrosEjecucion(registros) {
                 $set: {
                     'ejecucion.registros.$.valor': ejecucion.valor
                 }
-                // ,
-                // $push: {
-                //     'ejecucion.registros.$.valor.estados': ejecucion.estado
-                // }
             },
             (err, data: any) => {
-                throw err;
+                if (err) {
+                    throw err;
+                }
+                return data;
             }
         );
     });
