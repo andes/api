@@ -832,7 +832,7 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
             resultado: resRenaper
         });
     } catch (error) {
-        andesLog(req, logKeys.errorValidacionPaciente.key, pacienteAndes, logKeys.errorValidacionPaciente.operacion, error);
+        andesLog(req, logKeys.errorValidacionPaciente.key, null, logKeys.errorValidacionPaciente.operacion, error);
         return await validarSisa(pacienteAndes, req);
     }
     let band = true;
@@ -873,7 +873,7 @@ async function validarSisa(pacienteAndes: any, req: any, foto = null) {
         }
         return { paciente: pacienteAndes, validado: true };
     } catch (error) {
-        andesLog(req, logKeys.errorValidacionPaciente.key, pacienteAndes, logKeys.errorValidacionPaciente.operacion, error);
+        andesLog(req, logKeys.errorValidacionPaciente.key, null, logKeys.errorValidacionPaciente.operacion, error);
         // no hacemos nada con el paciente
         return { paciente: pacienteAndes, validado: false };
     }
