@@ -115,12 +115,10 @@ router.post('/pacientes/validar/', async (req, res, next) => {
     if (pacienteAndes && pacienteAndes.documento && pacienteAndes.sexo) {
         try {
             // chequeamos si el par dni-sexo ya existe en ANDES
-            const candidatos = await controller.checkRepetido(pacienteAndes);
+            const resultadoCheck = await controller.checkRepetido(pacienteAndes);
             let resultado;
-            if (candidatos.dniRepetido) {
-                let idCandidato = mongoose.Types.ObjectId(candidatos.resultadoMatching[0].paciente.id);
-                let candidato = await controller.buscarPaciente(idCandidato);
-                resultado = { paciente: candidato.paciente, existente: true };
+            if (resultadoCheck.dniRepetido) {
+                resultado = { paciente: resultadoCheck.resultadoMatching[0].paciente, existente: true };
             } else {
                 resultado = await controller.validarPaciente(pacienteAndes, req);
                 resultado.existente = false;
