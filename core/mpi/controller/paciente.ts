@@ -15,8 +15,8 @@ import * as configPrivate from '../../../config.private';
 import { getServicioGeonode } from '../../../utils/servicioGeonode';
 import { getGeoreferencia } from '../../../utils/serviciosGeoreferencia';
 import * as Barrio from '../../tm/schemas/barrio';
-import { model as Organizacion } from '../../tm/schemas/organizacion';
-import { organizacionCache } from 'core/tm/schemas/organizacionCache';
+import { log as andesLog } from '@andes/log';
+import { logKeys } from '../../../config';
 
 /**
  * Crea un paciente y lo sincroniza con elastic
@@ -305,6 +305,7 @@ export function buscarPacienteWithcondition(condition): Promise<{ db: String, pa
 export function matching(data): Promise<any[]> {
 
     const connElastic = new ElasticSync();
+
     let query;
     switch (data.type) {
         case 'simplequery':
@@ -528,17 +529,6 @@ export async function updateDireccion(req, data) {
     } catch (err) {
         return err;
     }
-}
-
-export function updateBarrio(geoRef) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const barrio = await getServicioGeonode(geoRef);
-            resolve(barrio);
-        } catch (err) {
-            return reject(err);
-        }
-    });
 }
 
 export function updateCarpetaEfectores(req, data) {
@@ -786,7 +776,7 @@ export async function matchPaciente(dataPaciente) {
  * @param {*} nuevoPaciente
  * @returns Promise<boolean> || error
  */
-export async function checkRepetido(nuevoPaciente): Promise<any> {
+export async function checkRepetido(nuevoPaciente): Promise<{ resultadoMatching: any[], dniRepetido: boolean, macheoAlto: boolean }> {
     let matchingInputData = {
         type: 'suggest',
         claveBlocking: 'documento',
@@ -800,7 +790,11 @@ export async function checkRepetido(nuevoPaciente): Promise<any> {
 
     let resultadoMatching = await matching(matchingInputData);  // Handlear error en funcion llamadora
     // Filtramos al propio paciente y a los resultados por debajo de la cota minima
-    resultadoMatching = resultadoMatching.filter(elem => (elem.paciente.id !== nuevoPaciente._id) && (elem.match > config.mpi.cotaMatchMin));
+
+    resultadoMatching = resultadoMatching.filter(elem => {
+        return (elem.paciente.id !== nuevoPaciente.id) && (elem.match > config.mpi.cotaMatchMin);
+    });
+
     // Extraemos los validados de los resultados
     let similaresValidados = resultadoMatching.filter(elem => elem.paciente.estado === 'validado');
     // Si el nuevo paciente está validado, filtramos los candidatos temporales
@@ -814,7 +808,6 @@ export async function checkRepetido(nuevoPaciente): Promise<any> {
         (element.paciente.sexo.toString() === matchingInputData.sexo.toString() && element.paciente.documento.toString() === matchingInputData.documento.toString())
     ).length > 0;
     // TODO: es necesario loguear matcheo alto???? loguear si es necesario.
-
     return { resultadoMatching, dniRepetido, macheoAlto };
 }
 
@@ -827,7 +820,6 @@ export async function checkRepetido(nuevoPaciente): Promise<any> {
  */
 export async function validarPaciente(pacienteAndes, req: any = configPrivate.userScheduler) {
     let sexoPaciente = ((typeof pacienteAndes.sexo === 'string')) ? pacienteAndes.sexo : (Object(pacienteAndes.sexo).id);
-
     if (sexoPaciente === 'otro') {
         return { paciente: pacienteAndes, validado: false };
     }
@@ -840,6 +832,7 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
             resultado: resRenaper
         });
     } catch (error) {
+        andesLog(req, logKeys.errorValidacionPaciente.key, pacienteAndes, logKeys.errorValidacionPaciente.operacion, error);
         return await validarSisa(pacienteAndes, req);
     }
     let band = true;
@@ -849,58 +842,16 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
         band = regtest.test(pacienteRenaper.nombres);
         band = band || regtest.test(pacienteRenaper.apellido);
         if (!band) {
-            // paciente validado por otra fuente autentica?
-            let dto: any = {
-                type: 'suggest',
-                claveBlocking: 'documento',
-                percentage: true,
-                apellido: pacienteRenaper.apellido,
-                nombre: pacienteRenaper.nombres,
-                documento: pacienteAndes.documento,
-                sexo: sexoPaciente,
-                fechaNacimiento: pacienteRenaper.fechaNacimiento
-            };
-            let pacientesSimilares = await matching(dto);
-            pacientesSimilares = pacientesSimilares.filter(item => item.paciente.estado === 'validado' && item.match >= 0.94);
-
-            if (pacientesSimilares.length === 1) {
-                try {
-                    // si existe algun paciente similar validado, lo buscamos. Si hay mas de un candidato se resuelve manualmente por auditoria
-                    let pacienteExistente: any = await buscarPaciente(pacientesSimilares[0].id);
-
-                    // se completan datos faltantes
-                    pacienteExistente.paciente.foto = pacienteRenaper.foto;
-                    if (!pacienteExistente.paciente.direccion[0].valor) {
-                        pacienteExistente.paciente.direccion[0].valor = pacienteRenaper.calle + ' ' + pacienteRenaper.numero;
-                    }
-                    if (!pacienteExistente.paciente.direccion[0].codigoPostal) {
-                        pacienteExistente.paciente.direccion[0].codigoPostal = pacienteRenaper.cpostal;
-                    }
-                    if (!pacienteExistente.paciente.cuil) {
-                        pacienteExistente.paciente.cuil = pacienteRenaper.cuil;
-                    }
-                    return { paciente: pacienteExistente.paciente, validado: false };
-                } catch (error) {
-                    // no hacemos nada con el paciente ya que podría estar validado por otra fuente
-                    return { paciente: pacienteAndes, validado: false };
-                }
-
-
-            } else {
-                pacienteAndes.nombre = pacienteRenaper.nombres;
-                pacienteAndes.apellido = pacienteRenaper.apellido;
-                pacienteAndes.fechaNacimiento = new Date(pacienteRenaper.fechaNacimiento);
-                pacienteAndes.cuil = pacienteRenaper.cuil;
-                pacienteAndes.estado = 'validado';
-                pacienteAndes.foto = pacienteRenaper.foto;
-                pacienteAndes.direccion = pacienteRenaper.calle + ' ' + pacienteRenaper.numero;
-                pacienteAndes.codigoPostal = pacienteRenaper.cpostal;
-                pacienteAndes.cuil = pacienteRenaper.cuil;
-
-                return { paciente: pacienteAndes, validado: true };
-            }
+            pacienteAndes.nombre = pacienteRenaper.nombres;
+            pacienteAndes.apellido = pacienteRenaper.apellido;
+            pacienteAndes.fechaNacimiento = new Date(pacienteRenaper.fechaNacimiento);
+            pacienteAndes.cuil = pacienteRenaper.cuil;
+            pacienteAndes.estado = 'validado';
+            pacienteAndes.foto = pacienteRenaper.foto;
+            return { paciente: pacienteAndes, validado: true };
         } else {
             return await validarSisa(pacienteAndes, req, pacienteRenaper.foto);
+
         }
     } else {
         return await validarSisa(pacienteAndes, req);
@@ -922,6 +873,7 @@ async function validarSisa(pacienteAndes: any, req: any, foto = null) {
         }
         return { paciente: pacienteAndes, validado: true };
     } catch (error) {
+        andesLog(req, logKeys.errorValidacionPaciente.key, pacienteAndes, logKeys.errorValidacionPaciente.operacion, error);
         // no hacemos nada con el paciente
         return { paciente: pacienteAndes, validado: false };
     }

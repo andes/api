@@ -10,8 +10,8 @@ import { ElasticSync } from '../../../utils/elasticSync';
 import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
 import { EventCore } from '@andes/event-bus';
-import { EventEmitter } from 'events';
-
+import { log as andesLog } from '@andes/log';
+import { logKeys } from '../../../config';
 
 const logD = debug('paciente-controller');
 const router = express.Router();
@@ -115,103 +115,16 @@ router.post('/pacientes/validar/', async (req, res, next) => {
     if (pacienteAndes && pacienteAndes.documento && pacienteAndes.sexo) {
         try {
             const resultado: any = await controller.validarPaciente(pacienteAndes, req);
-            // TODO loguear dentro de los metodos de validación renaper/sisa
-            // Logueamos la operación de búsqueda en la colección.
-            // Logger.log(req, 'fa_renaper', 'validar', {
-            //     data: resultado
-            // });
             res.json(resultado);
+            andesLog(req, logKeys.validacionPaciente.key, pacienteAndes, logKeys.validacionPaciente.operacion, resultado);
         } catch (err) {
-            // Logger.log(req, 'fa_renaper', 'error', {
-            //     error: err
-            // });
+            andesLog(req, logKeys.errorValidacionPaciente.key, pacienteAndes, logKeys.errorValidacionPaciente.operacion, err);
             return next(err);
         }
     } else {
         return next(500);
     }
 });
-
-/**
- * @swagger
- * /pacientes:
- *   get:
- *     tags:
- *       - Paciente
- *     description: Retorna un arreglo de objetos Paciente
- *     summary: Buscar pacientes
- *     produces:
- *       - application/json
- *     parameters:
- *       - name: nombre
- *         in: query
- *         description: El nombre del paciente
- *         required: false
- *         type: string
- *       - name: apellido
- *         in: query
- *         description: El apellido del paciente
- *         required: false
- *         type: string
- *       - name: documento
- *         in: query
- *         description: El documento del paciente
- *         required: false
- *         type: string
- *       - name: fechaNacimiento
- *         in: query
- *         description: El documento del paciente
- *         required: false
- *         type: string
- *         format: date
- *       - name: estado
- *         in: query
- *         description: El estado del paciente
- *         required: false
- *         type: string
- *         enum:
- *              - temporal
- *              - identificado
- *              - validado
- *              - recienNacido
- *              - extranjero
- *       - name: sexo
- *         in: query
- *         description:
- *         required: false
- *         type: string
- *         enum:
- *              - femenino
- *              - masculino
- *              - otro
- *     responses:
- *       200:
- *         description: un arreglo de objetos paciente
- *         schema:
- *           $ref: '#/definitions/paciente'
- *       400:
- *         description: Error- Agregar parámetro de búsqueda
- *
- * /pacientes/{id}:
- *   get:
- *     tags:
- *       - Paciente
- *     description: Retorna un objeto Paciente
- *     summary: Buscar paciente por ID
- *     produces:
- *       - application/json
- *     parameters:
- *       - name: id
- *         in: path
- *         description: _Id del paciente
- *         required: true
- *         type: string
- *     responses:
- *       200:
- *         description: un arreglo con un paciente
- *         schema:
- *           $ref: '#/definitions/paciente'
- */
 
 router.get('/pacientes/auditoria/', (req, res, next) => {
     let filtro;
@@ -292,9 +205,6 @@ router.get('/pacientes/:id', (req, res, next) => {
     }
     controller.buscarPaciente(req.params.id).then((resultado: any) => {
         if (resultado) {
-            Logger.log(req, 'mpi', 'query', {
-                mongoDB: resultado.paciente
-            });
             EventCore.emitAsync('mpi:paciente:get', resultado.paciente);
             res.json(resultado.paciente);
         } else {
@@ -375,10 +285,6 @@ router.get('/pacientes', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
         return next(403);
     }
-    // Logger de la consulta a ejecutar
-    Logger.log(req, 'mpi', 'query', {
-        elasticSearch: req.query
-    });
 
     controller.matching(req.query).then(result => {
         res.send(result);
@@ -598,7 +504,10 @@ router.put('/pacientes/:id', async (req, res, next) => {
         // Todo loguear posible duplicado si ignora el check
         let resultado = await controller.checkRepetido(req.body);
 
-        if (!resultado.length || resultado.length === 0 || (resultado.length > 0 && req.body.ignoreCheck && !resultado.macheoAlto && !resultado.dniRepetido)) {
+        if (!resultado.resultadoMatching.length ||
+            resultado.resultadoMatching.length === 0 ||
+            (req.body.ignoreCheck && !resultado.macheoAlto && !resultado.dniRepetido)
+        ) {
             let patientFound: any = await paciente.findById(query).exec();
 
             if (patientFound) {
@@ -610,7 +519,7 @@ router.put('/pacientes/:id', async (req, res, next) => {
                     delete data.fechaNacimiento;
                 }
 
-                // si el paciente esta validado y huvo cambios en direccion o localidad..
+                // si el paciente esta validado y hay cambios en direccion o localidad..
                 if (patientFound.estado === 'validado' && (patientFound.direccion[0].valor !== data.direccion[0].valor) ||
                     (patientFound.direccion[0].ubicacion.localidad && data.direccion[0].ubicacion.localidad &&
                         patientFound.direccion[0].ubicacion.localidad.nombre !== data.direccion[0].ubicacion.localidad.nombre) ||
@@ -876,9 +785,9 @@ router.patch('/pacientes/:id', async (req, res, next) => {
             } else {
                 pacienteAndes = resultado.paciente;
             }
-            let connElastic = new ElasticSync();
-
-            await connElastic.sync(pacienteAndes);
+            // Quitamos esta sincronizacion con elastic para evitar la sincronización de campos no necesarios.
+            // let connElastic = new ElasticSync();
+            // await connElastic.sync(pacienteAndes);
 
             Auth.audit(pacienteAndes, req);
             let pacienteSaved = await pacienteAndes.save();

@@ -3,7 +3,7 @@ import * as mongoose from 'mongoose';
 import * as agenda from '../../turnos/schemas/agenda';
 import * as agendaCtrl from '../../turnos/controller/agenda';
 import { organizacionCache } from '../../../core/tm/schemas/organizacionCache';
-import * as organizacion from '../../../core/tm/schemas/organizacion';
+import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
 import * as recordatorioController from '../controller/RecordatorioController';
@@ -171,7 +171,7 @@ router.get('/turnos', async (req: any, res, next) => {
 
 router.get('/turnos/ubicacion/organizacion/:id', async (req, res, next) => {
     const idOrganizacion = req.params.id;
-    const org: any = await organizacion.model.findById(idOrganizacion);
+    const org: any = await Organizacion.findById(idOrganizacion);
     let efector = (Object as any).assign({}, org);
     if (org.codigo && org.codigo.sisa) {
         const orgCache: any = await organizacionCache.findOne({ codigo: org.codigo.sisa });

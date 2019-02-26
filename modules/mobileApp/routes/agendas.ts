@@ -1,17 +1,9 @@
 import * as express from 'express';
-import * as mongoose from 'mongoose';
 import * as agenda from '../../turnos/schemas/agenda';
 import { organizacionCache } from '../../../core/tm/schemas/organizacionCache';
-import * as organizacion from '../../../core/tm/schemas/organizacion';
-import * as agendaCtrl from '../../turnos/controller/agenda';
-import { Auth } from './../../../auth/auth.class';
-import { Logger } from '../../../utils/logService';
-import * as recordatorioController from '../controller/RecordatorioController';
-import { LoggerPaciente } from '../../../utils/loggerPaciente';
+import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import { toArray } from '../../../utils/utils';
 import * as moment from 'moment';
-import { forEach } from 'async';
-import { ObjectID, ObjectId } from 'bson';
 
 const router = express.Router();
 
@@ -52,7 +44,7 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
     const promisesStack = [];
     try {
         for (let i = 0; i <= agendasResultado.length - 1; i++) {
-            const org: any = await organizacion.model.findById(agendasResultado[i].id);
+            const org: any = await Organizacion.findById(agendasResultado[i].id);
             if (org.codigo && org.codigo.sisa && org.turnosMobile) {
                 const orgCache: any = await organizacionCache.findOne({ codigo: org.codigo.sisa });
                 agendasResultado[i].coordenadasDeMapa = orgCache.coordenadasDeMapa;
