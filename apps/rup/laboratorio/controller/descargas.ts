@@ -83,15 +83,29 @@ export class Documento {
 
             if (protocolo.solicitud.registros[0].valor.solicitudPrestacion.servicio) {
                 html.replace('<!-- solicitud.registros[0].valor.solicitudPrestacion.servicio.term -->',
-                protocolo.solicitud.registros[0].valor.solicitudPrestacion.servicio.term);
+                    protocolo.solicitud.registros[0].valor.solicitudPrestacion.servicio.term);
             }
             return html;
         };
 
         let getHtmlResultadosPractica = (registro) => {
-            return fs.readFileSync(path.join(__dirname, '../templates/resultadosPractica.html'), 'utf8')
-                .replace('<!-- registro.nombre -->', registro.nombre)
-                .replace('<!-- registro.valor.resultado.valor -->', registro.valor.resultado.valor);
+            let html = fs.readFileSync(path.join(__dirname, '../templates/resultadosPractica.html'), 'utf8')
+                .replace('<!-- registro.nombre -->', registro.nombre);
+
+            if (registro.valor.resultado.valor) {
+                html = html.replace('<!-- registro.valor.resultado.valor -->',
+                    registro.valor.resultado.valor + ' ' + registro.valor.practica.unidadMedida.nombre);
+            }
+
+            if (registro.valor.valoresReferencia) {
+                html = html.replace('<!-- registro.valor.valoresReferencia.valorMinimo + " - " + registro.valor.valoresReferencia.valorMaximo -->',
+                    registro.valor.valoresReferencia.valorMinimo + ' - ' + registro.valor.valoresReferencia.valorMaximo);
+            }
+
+            html = html.replace('<!-- registro.valor.resultado.firmaElectronica -->',
+                registro.valor.estados[registro.valor.estados.length - 1].usuario.nombreCompleto + ' - ' +
+                registro.valor.estados[registro.valor.estados.length - 1].usuario.documento);
+            return html;
         };
 
         let getHtmlEndReporte = () => {

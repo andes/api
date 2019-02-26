@@ -6,7 +6,7 @@ import { model as Organizacion } from '../../../../core/tm/schemas/organizacion'
 import { toArray } from '../../../../utils/utils';
 import { EventCore } from '@andes/event-bus';
 import { buscarPaciente } from '../../../../core/mpi/controller/paciente';
-
+import { calcularEdad } from '../../../../utils/utils';
 
 const lookup = {
     from: 'practica',
@@ -82,7 +82,7 @@ const lookupResultadoAnterior = {
  * @param {*} params
  * @returns
  */
-async function getProtocolo(params) {
+export async function getProtocolos(params) {
     let conditions = await getQuery(params);
     conditions.push({ $unwind: '$ejecucion.registros' });
     conditions.push({ $lookup: lookup });
@@ -132,11 +132,92 @@ async function getProtocolo(params) {
     conditions.push({ $group: group });
     conditions.push({ $project: project });
 
-    // return conditions;
-    return await Prestacion.aggregate(conditions).exec();
+    let data = await Prestacion.aggregate(conditions).exec();
+    if (params.organizacionDerivacion) {
+        data.forEach((d) => {
+            d.ejecucion.registros = d.ejecucion.registros.filter((r) => {
+                return !r.valor.estados.some(e => e.tipo === 'derivada');
+            });
+        });
+    }
+
+    if (params.practicasValidadas) {
+        data.forEach((d) => {
+            d.ejecucion.registros = d.ejecucion.registros.filter((r) => {
+                return r.valor.estados.some(e => e.tipo !== 'validada');
+            });
+        });
+    }
+    cargarValoresDeReferencia(data);
+    return data;
 }
 
+/**
+ *s
+ *
+ * @param {*} data
+ */
+function cargarValoresDeReferencia(data) {
+    let getSexo = (sexo) => {
+        if (sexo === 'femenino') {
+            return 'F';
+        } else if (sexo === 'masculino') {
+            return 'M';
+        } else { return 'I'; }
+    };
+    data.forEach((prestacion) => {
+        prestacion.ejecucion.registros.forEach((registro) => {
+            let presentacion = getPresentacion(registro);
+            if (presentacion && !registro.valor.valoresReferencia) {
+                registro.valor.valoresReferencia = buscarValoresReferencia(
+                    calcularEdad(prestacion.paciente.fechaNacimiento),
+                    getSexo(prestacion.paciente.sexo),
+                    presentacion.valoresReferencia);
+            }
+        });
+    });
+}
 
+/**
+ *
+ *
+ * @returns
+ */
+function getPresentacion(registro) {
+    // Debiera devolver la presentacion que se configuro localmente para uso en la organizacion,
+    // Provisoriamente devuelve la primera posicion
+    return registro.valor.practica.presentaciones[0];
+}
+
+/**
+ *
+ *
+ * @param {*} sexo
+ * @param {*} edad
+ * @param {*} arrValoresRefencia
+ * @returns
+ */
+function buscarValoresReferencia(sexo, edad, arrValoresRefencia) {
+    // Buscar que matchee rango etareo y sexo
+    let valoresReferencia = arrValoresRefencia.find((vr) => {
+        return (vr.edadDesde <= edad && vr.edadHasta >= edad && vr.sexo === sexo);
+    });
+
+    // Buscar que matchee rango etareo
+    if (!valoresReferencia) {
+        valoresReferencia = arrValoresRefencia.find((vr) => {
+            return (vr.edadDesde <= edad && vr.edadHasta >= edad && vr.sexo === 'I');
+        });
+    }
+
+    // Buscar que aplique a cualquier sexo y edad
+    if (!valoresReferencia) {
+        valoresReferencia = arrValoresRefencia.find((vr) => {
+            return (vr.todasEdades && vr.sexo === 'I');
+        });
+    }
+    return valoresReferencia;
+}
 /**
  *
  *
@@ -145,7 +226,7 @@ async function getProtocolo(params) {
  * @returns
  */
 export async function getProtocoloById(id) {
-    return getProtocolo({ $match: { _id: id } });
+    return getProtocolos({ $match: { _id: id } });
 }
 
 /**
@@ -156,18 +237,7 @@ export async function getProtocoloById(id) {
  * @returns
  */
 export async function getProtocoloByNumero(numero) {
-    return getProtocolo({ 'solicitud.registros.valor.solicitudPrestacion.numeroProtocolo.numeroCompleto': numero });
-}
-
-/**
- *
- *
- * @export
- * @param {*} params
- * @returns
- */
-export async function getProtocolos(params) {
-    return getProtocolo(params);
+    return getProtocolos({ 'solicitud.registros.valor.solicitudPrestacion.numeroProtocolo.numeroCompleto': numero });
 }
 
 /**
@@ -247,8 +317,7 @@ export async function getEjecucionesCobasC311(numeroProtocolo?: string) {
     }
 
     let pipeline = [
-        match
-        ,
+        match,
         {
             $addFields: {
                 numeroProtocolo: {
@@ -441,20 +510,21 @@ async function getUltimoNumeroProtocolo(idOrganizacion) {
  * @param {*} registros
  */
 export async function actualizarRegistrosEjecucion(registros) {
-    let promises = registros.map((ejecucion: any) => {
+    let promises = registros.map((registro: any) => {
         return Prestacion.updateOne(
-            { 'ejecucion.registros._id': Types.ObjectId(ejecucion._id) },
+            { 'ejecucion.registros._id': Types.ObjectId(registro._id) },
             {
                 $set: {
-                    'ejecucion.registros.$.valor': ejecucion.valor
+                    'ejecucion.registros.$.valor': registro.valor
                 }
                 // ,
                 // $push: {
                 //     'ejecucion.registros.$.valor.estados': ejecucion.estado
                 // }
-            },
-            (err, data: any) => {
-                throw err;
+            }, (err, data: any) => {
+                if (err) {
+                    throw err;
+                }
             }
         );
     });

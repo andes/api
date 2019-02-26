@@ -38,17 +38,8 @@ router.post('/protocolos/', async (req, res, next) => {
 
 router.get('/protocolos/', async (req, res, next) => {
     try {
-        let data = await getProtocolos(req.query);
+        let data: any = await getProtocolos(req.query);
         if (data) {
-            if (req.query.organizacionDerivacion) {
-                data.forEach( (d) => {
-                    d.ejecucion.registros = d.ejecucion.registros.filter( (r) => {
-                        r.valor.estados.forEach( (w) => {
-                        });
-                        return !r.valor.estados.some( e => e.tipo === 'derivada');
-                    });
-                });
-            }
             res.json(data);
         } else {
             return next(404);
@@ -122,7 +113,7 @@ router.post('/protocolos/autoanalizador', async (req, res, next) => {
 router.get('/protocolos/numero/:numero', async (req, res, next) => {
     try {
         if (req.params.numero) {
-            let data = await getProtocoloByNumero(req.params.numero);
+            let data: any = await getProtocoloByNumero(req.params.numero);
             if (data) {
                 res.json(data);
             } else {
@@ -137,7 +128,7 @@ router.get('/protocolos/numero/:numero', async (req, res, next) => {
 router.get('/protocolos/:id', async (req, res, next) => {
     try {
         if (req.params.id) {
-            let data = await getProtocoloById(req.params.id);
+            let data: any = await getProtocoloById(req.params.id);
             if (data) {
                 res.json(data);
             } else {
@@ -171,14 +162,14 @@ router.patch('/protocolos/ejecuciones/registros/:id', async (req, res, next) => 
                 return res.json(data);
             }
         );
-    } catch (error) {
-        // console.log('error /protocolos/ejecuciones/registros/:id :', error);
+    } catch (err) {
+        return next(err);
     }
 });
 
 router.patch('/protocolos/ejecuciones/registros', async (req, res, next) => {
     try {
-        res.json(actualizarRegistrosEjecucion(req.body.registros));
+        res.json(await actualizarRegistrosEjecucion(req.body.registros));
     } catch (e) {
         return next(e);
     }
