@@ -819,9 +819,6 @@ export async function checkRepetido(nuevoPaciente): Promise<{ resultadoMatching:
         resultadoMatching.push({ paciente: arrayAuxiliar[index].paciente });
         resultadoMatching[index].match = candidatos[index].match;
     }
-    // for (let elemento of arrayAuxiliar) {
-    //     resultadoMatching[elemento.index].push({ paciente: elemento.paciente });
-    // }
     return { resultadoMatching, dniRepetido, macheoAlto };
 }
 
