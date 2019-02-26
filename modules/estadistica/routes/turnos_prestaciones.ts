@@ -15,6 +15,7 @@ router.get('/turnos_prestaciones', async (req, res, next) => {
         pretacion: req.query.prestacion,
         profesional: req.query.profesional
     };
+    // faltan parámetros financiador y estado (analizar)
 
     try {
         // Procesa los turnos aplicando los filtros
