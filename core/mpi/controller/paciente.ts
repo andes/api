@@ -11,10 +11,10 @@ import * as turnosController from '../../../modules/turnos/controller/turnosCont
 import { matchSisa } from '../../../utils/servicioSisa';
 import { getServicioRenaper } from '../../../utils/servicioRenaper';
 const regtest = /[^a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ ']+/;
-import * as https from 'https';
 import * as configPrivate from '../../../config.private';
 import { getServicioGeonode } from '../../../utils/servicioGeonode';
 import { getGeoreferencia } from '../../../utils/serviciosGeoreferencia';
+import * as Barrio from '../../tm/schemas/barrio';
 import { log as andesLog } from '@andes/log';
 import { logKeys } from '../../../config';
 
@@ -525,7 +525,7 @@ export async function updateDireccion(req, data) {
     data.markModified('direccion');
     data.direccion = req.body.direccion;
     try {
-        await actualizarGeoReferencia(req.body, data, null);
+        await actualizarGeoReferencia(data, req);
     } catch (err) {
         return err;
     }
@@ -884,36 +884,41 @@ async function validarSisa(pacienteAndes: any, req: any, foto = null) {
  * @param data debe contener direccion y localidad.
  */
 
-export async function actualizarGeoReferencia(patientFound, data, req) {
+export async function actualizarGeoReferencia(dataPaciente, req) {
     // (valores de direccion fueron modificados): están completos?
-    if (data.direccion[0].valor && data.direccion[0].ubicacion.localidad && data.direccion[0].ubicacion.localidad.nombre
-        && data.direccion[0].ubicacion.provincia && data.direccion[0].ubicacion.provincia.nombre) {
-
+    if (dataPaciente.direccion[0].valor && dataPaciente.direccion[0].ubicacion.localidad && dataPaciente.direccion[0].ubicacion.provincia) {
         try {
-            // si no existía georeferencia o bien NO fue modificada (se actualiza..)
-            if (!patientFound.direccion[0].geoReferencia || (patientFound.direccion[0].geoReferencia[0] === data.direccion[0].geoReferencia[0] &&
-                patientFound.direccion[0].geoReferencia[1] === data.direccion[0].geoReferencia[1])) {
-                const geoRef: any = await getGeoreferencia(data.direccion);
+            // si el paciente no fue georeferenciado
+            if (!dataPaciente.direccion[0].georeferencia) {
+                let dir = dataPaciente.direccion[0].valor + ', ' + dataPaciente.direccion[0].ubicacion.localidad.nombre + ', ' + dataPaciente.direccion[0].ubicacion.provincia.nombre;
+                const geoRef: any = await getGeoreferencia(dir);
                 // georeferencia exitosa?
                 if (geoRef && geoRef.lat) {
-                    data.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
-                    //  data.direccion[0].ubicacion.barrio = await getServicioGeonode(data.direccion[0].geoReferencia);
+                    dataPaciente.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
+                    let nombreBarrio = await getServicioGeonode(dataPaciente.direccion[0].geoReferencia);
+                    // consulta exitosa?
+                    if (nombreBarrio) {
+                        const barrioPaciente = await Barrio.findOne().where('nombre').equals(RegExp('^.*' + nombreBarrio + '.*$', 'i'));
+                        if (barrioPaciente) {
+                            dataPaciente.direccion[0].ubicacion.barrio = barrioPaciente;
+                        }
+                    }
                 } else {
-                    data.direccion[0].geoReferencia = null;
-                    //     data.direccion[0].ubicacion.barrio = null;
+                    dataPaciente.direccion[0].geoReferencia = null;
+                    dataPaciente.direccion[0].ubicacion.barrio = null;
                 }
             }
-            if (req) {
-                // se guardan los datos
-                updatePaciente(patientFound, data, req);
-            }
+            // if (req) {
+            //     // se guardan los datos
+            //     updatePaciente(dataPaciente, dataPaciente, req);
+            // }
         } catch (err) {
             return (err);
         }
     } else {
-        // si no ingreso direccion, provincia o localidad se setean variables en null ya que podrian contener informacion anterior
-        data.direccion[0].geoReferencia = null;
-        data.direccion[0].ubicacion.barrio = null;
+        // si no ingreso direccion, provincia o localidad se setean variables en null ya que podrian contener informacion anterior desactualizada
+        dataPaciente.direccion[0].geoReferencia = null;
+        dataPaciente.direccion[0].ubicacion.barrio = null;
     }
 }
 
