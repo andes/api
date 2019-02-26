@@ -18,11 +18,12 @@ router.get('/turnos_prestaciones', async (req, res, next) => {
 
     try {
         // Procesa los turnos aplicando los filtros
-        let turnos = await agendaController.procesar(parametros);
+        let _turnos = agendaController.procesar(parametros);
         // Procesa las prestaciones fuera de agenda
-        let prestaciones = await fueraDeAgendaController.procesar(parametros);
-        // hacerlo con promiseAll para que se hagan los dos procesos en paralelo
-        res.json(turnos);
+        let _prestaciones = fueraDeAgendaController.procesar(parametros);
+        let [turnos, prestaciones] = await Promise.all([_turnos, _prestaciones]);
+        let resultado = turnos.concat(prestaciones);
+        res.json(resultado);
     } catch (error) {
         return next(error);
     }
