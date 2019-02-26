@@ -1,11 +1,15 @@
 import * as codificacionModel from '../../rup/schemas/codificacion';
 
+/**
+ * @export Devuelve las prestaciones fuera de agenda que cumplen con los filtros
+ * @param {object} Filtros {rango de fechas, prestación, profesional, financiador, estado}
+ * @returns {object} {fecha, paciente, financiador, prestacion, profesionales, estado, idAgenda:null, idBloque:null, turno:null, idPrestacion}
+ */
 export async function procesar(parametros: any) {
     let pipeline2 = [];
 
     let match = {
         $and: [
-            // { $or: orgExcluidas },
             { createdAt: { $gte: new Date(parametros.fechaDesde) } },
             { createdAt: { $lte: new Date(parametros.fechaHasta) } }
         ],
@@ -36,16 +40,19 @@ export async function procesar(parametros: any) {
         const prestaciones = codificacionModel.aggregate(pipeline2).cursor({ batchSize: 100 }).exec();
         const resultado = [];
         await prestaciones.eachAsync(async (prestacion, error) => {
-            // console.log('prestacion ', prestacion);
             let dtoPrestacion = {
-                idPrestacion: prestacion.idPrestacion,
-                prestacion: prestacion.prestacion.solicitud.tipoPrestacion,
                 fecha: prestacion.createdAt,
                 paciente: prestacion.paciente,
+                financiador: prestacion.paciente && prestacion.paciente.obraSocial ? prestacion.paciente.obraSocial : null,
+                prestacion: prestacion.prestacion.solicitud.tipoPrestacion,
                 profesionales: [prestacion.prestacion.solicitud.profesional],
+                estado: 'Presente con registro del profesional',
+                idAgenda: null,
+                idBloque: null,
+                turno: null,
+                idPrestacion: prestacion.idPrestacion,
             };
             resultado.push(dtoPrestacion);
-            // console.log('resultado ', resultado);
             if (error) {
                 return error;
             }
