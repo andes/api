@@ -1,8 +1,13 @@
 import * as agenda from '../../turnos/schemas/agenda';
 
+/**
+ * @export Devuelve los turnos con paciente asignado que cumplen con los filtros
+ * @param {object} Filtros {rango de fechas, prestación, profesional, financiador, estado}
+ * @returns {object} {fecha, paciente, financiador, prestacion, profesionales, estado, idAgenda, idBloque, turno, idPrestacion:null}
+ */
 export async function procesar(parametros: any) {
     let query = agenda.find({ estado: { $nin: ['planificacion', 'borrada', 'suspendida', 'pausada'] } });
-    // Agregar filtro x estado
+    // Agregar filtro x estado del turno y financiador
     query.where('organizacion._id').equals(parametros.organizacion);
 
     if (parametros.fechaDesde) {
@@ -29,8 +34,8 @@ export async function procesar(parametros: any) {
 
 function devolverTurnos(ArrAgenda) {
     const ArrTurnos = [];
-    for (let j = 0; j < ArrAgenda.length; j++) {
-        let unaAgenda = ArrAgenda[j];
+    for (let k = 0; k < ArrAgenda.length; k++) {
+        let unaAgenda = ArrAgenda[k];
         // Se recorren los turnos (aqui se debería filtrar por los estados y por financiador)
         for (let i = 0; i < unaAgenda.bloques.length; i++) {
             let b = unaAgenda.bloques[i];
@@ -39,13 +44,16 @@ function devolverTurnos(ArrAgenda) {
                 if (t.estado === 'asignado') {
                     let estado = estadoTurno(t);
                     ArrTurnos.push({
-                        idAgenda: unaAgenda._id,
-                        idBloque: unaAgenda.bloques[i]._id,
                         fecha: t.horaInicio,
                         paciente: t.paciente,
-                        turno: t,
+                        financiador: t.paciente && t.paciente.obraSocial ? t.paciente.obraSocial : null,
+                        prestacion: t.tipoPrestacion,
                         profesionales: unaAgenda.profesionales,
-                        estado
+                        estado,
+                        idAgenda: unaAgenda._id,
+                        idBloque: unaAgenda.bloques[i]._id,
+                        turno: t,
+                        idPrestacion: null
                     });
                 }
             }
@@ -56,13 +64,16 @@ function devolverTurnos(ArrAgenda) {
             if (t.estado === 'asignado') {
                 let estado = estadoTurno(t);
                 ArrTurnos.push({
-                    idAgenda: unaAgenda._id,
-                    idBloque: null,
                     fecha: t.horaInicio,
                     paciente: t.paciente,
-                    turno: t,
+                    financiador: t.paciente && t.paciente.obraSocial ? t.paciente.obraSocial : null,
+                    prestacion: t.tipoPrestacion,
                     profesionales: unaAgenda.profesionales,
-                    estado
+                    estado,
+                    idAgenda: unaAgenda._id,
+                    idBloque: null,
+                    turno: t,
+                    idPrestacion: null
                 });
             }
         }
