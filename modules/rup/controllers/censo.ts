@@ -2,8 +2,8 @@
 import * as moment from 'moment';
 import * as camasController from './../controllers/cama';
 import * as internacionesController from './../controllers/internacion';
-import * as censoController from './../controllers/censo';
-
+import { toArray } from '../../../utils/utils';
+import { model as censo } from './../schemas/censo';
 
 export function filtrarMovimientosIntraUO(camas) {
     let salida = [];
@@ -149,36 +149,41 @@ export async function completarResumenDiario(listadoCenso, unidad, fecha, idOrga
         return err;
     }
 }
-
-export function censoMensual(fechaDesde, fechaHasta, unidad, idOrganizacion) {
-    return new Promise(async (resolve, reject) => {
-        let censoMensualTotal = [];
-        let nuevaFechaDesde = new Date(fechaDesde);
-        let nuevaFechaHasta = new Date(fechaHasta);
-        let promises = [];
-        let algo = 0;
-        while (nuevaFechaDesde <= nuevaFechaHasta) {
-            let censo = await censoDiario(unidad, new Date(nuevaFechaDesde), idOrganizacion);
-            promises.push(censo);
-            let nuevoDia = nuevaFechaDesde.getDate() + 1;
-            nuevaFechaDesde.setDate(nuevoDia);
+export async function censoMensual(fechaDesde, fechaHasta, unidad, organizacionID) {
+    let pipelineEstado = [];
+    pipelineEstado = [{
+        $match: {
+            $and: [
+                { 'censos.fecha': { $gte: fechaDesde } },
+                { 'censos.fecha': { $lte: fechaHasta } },
+                { idOrganizacion: organizacionID },
+                { 'unidadOrganizativa.conceptId': unidad }
+            ]
         }
-        Promise.all(promises).then(async censosDiarios => {
-            for (let unCenso of censosDiarios) {
-                if (unCenso.length > 0) {
-                    let resumen = await censoController.completarResumenDiario(unCenso, unidad, unCenso[0].fecha, idOrganizacion);
-                    let resultadoFinal = {
-                        fecha: unCenso[0].fecha,
-                        resumen
-                    };
-                    censoMensualTotal.push(resultadoFinal);
-                }
-            }
-            return resolve(censoMensualTotal);
-        });
-    });
-}
+    },
+    { $unwind: '$censos' },
+    {
+        $project: {
+            fecha: '$censos.fecha',
+            censo: '$censos.censo'
+        }
+    }, {
+        $match: {
+            $and: [
+                { fecha: { $gte: fechaDesde } },
+                { fecha: { $lte: fechaHasta } },
 
+            ]
+        }
+    },
+    ];
+    let data = await toArray(censo.aggregate(pipelineEstado).cursor({}).exec());
+    if (data && data.length > 0) {
+        return data;
+    } else {
+        return null;
+    }
+}
 export function completarUnCenso(censo, indice, fecha, idUnidadOrganizativa, CamaCenso) {
     let internacion = CamaCenso.internacion;
     let ingresoEgreso = [];
