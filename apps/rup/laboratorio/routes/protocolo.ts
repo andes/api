@@ -3,6 +3,7 @@ import { Auth } from './../../../../auth/auth.class';
 import * as express from 'express';
 import { model as Prestacion } from '../../../../modules/rup/schemas/prestacion';
 
+
 import { getResultadosAnteriores,
     getEjecucionesCobasC311,
     enviarAutoanalizador,
@@ -169,7 +170,7 @@ router.patch('/protocolos/ejecuciones/registros/:id', async (req, res, next) => 
 
 router.patch('/protocolos/ejecuciones/registros', async (req, res, next) => {
     try {
-        res.json(await actualizarRegistrosEjecucion(req.body.registros));
+        res.json(await actualizarRegistrosEjecucion(req));
     } catch (e) {
         return next(e);
     }

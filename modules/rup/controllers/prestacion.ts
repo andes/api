@@ -1,5 +1,5 @@
 import { model as Prestacion } from '../../rup/schemas/prestacion';
-import * as mongoose from 'mongoose';
+import { Types } from 'mongoose';
 import { Auth } from '../../../auth/auth.class';
 
 /**
@@ -11,7 +11,7 @@ import { Auth } from '../../../auth/auth.class';
  */
 export function liberarRefTurno(tid, req) {
     const query = Prestacion.findOne({ $where: 'this.estados[this.estados.length - 1].tipo ==  "pendiente"' });
-    query.where({ 'solicitud.turno': mongoose.Types.ObjectId(tid) });
+    query.where({ 'solicitud.turno': Types.ObjectId(tid) });
     query.exec((err, data1: any) => {
         if (err) {
             return ({
@@ -30,4 +30,23 @@ export function liberarRefTurno(tid, req) {
             return (data1);
         }
     });
+}
+
+/**
+ *
+ *
+ * @export
+ * @param {*} idProtocolo
+ * @param {*} estado
+ * @returns
+ */
+export async function pushEstado(req) {
+    try {
+        let prestacion = await Prestacion.findById(Types.ObjectId(req.body.idProtocolo) );
+        prestacion['estados'].push(req.body.estado);
+        Auth.audit(prestacion, req);
+        return prestacion.save();
+    } catch (e) {
+        throw e;
+    }
 }
