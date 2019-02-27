@@ -118,13 +118,17 @@ export class Documento {
 
         let htmlReporte = getHtmlStartReporte();
 
-        for (let protocolo of protocolos) {
-            htmlReporte += getHtmlHeader(protocolos[0].solicitud.organizacion.nombre);
-            htmlReporte += getHtmlDatosProtocolo(protocolo);
-            for (let registro of protocolo.ejecucion.registros) {
+        // for (let protocolo of protocolos) {
+        for (let i = 0; i < protocolos.length; i++) {
+            htmlReporte += getHtmlHeader(protocolos[i].solicitud.organizacion.nombre);
+            htmlReporte += getHtmlDatosProtocolo(protocolos[i]);
+            for (let registro of protocolos[i].ejecucion.registros) {
                 htmlReporte += getHtmlResultadosPractica(registro);
             }
-            htmlReporte += getPageBreak();
+
+            if (protocolos[i + 1]) {
+                htmlReporte += getPageBreak();
+            }
         }
 
         htmlReporte += getHtmlEndReporte();

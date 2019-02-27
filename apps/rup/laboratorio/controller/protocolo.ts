@@ -3,6 +3,7 @@ import * as moment from 'moment';
 import { Types } from 'mongoose';
 import { model as Prestacion } from '../../../../modules/rup/schemas/prestacion';
 import { model as Organizacion } from '../../../../core/tm/schemas/organizacion';
+import { pushEstado } from '../../../../modules/rup/controllers/prestacion';
 import { toArray } from '../../../../utils/utils';
 import { EventCore } from '@andes/event-bus';
 import { buscarPaciente } from '../../../../core/mpi/controller/paciente';
@@ -423,6 +424,8 @@ async function getQuery(params) {
                 matchOpt.$match['solicitud.registros.valor.solicitudPrestacion.numeroProtocolo.numero'] = { $lte: Number(value) };
             } else if (e === 'estado') {
                 matchOpt.$match['estados.tipo'] = { $in: (typeof value === 'string') ? [value] : value };
+            } else if (e === 'estadoFiltrar') {
+                matchOpt.$match['estados.tipo'] = { $not: { $in: (typeof value === 'string') ? [value] : value } };
             } else if (e === 'areas') {
                 matchOpt.$match['solicitud.registros.valor.solicitudPrestacion.practicas.area._id'] = {
                     $in: (Array.isArray(value) ? value : [value])
@@ -509,18 +512,17 @@ async function getUltimoNumeroProtocolo(idOrganizacion) {
  * @param {*} body
  * @param {*} registros
  */
-export async function actualizarRegistrosEjecucion(registros) {
-    let promises = registros.map((registro: any) => {
+export async function actualizarRegistrosEjecucion(req) {
+    let promises = req.body.registros.map((registro: any) => {
         return Prestacion.updateOne(
-            { 'ejecucion.registros._id': Types.ObjectId(registro._id) },
+            { $and: [
+                { _id: Types.ObjectId(req.body.idProtocolo) },
+                { 'ejecucion.registros._id': Types.ObjectId(registro._id) }
+            ]},
             {
                 $set: {
                     'ejecucion.registros.$.valor': registro.valor
                 }
-                // ,
-                // $push: {
-                //     'ejecucion.registros.$.valor.estados': ejecucion.estado
-                // }
             }, (err, data: any) => {
                 if (err) {
                     throw err;
@@ -528,7 +530,13 @@ export async function actualizarRegistrosEjecucion(registros) {
             }
         );
     });
-    return await Promise.all(promises);
+    const res  = await Promise.all(promises);
+
+    if (req.body.idProtocolo && req.body.estado) {
+        await pushEstado(req);
+    }
+
+    return res;
 }
 
 /**
