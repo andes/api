@@ -58,17 +58,19 @@ export class Documento {
 
 
     private static generarReporteResultados(protocolos) {
-        let getHtmlStartReporte = () => {
-            return fs.readFileSync(path.join(__dirname, '../templates/startReporte.html'), 'utf8');
-        };
+        const htmlStartReporte = fs.readFileSync(path.join(__dirname, '../templates/startReporte.html'), 'utf8');
+        const htmlHeader = fs.readFileSync(path.join(__dirname, '../templates/header.html'), 'utf8');
+        const htmlDatosProtocolo = fs.readFileSync(path.join(__dirname, '../templates/datosProtocolo.html'), 'utf8');
+        const htmlResultadosPractica = fs.readFileSync(path.join(__dirname, '../templates/resultadosPractica.html'), 'utf8');
+        const htmlEndReporte = fs.readFileSync(path.join(__dirname, '../templates/endReporte.html'), 'utf8');
+        const htmlPageBreak = fs.readFileSync(path.join(__dirname, '../templates/pageBreak.html'), 'utf8');
 
         let getHtmlHeader = (organizacionNombre) => {
-            return fs.readFileSync(path.join(__dirname, '../templates/header.html'), 'utf8')
-                .replace('<!-- protocolos[0].solicitud.organizacion.nombre -->', organizacionNombre);
+            return htmlHeader .replace('<!-- protocolos[0].solicitud.organizacion.nombre -->', organizacionNombre);
         };
 
         let getHtmlDatosProtocolo = (protocolo) => {
-            let html = fs.readFileSync(path.join(__dirname, '../templates/datosProtocolo.html'), 'utf8')
+            let html = htmlDatosProtocolo
                 .replace('<!-- paciente.apellido, paciente.nombre -->', protocolo.paciente.apellido + ', ' + protocolo.paciente.nombre)
                 .replace('<!-- paciente.documento -->', protocolo.paciente.documento)
                 .replace('<!-- paciente.fechaNacimiento -->', moment(protocolo.paciente.fechaNacimiento).format('DD-MM-YYYY'))
@@ -89,12 +91,14 @@ export class Documento {
         };
 
         let getHtmlResultadosPractica = (registro) => {
-            let html = fs.readFileSync(path.join(__dirname, '../templates/resultadosPractica.html'), 'utf8')
-                .replace('<!-- registro.nombre -->', registro.nombre);
+            let html = htmlResultadosPractica.replace('<!-- registro.nombre -->', registro.nombre);
 
             if (registro.valor.resultado.valor) {
-                html = html.replace('<!-- registro.valor.resultado.valor -->',
-                    registro.valor.resultado.valor + ' ' + registro.valor.practica.unidadMedida.nombre);
+                let valor = registro.valor.resultado.valor;
+                if (registro.valor.practica.unidadMedida && registro.valor.practica.unidadMedida.nombre) {
+                    valor += ' ' + registro.valor.practica.unidadMedida.nombre;
+                }
+                html = html.replace('<!-- registro.valor.resultado.valor -->', valor);
             }
 
             if (registro.valor.valoresReferencia) {
@@ -108,15 +112,7 @@ export class Documento {
             return html;
         };
 
-        let getHtmlEndReporte = () => {
-            return fs.readFileSync(path.join(__dirname, '../templates/endReporte.html'), 'utf8');
-        };
-
-        let getPageBreak = () => {
-            return fs.readFileSync(path.join(__dirname, '../templates/pageBreak.html'), 'utf8');
-        };
-
-        let htmlReporte = getHtmlStartReporte();
+        let htmlReporte = htmlStartReporte;
 
         // for (let protocolo of protocolos) {
         for (let i = 0; i < protocolos.length; i++) {
@@ -127,11 +123,11 @@ export class Documento {
             }
 
             if (protocolos[i + 1]) {
-                htmlReporte += getPageBreak();
+                htmlReporte += htmlPageBreak;
             }
         }
 
-        htmlReporte += getHtmlEndReporte();
+        htmlReporte += htmlEndReporte;
         return htmlReporte;
     }
 }
