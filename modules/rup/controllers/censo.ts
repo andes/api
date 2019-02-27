@@ -3,7 +3,12 @@ import * as moment from 'moment';
 import * as camasController from './../controllers/cama';
 import * as internacionesController from './../controllers/internacion';
 import * as censoController from './../controllers/censo';
+import * as mongoose from 'mongoose';
+import { toArray } from '../../../utils/utils';
 
+import * as cama from './../schemas/camas';
+import { Organizacion } from './../../../core/tm/schemas/organizacion';
+import * as censo from './../../../modules/rup/schemas/censo';
 
 export function filtrarMovimientosIntraUO(camas) {
     let salida = [];
@@ -46,6 +51,7 @@ export function filtrarMovimientosIntraUO(camas) {
 
 export async function censoDiario(unidad, fechaConsulta, idOrganizacion) {
     try {
+
         const fecha = fechaConsulta;
         let listadoCensos = [];
         let camas = await camasController.camaOcupadasxUO(unidad, fecha, idOrganizacion);
@@ -56,7 +62,7 @@ export async function censoDiario(unidad, fechaConsulta, idOrganizacion) {
             if (resultado.length) {
                 // filtramos aquellos movimientos que fueron dentro de una misma unidad organizativa
                 // y nos quedamos con el ultimo
-                let pasesCamaCenso: any[] = this.filtrarMovimientosIntraUO(resultado);
+                let pasesCamaCenso: any[] = filtrarMovimientosIntraUO(resultado);
                 // loopeamos todos los pases de las camas
                 pasesCamaCenso.map((censo: any, indice) => {
                     censo.pases = censo.pases.filter(p => { return p.estados.fecha <= moment(fecha).endOf('day').toDate(); });
@@ -68,6 +74,7 @@ export async function censoDiario(unidad, fechaConsulta, idOrganizacion) {
             } else {
                 listadoCensos.push({ censo: null, fecha });
             }
+            console.log(listadoCensos);
             return await listadoCensos;
         } else {
             return null;
@@ -160,6 +167,7 @@ export function censoMensual(fechaDesde, fechaHasta, unidad, idOrganizacion) {
         while (nuevaFechaDesde <= nuevaFechaHasta) {
             let censo = await censoDiario(unidad, new Date(nuevaFechaDesde), idOrganizacion);
             promises.push(censo);
+
             let nuevoDia = nuevaFechaDesde.getDate() + 1;
             nuevaFechaDesde.setDate(nuevoDia);
         }
@@ -177,6 +185,96 @@ export function censoMensual(fechaDesde, fechaHasta, unidad, idOrganizacion) {
             return resolve(censoMensualTotal);
         });
     });
+}
+
+export async function censoMensualJob() {
+
+    // traigo listado de organizaciones desde el listado de cama
+    const data2 = await toArray(cama.model.aggregate([
+        { $group: { _id: '$organizacion._id' } }
+    ]).cursor({}).exec());
+
+    let censoMensual = [];
+
+    for (let index = 0; index < data2.length; index++) {
+        const organizaciones = data2[index];
+        // obtengo el obj completo de cada organizacion por id
+        const org: any = await Organizacion.find(organizaciones._id);
+        let unidadesOrg = org[0].unidadesOrganizativas;
+        let idOrganizacion = mongoose.Types.ObjectId(organizaciones._id);
+        let resultadoFinal;
+        // loop por cada unidad organizativa de cada organizacion
+        for (let index = 0; index < unidadesOrg.length; index++) {
+            const uOrg = unidadesOrg[index];
+            let fechaDesde = moment(new Date().setMonth(new Date().getMonth() - 1)).startOf('day').toDate();
+
+            await censoController.censoMensual(moment(new Date('02/15/2019')).endOf('day'), moment(new Date()).endOf('day'), uOrg.conceptId, idOrganizacion).then(async (result: any) => {
+                // consulto si ya existe un censo para esa unidad organizativa y esa organizacion
+                let existeCenso: any = await censo.model.find({ 'unidadOrganizativa.conceptId': uOrg.conceptId, idOrganizacion: organizaciones._id });
+                console.log('resultado', result);
+
+                if (existeCenso.length > 0) {
+                    for (let index = 0; index < result.length; index++) {
+                        const element = result[index];
+
+                        // busco el index del censo que coincida con la fecha para despues pisar el mismo con el nuevo valor generado del censo
+                        let indexCenso = existeCenso[0].censos.findIndex(x => { return new Date(x.fecha).toString() === new Date(element.fecha).toString(); });
+                        console.log('index', indexCenso);
+
+                        // si es encontrado el valor piso el resultado
+                        if (indexCenso >= 0) {
+                            console.log('if');
+
+                            existeCenso[0].censos[indexCenso].censo = element.resumen;
+                            console.log(existeCenso[0]);
+
+                        } else {
+                            // si no se encontro se va a pushear el nuevo dia
+
+                            console.log('else interno');
+                            existeCenso[0].censos.push({
+                                fecha: element.fecha,
+                                censo: element.resumen
+                            });
+                            console.log(existeCenso[0]);
+
+                        }
+
+                    }
+                    await existeCenso[0].save();
+                } else {
+                    console.log('else');
+                    let censoObj = [];
+                    for (let index = 0; index < result.length; index++) {
+                        const element = result[index];
+                        censoObj.push({
+                            fecha: element.fecha,
+                            censo: element.resumen
+                        });
+                    }
+
+                    console.log('res', censoObj);
+                    let obj = {
+                        unidadOrganizativa: uOrg,
+                        idOrganizacion: organizaciones._id,
+                        censos: censoObj
+                    };
+                    // censoMensual.push(obj);
+                    const Censo = new censo.model(obj);
+                    let res = await Censo.save();
+
+
+                    console.log(res);
+
+
+                }
+
+            });
+        }
+
+    }
+
+
 }
 
 export function completarUnCenso(censo, indice, fecha, idUnidadOrganizativa, CamaCenso) {
