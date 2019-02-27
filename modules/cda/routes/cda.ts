@@ -31,7 +31,7 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
         }
         const yaExiste = await cdaCtr.CDAExists(idPrestacion, fecha, orgId);
         if (yaExiste) {
-            return next({ error: 'prestacion_existente ' + idPrestacion });
+            return next({ error: `prestacion_existente  ${idPrestacion}` });
         }
 
         const dataPaciente = req.body.paciente;
@@ -41,7 +41,7 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
         let prestacion = await cdaCtr.matchCode(req.body.tipoPrestacion);
         if (!prestacion) {
             // Es obligatorio que posea prestación
-            return next({ error: 'prestacion_invalida ' + req.body.tipoPrestacion });
+            return next({ error: `prestacion_invalida ${req.body.tipoPrestacion}` });
         }
         let cie10Code = req.body.cie10;
         const file: string = req.body.file;
@@ -57,7 +57,7 @@ router.post('/create', cdaCtr.validateMiddleware, async (req: any, res, next) =>
                     { codigo: cie10Code + '.8' }]
             });
             if (!cie10) {
-                return next({ error: 'cie10_invalid ' + cie10Code });
+                return next({ error: `cie10_invalid  ${cie10Code}` });
             }
         }
         let confidencialidad = 'N';
