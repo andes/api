@@ -72,10 +72,11 @@ export function listadoInternacion(filtros, organizacion) {
     }
 
     if (filtros.estadoString) {
-        opciones['$where'] = 'this.estados[this.estados.length - 1].tipo ==  \"' + filtros.estadoString + '\"';
+        opciones['$where'] = 'this.estados[this.estados.length - 1].tipo ==  \"' + filtros.estadoString + '\" && this.estados[this.estados.length - 1].tipo !=  \"modificada\"';
 
+    } else {
+        opciones['$where'] = 'this.estados[this.estados.length - 1].tipo !=  \"modificada\"';
     }
-    opciones['$where'] = 'this.estados[this.estados.length - 1].tipo !=  \"modificada\"';
 
     opciones['solicitud.ambitoOrigen'] = 'internacion';
     opciones['solicitud.tipoPrestacion.conceptId'] = '32485007';

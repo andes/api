@@ -107,22 +107,17 @@ router.get('/internaciones/censo', async (req, res, next) => {
 });
 
 
-router.get('/internaciones/censoMensual', async (req, res, next) => {
+router.get('/internaciones/censoMensual',  (req, res, next) => {
     let unidad = req.query.unidad;
 
     let idOrganizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
     let resultadoFinal;
     let censoMensual = [];
-    console.log(req.query.fechaDesde, req.query.fechaHasta, unidad, idOrganizacion);
     censoController.censoMensual(req.query.fechaDesde, req.query.fechaHasta, unidad, idOrganizacion).then(result => {
         res.json(result);
     });
 });
 
-router.get('/internaciones/censoMensual2', async (req, res, next) => {
-    censoController.censoMensualJob();
-
-});
 
 router.get('/internaciones/censo/disponibilidad', (req, res, next) => {
     // conceptId de la unidad organizativa
