@@ -17,7 +17,6 @@ router.get('/turnos_prestaciones', async (req, res, next) => {
         profesional: req.query.idProfesional,
         financiador: req.query.financiador
     };
-
     try {
         // Procesa los turnos aplicando los filtros
         let _turnos = agendaController.procesar(parametros);

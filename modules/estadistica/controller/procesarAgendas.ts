@@ -1,5 +1,4 @@
 import * as agenda from '../../turnos/schemas/agenda';
-import * as mongoose from 'mongoose';
 
 /**
  * @export Devuelve los turnos con paciente asignado que cumplen con los filtros
@@ -121,9 +120,13 @@ function estadoTurno(turno, turnoEstado) {
 function obraSocialTurno(turno, os) {
     if (os !== 'todos') {
         if (turno && turno.paciente && turno.paciente.obraSocial) {
-            return turno.paciente.obraSocial.id === os ? true : false;
+            return turno.paciente.obraSocial.financiador === os ? true : false;
         } else {
-            return false;
+            if (os === 'No posee' && turno.paciente && !turno.paciente.obraSocial) {
+                return true;
+            } else {
+                return false;
+            }
         }
     } else {
         return true;
