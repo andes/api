@@ -1,5 +1,5 @@
 import { tipoPrestacionSchema } from './../../tm/schemas/tipoPrestacion';
-import { profesionalSchema } from './../../tm/schemas/profesional';
+import { NombreApellidoSchema } from './../../tm/schemas/nombreApellido';
 
 import * as mongoose from 'mongoose';
 import * as turnoSchema from '../../../modules/turnos/schemas/turno';
@@ -26,7 +26,7 @@ export let logPacienteSchema = new mongoose.Schema({
     },
     dataTurno: {
         turno: turnoSchema,
-        profesionales: [profesionalSchema],
+        profesionales: [NombreApellidoSchema],
         tipoPrestacion: tipoPrestacionSchema,
         idBloque: mongoose.Schema.Types.ObjectId,
         idAgenda: mongoose.Schema.Types.ObjectId
