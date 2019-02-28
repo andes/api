@@ -85,7 +85,6 @@ export function updatePaciente(pacienteObj, data, req) {
             }).catch(error => {
                 return reject(error);
             });
-            resolve(pacienteObj);
         });
     });
 }
@@ -144,7 +143,6 @@ export function updatePacienteMpi(pacMpi, pacAndes, req) {
             }).catch(error => {
                 return reject(error);
             });
-            resolve(pacMpi);
         });
     });
 }

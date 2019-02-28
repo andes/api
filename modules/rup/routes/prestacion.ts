@@ -12,6 +12,7 @@ import { snomedModel } from '../../../core/term/schemas/snomed';
 import * as camasController from './../controllers/cama';
 import { parseDate } from './../../../shared/parse';
 import { EventCore } from '@andes/event-bus';
+import { facturacionAutomatica } from './../../facturacionAutomatica/controllers/facturacionAutomatica';
 
 const router = express.Router();
 import async = require('async');
@@ -553,15 +554,19 @@ router.patch('/prestaciones/:id', (req, res, next) => {
             default:
                 return next(500);
         }
-
         Auth.audit(data, req);
-
         data.save((error, prestacion) => {
             if (error) {
                 return next(error);
             }
 
             if (req.body.estado && req.body.estado.tipo === 'validada') {
+
+                /* Sacar esto y armar todo desde el microservicio pasando solo la prestación */
+                // let factura = await facturacionAutomatica(prestacion);
+
+                // EventCore.emitAsync('facturacion:factura:create', factura);
+
                 EventCore.emitAsync('rup:prestacion:validate', data);
             }
 
