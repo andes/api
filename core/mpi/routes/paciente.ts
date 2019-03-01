@@ -106,38 +106,6 @@ router.get('/pacientes/dashboard/', async (req, res, next) => {
 
 });
 
-router.get('/pacientes/auditoria/', (req, res, next) => {
-    let filtro;
-    switch (req.query.estado) {
-        case 'validados':
-            filtro = {
-                estado: 'validado'
-            };
-            break;
-        case 'temporales':
-            filtro = {
-                estado: 'temporal'
-            };
-            break;
-        case 'fallecidos':
-            filtro = {
-                fechaFallecimiento: {
-                    $exists: true
-                }
-            };
-            break;
-    }
-    filtro['activo'] = req.query.activo === true ? true : false;
-    let query = paciente.find(filtro);
-
-    query.exec((err, data) => {
-        if (err) {
-            return next(err);
-        }
-        res.json(data);
-    });
-});
-
 router.get('/pacientes/auditoria/vinculados/', async (req, res, next) => {
     let filtro = {
         'identificadores.0': { $exists: true },
