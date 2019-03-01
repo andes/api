@@ -435,7 +435,7 @@ router.post('/pacientes', async (req, res, next) => {
         if (req.body.documento) {
             // Todo loguear posible duplicado si ignora el check
             let resultado = await controller.checkRepetido(req.body);
-            if (!resultado || (resultado && req.body.ignoreCheck && !resultado.macheoAlto && !resultado.dniRepetido)) {
+            if ((resultado && resultado.resultadoMatching.length <= 0) || (resultado && resultado.resultadoMatching.length > 0 && req.body.ignoreCheck && !resultado.macheoAlto && !resultado.dniRepetido)) {
                 req.body.activo = true;
                 let pacienteObj = await controller.createPaciente(req.body, req);
                 // se carga geo referencia desde api de google
@@ -504,10 +504,7 @@ router.put('/pacientes/:id', async (req, res, next) => {
         // Todo loguear posible duplicado si ignora el check
         let resultado = await controller.checkRepetido(req.body);
 
-        if (!resultado.resultadoMatching.length ||
-            resultado.resultadoMatching.length === 0 ||
-            (req.body.ignoreCheck && !resultado.macheoAlto && !resultado.dniRepetido)
-        ) {
+        if ((resultado && resultado.resultadoMatching.length <= 0) || (resultado && resultado.resultadoMatching.length > 0 && req.body.ignoreCheck && !resultado.macheoAlto && !resultado.dniRepetido)) {
             let patientFound: any = await paciente.findById(query).exec();
 
             if (patientFound) {
