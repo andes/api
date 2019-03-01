@@ -327,26 +327,16 @@ export default [
         comment: '',
         child: [
             {
-                key: 'lectura',
-                title: 'Ver Auditoría de Pacientes',
+                key: 'vincular',
+                title: 'Vincular Pacientes, activar y desactivar sus vinculados',
                 type: 'boolean'
             },
             {
                 key: 'edicion',
-                title: 'Editar auditoría de pacientes',
-                child: [
-                    {
-                        key: 'activar/vincular',
-                        title: 'Activar/Vincular Pacientes',
-                        type: 'boolean'
-                    },
-                    {
-                        key: 'reporteErrores',
-                        title: 'Edición de Pacientes Validados',
-                        type: 'boolean'
-                    }
-                ]
+                title: 'Edición de Pacientes Validados',
+                type: 'boolean'
             }
+
         ]
     }, {
         key: 'espaciosFisicos',
