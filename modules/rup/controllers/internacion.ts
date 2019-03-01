@@ -70,7 +70,6 @@ export function listadoInternacion(filtros, organizacion) {
         opciones['ejecucion.registros.valor.informeIngreso.fechaIngreso'] = fechas;
 
     }
-    console.log(filtros);
     if (filtros.estadoString) {
         opciones['$where'] = 'this.estados[this.estados.length - 1].tipo ==  \"' + filtros.estadoString + '\" && this.estados[this.estados.length - 1].tipo !=  \"modificada\"';
 

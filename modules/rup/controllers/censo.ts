@@ -74,7 +74,6 @@ export async function censoDiario(unidad, fechaConsulta, idOrganizacion) {
             } else {
                 listadoCensos.push({ censo: null, fecha });
             }
-            console.log(listadoCensos);
             return await listadoCensos;
         } else {
             return null;
@@ -163,7 +162,6 @@ export function censoMensual(fechaDesde, fechaHasta, unidad, idOrganizacion) {
         let nuevaFechaDesde = new Date(fechaDesde);
         let nuevaFechaHasta = new Date(fechaHasta);
         let promises = [];
-        let algo = 0;
         while (nuevaFechaDesde <= nuevaFechaHasta) {
             let censo = await censoDiario(unidad, new Date(nuevaFechaDesde), idOrganizacion);
             promises.push(censo);
@@ -199,7 +197,6 @@ export async function censoMensualJob(done) {
         const org: any = await Organizacion.find(organizaciones._id);
         let unidadesOrg = org[0].unidadesOrganizativas;
         let idOrganizacion = mongoose.Types.ObjectId(organizaciones._id);
-        let resultadoFinal;
         // loop por cada unidad organizativa de cada organizacion
         for (let index = 0; index < unidadesOrg.length; index++) {
             const uOrg = unidadesOrg[index];
@@ -249,7 +246,7 @@ export async function censoMensualJob(done) {
                     };
                     // censoMensual.push(obj);
                     const Censo = new censo.model(obj);
-                    let res = await Censo.save();
+                    await Censo.save();
 
                 }
 

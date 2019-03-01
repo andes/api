@@ -4,12 +4,6 @@ import * as censoController from './../controllers/censo';
 import * as internacionesController from './../controllers/internacion';
 import * as camasController from './../controllers/cama';
 import { Auth } from './../../../auth/auth.class';
-import * as cama from './../schemas/camas';
-import { toArray } from '../../../utils/utils';
-import { Organizacion } from './../../../core/tm/schemas/organizacion';
-import * as censo from './../../../modules/rup/schemas/censo';
-
-import moment = require('moment');
 const router = express.Router();
 
 router.get('/internaciones/ultima/:idPaciente', (req, res, next) => {
@@ -107,7 +101,7 @@ router.get('/internaciones/censo', async (req, res, next) => {
 });
 
 
-router.get('/internaciones/censoMensual',  (req, res, next) => {
+router.get('/internaciones/censoMensual', (req, res, next) => {
     let unidad = req.query.unidad;
 
     let idOrganizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
