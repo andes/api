@@ -6,6 +6,7 @@ import { log } from '../../log/schemas/log';
 import * as controller from '../controller/paciente';
 import { Auth } from './../../../auth/auth.class';
 import { Logger } from '../../../utils/logService';
+import * as andesLog from '@andes/log'
 import { ElasticSync } from '../../../utils/elasticSync';
 import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
@@ -145,11 +146,6 @@ router.get('/pacientes/search', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
         return next(403);
     }
-    // Logger de la consulta a ejecutar
-    Logger.log(req, 'mpi', 'query', {
-        elasticSearch: req.query
-    });
-
     controller.matching({ type: 'search', filtros: req.query }).then(result => {
         res.send(result);
     }).catch(error => {
