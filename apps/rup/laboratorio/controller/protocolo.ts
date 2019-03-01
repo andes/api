@@ -85,6 +85,7 @@ const lookupResultadoAnterior = {
  */
 export async function getProtocolos(params) {
     let conditions = await getQuery(params);
+    conditions.unshift({ $match: { 'solicitud.tipoPrestacion.conceptId': '15220000' } });
     conditions.push({ $unwind: '$ejecucion.registros' });
     conditions.push({ $lookup: lookup });
     if (params.areas) {
@@ -133,7 +134,7 @@ export async function getProtocolos(params) {
     conditions.push({ $group: group });
     conditions.push({ $project: project });
 
-    let data = await Prestacion.aggregate(conditions).exec();
+    let data = await Prestacion.aggregate(conditions).allowDiskUse(true).exec();
     if (params.organizacionDerivacion) {
         data.forEach((d) => {
             d.ejecucion.registros = d.ejecucion.registros.filter((r) => {
@@ -192,7 +193,10 @@ function cargarValoresDeReferencia(data) {
 function getPresentacion(registro) {
     // Debiera devolver la presentacion que se configuro localmente para uso en la organizacion,
     // Provisoriamente devuelve la primera posicion
-    return registro.valor.practica.presentaciones[0];
+    if (registro.valor.practica) {
+        return registro.valor.practica.presentaciones[0];
+    }
+    return null;
 }
 
 /**
@@ -520,10 +524,12 @@ async function getUltimoNumeroProtocolo(idOrganizacion) {
 export async function actualizarRegistrosEjecucion(req) {
     let promises = req.body.registros.map((registro: any) => {
         return Prestacion.updateOne(
-            { $and: [
-                { _id: Types.ObjectId(req.body.idProtocolo) },
-                { 'ejecucion.registros._id': Types.ObjectId(registro._id) }
-            ]},
+            {
+                $and: [
+                    { _id: Types.ObjectId(req.body.idProtocolo) },
+                    { 'ejecucion.registros._id': Types.ObjectId(registro._id) }
+                ]
+            },
             {
                 $set: {
                     'ejecucion.registros.$.valor': registro.valor
@@ -535,7 +541,7 @@ export async function actualizarRegistrosEjecucion(req) {
             }
         );
     });
-    const res  = await Promise.all(promises);
+    const res = await Promise.all(promises);
 
     if (req.body.idProtocolo && req.body.estado) {
         await pushEstado(req);
