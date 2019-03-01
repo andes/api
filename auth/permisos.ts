@@ -147,7 +147,8 @@ export default [
                 key: 'cama',
                 title: 'Acciones sobre una cama',
                 child: [
-                    { key: 'create', title: 'Crear nueva cama', type: 'boolean' }
+                    { key: 'create', title: 'Crear nueva cama', type: 'boolean' },
+                    { key: 'baja', title: 'Eliminar cama', type: 'boolean' }
                 ]
             },
             { key: 'censo', title: 'Ver senso diario y mensual', type: 'boolean' },
