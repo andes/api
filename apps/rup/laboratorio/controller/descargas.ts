@@ -114,7 +114,6 @@ export class Documento {
 
         let htmlReporte = htmlStartReporte;
 
-        // for (let protocolo of protocolos) {
         for (let i = 0; i < protocolos.length; i++) {
             htmlReporte += getHtmlHeader(protocolos[i].solicitud.organizacion.nombre);
             htmlReporte += getHtmlDatosProtocolo(protocolos[i]);
