@@ -114,11 +114,19 @@ router.post('/pacientes/validar/', async (req, res, next) => {
     const pacienteAndes = req.body;
     if (pacienteAndes && pacienteAndes.documento && pacienteAndes.sexo) {
         try {
-            const resultado: any = await controller.validarPaciente(pacienteAndes, req);
+            // chequeamos si el par dni-sexo ya existe en ANDES
+            const resultadoCheck = await controller.checkRepetido(pacienteAndes);
+            let resultado;
+            if (resultadoCheck.dniRepetido) {
+                resultado = { paciente: resultadoCheck.resultadoMatching[0].paciente, existente: true };
+            } else {
+                resultado = await controller.validarPaciente(pacienteAndes, req);
+                resultado.existente = false;
+            }
             res.json(resultado);
-            andesLog(req, logKeys.validacionPaciente.key, pacienteAndes, logKeys.validacionPaciente.operacion, resultado);
+            andesLog(req, logKeys.validacionPaciente.key, null, logKeys.validacionPaciente.operacion, resultado);
         } catch (err) {
-            andesLog(req, logKeys.errorValidacionPaciente.key, pacienteAndes, logKeys.errorValidacionPaciente.operacion, err);
+            andesLog(req, logKeys.errorValidacionPaciente.key, null, logKeys.errorValidacionPaciente.operacion, err);
             return next(err);
         }
     } else {

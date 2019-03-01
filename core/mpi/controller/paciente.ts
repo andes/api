@@ -17,6 +17,7 @@ import { getGeoreferencia } from '../../../utils/serviciosGeoreferencia';
 import * as Barrio from '../../tm/schemas/barrio';
 import { log as andesLog } from '@andes/log';
 import { logKeys } from '../../../config';
+import * as mongoose from 'mongoose';
 
 /**
  * Crea un paciente y lo sincroniza con elastic
@@ -788,26 +789,36 @@ export async function checkRepetido(nuevoPaciente): Promise<{ resultadoMatching:
         fechaNacimiento: nuevoPaciente.fechaNacimiento
     };
 
-    let resultadoMatching = await matching(matchingInputData);  // Handlear error en funcion llamadora
+    let candidatos = await matching(matchingInputData);  // Handlear error en funcion llamadora
     // Filtramos al propio paciente y a los resultados por debajo de la cota minima
 
-    resultadoMatching = resultadoMatching.filter(elem => {
+    candidatos = candidatos.filter(elem => {
         return (elem.paciente.id !== nuevoPaciente.id) && (elem.match > config.mpi.cotaMatchMin);
     });
 
     // Extraemos los validados de los resultados
-    let similaresValidados = resultadoMatching.filter(elem => elem.paciente.estado === 'validado');
+    let similaresValidados = candidatos.filter(elem => elem.paciente.estado === 'validado');
     // Si el nuevo paciente está validado, filtramos los candidatos temporales
     if (nuevoPaciente.estado === 'validado') {
-        resultadoMatching = similaresValidados;
+        candidatos = similaresValidados;
     }
-    // La condición verifica que el matching no de superior a la cota maxima y que el nuevo paciente no coincida en dni y sexo con alguno ya existente
 
-    let macheoAlto = (resultadoMatching.filter(element => element.match > config.mpi.cotaMatchMax).length > 0);
+    let macheoAlto = (candidatos.filter(element => element.match > config.mpi.cotaMatchMax).length > 0);
     let dniRepetido = similaresValidados.filter(element =>
         (element.paciente.sexo.toString() === matchingInputData.sexo.toString() && element.paciente.documento.toString() === matchingInputData.documento.toString())
     ).length > 0;
-    // TODO: es necesario loguear matcheo alto???? loguear si es necesario.
+
+    let promiseArray = [];
+    for (let resultado of candidatos) {
+        let idPaciente = mongoose.Types.ObjectId(resultado.paciente.id);
+        promiseArray.push(buscarPaciente(idPaciente));
+    }
+    let arrayAuxiliar = await Promise.all(promiseArray);
+    let resultadoMatching = [];
+    for (let index = 0; index < arrayAuxiliar.length; index++) {
+        resultadoMatching.push({ paciente: arrayAuxiliar[index].paciente });
+        resultadoMatching[index].match = candidatos[index].match;
+    }
     return { resultadoMatching, dniRepetido, macheoAlto };
 }
 
@@ -832,7 +843,7 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
             resultado: resRenaper
         });
     } catch (error) {
-        andesLog(req, logKeys.errorValidacionPaciente.key, pacienteAndes, logKeys.errorValidacionPaciente.operacion, error);
+        andesLog(req, logKeys.errorValidacionPaciente.key, null, logKeys.errorValidacionPaciente.operacion, error);
         return await validarSisa(pacienteAndes, req);
     }
     let band = true;
@@ -873,7 +884,7 @@ async function validarSisa(pacienteAndes: any, req: any, foto = null) {
         }
         return { paciente: pacienteAndes, validado: true };
     } catch (error) {
-        andesLog(req, logKeys.errorValidacionPaciente.key, pacienteAndes, logKeys.errorValidacionPaciente.operacion, error);
+        andesLog(req, logKeys.errorValidacionPaciente.key, null, logKeys.errorValidacionPaciente.operacion, error);
         // no hacemos nada con el paciente
         return { paciente: pacienteAndes, validado: false };
     }
