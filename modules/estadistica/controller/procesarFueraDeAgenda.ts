@@ -40,6 +40,7 @@ export async function procesar(parametros: any) {
         const prestaciones = codificacionModel.aggregate(pipeline2).cursor({ batchSize: 100 }).exec();
         const resultado = [];
         let os = parametros.financiador ? parametros.financiador : 'todos';
+        let filtroEstado = parametros.estado ? parametros.estado : 'todos';
         await prestaciones.eachAsync(async (prestacion, error) => {
             let dtoPrestacion = {
                 fecha: prestacion.createdAt,
@@ -54,7 +55,9 @@ export async function procesar(parametros: any) {
                 idPrestacion: prestacion.idPrestacion,
             };
             if (dtoPrestacion.financiador && dtoPrestacion.financiador.financiador === os || os === 'todos') {
-                resultado.push(dtoPrestacion);
+                if (filtroEstado === dtoPrestacion.estado || filtroEstado === 'todos') {
+                    resultado.push(dtoPrestacion);
+                }
             }
             if (error) {
                 return error;
