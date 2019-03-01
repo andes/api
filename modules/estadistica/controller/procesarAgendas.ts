@@ -1,4 +1,6 @@
 import * as agenda from '../../turnos/schemas/agenda';
+import * as prestaciones from '../../../modules/rup/schemas/prestacion';
+import * as mongoose from 'mongoose';
 
 /**
  * @export Devuelve los turnos con paciente asignado que cumplen con los filtros
@@ -30,11 +32,11 @@ export async function procesar(parametros: any) {
     let data = await query.exec();
     let turnoEstado = parametros.estado ? parametros.estado : 'todos';
     let os = parametros.financiador ? parametros.financiador : 'todos';
-    turnos = devolverTurnos(data, turnoEstado, os);
+    turnos = await devolverTurnos(data, turnoEstado, os);
     return turnos;
 }
 
-function devolverTurnos(ArrAgenda, turnoEstado, os) {
+async function devolverTurnos(ArrAgenda, turnoEstado, os) {
     const ArrTurnos = [];
     for (let k = 0; k < ArrAgenda.length; k++) {
         let unaAgenda = ArrAgenda[k];
@@ -46,6 +48,7 @@ function devolverTurnos(ArrAgenda, turnoEstado, os) {
                 if (t.estado === 'asignado') {
                     let estado = estadoTurno(t, turnoEstado);
                     let obraSocial = obraSocialTurno(t, os);
+                    let prestacionId = await buscarPrestacion(t);
                     if (estado && obraSocial) {
                         ArrTurnos.push({
                             fecha: t.horaInicio,
@@ -57,7 +60,7 @@ function devolverTurnos(ArrAgenda, turnoEstado, os) {
                             idAgenda: unaAgenda._id,
                             idBloque: unaAgenda.bloques[i]._id,
                             turno: t,
-                            idPrestacion: null
+                            idPrestacion: prestacionId
                         });
                     }
                 }
@@ -69,6 +72,7 @@ function devolverTurnos(ArrAgenda, turnoEstado, os) {
             if (t.estado === 'asignado') {
                 let estado = estadoTurno(t, turnoEstado);
                 let obraSocial = obraSocialTurno(t, os);
+                let prestacionId = await buscarPrestacion(t);
                 if (estado && obraSocial) {
                     ArrTurnos.push({
                         fecha: t.horaInicio,
@@ -80,7 +84,7 @@ function devolverTurnos(ArrAgenda, turnoEstado, os) {
                         idAgenda: unaAgenda._id,
                         idBloque: null,
                         turno: t,
-                        idPrestacion: null
+                        idPrestacion: prestacionId
                     });
                 }
             }
@@ -130,5 +134,16 @@ function obraSocialTurno(turno, os) {
         }
     } else {
         return true;
+    }
+}
+
+async function buscarPrestacion(turno) {
+    let query = prestaciones.model.find({ 'solicitud.turno': new mongoose.Types.ObjectId(turno.id) });
+    let data = await query.exec();
+    let indice = data.length - 1;
+    if (indice >= 0) {
+        return data[indice]._id;
+    } else {
+        return null;
     }
 }
