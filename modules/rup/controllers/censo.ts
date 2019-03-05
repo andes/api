@@ -58,11 +58,11 @@ export async function censoDiario(unidad, fechaConsulta, idOrganizacion) {
                 // y nos quedamos con el ultimo
                 let pasesCamaCenso: any[] = this.filtrarMovimientosIntraUO(resultado);
                 // loopeamos todos los pases de las camas
-                pasesCamaCenso.map((censo: any, indice) => {
-                    censo.pases = censo.pases.filter(p => { return p.estados.fecha <= moment(fecha).endOf('day').toDate(); });
+                pasesCamaCenso.map((unCenso: any, indice) => {
+                    unCenso.pases = unCenso.pases.filter(p => { return p.estados.fecha <= moment(fecha).endOf('day').toDate(); });
                     // Llamamos a la funcion completarUnCenso que se encarga de devolvernos un array
                     // con la informacion que necesitamos para el censo. (ingreso, pase de, pase a, etc)
-                    let result = completarUnCenso(censo, indice, fecha, unidad, pasesCamaCenso[indice]);
+                    let result = completarUnCenso(unCenso, indice, fecha, unidad, pasesCamaCenso[indice]);
                     listadoCensos.push({ censo: result, fecha });
                 });
             } else {
@@ -184,15 +184,15 @@ export async function censoMensual(fechaDesde, fechaHasta, unidad, organizacionI
         return null;
     }
 }
-export function completarUnCenso(censo, indice, fecha, idUnidadOrganizativa, CamaCenso) {
+export function completarUnCenso(unCenso, indice, fecha, idUnidadOrganizativa, CamaCenso) {
     let internacion = CamaCenso.internacion;
     let ingresoEgreso = [];
     ingresoEgreso[indice] = {};
     ingresoEgreso[indice]['dataCenso'] = CamaCenso;
-    ingresoEgreso[indice]['egreso'] = comprobarEgreso(internacion, CamaCenso.ultimoEstado, censo.pases, fecha, idUnidadOrganizativa);
-    ingresoEgreso[indice]['esIngreso'] = esIngreso(censo.pases, CamaCenso.ultimoEstado, fecha, idUnidadOrganizativa);
-    ingresoEgreso[indice]['esPaseDe'] = esPaseDe(censo.pases, CamaCenso.ultimoEstado, fecha, idUnidadOrganizativa);
-    ingresoEgreso[indice]['esPaseA'] = esPaseA(censo.pases, CamaCenso.ultimoEstado, fecha, idUnidadOrganizativa);
+    ingresoEgreso[indice]['egreso'] = comprobarEgreso(internacion, CamaCenso.ultimoEstado, unCenso.pases, fecha, idUnidadOrganizativa);
+    ingresoEgreso[indice]['esIngreso'] = esIngreso(unCenso.pases, CamaCenso.ultimoEstado, fecha, idUnidadOrganizativa);
+    ingresoEgreso[indice]['esPaseDe'] = esPaseDe(unCenso.pases, CamaCenso.ultimoEstado, fecha, idUnidadOrganizativa);
+    ingresoEgreso[indice]['esPaseA'] = esPaseA(unCenso.pases, CamaCenso.ultimoEstado, fecha, idUnidadOrganizativa);
     return ingresoEgreso[indice];
 }
 
