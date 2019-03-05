@@ -231,8 +231,8 @@ export async function censoMensualJob(done) {
                     await existeCenso[0].save();
                 } else {
                     let censoObj = [];
-                    for (let index = 0; index < result.length; index++) {
-                        const element = result[index];
+                    for (let indexJ = 0; index < result.length; index++) {
+                        const element = result[indexJ];
                         censoObj.push({
                             fecha: element.fecha,
                             censo: element.resumen
