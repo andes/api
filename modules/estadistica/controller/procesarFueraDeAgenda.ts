@@ -1,4 +1,5 @@
 import * as codificacionModel from '../../rup/schemas/codificacion';
+import * as mongoose from 'mongoose';
 
 /**
  * @export Devuelve las prestaciones fuera de agenda que cumplen con los filtros
@@ -6,6 +7,7 @@ import * as codificacionModel from '../../rup/schemas/codificacion';
  * @returns {object} {fecha, paciente, financiador, prestacion, profesionales, estado, idAgenda:null, idBloque:null, turno:null, idPrestacion}
  */
 export async function procesar(parametros: any) {
+
     let pipeline2 = [];
 
     let match = {
@@ -15,8 +17,12 @@ export async function procesar(parametros: any) {
         ],
         'createdBy.organizacion._id': String(parametros.organizacion)
     };
+    let match2 = {};
     if (parametros.profesional) {
         match['createdBy.id'] = parametros.profesional;
+    }
+    if (parametros.prestacion) {
+        match2 = { 'prestacion.solicitud.tipoPrestacion.id': new mongoose.Types.ObjectId(parametros.prestacion) };
     }
     pipeline2 = [
         {
@@ -32,6 +38,9 @@ export async function procesar(parametros: any) {
         },
         {
             $unwind: '$prestacion',
+        },
+        {
+            $match: match2
         }
     ];
 
