@@ -77,23 +77,23 @@ router.get('/mapa', (req, res, next) => {
                     let queryMPI = { 'createdBy.organizacion._id': String(organizacion._id) };
                     let consultaMIP = pacienteModel.find(queryMPI).limit(1).exec();
 
-                    await Promise.all([consultaCITAS, consultaMOBILE, consultaRUP, consultaTOP, consultaMIP]).
-                        then(data => {
-                            organizacion.status.citas = data[0].length > 0;
-                            organizacion.status.mobile = data[1].length > 0;
-                            organizacion.status.rup = data[2].length > 0;
-                            organizacion.status.top = data[3].length > 0;
-                            organizacion.status.mpi = data[4].length > 0;
-                        });
-                    if (organizacion.status.citas || organizacion.status.rup || organizacion.status.mobile
-                        || organizacion.status.top || organizacion.status.mpi) {
-                        resultado.push(organizacion);
-                    }
-                }
-                res.json(resultado);
-            } catch (err) {
-                return next(err);
+            await Promise.all([consultaCITAS, consultaMOBILE, consultaRUP, consultaTOP, consultaMIP]).
+                      then(data => {
+                          organizacion.status.citas = data[0].length > 0;
+                          organizacion.status.mobile = data[1].length > 0;
+                          organizacion.status.rup = data[2].length > 0;
+                          organizacion.status.top = data[3].length > 0;
+                          organizacion.status.mpi = data[4].length > 0;
+                      });
+            if (organizacion.status.citas || organizacion.status.rup || organizacion.status.mobile
+                      || organizacion.status.top || organizacion.status.mpi) {
+                resultado.push(organizacion);
             }
+        }
+        res.json(resultado);
+    } catch (err) {
+        return next(err);
+    }
         },
         (err) => {
             return next(err);
