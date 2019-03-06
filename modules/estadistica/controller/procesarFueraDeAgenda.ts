@@ -18,11 +18,12 @@ export async function procesar(parametros: any) {
         'createdBy.organizacion._id': String(parametros.organizacion)
     };
     let match2 = {};
-    if (parametros.profesional) {
-        match['createdBy.id'] = parametros.profesional;
-    }
+
     if (parametros.prestacion) {
         match2 = { 'prestacion.solicitud.tipoPrestacion.id': new mongoose.Types.ObjectId(parametros.prestacion) };
+    }
+    if (parametros.profesional) {
+        match2 = { 'prestacion.solicitud.profesional.id': new mongoose.Types.ObjectId(parametros.profesional) };
     }
     pipeline2 = [
         {
@@ -43,7 +44,6 @@ export async function procesar(parametros: any) {
             $match: match2
         }
     ];
-
 
     try {
         const prestaciones = codificacionModel.aggregate(pipeline2).cursor({ batchSize: 100 }).exec();
