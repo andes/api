@@ -26,6 +26,7 @@ import {
 } from '@andes/event-bus';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
+import { NotificationService } from '../../../modules/mobileApp/controller/NotificationService';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -474,6 +475,8 @@ export function actualizarEstado(req, data) {
                     }
                     turno.motivoSuspension = 'agendaSuspendida';
                     turno.avisoSuspension = 'no enviado';
+
+                    NotificationService.notificarSuspension(turno);
 
                 });
             });

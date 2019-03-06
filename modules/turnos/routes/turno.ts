@@ -388,7 +388,7 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
 });
 
 /**
- * se marca como reasginado un turno suspendido
+ * se marca como reasignado un turno suspendido
  */
 router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res, next) => {
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
