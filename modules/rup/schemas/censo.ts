@@ -23,4 +23,3 @@ export let schema = new mongoose.Schema({
 
 
 export let model = mongoose.model('censo', schema, 'censo');
-

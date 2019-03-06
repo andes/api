@@ -102,12 +102,7 @@ router.get('/internaciones/censo', async (req, res, next) => {
 
 
 router.get('/internaciones/censoMensual', (req, res, next) => {
-    let unidad = req.query.unidad;
-
-    let idOrganizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
-    let resultadoFinal;
-    let censoMensual = [];
-    censoController.censoMensual(req.query.fechaDesde, req.query.fechaHasta, unidad, idOrganizacion).then(result => {
+    censoController.censoMensual(new Date(req.query.fechaDesde), new Date(req.query.fechaHasta), req.query.unidad, req.query.organizacion).then(result => {
         res.json(result);
     });
 });
