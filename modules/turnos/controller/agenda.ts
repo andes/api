@@ -896,23 +896,23 @@ export function saveAgenda(nuevaAgenda) {
 
 // Actualiza el paciente dentro del turno, si se realizo un update del paciente (Eventos entre módulos)
 EventCore.on('mpi:patient:update', async (pacienteModified) => {
-    let req = {
-        query: {
-            estado: 'asignado',
-            pacienteId: pacienteModified.id,
-            horaInicio: moment(new Date()).startOf('day').toDate() as any
-        }
-    };
-    let turnos: any = await turnosController.getTurno(req);
-    if (turnos.length > 0) {
-        turnos.forEach(element => {
-            try {
-                agendaController.updatePaciente(pacienteModified, element);
-            } catch (error) {
-                return error;
-            }
-        });
-    }
+    // let req = {
+    //     query: {
+    //         estado: 'asignado',
+    //         pacienteId: pacienteModified.id,
+    //         horaInicio: moment(new Date()).startOf('day').toDate() as any
+    //     }
+    // };
+    // let turnos: any = await turnosController.getTurno(req);
+    // if (turnos.length > 0) {
+    //     turnos.forEach(element => {
+    //         try {
+    //             agendaController.updatePaciente(pacienteModified, element);
+    //         } catch (error) {
+    //             return error;
+    //         }
+    //     });
+    // }
 });
 
 /**
