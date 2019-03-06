@@ -405,14 +405,14 @@ export function matching(data): Promise<any[]> {
                                 documento: data.documento ? data.documento.toString() : '',
                                 nombre: data.nombre ? data.nombre : '',
                                 apellido: data.apellido ? data.apellido : '',
-                                fechaNacimiento: data.fechaNacimiento ? moment(data.fechaNacimiento, 'YYYY-MM-DD', 'ar') : '',
+                                fechaNacimiento: data.fechaNacimiento ? moment(data.fechaNacimiento).format('YYYY-MM-DD') : '',
                                 sexo: data.sexo ? data.sexo : ''
                             };
                             const pacElastic = {
                                 documento: paciente2.documento ? paciente2.documento.toString() : '',
                                 nombre: paciente2.nombre ? paciente2.nombre : '',
                                 apellido: paciente2.apellido ? paciente2.apellido : '',
-                                fechaNacimiento: paciente2.fechaNacimiento ? moment(paciente2.fechaNacimiento, 'YYYY-MM-DD', 'ar') : '',
+                                fechaNacimiento: paciente2.fechaNacimiento ? moment(paciente2.fechaNacimiento).format('YYYY-MM-DD') : '',
                                 sexo: paciente2.sexo ? paciente2.sexo : ''
                             };
                             let match = new Matching();
