@@ -1,4 +1,5 @@
 import * as mongoose from 'mongoose';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 export let schema = new mongoose.Schema({
     unidadOrganizativa: Object,

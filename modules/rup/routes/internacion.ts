@@ -4,7 +4,6 @@ import * as censoController from './../controllers/censo';
 import * as internacionesController from './../controllers/internacion';
 import * as camasController from './../controllers/cama';
 import { Auth } from './../../../auth/auth.class';
-
 const router = express.Router();
 
 router.get('/internaciones/ultima/:idPaciente', (req, res, next) => {
@@ -107,6 +106,7 @@ router.get('/internaciones/censoMensual', (req, res, next) => {
         res.json(result);
     });
 });
+
 
 router.get('/internaciones/censo/disponibilidad', (req, res, next) => {
     // conceptId de la unidad organizativa
