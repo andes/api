@@ -83,7 +83,7 @@ router.get('/paciente', async (req, res, next) => {
     if (req.query.dni && req.query.sexo) {
         let prepaga = await prepagaController.getPaciente(req.query.dni, req.query.sexo);
         if (prepaga) {
-            res.json(prepaga);
+            res.json([prepaga]);
         } else {
             let arrayOSPuco: any = await pucoController.pacientePuco(req.query.dni);
             if (arrayOSPuco.length > 0) {
