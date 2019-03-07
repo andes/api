@@ -6,7 +6,7 @@ import * as camaController from './../controllers/cama';
 import { parseDate } from './../../../shared/parse';
 
 const router = express.Router();
-
+import { log } from '@andes/log';
 
 /**
 //  * busca las camas de una organizacion, por defecto trae todas o se
@@ -98,8 +98,10 @@ router.post('/camas', Auth.authenticate(), (req, res, next) => {
     Auth.audit(newCama, req);
     newCama.save((err) => {
         if (err) {
+            log(req, 'rup:camas:post', null, 'error al crear cama', err);
             return next(err);
         }
+        log(req, 'rup:camas:post', null, `Crear cama con id: "${newCama.id}"`, null);
         res.json(newCama);
     });
 });
@@ -111,6 +113,7 @@ router.post('/camas', Auth.authenticate(), (req, res, next) => {
 router.put('/camas/:id', Auth.authenticate(), (req, res, next) => {
     CamaModel.findById(req.params.id, (err3, data: any) => {
         if (err3) {
+            log(req, 'rup:camas:put', null, `Error al modificar (PUT) la cama: "${req.params.id}"`, err3);
             return next(404);
         }
         if (data) {
@@ -131,6 +134,7 @@ router.put('/camas/:id', Auth.authenticate(), (req, res, next) => {
                 if (err2) {
                     return next(err2);
                 }
+                log(req, 'rup:camas:put', null, `Modificación (PUT) de la cama: "${req.params.id}"`, null);
                 res.json(data);
             });
         } else {
@@ -143,8 +147,10 @@ router.put('/camas/:id', Auth.authenticate(), (req, res, next) => {
 router.delete('/camas/eliminarCama/:idCama', Auth.authenticate(), (req, res, next) => {
     CamaModel.findByIdAndRemove(req.params.idCama, (err, data) => {
         if (err) {
+            log(req, 'rup:camas:delete', null, `Error al eliminar la cama: "${req.params.idCama}"`, err);
             return next(err);
         }
+        log(req, 'rup:camas:delete', null, `Eliminamos la cama: "${req.params.idCama}"`, null);
         res.json(data);
     });
 });
@@ -154,6 +160,7 @@ router.patch('/camas/:idCama', Auth.authenticate(), (req, res, next) => {
         _id: req.params.idCama,
     }, (err, data: any) => {
         if (err) {
+            log(req, 'rup:camas:patch', null, `Error al modificar (PATCH) la cama: "${req.params.idCama}"`, err);
             return next(err);
         }
 
@@ -161,16 +168,19 @@ router.patch('/camas/:idCama', Auth.authenticate(), (req, res, next) => {
             case 'sector':
                 if (req.body.sector) {
                     data.sector = req.body.sector;
+                    log(req, 'rup:camas:patch', null, `Modificamos el sector de la cama: "${req.params.idCama}"`, null);
                 }
                 break;
             case 'habitacion':
                 if (req.body.habitacion) {
                     data.habitacion = req.body.habitacion;
+                    log(req, 'rup:camas:patch', null, `Modificamos la habitación de la cama: "${req.params.idCama}"`, null);
                 }
                 break;
             case 'nombre':
                 if (req.body.nombre) {
                     data.nombre = req.body.nombre;
+                    log(req, 'rup:camas:patch', null, `Modificamos el nombre de la cama: "${req.params.idCama}"`, null);
                 }
                 break;
             case 'cambioUnidadOrganizativa':
@@ -181,6 +191,7 @@ router.patch('/camas/:idCama', Auth.authenticate(), (req, res, next) => {
             case 'tipoCama':
                 if (req.body.tipoCama) {
                     data.tipoCama = req.body.tipoCama;
+                    log(req, 'rup:camas:patch', null, `Modificamos el tipo de la cama: "${req.params.idCama}"`, null);
                 }
                 break;
             case 'equipamiento':
@@ -192,6 +203,7 @@ router.patch('/camas/:idCama', Auth.authenticate(), (req, res, next) => {
                 if (req.body.estado) {
                     data.estados.push(req.body.estado);
                     data.ultimoEstado = req.body.estado;
+                    log(req, 'rup:camas:patch', null, `Agregamos un estado a la cama: "${req.params.idCama}"`, null);
                 }
                 break;
             default:
@@ -289,15 +301,21 @@ router.patch('/camas/cambiaEstado/:idCama', Auth.authenticate(), async (req, res
                 Auth.audit(unaCama, req);
                 // guardamos la cama
                 await unaCama.save();
+                log(req, 'rup:camas:patch/cambiaEstado', null, `Cambiar de estado la cama: "${req.params.idCama}"`, null);
                 return res.json(unaCama);
             } else {
+
                 return next({ message: 'No es posible realizar un cambio de estado anterior a que la cama esté disponible' });
             }
         } else {
+            log(req, 'rup:camas:patch/cambiaEstado', null, `Error al cambiar de estado la cama: "${req.params.idCama}"  no la encuentra`, null);
+
             return next(404);
         }
 
     } catch (err) {
+        log(req, 'rup:camas:patch/cambiaEstado', null, `Error al cambiar de estado la cama: "${req.params.idCama}"`, err);
+
         return next(err);
     }
 });

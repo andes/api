@@ -5,7 +5,7 @@ import * as internacionesController from './../controllers/internacion';
 import * as camasController from './../controllers/cama';
 import { Auth } from './../../../auth/auth.class';
 const router = express.Router();
-
+import { log } from '@andes/log';
 router.get('/internaciones/ultima/:idPaciente', (req, res, next) => {
     // buscamos la ultima interncion del paciente
     internacionesController.buscarUltimaInternacion(req.params.idPaciente, req.query.estado, req.query.organizacion).then(
@@ -69,8 +69,12 @@ router.patch('/internaciones/desocuparCama/:idInternacion', (req, res, next) => 
                 // guardamos organizacion
                 unaCama.save((errUpdate) => {
                     if (errUpdate) {
+                        log(req, 'rup:internacion:patch/desocuparCama', null, `Error al desocupar la cama con internación: "${req.params.idInternacion}"`, errUpdate);
+
                         return next(errUpdate);
                     }
+                    log(req, 'rup:internacion:patch/desocuparCama', null, `Agrega nuevo estado al desocupar la cama con internación: "${req.params.idInternacion}"`, null);
+
                     res.json(unaCama);
                 });
             } else {
@@ -94,6 +98,7 @@ router.get('/internaciones/censo', async (req, res, next) => {
             censoDiario,
             resumen
         };
+
         return res.json(resultadoFinal);
     } catch (err) {
         return next(err);
@@ -103,6 +108,7 @@ router.get('/internaciones/censo', async (req, res, next) => {
 
 router.get('/internaciones/censoMensual', (req, res, next) => {
     censoController.censoMensual(new Date(req.query.fechaDesde), new Date(req.query.fechaHasta), req.query.unidad, req.query.organizacion).then(result => {
+        log(req, 'rup:internacion:get/censoMensual', null, `Se consulto el censo mensual de la unidad con conceptId: "${req.params.unidad}" y organización con id: "${req.params.organizacion}" `, null);
         res.json(result);
     });
 });

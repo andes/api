@@ -13,7 +13,7 @@ import * as camasController from './../controllers/cama';
 import { parseDate } from './../../../shared/parse';
 import { EventCore } from '@andes/event-bus';
 import { facturacionAutomatica } from './../../facturacionAutomatica/controllers/facturacionAutomatica';
-
+import { log } from '@andes/log';
 const router = express.Router();
 import async = require('async');
 
@@ -482,8 +482,10 @@ router.post('/prestaciones', (req, res, next) => {
     Auth.audit(data, req);
     data.save((err) => {
         if (err) {
+            log(req, 'rup:prestacion:post', dto.paciente.id, 'Error al crear la prestación', err);
             return next(err);
         }
+        log(req, 'rup:prestacion:post', dto.paciente.id, 'Crear prestación', null);
         res.json(data);
         EventCore.emitAsync('rup:prestacion:create', data);
     });
@@ -492,6 +494,7 @@ router.post('/prestaciones', (req, res, next) => {
 router.patch('/prestaciones/:id', (req, res, next) => {
     Prestacion.findById(req.params.id, (err, data: any) => {
         if (err) {
+            log(req, 'rup:prestacion:patch', req.body.paciente.id, 'Error al modificar una prestación', err);
             return next(err);
         }
         req.body = parseDate(JSON.stringify(req.body));
@@ -506,6 +509,7 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                     if (data.estados[data.estados.length - 1].tipo === 'validada') {
                         return next('Prestación validada, no se puede volver a validar.');
                     }
+                    log(req, 'rup:prestacion:patch', data.paciente.id, `Agrega un estado a la prestacion "${req.body.estado}"`, null);
                     data['estados'].push(req.body.estado);
                 }
                 if (req.body.registros) {
@@ -549,12 +553,16 @@ router.patch('/prestaciones/:id', (req, res, next) => {
             case 'asignarTurno':
                 if (req.body.idTurno) {
                     data.solicitud.turno = req.body.idTurno;
+                    log(req, 'rup:prestacion:patch', data.paciente.id, `Asigna un turno a la prestacion "${req.body.idTurno}"`, null);
+
                 }
                 break;
             default:
                 return next(500);
         }
         Auth.audit(data, req);
+        log(req, 'rup:prestacion:patch', data.paciente.id, 'Modificación de la prestacion', null);
+
         data.save((error, prestacion) => {
             if (error) {
                 return next(error);
