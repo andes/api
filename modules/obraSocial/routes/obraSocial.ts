@@ -15,7 +15,8 @@ router.get('/', async (req, res, next) => {
     let query;
     query = ObraSocial.find({});
     if (req.query.nombre) {
-        query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
+        // query.where('nombre').equals(RegExp('^.*' + req.query.nombre + '.*$', 'i'));
+        query.where('nombre').equals(RegExp(`^.*${req.query.nombre}.*$`, 'i'));
     }
     if (req.query.prepaga === true) {
         query.where('prepaga').equals(true);
