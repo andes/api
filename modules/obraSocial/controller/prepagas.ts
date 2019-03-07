@@ -33,7 +33,7 @@ export async function actualizarPadronPrepagas(documento, sexo, obraSocial) {
             rta.idObraSocial = obraSocial.idObraSocial;
             rta.nombre = obraSocial.nombre;
             rta.financiador = obraSocial.financiador;
-            rta.idPrepaga = obraSocial.idPrepaga;
+            rta.idPrepaga = obraSocial._id;
             rta.numeroAfiliado = obraSocial.numeroAfiliado;
             rta.save((error) => {
                 if (error) {
@@ -44,6 +44,8 @@ export async function actualizarPadronPrepagas(documento, sexo, obraSocial) {
         } else {
             if (obraSocial.numeroAfiliado !== rta.numeroAfiliado) {
                 rta.numeroAfiliado = obraSocial.numeroAfiliado;
+                rta.idPrepaga = obraSocial._id;
+
                 rta.save((error) => {
                     if (error) {
                         return (error);
