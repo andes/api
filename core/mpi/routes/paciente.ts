@@ -451,6 +451,7 @@ router.put('/pacientes/:id', async (req, res, next) => {
                 // } catch (error) {
                 //     return next('Error actualizando turnos del paciente');
                 // }
+                EventCore.emitAsync('mpi:patient:update', pacienteUpdated);
                 res.json(pacienteUpdated);
 
             } else {
@@ -670,6 +671,7 @@ router.patch('/pacientes/:id', async (req, res, next) => {
                         if (!repetida) {
                             controller.updateCarpetaEfectores(req, resultado.paciente);
                             // controller.updateTurnosPaciente(resultado.paciente);
+                            EventCore.emitAsync('mpi:patient:update', resultado.paciente);
                         } else {
                             return next('El numero de carpeta ya existe');
                         }
@@ -678,6 +680,7 @@ router.patch('/pacientes/:id', async (req, res, next) => {
                 case 'updateContactos': // Update de carpeta y de contactos
                     resultado.paciente.markModified('contacto');
                     resultado.paciente.contacto = req.body.contacto;
+                    EventCore.emitAsync('mpi:patient:update', resultado.paciente);
                     // try {
                     //     controller.updateTurnosPaciente(resultado.paciente);
                     // } catch (error) {

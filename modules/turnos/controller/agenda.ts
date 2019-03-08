@@ -26,6 +26,7 @@ import {
 } from '@andes/event-bus';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
+import { nextTick } from 'async';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -880,39 +881,34 @@ export function actualizarTurnosDelDia() {
  * @param {any} nuevaAgenda
  * @returns
  */
-export function saveAgenda(nuevaAgenda) {
-    return new Promise((resolve, reject) => {
-        nuevaAgenda.save((err, dataAgenda) => {
-            if (err) {
-                reject(err);
-            }
-            if (dataAgenda) {
-                resolve(dataAgenda);
-            }
-        });
-    });
+export async function saveAgenda(nuevaAgenda) {
+    try {
+        return await nuevaAgenda.save();
+    } catch (error) {
+        return error;
+    }
 }
 
 
 // Actualiza el paciente dentro del turno, si se realizo un update del paciente (Eventos entre módulos)
 EventCore.on('mpi:patient:update', async (pacienteModified) => {
-    // let req = {
-    //     query: {
-    //         estado: 'asignado',
-    //         pacienteId: pacienteModified.id,
-    //         horaInicio: moment(new Date()).startOf('day').toDate() as any
-    //     }
-    // };
-    // let turnos: any = await turnosController.getTurno(req);
-    // if (turnos.length > 0) {
-    //     turnos.forEach(element => {
-    //         try {
-    //             agendaController.updatePaciente(pacienteModified, element);
-    //         } catch (error) {
-    //             return error;
-    //         }
-    //     });
-    // }
+    let req = {
+        query: {
+            estado: 'asignado',
+            pacienteId: pacienteModified.id,
+            horaInicio: moment(new Date()).startOf('day').toDate() as any
+        }
+    };
+    let turnos: any = await turnosController.getTurno(req);
+    if (turnos.length > 0) {
+        turnos.forEach(element => {
+            try {
+                agendaController.updatePaciente(pacienteModified, element);
+            } catch (error) {
+                return error;
+            }
+        });
+    }
 });
 
 /**
@@ -934,10 +930,10 @@ export function updatePaciente(pacienteModified, turno) {
             indiceTurno = bloques[i].turnos.findIndex(elem => elem._id.toString() === turno._id.toString());
 
             if (indiceTurno > -1) { // encontro el turno en este bloque?
-                bloques[i].turnos[indiceTurno].paciente.nombre = pacienteModified.nombre;
-                bloques[i].turnos[indiceTurno].paciente.apellido = pacienteModified.apellido;
-                bloques[i].turnos[indiceTurno].paciente.documento = pacienteModified.documento;
-                if (pacienteModified.contacto && pacienteModified.contacto[0]) {
+                bloques[i].turnos[indiceTurno].paciente.nombre = pacienteModified.nombre ? pacienteModified.nombre : '';
+                bloques[i].turnos[indiceTurno].paciente.apellido = pacienteModified.apellido ? pacienteModified.apellido : '';
+                bloques[i].turnos[indiceTurno].paciente.documento = pacienteModified.documento ? pacienteModified.documento : '';
+                if (pacienteModified.contacto && pacienteModified.contacto.length) {
                     bloques[i].turnos[indiceTurno].paciente.telefono = pacienteModified.contacto[0].valor;
                 }
                 bloques[i].turnos[indiceTurno].paciente.carpetaEfectores = pacienteModified.carpetaEfectores;
@@ -950,10 +946,10 @@ export function updatePaciente(pacienteModified, turno) {
             indiceTurno = data.sobreturnos.findIndex(elem => elem._id.toString() === turno._id.toString());
 
             if (indiceTurno > -1) { // esta el turno entre los sobreturnos?
-                data.sobreturnos[indiceTurno].paciente.nombre = pacienteModified.nombre;
-                data.sobreturnos[indiceTurno].paciente.apellido = pacienteModified.apellido;
-                data.sobreturnos[indiceTurno].paciente.documento = pacienteModified.documento;
-                if (pacienteModified.contacto && pacienteModified.contacto[0]) {
+                data.sobreturnos[indiceTurno].paciente.nombre = pacienteModified.nombre ? pacienteModified.nombre : '';
+                data.sobreturnos[indiceTurno].paciente.apellido = pacienteModified.apellido ? pacienteModified.apellido : '';
+                data.sobreturnos[indiceTurno].paciente.documento = pacienteModified.documento ? pacienteModified.documento : '';
+                if (pacienteModified.contacto && pacienteModified.contacto.length) {
                     data.sobreturnos[indiceTurno].paciente.telefono = pacienteModified.contacto[0].valor;
                 }
                 data.sobreturnos[indiceTurno].paciente.carpetaEfectores = pacienteModified.carpetaEfectores;

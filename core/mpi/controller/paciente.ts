@@ -11,7 +11,6 @@ import * as turnosController from '../../../modules/turnos/controller/turnosCont
 import { matchSisa } from '../../../utils/servicioSisa';
 import { getServicioRenaper } from '../../../utils/servicioRenaper';
 const regtest = /[^a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ ']+/;
-import * as https from 'https';
 import * as configPrivate from '../../../config.private';
 import { getServicioGeonode } from '../../../utils/servicioGeonode';
 import { handleHttpRequest } from '../../../utils/requestHandler';

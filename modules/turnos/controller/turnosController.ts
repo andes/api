@@ -6,6 +6,7 @@ import { buscarPaciente } from '../../../core/mpi/controller/paciente';
 import * as controller from '../../../core/mpi/controller/paciente';
 import { Auth } from './../../../auth/auth.class';
 import { paciente as pacienteModel } from '../../../core/mpi/schemas/paciente';
+import { EventCore } from '@andes/event-bus';
 
 export function getTurno(req) {
     return new Promise(async (resolve, reject) => {
@@ -354,6 +355,7 @@ export async function actualizarCarpeta(req: any, res: any, next: any, pacienteM
         const repetida = await controller.checkCarpeta(req, pacienteMPI.paciente);
         if (!repetida) {
             controller.updateCarpetaEfectores(req, pacienteMPI.paciente);
+            EventCore.emitAsync('mpi:patient:update', pacienteMPI.paciente);
             // controller.updateTurnosPaciente(pacienteMPI.paciente);
         } else {
             return next('El nÚmero de carpeta ya existe');
