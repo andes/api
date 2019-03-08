@@ -28,31 +28,27 @@ router.get('/perfiles/:id', (req: any, res, next) => {
 * Devuelve los perfiles globales y, si existen, los locales asociados a la organización donde el usuario está logueado
 */
 router.get('/perfiles', Auth.authenticate(), async (req, res, next) => {
-    let query;
-    if (req.query.idOrganizacion) {
-        query = {
-            $or: [
-                { organizacion: { $exists: false } }, // perfiles globales
-                { organizacion: null },
-                { organizacion: req.query.idOrganizacion }  // perfiles locales de la organización
-            ]
-        };
-    } else {
-        query = {
-            $or: [
-                { organizacion: { $exists: false } }, // perfiles globales
-                { organizacion: null }
-            ]
-        };
+    let query = perfil.find({});
+    if (req.query.idOrganizacion) { // perfiles globales y locales
+        query.or([{ organizacion: { $exists: false } },
+        { organizacion: null },
+        { organizacion: req.query.idOrganizacion }]);
+    } else { // solo perfiles globales
+        query.or([
+            { organizacion: { $exists: false } },
+            { organizacion: null }
+        ]);
+    }
+    if (req.query.activo === true || req.query.activo === false) { // si tiene el parámetro activo, si viene undefined no entra
+        query.where('activo').equals(req.query.activo);
     }
 
-    try {
-        perfil.find(query).then(async res2 => {
-            await res.json(res2);
-        });
-    } catch (e) {
-        return next(e);
-    }
+    query.exec((err, data) => {
+        if (err) {
+            return next(err);
+        }
+        res.json(data);
+    });
 });
 
 /*
