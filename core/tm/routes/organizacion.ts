@@ -1,9 +1,8 @@
 import * as express from 'express';
 import * as https from 'https';
-import { model as Organizacion } from '../schemas/organizacion';
+import { Organizacion } from '../schemas/organizacion';
 import * as utils from '../../../utils/utils';
 import { toArray } from '../../../utils/utils';
-
 import * as configPrivate from '../../../config.private';
 import { Auth } from '../../../auth/auth.class';
 
@@ -146,12 +145,28 @@ router.get('/organizaciones', async (req, res, next) => {
     }
 
     try {
-        let organizaciones = await Organizacion.find(filtros);
+        const organizaciones: any = await Organizacion.find(filtros);
+        delete organizaciones.configuraciones;
         return res.json(organizaciones);
     } catch (err) {
         return next(err);
     }
+});
 
+/**
+ * GET /organizaciones/:id/configuracion
+ * Devuelve las configuraciones de una organizacion.
+ *
+ *
+ */
+router.get('/organizaciones/:id/configuracion', async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const org: any = await Organizacion.findById(id, { configuraciones: 1 });
+        return res.json(org.configuraciones);
+    } catch (error) {
+        return next (error);
+    }
 });
 
 router.post('/organizaciones', Auth.authenticate(), async (req, res, next) => {

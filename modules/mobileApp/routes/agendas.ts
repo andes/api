@@ -1,6 +1,6 @@
 import * as express from 'express';
 import * as agenda from '../../turnos/schemas/agenda';
-import * as organizacion from '../../../core/tm/schemas/organizacion';
+import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import { toArray } from '../../../utils/utils';
 import * as moment from 'moment';
 
@@ -42,7 +42,7 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
     const promisesStack = [];
     try {
         for (let i = 0; i <= agendasResultado.length - 1; i++) {
-            const org: any = await organizacion.model.findById(agendasResultado[i].id);
+            const org: any = await Organizacion.findById(agendasResultado[i].id);
             if (org.codigo && org.codigo.sisa && org.turnosMobile) {
                 agendasResultado[i].coordenadasDeMapa = {
                     latitud: org.direccion.geoReferencia[0],

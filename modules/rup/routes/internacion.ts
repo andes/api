@@ -83,25 +83,24 @@ router.patch('/internaciones/desocuparCama/:idInternacion', (req, res, next) => 
 });
 
 
-router.get('/internaciones/censo', (req, res, next) => {
-    let unidad = req.query.unidad;
-    let idOrganizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
-    let resultadoFinal;
-    let fecha = new Date(req.query.fecha);
-    censoController.censoDiario(unidad, fecha, idOrganizacion).then(censoDiario => {
-        censoController.completarResumenDiario(censoDiario, unidad, fecha, idOrganizacion).then(resumen => {
-            resultadoFinal = {
-                censoDiario,
-                resumen
-            };
-            res.json(resultadoFinal);
-        }).catch(err => {
-            return next(err);
-        });
-    }).catch(err => {
+router.get('/internaciones/censo', async (req, res, next) => {
+    try {
+        let unidad = req.query.unidad;
+        let idOrganizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
+        let resultadoFinal;
+        let fecha = new Date(req.query.fecha);
+        let censoDiario = await censoController.censoDiario(unidad, fecha, idOrganizacion);
+        let resumen = await censoController.completarResumenDiario(censoDiario, unidad, fecha, idOrganizacion);
+        resultadoFinal = {
+            censoDiario,
+            resumen
+        };
+        return res.json(resultadoFinal);
+    } catch (err) {
         return next(err);
-    });
+    }
 });
+
 
 router.get('/internaciones/censoMensual', (req, res, next) => {
     let unidad = req.query.unidad;
@@ -131,6 +130,17 @@ router.get('/internaciones/censo/disponibilidad', (req, res, next) => {
         }).catch(err => {
             return next(err);
         });
+});
+
+
+router.get('/internaciones/listadoInternacion', async (req, res, next) => {
+    let idOrganizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
+    try {
+        let internaciones = await internacionesController.listadoInternacion(req.query, idOrganizacion);
+        res.json(internaciones);
+    } catch (err) {
+        return next(err);
+    }
 });
 
 export = router;

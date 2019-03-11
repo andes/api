@@ -3,7 +3,7 @@ import * as codificacionModel from '../../../rup/schemas/codificacion';
 import * as sql from 'mssql';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
-import { model as organizacion } from '../../../../core/tm/schemas/organizacion';
+import { Organizacion } from '../../../../core/tm/schemas/organizacion';
 import { Logger } from '../../../../utils/logService';
 import { userScheduler } from '../../../../config.private';
 
@@ -341,7 +341,7 @@ async function getEfector(idOrganizacion: any) {
     if (orgCache[idOrganizacion]) {
         return orgCache[idOrganizacion];
     } else {
-        const org: any = await organizacion.findById(idOrganizacion);
+        const org: any = await Organizacion.findById(idOrganizacion);
         if (org) {
             orgCache[idOrganizacion] = org;
             return org;
