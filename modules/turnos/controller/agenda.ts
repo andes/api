@@ -892,22 +892,26 @@ export async function saveAgenda(nuevaAgenda) {
 
 // Actualiza el paciente dentro del turno, si se realizo un update del paciente (Eventos entre módulos)
 EventCore.on('mpi:patient:update', async (pacienteModified) => {
-    let req = {
-        query: {
-            estado: 'asignado',
-            pacienteId: pacienteModified.id,
-            horaInicio: moment(new Date()).startOf('day').toDate() as any
-        }
-    };
-    let turnos: any = await turnosController.getTurno(req);
-    if (turnos.length > 0) {
-        turnos.forEach(element => {
-            try {
-                agendaController.updatePaciente(pacienteModified, element);
-            } catch (error) {
-                return error;
+    if (pacienteModified) {
+        let req = {
+            query: {
+                estado: 'asignado',
+                pacienteId: pacienteModified.id,
+                horaInicio: moment(new Date()).startOf('day').toDate() as any
             }
-        });
+        };
+        let turnos: any = await turnosController.getTurno(req);
+        if (turnos.length > 0) {
+            let turnosUpdates = [];
+            turnos.forEach(element => {
+                try {
+                    turnosUpdates.push(agendaController.updatePaciente(pacienteModified, element));
+                } catch (error) {
+                    return error;
+                }
+            });
+            await Promise.all(turnosUpdates);
+        }
     }
 });
 
@@ -918,12 +922,10 @@ EventCore.on('mpi:patient:update', async (pacienteModified) => {
  * @param {any} pacienteModified
  * @param {any} turno
  */
-export function updatePaciente(pacienteModified, turno) {
-    agendaModel.findById(turno.agenda_id, (err, data, next) => {
-        if (err) {
-            return next(err);
-        }
-        const bloques: any = data.bloques;
+export async function updatePaciente(pacienteModified, turno) {
+    let agenda: any = await agendaModel.findById(turno.agenda_id);
+    if (agenda) {
+        const bloques: any = agenda.bloques;
         let indiceTurno = -1;
         let i = 0;
         while (indiceTurno < 0 && i < bloques.length) {
@@ -943,28 +945,24 @@ export function updatePaciente(pacienteModified, turno) {
         }
 
         if (indiceTurno < 0) { // no se encontro el turno en los bloques de turnos?
-            indiceTurno = data.sobreturnos.findIndex(elem => elem._id.toString() === turno._id.toString());
+            indiceTurno = agenda.sobreturnos.findIndex(elem => elem._id.toString() === turno._id.toString());
 
             if (indiceTurno > -1) { // esta el turno entre los sobreturnos?
-                data.sobreturnos[indiceTurno].paciente.nombre = pacienteModified.nombre ? pacienteModified.nombre : '';
-                data.sobreturnos[indiceTurno].paciente.apellido = pacienteModified.apellido ? pacienteModified.apellido : '';
-                data.sobreturnos[indiceTurno].paciente.documento = pacienteModified.documento ? pacienteModified.documento : '';
+                agenda.sobreturnos[indiceTurno].paciente.nombre = pacienteModified.nombre ? pacienteModified.nombre : '';
+                agenda.sobreturnos[indiceTurno].paciente.apellido = pacienteModified.apellido ? pacienteModified.apellido : '';
+                agenda.sobreturnos[indiceTurno].paciente.documento = pacienteModified.documento ? pacienteModified.documento : '';
                 if (pacienteModified.contacto && pacienteModified.contacto.length) {
-                    data.sobreturnos[indiceTurno].paciente.telefono = pacienteModified.contacto[0].valor;
+                    agenda.sobreturnos[indiceTurno].paciente.telefono = pacienteModified.contacto[0].valor;
                 }
-                data.sobreturnos[indiceTurno].paciente.carpetaEfectores = pacienteModified.carpetaEfectores;
-                data.sobreturnos[indiceTurno].paciente.fechaNacimiento = pacienteModified.fechaNacimiento;
+                agenda.sobreturnos[indiceTurno].paciente.carpetaEfectores = pacienteModified.carpetaEfectores;
+                agenda.sobreturnos[indiceTurno].paciente.fechaNacimiento = pacienteModified.fechaNacimiento;
             }
         }
         if (indiceTurno > -1) {
-            try {
-                Auth.audit(data, (userScheduler as any));
-                saveAgenda(data);
-            } catch (error) {
-                return error;
-            }
+            Auth.audit(agenda, (userScheduler as any));
+            return agenda.save();
         }
-    });
+    }
 }
 
 
