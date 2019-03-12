@@ -523,6 +523,7 @@ async function getUltimoNumeroProtocolo(idOrganizacion) {
  */
 export async function actualizarRegistrosEjecucion(req) {
     let promises = req.body.registros.map((registro: any) => {
+        delete registro.valor.practica;
         return Prestacion.updateOne(
             {
                 $and: [
