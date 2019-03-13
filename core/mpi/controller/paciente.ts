@@ -51,43 +51,35 @@ export function createPaciente(data, req) {
 }
 
 
-export function updatePaciente(pacienteObj, data, req) {
-    return new Promise((resolve, reject) => {
-        const pacienteOriginal = pacienteObj.toObject();
-        for (const key in data) {
-            pacienteObj[key] = data[key];
-        }
-        // Habilita auditoria y guarda
-        if (req) {
-            // pacienteObj.markModified;
-            Auth.audit(pacienteObj, req);
-        }
-        pacienteObj.save((err2) => {
-            if (err2) {
-                return reject(err2);
-            }
-            try {
-                updateTurnosPaciente(pacienteObj);
-            } catch (error) { return error; }
-            const connElastic = new ElasticSync();
-            connElastic.sync(pacienteObj).then(updated => {
-                if (updated) {
-                    Logger.log(req, 'mpi', 'update', {
-                        original: pacienteOriginal,
-                        nuevo: pacienteObj
-                    });
-                } else {
-                    Logger.log(req, 'mpi', 'insert', pacienteObj);
-                }
-
-                EventCore.emitAsync('mpi:patient:update', pacienteObj);
-                resolve(pacienteObj);
-            }).catch(error => {
-                return reject(error);
+export async function updatePaciente(pacienteObj, data, req) {
+    const pacienteOriginal = pacienteObj.toObject();
+    for (const key in data) {
+        pacienteObj[key] = data[key];
+    }
+    // Habilita auditoria y guarda
+    if (req) {
+        // pacienteObj.markModified;
+        Auth.audit(pacienteObj, req);
+    }
+    try {
+        // await pacienteObj.save();
+        await pacienteObj.save();
+        const connElastic = new ElasticSync();
+        let updated = await connElastic.sync(pacienteObj);
+        if (updated) {
+            Logger.log(req, 'mpi', 'update', {
+                original: pacienteOriginal,
+                nuevo: pacienteObj
             });
-            resolve(pacienteObj);
-        });
-    });
+        } else {
+            Logger.log(req, 'mpi', 'insert', pacienteObj);
+        }
+        EventCore.emitAsync('mpi:patient:update', pacienteObj);
+        return pacienteObj;
+    } catch (error) {
+        return error;
+    }
+
 }
 /**
  * Busca los turnos futuros asignados al paciente y actualiza los datos.
@@ -144,7 +136,6 @@ export function updatePacienteMpi(pacMpi, pacAndes, req) {
             }).catch(error => {
                 return reject(error);
             });
-            resolve(pacMpi);
         });
     });
 }

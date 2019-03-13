@@ -2,7 +2,7 @@ import { getPracticasCobasC311 } from './../controller/practica';
 import * as moment from 'moment';
 import { Types } from 'mongoose';
 import { model as Prestacion } from '../../../../modules/rup/schemas/prestacion';
-import { model as Organizacion } from '../../../../core/tm/schemas/organizacion';
+import { Organizacion } from '../../../../core/tm/schemas/organizacion';
 import { pushEstado } from '../../../../modules/rup/controllers/prestacion';
 import { toArray } from '../../../../utils/utils';
 import { EventCore } from '@andes/event-bus';
@@ -523,6 +523,7 @@ async function getUltimoNumeroProtocolo(idOrganizacion) {
  */
 export async function actualizarRegistrosEjecucion(req) {
     let promises = req.body.registros.map((registro: any) => {
+        delete registro.valor.practica;
         return Prestacion.updateOne(
             {
                 $and: [

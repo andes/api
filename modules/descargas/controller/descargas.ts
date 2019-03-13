@@ -6,7 +6,7 @@ import * as moment from 'moment';
 import { Auth } from '../../../auth/auth.class';
 import { model as Prestacion } from '../../rup/schemas/prestacion';
 import * as Paciente from '../../../core/mpi/controller/paciente';
-import { model as Org } from '../../../core/tm/schemas/organizacion';
+import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import * as snomed from '../../../core/term/controller/snomedCtr';
 import * as rup from '../../../modules/rup/schemas/elementoRUP';
 import * as conceptoTurneable from '../../../core/tm/schemas/tipoPrestacion';
@@ -78,7 +78,7 @@ export class Documento {
 
     private static async getOrgById(idOrg) {
         return new Promise((resolve, reject) => {
-            Org.findById(idOrg, (err, org: any) => {
+            Organizacion.findById(idOrg, (err, org: any) => {
                 if (err) {
                     reject(err);
                 }

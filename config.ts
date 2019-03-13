@@ -45,6 +45,13 @@ export const modules = {
         route: '/core/log',
         middleware: appMiddleware
     },
+    logV2: {
+        active: true,
+        path: './core/log.v2/routes',
+        route: '/core/log.v2',
+        // Disable Auth for tests
+        middleware: null // appMiddleware
+    },
     status: {
         active: true,
         path: './core/status/routes',
@@ -291,4 +298,24 @@ export const logKeys = {
         key: 'mpi:mpiUpdater:finish',
         operacion: 'MPI updater finish'
     },
+    elasticCheck1: {
+        key: 'elastic:notFound:andes',
+        operacion: 'Paciente en Andes no encontrado en elastic'
+    },
+    elasticCheck2: {
+        key: 'elastic:notFound:mpi',
+        operacion: 'paciente en MPI no encontrado en elastic'
+    },
+    elasticCheck3: {
+        key: 'andes:notFound',
+        operacion: 'paciente en elasticsearch no encontrado en ANDES/MPI'
+    },
+    elasticFix: {
+        key: 'elasticFix:error',
+        operacion: 'error en el proceso'
+    },
+    elasticFix2: {
+        key: 'elasticFix:update',
+        operacion: 'Documentos referidos al paciente modificados'
+    }
 };
