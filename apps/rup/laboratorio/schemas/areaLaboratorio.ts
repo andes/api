@@ -1,3 +1,4 @@
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import {  model, Schema } from 'mongoose';
 
 // // tslint:disable
@@ -16,6 +17,6 @@ export let schema = new Schema({
         required: true
     }
 });
-schema.plugin(require('../../../../mongoose/audit'));
+schema.plugin(AuditPlugin);
 
 export let AreaLaboratorio = model('areaLaboratorio', schema, 'areaLaboratorio');

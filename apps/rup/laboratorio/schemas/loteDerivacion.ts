@@ -1,3 +1,4 @@
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { model, Schema } from 'mongoose';
 import * as Registro from './../../../../modules/rup/schemas/prestacion.registro';
 
@@ -33,6 +34,6 @@ export let schema = new Schema({
     usuarioResponsablePreparacion: String,
     usuarioEntrega: String
 });
-schema.plugin(require('../../../../mongoose/audit'));
+schema.plugin(AuditPlugin);
 
 export let LoteDerivacion = model('loteDerivacion', schema, 'loteDerivacion');

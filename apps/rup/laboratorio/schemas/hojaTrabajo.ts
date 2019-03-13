@@ -1,3 +1,4 @@
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import * as mongoose from 'mongoose';
 import { SnomedConcept } from './../../../../modules/rup/schemas/snomed-concept';
 
@@ -57,6 +58,5 @@ export let schema = new mongoose.Schema({
 
 
 // Habilitar plugin de auditoría
-schema.plugin(require('../../../../mongoose/audit'));
-
+schema.plugin(AuditPlugin);
 export let HojaTrabajo = mongoose.model('hojaTrabajo', schema, 'hojaTrabajo');

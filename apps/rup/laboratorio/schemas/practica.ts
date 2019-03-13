@@ -1,3 +1,4 @@
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { schema as AreaLaboratorio } from './areaLaboratorio';
 import { SnomedConcept } from './../../../../modules/rup/schemas/snomed-concept';
 import {  model, Schema } from 'mongoose';
@@ -203,6 +204,6 @@ export let schema = new Schema({
 
 
 // Habilitar plugin de auditoría 
-schema.plugin(require('../../../../mongoose/audit'));
 
+schema.plugin(AuditPlugin);
 export let Practica = model('practica', schema, 'practica');
