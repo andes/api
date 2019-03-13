@@ -10,7 +10,7 @@ import { any } from 'async';
 export async function facturacionAutomatica(prestacion: any) {
     let idOrganizacion = (prestacion.ejecucion) ? prestacion.ejecucion.organizacion.id : prestacion.organizacion._id;
 
-    let _datosOrganizacion = Organizacion.findById(idOrganizacion);
+    let _datosOrganizacion: any = Organizacion.findById(idOrganizacion);
     let _obraSocialPaciente = getObraSocial(prestacion.paciente.documento);
     let _getDR = getDatosReportables(prestacion);
 
