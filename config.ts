@@ -172,6 +172,12 @@ export const modules = {
         route: '/modules/top',
         middleware: appMiddleware
     },
+    turnos_prestaciones: {
+        active: true,
+        path: './modules/estadistica/routes',
+        route: '/modules/estadistica',
+        middleware: appMiddleware
+    },
     version: {
         active: true,
         path: './modules/version/routes',
