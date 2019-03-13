@@ -5,13 +5,16 @@ import { profesional } from './../../../core/tm/schemas/profesional';
 import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
 import { snomedModel } from '../../../core/term/schemas/snomed';
 import * as configAutomatica from './../schemas/configFacturacionAutomatica';
+import { any } from 'async';
 
 export async function facturacionAutomatica(prestacion: any) {
     let idOrganizacion = (prestacion.ejecucion) ? prestacion.ejecucion.organizacion.id : prestacion.organizacion._id;
-    let datosOrganizacion: any = await Organizacion.findById(idOrganizacion);
-    let obraSocialPaciente = await getObraSocial(prestacion.paciente.documento);
 
-    let getDR = await getDatosReportables(prestacion);
+    let _datosOrganizacion = Organizacion.findById(idOrganizacion);
+    let _obraSocialPaciente = getObraSocial(prestacion.paciente.documento);
+    let _getDR = getDatosReportables(prestacion);
+
+    let [datosOrganizacion, obraSocialPaciente, getDR] = await Promise.all([_datosOrganizacion, _obraSocialPaciente, _getDR]);
 
     const factura = {
         turno: {
@@ -64,7 +67,6 @@ async function getDatosReportables(prestacion: any) {
             const expresionesDR = configAuto.sumar.datosReportables.map((config: any) => config.valores);
 
             let promises = expresionesDR.map(async (exp, index) => {
-                // return new Promise(async (resolve, reject) => {
                 let querySnomed = makeMongoQuery(exp[0].expresion);
                 let docs = await snomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 });
 
@@ -91,14 +93,7 @@ async function getDatosReportables(prestacion: any) {
                     //         nombre: (data[0].registro.valor.concepto) ? data[0].registro.valor.concepto.term : data[0].registro.concepto.term
                     //     } : data[0].registro.valor
                     // };
-
-                    // resolve(datoReportable);
-                } else {
-                    // resolve();
                 }
-
-                // resolve();
-                // });
             });
 
             return await Promise.all(promises);
