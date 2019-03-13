@@ -203,7 +203,8 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
             ) : (agendaRes as any).bloques[posBloque].restantesDelDia,
             programado: esHoy ? 0 : (agendaRes as any).bloques[posBloque].restantesProgramados,
             gestion: esHoy ? 0 : (agendaRes as any).bloques[posBloque].restantesGestion,
-            profesional: esHoy ? 0 : (agendaRes as any).bloques[posBloque].restantesProfesional
+            profesional: esHoy ? 0 : (agendaRes as any).bloques[posBloque].restantesProfesional,
+            mobile: esHoy ? 0 : (agendaRes as any).bloques[posBloque].restantesMobile,
         };
 
         posTurno = (agendaRes as any).bloques[posBloque].turnos.findIndex(item => item._id.toString() === req.body.idTurno.toString());
@@ -248,6 +249,9 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                 break;
             case ('programado'):
                 update['bloques.' + posBloque + '.restantesProgramados'] = countBloques.programado - 1;
+                if (req.body.emitidoPor && req.body.emitidoPor === 'appMobile') {
+                    update['bloques.' + posBloque + '.restantesMobile'] = countBloques.mobile - 1;
+                }
                 break;
             case ('profesional'):
                 update['bloques.' + posBloque + '.restantesProfesional'] = countBloques.profesional - 1;
@@ -384,7 +388,7 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
 });
 
 /**
- * se marca como reasginado un turno suspendido
+ * se marca como reasignado un turno suspendido
  */
 router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res, next) => {
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion
