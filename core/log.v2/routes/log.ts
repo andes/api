@@ -1,7 +1,6 @@
 import express = require('express');
 import * as logger from '@andes/log';
 import * as mongoose from 'mongoose';
-import { Auth } from 'auth/auth.class';
 import * as config from '../../../config';
 
 let router = express.Router();

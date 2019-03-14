@@ -310,11 +310,14 @@ router.post('/agenda/clonar', (req, res, next) => {
                             bloque.restantesProgramados = bloque.accesoDirectoProgramado * bloque.cantidadSimultaneos;
                             bloque.restantesGestion = bloque.reservadoGestion * bloque.cantidadSimultaneos;
                             bloque.restantesProfesional = bloque.reservadoProfesional * bloque.cantidadSimultaneos;
+                            bloque.restantesMobile = bloque.cupoMobile ? bloque.cupoMobile * bloque.cantidadSimultaneos : 0;
+
                         } else {
                             bloque.restantesDelDia = bloque.accesoDirectoDelDia;
                             bloque.restantesProgramados = bloque.accesoDirectoProgramado;
                             bloque.restantesGestion = bloque.reservadoGestion;
                             bloque.restantesProfesional = bloque.reservadoProfesional;
+                            bloque.restantesMobile = bloque.cupoMobile ? bloque.cupoMobile : 0;
                         }
                         bloque._id = mongoose.Types.ObjectId();
                         if (!nueva.dinamica) {
