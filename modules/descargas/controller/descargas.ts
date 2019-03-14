@@ -20,8 +20,6 @@ moment.locale('es');
 if (env.NODE_ENV !== 'production') {
     // tslint:disable-next-line:no-console
     process.on('unhandledRejection', r => console.log(r));
-    // tslint:disable-next-line:no-console
-    process.on('TypeError', r => console.log(r));
 }
 
 export class Documento {
