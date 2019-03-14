@@ -446,12 +446,9 @@ router.put('/pacientes/:id', async (req, res, next) => {
                     await controller.actualizarGeoReferencia(data);
                 }
                 let pacienteUpdated = await controller.updatePaciente(patientFound, data, req);
-                // try {
-                //     controller.updateTurnosPaciente(pacienteUpdated);
-                // } catch (error) {
-                //     return next('Error actualizando turnos del paciente');
-                // }
-                EventCore.emitAsync('mpi:patient:update', pacienteUpdated);
+                if (pacienteUpdated) {
+                    EventCore.emitAsync('mpi:patient:update', pacienteUpdated);
+                }
                 res.json(pacienteUpdated);
 
             } else {
@@ -681,11 +678,6 @@ router.patch('/pacientes/:id', async (req, res, next) => {
                     resultado.paciente.markModified('contacto');
                     resultado.paciente.contacto = req.body.contacto;
                     EventCore.emitAsync('mpi:patient:update', resultado.paciente);
-                    // try {
-                    //     controller.updateTurnosPaciente(resultado.paciente);
-                    // } catch (error) {
-                    //     return next(error);
-                    // }
                     break;
 
                 case 'updateRelacion':
