@@ -41,6 +41,8 @@ export function createPaciente(data, req) {
                 Logger.log(req, 'mpi', 'insert', newPatient);
                 // Código para emitir eventos
                 EventCore.emitAsync('mpi:patient:create', newPatient);
+                EventCore.emitAsync('mpi:patientSumar:create', newPatient);
+
                 //
                 return resolve(newPatient);
             }).catch(error => {
@@ -81,6 +83,8 @@ export function updatePaciente(pacienteObj, data, req) {
                 }
 
                 EventCore.emitAsync('mpi:patient:update', pacienteObj);
+                EventCore.emitAsync('mpi:patientSumar:update', pacienteObj);
+
                 resolve(pacienteObj);
             }).catch(error => {
                 return reject(error);
@@ -140,6 +144,7 @@ export function updatePacienteMpi(pacMpi, pacAndes, req) {
                     Logger.log(req, 'mpi', 'insert', pacMpi);
                 }
                 EventCore.emitAsync('mpi:patient:update', pacMpi);
+                EventCore.emitAsync('mpi:patientSumar:update', pacMpi);
                 resolve(pacMpi);
             }).catch(error => {
                 return reject(error);
@@ -176,6 +181,7 @@ export function postPacienteMpi(newPatientMpi, req) {
                         nuevo: newPatientMpi,
                     });
                     EventCore.emitAsync('mpi:patient:create', newPatientMpi);
+                    EventCore.emitAsync('mpi:patientSumar:create', newPatientMpi);
                     resolve(newPatientMpi);
                 }).catch((error) => {
                     reject(error);
