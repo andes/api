@@ -1,10 +1,11 @@
 
 import * as express from 'express';
 import * as mongoose from 'mongoose';
-import { codificacion } from '../schemas/codificacion';
+import * as codificacion from '../schemas/codificacion';
 import * as prestacion from '../schemas/prestacion';
 import * as codificacionController from '../controllers/codificacionController';
 import { Auth } from './../../../auth/auth.class';
+import { toArray } from '../../../utils/utils';
 
 
 const router = express.Router();
@@ -49,36 +50,51 @@ router.get('/codificacion/:id?', async (req: any, res, next) => {
         const unaCodificacion = await codificacion.findById(req.params.id);
         res.json(unaCodificacion);
     } else {
-        let query;
-        query = codificacion.find({});
-        if (req.user.organizacion && req.user.organizacion.id) {
-            query.where('createdBy.organizacion._id').equals(req.user.organizacion.id);
-        }
-        if (req.query.fechaDesde) {
-            query.where('createdAt').gte(req.query.fechaDesde);
-        }
-        if (req.query.fechaHasta) {
-            query.where('createdAt').lte(req.query.fechaHasta);
-        }
-        if (req.query.auditadas === false) {
-            query.where('diagnostico.codificaciones.codificacionAuditoria.codigo').exists(false);
+        let filtros = {
+            'createdBy.organizacion.id': req.user.organizacion.id,
+            createdAt: {
+                $gte: new Date(req.query.fechaDesde),
+                $lte: new Date(req.query.fechaHasta),
+            },
+        };
+
+        if (!req.query.auditadas) {
+            filtros['diagnostico.codificaciones.codificacionAuditoria.codigo'] = { $exists: req.query.auditadas };
         }
 
-        query.exec(async (err, data: any) => {
-            if (err) {
-                return next(err);
-            }
-            const cantidad = data.length;
-            if (cantidad > 0) {
-                for (let i = 0; i < cantidad; i++) {
-                    let objeto = { ...data[i] }._doc;
-                    let unaPrestacion = await prestacion.model.findById(data[i].idPrestacion);
-                    objeto.prestacion = (unaPrestacion as any).solicitud.tipoPrestacion ? (unaPrestacion as any).solicitud.tipoPrestacion.term : null;
-                    data[i] = objeto;
+        let pipeline = [
+            {
+                $match: filtros
+            },
+            {
+                $lookup: {
+                    from: 'prestaciones',
+                    localField: 'idPrestacion',
+                    foreignField: '_id',
+                    as: 'prestacion'
                 }
-            }
+            },
+            { $unwind: '$prestacion' },
+            {
+                $project:
+                {
+                    id: '$_id',
+                    diagnostico: 1,
+                    idPrestacion: 1,
+                    paciente: 1,
+                    createdAt: 1,
+                    createdBy: 1,
+                    updatedAt: 1,
+                    updatedBy: 1,
+                    prestacion: '$prestacion.solicitud.tipoPrestacion.term'
+                }
+            }];
+        try {
+            const data = await toArray(codificacion.aggregate(pipeline).cursor({}).exec());
             res.json(data);
-        });
+        } catch (err) {
+            return next(err);
+        }
     }
 });
 
