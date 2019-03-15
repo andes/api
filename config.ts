@@ -274,9 +274,17 @@ export const logKeys = {
         key: 'mpi:paciente:insert',
         operacion: 'Insert paciente MPI'
     },
+    mpiInsertError: {
+        key: 'mpi:paciente:insert:error',
+        operacion: 'Insert paciente MPI error'
+    },
     mpiUpdate: {
         key: 'mpi:paciente:update',
         operacion: 'Update paciente MPI'
+    },
+    mpiUpdateError: {
+        key: 'mpi:paciente:update:error',
+        operacion: 'Update paciente MPI error'
     },
     mpiUpdateContact: {
         key: 'mpi:paciente:updateContacto',
