@@ -298,7 +298,9 @@ export const TwitterConfig = {
 
 export const registroProvincialData = {
     hostost: '',
-    queryFechaPath: ''
+    queryFechaPath: '',
+    queryNacidoByCertificado: '',
+    queryNacidoByFechaModificacion: ''
 };
 export const Drive = {
     adapter: 'file',

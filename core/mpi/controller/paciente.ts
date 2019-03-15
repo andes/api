@@ -38,14 +38,14 @@ export async function createPaciente(data, req) {
         delete nuevoPac.direccion;
 
         const connElastic = new ElasticSync();
-        await connElastic.create(newPatient._id.toString(), nuevoPac);
-        andesLog(req, logKeys.mpiInsert.key, req.body._id, logKeys.mpiInsert.operacion, newPatient, null);
+        await connElastic.create(newPatient.id.toString(), nuevoPac);
+        andesLog(req, logKeys.mpiInsert.key, newPatient.id, logKeys.mpiInsert.operacion, newPatient, null);
 
         // Código para emitir eventos
         EventCore.emitAsync('mpi:patient:create', newPatient);
         return newPatient;
     } catch (error) {
-        andesLog(req, logKeys.mpiInsert.key, req.body._id, logKeys.mpiInsert.operacion, null, 'Error insertando paciente');
+        andesLog(req, logKeys.mpiInsert.key, newPatient.id, logKeys.mpiInsert.operacion, null, 'Error insertando paciente');
         return error;
     }
 
@@ -66,9 +66,9 @@ export async function updatePaciente(pacienteObj, data, req) {
     const connElastic = new ElasticSync();
     let updated = await connElastic.sync(pacienteObj);
     if (updated) {
-        andesLog(req, logKeys.mpiUpdate.key, req.body._id, logKeys.mpiUpdate.operacion, pacienteObj, pacienteOriginal);
+        andesLog(req, logKeys.mpiUpdate.key, pacienteObj.id, logKeys.mpiUpdate.operacion, pacienteObj, pacienteOriginal);
     } else {
-        andesLog(req, logKeys.mpiInsert.key, req.body._id, logKeys.mpiInsert.operacion, pacienteObj, null);
+        andesLog(req, logKeys.mpiInsert.key, pacienteObj.id, logKeys.mpiInsert.operacion, pacienteObj, null);
     }
     EventCore.emitAsync('mpi:patient:update', pacienteObj);
     return pacienteObj;
@@ -840,7 +840,7 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
             pacienteAndes.cuil = pacienteRenaper.cuil;
             pacienteAndes.estado = 'validado';
             pacienteAndes.foto = pacienteRenaper.foto;
-            if (pacienteAndes.direccion.length) {
+            if (pacienteAndes.direccion && pacienteAndes.direccion.length) {
                 pacienteAndes.direccion[0].valor = pacienteRenaper.calle + ' ' + pacienteRenaper.numero;
             }
             return { paciente: pacienteAndes, validado: true };
