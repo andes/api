@@ -420,15 +420,10 @@ router.put('/pacientes/:id', async (req, res, next) => {
                     delete data.sexo;
                     delete data.fechaNacimiento;
                 }
-                if (patientFound.estado === 'validado' && data.direccion && patientFound.direccion[0].valor !== data.direccion[0].valor) {
-                    controller.actualizarGeoReferencia(data);
+                if (patientFound.estado === 'validado' && patientFound.direccion[0].valor !== data.direccion[0].valor) {
+                    await controller.actualizarGeoReferencia(data);
                 }
                 let pacienteUpdated = await controller.updatePaciente(patientFound, data, req);
-                try {
-                    controller.updateTurnosPaciente(pacienteUpdated);
-                } catch (error) {
-                    return next('Error actualizando turnos del paciente');
-                }
                 res.json(pacienteUpdated);
 
             } else {
@@ -647,7 +642,7 @@ router.patch('/pacientes/:id', async (req, res, next) => {
                         const repetida = await controller.checkCarpeta(req, resultado.paciente);
                         if (!repetida) {
                             controller.updateCarpetaEfectores(req, resultado.paciente);
-                            controller.updateTurnosPaciente(resultado.paciente);
+                            // controller.updateTurnosPaciente(resultado.paciente);
                         } else {
                             return next('El numero de carpeta ya existe');
                         }
@@ -656,11 +651,6 @@ router.patch('/pacientes/:id', async (req, res, next) => {
                 case 'updateContactos': // Update de carpeta y de contactos
                     resultado.paciente.markModified('contacto');
                     resultado.paciente.contacto = req.body.contacto;
-                    try {
-                        controller.updateTurnosPaciente(resultado.paciente);
-                    } catch (error) {
-                        return next(error);
-                    }
                     break;
 
                 case 'updateRelacion':
@@ -682,10 +672,6 @@ router.patch('/pacientes/:id', async (req, res, next) => {
             } else {
                 pacienteAndes = resultado.paciente;
             }
-            // Quitamos esta sincronizacion con elastic para evitar la sincronización de campos no necesarios.
-            // let connElastic = new ElasticSync();
-            // await connElastic.sync(pacienteAndes);
-
             Auth.audit(pacienteAndes, req);
             let pacienteSaved = await pacienteAndes.save();
             res.json(pacienteSaved);

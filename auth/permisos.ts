@@ -344,5 +344,16 @@ export default [
         child: [
         ]
     },
+    {
+        key: 'turnosPrestaciones',
+        title: 'Buscador de turnos y prestaciones para recupero financiero',
+        child: [
+            {
+                key: 'buscar',
+                title: 'Buscar prestaciones de pacientes',
+                type: 'boolean'
+            },
+        ]
+    },
 
 ];

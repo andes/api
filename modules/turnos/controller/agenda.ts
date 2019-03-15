@@ -26,6 +26,7 @@ import {
 } from '@andes/event-bus';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
+import { NotificationService } from '../../../modules/mobileApp/controller/NotificationService';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -112,6 +113,9 @@ export function liberarTurno(req, data, turno) {
                 break;
             case ('programado'):
                 data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
+                if (data.bloques[position.indexBloque].restantesMobile) {
+                    data.bloques[position.indexBloque].restantesMobile = data.bloques[position.indexBloque].restantesMobile + cant;
+                }
                 break;
             case ('profesional'):
                 data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional + cant;
@@ -471,6 +475,8 @@ export function actualizarEstado(req, data) {
                     }
                     turno.motivoSuspension = 'agendaSuspendida';
                     turno.avisoSuspension = 'no enviado';
+
+                    NotificationService.notificarSuspension(turno);
 
                 });
             });
@@ -896,23 +902,23 @@ export function saveAgenda(nuevaAgenda) {
 
 // Actualiza el paciente dentro del turno, si se realizo un update del paciente (Eventos entre módulos)
 EventCore.on('mpi:patient:update', async (pacienteModified) => {
-    let req = {
-        query: {
-            estado: 'asignado',
-            pacienteId: pacienteModified.id,
-            horaInicio: moment(new Date()).startOf('day').toDate() as any
-        }
-    };
-    let turnos: any = await turnosController.getTurno(req);
-    if (turnos.length > 0) {
-        turnos.forEach(element => {
-            try {
-                agendaController.updatePaciente(pacienteModified, element);
-            } catch (error) {
-                return error;
-            }
-        });
-    }
+    // let req = {
+    //     query: {
+    //         estado: 'asignado',
+    //         pacienteId: pacienteModified.id,
+    //         horaInicio: moment(new Date()).startOf('day').toDate() as any
+    //     }
+    // };
+    // let turnos: any = await turnosController.getTurno(req);
+    // if (turnos.length > 0) {
+    //     turnos.forEach(element => {
+    //         try {
+    //             agendaController.updatePaciente(pacienteModified, element);
+    //         } catch (error) {
+    //             return error;
+    //         }
+    //     });
+    // }
 });
 
 /**

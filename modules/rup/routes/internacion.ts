@@ -4,7 +4,6 @@ import * as censoController from './../controllers/censo';
 import * as internacionesController from './../controllers/internacion';
 import * as camasController from './../controllers/cama';
 import { Auth } from './../../../auth/auth.class';
-
 const router = express.Router();
 
 router.get('/internaciones/ultima/:idPaciente', (req, res, next) => {
@@ -103,16 +102,11 @@ router.get('/internaciones/censo', async (req, res, next) => {
 
 
 router.get('/internaciones/censoMensual', (req, res, next) => {
-    let unidad = req.query.unidad;
-
-    let idOrganizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
-    let resultadoFinal;
-    let censoMensual = [];
-
-    censoController.censoMensual(req.query.fechaDesde, req.query.fechaHasta, unidad, idOrganizacion).then(result => {
+    censoController.censoMensual(new Date(req.query.fechaDesde), new Date(req.query.fechaHasta), req.query.unidad, req.query.organizacion).then(result => {
         res.json(result);
     });
 });
+
 
 router.get('/internaciones/censo/disponibilidad', (req, res, next) => {
     // conceptId de la unidad organizativa
