@@ -48,7 +48,6 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
                     latitud: org.direccion.geoReferencia[0],
                     longitud: org.direccion.geoReferencia[1]
                 };
-                agendasResultado[i].coordenadasDeMapa.longitud = org.direccion.geoReferencia[1];
                 agendasResultado[i].domicilio = org.direccion.valor;
                 promisesStack.push(org);
             }
