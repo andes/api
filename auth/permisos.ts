@@ -155,7 +155,8 @@ export default [
                 key: 'cama',
                 title: 'Acciones sobre una cama',
                 child: [
-                    { key: 'create', title: 'Crear nueva cama', type: 'boolean' }
+                    { key: 'create', title: 'Crear nueva cama', type: 'boolean' },
+                    { key: 'baja', title: 'Eliminar cama', type: 'boolean' }
                 ]
             },
             { key: 'censo', title: 'Ver censo diario y mensual', type: 'boolean' },
@@ -340,6 +341,17 @@ export default [
         title: 'Edición de espacios físicos',
         comment: 'Agregar/editar espacios de la organización',
         child: [
+        ]
+    },
+    {
+        key: 'turnosPrestaciones',
+        title: 'Buscador de turnos y prestaciones para recupero financiero',
+        child: [
+            {
+                key: 'buscar',
+                title: 'Buscar prestaciones de pacientes',
+                type: 'boolean'
+            },
         ]
     },
 

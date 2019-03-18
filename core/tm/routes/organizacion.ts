@@ -1,12 +1,8 @@
 import * as express from 'express';
 import * as https from 'https';
-
-import { model as organizacion } from '../schemas/organizacion';
-
+import { Organizacion } from '../schemas/organizacion';
 import * as utils from '../../../utils/utils';
 import { toArray } from '../../../utils/utils';
-import { defaultLimit, maxLimit } from './../../../config';
-
 import * as configPrivate from '../../../config.private';
 import { Auth } from '../../../auth/auth.class';
 
@@ -16,7 +12,7 @@ const router = express.Router();
 
 router.get('/organizaciones/georef/:id?', async (req, res, next) => {
     if (req.params.id) {
-        organizacion
+        Organizacion
             .findById(req.params.id, (err, data: any) => {
                 if (err) {
                     return next(err);
@@ -72,7 +68,7 @@ router.get('/organizaciones/georef/:id?', async (req, res, next) => {
             });
 
     } else {
-        const query = organizacion.aggregate([
+        const query = Organizacion.aggregate([
             {
                 $match: {
                     'direccion.geoReferencia': {
@@ -107,339 +103,108 @@ router.get('/organizaciones/georef/:id?', async (req, res, next) => {
     }
 });
 
-/**
- * @swagger
- * definition:
- *   organizacion:
- *     properties:
- *       codigo:
- *          type: object
- *          properties:
- *            sisa:
- *              type: string
- *            cuie:
- *              type: string
- *            remediar:
- *              type: string
- *       nombre:
- *          type: string
- *       tipoEstablecimiento:
- *          type: object
- *          properties:
- *            id:
- *              type: string
- *            nombre:
- *              type: string
- *       telecom:
- *          type: array
- *          items:
- *              type: object
- *              properties:
- *                  tipo:
- *                      type: string
- *                      enum:
- *                          - Teléfono Fijo
- *                          - Teléfono Celular
- *                          - email
- *                  valor:
- *                      type: string
- *                  ranking:
- *                      type: number
- *                      format: float
- *                  ultimaActualizacion:
- *                      type: string
- *                      format: date
- *                  activo:
- *                      type: boolean
- *       direccion:
- *          type: array
- *          items:
- *              $ref: '#/definitions/direccion'
- *       contacto:
- *          type: array
- *          items:
- *              $ref: '#/definitions/contacto'
- *       nivelComplejidad:
- *          type: number
- *          format: float
- *       activo:
- *          type: boolean
- *       fechaAlta:
- *          type: string
- *          format: date
- *       fechaBaja:
- *          type: string
- *          format: date
- */
 
-/**
- * @swagger
- * /organizacion:
- *   get:
- *     tags:
- *       - Organizacion
- *     description: Retorna un arreglo de objetos organizacion
- *     summary: Listar organizaciones
- *     produces:
- *       - application/json
- *     parameters:
- *       - name: nombre
- *         in: query
- *         description: El nombre o descripción de la organizacion
- *         required: false
- *         type: string
- *       - name: sisa
- *         in: query
- *         description: El codigo sisa de la organizacion
- *         required: true
- *         type: string
- *       - name: skip
- *         in: query
- *         description: El valor numerico del skip
- *         required: false
- *         type: number
- *       - name: limit
- *         in: query
- *         description: El valor del limit
- *         required: false
- *         type: number
- *     responses:
- *       200:
- *         description: un arreglo de objetos organizacion
- *         schema:
- *           $ref: '#/definitions/organizacion'
- * /organizacion/{id}:
- *   get:
- *     tags:
- *       - Organizacion
- *     summary: Listar organizaciones con filtro por ID
- *     description: Retorna un arreglo de objetos organizacion
- *     produces:
- *       - application/json
- *     parameters:
- *       - name: id
- *         in: path
- *         description: _Id de una organizacion
- *         required: true
- *         type: string
- *       - name: tipo
- *         in: query
- *         description: _Id de una organizacion
- *         required: true
- *         type: string
- *
- *     responses:
- *       200:
- *         description: An array of especialidades
- *         schema:
- *           $ref: '#/definitions/organizacion'
- */
-router.get('/organizaciones/:id*?', (req, res, next) => {
-    if (req.params.id) {
-        organizacion
-            .findById(req.params.id, (err, data) => {
-                if (err) {
-                    return next(err);
-                }
-                res.json(data);
-            });
-    } else {
-        let query;
-        const act: Boolean = true;
-        const filtros = {
-            activo: act
+router.get('/organizaciones/:id', async (req, res, next) => {
+    try {
+        let org = await Organizacion.findById(req.params.id);
+        res.json(org);
+    } catch (err) {
+        return next(err);
+    }
+});
+
+router.get('/organizaciones', async (req, res, next) => {
+    const act: Boolean = true;
+    const filtros = {
+        activo: act
+    };
+
+    if (req.query.nombre) {
+        filtros['nombre'] = {
+            $regex: utils.makePattern(req.query.nombre)
         };
+    }
 
-        if (req.query.nombre) {
-            filtros['nombre'] = {
-                $regex: utils.makePattern(req.query.nombre)
-            };
-        }
+    if (req.query.cuie) {
+        filtros['codigo.cuie'] = req.query.cuie;
+    }
 
-        if (req.query.cuie) {
-            filtros['codigo.cuie'] = {
-                $regex: utils.makePattern(req.query.cuie)
-            };
-        }
+    if (req.query.sisa) {
+        filtros['codigo.sisa'] = req.query.sisa;
+    }
+    if (req.query.activo) {
+        filtros['activo'] = req.query.activo;
+    }
+    if (req.query.tipoEstablecimiento) {
+        filtros['tipoEstablecimiento.nombre'] = {
+            $regex: utils.makePattern(req.query.tipoEstablecimiento)
+        };
+    }
+    if (req.query.ids) {
+        filtros['_id'] = { $in: req.query.ids };
+    }
 
-        if (req.query.sisa) {
-            filtros['codigo.sisa'] = {
-                $regex: utils.makePattern(req.query.sisa)
-            };
-        }
-        if (req.query.activo) {
-            filtros['activo'] = req.query.activo;
-        }
-        if (req.query.tipoEstablecimiento) {
-            filtros['tipoEstablecimiento.nombre'] = {
-                $regex: utils.makePattern(req.query.tipoEstablecimiento)
-            };
-        }
-        if (req.query.ids) {
-            filtros['_id'] = { $in: req.query.ids };
-        }
-
-        const skip: number = parseInt(req.query.skip || 0, 10);
-        const limit: number = Math.min(parseInt(req.query.limit || defaultLimit, 10), maxLimit);
-
-        query = organizacion
-            .find(filtros);
-        // .skip(skip)
-        // .limit(limit);
-        query.exec((err, data) => {
-            if (err) {
-                return next(err);
-            }
-
-            res.json(data);
-        });
-
-        // if (req.query.nombre) {
-        //     filtros['nombre'] = { '$regex': utils.makePattern(req.query.nombre) };
-        // }
-
-        // if (req.query.cuie) {
-        //     filtros['codigo.cuie'] = { '$regex': utils.makePattern(req.query.cuie) };
-        // }
-
-        // if (req.query.sisa) {
-        //     filtros['codigo.sisa'] = { '$regex': utils.makePattern(req.query.sisa) };
-        // }
-        // if (req.query.activo) {
-        //     filtros['activo'] = req.query.activo;
-        // }
-        // if (req.query.tipoEstablecimiento) {
-        //     filtros['tipoEstablecimiento.nombre'] = {'$regex': utils.makePattern(req.query.tipoEstablecimiento) };
-        // }
-
-
-        // query.exec (err, data) => {
-        //     if (err) {
-        //         return next(err);
-        //     }
-        //     res.json(data);
-        // });
+    try {
+        const organizaciones: any = await Organizacion.find(filtros);
+        delete organizaciones.configuraciones;
+        return res.json(organizaciones);
+    } catch (err) {
+        return next(err);
     }
 });
 
 /**
- * @swagger
- * /organizacion:
- *   post:
- *     tags:
- *       - Organizacion
- *     description: Cargar una organizacion
- *     summary: Cargar una organizacion
- *     consumes:
- *       - application/json
- *     produces:
- *       - application/json
- *     parameters:
- *       - name: organizacion
- *         description: objeto organizacion
- *         in: body
- *         required: true
- *         schema:
- *           $ref: '#/definitions/organizacion'
- *     responses:
- *       200:
- *         description: Un objeto organizacion
- *         schema:
- *           $ref: '#/definitions/organizacion'
- * Auth.audit(newPatientMpi, req)
+ * GET /organizaciones/:id/configuracion
+ * Devuelve las configuraciones de una organizacion.
+ *
+ *
  */
-router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
-    if (!Auth.check(req, 'tm:especialidad:postEspecialidad')) {
+router.get('/organizaciones/:id/configuracion', async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const org: any = await Organizacion.findById(id, { configuraciones: 1 });
+        return res.json(org.configuraciones);
+    } catch (error) {
+        return next(error);
+    }
+});
+
+router.post('/organizaciones', Auth.authenticate(), async (req, res, next) => {
+    if (!Auth.check(req, 'tm:organizacion:create')) {
         return next(403);
     }
-    const newOrganization = new organizacion(req.body);
-    newOrganization.save((err) => {
-        if (err) {
-            return next(err);
-        }
-        res.json(newOrganization);
-    });
+    try {
+        const newOrganization = new Organizacion(req.body);
+        Auth.audit(newOrganization, req);
+        await newOrganization.save();
+        return res.json(newOrganization);
+    } catch (err) {
+        return next(err);
+    }
 });
 
-/**
- * @swagger
- * /organizacion/{id}:
- *   put:
- *     tags:
- *       - Organizacion
- *     description: Actualizar una organizacion
- *     summary: Actualizar una organizacion
- *     consumes:
- *       - application/json
- *     produces:
- *       - application/json
- *     parameters:
- *       - name: id
- *         in: path
- *         description: Id de una organizacion
- *         required: true
- *         type: string
- *       - name: organizacion
- *         description: objeto organizacion
- *         in: body
- *         required: true
- *         schema:
- *           $ref: '#/definitions/organizacion'
- *     responses:
- *       200:
- *         description: Un objeto organizaciones
- *         schema:
- *           $ref: '#/definitions/organizacion'
- */
-router.put('/organizaciones/:id', Auth.authenticate(), (req, res, next) => {
+router.put('/organizaciones/:id', Auth.authenticate(), async (req, res, next) => {
     if (!Auth.check(req, 'tm:organizacion:edit')) {
         return next(403);
     }
-    organizacion.findByIdAndUpdate(req.params.id, req.body, (err, data) => {
-        if (err) {
-            return next(err);
-        }
-
-        res.json(data);
-    });
+    try {
+        let org = await Organizacion.findByIdAndUpdate(req.params.id, req.body);
+        return res.json(org);
+    } catch (err) {
+        return next(err);
+    }
 });
 
-/**
- * @swagger
- * /organizacion/{id}:
- *   delete:
- *     tags:
- *       - Organizacion
- *     description: Eliminar una organizacion
- *     summary: Eliminar una organizacion
- *     consumes:
- *       - application/json
- *     produces:
- *       - application/json
- *     parameters:
- *       - name: id
- *         in: path
- *         description: Id de una organizacion
- *         required: true
- *         type: string
- *
- *     responses:
- *       200:
- *         description: Un objeto organizaciones
- *         schema:
- *           $ref: '#/definitions/organizacion'
- */
-router.delete('/organizaciones/:id', Auth.authenticate(), (req, res, next) => {
+router.delete('/organizaciones/:id', Auth.authenticate(), async (req, res, next) => {
     if (!Auth.check(req, 'tm:organizacion:delete')) {
         return next(403);
     }
-    organizacion.findByIdAndRemove(req.params._id, (err, data) => {
-        if (err) {
-            return next(err);
-        }
-
-        res.json(data);
-    });
+    try {
+        let org = await Organizacion.findByIdAndRemove(req.params._id);
+        return res.json(org);
+    } catch (err) {
+        return next(err);
+    }
 });
 
 

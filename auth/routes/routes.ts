@@ -3,7 +3,7 @@ import * as ldapjs from 'ldapjs';
 import * as configPrivate from '../../config.private';
 import { Auth } from './../auth.class';
 import { authUsers } from '../schemas/permisos';
-import * as authOrganizaciones from './../../core/tm/schemas/organizacion';
+import { Organizacion } from './../../core/tm/schemas/organizacion';
 import { profesional } from './../../core/tm/schemas/profesional';
 import * as mongoose from 'mongoose';
 import * as authMobile from '../../modules/mobileApp/controller/AuthController';
@@ -78,7 +78,7 @@ router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
             }
 
         }).filter(item => item !== null);
-        authOrganizaciones.model.find({ _id: { $in: organizaciones } }, (errOrgs, orgs: any[]) => {
+        Organizacion.find({ _id: { $in: organizaciones } }, (errOrgs, orgs: any[]) => {
             if (errOrgs) {
                 return next(errOrgs);
             }
@@ -101,7 +101,7 @@ router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
             usuario: username,
             'organizaciones._id': orgId
         }),
-        authOrganizaciones.model.findOne({ _id: orgId }, { nombre: 1 })
+        Organizacion.findOne({ _id: orgId }, { nombre: 1 })
     ]).then((data: any[]) => {
         if (data[0] && data[1]) {
             const user = data[0];
