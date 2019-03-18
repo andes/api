@@ -837,7 +837,7 @@ async function actualizarAux(agenda: any) {
 /**
  * Llegado el día de ejecucion de la agenda, los turnos restantesProgramados pasan a restantesDelDia
  *
- * @export actualizarTiposDeTurno()
+ * @export actualizarTurnosDelDia()
  * @returns resultado
  */
 export function actualizarTurnosDelDia() {
@@ -863,6 +863,49 @@ export function actualizarTurnosDelDia() {
         Auth.audit(agenda, (userScheduler as any));
         return saveAgenda(agenda).then(() => {
             Logger.log(userScheduler, 'citas', 'actualizarTurnosDelDia', {
+                idAgenda: agenda._id,
+                organizacion: agenda.organizacion,
+                horaInicio: agenda.horaInicio,
+                updatedAt: agenda.updatedAt,
+                updatedBy: agenda.updatedBy
+
+            });
+            return Promise.resolve();
+        }).catch(() => {
+            return Promise.resolve();
+        });
+
+    });
+}
+
+/**
+ * El dia anterior a la ejecución de la agenda (a las 12 del mediodía), los turnos restantes mobile se setean a 0
+ *
+ * @export actualizarTurnosMobile()
+ * @returns resultado
+ */
+export function actualizarTurnosMobile() {
+    const fechaActualizar = moment().add(1, 'day');
+
+    const condicion = {
+        $or: [{ estado: 'disponible' }, { estado: 'publicada' }],
+        horaInicio: {
+            $gte: (moment(fechaActualizar).startOf('day').toDate() as any),
+            $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
+        }
+    };
+    const cursor = agendaModel.find(condicion).cursor();
+    return cursor.eachAsync(doc => {
+        const agenda: any = doc;
+        for (let j = 0; j < agenda.bloques.length; j++) {
+            if (agenda.bloques[j].restantesMobile > 0) {
+                agenda.bloques[j].restantesMobile = 0;
+            }
+        }
+
+        Auth.audit(agenda, (userScheduler as any));
+        return saveAgenda(agenda).then(() => {
+            Logger.log(userScheduler, 'citas', 'actualizarTurnosMobile', {
                 idAgenda: agenda._id,
                 organizacion: agenda.organizacion,
                 horaInicio: agenda.horaInicio,
