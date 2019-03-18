@@ -5,10 +5,6 @@ import { WebHook, WebHookLog } from '../schemas/webhookSchema';
 import * as Fhir from '../../../packages/fhir/src/patient';
 const request = require('request');
 let router = express.Router();
-import * as localidad from '../../../core/tm/schemas/localidad';
-import * as organizacion from '../../../core/tm/schemas/organizacion';
-
-import * as provincia_model from '../../../core/tm/schemas/provincia_model';
 function filterData(filters: any[], data) {
     let i = 0;
     let continua = true;
