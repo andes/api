@@ -884,7 +884,7 @@ export function actualizarTurnosDelDia() {
  * @export actualizarTurnosMobile()
  * @returns resultado
  */
-export function actualizarTurnosMobile() {
+export async function actualizarTurnosMobile() {
     const fechaActualizar = moment().add(1, 'day');
 
     const condicion = {
@@ -892,7 +892,8 @@ export function actualizarTurnosMobile() {
         horaInicio: {
             $gte: (moment(fechaActualizar).startOf('day').toDate() as any),
             $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
-        }
+        },
+        'bloques.restantesMobile': { $gt: 0 }
     };
     const cursor = agendaModel.find(condicion).cursor();
     return cursor.eachAsync(doc => {
@@ -902,7 +903,6 @@ export function actualizarTurnosMobile() {
                 agenda.bloques[j].restantesMobile = 0;
             }
         }
-
         Auth.audit(agenda, (userScheduler as any));
         return saveAgenda(agenda).then(() => {
             Logger.log(userScheduler, 'citas', 'actualizarTurnosMobile', {
@@ -917,7 +917,6 @@ export function actualizarTurnosMobile() {
         }).catch(() => {
             return Promise.resolve();
         });
-
     });
 }
 
