@@ -71,7 +71,9 @@ export function updatePaciente(pacienteObj, data, req) {
             }
             try {
                 updateTurnosPaciente(pacienteObj);
-            } catch (error) { return error; }
+            } catch (error) {
+                return error;
+            }
             const connElastic = new ElasticSync();
             connElastic.sync(pacienteObj).then(updated => {
                 if (updated) {
@@ -896,6 +898,7 @@ async function validarSisa(pacienteAndes: any, req: any, foto = null) {
  */
 
 export async function actualizarGeoReferencia(dataPaciente, req) {
+    let pacienteOriginal = dataPaciente;
     // (valores de direccion fueron modificados): están completos?
     if (dataPaciente.direccion[0].valor && dataPaciente.direccion[0].ubicacion.localidad && dataPaciente.direccion[0].ubicacion.provincia) {
         try {
@@ -919,10 +922,10 @@ export async function actualizarGeoReferencia(dataPaciente, req) {
                     dataPaciente.direccion[0].ubicacion.barrio = null;
                 }
             }
-            // if (req) {
-            //     // se guardan los datos
-            //     updatePaciente(dataPaciente, dataPaciente, req);
-            // }
+            if (req) {
+                // se guardan los datos
+                updatePaciente(pacienteOriginal, dataPaciente, req);
+            }
         } catch (err) {
             return (err);
         }
