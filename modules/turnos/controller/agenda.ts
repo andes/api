@@ -13,6 +13,9 @@ import {
 import {
     Logger
 } from '../../../utils/logService';
+import { log } from '@andes/log';
+import { logKeys } from '../../../config';
+
 import {
     model as Prestacion
 } from '../../rup/schemas/prestacion';
@@ -904,15 +907,24 @@ export async function actualizarTurnosMobile() {
             }
         }
         Auth.audit(agenda, (userScheduler as any));
-        return saveAgenda(agenda).then(() => {
-            Logger.log(userScheduler, 'citas', 'actualizarTurnosMobile', {
-                idAgenda: agenda._id,
-                organizacion: agenda.organizacion,
-                horaInicio: agenda.horaInicio,
-                updatedAt: agenda.updatedAt,
-                updatedBy: agenda.updatedBy
+        return saveAgenda(agenda).then(async () => {
 
-            });
+            let logRequest = {
+                user: {
+                    usuario: { nombre: 'actualizarTurnosMobileJob', apellido: 'actualizarTurnosMobileJob' },
+                    app: 'citas',
+                    organizacion: userScheduler.user.organizacion.nombre
+                },
+                ip: 'localhost',
+                connection: {
+                    localAddress: ''
+                }
+            };
+            try {
+                await log(logRequest, logKeys.turnosMobileUpdate.key, null, logKeys.turnosMobileUpdate.operacion, null, null);
+            } catch (err) {
+                await log(logRequest, logKeys.turnosMobileUpdate.key, null, logKeys.turnosMobileUpdate.operacion, err, null);
+            }
             return Promise.resolve();
         }).catch(() => {
             return Promise.resolve();
