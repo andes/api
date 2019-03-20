@@ -71,6 +71,7 @@
     "stream": "0.0.2",
     "supports-color": "^4.2.1",
     "swagger-jsdoc": "^1.7.0",
+    "tls": "0.0.1",
     "twitter": "^1.7.1",
     "typescript": "^2.6.2",
     "ws": "^3.2.0",
