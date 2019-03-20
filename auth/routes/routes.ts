@@ -14,10 +14,11 @@ const shiroTrie = require('shiro-trie');
 const router = express.Router();
 
 
-router.put('/estadoPermisos/:username', Auth.authenticate(), (req, res, next) => {
-    authUsers.findOne({ usuario: req.params.username }).then((user: any) => {
+router.put('/estadoPermisos/:username', Auth.authenticate(), async (req, res, next) => {
+    let user: any = await authUsers.findOne({ usuario: req.params.username });
+    if (user) {
         let organizacion = user.organizaciones.find(x => x._id.toString() === req.body.idOrganizacion.toString());
-        organizacion.permisosPausados = !organizacion.permisosPausados;
+        organizacion.activo = !organizacion.activo;
         let obj = new authUsers(user);
         obj.save((err2) => {
             if (err2) {
@@ -25,8 +26,7 @@ router.put('/estadoPermisos/:username', Auth.authenticate(), (req, res, next) =>
             }
             res.json(organizacion);
         });
-
-    });
+    }
 });
 
 /**
@@ -44,7 +44,6 @@ router.get('/sesion', Auth.authenticate(), (req, res) => {
  */
 router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
     let username;
-    let organizacionesFiltradas = [];
     if (req.query.user) {
         username = req.query.user;
     } else {
@@ -55,13 +54,7 @@ router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
         if (err) {
             return next(err);
         }
-
-        // user.organizaciones.forEach(element => {
-        //     if (element.permisosPausados === false) {
-        //         organizacionesFiltradas.push(element);
-        //     }
-        // });
-        organizacionesFiltradas = user.organizaciones.filter(x => x.permisosPausados === false);
+        const organizacionesFiltradas = user.organizaciones.filter(x => x.activo === true);
 
         const organizaciones = organizacionesFiltradas.map((item) => {
             if ((req as any).query.admin) {

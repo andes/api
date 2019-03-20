@@ -59,4 +59,4 @@ const _schema = new Schema({
 _schema.plugin(AuditPlugin);
 
 export const OrganizacionSchema = _schema;
-export const Organizacion = model('organizacion', _schema, 'organizacion');
+export const Organizacion = model('organizacion', OrganizacionSchema, 'organizacion');

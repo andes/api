@@ -13,9 +13,9 @@ const schema = new mongoose.Schema({
             ref: 'organizacion'
         },
         permisos: [String],
-        permisosPausados: {
+        activo: {
             type: Boolean,
-            default: false
+            default: true
         }
     }]
 });
