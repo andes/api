@@ -7,8 +7,7 @@ let router = express.Router();
 
 
 router.get('/practicas/codigo/:codigo', async (req, res) => {
-    const codigo = parseInt(req.params.codigo, 10);
-    res.json(await getPracticaByCodigo(codigo));
+    res.json(await getPracticaByCodigo(req.params.codigo, req.query.buscarNoNomencladas));
 });
 
 router.get('/practicas/area/:area', async (req, res) => {
