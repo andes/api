@@ -899,37 +899,33 @@ export async function actualizarTurnosMobile() {
         'bloques.restantesMobile': { $gt: 0 }
     };
     const cursor = agendaModel.find(condicion).cursor();
-    return cursor.eachAsync(doc => {
-        const agenda: any = doc;
-        for (let j = 0; j < agenda.bloques.length; j++) {
-            if (agenda.bloques[j].restantesMobile > 0) {
-                agenda.bloques[j].restantesMobile = 0;
-            }
+    let logRequest = {
+        user: {
+            usuario: { nombre: 'actualizarTurnosMobileJob', apellido: 'actualizarTurnosMobileJob' },
+            app: 'citas',
+            organizacion: userScheduler.user.organizacion.nombre
+        },
+        ip: 'localhost',
+        connection: {
+            localAddress: ''
         }
-        Auth.audit(agenda, (userScheduler as any));
-        return saveAgenda(agenda).then(async () => {
-
-            let logRequest = {
-                user: {
-                    usuario: { nombre: 'actualizarTurnosMobileJob', apellido: 'actualizarTurnosMobileJob' },
-                    app: 'citas',
-                    organizacion: userScheduler.user.organizacion.nombre
-                },
-                ip: 'localhost',
-                connection: {
-                    localAddress: ''
+    };
+    try {
+        return await cursor.eachAsync(async doc => {
+            const agenda: any = doc;
+            for (let j = 0; j < agenda.bloques.length; j++) {
+                if (agenda.bloques[j].restantesMobile > 0) {
+                    agenda.bloques[j].restantesMobile = 0;
                 }
-            };
-            try {
-                await log(logRequest, logKeys.turnosMobileUpdate.key, null, logKeys.turnosMobileUpdate.operacion, null, null);
-            } catch (err) {
-                await log(logRequest, logKeys.turnosMobileUpdate.key, null, logKeys.turnosMobileUpdate.operacion, err, null);
             }
-            return Promise.resolve();
-        }).catch(() => {
-            return Promise.resolve();
+            Auth.audit(agenda, (userScheduler as any));
+            await saveAgenda(agenda);
+            await log(logRequest, logKeys.turnosMobileUpdate.key, null, logKeys.turnosMobileUpdate.operacion, null, { idAgenda: agenda._id });
         });
-    });
+    } catch (err) {
+        await log(logRequest, logKeys.turnosMobileUpdate.key, null, logKeys.turnosMobileUpdate.operacion, err, null);
+        return Promise.reject(err);
+    }
 }
 
 /**
