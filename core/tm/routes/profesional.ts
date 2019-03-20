@@ -52,68 +52,26 @@ router.get('/profesionales/guia', async (req, res, next) => {
         opciones['formacionGrado.profesion.codigo'] = Number(req.query.codigoProfesion);
         opciones['formacionGrado.matriculacion.matriculaNumero'] = Number(req.query.numeroMatricula);
     }
-    if (req.query.apellido && req.query.codigoProfesion) {
-        opciones['formacionGrado.profesion.codigo'] = Number(req.query.codigoProfesion);
-        opciones['apellido'] = utils.makePattern(req.query.apellido);
-    }
-
-    if (req.query.nombre) {
-        opciones['nombre'] = utils.makePattern(req.query.nombre);
-
-    }
 
     if (Object.keys(opciones).length !== 0) {
         opciones['formacionGrado.matriculacion'] = { $ne: null };
         opciones['profesionalMatriculado'] = true;
 
-        let datosGuia: any = await profesional.find(opciones);
-        let resultado = [];
+        let datosGuia: any = await profesional.findOne(opciones);
+        let resultado: IGuiaProfesional;
 
-        if (datosGuia.length > 0) {
-            datosGuia.forEach(element => {
-                resultado.push({
-                    id: element.id,
-                    nombre: element.nombre ? element.nombre : '',
-                    sexo: element.sexo ? element.sexo : '',
-                    apellido: element.apellido ? element.apellido : '',
-                    documento: element.documento ? element.documento : '',
-                    nacionalidad: element.nacionalidad ? element.nacionalidad.nombre : '',
-                    profesiones: element.formacionGrado
-                });
-            });
+        if (datosGuia) {
+            resultado = {
+                id: datosGuia.id,
+                nombre: datosGuia.nombre ? datosGuia.nombre : '',
+                sexo: datosGuia.sexo ? datosGuia.sexo : '',
+                apellido: datosGuia.apellido ? datosGuia.apellido : '',
+                documento: datosGuia.documento ? datosGuia.documento : '',
+                nacionalidad: datosGuia.nacionalidad ? datosGuia.nacionalidad.nombre : '',
+                profesiones: datosGuia.formacionGrado
+            };
         }
         res.json(resultado);
-    } else {
-        res.json();
-    }
-});
-
-router.get('/profesionales/matching', async (req, res, next) => {
-    const opciones = {};
-
-    if (req.query.documento) {
-        opciones['documento'] = req.query.documento;
-    }
-
-    if (Object.keys(opciones).length !== 0) {
-        let profEncontrados: any = await profesional.find(opciones);
-        let arrayProf = [];
-        let resultado;
-        if (profEncontrados) {
-            profEncontrados.forEach(element => {
-                resultado = {
-                    id: element.id,
-                    nombre: element.nombre,
-                    sexo: element.sexo,
-                    apellido: element.apellido,
-                    documento: element.documento,
-                    fechaNacimiento: element.fechaNacimiento
-                };
-                arrayProf.push(resultado);
-            });
-
-        }
-        res.json(arrayProf);
     } else {
         res.json();
     }
@@ -687,8 +645,7 @@ router.get('/resumen', (req, res, next) => {
                 apellido: data[0].apellido,
                 fechaNacimiento: data[0].fechaNacimiento,
                 documento: data[0].documento,
-                nacionalidad: data[0].nacionalidad,
-                sexo: data[0].sexo
+                nacionalidad: data[0].nacionalidad
 
             }];
 

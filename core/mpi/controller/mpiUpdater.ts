@@ -1,9 +1,16 @@
-import { userScheduler } from '../../../config.private';
+import {
+    userScheduler
+} from '../../../config.private';
 import * as controller from './paciente';
-import { paciente, pacienteMpi } from '../schemas/paciente';
-import { logKeys } from '../../../config';
+import {
+    paciente,
+    pacienteMpi
+} from '../schemas/paciente';
+
+import * as debug from 'debug';
 import * as servicioAnses from './../../../utils/servicioAnses';
-import { log } from '@andes/log';
+const log = debug('mpiUpdater');
+
 
 /**
  * Verfica que el paciente a insertar en MPI no exista previamente
@@ -21,7 +28,7 @@ async function existeEnMpi(pacienteBuscado: any) {
     const data = await controller.searchSimilar(pacienteBuscado, 'mpi', condicion);
     if (data.length) {
         const match = data[0];
-
+        log('Match Value', match.value);
         if (match.value < 1) {
             // Inserta como paciente nuevo ya que no matchea al 100%
             return ['new', pacienteBuscado];
@@ -69,33 +76,17 @@ async function existeEnMpi(pacienteBuscado: any) {
  * @export
  * @returns
  */
-export async function updatingMpi() {
+export function updatingMpi() {
     /*Definicion de variables y operaciones*/
-    let logRequest = {
-        user: {
-            usuario: { nombre: 'mpiUpdaterJob', apellido: 'mpiUpdaterJob' },
-            app: 'mpi',
-            organizacion: userScheduler.user.organizacion.nombre
-        },
-        ip: 'localhost',
-        connection: {
-            localAddress: ''
-        }
-    };
-    try {
-        await log(logRequest, logKeys.mpiUpdaterStart.key, null, logKeys.mpiUpdaterStart.operacion, null, null);
-    } catch (err) {
-        await log(logRequest, logKeys.mpiUpdaterStart.key, null, logKeys.mpiUpdaterStart.operacion, err, null);
-    }
+    log('MPIUpdater start');
 
     /*La condición de búsqueda es que sea un paciente validado por fuente auténtica*/
     const condicion = {
         estado: 'validado',
     };
     const cursorPacientes = paciente.find(condicion).cursor();
-
-    try {
-        await cursorPacientes.eachAsync(async (pacAndes: any) => {
+    return cursorPacientes.eachAsync((pacAndes: any) => {
+        return new Promise(async (resolve, reject) => {
             if (pacAndes !== null) {
                 try {
                     // Preservo el usuario real que hizo la modificación / creación
@@ -103,8 +94,9 @@ export async function updatingMpi() {
                         usuario: { nombre: pacAndes.createdBy.nombre, apellido: pacAndes.createdBy.apellido },
                         organizacion: pacAndes.createdBy.organizacion
                     };
-
+                    log('Paciente validado en ANDES ', pacAndes._id, pacAndes.apellido);
                     const resultado = await existeEnMpi(pacAndes);
+                    log('Existe en MPI', resultado[0], resultado[1].nombre + ' ' + resultado[1].apellido);
                     /*Si NO hubo matching al 100% lo tengo que insertar en MPI */
                     if (resultado[0] !== 'merge') {
                         if (resultado[0] === 'new') {
@@ -122,17 +114,21 @@ export async function updatingMpi() {
                         const pacienteAndes = pacAndes;
                         const pacMpi: any = new pacienteMpi(resultado[1]);
                         await controller.deletePacienteAndes(pacAndes._id); // Borro el paciente de mongodb Local
+                        // Verifico cuil anses
+                        if (!pacienteAndes.cuil) {
+                            const cuilData = await servicioAnses.getServicioAnses(pacienteAndes);
+                            pacienteAndes.cuil = cuilData['cuil'];
+                        }
                         await controller.updatePacienteMpi(pacMpi, pacienteAndes, userScheduler);
                     }
+                    resolve();
+                    log('Termino con el paciente');
                 } catch (ex) {
-                    log(logRequest, logKeys.mpiUpdate.key, pacAndes, logKeys.mpiUpdate.operacion, ex, null);
+                    log('errorUpdater-----', ex);
+                    resolve();
                     return (ex);
                 }
             }
         });
-
-        log(logRequest, logKeys.mpiUpdaterFinish.key, null, logKeys.mpiUpdaterFinish.operacion, null, null);
-    } catch (err) {
-        log(logRequest, logKeys.mpiUpdaterFinish.key, null, logKeys.mpiUpdaterFinish.operacion, err, null);
-    }
+    });
 }

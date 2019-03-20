@@ -109,7 +109,6 @@ function actualizarPaciente(pacienteMpi: any, pacienteSisa: any) {
         nombre: pacienteSisa.nombre,
         apellido: pacienteSisa.apellido,
         reportarError: false,
-        notaError: '',
         entidadesValidadoras: pacienteMpi.entidadesValidadoras
     };
     // PUT de paciente en MPI

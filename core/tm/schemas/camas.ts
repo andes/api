@@ -1,6 +1,6 @@
 import * as mongoose from 'mongoose';
-import { SnomedConcept, ISnomedConcept } from './snomed-concept';
-import * as nombreSchema from '../../../core/tm/schemas/nombre';
+import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
+import * as nombreSchema from './nombre';
 import * as estado from './camaEstado';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
@@ -36,13 +36,11 @@ export let schema = new mongoose.Schema({
 /* Se definen los campos virtuals */
 schema.virtual('ultimoEstado').get(function () {
     if (this.estados && this.estados.length > 0) {
-        this.estados.sort((a, b) => {
-            return a.fecha - b.fecha;
-        });
         return this.estados[this.estados.length - 1];
     } else {
         return null;
     }
+
 });
 
 schema.plugin(AuditPlugin);

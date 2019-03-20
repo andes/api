@@ -3,7 +3,7 @@ import * as ldapjs from 'ldapjs';
 import * as configPrivate from '../../config.private';
 import { Auth } from './../auth.class';
 import { authUsers } from '../schemas/permisos';
-import { Organizacion } from './../../core/tm/schemas/organizacion';
+import * as authOrganizaciones from './../../core/tm/schemas/organizacion';
 import { profesional } from './../../core/tm/schemas/profesional';
 import * as mongoose from 'mongoose';
 import * as authMobile from '../../modules/mobileApp/controller/AuthController';
@@ -71,7 +71,7 @@ router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
             }
 
         }).filter(item => item !== null);
-        Organizacion.find({ _id: { $in: organizaciones } }, (errOrgs, orgs: any[]) => {
+        authOrganizaciones.Organizacion.find({ _id: { $in: organizaciones } }, (errOrgs, orgs: any[]) => {
             if (errOrgs) {
                 return next(errOrgs);
             }
@@ -94,7 +94,7 @@ router.post('/organizaciones', Auth.authenticate(), (req, res, next) => {
             usuario: username,
             'organizaciones._id': orgId
         }),
-        Organizacion.findOne({ _id: orgId }, { nombre: 1 })
+        authOrganizaciones.Organizacion.findOne({ _id: orgId }, { nombre: 1 })
     ]).then((data: any[]) => {
         if (data[0] && data[1]) {
             const user = data[0];
@@ -154,9 +154,9 @@ router.post('/login', (req, res, next) => {
             profesional.findOne({
                 documento: req.body.usuario
             }, {
-                    matriculas: true,
-                    especialidad: true
-                }),
+                matriculas: true,
+                especialidad: true
+            }),
             authUsers.findOneAndUpdate(
                 { usuario: req.body.usuario },
                 { password: sha1Hash(req.body.password), nombre, apellido },
@@ -201,9 +201,9 @@ router.post('/login', (req, res, next) => {
             profesional.findOne({
                 documento: req.body.usuario
             }, {
-                    matriculas: true,
-                    especialidad: true
-                }),
+                matriculas: true,
+                especialidad: true
+            }),
         ]).then((data: any[]) => {
             const user = data[0];
             const prof = data[1];

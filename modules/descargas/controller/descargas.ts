@@ -6,7 +6,7 @@ import * as moment from 'moment';
 import { Auth } from '../../../auth/auth.class';
 import { model as Prestacion } from '../../rup/schemas/prestacion';
 import * as Paciente from '../../../core/mpi/controller/paciente';
-import { Organizacion } from '../../../core/tm/schemas/organizacion';
+import { Organizacion as Org } from '../../../core/tm/schemas/organizacion';
 import * as snomed from '../../../core/term/controller/snomedCtr';
 import * as rup from '../../../modules/rup/schemas/elementoRUP';
 import * as conceptoTurneable from '../../../core/tm/schemas/tipoPrestacion';
@@ -20,6 +20,8 @@ moment.locale('es');
 if (env.NODE_ENV !== 'production') {
     // tslint:disable-next-line:no-console
     process.on('unhandledRejection', r => console.log(r));
+    // tslint:disable-next-line:no-console
+    process.on('TypeError', r => console.log(r));
 }
 
 export class Documento {
@@ -76,7 +78,7 @@ export class Documento {
 
     private static async getOrgById(idOrg) {
         return new Promise((resolve, reject) => {
-            Organizacion.findById(idOrg, (err, org: any) => {
+            Org.findById(idOrg, (err, org: any) => {
                 if (err) {
                     reject(err);
                 }

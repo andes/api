@@ -1,12 +1,13 @@
-import { Schema, model, SchemaTypes } from 'mongoose';
+import * as mongoose from 'mongoose';
 import * as edificioSchema from './edificio';
 import * as direccionSchema from './direccion';
 import * as contactoSchema from './contacto';
 import * as tipoEstablecimientoSchema from './tipoEstablecimiento';
+
 import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
-export let MapaSectoresSchema = new Schema({
+export let mapaSectoresSchema = new mongoose.Schema({
     tipoSector: SnomedConcept,
     unidadConcept: {
         type: SnomedConcept,
@@ -14,9 +15,9 @@ export let MapaSectoresSchema = new Schema({
     },
     nombre: String
 });
-MapaSectoresSchema.add({ hijos: [MapaSectoresSchema] });
+mapaSectoresSchema.add({ hijos: [mapaSectoresSchema] });
 
-let CodigoSchema = new Schema({
+let codigoSchema = new mongoose.Schema({
     sisa: {
         type: String,
         required: true
@@ -26,18 +27,12 @@ let CodigoSchema = new Schema({
     sips: String
 });
 
-const _schema = new Schema({
-    codigo: {
-        type: CodigoSchema
-    },
+const _schema = new mongoose.Schema({
+    codigo: { type: codigoSchema },
     nombre: String,
-    tipoEstablecimiento: {
-        type: tipoEstablecimientoSchema
-    },
+    tipoEstablecimiento: { type: tipoEstablecimientoSchema },
     contacto: [contactoSchema],
-    direccion: {
-        type: direccionSchema
-    },
+    direccion: { type: direccionSchema },
     edificio: [edificioSchema],
     nivelComplejidad: Number,
     activo: {
@@ -45,18 +40,14 @@ const _schema = new Schema({
         required: true,
         default: true
     },
-    turnosMobile: {
-        type: Boolean,
-        default: false
-    },
+    turnosMobile: { type: Boolean, default: false },
     fechaAlta: Date,
     fechaBaja: Date,
-    mapaSectores: [MapaSectoresSchema],
-    unidadesOrganizativas: [SnomedConcept],
-    configuraciones: SchemaTypes.Mixed
+    mapaSectores: [mapaSectoresSchema],
+    unidadesOrganizativas: [SnomedConcept]
 });
 
 _schema.plugin(AuditPlugin);
 
 export const OrganizacionSchema = _schema;
-export const Organizacion = model('organizacion', OrganizacionSchema, 'organizacion');
+export const Organizacion = mongoose.model('organizacion', OrganizacionSchema, 'organizacion');

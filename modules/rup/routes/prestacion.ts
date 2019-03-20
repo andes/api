@@ -10,9 +10,7 @@ import { Logger } from '../../../utils/logService';
 import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
 import { snomedModel } from '../../../core/term/schemas/snomed';
 import * as camasController from './../controllers/cama';
-import { parseDate } from './../../../shared/parse';
 import { EventCore } from '@andes/event-bus';
-import { facturacionAutomatica } from './../../facturacionAutomatica/controllers/facturacionAutomatica';
 
 const router = express.Router();
 import async = require('async');
@@ -28,13 +26,10 @@ router.get('/prestaciones/sinCama', (req, res, next) => {
     let query = {
         'solicitud.organizacion.id': mongoose.Types.ObjectId(Auth.getOrganization(req)),
         'solicitud.ambitoOrigen': 'internacion',
-        'solicitud.tipoPrestacion.conceptId': '32485007',  // Ver si encontramos otra forma de diferenciar las prestaciones de internacion,
-        'ejecucion.registros.valor.informeIngreso.fechaIngreso': {
-            $gte: new Date(req.query.fechaDesde),
-            $lte: new Date(req.query.fechaHasta)
-        },
+        'solicitud.tipoPrestacion.conceptId': '32485007',  // Ver si encontramos otra forma de diferenciar las prestaciones de internacion
         $where: 'this.estados[this.estados.length - 1].tipo ==  \"' + 'ejecucion' + '\"',
     };
+
     // Buscamos prestaciones que sean del ambito de internacion.
     Prestacion.find(query, async (err, prestaciones) => {
         if (err) {
@@ -52,11 +47,8 @@ router.get('/prestaciones/sinCama', (req, res, next) => {
                 ultimoEstado: null,
                 paseDe: false,
                 esEgreso: false,
-                paseA: null,
-                fechaIngreso: null,
+                paseA: null
             };
-            enEspera.fechaIngreso = new Date(prestacion.ejecucion.registros[0].valor.informeIngreso.fechaIngreso);
-            enEspera.paseA = prestacion.ejecucion.registros[0].valor.informeIngreso.PaseAunidadOrganizativa ? prestacion.ejecucion.registros[0].valor.informeIngreso.PaseAunidadOrganizativa : null;
 
             // Buscamos si tiene una cama ocupada con el id de la internacion.
             let cama = await camasController.buscarCamaInternacion(mongoose.Types.ObjectId(prestacion.id), 'ocupada');
@@ -75,7 +67,7 @@ router.get('/prestaciones/sinCama', (req, res, next) => {
                     let _camas: any = await camasController.buscarPasesCamaXInternacion(prestacion._id);
                     if (_camas && _camas.length) {
                         enEspera.ultimoEstado = _camas[_camas.length - 1].estados.unidadOrganizativa.term;
-                        enEspera.paseDe = _camas[_camas.length - 1].estados.unidadOrganizativa;
+                        enEspera.paseDe = true;
                         enEspera.paseA = _camas[_camas.length - 1].estados.sugierePase;
                     }
                 }
@@ -114,10 +106,6 @@ router.get('/prestaciones/huds/:idPaciente', async (req, res, next) => {
 
     if (req.query.idPrestacion) {
         query['_id'] = mongoose.Types.ObjectId(req.query.idPrestacion);
-    }
-
-    if (req.query.deadline) {
-        query['ejecucion.fecha'] = { $gte: moment(req.query.deadline).startOf('day').toDate() };
     }
 
     let conceptos: any = [];
@@ -421,29 +409,17 @@ router.get('/prestaciones/:id*?', async (req, res, next) => {
         if (req.query.solicitudHasta) {
             query.where('solicitud.fecha').lte(moment(req.query.solicitudHasta).endOf('day').toDate() as any);
         }
+        // Solicitudes generadas desde puntoInicio Ventanilla
+        // Solicitudes que no tienen prestacionOrigen ni turno
+        // Si tienen prestacionOrigen son generadas por RUP y no se listan
+        // Si tienen turno, dejan de estar pendientes de turno y no se listan
 
-
-        if (req.query.tienePrestacionOrigen !== undefined) {
-            if (req.query.tienePrestacionOrigen === true) {
-                query.where('solicitud.prestacionOrigen').ne(null);
-            }
-            if (req.query.tienePrestacionOrigen === false) {
-                query.where('solicitud.prestacionOrigen').equals(null);
-            }
+        if (req.query.tienePrestacionOrigen === 'no') {
+            query.where('solicitud.prestacionOrigen').equals(null);
         }
 
-
-        if (req.query.tieneTurno !== undefined) {
-            if (req.query.tieneTurno === true) {
-                query.where('solicitud.turno').ne(null);
-            }
-            if (req.query.tieneTurno === false) {
-                query.where('solicitud.turno').equals(null);
-            }
-        }
-
-        if (req.query.tipoPrestaciones) {
-            query.where({ 'solicitud.tipoPrestacion.conceptId': { $in: req.query.tipoPrestaciones } });
+        if (req.query.tieneTurno === 'no') {
+            query.where('solicitud.turno').equals(null);
         }
 
         if (req.query.organizacion) {
@@ -477,8 +453,7 @@ router.get('/prestaciones/:id*?', async (req, res, next) => {
 });
 
 router.post('/prestaciones', (req, res, next) => {
-    let dto = parseDate(JSON.stringify(req.body));
-    const data = new Prestacion(dto);
+    const data = new Prestacion(req.body);
     Auth.audit(data, req);
     data.save((err) => {
         if (err) {
@@ -494,7 +469,6 @@ router.patch('/prestaciones/:id', (req, res, next) => {
         if (err) {
             return next(err);
         }
-        req.body = parseDate(JSON.stringify(req.body));
         switch (req.body.op) {
             case 'paciente':
                 if (req.body.paciente) {
@@ -522,12 +496,10 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 if (data.estados[data.estados.length - 1].tipo !== 'validada') {
                     return next('Para poder romper la validación, primero debe validar la prestación.');
                 }
-                if (!req.body.desdeInternacion) {
-                    if ((req as any).user.usuario.username !== data.estados[data.estados.length - 1].createdBy.documento) {
-                        return next('Solo puede romper la validación el usuario que haya creado.');
-                    }
-                }
 
+                if ((req as any).user.usuario.username !== data.estados[data.estados.length - 1].createdBy.documento) {
+                    return next('Solo puede romper la validación el usuario que haya creado.');
+                }
 
                 data.estados.push(req.body.estado);
                 break;
@@ -554,6 +526,7 @@ router.patch('/prestaciones/:id', (req, res, next) => {
             default:
                 return next(500);
         }
+
         Auth.audit(data, req);
         data.save((error, prestacion) => {
             if (error) {
@@ -561,12 +534,6 @@ router.patch('/prestaciones/:id', (req, res, next) => {
             }
 
             if (req.body.estado && req.body.estado.tipo === 'validada') {
-
-                /* Sacar esto y armar todo desde el microservicio pasando solo la prestación */
-                // let factura = await facturacionAutomatica(prestacion);
-
-                // EventCore.emitAsync('facturacion:factura:create', factura);
-
                 EventCore.emitAsync('rup:prestacion:validate', data);
             }
 
@@ -579,17 +546,19 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                     organizacion: prestacion.solicitud.organizacion,
                     frecuentes: req.body.registros
                 };
-                frecuentescrl.actualizarFrecuentes(dto).then(() => {
-                    Logger.log(req, 'rup', 'update', {
-                        accion: 'actualizarFrecuentes',
-                        ruta: req.url,
-                        method: req.method,
-                        data: req.body.listadoFrecuentes,
-                        err: false
+                frecuentescrl.actualizarFrecuentes(dto)
+                    .then((resultadoFrec: any) => {
+                        Logger.log(req, 'rup', 'update', {
+                            accion: 'actualizarFrecuentes',
+                            ruta: req.url,
+                            method: req.method,
+                            data: req.body.listadoFrecuentes,
+                            err: false
+                        });
+                    })
+                    .catch((errFrec) => {
+                        return next(errFrec);
                     });
-                }).catch((errFrec) => {
-                    return next(errFrec);
-                });
 
             }
 

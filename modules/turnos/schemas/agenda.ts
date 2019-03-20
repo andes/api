@@ -3,7 +3,7 @@ import * as nombreSchema from '../../../core/tm/schemas/nombre';
 import * as espacioFisicoSchema from '../../../modules/turnos/schemas/espacioFisico';
 import * as bloqueSchema from '../../../modules/turnos/schemas/bloque';
 import * as turnoSchema from '../../../modules/turnos/schemas/turno';
-import { NombreApellidoSchema } from '../../../core/tm/schemas/nombreApellido';
+import * as nombreApellidoSchema from '../../../core/tm/schemas/nombreApellido';
 import * as mongoose from 'mongoose';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
@@ -16,7 +16,7 @@ const schema = new mongoose.Schema({
         type: [tipoPrestacionSchema],
         required: true
     },
-    profesionales: [NombreApellidoSchema],
+    profesionales: [nombreApellidoSchema],
     espacioFisico: {
         type: espacioFisicoSchema
     },

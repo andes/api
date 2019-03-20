@@ -1,13 +1,13 @@
-import { pacienteSchema } from '../../../core/mpi/schemas/paciente';
+import { pacienteSchema } from './../../mpi/schemas/paciente';
 import * as mongoose from 'mongoose';
-import { SnomedConcept, ISnomedConcept } from './snomed-concept';
+import { SnomedConcept } from '../../../modules/rup/schemas/snomed-concept';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 export let schema = new mongoose.Schema({
     fecha: Date,
     estado: {
         type: String,
-        enum: ['ocupada', 'desocupada', 'disponible', 'reparacion', 'bloqueada', 'inactiva'],
+        enum: ['ocupada', 'desocupada', 'disponible', 'reparacion', 'bloqueada'],
         required: true,
         default: 'desocupada'
     },

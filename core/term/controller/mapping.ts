@@ -1,7 +1,6 @@
 import * as moment from 'moment';
 import { SnomedMapping } from '../schemas/mapping';
 import * as staticMapping from '../schemas/staticmapping';
-import * as cie10 from './../../../core/term/schemas/cie10';
 
 /**
  * Mapea un concepto de snomed a CIE10
@@ -69,7 +68,7 @@ export class SnomedCIE10Mapping {
      *
      * @param {any} conceptId
      * @param {any} [contexto=null]
-     * @return código CIE10Model
+     * @return CIE10Model
      * @memberof SnomedCIE10Mapping
      */
     public transform(conceptId, contexto = null) {
@@ -77,39 +76,27 @@ export class SnomedCIE10Mapping {
             this.setContexto(contexto);
         }
         return new Promise((resolve, reject) => {
-            SnomedMapping.find({ conceptId }).sort('mapGroup mapPriority').then(async (mapping) => {
+            SnomedMapping.find({ conceptId }).sort('mapGroup mapPriority').then((mapping) => {
                 /**
                  * Chequeamos regla a regla cual es la primera que se cumple
                  */
-                let arreglo: any[] = [];
                 for (let i = 0; i < mapping.length; i++) {
                     const rules = mapping[i] as any;
                     const rule = rules.mapRule;
 
                     if (this.check(rule)) {
                         if (rules.mapTarget.length > 0) {
-                            let prom = cie10.model.findOne({
-                                codigo: rules.mapTarget
-                            });
-                            arreglo.push(prom);
+                            return resolve(rules.mapTarget);
                         }
                     }
                 }
-                // Guarda cada una de las promesas incluidas las que son null
-                let promesas = await Promise.all(arreglo);
 
-                let docsRespuesta = promesas.filter(x => !!x);
-
-                if (docsRespuesta.length) {
-                    return resolve(docsRespuesta[0].codigo);
-                } else {
-                    // Chequea si existe un mapeo estático
-                    staticMapping.model.findOne({ conceptId }).then((staticmap: any) => {
-                        resolve(staticmap ? staticmap.mapTarget : null);
-                    }).catch(err2 => {
-                        reject(err2);
-                    });
-                }
+                // Chequea si existe un mapeo estático
+                staticMapping.model.findOne({ conceptId }).then((staticmap: any) => {
+                    resolve(staticmap ? staticmap.mapTarget : null);
+                }).catch(err2 => {
+                    reject(err2);
+                });
             }).catch((err) => {
                 reject(err);
             });

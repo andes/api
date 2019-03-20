@@ -3,7 +3,7 @@ import * as mongoose from 'mongoose';
 
 export let schema = new mongoose.Schema({
     codigo: {
-        type: String,
+        type: Number,
         required: true
     },
     nombre: {

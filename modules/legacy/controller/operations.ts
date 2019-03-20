@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 import * as constantes from '../schemas/constantes';
 import { agendasCache } from '../schemas/agendasCache';
 import { profesional } from './../../../core/tm/schemas/profesional';
-import { Organizacion } from './../../../core/tm/schemas/organizacion';
+import * as organizacion from './../../../core/tm/schemas/organizacion';
 import { configuracionPrestacionModel } from '../../../core/term/schemas/configuracionPrestacion';
 
 // Funciones privadas
@@ -35,7 +35,7 @@ function profesionalCompleto(lstProfesionales): any {
 /** Dado un id de Organización devuelve el objeto completo */
 function organizacionCompleto(idOrganizacion): any {
     return new Promise((resolve, reject) => {
-        Organizacion.findById(mongoose.Types.ObjectId(idOrganizacion), (err, unaOrganizacion) => {
+        organizacion.Organizacion.findById(mongoose.Types.ObjectId(idOrganizacion), (err, unaOrganizacion) => {
             if (err) {
                 return reject(err);
             }

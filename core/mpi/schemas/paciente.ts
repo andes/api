@@ -116,6 +116,7 @@ pacienteSchema.virtual('vinculos').get(function () {
     } else {
         return [this._id];
     }
+    return [];
 });
 
 /* Se definen los campos virtuals */

@@ -196,9 +196,6 @@ export async function getHistorialPaciente(req) {
                         },
                         turno: {
                             $first: '$bloques.turnos'
-                        },
-                        espacioFisico: {
-                            $first: '$espacioFisico'
                         }
                     }
                 },
@@ -255,9 +252,6 @@ export async function getHistorialPaciente(req) {
                         },
                         turno: {
                             $first: '$sobreturnos'
-                        },
-                        espacioFisico: {
-                            $first: '$espacioFisico'
                         }
                     }
                 },
@@ -279,7 +273,6 @@ export async function getHistorialPaciente(req) {
                 turno.organizacion = elem.organizacion;
                 turno.profesionales = elem.profesionales;
                 turno.paciente = elem.turno.paciente;
-                turno.espacioFisico = elem.espacioFisico;
                 turnos.push(turno);
             });
             return (turnos);
@@ -335,29 +328,24 @@ export async function getLiberadosPaciente(req) {
  * @param {*} pacienteMPI
  * @returns
  */
-export async function actualizarCarpeta(req: any, res: any, next: any, pacienteMPI: any, carpetas) {
-    let carpetasAux = (carpetas && carpetas.length > 0) ? (carpetas[0] as any).carpetaEfectores : [];
+export async function actualizarCarpeta(req, res, next, pacienteMPI, carpetas) {
     if (pacienteMPI) {
-        if (pacienteMPI.paciente.carpetaEfectores.length > 0) {
-            if (carpetasAux.length < pacienteMPI.paciente.carpetaEfectores.length) {
+        try { // Actualizamos los turnos activos del paciente
+            if (pacienteMPI.paciente.carpetaEfectores.length > 0) {
                 req.body.carpetaEfectores = pacienteMPI.paciente.carpetaEfectores;
             } else {
-                if (carpetasAux) {
-                    req.body.carpetaEfectores = carpetasAux;
+                if (carpetas.length > 0) {
+                    req.body.carpetaEfectores = (carpetas[0] as any).carpetaEfectores;
                 }
             }
-        } else {
-            if (carpetas.length > 0) {
-                req.body.carpetaEfectores = carpetasAux;
+            const repetida = await controller.checkCarpeta(req, pacienteMPI.paciente);
+            if (!repetida) {
+                controller.updateCarpetaEfectores(req, pacienteMPI.paciente);
+                controller.updateTurnosPaciente(pacienteMPI.paciente);
+            } else {
+                return next('El nÚmero de carpeta ya existe');
             }
-        }
-        const repetida = await controller.checkCarpeta(req, pacienteMPI.paciente);
-        if (!repetida) {
-            controller.updateCarpetaEfectores(req, pacienteMPI.paciente);
-            // controller.updateTurnosPaciente(pacienteMPI.paciente);
-        } else {
-            return next('El nÚmero de carpeta ya existe');
-        }
+        } catch (error) { return next(error); }
         let pacienteAndes: any;
         if (pacienteMPI.db === 'mpi') {
             pacienteAndes = new pacienteModel(pacienteMPI.paciente.toObject());
@@ -365,6 +353,10 @@ export async function actualizarCarpeta(req: any, res: any, next: any, pacienteM
             pacienteAndes = pacienteMPI.paciente;
         }
         Auth.audit(pacienteAndes, req);
-        await pacienteAndes.save();
+        pacienteAndes.save((errPatch) => {
+            if (errPatch) {
+                return next(errPatch);
+            }
+        });
     }
 }

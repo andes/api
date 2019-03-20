@@ -220,7 +220,7 @@ async function findCarpetasPrestamo(organizacionId: string, horaInicio: string, 
     pipeline.push({ $sort: sort });
     pipeline.push({ $group: group });
 
-    let result: any = await toArray(Prestamo.aggregate(pipeline).allowDiskUse(true).cursor({}).exec());
+    let result: any = await toArray(Prestamo.aggregate(pipeline).cursor({}).exec());
 
     result = result.filter((el) => {
         return el.estado === constantes.EstadosPrestamosCarpeta.Prestada;
@@ -280,7 +280,7 @@ async function buscarAgendasSobreturnos(organizacionId: string, tipoPrestacion: 
         }
     ];
 
-    return await toArray(agenda.aggregate(pipelineCarpeta).allowDiskUse(true).cursor({}).exec());
+    return await toArray(agenda.aggregate(pipelineCarpeta).cursor({}).exec());
 }
 
 async function buscarAgendasTurnos(organizacionId: string, tipoPrestacion: string, espacioFisico: string, profesional: string, horaInicio: string, horaFin: string) {
@@ -335,7 +335,7 @@ async function buscarAgendasTurnos(organizacionId: string, tipoPrestacion: strin
             }
         }];
 
-    return await toArray(agenda.aggregate(pipelineCarpeta).allowDiskUse(true).cursor({}).exec());
+    return await toArray(agenda.aggregate(pipelineCarpeta).cursor({}).exec());
 }
 
 export async function prestarCarpeta(req) {

@@ -1,6 +1,6 @@
 import { tipoPrestacionSchema, ITipoPrestacion } from '../../../core/tm/schemas/tipoPrestacion';
 import { espacioFisicoSchema, IEspacioFisico } from '../../../modules/turnos/schemas/espacioFisico';
-import { NombreApellidoSchema } from '../../../core/tm/schemas/nombreApellido';
+import * as nombreApellidoSchema from '../../../core/tm/schemas/nombreApellido';
 import * as constantes from './constantes';
 import { Document, Schema, Types, SchemaTypes, model, Model } from 'mongoose';
 import * as nombreSchema from '../../../core/tm/schemas/nombre';
@@ -70,7 +70,7 @@ export const PrestamoSchema = new Schema({
         agendaId: SchemaTypes.ObjectId,
         turno: {
             id: SchemaTypes.ObjectId,
-            profesionales: [NombreApellidoSchema],
+            profesionales: [nombreApellidoSchema],
             tipoPrestacion: tipoPrestacionSchema,
             espacioFisico: espacioFisicoSchema
         }
@@ -85,8 +85,8 @@ export const PrestamoSchema = new Schema({
     datosSolicitudManual: {
         espacioFisico: espacioFisicoSchema,
         prestacion: tipoPrestacionSchema,
-        profesional: NombreApellidoSchema,
-        responsable: NombreApellidoSchema,
+        profesional: nombreApellidoSchema,
+        responsable: nombreApellidoSchema,
         observaciones: String,
         idSolicitud: SchemaTypes.ObjectId
     }

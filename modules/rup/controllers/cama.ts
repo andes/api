@@ -1,4 +1,4 @@
-import { model as cama } from './../schemas/camas';
+import { model as cama } from '../../../core/tm/schemas/camas';
 import { toArray } from '../../../utils/utils';
 import * as moment from 'moment';
 
@@ -65,47 +65,55 @@ export function camaOcupadasxUO(unidadOrganizativa, fecha, idOrganizacion) {
                 nombre: '$nombre',
                 organizacion: '$organizacion',
                 tipoCama: '$tipoCama',
-                sectores: '$sectores',
-                idInternacion: '$estados.idInternacion',
-                fechaMovimiento: '$estados.fecha'
+                idInternacion: '$estados.idInternacion'
             },
             ultimoEstado: { $last: '$estados' }
         }
     },
+    // {
+    //     $match: { 'ultimoEstado.estado': 'ocupada' }
+    // },
     { $sort: { 'ultimoEstado.fecha': 1 } }];
+
+
     let query = cama.aggregate(pipelineEstado);
+
     return toArray(query.cursor({}).exec());
 }
 
-export async function desocupadaEnDia(dtoCama, fecha) {
-    let pipelineEstado = [];
-    let ultimoEstadofinDia = moment(dtoCama.ultimoEstado.fecha).endOf('day').toDate();
-    let finDiaConsulta = moment(fecha).endOf('day').toDate();
-    let inicioDia = moment(fecha).startOf('day').toDate();
-    if (finDiaConsulta > ultimoEstadofinDia) {
-        pipelineEstado = [
-            { $match: { _id: dtoCama._id.id } },
-            { $unwind: '$estados' },
-            {
-                $match: {
-                    $and: [{
-                        'estados.fecha': {
-                            $lte: inicioDia,
-                            $gte: dtoCama.ultimoEstado.fecha
-                        }
-                    }, { 'estados.estado': { $ne: 'ocupada' } }]
+export function desocupadaEnDia(dtoCama, fecha) {
+    return new Promise(async (resolve, reject) => {
+
+        let pipelineEstado = [];
+        let ultimoEstadofinDia = moment(dtoCama.ultimoEstado.fecha).endOf('day').toDate();
+        let finDiaConsulta = moment(fecha).endOf('day').toDate();
+        let inicioDia = moment(fecha).startOf('day').toDate();
+        if (finDiaConsulta > ultimoEstadofinDia) {
+            pipelineEstado = [
+                { $match: { _id: dtoCama._id.id } },
+                { $unwind: '$estados' },
+                {
+                    $match: {
+                        $and: [{
+                            'estados.fecha': {
+                                $lte: inicioDia,
+                                $gte: dtoCama.ultimoEstado.fecha
+                            }
+                        }, { 'estados.estado': { $ne: 'ocupada' } }]
+                    }
                 }
+            ];
+            let data = await toArray(cama.aggregate(pipelineEstado).cursor({}).exec());
+
+            if (data && data.length > 0) {
+                return resolve(null);
+            } else {
+                return resolve(dtoCama);
             }
-        ];
-        let data = await toArray(cama.aggregate(pipelineEstado).cursor({}).exec());
-        if (data && data.length > 0) {
-            return null;
         } else {
-            return dtoCama;
+            return resolve(dtoCama);
         }
-    } else {
-        return dtoCama;
-    }
+    });
 }
 export function camaXInternacion(idInternacion) {
     return new Promise(async (resolve, reject) => {
@@ -192,6 +200,7 @@ export function disponibilidadXUO(unidad, fecha, idOrganizacion) {
             }
         },
         { $match: { 'ultimoEstado.estado': { $nin: ['bloqueada', 'reparacion', 'ocupada'] } } }];
+
         let promises = [
             toArray(cama.aggregate(pipelineInicioDia).cursor({}).exec()),
             toArray(cama.aggregate(pipelineFinDia).cursor({}).exec())
@@ -203,39 +212,6 @@ export function disponibilidadXUO(unidad, fecha, idOrganizacion) {
 
     });
 }
-
-export async function disponibilidadCenso(unidad, fecha, idOrganizacion) {
-    let finDia = moment(fecha).endOf('day').toDate();
-    let pipelineFinDia = [{
-        $match: {
-            'organizacion._id': idOrganizacion,
-            'estados.unidadOrganizativa.conceptId': unidad,
-            'estados.fecha': { $lte: finDia }
-        }
-    },
-    { $unwind: '$estados' }, {
-        $match: {
-            'estados.unidadOrganizativa.conceptId': unidad,
-            'estados.fecha': { $lte: finDia }
-        }
-    },
-    { $sort: { 'estados.fecha': 1 } }, {
-        $group: {
-            _id: {
-                id: '$_id',
-                nombre: '$nombre',
-                organizacion: '$organizacion',
-                sector: '$sector',
-                habitacion: '$habitacion',
-                tipoCama: '$tipoCama'
-            },
-            ultimoEstado: { $last: '$estados' }
-        }
-    },
-    { $match: { 'ultimoEstado.estado': { $nin: ['bloqueada', 'reparacion'] } } }];
-    return await toArray(cama.aggregate(pipelineFinDia).cursor({}).exec());
-}
-
 export async function getHistorialCama(idOrganizacion, fechaDesde, fechaHasta, idCama) {
 
     let historial = [];
@@ -272,33 +248,6 @@ export async function getHistorialCama(idOrganizacion, fechaDesde, fechaHasta, i
     return await cama.aggregate(historial).exec();
 }
 
-
-export async function getInternacionCama(idCama) {
-    let internacion = [];
-    internacion = [{
-        $match: {
-            _id: idCama
-        }
-    },
-    { $unwind: '$estados' },
-    { $sort: { nombre: 1, 'estados.fecha': -1 } },
-    {
-        $project: {
-            estado: '$estados.estado',
-            paciente: '$estados.paciente'
-
-        }
-    },
-    {
-        $match: {
-            paciente: { $ne: null }
-        }
-    },
-    ];
-    return await cama.aggregate(internacion).exec();
-}
-
-
 export function camasXfecha(idOrganizacion, fecha) {
     return new Promise(async (resolve, reject) => {
         let pipelineEstado = [];
@@ -312,29 +261,15 @@ export function camasXfecha(idOrganizacion, fecha) {
         { $unwind: '$estados' },
         {
             $match: {
-                'estados.fecha': { $lte: fecha },
+                'estados.fecha': { $lte: fecha }
             }
         },
         { $sort: { 'estados.fecha': 1 } },
-        {
-            $project: {
-                estados: '$estados',
-                organizacion: '$organizacion',
-                sectores: '$sectores',
-                habitacion: '$habitacion',
-                nombre: '$nombre',
-                tipoCama: '$tipoCama',
-                unidadOrganizativaOriginal: '$unidadOrganizativaOriginal',
-                equipamiento: '$equipamiento',
-
-            },
-        },
         {
             $group:
             {
                 _id: { id: '$_id', },
                 id: { $last: '$_id' },
-                estados: { $push: '$estados' },
                 ultimoEstado: { $last: '$estados' },
                 organizacion: { $last: '$organizacion' },
                 sectores: { $last: '$sectores' },
@@ -344,11 +279,6 @@ export function camasXfecha(idOrganizacion, fecha) {
                 unidadOrganizativaOriginal: { $last: '$unidadOrganizativaOriginal' },
                 equipamiento: { $last: '$equipamiento' }
 
-            }
-        },
-        {
-            $match: {
-                'ultimoEstado.estado': { $ne: 'inactiva' }
             }
         }];
         let camas = await toArray(cama.aggregate(pipelineEstado).cursor({}).exec());

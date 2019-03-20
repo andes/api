@@ -26,7 +26,6 @@ import {
 } from '@andes/event-bus';
 import * as turnosController from '../../../modules/turnos/controller/turnosController';
 import * as agendaController from '../../../modules/turnos/controller/agenda';
-import { NotificationService } from '../../../modules/mobileApp/controller/NotificationService';
 
 // Turno
 export function darAsistencia(req, data, tid = null) {
@@ -113,9 +112,6 @@ export function liberarTurno(req, data, turno) {
                 break;
             case ('programado'):
                 data.bloques[position.indexBloque].restantesProgramados = data.bloques[position.indexBloque].restantesProgramados + cant;
-                if (data.bloques[position.indexBloque].restantesMobile) {
-                    data.bloques[position.indexBloque].restantesMobile = data.bloques[position.indexBloque].restantesMobile + cant;
-                }
                 break;
             case ('profesional'):
                 data.bloques[position.indexBloque].restantesProfesional = data.bloques[position.indexBloque].restantesProfesional + cant;
@@ -213,6 +209,7 @@ export function codificarTurno(req, data, tid) {
                     };
                     const map = new SnomedCIE10Mapping(parametros.paciente, parametros.secondaryConcepts);
                     map.transform(parametros.conceptId).then(target => {
+
                         if (target) {
                             // Buscar en cie10 los primeros 5 digitos
                             cie10.model.findOne({
@@ -313,6 +310,7 @@ export function codificarTurno(req, data, tid) {
                                 primeraVez: registro.esPrimeraVez
                             });
                             if (prestaciones.length === codificaciones.length) {
+                                // console.log('codificaciones ', codificaciones);
                                 turno.diagnostico = {
                                     ilegible: false,
                                     codificaciones: codificaciones.filter(cod => Object.keys(cod).length > 0)
@@ -475,8 +473,6 @@ export function actualizarEstado(req, data) {
                     }
                     turno.motivoSuspension = 'agendaSuspendida';
                     turno.avisoSuspension = 'no enviado';
-
-                    NotificationService.notificarSuspension(turno);
 
                 });
             });
@@ -774,63 +770,56 @@ export async function actualizarTiposDeTurno() {
  * Pendiente Auditoría según corresponda
  * se ejecuta una vez al día por el scheduler.
  *
- * @export actualizarEstadoAgendas()
- * @param {any} start
- * @param {any} end
+ * @export actualizarTiposDeTurno()
  * @returns resultado
  */
-export function actualizarEstadoAgendas(start, end) {
-    // actualiza los agendas en estado pausada, disponible o publicada que se hayan ejecutado entre las fechas start y end
+export function actualizarEstadoAgendas() {
+    // let fechaActualizar = moment(new Date()).subtract(1, 'days');
+    const fechaActualizar = moment(new Date());
+    // actualiza los agendas en estado pausada, disponible o publicada que se hayan ejecutado el día anterior
     const condicion = {
         $or: [{ estado: 'disponible' }, { estado: 'publicada' }, { estado: 'pausada' }, { estado: 'pendienteAsistencia' }, { estado: 'pendienteAuditoria' }],
+        // $or: [{ estado: 'disponible' }, { estado: 'publicada' }, { estado: 'pausada' }],
         $and: [
-            { horaInicio: { $gte: start } },
-            { horaInicio: { $lte: end } }
+            { horaInicio: { $gte: (moment(fechaActualizar).startOf('day').subtract(1, 'days').toDate() as any) } },
+            { horaInicio: { $lte: (moment(fechaActualizar).endOf('day').toDate() as any) } }
         ]
     };
     const cursor = agendaModel.find(condicion).cursor();
     return cursor.eachAsync(doc => {
         const agenda: any = doc;
-        let turnos = [];
-        let todosAsistencia = false;
-        let todosAuditados = false;
+        let todosAsistencia = true;
+        let todosAuditados = true;
         for (let j = 0; j < agenda.bloques.length; j++) {
-            turnos = turnos.concat(agenda.bloques[j].turnos);
+            const turnos = agenda.bloques[j].turnos;
+            // Verifico si al hay al menos un turno asignado sin asistencia
+            todosAsistencia = !turnos.some(t => t.estado === 'asignado' && !(t.asistencia));
+            todosAuditados = !(turnos.some(t => t.asistencia === 'asistio' && (!t.diagnostico.codificaciones[0] || (t.diagnostico.codificaciones[0] && !t.diagnostico.codificaciones[0].codificacionAuditoria))));
         }
-        if (agenda.sobreturnos) {
-            turnos = turnos.concat(agenda.sobreturnos);
-        }
-        todosAsistencia = !turnos.some(t => t.estado === 'asignado' && !(t.asistencia));
-        todosAuditados = !(turnos.some(t => t.asistencia === 'asistio' && (!t.diagnostico.codificaciones[0] || (t.diagnostico.codificaciones[0] && !t.diagnostico.codificaciones[0].codificacionAuditoria))));
 
         if (todosAsistencia) {
             if (todosAuditados) {
                 agenda.estado = 'auditada';
-                actualizarAux(agenda);
             } else {
-                if (agenda.estado !== 'pendienteAuditoria') {
-                    agenda.estado = 'pendienteAuditoria';
-                    actualizarAux(agenda);
-                }
+                agenda.estado = 'pendienteAuditoria';
             }
         } else {
-            if (agenda.estado !== 'pendienteAsistencia') {
-                agenda.estado = 'pendienteAsistencia';
-                actualizarAux(agenda);
-            }
+            agenda.estado = 'pendienteAsistencia';
         }
-    });
-}
+        Auth.audit(agenda, (userScheduler as any));
+        return saveAgenda(agenda).then((nuevaAgenda) => {
+            Logger.log(userScheduler, 'citas', 'actualizarEstadoAgendas', {
+                idAgenda: agenda._id,
+                organizacion: agenda.organizacion,
+                horaInicio: agenda.horaInicio,
+                updatedAt: agenda.updatedAt,
+                updatedBy: agenda.updatedBy
 
-async function actualizarAux(agenda: any) {
-    Auth.audit(agenda, (userScheduler as any));
-    await saveAgenda(agenda);
-    Logger.log(userScheduler, 'citas', 'actualizarEstadoAgendas', {
-        idAgenda: agenda._id,
-        organizacion: agenda.organizacion,
-        horaInicio: agenda.horaInicio,
-        updatedAt: agenda.updatedAt,
-        updatedBy: agenda.updatedBy
+            });
+            return Promise.resolve();
+        }).catch(() => {
+            return Promise.resolve();
+        });
     });
 }
 
@@ -902,23 +891,23 @@ export function saveAgenda(nuevaAgenda) {
 
 // Actualiza el paciente dentro del turno, si se realizo un update del paciente (Eventos entre módulos)
 EventCore.on('mpi:patient:update', async (pacienteModified) => {
-    // let req = {
-    //     query: {
-    //         estado: 'asignado',
-    //         pacienteId: pacienteModified.id,
-    //         horaInicio: moment(new Date()).startOf('day').toDate() as any
-    //     }
-    // };
-    // let turnos: any = await turnosController.getTurno(req);
-    // if (turnos.length > 0) {
-    //     turnos.forEach(element => {
-    //         try {
-    //             agendaController.updatePaciente(pacienteModified, element);
-    //         } catch (error) {
-    //             return error;
-    //         }
-    //     });
-    // }
+    let req = {
+        query: {
+            estado: 'asignado',
+            pacienteId: pacienteModified.id,
+            horaInicio: moment(new Date()).startOf('day').toDate() as any
+        }
+    };
+    let turnos: any = await turnosController.getTurno(req);
+    if (turnos.length > 0) {
+        turnos.forEach(element => {
+            try {
+                agendaController.updatePaciente(pacienteModified, element);
+            } catch (error) {
+                return error;
+            }
+        });
+    }
 });
 
 /**

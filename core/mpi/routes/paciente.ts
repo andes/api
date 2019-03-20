@@ -10,6 +10,7 @@ import { ElasticSync } from '../../../utils/elasticSync';
 import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
 import { EventCore } from '@andes/event-bus';
+import { EventEmitter } from 'events';
 
 
 const logD = debug('paciente-controller');
@@ -186,6 +187,9 @@ router.get('/pacientes/:id', (req, res, next) => {
     }
     controller.buscarPaciente(req.params.id).then((resultado: any) => {
         if (resultado) {
+            Logger.log(req, 'mpi', 'query', {
+                mongoDB: resultado.paciente
+            });
             EventCore.emitAsync('mpi:paciente:get', resultado.paciente);
             res.json(resultado.paciente);
         } else {
@@ -202,6 +206,10 @@ router.get('/pacientes', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
         return next(403);
     }
+    // Logger de la consulta a ejecutar
+    Logger.log(req, 'mpi', 'query', {
+        elasticSearch: req.query
+    });
 
     controller.matching(req.query).then(result => {
         res.send(result);
@@ -369,8 +377,8 @@ router.post('/pacientes', async (req, res, next) => {
                     let pacienteObj = await controller.createPaciente(req.body, req);
                     let patient = req.body;
                     // se carga geo referencia desde api de google
-                    if (req.body.estado === 'validado' && patient.direccion.length > 0) {
-                        await controller.actualizarGeoReferencia(patient);
+                    if (req.body.estado === 'validado') {
+                        await controller.actualizarGeoReferencia(req.body, patient);
                     }
                     return res.json(pacienteObj);
                 }
@@ -433,6 +441,7 @@ router.put('/pacientes/:id', async (req, res, next) => {
         if (cond) {
             return next('El paciente ya existe');
         } else {
+
             let patientFound: any = await paciente.findById(query).exec();
             if (patientFound) {
                 const data = req.body;
@@ -443,14 +452,9 @@ router.put('/pacientes/:id', async (req, res, next) => {
                     delete data.fechaNacimiento;
                 }
                 if (patientFound.estado === 'validado' && patientFound.direccion[0].valor !== data.direccion[0].valor) {
-                    await controller.actualizarGeoReferencia(data);
+                    controller.actualizarGeoReferencia(req.body, data);
                 }
                 let pacienteUpdated = await controller.updatePaciente(patientFound, data, req);
-                // try {
-                //     controller.updateTurnosPaciente(pacienteUpdated);
-                // } catch (error) {
-                //     return next('Error actualizando turnos del paciente');
-                // }
                 res.json(pacienteUpdated);
 
             } else {
@@ -459,7 +463,7 @@ router.put('/pacientes/:id', async (req, res, next) => {
 
                 // se carga geo referencia desde api de google
                 if (req.body.estado === 'validado') {
-                    await controller.actualizarGeoReferencia(newPatient);
+                    controller.actualizarGeoReferencia(req.body, newPatient);
                 }
                 // verifico si el paciente ya está en MPI
                 let patientFountMpi = await pacienteMpi.findById(query).exec();
@@ -669,7 +673,7 @@ router.patch('/pacientes/:id', async (req, res, next) => {
                         const repetida = await controller.checkCarpeta(req, resultado.paciente);
                         if (!repetida) {
                             controller.updateCarpetaEfectores(req, resultado.paciente);
-                            // controller.updateTurnosPaciente(resultado.paciente);
+                            controller.updateTurnosPaciente(resultado.paciente);
                         } else {
                             return next('El numero de carpeta ya existe');
                         }
@@ -678,11 +682,11 @@ router.patch('/pacientes/:id', async (req, res, next) => {
                 case 'updateContactos': // Update de carpeta y de contactos
                     resultado.paciente.markModified('contacto');
                     resultado.paciente.contacto = req.body.contacto;
-                    // try {
-                    //     controller.updateTurnosPaciente(resultado.paciente);
-                    // } catch (error) {
-                    //     return next(error);
-                    // }
+                    try {
+                        controller.updateTurnosPaciente(resultado.paciente);
+                    } catch (error) {
+                        return next(error);
+                    }
                     break;
 
                 case 'updateRelacion':
@@ -704,9 +708,9 @@ router.patch('/pacientes/:id', async (req, res, next) => {
             } else {
                 pacienteAndes = resultado.paciente;
             }
-            // Quitamos esta sincronizacion con elastic para evitar la sincronización de campos no necesarios.
-            // let connElastic = new ElasticSync();
-            // await connElastic.sync(pacienteAndes);
+            let connElastic = new ElasticSync();
+
+            await connElastic.sync(pacienteAndes);
 
             Auth.audit(pacienteAndes, req);
             let pacienteSaved = await pacienteAndes.save();

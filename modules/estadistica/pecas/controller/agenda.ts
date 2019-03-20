@@ -1,7 +1,9 @@
+import fs = require('fs');
+import async = require('async');
 import * as agendaModel from '../../../turnos/schemas/agenda';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
-import { Organizacion } from '../../../../core/tm/schemas/organizacion';
+import { Organizacion as organizacion } from '../../../../core/tm/schemas/organizacion';
 import * as sql from 'mssql';
 import * as configPrivate from '../../../../config.private';
 import { Logger } from '../../../../utils/logService';
@@ -16,6 +18,8 @@ const config = {
     connectionTimeout: 10000,
     requestTimeout: 45000
 };
+const type = 'PECAS-' + (new Date()).toISOString();
+const outputFile = type + '.json';
 
 /**
  * Actualiza la tabla pecas_consolidado de la BD Andes
@@ -44,59 +48,46 @@ export async function consultaPecas(start, end, done) {
         },
         'bloques.turnos': {
             $ne: null
-        }
-        // , estado: { $nin: ['planificacion']}
+        },
+        $or: [
+            {
+                estado: {
+                    $ne: 'planificacion'
+                }
+            },
+            {
+                estado: {
+                    $ne: 'pausada'
+                }
+            },
+            {
+                estado: {
+                    $ne: 'borrada'
+                }
+            }],
     };
     try {
         const agendas = agendaModel.aggregate([
             { $match: match },
-            // { $match: { _id: mongoose.Types.ObjectId('5bfd50bc64fcfe69e6faabde') } }
         ]).cursor({ batchSize: 100 }).exec();
         await agendas.eachAsync(async (a, error) => {
             if (error) {
-                return error;
+                // console.log('error ', error);
+                return (error);
             }
-            // Se recorren los turnos
-            const turnos = [];
-            for (let i = 0; i < a.bloques.length; i++) {
-                let b = a.bloques[i];
-                for (let j = 0; j < b.turnos.length; j++) {
-                    let t = a.bloques[i].turnos[j];
-                    turnos.push(String(t._id));
-                }
-            }
-
-            for (let i = 0; i < a.sobreturnos.length; i++) {
-                let t = a.sobreturnos[i];
-                turnos.push(String(t._id));
-            }
-
-            await eliminaAgenda(a._id);
-
-
             const promises = [];
-            for (let i = 0; i < a.bloques.length; i++) {
-                let b = a.bloques[i];
-                if (b.turnos.length) {
-                    for (let j = 0; j < b.turnos.length; j++) {
-                        let t = a.bloques[i].turnos[j];
-                        let p = auxiliar(a, b, t);
-                        promises.push(p);
-                    }
-                } else {
-                    // Se inserta solo la agenda
-                    let p = insertar_agenda(a, i);
+            // Se recorren los turnos dentro de los bloques
+            a.bloques.forEach(b => {
+                b.turnos.forEach(t => {
+                    const p = auxiliar(a, b, t);
                     promises.push(p);
-                }
-            }
-
+                });
+            });
             // Se recorren los sobreturnos
-
-            for (let i = 0; i < a.sobreturnos.length; i++) {
-                let t = a.sobreturnos[i];
-                let p = auxiliar(a, null, t);
+            a.sobreturnos.forEach(t => {
+                const p = auxiliar(a, null, t);
                 promises.push(p);
-            }
+            });
             return await Promise.all(promises);
         });
         done();
@@ -108,23 +99,18 @@ export async function consultaPecas(start, end, done) {
 // castea cada turno asignado y lo inserta en la tabla Sql
 async function auxiliar(a: any, b: any, t: any) {
     let turno: any = {};
-    let efector: any = {};
     turno.sobreturno = (b !== null) ? 'NO' : 'SI';
     // console.log('b => ', b);
     try {
-        let org: any = await getEfector(a.organizacion._id);
-        efector = {
-            tipoEfector: org.tipoEstablecimiento && org.tipoEstablecimiento.nombre ? org.tipoEstablecimiento.nombre : null,
-            codigo: org.codigo && org.codigo.sips ? org.codigo.sips : null
-        };
         // Chequear si el turno existe en sql PECAS y depeniendo de eso hacer un insert o  un update
         turno.tipoTurno = t.tipoTurno ? (t.tipoTurno === 'profesional' ? 'autocitado' : (t.tipoTurno === 'gestion' ? 'conllave' : t.tipoTurno)) : 'Sin datos';
         turno.estadoTurno = t.estado;
         let turnoConPaciente = t.estado === 'asignado' && t.paciente; // && t.asistencia
-        let idEfector = efector && efector.codigo ? parseInt(efector.codigo, 10) : null;
-        let tipoEfector = efector && efector.tipoEfector ? efector.tipoEfector : null;
+        let efector = await getEfector(a.organizacion._id) as any;
+        let idEfector = efector ? efector.codigo : null;
+        let tipoEfector = efector ? efector.tipoEfector : null;
         turno.tipoPrestacion = (turnoConPaciente && t.tipoPrestacion && t.tipoPrestacion.term) ? t.tipoPrestacion.term : null;
-        turno.idEfector = idEfector;
+        turno.idEfector = parseInt(idEfector, 10);
         turno.Organizacion = a.organizacion.nombre;
         turno.idAgenda = a._id;
         turno.FechaAgenda = moment(a.horaInicio).format('YYYYMMDD');
@@ -142,8 +128,8 @@ async function auxiliar(a: any, b: any, t: any) {
         turno.DNI = turnoConPaciente ? Number(t.paciente.documento) : null;
         turno.Apellido = turnoConPaciente ? t.paciente.apellido : null;
         turno.Apellido = turnoConPaciente ? turno.Apellido.toString().replace('\'', '\'\'') : null;
-        turno.Nombres = turnoConPaciente ? t.paciente.nombre.toString().replace('\'', '\'\'') : null;
-        const carpetas = turnoConPaciente && t.paciente.carpetaEfectores ? t.paciente.carpetaEfectores.filter(x => String(x.organizacion._id) === String(a.organizacion._id)) : [];
+        turno.Nombres = turnoConPaciente ? t.paciente.nombre : null;
+        const carpetas = turnoConPaciente ? t.paciente.carpetaEfectores.filter(x => String(x.organizacion._id) === String(a.organizacion._id)) : [];
         if (Array(carpetas).length > 0) {
             turno.HC = carpetas[0] ? (carpetas[0] as any).nroCarpeta : null;
         } else {
@@ -151,7 +137,7 @@ async function auxiliar(a: any, b: any, t: any) {
         }
         turno.codSexo = turnoConPaciente ? String(t.paciente.sexo) === 'femenino' ? String(2) : String(1) : null;
         turno.Sexo = turnoConPaciente ? t.paciente.sexo : null;
-        turno.FechaNacimiento = (turnoConPaciente && t.paciente.fechaNacimiento && moment(t.paciente.fechaNacimiento).year() > 1900) ? moment(t.paciente.fechaNacimiento).format('YYYYMMDD') : '';
+        turno.FechaNacimiento = (turnoConPaciente && t.paciente.fechaNacimiento ? moment(t.paciente.fechaNacimiento).format('YYYYMMDD') : '');
         const objectoEdad = (t.paciente && turno.FechaNacimiento) ? calcularEdad(t.paciente.fechaNacimiento) : null;
 
         turno.Edad = t.paciente && turno.fechaNacimiento ? objectoEdad.valor : null;
@@ -180,6 +166,7 @@ async function auxiliar(a: any, b: any, t: any) {
         // Estado turno
         let estadoAuditoria = null;
         if (t) {
+            // console.log(t.estado);
             switch (t.estado) {
                 case 'disponible':
                     estadoAuditoria = 'Disponible';
@@ -207,6 +194,7 @@ async function auxiliar(a: any, b: any, t: any) {
         }
 
         turno.estadoTurnoAuditoria = estadoAuditoria;
+
 
         // Asistencia
         turno.asistencia = turnoConPaciente && t.asistencia ? t.asistencia : null;
@@ -356,7 +344,7 @@ async function auxiliar(a: any, b: any, t: any) {
         }
 
         // se verifica si existe el turno en sql
-        let queryInsert = 'INSERT INTO ' + configPrivate.conSqlPecas.table.pecasTable +
+        let queryInsert = 'INSERT INTO dbo.Pecas_consolidado_2' +
             '(idEfector, Efector, TipoEfector, DescTipoEfector, IdZona, Zona, SubZona, idEfectorSuperior, EfectorSuperior, AreaPrograma, ' +
             'idAgenda, FechaAgenda, HoraAgenda, estadoAgenda, numeroBloque, turnosProgramados, turnosProfesional, turnosLlaves, turnosDelDia, ' +
             'idTurno, estadoTurno, tipoTurno, sobreturno, FechaConsulta, HoraTurno, Periodo, Tipodeconsulta, estadoTurnoAuditoria, Principal, ConsC2, ConsObst, tipoPrestacion, ' +
@@ -368,7 +356,7 @@ async function auxiliar(a: any, b: any, t: any) {
             'Diag2CodigoOriginal, Desc2DiagOriginal, Diag2CodigoAuditado, Desc2DiagAuditado, SemanticTag2, SnomedConcept2, SnomedTerm2, primeraVez2, ' +
             'Diag3CodigoOriginal, Desc3DiagOriginal, Diag3CodigoAuditado, Desc3DiagAuditado, SemanticTag3, SnomedConcept3, SnomedTerm3, primeraVez3, ' +
             'Profesional, TipoProfesional, CodigoEspecialidad, Especialidad, CodigoServicio, Servicio, ' +
-            'codifica, turnosMobile, updated) ' +
+            'codifica, turnosMobile) ' +
             'VALUES  ( ' + turno.idEfector + ',\'' + turno.Organizacion + '\',\'' + turno.TipoEfector + '\',\'' + turno.DescTipoEfector +
             '\',' + turno.IdZona + ',\'' + turno.Zona + '\',\'' + turno.SubZona + '\',' + turno.idEfectorSuperior + ',\'' + turno.EfectorSuperior + '\',\'' + turno.AreaPrograma +
             '\',\'' + turno.idAgenda + '\',\'' + turno.FechaAgenda + '\',\'' + turno.HoraAgenda + '\',\'' + turno.estadoAgenda +
@@ -393,101 +381,81 @@ async function auxiliar(a: any, b: any, t: any) {
             ',\'' + turno.Diag3CodigoOriginal + '\',\'' + turno.Desc3DiagOriginal + '\',\'' + turno.Diag3CodigoAuditado + '\',\'' + turno.Desc3DiagAuditado +
             '\',\'' + turno.semanticTag3 + '\',\'' + turno.conceptId3 + '\',\'' + turno.term3 + '\',' + turno.primeraVez3 +
             ',\'' + turno.Profesional + '\',\'' + turno.TipoProfesional + '\',' + turno.CodigoEspecialidad + ',\'' + turno.Especialidad +
-            '\',' + turno.CodigoServicio + ',\'' + turno.Servicio + '\',\'' + turno.codifica + '\',' + turno.turnosMobile + ',\'' + moment().format('YYYYMMDD HH:mm') + '\') ';
-
-        await executeQuery(queryInsert);
-
+            '\',' + turno.CodigoServicio + ',\'' + turno.Servicio + '\',\'' + turno.codifica + '\',' + turno.turnosMobile + '\) ';
+        let rta = await existeTurnoPecas(turno.idTurno);
+        if (rta.recordset.length > 0 && rta.recordset[0].idTurno) {
+            const queryDel = await eliminaTurnoPecas(turno.idTurno);
+            if (queryDel.rowsAffected[0] > 0) {
+                await executeQuery(queryInsert);
+            }
+        } else {
+            await executeQuery(queryInsert);
+        }
     } catch (error) {
         return (error);
     }
 }
 
-async function insertar_agenda(a: any, num_bloque: any) {
-    let ag: any = {};
-    let efector: any = {};
-    try {
-        let org: any = await getEfector(a.organizacion._id);
-        efector = {
-            tipoEfector: org.tipoEstablecimiento && org.tipoEstablecimiento.nombre ? org.tipoEstablecimiento.nombre : null,
-            codigo: org.codigo && org.codigo.sips ? org.codigo.sips : null
-        };
-        let idEfector = efector && efector.codigo ? parseInt(efector.codigo, 10) : null;
-        let tipoEfector = efector && efector.tipoEfector ? efector.tipoEfector : null;
-        ag.idEfector = idEfector;
-        ag.Organizacion = a.organizacion.nombre;
-        ag.idAgenda = a._id;
-        ag.tipoPrestacion = a.tipoPrestaciones && a.tipoPrestaciones.length && a.tipoPrestaciones[0] ? a.tipoPrestaciones[0].term : null;
-        ag.FechaAgenda = moment(a.horaInicio).format('YYYYMMDD');
-        ag.HoraAgenda = moment(a.horaInicio).format('HH:mm').toString();
-        ag.estadoAgenda = a.estado;
-        ag.numeroBloque = num_bloque;
-        ag.idTurno = a.bloques && a.bloques.length ? a.bloques[0]._id : null;
-
-
-        if (tipoEfector && tipoEfector === 'Centro de Salud') {
-            ag.TipoEfector = '1';
-        }
-        if (tipoEfector && tipoEfector === 'Hospital') {
-            ag.TipoEfector = '2';
-        }
-        if (tipoEfector && tipoEfector === 'Puesto Sanitario') {
-            ag.TipoEfector = '3';
-        }
-        if (tipoEfector && tipoEfector === 'ONG') {
-            ag.TipoEfector = '6';
-        }
-        ag.DescTipoEfector = tipoEfector;
-
-        let queryInsert = 'INSERT INTO ' + configPrivate.conSqlPecas.table.pecasTable +
-            '(idEfector, Efector, TipoEfector, DescTipoEfector, idAgenda, FechaAgenda, HoraAgenda, estadoAgenda, numeroBloque,  idTurno, tipoPrestacion,  updated) ' +
-            'VALUES  ( ' + ag.idEfector + ',\'' + ag.Organizacion + '\',\'' + ag.TipoEfector + '\',\'' + ag.DescTipoEfector +
-            '\',\'' + ag.idAgenda + '\',\'' + ag.FechaAgenda + '\',\'' + ag.HoraAgenda + '\',\'' + ag.estadoAgenda +
-            '\',' + ag.numeroBloque + ',\'' + ag.idTurno + '\',\'' + ag.tipoPrestacion + '\',\'' + moment().format('YYYYMMDD HH:mm') + '\') ';
-        await executeQuery(queryInsert);
-
-    } catch (error) {
-        return (error);
-    }
+async function existeTurnoPecas(turno: any) {
+    const result = await new sql.Request(poolTurnos)
+        .input('idTurno', sql.VarChar(50), turno)
+        .query('SELECT idTurno FROM dbo.Pecas_consolidado_2 WHERE idTurno = @idTurno');
+    return result;
 }
 
-/**
- * @param request sql request object
- * @param {string} columnName sql table column name
- * @param {string} paramNamePrefix prefix for parameter name
- * @param type parameter type
- * @param {Array<string>} values an array of values
- */
-// function parameteriseQueryForIn(request, columnName, parameterNamePrefix, type, values) {
-//     let parameterNames = [];
-//     for (let i = 0; i < values.length; i++) {
-//         let parameterName = parameterNamePrefix + i;
-//         request.input(parameterName, type, values[i]);
-//         parameterNames.push(`@${parameterName}`);
-//     }
-//     return `${columnName} IN (${parameterNames.join(',')})`;
-// }
-
-// async function eliminaTurnoPecas(turnos: any[]) {
-async function eliminaAgenda(id_agenda: string) {
-    const result = new sql.Request(poolTurnos);
-    // let query = `DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE ` + parameteriseQueryForIn(result, 'idTurno', 'idTurno', sql.NVarChar, turnos);
-    let query = `DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE idAgenda='${id_agenda}'`;
-    return await result.query(query);
+async function eliminaTurnoPecas(turno: any) {
+    const result = await new sql.Request(poolTurnos)
+        .input('idTurno', sql.VarChar(50), turno)
+        .query('DELETE FROM dbo.Pecas_consolidado_2 WHERE idTurno = @idTurno');
+    return result;
 }
 
-const orgCache = {};
-async function getEfector(idOrganizacion: any) {
-    if (orgCache[idOrganizacion]) {
-        return orgCache[idOrganizacion];
-    } else {
-        const org: any = await Organizacion.findById(idOrganizacion);
-        if (org) {
-            orgCache[idOrganizacion] = org;
-            return org;
-        }
-        return null;
-    }
+function getEfector(idOrganizacion: any) {
+    return new Promise((resolve, reject) => {
+        organizacion.findOne({
+            _id: mongoose.Types.ObjectId(idOrganizacion)
+        }).exec((err, data) => {
+            if (err) {
+                reject(err);
+            }
+            if ((data as any).codigo) {
+                const codigoSips = (data as any).codigo as any;
+                const efector = {
+                    codigo: codigoSips.sips ? codigoSips.sips : null,
+                    tipoEfector: (data as any).tipoEstablecimiento ? (data as any).tipoEstablecimiento.nombre : ''
+                };
+                if (codigoSips) {
+                    resolve(efector);
+                } else {
+                    resolve(null);
+                }
+            } else {
+                resolve(null);
+            }
+        });
+    });
 }
+
+/*
+[REVISAR]
+function getCapitulo(codigoCIE10: string) {
+    return new Promise((resolve, reject) => {
+        cie10.model.findOne({
+            codigo: String(codigoCIE10)
+        }).exec(function (err, data) {
+            if (err) {
+                reject(err);
+            }
+            if (data) {
+                let capitulo = String((data as any).capitulo);
+                resolve(capitulo);
+            } else {
+                resolve('');
+            }
+        });
+    });
+}
+*/
 
 function calcularEdad(fechaNacimiento) {
     let edad: any;

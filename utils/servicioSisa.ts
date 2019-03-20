@@ -119,6 +119,7 @@ export async function getPacienteSisa(nroDocumento, sexo?: string) {
 
 
 export function matchSisa(paciente) {
+    // console.log("PACIENTE EN MATCHSISA----------->",paciente);
     // Verifica si el paciente tiene un documento valido y realiza la búsqueda a través de Sisa
     let matchPorcentaje = 0;
     let pacienteSisa = {};
@@ -139,28 +140,34 @@ export function matchSisa(paciente) {
                     .then((resultado) => {
                         if (resultado) {
                             // Verifico el resultado devuelto por el rest de Sisa
-                            switch (resultado.Ciudadano.resultado) {
-                                case 'OK':
-                                    if (resultado.Ciudadano.identificadoRenaper && resultado.Ciudadano.identificadoRenaper !== 'NULL') {
-                                        pacienteSisa = formatearDatosSisa(resultado.Ciudadano);
-                                        matchPorcentaje = match.matchPersonas(paciente, pacienteSisa, weights, 'Levenshtein');
-                                        matchPorcentaje = (matchPorcentaje * 100);
-                                        // TODO
-                                        // Logger.log(req, 'auditoria', 'busqueda:sisa', {
-                                        //     resultado: resultado
-                                        // });
-                                        resolve({ paciente, matcheos: { entidad: 'Sisa', matcheo: matchPorcentaje, datosPaciente: pacienteSisa } });
-                                    } else {
+                            if (resultado[0] === 200) {
+                                switch (resultado[1].Ciudadano.resultado) {
+                                    case 'OK':
+                                        if (resultado[1].Ciudadano.identificadoRenaper && resultado[1].Ciudadano.identificadoRenaper !== 'NULL') {
+                                            pacienteSisa = formatearDatosSisa(resultado[1].Ciudadano);
+                                            matchPorcentaje = match.matchPersonas(paciente, pacienteSisa, weights, 'Levenshtein');
+                                            matchPorcentaje = (matchPorcentaje * 100);
+                                            // TODO
+                                            // Logger.log(req, 'auditoria', 'busqueda:sisa', {
+                                            //     resultado: resultado
+                                            // });
+                                            resolve({ paciente, matcheos: { entidad: 'Sisa', matcheo: matchPorcentaje, datosPaciente: pacienteSisa } });
+                                        } else {
+                                            resolve({ paciente, matcheos: { entidad: 'Sisa', matcheo: 0, datosPaciente: null } });
+                                        }
+                                        break;
+                                    default:
                                         resolve({ paciente, matcheos: { entidad: 'Sisa', matcheo: 0, datosPaciente: null } });
-                                    }
-                                    break;
-                                default:
-                                    resolve({ paciente, matcheos: { entidad: 'Sisa', matcheo: 0, datosPaciente: null } });
-                                    break;
+                                        break;
+                                }
+
+
                             }
-                            //     }
+
                         }
                         resolve({ paciente, matcheos: { entidad: 'Sisa', matcheo: 0, datosPaciente: null } });
+
+
                     })
                     .catch((err) => {
                         reject(err);

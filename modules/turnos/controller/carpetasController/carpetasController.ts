@@ -1,7 +1,7 @@
 import * as utils from './utils';
 import * as config from './config';
 import * as sql from 'mssql';
-import { Organizacion } from '../../../../core/tm/schemas/organizacion';
+import { Organizacion as Organizaciones } from '../../../../core/tm/schemas/organizacion';
 import * as carpetaPaciente from '../../../carpetas/schemas/carpetaPaciente';
 import * as configPrivate from '../../../../config.private';
 import { LoggerJobs } from '../../../../utils/loggerJobs';
@@ -73,7 +73,7 @@ const findUpdateCarpeta = async (paciente) => {
 
 export async function migrar() {
     try {
-        const efectores: any = await Organizacion.find({ integracionActiva: true }).exec();
+        const efectores: any = await Organizaciones.find({ integracionActiva: true }).exec();
         if (efectores && efectores.length > 0) {
 
             logger('Efectores---->', efectores);

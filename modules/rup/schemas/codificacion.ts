@@ -40,5 +40,4 @@ const codificacionSchema = new mongoose.Schema({
     }
 });
 codificacionSchema.plugin(AuditPlugin);
-let codificacion = mongoose.model('codificacion', codificacionSchema, 'codificacion');
-export = codificacion;
+export let codificacion = mongoose.model('codificacion', codificacionSchema, 'codificacion');

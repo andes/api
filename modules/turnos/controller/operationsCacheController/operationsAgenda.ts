@@ -433,7 +433,7 @@ export async function guardarCacheASips(agenda) {
     // CON_Agenda de SIPS soporta solo un profesional NOT NULL.
     // En caso de ser nulo el paciente en agenda de ANDES, por defector
     // graba dni '0', correspondiente a 'Sin especifiar', efector SSS.
-    const dniProfesional = (agenda.profesionales && agenda.profesionales[0] && agenda.profesionales[0].documento) ? agenda.profesionales[0].documento : '0';
+    const dniProfesional = agenda.profesionales ? agenda.profesionales[0].documento : '0';
     const codigoSisa = agenda.organizacion.codigo.sisa;
     const datosSips = {
         idEfector: '',

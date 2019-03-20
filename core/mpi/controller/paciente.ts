@@ -51,35 +51,43 @@ export function createPaciente(data, req) {
 }
 
 
-export async function updatePaciente(pacienteObj, data, req) {
-    const pacienteOriginal = pacienteObj.toObject();
-    for (const key in data) {
-        pacienteObj[key] = data[key];
-    }
-    // Habilita auditoria y guarda
-    if (req) {
-        // pacienteObj.markModified;
-        Auth.audit(pacienteObj, req);
-    }
-    try {
-        // await pacienteObj.save();
-        await pacienteObj.save();
-        const connElastic = new ElasticSync();
-        let updated = await connElastic.sync(pacienteObj);
-        if (updated) {
-            Logger.log(req, 'mpi', 'update', {
-                original: pacienteOriginal,
-                nuevo: pacienteObj
-            });
-        } else {
-            Logger.log(req, 'mpi', 'insert', pacienteObj);
+export function updatePaciente(pacienteObj, data, req) {
+    return new Promise((resolve, reject) => {
+        const pacienteOriginal = pacienteObj.toObject();
+        for (const key in data) {
+            pacienteObj[key] = data[key];
         }
-        EventCore.emitAsync('mpi:patient:update', pacienteObj);
-        return pacienteObj;
-    } catch (error) {
-        return error;
-    }
+        // Habilita auditoria y guarda
+        if (req) {
+            // pacienteObj.markModified;
+            Auth.audit(pacienteObj, req);
+        }
+        pacienteObj.save((err2) => {
+            if (err2) {
+                return reject(err2);
+            }
+            try {
+                updateTurnosPaciente(pacienteObj);
+            } catch (error) { return error; }
+            const connElastic = new ElasticSync();
+            connElastic.sync(pacienteObj).then(updated => {
+                if (updated) {
+                    Logger.log(req, 'mpi', 'update', {
+                        original: pacienteOriginal,
+                        nuevo: pacienteObj
+                    });
+                } else {
+                    Logger.log(req, 'mpi', 'insert', pacienteObj);
+                }
 
+                EventCore.emitAsync('mpi:patient:update', pacienteObj);
+                resolve(pacienteObj);
+            }).catch(error => {
+                return reject(error);
+            });
+            resolve(pacienteObj);
+        });
+    });
 }
 /**
  * Busca los turnos futuros asignados al paciente y actualiza los datos.
@@ -136,6 +144,7 @@ export function updatePacienteMpi(pacMpi, pacAndes, req) {
             }).catch(error => {
                 return reject(error);
             });
+            resolve(pacMpi);
         });
     });
 }
@@ -514,10 +523,21 @@ export async function updateDireccion(req, data) {
     data.markModified('direccion');
     data.direccion = req.body.direccion;
     try {
-        await actualizarGeoReferencia(data);
+        await actualizarGeoReferencia(req, data);
     } catch (err) {
         return err;
     }
+}
+
+export function updateBarrio(geoRef) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const barrio = await getServicioGeonode(geoRef);
+            resolve(barrio);
+        } catch (err) {
+            return reject(err);
+        }
+    });
 }
 
 export function updateCarpetaEfectores(req, data) {
@@ -616,9 +636,8 @@ export async function actualizarFinanciador(req, next) {
     }
 }
 
-export async function checkCarpeta(req, data) {
-    if (req.body && req.body.carpetaEfectores) {
-
+export function checkCarpeta(req, data) {
+    return new Promise((resolve, reject) => {
         const indiceCarpeta = req.body.carpetaEfectores.findIndex(x => x.organizacion._id === req.user.organizacion.id);
         if (indiceCarpeta > -1) {
             const query = {
@@ -629,14 +648,16 @@ export async function checkCarpeta(req, data) {
                     }
                 }
             };
-            let unPaciente = await paciente.find(query).exec();
-            return (unPaciente && unPaciente.length > 0);
+            paciente.find(query, (err, res) => {
+                if (err) {
+                    reject(err);
+                }
+                resolve((res && res.length > 0));
+            });
         } else {
-            return null;
+            resolve(false);
         }
-    } else {
-        return null;
-    }
+    });
 }
 
 /* Hasta acá funciones del PATCH */
@@ -778,7 +799,7 @@ export async function checkRepetido(nuevoPaciente): Promise<boolean> {
 
     let resultadoMatching = await matching(matchingInputData);  // Handlear error en funcion llamadora
     // Filtramos al mismo paciente
-    resultadoMatching = resultadoMatching.filter(elem => elem.paciente.id !== nuevoPaciente.id);
+    resultadoMatching = resultadoMatching.filter(elem => elem.paciente.id !== nuevoPaciente._id);
     // Si el nuevo paciente está validado, filtramos los candidatos temporales
     if (nuevoPaciente.estado === 'validado') {
         resultadoMatching = resultadoMatching.filter(elem => elem.paciente.estado === 'validado');
@@ -853,13 +874,14 @@ async function validarSisa(pacienteAndes: any) {
  * @param dataPaciente debe contener direccion y localidad.
  */
 
-export async function actualizarGeoReferencia(patient) {
-    if (patient.direccion[0].valor && patient.direccion[0].ubicacion.localidad && patient.direccion[0].ubicacion.localidad.nombre) {
+export async function actualizarGeoReferencia(req, data) {
+    if (data.direccion[0].valor && data.direccion[0].ubicacion.localidad && data.direccion[0].ubicacion.localidad.nombre) {
+        // Se carga geo referencia desde api de google
         try {
-            const geoRef: any = await geoRefPaciente(patient);
+            const geoRef: any = await geoRefPaciente(req);
             if (geoRef && geoRef.lat) {
-                patient.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
-                patient.direccion[0].ubicacion.barrio = await getServicioGeonode(patient.direccion[0].geoReferencia);
+                data.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
+                data.direccion[0].ubicacion.barrio = await getServicioGeonode(data.direccion[0].geoReferencia);
             }
         } catch (err) {
             return (err);
@@ -869,7 +891,7 @@ export async function actualizarGeoReferencia(patient) {
 
 export async function geoRefPaciente(dataPaciente) {
     const address = dataPaciente.direccion[0].valor + ',' + dataPaciente.direccion[0].ubicacion.localidad.nombre;
-    let pathGoogleApi = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}, AR&key=${configPrivate.geoKey}`;
+    let pathGoogleApi = 'https://maps.googleapis.com/maps/api/geocode/json?address=' + address + ', ' + 'AR' + '&key=' + configPrivate.geoKey;
 
     pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
     pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');

@@ -15,7 +15,6 @@ import * as debug from 'debug';
 import { EventCore } from '@andes/event-bus';
 import * as carpetaPaciente from '../../carpetas/schemas/carpetaPaciente';
 import * as controller from '../../../core/mpi/controller/paciente';
-import * as prepagasController from '../../obraSocial/controller/prepagas';
 
 const router = express.Router();
 const dbgTurno = debug('dbgTurno');
@@ -155,29 +154,15 @@ router.patch('/turno/agenda/:idAgenda', async (req, res, next) => {
         motivoConsulta: String
     };
  */
-
 router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res, next) => {
     const continues = ValidateDarTurno.checkTurno(req.body);
-    const pacienteTurno = req.body.paciente;
+    // const pacienteTurno = req.body.paciente;
     if (continues.valid) {
-        let agendaRes = await getAgenda(req.body.idAgenda);
+        let agendaRes;
         try {
-            let user = (req as any).user;
-            if (user.organizacion) {
-                let arrPrueba = [];
-                if (pacienteTurno.carpetaEfectores) {
-                    arrPrueba = pacienteTurno.carpetaEfectores.find((elto) => {
-                        return elto.organizacion._id === user.organizacion._id;
-                    });
-                }
-                // Si el paciente no tiene carpeta en ese efector, se busca en la colección carpetaPaciente y se actualiza
-                if (!arrPrueba || arrPrueba.length === 0) {
-                    const pacienteMPI = await controller.buscarPaciente(req.body.paciente.id) as any;
-                    const carpetas = await getCarpeta(req.body.paciente.documento, user.organizacion._id);
-                    await turnosController.actualizarCarpeta(req, res, next, pacienteMPI, carpetas);
-                    pacienteTurno.carpetaEfectores = req.body.carpetaEfectores;
-                }
-            }
+            await getPaciente(req.body.paciente.id);
+            await getTipoPrestacion(req.body.tipoPrestacion._id);
+            agendaRes = await getAgenda(req.params.idAgenda);
 
         } catch (err) {
             return next(err);
@@ -188,32 +173,38 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         let countBloques;
         let esHoy = false;
 
-        posBloque = (agendaRes as any).bloques.findIndex(item => item._id.toString() === req.body.idBloque.toString());
+        // Los siguientes 2 for ubican el indice del bloque y del turno
+        for (let x = 0; x < (agendaRes as any).bloques.length; x++) {
+            if ((agendaRes as any).bloques[x]._id.equals(req.params.idBloque)) {
+                posBloque = x;
 
-        // Ver si el día de la agenda coincide con el día de hoy
-        if ((agendaRes as any).horaInicio >= moment(new Date()).startOf('day').toDate() && (agendaRes as any).horaInicio <= moment(new Date()).endOf('day').toDate()) {
-            esHoy = true;
-        }
+                // Ver si el día de la agenda coincide con el día de hoy
+                if ((agendaRes as any).horaInicio >= moment(new Date()).startOf('day').toDate() && (agendaRes as any).horaInicio <= moment(new Date()).endOf('day').toDate()) {
+                    esHoy = true;
+                }
 
-        // Contadores de "delDia" y "programado" varían según si es el día de hoy o no
-        countBloques = {
-            delDia: esHoy ? (
-                ((agendaRes as any).bloques[posBloque].restantesDelDia as number) +
-                ((agendaRes as any).bloques[posBloque].restantesProgramados as number)
-            ) : (agendaRes as any).bloques[posBloque].restantesDelDia,
-            programado: esHoy ? 0 : (agendaRes as any).bloques[posBloque].restantesProgramados,
-            gestion: esHoy ? 0 : (agendaRes as any).bloques[posBloque].restantesGestion,
-            profesional: esHoy ? 0 : (agendaRes as any).bloques[posBloque].restantesProfesional,
-            mobile: esHoy ? 0 : (agendaRes as any).bloques[posBloque].restantesMobile,
-        };
+                // Contadores de "delDia" y "programado" varían según si es el día de hoy o no
+                countBloques = {
+                    delDia: esHoy ? (
+                        ((agendaRes as any).bloques[x].restantesDelDia as number) +
+                        ((agendaRes as any).bloques[x].restantesProgramados as number)
+                    ) : (agendaRes as any).bloques[x].restantesDelDia,
+                    programado: esHoy ? 0 : (agendaRes as any).bloques[x].restantesProgramados,
+                    gestion: esHoy ? 0 : (agendaRes as any).bloques[x].restantesGestion,
+                    profesional: esHoy ? 0 : (agendaRes as any).bloques[x].restantesProfesional
+                };
 
-        posTurno = (agendaRes as any).bloques[posBloque].turnos.findIndex(item => item._id.toString() === req.body.idTurno.toString());
-
-        const turnoSeleccionado = (agendaRes as any).bloques[posBloque].turnos[posTurno];
-        if (turnoSeleccionado.estado === 'disponible') {
-            posTurno = posTurno;
-        } else {
-            return next('noDisponible');
+                for (let y = 0; y < (agendaRes as any).bloques[posBloque].turnos.length; y++) {
+                    if ((agendaRes as any).bloques[posBloque].turnos[y]._id.equals(req.params.idTurno)) {
+                        const turnoSeleccionado = (agendaRes as any).bloques[posBloque].turnos[y];
+                        if (turnoSeleccionado.estado === 'disponible') {
+                            posTurno = y;
+                        } else {
+                            return next('noDisponible');
+                        }
+                    }
+                }
+            }
         }
 
         let tipoTurno = req.body.tipoTurno ? req.body.tipoTurno : (esHoy && req.query.reasignacion ? 'delDia' : 'programado');
@@ -249,9 +240,6 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                 break;
             case ('programado'):
                 update['bloques.' + posBloque + '.restantesProgramados'] = countBloques.programado - 1;
-                if (req.body.emitidoPor && req.body.emitidoPor === 'appMobile') {
-                    update['bloques.' + posBloque + '.restantesMobile'] = countBloques.mobile - 1;
-                }
                 break;
             case ('profesional'):
                 update['bloques.' + posBloque + '.restantesProfesional'] = countBloques.profesional - 1;
@@ -292,7 +280,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
         update[etiquetaUpdateBy] = usuario;
 
         const query = {
-            _id: req.body.idAgenda,
+            _id: req.params.idAgenda,
         };
 
         // Agrega un tag al JSON query
@@ -320,20 +308,12 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                 };
 
                 // Se actualiza el campo financiador del paciente
-                // pacienteController.actualizarFinanciador(req, next);
-
-                // Actualizar padron de prepagas
-                if (req.body.paciente && req.body.paciente.obraSocial && req.body.paciente.obraSocial.prepaga) {
-                    const documento = req.body.paciente.documento;
-                    const sexo = req.body.paciente.sexo;
-                    const obraSocial = req.body.paciente.obraSocial;
-                    await prepagasController.actualizarPadronPrepagas(documento, sexo, obraSocial);
-                }
+                pacienteController.actualizarFinanciador(req, next);
 
                 Logger.log(req, 'citas', 'asignarTurno', datosOp);
-                let turno = doc2.bloques.id(req.body.idBloque).turnos.id(req.body.idTurno);
+                let turno = doc2.bloques.id(req.params.idBloque).turnos.id(req.params.idTurno);
 
-                LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turno, req.body.idBloque, req.body.idAgenda);
+                LoggerPaciente.logTurno(req, 'turnos:dar', req.body.paciente, turno, req.params.idBloque, req.params.idAgenda);
 
                 EventCore.emitAsync('citas:turno:asignar', turno);
                 EventCore.emitAsync('citas:agenda:update', doc2);
@@ -343,6 +323,7 @@ router.patch('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, r
                 operations.cacheTurnos(doc2);
                 // Fin de insert cache
                 res.json(agendaRes);
+
             }
         });
     } else {
@@ -388,7 +369,7 @@ router.patch('/turno/:idTurno/:idBloque/:idAgenda', async (req, res, next) => {
 });
 
 /**
- * se marca como reasignado un turno suspendido
+ * se marca como reasginado un turno suspendido
  */
 router.put('/turno/:idTurno/bloque/:idBloque/agenda/:idAgenda/', async (req, res, next) => {
     // Al comenzar se chequea que el body contenga el paciente y el tipoPrestacion

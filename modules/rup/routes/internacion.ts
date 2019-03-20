@@ -4,6 +4,7 @@ import * as censoController from './../controllers/censo';
 import * as internacionesController from './../controllers/internacion';
 import * as camasController from './../controllers/cama';
 import { Auth } from './../../../auth/auth.class';
+
 const router = express.Router();
 
 router.get('/internaciones/ultima/:idPaciente', (req, res, next) => {
@@ -82,31 +83,37 @@ router.patch('/internaciones/desocuparCama/:idInternacion', (req, res, next) => 
 });
 
 
-router.get('/internaciones/censo', async (req, res, next) => {
-    try {
-        let unidad = req.query.unidad;
-        let idOrganizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
-        let resultadoFinal;
-        let fecha = new Date(req.query.fecha);
-        let censoDiario = await censoController.censoDiario(unidad, fecha, idOrganizacion);
-        let resumen = await censoController.completarResumenDiario(censoDiario, unidad, fecha, idOrganizacion);
-        resultadoFinal = {
-            censoDiario,
-            resumen
-        };
-        return res.json(resultadoFinal);
-    } catch (err) {
+router.get('/internaciones/censo', (req, res, next) => {
+    let unidad = req.query.unidad;
+    let idOrganizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
+    let resultadoFinal;
+    let fecha = new Date(req.query.fecha);
+    censoController.censoDiario(unidad, fecha, idOrganizacion).then(censoDiario => {
+        censoController.completarResumenDiario(censoDiario, unidad, fecha, idOrganizacion).then(resumen => {
+            resultadoFinal = {
+                censoDiario,
+                resumen
+            };
+            res.json(resultadoFinal);
+        }).catch(err => {
+            return next(err);
+        });
+    }).catch(err => {
         return next(err);
-    }
-});
-
-
-router.get('/internaciones/censoMensual', (req, res, next) => {
-    censoController.censoMensual(new Date(req.query.fechaDesde), new Date(req.query.fechaHasta), req.query.unidad, req.query.organizacion).then(result => {
-        res.json(result);
     });
 });
 
+router.get('/internaciones/censoMensual', (req, res, next) => {
+    let unidad = req.query.unidad;
+
+    let idOrganizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
+    let resultadoFinal;
+    let censoMensual = [];
+
+    censoController.censoMensual(req.query.fechaDesde, req.query.fechaHasta, unidad, idOrganizacion).then(result => {
+        res.json(result);
+    });
+});
 
 router.get('/internaciones/censo/disponibilidad', (req, res, next) => {
     // conceptId de la unidad organizativa
@@ -124,17 +131,6 @@ router.get('/internaciones/censo/disponibilidad', (req, res, next) => {
         }).catch(err => {
             return next(err);
         });
-});
-
-
-router.get('/internaciones/listadoInternacion', async (req, res, next) => {
-    let idOrganizacion = mongoose.Types.ObjectId(Auth.getOrganization(req));
-    try {
-        let internaciones = await internacionesController.listadoInternacion(req.query, idOrganizacion);
-        res.json(internaciones);
-    } catch (err) {
-        return next(err);
-    }
 });
 
 export = router;
