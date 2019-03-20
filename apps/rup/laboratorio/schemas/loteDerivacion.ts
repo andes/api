@@ -1,6 +1,6 @@
+import * as mongoose from 'mongoose';
 import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 import { model, Schema } from 'mongoose';
-import * as Registro from './../../../../modules/rup/schemas/prestacion.registro';
 
 export let schema = new Schema({
     numero: { type: String, required: true },
@@ -20,16 +20,18 @@ export let schema = new Schema({
             enum: ['preparado', 'en transporte', 'recibido']
         }
     }],
-    registrosPracticas: [{
+    itemsLoteDerivacion: [{
         idPrestacion: String,
         numeroProtocolo: String,
+        fechaSolicitud: Date,
         paciente: {
             id: { type: Schema.Types.ObjectId, ref: 'paciente', required: true },
             documento: String,
             apellido: String,
-            nombre: String
+            nombre: String,
+            sexo: String
         },
-        registro: Registro
+        registros: [mongoose.Schema.Types.Mixed]
     }],
     usuarioResponsablePreparacion: String,
     usuarioEntrega: String
