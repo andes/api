@@ -78,7 +78,7 @@ export async function getPracticasCompletas(idsPracticas) {
  */
 export async function getPracticaByCodigo(codigo, NoNomencladas = false) {
     let query: any = {
-        $and: [{ 'codigo': codigo.toUpperCase() }]
+        $and: [{ codigo: codigo.toUpperCase() }]
     };
 
     if (!NoNomencladas) {
