@@ -13,6 +13,8 @@ import { formacionCero, vencimientoMatriculaGrado, matriculaCero, vencimientoMat
 import { IGuiaProfesional } from '../interfaces/interfaceProfesional';
 import { sendSms } from '../../../utils/roboSender/sendSms';
 import { toArray } from '../../../utils/utils';
+import { Logger } from '../../../utils/logService';
+import { log } from '@andes/log';
 
 
 let router = express.Router();
@@ -96,6 +98,7 @@ router.get('/profesionales/matching', async (req, res, next) => {
     }
 
     if (Object.keys(opciones).length !== 0) {
+        opciones['profesionalMatriculado'] = true;
         let profEncontrados: any = await profesional.find(opciones);
         let arrayProf = [];
         let resultado;
@@ -484,7 +487,26 @@ router.post('/profesionales', Auth.authenticate(), (req, res, next) => {
         //     } else {
         const newProfesional = new profesional(req.body.profesional);
         Auth.audit(newProfesional, req);
-        newProfesional.save((err2) => {
+        newProfesional.save(async (err2) => {
+
+
+            let logRequest = {
+                user: {
+                    usuario: { nombre: req.user.nombre, apellido: req.user.apellido },
+                    app: 'matriculaciones',
+                    organizacion: req.user.organizacion.nombre
+                },
+                ip: 'localhost',
+                connection: {
+                    localAddress: ''
+                }
+            };
+            try {
+                await log(logRequest, 'profesional:put', null, 'profesional:put', newProfesional, null);
+            } catch (err) {
+                await log(logRequest, 'profesional:put', null, 'profesional:put', err, newProfesional);
+            }
+
             if (err2) {
                 next(err2);
             }
@@ -560,19 +582,69 @@ router.post('/profesionales/sendMail', (req, res, next) => {
 
 });
 
-router.put('/profesionales/actualizar', Auth.authenticate(), (req, res, next) => {
+
+router.put('/profesionales/actualizar', Auth.authenticate(), async (req, res, next) => {
     if (!Auth.check(req, 'matriculaciones:profesionales:putProfesional')) {
         return next(403);
     }
-    profesional.findByIdAndUpdate(req.body.id, req.body, {
-        new: true
-    }, (err, data) => {
-        if (err) {
-            return next(err);
+    profesional.findById(req.body.id, async (err, resultado: any) => {
+
+        const profesionalOriginal = resultado.toObject();
+        for (const key in req.body) {
+            resultado[key] = req.body[key];
         }
-        res.json(data);
+        Auth.audit(resultado, req);
+        resultado.save(async (err2) => {
+
+
+            let logRequest = {
+                user: {
+                    usuario: { nombre: req.user.nombre, apellido: req.user.apellido },
+                    app: 'matriculaciones',
+                    organizacion: req.user.organizacion.nombre
+                },
+                ip: 'localhost',
+                connection: {
+                    localAddress: ''
+                }
+            };
+            try {
+                await log(logRequest, 'profesional:put', null, 'profesional:put', resultado, profesionalOriginal);
+            } catch (err) {
+                await log(logRequest, 'profesional:put', null, 'profesional:put', err, profesionalOriginal);
+            }
+
+            if (err) {
+                return next(err);
+            }
+        });
+        res.json(resultado);
+
     });
 });
+
+// router.put('/profesionales/actualizar', Auth.authenticate(), (req, res, next) => {
+//     if (!Auth.check(req, 'matriculaciones:profesionales:putProfesional')) {
+//         return next(403);
+//     }
+//     profesional.findByIdAndUpdate(req.body.id, req.body, {
+//         new: true
+//     }, (err, data) => {
+
+
+//         Logger.log(req, 'profesional', 'updateProfesional', {
+//             accion: 'Actualizar profesional',
+//             ruta: req.url,
+//             method: req.method,
+//             data,
+//             err: err || false
+//         });
+//         if (err) {
+//             return next(err);
+//         }
+//         res.json(data);
+//     });
+// });
 
 
 // El delete está correcto, tomar como modelo para la documentación
@@ -614,7 +686,10 @@ router.delete('/profesionales/:id', Auth.authenticate(), (req, res, next) => {
 });
 
 router.patch('/profesionales/:id?', Auth.authenticate(), (req, res, next) => {
+    let profesionalOriginal;
     profesional.findById(req.params.id, (err, resultado: any) => {
+        profesionalOriginal = resultado.toObject();
+        console.log(profesionalOriginal.notas);
         if (resultado) {
             switch (req.body.op) {
                 case 'updateNotas':
@@ -647,8 +722,28 @@ router.patch('/profesionales/:id?', Auth.authenticate(), (req, res, next) => {
 
             }
         }
+
         Auth.audit(resultado, req);
-        resultado.save((err2) => {
+        resultado.save(async (err2) => {
+
+
+            let logRequest = {
+                user: {
+                    usuario: { nombre: req.user.nombre, apellido: req.user.apellido },
+                    app: 'matriculaciones',
+                    organizacion: req.user.organizacion.nombre
+                },
+                ip: 'localhost',
+                connection: {
+                    localAddress: ''
+                }
+            };
+            try {
+                await log(logRequest, 'profesional:patch', null, 'profesional:patch', resultado, profesionalOriginal);
+            } catch (err) {
+                await log(logRequest, 'profesional:patch', null, 'profesional:patch', err, profesionalOriginal);
+            }
+
             if (err2) {
                 next(err2);
             }
@@ -673,6 +768,8 @@ router.get('/resumen', (req, res, next) => {
     if (req.query.documento !== '') {
         opciones['documento'] = req.query.documento;
     }
+    opciones['profesionalMatriculado'] = true;
+    console.log(opciones);
     query = profesional.find(opciones);
     query.exec((err, data) => {
         if (err) {
