@@ -160,7 +160,8 @@ export default [
             },
             { key: 'censo', title: 'Ver censo diario y mensual', type: 'boolean' },
             { key: 'alta', title: 'Ingregar paciente', type: 'boolean' },
-            { key: 'inicio', title: 'Punto de inicio', type: 'boolean' }
+            { key: 'inicio', title: 'Punto de inicio', type: 'boolean' },
+            { key: 'mapaDeCamas', title: 'Mapa de camas', type: 'boolean' }
         ]
 
     },

@@ -229,8 +229,8 @@ router.get('/agenda/:id?', (req, res, next) => {
         if (req.query.rango) {
             const variable: any[] = [];
             variable.push({ horaInicio: { $lte: req.query.desde }, horaFin: { $gt: req.query.desde } });
-            variable.push({ horaInicio: { $lte: req.query.hasta }, horaFin: { $gt: req.query.hasta } });
-            variable.push({ horaInicio: { $gt: req.query.desde, $lte: req.query.hasta } });
+            variable.push({ horaInicio: { $lt: req.query.hasta }, horaFin: { $gte: req.query.hasta } });
+            variable.push({ horaInicio: { $gt: req.query.desde, $lt: req.query.hasta } });
             query.or(variable);
         }
 
