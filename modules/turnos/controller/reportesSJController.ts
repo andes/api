@@ -1,7 +1,7 @@
 import * as agendaModel from '../schemas/agenda';
 import { model as prestacionModel } from '../../rup/schemas/prestacion';
 import { toArray } from '../../../utils/utils';
-import { ObjectId } from 'mongodb';
+import * as mongoose from 'mongoose';
 
 export async function getResumenDiarioMensual(params: any) {
 
@@ -28,8 +28,8 @@ export async function getResumenDiarioMensual(params: any) {
         {
             $match: {
                 // 'organizacion.nombre': 'HOSPITAL DR. ALFREDO RIZO ESPARZA',
-                'organizacion._id': new ObjectId(params['organizacion']),
-                'tipoPrestaciones._id': new ObjectId(params['unidadOperativa']),
+                'organizacion._id': new mongoose.Types.ObjectId(params['organizacion']),
+                'tipoPrestaciones._id': new mongoose.Types.ObjectId(params['unidadOperativa']),
                 estado: { $nin: ['borrada', 'suspendida'] }
             }
         },
@@ -295,8 +295,8 @@ export async function getPlanillaC1(params: any) {
                     $gte: fechaDesde,
                     $lt: fechaHasta
                 },
-                'ejecucion.organizacion.id': new ObjectId(params['organizacion']),
-                'solicitud.tipoPrestacion.id': new ObjectId(params['unidadOperativa'])
+                'ejecucion.organizacion.id': new mongoose.Types.ObjectId(params['organizacion']),
+                'solicitud.tipoPrestacion.id': new mongoose.Types.ObjectId(params['unidadOperativa'])
             }
         },
         {
