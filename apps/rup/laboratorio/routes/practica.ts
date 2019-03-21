@@ -21,7 +21,7 @@ router.get('/practicas', async (req, res, next) => {
     } else {
         if (req.query.cadenaInput) {
             let paramBusqueda = req.query.cadenaInput.replace(/([-()\[\]{}+?*.$\^|,:#<!\\])/g, '\\$1').replace(/\x08/g, '\\x08');
-            res.json(await findByDescripcion(paramBusqueda, req.query.buscarSimples));
+            res.json(await findByDescripcion(paramBusqueda, req.query.buscarSimples, req.query.buscarNoNomencladas));
         } else {
             let ids = Array.isArray(req.query.ids) ? req.query.ids.map((id) => { return Types.ObjectId(id); }) : [Types.ObjectId(req.query.ids)];
             if (req.query.cargarSubpracticas) {

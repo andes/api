@@ -73,15 +73,15 @@ export async function getPracticasCompletas(idsPracticas) {
  *
  * @export
  * @param {*} codigo
- * @param {*} soloNomencladas: booleano por defecto trae aquellas practicas que tienen un codigo de nomenclador, si esta en falso busca en todas
+ * @param {*} noNomencladas: booleano por defecto trae aquellas practicas que tienen un codigo de nomenclador, si esta en falso busca en todas
  * @returns
  */
-export async function getPracticaByCodigo(codigo, NoNomencladas = false) {
+export async function getPracticaByCodigo(codigo, noNomencladas = false) {
     let query: any = {
         $and: [{ codigo: codigo.toUpperCase() }]
     };
 
-    if (!NoNomencladas) {
+    if (!noNomencladas) {
         query.$and.push({ codigoNomenclador: { $ne: '' } });
     }
 
@@ -96,15 +96,19 @@ export async function getPracticaByCodigo(codigo, NoNomencladas = false) {
  * @param {*} paramBusqueda
  * @param {*} soloSimples: booleano que indica si se debe buscar solo simples o simples y compuestas
  *  */
-export async function findByDescripcion(paramBusqueda, soloSimples) {
+export async function findByDescripcion(paramBusqueda, soloSimples, noNomencladas = false ) {
     let query: any = {
         $or: [
             { descripcion: { $regex: paramBusqueda } },
             { nombre: { $regex: paramBusqueda } },
             { 'concepto.term': { $regex: paramBusqueda } }
-        ],
-        $and: [{ codigoNomenclador: { $ne: '' } }]
+        ]
+        //$and: [{ codigoNomenclador: { $ne: '' } }]
     };
+
+    if (!noNomencladas) {
+        query.$and.push({ codigoNomenclador: { $ne: '' } });
+    }
 
     if (soloSimples) {
         query.$and.push({ categoria: { $eq: 'simple' } });
