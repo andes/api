@@ -40,7 +40,12 @@ router.post('/lotesDerivaciones/', async (req, res, next) => {
         if (err) {
             return next(err);
         }
-        await actualizarEstadoDerivadoRegistrosEjecucion(data.itemsLoteDerivacion.map( r => { return r._id; } ), data.createdBy, data.laboratorioDestino);
+
+        let registrosIds = [];
+
+        data.itemsLoteDerivacion.forEach( i =>  registrosIds = registrosIds.concat(i.map( r  => { return r.idRegistro; } )) );
+
+        await actualizarEstadoDerivadoRegistrosEjecucion(registrosIds, data.createdBy, data.laboratorioDestino);
         res.json(data);
     });
 });
