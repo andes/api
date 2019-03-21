@@ -887,7 +887,7 @@ export function actualizarTurnosDelDia() {
  * @export actualizarTurnosMobile()
  * @returns resultado
  */
-export async function actualizarTurnosMobile() {
+export function actualizarTurnosMobile() {
     const fechaActualizar = moment().add(1, 'day');
 
     const condicion = {
@@ -910,9 +910,9 @@ export async function actualizarTurnosMobile() {
             localAddress: ''
         }
     };
-    try {
-        return await cursor.eachAsync(async doc => {
-            const agenda: any = doc;
+    return cursor.eachAsync(async doc => {
+        const agenda: any = doc;
+        try {
             for (let j = 0; j < agenda.bloques.length; j++) {
                 if (agenda.bloques[j].restantesMobile > 0) {
                     agenda.bloques[j].restantesMobile = 0;
@@ -920,12 +920,10 @@ export async function actualizarTurnosMobile() {
             }
             Auth.audit(agenda, (userScheduler as any));
             await saveAgenda(agenda);
-            await log(logRequest, logKeys.turnosMobileUpdate.key, null, logKeys.turnosMobileUpdate.operacion, null, { idAgenda: agenda._id });
-        });
-    } catch (err) {
-        await log(logRequest, logKeys.turnosMobileUpdate.key, null, logKeys.turnosMobileUpdate.operacion, err, null);
-        return Promise.reject(err);
-    }
+        } catch (err) {
+            await log(logRequest, logKeys.turnosMobileUpdate.key, null, logKeys.turnosMobileUpdate.operacion, err, { idAgenda: agenda._id });
+        }
+    });
 }
 
 /**
