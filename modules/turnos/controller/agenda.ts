@@ -891,7 +891,7 @@ export function actualizarTurnosMobile() {
     const fechaActualizar = moment().add(1, 'day');
 
     const condicion = {
-        $or: [{ estado: 'disponible' }, { estado: 'publicada' }],
+        $or: [{ estado: 'disponible' }, { estado: 'publicada' }, { estado: 'pausada' }],
         horaInicio: {
             $gte: (moment(fechaActualizar).startOf('day').toDate() as any),
             $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
