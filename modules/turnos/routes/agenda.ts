@@ -229,8 +229,8 @@ router.get('/agenda/:id?', (req, res, next) => {
         if (req.query.rango) {
             const variable: any[] = [];
             variable.push({ horaInicio: { $lte: req.query.desde }, horaFin: { $gt: req.query.desde } });
-            variable.push({ horaInicio: { $lte: req.query.hasta }, horaFin: { $gt: req.query.hasta } });
-            variable.push({ horaInicio: { $gt: req.query.desde, $lte: req.query.hasta } });
+            variable.push({ horaInicio: { $lt: req.query.hasta }, horaFin: { $gte: req.query.hasta } });
+            variable.push({ horaInicio: { $gt: req.query.desde, $lt: req.query.hasta } });
             query.or(variable);
         }
 
@@ -310,11 +310,14 @@ router.post('/agenda/clonar', (req, res, next) => {
                             bloque.restantesProgramados = bloque.accesoDirectoProgramado * bloque.cantidadSimultaneos;
                             bloque.restantesGestion = bloque.reservadoGestion * bloque.cantidadSimultaneos;
                             bloque.restantesProfesional = bloque.reservadoProfesional * bloque.cantidadSimultaneos;
+                            bloque.restantesMobile = bloque.cupoMobile ? bloque.cupoMobile * bloque.cantidadSimultaneos : 0;
+
                         } else {
                             bloque.restantesDelDia = bloque.accesoDirectoDelDia;
                             bloque.restantesProgramados = bloque.accesoDirectoProgramado;
                             bloque.restantesGestion = bloque.reservadoGestion;
                             bloque.restantesProfesional = bloque.reservadoProfesional;
+                            bloque.restantesMobile = bloque.cupoMobile ? bloque.cupoMobile : 0;
                         }
                         bloque._id = mongoose.Types.ObjectId();
                         if (!nueva.dinamica) {
