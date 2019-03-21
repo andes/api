@@ -176,3 +176,40 @@ export async function getConceptByExpression(expression) {
         });
     });
 }
+
+export async function getConcepts(conceptsIds) {
+    return snomedModel.aggregate([
+        { $match:  { conceptId: { $in :  conceptsIds } } },
+        { $unwind: '$relationships' },
+        { $match:  {
+            'relationships.active': true,
+            'relationships.characteristicType.conceptId': '900000000000010007',
+            'relationships.type.conceptId': '116680003' }
+        },
+        {
+            $project: {
+                conceptId: 1,
+                statedAncestors: 1,
+                fullySpecifiedName: 1,
+                preferredTerm: 1,
+                semtag: 1,
+                relationships: {
+                    fsn: '$relationships.destination.fullySpecifiedName',
+                    term: '$relationships.destination.fullySpecifiedName',
+                    conceptId: '$relationships.destination.conceptId'
+                }
+            }
+        },
+        {
+            $group: {
+                _id: '$conceptId',
+                conceptId: { $first: '$conceptId' },
+                statedAncestors: { $first: '$statedAncestors' },
+                fsn: { $first: '$fullySpecifiedName' },
+                term: { $first: '$preferredTerm' },
+                semanticTag: { $first: '$semtag' },
+                relationships: { $push: '$relationships' },
+            }
+        }
+    ]);
+}

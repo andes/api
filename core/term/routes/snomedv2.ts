@@ -24,6 +24,20 @@ router.get('/snomed/concepts/:sctid', async (req, res, next) => {
 });
 
 /**
+ * Devuelve un listado de conceptos
+ */
+
+router.get('/snomed/concepts', async (req, res, next) => {
+    const sctids =  Array.isArray(req.query.sctids) ? req.query.sctids : [req.query.sctids];
+    try {
+        const concepts = await snomedCtr.getConcepts(sctids);
+        return res.json(concepts);
+    } catch (e) {
+        return next(e);
+    }
+});
+
+/**
  * Devuelve las descripciones de un concepto
  */
 
