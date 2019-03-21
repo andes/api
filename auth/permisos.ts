@@ -239,6 +239,13 @@ export default [
                     { key: 'postAgenda', title: 'insert agenda', type: 'boolean' },
                     { key: 'putAgenda', title: 'actualizar agenda', type: 'boolean' }
                 ]
+            },
+            {
+                key: 'supervisor',
+                title: 'supervisor',
+                child: [
+                    { key: 'aprobar', title: 'aprobar', type: 'boolean' },
+
             }
         ]
     },
