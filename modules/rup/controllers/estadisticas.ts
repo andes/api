@@ -189,17 +189,20 @@ function makeFacet(condicion) {
 }
 
 export async function dashboardSolicitudes(filtros, user) {
-    const usuarioOrganizacion = user.organizacion;
     const matchSolicitudEntrada: any = {};
     const matchSolicitudSalida: any = {};
     const matchInicial: any = {};
     const matchFiltros: any = {};
     let matchEstados: any = {};
 
+    /* Condición para filtrar prestaciones que son solicitudes */
     matchInicial['estados.0.tipo'] = {
         $in: ['pendiente', 'auditoria']
     };
 
+    /* Match inicial para filtrar solicitudes
+       según la organización del usuario logueado */
+    const usuarioOrganizacion = user.organizacion;
     matchSolicitudEntrada['solicitud.organizacion.id'] = new ObjectId(usuarioOrganizacion._id);
     matchSolicitudSalida['solicitud.organizacionOrigen.id'] = new ObjectId(usuarioOrganizacion._id);
 
@@ -211,6 +214,7 @@ export async function dashboardSolicitudes(filtros, user) {
         matchInicial['solicitud.fecha'] = fechaCondicion;
     }
 
+    /* Filtro por organización destino */
     if (filtros.organizaciones) {
         matchSolicitudEntrada['solicitud.organizacionOrigen.id'] = {
             $in: filtros.organizaciones.map(org => new ObjectId(org.id))
@@ -256,7 +260,7 @@ export async function dashboardSolicitudes(filtros, user) {
         { $match: matchSolicitudEntrada },
         { $match: matchFiltros },
         { $addFields: { ultimoEstado: { $arrayElemAt: ['$estados', -1] }}},
-        { $match: matchEstados},
+        { $match: matchEstados}, // Filtro por el último estado
         { $facet: makeFacet('entrada') }
     ];
     let pipelineSalida = [
@@ -265,7 +269,7 @@ export async function dashboardSolicitudes(filtros, user) {
         { $match: matchSolicitudSalida },
         { $match: matchFiltros },
         { $addFields: { ultimoEstado: { $arrayElemAt: ['$estados', -1] }}},
-        { $match: matchEstados},
+        { $match: matchEstados}, // Filtro por el último estado
         { $facet: makeFacet('salida') }
     ];
 
