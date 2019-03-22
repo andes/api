@@ -1,5 +1,11 @@
 import { SnomedCIE10Mapping } from '../../../core/term/controller/mapping';
 import * as cie10 from './../../../core/term/schemas/cie10';
+import { EventCore } from '@andes/event-bus';
+import * as codificacion from '../schemas/codificacion';
+
+EventCore.on('rup:prestacion:romperValidacion', async (idPrestacion) => {
+    await codificacion.findOneAndRemove({ idPrestacion });
+});
 
 export function codificarPrestacion(unaPrestacion: any) {
     return new Promise((resolve, reject) => {
