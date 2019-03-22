@@ -13,6 +13,7 @@ const router = express.Router();
 router.post('/codificacion', async (req, res, next) => {
     const idPrestacion = req.body.idPrestacion;
     const unaPrestacion = await prestacion.model.findById(idPrestacion);
+    await codificacion.findOneAndRemove({ idPrestacion });
     const codificaciones = await codificacionController.codificarPrestacion(unaPrestacion);
     let data = new codificacion({
         idPrestacion,
