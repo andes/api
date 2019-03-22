@@ -322,11 +322,18 @@ export default [
         ]
     },
     {
-
         key: 'laboratorio',
         title: 'Modulo Laboratorio',
         child: [
-            { key: 'analizador', title: 'Comunicarse con analizadores', type: 'boolean' }
+            { key: 'analizador', title: 'Comunicarse con analizadores', type: 'boolean' },
+            { key: 'recibir', title: 'Recepción de laboratorios', type: 'boolean' },
+            { key: 'imprimir', title: 'Impresión de hojas de trabajo', type: 'boolean' },
+            /* <--- Gestor de protocolos ---> */
+            { key: 'validar', title: 'Validar resultados de laboratorio', type: 'boolean' },
+            { key: 'cargar', title: 'Carga de resultados de laboratorio', type: 'boolean' },
+            { key: 'auditar', title: 'Auditoría de protocolos de laboratorio', type: 'boolean' },
+            /* <--- Gestor de protocolos ---> */
+
         ],
     }, {
         key: 'auditoriaPacientes',

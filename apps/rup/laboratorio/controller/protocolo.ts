@@ -170,7 +170,7 @@ function cargarValoresDeReferencia(data) {
     data.forEach((prestacion) => {
         prestacion.ejecucion.registros.forEach((registro) => {
 
-            if (registro.valor.practica.resultado.valorDefault && !registro.valor.resultado.valor) {
+            if (registro.valor && registro.valor.practica && registro.valor.practica.resultado.valorDefault && !registro.valor.resultado.valor) {
                 registro.valor.resultado.valor = registro.valor.practica.resultado.valorDefault;
             }
 
