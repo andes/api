@@ -108,27 +108,169 @@ export async function dashboard(org, prestaciones, desde, hasta) {
     return data[0];
 }
 
-export async function dashboardSolicitudes(filtros) {
+const facets = {
+    solicitudesDestino: [
+        { $group: {
+            _id: '$solicitud.tipoPrestacion.conceptId',
+            count: { $sum: 1 },
+            nombre: { $first: '$solicitud.tipoPrestacion.term' }
+        }}
+    ],
+
+    solicitudesOrigen: [
+        { $group: {
+            _id: '$solicitud.tipoPrestacionOrigen.conceptId',
+            count: { $sum: 1 },
+            nombre: { $first: '$solicitud.tipoPrestacionOrigen.term' }
+        }}
+    ],
+
+    organizacionesEntrada: [
+        { $group: {
+            _id: '$solicitud.organizacionOrigen.id',
+            count: { $sum: 1 },
+            nombre: { $first: '$solicitud.organizacionOrigen.nombre'}
+        }}
+    ],
+
+    organizacionesSalida: [
+        { $group: {
+            _id: '$solicitud.organizacion.id',
+            count: { $sum: 1 },
+            nombre: { $first: '$solicitud.organizacion.nombre'}
+        }}
+    ],
+
+    profesionalesOrigen: [
+        { $group: {
+            _id: '$solicitud.profesionalOrigen.id',
+            count: { $sum: 1 },
+            nombre: {$addToSet: { $concat: ['$solicitud.profesionalOrigen.nombre', ' ', '$solicitud.profesionalOrigen.apellido'] }}
+        }}
+    ],
+
+    profesionalesDestino: [
+        { $group: {
+            _id: '$solicitud.profesional.id',
+            count: { $sum: 1 },
+            nombre: {$addToSet: { $concat: ['$solicitud.profesional.nombre', ' ', '$solicitud.profesional.apellido'] }}
+        }}
+    ],
+
+    estados: [
+        { $addFields: {
+            estado: { $arrayElemAt: ['$estados', -1] }
+        }},
+        { $group: {
+            _id: '$estado.tipo',
+            count: { $sum: 1 },
+            nombre: {$first: '$estado.tipo'}
+        }}
+    ]
+};
+
+
+function makeFacet(condicion) {
+    const facet: any = {};
+
+    facet['estados'] = facets['estados'];
+    facet['solicitudesOrigen'] = facets['solicitudesOrigen'];
+    facet['solicitudesDestino'] = facets['solicitudesDestino'];
+    facet['profesionalesOrigen'] = facets['profesionalesOrigen'];
+    facet['profesionalesDestino'] = facets['profesionalesDestino'];
+
+    if (condicion === 'entrada') {
+        facet['organizaciones'] = facets['organizacionesEntrada'];
+    }
+    if (condicion === 'salida') {
+        facet['organizaciones'] = facets['organizacionesSalida'];
+    }
+    return facet;
+}
+
+export async function dashboardSolicitudes(filtros, user) {
+    const usuarioOrganizacion = user.organizacion;
     const matchSolicitudEntrada: any = {};
     const matchSolicitudSalida: any = {};
-    // console.log('filtros -> ', filtros)
-    if (filtros.organizacion) {
-        // filtro todas las solicitudes de entrada
-        // las que se van a realizar en la organizacion donde estoy parado
-        matchSolicitudEntrada['solicitud.organizacion.id'] = new ObjectId(filtros.organizacion);
-    }
+    const matchInicial: any = {};
+    const matchFiltros: any = {};
+    let matchEstados: any = {};
+
+    matchInicial['estados.0.tipo'] = {
+        $in: ['pendiente', 'auditoria']
+    };
+
+    matchSolicitudEntrada['solicitud.organizacion.id'] = new ObjectId(usuarioOrganizacion._id);
+    matchSolicitudSalida['solicitud.organizacionOrigen.id'] = new ObjectId(usuarioOrganizacion._id);
 
     if (filtros.solicitudDesde && filtros.solicitudHasta) {
-        matchSolicitudEntrada['solicitud.fecha'] = {
+        let fechaCondicion = {
             $gte: moment(filtros.solicitudDesde).startOf('day').toDate(),
             $lte: moment(filtros.solicitudHasta).endOf('day').toDate()
         };
+        matchInicial['solicitud.fecha'] = fechaCondicion;
     }
 
-    let pipeline = [
-        /* Filtros iniciales */
+    if (filtros.organizaciones) {
+        matchSolicitudEntrada['solicitud.organizacionOrigen.id'] = {
+            $in: filtros.organizaciones.map(org => new ObjectId(org.id))
+        };
+        matchSolicitudSalida['solicitud.organizacion.id'] = {
+            $in: filtros.organizaciones.map(org => new ObjectId(org.id))
+        };
+    }
+
+    if (filtros.profesionalesDestino) {
+        matchFiltros['solicitud.profesional.id'] = {
+            $in: filtros.profesionalesDestino.map(pr => new ObjectId(pr.id))
+        };
+    }
+
+    if (filtros.profesionalesOrigen) {
+        matchFiltros['solicitud.profesionalOrigen.id'] = {
+            $in: filtros.profesionalesOrigen.map(pr => new ObjectId(pr.id))
+        };
+    }
+
+    if (filtros.solicitudesOrigen) {
+        matchFiltros['solicitud.tipoPrestacionOrigen.conceptId'] = {
+            $in: filtros.solicitudesOrigen.map(solic => solic.id)
+        };
+    }
+
+    if (filtros.solicitudesDestino) {
+        matchFiltros['solicitud.tipoPrestacion.conceptId'] = {
+            $in: filtros.solicitudesDestino.map(solic => solic.id)
+        };
+    }
+
+    if (filtros.estados) {
+        matchEstados['ultimoEstado.tipo'] = {
+            $in: filtros.estados
+        };
+    }
+
+    let pipelineEntrada = [
+        /* Filtros */
+        { $match: matchInicial },
         { $match: matchSolicitudEntrada },
-        { $sort: {'solicitud.fecha': 1}}
+        { $match: matchFiltros },
+        { $addFields: { ultimoEstado: { $arrayElemAt: ['$estados', -1] }}},
+        { $match: matchEstados},
+        { $facet: makeFacet('entrada') }
     ];
-    return await toArray(Prestacion.aggregate(pipeline).cursor({ batchSize: 1000 }).exec());
+    let pipelineSalida = [
+        /* Filtros */
+        { $match: matchInicial },
+        { $match: matchSolicitudSalida },
+        { $match: matchFiltros },
+        { $addFields: { ultimoEstado: { $arrayElemAt: ['$estados', -1] }}},
+        { $match: matchEstados},
+        { $facet: makeFacet('salida') }
+    ];
+
+    const dataEntrada = toArray(Prestacion.aggregate(pipelineEntrada).cursor({ batchSize: 1000 }).exec());
+    const dataSalida = toArray(Prestacion.aggregate(pipelineSalida).cursor({ batchSize: 1000 }).exec());
+    const [solicitudesEntrada, solicitudesSalida] = await Promise.all([dataEntrada, dataSalida]);
+    return { entrada: solicitudesEntrada[0], salida: solicitudesSalida[0] };
 }

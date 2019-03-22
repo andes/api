@@ -281,8 +281,8 @@ router.get('/prestaciones/resumenPaciente/:idPaciente', async (req, res, next) =
 });
 
 router.post('/solicitudesDashboard', async (req, res, next) => {
-    const stats = await dashboardSolicitudes(req.body);
-    return res.json(stats);
+    const solicitudes = await dashboardSolicitudes(req.body, (req as any).user);
+    return res.json(solicitudes);
 });
 
 router.get('/prestaciones/solicitudes', (req, res, next) => {
