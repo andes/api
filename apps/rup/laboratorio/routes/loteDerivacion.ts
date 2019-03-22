@@ -1,5 +1,5 @@
 import * as express from 'express';
-import { generarNumeroLoteDerivacion } from './../controller/loteDerivacion';
+import { generarNumeroLoteDerivacion, updateLote } from './../controller/loteDerivacion';
 import { actualizarEstadoDerivadoRegistrosEjecucion } from './../controller/protocolo';
 import { LoteDerivacion } from './../schemas/loteDerivacion';
 import { Auth } from '../../../../auth/auth.class';
@@ -40,8 +40,22 @@ router.post('/lotesDerivaciones/', async (req, res, next) => {
         if (err) {
             return next(err);
         }
-        await actualizarEstadoDerivadoRegistrosEjecucion(data.registrosPracticas.map( r => { return r._id; } ), data.createdBy, data.laboratorioDestino);
+
+        let registrosIds = [];
+
+        data.itemsLoteDerivacion.forEach( i =>  registrosIds = registrosIds.concat(i.map( r  => { return r.idRegistro; } )) );
+
+        await actualizarEstadoDerivadoRegistrosEjecucion(registrosIds, data.createdBy, data.laboratorioDestino);
         res.json(data);
     });
 });
+
+router.patch('/lotesDerivaciones/:id', async (req, res, next) => {
+    try {
+        return res.json( await updateLote(req));
+    } catch (e) {
+        return next(e);
+    }
+});
+
 export = router;

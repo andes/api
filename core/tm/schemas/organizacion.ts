@@ -53,7 +53,8 @@ const _schema = new Schema({
     fechaBaja: Date,
     mapaSectores: [MapaSectoresSchema],
     unidadesOrganizativas: [SnomedConcept],
-    configuraciones: SchemaTypes.Mixed
+    configuraciones: SchemaTypes.Mixed,
+    prefijo: String
 });
 
 _schema.plugin(AuditPlugin);

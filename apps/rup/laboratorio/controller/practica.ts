@@ -55,14 +55,14 @@ export async function getPracticasCompletas(idsPracticas) {
 
     let findPracticasById = async (practicasIds, deep) => {
         let res = await Practica.find({ _id: { $in: practicasIds } });
-        res.forEach( (e: any) => { e.nivel = deep; });
+        res.forEach((e: any) => { e.nivel = deep; });
         practicas = practicas.concat(res);
         let promises = res.map(async (practica: any) => {
             if (practica.requeridos) {
                 await findPracticasById(practica.requeridos.map((e) => e._id), deep + 1);
             }
         });
-        return Promise.all(promises).then(() => {return practicas; } );
+        return Promise.all(promises).then(() => { return practicas; });
     };
 
     return await findPracticasById(idsPracticas, 0);
@@ -73,10 +73,19 @@ export async function getPracticasCompletas(idsPracticas) {
  *
  * @export
  * @param {*} codigo
+ * @param {*} noNomencladas: booleano por defecto trae aquellas practicas que tienen un codigo de nomenclador, si esta en falso busca en todas
  * @returns
  */
-export async function getPracticaByCodigo(codigo) {
-    let result = await Practica.find( { $and: [{ codigoNomenclador: { $ne: '' } }, { codigo }] } ).exec();
+export async function getPracticaByCodigo(codigo, noNomencladas = false) {
+    let query: any = {
+        $and: [{ codigo: codigo.toUpperCase() }]
+    };
+
+    if (!noNomencladas) {
+        query.$and.push({ codigoNomenclador: { $ne: '' } });
+    }
+
+    let result = await Practica.find(query).exec();
     return result.length > 0 ? result[0] : null;
 }
 
@@ -87,15 +96,19 @@ export async function getPracticaByCodigo(codigo) {
  * @param {*} paramBusqueda
  * @param {*} soloSimples: booleano que indica si se debe buscar solo simples o simples y compuestas
  *  */
-export async function findByDescripcion(paramBusqueda, soloSimples) {
+export async function findByDescripcion(paramBusqueda, soloSimples, noNomencladas = false ) {
     let query: any = {
         $or: [
             { descripcion: { $regex: paramBusqueda } },
             { nombre: { $regex: paramBusqueda } },
             { 'concepto.term': { $regex: paramBusqueda } }
-        ],
-        $and: [{ codigoNomenclador: { $ne: '' } }]
+        ]
+        //$and: [{ codigoNomenclador: { $ne: '' } }]
     };
+
+    if (!noNomencladas) {
+        query.$and.push({ codigoNomenclador: { $ne: '' } });
+    }
 
     if (soloSimples) {
         query.$and.push({ categoria: { $eq: 'simple' } });
@@ -113,8 +126,9 @@ export async function findByDescripcion(paramBusqueda, soloSimples) {
  * @returns
  */
 export async function getPracticasByArea(areaId) {
-    return await Practica.find( { 'area.id' : areaId });
+    return await Practica.find({ 'area.id': areaId });
 }
+
 export async function getPracticasCobasC311() {
     // Todo: en algun lugar filtrar solamente las practicas que el efector tiene habilitadas,
     // es posible que tenga practicas deshabilitadas momentaneamente por falta de reactivos

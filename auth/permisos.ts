@@ -153,7 +153,8 @@ export default [
             },
             { key: 'censo', title: 'Ver senso diario y mensual', type: 'boolean' },
             { key: 'alta', title: 'Ingregar paciente', type: 'boolean' },
-            { key: 'inicio', title: 'Punto de inicio', type: 'boolean' }
+            { key: 'inicio', title: 'Punto de inicio', type: 'boolean' },
+            { key: 'mapaDeCamas', title: 'Mapa de camas', type: 'boolean' }
         ]
 
     },
@@ -344,6 +345,17 @@ export default [
         key: 'espaciosFisicos',
         title: 'Edición de espacios físicos',
         child: []
+    },
+    {
+        key: 'turnosPrestaciones',
+        title: 'Buscador de turnos y prestaciones para recupero financiero',
+        child: [
+            {
+                key: 'buscar',
+                title: 'Buscar prestaciones de pacientes',
+                type: 'boolean'
+            },
+        ]
     },
 
 ];

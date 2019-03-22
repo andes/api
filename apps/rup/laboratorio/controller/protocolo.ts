@@ -433,7 +433,7 @@ async function getQuery(params) {
                 matchOpt.$match['solicitud.registros.valor.solicitudPrestacion.numeroProtocolo.numero'] = { $lte: Number(value) };
             } else if (e === 'estado') {
                 matchOpt.$match['estados.tipo'] = { $in: (typeof value === 'string') ? [value] : value };
-            } else if (e === 'estadoFiltrar') {
+            } else if (e === 'estadoFiltrar' && value) {
                 matchOpt.$match['estados.tipo'] = { $not: { $in: (typeof value === 'string') ? [value] : value } };
             } else if (e === 'areas') {
                 matchOpt.$match['solicitud.registros.valor.solicitudPrestacion.practicas.area._id'] = {
