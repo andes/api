@@ -17,7 +17,10 @@ export async function getResumenDiarioMensual(params: any) {
                 horaInicio: {
                     $gte: firstDay,
                     $lte: lastDay
-                }
+                },
+                'organizacion._id': new mongoose.Types.ObjectId(params['organizacion']),
+                'tipoPrestaciones._id': new mongoose.Types.ObjectId(params['prestacion']),
+                estado: { $nin: ['borrada', 'suspendida'] }
             }
         },
         {
@@ -27,9 +30,8 @@ export async function getResumenDiarioMensual(params: any) {
         },
         {
             $match: {
-                // 'organizacion.nombre': 'HOSPITAL DR. ALFREDO RIZO ESPARZA',
                 'organizacion._id': new mongoose.Types.ObjectId(params['organizacion']),
-                'tipoPrestaciones._id': new mongoose.Types.ObjectId(params['unidadOperativa']),
+                'tipoPrestaciones._id': new mongoose.Types.ObjectId(params['prestacion']),
                 estado: { $nin: ['borrada', 'suspendida'] }
             }
         },
@@ -53,7 +55,7 @@ export async function getResumenDiarioMensual(params: any) {
         {
             $project: {
                 _id: 0,
-                fecha: { $dateToString: { format: '%d-%m-%G', date: '$horaInicio' } },
+                fecha: '$horaInicio',
                 turnoEstado: '$bloques.turnos.estado',
                 pacienteSexo: '$bloques.turnos.paciente.sexo',
                 pacienteEdad: {
@@ -71,7 +73,6 @@ export async function getResumenDiarioMensual(params: any) {
                 }
             }
         },
-
         {
             $group: {
                 _id: {
@@ -146,19 +147,16 @@ export async function getResumenDiarioMensual(params: any) {
                 total: { $sum: 1 }
             }
         },
-
         {
             $project: {
                 _id: 0,
-
-                fechaISO: { $toDate: '$_id.fecha' },
-                fecha: '$_id.fecha',
+                fechaISO: { $toDate: { $dateToString: { format: '%d-%m-%G', date: '$_id.fecha' } } },
+                fecha: { $dateToString: { format: '%d-%m-%G', date: '$_id.fecha' } },
                 sexo: '$_id.sexo',
                 edad: { $toInt: '$_id.edad' },
                 total: { $toInt: '$total' }
             }
         },
-
         {
             $sort: {
                 fechaISO: 1,
@@ -190,25 +188,33 @@ function formatData(data: any, anio: number, mes: number) {
 
         // Mapeo con rango eteario y sexo correspondiente
         if (currData.length > 0) {
-            reg['30'].m = currData.filter(r => r.sexo === 'masculino' && r.edad === 30).length > 0 ? currData.filter(r => r.sexo === 'masculino' && r.edad === 30)[0]['total'] : 0; reg['30'].f = currData.filter(r => r.sexo === 'femenino' && r.edad === 30).length > 0 ? currData.filter(r => r.sexo === 'femenino' && r.edad === 30)[0]['total'] : 0;
+            reg['30'].m = sumar(currData, 'masculino', 30);
+            reg['30'].f = sumar(currData, 'femenino', 30);
 
-            reg['0_1'].m = currData.filter(r => r.sexo === 'masculino' && r.edad === 1).length > 0 ? currData.filter(r => r.sexo === 'masculino' && r.edad === 1)[0]['total'] : 0; reg['0_1'].f = currData.filter(r => r.sexo === 'femenino' && r.edad === 1).length > 0 ? currData.filter(r => r.sexo === 'femenino' && r.edad === 1)[0]['total'] : 0;
+            reg['0_1'].m = sumar(currData, 'masculino', 1);
+            reg['0_1'].f = sumar(currData, 'femenino', 1);
 
-            reg['1_4'].m = currData.filter(r => r.sexo === 'masculino' && r.edad === 5).length > 0 ? currData.filter(r => r.sexo === 'masculino' && r.edad === 5)[0]['total'] : 0; reg['1_4'].f = currData.filter(r => r.sexo === 'femenino' && r.edad === 5).length > 0 ? currData.filter(r => r.sexo === 'femenino' && r.edad === 5)[0]['total'] : 0;
+            reg['1_4'].m = sumar(currData, 'masculino', 5);
+            reg['1_4'].f = sumar(currData, 'femenino', 5);
 
-            reg['5_14'].m = currData.filter(r => r.sexo === 'masculino' && r.edad === 15).length > 0 ? currData.filter(r => r.sexo === 'masculino' && r.edad === 15)[0]['total'] : 0; reg['5_14'].f = currData.filter(r => r.sexo === 'femenino' && r.edad === 15).length > 0 ? currData.filter(r => r.sexo === 'femenino' && r.edad === 15)[0]['total'] : 0;
+            reg['5_14'].m = sumar(currData, 'masculino', 15);
+            reg['5_14'].f = sumar(currData, 'femenino', 15);
 
-            reg['15_19'].m = currData.filter(r => r.sexo === 'masculino' && r.edad === 20).length > 0 ? currData.filter(r => r.sexo === 'masculino' && r.edad === 20)[0]['total'] : 0; reg['15_19'].f = currData.filter(r => r.sexo === 'femenino' && r.edad === 20).length > 0 ? currData.filter(r => r.sexo === 'femenino' && r.edad === 20)[0]['total'] : 0;
+            reg['15_19'].m = sumar(currData, 'masculino', 20);
+            reg['15_19'].f = sumar(currData, 'femenino', 20);
 
-            reg['20_39'].m = currData.filter(r => r.sexo === 'masculino' && r.edad === 40).length > 0 ? currData.filter(r => r.sexo === 'masculino' && r.edad === 40)[0]['total'] : 0; reg['20_39'].f = currData.filter(r => r.sexo === 'femenino' && r.edad === 40).length > 0 ? currData.filter(r => r.sexo === 'femenino' && r.edad === 40)[0]['total'] : 0;
+            reg['20_39'].m = sumar(currData, 'masculino', 40);
+            reg['20_39'].f = sumar(currData, 'femenino', 40);
 
-            reg['40_69'].m = currData.filter(r => r.sexo === 'masculino' && r.edad === 70).length > 0 ? currData.filter(r => r.sexo === 'masculino' && r.edad === 70)[0]['total'] : 0; reg['40_69'].f = currData.filter(r => r.sexo === 'femenino' && r.edad === 70).length > 0 ? currData.filter(r => r.sexo === 'femenino' && r.edad === 70)[0]['total'] : 0;
+            reg['40_69'].m = sumar(currData, 'masculino', 70);
+            reg['40_69'].f = sumar(currData, 'femenino', 70);
 
-            reg['70'].m = currData.filter(r => r.sexo === 'masculino' && r.edad === 100).length > 0 ? currData.filter(r => r.sexo === 'masculino' && r.edad === 100)[0]['total'] : 0;
+            reg['70'].m = sumar(currData, 'masculino', 100);
+            reg['70'].f = sumar(currData, 'femenino', 100);
 
-            reg['70'].f = currData.filter(r => r.sexo === 'femenino' && r.edad === 100).length > 0 ? currData.filter(r => r.sexo === 'femenino' && r.edad === 100)[0]['total'] : 0;
-
-            reg.total.m = currData.filter(r => r.sexo === 'masculino').length > 0 ? currData.filter(r => r.sexo === 'masculino').map(r => { return r.total; }).reduce((a, b) => { return a + b; }) : 0; reg.total.f = currData.filter(r => r.sexo === 'femenino').length > 0 ? currData.filter(r => r.sexo === 'femenino').map(r => { return r.total; }).reduce((a, b) => { return a + b; }) : 0; reg.total.total = currData.map(r => { return r.total; }).reduce((a, b) => { return a + b; });
+            reg.total.m = sumarTotal(currData, 'masculino');
+            reg.total.f = sumarTotal(currData, 'femenino');
+            reg.total.total = currData.map(r => { return r.total; }).reduce((a, b) => { return a + b; });
         }
         res.push(reg);
     }
@@ -277,6 +283,16 @@ class Linea {
     total = { m: 0, f: 0, total: 0 };
 }
 
+function sumar(currData, sexo, edad) {
+    let cantidad = currData.filter(r => r.sexo === sexo && r.edad === edad);
+    return cantidad.length > 0 ? cantidad[0]['total'] : 0;
+}
+
+function sumarTotal(currData, sexo) {
+    let cantidad = currData.filter(r => r.sexo === sexo);
+    return cantidad.length > 0 ? cantidad.map(r => { return r.total; }).reduce((a, b) => { return a + b; }) : 0;
+}
+
 export async function getPlanillaC1(params: any) {
     let pipeline = [];
     let paramFecha = params['fecha'];
@@ -296,7 +312,7 @@ export async function getPlanillaC1(params: any) {
                     $lt: fechaHasta
                 },
                 'ejecucion.organizacion.id': new mongoose.Types.ObjectId(params['organizacion']),
-                'solicitud.tipoPrestacion.id': new mongoose.Types.ObjectId(params['unidadOperativa'])
+                'solicitud.tipoPrestacion.id': new mongoose.Types.ObjectId(params['prestacion'])
             }
         },
         {
