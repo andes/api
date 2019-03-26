@@ -1,6 +1,5 @@
 import * as express from 'express';
 import * as facturacionAutomaticaModel from './../schemas/configFacturacionAutomatica';
-import { facturacionAutomatica } from './../../facturacionAutomatica/controllers/facturacionAutomatica';
 import { EventCore } from '@andes/event-bus';
 
 let router = express.Router();
