@@ -30,7 +30,9 @@ router.get('/configFacturacionAutomatica/', (req, res, next) => {
 router.post('/facturaArancelamiento/', async (req, res, next) => {
     let prestacion = req.body;
 
-    EventCore.emitAsync('facturacion:factura:create', prestacion);
+    if (prestacion) {
+        EventCore.emitAsync('facturacion:factura:create', prestacion);
+    }
 });
 
 export = router;
