@@ -7,29 +7,39 @@ import * as mongoose from 'mongoose';
  * @param {object} Filtros {rango de fechas, prestación, profesional, financiador, estado}
  * @returns {object} {fecha, paciente, financiador, prestacion, profesionales, estado, idAgenda, idBloque, turno, idPrestacion:null}
  */
+
+
 export async function procesar(parametros: any) {
-    let query = agenda.find({ estado: { $nin: ['planificacion', 'borrada', 'suspendida', 'pausada'] } });
-    // Agregar filtro x estado del turno y financiador
-    query.where('organizacion._id').equals(parametros.organizacion);
+
+    let match = {
+        estado: { $nin: ['planificacion', 'borrada', 'suspendida', 'pausada'] },
+        'organizacion._id': parametros.organizacion,
+        bloques: {
+            $ne: null
+        },
+        'bloques.turnos': {
+            $ne: null
+        },
+        'bloques.turnos.estado': 'asignado'
+    };
 
     if (parametros.fechaDesde) {
-        query.where('horaInicio').gte(parametros.fechaDesde);
+        match['horaInicio'] = { $gte: parametros.fechaDesde };
     }
 
     if (parametros.fechaHasta) {
-        query.where('horaFin').lte(parametros.fechaHasta);
+        match['horaFin'] = { $lte: parametros.fechaHasta };
     }
 
     if (parametros.prestacion) {
-        query.where('tipoPrestaciones._id').equals(parametros.prestacion);
+        match['tipoPrestaciones._id'] = parametros.prestacion;
     }
 
     if (parametros.profesional) {
-        query.where('profesionales._id').equals(parametros.profesional);
+        match['profesionales._id'] = parametros.profesional;
     }
-
     let turnos = [];
-    let data = await query.exec();
+    let data = await agenda.find(match).exec();
     let turnoEstado = parametros.estado ? parametros.estado : 'todos';
     let os = parametros.financiador ? parametros.financiador : 'todos';
     turnos = await devolverTurnos(data, turnoEstado, os);
