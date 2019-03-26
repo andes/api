@@ -22,7 +22,6 @@ export function codificarPrestacion(unaPrestacion: any) {
                 };
                 const map = new SnomedCIE10Mapping(parametros.paciente, parametros.secondaryConcepts);
                 map.transform(parametros.conceptId).then(target => {
-
                     if (target) {
                         // Buscar en cie10 los primeros 5 digitos
                         cie10.model.findOne({
