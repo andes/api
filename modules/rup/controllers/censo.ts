@@ -183,6 +183,7 @@ export async function censoMensual(fechaDesde, fechaHasta, unidad, organizacionI
         }
     },
     ];
+    console.log(JSON.stringify(pipelineEstado));
     let data = await toArray(censo.model.aggregate(pipelineEstado).cursor({}).exec());
     if (data && data.length > 0) {
         return data;
@@ -190,7 +191,26 @@ export async function censoMensual(fechaDesde, fechaHasta, unidad, organizacionI
         return null;
     }
 }
+export async function censoMensualGenerar(fechaDesde, fechaHasta, unidad, idOrganizacion) {
+    let nuevaFechaDesde = new Date(fechaDesde);
+    let nuevaFechaHasta = new Date(fechaHasta);
+    let promises = [];
+    while (nuevaFechaDesde <= nuevaFechaHasta) {
+        let uncenso = await censoDiario(unidad, new Date(nuevaFechaDesde), idOrganizacion);
+        promises.push(uncenso);
 
+        let nuevoDia = nuevaFechaDesde.getDate() + 1;
+        nuevaFechaDesde.setDate(nuevoDia);
+    }
+    let censosDiarios = await Promise.all(promises);
+    let listaResultado = censosDiarios.map(unCenso => {
+        return {
+            fecha: unCenso[0].fecha,
+            resumen: censoController.completarResumenDiario(unCenso, unidad, unCenso[0].fecha, idOrganizacion)
+        };
+    });
+    return listaResultado;
+}
 export async function censoMensualJob(done) {
 
     // traigo listado de organizaciones desde el listado de cama
@@ -208,55 +228,54 @@ export async function censoMensualJob(done) {
             const uOrg = unidadesOrg[index];
             let fechaDesde = moment(new Date().setMonth(new Date().getMonth() - 6)).endOf('day').toDate();
 
-            await censoController.censoMensual(fechaDesde, moment(new Date()).endOf('day'), uOrg.conceptId, idOrganizacion).then(async (result: any) => {
-                // consulto si ya existe un censo para esa unidad organizativa y esa organizacion
-                let existeCenso: any = await censo.model.find({ 'unidadOrganizativa.conceptId': uOrg.conceptId, idOrganizacion: organizaciones._id });
-                if (existeCenso.length > 0) {
-                    for (let indexE = 0; indexE < result.length; indexE++) {
-                        const element = result[indexE];
+            let result = await censoController.censoMensualGenerar(fechaDesde, moment(new Date()).endOf('day'), uOrg.conceptId, idOrganizacion);
 
-                        // busco el index del censo que coincida con la fecha para despues pisar el mismo con el nuevo valor generado del censo
-                        let indexCenso = existeCenso[0].censos.findIndex(x => { return new Date(x.fecha).toString() === new Date(element.fecha).toString(); });
+            // consulto si ya existe un censo para esa unidad organizativa y esa organizacion
+            let existeCenso: any = await censo.model.find({ 'unidadOrganizativa.conceptId': uOrg.conceptId, idOrganizacion: organizaciones._id });
+            if (existeCenso.length > 0) {
+                for (let indexE = 0; indexE < result.length; indexE++) {
+                    const element = result[indexE];
 
-                        // si es encontrado el valor piso el resultado
-                        if (indexCenso >= 0) {
+                    // busco el index del censo que coincida con la fecha para despues pisar el mismo con el nuevo valor generado del censo
+                    let indexCenso = existeCenso[0].censos.findIndex(x => { return new Date(x.fecha).toString() === new Date(element.fecha).toString(); });
 
-                            existeCenso[0].censos[indexCenso].censo = element.resumen;
+                    // si es encontrado el valor piso el resultado
+                    if (indexCenso >= 0) {
 
-                        } else {
-                            // si no se encontro se va a pushear el nuevo dia
+                        existeCenso[0].censos[indexCenso].censo = element.resumen;
 
-                            existeCenso[0].censos.push({
-                                fecha: element.fecha,
-                                censo: element.resumen
-                            });
+                    } else {
+                        // si no se encontro se va a pushear el nuevo dia
 
-                        }
-
-                    }
-                    await existeCenso[0].save();
-                } else {
-                    let censoObj = [];
-                    for (let indexJ = 0; index < result.length; index++) {
-                        const element = result[indexJ];
-                        censoObj.push({
+                        existeCenso[0].censos.push({
                             fecha: element.fecha,
                             censo: element.resumen
                         });
+
                     }
 
-                    let obj = {
-                        unidadOrganizativa: uOrg,
-                        idOrganizacion: organizaciones._id,
-                        censos: censoObj
-                    };
-                    // censoMensual.push(obj);
-                    const Censo = new censo.model(obj);
-                    await Censo.save();
-
+                }
+                await existeCenso[0].save();
+            } else {
+                let censoObj = [];
+                for (let indexJ = 0; index < result.length; index++) {
+                    const element = result[indexJ];
+                    censoObj.push({
+                        fecha: element.fecha,
+                        censo: element.resumen
+                    });
                 }
 
-            });
+                let obj = {
+                    unidadOrganizativa: uOrg,
+                    idOrganizacion: organizaciones._id,
+                    censos: censoObj
+                };
+                // censoMensual.push(obj);
+                const Censo = new censo.model(obj);
+                await Censo.save();
+
+            }
         }
 
     }
