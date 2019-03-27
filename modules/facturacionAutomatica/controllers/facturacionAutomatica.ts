@@ -3,7 +3,7 @@ import { Puco } from './../../obraSocial/schemas/puco';
 import { ObraSocial } from './../../obraSocial/schemas/obraSocial';
 import { profesional } from './../../../core/tm/schemas/profesional';
 import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
-import { snomedModel } from '../../../core/term/schemas/snomed';
+import { SnomedModel } from '../../../core/term/schemas/snomed';
 import * as configAutomatica from './../schemas/configFacturacionAutomatica';
 
 export async function facturacionAutomatica(prestacion: any) {
@@ -66,7 +66,7 @@ async function getDatosReportables(prestacion: any) {
             let promises = expresionesDR.map(async (exp, index) => {
                 // return new Promise(async (resolve, reject) => {
                 let querySnomed = makeMongoQuery(exp[0].expresion);
-                let docs = await snomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 });
+                let docs = await SnomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 });
 
                 conceptos = docs.map((item: any) => {
                     let termSnomed = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);

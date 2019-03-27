@@ -2,7 +2,7 @@ import * as mongoose from 'mongoose';
 import { Connections } from './../../../connections';
 import * as configPrivate from './../../../config.private';
 
-export let textIndexSchema = new mongoose.Schema({
+export let TextIndexSchema = new mongoose.Schema({
     conceptId: String,
     term: String,
     fsn: String,
@@ -11,19 +11,19 @@ export let textIndexSchema = new mongoose.Schema({
 });
 
 // Se asegura que los índices estén creados
-textIndexSchema.index({ descriptionId: 1});
-textIndexSchema.index({ term: 'text'});
-textIndexSchema.index({ term: 1});
-textIndexSchema.index({ words: 1});
+TextIndexSchema.index({ descriptionId: 1});
+TextIndexSchema.index({ term: 'text'});
+TextIndexSchema.index({ term: 1});
+TextIndexSchema.index({ words: 1});
 
 // textIndexSchema.index({ words: 1, semanticTag: 1, languageCode: 1, conceptActive: 1, active: 1 });
 // textIndexSchema.index({ conceptId: 1, semanticTag: 1, languageCode: 1, conceptActive: 1, active: 1 });
 // textIndexSchema.index({ refsetIds: 1, semanticTag: 1, languageCode: 1, conceptActive: 1, active: 1 });
 
-export let textIndexModel = Connections.snomed.model(configPrivate.snomed.dbName + 'tx', textIndexSchema, configPrivate.snomed.dbVersion + 'tx');
+export let TextIndexModel = Connections.snomed.model(configPrivate.snomed.dbName + 'tx', TextIndexSchema, configPrivate.snomed.dbVersion + 'tx');
 
 
-export let snomedSchema = new mongoose.Schema({
+export let SnomedSchema = new mongoose.Schema({
     conceptId: String,
     semtag: String,
     preferredTerm: String,
@@ -64,12 +64,12 @@ export let snomedSchema = new mongoose.Schema({
     }]
 });
 
-snomedSchema.index({conceptId : 1});
-snomedSchema.index({'relationships.destination.conceptId' : 1, 'relationships.type.conceptId' : 1});
-snomedSchema.index({'relationships.type.conceptId' : 1, 'relationships.destination.conceptId' : 1});
-snomedSchema.index({inferredAncestors : 1});
-snomedSchema.index({statedAncestors : 1});
-snomedSchema.index({'memberships.refset.conceptId': 1});
+SnomedSchema.index({conceptId : 1});
+SnomedSchema.index({'relationships.destination.conceptId' : 1, 'relationships.type.conceptId' : 1});
+SnomedSchema.index({'relationships.type.conceptId' : 1, 'relationships.destination.conceptId' : 1});
+SnomedSchema.index({inferredAncestors : 1});
+SnomedSchema.index({statedAncestors : 1});
+SnomedSchema.index({'memberships.refset.conceptId': 1});
 
 
-export let snomedModel = Connections.snomed.model(configPrivate.snomed.dbName, snomedSchema, configPrivate.snomed.dbVersion);
+export let SnomedModel = Connections.snomed.model(configPrivate.snomed.dbName, SnomedSchema, configPrivate.snomed.dbVersion);
