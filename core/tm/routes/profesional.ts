@@ -15,6 +15,7 @@ import { sendSms } from '../../../utils/roboSender/sendSms';
 import { toArray } from '../../../utils/utils';
 import { Logger } from '../../../utils/logService';
 import { log } from '@andes/log';
+import { EventCore } from '@andes/event-bus';
 
 
 let router = express.Router();
@@ -510,6 +511,7 @@ router.post('/profesionales', Auth.authenticate(), (req, res, next) => {
             if (err2) {
                 next(err2);
             }
+            EventCore.emitAsync('matriculaciones:profesionales:create', newProfesional);
             res.json(newProfesional);
         });
         //     // }
@@ -618,6 +620,8 @@ router.put('/profesionales/actualizar', Auth.authenticate(), async (req, res, ne
                 return next(err);
             }
         });
+        console.log(JSON.stringify(resultado));
+        EventCore.emitAsync('matriculaciones:profesionales:create', resultado);
         res.json(resultado);
 
     });
