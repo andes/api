@@ -237,18 +237,23 @@ main {
 
         .nivel-2:not(:first-child) {
             margin-left: 1em;
-
-            h3 {
-                font-size: 0.65em;
-                
+            width: 100%;
+                h3 {
+                    font-size: 0.65em;
+                }
+                span {
+                    display:inline-block;
+                    width: 33,3%;
+                    font-size: 0.25cm;
             }
+  
+        }
         }
 
         .nivel-3 {
             margin-left: 2em;
         }
     }
-}
 
 // Footer
 footer {
@@ -304,6 +309,13 @@ footer {
 
     .contenedor-data-pdp {
         width: 37%;
+        display: inline-block;
+        margin-left: 0.5cm;
+        text-align: justify;
+    }
+
+    .contenedor-data-pdpCenso {
+        width: 50%;
         display: inline-block;
         margin-left: 0.5cm;
         text-align: justify;

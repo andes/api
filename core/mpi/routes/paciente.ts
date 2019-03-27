@@ -523,8 +523,12 @@ router.put('/pacientes/:id', async (req, res, next) => {
                     delete data.sexo;
                     delete data.fechaNacimiento;
                 }
-
                 let pacienteUpdated = await controller.updatePaciente(patientFound, data, req);
+                // try {
+                //     controller.updateTurnosPaciente(pacienteUpdated);
+                // } catch (error) {
+                //     return next('Error actualizando turnos del paciente');
+                // }
                 res.json(pacienteUpdated);
                 // si el paciente esta validado y hay cambios en direccion o localidad..
                 if (patientFound.estado === 'validado' && (direccionOld !== data.direccion[0].valor)) {
@@ -749,7 +753,7 @@ router.patch('/pacientes/:id', async (req, res, next) => {
                         const repetida = await controller.checkCarpeta(req, resultado.paciente);
                         if (!repetida) {
                             controller.updateCarpetaEfectores(req, resultado.paciente);
-                            controller.updateTurnosPaciente(resultado.paciente);
+                            // controller.updateTurnosPaciente(resultado.paciente);
                         } else {
                             return next('El numero de carpeta ya existe');
                         }
@@ -758,11 +762,11 @@ router.patch('/pacientes/:id', async (req, res, next) => {
                 case 'updateContactos': // Update de carpeta y de contactos
                     resultado.paciente.markModified('contacto');
                     resultado.paciente.contacto = req.body.contacto;
-                    try {
-                        controller.updateTurnosPaciente(resultado.paciente);
-                    } catch (error) {
-                        return next(error);
-                    }
+                    // try {
+                    //     controller.updateTurnosPaciente(resultado.paciente);
+                    // } catch (error) {
+                    //     return next(error);
+                    // }
                     break;
 
                 case 'updateRelacion':
