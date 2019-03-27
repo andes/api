@@ -52,16 +52,16 @@ export async function procesar(parametros: any) {
         if (parametros.financiador === 'No posee') {
             matchOS['$expr'] = {
                 $and: [
-                    { $ne: ['$turno.paciente', undefined] },
-                    { $eq: ['$turno.paciente.obraSocial', undefined] },
+                    { $ne: [{ $in: [{ $type: '$turno.paciente' }, ['missing', 'null', 'undefined']] }, true] },
+                    { $ne: [{ $in: [{ $type: '$turno.paciente.obraSocial' }, ['missing', 'null', 'undefined']] }, false] },
                 ]
             };
         } else {
             matchOS['$expr'] = {
                 $and: [
-                    { $ne: ['$turno', undefined] },
-                    { $ne: ['$turno.paciente', undefined] },
-                    { $ne: ['$turno.paciente.obraSocial', undefined] },
+                    // { $ne: ['$turno', undefined] },
+                    // { $ne: ['$turno.paciente', undefined] },
+                    // { $ne: ['$turno.paciente.obraSocial', undefined] },
                     { $eq: ['$turno.paciente.obraSocial.financiador', parametros.financiador] }
                 ]
             };
@@ -147,6 +147,7 @@ export async function procesar(parametros: any) {
             $match: matchOS
         }
     ];
+    console.log(JSON.stringify(matchOS));
     const turnosAsignados = await toArray(agenda.aggregate(pipelineBuscador).cursor({}).exec());
     return turnosAsignados;
 }
