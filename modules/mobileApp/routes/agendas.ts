@@ -39,27 +39,22 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
         $sort: { 'agendas.horaInicio': 1 }
     });
     let agendasResultado = await toArray(agenda.aggregate(pipelineAgendas).cursor({}).exec());
-    const promisesStack = [];
     try {
         for (let i = 0; i <= agendasResultado.length - 1; i++) {
             const org: any = await Organizacion.findById(agendasResultado[i].id);
-            if (org.codigo && org.codigo.sisa && org.turnosMobile) {
+            if (org.codigo && org.codigo.sisa && org.turnosMobile && org.direccion && org.direccion.geoReferencia) {
                 agendasResultado[i].coordenadasDeMapa = {
                     latitud: org.direccion.geoReferencia[0],
                     longitud: org.direccion.geoReferencia[1]
                 };
-                agendasResultado[i].coordenadasDeMapa.longitud = org.direccion.geoReferencia[1];
                 agendasResultado[i].domicilio = org.direccion.valor;
-                promisesStack.push(org);
             }
         }
-        await Promise.all(promisesStack);
         res.json(agendasResultado);
     } catch (err) {
         res.status(422).json({ message: err });
     }
-
 });
 
-
 export = router;
+
