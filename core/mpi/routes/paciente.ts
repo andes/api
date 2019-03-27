@@ -10,7 +10,8 @@ import { ElasticSync } from '../../../utils/elasticSync';
 import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
 import { EventCore } from '@andes/event-bus';
-
+import { log as andesLog } from '@andes/log';
+import { logKeys } from '../../../config';
 
 const logD = debug('paciente-controller');
 const router = express.Router();
@@ -103,9 +104,35 @@ router.get('/pacientes/dashboard/', async (req, res, next) => {
     result.pacienteMpi = await toArray(pacienteMpi.aggregate(estadoAggregate).cursor({ batchSize: 1000 }).exec());
     result.logs = await toArray(log.aggregate(logAggregate).cursor({ batchSize: 1000 }).exec());
     res.json(result);
-
 });
 
+router.post('/pacientes/validar/', async (req, res, next) => {
+    // TODO modificar permiso renaper -> validar/validacion o algo asi
+    if (!Auth.check(req, 'fa:get:renaper')) {
+        return next(403);
+    }
+    const pacienteAndes = req.body;
+    if (pacienteAndes && pacienteAndes.documento && pacienteAndes.sexo) {
+        try {
+            // chequeamos si el par dni-sexo ya existe en ANDES
+            const resultadoCheck = await controller.checkRepetido(pacienteAndes);
+            let resultado;
+            if (resultadoCheck.dniRepetido) {
+                resultado = { paciente: resultadoCheck.resultadoMatching[0].paciente, existente: true };
+            } else {
+                resultado = await controller.validarPaciente(pacienteAndes, req);
+                resultado.existente = false;
+            }
+            res.json(resultado);
+            andesLog(req, logKeys.validacionPaciente.key, null, logKeys.validacionPaciente.operacion, resultado);
+        } catch (err) {
+            andesLog(req, logKeys.errorValidacionPaciente.key, null, logKeys.errorValidacionPaciente.operacion, err);
+            return next(err);
+        }
+    } else {
+        return next(500);
+    }
+});
 
 router.get('/pacientes/auditoria/', (req, res, next) => {
     let filtro;
@@ -197,6 +224,70 @@ router.get('/pacientes/:id', (req, res, next) => {
 
 });
 
+
+/**
+ * @swagger
+ * /pacientes:
+ *   get:
+ *     tags:
+ *       - Paciente
+ *     description: Retorna un arreglo de objetos Paciente
+ *     summary: Buscar pacientes usando ElasticSearch
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: type
+ *         description: tipo de búsqueda
+ *         in: body
+ *         required: true
+ *         type: string
+ *         enum:
+ *              - simplequery
+ *              - multimatch
+ *              - suggest
+ *       - name: cadenaInput
+ *         description: pámetro requerido para multimatch
+ *         in: body
+ *         type: string
+ *       - name: claveBlocking
+ *         description: pámetro requerido para suggest
+ *         in: body
+ *         type: string
+ *       - name: percentage
+ *         description: pámetro requerido para suggest
+ *         in: body
+ *         type: boolean
+ *       - name: documento
+ *         description: pámetro requerido para suggest y simplequery
+ *         in: body
+ *         type: string
+ *       - name: nombre
+ *         description: pámetro requerido para suggest y simplequery
+ *         in: body
+ *         type: string
+ *       - name: apellido
+ *         description: pámetro requerido para suggest y simplequery
+ *         in: body
+ *         type: string
+ *       - name: sexo
+ *         description: pámetro requerido para suggest y simplequery
+ *         in: body
+ *         type: string
+ *       - name: fechaNacimiento
+ *         description: pámetro requerido para suggest
+ *         in: body
+ *         type: Date
+ *       - name: escaneado
+ *         description: pámetro requerido para suggest
+ *         in: body
+ *         type: boolean
+ *     responses:
+ *       200:
+ *         description: un arreglo de objetos paciente
+ *       400:
+ *         description: Error- Agregar parámetro de búsqueda
+ *
+ */
 // Search using elastic search
 router.get('/pacientes', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
@@ -350,30 +441,18 @@ router.post('/pacientes', async (req, res, next) => {
     }
     try {
         if (req.body.documento) {
-            const condicion = {
-                documento: req.body.documento
-            };
-            let data = await controller.searchSimilar(req.body, 'andes', condicion);
-            logD('Encontrados', data.map(item => item.value));
-            if (data && data.length && data[0].value > 0.90) {
-                logD('hay un paciente muy parecido en la base de datos');
-                const connElastic = new ElasticSync();
-                await connElastic.sync(data[0].paciente);
-                return res.json(data[0].paciente);
-            } else {
-                let cond = await controller.checkRepetido(req.body);
-                if (cond) {
-                    return next('El paciente ya existe');
-                } else {
-                    req.body.activo = true;
-                    let pacienteObj = await controller.createPaciente(req.body, req);
-                    let patient = req.body;
-                    // se carga geo referencia desde api de google
-                    if (req.body.estado === 'validado' && patient.direccion.length > 0) {
-                        await controller.actualizarGeoReferencia(patient);
-                    }
-                    return res.json(pacienteObj);
+            // Todo loguear posible duplicado si ignora el check
+            let resultado = await controller.checkRepetido(req.body);
+            if ((resultado && resultado.resultadoMatching.length <= 0) || (resultado && resultado.resultadoMatching.length > 0 && req.body.ignoreCheck && !resultado.macheoAlto && !resultado.dniRepetido)) {
+                req.body.activo = true;
+                let pacienteObj = await controller.createPaciente(req.body, req);
+                // se carga geo referencia desde api de google
+                res.json(pacienteObj);
+                if (req.body.estado === 'validado') {
+                    await controller.actualizarGeoReferencia(pacienteObj, req);
                 }
+            } else {
+                return res.json(resultado);
             }
         } else {
             req.body.activo = true;
@@ -429,21 +508,20 @@ router.put('/pacientes/:id', async (req, res, next) => {
         _id: objectId
     };
     try {
-        let cond = await controller.checkRepetido(req.body);
-        if (cond) {
-            return next('El paciente ya existe');
-        } else {
+        // Todo loguear posible duplicado si ignora el check
+        let resultado = await controller.checkRepetido(req.body);
+
+        if ((resultado && resultado.resultadoMatching.length <= 0) || (resultado && resultado.resultadoMatching.length > 0 && req.body.ignoreCheck && !resultado.macheoAlto && !resultado.dniRepetido)) {
             let patientFound: any = await paciente.findById(query).exec();
+
             if (patientFound) {
+                const direccionOld = patientFound.direccion[0].valor;
                 const data = req.body;
                 if (patientFound.estado === 'validado' && !patientFound.isScan) {
                     delete data.documento;
                     delete data.estado;
                     delete data.sexo;
                     delete data.fechaNacimiento;
-                }
-                if (patientFound.estado === 'validado' && patientFound.direccion[0].valor !== data.direccion[0].valor) {
-                    await controller.actualizarGeoReferencia(data);
                 }
                 let pacienteUpdated = await controller.updatePaciente(patientFound, data, req);
                 // try {
@@ -452,17 +530,17 @@ router.put('/pacientes/:id', async (req, res, next) => {
                 //     return next('Error actualizando turnos del paciente');
                 // }
                 res.json(pacienteUpdated);
-
+                // si el paciente esta validado y hay cambios en direccion o localidad..
+                if (patientFound.estado === 'validado' && (direccionOld !== data.direccion[0].valor)) {
+                    await controller.actualizarGeoReferencia(pacienteUpdated, req);
+                }
             } else {
                 req.body._id = req.body.id;
                 let newPatient = new paciente(req.body);
 
-                // se carga geo referencia desde api de google
-                if (req.body.estado === 'validado') {
-                    await controller.actualizarGeoReferencia(newPatient);
-                }
                 // verifico si el paciente ya está en MPI
-                let patientFountMpi = await pacienteMpi.findById(query).exec();
+                let patientFountMpi: any = await pacienteMpi.findById(query).exec();
+                const direccionOld = patientFountMpi.direccion[0].valor;
 
                 if (patientFountMpi) {
                     Auth.audit(newPatient, req);
@@ -481,7 +559,13 @@ router.put('/pacientes/:id', async (req, res, next) => {
                 }
                 EventCore.emitAsync('mpi:patient:update', nuevoPac);
                 res.json(nuevoPac);
+                // se carga geo referencia desde api de google
+                if (direccionOld !== req.body.direccion[0].valor) {
+                    await controller.actualizarGeoReferencia(newPatient, req);
+                }
             }
+        } else {
+            return res.json(resultado);
         }
     } catch (error) {
         return next(error);
@@ -756,73 +840,5 @@ router.patch('/pacientes/mpi/:id', (req, res, next) => {
         });
 });
 
-
-// Comentado hasta incorporar esta funcionalidad
-//
-// router.get('/pacientes/georef/:id', function (req, res, next) {
-//     /* Este método es público no requiere auth check */
-//     pacienteMpi.findById(req.params.id, function (err, data) {
-//         if (err) {
-//             console.log('ERROR GET GEOREF:  ', err);
-//             return next(err);
-//         }
-//         console.log('DATA:  ', data);
-//         let paciente;
-//         paciente = data;
-//         if (paciente && paciente.direccion[0].valor && paciente.direccion[0].ubicacion.localidad && paciente.direccion[0].ubicacion.provincia) {
-
-//             let dir = paciente.direccion[0].valor;
-//             let localidad = paciente.direccion[0].ubicacion.localidad.nombre;
-//             let provincia = paciente.direccion[0].ubicacion.provincia.nombre;
-//             // let pais = paciente.direccion[0].ubicacion.pais;
-//             let pathGoogleApi = '';
-//             let jsonGoogle = '';
-//             pathGoogleApi = '/maps/api/geocode/json?address=' + dir + ',+' + localidad + ',+' + provincia + ',+' + 'AR' + '&key=' + configPrivate.geoKey;
-
-//             pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
-//             pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
-//             pathGoogleApi = pathGoogleApi.replace(/é/gi, 'e');
-//             pathGoogleApi = pathGoogleApi.replace(/í/gi, 'i');
-//             pathGoogleApi = pathGoogleApi.replace(/ó/gi, 'o');
-//             pathGoogleApi = pathGoogleApi.replace(/ú/gi, 'u');
-//             pathGoogleApi = pathGoogleApi.replace(/ü/gi, 'u');
-//             pathGoogleApi = pathGoogleApi.replace(/ñ/gi, 'n');
-
-//             console.log('PATH CONSULTA GOOGLE API:   ', pathGoogleApi);
-
-//             let optionsgetmsg = {
-//                 host: 'maps.googleapis.com',
-//                 port: 443,
-//                 path: pathGoogleApi,
-//                 method: 'GET',
-//                 rejectUnauthorized: false
-//             };
-
-
-//             let reqGet = https.request(optionsgetmsg, function (res2) {
-//                 res2.on('data', function (d, error) {
-//                     jsonGoogle = jsonGoogle + d.toString();
-//                     console.log('RESPONSE: ', jsonGoogle);
-//                 });
-
-//                 res2.on('end', function () {
-//                     let salida = JSON.parse(jsonGoogle);
-//                     if (salida.status === 'OK') {
-//                         res.json(salida.results[0].geometry.location);
-//                     } else {
-//                         res.json('');
-//                     }
-//                 });
-//             });
-//             req.on('error', (e) => {
-//                 console.error(e);
-//                 return next(e);
-//             });
-//             reqGet.end();
-//         } else {
-//             return next('Datos incorrectos');
-//         }
-//     });
-// });
 
 export = router;

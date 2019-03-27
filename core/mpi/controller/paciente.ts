@@ -11,10 +11,13 @@ import * as turnosController from '../../../modules/turnos/controller/turnosCont
 import { matchSisa } from '../../../utils/servicioSisa';
 import { getServicioRenaper } from '../../../utils/servicioRenaper';
 const regtest = /[^a-zA-ZàáâäãåąčćęèéêëėįìíîïłńòóôöõøùúûüųūÿýżźñçčšžÀÁÂÄÃÅĄĆČĖĘÈÉÊËÌÍÎÏĮŁŃÒÓÔÖÕØÙÚÛÜŲŪŸÝŻŹÑßÇŒÆČŠŽ ']+/;
-import * as https from 'https';
 import * as configPrivate from '../../../config.private';
 import { getServicioGeonode } from '../../../utils/servicioGeonode';
-import { handleHttpRequest } from '../../../utils/requestHandler';
+import { getGeoreferencia } from '../../../utils/serviciosGeoreferencia';
+import * as Barrio from '../../tm/schemas/barrio';
+import { log as andesLog } from '@andes/log';
+import { logKeys } from '../../../config';
+import * as mongoose from 'mongoose';
 
 /**
  * Crea un paciente y lo sincroniza con elastic
@@ -514,7 +517,7 @@ export async function updateDireccion(req, data) {
     data.markModified('direccion');
     data.direccion = req.body.direccion;
     try {
-        await actualizarGeoReferencia(data);
+        await actualizarGeoReferencia(data, req);
     } catch (err) {
         return err;
     }
@@ -759,12 +762,13 @@ export async function matchPaciente(dataPaciente) {
 }
 
 /**
- *  Devuelve true si el paciente ya existe en ANDES
+ *  Devuelve un array de pacientes similares al ingresado por parámetro
+ *  Utiliza
  *
  * @param {*} nuevoPaciente
  * @returns Promise<boolean> || error
  */
-export async function checkRepetido(nuevoPaciente): Promise<boolean> {
+export async function checkRepetido(nuevoPaciente): Promise<{ resultadoMatching: any[], dniRepetido: boolean, macheoAlto: boolean }> {
     let matchingInputData = {
         type: 'suggest',
         claveBlocking: 'documento',
@@ -776,39 +780,62 @@ export async function checkRepetido(nuevoPaciente): Promise<boolean> {
         fechaNacimiento: nuevoPaciente.fechaNacimiento
     };
 
-    let resultadoMatching = await matching(matchingInputData);  // Handlear error en funcion llamadora
-    // Filtramos al mismo paciente
-    resultadoMatching = resultadoMatching.filter(elem => elem.paciente.id !== nuevoPaciente.id);
+    let candidatos = await matching(matchingInputData);  // Handlear error en funcion llamadora
+    // Filtramos al propio paciente y a los resultados por debajo de la cota minima
+
+    candidatos = candidatos.filter(elem => {
+        return (elem.paciente.id !== nuevoPaciente.id) && (elem.match > config.mpi.cotaMatchMin);
+    });
+
+    // Extraemos los validados de los resultados
+    let similaresValidados = candidatos.filter(elem => elem.paciente.estado === 'validado');
     // Si el nuevo paciente está validado, filtramos los candidatos temporales
     if (nuevoPaciente.estado === 'validado') {
-        resultadoMatching = resultadoMatching.filter(elem => elem.paciente.estado === 'validado');
+        candidatos = similaresValidados;
     }
-    // La condición verifica que el matching no de superior a la cota maxima y que el nuevo paciente no coincida en dni y sexo con alguno ya existente
-    let cond = false;
-    if (resultadoMatching && resultadoMatching.length > 0) {
-        cond = (resultadoMatching.filter(element => element.match > config.mpi.cotaMatchMax).length > 0);
-        cond = cond || resultadoMatching.filter(element =>
-            (element.paciente.sexo === matchingInputData.sexo && element.paciente.documento === matchingInputData.documento)
-        ).length > 0;
+
+    let macheoAlto = (candidatos.filter(element => element.match > config.mpi.cotaMatchMax).length > 0);
+    let dniRepetido = similaresValidados.filter(element =>
+        (element.paciente.sexo.toString() === matchingInputData.sexo.toString() && element.paciente.documento.toString() === matchingInputData.documento.toString())
+    ).length > 0;
+
+    let promiseArray = [];
+    for (let resultado of candidatos) {
+        let idPaciente = mongoose.Types.ObjectId(resultado.paciente.id);
+        promiseArray.push(buscarPaciente(idPaciente));
     }
-    return cond;
+    let arrayAuxiliar = await Promise.all(promiseArray);
+    let resultadoMatching = [];
+    for (let index = 0; index < arrayAuxiliar.length; index++) {
+        resultadoMatching.push({ paciente: arrayAuxiliar[index].paciente });
+        resultadoMatching[index].match = candidatos[index].match;
+    }
+    return { resultadoMatching, dniRepetido, macheoAlto };
 }
 
-/*
+/**
  * Intenta validar un paciente con fuentes auténticas.
- * Devuelve el paciente, validado o no
+ * Devuelve el paciente, y si fue validado o no (true/false)
  *
  * @param {*} pacienteAndes
  * @returns Object Paciente
  */
-export async function validarPaciente(pacienteAndes) {
-
-    let sexoRenaper = pacienteAndes.sexo === 'masculino' ? 'M' : 'F';
+export async function validarPaciente(pacienteAndes, req: any = configPrivate.userScheduler) {
+    let sexoPaciente = ((typeof pacienteAndes.sexo === 'string')) ? pacienteAndes.sexo : (Object(pacienteAndes.sexo).id);
+    if (sexoPaciente === 'otro') {
+        return { paciente: pacienteAndes, validado: false };
+    }
+    let sexoRenaper = sexoPaciente === 'masculino' ? 'M' : 'F';
     let resRenaper: any;
+
     try {
         resRenaper = await getServicioRenaper({ documento: pacienteAndes.documento, sexo: sexoRenaper });
+        Logger.log(req, 'fa_renaper', 'validar', {
+            resultado: resRenaper
+        });
     } catch (error) {
-        return await validarSisa(pacienteAndes);
+        andesLog(req, logKeys.errorValidacionPaciente.key, null, logKeys.errorValidacionPaciente.operacion, error);
+        return await validarSisa(pacienteAndes, req);
     }
     let band = true;
     // Respuesta correcta de renaper?
@@ -823,68 +850,78 @@ export async function validarPaciente(pacienteAndes) {
             pacienteAndes.cuil = pacienteRenaper.cuil;
             pacienteAndes.estado = 'validado';
             pacienteAndes.foto = pacienteRenaper.foto;
+            return { paciente: pacienteAndes, validado: true };
+        } else {
+            return await validarSisa(pacienteAndes, req, pacienteRenaper.foto);
+
         }
-        return pacienteAndes;
-    }
-    // Respuesta erronea de renaper o test regex fallido?
-    if (!resRenaper || (resRenaper && resRenaper.datos && resRenaper.datos.nroError !== 0) || band) {
-        return await validarSisa(pacienteAndes);
+    } else {
+        return await validarSisa(pacienteAndes, req);
     }
 }
 
-async function validarSisa(pacienteAndes: any) {
+async function validarSisa(pacienteAndes: any, req: any, foto = null) {
     try {
         let resSisa: any = await matchSisa(pacienteAndes);
-        let porcentajeMatcheo = resSisa.matcheos.matcheo;
-        if (porcentajeMatcheo > 95) {
-            pacienteAndes.nombre = resSisa.matcheos.datosPaciente.nombre;
-            pacienteAndes.apellido = resSisa.matcheos.datosPaciente.apellido;
-            pacienteAndes.fechaNacimiento = resSisa.matcheos.datosPaciente.fechaNacimiento;
-            pacienteAndes.estado = 'validado';
+        Logger.log(req, 'fa_sisa', 'validar', {
+            resultado: resSisa
+        });
+        pacienteAndes.nombre = resSisa.matcheos.datosPaciente.nombre;
+        pacienteAndes.apellido = resSisa.matcheos.datosPaciente.apellido;
+        pacienteAndes.fechaNacimiento = resSisa.matcheos.datosPaciente.fechaNacimiento;
+        pacienteAndes.estado = 'validado';
+        if (foto) {
+            pacienteAndes.foto = foto;
         }
-        return pacienteAndes;
+        return { paciente: pacienteAndes, validado: true };
     } catch (error) {
+        andesLog(req, logKeys.errorValidacionPaciente.key, null, logKeys.errorValidacionPaciente.operacion, error);
         // no hacemos nada con el paciente
-        return pacienteAndes;
+        return { paciente: pacienteAndes, validado: false };
     }
 }
+
 /**
  * * Segun la entrada, retorna un Point con las coordenadas de geo referencia o null.
- * @param dataPaciente debe contener direccion y localidad.
+ * @param data debe contener direccion y localidad.
  */
 
-export async function actualizarGeoReferencia(patient) {
-    if (patient.direccion[0].valor && patient.direccion[0].ubicacion.localidad && patient.direccion[0].ubicacion.localidad.nombre) {
+export async function actualizarGeoReferencia(dataPaciente, req) {
+    let pacienteOriginal = dataPaciente;
+    // (valores de direccion fueron modificados): están completos?
+    if (dataPaciente.direccion[0].valor && dataPaciente.direccion[0].ubicacion.localidad && dataPaciente.direccion[0].ubicacion.provincia) {
         try {
-            const geoRef: any = await geoRefPaciente(patient);
-            if (geoRef && geoRef.lat) {
-                patient.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
-                patient.direccion[0].ubicacion.barrio = await getServicioGeonode(patient.direccion[0].geoReferencia);
+            // si el paciente no fue georeferenciado
+            if (!dataPaciente.direccion[0].georeferencia) {
+                let dir = dataPaciente.direccion[0].valor + ', ' + dataPaciente.direccion[0].ubicacion.localidad.nombre + ', ' + dataPaciente.direccion[0].ubicacion.provincia.nombre;
+                const geoRef: any = await getGeoreferencia(dir);
+                // georeferencia exitosa?
+                if (geoRef && geoRef.lat) {
+                    dataPaciente.direccion[0].geoReferencia = [geoRef.lat, geoRef.lng];
+                    let nombreBarrio = await getServicioGeonode(dataPaciente.direccion[0].geoReferencia);
+                    // consulta exitosa?
+                    if (nombreBarrio) {
+                        const barrioPaciente = await Barrio.findOne().where('nombre').equals(RegExp('^.*' + nombreBarrio + '.*$', 'i'));
+                        if (barrioPaciente) {
+                            dataPaciente.direccion[0].ubicacion.barrio = barrioPaciente;
+                        }
+                    }
+                } else {
+                    dataPaciente.direccion[0].geoReferencia = null;
+                    dataPaciente.direccion[0].ubicacion.barrio = null;
+                }
+            }
+            if (req) {
+                // se guardan los datos
+                updatePaciente(pacienteOriginal, dataPaciente, req);
             }
         } catch (err) {
             return (err);
         }
-    }
-}
-
-export async function geoRefPaciente(dataPaciente) {
-    const address = dataPaciente.direccion[0].valor + ',' + dataPaciente.direccion[0].ubicacion.localidad.nombre;
-    let pathGoogleApi = `https://maps.googleapis.com/maps/api/geocode/json?address=${address}, AR&key=${configPrivate.geoKey}`;
-
-    pathGoogleApi = pathGoogleApi.replace(/ /g, '+');
-    pathGoogleApi = pathGoogleApi.replace(/á/gi, 'a');
-    pathGoogleApi = pathGoogleApi.replace(/é/gi, 'e');
-    pathGoogleApi = pathGoogleApi.replace(/í/gi, 'i');
-    pathGoogleApi = pathGoogleApi.replace(/ó/gi, 'o');
-    pathGoogleApi = pathGoogleApi.replace(/ú/gi, 'u');
-    pathGoogleApi = pathGoogleApi.replace(/ü/gi, 'u');
-    pathGoogleApi = pathGoogleApi.replace(/ñ/gi, 'n');
-
-    const [status, body] = await handleHttpRequest(pathGoogleApi);
-    const salida = JSON.parse(body);
-    if (salida.status === 'OK') {
-        return salida.results[0].geometry.location;
     } else {
-        return {};
+        // si no ingreso direccion, provincia o localidad se setean variables en null ya que podrian contener informacion anterior desactualizada
+        dataPaciente.direccion[0].geoReferencia = null;
+        dataPaciente.direccion[0].ubicacion.barrio = null;
     }
 }
+
