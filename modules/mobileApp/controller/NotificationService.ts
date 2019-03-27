@@ -22,6 +22,17 @@ export class NotificationService {
         }).catch(() => { log('ERROR'); });
     }
 
+    public static notificarSuspension(turno) {
+        if (turno.paciente) {
+            const idPaciente = turno.paciente.id;
+            moment.locale('es');
+            const date = moment(turno.horaInicio).format('DD [de] MMMM [a las] HH:mm');
+            const body = 'Su turno del ' + date + ' fue suspendido.';
+            const notificacion = { body, extraData: { action: 'suspender' } };
+            this.sendByPaciente(idPaciente, notificacion);
+        }
+    }
+
     /**
      * Envía notificación de campaña de salud
      */
