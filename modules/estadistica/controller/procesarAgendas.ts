@@ -59,9 +59,6 @@ export async function procesar(parametros: any) {
         } else {
             matchOS['$expr'] = {
                 $and: [
-                    // { $ne: ['$turno', undefined] },
-                    // { $ne: ['$turno.paciente', undefined] },
-                    // { $ne: ['$turno.paciente.obraSocial', undefined] },
                     { $eq: ['$turno.paciente.obraSocial.financiador', parametros.financiador] }
                 ]
             };
@@ -147,7 +144,6 @@ export async function procesar(parametros: any) {
             $match: matchOS
         }
     ];
-    console.log(JSON.stringify(matchOS));
     const turnosAsignados = await toArray(agenda.aggregate(pipelineBuscador).cursor({}).exec());
     return turnosAsignados;
 }
