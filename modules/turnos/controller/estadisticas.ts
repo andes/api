@@ -298,6 +298,7 @@ function filtrosFaltantes(filtros, data) {
 }
 
 export async function estadisticas(filtros) {
+    console.log('filtros -> ', filtros)
     let pipeline;
     const pipelineAgendas = [
         { $match: makePrimaryMatch(filtros) },
@@ -349,7 +350,7 @@ export async function estadisticas(filtros) {
     }
 
     const p1 = toArray(AgendarModel.aggregate(pipeline).cursor({ batchSize: 1000 }).exec());
-    const p2 = filtroPorCiudad(filtros);
+    const p2 = []; //filtroPorCiudad(filtros);
     const [datos, localidades] = await Promise.all([p1, p2]);
     filtrosFaltantes(filtros, datos[0]);
     datos[0]['localidades'] = localidades;
@@ -378,6 +379,18 @@ async function filtroPorCiudad(filtros) {
         },
         { $match: { 'turno.paciente.nombre': { $exists: true }, 'turno.estado': 'asignado' } },
         { $match: makeSecondaryMatch(filtros) },
+        // { $lookup: {
+        //     from: 'paciente',
+        //     localfield: 'turno.paciente._id',
+        //     foreignField: '_id',
+        //     as: 'pacAndes'
+        // } },
+        // { $lookup: {
+        //     from: 'pacienteMpi',
+        //     localfield: 'turno.paciente._id',
+        //     foreignField: '_id',
+        //     as: 'pacMpi'
+        // } }
     ];
     const turnosAsignados = await toArray(AgendarModel.aggregate(pipelineAsignados).cursor({ batchSize: 1000 }).exec());
     let idPacientes = turnosAsignados.map(data => ObjectId(data.idPaciente));
