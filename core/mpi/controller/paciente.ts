@@ -825,11 +825,11 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
     if (sexoPaciente === 'otro') {
         return { paciente: pacienteAndes, validado: false };
     }
-    let sexoRenaper = sexoPaciente === 'masculino' ? 'M' : 'F';
+    let sexoQuery = sexoPaciente === 'masculino' ? 'M' : 'F';
     let resRenaper: any;
 
     try {
-        resRenaper = await getServicioRenaper({ documento: pacienteAndes.documento, sexo: sexoRenaper });
+        resRenaper = await getServicioRenaper({ documento: pacienteAndes.documento, sexo: sexoQuery });
         Logger.log(req, 'fa_renaper', 'validar', {
             resultado: resRenaper
         });
@@ -862,6 +862,9 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
 
 async function validarSisa(pacienteAndes: any, req: any, foto = null) {
     try {
+        let sexoPaciente = ((typeof pacienteAndes.sexo === 'string')) ? pacienteAndes.sexo : (Object(pacienteAndes.sexo).id);
+
+        pacienteAndes.sexo = sexoPaciente;
         let resSisa: any = await matchSisa(pacienteAndes);
         Logger.log(req, 'fa_sisa', 'validar', {
             resultado: resSisa
