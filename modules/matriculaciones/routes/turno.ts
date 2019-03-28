@@ -228,7 +228,6 @@ router.get('/turnos/:tipo/?', async (request, response, errorHandler) => {
         matchObj['dia'] = parseInt(request.query.dia, 0);
     }
 
-    console.log(matchObj);
     if (!request.query.dia) {
         let aggregate = turno.aggregate(
             [{
@@ -238,19 +237,19 @@ router.get('/turnos/:tipo/?', async (request, response, errorHandler) => {
             },
                 {
                     $project: {
-                    tipo: true,
-                    fecha: true,
+                        tipo: true,
+                        fecha: true,
                         anio: { $year: '$fecha' },
-                    mes: { $month: '$fecha' },
+                        mes: { $month: '$fecha' },
                         dia: { $dayOfMonth: '$fecha' }
                     // hora: { $hour: '$fecha' },
                     // minutos: { $minute: '$fecha'}
-                }
+                    }
                 }, {
-                $match: matchObj
+                    $match: matchObj
                 }, {
-                $group: {
-                    _id: {
+                    $group: {
+                        _id: {
                         // tipo: '$tipo',
                         // fecha: '$fecha',
                         // anio: { $year: '$fecha' },
@@ -260,15 +259,14 @@ router.get('/turnos/:tipo/?', async (request, response, errorHandler) => {
                         // hora: { $hour: '$fecha' },
                         // minutos: { $minute: '$fecha'}
                     },
-                    count: { $sum: 1 }
-                }
-            }]);
+                        count: { $sum: 1 }
+                    }
+                }]);
 
         let datos = await toArray(aggregate.cursor({}).exec());
         response.status(201).json(datos);
 
     } else {
-        console.log('acaaaaaaa');
         let aggregate = turno.aggregate(
             [{
                 $match: {
