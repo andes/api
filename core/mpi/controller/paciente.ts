@@ -18,6 +18,7 @@ import * as Barrio from '../../tm/schemas/barrio';
 import { log as andesLog } from '@andes/log';
 import { logKeys } from '../../../config';
 import * as mongoose from 'mongoose';
+import { nextTick } from 'async';
 
 /**
  * Crea un paciente y lo sincroniza con elastic
@@ -564,18 +565,24 @@ export function updateActivo(req, data) {
 }
 
 export function updateRelacion(req, data) {
-    if (data && data.relaciones) {
-        const objRel = data.relaciones.find(elem => {
-            if (elem && req.body.dto && elem.referencia && req.body.dto.referencia) {
-                if (elem.referencia.toString() === req.body.dto.referencia.toString()) {
-                    return elem;
+    if (data) {
+        // verifico si el paciente tiene relaciones
+        if (data.relaciones) {
+            const objRel = data.relaciones.find(elem => {
+                if (elem && req.body.dto && elem.referencia && req.body.dto.referencia) {
+                    // checkeamos si ya existe la relacion que queremos insertar..
+                    if (elem.referencia.toString() === req.body.dto.referencia.toString()) {
+                        return elem;
+                    }
                 }
+            });
+            if (!objRel) {
+                data.markModified('relaciones');
+                data.relaciones.push(req.body.dto);
             }
-        });
-
-        if (!objRel) {
+        } else {
             data.markModified('relaciones');
-            data.relaciones.push(req.body.dto);
+            data.relaciones = [req.body.dto];
         }
     }
 }
