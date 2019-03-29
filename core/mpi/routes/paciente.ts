@@ -515,7 +515,7 @@ router.put('/pacientes/:id', async (req, res, next) => {
             let patientFound: any = await paciente.findById(query).exec();
 
             if (patientFound) {
-                const direccionOld = patientFound.direccion[0].valor;
+                const direccionOld = patientFound.direccion[0];
                 const data = req.body;
                 if (patientFound.estado === 'validado' && !patientFound.isScan) {
                     delete data.documento;
@@ -531,7 +531,9 @@ router.put('/pacientes/:id', async (req, res, next) => {
                 // }
                 res.json(pacienteUpdated);
                 // si el paciente esta validado y hay cambios en direccion o localidad..
-                if (patientFound.estado === 'validado' && (direccionOld !== data.direccion[0].valor)) {
+                if (patientFound.estado === 'validado' && (direccionOld.valor !== data.direccion[0].valor ||
+                    direccionOld.georreferencia[0] !== data.direccion[0].georreferencia[0] ||
+                    direccionOld.georreferencia[1] !== data.direccion[0].georreferencia[1])) {
                     await controller.actualizarGeoReferencia(pacienteUpdated, req);
                 }
             } else {
@@ -540,7 +542,7 @@ router.put('/pacientes/:id', async (req, res, next) => {
 
                 // verifico si el paciente ya está en MPI
                 let patientFountMpi: any = await pacienteMpi.findById(query).exec();
-                const direccionOld = patientFountMpi.direccion[0].valor;
+                const direccionOld = patientFountMpi.direccion[0];
 
                 if (patientFountMpi) {
                     Auth.audit(newPatient, req);
@@ -560,7 +562,9 @@ router.put('/pacientes/:id', async (req, res, next) => {
                 EventCore.emitAsync('mpi:patient:update', nuevoPac);
                 res.json(nuevoPac);
                 // se carga geo referencia desde api de google
-                if (direccionOld !== req.body.direccion[0].valor) {
+                if (direccionOld.valor !== req.body.direccion[0].valor ||
+                    direccionOld.georreferencia[0] !== req.body.direccion[0].georreferencia[0] ||
+                    direccionOld.georreferencia[1] !== req.body.direccion[0].georreferencia[1]) {
                     await controller.actualizarGeoReferencia(newPatient, req);
                 }
             }
