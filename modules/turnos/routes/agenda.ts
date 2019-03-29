@@ -603,4 +603,9 @@ router.post('/estadistica', async (req, res, next) => {
     return res.json(stats);
 });
 
+router.post('/filtroPorCiudad', async (req, res, next) => {
+    const stats = await AgendasEstadisticas.filtroPorCiudad(req.body);
+    return res.json(stats);
+});
+
 export = router;
