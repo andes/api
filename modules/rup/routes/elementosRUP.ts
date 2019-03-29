@@ -3,7 +3,7 @@ import * as mongoose from 'mongoose';
 import { defaultLimit, maxLimit } from './../../../config';
 import { elementoRUP } from '../schemas/elementoRUP';
 import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
-import { snomedModel } from '../../../core/term/schemas/snomed';
+import { SnomedModel } from '../../../core/term/schemas/snomed';
 
 const router = express.Router();
 
@@ -24,7 +24,7 @@ router.get('/elementosRUP/:id/guiada', (req, res, next) => {
                 if (!guia.conceptIds.length) {
                     const q = makeMongoQuery(guia.query);
                     flag = true;
-                    guia.conceptIds = await snomedModel.find(q, { conceptId: 1 }).then((docs: any[]) => {
+                    guia.conceptIds = await SnomedModel.find(q, { conceptId: 1 }).then((docs: any[]) => {
                         return docs.map(item => item.conceptId);
                     }).catch(next);
                 }

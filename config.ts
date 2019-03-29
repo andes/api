@@ -211,6 +211,12 @@ export const modules = {
         path: './modules/geonode/routes',
         route: '/modules/geonode',
         middleware: appMiddleware
+    },
+    georeferencia: {
+        active: true,
+        path: './modules/georeferencia/routes',
+        route: '/modules/georeferencia',
+        middleware: appMiddleware
     }
 };
 
@@ -299,6 +305,14 @@ export const logKeys = {
         key: 'mpi:mpiUpdater:finish',
         operacion: 'MPI updater finish'
     },
+    errorValidacionPaciente: {
+        key: 'mpi:validacion:error',
+        operacion: 'Error validando paciente'
+    },
+    validacionPaciente: {
+        key: 'mpi:validacion',
+        operacion: 'Validar paciente'
+    },
     elasticCheck1: {
         key: 'elastic:notFound:andes',
         operacion: 'Paciente en Andes no encontrado en elastic'
@@ -318,5 +332,9 @@ export const logKeys = {
     elasticFix2: {
         key: 'elasticFix:update',
         operacion: 'Documentos referidos al paciente modificados'
+    },
+    turnosMobileUpdate: {
+        key: 'citas:bloques:modificar',
+        operacion: 'setea a 0 turnos disponibles para app mobile'
     }
 };

@@ -63,6 +63,12 @@ export let pacienteSchema: mongoose.Schema = new mongoose.Schema({
     foto: String,
     fotoMobile: String,
     nacionalidad: String,
+    // ---------------------
+    // Campos asociados a pacientes extranjeros
+
+    tipoIdentificacion: { type: constantes.IDENTIFICACION, required: false },  // pasaporte o documento extranjero
+    numeroIdentificacion: String,
+    // --------------------
     relaciones: [{
         relacion: parentezcoSchema,
         referencia: {
@@ -71,7 +77,8 @@ export let pacienteSchema: mongoose.Schema = new mongoose.Schema({
         },
         nombre: String,
         apellido: String,
-        documento: String
+        documento: String,
+        foto: String
     }],
     financiador: [financiadorSchema],
     claveBlocking: { type: [String], es_indexed: true },
