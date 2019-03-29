@@ -305,6 +305,10 @@ export const logKeys = {
         key: 'mpi:mpiUpdater:finish',
         operacion: 'MPI updater finish'
     },
+    mpiAuditoriaSetActivo: {
+        key: 'mpi:auditoria:setActivo',
+        operacion: 'Activar/desactivar paciente'
+    },
     errorValidacionPaciente: {
         key: 'mpi:validacion:error',
         operacion: 'Error validando paciente'

@@ -167,6 +167,63 @@ router.get('/pacientes/auditoria/', (req, res, next) => {
 
 });
 
+router.put('/pacientes/auditoria/setActivo', async (req, res, next) => {
+    // if (!Auth.check(req, 'mpi:paciente:putAndes')) {
+    //     return next(403);
+    // }
+    if (!(mongoose.Types.ObjectId.isValid(req.body.id))) {
+        return next(404);
+    }
+    const objectId = new mongoose.Types.ObjectId(req.body.id);
+    const query = {
+        _id: objectId
+    };
+
+    try {
+        andesLog(req, logKeys.mpiAuditoriaSetActivo.key, req.body._id, logKeys.mpiAuditoriaSetActivo.operacion, req.body, null);
+
+        let patientFound: any = await paciente.findById(query).exec();
+
+        if (patientFound) {
+            const data = req.body;
+            if (patientFound.estado === 'validado' && !patientFound.isScan) {
+                delete data.documento;
+                delete data.estado;
+                delete data.sexo;
+                delete data.fechaNacimiento;
+            }
+            let pacienteUpdated = await controller.updatePaciente(patientFound, data, req);
+            res.json(pacienteUpdated);
+        } else {
+            req.body._id = req.body.id;
+            let newPatient = new paciente(req.body);
+
+            // verifico si el paciente ya está en MPI
+            let patientFountMpi: any = await pacienteMpi.findById(query).exec();
+
+            if (patientFountMpi) {
+                Auth.audit(newPatient, req);
+            }
+            await newPatient.save();
+            const nuevoPac = JSON.parse(JSON.stringify(newPatient));
+            const connElastic = new ElasticSync();
+            let updated = await connElastic.sync(newPatient);
+            if (updated) {
+                Logger.log(req, 'mpi', 'update', {
+                    original: nuevoPac,
+                    nuevo: newPatient
+                });
+            } else {
+                Logger.log(req, 'mpi', 'insert', newPatient);
+            }
+            EventCore.emitAsync('mpi:patient:update', nuevoPac);
+            res.json(nuevoPac);
+        }
+    } catch (error) {
+        return next(error);
+    }
+});
+
 router.get('/pacientes/auditoria/vinculados/', async (req, res, next) => {
     let filtro = {
         'identificadores.0': { $exists: true },
