@@ -201,6 +201,18 @@ router.get('/pacientes/inactivos/', async (req, res, next) => {
 
 });
 
+// Search using elastic search
+router.get('/pacientes/search', (req, res, next) => {
+    if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
+        return next(403);
+    }
+    controller.matching({ type: 'search', filtros: req.query }).then(result => {
+        res.send(result);
+    }).catch(error => {
+        return next(error);
+    });
+});
+
 
 // Simple mongodb query by ObjectId --> better performance
 router.get('/pacientes/:id', (req, res, next) => {
@@ -300,7 +312,6 @@ router.get('/pacientes', (req, res, next) => {
         return next(error);
     });
 });
-
 
 router.put('/pacientes/mpi/:id', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:putMpi')) {
@@ -524,11 +535,6 @@ router.put('/pacientes/:id', async (req, res, next) => {
                     delete data.fechaNacimiento;
                 }
                 let pacienteUpdated = await controller.updatePaciente(patientFound, data, req);
-                // try {
-                //     controller.updateTurnosPaciente(pacienteUpdated);
-                // } catch (error) {
-                //     return next('Error actualizando turnos del paciente');
-                // }
                 res.json(pacienteUpdated);
                 // si el paciente esta validado y hay cambios en direccion o localidad..
                 if (patientFound.estado === 'validado' && (direccionOld !== data.direccion[0].valor)) {
@@ -762,11 +768,6 @@ router.patch('/pacientes/:id', async (req, res, next) => {
                 case 'updateContactos': // Update de carpeta y de contactos
                     resultado.paciente.markModified('contacto');
                     resultado.paciente.contacto = req.body.contacto;
-                    // try {
-                    //     controller.updateTurnosPaciente(resultado.paciente);
-                    // } catch (error) {
-                    //     return next(error);
-                    // }
                     break;
 
                 case 'updateRelacion':
@@ -788,10 +789,6 @@ router.patch('/pacientes/:id', async (req, res, next) => {
             } else {
                 pacienteAndes = resultado.paciente;
             }
-            // Quitamos esta sincronizacion con elastic para evitar la sincronización de campos no necesarios.
-            // let connElastic = new ElasticSync();
-            // await connElastic.sync(pacienteAndes);
-
             Auth.audit(pacienteAndes, req);
             let pacienteSaved = await pacienteAndes.save();
             res.json(pacienteSaved);
@@ -839,6 +836,5 @@ router.patch('/pacientes/mpi/:id', (req, res, next) => {
             return next(err);
         });
 });
-
 
 export = router;

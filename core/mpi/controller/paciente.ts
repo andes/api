@@ -359,6 +359,20 @@ export function matching(data): Promise<any[]> {
                 };
             }
             break;
+        case 'search':
+            {
+                query = {
+                    bool: {
+                        must: {
+                            match: data.filtros
+                        },
+                        filter: {
+                            term: { activo: 'true' }
+                        }
+                    }
+                };
+            }
+            break;
     }
 
     if (data.incluirInactivos) {
