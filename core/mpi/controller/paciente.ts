@@ -839,11 +839,11 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
     if (sexoPaciente === 'otro') {
         return { paciente: pacienteAndes, validado: false };
     }
-    let sexoRenaper = sexoPaciente === 'masculino' ? 'M' : 'F';
+    let sexoQuery = sexoPaciente === 'masculino' ? 'M' : 'F';
     let resRenaper: any;
 
     try {
-        resRenaper = await getServicioRenaper({ documento: pacienteAndes.documento, sexo: sexoRenaper });
+        resRenaper = await getServicioRenaper({ documento: pacienteAndes.documento, sexo: sexoQuery });
         Logger.log(req, 'fa_renaper', 'validar', {
             resultado: resRenaper
         });
@@ -876,6 +876,9 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
 
 async function validarSisa(pacienteAndes: any, req: any, foto = null) {
     try {
+        let sexoPaciente = ((typeof pacienteAndes.sexo === 'string')) ? pacienteAndes.sexo : (Object(pacienteAndes.sexo).id);
+
+        pacienteAndes.sexo = sexoPaciente;
         let resSisa: any = await matchSisa(pacienteAndes);
         Logger.log(req, 'fa_sisa', 'validar', {
             resultado: resSisa
@@ -901,10 +904,10 @@ async function validarSisa(pacienteAndes: any, req: any, foto = null) {
  */
 
 export async function actualizarGeoReferencia(dataPaciente, req) {
-    let pacienteOriginal = dataPaciente;
-    // (valores de direccion fueron modificados): están completos?
-    if (dataPaciente.direccion[0].valor && dataPaciente.direccion[0].ubicacion.localidad && dataPaciente.direccion[0].ubicacion.provincia) {
-        try {
+    try {
+        let pacienteOriginal = dataPaciente;
+        // (valores de direccion fueron modificados): están completos?
+        if (dataPaciente.direccion[0].valor && dataPaciente.direccion[0].ubicacion.localidad && dataPaciente.direccion[0].ubicacion.provincia) {
             // si el paciente no fue georeferenciado
             if (!dataPaciente.direccion[0].georeferencia) {
                 let dir = dataPaciente.direccion[0].valor + ', ' + dataPaciente.direccion[0].ubicacion.localidad.nombre + ', ' + dataPaciente.direccion[0].ubicacion.provincia.nombre;
@@ -929,13 +932,16 @@ export async function actualizarGeoReferencia(dataPaciente, req) {
                 // se guardan los datos
                 updatePaciente(pacienteOriginal, dataPaciente, req);
             }
-        } catch (err) {
-            return (err);
+        } else {
+            if (dataPaciente.direccion[0].georeferencia) {
+                if (req) {
+                    // se guardan los datos
+                    updatePaciente(pacienteOriginal, dataPaciente, req);
+                }
+            }
         }
-    } else {
-        // si no ingreso direccion, provincia o localidad se setean variables en null ya que podrian contener informacion anterior desactualizada
-        dataPaciente.direccion[0].geoReferencia = null;
-        dataPaciente.direccion[0].ubicacion.barrio = null;
+    } catch (err) {
+        return (err);
     }
 }
 

@@ -126,10 +126,10 @@ export async function matchSisa(paciente) {
     paciente['matchSisa'] = 0;
     // Se buscan los datos en sisa y se obtiene el paciente
     const band = (paciente.entidadesValidadoras) ? (paciente.entidadesValidadoras.indexOf('sisa') < 0) : true;
-    if (paciente.documento && band && paciente.documento.length >= 7) {
+    if (paciente.documento && band && (paciente.documento.toString()).length >= 7) {
         let sexo = null;
         if (paciente.sexo) {
-            sexo = (paciente.sexo === 'femenino') ? 'F' : 'M';
+            sexo = ((paciente.sexo) === 'femenino') ? 'F' : 'M';
         }
         // OJO: Es sólo para pacientes con SEXO debido a que pueden existir distintos pacientes con el mismo DNI
         let resultadoSisa = await getSisaCiudadano(paciente.documento, configPrivate.sisa.username, configPrivate.sisa.password, sexo);
