@@ -230,7 +230,7 @@ router.patch('/camas/cambiaEstado/:idCama', Auth.authenticate(), async (req, res
             const ultimoEstado = unaCama.estados.find(e => new Date(e.fecha) < new Date(req.body.fecha));
             if (ultimoEstado) {
                 if (req.body.estado === ultimoEstado.estado) {
-                    unaCama.estados.push(req.body);
+                    // unaCama.estados.push(req.body);
                 } else {
                     switch (req.body.estado) {
                         case 'reparacion':
