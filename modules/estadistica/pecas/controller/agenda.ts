@@ -1,11 +1,12 @@
-import * as agendaModel from '../../../turnos/schemas/agenda';
 import * as mongoose from 'mongoose';
 import * as moment from 'moment';
-import { Organizacion } from '../../../../core/tm/schemas/organizacion';
+import { Pecas } from '../schemas/pecas';
 import * as sql from 'mssql';
 import * as configPrivate from '../../../../config.private';
-import { Logger } from '../../../../utils/logService';
-import { userScheduler } from '../../../../config.private';
+import { Organizacion } from '../../../../core/tm/schemas/organizacion';
+import { pecasExport } from '../controller/aggregateQueryPecas';
+import { log } from '@andes/log';
+
 
 let poolTurnos;
 const config = {
@@ -16,345 +17,60 @@ const config = {
     connectionTimeout: 10000,
     requestTimeout: 45000
 };
-
+let logRequest = {
+    user: {
+        usuario: { nombre: 'pecasConsolidadoJob', apellido: 'pecasConsolidadoJob' },
+        app: 'jobPecas',
+        organizacion: 'Subsecretaría de salud'
+    },
+    ip: 'localhost',
+    connection: {
+        localAddress: ''
+    }
+};
 /**
  * Actualiza la tabla pecas_consolidado de la BD Andes
  *
  * @export consultaPecas()
  * @returns resultado
  */
-export async function consultaPecas(start, end, done) {
+export async function consultaPecas(done, start, end) {
     try {
         poolTurnos = await new sql.ConnectionPool(config).connect();
     } catch (ex) {
-        // console.log('ex', ex);
         return (ex);
     }
 
-    let orgExcluidas = organizacionesExcluidas();
-
-    let match = {
-        $and: [
-            { $or: orgExcluidas },
-            { updatedAt: { $gt: new Date(start) } },
-            { updatedAt: { $lt: new Date(end) } }
-        ],
-        bloques: {
-            $ne: null
-        },
-        'bloques.turnos': {
-            $ne: null
-        }
-        // , estado: { $nin: ['planificacion']}
-    };
     try {
-        const agendas = agendaModel.aggregate([
-            { $match: match },
-            // { $match: { _id: mongoose.Types.ObjectId('5bfd50bc64fcfe69e6faabde') } }
-        ]).cursor({ batchSize: 100 }).exec();
-        await agendas.eachAsync(async (a, error) => {
-            if (error) {
-                return error;
+        // Eliminamos los registros temporales de PECAS
+        await Pecas.remove({});
+        // Exportamos los registros directamente desde mongodb
+        await pecasExport(start, end);
+        let pecasData: any = await Pecas.find({}).exec();
+        let insertsArray = [];
+        let cantidadRegistros = pecasData.length;
+        // Realizamos le proceso de insertado a pecas SQL
+        if (cantidadRegistros > 0) {
+            for (let i = 0; i < cantidadRegistros; i++) {
+                let doc = pecasData[i];
+                await eliminaTurno(doc.idTurno, doc.idAgenda);
+                let org = await getEfector(doc.idEfector);
+                let idEfectorSips = org.codigo && org.codigo.sips ? org.codigo.sips : null;
+                insertsArray.push(auxiliar(doc, idEfectorSips));
             }
-            // Se recorren los turnos
-            const turnos = [];
-            for (let i = 0; i < a.bloques.length; i++) {
-                let b = a.bloques[i];
-                for (let j = 0; j < b.turnos.length; j++) {
-                    let t = a.bloques[i].turnos[j];
-                    turnos.push(String(t._id));
-                }
-            }
-
-            for (let i = 0; i < a.sobreturnos.length; i++) {
-                let t = a.sobreturnos[i];
-                turnos.push(String(t._id));
-            }
-
-            await eliminaAgenda(a._id);
-
-
-            const promises = [];
-            for (let i = 0; i < a.bloques.length; i++) {
-                let b = a.bloques[i];
-                if (b.turnos.length) {
-                    for (let j = 0; j < b.turnos.length; j++) {
-                        let t = a.bloques[i].turnos[j];
-                        let p = auxiliar(a, b, t);
-                        promises.push(p);
-                    }
-                } else {
-                    // Se inserta solo la agenda
-                    let p = insertar_agenda(a, i);
-                    promises.push(p);
-                }
-            }
-
-            // Se recorren los sobreturnos
-
-            for (let i = 0; i < a.sobreturnos.length; i++) {
-                let t = a.sobreturnos[i];
-                let p = auxiliar(a, null, t);
-                promises.push(p);
-            }
-            return await Promise.all(promises);
-        });
-        done();
+            await Promise.all(insertsArray);
+            return (done());
+        } else {
+            return (done(null));
+        }
     } catch (error) {
         return (done(error));
     }
 }
 
 // castea cada turno asignado y lo inserta en la tabla Sql
-async function auxiliar(a: any, b: any, t: any) {
-    let turno: any = {};
-    let efector: any = {};
-    turno.sobreturno = (b !== null) ? 'NO' : 'SI';
-    // console.log('b => ', b);
+async function auxiliar(turno: any, idEfectorSips) {
     try {
-        let org: any = await getEfector(a.organizacion._id);
-        efector = {
-            tipoEfector: org.tipoEstablecimiento && org.tipoEstablecimiento.nombre ? org.tipoEstablecimiento.nombre : null,
-            codigo: org.codigo && org.codigo.sips ? org.codigo.sips : null
-        };
-        // Chequear si el turno existe en sql PECAS y depeniendo de eso hacer un insert o  un update
-        turno.tipoTurno = t.tipoTurno ? (t.tipoTurno === 'profesional' ? 'autocitado' : (t.tipoTurno === 'gestion' ? 'conllave' : t.tipoTurno)) : 'Sin datos';
-        turno.estadoTurno = t.estado;
-        let turnoConPaciente = t.estado === 'asignado' && t.paciente; // && t.asistencia
-        let idEfector = efector && efector.codigo ? parseInt(efector.codigo, 10) : null;
-        let tipoEfector = efector && efector.tipoEfector ? efector.tipoEfector : null;
-        turno.tipoPrestacion = (turnoConPaciente && t.tipoPrestacion && t.tipoPrestacion.term) ? t.tipoPrestacion.term : null;
-        turno.idEfector = idEfector;
-        turno.Organizacion = a.organizacion.nombre;
-        turno.idAgenda = a._id;
-        turno.FechaAgenda = moment(a.horaInicio).format('YYYYMMDD');
-        turno.HoraAgenda = moment(a.horaInicio).format('HH:mm').toString();
-        turno.estadoAgenda = a.estado;
-        turno.numeroBloque = a.bloques.indexOf(b);
-        turno.accesoDirectoProgramado = (b && b.accesoDirectoProgramado) ? b.accesoDirectoProgramado : null;
-        turno.reservadoProfesional = (b && b.reservadoProfesional) ? b.reservadoProfesional : null;
-        turno.reservadoGestion = (b && b.reservadoGestion) ? b.reservadoGestion : null;
-        turno.accesoDirectoDelDia = (b && b.accesoDirectoDelDia) ? b.accesoDirectoDelDia : null;
-        turno.idTurno = String(t._id);
-        turno.FechaConsulta = moment(t.horaInicio).format('YYYYMMDD');
-        turno.HoraTurno = moment(t.horaInicio).format('HH:mm').toString();
-        turno.Periodo = parseInt(moment(t.horaInicio).format('YYYYMM').toString(), 10);
-        turno.DNI = turnoConPaciente ? Number(t.paciente.documento) : null;
-        turno.Apellido = turnoConPaciente ? t.paciente.apellido : null;
-        turno.Apellido = turnoConPaciente ? turno.Apellido.toString().replace('\'', '\'\'') : null;
-        turno.Nombres = turnoConPaciente ? t.paciente.nombre.toString().replace('\'', '\'\'') : null;
-        const carpetas = turnoConPaciente && t.paciente.carpetaEfectores ? t.paciente.carpetaEfectores.filter(x => String(x.organizacion._id) === String(a.organizacion._id)) : [];
-        if (Array(carpetas).length > 0) {
-            turno.HC = carpetas[0] ? (carpetas[0] as any).nroCarpeta : null;
-        } else {
-            turno.HC = null;
-        }
-        turno.codSexo = turnoConPaciente ? String(t.paciente.sexo) === 'femenino' ? String(2) : String(1) : null;
-        turno.Sexo = turnoConPaciente ? t.paciente.sexo : null;
-        turno.FechaNacimiento = (turnoConPaciente && t.paciente.fechaNacimiento && moment(t.paciente.fechaNacimiento).year() > 1900) ? moment(t.paciente.fechaNacimiento).format('YYYYMMDD') : '';
-        const objectoEdad = (t.paciente && turno.FechaNacimiento) ? calcularEdad(t.paciente.fechaNacimiento) : null;
-
-        turno.Edad = t.paciente && turno.fechaNacimiento ? objectoEdad.valor : null;
-        turno.uniEdad = t.paciente && turno.fechaNacimiento ? objectoEdad.unidad : null;
-        turno.CodRangoEdad = t.paciente && turno.fechaNacimiento ? objectoEdad.CodRangoEdad : null;
-        turno.RangoEdad = t.paciente && turno.fechaNacimiento ? objectoEdad.RangoEdad : null;
-        turno.Peso = null;
-        turno.Talla = null;
-        turno.TAS = null;
-        turno.TAD = null;
-        turno.IMC = null;
-        turno.RCVG = null;
-        turno.codifica = null;
-        turno.Diag1CodigoOriginal = null;
-        turno.Desc1DiagOriginal = null;
-        turno.Diag1CodigoAuditado = null;
-        turno.Desc1DiagAuditado = null;
-        turno.conceptId1 = null;
-        turno.semanticTag1 = null;
-
-        turno.term1 = null;
-        turno.Principal = 0;
-        turno.Tipodeconsulta = null;
-        turno.ConsC2 = null;
-
-        // Estado turno
-        let estadoAuditoria = null;
-        if (t) {
-            switch (t.estado) {
-                case 'disponible':
-                    estadoAuditoria = 'Disponible';
-                    break;
-                case 'suspendido':
-                    estadoAuditoria = 'Suspendido';
-                    break;
-                case 'asignado':
-                    if (t.asistencia) {
-                        estadoAuditoria = 'Asistencia Verificada';
-                    }
-                    if (t.diagnostico.codificaciones.length > 0) {
-                        if (!(t.diagnostico.codificaciones[0].codificacionAuditoria && t.diagnostico.codificaciones[0].codificacionAuditoria.codigo) && (t.diagnostico.codificaciones[0].codificacionProfesional)) {
-                            estadoAuditoria = 'Registrado por Profesional';
-                        }
-                        if ((t.asistencia === 'noAsistio' || t.asistencia === 'sinDatos' || (t.diagnostico.codificaciones[0].codificacionAuditoria && t.diagnostico.codificaciones[0].codificacionAuditoria.codigo))) {
-                            estadoAuditoria = 'Auditado';
-                        }
-                    }
-                    break;
-                default:
-                    estadoAuditoria = null;
-            }
-
-        }
-
-        turno.estadoTurnoAuditoria = estadoAuditoria;
-
-        // Asistencia
-        turno.asistencia = turnoConPaciente && t.asistencia ? t.asistencia : null;
-        turno.reasignado = turnoConPaciente && t.reasignado && t.reasignado.siguiente ? 'SI' : 'NO';
-        // Diagnóstico 1 ORIGINAL
-        if (t.diagnostico.codificaciones.length > 0 && t.diagnostico.codificaciones[0] && t.diagnostico.codificaciones[0].primeraVez !== undefined) {
-            turno.primeraVez1 = (t.diagnostico.codificaciones[0].primeraVez === true) ? 1 : 0;
-        } else {
-            turno.primeraVez1 = null;
-        }
-        if (t.diagnostico.codificaciones.length > 0 && t.diagnostico.codificaciones[0].codificacionProfesional) {
-            turno.codifica = 'PROFESIONAL';
-            if (t.diagnostico.codificaciones[0].codificacionProfesional.cie10 && t.diagnostico.codificaciones[0].codificacionProfesional.cie10.codigo) {
-                turno.Diag1CodigoOriginal = t.diagnostico.codificaciones[0].codificacionProfesional.cie10.codigo;
-                turno.Desc1DiagOriginal = t.diagnostico.codificaciones[0].codificacionProfesional.cie10.nombre;
-            }
-            if (t.diagnostico.codificaciones[0].codificacionProfesional.snomed && t.diagnostico.codificaciones[0].codificacionProfesional.snomed.conceptId) {
-                turno.conceptId1 = t.diagnostico.codificaciones[0].codificacionProfesional.snomed.conceptId;
-                turno.term1 = t.diagnostico.codificaciones[0].codificacionProfesional.snomed.term;
-                turno.semanticTag1 = t.diagnostico.codificaciones[0].codificacionProfesional.snomed.semanticTag;
-            }
-        } else {
-            turno.codifica = 'NO PROFESIONAL';
-        }
-        // Diagnóstico 1 AUDITADO
-        if (t.diagnostico.codificaciones.length > 0 && t.diagnostico.codificaciones[0].codificacionAuditoria && t.diagnostico.codificaciones[0].codificacionAuditoria.codigo) {
-            turno.Diag1CodigoAuditado = t.diagnostico.codificaciones[0].codificacionAuditoria.codigo;
-            turno.Desc1DiagAuditado = t.diagnostico.codificaciones[0].codificacionAuditoria.nombre;
-            turno.ConsC2 = t.diagnostico.codificaciones[0].codificacionAuditoria.c2 && t.diagnostico.codificaciones[0].primeraVez ? 'SI' : 'NO';
-            turno.Tipodeconsulta = t.diagnostico.codificaciones[0].primeraVez ? 'Primera vez' : 'Ulterior';
-            turno.Principal = 1;
-        }
-
-        // Diagnóstico 2 ORIGINAL
-        turno.Diag2CodigoOriginal = null;
-        turno.Desc2DiagOriginal = null;
-        turno.Diag2CodigoAuditado = null;
-        turno.Desc2DiagAuditado = null;
-        turno.conceptId2 = null;
-        turno.term2 = null;
-        turno.semanticTag2 = null;
-        if (t.diagnostico.codificaciones.length > 1 && t.diagnostico.codificaciones[1] && t.diagnostico.codificaciones[1].primeraVez !== undefined) {
-            turno.primeraVez2 = (t.diagnostico.codificaciones[1].primeraVez === true) ? 1 : 0;
-        } else {
-            turno.primeraVez2 = null;
-        }
-        if (t.diagnostico.codificaciones.length > 1 && t.diagnostico.codificaciones[1].codificacionProfesional) {
-            if (t.diagnostico.codificaciones[1].codificacionProfesional.cie10 && t.diagnostico.codificaciones[1].codificacionProfesional.cie10.codigo) {
-                turno.Diag2CodigoOriginal = t.diagnostico.codificaciones[1].codificacionProfesional.cie10.codigo;
-                turno.Desc2DiagOriginal = t.diagnostico.codificaciones[1].codificacionProfesional.cie10.nombre;
-            }
-            if (t.diagnostico.codificaciones[1].codificacionProfesional.snomed && t.diagnostico.codificaciones[1].codificacionProfesional.snomed.conceptId) {
-                turno.conceptId2 = t.diagnostico.codificaciones[1].codificacionProfesional.snomed.conceptId;
-                turno.term2 = t.diagnostico.codificaciones[1].codificacionProfesional.snomed.term;
-                turno.semanticTag2 = t.diagnostico.codificaciones[1].codificacionProfesional.snomed.semanticTag;
-            }
-        }
-        // Diagnóstico 2 AUDITADO
-        if (t.diagnostico.codificaciones.length > 1 && t.diagnostico.codificaciones[1].codificacionAuditoria && t.diagnostico.codificaciones[1].codificacionAuditoria.codigo) {
-            turno.Diag2CodigoAuditado = t.diagnostico.codificaciones[1].codificacionAuditoria.codigo;
-            turno.Desc2DiagAuditado = t.diagnostico.codificaciones[1].codificacionAuditoria.nombre;
-        }
-        // Diagnóstico 3 ORIGINAL
-        turno.Diag3CodigoOriginal = null;
-        turno.Desc3DiagOriginal = null;
-        turno.Diag3CodigoAuditado = null;
-        turno.Desc3DiagAuditado = null;
-        turno.conceptId3 = null;
-        turno.term3 = null;
-        turno.semanticTag3 = null;
-
-        if (t.diagnostico.codificaciones.length > 2 && t.diagnostico.codificaciones[2] && t.diagnostico.codificaciones[2].primeraVez !== undefined) {
-            turno.primeraVez3 = (t.diagnostico.codificaciones[2].primeraVez === true) ? 1 : 0;
-        } else {
-            turno.primeraVez3 = null;
-        }
-        if (t.diagnostico.codificaciones.length > 2 && t.diagnostico.codificaciones[2].codificacionProfesional) {
-            if (t.diagnostico.codificaciones[2].codificacionProfesional.cie10 && t.diagnostico.codificaciones[2].codificacionProfesional.cie10.codigo) {
-                turno.Diag3CodigoOriginal = t.diagnostico.codificaciones[2].codificacionProfesional.cie10.codigo;
-                turno.Desc3DiagOriginal = t.diagnostico.codificaciones[2].codificacionProfesional.cie10.nombre;
-            }
-            if (t.diagnostico.codificaciones[2].codificacionProfesional.snomed && t.diagnostico.codificaciones[2].codificacionProfesional.snomed.conceptId) {
-                turno.conceptId3 = t.diagnostico.codificaciones[2].codificacionProfesional.snomed.conceptId;
-                turno.term3 = t.diagnostico.codificaciones[2].codificacionProfesional.snomed.term;
-                turno.semanticTag3 = t.diagnostico.codificaciones[2].codificacionProfesional.snomed.semanticTag;
-            }
-        }
-        // Diagnóstico 3 AUDITADO
-        if (t.diagnostico.codificaciones.length > 2 && t.diagnostico.codificaciones[2].codificacionAuditoria && t.diagnostico.codificaciones[2].codificacionAuditoria.codigo) {
-            turno.Diag3CodigoAuditado = t.diagnostico.codificaciones[2].codificacionAuditoria.codigo;
-            turno.Desc3DiagAuditado = t.diagnostico.codificaciones[2].codificacionAuditoria.nombre;
-        }
-
-        turno.Profesional = (a.profesionales && a.profesionales[0] && a.profesionales.length > 0 ? a.profesionales.map(pr => String(pr.apellido) + ', ' + String(pr.nombre)).join('; ') : 'Sin profesionales');
-        turno.Profesional = turno.Profesional.toString().replace('\'', '\'\'');
-        turno.TipoProfesional = null;
-        turno.CodigoEspecialidad = null;
-        turno.Especialidad = null;
-        turno.CodigoServicio = null;
-        turno.Servicio = (a.espacioFisico && a.espacioFisico.servicio ? a.espacioFisico.servicio.nombre : 'Sin servicio');
-        turno.IdBarrio = null;
-        turno.Barrio = null;
-        turno.IdLocalidad = null;
-        turno.Localidad = null;
-        turno.IdDpto = null;
-        turno.Departamento = null;
-        turno.IdPcia = null;
-        turno.Provincia = null;
-        turno.IdNacionalidad = null;
-        turno.Nacionalidad = null;
-        turno.Calle = null;
-        turno.Altura = null;
-        turno.Piso = null;
-        turno.Depto = null;
-        turno.Manzana = null;
-        turno.ConsObst = t.tipoPrestacion && t.tipoPrestacion.term.includes('obstetricia') ? 'SI' : 'NO';
-        turno.IdObraSocial = (turnoConPaciente && t.paciente.obraSocial && t.paciente.obraSocial.codigo) ? t.paciente.obraSocial.codigo : null;
-        turno.ObraSocial = (turnoConPaciente && t.paciente.obraSocial && t.paciente.obraSocial.financiador) ? t.paciente.obraSocial.financiador.toString().replace('\'', '\'\'') : null;
-        if (tipoEfector && tipoEfector === 'Centro de Salud') {
-            turno.TipoEfector = '1';
-        }
-        if (tipoEfector && tipoEfector === 'Hospital') {
-            turno.TipoEfector = '2';
-        }
-        if (tipoEfector && tipoEfector === 'Puesto Sanitario') {
-            turno.TipoEfector = '3';
-        }
-        if (tipoEfector && tipoEfector === 'ONG') {
-            turno.TipoEfector = '6';
-        }
-        turno.DescTipoEfector = tipoEfector;
-        turno.IdZona = null;
-        turno.Zona = null;
-        turno.SubZona = null;
-        turno.idEfectorSuperior = null;
-        turno.EfectorSuperior = null;
-        turno.AreaPrograma = null;
-
-        turno.IdPaciente = (t.paciente) ? String(t.paciente.id) : null;
-        turno.Longitud = '';
-        turno.Latitud = '';
-        turno.telefono = t.paciente && t.paciente.telefono ? t.paciente.telefono : '';
-        turno.estadoAgenda = a.estado;
-        turno.turnosMobile = 0;
-        if (t.emitidoPor && (t.emitidoPor === 'appMobile')) {
-            turno.turnosMobile = 1;
-        }
-
         // se verifica si existe el turno en sql
         let queryInsert = 'INSERT INTO ' + configPrivate.conSqlPecas.table.pecasTable +
             '(idEfector, Efector, TipoEfector, DescTipoEfector, IdZona, Zona, SubZona, idEfectorSuperior, EfectorSuperior, AreaPrograma, ' +
@@ -369,15 +85,15 @@ async function auxiliar(a: any, b: any, t: any) {
             'Diag3CodigoOriginal, Desc3DiagOriginal, Diag3CodigoAuditado, Desc3DiagAuditado, SemanticTag3, SnomedConcept3, SnomedTerm3, primeraVez3, ' +
             'Profesional, TipoProfesional, CodigoEspecialidad, Especialidad, CodigoServicio, Servicio, ' +
             'codifica, turnosMobile, updated) ' +
-            'VALUES  ( ' + turno.idEfector + ',\'' + turno.Organizacion + '\',\'' + turno.TipoEfector + '\',\'' + turno.DescTipoEfector +
+            'VALUES  (' + '\'' + idEfectorSips + '\',\'' + turno.Efector + '\',\'' + turno.TipoEfector + '\',\'' + turno.DescTipoEfector +
             '\',' + turno.IdZona + ',\'' + turno.Zona + '\',\'' + turno.SubZona + '\',' + turno.idEfectorSuperior + ',\'' + turno.EfectorSuperior + '\',\'' + turno.AreaPrograma +
-            '\',\'' + turno.idAgenda + '\',\'' + turno.FechaAgenda + '\',\'' + turno.HoraAgenda + '\',\'' + turno.estadoAgenda +
-            '\',' + turno.numeroBloque + ',' + turno.accesoDirectoProgramado + ',' + turno.reservadoProfesional + ',' + turno.reservadoGestion + ',' + turno.accesoDirectoDelDia +
-            ',\'' + turno.idTurno + '\',\'' + turno.estadoTurno + '\',\'' + turno.tipoTurno + '\',\'' + turno.sobreturno + '\',\'' + turno.FechaConsulta + '\',\'' + turno.HoraTurno + '\',' + turno.Periodo + ',\'' + turno.Tipodeconsulta + '\',\'' + turno.estadoTurnoAuditoria + '\',\'' + turno.Principal +
+            '\',\'' + turno.idAgenda + '\',\'' + moment(turno.FechaAgenda).format('YYYYMMDD') + '\',\'' + turno.HoraAgenda + '\',\'' + turno.estadoAgenda +
+            '\',' + turno.numeroBloque + ',' + turno.turnosProgramados + ',' + turno.turnosProfesional + ',' + turno.turnosLlaves + ',' + turno.turnosDelDia +
+            ',\'' + turno.idTurno + '\',\'' + turno.estadoTurno + '\',\'' + turno.tipoTurno + '\',\'' + turno.sobreturno + '\',\'' + moment(turno.FechaConsulta).format('YYYYMMDD') + '\',\'' + turno.HoraTurno + '\',' + turno.Periodo + ',\'' + turno.Tipodeconsulta + '\',\'' + turno.estadoTurnoAuditoria + '\',\'' + turno.Principal +
             '\',\'' + turno.ConsC2 + '\',\'' + turno.ConsObst + '\',\'' + turno.tipoPrestacion +
             // DATOS PACIENTE
             '\',' + turno.DNI + ',\'' + turno.Apellido + '\',\'' + turno.Nombres + '\',\'' + turno.HC + '\',\'' + turno.codSexo +
-            '\',\'' + turno.Sexo + '\',\'' + turno.FechaNacimiento + '\',' + turno.Edad + ',\'' + turno.uniEdad + '\',\'' + turno.CodRangoEdad +
+            '\',\'' + turno.Sexo + '\',\'' + moment(turno.FechaNacimiento).format('YYYYMMDD') + '\',' + turno.Edad + ',\'' + turno.uniEdad + '\',\'' + turno.CodRangoEdad +
             '\',\'' + turno.RangoEdad + '\',' + turno.IdObraSocial + ',\'' + turno.ObraSocial + '\',\'' + turno.IdPaciente + '\',\'' + turno.telefono +
             '\',' + turno.IdBarrio + ',\'' + turno.Barrio + '\',' + turno.IdLocalidad +
             ',\'' + turno.Localidad + '\',' + turno.IdDpto + ',\'' + turno.Departamento + '\',' + turno.IdPcia + ',\'' + turno.Provincia +
@@ -394,61 +110,61 @@ async function auxiliar(a: any, b: any, t: any) {
             '\',\'' + turno.semanticTag3 + '\',\'' + turno.conceptId3 + '\',\'' + turno.term3 + '\',' + turno.primeraVez3 +
             ',\'' + turno.Profesional + '\',\'' + turno.TipoProfesional + '\',' + turno.CodigoEspecialidad + ',\'' + turno.Especialidad +
             '\',' + turno.CodigoServicio + ',\'' + turno.Servicio + '\',\'' + turno.codifica + '\',' + turno.turnosMobile + ',\'' + moment().format('YYYYMMDD HH:mm') + '\') ';
-
-        await executeQuery(queryInsert);
-
+        return await executeQuery(queryInsert);
     } catch (error) {
+        await log(logRequest, 'andes:pecas:bi', null, 'insert', error, null);
         return (error);
     }
 }
 
-async function insertar_agenda(a: any, num_bloque: any) {
-    let ag: any = {};
-    let efector: any = {};
-    try {
-        let org: any = await getEfector(a.organizacion._id);
-        efector = {
-            tipoEfector: org.tipoEstablecimiento && org.tipoEstablecimiento.nombre ? org.tipoEstablecimiento.nombre : null,
-            codigo: org.codigo && org.codigo.sips ? org.codigo.sips : null
-        };
-        let idEfector = efector && efector.codigo ? parseInt(efector.codigo, 10) : null;
-        let tipoEfector = efector && efector.tipoEfector ? efector.tipoEfector : null;
-        ag.idEfector = idEfector;
-        ag.Organizacion = a.organizacion.nombre;
-        ag.idAgenda = a._id;
-        ag.tipoPrestacion = a.tipoPrestaciones && a.tipoPrestaciones.length && a.tipoPrestaciones[0] ? a.tipoPrestaciones[0].term : null;
-        ag.FechaAgenda = moment(a.horaInicio).format('YYYYMMDD');
-        ag.HoraAgenda = moment(a.horaInicio).format('HH:mm').toString();
-        ag.estadoAgenda = a.estado;
-        ag.numeroBloque = num_bloque;
-        ag.idTurno = a.bloques && a.bloques.length ? a.bloques[0]._id : null;
+
+// async function insertar_agenda(a: any, num_bloque: any) {
+//     let ag: any = {};
+//     let efector: any = {};
+//     try {
+//         let org: any = await getEfector(a.organizacion._id);
+//         efector = {
+//             tipoEfector: org.tipoEstablecimiento && org.tipoEstablecimiento.nombre ? org.tipoEstablecimiento.nombre : null,
+//             codigo: org.codigo && org.codigo.sips ? org.codigo.sips : null
+//         };
+//         let idEfector = efector && efector.codigo ? parseInt(efector.codigo, 10) : null;
+//         let tipoEfector = efector && efector.tipoEfector ? efector.tipoEfector : null;
+//         ag.idEfector = idEfector;
+//         ag.Organizacion = a.organizacion.nombre;
+//         ag.idAgenda = a._id;
+//         ag.tipoPrestacion = a.tipoPrestaciones && a.tipoPrestaciones.length && a.tipoPrestaciones[0] ? a.tipoPrestaciones[0].term : null;
+//         ag.FechaAgenda = moment(a.horaInicio).format('YYYYMMDD');
+//         ag.HoraAgenda = moment(a.horaInicio).format('HH:mm').toString();
+//         ag.estadoAgenda = a.estado;
+//         ag.numeroBloque = num_bloque;
+//         ag.idTurno = a.bloques && a.bloques.length ? a.bloques[0]._id : null;
 
 
-        if (tipoEfector && tipoEfector === 'Centro de Salud') {
-            ag.TipoEfector = '1';
-        }
-        if (tipoEfector && tipoEfector === 'Hospital') {
-            ag.TipoEfector = '2';
-        }
-        if (tipoEfector && tipoEfector === 'Puesto Sanitario') {
-            ag.TipoEfector = '3';
-        }
-        if (tipoEfector && tipoEfector === 'ONG') {
-            ag.TipoEfector = '6';
-        }
-        ag.DescTipoEfector = tipoEfector;
+//         if (tipoEfector && tipoEfector === 'Centro de Salud') {
+//             ag.TipoEfector = '1';
+//         }
+//         if (tipoEfector && tipoEfector === 'Hospital') {
+//             ag.TipoEfector = '2';
+//         }
+//         if (tipoEfector && tipoEfector === 'Puesto Sanitario') {
+//             ag.TipoEfector = '3';
+//         }
+//         if (tipoEfector && tipoEfector === 'ONG') {
+//             ag.TipoEfector = '6';
+//         }
+//         ag.DescTipoEfector = tipoEfector;
 
-        let queryInsert = 'INSERT INTO ' + configPrivate.conSqlPecas.table.pecasTable +
-            '(idEfector, Efector, TipoEfector, DescTipoEfector, idAgenda, FechaAgenda, HoraAgenda, estadoAgenda, numeroBloque,  idTurno, tipoPrestacion,  updated) ' +
-            'VALUES  ( ' + ag.idEfector + ',\'' + ag.Organizacion + '\',\'' + ag.TipoEfector + '\',\'' + ag.DescTipoEfector +
-            '\',\'' + ag.idAgenda + '\',\'' + ag.FechaAgenda + '\',\'' + ag.HoraAgenda + '\',\'' + ag.estadoAgenda +
-            '\',' + ag.numeroBloque + ',\'' + ag.idTurno + '\',\'' + ag.tipoPrestacion + '\',\'' + moment().format('YYYYMMDD HH:mm') + '\') ';
-        await executeQuery(queryInsert);
+//         let queryInsert = 'INSERT INTO ' + configPrivate.conSqlPecas.table.pecasTable +
+//             '(idEfector, Efector, TipoEfector, DescTipoEfector, idAgenda, FechaAgenda, HoraAgenda, estadoAgenda, numeroBloque,  idTurno, tipoPrestacion,  updated) ' +
+//             'VALUES  ( ' + ag.idEfector + ',\'' + ag.Organizacion + '\',\'' + ag.TipoEfector + '\',\'' + ag.DescTipoEfector +
+//             '\',\'' + ag.idAgenda + '\',\'' + ag.FechaAgenda + '\',\'' + ag.HoraAgenda + '\',\'' + ag.estadoAgenda +
+//             '\',' + ag.numeroBloque + ',\'' + ag.idTurno + '\',\'' + ag.tipoPrestacion + '\',\'' + moment().format('YYYYMMDD HH:mm') + '\') ';
+//         await executeQuery(queryInsert);
 
-    } catch (error) {
-        return (error);
-    }
-}
+//     } catch (error) {
+//         return (error);
+//     }
+// }
 
 /**
  * @param request sql request object
@@ -475,6 +191,13 @@ async function eliminaAgenda(id_agenda: string) {
     return await result.query(query);
 }
 
+async function eliminaTurno(id_turno: string, id_agenda: string) {
+    const result = new sql.Request(poolTurnos);
+    // let query = `DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE ` + parameteriseQueryForIn(result, 'idTurno', 'idTurno', sql.NVarChar, turnos);
+    let query = `DELETE FROM ${configPrivate.conSqlPecas.table.pecasTable} WHERE idAgenda='${id_agenda}' and idTurno='${id_turno}'`;
+    return await result.query(query);
+}
+
 const orgCache = {};
 async function getEfector(idOrganizacion: any) {
     if (orgCache[idOrganizacion]) {
@@ -488,7 +211,6 @@ async function getEfector(idOrganizacion: any) {
         return null;
     }
 }
-
 function calcularEdad(fechaNacimiento) {
     let edad: any;
     const fechaActual: Date = new Date();
@@ -538,14 +260,12 @@ function calcularEdad(fechaNacimiento) {
     }
     return edad;
 }
-
 function organizacionesExcluidas() {
     let organizaciones = [];
     const medicoIntegral = '5a5e3f7e0bd5677324737244';
     organizaciones.push({ 'organizacion._id': { $ne: mongoose.Types.ObjectId(medicoIntegral) } });
     return organizaciones;
 }
-
 async function executeQuery(query: any) {
     try {
         query += ' select SCOPE_IDENTITY() as id';
@@ -554,11 +274,9 @@ async function executeQuery(query: any) {
             return result.recordset[0].id;
         }
     } catch (err) {
-        // console.log('err ', err);
-        // let jsonWrite = fs.appendFileSync(outputFile, query + '\r', {
-        //     encoding: 'utf8'
-        // });
-        Logger.log(userScheduler, 'scheduler', 'insert', query);
+
+        // Ojo falta reemplazar los las KEY del archivo final de configuraciones para logs.
+        await log(logRequest, 'andes:pecas:bi', null, 'SQLOperation', err, null);
         return err;
     }
 }
