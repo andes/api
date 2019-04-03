@@ -14,6 +14,7 @@ const router = express.Router();
 /**
  * Get agendas disponibles a partir de un conceptId
  * Filtrando los bloques con ese tipo de prestación y turnos de acceso directo disponibles
+ * y solo devolviendo una agenda por profesional
  */
 
 router.get('/agendasDisponibles', async (req: any, res, next) => {
@@ -36,15 +37,19 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
         matchAgendas['tipoPrestaciones.conceptId'] = req.query.prestacion;
     }
     pipelineAgendas.push({ $match: matchAgendas });
-    pipelineAgendas.push({ $unwind: '$bloques' });
-    pipelineAgendas.push({ $match: { $expr: { $or: [{ $gt: ['$bloques.restantesProgramados', 0] }, { $gt: ['$bloques.restantesDelDia', 0] }] } } });
-    pipelineAgendas.push({ $unwind: '$bloques.tipoPrestaciones' });
-    pipelineAgendas.push({ $match: { 'bloques.tipoPrestaciones.conceptId': req.query.prestacion } });
+    // Las siguientes dos operaciones del aggregate son para filtrar solo 1 agenda por profesional
+    pipelineAgendas.push({ $group: { _id: '$profesionales', resultado: { $push: '$$ROOT' } } });
+    pipelineAgendas.push({ $project: { resultado: { $arrayElemAt: ['$resultado', 0] }, _id: 0 } });
 
-    console.log('pipelineAgendas ', JSON.stringify(pipelineAgendas));
+    pipelineAgendas.push({ $unwind: '$resultado' });
+    pipelineAgendas.push({ $unwind: '$resultado.bloques' });
+    pipelineAgendas.push({ $match: { $expr: { $or: [{ $gt: ['$resultado.bloques.restantesProgramados', 0] }, { $gt: ['$resultado.bloques.restantesDelDia', 0] }] } } });
+    pipelineAgendas.push({ $unwind: '$resultado.bloques.tipoPrestaciones' });
+    pipelineAgendas.push({ $match: { 'resultado.bloques.tipoPrestaciones.conceptId': req.query.prestacion } });
+
     try {
         let prestaciones = await toArray(agenda.aggregate(pipelineAgendas).cursor({}).exec());
-        res.json(prestaciones);
+        res.json(prestaciones.map(elem => { return elem.resultado; }));
     } catch (err) {
         return err;
     }
