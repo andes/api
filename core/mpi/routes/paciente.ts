@@ -247,7 +247,7 @@ router.get('/pacientes/buscarDocumento/', async (req, res, next) => {
     //     return next(403);
     // }
     let queryObject = req.query;
-    if (queryObject && queryObject.sexo && queryObject.stringScan && queryObject.documento && queryObject.fechaNacimiento && queryObject.nombre && queryObject.apellido) {
+    if (queryObject && queryObject.sexo && queryObject.scan && queryObject.documento && queryObject.fechaNacimiento && queryObject.nombre && queryObject.apellido) {
         queryObject.escaneado = true;
         queryObject.type = 'simplequery';
         try {
