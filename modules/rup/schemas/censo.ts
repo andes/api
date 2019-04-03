@@ -16,7 +16,8 @@ export let schema = new mongoose.Schema({
             existencia24: Number,
             ingresoEgresoDia: Number,
             pacientesDia: Number,
-            disponibles24: Number
+            disponibles24: Number,
+            diasEstada: Number
         }
     }]
 });

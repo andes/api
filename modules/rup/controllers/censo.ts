@@ -95,7 +95,8 @@ export async function completarResumenDiario(listadoCenso, unidad, fecha, idOrga
             existencia24: 0,
             ingresoEgresoDia: 0,
             pacientesDia: 0,
-            disponibles24: 0
+            disponibles24: 0,
+            diasEstada: 0
             //            disponibles0: 0
         };
         if (listadoCenso && listadoCenso.length > 0) {
@@ -131,6 +132,11 @@ export async function completarResumenDiario(listadoCenso, unidad, fecha, idOrga
                         (listadoCenso[indice].censo['egreso'] !== '' || listadoCenso[indice].censo['esPaseA'])) {
                         resumenCenso.ingresoEgresoDia += 1;
                     }
+                    if (listadoCenso[indice].censo['diasEstada']) {
+                        resumenCenso.diasEstada += listadoCenso[indice].censo['diasEstada'];
+                    }
+
+
                 }
             });
             resumenCenso.existencia24 = resumenCenso.existencia24 -
@@ -324,9 +330,22 @@ export function completarUnCenso(unCenso, indice, fecha, idUnidadOrganizativa, C
     ingresoEgreso[indice]['esIngreso'] = esIngreso(unCenso.pases, CamaCenso.ultimoEstado, fecha, idUnidadOrganizativa);
     ingresoEgreso[indice]['esPaseDe'] = esPaseDe(unCenso.pases, CamaCenso.ultimoEstado, fecha, idUnidadOrganizativa);
     ingresoEgreso[indice]['esPaseA'] = esPaseA(unCenso.pases, CamaCenso.ultimoEstado, fecha, idUnidadOrganizativa);
+    ingresoEgreso[indice]['diasEstada'] = getDiasEstada(internacion);
+
     return ingresoEgreso[indice];
 }
+function getDiasEstada(internacion) {
+    let registros = internacion.ejecucion.registros;
+    let egresoExiste = registros.find(registro => registro.concepto.conceptId === '58000006');
+    if (egresoExiste) {
+        if (egresoExiste.valor.InformeEgreso.diasDeEstada) {
+            return egresoExiste.valor.InformeEgreso.diasDeEstada;
 
+        }
+    }
+    return 0;
+
+}
 function esIngreso(pases, movimientoActual, fecha, idUnidadOrganizativa) {
     let ultimoIndice = -1;
     let bandera = true;

@@ -71,6 +71,7 @@ export class DocumentoCensoMensual {
                  <td>${censo.ingresoEgresoDia}</td>
                  <td>${censo.pacientesDia}</td>
                   <td>${censo.disponibles24}</td>
+                  <td>${censo.diasEstada}</td>
                   </tr>`;
             }
             let filaTotal = '';
@@ -87,6 +88,7 @@ export class DocumentoCensoMensual {
                      <td><strong>${ censoTot.ingresoEgresoDia}</strong></td>
                      <td><strong>${ censoTot.pacientesDia}</strong></td>
                      <td><strong>${ censoTot.disponibles24}</strong></td>
+                     <td><strong>${ censoTot.diasEstada}</strong></td>
                  </tr>`;
 
             let filaResumen = '';
@@ -99,6 +101,7 @@ export class DocumentoCensoMensual {
                     <td>${ resumen.mortHosp}</td>
                     <td>${ resumen.promPer}</td>
                     <td>${ resumen.giroCama}</td>
+                    <td>${ resumen.promDiasEstada}</td>
                     </tr>`;
             }
 
