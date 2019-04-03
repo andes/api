@@ -1,4 +1,5 @@
 import * as mongoose from 'mongoose';
+import { AuditPlugin } from '@andes/mongoose-plugin-audit';
 
 const schema = new mongoose.Schema({
     usuario: Number,
@@ -16,8 +17,12 @@ const schema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: 'organizacion'
         },
-        permisos: [String]
+        permisos: [String],
+        activo: {
+            type: Boolean,
+            default: true
+        }
     }]
 });
-
+schema.plugin(AuditPlugin);
 export let authUsers = mongoose.model('authUsers', schema, 'authUsers');

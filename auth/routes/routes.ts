@@ -12,6 +12,22 @@ const shiroTrie = require('shiro-trie');
 const router = express.Router();
 
 
+router.put('/estadoPermisos/:username', Auth.authenticate(), async (req, res, next) => {
+    let user: any = await authUsers.findOne({ usuario: req.params.username });
+    if (user) {
+        try {
+            let organizacion = user.organizaciones.find(x => x._id.toString() === req.body.idOrganizacion.toString());
+            organizacion.activo = !organizacion.activo;
+            let obj = new authUsers(user);
+            Auth.audit(obj, req);
+            await obj.save();
+            return res.json(organizacion);
+        } catch (err) {
+            return next(err);
+        }
+    }
+});
+
 /**
  * Obtiene el user de la session
  * @get /api/auth/sesion
@@ -37,7 +53,9 @@ router.get('/organizaciones', Auth.authenticate(), (req, res, next) => {
         if (err) {
             return next(err);
         }
-        const organizaciones = user.organizaciones.map((item) => {
+        const organizacionesFiltradas = user.organizaciones.filter(x => x.activo === true);
+
+        const organizaciones = organizacionesFiltradas.map((item) => {
             if ((req as any).query.admin) {
                 const shiro = shiroTrie.new();
                 shiro.add(item.permisos);

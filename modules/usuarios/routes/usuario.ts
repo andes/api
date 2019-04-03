@@ -4,13 +4,13 @@ import * as configPrivate from '../../../config.private';
 import * as ldapjs from 'ldapjs';
 // Routes
 const router = express.Router();
-// Services
-import { Logger } from '../../../utils/logService';
 // Schemas
 import { authUsers } from '../../../auth/schemas/permisos';
 // imports
 import { Auth } from '../../../auth/auth.class';
 import { EventCore } from '@andes/event-bus';
+import { log } from '@andes/log';
+import { logKeys } from '../../../config';
 // Constantes
 const isReachable = require('is-reachable');
 
@@ -23,22 +23,17 @@ router.post('/alta', (req, res, next) => {
     if (!Auth.check(req, 'usuarios:post')) {
         return next(403);
     }
-    const data = new authUsers(req.body);
+    let data = new authUsers(req.body);
+    Auth.audit(data, req);
     data.save((err) => {
         if (err) {
+            log(req, logKeys.usuarioCreateError.key, null, logKeys.usuarioCreateError.operacion, data);
             return next(err);
         }
-        Logger.log(req, 'usuarios', 'insert', {
-            accion: 'Crear Usuario',
-            ruta: req.url,
-            method: req.method,
-            data,
-            err: err || false
-        });
         res.json(data);
 
         EventCore.emitAsync('usuarios:create', data);
-
+        log(req, logKeys.usuarioCreate.key, null, logKeys.usuarioCreate.operacion, data);
     });
 });
 
@@ -59,19 +54,15 @@ router.put('/:id', (req, res, next) => {
             resultado.apellido = req.body.apellido;
             // [TODO] verificar permisos de organizacion
             resultado.organizaciones = req.body.organizaciones;
+            Auth.audit(resultado, req);
             resultado.save((err) => {
                 if (err) {
+                    log(req, logKeys.usuarioUpdateError.key, null, logKeys.usuarioUpdateError.operacion, resultado);
                     return next(err);
                 }
-                Logger.log(req, 'usuarios', 'update', {
-                    accion: 'Crear Usuario',
-                    ruta: req.url,
-                    method: req.method,
-                    data: resultado,
-                    err: err || false
-                });
                 res.json(resultado);
                 EventCore.emitAsync('usuarios:update', resultado);
+                log(req, logKeys.usuarioUpdate.key, null, logKeys.usuarioUpdate.operacion, resultado);
             });
         } else {
             return next('not_user');
@@ -100,6 +91,34 @@ router.get('/:dni', (req, res, next) => {
     }).catch((err) => {
         return next(err);
     });
+});
+
+/**
+* Devuelve los permisos del usuario cuyo nombre se pasa por parámetro (dni) para una organización en particular (idOrganizacion).
+* Devuelve vacío si no encuentra permisos para el usuario y organización
+* @method GET
+*/
+router.get('/dniOrg/?:dni', (req, res, next) => {
+    if (!Auth.check(req, 'usuarios:get')) {
+        return next(403);
+    }
+    let query = {
+        nombre: req.query.dni,
+        'organizaciones._id': req.query.idOrganizacion
+    };
+    let project = { 'organizaciones._id.$': req.query.idOrganizacion };
+
+    try {
+        authUsers.find(query, project).then((res2: any) => {
+            if (res2[0]) {
+                res.json(res2[0].organizaciones[0].permisos);
+            } else {
+                res.json([]); // mando vacío porque el usuario no tiene la organización (sin permisos para esta organización)
+            }
+        });
+    } catch (err) {
+        return next(err);
+    }
 });
 
 /**
