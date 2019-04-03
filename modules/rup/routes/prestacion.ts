@@ -12,11 +12,8 @@ import { snomedModel } from '../../../core/term/schemas/snomed';
 import * as camasController from './../controllers/cama';
 import { parseDate } from './../../../shared/parse';
 import { EventCore } from '@andes/event-bus';
-import { facturacionAutomatica } from './../../facturacionAutomatica/controllers/facturacionAutomatica';
 
 const router = express.Router();
-import async = require('async');
-
 
 /**
  * Trae todas las prestaciones con ambitoOrigen = internacion, tambien solo las prestaciones
@@ -356,7 +353,7 @@ router.get('/prestaciones/solicitudes', (req, res, next) => {
 });
 
 router.get('/prestaciones/:id*?', async (req, res, next) => {
-
+    console.log("Params presta: ", req.params);
     if (req.params.id) {
         const query = Prestacion.findById(req.params.id);
         query.exec((err, data) => {
@@ -464,6 +461,10 @@ router.get('/prestaciones/:id*?', async (req, res, next) => {
             query.limit(parseInt(req.query.limit, 10));
         }
 
+        if (req.query.id) {
+            query.where('_id').equals(req.query.id);
+        }
+
         query.exec((err, data) => {
             if (err) {
                 return next(err);
@@ -562,10 +563,8 @@ router.patch('/prestaciones/:id', (req, res, next) => {
 
             if (req.body.estado && req.body.estado.tipo === 'validada') {
 
-                /* Sacar esto y armar todo desde el microservicio pasando solo la prestación */
-                // let factura = await facturacionAutomatica(prestacion);
-
-                // EventCore.emitAsync('facturacion:factura:create', factura);
+                /* Este evento habilita la facturación automática desde RUP */
+                // EventCore.emitAsync('facturacion:factura:create', data);
 
                 EventCore.emitAsync('rup:prestacion:validate', data);
             }
