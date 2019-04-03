@@ -62,7 +62,8 @@ export const modules = {
         active: true,
         path: './core/mpi/routes',
         route: '/core/mpi',
-        middleware: appMiddleware
+        // TODO activar middleware de autenticación
+        // middleware: appMiddleware
     },
     auditoria: {
         active: true,

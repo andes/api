@@ -10,6 +10,7 @@ import { ElasticSync } from '../../../utils/elasticSync';
 import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
 import { EventCore } from '@andes/event-bus';
+import { userScheduler } from '../../../config.private';
 
 
 const logD = debug('paciente-controller');
@@ -175,6 +176,98 @@ router.get('/pacientes/inactivos/', async (req, res, next) => {
 });
 
 
+
+
+// Search using elastic search
+router.get('/pacientes', (req, res, next) => {
+    if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
+        return next(403);
+    }
+
+    controller.matching(req.query).then(result => {
+        res.send(result);
+    }).catch(error => {
+        return next(error);
+    });
+});
+
+/**
+ * @swagger
+ * /pacientes/{id}:
+ *   get:
+ *     tags:
+ *       - Paciente
+ *     description: Busca un paciente a partir de los datos de un DNI escaneado en ANDES, si el paciente no existe lo valida y guarda antes de responder con los datos del paciente
+ *     summary: Busca un paciente a partir de los datos de un DNI escaneado en ANDES, si el paciente no existe lo valida y guarda antes de responder con los datos del paciente
+ *     consumes:
+ *       - application/json
+ *     produces:
+ *       - application/json
+ *     parameters:
+ *       - name: documento
+ *         in: query
+ *         description: DNI de un paciente
+ *         required: true
+ *         type: string
+ *       - name: nombre
+ *         in: query
+ *         description: nombre de un paciente
+ *         required: true
+ *         type: string
+ *       - name: apellido
+ *         in: query
+ *         description: apellido de un paciente
+ *         required: true
+ *         type: string
+ *       - name: fechaNacimiento
+ *         in: query
+ *         description: fecha de nacimiento de un paciente
+ *         required: true
+ *         type: string
+ *       - name: sexo
+ *         in: query
+ *         description: sexo de un paciente
+ *         required: true
+ *         type: string
+ *       - name: stringScan
+ *         in: query
+ *         description: QR del DNI de un paciente parseado
+ *         required: true
+ *         type: string
+ *
+ *     responses:
+ *       200:
+ *         description: Un objeto paciente
+ *         schema:
+ *           $ref: '#/definitions/paciente'
+ */
+router.get('/pacientes/buscarDocumento/', async (req, res, next) => {
+    // TODO VALIDAR PERMISOS TOTEM
+    // if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
+    //     return next(403);
+    // }
+    let queryObject = req.query;
+    if (queryObject && queryObject.sexo && queryObject.stringScan && queryObject.documento && queryObject.fechaNacimiento && queryObject.nombre && queryObject.apellido) {
+        queryObject.escaneado = true;
+        queryObject.type = 'simplequery';
+        try {
+            let matchingResult = await controller.matching(queryObject);
+            if (matchingResult.length) {
+                res.send(matchingResult);
+            } else {
+                queryObject.estado = 'validado';
+                queryObject.genero = queryObject.sexo;
+                let nuevoPaciente = await controller.createPaciente(queryObject, userScheduler);
+                res.json([nuevoPaciente]);
+            }
+        } catch (error) {
+            return next(error);
+        }
+    } else {
+        return next('Parámetros de búsqueda incorrectos');
+    }
+});
+
 // Simple mongodb query by ObjectId --> better performance
 router.get('/pacientes/:id', (req, res, next) => {
     // busca en pacienteAndes y en pacienteMpi
@@ -196,20 +289,6 @@ router.get('/pacientes/:id', (req, res, next) => {
     });
 
 });
-
-// Search using elastic search
-router.get('/pacientes', (req, res, next) => {
-    if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
-        return next(403);
-    }
-
-    controller.matching(req.query).then(result => {
-        res.send(result);
-    }).catch(error => {
-        return next(error);
-    });
-});
-
 
 router.put('/pacientes/mpi/:id', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:putMpi')) {
