@@ -3,20 +3,21 @@ import { toArray } from '../../../../utils/utils';
 import { Pecas } from '../schemas/pecas';
 
 export async function pecasExport(start, end) {
-    const pipeline = [{
-        $match: {
-            updatedAt: {
-                $lt: new Date(end),
-                $gte: new Date(start)
-            },
-            bloques: {
-                $ne: null
-            },
-            'bloques.turnos': {
-                $ne: null
+    const pipeline = [
+        {
+            $match: {
+                updatedAt: {
+                    $lt: new Date(end),
+                    $gte: new Date(start)
+                },
+                bloques: {
+                    $ne: null
+                },
+                'bloques.turnos': {
+                    $ne: null
+                }
             }
-        }
-    },
+        },
         {
             $lookup: {
                 from: 'organizacion',
@@ -128,34 +129,36 @@ export async function pecasExport(start, end) {
             $addFields: {
                 edadOBject: {
                     $switch: {
-                        branches: [{
-                            case: {
-                                $eq: ['$_bloques.turnos.paciente.edad.diffAnios', null]
+                        branches: [
+                            {
+                                case: {
+                                    $eq: ['$_bloques.turnos.paciente.edad.diffAnios', null]
+                                },
+                                then: {
+                                    valor: null,
+                                    unidad: null,
+                                    CodRangoEdad: null,
+                                    RangoEdad: null
+                                }
                             },
-                            then: {
-                                valor: null,
-                                unidad: null,
-                                CodRangoEdad: null,
-                                RangoEdad: null
-                            }
-                        },
                             {
                                 case: {
                                     $ne: ['$_bloques.turnos.paciente.edad.diffAnios', 0]
                                 },
                                 then: {
                                     $switch: {
-                                        branches: [{
-                                            case: {
-                                                $lte: ['$_bloques.turnos.paciente.edad.diffAnios', 4]
+                                        branches: [
+                                            {
+                                                case: {
+                                                    $lte: ['$_bloques.turnos.paciente.edad.diffAnios', 4]
+                                                },
+                                                then: {
+                                                    valor: '$_bloques.turnos.paciente.edad.diffAnios',
+                                                    unidad: 'A',
+                                                    CodRangoEdad: 2,
+                                                    RangoEdad: '[1 a 4]'
+                                                }
                                             },
-                                            then: {
-                                                valor: '$_bloques.turnos.paciente.edad.diffAnios',
-                                                unidad: 'A',
-                                                CodRangoEdad: 2,
-                                                RangoEdad: '[1 a 4]'
-                                            }
-                                        },
                                             {
                                                 case: {
                                                     $and: [{
@@ -269,12 +272,13 @@ export async function pecasExport(start, end) {
                 Efector: '$organizacion.nombre',
                 TipoEfector: {
                     $switch: {
-                        branches: [{
-                            case: {
-                                $eq: ['$organizacion.tipoEstablecimiento.nombre', 'Centro de Salud']
+                        branches: [
+                            {
+                                case: {
+                                    $eq: ['$organizacion.tipoEstablecimiento.nombre', 'Centro de Salud']
+                                },
+                                then: '1'
                             },
-                            then: '1'
-                        },
                             {
                                 case: {
                                     $eq: ['$organizacion.tipoEstablecimiento.nombre', 'Hospital']
@@ -328,12 +332,13 @@ export async function pecasExport(start, end) {
                 estadoTurno: '$_bloques.turnos.estado',
                 tipoTurno: {
                     $switch: {
-                        branches: [{
-                            case: {
-                                $eq: ['$_bloques.turnos.tipoTurno', 'profesional']
+                        branches: [
+                            {
+                                case: {
+                                    $eq: ['$_bloques.turnos.tipoTurno', 'profesional']
+                                },
+                                then: 'autocitado'
                             },
-                            then: 'autocitado'
-                        },
                             {
                                 case: {
                                     $eq: ['$_bloques.turnos.tipoTurno', 'gestion']
@@ -342,13 +347,13 @@ export async function pecasExport(start, end) {
                             },
                             {
                                 case: {
-                                    eq: ['$_bloques.turnos.tipoTurno', 'delDia']
+                                    $eq: ['$_bloques.turnos.tipoTurno', 'delDia']
                                 },
                                 then: 'delDia'
                             },
                             {
                                 case: {
-                                    eq: ['$_bloques.turnos.tipoTurno', 'programado']
+                                    $eq: ['$_bloques.turnos.tipoTurno', 'programado']
                                 },
                                 then: 'programado'
                             },
@@ -358,12 +363,13 @@ export async function pecasExport(start, end) {
                 },
                 sobreturno: {
                     $switch: {
-                        branches: [{
-                            case: {
-                                $eq: ['$_bloques.turnos.sobreturno', true]
+                        branches: [
+                            {
+                                case: {
+                                    $eq: ['$_bloques.turnos.sobreturno', true]
+                                },
+                                then: 'SI'
                             },
-                            then: 'SI'
-                        },
                             {
                                 case: {
                                     $eq: ['$_bloques.turnos.sobreturno', false]
@@ -394,12 +400,13 @@ export async function pecasExport(start, end) {
                 },
                 Tipodeconsulta: {
                     $switch: {
-                        branches: [{
-                            case: {
-                                $eq: ['$codificacion0.codificacionAuditoria.codigo', null]
+                        branches: [
+                            {
+                                case: {
+                                    $eq: ['$codificacion0.codificacionAuditoria.codigo', null]
+                                },
+                                then: null
                             },
-                            then: null
-                        },
                             {
                                 case: {
                                     $eq: ['$codificacion0.primeraVez', true]
@@ -418,12 +425,13 @@ export async function pecasExport(start, end) {
                 },
                 estadoTurnoAuditoria: {
                     $switch: {
-                        branches: [{
-                            case: {
-                                $eq: ['$_bloques.turnos.estado', 'disponible']
+                        branches: [
+                            {
+                                case: {
+                                    $eq: ['$_bloques.turnos.estado', 'disponible']
+                                },
+                                then: 'Disponible'
                             },
-                            then: 'Disponible'
-                        },
                             {
                                 case: {
                                     $eq: ['$_bloques.turnos.estado', 'suspendido']
@@ -437,12 +445,13 @@ export async function pecasExport(start, end) {
                                 then: {
 
                                     $switch: {
-                                        branches: [{
-                                            case: {
-                                                $ne: ['$codificacion0.codificacionAuditoria.codigo', null]
+                                        branches: [
+                                            {
+                                                case: {
+                                                    $ne: ['$codificacion0.codificacionAuditoria.codigo', null]
+                                                },
+                                                then: 'Auditado'
                                             },
-                                            then: 'Auditado'
-                                        },
                                             {
                                                 case: {
                                                     $eq: ['$_bloques.turnos.asistencia', 'noAsistio']
@@ -492,9 +501,10 @@ export async function pecasExport(start, end) {
                 ConsC2: {
                     $cond: {
                         if: {
-                            $and: [{
-                                $ne: ['$codificacion0.codificacionAuditoria.codigo', null]
-                            },
+                            $and: [
+                                {
+                                    $ne: ['$codificacion0.codificacionAuditoria.codigo', null]
+                                },
                                 {
                                     $eq: ['$codificacion0.codificacionAuditoria.c2', true]
                                 },
@@ -527,7 +537,6 @@ export async function pecasExport(start, end) {
                     }
                 },
                 tipoPrestacion: '$prestacion.term',
-
                 DNI: {
                     $cond: {
                         if: {
@@ -535,7 +544,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$_bloques.turnos.paciente.documento'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -551,7 +560,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$_bloques.turnos.paciente.apellido'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -567,7 +576,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$_bloques.turnos.paciente.nombre'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -583,7 +592,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$_HC.nroCarpeta'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -594,12 +603,13 @@ export async function pecasExport(start, end) {
                 },
                 CodSexo: {
                     $switch: {
-                        branches: [{
-                            case: {
-                                $eq: ['$_bloques.turnos.paciente.sexo', null]
+                        branches: [
+                            {
+                                case: {
+                                    $eq: ['$_bloques.turnos.paciente.sexo', null]
+                                },
+                                then: null
                             },
-                            then: null
-                        },
                             {
                                 case: {
                                     $eq: ['$_bloques.turnos.paciente.sexo', 'femenino']
@@ -623,7 +633,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$_bloques.turnos.paciente.sexo'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -633,9 +643,23 @@ export async function pecasExport(start, end) {
                     }
                 },
                 FechaNacimiento: {
-                    $dateToString: {
-                        format: '%Y%m%d',
-                        date: '$horaInicio'
+                    $cond: {
+                        if: {
+                            $ne: [{
+                                $in: [{
+                                    $type: '$_bloques.turnos.paciente.fechaNacimiento'
+                                },
+                                ['missing', 'null', 'undefined']
+                                ]
+                            }, true]
+                        },
+                        then: {
+                            $dateToString: {
+                                format: '%Y%m%d',
+                                date: '$_bloques.turnos.paciente.fechaNacimiento'
+                            }
+                        },
+                        else: null
                     }
                 },
                 Edad: '$edadOBject.valor',
@@ -649,7 +673,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$_bloques.turnos.paciente.obraSocial.codigo'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -665,7 +689,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$_bloques.turnos.paciente.obraSocial.financiador'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -681,7 +705,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$_bloques.turnos.paciente._id'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -697,7 +721,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$_bloques.turnos.paciente.telefono'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -736,7 +760,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$_bloques.turnos.asistencia'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -761,7 +785,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion0.codificacionProfesional.cie10.codigo'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -777,7 +801,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion0.codificacionProfesional.cie10.nombre'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -793,7 +817,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion0.codificacionAuditoria.codigo'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -809,7 +833,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion0.codificacionAuditoria.nombre'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -825,7 +849,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion0.codificacionProfesional.snomed.semanticTag'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -841,7 +865,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion0.codificacionProfesional.snomed.conceptId'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -857,7 +881,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion0.codificacionProfesional.snomed.term'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -868,12 +892,13 @@ export async function pecasExport(start, end) {
                 },
                 primeraVez1: {
                     $switch: {
-                        branches: [{
-                            case: {
-                                $eq: ['$codificacion0.primeraVez', null]
+                        branches: [
+                            {
+                                case: {
+                                    $eq: ['$codificacion0.primeraVez', null]
+                                },
+                                then: null
                             },
-                            then: null
-                        },
                             {
                                 case: {
                                     $eq: ['$codificacion0.primeraVez', true]
@@ -897,7 +922,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion1.codificacionProfesional.cie10.codigo'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -913,7 +938,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion1.codificacionProfesional.cie10.nombre'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -929,7 +954,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion1.codificacionAuditoria.codigo'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -945,7 +970,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion1.codificacionAuditoria.nombre'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -961,7 +986,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion1.codificacionProfesional.snomed.semanticTag'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -977,7 +1002,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion1.codificacionProfesional.snomed.conceptId'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -993,7 +1018,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion1.codificacionProfesional.snomed.term'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1004,12 +1029,13 @@ export async function pecasExport(start, end) {
                 },
                 primeraVez2: {
                     $switch: {
-                        branches: [{
-                            case: {
-                                $eq: ['$codificacion1.primeraVez', null]
+                        branches: [
+                            {
+                                case: {
+                                    $eq: ['$codificacion1.primeraVez', null]
+                                },
+                                then: null
                             },
-                            then: null
-                        },
                             {
                                 case: {
                                     $eq: ['$codificacion1.primeraVez', true]
@@ -1033,7 +1059,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion2.codificacionProfesional.cie10.codigo'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1049,7 +1075,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion2.codificacionProfesional.cie10.nombre'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1065,7 +1091,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion2.codificacionAuditoria.codigo'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1081,7 +1107,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion2.codificacionAuditoria.nombre'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1097,7 +1123,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion2.codificacionProfesional.snomed.semanticTag'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1113,7 +1139,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion2.codificacionProfesional.snomed.conceptId'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1129,7 +1155,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$codificacion2.codificacionProfesional.snomed.term'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
@@ -1140,12 +1166,13 @@ export async function pecasExport(start, end) {
                 },
                 primeraVez3: {
                     $switch: {
-                        branches: [{
-                            case: {
-                                $eq: ['$codificacion2.primeraVez', null]
+                        branches: [
+                            {
+                                case: {
+                                    $eq: ['$codificacion2.primeraVez', null]
+                                },
+                                then: null
                             },
-                            then: null
-                        },
                             {
                                 case: {
                                     $eq: ['$codificacion2.primeraVez', true]
@@ -1185,7 +1212,7 @@ export async function pecasExport(start, end) {
                                 $in: [{
                                     $type: '$espacioFisico.servicio.nombre'
                                 },
-                            ['missing', 'null', 'undefined']
+                                ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
