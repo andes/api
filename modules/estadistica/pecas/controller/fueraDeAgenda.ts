@@ -284,7 +284,7 @@ async function auxiliar(pres: any) {
         prestacion.telefono = pres.paciente && pres.paciente.telefono ? pres.paciente.telefono : '';
         let queryInsert = 'INSERT INTO ' + configPrivate.conSqlPecas.table.fueraAgenda +
             '(idEfector, Efector, TipoEfector, DescTipoEfector, IdZona, Zona, SubZona, idEfectorSuperior, EfectorSuperior, AreaPrograma, ' +
-            'FechaConsulta, Periodo, estadoAuditoria, Tipodeconsulta, Principal, ConsC2, ConsObst, tipoPrestacion, DNI, Apellido, Nombres, ' +
+            'FechaConsulta, Periodo, Tipodeconsulta, estadoAuditoria, Principal, ConsC2, ConsObst, tipoPrestacion, DNI, Apellido, Nombres, ' +
             'HC, CodSexo, Sexo, FechaNacimiento, Edad, UniEdad, CodRangoEdad, RangoEdad, IdObraSocial, ObraSocial, IdPaciente, telefono, ' +
             'idBarrio, Barrio, idLocalidad, Localidad, IdDpto, Departamento, IdPcia, Provincia, IdNacionalidad, Nacionalidad, Calle, Altura,' +
             'Piso, Depto, Manzana, Longitud, Latitud, Peso, Talla, TAS, TAD, IMC, RCVG, Diag1CodigoOriginal, Desc1DiagOriginal,' +
