@@ -38,17 +38,20 @@ export async function consultaPecas(done, start, end) {
     try {
         poolTurnos = await new sql.ConnectionPool(config).connect();
     } catch (ex) {
+        console.log('error al conecatr a sql');
         return (ex);
     }
 
     try {
         // Eliminamos los registros temporales de PECAS
+        console.log('inicia proceso');
         await Pecas.remove({});
         // Exportamos los registros directamente desde mongodb
         await pecasExport(start, end);
         let pecasData: any = await Pecas.find({}).exec();
         let insertsArray = [];
         let cantidadRegistros = pecasData.length;
+        console.log('cantidad de registros ', cantidadRegistros);
         // Realizamos le proceso de insertado a pecas SQL
         if (cantidadRegistros > 0) {
             for (let i = 0; i < cantidadRegistros; i++) {
@@ -59,6 +62,7 @@ export async function consultaPecas(done, start, end) {
                 insertsArray.push(auxiliar(doc, idEfectorSips));
             }
             await Promise.all(insertsArray);
+            console.log('Finaliza el proceso');
             return (done());
         } else {
             return (done(null));
