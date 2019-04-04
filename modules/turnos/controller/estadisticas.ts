@@ -401,8 +401,8 @@ async function filtroPorCiudad(filtros) {
     const [andes, mpi] = await Promise.all([p1, p2]);
 
     const ubicacionesPaciente = {};
-    andes.forEach(paciente => { ubicacionesPaciente[paciente._id] = paciente.direccion[0]; });
-    mpi.forEach(paciente => { ubicacionesPaciente[paciente._id] = paciente.direccion[0]; });
+    andes.forEach(paciente => { ubicacionesPaciente[paciente._id] = paciente.direccion ? paciente.direccion[0] : null; });
+    mpi.forEach(paciente => { ubicacionesPaciente[paciente._id] = paciente.direccion ? paciente.direccion[0] : null; });
 
     const respuesta = {};
 
