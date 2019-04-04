@@ -38,17 +38,20 @@ export async function consultaPecas(done, start, end) {
     try {
         poolTurnos = await new sql.ConnectionPool(config).connect();
     } catch (ex) {
+        console.log('error al conecatr a sql');
         return (ex);
     }
 
     try {
         // Eliminamos los registros temporales de PECAS
+        console.log('inicia proceso');
         await Pecas.remove({});
         // Exportamos los registros directamente desde mongodb
         await pecasExport(start, end);
         let pecasData: any = await Pecas.find({}).exec();
         let insertsArray = [];
         let cantidadRegistros = pecasData.length;
+        console.log('cantidad de registros ', cantidadRegistros);
         // Realizamos le proceso de insertado a pecas SQL
         if (cantidadRegistros > 0) {
             for (let i = 0; i < cantidadRegistros; i++) {
@@ -59,6 +62,7 @@ export async function consultaPecas(done, start, end) {
                 insertsArray.push(auxiliar(doc, idEfectorSips));
             }
             await Promise.all(insertsArray);
+            console.log('Finaliza el proceso');
             return (done());
         } else {
             return (done(null));
@@ -70,47 +74,52 @@ export async function consultaPecas(done, start, end) {
 
 // castea cada turno asignado y lo inserta en la tabla Sql
 async function auxiliar(turno: any, idEfectorSips) {
+
+    // data checks
+    let fechaNac = turno.fechaNacimiento ? `'${turno.fechaNacimiento}'` : null;
+    let dni = turno.DNI !== '' ? turno.DNI : null;
+
+    let queryInsert = 'INSERT INTO ' + configPrivate.conSqlPecas.table.pecasTable +
+        '(idEfector, Efector, TipoEfector, DescTipoEfector, IdZona, Zona, SubZona, idEfectorSuperior, EfectorSuperior, AreaPrograma, ' +
+        'idAgenda, FechaAgenda, HoraAgenda, estadoAgenda, numeroBloque, turnosProgramados, turnosProfesional, turnosLlaves, turnosDelDia, ' +
+        'idTurno, estadoTurno, tipoTurno, sobreturno, FechaConsulta, HoraTurno, Periodo, Tipodeconsulta, estadoTurnoAuditoria, Principal, ConsC2, ConsObst, tipoPrestacion, ' +
+        'DNI, Apellido, Nombres, HC, CodSexo, Sexo, FechaNacimiento, Edad, UniEdad, CodRangoEdad, RangoEdad, IdObraSocial, ObraSocial, IdPaciente, telefono, ' +
+        'IdBarrio, Barrio, IdLocalidad, Localidad, IdDpto, Departamento, IdPcia, Provincia, IdNacionalidad, Nacionalidad, ' +
+        'Calle, Altura, Piso, Depto, Manzana, Longitud, Latitud, ' +
+        'Peso, Talla, TAS, TAD, IMC, RCVG, asistencia, reasignado, ' +
+        'Diag1CodigoOriginal, Desc1DiagOriginal, Diag1CodigoAuditado, Desc1DiagAuditado, SemanticTag1, SnomedConcept1, SnomedTerm1, primeraVez1, ' +
+        'Diag2CodigoOriginal, Desc2DiagOriginal, Diag2CodigoAuditado, Desc2DiagAuditado, SemanticTag2, SnomedConcept2, SnomedTerm2, primeraVez2, ' +
+        'Diag3CodigoOriginal, Desc3DiagOriginal, Diag3CodigoAuditado, Desc3DiagAuditado, SemanticTag3, SnomedConcept3, SnomedTerm3, primeraVez3, ' +
+        'Profesional, TipoProfesional, CodigoEspecialidad, Especialidad, CodigoServicio, Servicio, ' +
+        'codifica, turnosMobile, updated) ' +
+        'VALUES  (' + idEfectorSips + ',\'' + turno.Efector + '\',\'' + turno.TipoEfector + '\',\'' + turno.DescTipoEfector +
+        '\',' + turno.IdZona + ',' + turno.Zona + ',' + turno.SubZona + ',' + turno.idEfectorSuperior + ',\'' + turno.EfectorSuperior + '\',\'' + turno.AreaPrograma +
+        '\',\'' + turno.idAgenda + '\',\'' + turno.FechaAgenda + '\',\'' + turno.HoraAgenda + '\',\'' + turno.estadoAgenda +
+        '\',' + turno.numeroBloque + ',' + turno.turnosProgramados + ',' + turno.turnosProfesional + ',' + turno.turnosLlaves + ',' + turno.turnosDelDia +
+        ',\'' + turno.idTurno + '\',\'' + turno.estadoTurno + '\',\'' + turno.tipoTurno + '\',\'' + turno.sobreturno + '\',\'' + turno.FechaConsulta + '\',\'' + turno.HoraTurno + '\',\'' + turno.Periodo + '\',\'' + turno.Tipodeconsulta + '\',\'' + turno.estadoTurnoAuditoria + '\',\'' + turno.Principal +
+        '\',\'' + turno.ConsC2 + '\',\'' + turno.ConsObst + '\',\'' + turno.tipoPrestacion +
+        // DATOS PACIENTE
+        '\',' + dni + ',\'' + turno.Apellido + '\',\'' + turno.Nombres + '\',\'' + turno.HC + '\',\'' + turno.codSexo +
+        '\',\'' + turno.Sexo + '\',' + fechaNac + ',' + turno.Edad + ',\'' + turno.uniEdad + '\',\'' + turno.CodRangoEdad +
+        '\',\'' + turno.RangoEdad + '\',' + turno.IdObraSocial + ',\'' + turno.ObraSocial + '\',\'' + turno.IdPaciente + '\',\'' + turno.telefono +
+        '\',' + turno.IdBarrio + ',\'' + turno.Barrio + '\',' + turno.IdLocalidad +
+        ',\'' + turno.Localidad + '\',' + turno.IdDpto + ',\'' + turno.Departamento + '\',' + turno.IdPcia + ',\'' + turno.Provincia +
+        '\',' + turno.IdNacionalidad + ',\'' + turno.Nacionalidad + '\',\'' + turno.Calle + '\',\'' + turno.Altura + '\',\'' + turno.Piso +
+        '\',\'' + turno.Depto + '\',\'' + turno.Manzana + '\',\'' + turno.Longitud + '\',\'' + turno.Latitud +
+        '\',' + turno.Peso + ',' + turno.Talla + ',\'' + turno.TAS + '\',\'' + turno.TAD + '\',\'' + turno.IMC + '\',\'' + turno.RCVG +
+        // DATOS CONSULTA
+        '\',\'' + turno.asistencia + '\',\'' + turno.reasignado +
+        '\',\'' + turno.Diag1CodigoOriginal + '\',\'' + turno.Desc1DiagOriginal + '\',\'' + turno.Diag1CodigoAuditado + '\',\'' + turno.Desc1DiagAuditado +
+        '\',\'' + turno.semanticTag1 + '\',\'' + turno.conceptId1 + '\',\'' + turno.term1 + '\',' + turno.primeraVez1 +
+        ',\'' + turno.Diag2CodigoOriginal + '\',\'' + turno.Desc2DiagOriginal + '\',\'' + turno.Diag2CodigoAuditado + '\',\'' + turno.Desc2DiagAuditado +
+        '\',\'' + turno.semanticTag2 + '\',\'' + turno.conceptId2 + '\',\'' + turno.term2 + '\',' + turno.primeraVez2 +
+        ',\'' + turno.Diag3CodigoOriginal + '\',\'' + turno.Desc3DiagOriginal + '\',\'' + turno.Diag3CodigoAuditado + '\',\'' + turno.Desc3DiagAuditado +
+        '\',\'' + turno.semanticTag3 + '\',\'' + turno.conceptId3 + '\',\'' + turno.term3 + '\',' + turno.primeraVez3 +
+        ',\'' + turno.Profesional + '\',\'' + turno.TipoProfesional + '\',' + turno.CodigoEspecialidad + ',\'' + turno.Especialidad +
+        '\',' + turno.CodigoServicio + ',\'' + turno.Servicio + '\',\'' + turno.codifica + '\',' + turno.turnosMobile + ',\'' + moment().format('YYYYMMDD HH:mm') + '\') ';
     try {
-        // se verifica si existe el turno en sql
-        let queryInsert = 'INSERT INTO ' + configPrivate.conSqlPecas.table.pecasTable +
-            '(idEfector, Efector, TipoEfector, DescTipoEfector, IdZona, Zona, SubZona, idEfectorSuperior, EfectorSuperior, AreaPrograma, ' +
-            'idAgenda, FechaAgenda, HoraAgenda, estadoAgenda, numeroBloque, turnosProgramados, turnosProfesional, turnosLlaves, turnosDelDia, ' +
-            'idTurno, estadoTurno, tipoTurno, sobreturno, FechaConsulta, HoraTurno, Periodo, Tipodeconsulta, estadoTurnoAuditoria, Principal, ConsC2, ConsObst, tipoPrestacion, ' +
-            'DNI, Apellido, Nombres, HC, CodSexo, Sexo, FechaNacimiento, Edad, UniEdad, CodRangoEdad, RangoEdad, IdObraSocial, ObraSocial, IdPaciente, telefono, ' +
-            'IdBarrio, Barrio, IdLocalidad, Localidad, IdDpto, Departamento, IdPcia, Provincia, IdNacionalidad, Nacionalidad, ' +
-            'Calle, Altura, Piso, Depto, Manzana, Longitud, Latitud, ' +
-            'Peso, Talla, TAS, TAD, IMC, RCVG, asistencia, reasignado, ' +
-            'Diag1CodigoOriginal, Desc1DiagOriginal, Diag1CodigoAuditado, Desc1DiagAuditado, SemanticTag1, SnomedConcept1, SnomedTerm1, primeraVez1, ' +
-            'Diag2CodigoOriginal, Desc2DiagOriginal, Diag2CodigoAuditado, Desc2DiagAuditado, SemanticTag2, SnomedConcept2, SnomedTerm2, primeraVez2, ' +
-            'Diag3CodigoOriginal, Desc3DiagOriginal, Diag3CodigoAuditado, Desc3DiagAuditado, SemanticTag3, SnomedConcept3, SnomedTerm3, primeraVez3, ' +
-            'Profesional, TipoProfesional, CodigoEspecialidad, Especialidad, CodigoServicio, Servicio, ' +
-            'codifica, turnosMobile, updated) ' +
-            'VALUES  (' + '\'' + idEfectorSips + '\',\'' + turno.Efector + '\',\'' + turno.TipoEfector + '\',\'' + turno.DescTipoEfector +
-            '\',' + turno.IdZona + ',\'' + turno.Zona + '\',\'' + turno.SubZona + '\',' + turno.idEfectorSuperior + ',\'' + turno.EfectorSuperior + '\',\'' + turno.AreaPrograma +
-            '\',\'' + turno.idAgenda + '\',\'' + moment(turno.FechaAgenda).format('YYYYMMDD') + '\',\'' + turno.HoraAgenda + '\',\'' + turno.estadoAgenda +
-            '\',' + turno.numeroBloque + ',' + turno.turnosProgramados + ',' + turno.turnosProfesional + ',' + turno.turnosLlaves + ',' + turno.turnosDelDia +
-            ',\'' + turno.idTurno + '\',\'' + turno.estadoTurno + '\',\'' + turno.tipoTurno + '\',\'' + turno.sobreturno + '\',\'' + moment(turno.FechaConsulta).format('YYYYMMDD') + '\',\'' + turno.HoraTurno + '\',' + turno.Periodo + ',\'' + turno.Tipodeconsulta + '\',\'' + turno.estadoTurnoAuditoria + '\',\'' + turno.Principal +
-            '\',\'' + turno.ConsC2 + '\',\'' + turno.ConsObst + '\',\'' + turno.tipoPrestacion +
-            // DATOS PACIENTE
-            '\',' + turno.DNI + ',\'' + turno.Apellido + '\',\'' + turno.Nombres + '\',\'' + turno.HC + '\',\'' + turno.codSexo +
-            '\',\'' + turno.Sexo + '\',\'' + moment(turno.FechaNacimiento).format('YYYYMMDD') + '\',' + turno.Edad + ',\'' + turno.uniEdad + '\',\'' + turno.CodRangoEdad +
-            '\',\'' + turno.RangoEdad + '\',' + turno.IdObraSocial + ',\'' + turno.ObraSocial + '\',\'' + turno.IdPaciente + '\',\'' + turno.telefono +
-            '\',' + turno.IdBarrio + ',\'' + turno.Barrio + '\',' + turno.IdLocalidad +
-            ',\'' + turno.Localidad + '\',' + turno.IdDpto + ',\'' + turno.Departamento + '\',' + turno.IdPcia + ',\'' + turno.Provincia +
-            '\',' + turno.IdNacionalidad + ',\'' + turno.Nacionalidad + '\',\'' + turno.Calle + '\',\'' + turno.Altura + '\',\'' + turno.Piso +
-            '\',\'' + turno.Depto + '\',\'' + turno.Manzana + '\',\'' + turno.Longitud + '\',\'' + turno.Latitud +
-            '\',' + turno.Peso + ',' + turno.Talla + ',\'' + turno.TAS + '\',\'' + turno.TAD + '\',\'' + turno.IMC + '\',\'' + turno.RCVG +
-            // DATOS CONSULTA
-            '\',\'' + turno.asistencia + '\',\'' + turno.reasignado +
-            '\',\'' + turno.Diag1CodigoOriginal + '\',\'' + turno.Desc1DiagOriginal + '\',\'' + turno.Diag1CodigoAuditado + '\',\'' + turno.Desc1DiagAuditado +
-            '\',\'' + turno.semanticTag1 + '\',\'' + turno.conceptId1 + '\',\'' + turno.term1 + '\',' + turno.primeraVez1 +
-            ',\'' + turno.Diag2CodigoOriginal + '\',\'' + turno.Desc2DiagOriginal + '\',\'' + turno.Diag2CodigoAuditado + '\',\'' + turno.Desc2DiagAuditado +
-            '\',\'' + turno.semanticTag2 + '\',\'' + turno.conceptId2 + '\',\'' + turno.term2 + '\',' + turno.primeraVez2 +
-            ',\'' + turno.Diag3CodigoOriginal + '\',\'' + turno.Desc3DiagOriginal + '\',\'' + turno.Diag3CodigoAuditado + '\',\'' + turno.Desc3DiagAuditado +
-            '\',\'' + turno.semanticTag3 + '\',\'' + turno.conceptId3 + '\',\'' + turno.term3 + '\',' + turno.primeraVez3 +
-            ',\'' + turno.Profesional + '\',\'' + turno.TipoProfesional + '\',' + turno.CodigoEspecialidad + ',\'' + turno.Especialidad +
-            '\',' + turno.CodigoServicio + ',\'' + turno.Servicio + '\',\'' + turno.codifica + '\',' + turno.turnosMobile + ',\'' + moment().format('YYYYMMDD HH:mm') + '\') ';
-        return await executeQuery(queryInsert);
+        let resultado = await executeQuery(queryInsert);
+        return resultado;
     } catch (error) {
         await log(logRequest, 'andes:pecas:bi', null, 'insert', error, null);
         return (error);
@@ -274,7 +283,6 @@ async function executeQuery(query: any) {
             return result.recordset[0].id;
         }
     } catch (err) {
-
         // Ojo falta reemplazar los las KEY del archivo final de configuraciones para logs.
         await log(logRequest, 'andes:pecas:bi', null, 'SQLOperation', err, null);
         return err;
