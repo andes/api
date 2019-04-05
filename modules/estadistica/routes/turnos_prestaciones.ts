@@ -8,6 +8,11 @@ import * as fueraDeAgendaController from './../controller/procesarFueraDeAgenda'
 const router = express.Router();
 
 router.get('/turnos_prestaciones', async (req, res, next) => {
+
+    if (!Auth.check(req, 'turnosPrestaciones:buscar')) {
+        return next(403);
+    }
+
     const parametros = {
         organizacion: new mongoose.Types.ObjectId(Auth.getOrganization(req)),
         fechaDesde: req.query.fechaDesde,

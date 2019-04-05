@@ -182,5 +182,6 @@ schema.pre('save', function (next) {
 
 // Habilitar plugin de auditoría
 schema.plugin(AuditPlugin);
+schema.index({ 'solicitud.turno': 1 });
 
 export let model = mongoose.model('prestacion', schema, 'prestaciones');

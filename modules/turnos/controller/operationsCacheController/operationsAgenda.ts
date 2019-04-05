@@ -9,6 +9,7 @@ import * as turnoCtrl from './../turnoCacheController';
 import * as turnoOps from './operationsTurno';
 import * as configPrivate from '../../../../config.private';
 import * as dbg from 'debug';
+import * as mongoose from 'mongoose' ;
 
 const debug = dbg('integracion');
 
@@ -41,7 +42,8 @@ export function getAgendasDeMongoExportadas() {
 export function getAgendasDeMongoPendientes() {
 
     return agendasCache.find({
-        estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente
+        estadoIntegracion: constantes.EstadoExportacionAgendaCache.pendiente,
+        organizacion: { $nin: [mongoose.Types.ObjectId('57e9670e52df311059bc8964')]}
     }).sort({
         _id: 1
     }).limit(100);
