@@ -1,6 +1,7 @@
 import * as Agenda from '../../../../modules/turnos/schemas/agenda';
 import { toArray } from '../../../../utils/utils';
 import { Pecas } from '../schemas/pecas';
+import { Types } from 'mongoose';
 
 export async function pecasExport(start, end) {
     const pipeline = [

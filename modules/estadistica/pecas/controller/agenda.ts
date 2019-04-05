@@ -6,6 +6,7 @@ import * as configPrivate from '../../../../config.private';
 import { Organizacion } from '../../../../core/tm/schemas/organizacion';
 import { pecasExport } from '../controller/aggregateQueryPecas';
 import { log } from '@andes/log';
+import { sendMail } from '../../../../utils/roboSender/sendEmail';
 
 
 let poolTurnos;
@@ -28,6 +29,18 @@ let logRequest = {
         localAddress: ''
     }
 };
+
+let mailOptions = {
+
+    from: 'info@andes.gob.ar',
+    to: 'hfernandez@neuquen.gov.ar',
+    subject: 'Error pecas',
+    text: '',
+    html: '',
+    attachments: null
+
+};
+
 /**
  * Actualiza la tabla pecas_consolidado de la BD Andes
  *
@@ -56,7 +69,8 @@ export async function consultaPecas(done, start, end) {
                 await eliminaTurno(doc.idTurno, doc.idAgenda);
                 let org = await getEfector(doc.idEfector);
                 let idEfectorSips = org.codigo && org.codigo.sips ? org.codigo.sips : null;
-                insertsArray.push(auxiliar(doc, idEfectorSips));
+                insertsArray.push(insertCompleto(doc, idEfectorSips));
+                // }
             }
             await Promise.all(insertsArray);
             return (done());
@@ -68,12 +82,46 @@ export async function consultaPecas(done, start, end) {
     }
 }
 
-// castea cada turno asignado y lo inserta en la tabla Sql
-async function auxiliar(turno: any, idEfectorSips) {
+// Esto lo dejamos por si necesitan agendas sin turno
+async function soloAgenda(row: any, idEfectorSips) {
+    let ag: any = {};
+    try {
+        ag.idEfector = idEfectorSips;
+        ag.Organizacion = row.Efector;
+        ag.idAgenda = row.idAgenda;
+        ag.tipoPrestacion = row.tipoPrestacion;
+        ag.FechaAgenda = row.FechaAgenda;
+        ag.HoraAgenda = row.HoraAgenda;
+        ag.estadoAgenda = row.estadoAgenda;
+        ag.numeroBloque = 0;
+        ag.idTurno = row.bloques[0]._id;
+        ag.DescTipoEfector = row.DescTipoEfector;
+        let queryInsert = 'INSERT INTO ' + configPrivate.conSqlPecas.table.pecasTable +
+            '(idEfector, Efector, TipoEfector, DescTipoEfector, idAgenda, FechaAgenda, HoraAgenda, estadoAgenda, numeroBloque,  idTurno, tipoPrestacion,  updated) ' +
+            'VALUES  ( ' + ag.idEfector + ',\'' + ag.Organizacion + '\',\'' + ag.TipoEfector + '\',\'' + ag.DescTipoEfector +
+            '\',\'' + ag.idAgenda + '\',\'' + ag.FechaAgenda + '\',\'' + ag.HoraAgenda + '\',\'' + ag.estadoAgenda +
+            '\',' + ag.numeroBloque + ',\'' + ag.idTurno + '\',\'' + ag.tipoPrestacion + '\',\'' + moment().format('YYYYMMDD HH:mm') + '\') ';
+        await executeQuery(queryInsert);
 
-    // data checks
+    } catch (error) {
+        return (error);
+    }
+}
+
+// castea cada turno asignado y lo inserta en la tabla Sql
+async function insertCompleto(turno: any, idEfectorSips) {
+    // Chequeos necesarios
     let fechaNac = turno.fechaNacimiento ? `'${turno.fechaNacimiento}'` : null;
     let dni = turno.DNI !== '' ? turno.DNI : null;
+    let profesional = turno.Profesional.replace('\'', '\'\'');
+    let pacienteApellido = turno.Apellido ? turno.Apellido.replace('\'', '\'\'') : null;
+    let pacienteNombres = turno.Nombres ? turno.Nombres.replace('\'', '\'\'') : null;
+    let pacienteObraSocial = turno.ObraSocial ? turno.ObraSocial.replace('\'', '\'\'') : null;
+    let turnosDelDia = turno.turnosDelDia ? turno.turnosDelDia : null;
+    let turnosLlaves = turno.turnosLlaves ? turno.turnosLlaves : null;
+    let turnosProfesional = turno.turnosProfesional ? turno.turnosProfesional : null;
+    let turnosProgramados = turno.turnosProgramados ? turno.turnosProgramados : null;
+    let numeroBloque = turno.sobreturno === 'SI' ? -1 : turno.numeroBloque;
 
     let queryInsert = 'INSERT INTO ' + configPrivate.conSqlPecas.table.pecasTable +
         '(idEfector, Efector, TipoEfector, DescTipoEfector, IdZona, Zona, SubZona, idEfectorSuperior, EfectorSuperior, AreaPrograma, ' +
@@ -91,13 +139,13 @@ async function auxiliar(turno: any, idEfectorSips) {
         'VALUES  (' + idEfectorSips + ',\'' + turno.Efector + '\',\'' + turno.TipoEfector + '\',\'' + turno.DescTipoEfector +
         '\',' + turno.IdZona + ',' + turno.Zona + ',' + turno.SubZona + ',' + turno.idEfectorSuperior + ',\'' + turno.EfectorSuperior + '\',\'' + turno.AreaPrograma +
         '\',\'' + turno.idAgenda + '\',\'' + turno.FechaAgenda + '\',\'' + turno.HoraAgenda + '\',\'' + turno.estadoAgenda +
-        '\',' + turno.numeroBloque + ',' + turno.turnosProgramados + ',' + turno.turnosProfesional + ',' + turno.turnosLlaves + ',' + turno.turnosDelDia +
+        '\',' + numeroBloque + ',' + turnosProgramados + ',' + turnosProfesional + ',' + turnosLlaves + ',' + turnosDelDia +
         ',\'' + turno.idTurno + '\',\'' + turno.estadoTurno + '\',\'' + turno.tipoTurno + '\',\'' + turno.sobreturno + '\',\'' + turno.FechaConsulta + '\',\'' + turno.HoraTurno + '\',\'' + turno.Periodo + '\',\'' + turno.Tipodeconsulta + '\',\'' + turno.estadoTurnoAuditoria + '\',\'' + turno.Principal +
         '\',\'' + turno.ConsC2 + '\',\'' + turno.ConsObst + '\',\'' + turno.tipoPrestacion +
         // DATOS PACIENTE
-        '\',' + dni + ',\'' + turno.Apellido + '\',\'' + turno.Nombres + '\',\'' + turno.HC + '\',\'' + turno.codSexo +
+        '\',' + dni + ',\'' + pacienteApellido + '\',\'' + pacienteNombres + '\',\'' + turno.HC + '\',\'' + turno.codSexo +
         '\',\'' + turno.Sexo + '\',' + fechaNac + ',' + turno.Edad + ',\'' + turno.uniEdad + '\',\'' + turno.CodRangoEdad +
-        '\',\'' + turno.RangoEdad + '\',' + turno.IdObraSocial + ',\'' + turno.ObraSocial + '\',\'' + turno.IdPaciente + '\',\'' + turno.telefono +
+        '\',\'' + turno.RangoEdad + '\',' + turno.IdObraSocial + ',\'' + pacienteObraSocial + '\',\'' + turno.IdPaciente + '\',\'' + turno.telefono +
         '\',' + turno.IdBarrio + ',\'' + turno.Barrio + '\',' + turno.IdLocalidad +
         ',\'' + turno.Localidad + '\',' + turno.IdDpto + ',\'' + turno.Departamento + '\',' + turno.IdPcia + ',\'' + turno.Provincia +
         '\',' + turno.IdNacionalidad + ',\'' + turno.Nacionalidad + '\',\'' + turno.Calle + '\',\'' + turno.Altura + '\',\'' + turno.Piso +
@@ -111,7 +159,7 @@ async function auxiliar(turno: any, idEfectorSips) {
         '\',\'' + turno.semanticTag2 + '\',\'' + turno.conceptId2 + '\',\'' + turno.term2 + '\',' + turno.primeraVez2 +
         ',\'' + turno.Diag3CodigoOriginal + '\',\'' + turno.Desc3DiagOriginal + '\',\'' + turno.Diag3CodigoAuditado + '\',\'' + turno.Desc3DiagAuditado +
         '\',\'' + turno.semanticTag3 + '\',\'' + turno.conceptId3 + '\',\'' + turno.term3 + '\',' + turno.primeraVez3 +
-        ',\'' + turno.Profesional + '\',\'' + turno.TipoProfesional + '\',' + turno.CodigoEspecialidad + ',\'' + turno.Especialidad +
+        ',\'' + profesional + '\',\'' + turno.TipoProfesional + '\',' + turno.CodigoEspecialidad + ',\'' + turno.Especialidad +
         '\',' + turno.CodigoServicio + ',\'' + turno.Servicio + '\',\'' + turno.codifica + '\',' + turno.turnosMobile + ',\'' + moment().format('YYYYMMDD HH:mm') + '\') ';
     try {
         let resultado = await executeQuery(queryInsert);
@@ -279,8 +327,10 @@ async function executeQuery(query: any) {
             return result.recordset[0].id;
         }
     } catch (err) {
-        // Ojo falta reemplazar los las KEY del archivo final de configuraciones para logs.
-        await log(logRequest, 'andes:pecas:bi', null, 'SQLOperation', err, null);
+        let options = mailOptions;
+        options.text = `'error al insertar en sql: ${query}'`;
+        sendMail(mailOptions);
+        await log(logRequest, 'andes:pecas:bi', null, 'SQLOperation', query, null);
         return err;
     }
 }
