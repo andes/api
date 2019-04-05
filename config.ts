@@ -273,5 +273,3 @@ export const weightsVaccine = {
     gender: 0.3,
     birthDate: 0.2
 };
-
-
