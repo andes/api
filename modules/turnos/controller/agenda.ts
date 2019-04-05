@@ -14,7 +14,7 @@ import {
     Logger
 } from '../../../utils/logService';
 import { log } from '@andes/log';
-import { logKeys } from '../../../config';
+import { logKeys } from '../../../config-log';
 
 import {
     model as Prestacion

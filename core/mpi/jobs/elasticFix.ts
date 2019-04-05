@@ -6,7 +6,7 @@ import { ElasticSync } from '../../../utils/elasticSync';
 import debug = require('debug');
 import * as mongoose from 'mongoose';
 import { userScheduler } from '../../../config.private';
-import { logKeys } from '../../../config';
+import { logKeys } from '../../../config-log';
 import * as log from '@andes/log';
 import { model as prestacionModel } from '../../../modules/rup/schemas/prestacion';
 import * as agendaModel from '../../../modules/turnos/schemas/agenda';
