@@ -106,6 +106,7 @@ export async function pecasExport(start, end) {
                 codificacion0: {
                     $arrayElemAt: ['$_bloques.turnos.diagnostico.codificaciones', 0]
                 },
+                isAnyTrue0: { $anyElementTrue: ['$_bloques.turnos.diagnostico.codificaciones'] },
                 codificacion1: {
                     $arrayElemAt: ['$_bloques.turnos.diagnostico.codificaciones', 1]
                 },
@@ -448,7 +449,10 @@ export async function pecasExport(start, end) {
                                         branches: [
                                             {
                                                 case: {
-                                                    $ne: ['$codificacion0.codificacionAuditoria.codigo', null]
+
+                                                    $and: [{ $eq: ['$isAnyTrue0', true] },
+                                                    { $ne: [{ $in: [{ $type: '$codificacion0.codificacionAuditoria' }, ['missing', 'null', 'undefined']] }, true] },
+                                                    { $ne: ['$codificacion0.codificacionAuditoria.codigo', null] }]
                                                 },
                                                 then: 'Auditado'
                                             },
@@ -467,19 +471,19 @@ export async function pecasExport(start, end) {
 
                                             {
                                                 case: {
-                                                    $ne: ['$codificacion0.codificacionProfesional.snomed', null]
+                                                    $and: [{ $eq: ['$isAnyTrue0', true] }, { $ne: ['$codificacion0.codificacionProfesional.snomed', null] }]
                                                 },
                                                 then: 'Registrado por Profesional'
                                             },
                                             {
                                                 case: {
-                                                    $ne: ['$_bloques.turnos.asistencia', null]
+                                                    $ne: [{ $in: [{ $type: '$_bloques.turnos.asistencia' }, ['missing', 'null', 'undefined']] }, true],
                                                 },
                                                 then: 'Asistencia Verificada'
                                             }
 
                                         ],
-                                        default: '1'
+                                        default: 'Sin registro de asistencia'
                                     }
 
 
