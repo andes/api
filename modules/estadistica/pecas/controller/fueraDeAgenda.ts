@@ -77,7 +77,6 @@ export async function fueraAgendaPecas(start, end, done) {
 
 async function auxiliar(pres: any) {
     let prestacion: any = {};
-
     let efector: any = {};
     try {
         let org: any = await getEfector(pres.createdBy.organizacion._id);

@@ -7,6 +7,7 @@ import { Organizacion } from '../../../../core/tm/schemas/organizacion';
 import { pecasExport } from '../controller/aggregateQueryPecas';
 import { log } from '@andes/log';
 import { sendMail } from '../../../../utils/roboSender/sendEmail';
+import { emailListString } from '../../../../config.private';
 
 
 let poolTurnos;
@@ -31,9 +32,8 @@ let logRequest = {
 };
 
 let mailOptions = {
-
     from: 'info@andes.gob.ar',
-    to: 'hfernandez@neuquen.gov.ar',
+    to: emailListString,
     subject: 'Error pecas',
     text: '',
     html: '',

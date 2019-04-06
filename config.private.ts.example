@@ -282,6 +282,9 @@ export const Drive = {
     options: {}
 };
 
+// Lista separada por comas de emails (string)
+export const emailListString = '';
+
 export const logDatabase = {
     log: {
         host: getEnv('MONGO_LOGS', `mongodb://localhost:27017/andesLogs`),
