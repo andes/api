@@ -383,7 +383,7 @@ export async function dashboardSolicitudes(filtros, user) {
         { $facet: makeFacet('salida') }
     ];
 
-    const dataEntrada = toArray(Prestacion.aggregate(pipelineEntrada).cursor({ batchSize: 1000 }).exec());
+    const dataEntrada = Prestacion.aggregate(pipelineEntrada);
     const dataSalida = Prestacion.aggregate(pipelineSalida);
     const [solicitudesEntrada, solicitudesSalida] = await Promise.all([dataEntrada, dataSalida]);
     return { entrada: solicitudesEntrada[0], salida: solicitudesSalida[0] };
