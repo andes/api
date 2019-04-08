@@ -280,7 +280,7 @@ router.get('/prestaciones/resumenPaciente/:idPaciente', async (req, res, next) =
     });
 });
 
-router.post('/solicitudesDashboard', async (req, res, next) => {
+router.post('/solicitudes/dashboard', async (req, res, next) => {
     const solicitudes = await dashboardSolicitudes(req.body, (req as any).user);
     return res.json(solicitudes);
 });
