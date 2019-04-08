@@ -1,7 +1,6 @@
 import * as fs from 'fs';
 import * as scss from 'node-sass';
 import * as pdf from 'html-pdf';
-// import * as htmlPdf from 'html-pdf-chrome';
 import * as moment from 'moment';
 import { Auth } from '../../../auth/auth.class';
 import { model as Prestacion } from '../../rup/schemas/prestacion';
@@ -46,7 +45,7 @@ export class Documento {
     /**
      * Opciones default de PDF rendering
      */
-    private static options: pdf.CreateOptions = {
+    private options: pdf.CreateOptions = {
         // Nos aseguramos que usa el paquete que queremos
         phantomPath: phantomjs.path
     };
@@ -55,7 +54,7 @@ export class Documento {
      *
      * @param idPrestacion string ObjectID válido
      */
-    private static getPrestacionData(idPrestacion) {
+    private getPrestacionData(idPrestacion) {
         return new Promise((resolve, reject) => {
             Prestacion.findById(idPrestacion, (err, prestacion: any) => {
                 if (err) {
@@ -70,7 +69,7 @@ export class Documento {
      *
      * @param sctid string Snomed concept ID
      */
-    private static getPrestacionInformeParams(sctid) {
+    private getPrestacionInformeParams(sctid) {
         return new Promise((resolve, reject) => {
             conceptoTurneable.tipoPrestacion.findOne({ conceptId: sctid }, (err, ct: any) => {
                 if (err) {
@@ -85,7 +84,7 @@ export class Documento {
      *
      * @param sctid string Snomed concept ID
      */
-    private static getPrestacionInformeComponent(sctid) {
+    private getPrestacionInformeComponent(sctid) {
         return new Promise((resolve, reject) => {
             rup.elementoRUP.findOne({ 'conceptos.conceptId': sctid }, (err, ct: any) => {
                 if (err) {
@@ -96,7 +95,7 @@ export class Documento {
         });
     }
 
-    private static async getOrgById(idOrg) {
+    private async getOrgById(idOrg) {
         return new Promise((resolve, reject) => {
             Organizacion.findById(idOrg, (err, org: any) => {
                 if (err) {
@@ -107,7 +106,7 @@ export class Documento {
         });
     }
 
-    private static semanticTags = {
+    private semanticTags = {
         //  Motivos Principales de Consulta (MPC) posibles
         mpc: [
             'entidad observable',
@@ -150,45 +149,44 @@ export class Documento {
      *
      * @param st string semanticTag
      */
-    private static existeSemanticTagMPC(st) {
+    private existeSemanticTagMPC(st) {
         return this.semanticTags.mpc.findIndex(x => x === st) > -1;
     }
 
-    private static esHallazgo(st) {
+    private esHallazgo(st) {
         return this.semanticTags.hallazgos.findIndex(x => x === st) > -1;
     }
 
-    private static esProcedimiento(st) {
+    private esProcedimiento(st) {
         return this.semanticTags.procedimientos.findIndex(x => x === st) > -1;
     }
 
-    private static esInsumo(st) {
+    private esInsumo(st) {
         return this.semanticTags.insumos.findIndex(x => x === st) > -1;
     }
 
-    private static esSolicitud(st, esSolicitud) {
+    private esSolicitud(st, esSolicitud) {
         return (this.semanticTags.solicitudes.findIndex(x => x === st) > -1) && esSolicitud;
     }
 
-    private static esAdjunto(conceptId) {
+    private esAdjunto(conceptId) {
         // SCTID de "adjunto"?
         return (conceptId === '1921000013108');
     }
 
 
     // 'plan'
-    static generarRegistroSolicitudHTML(plan: any, template: string): any {
+    generarRegistroSolicitudHTML(plan: any, template: string): any {
         return template
             .replace('<!--plan-->', this.ucaseFirst(plan.concepto.term))
             .replace('<!--motivo-->', plan.valor.solicitudPrestacion.motivo)
             .replace('<!--indicaciones-->', plan.valor.solicitudPrestacion.indicaciones)
             .replace('<!--organizacionDestino-->', (plan.valor.solicitudPrestacion.organizacionDestino ? plan.valor.solicitudPrestacion.organizacionDestino.nombre : ''))
             .replace('<!--profesionalesDestino-->', plan.valor.solicitudPrestacion.profesionalesDestino ? plan.valor.solicitudPrestacion.profesionalesDestino.map(y => y.nombreCompleto).join(' ') : '');
-
     }
 
     // 'procedimiento' || 'entidad observable' || 'régimen/tratamiento' || 'elemento de registro'
-    static generarRegistroProcedimientoHTML(proc: any, template: string): any {
+    generarRegistroProcedimientoHTML(proc: any, template: string): any {
         let valor;
         if (proc.valor === 1) {
             valor = 'SI';
@@ -212,11 +210,10 @@ export class Documento {
             .replace('<!--valor-->', valor)
             // .replace('<!--valor-->', (proc.valor || this.getRegistros(proc)))
             .replace('<!--motivoPrincipalDeConsulta-->', proc.esDiagnosticoPrincipal === true ? 'PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL' : '');
-
     }
 
     // 'procedimiento' || 'hallazgo' || 'trastorno'
-    static generarRegistroHallazgoHTML(hallazgo: any, template: string): any {
+    generarRegistroHallazgoHTML(hallazgo: any, template: string): any {
         return template
             .replace('<!--concepto-->', hallazgo.nombre ? hallazgo.nombre : this.ucaseFirst(hallazgo.concepto.term))
             .replace('<!--evolucion-->', (hallazgo.valor && hallazgo.valor.evolucion) ? `<p><b>Evolución</b>: ${hallazgo.valor.evolucion}` : ``)
@@ -224,7 +221,7 @@ export class Documento {
     }
 
     // 'producto'
-    static generarRegistroInsumoHTML(producto: any, template: string): any {
+    generarRegistroInsumoHTML(producto: any, template: string): any {
         return template
             .replace('<!--concepto-->', this.ucaseFirst(producto.concepto.term))
             .replace('<!--motivoPrincipalDeConsulta-->', producto.esDiagnosticoPrincipal === true ? 'PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL' : '')
@@ -238,7 +235,7 @@ export class Documento {
     }
 
     // 'archivo adjunto'
-    static generarArchivoAdjuntoHTML(registro: any, template: string): any {
+    generarArchivoAdjuntoHTML(registro: any, template: string): any {
 
         let filePromises = [];
         let adjuntos = '';
@@ -268,7 +265,7 @@ export class Documento {
 
     }
 
-    static crearProcedimientos(proc, template) {
+    crearProcedimientos(proc, template) {
         return proc.length > 0 ? proc.map(x => {
             if (this.esProcedimiento(x.concepto.semanticTag) && x.esSolicitud === false) {
                 if (x.valor !== null && x.registros.length === 0) {
@@ -280,7 +277,7 @@ export class Documento {
         }) : [];
     }
 
-    static crearHallazgos(hall, template) {
+    crearHallazgos(hall, template) {
         return hall.length > 0 ? hall.map(x => {
             if (this.esHallazgo(x.concepto.semanticTag)) {
                 return this.generarRegistroHallazgoHTML(x, template);
@@ -288,7 +285,7 @@ export class Documento {
         }) : [];
     }
 
-    static crearPlanes(plan, template) {
+    crearPlanes(plan, template) {
         return plan.length > 0 ? plan.map(x => {
             if (x.esSolicitud) {
                 return this.generarRegistroSolicitudHTML(x, template);
@@ -297,19 +294,20 @@ export class Documento {
     }
 
 
-    static ucaseFirst(titulo: string) {
+    ucaseFirst(titulo: string) {
         return titulo[0].toLocaleUpperCase() + titulo.slice(1).toLocaleLowerCase();
     }
 
-    static informeRegistros: any[] = [];
-    static hallazgoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/hallazgo.html'), 'utf8');
-    static procedimientoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/procedimiento.html'), 'utf8');
-    static planTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/solicitud.html'), 'utf8');
-    static insumoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/insumo.html'), 'utf8');
-    static adjuntoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/adjunto.html'), 'utf8');
-    static nivelPadre = 0;
+    informeRegistros: any[] = [];
+    html: string = '';
+    hallazgoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/hallazgo.html'), 'utf8');
+    procedimientoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/procedimiento.html'), 'utf8');
+    planTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/solicitud.html'), 'utf8');
+    insumoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/insumo.html'), 'utf8');
+    adjuntoTemplate = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/includes/adjunto.html'), 'utf8');
+    nivelPadre = 0;
 
-    static async generarInforme(registros) {
+    async generarInforme(registros) {
         return new Promise(async (resolve, reject) => {
             for (let i = 0; i < registros.length; i++) {
 
@@ -387,7 +385,7 @@ export class Documento {
         });
     }
 
-    private static async getFirma(profesional) {
+    private async getFirma(profesional) {
         const FirmaSchema = makeFsFirma();
         const file = await FirmaSchema.findOne({ 'metadata.idProfesional': String(profesional.id) }, {}, { sort: { _id: -1 } });
         if (file) {
@@ -398,10 +396,10 @@ export class Documento {
         return null;
     }
 
-    private static async generarHTML(req) {
+    private async generarHTML(req) {
         return new Promise(async (resolve, reject) => {
             try {
-
+                let html;
                 // Prestación
                 let prestacion: any = await this.getPrestacionData(req.body.idPrestacion);
 
@@ -474,7 +472,6 @@ export class Documento {
                         }
                     }
 
-
                     let registros = prestacion.ejecucion.registros[0].registros.length ? prestacion.ejecucion.registros[0].registros : prestacion.ejecucion.registros;
                     // SE ARMA TODO EL HTML PARA GENERAR EL PDF:
                     await this.generarInforme(registros);
@@ -490,7 +487,7 @@ export class Documento {
 
 
                     // Se leen header y footer (si se le pasa un encoding, devuelve un string)
-                    let html = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/informe.html'), 'utf8');
+                    html = fs.readFileSync(path.join(__dirname, '../../../templates/rup/informes/html/informe.html'), 'utf8');
 
                     let nombreCompleto = paciente.apellido + ', ' + paciente.nombre;
                     let fechaNacimiento = paciente.fechaNacimiento ? moment(paciente.fechaNacimiento).format('DD/MM/YYYY') : 's/d';
@@ -554,7 +551,27 @@ export class Documento {
                         .replace('<!--fechaValidacion-->', moment(fechaValidacion).format('DD/MM/YYYY HH:mm') + ' hs')
                         .replace('<!--tituloInforme-->', tituloInforme ? tituloInforme : '')
                         // .replace('<!--contenidoInforme-->', contenidoInforme ? contenidoInforme : '')
+                        .replace('<!--registros-->', (contenidoInforme && contenidoInforme.length) ?
+                            contenidoInforme.map(x => typeof x.valor === 'string' ? x.valor :
+                                JSON.stringify(x.valor)).join('') : this.informeRegistros);
+
+                    if (prestacion.solicitud.tipoPrestacion.conceptId === '2341000013106') {
+                        html = html.replace('<!--fechaIngreso-->', prestacion.ejecucion.registros[0].valor.fechaDesde ?
+                            '<b>Fecha de ingreso: </b>' + moment(prestacion.ejecucion.registros[0].valor.fechaDesde).format('DD/MM/YYYY') : '')
+                            .replace('<!--fechaEgreso-->', prestacion.ejecucion.registros[0].valor.fechaHasta ?
+                                '<b>Fecha de egreso: </b>' + moment(prestacion.ejecucion.registros[0].valor.fechaHasta).format('DD/MM/YYYY') : '');
+                    }
+
+
+                    html = html
+                        .replace('<!--tipoPrestacion-->', tipoPrestacion)
+                        .replace('<!--fechaSolicitud-->', moment(prestacion.solicitud.fecha).format('DD/MM/YYYY HH:mm') + ' hs')
+                        .replace('<!--tituloFechaEjecucion-->', tituloFechaEjecucion)
+                        .replace('<!--fechaEjecucion-->', moment(fechaEjecucion).format('DD/MM/YYYY HH:mm') + ' hs')
+                        .replace('<!--fechaValidacion-->', moment(fechaValidacion).format('DD/MM/YYYY HH:mm') + ' hs')
+                        .replace('<!--tituloInforme-->', tituloInforme ? tituloInforme : '')
                         .replace('<!--registros-->', (contenidoInforme && contenidoInforme.length) ? contenidoInforme.map(x => typeof x.valor === 'string' ? x.valor : JSON.stringify(x.valor)).join('') : this.informeRegistros);
+
                     // FOOTER
                     html = html
                         .replace('<!--profesionalFirmante1-->', profesionalSolicitud)
@@ -573,7 +590,6 @@ export class Documento {
                     if (config.informe && motivoPrincipalDeConsulta) {
                         html = html
                             .replace('<!--motivoPrincipalDeConsulta-->', motivoPrincipalDeConsulta);
-
                     }
 
                     // Se carga logo del efector, si no existe se muestra el nombre del efector como texto
@@ -616,7 +632,7 @@ export class Documento {
         });
     }
 
-    private static generarCSS() {
+    private generarCSS() {
         // Se agregan los estilos CSS
         let scssFile = path.join(__dirname, '../../../templates/rup/informes/sass/main.scss');
 
@@ -632,7 +648,7 @@ export class Documento {
     }
 
 
-    private static async generarConstanciaPuco(req) {
+    private async generarConstanciaPuco(req) {
         let html = fs.readFileSync(path.join(__dirname, '../../../templates/puco/constancia.html'), 'utf8');
 
         // logo header
@@ -654,7 +670,7 @@ export class Documento {
         return html;
     }
 
-    private static generarCssPuco() {
+    private generarCssPuco() {
         let scssFile = path.join(__dirname, '../../../templates/puco/constancia.scss');
 
         // Se agregan los estilos
@@ -676,7 +692,7 @@ export class Documento {
      * @param next ExpressJS next
      * @param options html-pdf/PhantonJS rendering options
      */
-    static descargar(req, res, next, options = null) {
+    descargar(req, options = null) {
 
         return new Promise(async (resolve, reject) => {
 
@@ -688,6 +704,7 @@ export class Documento {
                     // https://www.npmjs.com/package/html-pdf
                     // http://phantomjs.org/api/webpage/property/paper-size.html
                     let phantomPDFOptions: pdf.CreateOptions = {
+                        // phantomPath: './node_modules/phantomjs-prebuilt/bin/phantomjs',
                         format: 'A4',
                         border: {
                             // default is 0, units: mm, cm, in, px
@@ -712,8 +729,10 @@ export class Documento {
 
                     await this.generarHTML(req).then(async htmlPDF => {
                         htmlPDF = htmlPDF + this.generarCSS();
-                        fs.writeFileSync('/tmp/test.html', htmlPDF);
+                        // fs.writeFileSync('/tmp/test.html', htmlPDF);
                         await pdf.create(htmlPDF, this.options).toFile((err2, file): any => {
+
+                            console.log(file);
                             // async
                             // const pdf2 = await htmlPdf.create(htmlPDF, options);
                             // await pdf2.toFile('/tmp/test.pdf');
@@ -724,6 +743,8 @@ export class Documento {
                                 reject(err2);
                             }
 
+                            this.informeRegistros = [];
+                            html = '';
                             resolve(file.filename);
 
                         });
@@ -735,7 +756,7 @@ export class Documento {
 
 
     // Descarga/imprime constancia solicitada desde pantalla de consulta de padrones PUCO
-    static descargarDocPuco(req, res, next, options = null) {
+    descargarDocPuco(req, res, next, options = null) {
         return new Promise((resolve, reject) => {
 
             switch (req.params.tipo) {
@@ -753,7 +774,6 @@ export class Documento {
                             left: '0cm'
                         },
                         header: {
-                            top: '0cm',
                             height: '0cm'
                         },
                         footer: {
