@@ -318,5 +318,9 @@ export const logKeys = {
     elasticFix2: {
         key: 'elasticFix:update',
         operacion: 'Documentos referidos al paciente modificados'
+    },
+    turnosMobileUpdate: {
+        key: 'citas:bloques:modificar',
+        operacion: 'setea a 0 turnos disponibles para app mobile'
     }
 };

@@ -1,7 +1,7 @@
 import * as express from 'express';
-import { textIndexModel, snomedModel } from '../schemas/snomed';
+import { TextIndexModel, SnomedModel } from '../schemas/snomed';
 import * as utils from '../../../utils/utils';
-import * as snomedCtr from '../controller/snomedCtr';
+import * as SnomedCtr from '../controller/snomedCtr';
 import * as configPrivate from './../../../config.private';
 import { makeMongoQuery } from '../controller/grammar/parser';
 import { toArray } from '../../../utils/utils';
@@ -16,8 +16,22 @@ const router = express.Router();
 router.get('/snomed/concepts/:sctid', async (req, res, next) => {
     const sctid = req.params.sctid;
     try {
-        const concept = await snomedCtr.getConcept(sctid);
+        const concept = await SnomedCtr.getConcept(sctid);
         return res.json(concept);
+    } catch (e) {
+        return next(e);
+    }
+});
+
+/**
+ * Devuelve un listado de conceptos
+ */
+
+router.get('/snomed/concepts', async (req, res, next) => {
+    const sctids =  Array.isArray(req.query.sctids) ? req.query.sctids : [req.query.sctids];
+    try {
+        const concepts = await SnomedCtr.getConcepts(sctids);
+        return res.json(concepts);
     } catch (e) {
         return next(e);
     }
@@ -30,7 +44,7 @@ router.get('/snomed/concepts/:sctid', async (req, res, next) => {
 router.get('/snomed/concepts/:sctid/descriptions', async (req, res, next) => {
     const sctid = req.params.sctid;
     try {
-        const concept: any = await snomedCtr.getConcept(sctid);
+        const concept: any = await SnomedCtr.getConcept(sctid);
         return res.send(concept.descriptions);
     } catch (e) {
         return next(e);
@@ -44,8 +58,8 @@ router.get('/snomed/concepts/:sctid/descriptions', async (req, res, next) => {
 router.get('/snomed/concepts/:sctid/parents', async (req, res, next) => {
     const sctid = req.params.sctid;
     try {
-        const concept: any = await snomedCtr.getConcept(sctid);
-        const relationships = snomedCtr.filterRelationships(concept, { parent: true });
+        const concept: any = await SnomedCtr.getConcept(sctid);
+        const relationships = SnomedCtr.filterRelationships(concept, { parent: true });
         return res.json(relationships);
 
     } catch (e) {
@@ -67,7 +81,7 @@ router.get('/snomed/concepts/:sctid/childs', async (req, res, next) => {
     const all = req.query.all || false;
     const leaf = req.query.leaf || false;
     try {
-        const childs: any = await snomedCtr.getChildren(sctid, { all, leaf });
+        const childs: any = await SnomedCtr.getChildren(sctid, { all, leaf });
         return res.json(childs);
 
     } catch (e) {
@@ -147,7 +161,7 @@ router.get('/snomed/search', async (req, res, next) => {
                     filters['destination.conceptId'] = elem.sctid;
                 } else {
                     filters['destination.conceptId'] = {
-                        $in: await snomedCtr.getChildren(elem.sctid, { all: true, completed: false })
+                        $in: await SnomedCtr.getChildren(elem.sctid, { all: true, completed: false })
                     };
                 }
             }
@@ -192,7 +206,7 @@ router.get('/snomed/search', async (req, res, next) => {
         { $match: { aEq: false } }
     ];
 
-    const result = await toArray(textIndexModel.aggregate(pipeline).cursor({}).exec());
+    const result = await toArray(TextIndexModel.aggregate(pipeline).cursor({}).exec());
     res.send(result);
 
 });
@@ -245,11 +259,11 @@ router.get('/snomed/expression', async (req, res, next) => {
             }
         ];
 
-        res.json(await toArray(snomedModel.aggregate(pipeline).cursor({}).exec()));
+        res.json(await toArray(SnomedModel.aggregate(pipeline).cursor({}).exec()));
 
     } else {
 
-        snomedModel.find(query, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docs: any[]) => {
+        SnomedModel.find(query, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docs: any[]) => {
             const response = docs.map((item) => {
                 const term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
                 return {

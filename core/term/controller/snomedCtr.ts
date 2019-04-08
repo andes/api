@@ -1,4 +1,4 @@
-import { snomedModel } from '../schemas/snomed';
+import { SnomedModel } from '../schemas/snomed';
 import { makeMongoQuery } from './grammar/parser';
 
 // ID del atributo que genera una relación padre-hijo
@@ -11,25 +11,22 @@ const StatedSct = '900000000000010007';
  *
  * @param sctid ConceptId
  */
-export function getConcept(sctid, format = 'full') {
-    return new Promise((resolve, reject) => {
-        snomedModel.findOne({ conceptId: sctid }).then((concept: any) => {
-            if (concept) {
-                if (format === 'full') {
-                    return resolve(concept);
-                } else {
-                    return resolve({
-                        conceptId: concept.conceptId,
-                        term: concept.preferredTerm,
-                        fsn: concept.fullySpecifiedName,
-                        semanticTag: concept.semtag,
-                        refsetIds: concept.memberships.map(m => m.refset.conceptId)
-                    });
-                }
-            }
-            return reject('not_found');
-        }).catch(reject);
-    });
+export async function getConcept(sctid, format = 'full') {
+    const concept: any = await SnomedModel.findOne({ conceptId: sctid });
+    if (concept) {
+        if (format === 'full') {
+            return concept;
+        } else {
+            return {
+                conceptId: concept.conceptId,
+                term: concept.preferredTerm,
+                fsn: concept.fullySpecifiedName,
+                semanticTag: concept.semtag,
+                refsetIds: concept.memberships.map(m => m.refset.conceptId)
+            };
+        }
+    }
+    return null;
 }
 
 /**
@@ -71,7 +68,7 @@ function checkType(concept, sctid) {
  * @param {Boolean} all True para devolver hijos, nietos, bisnietos... de un concepto, false solo hijos directos.
  *
  */
-export function getChildren(sctid, { all = false, completed = true, leaf = false }) {
+export async function getChildren(sctid, { all = false, completed = true, leaf = false }) {
     let query;
     if (all) {
         query = {
@@ -97,24 +94,23 @@ export function getChildren(sctid, { all = false, completed = true, leaf = false
         query['isLeafStated'] = true;
     }
 
-    return snomedModel.find(query).then((concepts: any[]) => {
-        const result = [];
-        concepts.forEach((cpt) => {
-            if (cpt.active === true) {
-                if (completed) {
-                    result.push({
-                        conceptId: cpt.conceptId,
-                        term: cpt.preferredTerm,
-                        fsn: cpt.fullySpecifiedName,
-                        type: checkType(cpt, sctid)
-                    });
-                } else {
-                    result.push(cpt.conceptId);
-                }
+    const concepts: any[] = await SnomedModel.find(query);
+    const result = [];
+    concepts.forEach((cpt) => {
+        if (cpt.active === true) {
+            if (completed) {
+                result.push({
+                    conceptId: cpt.conceptId,
+                    term: cpt.preferredTerm,
+                    fsn: cpt.fullySpecifiedName,
+                    type: checkType(cpt, sctid)
+                });
+            } else {
+                result.push(cpt.conceptId);
             }
-        });
-        return result;
+        }
     });
+    return result;
 }
 
 // "characteristicType.conceptId": "900000000000010007"
@@ -159,20 +155,56 @@ export async function contextFilter(options) {
         ];
     }
 
-    return snomedModel.find(conditions);
+    return SnomedModel.find(conditions);
 }
 
 export async function getConceptByExpression(expression) {
     const query = makeMongoQuery(expression);
-    snomedModel.find(query, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docs: any[]) => {
-        return docs.map((item) => {
-            const term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
-            return {
-                fsn: item.fullySpecifiedName,
-                term,
-                conceptId: item.conceptId,
-                semanticTag: item.semtag
-            };
-        });
+    const docs: any[] = await SnomedModel.find(query, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 });
+    return docs.map((item) => {
+        const term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
+        return {
+            fsn: item.fullySpecifiedName,
+            term,
+            conceptId: item.conceptId,
+            semanticTag: item.semtag
+        };
     });
+}
+
+export async function getConcepts(conceptsIds) {
+    return SnomedModel.aggregate([
+        { $match:  { conceptId: { $in :  conceptsIds } } },
+        { $unwind: '$relationships' },
+        { $match:  {
+            'relationships.active': true,
+            'relationships.characteristicType.conceptId': '900000000000010007',
+            'relationships.type.conceptId': '116680003' }
+        },
+        {
+            $project: {
+                conceptId: 1,
+                statedAncestors: 1,
+                fullySpecifiedName: 1,
+                preferredTerm: 1,
+                semtag: 1,
+                relationships: {
+                    fsn: '$relationships.destination.fullySpecifiedName',
+                    term: '$relationships.destination.fullySpecifiedName',
+                    conceptId: '$relationships.destination.conceptId'
+                }
+            }
+        },
+        {
+            $group: {
+                _id: '$conceptId',
+                conceptId: { $first: '$conceptId' },
+                statedAncestors: { $first: '$statedAncestors' },
+                fsn: { $first: '$fullySpecifiedName' },
+                term: { $first: '$preferredTerm' },
+                semanticTag: { $first: '$semtag' },
+                relationships: { $push: '$relationships' },
+            }
+        }
+    ]);
 }

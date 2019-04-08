@@ -8,7 +8,7 @@ import { buscarPaciente } from '../../../core/mpi/controller/paciente';
 import { buscarEnHuds, registrosProfundidad } from '../controllers/rup';
 import { Logger } from '../../../utils/logService';
 import { makeMongoQuery } from '../../../core/term/controller/grammar/parser';
-import { snomedModel } from '../../../core/term/schemas/snomed';
+import { SnomedModel } from '../../../core/term/schemas/snomed';
 import * as camasController from './../controllers/cama';
 import { parseDate } from './../../../shared/parse';
 import { EventCore } from '@andes/event-bus';
@@ -133,7 +133,7 @@ router.get('/prestaciones/huds/:idPaciente', async (req, res, next) => {
 
         if (req.query.expresion) {
             const querySnomed = makeMongoQuery(req.query.expresion);
-            snomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docs: any[]) => {
+            SnomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docs: any[]) => {
 
                 conceptos = docs.map((item) => {
                     const term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
@@ -198,7 +198,7 @@ router.get('/prestaciones/resumenPaciente/:idPaciente', async (req, res, next) =
 
                 // si el concepto buscado es una expresion snomed ..
                 if (!/^([0-9])+$/.test(concepto.conceptId)) {
-                    let docs = await snomedModel.find(makeMongoQuery(concepto.conceptId), { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 });
+                    let docs = await SnomedModel.find(makeMongoQuery(concepto.conceptId), { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 });
 
                     // Set de conceptos relacionados ..
                     let conceptosArray = docs.map((item: any) => {
@@ -221,7 +221,7 @@ router.get('/prestaciones/resumenPaciente/:idPaciente', async (req, res, next) =
 
             /* Los 'conceptosBuscados' que se quieren encontrar, son sólo los que pertenecen a la consulta 'consultaPrincipal',
                 para esto se realiza el siguiente filtro mediante una consulta snomed */
-            snomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docsCP: any[]) => {
+            SnomedModel.find(querySnomed, { fullySpecifiedName: 1, conceptId: 1, _id: false, semtag: 1 }).sort({ fullySpecifiedName: 1 }).then((docsCP: any[]) => {
                 // Set de consultas relacionadas con 'consultaPrincipal'
                 filtroPrestaciones = docsCP.map((item) => {
                     let term = item.fullySpecifiedName.substring(0, item.fullySpecifiedName.indexOf('(') - 1);
