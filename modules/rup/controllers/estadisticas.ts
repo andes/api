@@ -384,7 +384,7 @@ export async function dashboardSolicitudes(filtros, user) {
     ];
 
     const dataEntrada = toArray(Prestacion.aggregate(pipelineEntrada).cursor({ batchSize: 1000 }).exec());
-    const dataSalida = toArray(Prestacion.aggregate(pipelineSalida).cursor({ batchSize: 1000 }).exec());
+    const dataSalida = Prestacion.aggregate(pipelineSalida);
     const [solicitudesEntrada, solicitudesSalida] = await Promise.all([dataEntrada, dataSalida]);
     return { entrada: solicitudesEntrada[0], salida: solicitudesSalida[0] };
 }
