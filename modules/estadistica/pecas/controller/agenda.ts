@@ -113,7 +113,7 @@ async function insertCompleto(turno: any, idEfectorSips) {
     // Chequeos necesarios
     let fechaNac = turno.fechaNacimiento ? `'${turno.fechaNacimiento}'` : null;
     let dni = turno.DNI !== '' ? turno.DNI : null;
-    let profesional = turno.Profesional.replace('\'', '\'\'');
+    let profesional = turno.profesional ? turno.Profesional.replace('\'', '\'\'') : null;
     let pacienteApellido = turno.Apellido ? turno.Apellido.replace('\'', '\'\'') : null;
     let pacienteNombres = turno.Nombres ? turno.Nombres.replace('\'', '\'\'') : null;
     let pacienteObraSocial = turno.ObraSocial ? turno.ObraSocial.replace('\'', '\'\'') : null;
