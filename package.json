@@ -102,6 +102,7 @@
   },
   "homepage": "https://github.com/andes/api#readme",
   "devDependencies": {
+    "@types/html-pdf": "^2.1.2",
     "@types/request": "^2.48.1",
     "before": "0.0.1",
     "chai": "^4.1.2",
