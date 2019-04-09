@@ -1,6 +1,4 @@
 import * as agenda from '../../turnos/schemas/agenda';
-import * as prestaciones from '../../../modules/rup/schemas/prestacion';
-import * as mongoose from 'mongoose';
 import { toArray } from '../../../utils/utils';
 
 /**
