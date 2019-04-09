@@ -353,7 +353,6 @@ router.get('/prestaciones/solicitudes', (req, res, next) => {
 });
 
 router.get('/prestaciones/:id*?', async (req, res, next) => {
-    console.log("Params presta: ", req.params);
     if (req.params.id) {
         const query = Prestacion.findById(req.params.id);
         query.exec((err, data) => {
