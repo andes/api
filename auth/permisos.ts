@@ -344,5 +344,13 @@ export default [
             },
         ]
     },
+    {
+        key: 'dashboard',
+        title: 'Panel de datos estadísticos en gráficos y tablas',
+        child: [
+            { key: 'citas', title: 'Ver Dashboard de Citas', type: 'boolean'},
+            { key: 'top', title: 'Ver Dashboard de TOP', type: 'boolean'}
+        ]
+    }
 
 ];
