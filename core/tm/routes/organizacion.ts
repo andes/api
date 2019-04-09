@@ -5,7 +5,7 @@ import * as utils from '../../../utils/utils';
 import { toArray } from '../../../utils/utils';
 import * as configPrivate from '../../../config.private';
 import { Auth } from '../../../auth/auth.class';
-
+import { validarOrganizacionSisa } from '../controller/organizacion';
 const GeoJSON = require('geojson');
 const router = express.Router();
 
@@ -103,7 +103,16 @@ router.get('/organizaciones/georef/:id?', async (req, res, next) => {
     }
 });
 
-
+router.get('/organizaciones/sisa/:id', async (req, res, next) => {
+    try {
+        let orgSisa = await validarOrganizacionSisa(req.params.id);
+        if (orgSisa && orgSisa[0] === 200) {
+            res.json(orgSisa[1]);
+        }
+    } catch (err) {
+        return next(err);
+    }
+});
 router.get('/organizaciones/:id', async (req, res, next) => {
     try {
         let org = await Organizacion.findById(req.params.id);
@@ -114,11 +123,7 @@ router.get('/organizaciones/:id', async (req, res, next) => {
 });
 
 router.get('/organizaciones', async (req, res, next) => {
-    const act: Boolean = true;
-    const filtros = {
-        activo: act
-    };
-
+    const filtros = {};
     if (req.query.nombre) {
         filtros['nombre'] = {
             $regex: utils.makePattern(req.query.nombre)
@@ -132,9 +137,7 @@ router.get('/organizaciones', async (req, res, next) => {
     if (req.query.sisa) {
         filtros['codigo.sisa'] = req.query.sisa;
     }
-    if (req.query.activo) {
-        filtros['activo'] = req.query.activo;
-    }
+    filtros['activo'] = req.query.activo !== null && req.query.activo !== undefined ? req.query.activo : true;
     if (req.query.tipoEstablecimiento) {
         filtros['tipoEstablecimiento.nombre'] = {
             $regex: utils.makePattern(req.query.tipoEstablecimiento)
@@ -165,7 +168,7 @@ router.get('/organizaciones/:id/configuracion', async (req, res, next) => {
         const org: any = await Organizacion.findById(id, { configuraciones: 1 });
         return res.json(org.configuraciones);
     } catch (error) {
-        return next (error);
+        return next(error);
     }
 });
 
