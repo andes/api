@@ -12,6 +12,9 @@ import * as conceptoTurneable from '../../../core/tm/schemas/tipoPrestacion';
 import * as path from 'path';
 import { env } from 'process';
 import * as rupStore from '../../../modules/rup/controllers/rupStore';
+import * as Handlebars from 'handlebars';
+// const Handlebars = require('handlebars');
+
 
 import { makeFsFirma } from '../../../core/tm/schemas/firmaProf';
 let phantomjs = require('phantomjs-prebuilt-that-works');
@@ -551,9 +554,9 @@ export class Documento {
                         .replace('<!--fechaValidacion-->', moment(fechaValidacion).format('DD/MM/YYYY HH:mm') + ' hs')
                         .replace('<!--tituloInforme-->', tituloInforme ? tituloInforme : '')
                         // .replace('<!--contenidoInforme-->', contenidoInforme ? contenidoInforme : '')
-                        .replace('<!--registros-->', (contenidoInforme && contenidoInforme.length) ?
-                            contenidoInforme.map(x => typeof x.valor === 'string' ? x.valor :
-                                JSON.stringify(x.valor)).join('') : this.informeRegistros);
+                        .replace('<!--registros-->', (contenidoInforme && contenidoInforme.length)
+                            ? (contenidoInforme.map(x => typeof x.valor === 'string' ? x.valor : JSON.stringify(x.valor)).join(''))
+                            : this.informeRegistros);
 
                     if (prestacion.solicitud.tipoPrestacion.conceptId === '2341000013106') {
                         html = html.replace('<!--fechaIngreso-->', prestacion.ejecucion.registros[0].valor.fechaDesde ?
@@ -570,7 +573,9 @@ export class Documento {
                         .replace('<!--fechaEjecucion-->', moment(fechaEjecucion).format('DD/MM/YYYY HH:mm') + ' hs')
                         .replace('<!--fechaValidacion-->', moment(fechaValidacion).format('DD/MM/YYYY HH:mm') + ' hs')
                         .replace('<!--tituloInforme-->', tituloInforme ? tituloInforme : '')
-                        .replace('<!--registros-->', (contenidoInforme && contenidoInforme.length) ? contenidoInforme.map(x => typeof x.valor === 'string' ? x.valor : JSON.stringify(x.valor)).join('') : this.informeRegistros);
+                        .replace('<!--registros-->', (contenidoInforme && contenidoInforme.length)
+                            ? contenidoInforme.map(x => typeof x.valor === 'string' ? x.valor : JSON.stringify(x.valor)).join('')
+                            : this.informeRegistros);
 
                     // FOOTER
                     html = html
@@ -620,6 +625,13 @@ export class Documento {
                     // Limpio el informe
                     this.informeRegistros = [];
                     this.nivelPadre = 0;
+
+                    const data = {
+                        datosRapidosPaciente: 'lkasjdlkjsadlkajsld'
+                    }
+                    const template = Handlebars.compile(html);
+                    html = template(data);
+                    // console.log(html);
 
                     resolve(html);
 
