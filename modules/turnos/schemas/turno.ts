@@ -28,7 +28,6 @@ const turnoSchema = new mongoose.Schema({
         type: String,
         enum: ['asistio', 'noAsistio', 'sinDatos']
     },
-    horaAsistencia: Date,
     primeraVez: {
         type: {
             profesional: Boolean,

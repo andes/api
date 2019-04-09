@@ -27,6 +27,8 @@ import {
 import {
     EventCore
 } from '@andes/event-bus';
+import * as turnosController from '../../../modules/turnos/controller/turnosController';
+import * as agendaController from '../../../modules/turnos/controller/agenda';
 import { NotificationService } from '../../../modules/mobileApp/controller/NotificationService';
 
 // Turno
@@ -34,7 +36,6 @@ export function darAsistencia(req, data, tid = null) {
     const turno = getTurno(req, data, tid);
     turno.asistencia = 'asistio';
     turno.updatedAt = new Date();
-    turno.horaAsistencia = new Date();
     turno.updatedBy = req.user.usuario || req.user;
     return turno;
 }
@@ -43,7 +44,6 @@ export function darAsistencia(req, data, tid = null) {
 export function sacarAsistencia(req, data, tid = null) {
     const turno = getTurno(req, data, tid);
     turno.asistencia = undefined;
-    turno.horaAsistencia = undefined;
     turno.updatedAt = new Date();
     turno.updatedBy = req.user.usuario || req.user;
     return turno;

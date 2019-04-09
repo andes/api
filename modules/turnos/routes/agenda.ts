@@ -419,26 +419,6 @@ router.patch('/agenda/:id*?', (req, res, next) => {
                                 EventCore.emitAsync('citas:agenda:update', data[0]);
                             });
                         }).catch(err2 => { return next(err2); });
-                    } else if (req.body.op === 'darAsistencia') {
-                        agendaCtrl.darAsistencia(req, data, t[0]).then(() => {
-                            Auth.audit(data[0], req);
-                            data[0].save((error) => {
-                                if (error) {
-                                    return next(error);
-                                }
-                                EventCore.emitAsync('citas:turno:asistencia', data[0]);
-                            });
-                        }).catch(err2 => { return next(err2); });
-                    } else if (req.body.op === 'sacarAsistencia') {
-                        agendaCtrl.sacarAsistencia(req, data, t[0]).then(() => {
-                            Auth.audit(data[0], req);
-                            data[0].save((error) => {
-                                if (error) {
-                                    return next(error);
-                                }
-                                EventCore.emitAsync('citas:turno:unasistencia', data[0]);
-                            });
-                        }).catch(err2 => { return next(err2); });
                     }
                 } else {
                     agenda.find({ 'sobreturnos._id': mongoose.Types.ObjectId(t[0]) }, (err2, data2) => {
