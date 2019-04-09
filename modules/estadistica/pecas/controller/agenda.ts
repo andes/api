@@ -144,7 +144,7 @@ async function insertCompleto(turno: any, idEfectorSips) {
         '\',\'' + turno.ConsC2 + '\',\'' + turno.ConsObst + '\',\'' + turno.tipoPrestacion +
         // DATOS PACIENTE
         '\',' + dni + ',\'' + pacienteApellido + '\',\'' + pacienteNombres + '\',\'' + turno.HC + '\',\'' + turno.codSexo +
-        '\',\'' + turno.Sexo + '\',' + fechaNac + ',' + turno.Edad + ',\'' + turno.uniEdad + '\',\'' + turno.CodRangoEdad +
+        '\',\'' + turno.Sexo + '\',' + fechaNac + ',' + turno.Edad + ',\'' + turno.UniEdad + '\',\'' + turno.CodRangoEdad +
         '\',\'' + turno.RangoEdad + '\',' + turno.IdObraSocial + ',\'' + pacienteObraSocial + '\',\'' + turno.IdPaciente + '\',\'' + turno.telefono +
         '\',' + turno.IdBarrio + ',\'' + turno.Barrio + '\',' + turno.IdLocalidad +
         ',\'' + turno.Localidad + '\',' + turno.IdDpto + ',\'' + turno.Departamento + '\',' + turno.IdPcia + ',\'' + turno.Provincia +
@@ -154,11 +154,11 @@ async function insertCompleto(turno: any, idEfectorSips) {
         // DATOS CONSULTA
         '\',\'' + turno.asistencia + '\',\'' + turno.reasignado +
         '\',\'' + turno.Diag1CodigoOriginal + '\',\'' + turno.Desc1DiagOriginal + '\',\'' + turno.Diag1CodigoAuditado + '\',\'' + turno.Desc1DiagAuditado +
-        '\',\'' + turno.semanticTag1 + '\',\'' + turno.conceptId1 + '\',\'' + turno.term1 + '\',' + turno.primeraVez1 +
+        '\',\'' + turno.semanticTag1 + '\',\'' + turno.SnomedConcept1 + '\',\'' + turno.SnomedTerm1 + '\',' + turno.primeraVez1 +
         ',\'' + turno.Diag2CodigoOriginal + '\',\'' + turno.Desc2DiagOriginal + '\',\'' + turno.Diag2CodigoAuditado + '\',\'' + turno.Desc2DiagAuditado +
-        '\',\'' + turno.semanticTag2 + '\',\'' + turno.conceptId2 + '\',\'' + turno.term2 + '\',' + turno.primeraVez2 +
+        '\',\'' + turno.semanticTag2 + '\',\'' + turno.SnomedConcept2 + '\',\'' + turno.SnomedTerm2 + '\',' + turno.primeraVez2 +
         ',\'' + turno.Diag3CodigoOriginal + '\',\'' + turno.Desc3DiagOriginal + '\',\'' + turno.Diag3CodigoAuditado + '\',\'' + turno.Desc3DiagAuditado +
-        '\',\'' + turno.semanticTag3 + '\',\'' + turno.conceptId3 + '\',\'' + turno.term3 + '\',' + turno.primeraVez3 +
+        '\',\'' + turno.semanticTag3 + '\',\'' + turno.SnomedConcept3 + '\',\'' + turno.Snomedterm3 + '\',' + turno.primeraVez3 +
         ',\'' + profesional + '\',\'' + turno.TipoProfesional + '\',' + turno.CodigoEspecialidad + ',\'' + turno.Especialidad +
         '\',' + turno.CodigoServicio + ',\'' + turno.Servicio + '\',\'' + turno.codifica + '\',' + turno.turnosMobile + ',\'' + moment().format('YYYYMMDD HH:mm') + '\') ';
     try {
