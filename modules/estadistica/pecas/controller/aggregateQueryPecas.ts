@@ -676,14 +676,14 @@ export async function pecasExport(start, end) {
                         if: {
                             $ne: [{
                                 $in: [{
-                                    $type: '$_bloques.turnos.paciente.obraSocial.codigo'
+                                    $type: '$_bloques.turnos.paciente.obraSocial.codigoFinanciador'
                                 },
                                 ['missing', 'null', 'undefined']
                                 ]
                             }, true]
                         },
 
-                        then: '$_bloques.turnos.paciente.obraSocial.codigo',
+                        then: '$_bloques.turnos.paciente.obraSocial.codigoFinanciador',
                         else: null
                     }
                 },

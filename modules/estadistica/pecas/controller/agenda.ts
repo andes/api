@@ -111,7 +111,7 @@ async function soloAgenda(row: any, idEfectorSips) {
 // castea cada turno asignado y lo inserta en la tabla Sql
 async function insertCompleto(turno: any, idEfectorSips) {
     // Chequeos necesarios
-    let fechaNac = turno.FechaNacimiento ? `'${turno.FechaNacimiento}'` : null;
+    let fechaNac = (turno.FechaNacimiento && moment(turno.FechaNacimiento).year()) > 1900 ? `'${turno.FechaNacimiento}'` : null;
     let dni = turno.DNI !== '' ? turno.DNI : null;
     let profesional = turno.Profesional ? turno.Profesional.replace('\'', '\'\'') : null;
     let pacienteApellido = turno.Apellido ? turno.Apellido.replace('\'', '\'\'') : null;
