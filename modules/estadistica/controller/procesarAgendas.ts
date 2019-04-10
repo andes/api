@@ -37,7 +37,7 @@ export async function procesar(parametros: any) {
     }
 
     if (parametros.profesional) {
-        match['profesionales._id'] = parametros.profesional;
+        match['profesionales._id'] = mongoose.Types.ObjectId(parametros.profesional);
     }
 
     let matchEstado = {};
@@ -153,6 +153,6 @@ export async function procesar(parametros: any) {
             $match: matchOS
         }
     ];
-    const turnosAsignados = await toArray(agenda.aggregate(pipelineBuscador).cursor({}).exec());
+    const turnosAsignados = await agenda.aggregate(pipelineBuscador);
     return turnosAsignados;
 }
