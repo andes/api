@@ -9,7 +9,7 @@ import * as agendaCtrl from '../controller/agenda';
 import * as prestacionCtrl from '../../rup/controllers/prestacion';
 import * as agendaHPNCacheCtrl from '../controller/agendasHPNCacheController';
 import * as diagnosticosCtrl from '../controller/diagnosticosC2Controller';
-import * as reportesDiariosCtrl from '../controller/reportesDiariosController';
+import {getResumenDiarioMensual, getPlanillaC1} from '../controller/reportesDiariosController';
 import { LoggerPaciente } from '../../../utils/loggerPaciente';
 import * as operations from './../../legacy/controller/operations';
 import { toArray } from '../../../utils/utils';
@@ -134,7 +134,7 @@ router.get('/agenda/reporteResumenDiarioMensuals', async (req, res, next) => {
     let params = req.query;
 
     try {
-        const resultado = await reportesDiariosCtrl.getResumenDiarioMensual(params);
+        const resultado = await getResumenDiarioMensual(params);
         res.json(resultado);
     } catch (err) {
         return next(err);
@@ -146,7 +146,7 @@ router.get('/agenda/reportePlanillaC1', async (req, res, next) => {
     let params = req.query;
 
     try {
-        const resultado = await reportesDiariosCtrl.getPlanillaC1(params);
+        const resultado = await getPlanillaC1(params);
         res.json(resultado);
     } catch (err) {
         return next(err);
