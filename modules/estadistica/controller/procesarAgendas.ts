@@ -21,7 +21,7 @@ export async function procesar(parametros: any) {
         'bloques.turnos': {
             $ne: null
         },
-        'bloques.turnos.estado': 'asignado'
+        $or: [{ 'bloques.turnos.estado': 'asignado' }, { 'sobreturnos.estado': 'asignado' }]
     };
 
     if (parametros.fechaDesde) {
@@ -144,6 +144,7 @@ export async function procesar(parametros: any) {
             $match: matchOS
         }
     ];
+    // console.log('pipeline ', JSON.stringify(pipelineBuscador));
     const turnosAsignados = await toArray(agenda.aggregate(pipelineBuscador).cursor({}).exec());
     return turnosAsignados;
 }
