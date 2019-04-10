@@ -18,7 +18,8 @@ router.get('/prestacionesDisponibles', async (req: any, res, next) => {
     const matchAgendas = {};
 
     // TODO: compararar con organización del token
-    matchAgendas['organizacion._id'] = { $eq: new ObjectId('57f67d090166fa6aedb2f9fb') };
+    // console.log
+    matchAgendas['organizacion._id'] = { $eq: new ObjectId('57e9670e52df311059bc8964') };
     matchAgendas['horaInicio'] = { $gte: new Date(moment().format('YYYY-MM-DD HH:mm')) };
     matchAgendas['$or'] = [
         { 'bloques.restantesProgramados': { $gt: 0 } },
