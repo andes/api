@@ -111,14 +111,15 @@ async function soloAgenda(row: any, idEfectorSips) {
 // castea cada turno asignado y lo inserta en la tabla Sql
 async function insertCompleto(turno: any, idEfectorSips) {
     // Chequeos necesarios
-    let fechaNac = turno.fechaNacimiento ? `'${turno.fechaNacimiento}'` : null;
+    let fechaNac = turno.FechaNacimiento ? `'${turno.FechaNacimiento}'` : null;
     let dni = turno.DNI !== '' ? turno.DNI : null;
-    let profesional = turno.profesional ? turno.Profesional.replace('\'', '\'\'') : null;
+    let profesional = turno.Profesional ? turno.Profesional.replace('\'', '\'\'') : null;
     let pacienteApellido = turno.Apellido ? turno.Apellido.replace('\'', '\'\'') : null;
     let pacienteNombres = turno.Nombres ? turno.Nombres.replace('\'', '\'\'') : null;
     let pacienteObraSocial = turno.ObraSocial ? turno.ObraSocial.replace('\'', '\'\'') : null;
     let turnosDelDia = turno.turnosDelDia ? turno.turnosDelDia : null;
     let turnosLlaves = turno.turnosLlaves ? turno.turnosLlaves : null;
+    let pacienteTelefono = turno.Telefono ? turno.Telefono : null;
     let turnosProfesional = turno.turnosProfesional ? turno.turnosProfesional : null;
     let turnosProgramados = turno.turnosProgramados ? turno.turnosProgramados : null;
     let numeroBloque = turno.sobreturno === 'SI' ? -1 : turno.numeroBloque;
@@ -127,7 +128,7 @@ async function insertCompleto(turno: any, idEfectorSips) {
         '(idEfector, Efector, TipoEfector, DescTipoEfector, IdZona, Zona, SubZona, idEfectorSuperior, EfectorSuperior, AreaPrograma, ' +
         'idAgenda, FechaAgenda, HoraAgenda, estadoAgenda, numeroBloque, turnosProgramados, turnosProfesional, turnosLlaves, turnosDelDia, ' +
         'idTurno, estadoTurno, tipoTurno, sobreturno, FechaConsulta, HoraTurno, Periodo, Tipodeconsulta, estadoTurnoAuditoria, Principal, ConsC2, ConsObst, tipoPrestacion, ' +
-        'DNI, Apellido, Nombres, HC, CodSexo, Sexo, FechaNacimiento, Edad, UniEdad, CodRangoEdad, RangoEdad, IdObraSocial, ObraSocial, IdPaciente, telefono, ' +
+        'DNI, Apellido, Nombres, HC, CodSexo, Sexo, FechaNacimiento, Edad, UniEdad, CodRangoEdad, RangoEdad, IdObraSocial, ObraSocial, IdPaciente, Telefono, ' +
         'IdBarrio, Barrio, IdLocalidad, Localidad, IdDpto, Departamento, IdPcia, Provincia, IdNacionalidad, Nacionalidad, ' +
         'Calle, Altura, Piso, Depto, Manzana, Longitud, Latitud, ' +
         'Peso, Talla, TAS, TAD, IMC, RCVG, asistencia, reasignado, ' +
@@ -143,9 +144,9 @@ async function insertCompleto(turno: any, idEfectorSips) {
         ',\'' + turno.idTurno + '\',\'' + turno.estadoTurno + '\',\'' + turno.tipoTurno + '\',\'' + turno.sobreturno + '\',\'' + turno.FechaConsulta + '\',\'' + turno.HoraTurno + '\',\'' + turno.Periodo + '\',\'' + turno.Tipodeconsulta + '\',\'' + turno.estadoTurnoAuditoria + '\',\'' + turno.Principal +
         '\',\'' + turno.ConsC2 + '\',\'' + turno.ConsObst + '\',\'' + turno.tipoPrestacion +
         // DATOS PACIENTE
-        '\',' + dni + ',\'' + pacienteApellido + '\',\'' + pacienteNombres + '\',\'' + turno.HC + '\',\'' + turno.codSexo +
+        '\',' + dni + ',\'' + pacienteApellido + '\',\'' + pacienteNombres + '\',\'' + turno.HC + '\',\'' + turno.CodSexo +
         '\',\'' + turno.Sexo + '\',' + fechaNac + ',' + turno.Edad + ',\'' + turno.UniEdad + '\',\'' + turno.CodRangoEdad +
-        '\',\'' + turno.RangoEdad + '\',' + turno.IdObraSocial + ',\'' + pacienteObraSocial + '\',\'' + turno.IdPaciente + '\',\'' + turno.telefono +
+        '\',\'' + turno.RangoEdad + '\',' + turno.IdObraSocial + ',\'' + pacienteObraSocial + '\',\'' + turno.IdPaciente + '\',\'' + pacienteTelefono +
         '\',' + turno.IdBarrio + ',\'' + turno.Barrio + '\',' + turno.IdLocalidad +
         ',\'' + turno.Localidad + '\',' + turno.IdDpto + ',\'' + turno.Departamento + '\',' + turno.IdPcia + ',\'' + turno.Provincia +
         '\',' + turno.IdNacionalidad + ',\'' + turno.Nacionalidad + '\',\'' + turno.Calle + '\',\'' + turno.Altura + '\',\'' + turno.Piso +
@@ -154,11 +155,11 @@ async function insertCompleto(turno: any, idEfectorSips) {
         // DATOS CONSULTA
         '\',\'' + turno.asistencia + '\',\'' + turno.reasignado +
         '\',\'' + turno.Diag1CodigoOriginal + '\',\'' + turno.Desc1DiagOriginal + '\',\'' + turno.Diag1CodigoAuditado + '\',\'' + turno.Desc1DiagAuditado +
-        '\',\'' + turno.semanticTag1 + '\',\'' + turno.SnomedConcept1 + '\',\'' + turno.SnomedTerm1 + '\',' + turno.primeraVez1 +
+        '\',\'' + turno.SemanticTag1 + '\',\'' + turno.SnomedConcept1 + '\',\'' + turno.SnomedTerm1 + '\',' + turno.primeraVez1 +
         ',\'' + turno.Diag2CodigoOriginal + '\',\'' + turno.Desc2DiagOriginal + '\',\'' + turno.Diag2CodigoAuditado + '\',\'' + turno.Desc2DiagAuditado +
-        '\',\'' + turno.semanticTag2 + '\',\'' + turno.SnomedConcept2 + '\',\'' + turno.SnomedTerm2 + '\',' + turno.primeraVez2 +
+        '\',\'' + turno.SemanticTag2 + '\',\'' + turno.SnomedConcept2 + '\',\'' + turno.SnomedTerm2 + '\',' + turno.primeraVez2 +
         ',\'' + turno.Diag3CodigoOriginal + '\',\'' + turno.Desc3DiagOriginal + '\',\'' + turno.Diag3CodigoAuditado + '\',\'' + turno.Desc3DiagAuditado +
-        '\',\'' + turno.semanticTag3 + '\',\'' + turno.SnomedConcept3 + '\',\'' + turno.Snomedterm3 + '\',' + turno.primeraVez3 +
+        '\',\'' + turno.SemanticTag3 + '\',\'' + turno.SnomedConcept3 + '\',\'' + turno.Snomedterm3 + '\',' + turno.primeraVez3 +
         ',\'' + profesional + '\',\'' + turno.TipoProfesional + '\',' + turno.CodigoEspecialidad + ',\'' + turno.Especialidad +
         '\',' + turno.CodigoServicio + ',\'' + turno.Servicio + '\',\'' + turno.codifica + '\',' + turno.turnosMobile + ',\'' + moment().format('YYYYMMDD HH:mm') + '\') ';
     try {

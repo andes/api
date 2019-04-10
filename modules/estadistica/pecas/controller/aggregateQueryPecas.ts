@@ -248,7 +248,7 @@ export async function pecasExport(start, end) {
                                     valor: '$_bloques.turnos.paciente.edad.diffMeses',
                                     unidad: 'M',
                                     CodRangoEdad: '1',
-                                    RangoEdad: [1]
+                                    RangoEdad: '[1]'
                                 }
                             },
                             {
@@ -259,7 +259,7 @@ export async function pecasExport(start, end) {
                                     valor: '$_bloques.turnos.paciente.edad.diffDia',
                                     unidad: 'D',
                                     CodRangoEdad: '1',
-                                    RangoEdad: [1]
+                                    RangoEdad: '[1]'
                                 }
                             }
                         ],
@@ -719,7 +719,7 @@ export async function pecasExport(start, end) {
                         else: null
                     }
                 },
-                telefono: {
+                Telefono: {
                     $cond: {
                         if: {
                             $ne: [{
