@@ -150,7 +150,7 @@ export async function getResumenDiarioMensual(params: any) {
         {
             $project: {
                 _id: 0,
-                fechaISO: { $toDate: { $dateToString: { format: '%d-%m-%G', date: '$_id.fecha' } } },
+                fechaISO:  '$_id.fecha',
                 fecha: { $dateToString: { format: '%d-%m-%G', date: '$_id.fecha' } },
                 sexo: '$_id.sexo',
                 edad: { $toInt: '$_id.edad' },
@@ -165,7 +165,7 @@ export async function getResumenDiarioMensual(params: any) {
         }
     ];
 
-    let data = await toArray(agendaModel.aggregate(pipeline).cursor({}).exec());
+    let data = await agendaModel.aggregate(pipeline);
 
     let formatedData = formatData(data, y, m);
 
