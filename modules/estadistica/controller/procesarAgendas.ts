@@ -33,7 +33,7 @@ export async function procesar(parametros: any) {
     }
 
     if (parametros.prestacion) {
-        match['tipoPrestaciones._id'] = parametros.prestacion;
+        match['tipoPrestaciones._id'] = mongoose.Types.ObjectId(parametros.prestacion);
     }
 
     if (parametros.profesional) {
@@ -69,15 +69,24 @@ export async function procesar(parametros: any) {
         { $match: match },
         { $addFields: { profesionales0: { $arrayElemAt: ['$profesionales', 0] } } },
         { $addFields: { 'sobreturnos.tipoTurno': 'sobreturno' } },
-        { $unwind: '$bloques' },
-        { $addFields: { turnos: { $concatArrays: ['$sobreturnos', '$bloques.turnos'] } } },
-        { $unwind: '$turnos' },
-        { $match: { $expr: { $and: [{ $eq: ['$turnos.estado', 'asignado'] }] } } },
+        {
+            $addFields: {
+                _sobreturnos: [{ turnos: '$sobreturnos' }]
+            }
+        },
+        {
+            $addFields: {
+                _bloques: { $concatArrays: ['$_sobreturnos', '$bloques'] }
+            }
+        },
+        { $unwind: '$_bloques' },
+        { $unwind: '$_bloques.turnos' },
+        { $match: { $expr: { $and: [{ $eq: ['$_bloques.turnos.estado', 'asignado'] }] } } },
         {
             $project: {
                 idAgenda: '$_id',
                 idBloque: '$bloques._id',
-                turno: '$turnos',
+                turno: '$_bloques.turnos',
                 profesionales0: '$profesionales0.apellido',
                 profesionales: '$profesionales'
             }
@@ -144,7 +153,6 @@ export async function procesar(parametros: any) {
             $match: matchOS
         }
     ];
-    // console.log('pipeline ', JSON.stringify(pipelineBuscador));
     const turnosAsignados = await toArray(agenda.aggregate(pipelineBuscador).cursor({}).exec());
     return turnosAsignados;
 }
