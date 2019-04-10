@@ -591,7 +591,8 @@ router.patch('/prestaciones/:id', (req, res, next) => {
             }
 
             if (req.body.op === 'romperValidacion') {
-                EventCore.emitAsync('rup:prestacion:romperValidacion', data.id);
+                const _prestacion = data;
+                EventCore.emitAsync('rup:prestacion:romperValidacion', _prestacion);
             }
 
             if (req.body.planes) {
