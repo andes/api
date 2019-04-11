@@ -176,8 +176,6 @@ router.get('/pacientes/inactivos/', async (req, res, next) => {
 });
 
 
-
-
 // Search using elastic search
 router.get('/pacientes', (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
@@ -253,7 +251,7 @@ router.get('/pacientes/buscarDocumento/', async (req, res, next) => {
         try {
             let matchingResult = await controller.matching(queryObject);
             if (matchingResult.length) {
-                let pacienteAndes = await controller.buscarPaciente(matchingResult[0].paciente._id);
+                let pacienteAndes = await controller.buscarPaciente(matchingResult[0].id);
                 res.send(pacienteAndes);
             } else {
                 queryObject.estado = 'validado';

@@ -4,6 +4,7 @@ import { Organizacion } from '../../../core/tm/schemas/organizacion';
 import { toArray } from '../../../utils/utils';
 import * as moment from 'moment';
 import { Types } from 'mongoose';
+import { Auth } from '../../../auth/auth.class';
 
 const ObjectId = Types.ObjectId;
 const router = express.Router();
@@ -19,7 +20,7 @@ router.get('/prestacionesDisponibles', async (req: any, res, next) => {
 
     // TODO: compararar con organización del token
     // console.log
-    matchAgendas['organizacion._id'] = { $eq: new ObjectId('57e9670e52df311059bc8964') };
+    matchAgendas['organizacion._id'] = { $eq: new ObjectId( Auth.getOrganization(req)) };
     matchAgendas['bloques.turnos.horaInicio'] = { $gte: new Date(moment().format('YYYY-MM-DD HH:mm')) };
     matchAgendas['$or'] = [
         { 'bloques.restantesProgramados': { $gt: 0 } },

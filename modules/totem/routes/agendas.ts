@@ -24,7 +24,7 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
     if (!req.query.prestacion) {
         return res.json();
     }
-    // matchAgendas['organizacion._id'] = { $eq: mongoose.Types.ObjectId(Auth.getOrganization(req)) }; // TODO: compararar con id de organización del token
+    matchAgendas['organizacion._id'] = { $eq: mongoose.Types.ObjectId(Auth.getOrganization(req)) }; // TODO: compararar con id de organización del token
     matchAgendas['organizacion._id'] = { $eq: new ObjectId('57e9670e52df311059bc8964') };
     matchAgendas['bloques.turnos.horaInicio'] = { $gte: new Date(moment().format('YYYY-MM-DD HH:mm')) };
     matchAgendas['$or'] = [
