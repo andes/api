@@ -146,9 +146,9 @@ export class Auth {
      */
     static appTokenProtected() {
         return (req, res, next) => {
+            console.log(req);
             if (req.user.type === 'app-token') {
-                let orgID = req.user.organizacion.id ? req.user.organizacion.id : req.user.organizacion;
-                authApps.findOne({ organizacion: mongoose.Types.ObjectId(orgID) }).then((app: any) => {
+                authApps.findOne({ _id: req.user.app.id }).then((app: any) => {
                     let token: string = req.headers.authorization.substring(4);
                     if (app.token && app.token === token) {
                         next();

@@ -20,7 +20,7 @@ router.get('/prestacionesDisponibles', async (req: any, res, next) => {
     // TODO: compararar con organización del token
     // console.log
     matchAgendas['organizacion._id'] = { $eq: new ObjectId('57e9670e52df311059bc8964') };
-    matchAgendas['horaInicio'] = { $gte: new Date(moment().format('YYYY-MM-DD HH:mm')) };
+    matchAgendas['bloques.turnos.horaInicio'] = { $gte: new Date(moment().format('YYYY-MM-DD HH:mm')) };
     matchAgendas['$or'] = [
         { 'bloques.restantesProgramados': { $gt: 0 } },
         { 'bloques.restantesDelDia': { $gt: 0 } }];
@@ -41,17 +41,21 @@ router.get('/prestacionesDisponibles', async (req: any, res, next) => {
     pipelinePrestaciones.push({
         $group: {
             _id: {
+                _id: '$prestaciones._id',
                 conceptId: '$prestaciones.conceptId',
-                term: '$_id.term'
-
+                fsn: '$prestaciones.fsn',
+                semanticTag: '$prestaciones.semanticTag',
+                term: '$prestaciones.term'
             }
         }
     });
     pipelinePrestaciones.push({
         $project: {
+            _id: '$_id._id',
             conceptId: '$_id.conceptId',
+            fsn: '$_id.fsn',
+            semanticTag: '$_id.semanticTag',
             term: '$_id.term'
-
         }
     });
 

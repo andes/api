@@ -24,10 +24,9 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
     if (!req.query.prestacion) {
         return res.json();
     }
-    console.log((req as any).user);
     // matchAgendas['organizacion._id'] = { $eq: mongoose.Types.ObjectId(Auth.getOrganization(req)) }; // TODO: compararar con id de organización del token
     matchAgendas['organizacion._id'] = { $eq: new ObjectId('57e9670e52df311059bc8964') };
-    matchAgendas['horaInicio'] = { $gte: new Date(moment().format('YYYY-MM-DD HH:mm')) };
+    matchAgendas['bloques.turnos.horaInicio'] = { $gte: new Date(moment().format('YYYY-MM-DD HH:mm')) };
     matchAgendas['$or'] = [
         { 'bloques.restantesProgramados': { $gt: 0 } },
         { 'bloques.restantesDelDia': { $gt: 0 } }];
@@ -49,9 +48,7 @@ router.get('/agendasDisponibles', async (req: any, res, next) => {
     pipelineAgendas.push({ $match: { 'resultado.bloques.tipoPrestaciones.conceptId': req.query.prestacion } });
 
     try {
-        console.log(pipelineAgendas);
         let prestaciones = await toArray(agenda.aggregate(pipelineAgendas).cursor({}).exec());
-        console.log(prestaciones);
         res.json(prestaciones.map(elem => { return elem.resultado; }));
     } catch (err) {
         return err;

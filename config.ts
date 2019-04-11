@@ -63,7 +63,7 @@ export const modules = {
         path: './core/mpi/routes',
         route: '/core/mpi',
         // TODO activar middleware de autenticación
-        // middleware: appMiddleware
+        middleware: appMiddleware
     },
     auditoria: {
         active: true,
@@ -217,7 +217,7 @@ export const modules = {
         active: true,
         path: './modules/totem/routes',
         route: '/modules/totem',
-        middleware: null
+        middleware: appMiddleware
     }
 };
 
