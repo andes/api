@@ -210,7 +210,7 @@ router.get('/pacientes/:id/obraSocial', async (req, res, next) => {
     }
     try {
         let resultado = await controller.buscarPaciente(req.params.id);
-        if (resultado) {
+        if (resultado && resultado.paciente.documento) {
             let pacienteEncontrado = resultado.paciente.toObject();
             pacienteEncontrado.id = pacienteEncontrado._id;
             let financiador;
