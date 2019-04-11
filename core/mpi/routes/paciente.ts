@@ -253,7 +253,8 @@ router.get('/pacientes/buscarDocumento/', async (req, res, next) => {
         try {
             let matchingResult = await controller.matching(queryObject);
             if (matchingResult.length) {
-                res.send(matchingResult);
+                let pacienteAndes = await controller.buscarPaciente(matchingResult[0].paciente._id);
+                res.send(pacienteAndes);
             } else {
                 queryObject.estado = 'validado';
                 queryObject.genero = queryObject.sexo;
