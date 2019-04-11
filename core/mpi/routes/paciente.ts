@@ -199,7 +199,6 @@ router.get('/pacientes/:id', (req, res, next) => {
 
 });
 
-// Simple mongodb query by ObjectId --> better performance
 router.get('/pacientes/:id/obraSocial', async (req, res, next) => {
     // busca en pacienteAndes y en pacienteMpi
     if (!Auth.check(req, 'mpi:paciente:getbyId')) {
@@ -235,10 +234,10 @@ router.get('/pacientes/:id/obraSocial', async (req, res, next) => {
             EventCore.emitAsync('mpi:paciente:get', pacienteEncontrado);
             res.json(pacienteEncontrado);
         } else {
-            return next(500);
+            return res.json(resultado.paciente);
         }
     } catch (error) {
-        return next(error);
+        return next('Paciente no encontrado');
     }
 
 });
