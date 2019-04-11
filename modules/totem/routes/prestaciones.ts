@@ -41,21 +41,17 @@ router.get('/prestacionesDisponibles', async (req: any, res, next) => {
     pipelinePrestaciones.push({
         $group: {
             _id: {
-                _id: '$prestaciones._id',
                 conceptId: '$prestaciones.conceptId',
-                fsn: '$prestaciones.fsn',
-                semanticTag: '$prestaciones.semanticTag',
-                term: '$prestaciones.term'
+                term: '$_id.term'
+
             }
         }
     });
     pipelinePrestaciones.push({
         $project: {
-            _id: '$_id._id',
             conceptId: '$_id.conceptId',
-            fsn: '$_id.fsn',
-            semanticTag: '$_id.semanticTag',
             term: '$_id.term'
+
         }
     });
 
