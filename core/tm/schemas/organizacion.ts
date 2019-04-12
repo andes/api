@@ -51,6 +51,7 @@ const _schema = new Schema({
     },
     fechaAlta: Date,
     fechaBaja: Date,
+    showMapa: Boolean,
     mapaSectores: [MapaSectoresSchema],
     unidadesOrganizativas: [SnomedConcept],
     configuraciones: SchemaTypes.Mixed
