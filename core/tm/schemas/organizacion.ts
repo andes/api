@@ -53,7 +53,8 @@ const _schema = new Schema({
     fechaBaja: Date,
     mapaSectores: [MapaSectoresSchema],
     unidadesOrganizativas: [SnomedConcept],
-    configuraciones: SchemaTypes.Mixed
+    configuraciones: SchemaTypes.Mixed,
+    ofertaPrestacional: [{ idSisa: Number, nombre: String }] // "prestaciones" traidas de sisa. Se muestran en la app mobile
 });
 
 _schema.plugin(AuditPlugin);
