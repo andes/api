@@ -252,12 +252,12 @@ router.get('/pacientes/buscarDocumento/', async (req, res, next) => {
             let matchingResult = await controller.matching(queryObject);
             if (matchingResult.length) {
                 let pacienteAndes = await controller.buscarPaciente(matchingResult[0].id);
-                res.send(pacienteAndes);
+                res.send(pacienteAndes.paciente);
             } else {
                 queryObject.estado = 'validado';
                 queryObject.genero = queryObject.sexo;
                 let nuevoPaciente = await controller.createPaciente(queryObject, userScheduler);
-                res.json([nuevoPaciente]);
+                res.json(nuevoPaciente);
             }
         } catch (error) {
             return next(error);
