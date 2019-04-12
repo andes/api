@@ -5,7 +5,7 @@ import * as utils from '../../../utils/utils';
 import { toArray } from '../../../utils/utils';
 import * as configPrivate from '../../../config.private';
 import { Auth } from '../../../auth/auth.class';
-import { validarOrganizacionSisa } from '../controller/organizacion';
+import { validarOrganizacionSisa, obtenerOfertaPrestacional } from '../controller/organizacion';
 const GeoJSON = require('geojson');
 const router = express.Router();
 
@@ -102,11 +102,22 @@ router.get('/organizaciones/georef/:id?', async (req, res, next) => {
         res.json(geoJsonData);
     }
 });
-
+/*
+* Dado el código sisa de un efector, devuelve sus datos en sisa, incluido su ofertaPrestacional
+*/
 router.get('/organizaciones/sisa/:id', async (req, res, next) => {
     try {
-        let orgSisa = await validarOrganizacionSisa(req.params.id);
+        let [orgSisa, ofertaPrestacional] = await Promise.all([validarOrganizacionSisa(req.params.id), obtenerOfertaPrestacional(req.params.id)]);
         if (orgSisa && orgSisa[0] === 200) {
+            if (ofertaPrestacional && ofertaPrestacional[0] === 200) {
+                let prestaciones = [];
+                ofertaPrestacional[1].prestaciones.forEach((prest: { id: Number, disponible: String, nombre: String }) => {
+                    if (prest.disponible === 'SI') {
+                        prestaciones.push({ idSisa: prest.id, nombre: prest.nombre });
+                    }
+                });
+                orgSisa[1]['ofertaPrestacional'] = prestaciones;
+            }
             res.json(orgSisa[1]);
         }
     } catch (err) {
