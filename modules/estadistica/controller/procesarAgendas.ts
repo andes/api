@@ -23,6 +23,7 @@ export async function procesar(parametros: any) {
         },
         $or: [{ 'bloques.turnos.estado': 'asignado' }, { 'sobreturnos.estado': 'asignado' }]
     };
+    let matchTurno = {};
 
     if (parametros.fechaDesde) {
         match['horaInicio'] = { $gte: new Date(parametros.fechaDesde) };
@@ -34,6 +35,9 @@ export async function procesar(parametros: any) {
 
     if (parametros.prestacion) {
         match['tipoPrestaciones._id'] = mongoose.Types.ObjectId(parametros.prestacion);
+        matchTurno['$expr'] = { $and: [{ $eq: ['$_bloques.turnos.estado', 'asignado'] }, { $eq: ['$_bloques.turnos.tipoPrestacion._id', mongoose.Types.ObjectId(parametros.prestacion)] }] };
+    } else {
+        matchTurno['$expr'] = { $and: [{ $eq: ['$_bloques.turnos.estado', 'asignado'] }] };
     }
 
     if (parametros.profesional) {
@@ -81,7 +85,7 @@ export async function procesar(parametros: any) {
         },
         { $unwind: '$_bloques' },
         { $unwind: '$_bloques.turnos' },
-        { $match: { $expr: { $and: [{ $eq: ['$_bloques.turnos.estado', 'asignado'] }] } } },
+        { $match: matchTurno },
         {
             $project: {
                 idAgenda: '$_id',
