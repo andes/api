@@ -6,6 +6,9 @@ import * as moment from 'moment';
 import { Organizacion } from '../../../../core/tm/schemas/organizacion';
 import { Logger } from '../../../../utils/logService';
 import { userScheduler } from '../../../../config.private';
+import { log } from '@andes/log';
+import { sendMail } from '../../../../utils/roboSender/sendEmail';
+import { emailListString } from '../../../../config.private';
 
 
 let poolPrestaciones;
@@ -17,7 +20,27 @@ const config = {
     connectionTimeout: 10000,
     requestTimeout: 45000
 };
+let logRequest = {
+    user: {
+        usuario: { nombre: 'pecasFueraDeAgenda', apellido: 'pecasFueraDeAgenda' },
+        app: 'jobPecas',
+        organizacion: 'Subsecretaría de salud'
+    },
+    ip: 'localhost',
+    connection: {
+        localAddress: ''
+    }
+};
 
+let mailOptions = {
+    from: 'info@andes.gob.ar',
+    to: emailListString,
+    subject: 'Error pecas fuera de agenda',
+    text: '',
+    html: '',
+    attachments: null
+
+};
 /**
  * Actualiza la tabla fuera_de_agenda de la BD Andes
  *
@@ -315,9 +338,9 @@ async function auxiliar(pres: any) {
             '\',' + prestacion.CodigoServicio + ',\'' + prestacion.Servicio + '\',\'' + prestacion.codifica + '\',\'' + moment().format('YYYYMMDD HH:mm') + '\',\'' + pres.idPrestacion + '\')';
 
         return executeQuery(queryInsert);
-        // console.log('pres ', prestacion);
 
     } catch (error) {
+        await log(logRequest, 'andes:pecas:bi', null, 'SQLOperation', error, null);
         return (error);
     }
 }
@@ -406,7 +429,10 @@ async function executeQuery(query: any) {
             return result.recordset[0].id;
         }
     } catch (err) {
-        Logger.log(userScheduler, 'scheduler', 'insert', query);
+        await log(logRequest, 'andes:pecas:bi', null, 'SQLOperation', query, null);
+        let options = mailOptions;
+        options.text = `'error al insertar en sql fuera Agenda: ${query}'`;
+        sendMail(mailOptions);
         return err;
     }
 }
