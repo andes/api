@@ -1,5 +1,11 @@
 import { SnomedCIE10Mapping } from '../../../core/term/controller/mapping';
 import * as cie10 from './../../../core/term/schemas/cie10';
+import { EventCore } from '@andes/event-bus';
+import * as codificacion from '../schemas/codificacion';
+
+EventCore.on('rup:prestacion:romperValidacion', async (prestacion) => {
+    await codificacion.findOneAndRemove({ idPrestacion: prestacion.id });
+});
 
 export function codificarPrestacion(unaPrestacion: any) {
     return new Promise((resolve, reject) => {
@@ -16,7 +22,6 @@ export function codificarPrestacion(unaPrestacion: any) {
                 };
                 const map = new SnomedCIE10Mapping(parametros.paciente, parametros.secondaryConcepts);
                 map.transform(parametros.conceptId).then(target => {
-
                     if (target) {
                         // Buscar en cie10 los primeros 5 digitos
                         cie10.model.findOne({
