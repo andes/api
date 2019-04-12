@@ -10,9 +10,9 @@ import { ElasticSync } from '../../../utils/elasticSync';
 import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
 import { EventCore } from '@andes/event-bus';
-import * as prepagaController from '../../../modules/obraSocial/controller/prepagas';
-import * as sumarController from '../../../modules/obraSocial/controller/sumar';
-import * as pucoController from '../../../modules/obraSocial/controller/puco';
+import { getPaciente as getPacientePrepagas } from '../../../modules/obraSocial/controller/prepagas';
+import { pacienteSumar as getPacienteSumar } from '../../../modules/obraSocial/controller/sumar';
+import { pacientePuco as getPacientePuco } from '../../../modules/obraSocial/controller/puco';
 
 const logD = debug('paciente-controller');
 const router = express.Router();
@@ -207,22 +207,27 @@ router.get('/pacientes/:id/obraSocial', async (req, res, next) => {
     if (!(mongoose.Types.ObjectId.isValid(req.params.id))) {
         return next(404);
     }
+    const idPaciente = req.params.id;
+    let resultado: { db?: String; paciente: any; };
     try {
-        let resultado = await controller.buscarPaciente(req.params.id);
-        if (resultado && resultado.paciente.documento) {
+        resultado = await controller.buscarPaciente(idPaciente);
+    } catch (err) {
+        return next('Paciente no encontrado');
+    }
+    if (resultado && resultado.paciente.documento) {
+        try {
             let pacienteEncontrado = resultado.paciente.toObject();
             pacienteEncontrado.id = pacienteEncontrado._id;
             let financiador;
-            let prepaga = await prepagaController.getPaciente(pacienteEncontrado.documento, pacienteEncontrado.sexo);
-
+            let prepaga = await getPacientePrepagas(pacienteEncontrado.documento, pacienteEncontrado.sexo);
             if (prepaga) {
                 financiador = [prepaga];
             } else {
-                let arrayOSPuco: any = await pucoController.pacientePuco(pacienteEncontrado.documento);
+                let arrayOSPuco: any = await getPacienteSumar(pacienteEncontrado.documento);
                 if (arrayOSPuco.length > 0) {
                     financiador = arrayOSPuco;
                 } else {
-                    let arrayOSSumar = await sumarController.pacienteSumar(pacienteEncontrado.documento);
+                    let arrayOSSumar = await getPacientePuco(pacienteEncontrado.documento);
                     if (arrayOSSumar.length > 0) {
                         financiador = arrayOSSumar;
                     } else {
@@ -233,11 +238,11 @@ router.get('/pacientes/:id/obraSocial', async (req, res, next) => {
             pacienteEncontrado.financiador = financiador;
             EventCore.emitAsync('mpi:paciente:get', pacienteEncontrado);
             res.json(pacienteEncontrado);
-        } else {
+        } catch (error) {
             return res.json(resultado.paciente);
         }
-    } catch (error) {
-        return next('Paciente no encontrado');
+    } else {
+        return res.json(resultado.paciente);
     }
 
 });
