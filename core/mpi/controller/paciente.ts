@@ -847,7 +847,7 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
         resRenaper = await getServicioRenaper({ documento: pacienteAndes.documento, sexo: sexoQuery });
         andesLog(req, logKeys.validacionPaciente.key, pacienteAndes, logKeys.validacionPaciente.operacion, resRenaper);
     } catch (error) {
-        andesLog(req, logKeys.validacionPaciente.key, pacienteAndes, logKeys.validacionPaciente.operacion, null, null, 'Error validando paciente por RENAPER');
+        andesLog(req, logKeys.validacionPaciente.key, pacienteAndes, logKeys.validacionPaciente.operacion, null, 'Error validando paciente por RENAPER');
         return await validarSisa(pacienteAndes, req);
     }
     let band = true;
@@ -890,7 +890,7 @@ async function validarSisa(pacienteAndes: any, req: any, foto = null) {
         }
         return { paciente: pacienteAndes, validado: true };
     } catch (error) {
-        andesLog(req, logKeys.validacionPaciente.key, pacienteAndes, logKeys.validacionPaciente.operacion, null, null, 'Error validando paciente por SISA');
+        andesLog(req, logKeys.validacionPaciente.key, pacienteAndes, logKeys.validacionPaciente.operacion, null, 'Error validando paciente por SISA');
         // no hacemos nada con el paciente
         return { paciente: pacienteAndes, validado: false };
     }

@@ -215,7 +215,7 @@ router.put('/pacientes/auditoria/setActivo', async (req, res, next) => {
             res.json(nuevoPac);
         }
     } catch (error) {
-        andesLog(req, logKeys.mpiAuditoriaSetActivo.key, req.body._id, logKeys.mpiAuditoriaSetActivo.operacion, null, null, 'Error activando/desactivando paciente');
+        andesLog(req, logKeys.mpiAuditoriaSetActivo.key, req.body._id, logKeys.mpiAuditoriaSetActivo.operacion, null, 'Error activando/desactivando paciente');
         return next(error);
     }
 });
