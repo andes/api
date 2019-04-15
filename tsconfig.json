@@ -20,6 +20,9 @@
             ],
             "@andes/drive/*": [
                 "./packages/drive/*"
+            ],
+            "@andes/pacs-server/*": [
+                "./packages/pacs-server/*"
             ]
         },
         "typeRoots": [
