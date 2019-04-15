@@ -348,8 +348,14 @@ export default [
         key: 'dashboard',
         title: 'Panel de datos estadísticos en gráficos y tablas',
         child: [
-            { key: 'citas', title: 'Ver Dashboard de Citas', type: 'boolean'},
-            { key: 'top', title: 'Ver Dashboard de TOP', type: 'boolean'}
+            { key: 'tipoPrestacion', title: 'Tipo de prestación', type: 'prestacion'},
+            { key: 'citas', title: 'Dashboard Citas', child: [
+                { key: 'verDashboard', title: 'Ver Dashboard Citas', type: 'boolean'},
+                { key: 'verProfesionales', title: 'Ver todos los profesionales', type: 'boolean'}
+            ]},
+            { key: 'top', title: 'Dashboard TOP', child: [
+                { key: 'verDashboard', title: 'Ver Dashboard Top', type: 'boolean'}
+            ]}
         ]
     }
 
