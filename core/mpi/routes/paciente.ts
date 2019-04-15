@@ -10,10 +10,7 @@ import { ElasticSync } from '../../../utils/elasticSync';
 import * as debug from 'debug';
 import { toArray } from '../../../utils/utils';
 import { EventCore } from '@andes/event-bus';
-import { getPaciente as getPacientePrepagas } from '../../../modules/obraSocial/controller/prepagas';
-import { pacienteSumar as getPacienteSumar } from '../../../modules/obraSocial/controller/sumar';
-import { pacientePuco as getPacientePuco } from '../../../modules/obraSocial/controller/puco';
-
+import { getObraSocial } from '../../../modules/obraSocial/controller/obraSocial';
 const logD = debug('paciente-controller');
 const router = express.Router();
 
@@ -177,30 +174,7 @@ router.get('/pacientes/inactivos/', async (req, res, next) => {
 });
 
 
-// Simple mongodb query by ObjectId --> better performance
-router.get('/pacientes/:id', (req, res, next) => {
-    // busca en pacienteAndes y en pacienteMpi
-    if (!Auth.check(req, 'mpi:paciente:getbyId')) {
-        return next(403);
-    }
-    if (!(mongoose.Types.ObjectId.isValid(req.params.id))) {
-        return next(404);
-    }
-    controller.buscarPaciente(req.params.id).then((resultado: any) => {
-        if (resultado) {
-            EventCore.emitAsync('mpi:paciente:get', resultado.paciente);
-            res.json(resultado.paciente);
-        } else {
-            return next(500);
-        }
-    }).catch((err) => {
-        return next(err);
-    });
-
-});
-
-router.get('/pacientes/:id/obraSocial', async (req, res, next) => {
-    // busca en pacienteAndes y en pacienteMpi
+router.get('/pacientes/:id', async (req, res, next) => {
     if (!Auth.check(req, 'mpi:paciente:getbyId')) {
         return next(403);
     }
@@ -215,33 +189,16 @@ router.get('/pacientes/:id/obraSocial', async (req, res, next) => {
         return next('Paciente no encontrado');
     }
     if (resultado && resultado.paciente.documento) {
+        let pacienteEncontrado = resultado.paciente.toObject();
+        pacienteEncontrado.id = pacienteEncontrado._id;
         try {
-            let pacienteEncontrado = resultado.paciente.toObject();
-            pacienteEncontrado.id = pacienteEncontrado._id;
-            let financiador;
-            let prepaga = await getPacientePrepagas(pacienteEncontrado.documento, pacienteEncontrado.sexo);
-            if (prepaga) {
-                financiador = [prepaga];
-            } else {
-                let arrayOSPuco: any = await getPacienteSumar(pacienteEncontrado.documento);
-                if (arrayOSPuco.length > 0) {
-                    financiador = arrayOSPuco;
-                } else {
-                    let arrayOSSumar = await getPacientePuco(pacienteEncontrado.documento);
-                    if (arrayOSSumar.length > 0) {
-                        financiador = arrayOSSumar;
-                    } else {
-                        financiador = [];
-                    }
-                }
-            }
-            pacienteEncontrado.financiador = financiador;
-            EventCore.emitAsync('mpi:paciente:get', pacienteEncontrado);
+            pacienteEncontrado.financiador = await getObraSocial(pacienteEncontrado);
             res.json(pacienteEncontrado);
         } catch (error) {
             return res.json(resultado.paciente);
         }
     } else {
+        // Paciente sin DNI
         return res.json(resultado.paciente);
     }
 
