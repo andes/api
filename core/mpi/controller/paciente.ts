@@ -26,32 +26,30 @@ import { nextTick } from 'async';
  * @param data Datos del paciente
  * @param req  request de express para poder auditar
  */
-export function createPaciente(data, req) {
-    return new Promise((resolve, reject) => {
-        const newPatient = new paciente(data);
-        if (req) {
-            Auth.audit(newPatient, req);
-        }
-        newPatient.save((err) => {
-            if (err) {
-                return reject(err);
-            }
-            const nuevoPac = JSON.parse(JSON.stringify(newPatient));
-            delete nuevoPac._id;
-            delete nuevoPac.relaciones;
-            delete nuevoPac.direccion;
-            const connElastic = new ElasticSync();
-            connElastic.create(newPatient._id.toString(), nuevoPac).then(() => {
-                Logger.log(req, 'mpi', 'insert', newPatient);
-                // Código para emitir eventos
-                EventCore.emitAsync('mpi:patient:create', newPatient);
-                //
-                return resolve(newPatient);
-            }).catch(error => {
-                return reject(error);
-            });
-        });
-    });
+export async function createPaciente(data, req) {
+    const newPatient = new paciente(data);
+    if (req) {
+        Auth.audit(newPatient, req);
+    }
+    try {
+        await newPatient.save();
+        const nuevoPac = JSON.parse(JSON.stringify(newPatient));
+        delete nuevoPac._id;
+        delete nuevoPac.relaciones;
+        delete nuevoPac.direccion;
+
+        const connElastic = new ElasticSync();
+        await connElastic.create(newPatient._id.toString(), nuevoPac);
+        andesLog(req, logKeys.mpiInsert.key, req.body._id, logKeys.mpiInsert.operacion, newPatient, null);
+
+        // Código para emitir eventos
+        EventCore.emitAsync('mpi:patient:create', newPatient);
+        return newPatient;
+    } catch (error) {
+        andesLog(req, logKeys.mpiInsert.key, req.body._id, logKeys.mpiInsert.operacion, null, 'Error insertando paciente');
+        return error;
+    }
+
 }
 
 
@@ -66,24 +64,20 @@ export async function updatePaciente(pacienteObj, data, req) {
         Auth.audit(pacienteObj, req);
     }
     try {
-        // await pacienteObj.save();
         await pacienteObj.save();
         const connElastic = new ElasticSync();
         let updated = await connElastic.sync(pacienteObj);
         if (updated) {
-            Logger.log(req, 'mpi', 'update', {
-                original: pacienteOriginal,
-                nuevo: pacienteObj
-            });
+            andesLog(req, logKeys.mpiUpdate.key, req.body._id, logKeys.mpiUpdate.operacion, pacienteObj, pacienteOriginal);
         } else {
-            Logger.log(req, 'mpi', 'insert', pacienteObj);
+            andesLog(req, logKeys.mpiInsert.key, req.body._id, logKeys.mpiInsert.operacion, pacienteObj, null);
         }
         EventCore.emitAsync('mpi:patient:update', pacienteObj);
         return pacienteObj;
     } catch (error) {
+        andesLog(req, logKeys.mpiUpdate.key, req.body._id, logKeys.mpiUpdate.operacion, null, 'Error actualizando paciente');
         return error;
     }
-
 }
 /**
  * Busca los turnos futuros asignados al paciente y actualiza los datos.
@@ -851,11 +845,9 @@ export async function validarPaciente(pacienteAndes, req: any = configPrivate.us
 
     try {
         resRenaper = await getServicioRenaper({ documento: pacienteAndes.documento, sexo: sexoQuery });
-        Logger.log(req, 'fa_renaper', 'validar', {
-            resultado: resRenaper
-        });
+        andesLog(req, logKeys.validacionPaciente.key, pacienteAndes, logKeys.validacionPaciente.operacion, resRenaper);
     } catch (error) {
-        andesLog(req, logKeys.errorValidacionPaciente.key, null, logKeys.errorValidacionPaciente.operacion, error);
+        andesLog(req, logKeys.validacionPaciente.key, pacienteAndes, logKeys.validacionPaciente.operacion, null, null, 'Error validando paciente por RENAPER');
         return await validarSisa(pacienteAndes, req);
     }
     let band = true;
@@ -887,9 +879,8 @@ async function validarSisa(pacienteAndes: any, req: any, foto = null) {
 
         pacienteAndes.sexo = sexoPaciente;
         let resSisa: any = await matchSisa(pacienteAndes);
-        Logger.log(req, 'fa_sisa', 'validar', {
-            resultado: resSisa
-        });
+        andesLog(req, logKeys.validacionPaciente.key, pacienteAndes, logKeys.validacionPaciente.operacion, resSisa);
+
         pacienteAndes.nombre = resSisa.matcheos.datosPaciente.nombre;
         pacienteAndes.apellido = resSisa.matcheos.datosPaciente.apellido;
         pacienteAndes.fechaNacimiento = resSisa.matcheos.datosPaciente.fechaNacimiento;
@@ -899,7 +890,7 @@ async function validarSisa(pacienteAndes: any, req: any, foto = null) {
         }
         return { paciente: pacienteAndes, validado: true };
     } catch (error) {
-        andesLog(req, logKeys.errorValidacionPaciente.key, null, logKeys.errorValidacionPaciente.operacion, error);
+        andesLog(req, logKeys.validacionPaciente.key, pacienteAndes, logKeys.validacionPaciente.operacion, null, null, 'Error validando paciente por SISA');
         // no hacemos nada con el paciente
         return { paciente: pacienteAndes, validado: false };
     }
