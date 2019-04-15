@@ -355,7 +355,7 @@ function organizacionesExcluidas() {
 async function eliminaPrestacion(idPrestacion: string) {
     const result = new sql.Request(poolPrestaciones);
     let query = `DELETE FROM ${configPrivate.conSqlPecas.table.fueraAgenda} WHERE idPrestacion='${idPrestacion}'`;
-    return await result.query(query);
+    return executeQuery(query);
 }
 
 const orgCache = {};
