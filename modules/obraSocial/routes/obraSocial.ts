@@ -33,6 +33,26 @@ router.get('/', async (req, res, next) => {
     }
 });
 
+router.get('/prepagas', async (req, res, next) => {
+    try {
+        let prepagas = await ObraSocial.find({ prepaga: true }).exec();
+        res.json(prepagas);
+    } catch (error) {
+        return next(error);
+    }
+});
+
+/* TODO: validar con recupero si es necesario mirar SUMAR */
+router.get('/sumar', async (req, res, next) => {
+    try {
+        let arrayOSSumar = await sumarController.pacienteSumar(req.query.dni);
+
+        res.json(arrayOSSumar);
+    } catch (error) {
+        return next(error);
+    }
+});
+
 /**
  * Obtiene los datos de la obra social asociada a un paciente
  *
