@@ -241,8 +241,8 @@ router.post('/login', (req, res, next) => {
                 const dn = 'uid=' + req.body.usuario + ',' + configPrivate.auth.ldapOU;
                 const ldap = ldapjs.createClient({
                     url: `ldap://${configPrivate.hosts.ldap}`,
-                    timeout: 1000,
-                    connectTimeout: 1000,
+                    timeout: 4000,
+                    connectTimeout: 4000,
                 });
                 ldap.on('connectError', (err) => {
                     loginCache(passwordSha1);
