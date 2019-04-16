@@ -12,7 +12,6 @@ import { SnomedModel } from '../../../core/term/schemas/snomed';
 import * as camasController from './../controllers/cama';
 import { parseDate } from './../../../shared/parse';
 import { EventCore } from '@andes/event-bus';
-import { facturacionAutomatica } from './../../facturacionAutomatica/controllers/facturacionAutomatica';
 import { dashboardSolicitudes } from '../controllers/estadisticas';
 
 const router = express.Router();
