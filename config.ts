@@ -212,12 +212,6 @@ export const modules = {
         path: './modules/geonode/routes',
         route: '/modules/geonode',
         middleware: appMiddleware
-    },
-    totem: {
-        active: true,
-        path: './modules/totem/routes',
-        route: '/modules/totem',
-        middleware: appMiddleware
     }
 };
 
