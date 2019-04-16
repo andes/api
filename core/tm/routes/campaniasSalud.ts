@@ -28,8 +28,8 @@ router.get('/campania/:id', (req: any, res, next) => {
 router.get('/campanias', async (req, res, next) => {
     try {
         let fechaDesde = req.query.fechaDesde ? req.query.fechaDesde : moment().startOf('day').toDate();
-        let fechaHasta = req.query.fechaHasta ? req.query.fechaHasta : moment().startOf('day').toDate();
-        let docs: any = await campaniaCtrl.campanias(fechaDesde, fechaHasta);
+
+        let docs: any = await campaniaCtrl.campaniasVigentes(fechaDesde, req.query.fechaHasta);
         res.json(docs);
     } catch (e) {
         return next(e);
