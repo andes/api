@@ -13,6 +13,9 @@ import {
 import {
     Logger
 } from '../../../utils/logService';
+import { log } from '@andes/log';
+import { logKeys } from '../../../config';
+
 import {
     model as Prestacion
 } from '../../rup/schemas/prestacion';
@@ -837,7 +840,7 @@ async function actualizarAux(agenda: any) {
 /**
  * Llegado el día de ejecucion de la agenda, los turnos restantesProgramados pasan a restantesDelDia
  *
- * @export actualizarTiposDeTurno()
+ * @export actualizarTurnosDelDia()
  * @returns resultado
  */
 export function actualizarTurnosDelDia() {
@@ -875,6 +878,51 @@ export function actualizarTurnosDelDia() {
             return Promise.resolve();
         });
 
+    });
+}
+
+/**
+ * El dia anterior a la ejecución de la agenda (a las 12 del mediodía), los turnos restantes mobile se setean a 0
+ *
+ * @export actualizarTurnosMobile()
+ * @returns resultado
+ */
+export function actualizarTurnosMobile() {
+    const fechaActualizar = moment().add(1, 'day');
+
+    const condicion = {
+        $or: [{ estado: 'disponible' }, { estado: 'publicada' }, { estado: 'pausada' }],
+        horaInicio: {
+            $gte: (moment(fechaActualizar).startOf('day').toDate() as any),
+            $lte: (moment(fechaActualizar).endOf('day').toDate() as any)
+        },
+        'bloques.restantesMobile': { $gt: 0 }
+    };
+    const cursor = agendaModel.find(condicion).cursor();
+    let logRequest = {
+        user: {
+            usuario: { nombre: 'actualizarTurnosMobileJob', apellido: 'actualizarTurnosMobileJob' },
+            app: 'citas',
+            organizacion: userScheduler.user.organizacion.nombre
+        },
+        ip: 'localhost',
+        connection: {
+            localAddress: ''
+        }
+    };
+    return cursor.eachAsync(async doc => {
+        const agenda: any = doc;
+        try {
+            for (let j = 0; j < agenda.bloques.length; j++) {
+                if (agenda.bloques[j].restantesMobile > 0) {
+                    agenda.bloques[j].restantesMobile = 0;
+                }
+            }
+            Auth.audit(agenda, (userScheduler as any));
+            await saveAgenda(agenda);
+        } catch (err) {
+            await log(logRequest, logKeys.turnosMobileUpdate.key, null, logKeys.turnosMobileUpdate.operacion, err, { idAgenda: agenda._id });
+        }
     });
 }
 
