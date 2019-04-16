@@ -22,7 +22,7 @@ export async function campaniasVigentes(today: Date) {
  * @returns
  */
 export async function campanias(fechaDesde: Date, fechaHasta: Date) {
-    const query = { $and: [{ 'vigencia.desde': { $gte: fechaDesde } }, { 'vigencia.hasta': { $lte: fechaHasta } }] };
+    const query = { $and: [{ 'vigencia.desde': { $lte: fechaDesde } }, { 'vigencia.hasta': { $gte: fechaHasta } }] };
     let res;
     try {
         res = await campania.find(query).sort({ 'vigencia.desde': -1 });
