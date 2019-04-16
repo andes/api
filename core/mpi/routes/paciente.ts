@@ -181,25 +181,23 @@ router.get('/pacientes/:id', async (req, res, next) => {
     if (!(mongoose.Types.ObjectId.isValid(req.params.id))) {
         return next(404);
     }
-    const idPaciente = req.params.id;
-    let resultado: { db?: String; paciente: any; };
     try {
-        resultado = await controller.buscarPaciente(idPaciente);
+        const idPaciente = req.params.id;
+        const { paciente: pacienteBuscado } = await controller.buscarPaciente(idPaciente);
+        if (pacienteBuscado && pacienteBuscado.documento) {
+            let pacienteConOS = pacienteBuscado.toObject();
+            pacienteConOS.id = pacienteConOS._id;
+            try {
+                pacienteConOS.financiador = await getObraSocial(pacienteConOS);
+                res.json(pacienteConOS);
+            } catch (error) {
+                return res.json(pacienteBuscado);
+            }
+        } else {
+            return res.json(pacienteBuscado);
+        }
     } catch (err) {
         return next('Paciente no encontrado');
-    }
-    if (resultado && resultado.paciente.documento) {
-        let pacienteEncontrado = resultado.paciente.toObject();
-        pacienteEncontrado.id = pacienteEncontrado._id;
-        try {
-            pacienteEncontrado.financiador = await getObraSocial(pacienteEncontrado);
-            res.json(pacienteEncontrado);
-        } catch (error) {
-            return res.json(resultado.paciente);
-        }
-    } else {
-        // Paciente sin DNI
-        return res.json(resultado.paciente);
     }
 
 });
