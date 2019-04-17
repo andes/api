@@ -145,16 +145,15 @@ export class Auth {
      * @memberOf Auth
      */
     static appTokenProtected() {
-        return (req, res, next) => {
+        return async (req, res, next) => {
             if (req.user.type === 'app-token') {
-                authApps.findOne({ _id: req.user.app.id }).then((app: any) => {
-                    let token: string = req.headers.authorization.substring(4);
-                    if (app.token && app.token === token) {
-                        next();
-                    } else {
-                        next(403);
-                    }
-                });
+                let app: any = await authApps.findOne({ _id: req.user.app.id });
+                let token: string = req.headers.authorization.substring(4);
+                if (app.token && app.token === token) {
+                    next();
+                } else {
+                    next(403);
+                }
             } else {
                 next();
             }
