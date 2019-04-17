@@ -12,7 +12,6 @@ import { SnomedModel } from '../../../core/term/schemas/snomed';
 import * as camasController from './../controllers/cama';
 import { parseDate } from './../../../shared/parse';
 import { EventCore } from '@andes/event-bus';
-import { facturacionAutomatica } from './../../facturacionAutomatica/controllers/facturacionAutomatica';
 
 const router = express.Router();
 import async = require('async');
@@ -527,8 +526,6 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                         return next('Solo puede romper la validación el usuario que haya creado.');
                     }
                 }
-
-
                 data.estados.push(req.body.estado);
                 break;
             case 'registros':
@@ -555,7 +552,7 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                 return next(500);
         }
         Auth.audit(data, req);
-        data.save((error, prestacion) => {
+        data.save(async (error, prestacion) => {
             if (error) {
                 return next(error);
             }
@@ -591,6 +588,11 @@ router.patch('/prestaciones/:id', (req, res, next) => {
                     return next(errFrec);
                 });
 
+            }
+
+            if (req.body.op === 'romperValidacion') {
+                const _prestacion = data;
+                EventCore.emitAsync('rup:prestacion:romperValidacion', _prestacion);
             }
 
             if (req.body.planes) {
