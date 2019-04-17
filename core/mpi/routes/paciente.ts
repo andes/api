@@ -240,23 +240,25 @@ router.get('/pacientes', (req, res, next) => {
  *           $ref: '#/definitions/paciente'
  */
 router.get('/pacientes/buscarDocumento/', async (req, res, next) => {
-    // TODO VALIDAR PERMISOS TOTEM
-    // if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
-    //     return next(403);
-    // }
-    let queryObject = req.query;
-    if (queryObject && queryObject.sexo && queryObject.scan && queryObject.documento && queryObject.fechaNacimiento && queryObject.nombre && queryObject.apellido) {
-        queryObject.escaneado = true;
-        queryObject.type = 'simplequery';
+    if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
+        return next(403);
+    }
+    if (!Auth.check(req, 'mpi:paciente:insert')) {
+        return next(403);
+    }
+    let pacienteScaneado = req.query;
+    if (pacienteScaneado && pacienteScaneado.sexo && pacienteScaneado.scan && pacienteScaneado.documento && pacienteScaneado.fechaNacimiento && pacienteScaneado.nombre && pacienteScaneado.apellido) {
+        pacienteScaneado.escaneado = true;
+        pacienteScaneado.type = 'simplequery';
         try {
-            let matchingResult = await controller.matching(queryObject);
+            let matchingResult = await controller.matching(pacienteScaneado);
             if (matchingResult.length) {
-                let pacienteAndes = await controller.buscarPaciente(matchingResult[0].id);
-                res.send(pacienteAndes.paciente);
+                const { paciente: pacienteBuscado } = await controller.buscarPaciente(matchingResult[0].id);
+                res.send(pacienteBuscado);
             } else {
-                queryObject.estado = 'validado';
-                queryObject.genero = queryObject.sexo;
-                let nuevoPaciente = await controller.createPaciente(queryObject, userScheduler);
+                pacienteScaneado.estado = 'validado';
+                pacienteScaneado.genero = pacienteScaneado.sexo;
+                let nuevoPaciente = await controller.createPaciente(pacienteScaneado, userScheduler);
                 res.json(nuevoPaciente);
             }
         } catch (error) {

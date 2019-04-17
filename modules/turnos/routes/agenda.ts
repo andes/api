@@ -612,8 +612,6 @@ router.get('/prestacionesDisponibles', async (req: any, res, next) => {
     const pipelinePrestaciones = [];
     const matchAgendas = {};
 
-    // TODO: compararar con organización del token
-    // console.log
     matchAgendas['organizacion._id'] = { $eq: new mongoose.Types.ObjectId(Auth.getOrganization(req)) };
     matchAgendas['bloques.turnos.horaInicio'] = { $gte: new Date(moment().format('YYYY-MM-DD HH:mm')) };
     matchAgendas['$or'] = [
