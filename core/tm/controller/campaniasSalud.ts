@@ -1,4 +1,5 @@
 import * as campania from '../../tm/schemas/campaniasSalud';
+import moment = require('moment');
 
 /**
  * Devuelve las campañas de salud activas en el período entre fechaDesde y fechaHasta.
@@ -15,7 +16,7 @@ import * as campania from '../../tm/schemas/campaniasSalud';
 export async function campaniasVigentes(fechaDesde: Date, fechaHasta?: Date) {
     let query;
     if (fechaHasta) { // trae las campañas vigentes dentro del periodo
-        query = { 'vigencia.desde': { $gte: fechaDesde }, 'vigencia.hasta': { $lte: fechaHasta } };
+        query = { 'vigencia.desde': { $gte: fechaDesde }, 'vigencia.hasta': { $lte: moment(fechaHasta).add(1, 'days') } };
     } else { // trae las campañas vigentes en una fecha especifica (hoy)
         query = { 'vigencia.desde': { $lte: fechaDesde }, 'vigencia.hasta': { $gte: fechaDesde } };
     }
