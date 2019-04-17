@@ -59,7 +59,7 @@ export async function getResumenDiarioMensual(params: any) {
                 turnoEstado: '$bloques.turnos.estado',
                 pacienteSexo: '$bloques.turnos.paciente.sexo',
                 pacienteEdad: {
-                    $toInt: {
+                    $trunc: {
                         $divide: [
                             {
                                 $subtract: [
@@ -81,7 +81,7 @@ export async function getResumenDiarioMensual(params: any) {
                     edad: {
                         $switch: {
                             branches: [
-                                { case: { $lt: ['$pacienteEdad', 30] }, then: '30' }, // menores de 30 dias
+                                { case: { $lt: ['$pacienteEdad', 30] }, then: 30 }, // menores de 30 dias
                                 {
                                     case: {
                                         $and: [
@@ -89,7 +89,7 @@ export async function getResumenDiarioMensual(params: any) {
                                             { $gte: ['$pacienteEdad', 30] }
                                         ]
                                     },
-                                    then: '1'
+                                    then: 1
                                 }, // mayore de 30 dias hasta 1(365) año
                                 {
                                     case: {
@@ -98,7 +98,7 @@ export async function getResumenDiarioMensual(params: any) {
                                             { $gte: ['$pacienteEdad', 365] }
                                         ]
                                     },
-                                    then: '5'
+                                    then: 5
                                 }, // mayore de 1(365) años hasta 5(1825) años
                                 {
                                     case: {
@@ -107,7 +107,7 @@ export async function getResumenDiarioMensual(params: any) {
                                             { $gte: ['$pacienteEdad', 1825] }
                                         ]
                                     },
-                                    then: '15'
+                                    then: 15
                                 }, // mayore de 5(1825) años hasta 15(5475) años
                                 {
                                     case: {
@@ -116,7 +116,7 @@ export async function getResumenDiarioMensual(params: any) {
                                             { $gte: ['$pacienteEdad', 5475] }
                                         ]
                                     },
-                                    then: '20'
+                                    then: 20
                                 }, // mayore de 15(5475) años hasta 20(7300) años
                                 {
                                     case: {
@@ -125,7 +125,7 @@ export async function getResumenDiarioMensual(params: any) {
                                             { $gte: ['$pacienteEdad', 7300] }
                                         ]
                                     },
-                                    then: '40'
+                                    then: 40
                                 }, // mayore de 20(7300) años hasta 40(14600) años
                                 {
                                     case: {
@@ -134,11 +134,11 @@ export async function getResumenDiarioMensual(params: any) {
                                             { $gte: ['$pacienteEdad', 14600] }
                                         ]
                                     },
-                                    then: '70'
+                                    then: 70
                                 }, // mayore de 40(14600) años hasta 70(25550) años
                                 {
                                     case: { $and: [{ $gte: ['$pacienteEdad', 25550] }] },
-                                    then: '100'
+                                    then: 100
                                 } // mayore de 70(25550) años
                             ]
                         }
@@ -153,8 +153,8 @@ export async function getResumenDiarioMensual(params: any) {
                 fechaISO:  '$_id.fecha',
                 fecha: { $dateToString: { format: '%d-%m-%G', date: '$_id.fecha' } },
                 sexo: '$_id.sexo',
-                edad: { $toInt: '$_id.edad' },
-                total: { $toInt: '$total' }
+                edad: '$_id.edad',
+                total: '$total'
             }
         },
         {
@@ -364,7 +364,7 @@ export async function getPlanillaC1(params: any) {
                 pacienteSexo: '$paciente.sexo',
                 pacienteFechaNacimiento: '$paciente.fechaNacimiento',
                 pacienteEdad: {
-                    $toInt: {
+                    $trunc: {
                         $divide: [
                             {
                                 $subtract: ['$ejecucion.fecha', '$paciente.fechaNacimiento']
