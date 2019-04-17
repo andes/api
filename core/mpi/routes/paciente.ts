@@ -189,85 +189,6 @@ router.get('/pacientes', (req, res, next) => {
     });
 });
 
-/**
- * @swagger
- * /pacientes/{id}:
- *   get:
- *     tags:
- *       - Paciente
- *     description: Busca un paciente a partir de los datos de un DNI escaneado en ANDES, si el paciente no existe lo valida y guarda antes de responder con los datos del paciente
- *     summary: Busca un paciente a partir de los datos de un DNI escaneado en ANDES, si el paciente no existe lo valida y guarda antes de responder con los datos del paciente
- *     consumes:
- *       - application/json
- *     produces:
- *       - application/json
- *     parameters:
- *       - name: documento
- *         in: query
- *         description: DNI de un paciente
- *         required: true
- *         type: string
- *       - name: nombre
- *         in: query
- *         description: nombre de un paciente
- *         required: true
- *         type: string
- *       - name: apellido
- *         in: query
- *         description: apellido de un paciente
- *         required: true
- *         type: string
- *       - name: fechaNacimiento
- *         in: query
- *         description: fecha de nacimiento de un paciente
- *         required: true
- *         type: string
- *       - name: sexo
- *         in: query
- *         description: sexo de un paciente
- *         required: true
- *         type: string
- *       - name: stringScan
- *         in: query
- *         description: QR del DNI de un paciente parseado
- *         required: true
- *         type: string
- *
- *     responses:
- *       200:
- *         description: Un objeto paciente
- *         schema:
- *           $ref: '#/definitions/paciente'
- */
-router.get('/pacientes/buscarDocumento/', async (req, res, next) => {
-    if (!Auth.check(req, 'mpi:paciente:elasticSearch')) {
-        return next(403);
-    }
-    if (!Auth.check(req, 'mpi:paciente:insert')) {
-        return next(403);
-    }
-    let pacienteScaneado = req.query;
-    if (pacienteScaneado && pacienteScaneado.sexo && pacienteScaneado.scan && pacienteScaneado.documento && pacienteScaneado.fechaNacimiento && pacienteScaneado.nombre && pacienteScaneado.apellido) {
-        pacienteScaneado.escaneado = true;
-        pacienteScaneado.type = 'simplequery';
-        try {
-            let matchingResult = await controller.matching(pacienteScaneado);
-            if (matchingResult.length) {
-                const { paciente: pacienteBuscado } = await controller.buscarPaciente(matchingResult[0].id);
-                res.send(pacienteBuscado);
-            } else {
-                pacienteScaneado.estado = 'validado';
-                pacienteScaneado.genero = pacienteScaneado.sexo;
-                let nuevoPaciente = await controller.createPaciente(pacienteScaneado, userScheduler);
-                res.json(nuevoPaciente);
-            }
-        } catch (error) {
-            return next('Paciente no encontrado');
-        }
-    } else {
-        return next('Parámetros de búsqueda incorrectos');
-    }
-});
 
 // Simple mongodb query by ObjectId --> better performance
 router.get('/pacientes/:id', (req, res, next) => {
@@ -449,7 +370,7 @@ router.post('/pacientes', async (req, res, next) => {
                     let pacienteObj = await controller.createPaciente(req.body, req);
                     let patient = req.body;
                     // se carga geo referencia desde api de google
-                    if (req.body.estado === 'validado' && patient.direccion.length > 0) {
+                    if (req.body.estado === 'validado' && patient.direccion && patient.direccion.length > 0) {
                         await controller.actualizarGeoReferencia(patient);
                     }
                     return res.json(pacienteObj);
@@ -522,7 +443,7 @@ router.put('/pacientes/:id', async (req, res, next) => {
                     delete data.sexo;
                     delete data.fechaNacimiento;
                 }
-                if (patientFound.estado === 'validado' && patientFound.direccion[0].valor !== data.direccion[0].valor) {
+                if (patientFound.estado === 'validado' && patientFound.direccion && patientFound.direccion.length && patientFound.direccion[0].valor !== data.direccion[0].valor) {
                     await controller.actualizarGeoReferencia(data);
                 }
                 let pacienteUpdated = await controller.updatePaciente(patientFound, data, req);
