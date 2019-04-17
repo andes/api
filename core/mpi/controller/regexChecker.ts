@@ -50,18 +50,15 @@ export async function regexChecker(done) {
             });
 
         }).catch(err => {
-            // console.log('ERROR', err);
             Logger.log(userScheduler, 'scheduler', 'regexCheck', {
                 accion: 'error',
                 error: err
             });
             done();
         });
-        // console.log('----------------------------------------------------------FIN----------------------------------------------------------', countPacienteError);
         done();
 
     } catch (err) {
-        // console.log('ERROR', error);
         Logger.log(userScheduler, 'scheduler', 'regexCheck', {
             accion: 'error',
             error: err
