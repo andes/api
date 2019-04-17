@@ -51,10 +51,12 @@ export async function procesar(parametros: any) {
         let os = parametros.financiador ? parametros.financiador : 'todos';
         let filtroEstado = parametros.estado ? parametros.estado : 'todos';
         await prestaciones.eachAsync(async (prestacion, error) => {
+            let filtroOS = false;
             let dtoPrestacion = {
                 fecha: prestacion.createdAt,
                 paciente: prestacion.paciente,
-                financiador: prestacion.paciente && prestacion.paciente.obraSocial ? prestacion.paciente.obraSocial : null,
+                // financiador: prestacion.paciente && prestacion.paciente.obraSocial ? prestacion.paciente.obraSocial : null,
+                financiador: null,
                 prestacion: prestacion.prestacion.solicitud.tipoPrestacion,
                 profesionales: [prestacion.prestacion.solicitud.profesional],
                 estado: 'Presente con registro del profesional',
@@ -63,10 +65,19 @@ export async function procesar(parametros: any) {
                 turno: null,
                 idPrestacion: prestacion.idPrestacion,
             };
-            if (dtoPrestacion.financiador && dtoPrestacion.financiador.financiador === os || os === 'todos') {
-                if (filtroEstado === dtoPrestacion.estado || filtroEstado === 'todos') {
-                    resultado.push(dtoPrestacion);
+            if (prestacion.paciente && prestacion.paciente.obraSocial === os || os === 'todos') {
+                dtoPrestacion['financiador'] = prestacion.paciente.obraSocial;
+                filtroOS = true;
+            } else {
+                if (prestacion.paciente && !prestacion.paciente.obraSocial && os === 'No posee') {
+                    filtroOS = true;
+                } else {
+                    filtroOS = false;
                 }
+            }
+
+            if (filtroOS === true && (filtroEstado === dtoPrestacion.estado || filtroEstado === 'todos')) {
+                resultado.push(dtoPrestacion);
             }
             if (error) {
                 return error;
