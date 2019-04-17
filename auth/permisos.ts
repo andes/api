@@ -362,6 +362,20 @@ export default [
                 type: 'boolean'
             }
         ]
+    },
+    {
+        key: 'dashboard',
+        title: 'Panel de datos estadísticos en gráficos y tablas',
+        child: [
+            { key: 'citas', title: 'Dashboard Citas', child: [
+                { key: 'ver', title: 'Ver Dashboard Citas', type: 'boolean'},
+                { key: 'verProfesionales', title: 'Ver todos los profesionales', type: 'boolean'},
+                { key: 'tipoPrestacion', title: 'Tipo de prestación', type: 'prestacion'},
+            ]},
+            { key: 'top', title: 'Dashboard TOP', child: [
+                { key: 'ver', title: 'Ver Dashboard Top', type: 'boolean'}
+            ]}
+        ]
     }
 
 ];
