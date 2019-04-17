@@ -345,6 +345,25 @@ export default [
         ]
     },
     {
+        key: 'campania',
+        title: 'Campañas de salud',
+        avoidAll: true,
+        child: [
+            {
+                key: 'crear',
+                title: 'Crear y modificar',
+                comment: 'Permite crear y modificar campañas de salud',
+                type: 'boolean'
+            },
+            {
+                key: 'ver',
+                title: 'Visualizar',
+                comment: 'Habilita la visualización de campañas de salud',
+                type: 'boolean'
+            }
+        ]
+    },
+    {
         key: 'dashboard',
         title: 'Panel de datos estadísticos en gráficos y tablas',
         child: [
