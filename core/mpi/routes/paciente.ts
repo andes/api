@@ -260,7 +260,7 @@ router.get('/pacientes/buscarDocumento/', async (req, res, next) => {
                 res.json(nuevoPaciente);
             }
         } catch (error) {
-            return next(error);
+            return next('Paciente no encontrado');
         }
     } else {
         return next('Parámetros de búsqueda incorrectos');
