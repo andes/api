@@ -46,7 +46,7 @@ router.post('/censoMensual', (req: any, res, next) => {
  * que van a ser parte del archivo
  */
 router.post('/:tipo?', Auth.authenticate(), (req: any, res, next) => {
-    Documento.descargar(req, res, next).then(archivo => {
+    Documento.descargar(req).then(archivo => {
         res.download((archivo as string), (err) => {
             if (err) {
                 next(err);
