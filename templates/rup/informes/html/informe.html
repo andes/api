@@ -13,11 +13,11 @@
         <!-- Cabezal logos institucionales -->
         <section class="contenedor-logos">
             <span class="contenedor-logo-efector">
-                <!--logoOrganizacion-->
+                <img class="logo-efector" src="data:image/png;base64,{{ logoEfector }}" />
             </span>
             <span class="contenedor-logos-secundarios">
-                <!--logoAdicional-->
-                <!--logoAndes-->
+                <img class="logo-adicional" src="data:image/png;base64,{{ logoAdicional }}" />
+                <img class="logo-andes" src="data:image/png;base64,{{ logoAndes }}" />
             </span>
         </section>
         <section class="contenedor-data-origen">
@@ -26,10 +26,9 @@
                 <div class="contenedor-secundario">
                     <h6 class="volanta">datos del paciente</h6>
                     <h4>
-                        <!--paciente-->
+                        {{ nombreCompleto }}
                     </h4>
                     <h4>
-                        <!--datosRapidosPaciente-->
                         {{ datosRapidosPaciente }}
                     </h4>
                 </div>
@@ -37,13 +36,13 @@
                     <div class="contenedor-bloque-texto">
                         <h6 class="bolder">Fecha de Nacimiento</h6>
                         <h6>
-                            <!--fechaNacimiento-->
+                            {{ fechaNacimiento }}
                         </h6>
                     </div>
                     <div class="contenedor-bloque-texto">
                         <h6 class="bolder">Nro. de carpeta</h6>
                         <h6>
-                            <!--nroCarpeta-->
+                            {{ nroCarpeta }}
                         </h6>
                     </div>
                     <div class="contenedor-bloque-texto">
@@ -59,23 +58,23 @@
                 <div class="contenedor-secundario">
                     <h6 class="volanta">datos de origen de solicitud</h6>
                     <h4>
-                        <!--organizacionNombreSolicitud-->
+                        {{{ organizacionNombreSolicitud }}}
                     </h4>
                     <h5>
-                        <!--orgacionacionDireccionSolicitud-->
+                        {{ orgacionacionDireccionSolicitud }}
                     </h5>
                 </div>
                 <div class="contenedor-secundario">
                     <div class="contenedor-bloque-texto">
                         <h6 class="bolder">Fecha de solicitud</h6>
                         <h6>
-                            <!--fechaSolicitud-->
+                            {{ fechaSolicitud }}
                         </h6>
                     </div>
                     <div class="contenedor-bloque-texto">
                         <h6 class="bolder">Profesional</h6>
                         <h6>
-                            <!--profesionalSolicitud-->
+                            {{ profesionalSolicitud }}
                         </h6>
                     </div>
                 </div>
@@ -91,21 +90,21 @@
                 <!-- Titulo prestacion -->
                 <div class="contenedor-bloque-texto">
                     <div class="tipo-prestacion">
-                        <!--tipoPrestacion-->
+                        {{ tipoPrestacion }}
                     </div>
                 </div>
                 <div class="contenedor-bloque-texto">
                     <h6 class="bolder">Fecha Solicitud</h6>
                     <h6>
-                        <!--fechaSolicitud-->
+                        {{ fechaSolicitud }}
                     </h6>
                 </div>
                 <div class="contenedor-bloque-texto">
                     <h6 class="bolder">
-                        <!--tituloFechaEjecucion-->
+                        {{ tituloFechaEjecucion }}
                     </h6>
                     <h6>
-                        <!--fechaEjecucion-->
+                        {{ fechaEjecucion }}
                     </h6>
                 </div>
                 <div class="contenedor-bloque-texto">
@@ -113,28 +112,36 @@
                         <!--tituloFechaValidacion-->
                     </h6>
                     <h6>
-                        <!--fechaValidacion-->
+                        {{ fechaValidacion }}
                     </h6>
                 </div>
             </article>
             <hr>
             <span class="contenedor-concepto">
                 <!-- Semantic -->
+                {{#if fechaIngreso }}
+                {{#if fechaEgreso }}
                 <p>
-                    <!--unidadOrganizativa-->
-                    <!--fechaIngreso-->
-                    <!--fechaEgreso-->
+                    {{ fechaIngreso }}
+                    {{ fechaEgreso }}
                 </p>
+                {{/if}}
+                {{/if}}
+                {{#if motivoPrincipalDeConsulta}}
                 <p>
-                    <!--motivoPrincipalDeConsulta-->
+                    <b>PROCEDIMIENTO / DIAGNÓSTICO PRINCIPAL: </b>
+                    {{ motivoPrincipalDeConsulta }}
                 </p>
+                {{/if}}
                 <h3>
-                    <!--tituloInforme-->
+                    {{ tituloInforme }}
                 </h3>
-                <!--contenidoInforme-->
+                {{#unless registrosHTML}}
+                {{ contenidoInforme }}
+                {{/unless}}
             </span>
             <div class="registros">
-                <!--registros-->
+                {{{ registrosHTML }}}
             </div>
         </section>
     </main>
@@ -149,11 +156,11 @@
                 <!-- <img src="assets/img/firmas/firma-1.png" alt=""> -->
                 <hr class="lg">
                 <h6 class="bolder">
-                    <!--profesionalFirmante1-->
+                    {{ profesionalSolicitud }}
                 </h6>
                 <h6 class="subdata-italic"> </h6>
                 <h6 class="subdata-fecha">
-                    <!--fechaActual-->
+                    {{ fechaActual }}
                 </h6>
             </div>
         </span>
@@ -165,46 +172,43 @@
         <span class="contenedor-firmas"></span>
         <hr>
         <span class="contenedor-zocalo">
-            <!--logoPDP-->
-            <!-- <img class="logo-pdp" src="assets/img/logo-pdp.png" alt=""> -->
+            <img class="logo-pdp" src="data:image/png;base64,{{ logoPDP }}" alt="" />
             <article class="contenedor-data-pdp">
                 <h6>Nota: El contenido de este informe ha sido validado digitalmente siguiendo los estándares de
-                    calidad y seguridad
-                    requeridos. El ministerio de salud de la provincia de Neuquén es responsable inscripto en el
-                    Registro
-                    Nacional de Protección de Datos Personales, según lo requiere la Ley N° 25.326 (art. 3° y 21 inciso
-                    1).</h6>
+                    calidad y seguridad requeridos. El ministerio de salud de la provincia de Neuquén es responsable
+                    inscripto en el Registro Nacional de Protección de Datos Personales,
+                    según lo requiere la Ley N° 25.326 (art. 3° y 21 inciso 1).</h6>
             </article>
             <article class="contenedor-data-organizacion">
                 <h6>
-                    <!--organizacionNombreSolicitud-->
+                    {{{ organizacionNombreSolicitud }}}
                 </h6>
                 <h6>
-                    <!--orgacionacionDireccionSolicitud-->
+                    {{ orgacionacionDireccionSolicitud }}
                 </h6>
             </article>
             <article class="contenedor-data-impresion">
                 <h6 class="bolder">Impreso por:</h6>
                 <h6>
-                    <!--usuario-->
+                    {{ usuario }}
                 </h6>
                 <h6>
-                    <!--fechaActual-->
+                    {{ fechaActual }}
                 </h6>
             </article>
             <article class="contenedor-data-validacion">
                 <h6 class="bolder">Validado por:</h6>
                 <h6>
-                    <!--profesionalValidacion-->
+                    {{ profesionalValidacion }}
                 </h6>
                 <h6>
-                    <!--fechaValidacion-->
+                    {{ fechaValidacion }}
                 </h6>
             </article>
             <hr>
             <span class="numeracion">
-                <small>{{page}}</small> de
-                <small>{{pages}}</small>
+                <small>{{ pageNum }}</small> de
+                <small>{{ numPages }}</small>
             </span>
         </span>
     </footer>
