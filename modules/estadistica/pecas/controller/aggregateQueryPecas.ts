@@ -270,6 +270,7 @@ export async function pecasExport(start, end) {
         },
         {
             $project: {
+                _id: 0,
                 idEfector: '$organizacion._id',
                 Efector: '$organizacion.nombre',
                 TipoEfector: {
@@ -1251,19 +1252,12 @@ export async function pecasExport(start, end) {
                     }
                 }
             }
-        }
+        },
+        { $out: 'pecas' }
     ];
 
     const aggr = Agenda.aggregate(pipeline);
     const data = await toArray(aggr.cursor({}).exec());
-    if (data.length > 0) {
-        for (let i = 0; i < data.length; i++) {
-            let doc = data[i];
-            delete doc._id;
-            let pecas = new Pecas(doc);
-            await pecas.save();
-        }
-    }
     return;
 }
 
